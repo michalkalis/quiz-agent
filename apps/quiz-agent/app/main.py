@@ -1,0 +1,166 @@
+"""Quiz Agent API - Client-agnostic quiz service.
+
+AI-powered quiz agent with natural language understanding,
+RAG-based question retrieval, and nuanced answer evaluation.
+
+Features:
+- Natural language input parsing (AI agent core)
+- Voice transcription with Whisper API
+- Semantic question retrieval with RAG
+- Multi-tier answer evaluation
+- User rating and feedback system
+- Multiplayer-ready architecture
+- Client-agnostic (iOS, TV, terminal, web)
+
+Run with: uvicorn app.main:app --reload --port 8002
+"""
+
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../..", "packages/shared"))
+
+from quiz_shared.database.chroma_client import ChromaDBClient
+from quiz_shared.database.sql_client import SQLClient
+
+from .session.manager import SessionManager
+from .input.parser import InputParser
+from .retrieval.question_retriever import QuestionRetriever
+from .evaluation.evaluator import AnswerEvaluator
+from .rating.feedback import FeedbackService
+from .voice.transcriber import VoiceTranscriber
+from .api import rest
+
+
+# Global service instances
+session_manager: SessionManager = None
+chroma_client: ChromaDBClient = None
+sql_client: SQLClient = None
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan manager.
+
+    Handles startup and shutdown tasks:
+    - Initialize services
+    - Start background cleanup
+    - Graceful shutdown
+    """
+    global session_manager, chroma_client, sql_client
+
+    print("Starting Quiz Agent API...")
+
+    # Initialize database clients
+    chroma_client = ChromaDBClient(
+        collection_name="quiz_questions",
+        persist_directory="./data/chromadb"
+    )
+    print("✓ ChromaDB client initialized")
+
+    sql_client = SQLClient(
+        db_url=os.getenv("DATABASE_URL", "sqlite:///./data/ratings.db")
+    )
+    print("✓ SQL client initialized")
+
+    # Initialize services
+    session_manager = SessionManager(cleanup_interval=300)  # 5 min
+    input_parser = InputParser()
+    question_retriever = QuestionRetriever(chroma_client=chroma_client)
+    answer_evaluator = AnswerEvaluator()
+    feedback_service = FeedbackService(
+        chroma_client=chroma_client,
+        sql_client=sql_client,
+        low_rating_threshold=2.5
+    )
+    voice_transcriber = VoiceTranscriber()
+    print("✓ Services initialized")
+
+    # Inject dependencies into REST API
+    rest.init_dependencies(
+        sm=session_manager,
+        ip=input_parser,
+        qr=question_retriever,
+        ae=answer_evaluator,
+        fs=feedback_service,
+        vt=voice_transcriber
+    )
+    print("✓ API dependencies configured")
+
+    # Start background tasks
+    await session_manager.start_cleanup()
+    print("✓ Background cleanup started")
+
+    print("\n" + "="*50)
+    print("Quiz Agent API is ready!")
+    print("API Documentation: http://localhost:8002/docs")
+    print("Health Check: http://localhost:8002/api/v1/health")
+    print("="*50 + "\n")
+
+    yield
+
+    # Shutdown
+    print("\nShutting down Quiz Agent API...")
+    await session_manager.stop_cleanup()
+    print("✓ Cleanup stopped")
+
+
+# Create FastAPI app
+app = FastAPI(
+    title="Quiz Agent API",
+    description=(
+        "AI-powered quiz service with natural language understanding. "
+        "Client-agnostic design for iOS, TV, terminal, and web clients."
+    ),
+    version="1.0.0",
+    lifespan=lifespan
+)
+
+# CORS middleware for web clients
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Configure appropriately for production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include API routes
+app.include_router(rest.router)
+
+
+# Root endpoint
+@app.get("/")
+async def root():
+    """Root endpoint with API info."""
+    return {
+        "service": "Quiz Agent API",
+        "version": "1.0.0",
+        "description": "AI-powered quiz service with natural language understanding",
+        "features": [
+            "Natural language input parsing",
+            "Voice transcription (Whisper API)",
+            "RAG-based question retrieval",
+            "Nuanced answer evaluation",
+            "User ratings and feedback",
+            "Multiplayer support",
+            "Client-agnostic design"
+        ],
+        "docs": "/docs",
+        "health": "/api/v1/health"
+    }
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(
+        "app.main:app",
+        host="0.0.0.0",
+        port=8002,
+        reload=True,
+        log_level="info"
+    )

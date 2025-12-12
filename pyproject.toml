@@ -1,0 +1,18 @@
+[project]
+name = "quiz-system"
+version = "0.2.0"
+description = "Quiz system with question generator and AI-powered quiz agent"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+
+[tool.uv.workspace]
+members = [
+    "packages/shared",
+    "apps/question-generator",
+    "apps/quiz-agent"
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

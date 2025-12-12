@@ -1,0 +1,63 @@
+# Course reference materials (not part of main project)
+course-examples/
+graph.py
+quiz_main.py
+pub_quiz_generation_prompt.md
+README.md
+.CLAUDE.md
+uv.lock
+
+# Environment variables (contains API keys)
+.env
+.env.local
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+*.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# LangGraph / LangChain
+.langchain_cache/
+langsmith_cache/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+logs/

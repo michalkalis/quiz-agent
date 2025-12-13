@@ -32,6 +32,9 @@ ENV/
 *.swo
 *~
 
+# Claude Code local settings
+.claude/*.local.json
+
 # OS
 .DS_Store
 Thumbs.db
@@ -57,6 +60,9 @@ langsmith_cache/
 *.db
 *.sqlite
 *.sqlite3
+
+# Runtime data (vector DB, generated files)
+**/data/
 
 # Logs
 *.log

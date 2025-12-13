@@ -32,6 +32,10 @@ class QuizSession(BaseModel):
         "medium",
         description="Difficulty: easy | medium | hard"
     )
+    category: Optional[str] = Field(
+        None,
+        description="Current category filter (e.g., 'music', 'movies', 'all')"
+    )
     preferred_topics: List[str] = Field(
         default_factory=list,
         description="Preferred topics: ['science', 'history']"
@@ -39,6 +43,10 @@ class QuizSession(BaseModel):
     excluded_topics: List[str] = Field(
         default_factory=list,
         description="Excluded topics: ['sports', 'geography']"
+    )
+    disliked_topics: List[str] = Field(
+        default_factory=list,
+        description="Disliked topics (alias for excluded_topics): ['sports', 'geography']"
     )
     preferred_categories: List[str] = Field(
         default_factory=list,

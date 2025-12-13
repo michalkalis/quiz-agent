@@ -1,7 +1,6 @@
 """ChromaDB client for question storage with RAG capabilities."""
 
 import chromadb
-from chromadb.config import Settings
 from typing import List, Dict, Optional, Any
 from datetime import datetime
 import json
@@ -27,10 +26,10 @@ class ChromaDBClient:
             persist_directory: Directory to persist ChromaDB data
             collection_name: Name of collection for questions
         """
-        self.client = chromadb.Client(Settings(
-            persist_directory=persist_directory,
-            anonymized_telemetry=False
-        ))
+        # Use PersistentClient for proper disk persistence
+        self.client = chromadb.PersistentClient(
+            path=persist_directory
+        )
         self.collection_name = collection_name
         self.collection = self._get_or_create_collection()
 
@@ -126,6 +125,49 @@ class ChromaDBClient:
             print(f"Error getting question: {e}")
             return None
 
+    def count_questions(self, filters: Optional[Dict[str, Any]] = None) -> int:
+        """Count questions in the database, optionally with filters.
+
+        Args:
+            filters: Optional metadata filters
+
+        Returns:
+            Number of questions matching filters (or total if no filters)
+        """
+        try:
+            if filters:
+                # Build where clause similar to search_questions
+                filters_dict = filters or {}
+                top_level_conditions = {}
+                operators = {}
+                for key, value in filters_dict.items():
+                    if key.startswith("$"):
+                        operators[key] = value
+                    else:
+                        top_level_conditions[key] = value
+                
+                needs_and = len(top_level_conditions) > 1
+                if needs_and:
+                    where_clause = {"$and": []}
+                    for key, value in top_level_conditions.items():
+                        where_clause["$and"].append({key: value})
+                    where_clause.update(operators)
+                elif len(top_level_conditions) == 1:
+                    where_clause = top_level_conditions.copy()
+                    where_clause.update(operators)
+                else:
+                    where_clause = operators if operators else None
+                
+                results = self.collection.get(where=where_clause if where_clause else None)
+            else:
+                results = self.collection.get()
+            
+            ids = results.get('ids', [])
+            return len(ids) if ids else 0
+        except Exception as e:
+            print(f"Error counting questions: {e}")
+            return 0
+
     def update_question(self, question_id: str, updates: Dict[str, Any]) -> bool:
         """Update question metadata.
 
@@ -217,34 +259,89 @@ class ChromaDBClient:
         """
         try:
             # Build where clause
-            where_clause = filters or {}
-
-            # Exclude specific IDs
-            if excluded_ids:
-                where_clause["$and"] = where_clause.get("$and", [])
-                for qid in excluded_ids:
-                    where_clause["$and"].append({"id": {"$ne": qid}})
-
-            # Query ChromaDB
-            if query_text:
-                query_embedding = generate_embedding(query_text)
-                results = self.collection.query(
-                    query_embeddings=[query_embedding],
-                    where=where_clause if where_clause else None,
-                    n_results=n_results
-                )
+            # ChromaDB requires all conditions to be wrapped in a single operator when multiple conditions exist
+            filters_dict = filters or {}
+            
+            # Separate top-level conditions from operators
+            top_level_conditions = {}
+            operators = {}
+            for key, value in filters_dict.items():
+                if key.startswith("$"):
+                    operators[key] = value
+                else:
+                    top_level_conditions[key] = value
+            
+            # Build where clause
+            # ChromaDB requires all conditions to be wrapped in a single operator when multiple conditions exist
+            # If we have multiple top-level conditions OR excluded_ids, use $and
+            needs_and = len(top_level_conditions) > 1 or (excluded_ids and len(excluded_ids) > 0)
+            
+            if needs_and:
+                where_clause = {"$and": []}
+                # Add all top-level conditions
+                for key, value in top_level_conditions.items():
+                    where_clause["$and"].append({key: value})
+                # Add excluded IDs
+                if excluded_ids and len(excluded_ids) > 0:
+                    for qid in excluded_ids:
+                        where_clause["$and"].append({"id": {"$ne": qid}})
+                # Merge in any existing operators (shouldn't happen, but handle it)
+                where_clause.update(operators)
+            elif len(top_level_conditions) == 1:
+                # Single condition, use as-is
+                where_clause = top_level_conditions.copy()
+                where_clause.update(operators)
             else:
-                # No semantic search, just filter
-                results = self.collection.get(
-                    where=where_clause if where_clause else None,
-                    limit=n_results
-                )
+                # No filters or only operators
+                where_clause = operators if operators else None
+
+            # Debug: print where clause for troubleshooting
+            if where_clause:
+                print(f"DEBUG: ChromaDB where clause: {where_clause}")
+            
+            # Query ChromaDB
+            try:
+                if query_text:
+                    query_embedding = generate_embedding(query_text)
+                    results = self.collection.query(
+                        query_embeddings=[query_embedding],
+                        where=where_clause if where_clause else None,
+                        n_results=n_results
+                    )
+                else:
+                    # No semantic search, just filter
+                    results = self.collection.get(
+                        where=where_clause if where_clause else None,
+                        limit=n_results
+                    )
+            except Exception as query_error:
+                print(f"ERROR: ChromaDB query failed with where_clause: {where_clause}")
+                print(f"ERROR: Query error: {query_error}")
+                import traceback
+                traceback.print_exc()
+                raise
 
             # Convert to Question objects
             questions = []
-            ids = results['ids'][0] if 'ids' in results and results['ids'] else results.get('ids', [])
-            documents = results['documents'][0] if 'documents' in results and results['documents'] else results.get('documents', [])
-            metadatas = results['metadatas'][0] if 'metadatas' in results and results['metadatas'] else results.get('metadatas', [])
+            # Handle different result structures:
+            # - query() returns: {'ids': [[...]], 'documents': [[...]]} (nested)
+            # - get() returns: {'ids': [...], 'documents': [...]} (flat)
+            if 'ids' in results and results['ids']:
+                # Check if nested (query) or flat (get)
+                if isinstance(results['ids'][0], list):
+                    # Nested structure from query()
+                    ids = results['ids'][0]
+                    documents = results['documents'][0]
+                    metadatas = results['metadatas'][0]
+                else:
+                    # Flat structure from get()
+                    ids = results['ids']
+                    documents = results['documents']
+                    metadatas = results['metadatas']
+            else:
+                ids = []
+                documents = []
+                metadatas = []
 
             for i, qid in enumerate(ids):
                 question = self._metadata_to_question(
@@ -352,6 +449,10 @@ class ChromaDBClient:
             correct_answer = json.loads(correct_answer_raw)
         except (json.JSONDecodeError, TypeError):
             correct_answer = correct_answer_raw
+
+        # Ensure correct_answer is string or list (ChromaDB might return int)
+        if not isinstance(correct_answer, (str, list)):
+            correct_answer = str(correct_answer)
 
         # Optional JSON fields
         possible_answers = None

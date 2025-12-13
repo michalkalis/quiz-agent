@@ -23,6 +23,19 @@ import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../..", "packages/shared"))
 
+# Load environment variables from .env files
+try:
+    from dotenv import load_dotenv
+    # Try multiple locations: current dir, parent dirs, and project root
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.join(base_dir, "../..")
+    load_dotenv(os.path.join(project_root, ".env"))  # Project root .env
+    load_dotenv(os.path.join(base_dir, "../../.env"))  # Also check parent
+    load_dotenv()  # Current directory .env (overrides others)
+except ImportError:
+    # python-dotenv not available, skip .env loading
+    pass
+
 from quiz_shared.database.chroma_client import ChromaDBClient
 from quiz_shared.database.sql_client import SQLClient
 
@@ -53,31 +66,85 @@ async def lifespan(app: FastAPI):
     global session_manager, chroma_client, sql_client
 
     print("Starting Quiz Agent API...")
+    sys.stdout.flush()  # Ensure output is visible
+
+    # Check for required environment variables
+    openai_api_key = os.getenv("OPENAI_API_KEY")
+    if not openai_api_key:
+        raise ValueError(
+            "OPENAI_API_KEY environment variable is not set. "
+            "Please set it before starting the server:\n"
+            "  export OPENAI_API_KEY='your-api-key-here'\n"
+            "Or create a .env file with: OPENAI_API_KEY=your-api-key-here"
+        )
+
+    # Validate working directory
+    if not os.path.exists("app"):
+        raise ValueError(
+            "Server must be run from apps/quiz-agent/ directory.\n"
+            f"Current directory: {os.getcwd()}\n"
+            "Please run: cd apps/quiz-agent && python -m app.main"
+        )
+    print(f"✓ Working directory: {os.getcwd()}")
+    sys.stdout.flush()
+
+    # Ensure data directory exists
+    data_dir = "./data"
+    os.makedirs(data_dir, exist_ok=True)
+    print("✓ Data directory ready")
+    sys.stdout.flush()
 
     # Initialize database clients
-    chroma_client = ChromaDBClient(
-        collection_name="quiz_questions",
-        persist_directory="./data/chromadb"
-    )
-    print("✓ ChromaDB client initialized")
+    try:
+        print("Initializing ChromaDB client...")
+        sys.stdout.flush()
+        chroma_client = ChromaDBClient(
+            collection_name="quiz_questions",
+            persist_directory="./data/chromadb"
+        )
+        print("✓ ChromaDB client initialized")
+        sys.stdout.flush()
+    except Exception as e:
+        print(f"ERROR: Failed to initialize ChromaDB: {e}")
+        import traceback
+        traceback.print_exc()
+        raise
 
-    sql_client = SQLClient(
-        db_url=os.getenv("DATABASE_URL", "sqlite:///./data/ratings.db")
-    )
-    print("✓ SQL client initialized")
+    try:
+        print("Initializing SQL client...")
+        sys.stdout.flush()
+        sql_client = SQLClient(
+            database_url=os.getenv("DATABASE_URL", "sqlite:///./data/ratings.db")
+        )
+        print("✓ SQL client initialized")
+        sys.stdout.flush()
+    except Exception as e:
+        print(f"ERROR: Failed to initialize SQL client: {e}")
+        import traceback
+        traceback.print_exc()
+        raise
 
     # Initialize services
-    session_manager = SessionManager(cleanup_interval=300)  # 5 min
-    input_parser = InputParser()
-    question_retriever = QuestionRetriever(chroma_client=chroma_client)
-    answer_evaluator = AnswerEvaluator()
-    feedback_service = FeedbackService(
-        chroma_client=chroma_client,
-        sql_client=sql_client,
-        low_rating_threshold=2.5
-    )
-    voice_transcriber = VoiceTranscriber()
-    print("✓ Services initialized")
+    try:
+        print("Initializing services...")
+        sys.stdout.flush()
+        session_manager = SessionManager(cleanup_interval=300)  # 5 min
+        input_parser = InputParser()
+        question_retriever = QuestionRetriever(chroma_client=chroma_client)
+        answer_evaluator = AnswerEvaluator()
+        feedback_service = FeedbackService(
+            chroma_client=chroma_client,
+            sql_client=sql_client,
+            low_rating_threshold=2.5
+        )
+        voice_transcriber = VoiceTranscriber()
+        print("✓ Services initialized")
+        sys.stdout.flush()
+    except Exception as e:
+        print(f"ERROR: Failed to initialize services: {e}")
+        import traceback
+        traceback.print_exc()
+        raise
 
     # Inject dependencies into REST API
     rest.init_dependencies(
@@ -86,7 +153,8 @@ async def lifespan(app: FastAPI):
         qr=question_retriever,
         ae=answer_evaluator,
         fs=feedback_service,
-        vt=voice_transcriber
+        vt=voice_transcriber,
+        cc=chroma_client
     )
     print("✓ API dependencies configured")
 

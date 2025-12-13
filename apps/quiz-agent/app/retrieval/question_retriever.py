@@ -63,16 +63,14 @@ class QuestionRetriever:
         # Add category filter
         if session.preferred_categories:
             filters["category"] = {"$in": session.preferred_categories}
-        elif session.excluded_categories:
-            filters["category"] = {"$nin": session.excluded_categories}
-        else:
-            # Default to non-children categories
-            filters["category"] = {"$nin": ["children"]}
+        # Note: $nin not well supported in ChromaDB, so we skip excluded categories for now
+        # and rely on positive filtering via preferred_categories when needed
 
         # Exclude already asked questions
         excluded_ids = session.asked_question_ids
 
-        # Query ChromaDB
+        # Query ChromaDB with progressive fallback
+        # Try 1: With all filters
         candidates = self.chroma.search_questions(
             query_text=query_text,
             filters=filters,
@@ -81,7 +79,8 @@ class QuestionRetriever:
         )
 
         if not candidates:
-            # Fallback: try without topic preference
+            # Try 2: Without topic preference (semantic search)
+            print(f"DEBUG: No candidates with topic preference, trying without semantic search")
             candidates = self.chroma.search_questions(
                 query_text=None,
                 filters=filters,
@@ -90,6 +89,57 @@ class QuestionRetriever:
             )
 
         if not candidates:
+            # Try 3: Try different difficulty levels (easy -> medium -> hard)
+            difficulty_fallback = ["easy", "medium", "hard"]
+            if session.current_difficulty in difficulty_fallback:
+                difficulty_fallback.remove(session.current_difficulty)
+            
+            for fallback_difficulty in difficulty_fallback:
+                print(f"DEBUG: Trying fallback difficulty: {fallback_difficulty}")
+                fallback_filters = filters.copy()
+                fallback_filters["difficulty"] = fallback_difficulty
+                candidates = self.chroma.search_questions(
+                    query_text=None,
+                    filters=fallback_filters,
+                    n_results=n_candidates,
+                    excluded_ids=excluded_ids
+                )
+                if candidates:
+                    print(f"DEBUG: Found {len(candidates)} candidates with difficulty {fallback_difficulty}")
+                    break
+
+        if not candidates:
+            # Try 4: Remove category filter
+            print(f"DEBUG: Trying without category filter")
+            fallback_filters = {
+                "difficulty": session.current_difficulty,
+                "type": "text"
+            }
+            candidates = self.chroma.search_questions(
+                query_text=None,
+                filters=fallback_filters,
+                n_results=n_candidates,
+                excluded_ids=excluded_ids
+            )
+
+        if not candidates:
+            # Try 5: Any text question, any difficulty, any category
+            print(f"DEBUG: Trying with minimal filters (type only)")
+            minimal_filters = {"type": "text"}
+            candidates = self.chroma.search_questions(
+                query_text=None,
+                filters=minimal_filters,
+                n_results=n_candidates,
+                excluded_ids=excluded_ids
+            )
+
+        if not candidates:
+            # Check if database is empty
+            total_count = self.chroma.count_questions()
+            if total_count == 0:
+                print(f"ERROR: Database is empty. No questions found. Please generate or import questions first.")
+            else:
+                print(f"ERROR: No questions match the criteria. Database has {total_count} questions, but none match difficulty={session.current_difficulty}, type=text, category=not children")
             return None
 
         # Select question with diversity

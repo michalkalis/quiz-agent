@@ -97,6 +97,7 @@ question_retriever: Optional[QuestionRetriever] = None
 answer_evaluator: Optional[AnswerEvaluator] = None
 feedback_service: Optional[FeedbackService] = None
 voice_transcriber: Optional[VoiceTranscriber] = None
+chroma_client: Optional[Any] = None  # ChromaDBClient
 
 
 def init_dependencies(
@@ -105,16 +106,18 @@ def init_dependencies(
     qr: QuestionRetriever,
     ae: AnswerEvaluator,
     fs: FeedbackService,
-    vt: VoiceTranscriber
+    vt: VoiceTranscriber,
+    cc: Optional[Any] = None  # ChromaDBClient
 ):
     """Initialize service dependencies."""
-    global session_manager, input_parser, question_retriever, answer_evaluator, feedback_service, voice_transcriber
+    global session_manager, input_parser, question_retriever, answer_evaluator, feedback_service, voice_transcriber, chroma_client
     session_manager = sm
     input_parser = ip
     question_retriever = qr
     answer_evaluator = ae
     feedback_service = fs
     voice_transcriber = vt
+    chroma_client = cc
 
 
 # Helper functions
@@ -252,33 +255,74 @@ async def start_quiz(session_id: str, request: StartQuizRequest):
     if not all([session_manager, question_retriever]):
         raise HTTPException(status_code=500, detail="Service not initialized")
 
-    session = session_manager.get_session(session_id)
-    if not session:
-        raise HTTPException(status_code=404, detail="Session not found or expired")
+    try:
+        session = session_manager.get_session(session_id)
+        if not session:
+            raise HTTPException(status_code=404, detail="Session not found or expired")
 
-    if session.phase != "idle":
-        raise HTTPException(status_code=400, detail="Quiz already started")
+        if session.phase != "idle":
+            raise HTTPException(status_code=400, detail="Quiz already started")
 
-    # Update phase
-    session.phase = "asking"
-    session.asked_question_ids = []
+        # Update phase
+        session.phase = "asking"
+        session.asked_question_ids = []
 
-    # Get first question
-    question = question_retriever.get_next_question(session)
-    if not question:
-        raise HTTPException(status_code=500, detail="Failed to retrieve question")
+        # Get first question
+        print(f"DEBUG: Getting next question for session {session_id}, difficulty: {session.current_difficulty}")
+        try:
+            question = question_retriever.get_next_question(session)
+        except Exception as e:
+            print(f"ERROR: Exception in get_next_question: {e}")
+            import traceback
+            traceback.print_exc()
+            raise HTTPException(status_code=500, detail=f"Failed to retrieve question: {str(e)}")
+        
+        if not question:
+            print(f"ERROR: get_next_question returned None for session {session_id}")
+            # Check database status using the shared chroma_client
+            if chroma_client:
+                total_count = chroma_client.count_questions()
+            else:
+                total_count = 0
+            
+            if total_count == 0:
+                error_detail = (
+                    "The question database is empty. "
+                    "Please generate or import questions first:\n"
+                    "1. Start the question-generator app: cd apps/question-generator && python -m app.main\n"
+                    "2. Generate questions via the API or use the web interface\n"
+                    "3. Then try starting the quiz again"
+                )
+            else:
+                error_detail = (
+                    f"No questions match the criteria. "
+                    f"Database has {total_count} questions, but none match:\n"
+                    f"- Difficulty: {session.current_difficulty}\n"
+                    f"- Type: text\n"
+                    f"- Category: not in ['children']\n\n"
+                    "Try a different difficulty or ensure questions are properly categorized."
+                )
+            
+            raise HTTPException(status_code=500, detail=error_detail)
 
-    session.current_question_id = question.id
-    session.asked_question_ids.append(question.id)
-    session_manager.update_session(session)
+        session.current_question_id = question.id
+        session.asked_question_ids.append(question.id)
+        session_manager.update_session(session)
 
-    return InputResponse(
-        success=True,
-        message="Quiz started",
-        session=session_to_response(session),
-        current_question=question_to_dict(question),
-        feedback_received=[]
-    )
+        return InputResponse(
+            success=True,
+            message="Quiz started",
+            session=session_to_response(session),
+            current_question=question_to_dict(question),
+            feedback_received=[]
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"ERROR: Unexpected exception in start_quiz: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Failed to start quiz: {str(e)}")
 
 
 @router.post("/sessions/{session_id}/input", response_model=InputResponse)
@@ -309,9 +353,9 @@ async def submit_input(session_id: str, request: SubmitInputRequest):
         raise HTTPException(status_code=400, detail="Not waiting for input")
 
     # Get current question
-    from quiz_shared.database.chroma_client import ChromaDBClient
-    chroma = ChromaDBClient()
-    current_question = chroma.get_question(session.current_question_id)
+    if not chroma_client:
+        raise HTTPException(status_code=500, detail="ChromaDB client not initialized")
+    current_question = chroma_client.get_question(session.current_question_id)
     if not current_question:
         raise HTTPException(status_code=500, detail="Current question not found")
 
@@ -328,8 +372,11 @@ async def submit_input(session_id: str, request: SubmitInputRequest):
 
     # Process intents
     for intent in intents:
-        if intent.type == "answer":
-            user_answer = intent.value
+        intent_type = intent.get("intent_type")
+        extracted_data = intent.get("extracted_data", {})
+
+        if intent_type == "answer":
+            user_answer = extracted_data.get("answer")
             # Evaluate answer
             result, score_delta = await answer_evaluator.evaluate(
                 user_answer=user_answer,
@@ -356,7 +403,7 @@ async def submit_input(session_id: str, request: SubmitInputRequest):
 
             feedback_received.append(f"answer: {result}")
 
-        elif intent.type == "skip":
+        elif intent_type == "skip":
             evaluation_result = {
                 "user_answer": "skipped",
                 "result": "skipped",
@@ -365,29 +412,33 @@ async def submit_input(session_id: str, request: SubmitInputRequest):
             }
             feedback_received.append("skipped question")
 
-        elif intent.type == "rating":
+        elif intent_type == "rating":
             # Rating will be handled separately via rate endpoint
-            feedback_received.append(f"rating: {intent.value}")
+            rating_value = extracted_data.get("rating")
+            feedback_received.append(f"rating: {rating_value}")
 
-        elif intent.type == "difficulty_change":
-            session.current_difficulty = intent.value
-            feedback_received.append(f"difficulty: {intent.value}")
+        elif intent_type == "difficulty_change":
+            difficulty = extracted_data.get("difficulty")
+            session.current_difficulty = difficulty
+            feedback_received.append(f"difficulty: {difficulty}")
 
-        elif intent.type == "preference_change":
+        elif intent_type == "preference_change":
             # Add to preferred/disliked topics
-            if intent.value.startswith("-"):
-                topic = intent.value[1:]
+            topic = extracted_data.get("topic", "")
+            if topic.startswith("-"):
+                topic = topic[1:]
                 if topic not in session.disliked_topics:
                     session.disliked_topics.append(topic)
                 feedback_received.append(f"avoiding: {topic}")
             else:
-                if intent.value not in session.preferred_topics:
-                    session.preferred_topics.append(intent.value)
-                feedback_received.append(f"preference: {intent.value}")
+                if topic not in session.preferred_topics:
+                    session.preferred_topics.append(topic)
+                feedback_received.append(f"preference: {topic}")
 
-        elif intent.type == "category_change":
-            session.category = intent.value
-            feedback_received.append(f"category: {intent.value}")
+        elif intent_type == "category_change":
+            category = extracted_data.get("category")
+            session.category = category
+            feedback_received.append(f"category: {category}")
 
     # Check if quiz is finished
     if len(session.asked_question_ids) >= session.max_questions:
@@ -454,9 +505,9 @@ async def get_current_question(session_id: str):
     if not session.current_question_id:
         raise HTTPException(status_code=400, detail="No active question")
 
-    from quiz_shared.database.chroma_client import ChromaDBClient
-    chroma = ChromaDBClient()
-    question = chroma.get_question(session.current_question_id)
+    if not chroma_client:
+        raise HTTPException(status_code=500, detail="ChromaDB client not initialized")
+    question = chroma_client.get_question(session.current_question_id)
 
     if not question:
         raise HTTPException(status_code=500, detail="Question not found")
@@ -665,9 +716,9 @@ async def transcribe_and_submit(
             )
 
         # Get current question for context
-        from quiz_shared.database.chroma_client import ChromaDBClient
-        chroma = ChromaDBClient()
-        current_question = chroma.get_question(session.current_question_id)
+        if not chroma_client:
+            raise HTTPException(status_code=500, detail="ChromaDB client not initialized")
+        current_question = chroma_client.get_question(session.current_question_id)
         if not current_question:
             raise HTTPException(status_code=500, detail="Current question not found")
 
@@ -692,8 +743,11 @@ async def transcribe_and_submit(
 
         # Process intents (same logic as /input endpoint)
         for intent in intents:
-            if intent.type == "answer":
-                user_answer = intent.value
+            intent_type = intent.get("intent_type")
+            extracted_data = intent.get("extracted_data", {})
+
+            if intent_type == "answer":
+                user_answer = extracted_data.get("answer")
                 result, score_delta = await answer_evaluator.evaluate(
                     user_answer=user_answer,
                     question=current_question,
@@ -719,7 +773,7 @@ async def transcribe_and_submit(
 
                 feedback_received.append(f"answer: {result}")
 
-            elif intent.type == "skip":
+            elif intent_type == "skip":
                 evaluation_result = {
                     "user_answer": "skipped",
                     "result": "skipped",
@@ -728,24 +782,27 @@ async def transcribe_and_submit(
                 }
                 feedback_received.append("skipped question")
 
-            elif intent.type == "difficulty_change":
-                session.current_difficulty = intent.value
-                feedback_received.append(f"difficulty: {intent.value}")
+            elif intent_type == "difficulty_change":
+                difficulty = extracted_data.get("difficulty")
+                session.current_difficulty = difficulty
+                feedback_received.append(f"difficulty: {difficulty}")
 
-            elif intent.type == "preference_change":
-                if intent.value.startswith("-"):
-                    topic = intent.value[1:]
+            elif intent_type == "preference_change":
+                topic = extracted_data.get("topic", "")
+                if topic.startswith("-"):
+                    topic = topic[1:]
                     if topic not in session.disliked_topics:
                         session.disliked_topics.append(topic)
                     feedback_received.append(f"avoiding: {topic}")
                 else:
-                    if intent.value not in session.preferred_topics:
-                        session.preferred_topics.append(intent.value)
-                    feedback_received.append(f"preference: {intent.value}")
+                    if topic not in session.preferred_topics:
+                        session.preferred_topics.append(topic)
+                    feedback_received.append(f"preference: {topic}")
 
-            elif intent.type == "category_change":
-                session.category = intent.value
-                feedback_received.append(f"category: {intent.value}")
+            elif intent_type == "category_change":
+                category = extracted_data.get("category")
+                session.category = category
+                feedback_received.append(f"category: {category}")
 
         # Check if quiz is finished
         if len(session.asked_question_ids) >= session.max_questions:

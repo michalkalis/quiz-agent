@@ -123,6 +123,7 @@ class QuestionStorage:
         difficulty: Optional[str] = None,
         topic: Optional[str] = None,
         category: Optional[str] = None,
+        filters: Optional[dict] = None,
         limit: int = 10
     ) -> List[Question]:
         """Search questions with filters.
@@ -132,22 +133,24 @@ class QuestionStorage:
             difficulty: Filter by difficulty
             topic: Filter by topic
             category: Filter by category
+            filters: Additional filters dict (e.g., {"review_status": "approved"})
             limit: Max results
 
         Returns:
             List of matching questions
         """
-        filters = {}
+        combined_filters = filters.copy() if filters else {}
+
         if difficulty:
-            filters["difficulty"] = difficulty
+            combined_filters["difficulty"] = difficulty
         if topic:
-            filters["topic"] = topic
+            combined_filters["topic"] = topic
         if category:
-            filters["category"] = category
+            combined_filters["category"] = category
 
         return self.chroma.search_questions(
             query_text=query,
-            filters=filters,
+            filters=combined_filters,
             n_results=limit
         )
 
@@ -173,12 +176,23 @@ class QuestionStorage:
         """
         return self.chroma.delete_question(question_id)
 
-    def update_question(
+    def update_question(self, question: Question) -> bool:
+        """Update question in database.
+
+        Args:
+            question: Question object with updates
+
+        Returns:
+            True if successful
+        """
+        return self.chroma.update_question_obj(question)
+
+    def update_question_fields(
         self,
         question_id: str,
         updates: dict
     ) -> bool:
-        """Update question fields.
+        """Update specific question fields.
 
         Args:
             question_id: Question ID
@@ -188,3 +202,14 @@ class QuestionStorage:
             True if successful
         """
         return self.chroma.update_question(question_id, updates)
+
+    def get_all_questions(self, limit: int = 1000) -> List[Question]:
+        """Get all questions from database.
+
+        Args:
+            limit: Max results (default: 1000)
+
+        Returns:
+            List of all questions
+        """
+        return self.chroma.get_all_questions(limit=limit)

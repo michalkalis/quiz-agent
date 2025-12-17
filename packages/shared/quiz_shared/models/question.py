@@ -1,7 +1,7 @@
 """Question model with support for multiple question types."""
 
 from datetime import datetime
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union, Any
 from pydantic import BaseModel, Field
 
 
@@ -64,6 +64,36 @@ class Question(BaseModel):
         description="User ratings: {'user_1': 5, 'user_2': 4} (1-5 scale)"
     )
 
+    # Review workflow
+    review_status: str = Field(
+        "pending_review",
+        description="Status: pending_review | approved | rejected | needs_revision"
+    )
+    reviewed_by: Optional[str] = Field(
+        None,
+        description="Reviewer user ID"
+    )
+    reviewed_at: Optional[datetime] = Field(
+        None,
+        description="When reviewed"
+    )
+    review_notes: Optional[str] = Field(
+        None,
+        description="Reviewer feedback and notes"
+    )
+
+    # Detailed quality ratings (used during review)
+    quality_ratings: Optional[Dict[str, int]] = Field(
+        None,
+        description="Detailed ratings: {'surprise_factor': 4, 'clarity': 5, 'universal_appeal': 4, 'creativity': 5} (1-5 scale)"
+    )
+
+    # Generation metadata (for AI-generated questions)
+    generation_metadata: Optional[Dict[str, Any]] = Field(
+        None,
+        description="AI generation details: {'model': 'gpt-4o', 'temperature': 0.8, 'prompt_version': 'v2', 'stage': 'regenerate', 'ai_score': 8.5, 'ai_reasoning': '...'}"
+    )
+
     # Media (for audio/image/video types - future)
     media_url: Optional[str] = Field(None, description="URL to audio/image/video file")
     media_duration_seconds: Optional[int] = Field(
@@ -82,6 +112,26 @@ class Question(BaseModel):
         if not self.user_ratings:
             return 0.0
         return sum(self.user_ratings.values()) / len(self.user_ratings)
+
+    def calculate_quality_score(self) -> float:
+        """Calculate overall quality score from detailed quality_ratings (1-5 scale)."""
+        if not self.quality_ratings:
+            return 0.0
+        return sum(self.quality_ratings.values()) / len(self.quality_ratings)
+
+    def is_approved(self) -> bool:
+        """Check if question is approved for use in quizzes."""
+        return self.review_status == "approved"
+
+    def needs_review(self) -> bool:
+        """Check if question needs human review."""
+        return self.review_status in ["pending_review", "needs_revision"]
+
+    def get_ai_score(self) -> Optional[float]:
+        """Get AI-generated quality score if available."""
+        if self.generation_metadata and "ai_score" in self.generation_metadata:
+            return self.generation_metadata["ai_score"]
+        return None
 
     class Config:
         json_schema_extra = {

@@ -68,6 +68,7 @@ class ChromaDBClient:
                 "source": question.source,
                 "usage_count": question.usage_count,
                 "user_ratings": json.dumps(question.user_ratings),
+                "review_status": question.review_status,
             }
 
             # Add optional fields
@@ -83,6 +84,18 @@ class ChromaDBClient:
                 metadata["media_duration_seconds"] = question.media_duration_seconds
             if question.explanation:
                 metadata["explanation"] = question.explanation
+
+            # Review workflow fields
+            if question.reviewed_by:
+                metadata["reviewed_by"] = question.reviewed_by
+            if question.reviewed_at:
+                metadata["reviewed_at"] = question.reviewed_at.isoformat()
+            if question.review_notes:
+                metadata["review_notes"] = question.review_notes
+            if question.quality_ratings:
+                metadata["quality_ratings"] = json.dumps(question.quality_ratings)
+            if question.generation_metadata:
+                metadata["generation_metadata"] = json.dumps(question.generation_metadata)
 
             # Add to collection
             self.collection.add(
@@ -273,18 +286,15 @@ class ChromaDBClient:
             
             # Build where clause
             # ChromaDB requires all conditions to be wrapped in a single operator when multiple conditions exist
-            # If we have multiple top-level conditions OR excluded_ids, use $and
-            needs_and = len(top_level_conditions) > 1 or (excluded_ids and len(excluded_ids) > 0)
-            
+            # NOTE: excluded_ids cannot be filtered via where clause because ChromaDB's where only works on metadata fields
+            # The question ID is the primary ID, not a metadata field, so we filter excluded_ids in Python after retrieval
+            needs_and = len(top_level_conditions) > 1
+
             if needs_and:
                 where_clause = {"$and": []}
                 # Add all top-level conditions
                 for key, value in top_level_conditions.items():
                     where_clause["$and"].append({key: value})
-                # Add excluded IDs
-                if excluded_ids and len(excluded_ids) > 0:
-                    for qid in excluded_ids:
-                        where_clause["$and"].append({"id": {"$ne": qid}})
                 # Merge in any existing operators (shouldn't happen, but handle it)
                 where_clause.update(operators)
             elif len(top_level_conditions) == 1:
@@ -298,7 +308,14 @@ class ChromaDBClient:
             # Debug: print where clause for troubleshooting
             if where_clause:
                 print(f"DEBUG: ChromaDB where clause: {where_clause}")
-            
+
+            # Calculate how many results to fetch from ChromaDB
+            # If we have excluded_ids, fetch more to account for filtering
+            fetch_count = n_results
+            if excluded_ids and len(excluded_ids) > 0:
+                # Fetch extra to compensate for excluded IDs
+                fetch_count = n_results + len(excluded_ids)
+
             # Query ChromaDB
             try:
                 if query_text:
@@ -306,13 +323,13 @@ class ChromaDBClient:
                     results = self.collection.query(
                         query_embeddings=[query_embedding],
                         where=where_clause if where_clause else None,
-                        n_results=n_results
+                        n_results=fetch_count
                     )
                 else:
                     # No semantic search, just filter
                     results = self.collection.get(
                         where=where_clause if where_clause else None,
-                        limit=n_results
+                        limit=fetch_count
                     )
             except Exception as query_error:
                 print(f"ERROR: ChromaDB query failed with where_clause: {where_clause}")
@@ -344,6 +361,10 @@ class ChromaDBClient:
                 metadatas = []
 
             for i, qid in enumerate(ids):
+                # Filter out excluded IDs (must be done in Python since ChromaDB where clause doesn't support ID filtering)
+                if excluded_ids and qid in excluded_ids:
+                    continue
+
                 question = self._metadata_to_question(
                     qid,
                     documents[i],
@@ -423,6 +444,54 @@ class ChromaDBClient:
             print(f"Error deleting question: {e}")
             return False
 
+    def update_question_obj(self, question: Question) -> bool:
+        """Update a question object in database.
+
+        Args:
+            question: Complete Question object with updates
+
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            # Re-add question (ChromaDB upsert)
+            return self.add_question(question)
+        except Exception as e:
+            print(f"Error updating question object: {e}")
+            return False
+
+    def get_all_questions(self, limit: int = 1000) -> List[Question]:
+        """Get all questions from database.
+
+        Args:
+            limit: Max number of questions to return
+
+        Returns:
+            List of all Question objects
+        """
+        try:
+            results = self.collection.get(limit=limit)
+
+            questions = []
+            if 'ids' in results and results['ids']:
+                ids = results['ids']
+                documents = results['documents']
+                metadatas = results['metadatas']
+
+                for i, qid in enumerate(ids):
+                    question = self._metadata_to_question(
+                        qid,
+                        documents[i],
+                        metadatas[i]
+                    )
+                    questions.append(question)
+
+            return questions
+
+        except Exception as e:
+            print(f"Error getting all questions: {e}")
+            return []
+
     def _metadata_to_question(
         self,
         question_id: str,
@@ -463,6 +532,19 @@ class ChromaDBClient:
         if "alternative_answers" in metadata:
             alternative_answers = json.loads(metadata["alternative_answers"])
 
+        # Parse review workflow fields
+        quality_ratings = None
+        if "quality_ratings" in metadata:
+            quality_ratings = json.loads(metadata["quality_ratings"])
+
+        generation_metadata = None
+        if "generation_metadata" in metadata:
+            generation_metadata = json.loads(metadata["generation_metadata"])
+
+        reviewed_at = None
+        if "reviewed_at" in metadata:
+            reviewed_at = datetime.fromisoformat(metadata["reviewed_at"])
+
         return Question(
             id=question_id,
             question=question_text,
@@ -481,5 +563,11 @@ class ChromaDBClient:
             user_ratings=user_ratings,
             media_url=metadata.get("media_url"),
             media_duration_seconds=metadata.get("media_duration_seconds"),
-            explanation=metadata.get("explanation")
+            explanation=metadata.get("explanation"),
+            review_status=metadata.get("review_status", "pending_review"),
+            reviewed_by=metadata.get("reviewed_by"),
+            reviewed_at=reviewed_at,
+            review_notes=metadata.get("review_notes"),
+            quality_ratings=quality_ratings,
+            generation_metadata=generation_metadata
         )

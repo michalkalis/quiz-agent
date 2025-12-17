@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}Questions - Quiz Question Manager{% endblock %}
+
+{% block content %}
+<div class="stats">
+    <div class="stat-card">
+        <h3>Total Questions</h3>
+        <div class="value">{{ stats.total }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>Pending Review</h3>
+        <div class="value">{{ stats.pending }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>Approved</h3>
+        <div class="value">{{ stats.approved }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>Rejected</h3>
+        <div class="value">{{ stats.rejected }}</div>
+    </div>
+</div>
+
+<div class="filter-bar">
+    <div class="filter-group">
+        <label for="status">Status</label>
+        <select id="status" onchange="applyFilters()">
+            <option value="">All</option>
+            <option value="pending_review" {% if filter_status == 'pending_review' %}selected{% endif %}>Pending Review</option>
+            <option value="approved" {% if filter_status == 'approved' %}selected{% endif %}>Approved</option>
+            <option value="rejected" {% if filter_status == 'rejected' %}selected{% endif %}>Rejected</option>
+            <option value="needs_revision" {% if filter_status == 'needs_revision' %}selected{% endif %}>Needs Revision</option>
+        </select>
+    </div>
+    <div class="filter-group">
+        <label for="difficulty">Difficulty</label>
+        <select id="difficulty" onchange="applyFilters()">
+            <option value="">All</option>
+            <option value="easy" {% if filter_difficulty == 'easy' %}selected{% endif %}>Easy</option>
+            <option value="medium" {% if filter_difficulty == 'medium' %}selected{% endif %}>Medium</option>
+            <option value="hard" {% if filter_difficulty == 'hard' %}selected{% endif %}>Hard</option>
+        </select>
+    </div>
+    <div class="filter-group">
+        <label for="topic">Topic</label>
+        <input type="text" id="topic" placeholder="e.g., Science" value="{{ filter_topic or '' }}" onchange="applyFilters()">
+    </div>
+    <div class="filter-group">
+        <label>&nbsp;</label>
+        <button class="btn" onclick="clearFilters()">Clear Filters</button>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Questions ({{ questions|length }})</h2>
+
+    {% if questions %}
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 50%">Question</th>
+                <th>Answer</th>
+                <th>Topic</th>
+                <th>Difficulty</th>
+                <th>Status</th>
+                <th>Quality</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for q in questions %}
+            <tr>
+                <td>{{ q.question }}</td>
+                <td>{{ q.correct_answer }}</td>
+                <td>{{ q.topic }}</td>
+                <td>{{ q.difficulty }}</td>
+                <td>
+                    {% if q.review_status == 'pending_review' %}
+                        <span class="badge pending">Pending</span>
+                    {% elif q.review_status == 'approved' %}
+                        <span class="badge approved">Approved</span>
+                    {% elif q.review_status == 'rejected' %}
+                        <span class="badge rejected">Rejected</span>
+                    {% elif q.review_status == 'needs_revision' %}
+                        <span class="badge needs-revision">Needs Revision</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if q.quality_score %}
+                        {{ "%.1f"|format(q.quality_score) }}/5.0
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>
+                    {% if q.review_status == 'pending_review' or q.review_status == 'needs_revision' %}
+                        <a href="/web/review/{{ q.id }}" class="btn btn-success" style="padding: 6px 12px; font-size: 12px;">Review</a>
+                    {% endif %}
+                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="viewDetails('{{ q.id }}')">View</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+        </svg>
+        <h3>No questions found</h3>
+        <p>Import some questions or adjust your filters</p>
+        <br>
+        <a href="/web/import" class="btn">Import Questions</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function applyFilters() {
+    const status = document.getElementById('status').value;
+    const difficulty = document.getElementById('difficulty').value;
+    const topic = document.getElementById('topic').value;
+
+    const params = new URLSearchParams();
+    if (status) params.append('status', status);
+    if (difficulty) params.append('difficulty', difficulty);
+    if (topic) params.append('topic', topic);
+
+    window.location.href = '/web?' + params.toString();
+}
+
+function clearFilters() {
+    window.location.href = '/web';
+}
+
+function viewDetails(questionId) {
+    alert('View details for question: ' + questionId + '\n\nDetailed view coming soon!');
+}
+</script>
+{% endblock %}

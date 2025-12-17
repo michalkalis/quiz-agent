@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Review Questions - Quiz Question Manager{% endblock %}
+
+{% block content %}
+{% if question %}
+<div class="card">
+    <h2>Review Question</h2>
+    <p style="color: #7f8c8d;">Question {{ current_index }} of {{ total_pending }}</p>
+
+    <div style="background: #f8f9fa; padding: 20px; border-radius: 4px; margin: 20px 0;">
+        <h3 style="margin-bottom: 15px;">{{ question.question }}</h3>
+        <p><strong>Answer:</strong> {{ question.correct_answer }}</p>
+        {% if question.alternative_answers %}
+        <p><strong>Alternative answers:</strong> {{ question.alternative_answers|join(', ') }}</p>
+        {% endif %}
+        <p><strong>Topic:</strong> {{ question.topic }} | <strong>Difficulty:</strong> {{ question.difficulty }}</p>
+        {% if question.generation_metadata and question.generation_metadata.get('ai_score') %}
+        <p><strong>AI Score:</strong> {{ question.generation_metadata.ai_score }}/10</p>
+        {% endif %}
+    </div>
+
+    <form method="POST" action="/web/review/{{ question.id }}">
+        <div class="form-group">
+            <label>Surprise Factor (1-5)</label>
+            <input type="range" id="surprise_factor" name="surprise_factor" min="1" max="5" value="3" oninput="updateValue('surprise', this.value)">
+            <span id="surprise_value">3</span>
+        </div>
+
+        <div class="form-group">
+            <label>Clarity (1-5)</label>
+            <input type="range" id="clarity" name="clarity" min="1" max="5" value="3" oninput="updateValue('clarity', this.value)">
+            <span id="clarity_value">3</span>
+        </div>
+
+        <div class="form-group">
+            <label>Universal Appeal (1-5)</label>
+            <input type="range" id="universal_appeal" name="universal_appeal" min="1" max="5" value="3" oninput="updateValue('universal', this.value)">
+            <span id="universal_value">3</span>
+        </div>
+
+        <div class="form-group">
+            <label>Creativity (1-5)</label>
+            <input type="range" id="creativity" name="creativity" min="1" max="5" value="3" oninput="updateValue('creativity', this.value)">
+            <span id="creativity_value">3</span>
+        </div>
+
+        <div class="form-group">
+            <label>Overall Quality Score</label>
+            <div id="overall_score" style="font-size: 24px; font-weight: bold; color: #2c3e50;">3.0 / 5.0</div>
+        </div>
+
+        <div class="form-group">
+            <label for="review_notes">Notes (Optional)</label>
+            <textarea id="review_notes" name="review_notes" rows="3" placeholder="Add any feedback or notes about this question..."></textarea>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 30px;">
+            <button type="submit" name="status" value="approved" class="btn btn-success">Approve</button>
+            <button type="submit" name="status" value="needs_revision" class="btn" style="background: #a29bfe;">Needs Revision</button>
+            <button type="submit" name="status" value="rejected" class="btn btn-danger">Reject</button>
+            <a href="/web/review" class="btn btn-secondary">Skip</a>
+        </div>
+    </form>
+</div>
+{% else %}
+<div class="card">
+    <div class="empty-state">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <h3>No questions to review!</h3>
+        <p>All questions have been reviewed. Great job!</p>
+        <br>
+        <a href="/web" class="btn">View All Questions</a>
+        <a href="/web/import" class="btn" style="background: #27ae60;">Import More Questions</a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function updateValue(name, value) {
+    document.getElementById(name + '_value').textContent = value;
+    calculateOverall();
+}
+
+function calculateOverall() {
+    const surprise = parseInt(document.getElementById('surprise_factor').value);
+    const clarity = parseInt(document.getElementById('clarity').value);
+    const universal = parseInt(document.getElementById('universal_appeal').value);
+    const creativity = parseInt(document.getElementById('creativity').value);
+
+    const average = (surprise + clarity + universal + creativity) / 4;
+    document.getElementById('overall_score').textContent = average.toFixed(1) + ' / 5.0';
+
+    // Color based on score
+    const scoreElement = document.getElementById('overall_score');
+    if (average >= 4.0) {
+        scoreElement.style.color = '#27ae60';
+    } else if (average >= 3.0) {
+        scoreElement.style.color = '#f39c12';
+    } else {
+        scoreElement.style.color = '#e74c3c';
+    }
+}
+
+// Initialize
+calculateOverall();
+</script>
+{% endblock %}

@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Import Questions - Quiz Question Manager{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Import Questions from ChatGPT</h2>
+    <p style="color: #7f8c8d; margin-bottom: 20px;">
+        Paste the JSON output from ChatGPT below. Questions will be imported with status "pending_review".
+    </p>
+
+    {% if message %}
+    <div class="alert alert-{{ message_type }}">
+        {{ message }}
+    </div>
+    {% endif %}
+
+    <form method="POST" action="/web/import">
+        <div class="form-group">
+            <label for="json_data">ChatGPT JSON Output</label>
+            <textarea id="json_data" name="json_data" rows="15" placeholder='{
+  "questions": [
+    {
+      "question": "Which animal has cube-shaped feces?",
+      "correct_answer": "Wombat",
+      "alternative_answers": ["wombat"],
+      "topic": "Biology",
+      "difficulty": "medium",
+      "tags": ["animals", "biology"]
+    }
+  ]
+}' required></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="source">Source</label>
+            <input type="text" id="source" name="source" value="chatgpt" placeholder="e.g., chatgpt, manual">
+        </div>
+
+        <div class="form-group">
+            <label>
+                <input type="checkbox" name="skip_duplicates" value="true" checked>
+                Skip duplicate questions (similarity ≥ 85%)
+            </label>
+        </div>
+
+        <button type="submit" class="btn btn-success">Import Questions</button>
+        <a href="/web" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+
+<div class="card">
+    <h2>How to Generate Questions with ChatGPT</h2>
+    <ol style="line-height: 2; color: #555;">
+        <li>Open ChatGPT app</li>
+        <li>Use the prompt from <code>CHATGPT_GENERATION_GUIDE.md</code></li>
+        <li>Copy the JSON response</li>
+        <li>Paste it above and click "Import Questions"</li>
+        <li>Review imported questions in the <a href="/web/review">Review</a> page</li>
+    </ol>
+
+    <p style="margin-top: 20px;">
+        <a href="/api/v1/export/chatgpt?count=10&difficulty=medium" target="_blank" class="btn">
+            Get ChatGPT Prompt
+        </a>
+    </p>
+</div>
+
+<div class="card">
+    <h2>Generate with API (Advanced)</h2>
+    <p style="color: #7f8c8d; margin-bottom: 15px;">
+        Use the advanced generation pipeline with Best-of-N selection:
+    </p>
+    <pre style="background: #f8f9fa; padding: 15px; border-radius: 4px; overflow-x: auto;"><code>curl -X POST http://localhost:8001/api/v1/generate/advanced \
+  -H "Content-Type: application/json" \
+  -d '{
+    "count": 10,
+    "difficulty": "medium",
+    "topics": ["science", "history"],
+    "enable_best_of_n": true,
+    "n_multiplier": 3
+  }'</code></pre>
+    <p style="margin-top: 15px; font-size: 14px; color: #7f8c8d;">
+        This will generate 30 questions, critique each with AI judge, and return the best 10.
+    </p>
+</div>
+{% endblock %}

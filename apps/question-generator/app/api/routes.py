@@ -14,14 +14,23 @@ from .schemas import (
     GenerateRequest, GenerateResponse, QuestionResponse,
     ImportRequest, ImportResponse,
     ApproveRequest, ApproveResponse,
-    SearchResponse, DuplicatesResponse, DuplicateInfo
+    SearchResponse, DuplicatesResponse, DuplicateInfo,
+    AdvancedGenerateRequest, AdvancedGenerateResponse, AdvancedQuestionResponse,
+    ReviewRequest, ReviewResponse, PendingReviewResponse, ReviewStats
 )
 from ..generation.generator import QuestionGenerator
+from ..generation.advanced_generator import AdvancedQuestionGenerator
 from ..generation.storage import QuestionStorage
 
 
 # Initialize services
 generator = QuestionGenerator()
+advanced_generator = AdvancedQuestionGenerator(
+    generation_model="gpt-4o",
+    critique_model="gpt-4o-mini",
+    generation_temperature=0.8,
+    critique_temperature=0.3
+)
 storage = QuestionStorage()
 
 # Create router
@@ -64,6 +73,67 @@ async def generate_questions(request: GenerateRequest):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Generation failed: {str(e)}")
+
+
+@router.post("/generate/advanced", response_model=AdvancedGenerateResponse)
+async def generate_questions_advanced(request: AdvancedGenerateRequest):
+    """Generate quiz questions using advanced multi-stage pipeline.
+
+    Pipeline:
+    1. Generate N x count questions with Chain of Thought reasoning
+    2. Critique each question with LLM judge
+    3. Select top-scoring questions
+    4. Store as pending_review
+
+    Args:
+        request: Advanced generation parameters
+
+    Returns:
+        Generated questions with quality metadata and statistics
+    """
+    start_time = time.time()
+
+    try:
+        questions = await advanced_generator.generate_questions(
+            count=request.count,
+            difficulty=request.difficulty,
+            topics=request.topics,
+            categories=request.categories,
+            question_type=request.type,
+            excluded_topics=request.excluded_topics,
+            enable_best_of_n=request.enable_best_of_n,
+            n_multiplier=request.n_multiplier,
+            min_quality_score=request.min_quality_score,
+        )
+
+        # Convert to response format
+        question_responses = [
+            _question_to_advanced_response(q) for q in questions
+        ]
+
+        generation_time = time.time() - start_time
+
+        # Calculate statistics
+        total_generated = request.count * request.n_multiplier if request.enable_best_of_n else request.count
+        ai_scores = [q.get_ai_score() for q in questions if q.get_ai_score() is not None]
+        avg_ai_score = sum(ai_scores) / len(ai_scores) if ai_scores else None
+
+        stats = {
+            "generated_count": total_generated,
+            "selected_count": len(questions),
+            "avg_ai_score": round(avg_ai_score, 2) if avg_ai_score else None,
+            "min_ai_score": round(min(ai_scores), 2) if ai_scores else None,
+            "max_ai_score": round(max(ai_scores), 2) if ai_scores else None,
+        }
+
+        return AdvancedGenerateResponse(
+            questions=question_responses,
+            generation_time_seconds=round(generation_time, 2),
+            stats=stats
+        )
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Advanced generation failed: {str(e)}")
 
 
 @router.post("/import", response_model=ImportResponse)
@@ -289,6 +359,115 @@ async def export_chatgpt_prompt(
     return {"prompt": prompt}
 
 
+# Review Workflow Endpoints
+
+@router.get("/reviews/pending", response_model=PendingReviewResponse)
+async def list_pending_reviews(limit: int = 50, offset: int = 0):
+    """List questions pending review.
+
+    Args:
+        limit: Max results
+        offset: Pagination offset
+
+    Returns:
+        Questions with status pending_review or needs_revision
+    """
+    try:
+        # Search for pending questions
+        pending_questions = storage.search_questions(
+            query=None,
+            filters={"review_status": "pending_review"},
+            limit=limit
+        )
+
+        question_responses = [
+            _question_to_advanced_response(q) for q in pending_questions
+        ]
+
+        return PendingReviewResponse(
+            questions=question_responses,
+            total=len(pending_questions)
+        )
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to list pending reviews: {str(e)}")
+
+
+@router.post("/reviews/submit", response_model=ReviewResponse)
+async def submit_review(request: ReviewRequest):
+    """Submit a review for a question (approve/reject/needs revision).
+
+    Args:
+        request: Review data with ratings and status
+
+    Returns:
+        Review confirmation
+    """
+    try:
+        from datetime import datetime
+
+        # Get question
+        question = storage.get_question(request.question_id)
+
+        if not question:
+            raise HTTPException(status_code=404, detail="Question not found")
+
+        # Update review fields
+        question.review_status = request.status
+        question.reviewed_by = request.reviewer_id
+        question.reviewed_at = datetime.now()
+        question.review_notes = request.review_notes
+        question.quality_ratings = request.quality_ratings
+
+        # Save updated question
+        storage.update_question(question)
+
+        return ReviewResponse(
+            question_id=request.question_id,
+            status=request.status,
+            message=f"Question {request.status}"
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Review submission failed: {str(e)}")
+
+
+@router.get("/reviews/stats", response_model=ReviewStats)
+async def get_review_stats():
+    """Get statistics about review workflow.
+
+    Returns:
+        Counts of questions by review status
+    """
+    try:
+        # Get all questions
+        all_questions = storage.get_all_questions()
+
+        # Count by status
+        pending = sum(1 for q in all_questions if q.review_status == "pending_review")
+        approved = sum(1 for q in all_questions if q.review_status == "approved")
+        rejected = sum(1 for q in all_questions if q.review_status == "rejected")
+        needs_revision = sum(1 for q in all_questions if q.review_status == "needs_revision")
+
+        # Calculate average quality score for approved questions
+        approved_questions = [q for q in all_questions if q.review_status == "approved"]
+        quality_scores = [q.calculate_quality_score() for q in approved_questions if q.quality_ratings]
+        avg_quality = sum(quality_scores) / len(quality_scores) if quality_scores else None
+
+        return ReviewStats(
+            pending_review=pending,
+            approved=approved,
+            rejected=rejected,
+            needs_revision=needs_revision,
+            avg_quality_score=round(avg_quality, 2) if avg_quality else None
+        )
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get stats: {str(e)}")
+
+
 # Helper functions
 
 def _question_to_response(question: Question) -> QuestionResponse:
@@ -305,6 +484,26 @@ def _question_to_response(question: Question) -> QuestionResponse:
         alternative_answers=question.alternative_answers,
         tags=question.tags,
         quality_score=question.calculate_avg_rating() if question.user_ratings else None
+    )
+
+
+def _question_to_advanced_response(question: Question) -> AdvancedQuestionResponse:
+    """Convert Question model to Advanced API response with review metadata."""
+    return AdvancedQuestionResponse(
+        id=question.id,
+        question=question.question,
+        type=question.type,
+        correct_answer=question.correct_answer if isinstance(question.correct_answer, str) else str(question.correct_answer),
+        topic=question.topic,
+        category=question.category,
+        difficulty=question.difficulty,
+        possible_answers=question.possible_answers,
+        alternative_answers=question.alternative_answers,
+        tags=question.tags,
+        quality_score=question.calculate_avg_rating() if question.user_ratings else None,
+        review_status=question.review_status,
+        quality_ratings=question.quality_ratings,
+        generation_metadata=question.generation_metadata
     )
 
 

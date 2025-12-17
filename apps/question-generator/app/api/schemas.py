@@ -77,3 +77,71 @@ class DuplicatesResponse(BaseModel):
     """Response from duplicates check."""
     duplicates: List[DuplicateInfo]
     is_duplicate: bool
+
+
+# Advanced Generation Schemas
+
+class AdvancedGenerateRequest(BaseModel):
+    """Request to generate questions using advanced pipeline."""
+    count: int = Field(10, ge=1, le=50, description="Number of questions to return (1-50)")
+    difficulty: str = Field("medium", description="easy, medium, or hard")
+    topics: Optional[List[str]] = Field(None, description="Preferred topics")
+    categories: Optional[List[str]] = Field(None, description="Categories (adults, children, etc.)")
+    type: str = Field("text", description="text or text_multichoice")
+    excluded_topics: Optional[List[str]] = Field(None, description="Topics to avoid")
+    enable_best_of_n: bool = Field(True, description="Use Best-of-N selection")
+    n_multiplier: int = Field(3, ge=1, le=5, description="Generate this many times count")
+    min_quality_score: float = Field(7.0, ge=0.0, le=10.0, description="Minimum quality score")
+
+
+class AdvancedQuestionResponse(QuestionResponse):
+    """Response with question data including quality metadata."""
+    review_status: str
+    quality_ratings: Optional[Dict[str, int]] = None
+    generation_metadata: Optional[Dict[str, Any]] = None
+
+
+class AdvancedGenerateResponse(BaseModel):
+    """Response from advanced generate endpoint."""
+    questions: List[AdvancedQuestionResponse]
+    generation_time_seconds: float
+    stats: Dict[str, Any] = Field(
+        ...,
+        description="Generation statistics: generated_count, selected_count, avg_score, etc."
+    )
+
+
+# Review Workflow Schemas
+
+class ReviewRequest(BaseModel):
+    """Request to review (approve/reject) a question."""
+    question_id: str
+    status: str = Field(..., description="approved | rejected | needs_revision")
+    quality_ratings: Dict[str, int] = Field(
+        ...,
+        description="Ratings: surprise_factor, clarity, universal_appeal, creativity (1-5)"
+    )
+    review_notes: Optional[str] = Field(None, description="Reviewer feedback")
+    reviewer_id: str = Field("admin", description="Reviewer user ID")
+
+
+class ReviewResponse(BaseModel):
+    """Response from review endpoint."""
+    question_id: str
+    status: str
+    message: str
+
+
+class PendingReviewResponse(BaseModel):
+    """Response from list pending reviews endpoint."""
+    questions: List[AdvancedQuestionResponse]
+    total: int
+
+
+class ReviewStats(BaseModel):
+    """Statistics about review workflow."""
+    pending_review: int
+    approved: int
+    rejected: int
+    needs_revision: int
+    avg_quality_score: Optional[float] = None

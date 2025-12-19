@@ -47,9 +47,10 @@ async def home(
         limit=1000
     )
 
-    # Add quality_score to each question
+    # Calculate quality scores separately (Pydantic models don't allow arbitrary attributes)
+    quality_scores = {}
     for q in questions:
-        q.quality_score = q.calculate_quality_score() if q.quality_ratings else None
+        quality_scores[q.id] = q.calculate_quality_score() if q.quality_ratings else None
 
     # Get stats
     all_questions = storage.get_all_questions(limit=2000)
@@ -63,6 +64,7 @@ async def home(
     return templates.TemplateResponse("home.html", {
         "request": request,
         "questions": questions,
+        "quality_scores": quality_scores,
         "stats": stats,
         "filter_status": status,
         "filter_difficulty": difficulty,

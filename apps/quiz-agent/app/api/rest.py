@@ -30,7 +30,7 @@ from ..voice.transcriber import VoiceTranscriber
 class CreateSessionRequest(BaseModel):
     """Request to create a new quiz session."""
     max_questions: int = Field(default=10, ge=1, le=50, description="Number of questions")
-    difficulty: str = Field(default="medium", pattern="^(easy|medium|hard)$")
+    difficulty: str = Field(default="medium", pattern="^(easy|medium|hard|random)$", description="Difficulty level or 'random' for varying difficulty per question")
     user_id: Optional[str] = None
     mode: str = Field(default="single", pattern="^(single|multiplayer)$")
     category: Optional[str] = Field(default=None, description="Category filter")

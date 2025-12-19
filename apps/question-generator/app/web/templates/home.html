@@ -87,8 +87,8 @@
                     {% endif %}
                 </td>
                 <td>
-                    {% if q.quality_score %}
-                        {{ "%.1f"|format(q.quality_score) }}/5.0
+                    {% if quality_scores.get(q.id) %}
+                        {{ "%.1f"|format(quality_scores[q.id]) }}/5.0
                     {% else %}
                         -
                     {% endif %}

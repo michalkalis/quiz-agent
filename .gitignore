@@ -63,6 +63,8 @@ langsmith_cache/
 
 # Runtime data (vector DB, generated files)
 **/data/
+chroma_data/
+**/chroma_data/
 
 # Logs
 *.log

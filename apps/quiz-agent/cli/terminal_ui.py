@@ -146,14 +146,13 @@ Welcome to the AI-powered quiz experience!
             # Show current settings
             self.console.print("[bold cyan]Starting Quiz[/bold cyan]\n")
             self.show_settings()
-            
-            # Use random difficulty if selected
+
+            # Keep difficulty as-is (including "random" which will vary per question)
             difficulty = self.quiz_settings["difficulty"]
+            difficulty_display = difficulty
             if difficulty == "random":
-                import random
-                difficulty = random.choice(["easy", "medium", "hard"])
-                self.console.print(f"[dim]Selected random difficulty: {difficulty}[/dim]\n")
-            
+                difficulty_display = "random (varies per question)"
+
             # Create session
             with Progress(
                 SpinnerColumn(),
@@ -170,7 +169,7 @@ Welcome to the AI-powered quiz experience!
                 )
 
             self.console.print(f"✅ [green]Session created: {self.client.session_id}[/green]")
-            self.console.print(f"📝 Questions: {self.quiz_settings['num_questions']} | Difficulty: {difficulty}\n")
+            self.console.print(f"📝 Questions: {self.quiz_settings['num_questions']} | Difficulty: {difficulty_display}\n")
 
             # Start quiz
             with Progress(

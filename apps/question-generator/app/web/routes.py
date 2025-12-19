@@ -199,6 +199,24 @@ async def submit_review(
     if not question:
         return RedirectResponse(url="/web/review", status_code=302)
 
+    # Get next pending question BEFORE updating this one
+    # This ensures we get the next question in the queue
+    all_pending = storage.search_questions(
+        filters={"review_status": "pending_review"},
+        limit=1000
+    )
+
+    # Find next question after current one
+    next_question = None
+    for i, q in enumerate(all_pending):
+        if q.id == question_id and i + 1 < len(all_pending):
+            next_question = all_pending[i + 1]
+            break
+
+    # If current question is last or not found, use first pending (excluding current)
+    if not next_question:
+        next_question = next((q for q in all_pending if q.id != question_id), None)
+
     # Update review fields
     question.review_status = status
     question.reviewed_by = "admin"  # TODO: Get from auth
@@ -214,8 +232,11 @@ async def submit_review(
     # Save
     storage.update_question(question)
 
-    # Redirect to next pending question
-    return RedirectResponse(url="/web/review", status_code=302)
+    # Redirect to next pending question or back to review page if none left
+    if next_question:
+        return RedirectResponse(url=f"/web/review/{next_question.id}", status_code=303)
+    else:
+        return RedirectResponse(url="/web/review", status_code=303)
 
 
 @router.get("/stats", response_class=HTMLResponse)

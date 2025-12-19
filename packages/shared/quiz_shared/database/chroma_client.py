@@ -454,10 +454,63 @@ class ChromaDBClient:
             True if successful, False otherwise
         """
         try:
-            # Re-add question (ChromaDB upsert)
-            return self.add_question(question)
+            # Generate embedding for question text
+            embedding = generate_embedding(question.question)
+
+            # Prepare metadata (all fields except question text)
+            metadata = {
+                "type": question.type,
+                "correct_answer": question.correct_answer if isinstance(question.correct_answer, str) else json.dumps(question.correct_answer),
+                "topic": question.topic,
+                "category": question.category,
+                "difficulty": question.difficulty,
+                "tags": json.dumps(question.tags),
+                "created_at": question.created_at.isoformat(),
+                "source": question.source,
+                "usage_count": question.usage_count,
+                "user_ratings": json.dumps(question.user_ratings),
+                "review_status": question.review_status,
+            }
+
+            # Add optional fields
+            if question.possible_answers:
+                metadata["possible_answers"] = json.dumps(question.possible_answers)
+            if question.alternative_answers:
+                metadata["alternative_answers"] = json.dumps(question.alternative_answers)
+            if question.created_by:
+                metadata["created_by"] = question.created_by
+            if question.media_url:
+                metadata["media_url"] = question.media_url
+            if question.media_duration_seconds:
+                metadata["media_duration_seconds"] = question.media_duration_seconds
+            if question.explanation:
+                metadata["explanation"] = question.explanation
+
+            # Review workflow fields
+            if question.reviewed_by:
+                metadata["reviewed_by"] = question.reviewed_by
+            if question.reviewed_at:
+                metadata["reviewed_at"] = question.reviewed_at.isoformat()
+            if question.review_notes:
+                metadata["review_notes"] = question.review_notes
+            if question.quality_ratings:
+                metadata["quality_ratings"] = json.dumps(question.quality_ratings)
+            if question.generation_metadata:
+                metadata["generation_metadata"] = json.dumps(question.generation_metadata)
+
+            # Use upsert to update existing question
+            self.collection.upsert(
+                ids=[question.id],
+                documents=[question.question],
+                metadatas=[metadata],
+                embeddings=[embedding]
+            )
+
+            return True
         except Exception as e:
             print(f"Error updating question object: {e}")
+            import traceback
+            traceback.print_exc()
             return False
 
     def get_all_questions(self, limit: int = 1000) -> List[Question]:

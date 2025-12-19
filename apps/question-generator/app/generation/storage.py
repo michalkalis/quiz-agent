@@ -20,7 +20,14 @@ class QuestionStorage:
         Args:
             chroma_client: ChromaDB client (or create default)
         """
-        self.chroma = chroma_client or ChromaDBClient()
+        if chroma_client is None:
+            # Use absolute path to project root's chroma_data directory
+            # This ensures all components use the same database
+            project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../.."))
+            chroma_path = os.path.join(project_root, "chroma_data")
+            chroma_client = ChromaDBClient(persist_directory=chroma_path)
+
+        self.chroma = chroma_client
 
     def check_duplicates(
         self,

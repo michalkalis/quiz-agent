@@ -107,6 +107,12 @@ class Question(BaseModel):
         description="Optional educational context or explanation"
     )
 
+    # Embedding cache (for performance optimization)
+    embedding: Optional[List[float]] = Field(
+        None,
+        description="Cached embedding vector (1536-dim for text-embedding-3-small)"
+    )
+
     def calculate_avg_rating(self) -> float:
         """Calculate average rating from user_ratings dict."""
         if not self.user_ratings:

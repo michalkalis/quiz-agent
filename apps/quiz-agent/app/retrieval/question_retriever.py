@@ -373,13 +373,21 @@ class QuestionRetriever:
         Returns:
             Diversity score (0.0 to 1.0, higher is more diverse)
         """
-        # Generate embedding for candidate
-        candidate_embedding = generate_embedding(candidate.question)
+        # Use cached embedding if available, otherwise generate
+        if candidate.embedding is not None:
+            candidate_embedding = candidate.embedding
+        else:
+            candidate_embedding = generate_embedding(candidate.question)
 
         # Calculate average distance from recent questions
         distances = []
         for recent_q in recent_questions:
-            recent_embedding = generate_embedding(recent_q.question)
+            # Use cached embedding if available, otherwise generate
+            if recent_q.embedding is not None:
+                recent_embedding = recent_q.embedding
+            else:
+                recent_embedding = generate_embedding(recent_q.question)
+
             similarity = calculate_similarity(candidate_embedding, recent_embedding)
             # Distance = 1 - similarity (higher distance = more diverse)
             distance = 1.0 - similarity

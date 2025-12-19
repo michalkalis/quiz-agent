@@ -121,21 +121,33 @@ class ChromaDBClient:
             Question object or None if not found
         """
         try:
-            result = self.collection.get(ids=[question_id])
+            result = self.collection.get(
+                ids=[question_id],
+                include=["embeddings", "documents", "metadatas"]
+            )
 
             if not result['ids']:
                 return None
+
+            # Extract embedding if available
+            embedding = None
+            if 'embeddings' in result and result['embeddings'] is not None:
+                if len(result['embeddings']) > 0 and result['embeddings'][0] is not None:
+                    embedding = result['embeddings'][0]
 
             # Reconstruct Question object
             metadata = result['metadatas'][0]
             return self._metadata_to_question(
                 question_id,
                 result['documents'][0],
-                metadata
+                metadata,
+                embedding=embedding
             )
 
         except Exception as e:
             print(f"Error getting question: {e}")
+            import traceback
+            traceback.print_exc()
             return None
 
     def count_questions(self, filters: Optional[Dict[str, Any]] = None) -> int:
@@ -323,13 +335,15 @@ class ChromaDBClient:
                     results = self.collection.query(
                         query_embeddings=[query_embedding],
                         where=where_clause if where_clause else None,
-                        n_results=fetch_count
+                        n_results=fetch_count,
+                        include=["embeddings", "documents", "metadatas"]
                     )
                 else:
                     # No semantic search, just filter
                     results = self.collection.get(
                         where=where_clause if where_clause else None,
-                        limit=fetch_count
+                        limit=fetch_count,
+                        include=["embeddings", "documents", "metadatas"]
                     )
             except Exception as query_error:
                 print(f"ERROR: ChromaDB query failed with where_clause: {where_clause}")
@@ -341,8 +355,8 @@ class ChromaDBClient:
             # Convert to Question objects
             questions = []
             # Handle different result structures:
-            # - query() returns: {'ids': [[...]], 'documents': [[...]]} (nested)
-            # - get() returns: {'ids': [...], 'documents': [...]} (flat)
+            # - query() returns: {'ids': [[...]], 'documents': [[...]], 'embeddings': [[...]]} (nested)
+            # - get() returns: {'ids': [...], 'documents': [...], 'embeddings': [...]} (flat)
             if 'ids' in results and results['ids']:
                 # Check if nested (query) or flat (get)
                 if isinstance(results['ids'][0], list):
@@ -350,15 +364,18 @@ class ChromaDBClient:
                     ids = results['ids'][0]
                     documents = results['documents'][0]
                     metadatas = results['metadatas'][0]
+                    embeddings = results['embeddings'][0] if 'embeddings' in results and results['embeddings'] else [None] * len(ids)
                 else:
                     # Flat structure from get()
                     ids = results['ids']
                     documents = results['documents']
                     metadatas = results['metadatas']
+                    embeddings = results['embeddings'] if 'embeddings' in results else [None] * len(ids)
             else:
                 ids = []
                 documents = []
                 metadatas = []
+                embeddings = []
 
             for i, qid in enumerate(ids):
                 # Filter out excluded IDs (must be done in Python since ChromaDB where clause doesn't support ID filtering)
@@ -368,7 +385,8 @@ class ChromaDBClient:
                 question = self._metadata_to_question(
                     qid,
                     documents[i],
-                    metadatas[i]
+                    metadatas[i],
+                    embedding=embeddings[i] if i < len(embeddings) else None
                 )
                 questions.append(question)
 
@@ -549,7 +567,8 @@ class ChromaDBClient:
         self,
         question_id: str,
         question_text: str,
-        metadata: Dict[str, Any]
+        metadata: Dict[str, Any],
+        embedding: Optional[List[float]] = None
     ) -> Question:
         """Convert ChromaDB metadata back to Question object.
 
@@ -557,6 +576,7 @@ class ChromaDBClient:
             question_id: Question ID
             question_text: Question text
             metadata: Metadata dict from ChromaDB
+            embedding: Optional cached embedding vector
 
         Returns:
             Question object
@@ -622,5 +642,6 @@ class ChromaDBClient:
             reviewed_at=reviewed_at,
             review_notes=metadata.get("review_notes"),
             quality_ratings=quality_ratings,
-            generation_metadata=generation_metadata
+            generation_metadata=generation_metadata,
+            embedding=embedding
         )

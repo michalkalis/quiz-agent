@@ -96,6 +96,8 @@
                 <td>
                     {% if q.review_status == 'pending_review' or q.review_status == 'needs_revision' %}
                         <a href="/web/review/{{ q.id }}" class="btn btn-success" style="padding: 6px 12px; font-size: 12px;">Review</a>
+                    {% else %}
+                        <a href="/web/review/{{ q.id }}" class="btn" style="padding: 6px 12px; font-size: 12px; background: #95a5a6;">Re-review</a>
                     {% endif %}
                     <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="viewDetails('{{ q.id }}')">View</button>
                 </td>

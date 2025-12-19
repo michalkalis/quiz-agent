@@ -6,7 +6,24 @@
 {% if question %}
 <div class="card">
     <h2>Review Question</h2>
+    {% if total_pending and current_index %}
     <p style="color: #7f8c8d;">Question {{ current_index }} of {{ total_pending }}</p>
+    {% endif %}
+
+    {% if question.review_status != 'pending_review' %}
+    <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; margin: 15px 0; border-radius: 4px;">
+        <strong>Re-reviewing:</strong> This question was previously
+        {% if question.review_status == 'approved' %}
+            <span style="color: #27ae60;">approved</span>
+        {% elif question.review_status == 'rejected' %}
+            <span style="color: #e74c3c;">rejected</span>
+        {% elif question.review_status == 'needs_revision' %}
+            <span style="color: #a29bfe;">marked for revision</span>
+        {% endif %}
+        {% if question.reviewed_by %}by {{ question.reviewed_by }}{% endif %}
+        {% if question.reviewed_at %}on {{ question.reviewed_at.strftime('%Y-%m-%d %H:%M') }}{% endif %}
+    </div>
+    {% endif %}
 
     <div style="background: #f8f9fa; padding: 20px; border-radius: 4px; margin: 20px 0;">
         <h3 style="margin-bottom: 15px;">{{ question.question }}</h3>
@@ -21,38 +38,43 @@
     </div>
 
     <form method="POST" action="/web/review/{{ question.id }}">
+        {% set surprise = question.quality_ratings.surprise_factor if question.quality_ratings else 3 %}
+        {% set clarity = question.quality_ratings.clarity if question.quality_ratings else 3 %}
+        {% set universal = question.quality_ratings.universal_appeal if question.quality_ratings else 3 %}
+        {% set creativity = question.quality_ratings.creativity if question.quality_ratings else 3 %}
+
         <div class="form-group">
             <label>Surprise Factor (1-5)</label>
-            <input type="range" id="surprise_factor" name="surprise_factor" min="1" max="5" value="3" oninput="updateValue('surprise', this.value)">
-            <span id="surprise_value">3</span>
+            <input type="range" id="surprise_factor" name="surprise_factor" min="1" max="5" value="{{ surprise }}" oninput="updateValue('surprise', this.value)">
+            <span id="surprise_value">{{ surprise }}</span>
         </div>
 
         <div class="form-group">
             <label>Clarity (1-5)</label>
-            <input type="range" id="clarity" name="clarity" min="1" max="5" value="3" oninput="updateValue('clarity', this.value)">
-            <span id="clarity_value">3</span>
+            <input type="range" id="clarity" name="clarity" min="1" max="5" value="{{ clarity }}" oninput="updateValue('clarity', this.value)">
+            <span id="clarity_value">{{ clarity }}</span>
         </div>
 
         <div class="form-group">
             <label>Universal Appeal (1-5)</label>
-            <input type="range" id="universal_appeal" name="universal_appeal" min="1" max="5" value="3" oninput="updateValue('universal', this.value)">
-            <span id="universal_value">3</span>
+            <input type="range" id="universal_appeal" name="universal_appeal" min="1" max="5" value="{{ universal }}" oninput="updateValue('universal', this.value)">
+            <span id="universal_value">{{ universal }}</span>
         </div>
 
         <div class="form-group">
             <label>Creativity (1-5)</label>
-            <input type="range" id="creativity" name="creativity" min="1" max="5" value="3" oninput="updateValue('creativity', this.value)">
-            <span id="creativity_value">3</span>
+            <input type="range" id="creativity" name="creativity" min="1" max="5" value="{{ creativity }}" oninput="updateValue('creativity', this.value)">
+            <span id="creativity_value">{{ creativity }}</span>
         </div>
 
         <div class="form-group">
             <label>Overall Quality Score</label>
-            <div id="overall_score" style="font-size: 24px; font-weight: bold; color: #2c3e50;">3.0 / 5.0</div>
+            <div id="overall_score" style="font-size: 24px; font-weight: bold; color: #2c3e50;">{{ ((surprise + clarity + universal + creativity) / 4)|round(1) }} / 5.0</div>
         </div>
 
         <div class="form-group">
             <label for="review_notes">Notes (Optional)</label>
-            <textarea id="review_notes" name="review_notes" rows="3" placeholder="Add any feedback or notes about this question..."></textarea>
+            <textarea id="review_notes" name="review_notes" rows="3" placeholder="Add any feedback or notes about this question...">{{ question.review_notes or '' }}</textarea>
         </div>
 
         <div style="display: flex; gap: 10px; margin-top: 30px;">

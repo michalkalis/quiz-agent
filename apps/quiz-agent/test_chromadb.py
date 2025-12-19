@@ -15,10 +15,14 @@ from quiz_shared.database.chroma_client import ChromaDBClient
 
 print("=== Testing ChromaDB Queries ===\n")
 
-# Initialize client
+# Initialize client with shared database path
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+chroma_path = os.path.join(project_root, "chroma_data")
+print(f"Using ChromaDB at: {chroma_path}\n")
+
 client = ChromaDBClient(
     collection_name="quiz_questions",
-    persist_directory="./data/chromadb"
+    persist_directory=chroma_path
 )
 
 # Test 1: Count all questions

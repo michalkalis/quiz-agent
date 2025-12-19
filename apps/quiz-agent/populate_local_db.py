@@ -17,14 +17,18 @@ from datetime import datetime
 
 print("Initializing ChromaDB...")
 print(f"Working directory: {os.getcwd()}")
-print(f"Persist directory: {os.path.abspath('./data/chromadb')}")
+
+# Use shared ChromaDB at project root
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+chroma_path = os.path.join(project_root, "chroma_data")
+print(f"Persist directory: {chroma_path}")
 
 # Ensure directory exists
-os.makedirs('./data/chromadb', exist_ok=True)
+os.makedirs(chroma_path, exist_ok=True)
 
 client = ChromaDBClient(
     collection_name="quiz_questions",
-    persist_directory="./data/chromadb"
+    persist_directory=chroma_path
 )
 
 print(f"Current question count: {client.count_questions()}")
@@ -121,14 +125,14 @@ print(f"   - Text type: {client.count_questions({'type': 'text'})}")
 
 # Verify persistence
 print("\nVerifying persistence...")
-client2 = ChromaDBClient(persist_directory="./data/chromadb")
+client2 = ChromaDBClient(persist_directory=chroma_path)
 count2 = client2.count_questions()
 print(f"✓ Reopened database has {count2} questions")
 
 # Check if directory was created
-if os.path.exists('./data/chromadb'):
-    print(f"✓ Database directory exists: {os.path.abspath('./data/chromadb')}")
-    files = os.listdir('./data/chromadb')
+if os.path.exists(chroma_path):
+    print(f"✓ Database directory exists: {chroma_path}")
+    files = os.listdir(chroma_path)
     print(f"  Files: {files[:10] if len(files) > 10 else files}")
 else:
     print("✗ Warning: Database directory does not exist!")

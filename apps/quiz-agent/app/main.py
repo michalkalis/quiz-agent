@@ -98,11 +98,14 @@ async def lifespan(app: FastAPI):
     try:
         print("Initializing ChromaDB client...")
         sys.stdout.flush()
+        # Use shared ChromaDB at project root (same as question-generator web UI)
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
+        chroma_path = os.path.join(project_root, "chroma_data")
         chroma_client = ChromaDBClient(
             collection_name="quiz_questions",
-            persist_directory="./data/chromadb"
+            persist_directory=chroma_path
         )
-        print("✓ ChromaDB client initialized")
+        print(f"✓ ChromaDB client initialized (using {chroma_path})")
         sys.stdout.flush()
     except Exception as e:
         print(f"ERROR: Failed to initialize ChromaDB: {e}")

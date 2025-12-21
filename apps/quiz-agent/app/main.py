@@ -45,6 +45,7 @@ from .retrieval.question_retriever import QuestionRetriever
 from .evaluation.evaluator import AnswerEvaluator
 from .rating.feedback import FeedbackService
 from .voice.transcriber import VoiceTranscriber
+from .tts.service import TTSService
 from .api import rest
 
 
@@ -52,6 +53,7 @@ from .api import rest
 session_manager: SessionManager = None
 chroma_client: ChromaDBClient = None
 sql_client: SQLClient = None
+tts_service: TTSService = None
 
 
 @asynccontextmanager
@@ -63,7 +65,7 @@ async def lifespan(app: FastAPI):
     - Start background cleanup
     - Graceful shutdown
     """
-    global session_manager, chroma_client, sql_client
+    global session_manager, chroma_client, sql_client, tts_service
 
     print("Starting Quiz Agent API...")
     sys.stdout.flush()  # Ensure output is visible
@@ -141,6 +143,7 @@ async def lifespan(app: FastAPI):
             low_rating_threshold=2.5
         )
         voice_transcriber = VoiceTranscriber()
+        tts_service = TTSService()
         print("✓ Services initialized")
         sys.stdout.flush()
     except Exception as e:
@@ -148,6 +151,18 @@ async def lifespan(app: FastAPI):
         import traceback
         traceback.print_exc()
         raise
+
+    # Pre-generate static feedback audio
+    try:
+        print("Pre-generating static feedback audio...")
+        sys.stdout.flush()
+        await tts_service.pregenerate_static_feedback()
+        print("✓ Static feedback audio ready")
+        sys.stdout.flush()
+    except Exception as e:
+        print(f"WARNING: Failed to pre-generate feedback audio: {e}")
+        print("Feedback will be generated on-demand")
+        sys.stdout.flush()
 
     # Inject dependencies into REST API
     rest.init_dependencies(
@@ -157,6 +172,7 @@ async def lifespan(app: FastAPI):
         ae=answer_evaluator,
         fs=feedback_service,
         vt=voice_transcriber,
+        tts=tts_service,
         cc=chroma_client
     )
     print("✓ API dependencies configured")

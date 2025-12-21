@@ -23,6 +23,7 @@ from ..retrieval.question_retriever import QuestionRetriever
 from ..evaluation.evaluator import AnswerEvaluator
 from ..rating.feedback import FeedbackService
 from ..voice.transcriber import VoiceTranscriber
+from ..tts.service import TTSService
 
 
 # Request/Response Models
@@ -69,6 +70,7 @@ class InputResponse(BaseModel):
     current_question: Optional[Dict[str, Any]] = None
     evaluation: Optional[Dict[str, Any]] = None
     feedback_received: List[str] = Field(default_factory=list, description="Parsed intents")
+    audio: Optional[Dict[str, Any]] = Field(default=None, description="Audio URLs when audio=true")
 
 
 class RateQuestionRequest(BaseModel):
@@ -84,6 +86,13 @@ class AddParticipantRequest(BaseModel):
     user_id: Optional[str] = None
 
 
+class SynthesizeTTSRequest(BaseModel):
+    """Request to synthesize text to speech."""
+    text: str = Field(..., min_length=1, max_length=1000, description="Text to synthesize")
+    voice: Optional[str] = Field(default="nova", description="Voice name (nova, shimmer, onyx)")
+    format: Optional[str] = Field(default="opus", description="Audio format (opus, mp3, aac)")
+
+
 # Router
 
 router = APIRouter(prefix="/api/v1", tags=["Quiz Agent"])
@@ -97,6 +106,7 @@ question_retriever: Optional[QuestionRetriever] = None
 answer_evaluator: Optional[AnswerEvaluator] = None
 feedback_service: Optional[FeedbackService] = None
 voice_transcriber: Optional[VoiceTranscriber] = None
+tts_service: Optional[TTSService] = None
 chroma_client: Optional[Any] = None  # ChromaDBClient
 
 
@@ -107,16 +117,18 @@ def init_dependencies(
     ae: AnswerEvaluator,
     fs: FeedbackService,
     vt: VoiceTranscriber,
+    tts: TTSService,
     cc: Optional[Any] = None  # ChromaDBClient
 ):
     """Initialize service dependencies."""
-    global session_manager, input_parser, question_retriever, answer_evaluator, feedback_service, voice_transcriber, chroma_client
+    global session_manager, input_parser, question_retriever, answer_evaluator, feedback_service, voice_transcriber, tts_service, chroma_client
     session_manager = sm
     input_parser = ip
     question_retriever = qr
     answer_evaluator = ae
     feedback_service = fs
     voice_transcriber = vt
+    tts_service = tts
     chroma_client = cc
 
 
@@ -243,14 +255,18 @@ async def extend_session(session_id: str, minutes: int = 30):
 # Game Flow Endpoints
 
 @router.post("/sessions/{session_id}/start", response_model=InputResponse)
-async def start_quiz(session_id: str, request: StartQuizRequest):
+async def start_quiz(session_id: str, request: StartQuizRequest, audio: bool = False):
     """Start the quiz and get first question.
 
     Args:
         session_id: Session ID
+        audio: Include audio URLs in response (default: False)
 
     Returns:
-        First question and updated session state
+        First question and updated session state (with audio URLs if audio=true)
+
+    Example:
+        POST /api/v1/sessions/sess_123/start?audio=true
     """
     if not all([session_manager, question_retriever]):
         raise HTTPException(status_code=500, detail="Service not initialized")
@@ -309,12 +325,21 @@ async def start_quiz(session_id: str, request: StartQuizRequest):
         session.asked_question_ids.append(question.id)
         session_manager.update_session(session)
 
+        # Build response with optional audio URLs
+        audio_info = None
+        if audio:
+            audio_info = {
+                "question_url": f"/api/v1/sessions/{session_id}/question/audio",
+                "format": "opus"
+            }
+
         return InputResponse(
             success=True,
             message="Quiz started",
             session=session_to_response(session),
             current_question=question_to_dict(question),
-            feedback_received=[]
+            feedback_received=[],
+            audio=audio_info
         )
     except HTTPException:
         raise
@@ -326,7 +351,7 @@ async def start_quiz(session_id: str, request: StartQuizRequest):
 
 
 @router.post("/sessions/{session_id}/input", response_model=InputResponse)
-async def submit_input(session_id: str, request: SubmitInputRequest):
+async def submit_input(session_id: str, request: SubmitInputRequest, audio: bool = False):
     """Submit user input (AI-powered natural language parsing).
 
     The AI agent parses complex inputs like:
@@ -338,9 +363,10 @@ async def submit_input(session_id: str, request: SubmitInputRequest):
     Args:
         session_id: Session ID
         request: User input
+        audio: Include audio URLs in response (default: False)
 
     Returns:
-        Evaluation results and next question (if applicable)
+        Evaluation results and next question (with audio URLs if audio=true)
     """
     if not all([session_manager, input_parser, question_retriever, answer_evaluator]):
         raise HTTPException(status_code=500, detail="Service not initialized")
@@ -440,6 +466,15 @@ async def submit_input(session_id: str, request: SubmitInputRequest):
             session.category = category
             feedback_received.append(f"category: {category}")
 
+    # Build audio info for response
+    audio_info = None
+    if audio and evaluation_result:
+        result_type = evaluation_result.get("result", "")
+        audio_info = {
+            "feedback_url": f"/api/v1/tts/feedback/{result_type}",
+            "format": "opus"
+        }
+
     # Check if quiz is finished
     if len(session.asked_question_ids) >= session.max_questions:
         session.phase = "finished"
@@ -451,7 +486,8 @@ async def submit_input(session_id: str, request: SubmitInputRequest):
             session=session_to_response(session),
             current_question=None,
             evaluation=evaluation_result,
-            feedback_received=feedback_received
+            feedback_received=feedback_received,
+            audio=audio_info
         )
 
     # Get next question
@@ -466,7 +502,8 @@ async def submit_input(session_id: str, request: SubmitInputRequest):
             session=session_to_response(session),
             current_question=None,
             evaluation=evaluation_result,
-            feedback_received=feedback_received
+            feedback_received=feedback_received,
+            audio=audio_info
         )
 
     # Update session with next question
@@ -475,13 +512,21 @@ async def submit_input(session_id: str, request: SubmitInputRequest):
     session.phase = "asking"
     session_manager.update_session(session)
 
+    # Add question URL to audio info
+    if audio:
+        if not audio_info:
+            audio_info = {}
+        audio_info["question_url"] = f"/api/v1/sessions/{session_id}/question/audio"
+        audio_info["format"] = "opus"
+
     return InputResponse(
         success=True,
         message="Input processed",
         session=session_to_response(session),
         current_question=question_to_dict(next_question),
         evaluation=evaluation_result,
-        feedback_received=feedback_received
+        feedback_received=feedback_received,
+        audio=audio_info
     )
 
 
@@ -673,7 +718,8 @@ async def transcribe_audio(
 async def transcribe_and_submit(
     session_id: str,
     audio: UploadFile = File(..., description="Audio file with quiz answer"),
-    participant_id: Optional[str] = None
+    participant_id: Optional[str] = None,
+    include_audio: bool = True
 ):
     """Transcribe audio and submit to quiz (one-step operation).
 
@@ -685,11 +731,12 @@ async def transcribe_and_submit(
 
     Args:
         session_id: Session ID
-        audio: Audio file upload
-        participant_id: Optional participant ID for multiplayer
+        audio: Audio file (mp3, m4a, wav, webm, etc.)
+        participant_id: Optional participant ID (for multiplayer)
+        include_audio: Include audio URLs in response (default: True for voice clients)
 
     Returns:
-        Same as /sessions/{id}/input endpoint
+        Evaluation + next question + audio URLs (feedback + next question audio)
 
     Example:
         curl -X POST http://localhost:8002/api/v1/voice/submit/sess_abc123 \
@@ -804,6 +851,15 @@ async def transcribe_and_submit(
                 session.category = category
                 feedback_received.append(f"category: {category}")
 
+        # Build audio info for voice response
+        audio_info = None
+        if include_audio and evaluation_result:
+            result_type = evaluation_result.get("result", "")
+            audio_info = {
+                "feedback_url": f"/api/v1/tts/feedback/{result_type}",
+                "format": "opus"
+            }
+
         # Check if quiz is finished
         if len(session.asked_question_ids) >= session.max_questions:
             session.phase = "finished"
@@ -815,7 +871,8 @@ async def transcribe_and_submit(
                 session=session_to_response(session),
                 current_question=None,
                 evaluation=evaluation_result,
-                feedback_received=feedback_received
+                feedback_received=feedback_received,
+                audio=audio_info
             )
 
         # Get next question
@@ -830,7 +887,8 @@ async def transcribe_and_submit(
                 session=session_to_response(session),
                 current_question=None,
                 evaluation=evaluation_result,
-                feedback_received=feedback_received
+                feedback_received=feedback_received,
+                audio=audio_info
             )
 
         # Update session with next question
@@ -839,13 +897,21 @@ async def transcribe_and_submit(
         session.phase = "asking"
         session_manager.update_session(session)
 
+        # Add question URL to audio info
+        if include_audio:
+            if not audio_info:
+                audio_info = {}
+            audio_info["question_url"] = f"/api/v1/sessions/{session_id}/question/audio"
+            audio_info["format"] = "opus"
+
         return InputResponse(
             success=True,
             message="Voice input processed",
             session=session_to_response(session),
             current_question=question_to_dict(next_question),
             evaluation=evaluation_result,
-            feedback_received=feedback_received
+            feedback_received=feedback_received,
+            audio=audio_info
         )
 
     except ValueError as e:
@@ -854,6 +920,151 @@ async def transcribe_and_submit(
         raise HTTPException(status_code=500, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Voice submission failed: {str(e)}")
+
+
+# Text-to-Speech (TTS) Endpoints
+
+@router.post("/tts/synthesize")
+async def synthesize_tts(request: SynthesizeTTSRequest):
+    """Generate speech audio from text (generic TTS).
+
+    Args:
+        request: TTS synthesis request with text, voice, and format
+
+    Returns:
+        Audio file in requested format (Opus by default)
+
+    Example:
+        curl -X POST http://localhost:8002/api/v1/tts/synthesize \
+          -H "Content-Type: application/json" \
+          -d '{"text": "What is the capital of France?", "voice": "nova"}' \
+          --output question.opus
+    """
+    if not tts_service:
+        raise HTTPException(status_code=500, detail="TTS service not initialized")
+
+    try:
+        audio_data = await tts_service.synthesize(
+            text=request.text,
+            voice=request.voice,
+            use_cache=True
+        )
+
+        from fastapi.responses import Response
+        return Response(
+            content=audio_data,
+            media_type=f"audio/{request.format}",
+            headers={
+                "Content-Disposition": f'attachment; filename="speech.{request.format}"'
+            }
+        )
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"TTS synthesis failed: {str(e)}")
+
+
+@router.get("/sessions/{session_id}/question/audio")
+async def get_question_audio(session_id: str):
+    """Get audio for current question in session (cached).
+
+    Args:
+        session_id: Session ID
+
+    Returns:
+        Audio file of current question in Opus format
+
+    Example:
+        curl http://localhost:8002/api/v1/sessions/sess_abc123/question/audio \
+          --output question.opus
+    """
+    if not all([session_manager, tts_service, chroma_client]):
+        raise HTTPException(status_code=500, detail="Services not initialized")
+
+    # Get session
+    session = session_manager.get_session(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found or expired")
+
+    # Get current question
+    if not session.current_question_id:
+        raise HTTPException(status_code=400, detail="No active question in session")
+
+    current_question = chroma_client.get_question(session.current_question_id)
+    if not current_question:
+        raise HTTPException(status_code=404, detail="Current question not found")
+
+    try:
+        # Generate/retrieve cached audio
+        audio_data = await tts_service.synthesize_question(
+            question_text=current_question.question
+        )
+
+        from fastapi.responses import Response
+        return Response(
+            content=audio_data,
+            media_type="audio/opus",
+            headers={
+                "Content-Disposition": 'attachment; filename="question.opus"',
+                "Cache-Control": "public, max-age=3600"  # Cache for 1 hour
+            }
+        )
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Audio generation failed: {str(e)}")
+
+
+@router.get("/tts/feedback/{result}")
+async def get_feedback_audio(result: str, variant: Optional[int] = None):
+    """Get pre-cached feedback audio (instant response).
+
+    Args:
+        result: Evaluation result (correct, incorrect, partially_correct, skipped)
+        variant: Optional specific phrase variant (0, 1, 2, ...). Random if not specified.
+
+    Returns:
+        Pre-generated audio file in Opus format
+
+    Example:
+        curl http://localhost:8002/api/v1/tts/feedback/correct \
+          --output feedback.opus
+    """
+    if not tts_service:
+        raise HTTPException(status_code=500, detail="TTS service not initialized")
+
+    # Validate result
+    valid_results = ["correct", "incorrect", "partially_correct", "partially_incorrect", "skipped"]
+    if result not in valid_results:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid result. Must be one of: {', '.join(valid_results)}"
+        )
+
+    try:
+        # Get pre-cached feedback audio
+        audio_data = await tts_service.get_feedback_audio(result, variant)
+
+        if not audio_data:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Feedback audio not found for result '{result}'. Pre-generation may have failed."
+            )
+
+        from fastapi.responses import Response
+        return Response(
+            content=audio_data,
+            media_type="audio/opus",
+            headers={
+                "Content-Disposition": f'attachment; filename="feedback_{result}.opus"',
+                "Cache-Control": "public, max-age=86400"  # Cache for 24 hours
+            }
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve feedback audio: {str(e)}")
 
 
 # Health Check

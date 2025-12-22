@@ -1,11 +1,5 @@
 # Course reference materials (not part of main project)
 course-examples/
-graph.py
-quiz_main.py
-pub_quiz_generation_prompt.md
-README.md
-.CLAUDE.md
-uv.lock
 
 # Environment variables (contains API keys)
 .env
@@ -31,6 +25,20 @@ ENV/
 *.swp
 *.swo
 *~
+
+# Xcode
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
+*.xcworkspace/*
+!*.xcworkspace/contents.xcworkspacedata
+xcuserdata/
+*.moved-aside
+DerivedData/
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
 
 # Claude Code local settings
 .claude/*.local.json
@@ -62,10 +70,29 @@ langsmith_cache/
 *.sqlite3
 
 # Runtime data (vector DB, generated files)
-**/data/
 chroma_data/
 **/chroma_data/
+apps/quiz-agent/data/
+apps/question-generator/data/
 
 # Logs
 *.log
 logs/
+
+# Backup and temporary files
+*.bak
+*.tmp
+*.swp
+*.orig
+*~
+
+# Node.js (for web-ui)
+node_modules/
+.next/
+.turbo/
+*.tsbuildinfo
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride

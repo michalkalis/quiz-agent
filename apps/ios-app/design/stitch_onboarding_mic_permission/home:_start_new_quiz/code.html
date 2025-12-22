@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Home: Start New Quiz</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&amp;family=Noto+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#34C759", // Updated to a more subtle iOS green
+                        "primary-dim": "rgba(52, 199, 89, 0.1)",
+                        "background-light": "#FFFFFF",
+                        "background-dark": "#1C1C1E", // Apple System Gray 6 equivalent
+                        "surface-light": "#F2F2F7", // Apple System Gray 6 Light
+                        "surface-dark": "#2C2C2E", // Apple System Gray 5 Dark
+                        "surface-dark-highlight": "#3A3A3C",
+                    },
+                    fontFamily: {
+                        "display": ["Lexend", "sans-serif"],
+                        "body": ["Noto Sans", "sans-serif"],
+                    },
+                    borderRadius: {
+                        "DEFAULT": "1rem",
+                        "lg": "1.5rem",
+                        "xl": "2rem",
+                        "2xl": "2.5rem",
+                        "full": "9999px"
+                    },
+                    boxShadow: {
+                        "soft": "0 4px 20px -5px rgba(0, 0, 0, 0.05)",
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        body {
+            min-height: 100vh;padding-bottom: env(safe-area-inset-bottom); 
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white transition-colors duration-200 antialiased selection:bg-primary/20 selection:text-primary">
+<div class="relative flex h-full min-h-screen w-full flex-col overflow-x-hidden max-w-md mx-auto">
+<div class="flex items-center px-6 pt-8 pb-2 justify-between z-10">
+<div class="flex flex-col gap-0.5">
+<h2 class="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-widest">Good Evening</h2>
+<h1 class="text-slate-900 dark:text-white text-2xl font-bold tracking-tight">Driver</h1>
+</div>
+<button class="flex items-center justify-center rounded-full w-10 h-10 bg-surface-light dark:bg-surface-dark text-slate-900 dark:text-white hover:bg-slate-200 dark:hover:bg-surface-dark-highlight transition-colors">
+<span class="material-symbols-outlined" style="font-size: 20px;">settings</span>
+</button>
+</div>
+<div class="flex justify-center py-2">
+<div class="flex items-center gap-2.5 bg-surface-light dark:bg-surface-dark px-4 py-1.5 rounded-full border border-slate-200/50 dark:border-white/5 transition-colors">
+<div class="relative flex h-2.5 w-2.5">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
+</div>
+<span class="text-slate-600 dark:text-slate-300 font-semibold text-xs tracking-wide">LISTENING</span>
+</div>
+</div>
+<div class="flex-1 flex flex-col px-5 pb-8 pt-4 gap-6">
+<div class="flex flex-col items-center justify-center gap-1 py-2">
+<h1 class="text-slate-900 dark:text-white tracking-tight text-3xl font-bold text-center">Ready for Trivia?</h1>
+<div class="flex gap-2 mt-1">
+<div class="flex items-center justify-center gap-x-1.5 rounded-full px-3 py-1 bg-surface-light dark:bg-surface-dark">
+<span class="material-symbols-outlined text-primary" style="font-size: 16px;">speed</span>
+<p class="text-slate-600 dark:text-slate-300 text-xs font-medium">Medium Difficulty</p>
+</div>
+</div>
+</div>
+<div class="w-full">
+<div class="flex flex-col gap-3">
+<div class="flex items-center justify-between px-1">
+<span class="text-slate-400 dark:text-slate-500 text-xs font-bold uppercase tracking-wider">Active Session</span>
+</div>
+<div class="relative flex flex-col rounded-2xl bg-white dark:bg-surface-dark border border-slate-100 dark:border-white/5 shadow-soft p-5 gap-4 overflow-hidden group">
+<div class="hidden" data-alt="Abstract neon green geometric pattern on dark background" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAG9tT8r8ArIScnAY1BnkxhgRLCe-XV6bcmMLqr4V9UhhcXWH10ac0fRH8UNUzMa4oXHHeaONMnobU70OLLqN-QTu14NxdkTBhUmH7EJXJe083Vkzcx9lc4aa5eyipDp2usQKnD499wQo0Rvcm_LWHgw5t7CtKyl7mKy0BAUGx6_QQF1hAnImiWv8ynUGvJjgnLLzW4ZbyFp-sLIEofqzZuo6g8FjNIyeki-XvsOEnJnER0ZLC1FFPHZHJmCV4x1-6KZleDkzJKNbU");'></div>
+<div class="flex items-start justify-between gap-4">
+<div class="flex flex-col gap-1">
+<h3 class="text-slate-900 dark:text-white text-xl font-bold leading-tight">Science &amp; Nature</h3>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Round 3 • 4/10 Questions</p>
+</div>
+<div class="relative h-10 w-10 flex items-center justify-center rounded-full border-2 border-slate-100 dark:border-white/10">
+<span class="material-symbols-outlined text-primary" style="font-size: 20px;">bookmark</span>
+</div>
+</div>
+<div class="h-px w-full bg-slate-100 dark:bg-white/5"></div>
+<button class="flex w-full items-center justify-center rounded-xl h-12 bg-slate-900 dark:bg-white text-white dark:text-black hover:opacity-90 active:scale-[0.98] transition-all gap-2 shadow-sm">
+<span class="material-symbols-outlined filled" style="font-size: 20px; font-variation-settings: 'FILL' 1;">play_arrow</span>
+<span class="font-bold text-base">Resume Quiz</span>
+</button>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-4 px-8 opacity-40">
+<div class="h-px bg-slate-300 dark:bg-white/20 flex-1"></div>
+<span class="text-slate-400 dark:text-white/40 text-xs font-bold uppercase tracking-widest">OR</span>
+<div class="h-px bg-slate-300 dark:bg-white/20 flex-1"></div>
+</div>
+<button class="flex w-full cursor-pointer items-center justify-center rounded-2xl h-14 bg-surface-light dark:bg-surface-dark border border-transparent hover:border-primary/30 active:bg-slate-200 dark:active:bg-surface-dark-highlight text-slate-900 dark:text-white gap-3 text-lg font-semibold transition-all">
+<span class="material-symbols-outlined text-primary" style="font-size: 24px;">add_circle</span>
+                Start Fresh Quiz
+            </button>
+<div class="flex-grow"></div>
+<div class="py-4 text-center">
+<p class="text-slate-400 dark:text-white/30 text-xs font-medium">
+                    Say <span class="text-slate-600 dark:text-white font-bold">"Hey Quiz"</span> to manage hands-free
+                </p>
+</div>
+</div>
+</div>
+
+</body></html>

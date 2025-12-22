@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Welcome to Quiz Master</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#8c2bee", 
+                        "background-light": "#ffffff",
+                        "background-dark": "#1c1c1e",
+                        "surface-light": "#f2f2f7",
+                        "surface-dark": "#2c2c2e",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem", 
+                        "lg": "0.75rem", 
+                        "xl": "1rem", 
+                        "2xl": "1.5rem",
+                        "3xl": "2rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {overscroll-behavior-y: none; 
+        }.no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white antialiased selection:bg-primary/30 selection:text-inherit transition-colors duration-300">
+<div class="relative flex min-h-screen w-full flex-col mx-auto max-w-[480px] bg-background-light dark:bg-background-dark shadow-2xl overflow-hidden">
+<div class="w-full p-5 pb-2">
+<div class="relative w-full aspect-[4/3] rounded-3xl overflow-hidden shadow-sm group bg-surface-light dark:bg-surface-dark">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-105" data-alt="Futuristic neon car dashboard glowing purple driving at night" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA0uOJfo9jd8aonkGfuq8MxtFP8k9iT-nYEz-3AHdngYpvywfWpa9xWDrZuybmmUI-dnvjwuiBP90vvMnr7lxwubXCJ2Qb_gcLsLdHEx4Xq7NVc6F8TEAXDVbNsAuvKbZEhXXzYlug6UtmYTKHxe3KUb4b8pUm_wysW9KwHHsjEun9BtHD6M-WcPx16EJc6qqZ6JFA0Bz2xrpwkoyqlpQqEerAdUb1eGNue-y62J11CRYofo6PmyM8NdSEN19rqpSSQqAXL7y8t1A0");'>
+</div>
+<div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
+<div class="absolute top-4 right-4 bg-black/40 backdrop-blur-md border border-white/10 text-white text-[11px] font-semibold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                Online
+            </div>
+<div class="absolute bottom-4 left-4">
+<div class="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-lg">
+<span class="material-symbols-outlined text-white text-2xl">smart_toy</span>
+</div>
+</div>
+</div>
+</div>
+<div class="flex flex-col px-6 py-2">
+<h1 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white mb-2 leading-tight">
+            Welcome to <br/>
+<span class="text-primary dark:text-primary/90">Quiz Master</span>
+</h1>
+<p class="text-lg font-medium text-slate-500 dark:text-slate-400 leading-snug">
+            Your AI Copilot for Trivia.
+        </p>
+<p class="mt-3 text-sm text-slate-600 dark:text-slate-400 leading-relaxed max-w-prose">
+            Hands-free, voice-first. Just say <span class="text-slate-900 dark:text-white font-semibold">"Hey Quiz Master"</span> to play while you drive.
+        </p>
+</div>
+<div class="flex-1 px-6 space-y-3 py-4 overflow-y-auto no-scrollbar">
+<div class="flex items-center gap-4 p-3.5 rounded-2xl bg-surface-light dark:bg-white/5 border border-transparent dark:border-white/5 transition-colors">
+<div class="flex items-center justify-center rounded-xl bg-white dark:bg-white/10 text-primary shrink-0 w-10 h-10 shadow-sm dark:shadow-none">
+<span class="material-symbols-outlined text-[22px]">mic</span>
+</div>
+<div class="flex flex-col">
+<span class="text-slate-900 dark:text-white text-sm font-semibold">Hands-free interaction</span>
+<span class="text-slate-500 dark:text-slate-500 text-xs">Tap-free, voice-first control</span>
+</div>
+</div>
+<div class="flex items-center gap-4 p-3.5 rounded-2xl bg-surface-light dark:bg-white/5 border border-transparent dark:border-white/5 transition-colors">
+<div class="flex items-center justify-center rounded-xl bg-white dark:bg-white/10 text-primary shrink-0 w-10 h-10 shadow-sm dark:shadow-none">
+<span class="material-symbols-outlined text-[22px]">psychology</span>
+</div>
+<div class="flex flex-col">
+<span class="text-slate-900 dark:text-white text-sm font-semibold">AI-Powered Questions</span>
+<span class="text-slate-500 dark:text-slate-500 text-xs">Personalized to your interests</span>
+</div>
+</div>
+<div class="flex items-center gap-4 p-3.5 rounded-2xl bg-surface-light dark:bg-white/5 border border-transparent dark:border-white/5 transition-colors">
+<div class="flex items-center justify-center rounded-xl bg-white dark:bg-white/10 text-primary shrink-0 w-10 h-10 shadow-sm dark:shadow-none">
+<span class="material-symbols-outlined text-[22px]">directions_car</span>
+</div>
+<div class="flex flex-col">
+<span class="text-slate-900 dark:text-white text-sm font-semibold">Perfect for Commutes</span>
+<span class="text-slate-500 dark:text-slate-500 text-xs">Turn traffic into trivia time</span>
+</div>
+</div>
+</div>
+<div class="sticky bottom-0 w-full bg-white/95 dark:bg-background-dark/95 backdrop-blur-xl border-t border-slate-200 dark:border-white/10 p-6 z-20">
+<div class="flex justify-center items-center gap-1 mb-4 h-6 opacity-60">
+<div class="w-1 h-2 bg-primary/60 rounded-full animate-[bounce_1s_infinite]"></div>
+<div class="w-1 h-3 bg-primary/60 rounded-full animate-[bounce_1.2s_infinite]"></div>
+<div class="w-1 h-5 bg-primary rounded-full animate-[bounce_0.8s_infinite]"></div>
+<div class="w-1 h-3 bg-primary/60 rounded-full animate-[bounce_1.1s_infinite]"></div>
+<div class="w-1 h-2 bg-primary/60 rounded-full animate-[bounce_0.9s_infinite]"></div>
+</div>
+<button class="w-full group bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-gray-200 active:scale-[0.98] transition-all text-white dark:text-black font-semibold text-base h-14 rounded-full shadow-sm flex items-center justify-center gap-2.5">
+<span class="material-symbols-outlined text-[20px] group-hover:scale-110 transition-transform">mic</span>
+            Enable Microphone &amp; Start
+        </button>
+<p class="text-center text-[10px] text-slate-400 dark:text-slate-600 mt-3 font-medium uppercase tracking-wide">
+            Voice-Only Interface • Drive Safely
+        </p>
+</div>
+</div>
+
+</body></html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Live Quiz: Question</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#34c759", // Slightly more iOS standard green
+                        "background-light": "#ffffff",
+                        "background-dark": "#000000", // True dark for OLED/Car
+                        "surface-light": "#f2f2f7",
+                        "surface-dark": "#1c1c1e",
+                        "surface-dark-highlight": "#2c2c2e",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+                    boxShadow: {
+                        'glow': '0 0 20px rgba(52, 199, 89, 0.2)',
+                        'glow-strong': '0 0 30px rgba(52, 199, 89, 0.4)',
+                    }
+                },
+            },
+        }
+    </script>
+<style>@keyframes pulse-ring-subtle {
+            0% { transform: scale(0.95); opacity: 0.3; border-width: 2px; }
+            100% { transform: scale(1.4); opacity: 0; border-width: 0px; }
+        }
+        .animate-pulse-ring {
+            animation: pulse-ring-subtle 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        .animate-pulse-ring-delay {
+            animation: pulse-ring-subtle 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+            animation-delay: 0.8s;
+        }@keyframes sound-bar {
+            0%, 100% { height: 4px; opacity: 0.5; }
+            50% { height: 16px; opacity: 1; }
+        }
+        .sound-wave-bar {
+            animation: sound-bar 1s ease-in-out infinite;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(667px, 100dvh);}
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display min-h-screen flex flex-col overflow-hidden select-none text-neutral-900 dark:text-neutral-100">
+<div class="px-6 pt-12 pb-2 w-full">
+<div class="flex gap-6 justify-between items-end mb-3">
+<p class="text-neutral-500 dark:text-neutral-400 text-xs font-bold tracking-widest uppercase">Question 4 of 10</p>
+</div>
+<div class="rounded-full bg-neutral-100 dark:bg-neutral-800 h-1.5 overflow-hidden">
+<div class="h-full rounded-full bg-primary transition-all duration-500 ease-out" style="width: 40%;"></div>
+</div>
+</div>
+<div class="flex-1 flex flex-col px-6 relative z-10">
+<div class="flex gap-2 py-6 flex-wrap justify-center">
+<div class="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-lg bg-surface-light dark:bg-surface-dark px-4 border border-transparent dark:border-neutral-800">
+<span class="material-symbols-outlined text-neutral-500 dark:text-neutral-400 text-[16px]">public</span>
+<p class="text-neutral-600 dark:text-neutral-300 text-xs font-bold uppercase tracking-wide">Geography</p>
+</div>
+<div class="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-lg bg-surface-light dark:bg-surface-dark px-4 border border-transparent dark:border-neutral-800">
+<span class="material-symbols-outlined text-yellow-500/80 text-[16px] filled">signal_cellular_alt</span>
+<p class="text-neutral-600 dark:text-neutral-300 text-xs font-bold uppercase tracking-wide">Medium</p>
+</div>
+</div>
+<div class="flex-1 flex flex-col justify-center items-center text-center mb-8 relative">
+<div class="absolute inset-0 z-[-1] opacity-5 pointer-events-none flex items-center justify-center overflow-hidden">
+<div class="w-[300px] h-[300px] bg-primary blur-[100px] rounded-full opacity-20 dark:opacity-10"></div>
+</div>
+<h1 class="text-neutral-900 dark:text-white tracking-tight text-[32px] md:text-[38px] font-bold leading-[1.2] max-w-sm mx-auto">
+            What is the capital city of Australia?
+        </h1>
+</div>
+</div>
+<div class="relative w-full pb-10 pt-4 px-6 flex flex-col items-center justify-end">
+<div class="flex flex-col items-center justify-center h-20 mb-2 space-y-3">
+<div class="flex items-center gap-1 h-6">
+<div class="w-1.5 bg-primary rounded-full sound-wave-bar" style="animation-delay: 0.1s"></div>
+<div class="w-1.5 bg-primary rounded-full sound-wave-bar" style="animation-delay: 0.2s"></div>
+<div class="w-1.5 bg-primary rounded-full sound-wave-bar" style="animation-delay: 0.3s"></div>
+<div class="w-1.5 bg-primary rounded-full sound-wave-bar" style="animation-delay: 0.1s"></div>
+<div class="w-1.5 bg-primary rounded-full sound-wave-bar" style="animation-delay: 0.4s"></div>
+</div>
+<p class="text-primary font-semibold text-base tracking-wide uppercase text-sm">Listening...</p>
+</div>
+<div class="relative z-10 mb-8 group cursor-pointer tap-highlight-transparent">
+<div class="absolute inset-0 rounded-full border border-primary/40 animate-pulse-ring"></div>
+<div class="absolute inset-0 rounded-full border border-primary/20 animate-pulse-ring-delay"></div>
+<button aria-label="Microphone" class="relative flex items-center justify-center w-20 h-20 rounded-full bg-surface-light dark:bg-surface-dark border border-neutral-200 dark:border-neutral-700 text-primary shadow-sm hover:scale-105 active:scale-95 transition-transform duration-200">
+<span class="material-symbols-outlined text-[36px]">mic</span>
+</button>
+</div>
+<div class="relative z-10 w-full grid grid-cols-3 items-center max-w-md mx-auto">
+<div class="flex justify-start">
+<button class="flex items-center justify-center w-12 h-12 rounded-full bg-transparent hover:bg-surface-light dark:hover:bg-surface-dark text-neutral-400 dark:text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors">
+<span class="material-symbols-outlined text-[24px]">volume_up</span>
+</button>
+</div>
+<div class="flex justify-center">
+<p class="text-neutral-400 dark:text-neutral-600 text-xs font-medium">Tap to pause</p>
+</div>
+<div class="flex justify-end">
+<button class="flex items-center gap-1.5 pl-4 pr-3 h-10 rounded-full bg-surface-light dark:bg-surface-dark text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors">
+<span class="font-semibold text-sm">Skip</span>
+<span class="material-symbols-outlined text-[20px]">skip_next</span>
+</button>
+</div>
+</div>
+</div>
+
+</body></html>

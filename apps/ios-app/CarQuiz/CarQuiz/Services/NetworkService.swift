@@ -1,0 +1,272 @@
+//
+//  NetworkService.swift
+//  CarQuiz
+//
+//  REST API client for Quiz Agent backend
+//  Actor-based for thread-safe networking
+//
+
+@preconcurrency import Foundation
+
+/// Protocol for network operations
+protocol NetworkServiceProtocol: Sendable {
+    func createSession(maxQuestions: Int, difficulty: String) async throws -> QuizSession
+    func startQuiz(sessionId: String) async throws -> QuizResponse
+    func submitVoiceAnswer(sessionId: String, audioData: Data, fileName: String) async throws -> QuizResponse
+    func downloadAudio(from urlString: String) async throws -> Data
+    func endSession(sessionId: String) async throws
+}
+
+/// Thread-safe network service using Swift 6 actor
+actor NetworkService: NetworkServiceProtocol {
+    private let baseURL: URL
+    private let session: URLSession
+
+    init(baseURL: String = Config.apiBaseURL) {
+        self.baseURL = URL(string: baseURL)!
+
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = 30
+        config.timeoutIntervalForResource = 60
+        self.session = URLSession(configuration: config)
+    }
+
+    // MARK: - Session Management
+
+    func createSession(maxQuestions: Int = 10, difficulty: String = "medium") async throws -> QuizSession {
+        let endpoint = baseURL.appendingPathComponent("/api/v1/sessions")
+
+        var request = URLRequest(url: endpoint)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        let body: [String: Any] = [
+            "max_questions": maxQuestions,
+            "difficulty": difficulty,
+            "mode": "single"
+        ]
+
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        if Config.verboseLogging {
+            print("🌐 POST \(endpoint)")
+        }
+
+        let (data, response) = try await session.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw NetworkError.invalidResponse
+        }
+
+        return try await MainActor.run {
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            return try decoder.decode(QuizSession.self, from: data)
+        }
+    }
+
+    func startQuiz(sessionId: String) async throws -> QuizResponse {
+        var components = URLComponents(url: baseURL.appendingPathComponent("/api/v1/sessions/\(sessionId)/start"), resolvingAgainstBaseURL: false)!
+        components.queryItems = [URLQueryItem(name: "audio", value: "true")]
+
+        guard let url = components.url else {
+            throw NetworkError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        // Backend expects an empty JSON body
+        request.httpBody = try JSONSerialization.data(withJSONObject: [:])
+
+        if Config.verboseLogging {
+            print("🌐 POST \(url)")
+        }
+
+        let (data, response) = try await session.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw NetworkError.invalidResponse
+        }
+
+        return try await decodeQuizResponse(from: data)
+    }
+
+    func endSession(sessionId: String) async throws {
+        let endpoint = baseURL.appendingPathComponent("/api/v1/sessions/\(sessionId)")
+
+        var request = URLRequest(url: endpoint)
+        request.httpMethod = "DELETE"
+
+        if Config.verboseLogging {
+            print("🌐 DELETE \(endpoint)")
+        }
+
+        let (_, response) = try await session.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw NetworkError.invalidResponse
+        }
+    }
+
+    // MARK: - Voice Submission
+
+    func submitVoiceAnswer(sessionId: String, audioData: Data, fileName: String = "answer.m4a") async throws -> QuizResponse {
+        let endpoint = baseURL.appendingPathComponent("/api/v1/voice/submit/\(sessionId)")
+
+        let boundary = UUID().uuidString
+        var request = URLRequest(url: endpoint)
+        request.httpMethod = "POST"
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+
+        // Build multipart form data
+        var body = Data()
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"audio\"; filename=\"\(fileName)\"\r\n".data(using: .utf8)!)
+        body.append("Content-Type: audio/m4a\r\n\r\n".data(using: .utf8)!)
+        body.append(audioData)
+        body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
+
+        request.httpBody = body
+
+        if Config.verboseLogging {
+            print("🌐 POST \(endpoint) (audio: \(audioData.count) bytes)")
+        }
+
+        let (data, response) = try await session.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw NetworkError.invalidResponse
+        }
+
+        return try await decodeQuizResponse(from: data)
+    }
+
+    // MARK: - Audio Download
+
+    func downloadAudio(from urlString: String) async throws -> Data {
+        // Handle relative vs absolute URLs
+        let url: URL
+        if urlString.hasPrefix("http") {
+            guard let absoluteURL = URL(string: urlString) else {
+                throw NetworkError.invalidURL
+            }
+            url = absoluteURL
+        } else {
+            url = baseURL.appendingPathComponent(urlString)
+        }
+
+        if Config.verboseLogging {
+            print("🌐 GET \(url)")
+        }
+
+        let (data, response) = try await session.data(from: url)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw NetworkError.invalidResponse
+        }
+
+        return data
+    }
+
+    // MARK: - Helper Methods
+
+    private func decodeQuizResponse(from data: Data) async throws -> QuizResponse {
+        return try await MainActor.run {
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            decoder.keyDecodingStrategy = .convertFromSnakeCase
+
+            do {
+                return try decoder.decode(QuizResponse.self, from: data)
+            } catch {
+                if Config.verboseLogging {
+                    print("❌ Decoding error: \(error)")
+                    if let jsonString = String(data: data, encoding: .utf8) {
+                        print("📄 Response JSON: \(jsonString)")
+                    }
+                }
+                throw NetworkError.decodingError(error)
+            }
+        }
+    }
+}
+
+// MARK: - Error Types
+
+enum NetworkError: LocalizedError {
+    case invalidResponse
+    case invalidURL
+    case decodingError(Error)
+
+    var errorDescription: String? {
+        switch self {
+        case .invalidResponse:
+            return "Invalid server response"
+        case .invalidURL:
+            return "Invalid URL"
+        case .decodingError(let error):
+            return "Failed to decode response: \(error.localizedDescription)"
+        }
+    }
+}
+
+// MARK: - Mock for Testing
+
+#if DEBUG
+final class MockNetworkService: NetworkServiceProtocol {
+    var mockSession: QuizSession?
+    var mockResponse: QuizResponse?
+    var mockAudioData: Data?
+    var shouldFail = false
+
+    func createSession(maxQuestions: Int, difficulty: String) async throws -> QuizSession {
+        if shouldFail {
+            throw NetworkError.invalidResponse
+        }
+        guard let session = mockSession else {
+            throw NetworkError.invalidResponse
+        }
+        return session
+    }
+
+    func startQuiz(sessionId: String) async throws -> QuizResponse {
+        if shouldFail {
+            throw NetworkError.invalidResponse
+        }
+        guard let response = mockResponse else {
+            throw NetworkError.invalidResponse
+        }
+        return response
+    }
+
+    func submitVoiceAnswer(sessionId: String, audioData: Data, fileName: String) async throws -> QuizResponse {
+        if shouldFail {
+            throw NetworkError.invalidResponse
+        }
+        guard let response = mockResponse else {
+            throw NetworkError.invalidResponse
+        }
+        return response
+    }
+
+    func downloadAudio(from urlString: String) async throws -> Data {
+        if shouldFail {
+            throw NetworkError.invalidResponse
+        }
+        return mockAudioData ?? Data()
+    }
+
+    func endSession(sessionId: String) async throws {
+        if shouldFail {
+            throw NetworkError.invalidResponse
+        }
+    }
+}
+#endif

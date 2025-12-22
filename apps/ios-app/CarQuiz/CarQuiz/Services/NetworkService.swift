@@ -191,6 +191,23 @@ actor NetworkService: NetworkServiceProtocol {
                     if let jsonString = String(data: data, encoding: .utf8) {
                         print("📄 Response JSON: \(jsonString)")
                     }
+                    // Print detailed decoding error
+                    if let decodingError = error as? DecodingError {
+                        switch decodingError {
+                        case .keyNotFound(let key, let context):
+                            print("🔍 Missing key: \(key.stringValue) at path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "))")
+                        case .typeMismatch(let type, let context):
+                            print("🔍 Type mismatch for \(type) at path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "))")
+                            print("   Expected: \(type), context: \(context.debugDescription)")
+                        case .valueNotFound(let type, let context):
+                            print("🔍 Value not found for \(type) at path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "))")
+                        case .dataCorrupted(let context):
+                            print("🔍 Data corrupted at path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "))")
+                            print("   Debug: \(context.debugDescription)")
+                        @unknown default:
+                            print("🔍 Unknown decoding error")
+                        }
+                    }
                 }
                 throw NetworkError.decodingError(error)
             }

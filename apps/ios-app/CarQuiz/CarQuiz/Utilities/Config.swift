@@ -18,8 +18,8 @@ enum Config {
         // Note: Use "localhost" for iOS Simulator, not "127.0.0.1"
         return "http://localhost:8002"
         #else
-        // Production - update this with your deployed backend URL
-        return "https://api.quizagent.com"
+        // Production - deployed on Fly.io
+        return "https://quiz-agent-api.fly.dev"
         #endif
     }
 

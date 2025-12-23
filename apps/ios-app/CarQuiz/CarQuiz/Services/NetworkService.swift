@@ -36,6 +36,11 @@ actor NetworkService: NetworkServiceProtocol {
     func createSession(maxQuestions: Int = 10, difficulty: String = "medium") async throws -> QuizSession {
         let endpoint = baseURL.appendingPathComponent("/api/v1/sessions")
 
+        if Config.verboseLogging {
+            print("🌐 Base URL: \(baseURL)")
+            print("🌐 Full endpoint: \(endpoint)")
+        }
+
         var request = URLRequest(url: endpoint)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -53,6 +58,13 @@ actor NetworkService: NetworkServiceProtocol {
         }
 
         let (data, response) = try await session.data(for: request)
+
+        if Config.verboseLogging {
+            print("📥 Response received: \(data.count) bytes")
+            if let httpResponse = response as? HTTPURLResponse {
+                print("📊 Status code: \(httpResponse.statusCode)")
+            }
+        }
 
         guard let httpResponse = response as? HTTPURLResponse,
               (200...299).contains(httpResponse.statusCode) else {
@@ -87,8 +99,23 @@ actor NetworkService: NetworkServiceProtocol {
 
         let (data, response) = try await session.data(for: request)
 
+        if Config.verboseLogging {
+            print("📥 Response received: \(data.count) bytes")
+            if let httpResponse = response as? HTTPURLResponse {
+                print("📊 Status code: \(httpResponse.statusCode)")
+            }
+        }
+
         guard let httpResponse = response as? HTTPURLResponse,
               (200...299).contains(httpResponse.statusCode) else {
+            if Config.verboseLogging {
+                if let httpResponse = response as? HTTPURLResponse {
+                    print("❌ HTTP error: \(httpResponse.statusCode)")
+                }
+                if let responseString = String(data: data, encoding: .utf8) {
+                    print("📄 Response body: \(responseString)")
+                }
+            }
             throw NetworkError.invalidResponse
         }
 
@@ -181,7 +208,7 @@ actor NetworkService: NetworkServiceProtocol {
         return try await MainActor.run {
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .iso8601
-            decoder.keyDecodingStrategy = .convertFromSnakeCase
+            // Note: Using manual CodingKeys in models, not automatic snake_case conversion
 
             do {
                 return try decoder.decode(QuizResponse.self, from: data)

@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-
 @main
 struct CarQuizApp: App {
     @StateObject private var appState = AppState()

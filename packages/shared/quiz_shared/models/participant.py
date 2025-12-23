@@ -1,6 +1,6 @@
 """Participant model for multiplayer quiz sessions."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 from pydantic import BaseModel, Field
 
@@ -31,7 +31,7 @@ class Participant(BaseModel):
 
     # Multiplayer
     is_host: bool = Field(False, description="Host controls quiz flow")
-    joined_at: datetime = Field(default_factory=datetime.now)
+    joined_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     class Config:
         json_schema_extra = {

@@ -1,6 +1,6 @@
 """Session model for quiz state management."""
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 from pydantic import BaseModel, Field
 
@@ -87,10 +87,10 @@ class QuizSession(BaseModel):
     )
 
     # Timestamps
-    created_at: datetime = Field(default_factory=datetime.now)
-    updated_at: datetime = Field(default_factory=datetime.now)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     expires_at: datetime = Field(
-        default_factory=lambda: datetime.now() + timedelta(minutes=30),
+        default_factory=lambda: datetime.now(timezone.utc) + timedelta(minutes=30),
         description="Session expiry (30 min TTL)"
     )
 

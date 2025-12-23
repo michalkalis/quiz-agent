@@ -2,7 +2,7 @@
 
 import uuid
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Optional
 from threading import Lock
 
@@ -64,7 +64,7 @@ class SessionManager:
 
     def _cleanup_expired(self):
         """Remove expired sessions."""
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         with self._lock:
             expired = [
                 sid for sid, session in self._sessions.items()
@@ -108,7 +108,7 @@ class SessionManager:
             max_questions=max_questions,
             current_difficulty=difficulty,
             phase="idle",
-            expires_at=datetime.now() + timedelta(minutes=ttl_minutes)
+            expires_at=datetime.now(timezone.utc) + timedelta(minutes=ttl_minutes)
         )
 
         # For single-player, create default participant
@@ -138,7 +138,7 @@ class SessionManager:
         with self._lock:
             session = self._sessions.get(session_id)
 
-        if session and session.expires_at < datetime.now():
+        if session and session.expires_at < datetime.now(timezone.utc):
             # Expired, remove it
             self.delete_session(session_id)
             return None
@@ -158,7 +158,7 @@ class SessionManager:
             return False
 
         # Update timestamp
-        session.updated_at = datetime.now()
+        session.updated_at = datetime.now(timezone.utc)
 
         with self._lock:
             self._sessions[session.session_id] = session
@@ -198,12 +198,12 @@ class SessionManager:
         if not session:
             return False
 
-        session.expires_at = datetime.now() + timedelta(minutes=minutes)
+        session.expires_at = datetime.now(timezone.utc) + timedelta(minutes=minutes)
         return self.update_session(session)
 
     def get_active_sessions_count(self) -> int:
         """Get count of active (non-expired) sessions."""
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         with self._lock:
             active = sum(
                 1 for session in self._sessions.values()

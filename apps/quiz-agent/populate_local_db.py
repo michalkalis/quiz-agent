@@ -4,9 +4,12 @@
 import sys
 import os
 
-# Load .env from project root
-from dotenv import load_dotenv
-load_dotenv('../../.env')
+# Load .env from project root (optional)
+try:
+    from dotenv import load_dotenv
+    load_dotenv('../../.env')
+except ImportError:
+    pass  # dotenv not available, skip
 
 # Add shared package to path
 sys.path.insert(0, '../../packages/shared')

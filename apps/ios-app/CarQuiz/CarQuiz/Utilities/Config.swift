@@ -10,15 +10,15 @@ import Foundation
 enum Config {
     /// Base URL for the Quiz Agent API
     ///
-    /// - Development: Points to localhost backend
-    /// - Production: Points to deployed backend URL
+    /// - Simulator: Points to localhost backend (for local development)
+    /// - Physical Device: Points to deployed backend URL on Fly.io
     static var apiBaseURL: String {
-        #if DEBUG
-        // Local development - backend running on port 8002
+        #if targetEnvironment(simulator)
+        // iOS Simulator - backend running locally on port 8002
         // Note: Use "localhost" for iOS Simulator, not "127.0.0.1"
         return "http://localhost:8002"
         #else
-        // Production - deployed on Fly.io
+        // Physical device - deployed on Fly.io
         return "https://quiz-agent-api.fly.dev"
         #endif
     }

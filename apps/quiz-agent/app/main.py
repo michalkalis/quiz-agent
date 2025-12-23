@@ -46,7 +46,7 @@ from .evaluation.evaluator import AnswerEvaluator
 from .rating.feedback import FeedbackService
 from .voice.transcriber import VoiceTranscriber
 from .tts.service import TTSService
-from .api import rest
+from .api import rest, admin
 
 
 # Global service instances
@@ -175,6 +175,8 @@ async def lifespan(app: FastAPI):
         tts=tts_service,
         cc=chroma_client
     )
+    # Inject dependencies into Admin API
+    admin.init_dependencies(cc=chroma_client)
     print("✓ API dependencies configured")
 
     # Start background tasks
@@ -217,6 +219,7 @@ app.add_middleware(
 
 # Include API routes
 app.include_router(rest.router)
+app.include_router(admin.router)
 
 
 # Root endpoint

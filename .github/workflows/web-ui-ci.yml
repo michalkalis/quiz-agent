@@ -32,8 +32,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: apps/web-ui/package-lock.json
 
       - name: Install dependencies
         run: |
@@ -74,8 +72,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: apps/web-ui/package-lock.json
 
       - name: Install dependencies
         run: |
@@ -115,8 +111,8 @@ jobs:
 
       - name: Install backend dependencies
         run: |
-          uv pip install -e apps/quiz-agent
-          uv pip install -e packages/shared
+          uv pip install --system -e apps/quiz-agent
+          uv pip install --system -e packages/shared
 
       - name: Start backend
         env:

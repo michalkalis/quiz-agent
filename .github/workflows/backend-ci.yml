@@ -39,9 +39,9 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv pip install -e apps/quiz-agent
-          uv pip install -e packages/shared
-          uv pip install pytest pytest-cov pytest-asyncio httpx
+          uv pip install --system -e apps/quiz-agent
+          uv pip install --system -e packages/shared
+          uv pip install --system pytest pytest-cov pytest-asyncio httpx
 
       - name: Run backend tests
         env:
@@ -76,7 +76,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv pip install ruff
+          uv pip install --system ruff
 
       - name: Run ruff linter
         run: |
@@ -104,9 +104,9 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv pip install -e apps/question-generator
-          uv pip install -e packages/shared
-          uv pip install pytest pytest-asyncio httpx
+          uv pip install --system -e apps/question-generator
+          uv pip install --system -e packages/shared
+          uv pip install --system pytest pytest-asyncio httpx
 
       - name: Run question generator tests
         env:
@@ -133,8 +133,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv pip install -e apps/quiz-agent
-          uv pip install -e packages/shared
+          uv pip install --system -e apps/quiz-agent
+          uv pip install --system -e packages/shared
 
       - name: Start backend server
         env:

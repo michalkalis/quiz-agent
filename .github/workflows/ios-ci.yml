@@ -19,7 +19,7 @@ on:
 jobs:
   build-and-test:
     name: Build and Test iOS App
-    runs-on: macos-14  # macOS 14 with Xcode 16+
+    runs-on: macos-15  # macOS 15 with Xcode 16+
 
     steps:
       - name: Checkout code
@@ -69,7 +69,7 @@ jobs:
 
   lint-swift:
     name: Lint Swift Code
-    runs-on: macos-14
+    runs-on: macos-15
 
     steps:
       - name: Checkout code
@@ -102,8 +102,8 @@ jobs:
 
       - name: Install backend dependencies
         run: |
-          uv pip install -e apps/quiz-agent
-          uv pip install -e packages/shared
+          uv pip install --system -e apps/quiz-agent
+          uv pip install --system -e packages/shared
 
       - name: Start backend to generate OpenAPI spec
         env:

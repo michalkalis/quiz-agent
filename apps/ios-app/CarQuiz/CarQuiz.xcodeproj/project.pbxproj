@@ -24,15 +24,12 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		0BD6C2A6F312AB2D0ADA0524 /* Local.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Local.xcconfig; path = Configuration/Local.xcconfig; sourceTree = "<group>"; };
 		5004B49A2EF874800068C8D1 /* CarQuiz.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CarQuiz.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5004B4A72EF874820068C8D1 /* CarQuizTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CarQuizTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		5004B4B12EF874820068C8D1 /* CarQuizUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CarQuizUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		62FB9AFFE2F29A05D528EFF0 /* Prod.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Prod.xcconfig; path = Configuration/Prod.xcconfig; sourceTree = "<group>"; };
 		961941338301A9636C461FF2 /* Shared.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Shared.xcconfig; path = Configuration/Shared.xcconfig; sourceTree = "<group>"; };
 		D86E1E0498FBCF4EF3A9CF7D /* Local.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Local.xcconfig; path = Configuration/Local.xcconfig; sourceTree = "<group>"; };
-		DD57CDA50BD62E1CB1F989F4 /* Shared.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Shared.xcconfig; path = Configuration/Shared.xcconfig; sourceTree = "<group>"; };
-		FE93404C564E3AFF11112BA6 /* Prod.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Prod.xcconfig; path = Configuration/Prod.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -116,11 +113,8 @@
 			isa = PBXGroup;
 			children = (
 				961941338301A9636C461FF2 /* Shared.xcconfig */,
-				0BD6C2A6F312AB2D0ADA0524 /* Local.xcconfig */,
 				62FB9AFFE2F29A05D528EFF0 /* Prod.xcconfig */,
-				DD57CDA50BD62E1CB1F989F4 /* Shared.xcconfig */,
 				D86E1E0498FBCF4EF3A9CF7D /* Local.xcconfig */,
-				FE93404C564E3AFF11112BA6 /* Prod.xcconfig */,
 			);
 			name = Configuration;
 			sourceTree = SOURCE_ROOT;
@@ -568,37 +562,34 @@
 			baseConfigurationReference = D86E1E0498FBCF4EF3A9CF7D /* Local.xcconfig */;
 			buildSettings = {
 				DEVELOPMENT_TEAM = J47232U5B5;
-				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = com.missinghue.CarQuiz;
+				PRODUCT_BUNDLE_IDENTIFIER = com.missinghue.CarQuiz;
 				PRODUCT_NAME = CarQuiz;
 			};
 			name = "Debug-Local";
 		};
 		5090EC5E2EFB1A4F004DB170 /* Release-Local */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 0BD6C2A6F312AB2D0ADA0524 /* Local.xcconfig */;
 			buildSettings = {
 				DEVELOPMENT_TEAM = J47232U5B5;
-				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = com.missinghue.CarQuiz;
+				PRODUCT_BUNDLE_IDENTIFIER = com.missinghue.CarQuiz;
 				PRODUCT_NAME = CarQuiz;
 			};
 			name = "Release-Local";
 		};
 		5090EC5F2EFB1A4F004DB170 /* Debug-Prod */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = FE93404C564E3AFF11112BA6 /* Prod.xcconfig */;
 			buildSettings = {
 				DEVELOPMENT_TEAM = J47232U5B5;
-				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = com.missinghue.CarQuiz;
+				PRODUCT_BUNDLE_IDENTIFIER = com.missinghue.CarQuiz;
 				PRODUCT_NAME = CarQuiz;
 			};
 			name = "Debug-Prod";
 		};
 		5090EC602EFB1A4F004DB170 /* Release-Prod */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = FE93404C564E3AFF11112BA6 /* Prod.xcconfig */;
 			buildSettings = {
 				DEVELOPMENT_TEAM = J47232U5B5;
-				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = com.missinghue.CarQuiz;
+				PRODUCT_BUNDLE_IDENTIFIER = com.missinghue.CarQuiz;
 				PRODUCT_NAME = CarQuiz;
 			};
 			name = "Release-Prod";
@@ -725,7 +716,6 @@
 		};
 		8EA7A76EC49845FDF05B949A /* Release-Local */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 0BD6C2A6F312AB2D0ADA0524 /* Local.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -782,7 +772,6 @@
 		};
 		BB84328D4A4EFA295816EC63 /* Release-Prod */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = FE93404C564E3AFF11112BA6 /* Prod.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;

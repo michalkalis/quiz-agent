@@ -1,0 +1,140 @@
+name: Web UI CI
+
+# Note: This workflow is prepared for when web-ui is implemented
+# Currently apps/web-ui/ does not exist, so this workflow won't trigger
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'apps/web-ui/**'
+      - '.github/workflows/web-ui-ci.yml'
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'apps/web-ui/**'
+      - '.github/workflows/web-ui-ci.yml'
+
+jobs:
+  build-and-test:
+    name: Build and Test Web UI
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: apps/web-ui/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd apps/web-ui
+          npm ci
+
+      - name: Run linter
+        run: |
+          cd apps/web-ui
+          npm run lint
+
+      - name: Run tests
+        run: |
+          cd apps/web-ui
+          npm test -- --coverage
+
+      - name: Build production bundle
+        run: |
+          cd apps/web-ui
+          npm run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-ui-build
+          path: apps/web-ui/dist  # or .next for Next.js
+          retention-days: 7
+
+  type-check:
+    name: TypeScript Type Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: apps/web-ui/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd apps/web-ui
+          npm ci
+
+      - name: Type check
+        run: |
+          cd apps/web-ui
+          npm run type-check || npx tsc --noEmit
+
+  verify-openapi-types:
+    name: Verify OpenAPI Types Generated
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: |
+          cd apps/web-ui
+          npm ci
+
+      - name: Install uv (for backend)
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install backend dependencies
+        run: |
+          uv pip install -e apps/quiz-agent
+          uv pip install -e packages/shared
+
+      - name: Start backend
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY || 'sk-test-key' }}
+        run: |
+          cd apps/quiz-agent
+          uvicorn app.main:app --host 0.0.0.0 --port 8002 &
+          sleep 5
+
+      - name: Generate TypeScript types from OpenAPI
+        run: |
+          cd apps/web-ui
+          # Using @hey-api/openapi-ts or similar
+          curl http://localhost:8002/openapi.json -o openapi.json
+          npx @hey-api/openapi-ts -i openapi.json -o src/generated -c @hey-api/client-fetch
+          echo "✅ TypeScript types generated"
+
+      - name: Verify types compile
+        run: |
+          cd apps/web-ui
+          npm run type-check || npx tsc --noEmit

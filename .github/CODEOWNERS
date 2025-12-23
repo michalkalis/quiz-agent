@@ -1,0 +1,43 @@
+# Code Owners for Quiz Agent Monorepo
+#
+# This file defines code ownership for automatic review requests.
+# When a PR touches files in these paths, the specified owners are
+# automatically requested as reviewers.
+#
+# Format: path/pattern @github-username
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Global owners (fallback for everything not explicitly defined below)
+* @michalkalis
+
+# Backend Python Services
+/apps/quiz-agent/ @michalkalis
+/apps/question-generator/ @michalkalis
+/packages/shared/ @michalkalis
+
+# iOS App
+/apps/ios-app/ @michalkalis
+
+# Web UI (when implemented)
+/apps/web-ui/ @michalkalis
+
+# CI/CD and DevOps
+/.github/ @michalkalis
+/.github/workflows/ @michalkalis
+
+# Configuration Files
+/pyproject.toml @michalkalis
+/.gitignore @michalkalis
+/.env.example @michalkalis
+
+# Documentation
+/CLAUDE.md @michalkalis
+/.claude/rules/ @michalkalis
+/README.md @michalkalis
+/apps/*/README.md @michalkalis
+
+# Deployment Configuration
+/fly.toml @michalkalis
+
+# Course Materials (optional - for learning materials)
+/course-examples/ @michalkalis

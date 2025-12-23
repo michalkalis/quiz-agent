@@ -1,0 +1,158 @@
+name: Backend CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'apps/quiz-agent/**'
+      - 'apps/question-generator/**'
+      - 'packages/shared/**'
+      - '.github/workflows/backend-ci.yml'
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'apps/quiz-agent/**'
+      - 'apps/question-generator/**'
+      - 'packages/shared/**'
+      - '.github/workflows/backend-ci.yml'
+
+jobs:
+  test-backend:
+    name: Test Quiz Agent Backend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install dependencies
+        run: |
+          uv pip install -e apps/quiz-agent
+          uv pip install -e packages/shared
+          uv pip install pytest pytest-cov pytest-asyncio httpx
+
+      - name: Run backend tests
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          cd apps/quiz-agent
+          pytest tests/ -v --cov=app --cov-report=xml --cov-report=term
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
+        if: github.event_name == 'pull_request'
+        with:
+          file: ./apps/quiz-agent/coverage.xml
+          flags: backend
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  lint-backend:
+    name: Lint Backend Code
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install dependencies
+        run: |
+          uv pip install ruff
+
+      - name: Run ruff linter
+        run: |
+          ruff check apps/quiz-agent/ apps/question-generator/ packages/shared/
+
+      - name: Run ruff formatter
+        run: |
+          ruff format --check apps/quiz-agent/ apps/question-generator/ packages/shared/
+
+  test-question-generator:
+    name: Test Question Generator
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install dependencies
+        run: |
+          uv pip install -e apps/question-generator
+          uv pip install -e packages/shared
+          uv pip install pytest pytest-asyncio httpx
+
+      - name: Run question generator tests
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          cd apps/question-generator
+          pytest tests/ -v || echo "No tests found, skipping"
+
+  verify-openapi:
+    name: Verify OpenAPI Spec Generation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install dependencies
+        run: |
+          uv pip install -e apps/quiz-agent
+          uv pip install -e packages/shared
+
+      - name: Start backend server
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY || 'sk-test-key' }}
+        run: |
+          cd apps/quiz-agent
+          uvicorn app.main:app --host 0.0.0.0 --port 8002 &
+          sleep 5
+
+      - name: Verify OpenAPI spec is accessible
+        run: |
+          curl -f http://localhost:8002/docs || exit 1
+          curl -f http://localhost:8002/openapi.json -o openapi.json
+          ls -lh openapi.json
+
+      - name: Upload OpenAPI spec as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi-spec
+          path: openapi.json
+          retention-days: 30

@@ -150,6 +150,10 @@ actor NetworkService: NetworkServiceProtocol {
         request.httpMethod = "POST"
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
 
+        // Voice submission requires longer timeout due to:
+        // 1. Audio upload, 2. Whisper transcription, 3. GPT-4 evaluation, 4. TTS generation
+        request.timeoutInterval = 120  // 2 minutes for AI processing
+
         // Build multipart form data
         var body = Data()
         body.append("--\(boundary)\r\n".data(using: .utf8)!)

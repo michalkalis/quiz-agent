@@ -1,0 +1,26 @@
+//
+// Prod.xcconfig
+// CarQuiz
+//
+// Configuration for production environment
+//
+
+#include "Shared.xcconfig"
+
+// MARK: - Environment
+ENVIRONMENT_NAME = Production
+
+// MARK: - API Configuration
+API_BASE_URL = https:/$()/quiz-agent-api.fly.dev
+
+// MARK: - Bundle Identifier
+PRODUCT_BUNDLE_IDENTIFIER = $(BUNDLE_ID_BASE)
+
+// MARK: - App Display Name
+PRODUCT_NAME = $(APP_DISPLAY_NAME)
+
+// MARK: - Release Settings
+ENABLE_TESTABILITY = NO
+GCC_OPTIMIZATION_LEVEL = s
+SWIFT_OPTIMIZATION_LEVEL = -O
+SWIFT_COMPILATION_MODE = wholemodule

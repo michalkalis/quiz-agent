@@ -1,0 +1,29 @@
+//
+// Shared.xcconfig
+// CarQuiz
+//
+// Shared build settings for all environments
+//
+
+// MARK: - App Information
+APP_NAME = CarQuiz
+APP_DISPLAY_NAME = CarQuiz
+
+// MARK: - Bundle Identifier Base
+// Environment-specific configs will append a suffix to this
+BUNDLE_ID_BASE = com.carquiz.app
+
+// MARK: - API Configuration
+API_VERSION = /api/v1
+
+// MARK: - Code Signing (override in environment-specific configs if needed)
+CODE_SIGN_STYLE = Automatic
+DEVELOPMENT_TEAM =
+
+// MARK: - Swift Settings
+SWIFT_VERSION = 6.0
+SWIFT_STRICT_CONCURRENCY = complete
+
+// MARK: - Other Settings
+TARGETED_DEVICE_FAMILY = 1
+IPHONEOS_DEPLOYMENT_TARGET = 18.0

@@ -8,5 +8,11 @@
 	</array>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>We need microphone access to record your quiz answers hands-free while driving.</string>
+	<key>API_BASE_URL</key>
+	<string>$(API_BASE_URL)</string>
+	<key>API_VERSION</key>
+	<string>$(API_VERSION)</string>
+	<key>ENVIRONMENT_NAME</key>
+	<string>$(ENVIRONMENT_NAME)</string>
 </dict>
 </plist>

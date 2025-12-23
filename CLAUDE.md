@@ -59,9 +59,17 @@ Native iOS application for voice-based trivia quizzes designed for hands-free us
 
 **Quick Start:**
 ```bash
-open apps/ios-app/CarQuiz.xcodeproj
-# Update Config.swift with backend URL, then Cmd+R
+open apps/ios-app/CarQuiz/CarQuiz.xcodeproj
+# Select scheme: CarQuiz-Local (localhost) or CarQuiz-Prod (Fly.io)
+# Then Cmd+R to build and run
 ```
+
+**Environment Management:**
+The iOS app supports multiple environments via xcconfig files and Xcode schemes:
+- **CarQuiz-Local** → http://localhost:8002 (local development)
+- **CarQuiz-Prod** → https://quiz-agent-api.fly.dev (production)
+
+See `apps/ios-app/CarQuiz/README_ENVIRONMENTS.md` for details on the environment system.
 
 **Important:** Models must be Codable and match backend Pydantic models. See @.claude/rules/ios.md for detailed development guidelines.
 
@@ -141,13 +149,16 @@ uv pip install -e packages/shared
 ### iOS
 ```bash
 # Open in Xcode
-open apps/ios-app/CarQuiz.xcodeproj
+open apps/ios-app/CarQuiz/CarQuiz.xcodeproj
 
-# Build from command line
-cd apps/ios-app && xcodebuild -scheme CarQuiz -destination 'platform=iOS Simulator,name=iPhone 15'
+# Build from command line (Local environment)
+cd apps/ios-app/CarQuiz && xcodebuild -scheme CarQuiz-Local -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+
+# Build Production environment
+cd apps/ios-app/CarQuiz && xcodebuild -scheme CarQuiz-Prod -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
 
 # Run tests
-cd apps/ios-app && xcodebuild test -scheme CarQuiz -destination 'platform=iOS Simulator,name=iPhone 15'
+cd apps/ios-app/CarQuiz && xcodebuild test -scheme CarQuiz-Local -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
 ```
 
 ### Cross-Platform

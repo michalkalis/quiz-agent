@@ -7,6 +7,7 @@
 //
 
 import AVFoundation
+import AVKit
 import Combine
 import Foundation
 
@@ -30,7 +31,8 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
     @Published private(set) var isPlaying = false
 
     private var audioRecorder: AVAudioRecorder?
-    private var audioPlayer: AVAudioPlayer?
+    private var audioPlayer: AVPlayer?
+    private var playbackObserver: Any?
     private var playbackContinuation: CheckedContinuation<Void, Never>?
 
     // MARK: - Audio Session Setup
@@ -132,46 +134,97 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         try data.write(to: tempURL)
 
         if Config.verboseLogging {
-            print("🔊 Playing audio: \(data.count) bytes")
+            print("🔊 Playing audio: \(data.count) bytes from \(tempURL.lastPathComponent)")
         }
 
-        // iOS 18+ has native Opus support via AVAudioPlayer
-        do {
-            audioPlayer = try AVAudioPlayer(contentsOf: tempURL)
-            audioPlayer?.delegate = self
-            audioPlayer?.prepareToPlay()
+        // Use AVPlayer for better codec support (including Opus)
+        let playerItem = AVPlayerItem(url: tempURL)
+        audioPlayer = AVPlayer(playerItem: playerItem)
 
+        // Observe playback completion
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            playbackContinuation = continuation
             isPlaying = true
 
-            // Play audio
-            if audioPlayer?.play() == true {
-                // Wait for playback to complete
-                await withCheckedContinuation { continuation in
-                    playbackContinuation = continuation
+            var successObserver: NSObjectProtocol?
+            var failureObserver: NSObjectProtocol?
+
+            // Observe when playback finishes successfully
+            successObserver = NotificationCenter.default.addObserver(
+                forName: .AVPlayerItemDidPlayToEndTime,
+                object: playerItem,
+                queue: .main
+            ) { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    self?.isPlaying = false
+                    if let cont = self?.playbackContinuation {
+                        self?.playbackContinuation = nil
+                        cont.resume()
+                    }
+
+                    // Clean up observers
+                    if let observer = successObserver {
+                        NotificationCenter.default.removeObserver(observer)
+                    }
+                    if let observer = failureObserver {
+                        NotificationCenter.default.removeObserver(observer)
+                    }
+                    try? FileManager.default.removeItem(at: tempURL)
+
+                    if Config.verboseLogging {
+                        print("🔊 Playback completed")
+                    }
                 }
-            } else {
-                throw AudioError.playbackFailed
             }
 
-            // Clean up
-            isPlaying = false
-            try? FileManager.default.removeItem(at: tempURL)
+            // Observe playback failures
+            failureObserver = NotificationCenter.default.addObserver(
+                forName: .AVPlayerItemFailedToPlayToEndTime,
+                object: playerItem,
+                queue: .main
+            ) { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    self?.isPlaying = false
 
-        } catch {
-            isPlaying = false
-            try? FileManager.default.removeItem(at: tempURL)
+                    if Config.verboseLogging {
+                        print("❌ Playback failed")
+                    }
+
+                    if let cont = self?.playbackContinuation {
+                        self?.playbackContinuation = nil
+                        cont.resume()
+                    }
+
+                    // Clean up observers
+                    if let observer = successObserver {
+                        NotificationCenter.default.removeObserver(observer)
+                    }
+                    if let observer = failureObserver {
+                        NotificationCenter.default.removeObserver(observer)
+                    }
+                    try? FileManager.default.removeItem(at: tempURL)
+                }
+            }
+
+            // Start playback
+            audioPlayer?.play()
 
             if Config.verboseLogging {
-                print("❌ Playback error: \(error)")
+                print("🔊 Started AVPlayer playback")
             }
-
-            throw AudioError.playbackFailed
         }
     }
 
     func stopPlayback() {
-        audioPlayer?.stop()
+        audioPlayer?.pause()
+        audioPlayer = nil
         isPlaying = false
+
+        // Clean up observer
+        if let observer = playbackObserver {
+            NotificationCenter.default.removeObserver(observer)
+            playbackObserver = nil
+        }
 
         if let continuation = playbackContinuation {
             continuation.resume()
@@ -198,33 +251,6 @@ extension AudioService: AVAudioRecorderDelegate {
             isRecording = false
             if Config.verboseLogging {
                 print("❌ Recording error: \(error?.localizedDescription ?? "unknown")")
-            }
-        }
-    }
-}
-
-// MARK: - AVAudioPlayerDelegate
-
-extension AudioService: AVAudioPlayerDelegate {
-    nonisolated func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
-        Task { @MainActor in
-            isPlaying = false
-            if let continuation = playbackContinuation {
-                continuation.resume()
-                playbackContinuation = nil
-            }
-        }
-    }
-
-    nonisolated func audioPlayerDecodeErrorDidOccur(_ player: AVAudioPlayer, error: Error?) {
-        Task { @MainActor in
-            isPlaying = false
-            if Config.verboseLogging {
-                print("❌ Playback decode error: \(error?.localizedDescription ?? "unknown")")
-            }
-            if let continuation = playbackContinuation {
-                continuation.resume()
-                playbackContinuation = nil
             }
         }
     }

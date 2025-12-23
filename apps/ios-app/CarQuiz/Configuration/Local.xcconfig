@@ -1,0 +1,28 @@
+//
+// Local.xcconfig
+// CarQuiz
+//
+// Configuration for local development environment
+//
+
+#include "Shared.xcconfig"
+
+// MARK: - Environment
+ENVIRONMENT_NAME = Local
+
+// MARK: - API Configuration
+API_BASE_URL = http:/$()/localhost:8002
+
+// MARK: - Bundle Identifier
+// No suffix for local development
+PRODUCT_BUNDLE_IDENTIFIER = $(BUNDLE_ID_BASE)
+
+// MARK: - App Display Name
+// Add environment indicator to app name
+PRODUCT_NAME = $(APP_DISPLAY_NAME) Local
+
+// MARK: - Debug Settings
+ENABLE_TESTABILITY = YES
+GCC_OPTIMIZATION_LEVEL = 0
+SWIFT_OPTIMIZATION_LEVEL = -Onone
+SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG

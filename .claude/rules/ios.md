@@ -87,14 +87,18 @@ open apps/ios-app/CarQuiz.xcodeproj
 
 ### Build from Command Line
 ```bash
-cd apps/ios-app
-xcodebuild -scheme CarQuiz -destination 'platform=iOS Simulator,name=iPhone 15'
+cd apps/ios-app/CarQuiz
+# Build with Local environment (localhost)
+xcodebuild -scheme CarQuiz-Local -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+
+# Build with Production environment
+xcodebuild -scheme CarQuiz-Prod -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
 ```
 
 ### Run Tests
 ```bash
-cd apps/ios-app
-xcodebuild test -scheme CarQuiz -destination 'platform=iOS Simulator,name=iPhone 15'
+cd apps/ios-app/CarQuiz
+xcodebuild test -scheme CarQuiz-Local -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
 ```
 
 ### Clean Build Folder

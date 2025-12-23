@@ -10,25 +10,35 @@ import Foundation
 enum Config {
     /// Base URL for the Quiz Agent API
     ///
-    /// - Simulator: Points to localhost backend (for local development)
-    /// - Physical Device: Points to deployed backend URL on Fly.io
+    /// Read from Info.plist which gets populated from xcconfig files based on build configuration
     static var apiBaseURL: String {
-        #if targetEnvironment(simulator)
-        // iOS Simulator - backend running locally on port 8002
-        // Note: Use "localhost" for iOS Simulator, not "127.0.0.1"
-        return "http://localhost:8002"
-        #else
-        // Physical device - deployed on Fly.io
-        return "https://quiz-agent-api.fly.dev"
-        #endif
+        guard let url = Bundle.main.object(forInfoDictionaryKey: "API_BASE_URL") as? String else {
+            fatalError("API_BASE_URL not found in Info.plist. Ensure xcconfig files are properly configured.")
+        }
+        return url
     }
 
     /// API version prefix
-    static let apiVersion = "/api/v1"
+    ///
+    /// Read from Info.plist which gets populated from xcconfig files
+    static var apiVersion: String {
+        guard let version = Bundle.main.object(forInfoDictionaryKey: "API_VERSION") as? String else {
+            return "/api/v1" // Fallback
+        }
+        return version
+    }
 
     /// Full API base URL with version
     static var apiBaseURLWithVersion: String {
         return apiBaseURL + apiVersion
+    }
+
+    /// Current environment name (Local, Production, etc.)
+    static var environmentName: String {
+        guard let env = Bundle.main.object(forInfoDictionaryKey: "ENVIRONMENT_NAME") as? String else {
+            return "Unknown"
+        }
+        return env
     }
 
     // MARK: - App Configuration

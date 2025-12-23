@@ -12,6 +12,7 @@ import Combine
 import Foundation
 
 /// Protocol for audio operations
+@MainActor
 protocol AudioServiceProtocol: Sendable {
     var isRecording: Bool { get }
     var isPlaying: Bool { get }
@@ -44,7 +45,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         try session.setCategory(
             .playAndRecord,
             mode: .spokenAudio,
-            options: [.defaultToSpeaker, .allowBluetooth, .mixWithOthers]
+            options: [.defaultToSpeaker, .allowBluetoothA2DP, .mixWithOthers]
         )
 
         try session.setActive(true)
@@ -58,7 +59,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
     func requestMicrophonePermission() async -> Bool {
         await withCheckedContinuation { continuation in
-            AVAudioSession.sharedInstance().requestRecordPermission { granted in
+            AVAudioApplication.requestRecordPermission { granted in
                 if Config.verboseLogging {
                     print("🎤 Microphone permission: \(granted ? "granted" : "denied")")
                 }
@@ -146,8 +147,10 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
             playbackContinuation = continuation
             isPlaying = true
 
-            var successObserver: NSObjectProtocol?
-            var failureObserver: NSObjectProtocol?
+            // Mark as nonisolated(unsafe) because NSObjectProtocol is not Sendable in Swift 6
+            // These are only accessed on main queue, so cross-isolation is safe
+            nonisolated(unsafe) var successObserver: NSObjectProtocol?
+            nonisolated(unsafe) var failureObserver: NSObjectProtocol?
 
             // Observe when playback finishes successfully
             successObserver = NotificationCenter.default.addObserver(

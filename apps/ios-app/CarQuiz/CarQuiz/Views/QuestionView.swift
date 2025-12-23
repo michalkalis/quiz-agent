@@ -161,7 +161,7 @@ struct QuestionView: View {
                 switch viewModel.quizState {
                 case .askingQuestion:
                     // Start recording
-                    try await appState.audioService.startRecording()
+                    try appState.audioService.startRecording()
                     viewModel.quizState = .recording
 
                 case .recording:

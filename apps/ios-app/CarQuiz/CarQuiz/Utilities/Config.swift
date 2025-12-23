@@ -61,7 +61,8 @@ enum Config {
     // MARK: - Debug Settings
 
     /// Enable verbose logging in debug builds
-    nonisolated(unsafe) static let verboseLogging: Bool = {
+    /// Note: nonisolated needed to access from actors (NetworkService, etc.)
+    nonisolated static let verboseLogging: Bool = {
         #if DEBUG
         return true
         #else

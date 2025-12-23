@@ -158,7 +158,7 @@ final class QuizViewModel: ObservableObject {
 
     /// Resume a saved session
     func resumeSession() async {
-        guard let sessionId = sessionStore.currentSessionId else {
+        guard sessionStore.currentSessionId != nil else {
             errorMessage = "No saved session found"
             return
         }

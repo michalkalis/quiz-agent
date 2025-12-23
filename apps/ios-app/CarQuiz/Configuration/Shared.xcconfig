@@ -13,12 +13,16 @@ APP_DISPLAY_NAME = CarQuiz
 // Environment-specific configs will append a suffix to this
 BUNDLE_ID_BASE = com.carquiz.app
 
+// MARK: - Info.plist Configuration
+INFOPLIST_FILE = CarQuiz/Info.plist
+GENERATE_INFOPLIST_FILE = NO
+
 // MARK: - API Configuration
 API_VERSION = /api/v1
 
 // MARK: - Code Signing (override in environment-specific configs if needed)
 CODE_SIGN_STYLE = Automatic
-DEVELOPMENT_TEAM =
+DEVELOPMENT_TEAM = $(inherited)
 
 // MARK: - Swift Settings
 SWIFT_VERSION = 6.0

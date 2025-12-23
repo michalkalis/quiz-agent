@@ -56,15 +56,11 @@
 		};
 		5004B4AA2EF874820068C8D1 /* CarQuizTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = CarQuizTests;
 			sourceTree = "<group>";
 		};
 		5004B4B42EF874820068C8D1 /* CarQuizUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = CarQuizUITests;
 			sourceTree = "<group>";
 		};
@@ -567,8 +563,105 @@
 			};
 			name = Release;
 		};
+		5090EC5D2EFB1A4F004DB170 /* Debug-Local */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = D86E1E0498FBCF4EF3A9CF7D /* Local.xcconfig */;
+			buildSettings = {
+				DEVELOPMENT_TEAM = J47232U5B5;
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = com.missinghue.CarQuiz;
+				PRODUCT_NAME = CarQuiz;
+			};
+			name = "Debug-Local";
+		};
+		5090EC5E2EFB1A4F004DB170 /* Release-Local */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0BD6C2A6F312AB2D0ADA0524 /* Local.xcconfig */;
+			buildSettings = {
+				DEVELOPMENT_TEAM = J47232U5B5;
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = com.missinghue.CarQuiz;
+				PRODUCT_NAME = CarQuiz;
+			};
+			name = "Release-Local";
+		};
+		5090EC5F2EFB1A4F004DB170 /* Debug-Prod */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = FE93404C564E3AFF11112BA6 /* Prod.xcconfig */;
+			buildSettings = {
+				DEVELOPMENT_TEAM = J47232U5B5;
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = com.missinghue.CarQuiz;
+				PRODUCT_NAME = CarQuiz;
+			};
+			name = "Debug-Prod";
+		};
+		5090EC602EFB1A4F004DB170 /* Release-Prod */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = FE93404C564E3AFF11112BA6 /* Prod.xcconfig */;
+			buildSettings = {
+				DEVELOPMENT_TEAM = J47232U5B5;
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = com.missinghue.CarQuiz;
+				PRODUCT_NAME = CarQuiz;
+			};
+			name = "Release-Prod";
+		};
+		5090EC612EFB1A4F004DB170 /* Debug-Local */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = CarQuizTests;
+			};
+			name = "Debug-Local";
+		};
+		5090EC622EFB1A4F004DB170 /* Release-Local */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = CarQuizTests;
+			};
+			name = "Release-Local";
+		};
+		5090EC632EFB1A4F004DB170 /* Debug-Prod */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = CarQuizTests;
+			};
+			name = "Debug-Prod";
+		};
+		5090EC642EFB1A4F004DB170 /* Release-Prod */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = CarQuizTests;
+			};
+			name = "Release-Prod";
+		};
+		5090EC652EFB1A4F004DB170 /* Debug-Local */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = CarQuizUITests;
+			};
+			name = "Debug-Local";
+		};
+		5090EC662EFB1A4F004DB170 /* Release-Local */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = CarQuizUITests;
+			};
+			name = "Release-Local";
+		};
+		5090EC672EFB1A4F004DB170 /* Debug-Prod */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = CarQuizUITests;
+			};
+			name = "Debug-Prod";
+		};
+		5090EC682EFB1A4F004DB170 /* Release-Prod */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = CarQuizUITests;
+			};
+			name = "Release-Prod";
+		};
 		7EE95A75788CA2F05E56FE7E /* Debug-Local */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = D86E1E0498FBCF4EF3A9CF7D /* Local.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -632,6 +725,7 @@
 		};
 		8EA7A76EC49845FDF05B949A /* Release-Local */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0BD6C2A6F312AB2D0ADA0524 /* Local.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -688,6 +782,7 @@
 		};
 		BB84328D4A4EFA295816EC63 /* Release-Prod */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = FE93404C564E3AFF11112BA6 /* Prod.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -744,6 +839,7 @@
 		};
 		BC7A57B5976906E0851FA298 /* Debug-Prod */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 62FB9AFFE2F29A05D528EFF0 /* Prod.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -826,6 +922,10 @@
 			buildConfigurations = (
 				5004B4BC2EF874820068C8D1 /* Debug */,
 				5004B4BD2EF874820068C8D1 /* Release */,
+				5090EC5D2EFB1A4F004DB170 /* Debug-Local */,
+				5090EC5E2EFB1A4F004DB170 /* Release-Local */,
+				5090EC5F2EFB1A4F004DB170 /* Debug-Prod */,
+				5090EC602EFB1A4F004DB170 /* Release-Prod */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -835,6 +935,10 @@
 			buildConfigurations = (
 				5004B4BF2EF874820068C8D1 /* Debug */,
 				5004B4C02EF874820068C8D1 /* Release */,
+				5090EC612EFB1A4F004DB170 /* Debug-Local */,
+				5090EC622EFB1A4F004DB170 /* Release-Local */,
+				5090EC632EFB1A4F004DB170 /* Debug-Prod */,
+				5090EC642EFB1A4F004DB170 /* Release-Prod */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -844,6 +948,10 @@
 			buildConfigurations = (
 				5004B4C22EF874820068C8D1 /* Debug */,
 				5004B4C32EF874820068C8D1 /* Release */,
+				5090EC652EFB1A4F004DB170 /* Debug-Local */,
+				5090EC662EFB1A4F004DB170 /* Release-Local */,
+				5090EC672EFB1A4F004DB170 /* Debug-Prod */,
+				5090EC682EFB1A4F004DB170 /* Release-Prod */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

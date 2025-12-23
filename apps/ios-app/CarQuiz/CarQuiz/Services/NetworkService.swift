@@ -269,10 +269,11 @@ enum NetworkError: LocalizedError {
 
 #if DEBUG
 final class MockNetworkService: NetworkServiceProtocol {
-    var mockSession: QuizSession?
-    var mockResponse: QuizResponse?
-    var mockAudioData: Data?
-    var shouldFail = false
+    // Mock properties for testing - marked as unsafe since they're mutable
+    nonisolated(unsafe) var mockSession: QuizSession?
+    nonisolated(unsafe) var mockResponse: QuizResponse?
+    nonisolated(unsafe) var mockAudioData: Data?
+    nonisolated(unsafe) var shouldFail = false
 
     func createSession(maxQuestions: Int, difficulty: String) async throws -> QuizSession {
         if shouldFail {

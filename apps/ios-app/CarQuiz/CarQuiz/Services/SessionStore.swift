@@ -16,7 +16,9 @@ protocol SessionStoreProtocol: Sendable {
 
 /// Simple UserDefaults-based session storage
 final class SessionStore: SessionStoreProtocol {
-    private let userDefaults: UserDefaults
+    // UserDefaults is not Sendable in Swift 6, but it's thread-safe
+    // We use nonisolated(unsafe) to acknowledge this
+    nonisolated(unsafe) private let userDefaults: UserDefaults
     private let sessionIdKey = "current_session_id"
 
     init(userDefaults: UserDefaults = .standard) {
@@ -51,7 +53,9 @@ final class SessionStore: SessionStoreProtocol {
 
 #if DEBUG
 final class MockSessionStore: SessionStoreProtocol {
-    var currentSessionId: String?
+    // Mock store for testing - marked as unsafe since it's mutable
+    // In production, use SessionStore which uses thread-safe UserDefaults
+    nonisolated(unsafe) var currentSessionId: String?
 
     func saveSession(id: String) {
         currentSessionId = id

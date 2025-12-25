@@ -69,6 +69,7 @@ extension QuizResponse {
             maxQuestions: 10,
             currentDifficulty: "medium",
             category: nil,
+            language: "en",
             participants: [
                 Participant(
                     id: "p_preview_1",
@@ -107,6 +108,7 @@ extension QuizResponse {
             maxQuestions: 10,
             currentDifficulty: "medium",
             category: nil,
+            language: "en",
             participants: [
                 Participant(
                     id: "p_preview_1",

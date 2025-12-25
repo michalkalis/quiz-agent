@@ -169,6 +169,33 @@ def question_to_dict(question: Question) -> Dict[str, Any]:
     }
 
 
+async def question_to_dict_translated(question: Question, language: str) -> Dict[str, Any]:
+    """Convert Question to dict with translated question text.
+
+    Args:
+        question: Question object to convert
+        language: Target language code (ISO 639-1)
+
+    Returns:
+        Question dict with translated question text
+    """
+    question_dict = question_to_dict(question)
+
+    # Translate question text if not English and translation service available
+    if translation_service and language != "en":
+        try:
+            translated_text = await translation_service.translate_question(
+                question=question.question,
+                target_language=language
+            )
+            question_dict["question"] = translated_text
+        except Exception as e:
+            print(f"WARNING: Failed to translate question text to {language}: {e}")
+            # Keep original English text on translation failure
+
+    return question_dict
+
+
 # Session Management Endpoints
 
 @router.post("/sessions", response_model=SessionResponse, status_code=status.HTTP_201_CREATED)
@@ -344,7 +371,7 @@ async def start_quiz(session_id: str, request: StartQuizRequest, audio: bool = F
             success=True,
             message="Quiz started",
             session=session_to_response(session),
-            current_question=question_to_dict(question),
+            current_question=await question_to_dict_translated(question, session.language),
             feedback_received=[],
             audio=audio_info
         )
@@ -530,7 +557,7 @@ async def submit_input(session_id: str, request: SubmitInputRequest, audio: bool
         success=True,
         message="Input processed",
         session=session_to_response(session),
-        current_question=question_to_dict(next_question),
+        current_question=await question_to_dict_translated(next_question, session.language),
         evaluation=evaluation_result,
         feedback_received=feedback_received,
         audio=audio_info
@@ -565,7 +592,7 @@ async def get_current_question(session_id: str):
         raise HTTPException(status_code=500, detail="Question not found")
 
     return {
-        "question": question_to_dict(question),
+        "question": await question_to_dict_translated(question, session.language),
         "progress": {
             "current": len(session.asked_question_ids),
             "total": session.max_questions
@@ -925,7 +952,7 @@ async def transcribe_and_submit(
             success=True,
             message="Voice input processed",
             session=session_to_response(session),
-            current_question=question_to_dict(next_question),
+            current_question=await question_to_dict_translated(next_question, session.language),
             evaluation=evaluation_result,
             feedback_received=feedback_received,
             audio=audio_info

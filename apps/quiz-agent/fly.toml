@@ -16,13 +16,12 @@ primary_region = "cdg"
 
   # Health check configuration
   # App takes ~8 seconds to start, so give it 15s grace period
-  [http_service.checks]
-    [http_service.checks.health]
-      grace_period = "15s"
-      interval = "30s"
-      timeout = "5s"
-      method = "GET"
-      path = "/api/v1/health"
+  [[http_service.http_checks]]
+    grace_period = "15s"
+    interval = "30s"
+    timeout = "5s"
+    method = "GET"
+    path = "/api/v1/health"
 
 [[mounts]]
   source = "quiz_agent_data"

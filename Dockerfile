@@ -38,7 +38,7 @@ COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/pytho
 COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy application code
-COPY --from=builder /build/apps/quiz-agent /app
+COPY --from=builder /build/app /app
 COPY --from=builder /build/packages/shared /packages/shared
 
 # Create data directory for persistent storage

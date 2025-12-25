@@ -73,6 +73,14 @@ class InputParser:
         # Fast path for common commands
         user_input_lower = user_input.lower().strip()
 
+        # Fast path for empty input - prevent LLM hallucination
+        if not user_input or len(user_input.strip()) < 2:
+            return [{
+                "intent_type": "skip",
+                "extracted_data": {},
+                "confirmation_message": "No input received"
+            }]
+
         if phase == "idle" and user_input_lower in ["start", "begin", "play", "go"]:
             return [{"intent_type": "start", "extracted_data": {}, "confirmation_message": None}]
 

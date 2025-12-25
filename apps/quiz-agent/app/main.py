@@ -100,9 +100,17 @@ async def lifespan(app: FastAPI):
     try:
         print("Initializing ChromaDB client...")
         sys.stdout.flush()
-        # Use shared ChromaDB at project root (same as question-generator web UI)
-        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
-        chroma_path = os.path.join(project_root, "chroma_data")
+
+        # Use CHROMA_PATH env var if set (for production), otherwise use project root (for local dev)
+        chroma_path = os.getenv("CHROMA_PATH")
+        if not chroma_path:
+            # Local development: use shared ChromaDB at project root
+            project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
+            chroma_path = os.path.join(project_root, "chroma_data")
+
+        # Ensure directory exists
+        os.makedirs(chroma_path, exist_ok=True)
+
         chroma_client = ChromaDBClient(
             collection_name="quiz_questions",
             persist_directory=chroma_path

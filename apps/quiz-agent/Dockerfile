@@ -1,23 +1,23 @@
 # Multi-stage build for Quiz Agent API
-# Build context: repository root
-# Dockerfile location: repository root
+# Build context: repository root (../..)
+# Dockerfile location: apps/quiz-agent/Dockerfile
 
 FROM python:3.11-slim as builder
 
 WORKDIR /build
 
-# Install pip packages
+# Install pip
 RUN pip install --no-cache-dir --upgrade pip
 
-# Copy shared package first and install it
+# Copy shared package and install it
 COPY packages/shared /build/packages/shared
 RUN pip install --no-cache-dir -e /build/packages/shared
 
-# Copy quiz-agent files
+# Copy quiz-agent app code
 COPY apps/quiz-agent /build/app
 WORKDIR /build/app
 
-# Install quiz-agent dependencies (skip quiz-shared since already installed)
+# Install quiz-agent dependencies
 RUN pip install --no-cache-dir \
     fastapi>=0.104.0 \
     uvicorn>=0.24.0 \
@@ -38,7 +38,7 @@ COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/pytho
 COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy application code
-COPY --from=builder /build/apps/quiz-agent /app
+COPY --from=builder /build/app /app
 COPY --from=builder /build/packages/shared /packages/shared
 
 # Create data directory for persistent storage

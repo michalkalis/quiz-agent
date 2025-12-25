@@ -36,6 +36,7 @@ class QuizSession(BaseModel):
         None,
         description="Current category filter (e.g., 'music', 'movies', 'all')"
     )
+    language: str = Field("en", description="Preferred language code (ISO 639-1)")
     preferred_topics: List[str] = Field(
         default_factory=list,
         description="Preferred topics: ['science', 'history']"
@@ -115,6 +116,7 @@ class QuizSession(BaseModel):
                 "participants": [],
                 "max_questions": 10,
                 "current_difficulty": "medium",
+                "language": "sk",
                 "preferred_topics": ["science"],
                 "excluded_topics": ["sports"],
                 "preferred_categories": ["music"],

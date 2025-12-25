@@ -46,6 +46,7 @@ from .evaluation.evaluator import AnswerEvaluator
 from .rating.feedback import FeedbackService
 from .voice.transcriber import VoiceTranscriber
 from .tts.service import TTSService
+from .translation import TranslationService
 from .api import rest, admin
 
 
@@ -54,6 +55,7 @@ session_manager: SessionManager = None
 chroma_client: ChromaDBClient = None
 sql_client: SQLClient = None
 tts_service: TTSService = None
+translation_service: TranslationService = None
 
 
 @asynccontextmanager
@@ -65,7 +67,7 @@ async def lifespan(app: FastAPI):
     - Start background cleanup
     - Graceful shutdown
     """
-    global session_manager, chroma_client, sql_client, tts_service
+    global session_manager, chroma_client, sql_client, tts_service, translation_service
 
     print("Starting Quiz Agent API...")
     sys.stdout.flush()  # Ensure output is visible
@@ -152,6 +154,7 @@ async def lifespan(app: FastAPI):
         )
         voice_transcriber = VoiceTranscriber()
         tts_service = TTSService()
+        translation_service = TranslationService()
         print("✓ Services initialized")
         sys.stdout.flush()
     except Exception as e:
@@ -181,6 +184,7 @@ async def lifespan(app: FastAPI):
         fs=feedback_service,
         vt=voice_transcriber,
         tts=tts_service,
+        ts=translation_service,
         cc=chroma_client
     )
     # Inject dependencies into Admin API

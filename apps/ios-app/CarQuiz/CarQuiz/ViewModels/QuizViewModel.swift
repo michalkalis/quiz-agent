@@ -33,6 +33,11 @@ final class QuizViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var isLoading = false
 
+    // MARK: - Language Selection
+
+    @Published var selectedLanguage: Language = Language.default
+    @Published var showingLanguagePicker = false
+
     // MARK: - Dependencies
 
     private let networkService: NetworkServiceProtocol
@@ -56,25 +61,34 @@ final class QuizViewModel: ObservableObject {
     // MARK: - Quiz Flow
 
     /// Start a new quiz session
-    func startNewQuiz(maxQuestions: Int = Config.defaultQuestions, difficulty: String = Config.defaultDifficulty) async {
+    func startNewQuiz(
+        maxQuestions: Int = Config.defaultQuestions,
+        difficulty: String = Config.defaultDifficulty,
+        language: String? = nil
+    ) async {
         isLoading = true
         errorMessage = nil
 
         defer { isLoading = false }
 
         do {
+            // Use provided language or fall back to selected language
+            let languageCode = language ?? selectedLanguage.id
+
             if Config.verboseLogging {
-                print("🎮 Starting new quiz: \(maxQuestions) questions, difficulty: \(difficulty)")
+                print("🎮 Starting new quiz: \(maxQuestions) questions, difficulty: \(difficulty), language: \(languageCode)")
             }
 
             // Create session
             let session = try await networkService.createSession(
                 maxQuestions: maxQuestions,
-                difficulty: difficulty
+                difficulty: difficulty,
+                language: languageCode
             )
 
             currentSession = session
             sessionStore.saveSession(id: session.id)
+            sessionStore.saveLanguage(languageCode)
 
             // Start quiz and get first question
             let response = try await networkService.startQuiz(sessionId: session.id)
@@ -175,6 +189,33 @@ final class QuizViewModel: ObservableObject {
 
         if Config.verboseLogging {
             print("🏠 Reset to home")
+        }
+    }
+
+    // MARK: - Language Selection
+
+    /// Load saved language preference from storage
+    func loadSavedLanguage() {
+        if let savedCode = sessionStore.preferredLanguage,
+           let language = Language.forCode(savedCode) {
+            selectedLanguage = language
+
+            if Config.verboseLogging {
+                print("📦 Loaded saved language: \(language.name)")
+            }
+        }
+    }
+
+    /// Show the language picker sheet
+    func showLanguagePicker() {
+        showingLanguagePicker = true
+    }
+
+    /// Confirm language selection and start quiz
+    func confirmLanguageAndStartQuiz() {
+        showingLanguagePicker = false
+        Task {
+            await startNewQuiz(language: selectedLanguage.id)
         }
     }
 

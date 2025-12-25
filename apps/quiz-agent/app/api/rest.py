@@ -35,6 +35,7 @@ class CreateSessionRequest(BaseModel):
     user_id: Optional[str] = None
     mode: str = Field(default="single", pattern="^(single|multiplayer)$")
     category: Optional[str] = Field(default=None, description="Category filter")
+    language: str = Field(default="en", pattern="^[a-z]{2}$", description="Language code (ISO 639-1)")
     ttl_minutes: int = Field(default=30, ge=10, le=120, description="Session expiry time")
 
 
@@ -46,6 +47,7 @@ class SessionResponse(BaseModel):
     max_questions: int
     current_difficulty: str
     category: Optional[str]
+    language: str
     participants: List[Participant]
     expires_at: datetime
     created_at: datetime
@@ -107,6 +109,7 @@ answer_evaluator: Optional[AnswerEvaluator] = None
 feedback_service: Optional[FeedbackService] = None
 voice_transcriber: Optional[VoiceTranscriber] = None
 tts_service: Optional[TTSService] = None
+translation_service: Optional[Any] = None  # TranslationService
 chroma_client: Optional[Any] = None  # ChromaDBClient
 
 
@@ -118,10 +121,11 @@ def init_dependencies(
     fs: FeedbackService,
     vt: VoiceTranscriber,
     tts: TTSService,
+    ts: Any,  # TranslationService
     cc: Optional[Any] = None  # ChromaDBClient
 ):
     """Initialize service dependencies."""
-    global session_manager, input_parser, question_retriever, answer_evaluator, feedback_service, voice_transcriber, tts_service, chroma_client
+    global session_manager, input_parser, question_retriever, answer_evaluator, feedback_service, voice_transcriber, tts_service, translation_service, chroma_client
     session_manager = sm
     input_parser = ip
     question_retriever = qr
@@ -129,6 +133,7 @@ def init_dependencies(
     feedback_service = fs
     voice_transcriber = vt
     tts_service = tts
+    translation_service = ts
     chroma_client = cc
 
 
@@ -143,6 +148,7 @@ def session_to_response(session: QuizSession) -> SessionResponse:
         max_questions=session.max_questions,
         current_difficulty=session.current_difficulty,
         category=session.category,
+        language=session.language,
         participants=session.participants,
         expires_at=session.expires_at,
         created_at=session.created_at
@@ -184,10 +190,11 @@ async def create_session(request: CreateSessionRequest):
             ttl_minutes=request.ttl_minutes
         )
 
-        # Store category preference if provided
+        # Store language and category preferences
+        session.language = request.language
         if request.category:
             session.category = request.category
-            session_manager.update_session(session)
+        session_manager.update_session(session)
 
         return session_to_response(session)
 
@@ -471,7 +478,7 @@ async def submit_input(session_id: str, request: SubmitInputRequest, audio: bool
     if audio and evaluation_result:
         result_type = evaluation_result.get("result", "")
         audio_info = {
-            "feedback_url": f"/api/v1/tts/feedback/{result_type}",
+            "feedback_url": f"/api/v1/sessions/{session_id}/feedback/{result_type}/audio",
             "format": "opus"
         }
 
@@ -776,6 +783,16 @@ async def transcribe_and_submit(
             current_question=current_question.question
         )
 
+        # Validate transcription is not empty
+        if not transcribed_text or len(transcribed_text.strip()) < 2:
+            print(f"⚠️ Empty transcription detected for session {session_id}")
+            raise HTTPException(
+                status_code=400,
+                detail="No speech detected in audio. Please record your answer clearly and try again."
+            )
+
+        print(f"✅ Transcribed: '{transcribed_text}'")
+
         # Now submit the transcribed text as regular input
         # Parse input with AI agent
         intents = await input_parser.parse(
@@ -856,7 +873,7 @@ async def transcribe_and_submit(
         if include_audio and evaluation_result:
             result_type = evaluation_result.get("result", "")
             audio_info = {
-                "feedback_url": f"/api/v1/tts/feedback/{result_type}",
+                "feedback_url": f"/api/v1/sessions/{session_id}/feedback/{result_type}/audio",
                 "format": "opus"
             }
 
@@ -996,9 +1013,25 @@ async def get_question_audio(session_id: str):
         raise HTTPException(status_code=404, detail="Current question not found")
 
     try:
+        # Translate question to session language if needed
+        question_text = current_question.question
+
+        print(f"DEBUG: translation_service = {translation_service}")
+        print(f"DEBUG: session.language = {session.language}")
+
+        if translation_service and session.language != "en":
+            print(f"DEBUG: Translating question to {session.language}")
+            question_text = await translation_service.translate_question(
+                question=current_question.question,
+                target_language=session.language
+            )
+            print(f"DEBUG: Translated text = {question_text}")
+        else:
+            print(f"DEBUG: No translation needed (translation_service={translation_service is not None}, lang={session.language})")
+
         # Generate/retrieve cached audio
         audio_data = await tts_service.synthesize_question(
-            question_text=current_question.question
+            question_text=question_text
         )
 
         from fastapi.responses import Response
@@ -1065,6 +1098,57 @@ async def get_feedback_audio(result: str, variant: Optional[int] = None):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to retrieve feedback audio: {str(e)}")
+
+
+@router.get("/sessions/{session_id}/feedback/{result}/audio")
+async def get_session_feedback_audio(session_id: str, result: str):
+    """Get feedback audio in session's language.
+
+    Args:
+        session_id: Session ID
+        result: Evaluation result (correct, incorrect, etc.)
+
+    Returns:
+        Feedback audio in session's preferred language
+    """
+    if not all([session_manager, tts_service, translation_service]):
+        raise HTTPException(status_code=500, detail="Services not initialized")
+
+    # Get session to know the language
+    session = session_manager.get_session(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found or expired")
+
+    # Validate result
+    valid_results = ["correct", "incorrect", "partially_correct", "partially_incorrect", "skipped"]
+    if result not in valid_results:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid result. Must be one of: {', '.join(valid_results)}"
+        )
+
+    try:
+        # Import the feedback messages function
+        from ..translation import get_feedback_message
+
+        # Get feedback message in session language
+        feedback_text = get_feedback_message(result, session.language)
+
+        # Generate audio
+        audio_data = await tts_service.synthesize(feedback_text, use_cache=True)
+
+        from fastapi.responses import Response
+        return Response(
+            content=audio_data,
+            media_type="audio/opus",
+            headers={
+                "Content-Disposition": f'attachment; filename="feedback_{result}_{session.language}.opus"',
+                "Cache-Control": "public, max-age=3600"  # Cache for 1 hour
+            }
+        )
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate feedback audio: {str(e)}")
 
 
 # Health Check

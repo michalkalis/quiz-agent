@@ -35,9 +35,7 @@ struct HomeView: View {
 
             // Start Button
             Button(action: {
-                Task {
-                    await viewModel.startNewQuiz()
-                }
+                viewModel.showLanguagePicker()
             }) {
                 HStack {
                     Image(systemName: "play.circle.fill")
@@ -55,6 +53,17 @@ struct HomeView: View {
             .padding(.horizontal, 40)
             .disabled(viewModel.isLoading)
 
+            // Current language display
+            if let currentLanguage = Language.forCode(viewModel.selectedLanguage.id) {
+                HStack(spacing: 4) {
+                    Image(systemName: "globe")
+                        .font(.caption)
+                    Text("Language: \(currentLanguage.nativeName)")
+                        .font(.caption)
+                }
+                .foregroundColor(.secondary)
+            }
+
             // Loading indicator
             if viewModel.isLoading {
                 ProgressView()
@@ -64,6 +73,17 @@ struct HomeView: View {
             Spacer()
         }
         .padding()
+        .sheet(isPresented: $viewModel.showingLanguagePicker) {
+            LanguagePickerView(
+                selectedLanguage: $viewModel.selectedLanguage,
+                onConfirm: {
+                    viewModel.confirmLanguageAndStartQuiz()
+                }
+            )
+        }
+        .onAppear {
+            viewModel.loadSavedLanguage()
+        }
     }
 }
 

@@ -15,6 +15,7 @@ struct QuizSession: Codable, Identifiable, Sendable {
     let maxQuestions: Int
     let currentDifficulty: String
     let category: String?
+    let language: String
     let participants: [Participant]
     let expiresAt: Date
     let createdAt: Date
@@ -26,6 +27,7 @@ struct QuizSession: Codable, Identifiable, Sendable {
         case maxQuestions = "max_questions"
         case currentDifficulty = "current_difficulty"
         case category
+        case language
         case participants
         case expiresAt = "expires_at"
         case createdAt = "created_at"

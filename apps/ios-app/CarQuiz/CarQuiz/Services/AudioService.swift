@@ -36,22 +36,69 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
     private var playbackObserver: Any?
     private var playbackContinuation: CheckedContinuation<Void, Never>?
 
+    // Mark as nonisolated(unsafe) because NSObjectProtocol is not Sendable in Swift 6
+    // Only accessed on main queue, so cross-isolation is safe
+    nonisolated(unsafe) private var routeChangeObserver: NSObjectProtocol?
+
+    deinit {
+        // Clean up route change observer
+        if let observer = routeChangeObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
+    }
+
     // MARK: - Audio Session Setup
 
     func setupAudioSession() throws {
         let session = AVAudioSession.sharedInstance()
 
         // Configure for background playback and recording
+        // .allowBluetoothHFP enables Bluetooth microphone input (Hands-Free Profile)
+        // .allowBluetoothA2DP enables high-quality Bluetooth playback (A2DP)
+        // .mixWithOthers allows navigation apps to play simultaneously
         try session.setCategory(
             .playAndRecord,
             mode: .spokenAudio,
-            options: [.defaultToSpeaker, .allowBluetoothA2DP, .mixWithOthers]
+            options: [.allowBluetoothHFP, .allowBluetoothA2DP, .mixWithOthers]
         )
 
         try session.setActive(true)
 
+        // Observe audio route changes (Bluetooth connect/disconnect)
+        routeChangeObserver = NotificationCenter.default.addObserver(
+            forName: AVAudioSession.routeChangeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            // Already on main queue, can call directly
+            self?.handleRouteChange(notification)
+        }
+
         if Config.verboseLogging {
             print("🎤 Audio session configured for background playback and recording")
+        }
+    }
+
+    nonisolated private func handleRouteChange(_ notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let reasonValue = userInfo[AVAudioSessionRouteChangeReasonKey] as? UInt,
+              let reason = AVAudioSession.RouteChangeReason(rawValue: reasonValue) else {
+            return
+        }
+
+        switch reason {
+        case .newDeviceAvailable:
+            // Bluetooth connected
+            if Config.verboseLogging {
+                print("🎧 Bluetooth device connected")
+            }
+        case .oldDeviceUnavailable:
+            // Bluetooth disconnected - gracefully fall back to built-in mic
+            if Config.verboseLogging {
+                print("🎧 Bluetooth device disconnected, using built-in microphone")
+            }
+        default:
+            break
         }
     }
 

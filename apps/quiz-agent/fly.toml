@@ -6,20 +6,30 @@ primary_region = "cdg"
 # Deploy command: cd ../../ && fly deploy -c apps/quiz-agent/fly.toml
 [build]
   dockerfile = "Dockerfile"
+  build_context = "../.."
 
-[http_service]
+[[services]]
+  protocol = "tcp"
   internal_port = 8002
-  force_https = true
   auto_stop_machines = "off"
   auto_start_machines = true
   min_machines_running = 1
 
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+    force_https = true
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+
   # Health check configuration
-  # App takes ~8 seconds to start, so give it 15s grace period
-  [[http_service.http_checks]]
-    grace_period = "15s"
+  # App takes ~8 seconds to start, so give it longer grace period
+  [[services.http_checks]]
+    grace_period = "30s"
     interval = "30s"
-    timeout = "5s"
+    timeout = "10s"
     method = "GET"
     path = "/api/v1/health"
 

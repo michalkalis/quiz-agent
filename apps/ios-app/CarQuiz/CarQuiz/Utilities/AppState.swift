@@ -21,8 +21,8 @@ final class AppState: ObservableObject {
         self.audioService = AudioService()
         self.sessionStore = SessionStore()
 
-        // Setup audio session
-        try? audioService.setupAudioSession()
+        // Setup audio session with default mode
+        try? audioService.setupAudioSession(mode: AudioMode.default)
 
         if Config.verboseLogging {
             print("🚀 AppState initialized")

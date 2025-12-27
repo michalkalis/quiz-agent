@@ -11,8 +11,10 @@ import Foundation
 protocol SessionStoreProtocol: Sendable {
     var currentSessionId: String? { get }
     var preferredLanguage: String? { get }
+    var preferredAudioMode: String? { get }
     func saveSession(id: String)
     func saveLanguage(_ languageCode: String)
+    func saveAudioMode(_ modeId: String)
     func clearSession()
 }
 
@@ -23,6 +25,7 @@ final class SessionStore: SessionStoreProtocol {
     nonisolated(unsafe) private let userDefaults: UserDefaults
     private let sessionIdKey = "current_session_id"
     private let languageKey = "preferred_language"
+    private let audioModeKey = "preferred_audio_mode"
 
     init(userDefaults: UserDefaults = .standard) {
         self.userDefaults = userDefaults
@@ -36,6 +39,11 @@ final class SessionStore: SessionStoreProtocol {
     /// Get the user's preferred language
     var preferredLanguage: String? {
         userDefaults.string(forKey: languageKey)
+    }
+
+    /// Get the user's preferred audio mode
+    var preferredAudioMode: String? {
+        userDefaults.string(forKey: audioModeKey)
     }
 
     /// Save a session ID for later resumption
@@ -56,8 +64,17 @@ final class SessionStore: SessionStoreProtocol {
         }
     }
 
+    /// Save the user's preferred audio mode
+    func saveAudioMode(_ modeId: String) {
+        userDefaults.set(modeId, forKey: audioModeKey)
+
+        if Config.verboseLogging {
+            print("📦 SessionStore: Saved audio mode: \(modeId)")
+        }
+    }
+
     /// Clear the stored session ID
-    /// Note: Language preference is NOT cleared - it persists across sessions
+    /// Note: Language and audio mode preferences are NOT cleared - they persist across sessions
     func clearSession() {
         userDefaults.removeObject(forKey: sessionIdKey)
 
@@ -75,6 +92,7 @@ final class MockSessionStore: SessionStoreProtocol {
     // In production, use SessionStore which uses thread-safe UserDefaults
     nonisolated(unsafe) var currentSessionId: String?
     nonisolated(unsafe) var preferredLanguage: String?
+    nonisolated(unsafe) var preferredAudioMode: String?
 
     func saveSession(id: String) {
         currentSessionId = id
@@ -82,6 +100,10 @@ final class MockSessionStore: SessionStoreProtocol {
 
     func saveLanguage(_ languageCode: String) {
         preferredLanguage = languageCode
+    }
+
+    func saveAudioMode(_ modeId: String) {
+        preferredAudioMode = modeId
     }
 
     func clearSession() {

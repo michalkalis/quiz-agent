@@ -17,11 +17,13 @@ protocol AudioServiceProtocol: Sendable {
     var isRecording: Bool { get }
     var isPlaying: Bool { get }
 
-    func setupAudioSession() throws
+    func setupAudioSession(mode: AudioMode) throws
+    func switchAudioMode(_ mode: AudioMode) async throws
     func requestMicrophonePermission() async -> Bool
     func startRecording() throws
     func stopRecording() async throws -> Data
-    func playOpusAudio(_ data: Data) async throws
+    func playOpusAudio(_ data: Data) async throws -> TimeInterval
+    func playOpusAudioFromBase64(_ base64: String) async throws -> TimeInterval
     func stopPlayback()
 }
 
@@ -35,6 +37,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
     private var audioPlayer: AVPlayer?
     private var playbackObserver: Any?
     private var playbackContinuation: CheckedContinuation<Void, Never>?
+    private var currentAudioMode: AudioMode = AudioMode.default
 
     // Mark as nonisolated(unsafe) because NSObjectProtocol is not Sendable in Swift 6
     // Only accessed on main queue, so cross-isolation is safe
@@ -49,17 +52,52 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
     // MARK: - Audio Session Setup
 
-    func setupAudioSession() throws {
+    func setupAudioSession(mode: AudioMode) throws {
         let session = AVAudioSession.sharedInstance()
 
+        // Store current mode
+        currentAudioMode = mode
+
+        // Configure audio session options based on selected mode
+        var options: AVAudioSession.CategoryOptions
+
+        switch mode.id {
+        case "media":
+            // Media Mode: A2DP only (high-quality playback, built-in mic)
+            // No HFP = No "phone call" UI in car display
+            options = [.defaultToSpeaker, .allowBluetoothA2DP, .mixWithOthers]
+
+            if Config.verboseLogging {
+                print("🎤 Audio session: Media Mode (A2DP only)")
+            }
+
+        case "call":
+            // Call Mode: HFP + A2DP (Bluetooth mic enabled)
+            // May show as "phone call" in car display
+            options = [.defaultToSpeaker, .allowBluetoothHFP, .allowBluetoothA2DP, .mixWithOthers]
+
+            if Config.verboseLogging {
+                print("🎤 Audio session: Call Mode (HFP + A2DP)")
+            }
+
+        default:
+            // Fallback to call mode (current behavior)
+            options = [.defaultToSpeaker, .allowBluetoothHFP, .allowBluetoothA2DP, .mixWithOthers]
+
+            if Config.verboseLogging {
+                print("⚠️ Unknown audio mode '\(mode.id)', defaulting to Call Mode")
+            }
+        }
+
         // Configure for background playback and recording
+        // .defaultToSpeaker forces output to speaker instead of receiver (louder audio)
         // .allowBluetoothHFP enables Bluetooth microphone input (Hands-Free Profile)
         // .allowBluetoothA2DP enables high-quality Bluetooth playback (A2DP)
         // .mixWithOthers allows navigation apps to play simultaneously
         try session.setCategory(
             .playAndRecord,
             mode: .spokenAudio,
-            options: [.allowBluetoothHFP, .allowBluetoothA2DP, .mixWithOthers]
+            options: options
         )
 
         try session.setActive(true)
@@ -76,6 +114,35 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
         if Config.verboseLogging {
             print("🎤 Audio session configured for background playback and recording")
+        }
+    }
+
+    /// Switch audio mode dynamically (e.g., during quiz)
+    /// - Parameter mode: New audio mode to activate
+    func switchAudioMode(_ mode: AudioMode) async throws {
+        guard mode.id != currentAudioMode.id else {
+            if Config.verboseLogging {
+                print("🔄 Audio mode already set to \(mode.name), skipping switch")
+            }
+            return
+        }
+
+        // Stop any active recording/playback first
+        if isRecording {
+            _ = try? await stopRecording()
+        }
+        if isPlaying {
+            stopPlayback()
+        }
+
+        // Deactivate current session
+        try AVAudioSession.sharedInstance().setActive(false)
+
+        // Reconfigure with new mode
+        try setupAudioSession(mode: mode)
+
+        if Config.verboseLogging {
+            print("🔄 Audio mode switched to: \(mode.name)")
         }
     }
 
@@ -174,7 +241,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
     // MARK: - Playback
 
-    func playOpusAudio(_ data: Data) async throws {
+    func playOpusAudio(_ data: Data) async throws -> TimeInterval {
         // Save to temporary file for playback
         let tempURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("audio_\(UUID().uuidString).opus")
@@ -188,6 +255,15 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         // Use AVPlayer for better codec support (including Opus)
         let playerItem = AVPlayerItem(url: tempURL)
         audioPlayer = AVPlayer(playerItem: playerItem)
+
+        // Get duration before starting playback (async in iOS 18+)
+        let asset = playerItem.asset
+        let duration = try await asset.load(.duration)
+        let durationSeconds = CMTimeGetSeconds(duration)
+
+        if Config.verboseLogging {
+            print("🔊 Audio duration: \(String(format: "%.1f", durationSeconds))s")
+        }
 
         // Observe playback completion
         await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
@@ -263,6 +339,15 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
                 print("🔊 Started AVPlayer playback")
             }
         }
+
+        return durationSeconds
+    }
+
+    func playOpusAudioFromBase64(_ base64: String) async throws -> TimeInterval {
+        guard let data = Data(base64Encoded: base64) else {
+            throw AudioError.invalidBase64
+        }
+        return try await playOpusAudio(data)
     }
 
     func stopPlayback() {
@@ -313,6 +398,7 @@ enum AudioError: LocalizedError {
     case recordingFailed
     case playbackFailed
     case permissionDenied
+    case invalidBase64
 
     var errorDescription: String? {
         switch self {
@@ -324,6 +410,8 @@ enum AudioError: LocalizedError {
             return "Playback failed"
         case .permissionDenied:
             return "Microphone permission denied"
+        case .invalidBase64:
+            return "Invalid base64 audio data"
         }
     }
 }
@@ -339,7 +427,11 @@ final class MockAudioService: ObservableObject, AudioServiceProtocol {
     var shouldFailPlayback = false
     var mockRecordingData = Data("mock audio".utf8)
 
-    func setupAudioSession() throws {
+    func setupAudioSession(mode: AudioMode) throws {
+        // Mock implementation
+    }
+
+    func switchAudioMode(_ mode: AudioMode) async throws {
         // Mock implementation
     }
 
@@ -362,13 +454,21 @@ final class MockAudioService: ObservableObject, AudioServiceProtocol {
         return mockRecordingData
     }
 
-    func playOpusAudio(_ data: Data) async throws {
+    func playOpusAudio(_ data: Data) async throws -> TimeInterval {
         if shouldFailPlayback {
             throw AudioError.playbackFailed
         }
         isPlaying = true
         try await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
         isPlaying = false
+        return 3.0  // Mock duration
+    }
+
+    func playOpusAudioFromBase64(_ base64: String) async throws -> TimeInterval {
+        guard Data(base64Encoded: base64) != nil else {
+            throw AudioError.invalidBase64
+        }
+        return try await playOpusAudio(Data())
     }
 
     func stopPlayback() {

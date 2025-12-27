@@ -38,6 +38,10 @@ final class QuizViewModel: ObservableObject {
     @Published var selectedLanguage: Language = Language.default
     @Published var showingLanguagePicker = false
 
+    // MARK: - Audio Mode Selection
+
+    @Published var selectedAudioMode: AudioMode = AudioMode.default
+
     // MARK: - Dependencies
 
     private let networkService: NetworkServiceProtocol
@@ -77,6 +81,21 @@ final class QuizViewModel: ObservableObject {
 
             if Config.verboseLogging {
                 print("🎮 Starting new quiz: \(maxQuestions) questions, difficulty: \(difficulty), language: \(languageCode)")
+            }
+
+            // Configure audio session with user's preferred mode
+            do {
+                try audioService.setupAudioSession(mode: selectedAudioMode)
+                sessionStore.saveAudioMode(selectedAudioMode.id)
+
+                if Config.verboseLogging {
+                    print("🎤 Audio session configured with \(selectedAudioMode.name)")
+                }
+            } catch {
+                // Log error but continue - audio might still work
+                if Config.verboseLogging {
+                    print("⚠️ Warning: Failed to configure audio session: \(error)")
+                }
             }
 
             // Create session
@@ -206,6 +225,43 @@ final class QuizViewModel: ObservableObject {
         }
     }
 
+    /// Load saved audio mode preference from storage
+    func loadSavedAudioMode() {
+        if let savedId = sessionStore.preferredAudioMode,
+           let mode = AudioMode.forId(savedId) {
+            selectedAudioMode = mode
+
+            if Config.verboseLogging {
+                print("📦 Loaded saved audio mode: \(mode.name)")
+            }
+        }
+    }
+
+    /// Toggle audio mode between Call Mode and Media Mode
+    func toggleAudioMode() {
+        Task {
+            let newMode = selectedAudioMode.id == "call"
+                ? AudioMode.forId("media")!
+                : AudioMode.forId("call")!
+
+            do {
+                try await audioService.switchAudioMode(newMode)
+                selectedAudioMode = newMode
+                sessionStore.saveAudioMode(newMode.id)
+
+                if Config.verboseLogging {
+                    print("🔄 Switched to \(newMode.name)")
+                }
+            } catch {
+                errorMessage = "Failed to switch audio mode: \(error.localizedDescription)"
+
+                if Config.verboseLogging {
+                    print("❌ Error switching audio mode: \(error)")
+                }
+            }
+        }
+    }
+
     /// Show the language picker sheet
     func showLanguagePicker() {
         showingLanguagePicker = true
@@ -231,38 +287,54 @@ final class QuizViewModel: ObservableObject {
             questionsAnswered = participant.answeredCount
         }
 
-        // Play feedback audio
-        if let audioInfo = response.audio,
-           let feedbackUrl = audioInfo.feedbackUrl {
-            await playFeedbackAudio(from: feedbackUrl)
-        }
+        // Play feedback audio and capture duration
+        var feedbackDuration: TimeInterval = 3.0  // Default fallback
 
-        // Check if quiz is finished
-        if response.isQuizFinished {
-            quizState = .finished
-            sessionStore.clearSession()
-
-            if Config.verboseLogging {
-                print("🎮 Quiz finished! Final score: \(score)")
+        if let audioInfo = response.audio {
+            // Prioritize base64 (enhanced feedback) over URL (generic feedback)
+            if let base64 = audioInfo.feedbackAudioBase64 {
+                feedbackDuration = await playFeedbackAudioBase64(base64)
+            } else if let feedbackUrl = audioInfo.feedbackUrl {
+                feedbackDuration = await playFeedbackAudio(from: feedbackUrl)
             }
-            return
         }
 
-        // Show result briefly
+        // Always show result screen first
         quizState = .showingResult
 
-        // Auto-advance to next question after delay
-        try? await Task.sleep(nanoseconds: 3_000_000_000) // 3 seconds
+        // Determine next state based on quiz status
+        let nextState: QuizState = response.isQuizFinished ? .finished : .askingQuestion
+
+        // Dynamic auto-advance: audio duration + 1 second buffer
+        let delaySeconds = feedbackDuration + 1.0
+        let delayNanos = UInt64(delaySeconds * 1_000_000_000)
+
+        if Config.verboseLogging {
+            print("⏱️ Auto-advancing in \(String(format: "%.1f", delaySeconds))s (audio: \(String(format: "%.1f", feedbackDuration))s + 1s buffer)")
+        }
+
+        try? await Task.sleep(nanoseconds: delayNanos)
 
         // Check if still in showingResult state (user didn't navigate away)
         if quizState == .showingResult {
-            currentQuestion = response.currentQuestion
-            quizState = .askingQuestion
+            if nextState == .finished {
+                // Quiz is complete, transition to finished state
+                quizState = .finished
+                sessionStore.clearSession()
 
-            // Play next question audio
-            if let audioInfo = response.audio,
-               let questionUrl = audioInfo.questionUrl {
-                await playQuestionAudio(from: questionUrl)
+                if Config.verboseLogging {
+                    print("🎮 Quiz finished! Final score: \(score)")
+                }
+            } else {
+                // More questions remain, transition to next question
+                currentQuestion = response.currentQuestion
+                quizState = .askingQuestion
+
+                // Play next question audio
+                if let audioInfo = response.audio,
+                   let questionUrl = audioInfo.questionUrl {
+                    await playQuestionAudio(from: questionUrl)
+                }
             }
         }
     }
@@ -270,7 +342,7 @@ final class QuizViewModel: ObservableObject {
     private func playQuestionAudio(from urlString: String) async {
         do {
             let audioData = try await networkService.downloadAudio(from: urlString)
-            try await audioService.playOpusAudio(audioData)
+            _ = try await audioService.playOpusAudio(audioData)
         } catch {
             if Config.verboseLogging {
                 print("⚠️ Failed to play question audio: \(error)")
@@ -279,15 +351,28 @@ final class QuizViewModel: ObservableObject {
         }
     }
 
-    private func playFeedbackAudio(from urlString: String) async {
+    private func playFeedbackAudio(from urlString: String) async -> TimeInterval {
         do {
             let audioData = try await networkService.downloadAudio(from: urlString)
-            try await audioService.playOpusAudio(audioData)
+            let duration = try await audioService.playOpusAudio(audioData)
+            return duration
         } catch {
             if Config.verboseLogging {
                 print("⚠️ Failed to play feedback audio: \(error)")
             }
-            // Don't fail the quiz if audio doesn't play
+            return 3.0  // Default fallback duration
+        }
+    }
+
+    private func playFeedbackAudioBase64(_ base64: String) async -> TimeInterval {
+        do {
+            let duration = try await audioService.playOpusAudioFromBase64(base64)
+            return duration
+        } catch {
+            if Config.verboseLogging {
+                print("⚠️ Failed to play base64 feedback audio: \(error)")
+            }
+            return 3.0  // Default fallback duration
         }
     }
 
@@ -314,6 +399,7 @@ extension QuizViewModel {
         )
         viewModel.currentQuestion = Question.preview
         viewModel.quizState = .askingQuestion
+        viewModel.selectedAudioMode = AudioMode.default
         return viewModel
     }()
 
@@ -328,6 +414,7 @@ extension QuizViewModel {
         viewModel.score = 1.0
         viewModel.questionsAnswered = 1
         viewModel.quizState = .showingResult
+        viewModel.selectedAudioMode = AudioMode.default
         return viewModel
     }()
 }

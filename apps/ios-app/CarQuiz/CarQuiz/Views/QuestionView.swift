@@ -125,6 +125,16 @@ struct QuestionView: View {
             }
         }
         .padding()
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button(action: {
+                    viewModel.toggleAudioMode()
+                }) {
+                    Image(systemName: viewModel.selectedAudioMode.icon)
+                }
+                .disabled(viewModel.quizState == .recording || viewModel.quizState == .processing)
+            }
+        }
     }
 
     // MARK: - Computed Properties

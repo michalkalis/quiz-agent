@@ -53,12 +53,22 @@ struct HomeView: View {
             .padding(.horizontal, 40)
             .disabled(viewModel.isLoading)
 
-            // Current language display
-            if let currentLanguage = Language.forCode(viewModel.selectedLanguage.id) {
+            // Current settings display
+            VStack(spacing: 4) {
+                if let currentLanguage = Language.forCode(viewModel.selectedLanguage.id) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "globe")
+                            .font(.caption)
+                        Text("Language: \(currentLanguage.nativeName)")
+                            .font(.caption)
+                    }
+                    .foregroundColor(.secondary)
+                }
+
                 HStack(spacing: 4) {
-                    Image(systemName: "globe")
+                    Image(systemName: viewModel.selectedAudioMode.icon)
                         .font(.caption)
-                    Text("Language: \(currentLanguage.nativeName)")
+                    Text("Audio: \(viewModel.selectedAudioMode.name)")
                         .font(.caption)
                 }
                 .foregroundColor(.secondary)
@@ -73,6 +83,20 @@ struct HomeView: View {
             Spacer()
         }
         .padding()
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button(action: {
+                    viewModel.toggleAudioMode()
+                }) {
+                    Label {
+                        Text(viewModel.selectedAudioMode.name)
+                    } icon: {
+                        Image(systemName: viewModel.selectedAudioMode.icon)
+                    }
+                }
+                .buttonStyle(.bordered)
+            }
+        }
         .sheet(isPresented: $viewModel.showingLanguagePicker) {
             LanguagePickerView(
                 selectedLanguage: $viewModel.selectedLanguage,
@@ -83,6 +107,7 @@ struct HomeView: View {
         }
         .onAppear {
             viewModel.loadSavedLanguage()
+            viewModel.loadSavedAudioMode()
         }
     }
 }

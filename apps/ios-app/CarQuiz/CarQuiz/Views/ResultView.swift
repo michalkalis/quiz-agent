@@ -62,23 +62,21 @@ struct ResultView: View {
                     .background(Color.gray.opacity(0.1))
                     .cornerRadius(12)
 
-                    // Correct answer (if wrong)
-                    if evaluation.result != .correct {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Correct Answer:")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                                .textCase(.uppercase)
+                    // Correct answer (always shown)
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Correct Answer:")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .textCase(.uppercase)
 
-                            Text(evaluation.correctAnswer)
-                                .font(.body)
-                                .foregroundColor(.primary)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding()
-                        .background(Color.green.opacity(0.1))
-                        .cornerRadius(12)
+                        Text(evaluation.correctAnswer)
+                            .font(.body)
+                            .foregroundColor(.primary)
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding()
+                    .background(Color.green.opacity(0.1))
+                    .cornerRadius(12)
                 }
                 .padding(.horizontal, 32)
             } else {

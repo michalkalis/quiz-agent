@@ -93,6 +93,7 @@ extension QuizResponse {
         feedbackReceived: [],
         audio: AudioInfo(
             feedbackUrl: nil,
+            feedbackAudioBase64: nil,
             questionUrl: "/api/v1/sessions/sess_preview_123/question/audio",
             format: "opus"
         )
@@ -132,6 +133,7 @@ extension QuizResponse {
         feedbackReceived: ["answer: correct"],
         audio: AudioInfo(
             feedbackUrl: "/api/v1/tts/feedback/correct",
+            feedbackAudioBase64: nil,
             questionUrl: "/api/v1/sessions/sess_preview_123/question/audio",
             format: "opus"
         )

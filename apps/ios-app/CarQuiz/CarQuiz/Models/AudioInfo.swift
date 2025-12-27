@@ -7,23 +7,25 @@
 
 import Foundation
 
-/// Contains audio URLs returned from backend
+/// Contains audio URLs and data returned from backend
 struct AudioInfo: Codable, Sendable {
     let feedbackUrl: String?
+    let feedbackAudioBase64: String?  // Enhanced feedback with correct answer
     let questionUrl: String?
     let format: String
 
     enum CodingKeys: String, CodingKey {
         case feedbackUrl = "feedback_url"
+        case feedbackAudioBase64 = "feedback_audio_base64"
         case questionUrl = "question_url"
         case format
     }
 }
 
 extension AudioInfo {
-    /// Check if feedback audio is available
+    /// Check if feedback audio is available (URL or base64)
     var hasFeedbackAudio: Bool {
-        feedbackUrl != nil
+        feedbackUrl != nil || feedbackAudioBase64 != nil
     }
 
     /// Check if question audio is available

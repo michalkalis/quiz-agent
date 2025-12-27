@@ -451,6 +451,31 @@ async def submit_input(session_id: str, request: SubmitInputRequest, audio: bool
                 "correct_answer": str(current_question.correct_answer)
             }
 
+            # Generate enhanced feedback audio for non-perfect answers
+            enhanced_feedback_audio = None
+            if audio and result in ["incorrect", "partially_correct", "partially_incorrect"]:
+                try:
+                    from ..translation.feedback_messages import get_correct_answer_message
+
+                    # Build feedback message with correct answer
+                    correct_answer = str(current_question.correct_answer)
+                    feedback_text = get_correct_answer_message(
+                        result=result,
+                        answer=correct_answer,
+                        language=session.language
+                    )
+
+                    # Generate TTS with caching
+                    enhanced_feedback_audio = await tts_service.synthesize(
+                        text=feedback_text,
+                        use_cache=True
+                    )
+
+                except Exception as e:
+                    # Log error but don't fail the request
+                    print(f"⚠️ Failed to generate enhanced feedback: {e}")
+                    enhanced_feedback_audio = None
+
             # Update participant score
             if request.participant_id:
                 for p in session.participants:
@@ -504,10 +529,19 @@ async def submit_input(session_id: str, request: SubmitInputRequest, audio: bool
     audio_info = None
     if audio and evaluation_result:
         result_type = evaluation_result.get("result", "")
-        audio_info = {
-            "feedback_url": f"/api/v1/sessions/{session_id}/feedback/{result_type}/audio",
-            "format": "opus"
-        }
+
+        # Use enhanced feedback (base64) if available, otherwise generic feedback URL
+        if enhanced_feedback_audio:
+            import base64
+            audio_info = {
+                "feedback_audio_base64": base64.b64encode(enhanced_feedback_audio).decode(),
+                "format": "opus"
+            }
+        else:
+            audio_info = {
+                "feedback_url": f"/api/v1/sessions/{session_id}/feedback/{result_type}/audio",
+                "format": "opus"
+            }
 
     # Check if quiz is finished
     if len(session.asked_question_ids) >= session.max_questions:
@@ -831,6 +865,7 @@ async def transcribe_and_submit(
         feedback_received = [f"voice_input: {transcribed_text}"]
         evaluation_result = None
         user_answer = None
+        enhanced_feedback_audio = None
 
         # Process intents (same logic as /input endpoint)
         for intent in intents:
@@ -851,6 +886,31 @@ async def transcribe_and_submit(
                     "points": score_delta,
                     "correct_answer": str(current_question.correct_answer)
                 }
+
+                # Generate enhanced feedback audio for all answers
+                enhanced_feedback_audio = None
+                if audio and result in ["correct", "incorrect", "partially_correct", "partially_incorrect"]:
+                    try:
+                        from ..translation.feedback_messages import get_correct_answer_message
+
+                        # Build feedback message with correct answer
+                        correct_answer = str(current_question.correct_answer)
+                        feedback_text = get_correct_answer_message(
+                            result=result,
+                            answer=correct_answer,
+                            language=session.language
+                        )
+
+                        # Generate TTS with caching
+                        enhanced_feedback_audio = await tts_service.synthesize(
+                            text=feedback_text,
+                            use_cache=True
+                        )
+
+                    except Exception as e:
+                        # Log error but don't fail the request
+                        print(f"⚠️ Failed to generate enhanced feedback: {e}")
+                        enhanced_feedback_audio = None
 
                 # Update participant score
                 if participant_id:
@@ -899,10 +959,19 @@ async def transcribe_and_submit(
         audio_info = None
         if include_audio and evaluation_result:
             result_type = evaluation_result.get("result", "")
-            audio_info = {
-                "feedback_url": f"/api/v1/sessions/{session_id}/feedback/{result_type}/audio",
-                "format": "opus"
-            }
+
+            # Use enhanced feedback (base64) if available, otherwise generic feedback URL
+            if enhanced_feedback_audio:
+                import base64
+                audio_info = {
+                    "feedback_audio_base64": base64.b64encode(enhanced_feedback_audio).decode(),
+                    "format": "opus"
+                }
+            else:
+                audio_info = {
+                    "feedback_url": f"/api/v1/sessions/{session_id}/feedback/{result_type}/audio",
+                    "format": "opus"
+                }
 
         # Check if quiz is finished
         if len(session.asked_question_ids) >= session.max_questions:

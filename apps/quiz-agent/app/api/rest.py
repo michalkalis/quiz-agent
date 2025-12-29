@@ -357,6 +357,10 @@ async def start_quiz(session_id: str, request: StartQuizRequest, audio: bool = F
 
         session.current_question_id = question.id
         session.asked_question_ids.append(question.id)
+
+        # Cache translated question text for TTS audio consistency
+        translated_question_dict = await question_to_dict_translated(question, session.language)
+        session.current_question_text = translated_question_dict["question"]
         session_manager.update_session(session)
 
         # Build response with optional audio URLs
@@ -371,7 +375,7 @@ async def start_quiz(session_id: str, request: StartQuizRequest, audio: bool = F
             success=True,
             message="Quiz started",
             session=session_to_response(session),
-            current_question=await question_to_dict_translated(question, session.language),
+            current_question=translated_question_dict,
             feedback_received=[],
             audio=audio_info
         )
@@ -578,6 +582,10 @@ async def submit_input(session_id: str, request: SubmitInputRequest, audio: bool
     session.current_question_id = next_question.id
     session.asked_question_ids.append(next_question.id)
     session.phase = "asking"
+
+    # Cache translated question text for TTS audio consistency
+    translated_question_dict = await question_to_dict_translated(next_question, session.language)
+    session.current_question_text = translated_question_dict["question"]
     session_manager.update_session(session)
 
     # Add question URL to audio info
@@ -591,7 +599,7 @@ async def submit_input(session_id: str, request: SubmitInputRequest, audio: bool
         success=True,
         message="Input processed",
         session=session_to_response(session),
-        current_question=await question_to_dict_translated(next_question, session.language),
+        current_question=translated_question_dict,
         evaluation=evaluation_result,
         feedback_received=feedback_received,
         audio=audio_info
@@ -618,15 +626,30 @@ async def get_current_question(session_id: str):
     if not session.current_question_id:
         raise HTTPException(status_code=400, detail="No active question")
 
-    if not chroma_client:
-        raise HTTPException(status_code=500, detail="ChromaDB client not initialized")
-    question = chroma_client.get_question(session.current_question_id)
+    # Check if we have cached translated text
+    if session.current_question_text:
+        # Use cached translation (optimization - avoids re-fetching and re-translating)
+        if not chroma_client:
+            raise HTTPException(status_code=500, detail="ChromaDB client not initialized")
+        question = chroma_client.get_question(session.current_question_id)
+        if not question:
+            raise HTTPException(status_code=500, detail="Question not found")
 
-    if not question:
-        raise HTTPException(status_code=500, detail="Question not found")
+        question_dict = question_to_dict(question)
+        question_dict["question"] = session.current_question_text
+        translated_question = question_dict
+    else:
+        # Fallback: fetch and translate
+        if not chroma_client:
+            raise HTTPException(status_code=500, detail="ChromaDB client not initialized")
+        question = chroma_client.get_question(session.current_question_id)
+        if not question:
+            raise HTTPException(status_code=500, detail="Question not found")
+
+        translated_question = await question_to_dict_translated(question, session.language)
 
     return {
-        "question": await question_to_dict_translated(question, session.language),
+        "question": translated_question,
         "progress": {
             "current": len(session.asked_question_ids),
             "total": session.max_questions
@@ -1008,6 +1031,10 @@ async def transcribe_and_submit(
         session.current_question_id = next_question.id
         session.asked_question_ids.append(next_question.id)
         session.phase = "asking"
+
+        # Cache translated question text for TTS audio consistency
+        translated_question_dict = await question_to_dict_translated(next_question, session.language)
+        session.current_question_text = translated_question_dict["question"]
         session_manager.update_session(session)
 
         # Add question URL to audio info
@@ -1021,7 +1048,7 @@ async def transcribe_and_submit(
             success=True,
             message="Voice input processed",
             session=session_to_response(session),
-            current_question=await question_to_dict_translated(next_question, session.language),
+            current_question=translated_question_dict,
             evaluation=evaluation_result,
             feedback_received=feedback_received,
             audio=audio_info
@@ -1104,26 +1131,29 @@ async def get_question_audio(session_id: str):
     if not session.current_question_id:
         raise HTTPException(status_code=400, detail="No active question in session")
 
-    current_question = chroma_client.get_question(session.current_question_id)
-    if not current_question:
-        raise HTTPException(status_code=404, detail="Current question not found")
-
     try:
-        # Translate question to session language if needed
-        question_text = current_question.question
-
-        print(f"DEBUG: translation_service = {translation_service}")
-        print(f"DEBUG: session.language = {session.language}")
-
-        if translation_service and session.language != "en":
-            print(f"DEBUG: Translating question to {session.language}")
-            question_text = await translation_service.translate_question(
-                question=current_question.question,
-                target_language=session.language
-            )
-            print(f"DEBUG: Translated text = {question_text}")
+        # Use cached translated text for consistency with displayed question
+        # This ensures the audio matches exactly what the user sees on screen
+        if session.current_question_text:
+            question_text = session.current_question_text
+            print(f"DEBUG: Using cached translated text from session")
         else:
-            print(f"DEBUG: No translation needed (translation_service={translation_service is not None}, lang={session.language})")
+            # Fallback: fetch and translate (should rarely happen)
+            current_question = chroma_client.get_question(session.current_question_id)
+            if not current_question:
+                raise HTTPException(status_code=404, detail="Current question not found")
+
+            # Translate using the same logic as the response
+            translated_dict = await question_to_dict_translated(current_question, session.language)
+            question_text = translated_dict["question"]
+
+            # Cache for future audio requests
+            session.current_question_text = question_text
+            session_manager.update_session(session)
+
+            print(f"DEBUG: Translated and cached text for session")
+
+        print(f"DEBUG: Generating TTS for text: {question_text[:50]}...")
 
         # Generate/retrieve cached audio
         audio_data = await tts_service.synthesize_question(

@@ -50,6 +50,12 @@ final class QuizViewModel: ObservableObject {
 
     private var cancellables = Set<AnyCancellable>()
 
+    // Auto-advance task for result screen
+    private var autoAdvanceTask: Task<Void, Never>?
+
+    // Next question audio URL (from response)
+    private var nextQuestionAudioUrl: String?
+
     // MARK: - Initialization
 
     init(
@@ -287,6 +293,10 @@ final class QuizViewModel: ObservableObject {
             questionsAnswered = participant.answeredCount
         }
 
+        // Store next question and its audio URL for later use
+        currentQuestion = response.currentQuestion
+        nextQuestionAudioUrl = response.audio?.questionUrl
+
         // Play feedback audio and capture duration
         var feedbackDuration: TimeInterval = 3.0  // Default fallback
 
@@ -302,39 +312,62 @@ final class QuizViewModel: ObservableObject {
         // Always show result screen first
         quizState = .showingResult
 
-        // Determine next state based on quiz status
-        let nextState: QuizState = response.isQuizFinished ? .finished : .askingQuestion
-
-        // Dynamic auto-advance: audio duration + 1 second buffer
-        let delaySeconds = feedbackDuration + 1.0
-        let delayNanos = UInt64(delaySeconds * 1_000_000_000)
+        // Fixed 8-second auto-advance delay (balances audio playback + reading time + buffer)
+        let autoAdvanceDelay: TimeInterval = 8.0
+        let delayNanos = UInt64(autoAdvanceDelay * 1_000_000_000)
 
         if Config.verboseLogging {
-            print("⏱️ Auto-advancing in \(String(format: "%.1f", delaySeconds))s (audio: \(String(format: "%.1f", feedbackDuration))s + 1s buffer)")
+            print("⏱️ Auto-advancing in \(String(format: "%.1f", autoAdvanceDelay))s (audio: \(String(format: "%.1f", feedbackDuration))s, reading time + buffer)")
         }
 
-        try? await Task.sleep(nanoseconds: delayNanos)
+        // Store task reference to allow cancellation if user taps "Continue" button
+        autoAdvanceTask = Task {
+            try? await Task.sleep(nanoseconds: delayNanos)
 
-        // Check if still in showingResult state (user didn't navigate away)
-        if quizState == .showingResult {
-            if nextState == .finished {
-                // Quiz is complete, transition to finished state
-                quizState = .finished
-                sessionStore.clearSession()
+            // Only proceed if still showing result (user didn't tap button)
+            if quizState == .showingResult {
+                await proceedToNextQuestion()
+            }
+        }
+    }
 
-                if Config.verboseLogging {
-                    print("🎮 Quiz finished! Final score: \(score)")
-                }
-            } else {
-                // More questions remain, transition to next question
-                currentQuestion = response.currentQuestion
-                quizState = .askingQuestion
+    /// Proceed to next question or finish quiz
+    /// Can be called manually via button or automatically via timer
+    func proceedToNextQuestion() async {
+        // Cancel any pending auto-advance
+        autoAdvanceTask?.cancel()
+        autoAdvanceTask = nil
 
-                // Play next question audio
-                if let audioInfo = response.audio,
-                   let questionUrl = audioInfo.questionUrl {
-                    await playQuestionAudio(from: questionUrl)
-                }
+        // Only proceed if currently showing results
+        guard quizState == .showingResult else {
+            if Config.verboseLogging {
+                print("⚠️ Ignoring proceedToNextQuestion - not in showingResult state")
+            }
+            return
+        }
+
+        // Determine next state based on session status
+        if let session = currentSession, session.isFinished {
+            // Quiz is complete
+            quizState = .finished
+            sessionStore.clearSession()
+
+            if Config.verboseLogging {
+                print("🎮 Quiz finished! Final score: \(score)")
+            }
+        } else {
+            // More questions remain - transition to next question
+            // (question already loaded in currentQuestion from handleQuizResponse)
+            quizState = .askingQuestion
+
+            // Play next question audio if available
+            if let questionUrl = nextQuestionAudioUrl {
+                await playQuestionAudio(from: questionUrl)
+                nextQuestionAudioUrl = nil  // Clear after use
+            }
+
+            if Config.verboseLogging {
+                print("❓ Showing next question: \(currentQuestion?.question ?? "unknown")")
             }
         }
     }

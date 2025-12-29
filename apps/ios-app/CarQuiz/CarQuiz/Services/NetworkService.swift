@@ -209,6 +209,24 @@ actor NetworkService: NetworkServiceProtocol {
             throw NetworkError.invalidResponse
         }
 
+        // Verify download integrity by checking Content-Length
+        if let expectedLength = httpResponse.value(forHTTPHeaderField: "Content-Length"),
+           let expectedBytes = Int64(expectedLength),
+           expectedBytes > 0 {
+            let actualBytes = Int64(data.count)
+
+            if actualBytes != expectedBytes {
+                if Config.verboseLogging {
+                    print("⚠️ Download size mismatch: expected \(expectedBytes) bytes, got \(actualBytes) bytes")
+                }
+                throw NetworkError.invalidResponse
+            }
+
+            if Config.verboseLogging {
+                print("✓ Download integrity verified: \(actualBytes) bytes")
+            }
+        }
+
         return data
     }
 

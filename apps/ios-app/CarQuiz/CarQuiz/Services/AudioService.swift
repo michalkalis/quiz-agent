@@ -254,7 +254,14 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
         // Use AVPlayer for better codec support (including Opus)
         let playerItem = AVPlayerItem(url: tempURL)
+
+        // Configure buffering for smoother playback
+        playerItem.preferredForwardBufferDuration = 5.0  // Buffer 5 seconds ahead
+
         audioPlayer = AVPlayer(playerItem: playerItem)
+
+        // Automatically wait when buffering to minimize stalling
+        audioPlayer?.automaticallyWaitsToMinimizeStalling = true
 
         // Get duration before starting playback (async in iOS 18+)
         let asset = playerItem.asset
@@ -274,6 +281,22 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
             // These are only accessed on main queue, so cross-isolation is safe
             nonisolated(unsafe) var successObserver: NSObjectProtocol?
             nonisolated(unsafe) var failureObserver: NSObjectProtocol?
+            nonisolated(unsafe) var statusObserver: NSKeyValueObservation?
+
+            // Monitor playback status for stalling
+            statusObserver = audioPlayer?.observe(\.timeControlStatus, options: [.new]) { player, _ in
+                Task { @MainActor in
+                    if player.timeControlStatus == .waitingToPlayAtSpecifiedRate {
+                        if Config.verboseLogging {
+                            print("⚠️ Audio playback stalling, waiting for buffer...")
+                        }
+                    } else if player.timeControlStatus == .playing {
+                        if Config.verboseLogging {
+                            print("▶️ Audio playback resumed")
+                        }
+                    }
+                }
+            }
 
             // Observe when playback finishes successfully
             successObserver = NotificationCenter.default.addObserver(
@@ -295,6 +318,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
                     if let observer = failureObserver {
                         NotificationCenter.default.removeObserver(observer)
                     }
+                    statusObserver?.invalidate()
                     try? FileManager.default.removeItem(at: tempURL)
 
                     if Config.verboseLogging {
@@ -328,6 +352,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
                     if let observer = failureObserver {
                         NotificationCenter.default.removeObserver(observer)
                     }
+                    statusObserver?.invalidate()
                     try? FileManager.default.removeItem(at: tempURL)
                 }
             }

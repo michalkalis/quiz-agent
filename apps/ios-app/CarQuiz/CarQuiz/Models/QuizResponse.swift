@@ -65,7 +65,7 @@ extension QuizResponse {
         session: QuizSession(
             id: "sess_preview_123",
             mode: "single",
-            phase: "asking",
+            phase: "asking",    
             maxQuestions: 10,
             currentDifficulty: "medium",
             category: nil,

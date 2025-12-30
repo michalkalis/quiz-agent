@@ -34,7 +34,8 @@ class QuestionRetriever:
     def get_next_question(
         self,
         session: QuizSession,
-        n_candidates: int = 50  # Fetch more for better semantic selection
+        n_candidates: int = 50,  # Fetch more for better semantic selection
+        client_excluded_ids: Optional[List[str]] = None
     ) -> Optional[Question]:
         """Get next question using RAG-first approach.
 
@@ -43,6 +44,7 @@ class QuestionRetriever:
         Args:
             session: Current quiz session
             n_candidates: Number of candidates to retrieve (higher = better diversity)
+            client_excluded_ids: Question IDs excluded by client (cross-session history)
 
         Returns:
             Selected question or None if no matches
@@ -61,17 +63,31 @@ class QuestionRetriever:
         # Step 3: Build metadata filters (as CONSTRAINTS, not primary selection)
         filters = self._build_metadata_filters(question_difficulty, session)
 
-        # Step 4: Retrieve candidates using semantic search (PRIMARY mechanism)
+        # Step 4: Merge session-scoped and client-side exclusions
+        session_excluded = session.asked_question_ids
+        client_excluded = client_excluded_ids or []
+        all_excluded_ids = list(set(session_excluded + client_excluded))
+
+        print(f"DEBUG: Excluding {len(all_excluded_ids)} questions total")
+        print(f"  - Session: {len(session_excluded)}")
+        print(f"  - Client history: {len(client_excluded)}")
+
+        # Step 5: Retrieve candidates using semantic search (PRIMARY mechanism)
         candidates = self._retrieve_candidates_semantic(
             semantic_query=semantic_query,
             filters=filters,
             n_candidates=n_candidates,
-            excluded_ids=session.asked_question_ids
+            excluded_ids=all_excluded_ids
         )
 
         if not candidates:
             print(f"DEBUG: No candidates from semantic search, trying fallback strategies")
-            candidates = self._fallback_retrieval(session, question_difficulty, n_candidates)
+            candidates = self._fallback_retrieval(
+                session,
+                question_difficulty,
+                n_candidates,
+                all_excluded_ids
+            )
 
         if not candidates:
             return self._handle_no_candidates(session, question_difficulty)
@@ -202,7 +218,8 @@ class QuestionRetriever:
         self,
         session: QuizSession,
         question_difficulty: str,
-        n_candidates: int
+        n_candidates: int,
+        excluded_ids: List[str]
     ) -> List[Question]:
         """Fallback retrieval strategies when primary semantic search fails.
 
@@ -210,11 +227,11 @@ class QuestionRetriever:
             session: Current quiz session
             question_difficulty: Difficulty level
             n_candidates: Number of candidates
+            excluded_ids: Question IDs to exclude (merged session + client)
 
         Returns:
             List of candidate questions
         """
-        excluded_ids = session.asked_question_ids
 
         # Fallback 1: Simpler semantic query (just "question")
         print(f"DEBUG: Fallback 1 - Simpler semantic query")

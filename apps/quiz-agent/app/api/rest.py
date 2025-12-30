@@ -55,7 +55,10 @@ class SessionResponse(BaseModel):
 
 class StartQuizRequest(BaseModel):
     """Request to start the quiz."""
-    pass
+    excluded_question_ids: Optional[List[str]] = Field(
+        default=None,
+        description="Question IDs to exclude from selection (client-side history)"
+    )
 
 
 class SubmitInputRequest(BaseModel):
@@ -313,14 +316,22 @@ async def start_quiz(session_id: str, request: StartQuizRequest, audio: bool = F
         if session.phase != "idle":
             raise HTTPException(status_code=400, detail="Quiz already started")
 
+        # Extract client-side excluded question IDs
+        client_excluded_ids = request.excluded_question_ids or []
+
+        print(f"DEBUG: Client excluded {len(client_excluded_ids)} questions")
+
         # Update phase
         session.phase = "asking"
         session.asked_question_ids = []
 
-        # Get first question
+        # Get first question with client exclusions
         print(f"DEBUG: Getting next question for session {session_id}, difficulty: {session.current_difficulty}")
         try:
-            question = question_retriever.get_next_question(session)
+            question = question_retriever.get_next_question(
+                session,
+                client_excluded_ids=client_excluded_ids
+            )
         except Exception as e:
             print(f"ERROR: Exception in get_next_question: {e}")
             import traceback
@@ -331,10 +342,23 @@ async def start_quiz(session_id: str, request: StartQuizRequest, audio: bool = F
             print(f"ERROR: get_next_question returned None for session {session_id}")
             # Check database status using the shared chroma_client
             if chroma_client:
-                total_count = chroma_client.count_questions()
+                total_count = chroma_client.count_questions(filters={"review_status": "approved"})
             else:
                 total_count = 0
-            
+
+            # Check if issue is client history exhaustion
+            client_seen_count = len(client_excluded_ids)
+            if total_count > 0 and client_seen_count >= total_count * 0.8:
+                raise HTTPException(
+                    status_code=409,  # Conflict
+                    detail={
+                        "message": "You've seen most available questions",
+                        "total_questions": total_count,
+                        "questions_seen": client_seen_count,
+                        "suggestion": "reset_history"
+                    }
+                )
+
             if total_count == 0:
                 error_detail = (
                     "The question database is empty. "
@@ -352,7 +376,7 @@ async def start_quiz(session_id: str, request: StartQuizRequest, audio: bool = F
                     f"- Category: not in ['children']\n\n"
                     "Try a different difficulty or ensure questions are properly categorized."
                 )
-            
+
             raise HTTPException(status_code=500, detail=error_detail)
 
         session.current_question_id = question.id

@@ -84,6 +84,14 @@ struct HomeView: View {
         }
         .padding()
         .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                NavigationLink {
+                    SettingsView(viewModel: viewModel)
+                } label: {
+                    Label("Settings", systemImage: "gear")
+                }
+            }
+
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button(action: {
                     viewModel.toggleAudioMode()

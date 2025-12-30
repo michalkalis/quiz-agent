@@ -11,7 +11,7 @@
 /// Protocol for network operations
 protocol NetworkServiceProtocol: Sendable {
     func createSession(maxQuestions: Int, difficulty: String, language: String) async throws -> QuizSession
-    func startQuiz(sessionId: String) async throws -> QuizResponse
+    func startQuiz(sessionId: String, excludedQuestionIds: [String]) async throws -> QuizResponse
     func submitVoiceAnswer(sessionId: String, audioData: Data, fileName: String) async throws -> QuizResponse
     func downloadAudio(from urlString: String) async throws -> Data
     func endSession(sessionId: String) async throws
@@ -79,7 +79,7 @@ actor NetworkService: NetworkServiceProtocol {
         }
     }
 
-    func startQuiz(sessionId: String) async throws -> QuizResponse {
+    func startQuiz(sessionId: String, excludedQuestionIds: [String] = []) async throws -> QuizResponse {
         var components = URLComponents(url: baseURL.appendingPathComponent("/api/v1/sessions/\(sessionId)/start"), resolvingAgainstBaseURL: false)!
         components.queryItems = [URLQueryItem(name: "audio", value: "true")]
 
@@ -91,11 +91,14 @@ actor NetworkService: NetworkServiceProtocol {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        // Backend expects an empty JSON body
-        request.httpBody = try JSONSerialization.data(withJSONObject: [:])
+        // Send excluded question IDs in request body
+        let body: [String: Any] = [
+            "excluded_question_ids": excludedQuestionIds
+        ]
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
         if Config.verboseLogging {
-            print("🌐 POST \(url)")
+            print("🌐 POST \(url) with \(excludedQuestionIds.count) excluded IDs")
         }
 
         let (data, response) = try await session.data(for: request)
@@ -309,7 +312,7 @@ final class MockNetworkService: NetworkServiceProtocol {
         return session
     }
 
-    func startQuiz(sessionId: String) async throws -> QuizResponse {
+    func startQuiz(sessionId: String, excludedQuestionIds: [String] = []) async throws -> QuizResponse {
         if shouldFail {
             throw NetworkError.invalidResponse
         }

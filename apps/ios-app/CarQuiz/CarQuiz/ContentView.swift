@@ -12,11 +12,12 @@ struct ContentView: View {
     @StateObject private var viewModel: QuizViewModel
 
     init() {
-        // Will be initialized properly via environmentObject
+        // Temporary initialization - will be replaced with proper dependency injection
         _viewModel = StateObject(wrappedValue: QuizViewModel(
             networkService: NetworkService(),
             audioService: AudioService(),
-            sessionStore: SessionStore()
+            sessionStore: SessionStore(),
+            questionHistoryStore: QuestionHistoryStore()
         ))
     }
 

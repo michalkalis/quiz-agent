@@ -47,6 +47,7 @@ final class QuizViewModel: ObservableObject {
     private let networkService: NetworkServiceProtocol
     private let audioService: AudioServiceProtocol
     private let sessionStore: SessionStoreProtocol
+    private let questionHistoryStore: QuestionHistoryStoreProtocol
 
     private var cancellables = Set<AnyCancellable>()
 
@@ -61,11 +62,13 @@ final class QuizViewModel: ObservableObject {
     init(
         networkService: NetworkServiceProtocol,
         audioService: AudioServiceProtocol,
-        sessionStore: SessionStoreProtocol
+        sessionStore: SessionStoreProtocol,
+        questionHistoryStore: QuestionHistoryStoreProtocol
     ) {
         self.networkService = networkService
         self.audioService = audioService
         self.sessionStore = sessionStore
+        self.questionHistoryStore = questionHistoryStore
     }
 
     // MARK: - Quiz Flow
@@ -81,12 +84,26 @@ final class QuizViewModel: ObservableObject {
 
         defer { isLoading = false }
 
+        // Check if question history is at capacity
+        if questionHistoryStore.isAtCapacity {
+            errorMessage = "Question history is full. Please reset your history in Settings to continue."
+            quizState = .error
+            return
+        }
+
         do {
             // Use provided language or fall back to selected language
             let languageCode = language ?? selectedLanguage.id
 
             if Config.verboseLogging {
                 print("🎮 Starting new quiz: \(maxQuestions) questions, difficulty: \(difficulty), language: \(languageCode)")
+            }
+
+            // Get excluded question IDs from history
+            let excludedIds = questionHistoryStore.getExclusionList()
+
+            if Config.verboseLogging {
+                print("🎮 Excluding \(excludedIds.count) previously seen questions")
             }
 
             // Configure audio session with user's preferred mode
@@ -115,12 +132,31 @@ final class QuizViewModel: ObservableObject {
             sessionStore.saveSession(id: session.id)
             sessionStore.saveLanguage(languageCode)
 
-            // Start quiz and get first question
-            let response = try await networkService.startQuiz(sessionId: session.id)
+            // Start quiz and get first question with exclusion list
+            let response = try await networkService.startQuiz(
+                sessionId: session.id,
+                excludedQuestionIds: excludedIds
+            )
 
             currentSession = response.session
             currentQuestion = response.currentQuestion
             quizState = .askingQuestion
+
+            // Save question ID to history
+            if let questionId = response.currentQuestion?.id {
+                do {
+                    try questionHistoryStore.addQuestionId(questionId)
+                } catch QuestionHistoryError.capacityReached {
+                    // Should not happen (checked before quiz start)
+                    if Config.verboseLogging {
+                        print("⚠️ WARNING: Question history reached capacity mid-quiz")
+                    }
+                } catch {
+                    if Config.verboseLogging {
+                        print("⚠️ WARNING: Failed to save question to history: \(error)")
+                    }
+                }
+            }
 
             // Play question audio if available
             if let audioInfo = response.audio,
@@ -283,6 +319,15 @@ final class QuizViewModel: ObservableObject {
 
     // MARK: - Private Helpers
 
+    /// Stop any currently playing audio (cleanup during state transitions)
+    private func stopAnyPlayingAudio() {
+        audioService.stopPlayback()
+
+        if Config.verboseLogging {
+            print("🔇 Stopped any playing audio for state transition")
+        }
+    }
+
     private func handleQuizResponse(_ response: QuizResponse) async {
         currentSession = response.session
         lastEvaluation = response.evaluation
@@ -296,6 +341,27 @@ final class QuizViewModel: ObservableObject {
         // Store next question and its audio URL for later use
         currentQuestion = response.currentQuestion
         nextQuestionAudioUrl = response.audio?.questionUrl
+
+        // Save question ID to history
+        if let questionId = response.currentQuestion?.id {
+            do {
+                try questionHistoryStore.addQuestionId(questionId)
+            } catch QuestionHistoryError.capacityReached {
+                // Should not happen (checked before quiz start)
+                if Config.verboseLogging {
+                    print("⚠️ WARNING: Question history reached capacity mid-quiz")
+                }
+            } catch {
+                if Config.verboseLogging {
+                    print("⚠️ WARNING: Failed to save question to history: \(error)")
+                }
+            }
+        }
+
+        // CRITICAL: Cancel any previous auto-advance task before starting new result flow
+        // This prevents race conditions if somehow handleQuizResponse is called multiple times
+        autoAdvanceTask?.cancel()
+        autoAdvanceTask = nil
 
         // Play feedback audio and capture duration
         var feedbackDuration: TimeInterval = 3.0  // Default fallback
@@ -345,6 +411,13 @@ final class QuizViewModel: ObservableObject {
             }
             return
         }
+
+        // CRITICAL: Stop any playing feedback audio before transitioning
+        // This ensures clean state transition from ResultView to QuestionView
+        stopAnyPlayingAudio()
+
+        // Small delay to ensure audio cleanup completes
+        try? await Task.sleep(nanoseconds: 100_000_000)  // 0.1 seconds
 
         // Determine next state based on session status
         if let session = currentSession, session.isFinished {
@@ -410,6 +483,14 @@ final class QuizViewModel: ObservableObject {
     }
 
     private func resetState() {
+        // Cancel any pending auto-advance task
+        autoAdvanceTask?.cancel()
+        autoAdvanceTask = nil
+
+        // Stop any playing audio
+        stopAnyPlayingAudio()
+
+        // Reset all state
         quizState = .idle
         currentQuestion = nil
         currentSession = nil
@@ -417,6 +498,23 @@ final class QuizViewModel: ObservableObject {
         score = 0.0
         questionsAnswered = 0
         errorMessage = nil
+        nextQuestionAudioUrl = nil
+    }
+
+    // MARK: - Question History Management
+
+    /// Number of questions in history
+    var questionHistoryCount: Int {
+        questionHistoryStore.askedQuestionIds.count
+    }
+
+    /// Reset question history (allows previously seen questions to appear again)
+    func resetQuestionHistory() {
+        questionHistoryStore.clearHistory()
+
+        if Config.verboseLogging {
+            print("🗑️ Question history reset by user")
+        }
     }
 }
 
@@ -428,7 +526,8 @@ extension QuizViewModel {
         let viewModel = QuizViewModel(
             networkService: MockNetworkService(),
             audioService: MockAudioService(),
-            sessionStore: MockSessionStore()
+            sessionStore: MockSessionStore(),
+            questionHistoryStore: MockQuestionHistoryStore()
         )
         viewModel.currentQuestion = Question.preview
         viewModel.quizState = .askingQuestion
@@ -440,7 +539,8 @@ extension QuizViewModel {
         let viewModel = QuizViewModel(
             networkService: MockNetworkService(),
             audioService: MockAudioService(),
-            sessionStore: MockSessionStore()
+            sessionStore: MockSessionStore(),
+            questionHistoryStore: MockQuestionHistoryStore()
         )
         viewModel.currentQuestion = Question.preview
         viewModel.lastEvaluation = Evaluation.previewCorrect

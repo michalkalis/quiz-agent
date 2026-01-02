@@ -5,6 +5,7 @@ Ported from graph.py:75-356 with enhancements for rating and multiplayer.
 
 import json
 from typing import Dict, List, Optional, Any
+from difflib import SequenceMatcher
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
 
@@ -124,6 +125,32 @@ class InputParser:
                 "confirmation_message": None
             }]
 
+        # Validate answer intents to prevent question text contamination
+        for intent in intents:
+            if intent.get("intent_type") == "answer":
+                answer = intent.get("extracted_data", {}).get("answer", "")
+
+                # Check if answer suspiciously long (likely captured question)
+                if len(answer) > 100:
+                    print(f"⚠️ Suspiciously long answer detected ({len(answer)} chars): {answer[:50]}...")
+                    print("   Converting to skip to prevent question text contamination")
+                    intent["intent_type"] = "skip"
+                    intent["extracted_data"] = {}
+                    intent["confirmation_message"] = "Answer too long, treating as skip"
+                    continue
+
+                # Check if answer is suspiciously similar to question
+                if current_question and len(current_question) > 10:
+                    similarity = SequenceMatcher(None, answer.lower(), current_question.lower()).ratio()
+                    if similarity > 0.7:  # 70% similar to question
+                        print(f"⚠️ Answer too similar to question (similarity: {similarity:.2f})")
+                        print(f"   Question: {current_question[:50]}...")
+                        print(f"   Answer: {answer[:50]}...")
+                        print("   Converting to skip to prevent contamination")
+                        intent["intent_type"] = "skip"
+                        intent["extracted_data"] = {}
+                        intent["confirmation_message"] = "Invalid answer detected, treating as skip"
+
         return intents
 
     def _create_classifier_prompt(
@@ -151,7 +178,11 @@ INTENT TYPES:
 8. "unclear" - Irrelevant text that should be ignored
 
 EXTRACTION RULES:
-- For "answer": Extract just the answer text
+- For "answer": Extract ONLY the user's spoken answer, not the question text
+  ⚠️ CRITICAL: Maximum answer length is 100 characters (longer = likely contamination)
+  ⚠️ If user repeats question before answering (e.g., "What is Paris? Paris"), extract only "Paris"
+  ⚠️ If transcription contains only the question with no actual answer, classify as "skip"
+  ⚠️ Do NOT include question text, even if it appears in the transcription
 - For "skip": No additional data needed
 - For "rating": Extract rating (1-5) and optional feedback
   - Negative sentiment ("bad", "terrible", "too easy", "don't like") → rating: 1

@@ -10,6 +10,10 @@ import SwiftUI
 struct ResultView: View {
     @ObservedObject var viewModel: QuizViewModel
 
+    @State private var showEvaluation = false
+    @State private var showEditSheet = false
+    @State private var editedAnswer = ""
+
     var body: some View {
         VStack(spacing: 32) {
             Spacer()
@@ -17,27 +21,36 @@ struct ResultView: View {
             // Result icon and status
             if let evaluation = viewModel.lastEvaluation {
                 VStack(spacing: 24) {
-                    // Icon with animation
-                    Image(systemName: resultIcon(for: evaluation.result))
-                        .font(.system(size: 80))
-                        .foregroundColor(resultColor(for: evaluation.result))
-                        .transition(.scale.combined(with: .opacity))
+                    // Show evaluation result after 2-second delay
+                    if showEvaluation {
+                        // Icon with animation
+                        Image(systemName: resultIcon(for: evaluation.result))
+                            .font(.system(size: 80))
+                            .foregroundColor(resultColor(for: evaluation.result))
+                            .transition(.scale.combined(with: .opacity))
 
-                    // Result text
-                    Text(resultText(for: evaluation.result))
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                        .foregroundColor(resultColor(for: evaluation.result))
+                        // Result text
+                        Text(resultText(for: evaluation.result))
+                            .font(.largeTitle)
+                            .fontWeight(.bold)
+                            .foregroundColor(resultColor(for: evaluation.result))
 
-                    // Points awarded
-                    if evaluation.points > 0 {
-                        HStack(spacing: 8) {
-                            Image(systemName: "star.fill")
-                                .foregroundColor(.yellow)
-                            Text("+\(formatPoints(evaluation.points))")
-                                .font(.title2)
-                                .fontWeight(.semibold)
+                        // Points awarded
+                        if evaluation.points > 0 {
+                            HStack(spacing: 8) {
+                                Image(systemName: "star.fill")
+                                    .foregroundColor(.yellow)
+                                Text("+\(formatPoints(evaluation.points))")
+                                    .font(.title2)
+                                    .fontWeight(.semibold)
+                            }
                         }
+                    } else {
+                        // Before showing result, show waiting message
+                        Text("Let's see...")
+                            .font(.title)
+                            .foregroundColor(.secondary)
+                            .padding(.vertical, 40)
                     }
                 }
 
@@ -62,21 +75,40 @@ struct ResultView: View {
                     .background(Color.gray.opacity(0.1))
                     .cornerRadius(12)
 
-                    // Correct answer (always shown)
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Correct Answer:")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .textCase(.uppercase)
+                    // Correct answer (shown after evaluation)
+                    if showEvaluation {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Correct Answer:")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .textCase(.uppercase)
 
-                        Text(evaluation.correctAnswer)
-                            .font(.body)
-                            .foregroundColor(.primary)
+                            Text(evaluation.correctAnswer)
+                                .font(.body)
+                                .foregroundColor(.primary)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding()
+                        .background(Color.green.opacity(0.1))
+                        .cornerRadius(12)
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding()
-                    .background(Color.green.opacity(0.1))
-                    .cornerRadius(12)
+
+                    // Edit button (only if incorrect)
+                    if showEvaluation && evaluation.result != .correct {
+                        Button(action: {
+                            editedAnswer = evaluation.userAnswer
+                            showEditSheet = true
+                        }) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "pencil.circle.fill")
+                                Text("Edit Answer")
+                            }
+                            .font(.callout)
+                            .fontWeight(.medium)
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(.orange)
+                    }
                 }
                 .padding(.horizontal, 32)
             } else {
@@ -160,6 +192,76 @@ struct ResultView: View {
         }
         .padding()
         .animation(.spring(response: 0.5, dampingFraction: 0.7), value: viewModel.lastEvaluation)
+        .onChange(of: viewModel.lastEvaluation) { oldValue, newValue in
+            // Reset state when new evaluation arrives (different from previous)
+            if oldValue != newValue {
+                showEvaluation = false
+                editedAnswer = newValue?.userAnswer ?? ""
+
+                // Start 2-second timer to reveal evaluation
+                Task {
+                    try? await Task.sleep(nanoseconds: 2_000_000_000)
+                    withAnimation {
+                        showEvaluation = true
+                    }
+                }
+            }
+        }
+        .onAppear {
+            // Initialize edited answer and start timer on first appearance
+            if let evaluation = viewModel.lastEvaluation {
+                editedAnswer = evaluation.userAnswer
+
+                Task {
+                    try? await Task.sleep(nanoseconds: 2_000_000_000)
+                    withAnimation {
+                        showEvaluation = true
+                    }
+                }
+            }
+        }
+        .sheet(isPresented: $showEditSheet) {
+            NavigationView {
+                VStack(spacing: 24) {
+                    Text("Edit Your Answer")
+                        .font(.title2)
+                        .fontWeight(.bold)
+
+                    TextField("Your answer", text: $editedAnswer)
+                        .textFieldStyle(.roundedBorder)
+                        .padding()
+                        .font(.body)
+
+                    Spacer()
+
+                    Button(action: {
+                        Task {
+                            await viewModel.resubmitAnswer(editedAnswer)
+                            showEditSheet = false
+                        }
+                    }) {
+                        HStack(spacing: 12) {
+                            Text("Resubmit Answer")
+                                .font(.title3)
+                                .fontWeight(.semibold)
+                            Image(systemName: "arrow.right.circle.fill")
+                                .font(.title3)
+                        }
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 56)
+                        .background(Color.blue)
+                        .cornerRadius(16)
+                    }
+                    .padding(.horizontal, 32)
+                    .disabled(editedAnswer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+                .padding()
+                .navigationBarItems(trailing: Button("Cancel") {
+                    showEditSheet = false
+                })
+            }
+        }
         .toolbar {
             // Minimize button (top-left)
             ToolbarItem(placement: .navigationBarLeading) {

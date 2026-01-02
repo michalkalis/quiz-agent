@@ -260,6 +260,42 @@ final class QuizViewModel: ObservableObject {
         }
     }
 
+    /// Resubmit an edited text answer
+    func resubmitAnswer(_ newAnswer: String) async {
+        guard let sessionId = currentSession?.id else {
+            errorMessage = "No active session"
+            return
+        }
+
+        quizState = .processing
+        isLoading = true
+        errorMessage = nil
+
+        defer { isLoading = false }
+
+        do {
+            if Config.verboseLogging {
+                print("✏️ Resubmitting edited answer: \(newAnswer)")
+            }
+
+            let response = try await networkService.submitTextInput(
+                sessionId: sessionId,
+                input: newAnswer,
+                audio: settings.audioMode != "off"
+            )
+
+            await handleQuizResponse(response)
+
+        } catch {
+            errorMessage = "Failed to resubmit answer: \(error.localizedDescription)"
+            quizState = .error
+
+            if Config.verboseLogging {
+                print("❌ Error resubmitting answer: \(error)")
+            }
+        }
+    }
+
     /// End the current quiz session
     func endQuiz() async {
         guard let sessionId = currentSession?.id else { return }

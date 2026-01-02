@@ -2358,7 +2358,7 @@ requires-dist = [
 [[package]]
 name = "quiz-system"
 version = "0.2.0"
-source = { virtual = "." }
+source = { editable = "." }
 
 [[package]]
 name = "referencing"

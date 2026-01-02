@@ -47,7 +47,8 @@ class VoiceTranscriber:
         self,
         audio_file: BinaryIO,
         filename: str,
-        prompt: Optional[str] = None
+        prompt: Optional[str] = None,
+        language: Optional[str] = None
     ) -> tuple[str, Optional[str]]:
         """Transcribe audio file to text.
 
@@ -55,6 +56,8 @@ class VoiceTranscriber:
             audio_file: Audio file binary stream
             filename: Original filename (for format detection)
             prompt: Optional context to guide transcription
+            language: Optional ISO 639-1 language code for this request
+                     Overrides instance language if provided
 
         Returns:
             Tuple of (transcribed_text, language)
@@ -97,9 +100,10 @@ class VoiceTranscriber:
                 "response_format": "verbose_json"
             }
 
-            # Add language if specified
-            if self.language:
-                params["language"] = self.language
+            # Use per-request language if provided, otherwise fall back to instance language
+            effective_language = language or self.language
+            if effective_language:
+                params["language"] = effective_language
 
             # Add prompt for context (improves accuracy)
             if prompt:
@@ -121,7 +125,8 @@ class VoiceTranscriber:
         self,
         audio_file: BinaryIO,
         filename: str,
-        current_question: Optional[str] = None
+        current_question: Optional[str] = None,
+        language: Optional[str] = None
     ) -> str:
         """Transcribe audio with quiz-specific context.
 
@@ -132,6 +137,8 @@ class VoiceTranscriber:
             audio_file: Audio file binary stream
             filename: Original filename
             current_question: Current quiz question for context
+            language: Optional ISO 639-1 language code for this request
+                     Overrides instance language if provided
 
         Returns:
             Transcribed text
@@ -154,7 +161,8 @@ class VoiceTranscriber:
         text, _ = await self.transcribe(
             audio_file=audio_file,
             filename=filename,
-            prompt=prompt
+            prompt=prompt,
+            language=language
         )
 
         return text

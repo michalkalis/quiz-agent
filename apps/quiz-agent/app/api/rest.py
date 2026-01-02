@@ -199,6 +199,39 @@ async def question_to_dict_translated(question: Question, language: str) -> Dict
     return question_dict
 
 
+async def translate_correct_answer(answer: str, language: str) -> str:
+    """Translate correct answer to target language.
+
+    Args:
+        answer: Answer text in English
+        language: Target language code (ISO 639-1)
+
+    Returns:
+        Translated answer text, or original English on failure
+    """
+    print(f"DEBUG [translate_correct_answer]: answer='{answer}', language='{language}', translation_service={'available' if translation_service else 'None'}")
+
+    # No translation needed for English
+    if language == "en" or not translation_service:
+        print(f"DEBUG [translate_correct_answer]: Skipping translation (language={language}, service={bool(translation_service)})")
+        return answer
+
+    try:
+        print(f"DEBUG [translate_correct_answer]: Calling translation_service.translate_feedback...")
+        translated_answer = await translation_service.translate_feedback(
+            feedback=answer,
+            target_language=language
+        )
+        print(f"DEBUG [translate_correct_answer]: Translation result: '{answer}' -> '{translated_answer}'")
+        return translated_answer
+    except Exception as e:
+        print(f"⚠️ Failed to translate correct answer to {language}: {e}")
+        import traceback
+        traceback.print_exc()
+        # Gracefully fall back to English
+        return answer
+
+
 # Session Management Endpoints
 
 @router.post("/sessions", response_model=SessionResponse, status_code=status.HTTP_201_CREATED)
@@ -472,11 +505,17 @@ async def submit_input(session_id: str, request: SubmitInputRequest, audio: bool
                 question_text=current_question.question
             )
 
+            # Translate correct answer to session language
+            translated_correct_answer = await translate_correct_answer(
+                str(current_question.correct_answer),
+                session.language
+            )
+
             evaluation_result = {
                 "user_answer": user_answer,
                 "result": result,
                 "points": score_delta,
-                "correct_answer": str(current_question.correct_answer)
+                "correct_answer": translated_correct_answer
             }
 
             # Generate enhanced feedback audio for non-perfect answers
@@ -485,11 +524,10 @@ async def submit_input(session_id: str, request: SubmitInputRequest, audio: bool
                 try:
                     from ..translation.feedback_messages import get_correct_answer_message
 
-                    # Build feedback message with correct answer
-                    correct_answer = str(current_question.correct_answer)
+                    # Build feedback message with translated correct answer
                     feedback_text = get_correct_answer_message(
                         result=result,
-                        answer=correct_answer,
+                        answer=translated_correct_answer,
                         language=session.language
                     )
 
@@ -517,11 +555,17 @@ async def submit_input(session_id: str, request: SubmitInputRequest, audio: bool
             feedback_received.append(f"answer: {result}")
 
         elif intent_type == "skip":
+            # Translate correct answer for skip case
+            translated_correct_answer_skip = await translate_correct_answer(
+                str(current_question.correct_answer),
+                session.language
+            )
+
             evaluation_result = {
                 "user_answer": "skipped",
                 "result": "skipped",
                 "points": 0.0,
-                "correct_answer": str(current_question.correct_answer)
+                "correct_answer": translated_correct_answer_skip
             }
             feedback_received.append("skipped question")
 
@@ -884,11 +928,12 @@ async def transcribe_and_submit(
         if not current_question:
             raise HTTPException(status_code=500, detail="Current question not found")
 
-        # Transcribe with quiz context
+        # Transcribe with quiz context, constraining to session language
         transcribed_text = await voice_transcriber.transcribe_with_quiz_context(
             audio_file=audio.file,
             filename=audio.filename,
-            current_question=current_question.question
+            current_question=current_question.question,
+            language=session.language
         )
 
         # Validate transcription is not empty
@@ -900,6 +945,20 @@ async def transcribe_and_submit(
             )
 
         print(f"✅ Transcribed: '{transcribed_text}'")
+
+        # Diagnostic logging for audio contamination detection
+        from difflib import SequenceMatcher
+        print(f"DEBUG [voice/submit]: Transcription length: {len(transcribed_text)} chars")
+        print(f"DEBUG [voice/submit]: Current question: '{current_question.question[:50]}...'")
+
+        # Check for potential contamination
+        if len(transcribed_text) > 100:
+            print(f"⚠️ WARNING: Transcription unusually long ({len(transcribed_text)} chars) - possible TTS leakage")
+
+        similarity = SequenceMatcher(None, transcribed_text.lower(), current_question.question.lower()).ratio()
+        if similarity > 0.5:
+            print(f"⚠️ WARNING: Transcription {similarity*100:.0f}% similar to question - possible TTS leakage")
+            print(f"   This may indicate microphone captured TTS playback")
 
         # Now submit the transcribed text as regular input
         # Parse input with AI agent
@@ -927,11 +986,17 @@ async def transcribe_and_submit(
                     question_text=current_question.question
                 )
 
+                # Translate correct answer to session language
+                translated_correct_answer_voice = await translate_correct_answer(
+                    str(current_question.correct_answer),
+                    session.language
+                )
+
                 evaluation_result = {
                     "user_answer": user_answer,
                     "result": result,
                     "points": score_delta,
-                    "correct_answer": str(current_question.correct_answer)
+                    "correct_answer": translated_correct_answer_voice
                 }
 
                 # Generate enhanced feedback audio for all answers
@@ -940,11 +1005,10 @@ async def transcribe_and_submit(
                     try:
                         from ..translation.feedback_messages import get_correct_answer_message
 
-                        # Build feedback message with correct answer
-                        correct_answer = str(current_question.correct_answer)
+                        # Build feedback message with translated correct answer
                         feedback_text = get_correct_answer_message(
                             result=result,
-                            answer=correct_answer,
+                            answer=translated_correct_answer_voice,
                             language=session.language
                         )
 
@@ -972,11 +1036,17 @@ async def transcribe_and_submit(
                 feedback_received.append(f"answer: {result}")
 
             elif intent_type == "skip":
+                # Translate correct answer for skip case
+                translated_correct_answer_voice_skip = await translate_correct_answer(
+                    str(current_question.correct_answer),
+                    session.language
+                )
+
                 evaluation_result = {
                     "user_answer": "skipped",
                     "result": "skipped",
                     "points": 0.0,
-                    "correct_answer": str(current_question.correct_answer)
+                    "correct_answer": translated_correct_answer_voice_skip
                 }
                 feedback_received.append("skipped question")
 

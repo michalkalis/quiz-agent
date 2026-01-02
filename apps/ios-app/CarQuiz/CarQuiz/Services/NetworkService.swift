@@ -13,6 +13,7 @@ protocol NetworkServiceProtocol: Sendable {
     func createSession(maxQuestions: Int, difficulty: String, language: String, category: String?) async throws -> QuizSession
     func startQuiz(sessionId: String, excludedQuestionIds: [String]) async throws -> QuizResponse
     func submitVoiceAnswer(sessionId: String, audioData: Data, fileName: String) async throws -> QuizResponse
+    func submitTextInput(sessionId: String, input: String, audio: Bool) async throws -> QuizResponse
     func downloadAudio(from urlString: String) async throws -> Data
     func endSession(sessionId: String) async throws
 }
@@ -209,6 +210,39 @@ actor NetworkService: NetworkServiceProtocol {
         return try await decodeQuizResponse(from: data)
     }
 
+    func submitTextInput(sessionId: String, input: String, audio: Bool = true) async throws -> QuizResponse {
+        var components = URLComponents(url: baseURL.appendingPathComponent("/api/v1/sessions/\(sessionId)/input"), resolvingAgainstBaseURL: false)!
+        components.queryItems = [URLQueryItem(name: "audio", value: audio ? "true" : "false")]
+
+        guard let url = components.url else {
+            throw NetworkError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        // Text submission with GPT-4 evaluation and TTS
+        request.timeoutInterval = 60
+
+        // Build JSON body
+        let body = ["input": input]
+        request.httpBody = try JSONEncoder().encode(body)
+
+        if Config.verboseLogging {
+            print("🌐 POST \(url) (text: \(input.prefix(50))...)")
+        }
+
+        let (data, response) = try await session.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw NetworkError.invalidResponse
+        }
+
+        return try await decodeQuizResponse(from: data)
+    }
+
     // MARK: - Audio Download
 
     func downloadAudio(from urlString: String) async throws -> Data {
@@ -382,6 +416,16 @@ final class MockNetworkService: NetworkServiceProtocol {
     }
 
     func submitVoiceAnswer(sessionId: String, audioData: Data, fileName: String) async throws -> QuizResponse {
+        if shouldFail {
+            throw NetworkError.invalidResponse
+        }
+        guard let response = mockResponse else {
+            throw NetworkError.invalidResponse
+        }
+        return response
+    }
+
+    func submitTextInput(sessionId: String, input: String, audio: Bool) async throws -> QuizResponse {
         if shouldFail {
             throw NetworkError.invalidResponse
         }

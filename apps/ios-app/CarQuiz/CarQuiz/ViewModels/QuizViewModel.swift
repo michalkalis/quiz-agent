@@ -33,6 +33,9 @@ final class QuizViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var isLoading = false
 
+    // NEW: Auto-advance countdown for ResultView binding (single source of truth)
+    @Published var autoAdvanceCountdown: Int = 0
+
     // MARK: - Language Selection
 
     @Published var selectedLanguage: Language = Language.default
@@ -41,6 +44,25 @@ final class QuizViewModel: ObservableObject {
     // MARK: - Audio Mode Selection
 
     @Published var selectedAudioMode: AudioMode = AudioMode.default
+
+    // MARK: - State Coordination Actor
+
+    /// Actor to serialize state transitions and prevent concurrent handleQuizResponse calls
+    private actor StateCoordinator {
+        private var isProcessing = false
+
+        func acquireLock() async -> Bool {
+            guard !isProcessing else { return false }
+            isProcessing = true
+            return true
+        }
+
+        func releaseLock() {
+            isProcessing = false
+        }
+    }
+
+    private let stateCoordinator = StateCoordinator()
 
     // MARK: - Dependencies
 
@@ -54,8 +76,9 @@ final class QuizViewModel: ObservableObject {
     // Auto-advance task for result screen
     private var autoAdvanceTask: Task<Void, Never>?
 
-    // Next question audio URL (from response)
+    // Next question data (from response, displayed after showing results)
     private var nextQuestionAudioUrl: String?
+    private var nextQuestion: Question?
 
     // MARK: - Initialization
 
@@ -320,8 +343,8 @@ final class QuizViewModel: ObservableObject {
     // MARK: - Private Helpers
 
     /// Stop any currently playing audio (cleanup during state transitions)
-    private func stopAnyPlayingAudio() {
-        audioService.stopPlayback()
+    private func stopAnyPlayingAudio() async {
+        await audioService.stopPlayback()
 
         if Config.verboseLogging {
             print("🔇 Stopped any playing audio for state transition")
@@ -329,6 +352,25 @@ final class QuizViewModel: ObservableObject {
     }
 
     private func handleQuizResponse(_ response: QuizResponse) async {
+        // CRITICAL: Acquire lock to prevent concurrent calls
+        guard await stateCoordinator.acquireLock() else {
+            if Config.verboseLogging {
+                print("⚠️ handleQuizResponse already in progress, ignoring duplicate call")
+            }
+            return
+        }
+
+        defer {
+            Task {
+                await stateCoordinator.releaseLock()
+            }
+        }
+
+        // Cancel any previous auto-advance task
+        autoAdvanceTask?.cancel()
+        autoAdvanceTask = nil
+
+        // Update session state
         currentSession = response.session
         lastEvaluation = response.evaluation
 
@@ -338,8 +380,9 @@ final class QuizViewModel: ObservableObject {
             questionsAnswered = participant.answeredCount
         }
 
-        // Store next question and its audio URL for later use
-        currentQuestion = response.currentQuestion
+        // Store NEXT question separately (don't update currentQuestion yet!)
+        // This prevents the next question from flashing before showing results
+        nextQuestion = response.currentQuestion
         nextQuestionAudioUrl = response.audio?.questionUrl
 
         // Save question ID to history
@@ -358,12 +401,7 @@ final class QuizViewModel: ObservableObject {
             }
         }
 
-        // CRITICAL: Cancel any previous auto-advance task before starting new result flow
-        // This prevents race conditions if somehow handleQuizResponse is called multiple times
-        autoAdvanceTask?.cancel()
-        autoAdvanceTask = nil
-
-        // Play feedback audio and capture duration
+        // Play feedback audio (non-blocking, but await to get duration)
         var feedbackDuration: TimeInterval = 3.0  // Default fallback
 
         if let audioInfo = response.audio {
@@ -378,21 +416,57 @@ final class QuizViewModel: ObservableObject {
         // Always show result screen first
         quizState = .showingResult
 
-        // Fixed 8-second auto-advance delay (balances audio playback + reading time + buffer)
-        let autoAdvanceDelay: TimeInterval = 8.0
-        let delayNanos = UInt64(autoAdvanceDelay * 1_000_000_000)
+        // Start auto-advance with countdown
+        let autoAdvanceDelay: Int = 8  // 8 seconds
+        await startAutoAdvanceCountdown(duration: autoAdvanceDelay, audioDuration: feedbackDuration)
+    }
 
+    /// Starts the auto-advance countdown loop with real-time UI updates
+    private func startAutoAdvanceCountdown(duration: Int, audioDuration: TimeInterval) async {
         if Config.verboseLogging {
-            print("⏱️ Auto-advancing in \(String(format: "%.1f", autoAdvanceDelay))s (audio: \(String(format: "%.1f", feedbackDuration))s, reading time + buffer)")
+            print("⏱️ Auto-advancing in \(duration)s (audio: \(String(format: "%.1f", audioDuration))s, reading time + buffer)")
         }
 
-        // Store task reference to allow cancellation if user taps "Continue" button
-        autoAdvanceTask = Task {
-            try? await Task.sleep(nanoseconds: delayNanos)
+        autoAdvanceCountdown = duration
 
-            // Only proceed if still showing result (user didn't tap button)
-            if quizState == .showingResult {
-                await proceedToNextQuestion()
+        autoAdvanceTask = Task { [weak self] in
+            guard let self else { return }
+
+            // Countdown loop
+            for remaining in (0...duration).reversed() {
+                // Check for cancellation
+                if Task.isCancelled {
+                    if Config.verboseLogging {
+                        await MainActor.run {
+                            print("⏱️ Auto-advance countdown cancelled")
+                        }
+                    }
+                    return
+                }
+
+                await MainActor.run {
+                    self.autoAdvanceCountdown = remaining
+                }
+
+                if remaining > 0 {
+                    try? await Task.sleep(nanoseconds: 1_000_000_000)  // 1 second
+                }
+            }
+
+            // Auto-advance after countdown completes
+            if Task.isCancelled { return }
+
+            await MainActor.run {
+                guard self.quizState == .showingResult else {
+                    if Config.verboseLogging {
+                        print("⏱️ Auto-advance aborted - not in showingResult state")
+                    }
+                    return
+                }
+
+                Task {
+                    await self.proceedToNextQuestion()
+                }
             }
         }
     }
@@ -414,7 +488,7 @@ final class QuizViewModel: ObservableObject {
 
         // CRITICAL: Stop any playing feedback audio before transitioning
         // This ensures clean state transition from ResultView to QuestionView
-        stopAnyPlayingAudio()
+        await stopAnyPlayingAudio()
 
         // Small delay to ensure audio cleanup completes
         try? await Task.sleep(nanoseconds: 100_000_000)  // 0.1 seconds
@@ -429,8 +503,12 @@ final class QuizViewModel: ObservableObject {
                 print("🎮 Quiz finished! Final score: \(score)")
             }
         } else {
-            // More questions remain - transition to next question
-            // (question already loaded in currentQuestion from handleQuizResponse)
+            // More questions remain - NOW update currentQuestion with stored next question
+            // This ensures the next question only appears AFTER showing results
+            currentQuestion = nextQuestion
+            nextQuestion = nil  // Clear after use
+
+            // Transition to asking question state
             quizState = .askingQuestion
 
             // Play next question audio if available
@@ -488,7 +566,9 @@ final class QuizViewModel: ObservableObject {
         autoAdvanceTask = nil
 
         // Stop any playing audio
-        stopAnyPlayingAudio()
+        Task {
+            await stopAnyPlayingAudio()
+        }
 
         // Reset all state
         quizState = .idle
@@ -499,6 +579,8 @@ final class QuizViewModel: ObservableObject {
         questionsAnswered = 0
         errorMessage = nil
         nextQuestionAudioUrl = nil
+        nextQuestion = nil
+        autoAdvanceCountdown = 0
     }
 
     // MARK: - Question History Management

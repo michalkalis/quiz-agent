@@ -24,7 +24,7 @@ protocol AudioServiceProtocol: Sendable {
     func stopRecording() async throws -> Data
     func playOpusAudio(_ data: Data) async throws -> TimeInterval
     func playOpusAudioFromBase64(_ base64: String) async throws -> TimeInterval
-    func stopPlayback()
+    func stopPlayback() async  // Now async for proper cleanup
 }
 
 /// Main actor audio service for AVFoundation operations
@@ -33,10 +33,39 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
     @Published private(set) var isRecording = false
     @Published private(set) var isPlaying = false
 
+    // MARK: - Audio Queue Actor (Serial Execution)
+
+    /// Actor-based serial queue ensuring only one audio operation at a time
+    private actor AudioQueue {
+        private var currentOperation: UUID?
+
+        func setCurrentOperation(_ id: UUID) {
+            currentOperation = id
+        }
+
+        func getCurrentOperation() -> UUID? {
+            currentOperation
+        }
+
+        func clearOperation(_ id: UUID) {
+            if currentOperation == id {
+                currentOperation = nil
+            }
+        }
+
+        func isOperationActive(_ id: UUID) -> Bool {
+            currentOperation == id
+        }
+    }
+
+    private let audioQueue = AudioQueue()
+
+    // MARK: - Playback State
+
     private var audioRecorder: AVAudioRecorder?
     private var audioPlayer: AVPlayer?
-    private var playbackObserver: Any?
-    private var playbackContinuation: CheckedContinuation<Void, Never>?
+    private var currentPlaybackTask: Task<TimeInterval, Error>?
+    private var currentPlaybackId: UUID?
     private var currentAudioMode: AudioMode = AudioMode.default
 
     // Mark as nonisolated(unsafe) because NSObjectProtocol is not Sendable in Swift 6
@@ -48,6 +77,9 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         if let observer = routeChangeObserver {
             NotificationCenter.default.removeObserver(observer)
         }
+
+        // Cancel any in-flight playback
+        currentPlaybackTask?.cancel()
     }
 
     // MARK: - Audio Session Setup
@@ -132,7 +164,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
             _ = try? await stopRecording()
         }
         if isPlaying {
-            stopPlayback()
+            await stopPlayback()  // Now async
         }
 
         // Deactivate current session
@@ -242,14 +274,39 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
     // MARK: - Playback
 
     func playOpusAudio(_ data: Data) async throws -> TimeInterval {
+        let operationId = UUID()
+
+        // Cancel any previous playback first
+        await cancelCurrentPlayback()
+
+        // Wait for any in-flight operation to complete (serial queue)
+        while await audioQueue.getCurrentOperation() != nil {
+            try? await Task.sleep(nanoseconds: 50_000_000) // 50ms polling
+        }
+
+        // Mark this as the current operation
+        await audioQueue.setCurrentOperation(operationId)
+        currentPlaybackId = operationId
+
+        // Perform the actual playback
+        return try await performPlayback(data: data, operationId: operationId)
+    }
+
+    /// Performs the actual audio playback with proper cancellation support
+    private func performPlayback(data: Data, operationId: UUID) async throws -> TimeInterval {
         // Save to temporary file for playback
         let tempURL = FileManager.default.temporaryDirectory
-            .appendingPathComponent("audio_\(UUID().uuidString).opus")
+            .appendingPathComponent("audio_\(operationId).opus")
 
         try data.write(to: tempURL)
 
         if Config.verboseLogging {
             print("🔊 Playing audio: \(data.count) bytes from \(tempURL.lastPathComponent)")
+        }
+
+        // Ensure cleanup happens even on cancellation or error
+        defer {
+            try? FileManager.default.removeItem(at: tempURL)
         }
 
         // Use AVPlayer for better codec support (including Opus)
@@ -272,44 +329,22 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
             print("🔊 Audio duration: \(String(format: "%.1f", durationSeconds))s")
         }
 
-        // Observe playback completion
-        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-            playbackContinuation = continuation
-            isPlaying = true
+        isPlaying = true
 
-            // Mark as nonisolated(unsafe) because NSObjectProtocol is not Sendable in Swift 6
-            // These are only accessed on main queue, so cross-isolation is safe
-            nonisolated(unsafe) var successObserver: NSObjectProtocol?
-            nonisolated(unsafe) var failureObserver: NSObjectProtocol?
-            nonisolated(unsafe) var statusObserver: NSKeyValueObservation?
+        // Use withTaskCancellationHandler for proper cleanup
+        return try await withTaskCancellationHandler {
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<TimeInterval, Error>) in
+                // Mark as nonisolated(unsafe) because NSObjectProtocol is not Sendable in Swift 6
+                // These are only accessed on main queue, so cross-isolation is safe
+                nonisolated(unsafe) var successObserver: NSObjectProtocol?
+                nonisolated(unsafe) var failureObserver: NSObjectProtocol?
+                nonisolated(unsafe) var statusObserver: NSKeyValueObservation?
+                var didResume = false
 
-            // Monitor playback status for stalling
-            statusObserver = audioPlayer?.observe(\.timeControlStatus, options: [.new]) { player, _ in
-                Task { @MainActor in
-                    if player.timeControlStatus == .waitingToPlayAtSpecifiedRate {
-                        if Config.verboseLogging {
-                            print("⚠️ Audio playback stalling, waiting for buffer...")
-                        }
-                    } else if player.timeControlStatus == .playing {
-                        if Config.verboseLogging {
-                            print("▶️ Audio playback resumed")
-                        }
-                    }
-                }
-            }
-
-            // Observe when playback finishes successfully
-            successObserver = NotificationCenter.default.addObserver(
-                forName: .AVPlayerItemDidPlayToEndTime,
-                object: playerItem,
-                queue: .main
-            ) { [weak self] _ in
-                Task { @MainActor [weak self] in
-                    self?.isPlaying = false
-                    if let cont = self?.playbackContinuation {
-                        self?.playbackContinuation = nil
-                        cont.resume()
-                    }
+                // Helper to ensure continuation resumes only once
+                func resumeOnce(with result: Result<TimeInterval, Error>) {
+                    guard !didResume else { return }
+                    didResume = true
 
                     // Clean up observers
                     if let observer = successObserver {
@@ -319,53 +354,109 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
                         NotificationCenter.default.removeObserver(observer)
                     }
                     statusObserver?.invalidate()
-                    try? FileManager.default.removeItem(at: tempURL)
 
-                    if Config.verboseLogging {
-                        print("🔊 Playback completed")
+                    switch result {
+                    case .success(let value):
+                        continuation.resume(returning: value)
+                    case .failure(let error):
+                        continuation.resume(throwing: error)
                     }
                 }
-            }
 
-            // Observe playback failures
-            failureObserver = NotificationCenter.default.addObserver(
-                forName: .AVPlayerItemFailedToPlayToEndTime,
-                object: playerItem,
-                queue: .main
-            ) { [weak self] _ in
-                Task { @MainActor [weak self] in
-                    self?.isPlaying = false
+                // Monitor playback status for stalling
+                statusObserver = audioPlayer?.observe(\.timeControlStatus, options: [.new]) { player, _ in
+                    Task { @MainActor in
+                        if player.timeControlStatus == .waitingToPlayAtSpecifiedRate {
+                            if Config.verboseLogging {
+                                print("⚠️ Audio playback stalling, waiting for buffer...")
+                            }
+                        } else if player.timeControlStatus == .playing {
+                            if Config.verboseLogging {
+                                print("▶️ Audio playback resumed")
+                            }
+                        }
+                    }
+                }
 
-                    if Config.verboseLogging {
-                        print("❌ Playback failed")
-                    }
+                // Observe when playback finishes successfully
+                successObserver = NotificationCenter.default.addObserver(
+                    forName: .AVPlayerItemDidPlayToEndTime,
+                    object: playerItem,
+                    queue: .main
+                ) { [weak self] _ in
+                    Task { @MainActor [weak self] in
+                        await self?.audioQueue.clearOperation(operationId)
+                        self?.isPlaying = false
+                        self?.currentPlaybackId = nil
 
-                    if let cont = self?.playbackContinuation {
-                        self?.playbackContinuation = nil
-                        cont.resume()
-                    }
+                        if Config.verboseLogging {
+                            print("🔊 Playback completed")
+                        }
 
-                    // Clean up observers
-                    if let observer = successObserver {
-                        NotificationCenter.default.removeObserver(observer)
+                        resumeOnce(with: .success(durationSeconds))
                     }
-                    if let observer = failureObserver {
-                        NotificationCenter.default.removeObserver(observer)
+                }
+
+                // Observe playback failures
+                failureObserver = NotificationCenter.default.addObserver(
+                    forName: .AVPlayerItemFailedToPlayToEndTime,
+                    object: playerItem,
+                    queue: .main
+                ) { [weak self] notification in
+                    // Extract error outside Task to avoid concurrency issues
+                    let error = notification.userInfo?[AVPlayerItemFailedToPlayToEndTimeErrorKey] as? Error
+
+                    Task { @MainActor [weak self] in
+                        await self?.audioQueue.clearOperation(operationId)
+                        self?.isPlaying = false
+                        self?.currentPlaybackId = nil
+
+                        if Config.verboseLogging {
+                            print("❌ Playback failed")
+                        }
+
+                        resumeOnce(with: .failure(error ?? AudioError.playbackFailed))
                     }
-                    statusObserver?.invalidate()
-                    try? FileManager.default.removeItem(at: tempURL)
+                }
+
+                // Start playback
+                audioPlayer?.play()
+
+                if Config.verboseLogging {
+                    print("🔊 Started AVPlayer playback")
                 }
             }
-
-            // Start playback
-            audioPlayer?.play()
-
-            if Config.verboseLogging {
-                print("🔊 Started AVPlayer playback")
+        } onCancel: {
+            Task { @MainActor [weak self] in
+                await self?.cleanupPlayback(operationId: operationId)
             }
         }
+    }
 
-        return durationSeconds
+    /// Cleans up playback resources for a specific operation
+    private func cleanupPlayback(operationId: UUID) async {
+        guard currentPlaybackId == operationId else { return }
+
+        audioPlayer?.pause()
+        audioPlayer = nil
+        isPlaying = false
+        currentPlaybackId = nil
+
+        await audioQueue.clearOperation(operationId)
+
+        if Config.verboseLogging {
+            print("🔊 Cleaned up playback (id: \(operationId))")
+        }
+    }
+
+    /// Cancels any currently active playback
+    private func cancelCurrentPlayback() async {
+        currentPlaybackTask?.cancel()
+        currentPlaybackTask = nil
+
+        if let id = currentPlaybackId {
+            await cleanupPlayback(operationId: id)
+        }
     }
 
     func playOpusAudioFromBase64(_ base64: String) async throws -> TimeInterval {
@@ -375,20 +466,9 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         return try await playOpusAudio(data)
     }
 
-    func stopPlayback() {
-        audioPlayer?.pause()
-        audioPlayer = nil
-        isPlaying = false
-
-        // Clean up observer
-        if let observer = playbackObserver {
-            NotificationCenter.default.removeObserver(observer)
-            playbackObserver = nil
-        }
-
-        if let continuation = playbackContinuation {
-            continuation.resume()
-            playbackContinuation = nil
+    func stopPlayback() async {
+        if let id = currentPlaybackId {
+            await cleanupPlayback(operationId: id)
         }
 
         if Config.verboseLogging {
@@ -496,7 +576,7 @@ final class MockAudioService: ObservableObject, AudioServiceProtocol {
         return try await playOpusAudio(Data())
     }
 
-    func stopPlayback() {
+    func stopPlayback() async {
         isPlaying = false
     }
 }

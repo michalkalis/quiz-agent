@@ -9,7 +9,6 @@ import SwiftUI
 
 struct ResultView: View {
     @ObservedObject var viewModel: QuizViewModel
-    @State private var countdown: Int = 8
 
     var body: some View {
         VStack(spacing: 32) {
@@ -109,12 +108,12 @@ struct ResultView: View {
             .padding(.horizontal, 32)
             .padding(.bottom, 20)
 
-            // Auto-advance indicator with countdown
+            // Auto-advance indicator with countdown (binds to ViewModel)
             HStack(spacing: 8) {
                 ProgressView()
                     .scaleEffect(0.8)
-                if countdown > 0 {
-                    Text("Auto-advancing in \(countdown) second\(countdown == 1 ? "" : "s")...")
+                if viewModel.autoAdvanceCountdown > 0 {
+                    Text("Auto-advancing in \(viewModel.autoAdvanceCountdown) second\(viewModel.autoAdvanceCountdown == 1 ? "" : "s")...")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 } else {
@@ -127,17 +126,6 @@ struct ResultView: View {
         }
         .padding()
         .animation(.spring(response: 0.5, dampingFraction: 0.7), value: viewModel.lastEvaluation)
-        .onAppear {
-            // Reset countdown and start timer
-            countdown = 8
-            Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
-                if countdown > 0 {
-                    countdown -= 1
-                } else {
-                    timer.invalidate()
-                }
-            }
-        }
     }
 
     // MARK: - Helper Functions

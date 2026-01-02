@@ -22,6 +22,9 @@ actor NetworkService: NetworkServiceProtocol {
     private let baseURL: URL
     private let session: URLSession
 
+    // Task registry for cancellation support
+    private var activeTasks: [UUID: URLSessionDataTask] = [:]
+
     init(baseURL: String = Config.apiBaseURL) {
         self.baseURL = URL(string: baseURL)!
 
@@ -29,6 +32,25 @@ actor NetworkService: NetworkServiceProtocol {
         config.timeoutIntervalForRequest = 30
         config.timeoutIntervalForResource = 60
         self.session = URLSession(configuration: config)
+    }
+
+    // MARK: - Task Registry
+
+    private func registerTask(_ id: UUID, task: URLSessionDataTask) {
+        activeTasks[id] = task
+    }
+
+    private func unregisterTask(_ id: UUID) {
+        activeTasks.removeValue(forKey: id)
+    }
+
+    private func cancelTask(_ id: UUID) {
+        activeTasks[id]?.cancel()
+        activeTasks.removeValue(forKey: id)
+
+        if Config.verboseLogging {
+            print("🌐 Cancelled task: \(id)")
+        }
     }
 
     // MARK: - Session Management
@@ -185,6 +207,8 @@ actor NetworkService: NetworkServiceProtocol {
     // MARK: - Audio Download
 
     func downloadAudio(from urlString: String) async throws -> Data {
+        let taskId = UUID()
+
         // Handle relative vs absolute URLs
         let url: URL
         if urlString.hasPrefix("http") {
@@ -205,32 +229,62 @@ actor NetworkService: NetworkServiceProtocol {
         var request = URLRequest(url: url)
         request.cachePolicy = .reloadIgnoringLocalCacheData
 
-        let (data, response) = try await session.data(for: request)
+        // Use withTaskCancellationHandler for proper cleanup
+        return try await withTaskCancellationHandler {
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Data, Error>) in
+                let task = session.dataTask(with: request) { [weak self] data, response, error in
+                    Task {
+                        await self?.unregisterTask(taskId)
 
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
-            throw NetworkError.invalidResponse
-        }
+                        // Handle cancellation gracefully
+                        if let error = error as? URLError, error.code == .cancelled {
+                            continuation.resume(throwing: CancellationError())
+                            return
+                        }
 
-        // Verify download integrity by checking Content-Length
-        if let expectedLength = httpResponse.value(forHTTPHeaderField: "Content-Length"),
-           let expectedBytes = Int64(expectedLength),
-           expectedBytes > 0 {
-            let actualBytes = Int64(data.count)
+                        if let error = error {
+                            continuation.resume(throwing: error)
+                            return
+                        }
 
-            if actualBytes != expectedBytes {
-                if Config.verboseLogging {
-                    print("⚠️ Download size mismatch: expected \(expectedBytes) bytes, got \(actualBytes) bytes")
+                        guard let httpResponse = response as? HTTPURLResponse,
+                              (200...299).contains(httpResponse.statusCode),
+                              let data = data else {
+                            continuation.resume(throwing: NetworkError.invalidResponse)
+                            return
+                        }
+
+                        // Verify download integrity by checking Content-Length
+                        if let expectedLength = httpResponse.value(forHTTPHeaderField: "Content-Length"),
+                           let expectedBytes = Int64(expectedLength),
+                           expectedBytes > 0 {
+                            let actualBytes = Int64(data.count)
+
+                            if actualBytes != expectedBytes {
+                                if Config.verboseLogging {
+                                    print("⚠️ Download size mismatch: expected \(expectedBytes) bytes, got \(actualBytes) bytes")
+                                }
+                                continuation.resume(throwing: NetworkError.invalidResponse)
+                                return
+                            }
+
+                            if Config.verboseLogging {
+                                print("✓ Download integrity verified: \(actualBytes) bytes")
+                            }
+                        }
+
+                        continuation.resume(returning: data)
+                    }
                 }
-                throw NetworkError.invalidResponse
-            }
 
-            if Config.verboseLogging {
-                print("✓ Download integrity verified: \(actualBytes) bytes")
+                registerTask(taskId, task: task)
+                task.resume()
+            }
+        } onCancel: {
+            Task {
+                await self.cancelTask(taskId)
             }
         }
-
-        return data
     }
 
     // MARK: - Helper Methods

@@ -36,8 +36,11 @@ final class QuizViewModel: ObservableObject {
     // NEW: Auto-advance countdown for ResultView binding (single source of truth)
     @Published var autoAdvanceCountdown: Int = 0
 
-    // Auto-advance enabled state (permanently disabled when user pauses)
+    // Auto-advance enabled state (global setting toggle)
     @Published var autoAdvanceEnabled: Bool = true
+
+    // Per-question pause state (resets on next question)
+    @Published var currentQuestionPaused: Bool = false
 
     // Minimize state
     @Published var isMinimized: Bool = false
@@ -331,14 +334,28 @@ final class QuizViewModel: ObservableObject {
         }
     }
 
-    /// Pause the quiz (permanently disables auto-advance for this session)
+    /// Pause auto-advance for current question only (not permanent)
     func pauseQuiz() {
         autoAdvanceTask?.cancel()
         autoAdvanceTask = nil
-        autoAdvanceEnabled = false
+        currentQuestionPaused = true
 
         if Config.verboseLogging {
-            print("⏸️ Quiz paused - auto-advance permanently disabled for this session")
+            print("⏸️ Current question paused - auto-advance will resume on next question")
+        }
+    }
+
+    /// Continue to next question after user paused current one
+    func continueToNext() {
+        // Reset per-question pause state
+        currentQuestionPaused = false
+
+        Task {
+            await proceedToNextQuestion()
+        }
+
+        if Config.verboseLogging {
+            print("▶️ Continuing to next question - auto-advance re-enabled")
         }
     }
 
@@ -425,7 +442,18 @@ final class QuizViewModel: ObservableObject {
 
         // Update session state
         currentSession = response.session
-        lastEvaluation = response.evaluation
+
+        // CRITICAL: Validate evaluation exists before showing result
+        guard let evaluation = response.evaluation else {
+            if Config.verboseLogging {
+                print("❌ ERROR: No evaluation in response, cannot show result")
+            }
+            errorMessage = "Invalid response from server"
+            quizState = .error
+            return
+        }
+
+        lastEvaluation = evaluation
 
         // Update score and question count
         if let participant = response.session.participants.first {
@@ -475,10 +503,11 @@ final class QuizViewModel: ObservableObject {
 
     /// Starts the auto-advance countdown loop with real-time UI updates
     private func startAutoAdvanceCountdown(duration: Int, audioDuration: TimeInterval) async {
-        // Skip auto-advance if permanently disabled by user pause
-        guard autoAdvanceEnabled else {
+        // Skip auto-advance if disabled globally OR if current question is paused
+        guard autoAdvanceEnabled && !currentQuestionPaused else {
             if Config.verboseLogging {
-                print("⏱️ Auto-advance disabled, skipping countdown")
+                let reason = !autoAdvanceEnabled ? "disabled globally" : "paused for current question"
+                print("⏱️ Auto-advance skipped (\(reason))")
             }
             autoAdvanceCountdown = 0
             return
@@ -546,6 +575,9 @@ final class QuizViewModel: ObservableObject {
             }
             return
         }
+
+        // Reset per-question pause when moving to next question
+        currentQuestionPaused = false
 
         // CRITICAL: Stop any playing feedback audio before transitioning
         // This ensures clean state transition from ResultView to QuestionView
@@ -642,6 +674,8 @@ final class QuizViewModel: ObservableObject {
         nextQuestionAudioUrl = nil
         nextQuestion = nil
         autoAdvanceCountdown = 0
+        currentQuestionPaused = false
+        autoAdvanceEnabled = true
     }
 
     // MARK: - Question History Management
@@ -674,7 +708,7 @@ extension QuizViewModel {
         )
         viewModel.currentQuestion = Question.preview
         viewModel.quizState = .askingQuestion
-        viewModel.selectedAudioMode = AudioMode.default
+        viewModel.settings.audioMode = AudioMode.default.id
         return viewModel
     }()
 
@@ -690,7 +724,7 @@ extension QuizViewModel {
         viewModel.score = 1.0
         viewModel.questionsAnswered = 1
         viewModel.quizState = .showingResult
-        viewModel.selectedAudioMode = AudioMode.default
+        viewModel.settings.audioMode = AudioMode.default.id
         return viewModel
     }()
 }

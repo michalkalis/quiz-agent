@@ -88,9 +88,7 @@ struct ResultView: View {
 
             // Continue button
             Button(action: {
-                Task {
-                    await viewModel.proceedToNextQuestion()
-                }
+                viewModel.continueToNext()
             }) {
                 HStack(spacing: 12) {
                     Text("Continue")
@@ -107,54 +105,38 @@ struct ResultView: View {
             }
             .padding(.horizontal, 32)
 
-            // Pause/Resume and End Quiz buttons
+            // Pause and Continue buttons (BOTH always visible)
             HStack(spacing: 16) {
-                if viewModel.autoAdvanceEnabled {
-                    // Pause button (shown when auto-advance is active)
-                    Button(action: {
-                        viewModel.pauseQuiz()
-                    }) {
-                        HStack(spacing: 8) {
-                            Image(systemName: "pause.circle")
-                            Text("Pause")
-                        }
-                        .font(.callout)
+                // Pause button (disabled after tapped)
+                Button(action: {
+                    viewModel.pauseQuiz()
+                }) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "pause.circle")
+                        Text("Pause")
                     }
-                    .buttonStyle(.bordered)
-                } else {
-                    // Resume button (shown when paused)
-                    Button(action: {
-                        viewModel.resumeQuiz()
-                    }) {
-                        HStack(spacing: 8) {
-                            Image(systemName: "play.circle")
-                            Text("Resume")
-                        }
-                        .font(.callout)
-                    }
-                    .buttonStyle(.borderedProminent)
-
-                    // End Quiz button (shown when paused)
-                    Button(action: {
-                        Task {
-                            await viewModel.endQuiz()
-                        }
-                    }) {
-                        HStack(spacing: 8) {
-                            Image(systemName: "xmark.circle")
-                            Text("End Quiz")
-                        }
-                        .font(.callout)
-                    }
-                    .buttonStyle(.bordered)
-                    .tint(.red)
+                    .font(.callout)
                 }
+                .buttonStyle(.bordered)
+                .disabled(viewModel.currentQuestionPaused)
+
+                // Continue button (always enabled)
+                Button(action: {
+                    viewModel.continueToNext()
+                }) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "arrow.right.circle")
+                        Text("Continue")
+                    }
+                    .font(.callout)
+                }
+                .buttonStyle(.borderedProminent)
             }
             .padding(.horizontal, 32)
             .padding(.bottom, 20)
 
-            // Auto-advance indicator (only shown when enabled)
-            if viewModel.autoAdvanceEnabled {
+            // Auto-advance indicator
+            if viewModel.autoAdvanceEnabled && !viewModel.currentQuestionPaused {
                 HStack(spacing: 8) {
                     ProgressView()
                         .scaleEffect(0.8)
@@ -169,8 +151,8 @@ struct ResultView: View {
                     }
                 }
                 .padding(.bottom, 20)
-            } else {
-                Text("Auto-advance paused")
+            } else if viewModel.currentQuestionPaused {
+                Text("Auto-advance paused for this question")
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .padding(.bottom, 20)
@@ -178,6 +160,30 @@ struct ResultView: View {
         }
         .padding()
         .animation(.spring(response: 0.5, dampingFraction: 0.7), value: viewModel.lastEvaluation)
+        .toolbar {
+            // Minimize button (top-left)
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(action: {
+                    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                        viewModel.isMinimized = true
+                    }
+                }) {
+                    Label("Minimize", systemImage: "arrow.down.right.and.arrow.up.left")
+                }
+            }
+
+            // End Quiz button (top-right)
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button(action: {
+                    Task {
+                        await viewModel.endQuiz()
+                    }
+                }) {
+                    Label("End Quiz", systemImage: "xmark.circle")
+                }
+                .tint(.red)
+            }
+        }
     }
 
     // MARK: - Helper Functions

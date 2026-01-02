@@ -36,14 +36,31 @@ final class QuizViewModel: ObservableObject {
     // NEW: Auto-advance countdown for ResultView binding (single source of truth)
     @Published var autoAdvanceCountdown: Int = 0
 
-    // MARK: - Language Selection
+    // Auto-advance enabled state (permanently disabled when user pauses)
+    @Published var autoAdvanceEnabled: Bool = true
 
-    @Published var selectedLanguage: Language = Language.default
+    // Minimize state
+    @Published var isMinimized: Bool = false
+
+    // MARK: - Quiz Settings
+
+    @Published var settings: QuizSettings = .default
     @Published var showingLanguagePicker = false
 
-    // MARK: - Audio Mode Selection
+    // Computed properties for backward compatibility
+    var selectedLanguage: Language {
+        Language.forCode(settings.language) ?? Language.default
+    }
 
-    @Published var selectedAudioMode: AudioMode = AudioMode.default
+    var selectedAudioMode: AudioMode {
+        AudioMode.forId(settings.audioMode) ?? AudioMode.default
+    }
+
+    /// Whether minimize is allowed in current state
+    /// Only enabled during .askingQuestion (not during recording/processing)
+    var canMinimize: Bool {
+        quizState == .askingQuestion
+    }
 
     // MARK: - State Coordination Actor
 
@@ -92,20 +109,29 @@ final class QuizViewModel: ObservableObject {
         self.audioService = audioService
         self.sessionStore = sessionStore
         self.questionHistoryStore = questionHistoryStore
+
+        // Load saved settings
+        self.settings = sessionStore.loadSettings()
     }
 
     // MARK: - Quiz Flow
 
     /// Start a new quiz session
     func startNewQuiz(
-        maxQuestions: Int = Config.defaultQuestions,
-        difficulty: String = Config.defaultDifficulty,
+        maxQuestions: Int? = nil,
+        difficulty: String? = nil,
         language: String? = nil
     ) async {
         isLoading = true
         errorMessage = nil
+        autoAdvanceEnabled = true  // Reset auto-advance for new quiz
 
         defer { isLoading = false }
+
+        // Use provided parameters or fall back to settings
+        let quizMaxQuestions = maxQuestions ?? settings.numberOfQuestions
+        let quizDifficulty = difficulty ?? settings.difficulty
+        let quizLanguage = language ?? settings.language
 
         // Check if question history is at capacity
         if questionHistoryStore.isAtCapacity {
@@ -115,11 +141,8 @@ final class QuizViewModel: ObservableObject {
         }
 
         do {
-            // Use provided language or fall back to selected language
-            let languageCode = language ?? selectedLanguage.id
-
             if Config.verboseLogging {
-                print("🎮 Starting new quiz: \(maxQuestions) questions, difficulty: \(difficulty), language: \(languageCode)")
+                print("🎮 Starting new quiz: \(quizMaxQuestions) questions, difficulty: \(quizDifficulty), language: \(quizLanguage)")
             }
 
             // Get excluded question IDs from history
@@ -146,14 +169,15 @@ final class QuizViewModel: ObservableObject {
 
             // Create session
             let session = try await networkService.createSession(
-                maxQuestions: maxQuestions,
-                difficulty: difficulty,
-                language: languageCode
+                maxQuestions: quizMaxQuestions,
+                difficulty: quizDifficulty,
+                language: quizLanguage,
+                category: settings.category
             )
 
             currentSession = session
             sessionStore.saveSession(id: session.id)
-            sessionStore.saveLanguage(languageCode)
+            // Settings are already persisted in SessionStore, no need to save individually
 
             // Start quiz and get first question with exclusion list
             let response = try await networkService.startQuiz(
@@ -279,26 +303,53 @@ final class QuizViewModel: ObservableObject {
     // MARK: - Language Selection
 
     /// Load saved language preference from storage
+    /// (Kept for backward compatibility - settings are now loaded in init)
     func loadSavedLanguage() {
-        if let savedCode = sessionStore.preferredLanguage,
-           let language = Language.forCode(savedCode) {
-            selectedLanguage = language
+        settings = sessionStore.loadSettings()
 
-            if Config.verboseLogging {
-                print("📦 Loaded saved language: \(language.name)")
-            }
+        if Config.verboseLogging {
+            print("📦 Reloaded settings (language: \(settings.language))")
         }
     }
 
     /// Load saved audio mode preference from storage
+    /// (Kept for backward compatibility - settings are now loaded in init)
     func loadSavedAudioMode() {
-        if let savedId = sessionStore.preferredAudioMode,
-           let mode = AudioMode.forId(savedId) {
-            selectedAudioMode = mode
+        settings = sessionStore.loadSettings()
 
-            if Config.verboseLogging {
-                print("📦 Loaded saved audio mode: \(mode.name)")
-            }
+        if Config.verboseLogging {
+            print("📦 Reloaded settings (audio mode: \(settings.audioMode))")
+        }
+    }
+
+    /// Save current settings to persistent storage
+    func saveSettings() {
+        sessionStore.saveSettings(settings)
+
+        if Config.verboseLogging {
+            print("💾 Saved settings: \(settings)")
+        }
+    }
+
+    /// Pause the quiz (permanently disables auto-advance for this session)
+    func pauseQuiz() {
+        autoAdvanceTask?.cancel()
+        autoAdvanceTask = nil
+        autoAdvanceEnabled = false
+
+        if Config.verboseLogging {
+            print("⏸️ Quiz paused - auto-advance permanently disabled for this session")
+        }
+    }
+
+    /// Resume the quiz (proceeds to next question immediately, no auto-advance)
+    func resumeQuiz() {
+        Task {
+            await proceedToNextQuestion()
+        }
+
+        if Config.verboseLogging {
+            print("▶️ Quiz resumed - proceeding to next question")
         }
     }
 
@@ -311,8 +362,8 @@ final class QuizViewModel: ObservableObject {
 
             do {
                 try await audioService.switchAudioMode(newMode)
-                selectedAudioMode = newMode
-                sessionStore.saveAudioMode(newMode.id)
+                settings.audioMode = newMode.id
+                sessionStore.saveSettings(settings)
 
                 if Config.verboseLogging {
                     print("🔄 Switched to \(newMode.name)")
@@ -335,8 +386,10 @@ final class QuizViewModel: ObservableObject {
     /// Confirm language selection and start quiz
     func confirmLanguageAndStartQuiz() {
         showingLanguagePicker = false
+        // Note: selectedLanguage is a computed property from settings
+        // If using language picker, it should update settings.language directly
         Task {
-            await startNewQuiz(language: selectedLanguage.id)
+            await startNewQuiz()
         }
     }
 
@@ -416,13 +469,21 @@ final class QuizViewModel: ObservableObject {
         // Always show result screen first
         quizState = .showingResult
 
-        // Start auto-advance with countdown
-        let autoAdvanceDelay: Int = 8  // 8 seconds
-        await startAutoAdvanceCountdown(duration: autoAdvanceDelay, audioDuration: feedbackDuration)
+        // Start auto-advance with countdown (using user's settings)
+        await startAutoAdvanceCountdown(duration: settings.autoAdvanceDelay, audioDuration: feedbackDuration)
     }
 
     /// Starts the auto-advance countdown loop with real-time UI updates
     private func startAutoAdvanceCountdown(duration: Int, audioDuration: TimeInterval) async {
+        // Skip auto-advance if permanently disabled by user pause
+        guard autoAdvanceEnabled else {
+            if Config.verboseLogging {
+                print("⏱️ Auto-advance disabled, skipping countdown")
+            }
+            autoAdvanceCountdown = 0
+            return
+        }
+
         if Config.verboseLogging {
             print("⏱️ Auto-advancing in \(duration)s (audio: \(String(format: "%.1f", audioDuration))s, reading time + buffer)")
         }

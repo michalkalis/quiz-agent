@@ -10,7 +10,7 @@
 
 /// Protocol for network operations
 protocol NetworkServiceProtocol: Sendable {
-    func createSession(maxQuestions: Int, difficulty: String, language: String) async throws -> QuizSession
+    func createSession(maxQuestions: Int, difficulty: String, language: String, category: String?) async throws -> QuizSession
     func startQuiz(sessionId: String, excludedQuestionIds: [String]) async throws -> QuizResponse
     func submitVoiceAnswer(sessionId: String, audioData: Data, fileName: String) async throws -> QuizResponse
     func downloadAudio(from urlString: String) async throws -> Data
@@ -55,7 +55,7 @@ actor NetworkService: NetworkServiceProtocol {
 
     // MARK: - Session Management
 
-    func createSession(maxQuestions: Int = 10, difficulty: String = "medium", language: String = "en") async throws -> QuizSession {
+    func createSession(maxQuestions: Int = 10, difficulty: String = "medium", language: String = "en", category: String? = nil) async throws -> QuizSession {
         let endpoint = baseURL.appendingPathComponent("/api/v1/sessions")
 
         if Config.verboseLogging {
@@ -67,12 +67,17 @@ actor NetworkService: NetworkServiceProtocol {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        let body: [String: Any] = [
+        var body: [String: Any] = [
             "max_questions": maxQuestions,
             "difficulty": difficulty,
             "mode": "single",
             "language": language
         ]
+
+        // Add category if specified
+        if let category = category {
+            body["category"] = category
+        }
 
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
@@ -356,7 +361,7 @@ final class MockNetworkService: NetworkServiceProtocol {
     nonisolated(unsafe) var mockAudioData: Data?
     nonisolated(unsafe) var shouldFail = false
 
-    func createSession(maxQuestions: Int, difficulty: String, language: String) async throws -> QuizSession {
+    func createSession(maxQuestions: Int, difficulty: String, language: String, category: String?) async throws -> QuizSession {
         if shouldFail {
             throw NetworkError.invalidResponse
         }

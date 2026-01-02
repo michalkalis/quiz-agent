@@ -58,6 +58,29 @@ enum Config {
     /// Voice recording maximum duration in seconds
     static let maxRecordingDuration: TimeInterval = 30.0
 
+    // MARK: - Settings Options
+
+    /// Available question count options for quiz settings
+    static let questionCountOptions = [5, 10, 15, 20]
+
+    /// Available difficulty options for quiz settings
+    static let difficultyOptions = [
+        ("easy", "Easy"),
+        ("medium", "Medium"),
+        ("hard", "Hard"),
+        ("random", "Random")
+    ]
+
+    /// Available category options for quiz settings (nil = All Categories)
+    static let categoryOptions: [(id: String?, display: String)] = [
+        (nil, "All Categories"),
+        ("adults", "Adults"),
+        ("general", "General")
+    ]
+
+    /// Available auto-advance delay options (in seconds)
+    static let autoAdvanceDelayOptions = [5, 8, 10, 15]
+
     // MARK: - Debug Settings
 
     /// Enable verbose logging in debug builds

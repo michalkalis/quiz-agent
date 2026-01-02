@@ -22,27 +22,46 @@ struct ContentView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            Group {
-                switch viewModel.quizState {
-                case .idle:
-                    HomeView(viewModel: viewModel)
+        ZStack {
+            // Main navigation content
+            NavigationStack {
+                Group {
+                    switch viewModel.quizState {
+                    case .idle:
+                        HomeView(viewModel: viewModel)
 
-                case .askingQuestion, .recording, .processing:
-                    QuestionView(viewModel: viewModel)
+                    case .askingQuestion, .recording, .processing:
+                        // Show HomeView when minimized, otherwise QuestionView
+                        if viewModel.isMinimized {
+                            HomeView(viewModel: viewModel)
+                        } else {
+                            QuestionView(viewModel: viewModel)
+                        }
 
-                case .showingResult:
-                    ResultView(viewModel: viewModel)
+                    case .showingResult:
+                        ResultView(viewModel: viewModel)
 
-                case .finished:
-                    CompletionView(viewModel: viewModel)
+                    case .finished:
+                        CompletionView(viewModel: viewModel)
 
-                case .error:
-                    ErrorView(viewModel: viewModel)
+                    case .error:
+                        ErrorView(viewModel: viewModel)
+                    }
+                }
+                .animation(.easeInOut, value: viewModel.quizState)
+            }
+
+            // Floating minimized quiz view overlay
+            if viewModel.isMinimized {
+                VStack {
+                    Spacer()
+                    MinimizedQuizView(viewModel: viewModel)
+                        .padding()
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
-            .animation(.easeInOut, value: viewModel.quizState)
         }
+        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: viewModel.isMinimized)
         .onAppear {
             // Initialize ViewModel with app-wide dependencies
             // This ensures proper dependency injection

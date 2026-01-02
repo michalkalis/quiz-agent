@@ -106,23 +106,75 @@ struct ResultView: View {
                 .cornerRadius(16)
             }
             .padding(.horizontal, 32)
-            .padding(.bottom, 20)
 
-            // Auto-advance indicator with countdown (binds to ViewModel)
-            HStack(spacing: 8) {
-                ProgressView()
-                    .scaleEffect(0.8)
-                if viewModel.autoAdvanceCountdown > 0 {
-                    Text("Auto-advancing in \(viewModel.autoAdvanceCountdown) second\(viewModel.autoAdvanceCountdown == 1 ? "" : "s")...")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+            // Pause/Resume and End Quiz buttons
+            HStack(spacing: 16) {
+                if viewModel.autoAdvanceEnabled {
+                    // Pause button (shown when auto-advance is active)
+                    Button(action: {
+                        viewModel.pauseQuiz()
+                    }) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "pause.circle")
+                            Text("Pause")
+                        }
+                        .font(.callout)
+                    }
+                    .buttonStyle(.bordered)
                 } else {
-                    Text("Loading next question...")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                    // Resume button (shown when paused)
+                    Button(action: {
+                        viewModel.resumeQuiz()
+                    }) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "play.circle")
+                            Text("Resume")
+                        }
+                        .font(.callout)
+                    }
+                    .buttonStyle(.borderedProminent)
+
+                    // End Quiz button (shown when paused)
+                    Button(action: {
+                        Task {
+                            await viewModel.endQuiz()
+                        }
+                    }) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "xmark.circle")
+                            Text("End Quiz")
+                        }
+                        .font(.callout)
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(.red)
                 }
             }
+            .padding(.horizontal, 32)
             .padding(.bottom, 20)
+
+            // Auto-advance indicator (only shown when enabled)
+            if viewModel.autoAdvanceEnabled {
+                HStack(spacing: 8) {
+                    ProgressView()
+                        .scaleEffect(0.8)
+                    if viewModel.autoAdvanceCountdown > 0 {
+                        Text("Auto-advancing in \(viewModel.autoAdvanceCountdown) second\(viewModel.autoAdvanceCountdown == 1 ? "" : "s")...")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    } else {
+                        Text("Loading next question...")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .padding(.bottom, 20)
+            } else {
+                Text("Auto-advance paused")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .padding(.bottom, 20)
+            }
         }
         .padding()
         .animation(.spring(response: 0.5, dampingFraction: 0.7), value: viewModel.lastEvaluation)

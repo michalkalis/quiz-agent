@@ -126,13 +126,15 @@ struct QuestionView: View {
         }
         .padding()
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
+            ToolbarItem(placement: .navigationBarLeading) {
                 Button(action: {
-                    viewModel.toggleAudioMode()
+                    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                        viewModel.isMinimized = true
+                    }
                 }) {
-                    Image(systemName: viewModel.selectedAudioMode.icon)
+                    Label("Minimize", systemImage: "arrow.down.right.and.arrow.up.left")
                 }
-                .disabled(viewModel.quizState == .recording || viewModel.quizState == .processing)
+                .disabled(!viewModel.canMinimize)
             }
         }
     }

@@ -93,7 +93,12 @@ struct ErrorView: View {
 
             Button("Try Again") {
                 Task {
-                    await viewModel.startNewQuiz()
+                    // Check error context to determine retry action
+                    if viewModel.shouldRetryWithNewSession {
+                        await viewModel.startNewQuiz()
+                    } else {
+                        await viewModel.retryLastOperation()
+                    }
                 }
             }
             .buttonStyle(.borderedProminent)

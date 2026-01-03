@@ -125,6 +125,20 @@ struct QuestionView: View {
             }
         }
         .padding()
+        .sheet(isPresented: $viewModel.showAnswerConfirmation) {
+            AnswerConfirmationView(
+                isProcessing: viewModel.isLoading,
+                transcribedAnswer: viewModel.transcribedAnswer,
+                onConfirm: {
+                    Task {
+                        await viewModel.confirmAnswer()
+                    }
+                },
+                onReRecord: {
+                    viewModel.rerecordAnswer()
+                }
+            )
+        }
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button(action: {

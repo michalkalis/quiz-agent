@@ -11,8 +11,6 @@ struct ResultView: View {
     @ObservedObject var viewModel: QuizViewModel
 
     @State private var showEvaluation = false
-    @State private var showEditSheet = false
-    @State private var editedAnswer = ""
 
     var body: some View {
         VStack(spacing: 32) {
@@ -92,23 +90,6 @@ struct ResultView: View {
                         .background(Color.green.opacity(0.1))
                         .cornerRadius(12)
                     }
-
-                    // Edit button (only if incorrect)
-                    if showEvaluation && evaluation.result != .correct {
-                        Button(action: {
-                            editedAnswer = evaluation.userAnswer
-                            showEditSheet = true
-                        }) {
-                            HStack(spacing: 8) {
-                                Image(systemName: "pencil.circle.fill")
-                                Text("Edit Answer")
-                            }
-                            .font(.callout)
-                            .fontWeight(.medium)
-                        }
-                        .buttonStyle(.bordered)
-                        .tint(.orange)
-                    }
                 }
                 .padding(.horizontal, 32)
             } else {
@@ -137,32 +118,19 @@ struct ResultView: View {
             }
             .padding(.horizontal, 32)
 
-            // Pause and Continue buttons (BOTH always visible)
-            HStack(spacing: 16) {
-                // Pause button (disabled after tapped)
+            // Cancel button (for auto-advance)
+            HStack {
                 Button(action: {
                     viewModel.pauseQuiz()
                 }) {
                     HStack(spacing: 8) {
-                        Image(systemName: "pause.circle")
-                        Text("Pause")
+                        Image(systemName: "xmark.circle")
+                        Text("Cancel")
                     }
                     .font(.callout)
                 }
                 .buttonStyle(.bordered)
                 .disabled(viewModel.currentQuestionPaused)
-
-                // Continue button (always enabled)
-                Button(action: {
-                    viewModel.continueToNext()
-                }) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "arrow.right.circle")
-                        Text("Continue")
-                    }
-                    .font(.callout)
-                }
-                .buttonStyle(.borderedProminent)
             }
             .padding(.horizontal, 32)
             .padding(.bottom, 20)
@@ -192,75 +160,9 @@ struct ResultView: View {
         }
         .padding()
         .animation(.spring(response: 0.5, dampingFraction: 0.7), value: viewModel.lastEvaluation)
-        .onChange(of: viewModel.lastEvaluation) { oldValue, newValue in
-            // Reset state when new evaluation arrives (different from previous)
-            if oldValue != newValue {
-                showEvaluation = false
-                editedAnswer = newValue?.userAnswer ?? ""
-
-                // Start 2-second timer to reveal evaluation
-                Task {
-                    try? await Task.sleep(nanoseconds: 2_000_000_000)
-                    withAnimation {
-                        showEvaluation = true
-                    }
-                }
-            }
-        }
         .onAppear {
-            // Initialize edited answer and start timer on first appearance
-            if let evaluation = viewModel.lastEvaluation {
-                editedAnswer = evaluation.userAnswer
-
-                Task {
-                    try? await Task.sleep(nanoseconds: 2_000_000_000)
-                    withAnimation {
-                        showEvaluation = true
-                    }
-                }
-            }
-        }
-        .sheet(isPresented: $showEditSheet) {
-            NavigationView {
-                VStack(spacing: 24) {
-                    Text("Edit Your Answer")
-                        .font(.title2)
-                        .fontWeight(.bold)
-
-                    TextField("Your answer", text: $editedAnswer)
-                        .textFieldStyle(.roundedBorder)
-                        .padding()
-                        .font(.body)
-
-                    Spacer()
-
-                    Button(action: {
-                        Task {
-                            await viewModel.resubmitAnswer(editedAnswer)
-                            showEditSheet = false
-                        }
-                    }) {
-                        HStack(spacing: 12) {
-                            Text("Resubmit Answer")
-                                .font(.title3)
-                                .fontWeight(.semibold)
-                            Image(systemName: "arrow.right.circle.fill")
-                                .font(.title3)
-                        }
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 56)
-                        .background(Color.blue)
-                        .cornerRadius(16)
-                    }
-                    .padding(.horizontal, 32)
-                    .disabled(editedAnswer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                }
-                .padding()
-                .navigationBarItems(trailing: Button("Cancel") {
-                    showEditSheet = false
-                })
-            }
+            // Show evaluation immediately - no timer
+            showEvaluation = true
         }
         .toolbar {
             // Minimize button (top-left)

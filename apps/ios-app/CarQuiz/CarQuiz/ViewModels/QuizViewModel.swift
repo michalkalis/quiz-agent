@@ -19,6 +19,13 @@ enum QuizState: Equatable, Sendable {
     case error
 }
 
+/// Error context for distinguishing error types
+enum ErrorContext {
+    case initialization  // Error during session creation or quiz start
+    case submission      // Error during answer submission
+    case general         // Other errors
+}
+
 /// Main quiz view model coordinating all services
 @MainActor
 final class QuizViewModel: ObservableObject {
@@ -32,6 +39,12 @@ final class QuizViewModel: ObservableObject {
     @Published var questionsAnswered: Int = 0
     @Published var errorMessage: String?
     @Published var isLoading = false
+    private var errorContext: ErrorContext = .initialization
+
+    // Answer confirmation modal state
+    @Published var showAnswerConfirmation = false
+    @Published var transcribedAnswer = ""
+    private var pendingResponse: QuizResponse? = nil
 
     // NEW: Auto-advance countdown for ResultView binding (single source of truth)
     @Published var autoAdvanceCountdown: Int = 0
@@ -216,6 +229,7 @@ final class QuizViewModel: ObservableObject {
 
         } catch {
             errorMessage = "Failed to start quiz: \(error.localizedDescription)"
+            errorContext = .initialization
             quizState = .error
 
             if Config.verboseLogging {
@@ -228,6 +242,7 @@ final class QuizViewModel: ObservableObject {
     func submitVoiceAnswer(audioData: Data) async {
         guard let sessionId = currentSession?.id else {
             errorMessage = "No active session"
+            quizState = .error
             return
         }
 
@@ -248,15 +263,55 @@ final class QuizViewModel: ObservableObject {
                 fileName: "answer.m4a"
             )
 
-            await handleQuizResponse(response)
+            // Store response and show confirmation modal
+            pendingResponse = response
+            transcribedAnswer = response.evaluation?.userAnswer ?? "No answer detected"
+            showAnswerConfirmation = true
+
+            // Don't call handleQuizResponse yet - wait for user confirmation
 
         } catch {
             errorMessage = "Failed to submit answer: \(error.localizedDescription)"
+            errorContext = .submission
             quizState = .error
 
             if Config.verboseLogging {
                 print("❌ Error submitting answer: \(error)")
             }
+        }
+    }
+
+    /// Confirm the transcribed answer and proceed to show result
+    func confirmAnswer() async {
+        guard let response = pendingResponse else { return }
+        showAnswerConfirmation = false
+        pendingResponse = nil
+        await handleQuizResponse(response)
+    }
+
+    /// Reject the transcribed answer and return to recording
+    func rerecordAnswer() {
+        showAnswerConfirmation = false
+        pendingResponse = nil
+        quizState = .recording
+        errorMessage = nil
+    }
+
+    /// Whether to retry with a new session (for initialization errors)
+    var shouldRetryWithNewSession: Bool {
+        errorContext == .initialization
+    }
+
+    /// Retry the last operation based on error context
+    func retryLastOperation() async {
+        switch errorContext {
+        case .submission:
+            // Retry answer submission (return to recording state)
+            quizState = .askingQuestion
+            errorMessage = nil
+        default:
+            // Fallback to starting new quiz
+            await startNewQuiz()
         }
     }
 
@@ -518,23 +573,26 @@ final class QuizViewModel: ObservableObject {
             }
         }
 
-        // Play feedback audio (non-blocking, but await to get duration)
-        var feedbackDuration: TimeInterval = 3.0  // Default fallback
-
-        if let audioInfo = response.audio {
-            // Prioritize base64 (enhanced feedback) over URL (generic feedback)
-            if let base64 = audioInfo.feedbackAudioBase64 {
-                feedbackDuration = await playFeedbackAudioBase64(base64)
-            } else if let feedbackUrl = audioInfo.feedbackUrl {
-                feedbackDuration = await playFeedbackAudio(from: feedbackUrl)
-            }
-        }
-
-        // Always show result screen first
+        // IMPORTANT: Show result screen BEFORE playing audio
+        // This ensures ResultView is visible when audio starts playing
         quizState = .showingResult
 
-        // Start auto-advance with countdown (using user's settings)
-        await startAutoAdvanceCountdown(duration: settings.autoAdvanceDelay, audioDuration: feedbackDuration)
+        // Play feedback audio and start countdown in background
+        Task {
+            var feedbackDuration: TimeInterval = 0.0
+
+            if let audioInfo = response.audio {
+                // Prioritize base64 (enhanced feedback) over URL (generic feedback)
+                if let base64 = audioInfo.feedbackAudioBase64 {
+                    feedbackDuration = await playFeedbackAudioBase64(base64)
+                } else if let feedbackUrl = audioInfo.feedbackUrl {
+                    feedbackDuration = await playFeedbackAudio(from: feedbackUrl)
+                }
+            }
+
+            // Start auto-advance countdown after audio completes (or immediately if no audio)
+            await startAutoAdvanceCountdown(duration: settings.autoAdvanceDelay, audioDuration: feedbackDuration)
+        }
     }
 
     /// Starts the auto-advance countdown loop with real-time UI updates

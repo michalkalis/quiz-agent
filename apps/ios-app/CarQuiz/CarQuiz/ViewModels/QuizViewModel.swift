@@ -289,11 +289,11 @@ final class QuizViewModel: ObservableObject {
         await handleQuizResponse(response)
     }
 
-    /// Reject the transcribed answer and return to recording
+    /// Reject the transcribed answer and return to ready-to-record state
     func rerecordAnswer() {
         showAnswerConfirmation = false
         pendingResponse = nil
-        quizState = .recording
+        quizState = .askingQuestion  // Return to ready state, not recording
         errorMessage = nil
     }
 

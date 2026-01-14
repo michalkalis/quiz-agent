@@ -114,8 +114,8 @@ struct QuestionView: View {
             .disabled(viewModel.quizState == .processing)
             .padding(.bottom, 40)
 
-            // Error message
-            if let error = recordingError {
+            // Error message (from recording or answer submission)
+            if let error = recordingError ?? viewModel.errorMessage {
                 Text(error)
                     .font(.caption)
                     .foregroundColor(.red)
@@ -181,6 +181,7 @@ struct QuestionView: View {
 
     private func handleMicrophoneTap() {
         recordingError = nil
+        viewModel.errorMessage = nil  // Clear any previous submission error
 
         Task {
             do {

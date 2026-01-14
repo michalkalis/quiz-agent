@@ -73,9 +73,9 @@ final class QuizViewModel: ObservableObject {
     }
 
     /// Whether minimize is allowed in current state
-    /// Only enabled during .askingQuestion (not during recording/processing)
+    /// Enabled during active quiz states (question, recording, processing, results)
     var canMinimize: Bool {
-        quizState == .askingQuestion
+        quizState == .askingQuestion || quizState == .recording || quizState == .processing || quizState == .showingResult
     }
 
     // MARK: - State Coordination Actor
@@ -263,13 +263,45 @@ final class QuizViewModel: ObservableObject {
                 fileName: "answer.m4a"
             )
 
+            // Check if response has a valid evaluation before showing confirmation
+            guard let evaluation = response.evaluation else {
+                if Config.verboseLogging {
+                    print("⚠️ No evaluation in response - speech may not have been recognized")
+                }
+                // Return to asking state so user can re-record
+                errorMessage = "Could not understand your answer. Please speak clearly and try again."
+                errorContext = .submission
+                quizState = .error
+                return
+            }
+
             // Store response and show confirmation modal
             pendingResponse = response
-            transcribedAnswer = response.evaluation?.userAnswer ?? "No answer detected"
+            transcribedAnswer = evaluation.userAnswer
             showAnswerConfirmation = true
 
             // Don't call handleQuizResponse yet - wait for user confirmation
 
+        } catch let error as NetworkError {
+            // Handle "speech not understood" errors gracefully - let user re-record
+            if case .serverError(let statusCode, let message) = error, statusCode == 400 {
+                errorMessage = message
+                quizState = .askingQuestion  // Return to ready state for re-recording
+
+                if Config.verboseLogging {
+                    print("⚠️ Speech not understood, returning to question: \(message)")
+                }
+                return
+            }
+
+            // Other network errors go to error screen
+            errorMessage = "Failed to submit answer: \(error.localizedDescription)"
+            errorContext = .submission
+            quizState = .error
+
+            if Config.verboseLogging {
+                print("❌ Error submitting answer: \(error)")
+            }
         } catch {
             errorMessage = "Failed to submit answer: \(error.localizedDescription)"
             errorContext = .submission
@@ -539,7 +571,8 @@ final class QuizViewModel: ObservableObject {
             if Config.verboseLogging {
                 print("❌ ERROR: No evaluation in response, cannot show result")
             }
-            errorMessage = "Invalid response from server"
+            errorMessage = "Could not evaluate your answer. Please try again."
+            errorContext = .submission
             quizState = .error
             return
         }

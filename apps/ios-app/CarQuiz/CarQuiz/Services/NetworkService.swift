@@ -202,8 +202,29 @@ actor NetworkService: NetworkServiceProtocol {
 
         let (data, response) = try await session.data(for: request)
 
+        if Config.verboseLogging {
+            print("📥 Voice response received: \(data.count) bytes")
+            if let httpResponse = response as? HTTPURLResponse {
+                print("📊 Status code: \(httpResponse.statusCode)")
+            }
+        }
+
         guard let httpResponse = response as? HTTPURLResponse,
               (200...299).contains(httpResponse.statusCode) else {
+            let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
+
+            if Config.verboseLogging {
+                print("❌ HTTP error: \(statusCode)")
+                if let responseString = String(data: data, encoding: .utf8) {
+                    print("📄 Response body: \(responseString)")
+                }
+            }
+
+            // Try to extract error message from backend response
+            if let errorResponse = try? JSONDecoder().decode(ErrorResponse.self, from: data) {
+                throw NetworkError.serverError(statusCode: statusCode, message: errorResponse.detail)
+            }
+
             throw NetworkError.invalidResponse
         }
 
@@ -368,10 +389,16 @@ actor NetworkService: NetworkServiceProtocol {
 
 // MARK: - Error Types
 
+/// Backend error response structure
+private struct ErrorResponse: Decodable {
+    let detail: String
+}
+
 enum NetworkError: LocalizedError {
     case invalidResponse
     case invalidURL
     case decodingError(Error)
+    case serverError(statusCode: Int, message: String)
 
     var errorDescription: String? {
         switch self {
@@ -381,6 +408,8 @@ enum NetworkError: LocalizedError {
             return "Invalid URL"
         case .decodingError(let error):
             return "Failed to decode response: \(error.localizedDescription)"
+        case .serverError(_, let message):
+            return message
         }
     }
 }

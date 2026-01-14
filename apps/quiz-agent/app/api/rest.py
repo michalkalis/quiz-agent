@@ -1072,6 +1072,14 @@ async def transcribe_and_submit(
                 session.category = category
                 feedback_received.append(f"category: {category}")
 
+        # Validate that an answer was detected (for voice submissions, we expect an answer)
+        if evaluation_result is None:
+            print(f"⚠️ No answer intent detected in transcription: '{transcribed_text}'")
+            raise HTTPException(
+                status_code=400,
+                detail="Could not understand your answer. Please speak clearly and try again."
+            )
+
         # Build audio info for voice response
         audio_info = None
         if include_audio and evaluation_result:
@@ -1148,6 +1156,9 @@ async def transcribe_and_submit(
             audio=audio_info
         )
 
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is (preserve status code)
+        raise
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except RuntimeError as e:

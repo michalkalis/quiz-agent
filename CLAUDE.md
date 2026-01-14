@@ -2,13 +2,6 @@
 
 AI-powered quiz platform with voice-based interaction. Designed for hands-free trivia while driving.
 
-## Development Guidelines
-
-For detailed development rules, see:
-- **Backend Development:** @.claude/rules/backend.md (Python/FastAPI rules)
-- **iOS Development:** @.claude/rules/ios.md (Swift/SwiftUI rules)
-- **Shared Standards:** @.claude/rules/shared.md (Git workflow, testing, API contracts)
-
 ## Repository Structure
 
 ```

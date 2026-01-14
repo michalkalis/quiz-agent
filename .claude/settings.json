@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "branch=$(git branch --show-current 2>/dev/null); if [ \"$branch\" = \"main\" ] || [ \"$branch\" = \"master\" ]; then echo '{\"decision\": \"block\", \"reason\": \"Cannot edit on main/master branch. Create a feature branch first: git checkout -b feature/your-feature\"}'; exit 0; fi",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

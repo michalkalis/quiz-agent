@@ -72,6 +72,34 @@ final class QuizViewModel: ObservableObject {
         AudioMode.forId(settings.audioMode) ?? AudioMode.default
     }
 
+    // MARK: - Audio Device State
+
+    /// Available input devices from AudioService
+    var availableInputDevices: [AudioDevice] {
+        audioService.availableInputDevices
+    }
+
+    /// Currently selected input device (nil = automatic)
+    var selectedInputDevice: AudioDevice? {
+        audioService.currentInputDevice
+    }
+
+    /// Current output device name for display
+    var currentOutputDeviceName: String {
+        audioService.currentOutputDeviceName
+    }
+
+    /// Display name for current input device
+    var currentInputDeviceName: String {
+        if let device = audioService.currentInputDevice {
+            return device.name
+        }
+        return "Automatic"
+    }
+
+    /// Sheet presentation state for microphone picker
+    @Published var showingMicrophonePicker = false
+
     /// Whether minimize is allowed in current state
     /// Enabled during active quiz states (question, recording, processing, results)
     var canMinimize: Bool {
@@ -514,6 +542,58 @@ final class QuizViewModel: ObservableObject {
                 if Config.verboseLogging {
                     print("❌ Error switching audio mode: \(error)")
                 }
+            }
+        }
+    }
+
+    // MARK: - Audio Device Management
+
+    /// Refresh available audio input devices
+    func refreshAudioDevices() {
+        audioService.refreshAvailableDevices()
+
+        // Try to restore saved preferred device
+        if let savedId = settings.preferredInputDeviceId {
+            // Check if saved device is still available
+            if let device = availableInputDevices.first(where: { $0.id == savedId }) {
+                do {
+                    try audioService.setPreferredInputDevice(device)
+                    if Config.verboseLogging {
+                        print("🎤 Restored preferred input device: \(device.name)")
+                    }
+                } catch {
+                    if Config.verboseLogging {
+                        print("⚠️ Failed to restore preferred input device: \(error)")
+                    }
+                }
+            } else {
+                // Saved device not available, keep preference for reconnection
+                if Config.verboseLogging {
+                    print("🎤 Saved input device not available, using automatic")
+                }
+            }
+        }
+    }
+
+    /// Set preferred input device
+    /// - Parameter device: Device to use, or nil for automatic selection
+    func setPreferredInputDevice(_ device: AudioDevice?) {
+        do {
+            try audioService.setPreferredInputDevice(device)
+
+            // Persist preference
+            settings.preferredInputDeviceId = device?.id
+            sessionStore.saveSettings(settings)
+
+            if Config.verboseLogging {
+                let deviceName = device?.name ?? "Automatic"
+                print("🎤 Set preferred input device: \(deviceName)")
+            }
+        } catch {
+            errorMessage = "Failed to set audio device: \(error.localizedDescription)"
+
+            if Config.verboseLogging {
+                print("❌ Error setting preferred input device: \(error)")
             }
         }
     }

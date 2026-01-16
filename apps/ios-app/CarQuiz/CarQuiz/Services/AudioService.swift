@@ -17,6 +17,11 @@ protocol AudioServiceProtocol: Sendable {
     var isRecording: Bool { get }
     var isPlaying: Bool { get }
 
+    // Device management
+    var availableInputDevices: [AudioDevice] { get }
+    var currentInputDevice: AudioDevice? { get }
+    var currentOutputDeviceName: String { get }
+
     func setupAudioSession(mode: AudioMode) throws
     func switchAudioMode(_ mode: AudioMode) async throws
     func requestMicrophonePermission() async -> Bool
@@ -25,6 +30,10 @@ protocol AudioServiceProtocol: Sendable {
     func playOpusAudio(_ data: Data) async throws -> TimeInterval
     func playOpusAudioFromBase64(_ base64: String) async throws -> TimeInterval
     func stopPlayback() async  // Now async for proper cleanup
+
+    // Device selection
+    func refreshAvailableDevices()
+    func setPreferredInputDevice(_ device: AudioDevice?) throws
 }
 
 /// Main actor audio service for AVFoundation operations
@@ -32,6 +41,23 @@ protocol AudioServiceProtocol: Sendable {
 final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
     @Published private(set) var isRecording = false
     @Published private(set) var isPlaying = false
+
+    // MARK: - Device Management
+
+    /// Available input devices (microphones)
+    @Published private(set) var availableInputDevices: [AudioDevice] = []
+
+    /// Currently active input device (nil = automatic)
+    @Published private(set) var currentInputDevice: AudioDevice?
+
+    /// Current output device name for display
+    var currentOutputDeviceName: String {
+        let session = AVAudioSession.sharedInstance()
+        if let output = session.currentRoute.outputs.first {
+            return output.portName
+        }
+        return "iPhone"
+    }
 
     // MARK: - Audio Queue Actor (Serial Execution)
 
@@ -191,13 +217,92 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
             if Config.verboseLogging {
                 print("🎧 Bluetooth device connected")
             }
+            // Refresh available devices on main actor
+            Task { @MainActor in
+                self.refreshAvailableDevices()
+            }
         case .oldDeviceUnavailable:
             // Bluetooth disconnected - gracefully fall back to built-in mic
             if Config.verboseLogging {
                 print("🎧 Bluetooth device disconnected, using built-in microphone")
             }
+            // Refresh available devices on main actor
+            Task { @MainActor in
+                self.refreshAvailableDevices()
+                self.updateCurrentInputDevice()
+            }
         default:
             break
+        }
+    }
+
+    // MARK: - Device Management
+
+    /// Refresh list of available input devices
+    func refreshAvailableDevices() {
+        let session = AVAudioSession.sharedInstance()
+
+        guard let inputs = session.availableInputs else {
+            availableInputDevices = []
+            if Config.verboseLogging {
+                print("🎤 No input devices available")
+            }
+            return
+        }
+
+        availableInputDevices = inputs.map { AudioDevice.from(port: $0) }
+
+        if Config.verboseLogging {
+            print("🎤 Available input devices: \(availableInputDevices.map { $0.name })")
+        }
+
+        // Update current device state
+        updateCurrentInputDevice()
+    }
+
+    /// Update the current input device based on session's preferred input
+    private func updateCurrentInputDevice() {
+        let session = AVAudioSession.sharedInstance()
+
+        if let preferredInput = session.preferredInput {
+            currentInputDevice = AudioDevice.from(port: preferredInput)
+        } else {
+            // No preferred input = automatic selection
+            currentInputDevice = nil
+        }
+
+        if Config.verboseLogging {
+            let deviceName = currentInputDevice?.name ?? "Automatic"
+            print("🎤 Current input device: \(deviceName)")
+        }
+    }
+
+    /// Set preferred input device
+    /// - Parameter device: Device to use, or nil for automatic selection
+    func setPreferredInputDevice(_ device: AudioDevice?) throws {
+        let session = AVAudioSession.sharedInstance()
+
+        if let device = device, !device.isAutomatic {
+            // Find matching AVAudioSessionPortDescription
+            guard let inputs = session.availableInputs,
+                  let port = inputs.first(where: { $0.uid == device.id }) else {
+                throw AudioError.deviceNotFound
+            }
+
+            try session.setPreferredInput(port)
+            currentInputDevice = device
+
+            if Config.verboseLogging {
+                print("🎤 Set preferred input: \(device.name)")
+            }
+        } else {
+            // Clear preference - let iOS choose automatically
+            try session.setPreferredInput(nil)
+            currentInputDevice = nil
+
+            if Config.verboseLogging {
+                print("🎤 Cleared preferred input (automatic selection)")
+            }
         }
     }
 
@@ -223,12 +328,14 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         let fileURL = tempDir.appendingPathComponent(fileName)
 
         // Configure audio recorder settings for voice
+        // 16kHz sample rate is sufficient for speech (voice range ~85-255Hz fundamentals)
+        // Benefits: ~2.75x smaller files, faster upload, faster Whisper processing
         let settings: [String: Any] = [
             AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
-            AVSampleRateKey: 44100.0,
+            AVSampleRateKey: 16000.0,  // Voice-optimized (was 44100)
             AVNumberOfChannelsKey: 1,  // Mono for voice
             AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue,
-            AVEncoderBitRateKey: 64000  // 64kbps for voice
+            AVEncoderBitRateKey: 32000  // 32kbps sufficient for 16kHz voice
         ]
 
         audioRecorder = try AVAudioRecorder(url: fileURL, settings: settings)
@@ -504,6 +611,7 @@ enum AudioError: LocalizedError {
     case playbackFailed
     case permissionDenied
     case invalidBase64
+    case deviceNotFound
 
     var errorDescription: String? {
         switch self {
@@ -517,6 +625,8 @@ enum AudioError: LocalizedError {
             return "Microphone permission denied"
         case .invalidBase64:
             return "Invalid base64 audio data"
+        case .deviceNotFound:
+            return "Audio device not available"
         }
     }
 }
@@ -531,6 +641,11 @@ final class MockAudioService: ObservableObject, AudioServiceProtocol {
     var shouldFailRecording = false
     var shouldFailPlayback = false
     var mockRecordingData = Data("mock audio".utf8)
+
+    // Device management
+    var availableInputDevices: [AudioDevice] = [.previewBuiltIn, .previewBluetooth]
+    var currentInputDevice: AudioDevice?
+    var currentOutputDeviceName: String = "iPhone"
 
     func setupAudioSession(mode: AudioMode) throws {
         // Mock implementation
@@ -578,6 +693,14 @@ final class MockAudioService: ObservableObject, AudioServiceProtocol {
 
     func stopPlayback() async {
         isPlaying = false
+    }
+
+    func refreshAvailableDevices() {
+        // Mock: devices don't change
+    }
+
+    func setPreferredInputDevice(_ device: AudioDevice?) throws {
+        currentInputDevice = device
     }
 }
 #endif

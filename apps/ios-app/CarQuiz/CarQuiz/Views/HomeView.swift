@@ -39,16 +39,21 @@ struct HomeView: View {
                     await viewModel.startNewQuiz()
                 }
             }) {
-                HStack {
-                    Image(systemName: "play.circle.fill")
-                        .font(.title2)
+                HStack(spacing: 12) {
+                    if viewModel.isLoading {
+                        ProgressView()
+                            .tint(.white)
+                    } else {
+                        Image(systemName: "play.circle.fill")
+                            .font(.title2)
+                    }
 
                     Text("Start Quiz")
                         .font(.headline)
                 }
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(Color.blue)
+                .background(viewModel.isLoading ? Color.blue.opacity(0.6) : Color.blue)
                 .foregroundColor(.white)
                 .cornerRadius(16)
             }
@@ -155,6 +160,42 @@ struct HomeView: View {
                         }
                     }
 
+                    // Microphone Selection
+                    settingsRow(
+                        icon: "mic.fill",
+                        title: "Microphone",
+                        value: viewModel.currentInputDeviceName
+                    ) {
+                        Button(action: {
+                            viewModel.showingMicrophonePicker = true
+                        }) {
+                            HStack {
+                                Text(viewModel.currentInputDeviceName)
+                                    .foregroundColor(.primary)
+                                    .lineLimit(1)
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+
+                    // Speaker Selection (System Picker)
+                    settingsRow(
+                        icon: "speaker.wave.2.fill",
+                        title: "Speaker",
+                        value: viewModel.currentOutputDeviceName
+                    ) {
+                        HStack {
+                            Text(viewModel.currentOutputDeviceName)
+                                .foregroundColor(.primary)
+                                .lineLimit(1)
+                            Spacer()
+                            AudioRoutePickerButton()
+                        }
+                    }
+
                     // Auto-advance Timer Picker
                     settingsRow(
                         icon: "timer",
@@ -176,12 +217,6 @@ struct HomeView: View {
             }
             .padding(.horizontal, 24)
 
-            // Loading indicator
-            if viewModel.isLoading {
-                ProgressView()
-                    .padding()
-            }
-
             Spacer()
         }
         .padding()
@@ -198,6 +233,10 @@ struct HomeView: View {
         .onAppear {
             viewModel.loadSavedLanguage()
             viewModel.loadSavedAudioMode()
+            viewModel.refreshAudioDevices()
+        }
+        .sheet(isPresented: $viewModel.showingMicrophonePicker) {
+            AudioDevicePickerView(viewModel: viewModel)
         }
     }
 

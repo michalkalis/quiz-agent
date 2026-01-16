@@ -30,6 +30,9 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// Auto-advance delay in seconds for result screen
     var autoAdvanceDelay: Int
 
+    /// Preferred input device UID (nil = automatic selection)
+    var preferredInputDeviceId: String?
+
     // MARK: - Default Configuration
 
     /// Default settings matching app defaults
@@ -39,7 +42,8 @@ struct QuizSettings: Codable, Equatable, Sendable {
         numberOfQuestions: 10,
         category: nil,  // All categories
         difficulty: "medium",
-        autoAdvanceDelay: 8
+        autoAdvanceDelay: 8,
+        preferredInputDeviceId: nil  // Automatic
     )
 
     // MARK: - Validation Helpers
@@ -86,7 +90,8 @@ extension QuizSettings {
         numberOfQuestions: 20,
         category: "adults",
         difficulty: "hard",
-        autoAdvanceDelay: 5
+        autoAdvanceDelay: 5,
+        preferredInputDeviceId: nil
     )
 }
 #endif

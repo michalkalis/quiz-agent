@@ -91,6 +91,20 @@ class InputParser:
         if user_input_lower in ["skip", "pass", "next"]:
             return [{"intent_type": "skip", "extracted_data": {}, "confirmation_message": "Skipping question"}]
 
+        # Fast path for simple answers (1-3 words, no commands)
+        # This saves 0.5-1s by skipping the LLM call for direct answers like "Paris"
+        words = user_input.split()
+        if len(words) <= 3 and phase in ["asking", "awaiting_answer"]:
+            # Check if input contains any command keywords
+            command_keywords = ["skip", "quit", "rate", "harder", "easier", "don't", "hate", "love", "great", "bad", "terrible"]
+            has_command = any(kw in user_input_lower for kw in command_keywords)
+            if not has_command:
+                return [{
+                    "intent_type": "answer",
+                    "extracted_data": {"answer": user_input},
+                    "confirmation_message": None
+                }]
+
         # Use LLM for complex input
         prompt = self._create_classifier_prompt(user_input, current_question)
 

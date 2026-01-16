@@ -4,6 +4,7 @@ Designed to work with any client: iOS app, terminal, TV app, web.
 All responses are structured JSON with consistent format.
 """
 
+import asyncio
 from typing import Optional, List, Dict, Any
 from fastapi import APIRouter, HTTPException, status, UploadFile, File
 from pydantic import BaseModel, Field
@@ -946,6 +947,14 @@ async def transcribe_and_submit(
 
         print(f"✅ Transcribed: '{transcribed_text}'")
 
+        # Start fetching next question in parallel with evaluation (saves ~0.2-0.5s)
+        # Only if quiz isn't finished yet
+        next_question_task = None
+        if len(session.asked_question_ids) < session.max_questions:
+            next_question_task = asyncio.create_task(
+                asyncio.to_thread(question_retriever.get_next_question, session)
+            )
+
         # Diagnostic logging for audio contamination detection
         from difflib import SequenceMatcher
         print(f"DEBUG [voice/submit]: Transcription length: {len(transcribed_text)} chars")
@@ -1103,6 +1112,10 @@ async def transcribe_and_submit(
             session.phase = "finished"
             session_manager.update_session(session)
 
+            # Cancel the parallel task if running
+            if next_question_task:
+                next_question_task.cancel()
+
             return InputResponse(
                 success=True,
                 message="Quiz completed!",
@@ -1113,8 +1126,12 @@ async def transcribe_and_submit(
                 audio=audio_info
             )
 
-        # Get next question
-        next_question = question_retriever.get_next_question(session)
+        # Get next question (await parallel task or fetch synchronously as fallback)
+        if next_question_task:
+            next_question = await next_question_task
+        else:
+            next_question = question_retriever.get_next_question(session)
+
         if not next_question:
             session.phase = "finished"
             session_manager.update_session(session)

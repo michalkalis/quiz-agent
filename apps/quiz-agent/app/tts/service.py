@@ -4,6 +4,7 @@ Provides voice synthesis for quiz questions and feedback with intelligent cachin
 """
 
 import asyncio
+import io
 import os
 import random
 from typing import Optional
@@ -17,6 +18,43 @@ from .voices import (
     TTS_FORMAT,
     TTS_SPEED
 )
+
+# Volume boost setting (in decibels)
+# +3.5dB ≈ 50% louder, compensates for quiet OpenAI TTS output
+VOLUME_BOOST_DB = 3.5
+
+
+def boost_volume(audio_data: bytes, gain_db: float = VOLUME_BOOST_DB) -> bytes:
+    """Boost audio volume using pydub.
+
+    Args:
+        audio_data: Raw audio bytes (Opus format)
+        gain_db: Gain in decibels (+3.5dB ≈ 50% louder)
+
+    Returns:
+        Volume-boosted audio bytes in same format
+
+    Note:
+        Requires ffmpeg installed on the system for pydub to work with Opus.
+    """
+    try:
+        from pydub import AudioSegment
+
+        # Load audio from bytes
+        audio = AudioSegment.from_file(io.BytesIO(audio_data), format="ogg")
+
+        # Apply gain boost
+        louder_audio = audio + gain_db
+
+        # Export back to bytes
+        buffer = io.BytesIO()
+        louder_audio.export(buffer, format="ogg", codec="libopus")
+        return buffer.getvalue()
+
+    except Exception as e:
+        # If volume boost fails, return original audio (graceful fallback)
+        print(f"⚠️ Volume boost failed (returning original): {e}")
+        return audio_data
 
 
 class TTSService:
@@ -105,7 +143,10 @@ class TTSService:
                 # Read audio bytes
                 audio_data = response.content
 
-                # Cache result
+                # Apply volume boost (+3.5dB ≈ 50% louder)
+                audio_data = boost_volume(audio_data)
+
+                # Cache result (cache the boosted version)
                 if use_cache:
                     self.cache.set(text, voice, audio_data)
 

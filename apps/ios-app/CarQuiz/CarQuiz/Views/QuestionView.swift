@@ -187,6 +187,8 @@ struct QuestionView: View {
             do {
                 switch viewModel.quizState {
                 case .askingQuestion:
+                    // Stop any playing audio before recording
+                    await appState.audioService.stopPlayback()
                     // Start recording
                     try appState.audioService.startRecording()
                     viewModel.quizState = .recording

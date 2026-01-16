@@ -35,6 +35,7 @@ final class QuizViewModel: ObservableObject {
     @Published var currentQuestion: Question?
     @Published var currentSession: QuizSession?
     @Published var lastEvaluation: Evaluation?
+    @Published var answeredQuestion: Question?  // Snapshot of question being evaluated (stable during ResultView)
     @Published var score: Double = 0.0
     @Published var questionsAnswered: Int = 0
     @Published var errorMessage: String?
@@ -657,6 +658,11 @@ final class QuizViewModel: ObservableObject {
             return
         }
 
+        // CRITICAL: Snapshot the current question BEFORE updating any state
+        // This ensures ResultView displays the correct source attribution
+        // for the question being evaluated (not the next question)
+        answeredQuestion = currentQuestion
+
         lastEvaluation = evaluation
 
         // Update score and question count
@@ -786,6 +792,9 @@ final class QuizViewModel: ObservableObject {
         // Reset per-question pause when moving to next question
         currentQuestionPaused = false
 
+        // Clear the answered question snapshot (no longer needed after result screen)
+        answeredQuestion = nil
+
         // CRITICAL: Stop any playing feedback audio before transitioning
         // This ensures clean state transition from ResultView to QuestionView
         await stopAnyPlayingAudio()
@@ -875,6 +884,7 @@ final class QuizViewModel: ObservableObject {
         currentQuestion = nil
         currentSession = nil
         lastEvaluation = nil
+        answeredQuestion = nil
         score = 0.0
         questionsAnswered = 0
         errorMessage = nil
@@ -927,6 +937,7 @@ extension QuizViewModel {
             questionHistoryStore: MockQuestionHistoryStore()
         )
         viewModel.currentQuestion = Question.preview
+        viewModel.answeredQuestion = Question.preview  // Snapshot for result screen
         viewModel.lastEvaluation = Evaluation.previewCorrect
         viewModel.score = 1.0
         viewModel.questionsAnswered = 1

@@ -11,6 +11,8 @@ struct ResultView: View {
     @ObservedObject var viewModel: QuizViewModel
 
     @State private var showEvaluation = false
+    @State private var showQuitConfirmation = false
+    @State private var showSourceWebView = false
 
     var body: some View {
         VStack(spacing: 32) {
@@ -92,6 +94,47 @@ struct ResultView: View {
                     }
                 }
                 .padding(.horizontal, 32)
+
+                // Source attribution section (only if source exists)
+                // Uses answeredQuestion (snapshot) to ensure source matches evaluation
+                if let sourceExcerpt = viewModel.answeredQuestion?.sourceExcerpt,
+                   viewModel.answeredQuestion?.sourceUrl != nil,
+                   showEvaluation {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Image(systemName: "link.circle.fill")
+                                .foregroundColor(.blue)
+                            Text("Source")
+                                .font(.headline)
+                        }
+
+                        // Inline excerpt
+                        Text(sourceExcerpt)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .padding()
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Color.blue.opacity(0.05))
+                            .cornerRadius(8)
+
+                        // Read More button
+                        Button(action: {
+                            showSourceWebView = true
+                        }) {
+                            HStack {
+                                Text("Read Full Article")
+                                Image(systemName: "arrow.up.forward.circle")
+                            }
+                            .font(.callout)
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
+                    .padding()
+                    .background(Color(uiColor: .systemBackground))
+                    .cornerRadius(12)
+                    .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+                    .padding(.horizontal, 32)
+                }
             } else {
                 ProgressView()
                     .scaleEffect(1.5)
@@ -118,14 +161,14 @@ struct ResultView: View {
             }
             .padding(.horizontal, 32)
 
-            // Cancel button (for auto-advance)
+            // Stay Here button (pauses auto-advance for this question)
             HStack {
                 Button(action: {
                     viewModel.pauseQuiz()
                 }) {
                     HStack(spacing: 8) {
-                        Image(systemName: "xmark.circle")
-                        Text("Cancel")
+                        Image(systemName: "hand.raised.fill")
+                        Text("Stay Here")
                     }
                     .font(.callout)
                 }
@@ -152,7 +195,7 @@ struct ResultView: View {
                 }
                 .padding(.bottom, 20)
             } else if viewModel.currentQuestionPaused {
-                Text("Auto-advance paused for this question")
+                Text("Staying on this question")
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .padding(.bottom, 20)
@@ -179,13 +222,30 @@ struct ResultView: View {
             // End Quiz button (top-right)
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button(action: {
-                    Task {
-                        await viewModel.endQuiz()
-                    }
+                    showQuitConfirmation = true
                 }) {
                     Label("End Quiz", systemImage: "xmark.circle")
                 }
                 .tint(.red)
+            }
+        }
+        .confirmationDialog(
+            "End Quiz?",
+            isPresented: $showQuitConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("End Quiz", role: .destructive) {
+                Task {
+                    await viewModel.endQuiz()
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Are you sure you want to quit? Your progress will be saved, but the current session will end.")
+        }
+        .sheet(isPresented: $showSourceWebView) {
+            if let sourceUrl = viewModel.answeredQuestion?.sourceUrl {
+                SourceWebView(url: sourceUrl, isPresented: $showSourceWebView)
             }
         }
     }

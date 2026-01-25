@@ -15,28 +15,38 @@ struct QuestionView: View {
     @State private var audioData: Data?
 
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: Theme.Spacing.lg) {
             // Header: Progress and Score
             HStack {
-                // Progress indicator
+                // Progress badge
                 if let session = viewModel.currentSession,
                    viewModel.questionsAnswered < session.maxQuestions {
-                    Text("Q \(viewModel.questionsAnswered + 1)/\(session.maxQuestions)")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                    ProgressBadge(
+                        current: viewModel.questionsAnswered + 1,
+                        total: session.maxQuestions
+                    )
                 }
 
                 Spacer()
 
-                // Score
-                HStack(spacing: 4) {
+                // Score card (compact)
+                HStack(spacing: Theme.Spacing.xs) {
                     Image(systemName: "star.fill")
-                        .font(.caption)
-                        .foregroundColor(.yellow)
+                        .font(.system(size: Theme.Typography.sizeXS))
+                        .foregroundColor(Theme.Colors.warning)
 
                     Text("\(Int(viewModel.score))")
-                        .font(.headline)
+                        .font(.displayMD)
+                        .foregroundColor(Theme.Colors.textPrimary)
                 }
+                .padding(.horizontal, Theme.Spacing.sm)
+                .padding(.vertical, Theme.Spacing.xs)
+                .background(Theme.Colors.bgElevated)
+                .cornerRadius(Theme.Radius.sm)
+                .overlay(
+                    RoundedRectangle(cornerRadius: Theme.Radius.sm)
+                        .stroke(Theme.Colors.border, lineWidth: 1)
+                )
             }
             .padding(.horizontal)
 
@@ -44,87 +54,72 @@ struct QuestionView: View {
 
             // Question content
             if let question = viewModel.currentQuestion {
-                VStack(spacing: 16) {
+                VStack(spacing: Theme.Spacing.md) {
                     // Topic badge
-                    Text(question.topic.capitalized)
-                        .font(.caption)
-                        .fontWeight(.medium)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(Color.blue.opacity(0.1))
-                        .foregroundColor(.blue)
-                        .cornerRadius(12)
+                    CategoryBadge(category: question.topic)
 
                     // Question text
                     Text(question.question)
-                        .font(.title2)
-                        .fontWeight(.semibold)
+                        .font(.displayLG)
+                        .foregroundColor(Theme.Colors.textPrimary)
                         .multilineTextAlignment(.center)
-                        .padding(.horizontal, 32)
+                        .padding(.horizontal, Theme.Spacing.xl)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             } else {
                 ProgressView()
                     .scaleEffect(1.5)
+                    .tint(Theme.Colors.accentPrimary)
             }
 
             Spacer()
 
             // Recording status
-            if viewModel.quizState == .recording {
-                HStack(spacing: 8) {
-                    Circle()
-                        .fill(Color.red)
-                        .frame(width: 12, height: 12)
-                        .modifier(PulsingAnimation())
+            VStack(spacing: Theme.Spacing.xs) {
+                if viewModel.quizState == .recording {
+                    HStack(spacing: Theme.Spacing.xs) {
+                        Circle()
+                            .fill(Theme.Colors.recording)
+                            .frame(width: 12, height: 12)
+                            .modifier(PulsingAnimation())
 
-                    Text("Recording...")
-                        .font(.headline)
-                        .foregroundColor(.red)
+                        Text("Recording...")
+                            .font(.displayMD)
+                            .foregroundColor(Theme.Colors.recording)
+                    }
+                } else if viewModel.quizState == .processing {
+                    HStack(spacing: Theme.Spacing.sm) {
+                        ProgressView()
+                            .tint(Theme.Colors.accentPrimary)
+                        Text("Processing your answer...")
+                            .font(.textSM)
+                            .foregroundColor(Theme.Colors.textSecondary)
+                    }
+                } else {
+                    Text("Tap to answer")
+                        .font(.textSM)
+                        .foregroundColor(Theme.Colors.textSecondary)
                 }
-                .padding()
-            } else if viewModel.quizState == .processing {
-                HStack(spacing: 12) {
-                    ProgressView()
-                    Text("Processing your answer...")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
-                .padding()
-            } else {
-                Text("Tap to answer")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .padding()
             }
+            .frame(height: 24)
+            .padding(.bottom, Theme.Spacing.md)
 
             // Microphone button
-            Button(action: handleMicrophoneTap) {
-                ZStack {
-                    Circle()
-                        .fill(microphoneButtonColor)
-                        .frame(width: 80, height: 80)
-                        .shadow(radius: viewModel.quizState == .recording ? 8 : 4)
+            MicButton(state: micButtonState, action: handleMicrophoneTap)
+                .padding(.bottom, Theme.Spacing.xxl)
 
-                    Image(systemName: microphoneIcon)
-                        .font(.system(size: 32))
-                        .foregroundColor(.white)
-                }
-            }
-            .disabled(viewModel.quizState == .processing)
-            .padding(.bottom, 40)
-
-            // Error message (from recording or answer submission)
+            // Error message
             if let error = recordingError ?? viewModel.errorMessage {
                 Text(error)
-                    .font(.caption)
-                    .foregroundColor(.red)
+                    .font(.textXS)
+                    .foregroundColor(Theme.Colors.error)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)
                     .padding(.bottom)
             }
         }
         .padding()
+        .background(Theme.Colors.bgPrimary)
         .sheet(isPresented: $viewModel.showAnswerConfirmation) {
             AnswerConfirmationView(
                 isProcessing: viewModel.isLoading,
@@ -147,6 +142,7 @@ struct QuestionView: View {
                     }
                 }) {
                     Label("Minimize", systemImage: "arrow.down.right.and.arrow.up.left")
+                        .foregroundColor(Theme.Colors.accentPrimary)
                 }
                 .disabled(!viewModel.canMinimize)
             }
@@ -155,25 +151,14 @@ struct QuestionView: View {
 
     // MARK: - Computed Properties
 
-    private var microphoneButtonColor: Color {
+    private var micButtonState: MicButton.State {
         switch viewModel.quizState {
         case .recording:
-            return .red
+            return .recording
         case .processing:
-            return .gray
+            return .processing
         default:
-            return .blue
-        }
-    }
-
-    private var microphoneIcon: String {
-        switch viewModel.quizState {
-        case .recording:
-            return "stop.circle.fill"
-        case .processing:
-            return "waveform"
-        default:
-            return "mic.fill"
+            return .idle
         }
     }
 
@@ -181,20 +166,24 @@ struct QuestionView: View {
 
     private func handleMicrophoneTap() {
         recordingError = nil
-        viewModel.errorMessage = nil  // Clear any previous submission error
+        viewModel.errorMessage = nil
 
         Task {
             do {
                 switch viewModel.quizState {
                 case .askingQuestion:
-                    // Stop any playing audio before recording
-                    await appState.audioService.stopPlayback()
-                    // Start recording
-                    try appState.audioService.startRecording()
+                    // OPTIMISTIC UI: Lock button immediately to prevent double-tap
                     viewModel.quizState = .recording
+                    do {
+                        await appState.audioService.prepareForRecording()
+                        try appState.audioService.startRecording()
+                    } catch {
+                        // Rollback on failure
+                        viewModel.quizState = .askingQuestion
+                        throw error
+                    }
 
                 case .recording:
-                    // Stop recording and submit
                     let data = try await appState.audioService.stopRecording()
                     await viewModel.submitVoiceAnswer(audioData: data)
 

@@ -5,6 +5,12 @@
 //  Audio recording and playback service
 //  @MainActor because AVFoundation requires main thread
 //
+//  IMPORTANT: Audio Format Compatibility
+//  - iOS AVPlayer supports Opus ONLY in CAF/MOV/MP4 containers
+//  - OggOpus (.opus/.ogg) is NOT supported by AVPlayer
+//  - Backend must serve MP3 or AAC in M4A for reliable playback
+//  - See: https://developer.apple.com/documentation/avfoundation/avasset
+//
 
 import AVFoundation
 import AVKit
@@ -25,6 +31,7 @@ protocol AudioServiceProtocol: Sendable {
     func setupAudioSession(mode: AudioMode) throws
     func switchAudioMode(_ mode: AudioMode) async throws
     func requestMicrophonePermission() async -> Bool
+    func prepareForRecording() async  // Stops playback and waits for hardware settle
     func startRecording() throws
     func stopRecording() async throws -> Data
     func playOpusAudio(_ data: Data) async throws -> TimeInterval
@@ -88,24 +95,42 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
     // MARK: - Playback State
 
+    /// Consolidated playback state - single source of truth
+    /// Replaces the previous triple-variable tracking (currentPlaybackTask, currentPlaybackId, isPlaybackComplete)
+    enum PlaybackState: Equatable, Sendable {
+        case idle
+        case playing(id: UUID)
+
+        var isIdle: Bool {
+            if case .idle = self { return true }
+            return false
+        }
+
+        var playbackId: UUID? {
+            if case .playing(let id) = self { return id }
+            return nil
+        }
+    }
+
+    private var playbackState: PlaybackState = .idle
+
     private var audioRecorder: AVAudioRecorder?
     private var audioPlayer: AVPlayer?
-    private var currentPlaybackTask: Task<TimeInterval, Error>?
-    private var currentPlaybackId: UUID?
     private var currentAudioMode: AudioMode = AudioMode.default
 
     // Mark as nonisolated(unsafe) because NSObjectProtocol is not Sendable in Swift 6
     // Only accessed on main queue, so cross-isolation is safe
     nonisolated(unsafe) private var routeChangeObserver: NSObjectProtocol?
+    nonisolated(unsafe) private var interruptionObserver: NSObjectProtocol?
 
     deinit {
-        // Clean up route change observer
+        // Clean up observers
         if let observer = routeChangeObserver {
             NotificationCenter.default.removeObserver(observer)
         }
-
-        // Cancel any in-flight playback
-        currentPlaybackTask?.cancel()
+        if let observer = interruptionObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
     }
 
     // MARK: - Audio Session Setup
@@ -168,6 +193,15 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         ) { [weak self] notification in
             // Already on main queue, can call directly
             self?.handleRouteChange(notification)
+        }
+
+        // Observe audio session interruptions (phone calls, Siri, other apps)
+        interruptionObserver = NotificationCenter.default.addObserver(
+            forName: AVAudioSession.interruptionNotification,
+            object: AVAudioSession.sharedInstance(),
+            queue: .main
+        ) { [weak self] notification in
+            self?.handleInterruption(notification)
         }
 
         if Config.verboseLogging {
@@ -233,6 +267,38 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
             }
         default:
             break
+        }
+    }
+
+    /// Handle audio session interruptions (phone calls, Siri, other apps)
+    nonisolated private func handleInterruption(_ notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
+              let type = AVAudioSession.InterruptionType(rawValue: typeValue) else {
+            return
+        }
+
+        Task { @MainActor in
+            switch type {
+            case .began:
+                // Interruption started - stop any active operations to prevent corruption
+                if self.isRecording {
+                    _ = try? await self.stopRecording()
+                }
+                if self.isPlaying {
+                    await self.stopPlayback()
+                }
+                if Config.verboseLogging {
+                    print("⚠️ Audio session interrupted")
+                }
+            case .ended:
+                // Interruption ended - log but don't auto-resume (let user restart)
+                if Config.verboseLogging {
+                    print("✅ Audio session interruption ended")
+                }
+            @unknown default:
+                break
+            }
         }
     }
 
@@ -321,6 +387,24 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
     // MARK: - Recording
 
+    /// Prepares audio system for recording by stopping playback and waiting for hardware
+    ///
+    /// stopPlayback() now guarantees cleanup is complete before returning,
+    /// eliminating the need for polling. We only need hardware settle time.
+    func prepareForRecording() async {
+        // Stop any active playback - this is now a blocking operation
+        await stopPlayback()
+
+        // Hardware settle time - AVAudioSession needs time to release playback resources
+        // and transition to recording mode. Without this delay, recording may start
+        // before hardware is ready, resulting in empty/corrupt recordings (28 bytes)
+        try? await Task.sleep(nanoseconds: 200_000_000)  // 200ms
+
+        if Config.verboseLogging {
+            print("🎤 Audio system ready for recording")
+        }
+    }
+
     func startRecording() throws {
         // Create temporary file URL
         let tempDir = FileManager.default.temporaryDirectory
@@ -340,7 +424,43 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
         audioRecorder = try AVAudioRecorder(url: fileURL, settings: settings)
         audioRecorder?.delegate = self
-        audioRecorder?.record()
+
+        // Try to start recording with retry logic
+        // record() can fail if audio session isn't fully ready after playback
+        var started = false
+
+        for attempt in 1 ... 3 {
+            started = audioRecorder?.record() ?? false
+            if started {
+                break
+            }
+
+            // Log retry attempt
+            if Config.verboseLogging {
+                print("⚠️ Recording attempt \(attempt) failed, retrying...")
+            }
+
+            // Exponential backoff: 100ms, 200ms, 400ms
+            let delayNs = UInt64(100_000_000 * (1 << (attempt - 1)))
+
+            // Use RunLoop to wait without blocking @MainActor
+            // We can't use Task.sleep in a non-async function
+            let delaySeconds = Double(delayNs) / 1_000_000_000
+            RunLoop.current.run(until: Date().addingTimeInterval(delaySeconds))
+        }
+
+        guard started else {
+            audioRecorder = nil
+            if Config.verboseLogging {
+                print("❌ Recording failed to start after 3 attempts")
+                // Log audio session state for diagnostics
+                let session = AVAudioSession.sharedInstance()
+                print("   Session category: \(session.category.rawValue)")
+                print("   Session mode: \(session.mode.rawValue)")
+                print("   Input available: \(session.isInputAvailable)")
+            }
+            throw AudioError.recordingFailed
+        }
 
         isRecording = true
 
@@ -366,6 +486,19 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         // Read the recorded audio data
         let data = try Data(contentsOf: url)
 
+        // Validate minimum recording size
+        // M4A header alone is ~28 bytes, a 1-second 16kHz mono recording is ~2KB minimum
+        // Use 500 bytes as threshold to catch empty/corrupt recordings
+        let minimumValidSize = 500
+        guard data.count >= minimumValidSize else {
+            if Config.verboseLogging {
+                print("❌ Recording too short: \(data.count) bytes (minimum: \(minimumValidSize))")
+            }
+            try? FileManager.default.removeItem(at: url)
+            audioRecorder = nil
+            throw AudioError.recordingTooShort
+        }
+
         // Clean up temporary file
         try? FileManager.default.removeItem(at: url)
 
@@ -384,16 +517,11 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         let operationId = UUID()
 
         // Cancel any previous playback first
-        await cancelCurrentPlayback()
+        await stopPlayback()
 
-        // Wait for any in-flight operation to complete (serial queue)
-        while await audioQueue.getCurrentOperation() != nil {
-            try? await Task.sleep(nanoseconds: 50_000_000) // 50ms polling
-        }
-
-        // Mark this as the current operation
+        // Mark this as the current operation (atomic state transition)
         await audioQueue.setCurrentOperation(operationId)
-        currentPlaybackId = operationId
+        playbackState = .playing(id: operationId)
 
         // Perform the actual playback
         return try await performPlayback(data: data, operationId: operationId)
@@ -401,22 +529,31 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
     /// Performs the actual audio playback with proper cancellation support
     private func performPlayback(data: Data, operationId: UUID) async throws -> TimeInterval {
-        // Save to temporary file for playback
+        // playbackState already set to .playing(id: operationId) by caller
+
+        // Save to temporary file for playback (MP3 for universal AVPlayer compatibility)
         let tempURL = FileManager.default.temporaryDirectory
-            .appendingPathComponent("audio_\(operationId).opus")
+            .appendingPathComponent("audio_\(operationId).mp3")
 
         try data.write(to: tempURL)
+
+        // Force flush to disk - prevents AVPlayer from reading incomplete data
+        // This is critical for files written immediately before playback
+        if let fileHandle = try? FileHandle(forWritingTo: tempURL) {
+            try? fileHandle.synchronize()
+            try? fileHandle.close()
+        }
 
         if Config.verboseLogging {
             print("🔊 Playing audio: \(data.count) bytes from \(tempURL.lastPathComponent)")
         }
 
-        // Ensure cleanup happens even on cancellation or error
+        // Clean up temp file on exit (state cleanup handled by observers/onCancel)
         defer {
             try? FileManager.default.removeItem(at: tempURL)
         }
 
-        // Use AVPlayer for better codec support (including Opus)
+        // Use AVPlayer for codec support (MP3, AAC, etc.)
         let playerItem = AVPlayerItem(url: tempURL)
 
         // Configure buffering for smoother playback
@@ -424,8 +561,10 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
         audioPlayer = AVPlayer(playerItem: playerItem)
 
-        // Automatically wait when buffering to minimize stalling
-        audioPlayer?.automaticallyWaitsToMinimizeStalling = true
+        // IMPORTANT: Disable auto-wait for local files
+        // automaticallyWaitsToMinimizeStalling = true is designed for streaming
+        // For local files, it causes unnecessary "evaluating buffering rate" delays
+        audioPlayer?.automaticallyWaitsToMinimizeStalling = false
 
         // Get duration before starting playback (async in iOS 18+)
         let asset = playerItem.asset
@@ -446,14 +585,16 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
                 nonisolated(unsafe) var successObserver: NSObjectProtocol?
                 nonisolated(unsafe) var failureObserver: NSObjectProtocol?
                 nonisolated(unsafe) var statusObserver: NSKeyValueObservation?
+                nonisolated(unsafe) var stalledTimer: Timer?
                 var didResume = false
+                var hasStartedPlaying = false
 
                 // Helper to ensure continuation resumes only once
                 func resumeOnce(with result: Result<TimeInterval, Error>) {
                     guard !didResume else { return }
                     didResume = true
 
-                    // Clean up observers
+                    // Clean up observers and timer
                     if let observer = successObserver {
                         NotificationCenter.default.removeObserver(observer)
                     }
@@ -461,6 +602,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
                         NotificationCenter.default.removeObserver(observer)
                     }
                     statusObserver?.invalidate()
+                    stalledTimer?.invalidate()
 
                     switch result {
                     case .success(let value):
@@ -470,18 +612,50 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
                     }
                 }
 
-                // Monitor playback status for stalling
+                // Monitor playback status for stalling with detailed diagnostics
                 statusObserver = audioPlayer?.observe(\.timeControlStatus, options: [.new]) { player, _ in
                     Task { @MainActor in
-                        if player.timeControlStatus == .waitingToPlayAtSpecifiedRate {
+                        switch player.timeControlStatus {
+                        case .waitingToPlayAtSpecifiedRate:
+                            let reason = player.reasonForWaitingToPlay?.rawValue ?? "unknown"
                             if Config.verboseLogging {
-                                print("⚠️ Audio playback stalling, waiting for buffer...")
+                                print("⚠️ Audio playback stalling, reason: \(reason)")
                             }
-                        } else if player.timeControlStatus == .playing {
+                            // Check for format errors (critical for diagnosing codec issues)
+                            if let error = player.currentItem?.error {
+                                print("❌ Player item error: \(error.localizedDescription)")
+                            }
+                        case .playing:
+                            hasStartedPlaying = true
+                            // Cancel stall timer once playback starts
+                            stalledTimer?.invalidate()
+                            stalledTimer = nil
                             if Config.verboseLogging {
                                 print("▶️ Audio playback resumed")
                             }
+                        case .paused:
+                            break
+                        @unknown default:
+                            break
                         }
+                    }
+                }
+
+                // Playback timeout - fail if playback doesn't start within 5 seconds
+                // This prevents infinite stalling on problematic files
+                stalledTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: false) { [weak self] _ in
+                    Task { @MainActor [weak self] in
+                        guard !hasStartedPlaying else { return }
+
+                        if Config.verboseLogging {
+                            print("⚠️ Playback timeout - audio failed to start within 5 seconds")
+                        }
+
+                        await self?.audioQueue.clearOperation(operationId)
+                        self?.isPlaying = false
+                        self?.playbackState = .idle
+
+                        resumeOnce(with: .failure(AudioError.playbackFailed))
                     }
                 }
 
@@ -494,7 +668,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
                     Task { @MainActor [weak self] in
                         await self?.audioQueue.clearOperation(operationId)
                         self?.isPlaying = false
-                        self?.currentPlaybackId = nil
+                        self?.playbackState = .idle
 
                         if Config.verboseLogging {
                             print("🔊 Playback completed")
@@ -516,7 +690,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
                     Task { @MainActor [weak self] in
                         await self?.audioQueue.clearOperation(operationId)
                         self?.isPlaying = false
-                        self?.currentPlaybackId = nil
+                        self?.playbackState = .idle
 
                         if Config.verboseLogging {
                             print("❌ Playback failed")
@@ -542,27 +716,18 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
     /// Cleans up playback resources for a specific operation
     private func cleanupPlayback(operationId: UUID) async {
-        guard currentPlaybackId == operationId else { return }
+        // Only cleanup if this is the active operation (prevents TOCTOU race)
+        guard case .playing(let activeId) = playbackState, activeId == operationId else { return }
 
         audioPlayer?.pause()
         audioPlayer = nil
         isPlaying = false
-        currentPlaybackId = nil
+        playbackState = .idle  // Single atomic state transition
 
         await audioQueue.clearOperation(operationId)
 
         if Config.verboseLogging {
             print("🔊 Cleaned up playback (id: \(operationId))")
-        }
-    }
-
-    /// Cancels any currently active playback
-    private func cancelCurrentPlayback() async {
-        currentPlaybackTask?.cancel()
-        currentPlaybackTask = nil
-
-        if let id = currentPlaybackId {
-            await cleanupPlayback(operationId: id)
         }
     }
 
@@ -573,10 +738,23 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         return try await playOpusAudio(data)
     }
 
+    /// Stops playback and ensures cleanup completes before returning (blocking)
     func stopPlayback() async {
-        if let id = currentPlaybackId {
-            await cleanupPlayback(operationId: id)
+        // Early exit if not playing
+        guard case .playing(let operationId) = playbackState else {
+            if Config.verboseLogging {
+                print("🔊 stopPlayback called but not playing")
+            }
+            return
         }
+
+        // Pause and cleanup
+        audioPlayer?.pause()
+        audioPlayer = nil
+        isPlaying = false
+        playbackState = .idle  // Atomic transition
+
+        await audioQueue.clearOperation(operationId)
 
         if Config.verboseLogging {
             print("🔊 Stopped playback")
@@ -608,6 +786,7 @@ extension AudioService: AVAudioRecorderDelegate {
 enum AudioError: LocalizedError {
     case noActiveRecording
     case recordingFailed
+    case recordingTooShort
     case playbackFailed
     case permissionDenied
     case invalidBase64
@@ -619,6 +798,8 @@ enum AudioError: LocalizedError {
             return "No active recording"
         case .recordingFailed:
             return "Recording failed"
+        case .recordingTooShort:
+            return "Recording too short or empty"
         case .playbackFailed:
             return "Playback failed"
         case .permissionDenied:
@@ -657,6 +838,10 @@ final class MockAudioService: ObservableObject, AudioServiceProtocol {
 
     func requestMicrophonePermission() async -> Bool {
         return true
+    }
+
+    func prepareForRecording() async {
+        isPlaying = false
     }
 
     func startRecording() throws {

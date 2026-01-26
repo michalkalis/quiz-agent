@@ -2,7 +2,7 @@
 //  HomeView.swift
 //  CarQuiz
 //
-//  Welcome screen and quiz start
+//  Welcome screen and quiz start matching Pencil design
 //
 
 import SwiftUI
@@ -11,225 +11,147 @@ struct HomeView: View {
     @ObservedObject var viewModel: QuizViewModel
 
     var body: some View {
-        VStack(spacing: 32) {
-            Spacer()
+        ScrollView {
+            VStack(spacing: Theme.Spacing.lg) {
+                // MARK: - Header Section
 
-            // App Icon/Logo
-            Image(systemName: "car.fill")
-                .font(.system(size: 80))
-                .foregroundColor(.blue)
+                VStack(spacing: Theme.Spacing.sm) {
+                    AppLogo(size: 80)
 
-            // Title
-            VStack(spacing: 8) {
-                Text("CarQuiz")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
+                    Text("CarQuiz")
+                        .font(.system(size: Theme.Typography.sizeXXL, weight: .bold, design: .default))
+                        .foregroundColor(Theme.Colors.textPrimary)
 
-                Text("Hands-Free Trivia While You Drive")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-            }
-
-            Spacer()
-
-            // Start Button
-            Button(action: {
-                Task {
-                    await viewModel.startNewQuiz()
+                    Text("Hands-Free Trivia While You Drive")
+                        .font(.system(size: Theme.Typography.sizeSM))
+                        .foregroundColor(Theme.Colors.textSecondary)
+                        .multilineTextAlignment(.center)
                 }
-            }) {
-                HStack(spacing: 12) {
-                    if viewModel.isLoading {
-                        ProgressView()
-                            .tint(.white)
-                    } else {
-                        Image(systemName: "play.circle.fill")
-                            .font(.title2)
-                    }
+                .padding(.top, Theme.Spacing.lg)
 
-                    Text("Start Quiz")
-                        .font(.headline)
+                // MARK: - Your Progress Section
+
+                VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
+                    Text("Your Progress")
+                        .font(.system(size: Theme.Typography.sizeMD, weight: .semibold))
+                        .foregroundColor(Theme.Colors.textPrimary)
+                        .padding(.horizontal, 4)
+
+                    HStack(spacing: Theme.Spacing.md) {
+                        StatsCard(
+                            icon: "flame.fill",
+                            value: "\(viewModel.currentStreak)",
+                            label: "Day Streak",
+                            iconColor: Theme.Colors.warning
+                        )
+
+                        StatsCard(
+                            icon: "star.fill",
+                            value: String(format: "%.1f", viewModel.bestScore),
+                            label: "Best Score",
+                            iconColor: Theme.Colors.goldDark
+                        )
+                    }
                 }
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(viewModel.isLoading ? Color.blue.opacity(0.6) : Color.blue)
-                .foregroundColor(.white)
-                .cornerRadius(16)
-            }
-            .padding(.horizontal, 40)
-            .disabled(viewModel.isLoading)
+                .padding(.horizontal, Theme.Spacing.md)
 
-            // Quiz Settings Panel
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Quiz Settings")
-                    .font(.headline)
-                    .foregroundColor(.primary)
-                    .padding(.horizontal, 8)
+                // MARK: - Quick Settings Section
 
-                VStack(spacing: 8) {
-                    // Language Picker
-                    settingsRow(
-                        icon: "globe",
-                        title: "Language",
-                        value: Language.forCode(viewModel.settings.language)?.nativeName ?? "Unknown"
-                    ) {
-                        Menu {
-                            ForEach(Language.supportedLanguages) { language in
-                                Button(language.nativeName) {
-                                    viewModel.settings.language = language.id
-                                    viewModel.saveSettings()
+                VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
+                    Text("Quick Settings")
+                        .font(.system(size: Theme.Typography.sizeMD, weight: .semibold))
+                        .foregroundColor(Theme.Colors.textPrimary)
+                        .padding(.horizontal, 4)
+
+                    VStack(spacing: Theme.Spacing.xs) {
+                        // Language
+                        QuickSettingRow(
+                            icon: "globe",
+                            title: "Language",
+                            value: Language.forCode(viewModel.settings.language)?.nativeName ?? "Unknown"
+                        ) {
+                            Menu {
+                                ForEach(Language.supportedLanguages) { language in
+                                    Button(language.nativeName) {
+                                        viewModel.settings.language = language.id
+                                        viewModel.saveSettings()
+                                    }
                                 }
+                            } label: {
+                                settingsMenuLabel(value: Language.forCode(viewModel.settings.language)?.nativeName ?? "Select")
                             }
-                        } label: {
-                            settingsMenuLabel(value: Language.forCode(viewModel.settings.language)?.nativeName ?? "Select")
                         }
-                    }
 
-                    // Number of Questions Picker
-                    settingsRow(
-                        icon: "number",
-                        title: "Questions",
-                        value: "\(viewModel.settings.numberOfQuestions)"
-                    ) {
-                        Menu {
-                            ForEach(Config.questionCountOptions, id: \.self) { count in
-                                Button("\(count) Questions") {
-                                    viewModel.settings.numberOfQuestions = count
-                                    viewModel.saveSettings()
+                        // Difficulty
+                        QuickSettingRow(
+                            icon: "chart.bar",
+                            title: "Difficulty",
+                            value: viewModel.settings.difficultyDisplayName()
+                        ) {
+                            Menu {
+                                ForEach(Config.difficultyOptions, id: \.0) { id, display in
+                                    Button(display) {
+                                        viewModel.settings.difficulty = id
+                                        viewModel.saveSettings()
+                                    }
                                 }
+                            } label: {
+                                settingsMenuLabel(value: viewModel.settings.difficultyDisplayName())
                             }
-                        } label: {
-                            settingsMenuLabel(value: "\(viewModel.settings.numberOfQuestions)")
                         }
-                    }
 
-                    // Difficulty Picker
-                    settingsRow(
-                        icon: "chart.bar",
-                        title: "Difficulty",
-                        value: viewModel.settings.difficultyDisplayName()
-                    ) {
-                        Menu {
-                            ForEach(Config.difficultyOptions, id: \.0) { (id, display) in
-                                Button(display) {
-                                    viewModel.settings.difficulty = id
-                                    viewModel.saveSettings()
+                        // Category
+                        QuickSettingRow(
+                            icon: "tag",
+                            title: "Categories",
+                            value: viewModel.settings.categoryDisplayName()
+                        ) {
+                            Menu {
+                                ForEach(Config.categoryOptions, id: \.id) { option in
+                                    Button(option.display) {
+                                        viewModel.settings.category = option.id
+                                        viewModel.saveSettings()
+                                    }
                                 }
+                            } label: {
+                                settingsMenuLabel(value: viewModel.settings.categoryDisplayName())
                             }
-                        } label: {
-                            settingsMenuLabel(value: viewModel.settings.difficultyDisplayName())
-                        }
-                    }
-
-                    // Category Picker
-                    settingsRow(
-                        icon: "tag",
-                        title: "Category",
-                        value: viewModel.settings.categoryDisplayName()
-                    ) {
-                        Menu {
-                            ForEach(Config.categoryOptions, id: \.id) { option in
-                                Button(option.display) {
-                                    viewModel.settings.category = option.id
-                                    viewModel.saveSettings()
-                                }
-                            }
-                        } label: {
-                            settingsMenuLabel(value: viewModel.settings.categoryDisplayName())
-                        }
-                    }
-
-                    // Audio Mode Toggle
-                    settingsRow(
-                        icon: viewModel.selectedAudioMode.icon,
-                        title: "Audio Mode",
-                        value: viewModel.selectedAudioMode.name
-                    ) {
-                        Button(action: {
-                            viewModel.toggleAudioMode()
-                        }) {
-                            HStack {
-                                Text(viewModel.selectedAudioMode.name)
-                                    .foregroundColor(.primary)
-                                Spacer()
-                                Image(systemName: "chevron.down")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                    }
-
-                    // Microphone Selection
-                    settingsRow(
-                        icon: "mic.fill",
-                        title: "Microphone",
-                        value: viewModel.currentInputDeviceName
-                    ) {
-                        Button(action: {
-                            viewModel.showingMicrophonePicker = true
-                        }) {
-                            HStack {
-                                Text(viewModel.currentInputDeviceName)
-                                    .foregroundColor(.primary)
-                                    .lineLimit(1)
-                                Spacer()
-                                Image(systemName: "chevron.right")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                    }
-
-                    // Speaker Selection (System Picker)
-                    settingsRow(
-                        icon: "speaker.wave.2.fill",
-                        title: "Speaker",
-                        value: viewModel.currentOutputDeviceName
-                    ) {
-                        HStack {
-                            Text(viewModel.currentOutputDeviceName)
-                                .foregroundColor(.primary)
-                                .lineLimit(1)
-                            Spacer()
-                            AudioRoutePickerButton()
-                        }
-                    }
-
-                    // Auto-advance Timer Picker
-                    settingsRow(
-                        icon: "timer",
-                        title: "Auto-advance",
-                        value: "\(viewModel.settings.autoAdvanceDelay)s"
-                    ) {
-                        Menu {
-                            ForEach(Config.autoAdvanceDelayOptions, id: \.self) { seconds in
-                                Button("\(seconds) seconds") {
-                                    viewModel.settings.autoAdvanceDelay = seconds
-                                    viewModel.saveSettings()
-                                }
-                            }
-                        } label: {
-                            settingsMenuLabel(value: "\(viewModel.settings.autoAdvanceDelay)s")
                         }
                     }
                 }
-            }
-            .padding(.horizontal, 24)
+                .padding(.horizontal, Theme.Spacing.md)
 
-            Spacer()
-        }
-        .padding()
-        .toolbar {
-            // Only show Settings link (Question History management)
-            ToolbarItem(placement: .navigationBarTrailing) {
-                NavigationLink {
-                    SettingsView(viewModel: viewModel)
-                } label: {
-                    Label("History", systemImage: "clock.arrow.circlepath")
+                Spacer(minLength: Theme.Spacing.lg)
+
+                // MARK: - Action Buttons
+
+                VStack(spacing: Theme.Spacing.sm) {
+                    PrimaryButton(
+                        title: "Start Quiz",
+                        icon: "play.fill",
+                        isLoading: viewModel.isLoading
+                    ) {
+                        Task {
+                            await viewModel.startNewQuiz()
+                        }
+                    }
+
+                    NavigationLink {
+                        SettingsView(viewModel: viewModel)
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "gearshape")
+                                .font(.system(size: Theme.Components.iconSM))
+                            Text("More Settings")
+                        }
+                    }
+                    .buttonStyle(.secondary)
                 }
+                .padding(.horizontal, Theme.Spacing.lg)
+                .padding(.bottom, Theme.Spacing.lg)
             }
         }
+        .background(Theme.Colors.bgPrimary)
         .onAppear {
             viewModel.loadSavedLanguage()
             viewModel.loadSavedAudioMode()
@@ -242,44 +164,54 @@ struct HomeView: View {
 
     // MARK: - Helper Views
 
-    @ViewBuilder
-    private func settingsRow<Content: View>(
-        icon: String,
-        title: String,
-        value: String,
-        @ViewBuilder content: () -> Content
-    ) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.body)
-                .foregroundColor(.blue)
-                .frame(width: 24)
+    private func settingsMenuLabel(value: String) -> some View {
+        HStack(spacing: Theme.Spacing.xs) {
+            Text(value)
+                .foregroundColor(Theme.Colors.textPrimary)
+            Image(systemName: "chevron.down")
+                .font(.caption)
+                .foregroundColor(Theme.Colors.textSecondary)
+        }
+    }
+}
 
-            Text(title)
-                .font(.body)
-                .foregroundColor(.primary)
+// MARK: - Quick Setting Row
+
+private struct QuickSettingRow<Content: View>: View {
+    let icon: String
+    let title: String
+    let value: String
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        HStack(spacing: Theme.Spacing.sm) {
+            Image(systemName: icon)
+                .font(.system(size: Theme.Components.iconMD))
+                .foregroundColor(Theme.Colors.accentPrimary)
+                .frame(width: Theme.Components.iconMD)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: Theme.Typography.sizeXS, weight: .semibold))
+                    .foregroundColor(Theme.Colors.textSecondary)
+
+                Text(value)
+                    .font(.system(size: Theme.Typography.sizeSM))
+                    .foregroundColor(Theme.Colors.textPrimary)
+            }
 
             Spacer()
 
             content()
         }
-        .padding(.vertical, 12)
-        .padding(.horizontal, 16)
-        .background(Color.gray.opacity(0.1))
-        .cornerRadius(12)
-    }
-
-    private func settingsMenuLabel(value: String) -> some View {
-        HStack(spacing: 8) {
-            Text(value)
-                .foregroundColor(.primary)
-            Image(systemName: "chevron.down")
-                .font(.caption)
-                .foregroundColor(.secondary)
-        }
+        .padding(Theme.Spacing.md)
+        .background(Theme.Colors.bgCard)
+        .cornerRadius(Theme.Radius.xl)
     }
 }
 
 #Preview {
-    HomeView(viewModel: QuizViewModel.preview)
+    NavigationStack {
+        HomeView(viewModel: QuizViewModel.preview)
+    }
 }

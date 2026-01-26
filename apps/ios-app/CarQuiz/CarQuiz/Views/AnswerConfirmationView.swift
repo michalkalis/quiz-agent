@@ -14,68 +14,64 @@ struct AnswerConfirmationView: View {
     let onReRecord: () -> Void
 
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: Theme.Spacing.lg) {
             if isProcessing {
                 // Processing state
                 ProgressView()
                     .scaleEffect(1.5)
+                    .tint(Theme.Colors.accentPrimary)
                     .padding()
 
                 Text("Processing...")
-                    .font(.headline)
-                    .foregroundColor(.secondary)
+                    .font(.displayMD)
+                    .foregroundColor(Theme.Colors.textSecondary)
             } else {
                 // Transcription result state
                 Text("Your Answer")
-                    .font(.title2)
-                    .fontWeight(.bold)
+                    .font(.displayLG)
+                    .foregroundColor(Theme.Colors.textPrimary)
 
                 ScrollView {
                     Text(transcribedAnswer)
-                        .font(.body)
+                        .font(.textMD)
+                        .foregroundColor(Theme.Colors.textPrimary)
                         .multilineTextAlignment(.center)
-                        .padding(20)
+                        .padding(Theme.Spacing.lg)
                         .frame(maxWidth: .infinity)
-                        .background(Color.gray.opacity(0.1))
-                        .cornerRadius(12)
+                        .background(Theme.Colors.bgSecondary)
+                        .cornerRadius(Theme.Radius.sm)
                 }
                 .frame(maxHeight: 200)
 
                 Spacer()
 
                 // Action buttons
-                HStack(spacing: 16) {
+                HStack(spacing: Theme.Spacing.md) {
+                    // Re-record button
                     Button(action: onReRecord) {
-                        HStack(spacing: 8) {
+                        HStack(spacing: Theme.Spacing.xs) {
                             Image(systemName: "mic.circle.fill")
                             Text("Re-record")
                         }
-                        .font(.body)
-                        .fontWeight(.medium)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
                     }
-                    .buttonStyle(.bordered)
-                    .tint(.orange)
+                    .buttonStyle(.secondary)
 
+                    // Confirm button
                     Button(action: onConfirm) {
-                        HStack(spacing: 8) {
+                        HStack(spacing: Theme.Spacing.xs) {
                             Image(systemName: "checkmark.circle.fill")
                             Text("Confirm")
                         }
-                        .font(.body)
-                        .fontWeight(.semibold)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
                     }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.primary)
                 }
             }
         }
-        .padding(32)
+        .padding(Theme.Spacing.xl)
+        .background(Theme.Colors.bgPrimary)
         .presentationDetents([.medium])
         .presentationDragIndicator(.visible)
-        .interactiveDismissDisabled(isProcessing)  // Prevent swipe-to-dismiss while processing
+        .interactiveDismissDisabled(isProcessing)
     }
 }
 

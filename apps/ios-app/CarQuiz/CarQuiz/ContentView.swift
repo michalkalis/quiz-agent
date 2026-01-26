@@ -39,7 +39,12 @@ struct ContentView: View {
                         }
 
                     case .showingResult:
-                        ResultView(viewModel: viewModel)
+                        // Show HomeView when minimized, otherwise ResultView
+                        if viewModel.isMinimized {
+                            HomeView(viewModel: viewModel)
+                        } else {
+                            ResultView(viewModel: viewModel)
+                        }
 
                     case .finished:
                         CompletionView(viewModel: viewModel)
@@ -69,48 +74,67 @@ struct ContentView: View {
     }
 }
 
-/// Error state view
+/// Error state view with themed styling
 struct ErrorView: View {
     @ObservedObject var viewModel: QuizViewModel
 
     var body: some View {
-        VStack(spacing: 24) {
-            Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 60))
-                .foregroundColor(.red)
+        VStack(spacing: Theme.Spacing.lg) {
+            Spacer()
 
-            Text("Oops!")
-                .font(.largeTitle)
-                .fontWeight(.bold)
+            // Error icon
+            ZStack {
+                Circle()
+                    .fill(Theme.Colors.errorBg)
+                    .frame(width: Theme.Components.trophySize, height: Theme.Components.trophySize)
 
-            if let errorMessage = viewModel.errorMessage {
-                Text(errorMessage)
-                    .font(.body)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
+                Image(systemName: "wifi.slash")
+                    .font(.system(size: Theme.Components.trophyIconSize))
+                    .foregroundColor(Theme.Colors.error)
             }
 
-            Button("Try Again") {
-                Task {
-                    // Check error context to determine retry action
-                    if viewModel.shouldRetryWithNewSession {
-                        await viewModel.startNewQuiz()
-                    } else {
-                        await viewModel.retryLastOperation()
-                    }
+            // Error message
+            VStack(spacing: Theme.Spacing.xs) {
+                Text("Oops!")
+                    .font(.displayXXL)
+                    .foregroundColor(Theme.Colors.textPrimary)
+
+                if let errorMessage = viewModel.errorMessage {
+                    Text(errorMessage)
+                        .font(.textMD)
+                        .foregroundColor(Theme.Colors.textSecondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, Theme.Spacing.xl)
                 }
             }
-            .buttonStyle(.borderedProminent)
-            .disabled(viewModel.isLoading)
-            .padding(.top)
 
-            Button("Go Home") {
-                viewModel.resetToHome()
+            Spacer()
+
+            // Action buttons
+            VStack(spacing: Theme.Spacing.md) {
+                PrimaryButton(
+                    title: "Try Again",
+                    icon: "arrow.clockwise",
+                    isLoading: viewModel.isLoading
+                ) {
+                    Task {
+                        if viewModel.shouldRetryWithNewSession {
+                            await viewModel.startNewQuiz()
+                        } else {
+                            await viewModel.retryLastOperation()
+                        }
+                    }
+                }
+
+                SecondaryButton(title: "Go Home") {
+                    viewModel.resetToHome()
+                }
             }
-            .buttonStyle(.bordered)
+            .padding(.horizontal, Theme.Spacing.xxl)
+            .padding(.bottom, Theme.Spacing.xxl)
         }
         .padding()
+        .background(Theme.Colors.bgPrimary)
     }
 }
 

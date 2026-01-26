@@ -16,6 +16,8 @@ struct Question: Codable, Identifiable, Sendable {
     let difficulty: String
     let topic: String
     let category: String
+    let sourceUrl: String?
+    let sourceExcerpt: String?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -25,6 +27,8 @@ struct Question: Codable, Identifiable, Sendable {
         case difficulty
         case topic
         case category
+        case sourceUrl = "source_url"
+        case sourceExcerpt = "source_excerpt"
     }
 }
 
@@ -58,7 +62,9 @@ extension Question {
         possibleAnswers: nil,
         difficulty: "easy",
         topic: "Geography",
-        category: "adults"
+        category: "adults",
+        sourceUrl: "https://en.wikipedia.org/wiki/Paris",
+        sourceExcerpt: "Paris is the capital and largest city of France, situated on the Seine River."
     )
 
     static let previewHard = Question(
@@ -68,7 +74,9 @@ extension Question {
         possibleAnswers: nil,
         difficulty: "hard",
         topic: "Chemistry",
-        category: "adults"
+        category: "adults",
+        sourceUrl: nil,
+        sourceExcerpt: nil
     )
 }
 #endif

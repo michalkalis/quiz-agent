@@ -29,10 +29,13 @@ struct AudioDevicePickerView: View {
                         }
                     } header: {
                         Text("Available Devices")
+                            .font(.labelSM)
+                            .foregroundColor(Theme.Colors.textSecondary)
                     } footer: {
                         if viewModel.selectedAudioMode.id == "media" && viewModel.availableInputDevices.contains(where: { $0.isHFP }) {
                             Text("Switch to Call Mode in settings to use Bluetooth microphones.")
-                                .foregroundColor(.secondary)
+                                .font(.textXS)
+                                .foregroundColor(Theme.Colors.textSecondary)
                         }
                     }
                 }
@@ -40,11 +43,12 @@ struct AudioDevicePickerView: View {
                 // No devices available message
                 if viewModel.availableInputDevices.isEmpty {
                     Section {
-                        HStack {
+                        HStack(spacing: Theme.Spacing.sm) {
                             Image(systemName: "info.circle")
-                                .foregroundColor(.secondary)
+                                .foregroundColor(Theme.Colors.textSecondary)
                             Text("No external microphones detected. Connect Bluetooth or wired audio devices to see them here.")
-                                .foregroundColor(.secondary)
+                                .font(.textSM)
+                                .foregroundColor(Theme.Colors.textSecondary)
                         }
                     }
                 }
@@ -56,6 +60,7 @@ struct AudioDevicePickerView: View {
                     Button("Done") {
                         dismiss()
                     }
+                    .foregroundColor(Theme.Colors.accentPrimary)
                 }
             }
             .onAppear {
@@ -73,26 +78,27 @@ struct AudioDevicePickerView: View {
                 viewModel.setPreferredInputDevice(device)
             }
         }) {
-            HStack(spacing: 12) {
+            HStack(spacing: Theme.Spacing.sm) {
                 // Device icon
                 Image(systemName: device.isAutomatic ? "wand.and.stars" : device.icon)
-                    .font(.title3)
-                    .foregroundColor(device.isAutomatic ? .purple : .blue)
-                    .frame(width: 32)
+                    .font(.system(size: Theme.Typography.sizeLG))
+                    .foregroundColor(device.isAutomatic ? Theme.Colors.accentPrimary : Theme.Colors.accentPrimary)
+                    .frame(width: Theme.Components.iconLG)
 
                 // Device name and subtitle
                 VStack(alignment: .leading, spacing: 2) {
                     Text(device.name)
-                        .foregroundColor(.primary)
+                        .font(.textMD)
+                        .foregroundColor(Theme.Colors.textPrimary)
 
                     if !device.isAutomatic {
                         Text(device.subtitle)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                            .font(.textXS)
+                            .foregroundColor(Theme.Colors.textSecondary)
                     } else {
                         Text("Let iOS choose the best microphone")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                            .font(.textXS)
+                            .foregroundColor(Theme.Colors.textSecondary)
                     }
                 }
 
@@ -101,7 +107,7 @@ struct AudioDevicePickerView: View {
                 // Checkmark for selected device
                 if isSelected {
                     Image(systemName: "checkmark")
-                        .foregroundColor(.blue)
+                        .foregroundColor(Theme.Colors.accentPrimary)
                         .fontWeight(.semibold)
                 }
             }

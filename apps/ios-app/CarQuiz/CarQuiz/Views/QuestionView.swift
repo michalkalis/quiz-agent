@@ -16,7 +16,7 @@ struct QuestionView: View {
 
     var body: some View {
         VStack(spacing: Theme.Spacing.lg) {
-            // Header: Progress and Score
+            // Header: Progress, Score, and Minimize
             HStack {
                 // Progress badge
                 if let session = viewModel.currentSession,
@@ -30,23 +30,26 @@ struct QuestionView: View {
                 Spacer()
 
                 // Score card (compact)
-                HStack(spacing: Theme.Spacing.xs) {
-                    Image(systemName: "star.fill")
-                        .font(.system(size: Theme.Typography.sizeXS))
-                        .foregroundColor(Theme.Colors.warning)
-
-                    Text("\(Int(viewModel.score))")
-                        .font(.displayMD)
-                        .foregroundColor(Theme.Colors.textPrimary)
-                }
-                .padding(.horizontal, Theme.Spacing.sm)
-                .padding(.vertical, Theme.Spacing.xs)
-                .background(Theme.Colors.bgElevated)
-                .cornerRadius(Theme.Radius.sm)
-                .overlay(
-                    RoundedRectangle(cornerRadius: Theme.Radius.sm)
-                        .stroke(Theme.Colors.border, lineWidth: 1)
+                ScoreCard(
+                    score: viewModel.score,
+                    totalQuestions: viewModel.currentSession?.maxQuestions ?? 10
                 )
+                .frame(width: 100)
+
+                // Minimize button
+                Button {
+                    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                        viewModel.isMinimized = true
+                    }
+                } label: {
+                    Image(systemName: "arrow.down.right.and.arrow.up.left")
+                        .font(.system(size: Theme.Components.iconSM))
+                        .foregroundColor(Theme.Colors.textSecondary)
+                        .padding(Theme.Spacing.xs)
+                        .background(Theme.Colors.bgCard)
+                        .cornerRadius(Theme.Radius.sm)
+                }
+                .disabled(!viewModel.canMinimize)
             }
             .padding(.horizontal)
 
@@ -58,13 +61,16 @@ struct QuestionView: View {
                     // Topic badge
                     CategoryBadge(category: question.topic)
 
-                    // Question text
+                    // Question text in card
                     Text(question.question)
-                        .font(.displayLG)
+                        .font(.system(size: Theme.Typography.sizeXL, weight: .bold))
                         .foregroundColor(Theme.Colors.textPrimary)
                         .multilineTextAlignment(.center)
-                        .padding(.horizontal, Theme.Spacing.xl)
-                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(Theme.Spacing.lg)
+                        .frame(maxWidth: .infinity)
+                        .background(Theme.Colors.bgCard)
+                        .cornerRadius(Theme.Radius.xl)
+                        .padding(.horizontal, Theme.Spacing.md)
                 }
             } else {
                 ProgressView()
@@ -74,49 +80,27 @@ struct QuestionView: View {
 
             Spacer()
 
-            // Recording status
-            VStack(spacing: Theme.Spacing.xs) {
-                if viewModel.quizState == .recording {
-                    HStack(spacing: Theme.Spacing.xs) {
-                        Circle()
-                            .fill(Theme.Colors.recording)
-                            .frame(width: 12, height: 12)
-                            .modifier(PulsingAnimation())
-
-                        Text("Recording...")
-                            .font(.displayMD)
-                            .foregroundColor(Theme.Colors.recording)
-                    }
-                } else if viewModel.quizState == .processing {
-                    HStack(spacing: Theme.Spacing.sm) {
-                        ProgressView()
-                            .tint(Theme.Colors.accentPrimary)
-                        Text("Processing your answer...")
-                            .font(.textSM)
-                            .foregroundColor(Theme.Colors.textSecondary)
-                    }
-                } else {
-                    Text("Tap to answer")
-                        .font(.textSM)
-                        .foregroundColor(Theme.Colors.textSecondary)
-                }
-            }
-            .frame(height: 24)
-            .padding(.bottom, Theme.Spacing.md)
+            // Recording status hint
+            Text(hintText)
+                .font(.system(size: Theme.Typography.sizeSM, weight: .medium))
+                .foregroundColor(hintColor)
+                .frame(height: 24)
+                .padding(.bottom, Theme.Spacing.md)
 
             // Microphone button
             MicButton(state: micButtonState, action: handleMicrophoneTap)
-                .padding(.bottom, Theme.Spacing.xxl)
 
             // Error message
             if let error = recordingError ?? viewModel.errorMessage {
                 Text(error)
-                    .font(.textXS)
+                    .font(.system(size: Theme.Typography.sizeXS))
                     .foregroundColor(Theme.Colors.error)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)
-                    .padding(.bottom)
+                    .padding(.top, Theme.Spacing.sm)
             }
+
+            Spacer(minLength: Theme.Spacing.lg)
         }
         .padding()
         .background(Theme.Colors.bgPrimary)
@@ -134,18 +118,29 @@ struct QuestionView: View {
                 }
             )
         }
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button(action: {
-                    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                        viewModel.isMinimized = true
-                    }
-                }) {
-                    Label("Minimize", systemImage: "arrow.down.right.and.arrow.up.left")
-                        .foregroundColor(Theme.Colors.accentPrimary)
-                }
-                .disabled(!viewModel.canMinimize)
-            }
+    }
+
+    // MARK: - Hint Text
+
+    private var hintText: String {
+        switch viewModel.quizState {
+        case .recording:
+            return "Recording..."
+        case .processing:
+            return "Processing your answer..."
+        default:
+            return "Tap to answer"
+        }
+    }
+
+    private var hintColor: Color {
+        switch viewModel.quizState {
+        case .recording:
+            return Theme.Colors.recording
+        case .processing:
+            return Theme.Colors.accentPrimary
+        default:
+            return Theme.Colors.textSecondary
         }
     }
 

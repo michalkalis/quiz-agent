@@ -2,7 +2,7 @@
 //  ResultView.swift
 //  CarQuiz
 //
-//  Answer evaluation and feedback display
+//  Answer evaluation and feedback display matching Pencil design
 //
 
 import SwiftUI
@@ -15,219 +15,161 @@ struct ResultView: View {
     @State private var showSourceWebView = false
 
     var body: some View {
-        VStack(spacing: 32) {
-            Spacer()
+        ScrollView {
+            VStack(spacing: Theme.Spacing.lg) {
+                // MARK: - Header Section
+                HStack(spacing: Theme.Spacing.sm) {
+                    // Progress badge
+                    if let session = viewModel.currentSession {
+                        ProgressBadge(
+                            current: viewModel.questionsAnswered,
+                            total: session.maxQuestions
+                        )
+                    }
 
-            // Result icon and status
-            if let evaluation = viewModel.lastEvaluation {
-                VStack(spacing: 24) {
-                    // Show evaluation result after 2-second delay
-                    if showEvaluation {
-                        // Icon with animation
-                        Image(systemName: resultIcon(for: evaluation.result))
-                            .font(.system(size: 80))
-                            .foregroundColor(resultColor(for: evaluation.result))
+                    Spacer()
+
+                    // Score card
+                    ScoreCard(
+                        score: viewModel.score,
+                        totalQuestions: viewModel.currentSession?.maxQuestions ?? 10
+                    )
+                    .frame(width: 100)
+
+                    // Streak badge (if applicable)
+                    if viewModel.currentStreak >= 2 {
+                        StreakBadge(streak: viewModel.currentStreak)
+                    }
+
+                    // Minimize button
+                    Button {
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                            viewModel.isMinimized = true
+                        }
+                    } label: {
+                        Image(systemName: "arrow.down.right.and.arrow.up.left")
+                            .font(.system(size: Theme.Components.iconSM))
+                            .foregroundColor(Theme.Colors.textSecondary)
+                            .padding(Theme.Spacing.xs)
+                            .background(Theme.Colors.bgCard)
+                            .cornerRadius(Theme.Radius.sm)
+                    }
+                }
+                .padding(.horizontal)
+
+                // MARK: - Result Badge
+                if let evaluation = viewModel.lastEvaluation {
+                    VStack(spacing: Theme.Spacing.lg) {
+                        if showEvaluation {
+                            ResultBadge(
+                                type: resultBadgeType(for: evaluation.result),
+                                points: evaluation.points
+                            )
                             .transition(.scale.combined(with: .opacity))
+                        } else {
+                            Text("Let's see...")
+                                .font(.system(size: Theme.Typography.sizeLG, weight: .bold))
+                                .foregroundColor(Theme.Colors.textSecondary)
+                                .padding(.vertical, Theme.Spacing.xl)
+                        }
 
-                        // Result text
-                        Text(resultText(for: evaluation.result))
-                            .font(.largeTitle)
-                            .fontWeight(.bold)
-                            .foregroundColor(resultColor(for: evaluation.result))
+                        // Answer comparison
+                        VStack(spacing: Theme.Spacing.md) {
+                            // User's answer
+                            AnswerCard(
+                                label: "Your Answer:",
+                                answer: evaluation.userAnswer,
+                                style: .neutral
+                            )
 
-                        // Points awarded
-                        if evaluation.points > 0 {
-                            HStack(spacing: 8) {
-                                Image(systemName: "star.fill")
-                                    .foregroundColor(.yellow)
-                                Text("+\(formatPoints(evaluation.points))")
-                                    .font(.title2)
-                                    .fontWeight(.semibold)
+                            // Correct answer (shown after evaluation)
+                            if showEvaluation {
+                                AnswerCard(
+                                    label: "Correct Answer:",
+                                    answer: evaluation.correctAnswer,
+                                    style: .correct
+                                )
                             }
                         }
-                    } else {
-                        // Before showing result, show waiting message
-                        Text("Let's see...")
-                            .font(.title)
-                            .foregroundColor(.secondary)
-                            .padding(.vertical, 40)
-                    }
-                }
+                        .padding(.horizontal)
 
-                Divider()
-                    .padding(.horizontal, 40)
-
-                // Answer comparison
-                VStack(spacing: 20) {
-                    // User's answer
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Your Answer:")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .textCase(.uppercase)
-
-                        Text(evaluation.userAnswer)
-                            .font(.body)
-                            .foregroundColor(.primary)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding()
-                    .background(Color.gray.opacity(0.1))
-                    .cornerRadius(12)
-
-                    // Correct answer (shown after evaluation)
-                    if showEvaluation {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Correct Answer:")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                                .textCase(.uppercase)
-
-                            Text(evaluation.correctAnswer)
-                                .font(.body)
-                                .foregroundColor(.primary)
+                        // Source attribution section
+                        if let sourceExcerpt = viewModel.answeredQuestion?.sourceExcerpt,
+                           viewModel.answeredQuestion?.sourceUrl != nil,
+                           showEvaluation {
+                            SourceCard(
+                                excerpt: sourceExcerpt,
+                                onReadMore: { showSourceWebView = true }
+                            )
+                            .padding(.horizontal)
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding()
-                        .background(Color.green.opacity(0.1))
-                        .cornerRadius(12)
                     }
-                }
-                .padding(.horizontal, 32)
-
-                // Source attribution section (only if source exists)
-                // Uses answeredQuestion (snapshot) to ensure source matches evaluation
-                if let sourceExcerpt = viewModel.answeredQuestion?.sourceExcerpt,
-                   viewModel.answeredQuestion?.sourceUrl != nil,
-                   showEvaluation {
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            Image(systemName: "link.circle.fill")
-                                .foregroundColor(.blue)
-                            Text("Source")
-                                .font(.headline)
-                        }
-
-                        // Inline excerpt
-                        Text(sourceExcerpt)
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                            .padding()
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Color.blue.opacity(0.05))
-                            .cornerRadius(8)
-
-                        // Read More button
-                        Button(action: {
-                            showSourceWebView = true
-                        }) {
-                            HStack {
-                                Text("Read Full Article")
-                                Image(systemName: "arrow.up.forward.circle")
-                            }
-                            .font(.callout)
-                        }
-                        .buttonStyle(.borderedProminent)
-                    }
-                    .padding()
-                    .background(Color(uiColor: .systemBackground))
-                    .cornerRadius(12)
-                    .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
-                    .padding(.horizontal, 32)
-                }
-            } else {
-                ProgressView()
-                    .scaleEffect(1.5)
-            }
-
-            Spacer()
-
-            // Continue button
-            Button(action: {
-                viewModel.continueToNext()
-            }) {
-                HStack(spacing: 12) {
-                    Text("Continue")
-                        .font(.title3)
-                        .fontWeight(.semibold)
-                    Image(systemName: "arrow.right.circle.fill")
-                        .font(.title3)
-                }
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .frame(height: 56)
-                .background(Color.blue)
-                .cornerRadius(16)
-            }
-            .padding(.horizontal, 32)
-
-            // Stay Here button (pauses auto-advance for this question)
-            HStack {
-                Button(action: {
-                    viewModel.pauseQuiz()
-                }) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "hand.raised.fill")
-                        Text("Stay Here")
-                    }
-                    .font(.callout)
-                }
-                .buttonStyle(.bordered)
-                .disabled(viewModel.currentQuestionPaused)
-            }
-            .padding(.horizontal, 32)
-            .padding(.bottom, 20)
-
-            // Auto-advance indicator
-            if viewModel.autoAdvanceEnabled && !viewModel.currentQuestionPaused {
-                HStack(spacing: 8) {
+                } else {
                     ProgressView()
-                        .scaleEffect(0.8)
+                        .scaleEffect(1.5)
+                        .tint(Theme.Colors.accentPrimary)
+                        .padding(.vertical, Theme.Spacing.xxl)
+                }
+
+                // MARK: - Auto-advance indicator
+                if viewModel.autoAdvanceEnabled && !viewModel.currentQuestionPaused {
                     if viewModel.autoAdvanceCountdown > 0 {
-                        Text("Auto-advancing in \(viewModel.autoAdvanceCountdown) second\(viewModel.autoAdvanceCountdown == 1 ? "" : "s")...")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                        CountdownTimer(seconds: viewModel.autoAdvanceCountdown)
                     } else {
-                        Text("Loading next question...")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                        HStack(spacing: Theme.Spacing.xs) {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                                .tint(Theme.Colors.accentPrimary)
+                            Text("Loading next question...")
+                                .font(.system(size: Theme.Typography.sizeXS))
+                                .foregroundColor(Theme.Colors.textSecondary)
+                        }
+                    }
+                } else if viewModel.currentQuestionPaused {
+                    Text("Staying on this question")
+                        .font(.system(size: Theme.Typography.sizeXS))
+                        .foregroundColor(Theme.Colors.textSecondary)
+                }
+
+                // MARK: - Action Buttons
+                VStack(spacing: Theme.Spacing.sm) {
+                    PrimaryButton(title: "Continue", icon: "arrow.right") {
+                        viewModel.continueToNext()
+                    }
+
+                    Button(action: {
+                        viewModel.pauseQuiz()
+                    }) {
+                        HStack(spacing: Theme.Spacing.xs) {
+                            Image(systemName: "hand.raised.fill")
+                            Text("Stay Here")
+                        }
+                    }
+                    .buttonStyle(.secondary)
+                    .disabled(viewModel.currentQuestionPaused)
+
+                    // View Source button
+                    if viewModel.answeredQuestion?.sourceUrl != nil {
+                        Button {
+                            showSourceWebView = true
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "link")
+                                    .font(.system(size: Theme.Typography.sizeXS))
+                                Text("View Source")
+                            }
+                            .foregroundColor(Theme.Colors.accentPrimary)
+                        }
                     }
                 }
-                .padding(.bottom, 20)
-            } else if viewModel.currentQuestionPaused {
-                Text("Staying on this question")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .padding(.bottom, 20)
+                .padding(.horizontal)
+                .padding(.bottom, Theme.Spacing.lg)
             }
         }
-        .padding()
+        .background(Theme.Colors.bgPrimary)
         .animation(.spring(response: 0.5, dampingFraction: 0.7), value: viewModel.lastEvaluation)
         .onAppear {
-            // Show evaluation immediately - no timer
             showEvaluation = true
-        }
-        .toolbar {
-            // Minimize button (top-left)
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button(action: {
-                    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                        viewModel.isMinimized = true
-                    }
-                }) {
-                    Label("Minimize", systemImage: "arrow.down.right.and.arrow.up.left")
-                }
-            }
-
-            // End Quiz button (top-right)
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button(action: {
-                    showQuitConfirmation = true
-                }) {
-                    Label("End Quiz", systemImage: "xmark.circle")
-                }
-                .tint(.red)
-            }
         }
         .confirmationDialog(
             "End Quiz?",
@@ -252,53 +194,108 @@ struct ResultView: View {
 
     // MARK: - Helper Functions
 
-    private func resultIcon(for result: Evaluation.EvaluationResult) -> String {
+    private func resultBadgeType(for result: Evaluation.EvaluationResult) -> ResultBadge.ResultType {
         switch result {
         case .correct:
-            return "checkmark.circle.fill"
+            return .correct
         case .incorrect:
-            return "xmark.circle.fill"
+            return .incorrect
         case .partiallyCorrect, .partiallyIncorrect:
-            return "exclamationmark.circle.fill"
+            return .partiallyCorrect
         case .skipped:
-            return "forward.circle.fill"
+            return .skipped
         }
     }
+}
 
-    private func resultColor(for result: Evaluation.EvaluationResult) -> Color {
-        switch result {
+// MARK: - Answer Card Component
+
+private struct AnswerCard: View {
+    enum Style {
+        case neutral
+        case correct
+    }
+
+    let label: String
+    let answer: String
+    let style: Style
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
+            Text(label)
+                .font(.system(size: Theme.Typography.sizeXS, weight: .semibold))
+                .foregroundColor(Theme.Colors.textSecondary)
+                .textCase(.uppercase)
+
+            Text(answer)
+                .font(.system(size: Theme.Typography.sizeMD))
+                .foregroundColor(Theme.Colors.textPrimary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(Theme.Spacing.md)
+        .background(backgroundColor)
+        .cornerRadius(Theme.Radius.md)
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.Radius.md)
+                .stroke(borderColor, lineWidth: 1.5)
+        )
+    }
+
+    private var backgroundColor: Color {
+        switch style {
+        case .neutral:
+            return Theme.Colors.bgCard
         case .correct:
-            return .green
-        case .incorrect:
-            return .red
-        case .partiallyCorrect, .partiallyIncorrect:
-            return .orange
-        case .skipped:
-            return .gray
+            return Theme.Colors.successBg
         }
     }
 
-    private func resultText(for result: Evaluation.EvaluationResult) -> String {
-        switch result {
+    private var borderColor: Color {
+        switch style {
+        case .neutral:
+            return Theme.Colors.border
         case .correct:
-            return "Correct!"
-        case .incorrect:
-            return "Incorrect"
-        case .partiallyCorrect:
-            return "Partially Correct"
-        case .partiallyIncorrect:
-            return "Partially Incorrect"
-        case .skipped:
-            return "Skipped"
+            return Theme.Colors.success.opacity(0.3)
         }
     }
+}
 
-    private func formatPoints(_ points: Double) -> String {
-        if points.truncatingRemainder(dividingBy: 1) == 0 {
-            return "\(Int(points))"
-        } else {
-            return String(format: "%.1f", points)
+// MARK: - Source Card Component
+
+private struct SourceCard: View {
+    let excerpt: String
+    let onReadMore: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
+            HStack(spacing: Theme.Spacing.xs) {
+                Image(systemName: "link.circle.fill")
+                    .foregroundColor(Theme.Colors.accentPrimary)
+                Text("Source")
+                    .font(.system(size: Theme.Typography.sizeMD, weight: .semibold))
+                    .foregroundColor(Theme.Colors.textPrimary)
+            }
+
+            Text(excerpt)
+                .font(.system(size: Theme.Typography.sizeSM))
+                .foregroundColor(Theme.Colors.textSecondary)
+                .padding(Theme.Spacing.md)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Theme.Colors.accentPrimarySoft)
+                .cornerRadius(Theme.Radius.sm)
+
+            Button(action: onReadMore) {
+                HStack(spacing: Theme.Spacing.xs) {
+                    Text("Read Full Article")
+                    Image(systemName: "arrow.up.forward.circle")
+                }
+                .font(.system(size: Theme.Typography.sizeSM))
+                .foregroundColor(Theme.Colors.accentPrimary)
+            }
         }
+        .padding(Theme.Spacing.md)
+        .background(Theme.Colors.bgCard)
+        .cornerRadius(Theme.Radius.md)
     }
 }
 

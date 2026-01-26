@@ -59,6 +59,14 @@ final class QuizViewModel: ObservableObject {
     // Minimize state
     @Published var isMinimized: Bool = false
 
+    // MARK: - Gamification Stats
+
+    /// Current consecutive correct answer streak
+    @Published var currentStreak: Int = 0
+
+    /// Best score achieved (persisted via UserDefaults)
+    @Published var bestScore: Double = 0.0
+
     // MARK: - Quiz Settings
 
     @Published var settings: QuizSettings = .default
@@ -157,6 +165,9 @@ final class QuizViewModel: ObservableObject {
 
         // Load saved settings
         self.settings = sessionStore.loadSettings()
+
+        // Load best score from UserDefaults
+        self.bestScore = UserDefaults.standard.double(forKey: "CarQuiz.bestScore")
     }
 
     // MARK: - Quiz Flow
@@ -669,6 +680,19 @@ final class QuizViewModel: ObservableObject {
         if let participant = response.session.participants.first {
             score = participant.score
             questionsAnswered = participant.answeredCount
+
+            // Update best score if current score is higher
+            if score > bestScore {
+                bestScore = score
+                UserDefaults.standard.set(bestScore, forKey: "CarQuiz.bestScore")
+            }
+        }
+
+        // Update streak based on evaluation result
+        if evaluation.result == .correct {
+            currentStreak += 1
+        } else {
+            currentStreak = 0
         }
 
         // Store NEXT question separately (don't update currentQuestion yet!)

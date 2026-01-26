@@ -2,7 +2,7 @@
 //  MinimizedQuizView.swift
 //  CarQuiz
 //
-//  Compact floating view shown when quiz is minimized
+//  Compact floating widget matching Pencil design
 //
 
 import SwiftUI
@@ -11,50 +11,82 @@ struct MinimizedQuizView: View {
     @ObservedObject var viewModel: QuizViewModel
 
     var body: some View {
-        VStack(spacing: 8) {
-            // Status row with question number and score
-            HStack(spacing: 16) {
-                // Question progress
-                HStack(spacing: 6) {
-                    Image(systemName: "target")
-                        .font(.caption)
-                        .foregroundColor(.blue)
-                    Text("Q \(viewModel.questionsAnswered + 1)/\(viewModel.currentSession?.maxQuestions ?? 10)")
-                        .font(.caption)
-                        .fontWeight(.medium)
-                        .foregroundColor(.primary)
+        VStack(spacing: Theme.Spacing.xs) {
+            // Progress text
+            Text("\(viewModel.questionsAnswered + 1)/\(viewModel.currentSession?.maxQuestions ?? 10)")
+                .font(.system(size: Theme.Typography.sizeXS, weight: .semibold))
+                .foregroundColor(Theme.Colors.textSecondary)
+
+            // Score
+            Text(String(format: "%.1f", viewModel.score))
+                .font(.system(size: 24, weight: .bold))
+                .foregroundColor(Theme.Colors.accentPrimary)
+
+            // State-specific mic button
+            if viewModel.quizState == .askingQuestion {
+                Button {
+                    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                        viewModel.isMinimized = false
+                    }
+                } label: {
+                    Image(systemName: "mic.fill")
+                        .font(.system(size: Theme.Components.iconSM))
+                        .foregroundColor(Theme.Colors.textOnAccent)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: Theme.Components.widgetMicHeight)
+                        .background(Theme.Colors.accentPrimary)
+                        .cornerRadius(Theme.Radius.xl)
                 }
-
-                Spacer()
-
-                // Score
-                HStack(spacing: 6) {
-                    Image(systemName: "star.fill")
-                        .font(.caption)
-                        .foregroundColor(.yellow)
-                    Text("\(Int(viewModel.score))")
-                        .font(.caption)
-                        .fontWeight(.medium)
-                        .foregroundColor(.primary)
+            } else if viewModel.quizState == .recording {
+                HStack(spacing: Theme.Spacing.xs) {
+                    Image(systemName: "waveform")
+                        .font(.system(size: Theme.Typography.sizeXS))
+                        .foregroundColor(Theme.Colors.recording)
+                        .symbolEffect(.pulse)
+                    Text("Recording...")
+                        .font(.system(size: Theme.Typography.sizeXS))
+                        .foregroundColor(Theme.Colors.textSecondary)
                 }
-            }
-
-            Divider()
-
-            // Expand hint
-            HStack(spacing: 6) {
-                Text("Tap to expand")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-                Image(systemName: "arrow.up.circle")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
+                .frame(maxWidth: .infinity)
+                .frame(height: Theme.Components.widgetMicHeight)
+            } else if viewModel.quizState == .processing {
+                HStack(spacing: Theme.Spacing.xs) {
+                    ProgressView()
+                        .scaleEffect(0.7)
+                        .tint(Theme.Colors.accentPrimary)
+                    Text("Processing...")
+                        .font(.system(size: Theme.Typography.sizeXS))
+                        .foregroundColor(Theme.Colors.textSecondary)
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: Theme.Components.widgetMicHeight)
+            } else if viewModel.quizState == .showingResult {
+                HStack(spacing: Theme.Spacing.xs) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: Theme.Typography.sizeXS))
+                        .foregroundColor(Theme.Colors.success)
+                    Text("Review")
+                        .font(.system(size: Theme.Typography.sizeXS))
+                        .foregroundColor(Theme.Colors.textSecondary)
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: Theme.Components.widgetMicHeight)
             }
         }
-        .padding(16)
-        .background(.ultraThinMaterial)
-        .cornerRadius(16)
-        .shadow(color: Color.black.opacity(0.2), radius: 8, x: 0, y: 4)
+        .padding(Theme.Spacing.md)
+        .frame(width: Theme.Components.widgetWidth)
+        .background(Theme.Colors.bgCard)
+        .cornerRadius(Theme.Radius.lg)
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.Radius.lg)
+                .stroke(Theme.Colors.border, lineWidth: 2)
+        )
+        .shadow(
+            color: Color.black.opacity(0.125),
+            radius: 16,
+            x: 0,
+            y: 4
+        )
         .onTapGesture {
             withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                 viewModel.isMinimized = false
@@ -69,5 +101,5 @@ struct MinimizedQuizView: View {
         MinimizedQuizView(viewModel: QuizViewModel.preview)
             .padding()
     }
-    .background(Color.gray.opacity(0.2))
+    .background(Theme.Colors.bgSecondary)
 }

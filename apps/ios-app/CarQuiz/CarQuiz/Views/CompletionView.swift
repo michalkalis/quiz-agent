@@ -2,7 +2,7 @@
 //  CompletionView.swift
 //  CarQuiz
 //
-//  Quiz completion and session summary
+//  Quiz completion and session summary matching Pencil design
 //
 
 import SwiftUI
@@ -11,113 +11,104 @@ struct CompletionView: View {
     @ObservedObject var viewModel: QuizViewModel
 
     var body: some View {
-        VStack(spacing: 32) {
-            Spacer()
-
-            // Trophy icon
-            Image(systemName: trophyIcon)
-                .font(.system(size: 80))
-                .foregroundColor(trophyColor)
-                .transition(.scale.combined(with: .opacity))
-
-            // Completion message
-            VStack(spacing: 8) {
-                Text("Quiz Complete!")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-
-                Text(congratulatoryMessage)
-                    .font(.title3)
-                    .foregroundColor(.secondary)
-            }
-
-            // Score card
-            VStack(spacing: 24) {
-                // Final score circle
-                ZStack {
-                    Circle()
-                        .stroke(Color.gray.opacity(0.2), lineWidth: 12)
-                        .frame(width: 160, height: 160)
-
-                    Circle()
-                        .trim(from: 0, to: scorePercentage / 100)
-                        .stroke(
-                            scoreColor,
-                            style: StrokeStyle(lineWidth: 12, lineCap: .round)
-                        )
-                        .frame(width: 160, height: 160)
-                        .rotationEffect(.degrees(-90))
-                        .animation(.spring(response: 1.0, dampingFraction: 0.7), value: viewModel.score)
-
-                    VStack(spacing: 4) {
-                        Text("\(formattedScore)")
-                            .font(.system(size: 48, weight: .bold))
-
-                        Text("out of \(maxQuestions)")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+        ScrollView {
+            VStack(spacing: Theme.Spacing.xl) {
+                // Close button
+                HStack {
+                    Spacer()
+                    Button {
+                        viewModel.resetToHome()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: Theme.Components.iconSM, weight: .medium))
+                            .foregroundColor(Theme.Colors.textSecondary)
+                            .padding(Theme.Spacing.sm)
+                            .background(Theme.Colors.bgCard)
+                            .cornerRadius(Theme.Radius.full)
                     }
                 }
+                .padding(.horizontal)
 
-                // Stats
-                HStack(spacing: 40) {
-                    StatView(
+                // MARK: - Trophy Section
+                VStack(spacing: Theme.Spacing.md) {
+                    Text("Quiz Master!")
+                        .font(.system(size: Theme.Typography.sizeXXL, weight: .bold))
+                        .foregroundColor(Theme.Colors.textPrimary)
+
+                    Text(congratulatoryMessage)
+                        .font(.system(size: Theme.Typography.sizeMD))
+                        .foregroundColor(Theme.Colors.textSecondary)
+                }
+
+                // Trophy Icon
+                TrophyIcon(size: 120)
+                    .padding(.vertical, Theme.Spacing.lg)
+
+                // MARK: - Score Card
+                VStack(spacing: Theme.Spacing.sm) {
+                    Text("Final Score")
+                        .font(.system(size: Theme.Typography.sizeXS, weight: .medium))
+                        .foregroundColor(Theme.Colors.textSecondary)
+
+                    Text(formattedScore)
+                        .font(.system(size: 56, weight: .heavy))
+                        .foregroundColor(Theme.Colors.accentPrimary)
+
+                    Text("\(Int(scorePercentage))% Accuracy")
+                        .font(.system(size: Theme.Typography.sizeMD, weight: .medium))
+                        .foregroundColor(Theme.Colors.textSecondary)
+                }
+                .padding(Theme.Spacing.xl)
+                .frame(maxWidth: .infinity)
+                .background(Theme.Colors.bgCard)
+                .cornerRadius(Theme.Radius.xl)
+                .overlay(
+                    RoundedRectangle(cornerRadius: Theme.Radius.xl)
+                        .stroke(Theme.Gradients.cardBorder(), lineWidth: 2)
+                )
+                .padding(.horizontal)
+
+                // MARK: - Stats Row
+                HStack(spacing: Theme.Spacing.md) {
+                    StatsCard(
                         icon: "checkmark.circle.fill",
                         value: "\(viewModel.questionsAnswered)",
-                        label: "Questions"
+                        label: "Correct",
+                        iconColor: Theme.Colors.success
                     )
 
-                    StatView(
-                        icon: "percent",
-                        value: "\(Int(scorePercentage))%",
-                        label: "Accuracy"
+                    StatsCard(
+                        icon: "flame.fill",
+                        value: "\(viewModel.currentStreak)",
+                        label: "Streak",
+                        iconColor: Theme.Colors.warning
                     )
                 }
-            }
-            .padding(.vertical)
+                .padding(.horizontal)
 
-            Spacer()
+                Spacer(minLength: Theme.Spacing.xl)
 
-            // Actions
-            VStack(spacing: 16) {
-                // Start another quiz
-                Button(action: {
-                    Task {
-                        await viewModel.startNewQuiz()
+                // MARK: - Action Buttons
+                VStack(spacing: Theme.Spacing.sm) {
+                    PrimaryButton(
+                        title: "Play Again",
+                        icon: "arrow.clockwise",
+                        isLoading: viewModel.isLoading
+                    ) {
+                        Task {
+                            await viewModel.startNewQuiz()
+                        }
                     }
-                }) {
-                    HStack {
-                        Image(systemName: "arrow.clockwise")
-                            .font(.title2)
 
-                        Text("Start Another Quiz")
-                            .font(.headline)
+                    SecondaryButton(title: "Back to Home") {
+                        viewModel.resetToHome()
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(viewModel.isLoading ? Color.blue.opacity(0.5) : Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(16)
                 }
-                .disabled(viewModel.isLoading)
-
-                // Go home
-                Button(action: {
-                    viewModel.resetToHome()
-                }) {
-                    Text("Done")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.gray.opacity(0.1))
-                        .foregroundColor(.primary)
-                        .cornerRadius(16)
-                }
+                .padding(.horizontal)
+                .padding(.bottom, Theme.Spacing.lg)
             }
-            .padding(.horizontal, 40)
-            .padding(.bottom, 40)
         }
-        .padding()
+        .background(Theme.Colors.bgPrimary)
     }
 
     // MARK: - Computed Properties
@@ -133,39 +124,9 @@ struct CompletionView: View {
 
     private var formattedScore: String {
         if viewModel.score.truncatingRemainder(dividingBy: 1) == 0 {
-            return "\(Int(viewModel.score))"
+            return "\(Int(viewModel.score)) / \(maxQuestions)"
         } else {
-            return String(format: "%.1f", viewModel.score)
-        }
-    }
-
-    private var trophyIcon: String {
-        if scorePercentage >= 80 {
-            return "trophy.fill"
-        } else if scorePercentage >= 60 {
-            return "star.fill"
-        } else {
-            return "flag.checkered"
-        }
-    }
-
-    private var trophyColor: Color {
-        if scorePercentage >= 80 {
-            return .yellow
-        } else if scorePercentage >= 60 {
-            return .orange
-        } else {
-            return .blue
-        }
-    }
-
-    private var scoreColor: Color {
-        if scorePercentage >= 80 {
-            return .green
-        } else if scorePercentage >= 60 {
-            return .orange
-        } else {
-            return .red
+            return String(format: "%.1f / %d", viewModel.score, maxQuestions)
         }
     }
 
@@ -178,30 +139,6 @@ struct CompletionView: View {
             return "Well done!"
         } else {
             return "Good effort!"
-        }
-    }
-}
-
-// MARK: - Stat View Component
-
-struct StatView: View {
-    let icon: String
-    let value: String
-    let label: String
-
-    var body: some View {
-        VStack(spacing: 8) {
-            Image(systemName: icon)
-                .font(.title2)
-                .foregroundColor(.blue)
-
-            Text(value)
-                .font(.title3)
-                .fontWeight(.semibold)
-
-            Text(label)
-                .font(.caption)
-                .foregroundColor(.secondary)
         }
     }
 }

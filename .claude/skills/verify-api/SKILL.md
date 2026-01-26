@@ -1,3 +1,10 @@
+---
+name: verify-api
+description: Verify iOS Codable structs match backend Pydantic models. Use after API changes.
+allowed-tools: Read, Grep, Glob
+model: sonnet
+---
+
 # Verify API Contract
 
 Verify that iOS Codable structs match backend Pydantic models.
@@ -13,7 +20,7 @@ Verify that iOS Codable structs match backend Pydantic models.
 
 3. **Compare**: For each model pair, verify:
    - Field names match (accounting for snake_case vs camelCase)
-   - Field types are compatible (str↔String, int↔Int, Optional↔nil)
+   - Field types are compatible (str<->String, int<->Int, Optional<->nil)
    - Required vs optional fields align
 
 4. **Report**:
@@ -23,7 +30,4 @@ Verify that iOS Codable structs match backend Pydantic models.
 
 ## Optional: Build Verification
 
-If $ARGUMENTS contains "build", also run:
-```bash
-cd apps/ios-app/CarQuiz && xcodebuild -scheme CarQuiz-Local -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -quiet
-```
+If $ARGUMENTS contains "build", also run iOS build to verify compilation.

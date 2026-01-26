@@ -1,0 +1,78 @@
+#!/bin/bash
+# Session start hook - displays available tools and efficiency tips
+
+# Colors (ANSI escape codes)
+CYAN='\033[36m'
+GREEN='\033[32m'
+YELLOW='\033[33m'
+DIM='\033[2m'
+RESET='\033[0m'
+BOLD='\033[1m'
+
+# Get a random tip from the tips file
+TIPS_FILE="$CLAUDE_PROJECT_DIR/.claude/data/efficiency-tips.txt"
+TIP=""
+if [ -f "$TIPS_FILE" ]; then
+    # Read non-comment, non-empty lines and pick one randomly
+    TIP=$(grep -v '^#' "$TIPS_FILE" | grep -v '^$' | shuf -n 1 2>/dev/null || \
+          grep -v '^#' "$TIPS_FILE" | grep -v '^$' | awk 'BEGIN{srand()} {lines[NR]=$0} END{print lines[int(rand()*NR)+1]}')
+fi
+
+# Check if best practices check is overdue
+LAST_CHECK_FILE="$CLAUDE_PROJECT_DIR/.claude/.last-check"
+CHECK_REMINDER=""
+if [ ! -f "$LAST_CHECK_FILE" ]; then
+    CHECK_REMINDER="Run /best-practices for first-time setup review"
+else
+    LAST_CHECK=$(cat "$LAST_CHECK_FILE" 2>/dev/null)
+    NOW=$(date +%s)
+    if [[ "$LAST_CHECK" =~ ^[0-9]+$ ]]; then
+        DAYS_SINCE=$(( (NOW - LAST_CHECK) / 86400 ))
+        if [ "$DAYS_SINCE" -ge 7 ]; then
+            CHECK_REMINDER="Best practices check is ${DAYS_SINCE} days overdue"
+        fi
+    fi
+fi
+
+echo ""
+echo -e "${CYAN}╭─────────────────────────────────────────────────────────╮${RESET}"
+echo -e "${CYAN}│${RESET}  ${BOLD}AVAILABLE TOOLS FOR quiz-agent${RESET}                        ${CYAN}│${RESET}"
+echo -e "${CYAN}├─────────────────────────────────────────────────────────┤${RESET}"
+echo -e "${CYAN}│${RESET}  ${YELLOW}SKILLS${RESET} ${DIM}(invoke with /name)${RESET}                             ${CYAN}│${RESET}"
+echo -e "${CYAN}│${RESET}    ${GREEN}/verify-api${RESET}     - Check iOS<->Backend model sync     ${CYAN}│${RESET}"
+echo -e "${CYAN}│${RESET}    ${GREEN}/start-local${RESET}    - Start backend/web services         ${CYAN}│${RESET}"
+echo -e "${CYAN}│${RESET}    ${GREEN}/catchup${RESET}        - Summarize branch changes           ${CYAN}│${RESET}"
+echo -e "${CYAN}│${RESET}    ${GREEN}/test-ios${RESET}       - Run iOS unit tests                 ${CYAN}│${RESET}"
+echo -e "${CYAN}│${RESET}    ${GREEN}/test-backend${RESET}   - Run pytest suite                   ${CYAN}│${RESET}"
+echo -e "${CYAN}│${RESET}    ${GREEN}/build-ios${RESET}      - Build iOS app                      ${CYAN}│${RESET}"
+echo -e "${CYAN}│${RESET}    ${GREEN}/best-practices${RESET} - Check Claude Code setup (weekly)   ${CYAN}│${RESET}"
+echo -e "${CYAN}├─────────────────────────────────────────────────────────┤${RESET}"
+echo -e "${CYAN}│${RESET}  ${YELLOW}AGENTS${RESET} ${DIM}(delegate with \"use X agent\")${RESET}                   ${CYAN}│${RESET}"
+echo -e "${CYAN}│${RESET}    ${GREEN}ios-tester${RESET}      - Run iOS tests, report failures     ${CYAN}│${RESET}"
+echo -e "${CYAN}│${RESET}    ${GREEN}backend-tester${RESET}  - Run pytest, report failures        ${CYAN}│${RESET}"
+echo -e "${CYAN}│${RESET}    ${GREEN}code-reviewer${RESET}   - Review recent changes              ${CYAN}│${RESET}"
+echo -e "${CYAN}├─────────────────────────────────────────────────────────┤${RESET}"
+echo -e "${CYAN}│${RESET}  ${YELLOW}HOOKS${RESET} ${DIM}(automatic)${RESET}                                      ${CYAN}│${RESET}"
+echo -e "${CYAN}│${RESET}    Branch protection (blocks main/master edits)         ${CYAN}│${RESET}"
+echo -e "${CYAN}│${RESET}    Swift auto-format (swiftformat on .swift edits)      ${CYAN}│${RESET}"
+
+# Show tip if available
+if [ -n "$TIP" ]; then
+    echo -e "${CYAN}├─────────────────────────────────────────────────────────┤${RESET}"
+    echo -e "${CYAN}│${RESET}  ${YELLOW}TIP${RESET}: ${TIP:0:50}${RESET}"
+    # If tip is longer than 50 chars, show continuation
+    if [ ${#TIP} -gt 50 ]; then
+        echo -e "${CYAN}│${RESET}       ${TIP:50:47}${RESET}"
+    fi
+fi
+
+# Show check reminder if overdue
+if [ -n "$CHECK_REMINDER" ]; then
+    echo -e "${CYAN}├─────────────────────────────────────────────────────────┤${RESET}"
+    echo -e "${CYAN}│${RESET}  ${YELLOW}⚠${RESET}  ${CHECK_REMINDER}${RESET}"
+fi
+
+echo -e "${CYAN}╰─────────────────────────────────────────────────────────╯${RESET}"
+echo ""
+
+exit 0

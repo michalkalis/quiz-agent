@@ -1,0 +1,22 @@
+# Claude Code Efficiency Tips
+# One tip per line - shown randomly at session start
+# Lines starting with # are ignored
+
+Use /permissions to allowlist safe commands and reduce interruptions
+Run /compact to clean up long sessions and free context space
+Delegate heavy exploration to subagents to preserve main context
+Use --dangerously-skip-permissions only in isolated containers
+Try /best-practices weekly to check your Claude Code setup
+Use Shift+Tab for quick Yes/No prompts instead of typing
+Press Escape twice to interrupt Claude mid-response
+Use /clear to start fresh when context gets cluttered
+Add commonly-run commands to allowed_tools in settings.json
+Create skills for workflows you repeat more than twice
+Use haiku model for simple skills to reduce cost and latency
+Check /cost periodically to monitor token usage
+Use hooks to automate formatting and linting on file saves
+Add branch protection hooks to prevent accidental main edits
+Use @file.md imports in CLAUDE.md to keep it concise
+Subagents don't share your context - give them full details
+Run /doctor if Claude Code is behaving unexpectedly
+Use /memory add to teach Claude project-specific patterns

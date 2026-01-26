@@ -1,8 +1,11 @@
-# Catchup Command
+---
+name: catchup
+description: Summarize recent changes on current branch to resume work after a break
+allowed-tools: Bash, Read, Grep, Glob
+model: sonnet
+---
 
-Resume work after a break by understanding recent changes.
-
-## Instructions
+# Catchup - Resume Work After Break
 
 1. Find the base branch (main or develop) and compare current branch against it
 2. Read all files that have changed in the current git branch

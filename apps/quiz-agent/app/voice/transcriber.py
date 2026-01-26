@@ -4,8 +4,98 @@ Converts audio files to text for voice-based quiz interaction.
 """
 
 from typing import Optional, BinaryIO
+from dataclasses import dataclass
 from openai import AsyncOpenAI
 import os
+
+
+# Known Whisper hallucination patterns (common outputs on silence/noise)
+HALLUCINATION_PATTERNS = [
+    "thank you",
+    "thanks for watching",
+    "thanks for listening",
+    "thank you for watching",
+    "thank you for listening",
+    "bye",
+    "bye bye",
+    "goodbye",
+    "see you",
+    "please subscribe",
+    "like and subscribe",
+    "music",
+    "[music]",
+    "(music)",
+    "you",
+    "...",
+]
+
+
+@dataclass
+class TranscriptionResult:
+    """Result of audio transcription with confidence metrics.
+
+    Attributes:
+        text: Transcribed text
+        language: Detected language code (ISO 639-1)
+        no_speech_prob: Probability segment has no speech (0-1, higher = likely silence)
+        avg_logprob: Average confidence (-0.5 to 0 good, < -1 low confidence)
+        duration: Audio duration in seconds
+    """
+    text: str
+    language: Optional[str]
+    no_speech_prob: float
+    avg_logprob: float
+    duration: float
+
+    def is_valid(self) -> bool:
+        """Check if transcription passes quality thresholds.
+
+        Returns:
+            True if transcription appears to be valid speech, False otherwise
+        """
+        # Empty or very short text
+        if not self.text or len(self.text.strip()) < 2:
+            return False
+
+        # High probability of no speech (> 0.8 = very likely silence)
+        # Relaxed from 0.6 to avoid rejecting valid speech in noisy environments
+        if self.no_speech_prob > 0.8:
+            return False
+
+        # Very low confidence (< -1.5 = severely garbled)
+        # Relaxed from -1.0 to accept short answers and accented speech
+        if self.avg_logprob < -1.5:
+            return False
+
+        # Check for known hallucination patterns
+        text_lower = self.text.lower().strip()
+        for pattern in HALLUCINATION_PATTERNS:
+            if text_lower == pattern or text_lower == pattern + ".":
+                return False
+
+        return True
+
+    def get_rejection_reason(self) -> Optional[str]:
+        """Get human-readable reason why transcription was rejected.
+
+        Returns:
+            Rejection reason string, or None if valid
+        """
+        if not self.text or len(self.text.strip()) < 2:
+            return "empty_transcription"
+
+        if self.no_speech_prob > 0.8:
+            return f"no_speech_detected (prob={self.no_speech_prob:.2f})"
+
+        if self.avg_logprob < -1.5:
+            return f"low_confidence (logprob={self.avg_logprob:.2f})"
+
+        text_lower = self.text.lower().strip()
+        for pattern in HALLUCINATION_PATTERNS:
+            if text_lower == pattern or text_lower == pattern + ".":
+                return f"hallucination_pattern ('{pattern}')"
+
+        return None
 
 
 class VoiceTranscriber:
@@ -49,8 +139,8 @@ class VoiceTranscriber:
         filename: str,
         prompt: Optional[str] = None,
         language: Optional[str] = None
-    ) -> tuple[str, Optional[str]]:
-        """Transcribe audio file to text.
+    ) -> TranscriptionResult:
+        """Transcribe audio file to text with confidence metrics.
 
         Args:
             audio_file: Audio file binary stream
@@ -60,7 +150,7 @@ class VoiceTranscriber:
                      Overrides instance language if provided
 
         Returns:
-            Tuple of (transcribed_text, language)
+            TranscriptionResult with text, language, and confidence metrics
 
         Raises:
             ValueError: If file format not supported or file too large
@@ -68,9 +158,11 @@ class VoiceTranscriber:
         Example:
             >>> transcriber = VoiceTranscriber()
             >>> with open("answer.mp3", "rb") as f:
-            ...     text, lang = await transcriber.transcribe(f, "answer.mp3")
-            >>> print(text)
+            ...     result = await transcriber.transcribe(f, "answer.mp3")
+            >>> print(result.text)
             'Paris'
+            >>> print(result.is_valid())
+            True
         """
         # Validate file format
         file_ext = self._get_file_extension(filename)
@@ -115,8 +207,40 @@ class VoiceTranscriber:
             # Extract text and detected language
             text = response.text.strip()
             detected_language = getattr(response, "language", None)
+            duration = getattr(response, "duration", 0.0) or 0.0
 
-            return text, detected_language
+            # Extract confidence metrics from segments (verbose_json format)
+            segments = getattr(response, "segments", None)
+            no_speech_prob = 0.0
+            avg_logprob = 0.0
+
+            if segments and len(segments) > 0:
+                # Average metrics across all segments
+                total_no_speech = sum(
+                    getattr(seg, "no_speech_prob", 0.0) or 0.0 for seg in segments
+                )
+                total_logprob = sum(
+                    getattr(seg, "avg_logprob", 0.0) or 0.0 for seg in segments
+                )
+                no_speech_prob = total_no_speech / len(segments)
+                avg_logprob = total_logprob / len(segments)
+
+                print(f"DEBUG [transcribe]: segments={len(segments)}, "
+                      f"no_speech_prob={no_speech_prob:.3f}, "
+                      f"avg_logprob={avg_logprob:.3f}, "
+                      f"duration={duration:.2f}s")
+            else:
+                # Fallback: no segment data available (shouldn't happen with verbose_json)
+                print(f"⚠️ WARNING [transcribe]: No segment data in Whisper response, "
+                      f"falling back to permissive defaults")
+
+            return TranscriptionResult(
+                text=text,
+                language=detected_language,
+                no_speech_prob=no_speech_prob,
+                avg_logprob=avg_logprob,
+                duration=duration
+            )
 
         except Exception as e:
             raise RuntimeError(f"Transcription failed: {str(e)}")
@@ -127,7 +251,7 @@ class VoiceTranscriber:
         filename: str,
         current_question: Optional[str] = None,
         language: Optional[str] = None
-    ) -> str:
+    ) -> TranscriptionResult:
         """Transcribe audio with quiz-specific context.
 
         Provides better accuracy by giving Whisper context about
@@ -141,16 +265,18 @@ class VoiceTranscriber:
                      Overrides instance language if provided
 
         Returns:
-            Transcribed text
+            TranscriptionResult with text, language, and confidence metrics
 
         Example:
-            >>> text = await transcriber.transcribe_with_quiz_context(
+            >>> result = await transcriber.transcribe_with_quiz_context(
             ...     audio_file,
             ...     "answer.mp3",
             ...     "What is the capital of France?"
             ... )
-            >>> print(text)
+            >>> print(result.text)
             'Paris, but too easy'
+            >>> print(result.is_valid())
+            True
         """
         # Build context prompt
         prompt = "Quiz answer. "
@@ -158,14 +284,12 @@ class VoiceTranscriber:
             prompt += f"Question: {current_question}. "
         prompt += "Expected: short answers, place names, proper nouns, numbers."
 
-        text, _ = await self.transcribe(
+        return await self.transcribe(
             audio_file=audio_file,
             filename=filename,
             prompt=prompt,
             language=language
         )
-
-        return text
 
     def _get_file_extension(self, filename: str) -> str:
         """Extract file extension from filename.

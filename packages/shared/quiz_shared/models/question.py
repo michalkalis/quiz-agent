@@ -56,6 +56,14 @@ class Question(BaseModel):
         "generated",
         description="Source: generated | manual | imported"
     )
+    source_url: Optional[str] = Field(
+        None,
+        description="URL to source article or reference"
+    )
+    source_excerpt: Optional[str] = Field(
+        None,
+        description="Brief excerpt from source (1-2 sentences max)"
+    )
 
     # Quality metrics
     usage_count: int = Field(0, description="Times used in quizzes")

@@ -42,5 +42,7 @@ STATIC_FEEDBACK: Dict[str, List[str]] = {
 }
 
 # Audio format configuration
-TTS_FORMAT = "opus"  # Opus format (24kbps, iOS native support, 5x smaller than MP3)
+# MP3 format: Universally supported by iOS AVPlayer (unlike OggOpus)
+# Note: Opus is NOT natively supported by AVPlayer in Ogg containers
+TTS_FORMAT = "mp3"
 TTS_SPEED = 1.0      # Normal speech speed

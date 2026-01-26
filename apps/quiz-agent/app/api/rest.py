@@ -23,7 +23,7 @@ from ..input.parser import InputParser
 from ..retrieval.question_retriever import QuestionRetriever
 from ..evaluation.evaluator import AnswerEvaluator
 from ..rating.feedback import FeedbackService
-from ..voice.transcriber import VoiceTranscriber
+from ..voice.transcriber import VoiceTranscriber, TranscriptionResult
 from ..tts.service import TTSService
 
 
@@ -854,16 +854,21 @@ async def transcribe_audio(
             )
 
         # Transcribe
-        text, language = await voice_transcriber.transcribe(
+        result = await voice_transcriber.transcribe(
             audio_file=audio.file,
             filename=audio.filename
         )
 
         return {
             "success": True,
-            "text": text,
-            "language": language,
-            "filename": audio.filename
+            "text": result.text,
+            "language": result.language,
+            "filename": audio.filename,
+            "confidence": {
+                "no_speech_prob": result.no_speech_prob,
+                "avg_logprob": result.avg_logprob,
+                "is_valid": result.is_valid()
+            }
         }
 
     except ValueError as e:
@@ -930,22 +935,29 @@ async def transcribe_and_submit(
             raise HTTPException(status_code=500, detail="Current question not found")
 
         # Transcribe with quiz context, constraining to session language
-        transcribed_text = await voice_transcriber.transcribe_with_quiz_context(
+        transcription_result = await voice_transcriber.transcribe_with_quiz_context(
             audio_file=audio.file,
             filename=audio.filename,
             current_question=current_question.question,
             language=session.language
         )
 
-        # Validate transcription is not empty
-        if not transcribed_text or len(transcribed_text.strip()) < 2:
-            print(f"⚠️ Empty transcription detected for session {session_id}")
+        # Validate transcription quality using confidence metrics
+        if not transcription_result.is_valid():
+            rejection_reason = transcription_result.get_rejection_reason()
+            print(f"⚠️ Transcription rejected for session {session_id}: {rejection_reason}")
+            print(f"   text='{transcription_result.text}', "
+                  f"no_speech_prob={transcription_result.no_speech_prob:.3f}, "
+                  f"avg_logprob={transcription_result.avg_logprob:.3f}")
             raise HTTPException(
                 status_code=400,
-                detail="No speech detected in audio. Please record your answer clearly and try again."
+                detail="No clear speech detected. Please speak clearly and try again."
             )
 
-        print(f"✅ Transcribed: '{transcribed_text}'")
+        transcribed_text = transcription_result.text
+        print(f"✅ Transcribed: '{transcribed_text}' "
+              f"(no_speech={transcription_result.no_speech_prob:.2f}, "
+              f"logprob={transcription_result.avg_logprob:.2f})")
 
         # Start fetching next question in parallel with evaluation (saves ~0.2-0.5s)
         # Only if quiz isn't finished yet

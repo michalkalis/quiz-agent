@@ -28,27 +28,28 @@ def boost_volume(audio_data: bytes, gain_db: float = VOLUME_BOOST_DB) -> bytes:
     """Boost audio volume using pydub.
 
     Args:
-        audio_data: Raw audio bytes (Opus format)
+        audio_data: Raw audio bytes (MP3 format)
         gain_db: Gain in decibels (+3.5dB ≈ 50% louder)
 
     Returns:
-        Volume-boosted audio bytes in same format
+        Volume-boosted audio bytes in MP3 format
 
     Note:
-        Requires ffmpeg installed on the system for pydub to work with Opus.
+        Requires ffmpeg installed on the system for pydub to work.
+        Uses MP3 format for universal iOS AVPlayer compatibility.
     """
     try:
         from pydub import AudioSegment
 
-        # Load audio from bytes
-        audio = AudioSegment.from_file(io.BytesIO(audio_data), format="ogg")
+        # Load MP3 audio from bytes
+        audio = AudioSegment.from_file(io.BytesIO(audio_data), format="mp3")
 
         # Apply gain boost
         louder_audio = audio + gain_db
 
-        # Export back to bytes
+        # Export back to MP3 (64k bitrate is good quality for speech)
         buffer = io.BytesIO()
-        louder_audio.export(buffer, format="ogg", codec="libopus")
+        louder_audio.export(buffer, format="mp3", bitrate="64k")
         return buffer.getvalue()
 
     except Exception as e:
@@ -65,7 +66,7 @@ class TTSService:
     - 3-tier caching (static, LRU, dynamic)
     - Concurrency limiting (max 20 concurrent requests)
     - Multilingual support (OpenAI TTS speaks 50+ languages)
-    - Opus format (24kbps, iOS native, 5x smaller than MP3)
+    - MP3 format (universally supported by iOS AVPlayer)
 
     Usage:
         >>> tts = TTSService()
@@ -111,7 +112,7 @@ class TTSService:
             use_cache: Whether to use cache (default: True)
 
         Returns:
-            Audio bytes in Opus format
+            Audio bytes in MP3 format
 
         Example:
             >>> audio = await tts.synthesize("Bonjour!")  # French
@@ -273,7 +274,7 @@ class TTSService:
             voice: Voice name (default: "nova")
 
         Returns:
-            Audio bytes in Opus format
+            Audio bytes in MP3 format
         """
         return await self.synthesize(
             text=question_text,

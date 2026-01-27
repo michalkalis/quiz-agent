@@ -13,6 +13,7 @@ struct QuestionView: View {
 
     @State private var recordingError: String?
     @State private var audioData: Data?
+    @State private var showEndQuizConfirmation = false
 
     var body: some View {
         VStack(spacing: Theme.Spacing.lg) {
@@ -42,7 +43,7 @@ struct QuestionView: View {
                         viewModel.isMinimized = true
                     }
                 } label: {
-                    Image(systemName: "arrow.down.right.and.arrow.up.left")
+                    Image(systemName: "chevron.down")
                         .font(.system(size: Theme.Components.iconSM))
                         .foregroundColor(Theme.Colors.textSecondary)
                         .padding(Theme.Spacing.xs)
@@ -90,6 +91,32 @@ struct QuestionView: View {
             // Microphone button
             MicButton(state: micButtonState, action: handleMicrophoneTap)
 
+            // Skip & End Quiz buttons
+            HStack(spacing: Theme.Spacing.md) {
+                Button {
+                    Task { await viewModel.skipQuestion() }
+                } label: {
+                    HStack(spacing: Theme.Spacing.xs) {
+                        Image(systemName: "forward.fill")
+                        Text("Skip")
+                    }
+                }
+                .buttonStyle(.secondary)
+                .disabled(!canInteract)
+
+                Button {
+                    showEndQuizConfirmation = true
+                } label: {
+                    HStack(spacing: Theme.Spacing.xs) {
+                        Image(systemName: "xmark.circle.fill")
+                        Text("End Quiz")
+                    }
+                }
+                .buttonStyle(.danger)
+                .disabled(!canInteract)
+            }
+            .padding(.horizontal)
+
             // Error message
             if let error = recordingError ?? viewModel.errorMessage {
                 Text(error)
@@ -118,6 +145,20 @@ struct QuestionView: View {
                 }
             )
         }
+        .confirmationDialog(
+            "End Quiz?",
+            isPresented: $showEndQuizConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("End Quiz", role: .destructive) {
+                Task {
+                    await viewModel.endQuiz()
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Are you sure you want to end the quiz? Your progress will be saved.")
+        }
     }
 
     // MARK: - Hint Text
@@ -145,6 +186,11 @@ struct QuestionView: View {
     }
 
     // MARK: - Computed Properties
+
+    /// Whether Skip/End Quiz buttons are interactive (disabled during recording/processing)
+    private var canInteract: Bool {
+        viewModel.quizState == .askingQuestion
+    }
 
     private var micButtonState: MicButton.State {
         switch viewModel.quizState {

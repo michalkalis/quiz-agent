@@ -262,6 +262,29 @@ struct QuizViewModelAnsweredQuestionTests {
         #expect(viewModel.answeredQuestion == nil)
     }
 
+    @Test("resetToHome resets quiz state cleanly")
+    @MainActor
+    func resetToHomeResetsState() async throws {
+        // Arrange
+        let viewModel = makeViewModel()
+        viewModel.currentQuestion = makeQuestion(id: "q_001", source: "Test")
+        viewModel.answeredQuestion = makeQuestion(id: "q_001", source: "Test")
+        viewModel.quizState = .showingResult
+        viewModel.score = 5.0
+        viewModel.questionsAnswered = 3
+
+        // Act
+        viewModel.resetToHome()
+
+        // Assert - all state should be reset
+        #expect(viewModel.quizState == .idle)
+        #expect(viewModel.currentQuestion == nil)
+        #expect(viewModel.answeredQuestion == nil)
+        #expect(viewModel.score == 0.0)
+        #expect(viewModel.questionsAnswered == 0)
+        #expect(viewModel.errorMessage == nil)
+    }
+
     @Test("answeredQuestion cleared on reset")
     @MainActor
     func answeredQuestionClearedOnReset() async throws {

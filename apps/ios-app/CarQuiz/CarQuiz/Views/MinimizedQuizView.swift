@@ -10,6 +10,8 @@ import SwiftUI
 struct MinimizedQuizView: View {
     @ObservedObject var viewModel: QuizViewModel
 
+    @State private var showEndQuizConfirmation = false
+
     var body: some View {
         VStack(spacing: Theme.Spacing.xs) {
             // Progress text
@@ -81,6 +83,23 @@ struct MinimizedQuizView: View {
             RoundedRectangle(cornerRadius: Theme.Radius.lg)
                 .stroke(Theme.Colors.border, lineWidth: 2)
         )
+        .overlay(alignment: .topTrailing) {
+            Button {
+                showEndQuizConfirmation = true
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundColor(Theme.Colors.textSecondary)
+                    .frame(width: 22, height: 22)
+                    .background(Theme.Colors.bgSecondary)
+                    .clipShape(Circle())
+                    .overlay(
+                        Circle()
+                            .stroke(Theme.Colors.border, lineWidth: 1)
+                    )
+            }
+            .offset(x: 6, y: -6)
+        }
         .shadow(
             color: Color.black.opacity(0.125),
             radius: 16,
@@ -91,6 +110,20 @@ struct MinimizedQuizView: View {
             withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                 viewModel.isMinimized = false
             }
+        }
+        .confirmationDialog(
+            "End Quiz?",
+            isPresented: $showEndQuizConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("End Quiz", role: .destructive) {
+                Task {
+                    await viewModel.endQuiz()
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Are you sure you want to end the quiz? Your progress will be saved.")
         }
     }
 }

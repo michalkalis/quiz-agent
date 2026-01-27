@@ -73,15 +73,8 @@ struct CompletionView: View {
                     StatsCard(
                         icon: "checkmark.circle.fill",
                         value: "\(viewModel.questionsAnswered)",
-                        label: "Correct",
+                        label: "Answered",
                         iconColor: Theme.Colors.success
-                    )
-
-                    StatsCard(
-                        icon: "flame.fill",
-                        value: "\(viewModel.currentStreak)",
-                        label: "Streak",
-                        iconColor: Theme.Colors.warning
                     )
                 }
                 .padding(.horizontal)

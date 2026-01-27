@@ -80,7 +80,7 @@ struct ResultBadge: View {
         case .incorrect, .skipped:
             return Theme.Gradients.incorrect()
         case .partiallyCorrect:
-            return Theme.Gradients.streak() // Orange gradient for partial
+            return Theme.Gradients.partial()
         }
     }
 

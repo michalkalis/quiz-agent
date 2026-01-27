@@ -184,8 +184,8 @@ enum Theme {
             )
         }
 
-        /// Streak badge gradient (orange) - 90° angle
-        static func streak() -> LinearGradient {
+        /// Partial answer gradient (orange) - 90° angle
+        static func partial() -> LinearGradient {
             LinearGradient(
                 colors: [Color(hex: "#F59E0B"), Color(hex: "#D97706")],
                 startPoint: .top,

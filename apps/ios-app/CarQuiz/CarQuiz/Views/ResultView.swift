@@ -36,18 +36,13 @@ struct ResultView: View {
                     )
                     .frame(width: 100)
 
-                    // Streak badge (if applicable)
-                    if viewModel.currentStreak >= 2 {
-                        StreakBadge(streak: viewModel.currentStreak)
-                    }
-
                     // Minimize button
                     Button {
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                             viewModel.isMinimized = true
                         }
                     } label: {
-                        Image(systemName: "arrow.down.right.and.arrow.up.left")
+                        Image(systemName: "chevron.down")
                             .font(.system(size: Theme.Components.iconSM))
                             .foregroundColor(Theme.Colors.textSecondary)
                             .padding(Theme.Spacing.xs)

@@ -29,32 +29,6 @@ struct HomeView: View {
                 }
                 .padding(.top, Theme.Spacing.lg)
 
-                // MARK: - Your Progress Section
-
-                VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
-                    Text("Your Progress")
-                        .font(.system(size: Theme.Typography.sizeMD, weight: .semibold))
-                        .foregroundColor(Theme.Colors.textPrimary)
-                        .padding(.horizontal, 4)
-
-                    HStack(spacing: Theme.Spacing.md) {
-                        StatsCard(
-                            icon: "flame.fill",
-                            value: "\(viewModel.currentStreak)",
-                            label: "Day Streak",
-                            iconColor: Theme.Colors.warning
-                        )
-
-                        StatsCard(
-                            icon: "star.fill",
-                            value: String(format: "%.1f", viewModel.bestScore),
-                            label: "Best Score",
-                            iconColor: Theme.Colors.goldDark
-                        )
-                    }
-                }
-                .padding(.horizontal, Theme.Spacing.md)
-
                 // MARK: - Quick Settings Section
 
                 VStack(alignment: .leading, spacing: Theme.Spacing.sm) {

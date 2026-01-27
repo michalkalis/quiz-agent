@@ -39,7 +39,6 @@ final class QuizViewModel: ObservableObject {
     @Published var score: Double = 0.0
     @Published var questionsAnswered: Int = 0
     @Published var errorMessage: String?
-    @Published var isLoading = false
     private var errorContext: ErrorContext = .initialization
 
     // Answer confirmation modal state
@@ -168,11 +167,8 @@ final class QuizViewModel: ObservableObject {
         difficulty: String? = nil,
         language: String? = nil
     ) async {
-        isLoading = true
         errorMessage = nil
         autoAdvanceEnabled = true  // Reset auto-advance for new quiz
-
-        defer { isLoading = false }
 
         // Use provided parameters or fall back to settings
         let quizMaxQuestions = maxQuestions ?? settings.numberOfQuestions
@@ -277,10 +273,7 @@ final class QuizViewModel: ObservableObject {
         }
 
         quizState = .processing
-        isLoading = true
         errorMessage = nil
-
-        defer { isLoading = false }
 
         do {
             if Config.verboseLogging {
@@ -385,10 +378,7 @@ final class QuizViewModel: ObservableObject {
         }
 
         quizState = .processing
-        isLoading = true
         errorMessage = nil
-
-        defer { isLoading = false }
 
         do {
             if Config.verboseLogging {
@@ -418,10 +408,7 @@ final class QuizViewModel: ObservableObject {
         guard let sessionId = currentSession?.id else { return }
 
         quizState = .processing
-        isLoading = true
         errorMessage = nil
-
-        defer { isLoading = false }
 
         do {
             if Config.verboseLogging {

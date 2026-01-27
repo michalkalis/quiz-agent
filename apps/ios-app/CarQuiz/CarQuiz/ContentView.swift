@@ -114,8 +114,7 @@ struct ErrorView: View {
             VStack(spacing: Theme.Spacing.md) {
                 PrimaryButton(
                     title: "Try Again",
-                    icon: "arrow.clockwise",
-                    isLoading: viewModel.isLoading
+                    icon: "arrow.clockwise"
                 ) {
                     Task {
                         if viewModel.shouldRetryWithNewSession {

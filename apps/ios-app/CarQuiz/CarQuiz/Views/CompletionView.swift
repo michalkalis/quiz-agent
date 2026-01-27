@@ -85,8 +85,7 @@ struct CompletionView: View {
                 VStack(spacing: Theme.Spacing.sm) {
                     PrimaryButton(
                         title: "Play Again",
-                        icon: "arrow.clockwise",
-                        isLoading: viewModel.isLoading
+                        icon: "arrow.clockwise"
                     ) {
                         Task {
                             await viewModel.startNewQuiz()

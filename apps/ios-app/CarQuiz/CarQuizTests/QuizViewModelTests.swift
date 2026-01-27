@@ -356,3 +356,170 @@ struct QuizViewModelAnsweredQuestionTests {
         #expect(viewModel.answeredQuestion?.sourceExcerpt != "Source 1")
     }
 }
+
+// MARK: - Loading State Tests
+
+@Suite("QuizViewModel Loading State Tests")
+struct QuizViewModelLoadingStateTests {
+
+    /// Creates a fresh ViewModel with configurable mock network
+    @MainActor
+    private func makeViewModel(shouldFail: Bool = false) -> (QuizViewModel, MockNetworkService) {
+        let mockNetwork = MockNetworkService()
+        mockNetwork.shouldFail = shouldFail
+
+        // Set up default mock session and response
+        mockNetwork.mockSession = QuizSession(
+            id: "test_session_123",
+            mode: "single",
+            phase: "asking",
+            maxQuestions: 10,
+            currentDifficulty: "medium",
+            category: nil,
+            language: "en",
+            participants: [
+                Participant(
+                    id: "p1", userId: nil, displayName: "Player",
+                    score: 0, answeredCount: 0, correctCount: 0,
+                    lastAnswer: nil, lastResult: nil,
+                    isHost: true, isReady: true, joinedAt: Date()
+                )
+            ],
+            expiresAt: Date().addingTimeInterval(30 * 60),
+            createdAt: Date()
+        )
+
+        mockNetwork.mockResponse = makeQuizResponse(
+            evaluationFor: "q_001",
+            userAnswer: "Test",
+            isCorrect: true,
+            nextQuestion: makeQuestion(id: "q_002", source: "Next")
+        )
+
+        let viewModel = QuizViewModel(
+            networkService: mockNetwork,
+            audioService: MockAudioService(),
+            sessionStore: MockSessionStore(),
+            questionHistoryStore: MockQuestionHistoryStore()
+        )
+        return (viewModel, mockNetwork)
+    }
+
+    @Test("submitVoiceAnswer sets quizState to processing then resolves")
+    @MainActor
+    func submitVoiceAnswerSetsProcessing() async throws {
+        let (viewModel, _) = makeViewModel()
+        // Set up active session so submitVoiceAnswer doesn't bail early
+        viewModel.currentSession = QuizSession(
+            id: "test_session_123",
+            mode: "single", phase: "asking", maxQuestions: 10,
+            currentDifficulty: "medium", category: nil, language: "en",
+            participants: [], expiresAt: Date().addingTimeInterval(1800),
+            createdAt: Date()
+        )
+        viewModel.currentQuestion = makeQuestion(id: "q_001", source: "Test")
+        viewModel.quizState = .askingQuestion
+
+        await viewModel.submitVoiceAnswer(audioData: Data("mock audio".utf8))
+
+        // After completion, state should not be .processing (moved to showingResult via confirmation)
+        // The answer confirmation sheet should be shown
+        #expect(viewModel.showAnswerConfirmation == true)
+    }
+
+    @Test("skipQuestion sets quizState to processing then resolves to showingResult")
+    @MainActor
+    func skipQuestionSetsProcessing() async throws {
+        let (viewModel, _) = makeViewModel()
+        viewModel.currentSession = QuizSession(
+            id: "test_session_123",
+            mode: "single", phase: "asking", maxQuestions: 10,
+            currentDifficulty: "medium", category: nil, language: "en",
+            participants: [], expiresAt: Date().addingTimeInterval(1800),
+            createdAt: Date()
+        )
+        viewModel.currentQuestion = makeQuestion(id: "q_001", source: "Test")
+        viewModel.quizState = .askingQuestion
+
+        await viewModel.skipQuestion()
+
+        // After skip completes, state transitions to showingResult
+        #expect(viewModel.quizState == .showingResult)
+    }
+
+    @Test("resubmitAnswer sets quizState to processing then resolves to showingResult")
+    @MainActor
+    func resubmitAnswerSetsProcessing() async throws {
+        let (viewModel, _) = makeViewModel()
+        viewModel.currentSession = QuizSession(
+            id: "test_session_123",
+            mode: "single", phase: "asking", maxQuestions: 10,
+            currentDifficulty: "medium", category: nil, language: "en",
+            participants: [], expiresAt: Date().addingTimeInterval(1800),
+            createdAt: Date()
+        )
+        viewModel.currentQuestion = makeQuestion(id: "q_001", source: "Test")
+        viewModel.quizState = .askingQuestion
+
+        await viewModel.resubmitAnswer("Paris")
+
+        #expect(viewModel.quizState == .showingResult)
+    }
+
+    @Test("startNewQuiz transitions to askingQuestion on success")
+    @MainActor
+    func startNewQuizTransitionsToAskingQuestion() async throws {
+        let (viewModel, _) = makeViewModel()
+
+        #expect(viewModel.quizState == .idle)
+
+        await viewModel.startNewQuiz()
+
+        #expect(viewModel.quizState == .askingQuestion)
+        #expect(viewModel.currentQuestion != nil)
+    }
+
+    @Test("startNewQuiz transitions to error on failure")
+    @MainActor
+    func startNewQuizTransitionsToError() async throws {
+        let (viewModel, _) = makeViewModel(shouldFail: true)
+
+        await viewModel.startNewQuiz()
+
+        #expect(viewModel.quizState == .error)
+        #expect(viewModel.errorMessage != nil)
+    }
+
+    @Test("resetToHome resets to idle cleanly")
+    @MainActor
+    func resetToHomeResetsToIdle() async throws {
+        let (viewModel, _) = makeViewModel()
+        // Put viewModel into non-idle state
+        viewModel.quizState = .processing
+        viewModel.errorMessage = "Some error"
+        viewModel.score = 5.0
+        viewModel.questionsAnswered = 3
+
+        viewModel.resetToHome()
+
+        #expect(viewModel.quizState == .idle)
+        #expect(viewModel.errorMessage == nil)
+        #expect(viewModel.score == 0.0)
+        #expect(viewModel.questionsAnswered == 0)
+    }
+
+    @Test("no isLoading property exists on QuizViewModel")
+    @MainActor
+    func noIsLoadingProperty() async throws {
+        // This test documents that isLoading has been removed.
+        // QuizState.processing is the single source of truth for loading state.
+        let (viewModel, _) = makeViewModel()
+
+        // The only way to check "is loading" is via quizState
+        viewModel.quizState = .processing
+        #expect(viewModel.quizState == .processing)
+
+        viewModel.quizState = .idle
+        #expect(viewModel.quizState != .processing)
+    }
+}

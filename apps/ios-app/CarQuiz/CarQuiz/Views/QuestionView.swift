@@ -133,7 +133,7 @@ struct QuestionView: View {
         .background(Theme.Colors.bgPrimary)
         .sheet(isPresented: $viewModel.showAnswerConfirmation) {
             AnswerConfirmationView(
-                isProcessing: viewModel.isLoading,
+                isProcessing: viewModel.quizState == .processing,
                 transcribedAnswer: viewModel.transcribedAnswer,
                 onConfirm: {
                     Task {

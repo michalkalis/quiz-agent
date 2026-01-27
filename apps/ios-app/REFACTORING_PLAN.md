@@ -15,8 +15,8 @@ Thorough code review found 10 issues ranging from unnecessary complexity (actor-
 ## Subtask 3: Remove `StateCoordinator` Actor ✅
 ## Subtask 4: Remove `AudioQueue` Actor ✅
 ## Subtask 5: Fix `pendingResponse` Modal Swipe-to-Dismiss ✅
-## Subtask 6: Consolidate Error State into ViewModel
-## Subtask 7: Move Recording Lifecycle into ViewModel
+## Subtask 6: Consolidate Error State into ViewModel ✅
+## Subtask 7: Move Recording Lifecycle into ViewModel ✅
 ## Subtask 8: Consolidate Persistence
 ## Subtask 9: Refactor `QuizState` to Carry Associated Values
 

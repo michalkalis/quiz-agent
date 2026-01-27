@@ -9,10 +9,7 @@ import SwiftUI
 
 struct QuestionView: View {
     @ObservedObject var viewModel: QuizViewModel
-    @EnvironmentObject var appState: AppState
 
-    @State private var recordingError: String?
-    @State private var audioData: Data?
     @State private var showEndQuizConfirmation = false
 
     var body: some View {
@@ -118,7 +115,7 @@ struct QuestionView: View {
             .padding(.horizontal)
 
             // Error message
-            if let error = recordingError ?? viewModel.errorMessage {
+            if let error = viewModel.errorMessage {
                 Text(error)
                     .font(.system(size: Theme.Typography.sizeXS))
                     .foregroundColor(Theme.Colors.error)
@@ -208,40 +205,7 @@ struct QuestionView: View {
     // MARK: - Actions
 
     private func handleMicrophoneTap() {
-        recordingError = nil
-        viewModel.errorMessage = nil
-
-        Task {
-            do {
-                switch viewModel.quizState {
-                case .askingQuestion:
-                    // OPTIMISTIC UI: Lock button immediately to prevent double-tap
-                    viewModel.quizState = .recording
-                    do {
-                        await appState.audioService.prepareForRecording()
-                        try appState.audioService.startRecording()
-                    } catch {
-                        // Rollback on failure
-                        viewModel.quizState = .askingQuestion
-                        throw error
-                    }
-
-                case .recording:
-                    let data = try await appState.audioService.stopRecording()
-                    await viewModel.submitVoiceAnswer(audioData: data)
-
-                default:
-                    break
-                }
-            } catch {
-                recordingError = "Recording failed: \(error.localizedDescription)"
-                viewModel.quizState = .askingQuestion
-
-                if Config.verboseLogging {
-                    print("❌ Recording error: \(error)")
-                }
-            }
-        }
+        Task { await viewModel.toggleRecording() }
     }
 }
 
@@ -263,5 +227,4 @@ struct PulsingAnimation: ViewModifier {
 
 #Preview {
     QuestionView(viewModel: QuizViewModel.preview)
-        .environmentObject(AppState())
 }

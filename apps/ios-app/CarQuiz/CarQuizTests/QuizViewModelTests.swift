@@ -668,3 +668,158 @@ struct QuizViewModelAnswerConfirmationDismissTests {
         #expect(viewModel.quizState == .askingQuestion)
     }
 }
+
+// MARK: - Recording Lifecycle Tests
+
+@Suite("QuizViewModel Recording Tests")
+struct QuizViewModelRecordingTests {
+
+    @MainActor
+    private func makeViewModel(shouldFailRecording: Bool = false) -> (QuizViewModel, MockAudioService) {
+        let mockAudio = MockAudioService()
+        mockAudio.shouldFailRecording = shouldFailRecording
+
+        let mockNetwork = MockNetworkService()
+        mockNetwork.mockSession = QuizSession(
+            id: "test_session_123",
+            mode: "single", phase: "asking", maxQuestions: 10,
+            currentDifficulty: "medium", category: nil, language: "en",
+            participants: [
+                Participant(
+                    id: "p1", userId: nil, displayName: "Player",
+                    score: 0, answeredCount: 0, correctCount: 0,
+                    lastAnswer: nil, lastResult: nil,
+                    isHost: true, isReady: true, joinedAt: Date()
+                )
+            ],
+            expiresAt: Date().addingTimeInterval(30 * 60),
+            createdAt: Date()
+        )
+        mockNetwork.mockResponse = makeQuizResponse(
+            evaluationFor: "q_001",
+            userAnswer: "Test",
+            isCorrect: true,
+            nextQuestion: makeQuestion(id: "q_002", source: "Next")
+        )
+
+        let viewModel = QuizViewModel(
+            networkService: mockNetwork,
+            audioService: mockAudio,
+            sessionStore: MockSessionStore(),
+            questionHistoryStore: MockQuestionHistoryStore()
+        )
+        return (viewModel, mockAudio)
+    }
+
+    @Test("toggleRecording from askingQuestion starts recording")
+    @MainActor
+    func toggleRecordingFromAskingQuestionStartsRecording() async throws {
+        let (viewModel, mockAudio) = makeViewModel()
+        viewModel.quizState = .askingQuestion
+
+        await viewModel.toggleRecording()
+
+        #expect(viewModel.quizState == .recording)
+        #expect(mockAudio.isRecording == true)
+        #expect(viewModel.errorMessage == nil)
+    }
+
+    @Test("toggleRecording from recording stops and submits")
+    @MainActor
+    func toggleRecordingFromRecordingStopsAndSubmits() async throws {
+        let (viewModel, _) = makeViewModel()
+        viewModel.currentSession = QuizSession(
+            id: "test_session_123",
+            mode: "single", phase: "asking", maxQuestions: 10,
+            currentDifficulty: "medium", category: nil, language: "en",
+            participants: [], expiresAt: Date().addingTimeInterval(1800),
+            createdAt: Date()
+        )
+        viewModel.currentQuestion = makeQuestion(id: "q_001", source: "Test")
+        viewModel.quizState = .recording
+
+        await viewModel.toggleRecording()
+
+        // After successful stop + submit, answer confirmation should show
+        #expect(viewModel.showAnswerConfirmation == true)
+    }
+
+    @Test("toggleRecording start failure rolls back to askingQuestion")
+    @MainActor
+    func toggleRecordingStartFailureRollsBack() async throws {
+        let (viewModel, _) = makeViewModel(shouldFailRecording: true)
+        viewModel.quizState = .askingQuestion
+
+        await viewModel.toggleRecording()
+
+        #expect(viewModel.quizState == .askingQuestion)
+        #expect(viewModel.errorMessage != nil)
+        #expect(viewModel.errorMessage!.contains("Recording failed"))
+    }
+
+    @Test("toggleRecording stop failure sets error and returns to askingQuestion")
+    @MainActor
+    func toggleRecordingStopFailureSetsError() async throws {
+        let (viewModel, mockAudio) = makeViewModel()
+        viewModel.quizState = .askingQuestion
+
+        // First toggle: start recording successfully
+        await viewModel.toggleRecording()
+        #expect(viewModel.quizState == .recording)
+
+        // Now make stop fail
+        mockAudio.shouldFailRecording = true
+
+        // Second toggle: stop recording (should fail)
+        await viewModel.toggleRecording()
+
+        #expect(viewModel.quizState == .askingQuestion)
+        #expect(viewModel.errorMessage != nil)
+        #expect(viewModel.errorMessage!.contains("Recording failed"))
+    }
+
+    @Test("toggleRecording from processing does nothing")
+    @MainActor
+    func toggleRecordingFromProcessingDoesNothing() async throws {
+        let (viewModel, _) = makeViewModel()
+        viewModel.quizState = .processing
+
+        await viewModel.toggleRecording()
+
+        #expect(viewModel.quizState == .processing)
+        #expect(viewModel.errorMessage == nil)
+    }
+
+    @Test("toggleRecording from idle does nothing")
+    @MainActor
+    func toggleRecordingFromIdleDoesNothing() async throws {
+        let (viewModel, _) = makeViewModel()
+        viewModel.quizState = .idle
+
+        await viewModel.toggleRecording()
+
+        #expect(viewModel.quizState == .idle)
+        #expect(viewModel.errorMessage == nil)
+    }
+
+    @Test("retryLastOperation after recording error returns to askingQuestion")
+    @MainActor
+    func retryAfterRecordingErrorReturnsToAskingQuestion() async throws {
+        let (viewModel, _) = makeViewModel(shouldFailRecording: true)
+        viewModel.quizState = .askingQuestion
+
+        // Trigger a recording error (sets errorContext to .recording internally)
+        await viewModel.toggleRecording()
+        #expect(viewModel.quizState == .askingQuestion)
+        #expect(viewModel.errorMessage != nil)
+
+        // Simulate user navigating to error screen
+        viewModel.quizState = .error
+
+        // Retry should return to askingQuestion (not start a new quiz)
+        await viewModel.retryLastOperation()
+
+        #expect(viewModel.quizState == .askingQuestion)
+        #expect(viewModel.errorMessage == nil)
+    }
+}

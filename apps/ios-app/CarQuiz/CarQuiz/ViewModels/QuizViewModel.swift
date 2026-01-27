@@ -23,6 +23,7 @@ enum QuizState: Equatable, Sendable {
 enum ErrorContext {
     case initialization  // Error during session creation or quiz start
     case submission      // Error during answer submission
+    case recording       // Error during audio recording
     case general         // Other errors
 }
 
@@ -251,6 +252,57 @@ final class QuizViewModel: ObservableObject {
         }
     }
 
+    // MARK: - Recording Lifecycle
+
+    /// Toggle recording: start if asking a question, stop and submit if recording
+    func toggleRecording() async {
+        switch quizState {
+        case .askingQuestion:
+            await startRecording()
+        case .recording:
+            await stopRecordingAndSubmit()
+        default:
+            break
+        }
+    }
+
+    /// Start recording the user's voice answer
+    /// Handles audio preparation, state transitions, and error rollback
+    private func startRecording() async {
+        errorMessage = nil
+        quizState = .recording
+
+        do {
+            await audioService.prepareForRecording()
+            try audioService.startRecording()
+        } catch {
+            // Rollback to asking state so user can retry
+            quizState = .askingQuestion
+            errorMessage = "Recording failed: \(error.localizedDescription)"
+            errorContext = .recording
+
+            if Config.verboseLogging {
+                print("❌ Recording failed to start: \(error)")
+            }
+        }
+    }
+
+    /// Stop recording and submit the audio for evaluation
+    private func stopRecordingAndSubmit() async {
+        do {
+            let data = try await audioService.stopRecording()
+            await submitVoiceAnswer(audioData: data)
+        } catch {
+            errorMessage = "Recording failed: \(error.localizedDescription)"
+            errorContext = .recording
+            quizState = .askingQuestion
+
+            if Config.verboseLogging {
+                print("❌ Recording stop failed: \(error)")
+            }
+        }
+    }
+
     /// Submit a voice answer
     func submitVoiceAnswer(audioData: Data) async {
         guard let sessionId = currentSession?.id else {
@@ -357,8 +409,8 @@ final class QuizViewModel: ObservableObject {
     /// Retry the last operation based on error context
     func retryLastOperation() async {
         switch errorContext {
-        case .submission:
-            // Retry answer submission (return to recording state)
+        case .submission, .recording:
+            // Return to question for re-recording or re-submission
             quizState = .askingQuestion
             errorMessage = nil
         default:

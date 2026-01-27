@@ -131,7 +131,9 @@ struct QuestionView: View {
         }
         .padding()
         .background(Theme.Colors.bgPrimary)
-        .sheet(isPresented: $viewModel.showAnswerConfirmation) {
+        .sheet(isPresented: $viewModel.showAnswerConfirmation, onDismiss: {
+            viewModel.handleAnswerConfirmationDismissed()
+        }) {
             AnswerConfirmationView(
                 isProcessing: viewModel.quizState == .processing,
                 transcribedAnswer: viewModel.transcribedAnswer,

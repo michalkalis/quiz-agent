@@ -331,6 +331,16 @@ final class QuizViewModel: ObservableObject {
         await handleQuizResponse(response)
     }
 
+    /// Defense-in-depth cleanup if the answer confirmation sheet is dismissed
+    /// without Confirm or Re-record (e.g., programmatic dismiss, future changes).
+    /// No-op when pendingResponse was already consumed by confirmAnswer/rerecordAnswer.
+    func handleAnswerConfirmationDismissed() {
+        guard pendingResponse != nil else { return }
+        pendingResponse = nil
+        quizState = .askingQuestion
+        errorMessage = nil
+    }
+
     /// Reject the transcribed answer and return to ready-to-record state
     func rerecordAnswer() {
         showAnswerConfirmation = false

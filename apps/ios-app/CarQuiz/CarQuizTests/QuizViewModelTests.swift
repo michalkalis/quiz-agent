@@ -552,3 +552,119 @@ struct QuizViewModelLoadingStateTests {
         #expect(viewModel.lastEvaluation != nil)
     }
 }
+
+// MARK: - Answer Confirmation Dismiss Tests
+
+@Suite("QuizViewModel Answer Confirmation Dismiss Tests")
+struct QuizViewModelAnswerConfirmationDismissTests {
+
+    /// Creates a ViewModel with a mock network that returns a valid evaluation response
+    @MainActor
+    private func makeViewModel() -> (QuizViewModel, MockNetworkService) {
+        let mockNetwork = MockNetworkService()
+        mockNetwork.mockSession = QuizSession(
+            id: "test_session_123",
+            mode: "single", phase: "asking", maxQuestions: 10,
+            currentDifficulty: "medium", category: nil, language: "en",
+            participants: [
+                Participant(
+                    id: "p1", userId: nil, displayName: "Player",
+                    score: 0, answeredCount: 0, correctCount: 0,
+                    lastAnswer: nil, lastResult: nil,
+                    isHost: true, isReady: true, joinedAt: Date()
+                )
+            ],
+            expiresAt: Date().addingTimeInterval(30 * 60),
+            createdAt: Date()
+        )
+        mockNetwork.mockResponse = makeQuizResponse(
+            evaluationFor: "q_001",
+            userAnswer: "Paris",
+            isCorrect: true,
+            nextQuestion: makeQuestion(id: "q_002", source: "Next question")
+        )
+
+        let viewModel = QuizViewModel(
+            networkService: mockNetwork,
+            audioService: MockAudioService(),
+            sessionStore: MockSessionStore(),
+            questionHistoryStore: MockQuestionHistoryStore()
+        )
+        return (viewModel, mockNetwork)
+    }
+
+    /// Put ViewModel into post-voice-submission state (pendingResponse set, confirmation sheet showing)
+    @MainActor
+    private func putIntoConfirmationState(_ viewModel: QuizViewModel) async {
+        viewModel.currentSession = QuizSession(
+            id: "test_session_123",
+            mode: "single", phase: "asking", maxQuestions: 10,
+            currentDifficulty: "medium", category: nil, language: "en",
+            participants: [], expiresAt: Date().addingTimeInterval(1800),
+            createdAt: Date()
+        )
+        viewModel.currentQuestion = makeQuestion(id: "q_001", source: "Test question")
+        viewModel.quizState = .askingQuestion
+
+        // submitVoiceAnswer sets pendingResponse and showAnswerConfirmation
+        await viewModel.submitVoiceAnswer(audioData: Data("mock audio".utf8))
+    }
+
+    @Test("handleAnswerConfirmationDismissed resets state when pendingResponse exists")
+    @MainActor
+    func dismissResetsStateWhenPendingResponseExists() async throws {
+        let (viewModel, _) = makeViewModel()
+        await putIntoConfirmationState(viewModel)
+
+        // Verify we're in the confirmation state
+        #expect(viewModel.showAnswerConfirmation == true)
+        #expect(viewModel.transcribedAnswer == "Paris")
+
+        // Simulate sheet dismiss (e.g., swipe down if it were allowed)
+        viewModel.showAnswerConfirmation = false
+        viewModel.handleAnswerConfirmationDismissed()
+
+        // State should be cleaned up: back to askingQuestion, not stuck in processing
+        #expect(viewModel.quizState == .askingQuestion)
+        #expect(viewModel.errorMessage == nil)
+    }
+
+    @Test("handleAnswerConfirmationDismissed is no-op after confirmAnswer")
+    @MainActor
+    func dismissIsNoOpAfterConfirmAnswer() async throws {
+        let (viewModel, _) = makeViewModel()
+        await putIntoConfirmationState(viewModel)
+
+        // User taps Confirm — this clears pendingResponse and processes the answer
+        await viewModel.confirmAnswer()
+
+        // Verify confirmAnswer transitioned to showingResult
+        #expect(viewModel.quizState == .showingResult)
+
+        // Now if onDismiss fires (sheet animation completing), it should be a no-op
+        viewModel.handleAnswerConfirmationDismissed()
+
+        // State should remain .showingResult, NOT reset to .askingQuestion
+        #expect(viewModel.quizState == .showingResult)
+    }
+
+    @Test("handleAnswerConfirmationDismissed is no-op after rerecordAnswer")
+    @MainActor
+    func dismissIsNoOpAfterRerecordAnswer() async throws {
+        let (viewModel, _) = makeViewModel()
+        await putIntoConfirmationState(viewModel)
+
+        // User taps Re-record — this clears pendingResponse and returns to askingQuestion
+        viewModel.rerecordAnswer()
+
+        // Verify rerecordAnswer transitioned to askingQuestion
+        #expect(viewModel.quizState == .askingQuestion)
+        #expect(viewModel.showAnswerConfirmation == false)
+
+        // Now if onDismiss fires, it should be a no-op (pendingResponse already nil)
+        viewModel.handleAnswerConfirmationDismissed()
+
+        // State should remain .askingQuestion (unchanged, not re-set)
+        #expect(viewModel.quizState == .askingQuestion)
+    }
+}

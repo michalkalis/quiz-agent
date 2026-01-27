@@ -71,7 +71,7 @@ struct AnswerConfirmationView: View {
         .background(Theme.Colors.bgPrimary)
         .presentationDetents([.medium])
         .presentationDragIndicator(.visible)
-        .interactiveDismissDisabled(isProcessing)
+        .interactiveDismissDisabled(true)
     }
 }
 

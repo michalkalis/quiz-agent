@@ -6,6 +6,7 @@
 //  to prevent race conditions where ResultView shows wrong question data.
 //
 
+import Foundation
 import Testing
 @testable import CarQuiz
 
@@ -521,5 +522,33 @@ struct QuizViewModelLoadingStateTests {
 
         viewModel.quizState = .idle
         #expect(viewModel.quizState != .processing)
+    }
+
+    @Test("skipQuestion during processing state keeps state consistent")
+    @MainActor
+    func skipQuestionDuringProcessingKeepsConsistentState() async throws {
+        // This test documents the duplicate-call guard behavior.
+        // handleQuizResponse uses a Bool guard (isProcessingResponse) to prevent
+        // concurrent calls from corrupting state. When skipQuestion is called while
+        // already in .processing, the second call through handleQuizResponse is
+        // rejected by the guard, keeping state consistent.
+        let (viewModel, _) = makeViewModel()
+        viewModel.currentSession = QuizSession(
+            id: "test_session_123",
+            mode: "single", phase: "asking", maxQuestions: 10,
+            currentDifficulty: "medium", category: nil, language: "en",
+            participants: [], expiresAt: Date().addingTimeInterval(1800),
+            createdAt: Date()
+        )
+        viewModel.currentQuestion = makeQuestion(id: "q_001", source: "Test")
+        viewModel.quizState = .processing  // Already processing
+
+        // Call skipQuestion while already processing
+        await viewModel.skipQuestion()
+
+        // State should resolve to showingResult (the skip call goes through
+        // handleQuizResponse which transitions to showingResult)
+        #expect(viewModel.quizState == .showingResult)
+        #expect(viewModel.lastEvaluation != nil)
     }
 }

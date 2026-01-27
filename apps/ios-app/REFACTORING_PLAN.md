@@ -12,7 +12,7 @@ Thorough code review found 10 issues ranging from unnecessary complexity (actor-
 
 ## Subtask 1: Remove Streak & Best Score ✅
 ## Subtask 2: Remove `isLoading` ✅
-## Subtask 3: Remove `StateCoordinator` Actor
+## Subtask 3: Remove `StateCoordinator` Actor ✅
 ## Subtask 4: Remove `AudioQueue` Actor
 ## Subtask 5: Fix `pendingResponse` Modal Swipe-to-Dismiss
 ## Subtask 6: Consolidate Error State into ViewModel

@@ -106,24 +106,11 @@ final class QuizViewModel: ObservableObject {
         quizState == .askingQuestion || quizState == .recording || quizState == .processing || quizState == .showingResult
     }
 
-    // MARK: - State Coordination Actor
+    // MARK: - Re-entrancy Guard
 
-    /// Actor to serialize state transitions and prevent concurrent handleQuizResponse calls
-    private actor StateCoordinator {
-        private var isProcessing = false
-
-        func acquireLock() async -> Bool {
-            guard !isProcessing else { return false }
-            isProcessing = true
-            return true
-        }
-
-        func releaseLock() {
-            isProcessing = false
-        }
-    }
-
-    private let stateCoordinator = StateCoordinator()
+    /// Simple Bool flag to prevent concurrent handleQuizResponse calls.
+    /// Safe because this class is @MainActor — all access is serialized on the main thread.
+    private var isProcessingResponse = false
 
     // MARK: - Dependencies
 
@@ -647,19 +634,15 @@ final class QuizViewModel: ObservableObject {
     }
 
     private func handleQuizResponse(_ response: QuizResponse) async {
-        // CRITICAL: Acquire lock to prevent concurrent calls
-        guard await stateCoordinator.acquireLock() else {
+        // Guard against concurrent calls (safe: @MainActor serializes access)
+        guard !isProcessingResponse else {
             if Config.verboseLogging {
                 print("⚠️ handleQuizResponse already in progress, ignoring duplicate call")
             }
             return
         }
-
-        defer {
-            Task {
-                await stateCoordinator.releaseLock()
-            }
-        }
+        isProcessingResponse = true
+        defer { isProcessingResponse = false }
 
         // Cancel any previous auto-advance task
         autoAdvanceTask?.cancel()
@@ -902,6 +885,7 @@ final class QuizViewModel: ObservableObject {
         }
 
         // Reset all state
+        isProcessingResponse = false
         quizState = .idle
         currentQuestion = nil
         currentSession = nil

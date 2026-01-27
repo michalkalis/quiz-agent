@@ -6,6 +6,7 @@
 //  These tests help prevent regression of the 28-byte recording bug.
 //
 
+import Foundation
 import Testing
 @testable import CarQuiz
 

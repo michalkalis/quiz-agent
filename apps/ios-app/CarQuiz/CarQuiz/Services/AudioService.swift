@@ -66,33 +66,6 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         return "iPhone"
     }
 
-    // MARK: - Audio Queue Actor (Serial Execution)
-
-    /// Actor-based serial queue ensuring only one audio operation at a time
-    private actor AudioQueue {
-        private var currentOperation: UUID?
-
-        func setCurrentOperation(_ id: UUID) {
-            currentOperation = id
-        }
-
-        func getCurrentOperation() -> UUID? {
-            currentOperation
-        }
-
-        func clearOperation(_ id: UUID) {
-            if currentOperation == id {
-                currentOperation = nil
-            }
-        }
-
-        func isOperationActive(_ id: UUID) -> Bool {
-            currentOperation == id
-        }
-    }
-
-    private let audioQueue = AudioQueue()
-
     // MARK: - Playback State
 
     /// Consolidated playback state - single source of truth
@@ -519,8 +492,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         // Cancel any previous playback first
         await stopPlayback()
 
-        // Mark this as the current operation (atomic state transition)
-        await audioQueue.setCurrentOperation(operationId)
+        // Mark this as the current operation
         playbackState = .playing(id: operationId)
 
         // Perform the actual playback
@@ -651,7 +623,6 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
                             print("⚠️ Playback timeout - audio failed to start within 5 seconds")
                         }
 
-                        await self?.audioQueue.clearOperation(operationId)
                         self?.isPlaying = false
                         self?.playbackState = .idle
 
@@ -666,7 +637,6 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
                     queue: .main
                 ) { [weak self] _ in
                     Task { @MainActor [weak self] in
-                        await self?.audioQueue.clearOperation(operationId)
                         self?.isPlaying = false
                         self?.playbackState = .idle
 
@@ -688,7 +658,6 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
                     let error = notification.userInfo?[AVPlayerItemFailedToPlayToEndTimeErrorKey] as? Error
 
                     Task { @MainActor [weak self] in
-                        await self?.audioQueue.clearOperation(operationId)
                         self?.isPlaying = false
                         self?.playbackState = .idle
 
@@ -722,9 +691,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         audioPlayer?.pause()
         audioPlayer = nil
         isPlaying = false
-        playbackState = .idle  // Single atomic state transition
-
-        await audioQueue.clearOperation(operationId)
+        playbackState = .idle
 
         if Config.verboseLogging {
             print("🔊 Cleaned up playback (id: \(operationId))")
@@ -741,7 +708,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
     /// Stops playback and ensures cleanup completes before returning (blocking)
     func stopPlayback() async {
         // Early exit if not playing
-        guard case .playing(let operationId) = playbackState else {
+        guard case .playing = playbackState else {
             if Config.verboseLogging {
                 print("🔊 stopPlayback called but not playing")
             }
@@ -752,9 +719,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         audioPlayer?.pause()
         audioPlayer = nil
         isPlaying = false
-        playbackState = .idle  // Atomic transition
-
-        await audioQueue.clearOperation(operationId)
+        playbackState = .idle
 
         if Config.verboseLogging {
             print("🔊 Stopped playback")

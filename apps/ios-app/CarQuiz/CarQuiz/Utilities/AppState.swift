@@ -13,15 +13,13 @@ import Foundation
 final class AppState: ObservableObject {
     let networkService: NetworkServiceProtocol
     let audioService: AudioServiceProtocol
-    let sessionStore: SessionStoreProtocol
-    let questionHistoryStore: QuestionHistoryStoreProtocol
+    let persistenceStore: PersistenceStoreProtocol
 
     init() {
         // Production dependencies
         self.networkService = NetworkService(baseURL: Config.apiBaseURL)
         self.audioService = AudioService()
-        self.sessionStore = SessionStore()
-        self.questionHistoryStore = QuestionHistoryStore()
+        self.persistenceStore = PersistenceStore()
 
         // Setup audio session with default mode
         try? audioService.setupAudioSession(mode: AudioMode.default)
@@ -36,13 +34,11 @@ final class AppState: ObservableObject {
     init(
         networkService: NetworkServiceProtocol,
         audioService: AudioServiceProtocol,
-        sessionStore: SessionStoreProtocol,
-        questionHistoryStore: QuestionHistoryStoreProtocol
+        persistenceStore: PersistenceStoreProtocol
     ) {
         self.networkService = networkService
         self.audioService = audioService
-        self.sessionStore = sessionStore
-        self.questionHistoryStore = questionHistoryStore
+        self.persistenceStore = persistenceStore
     }
 
     /// Create a new QuizViewModel with injected dependencies
@@ -50,8 +46,7 @@ final class AppState: ObservableObject {
         QuizViewModel(
             networkService: networkService,
             audioService: audioService,
-            sessionStore: sessionStore,
-            questionHistoryStore: questionHistoryStore
+            persistenceStore: persistenceStore
         )
     }
 }

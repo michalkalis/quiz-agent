@@ -32,7 +32,7 @@ apps/ios-app/CarQuiz/CarQuiz/
 ├── Services/
 │   ├── NetworkService.swift      # Actor - backend API
 │   ├── AudioService.swift        # @MainActor - recording/playback
-│   └── SessionStore.swift        # Persistence
+│   └── PersistenceStore.swift    # Unified persistence (session + settings + question history)
 ├── ViewModels/
 │   └── QuizViewModel.swift       # @MainActor - quiz state
 ├── Views/
@@ -133,4 +133,4 @@ cd apps/ios-app/CarQuiz && xcodebuild test -scheme CarQuiz-Local -destination 'p
 Mock implementations available:
 - `MockNetworkService` - Configurable responses
 - `MockAudioService` - Simulated recording/playback
-- `MockSessionStore` - In-memory storage
+- `MockPersistenceStore` - In-memory storage for session, settings, and question history

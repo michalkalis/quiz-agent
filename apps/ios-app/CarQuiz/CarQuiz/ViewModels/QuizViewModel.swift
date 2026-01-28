@@ -163,8 +163,7 @@ final class QuizViewModel: ObservableObject {
 
     private let networkService: NetworkServiceProtocol
     private let audioService: AudioServiceProtocol
-    private let sessionStore: SessionStoreProtocol
-    private let questionHistoryStore: QuestionHistoryStoreProtocol
+    private let persistenceStore: PersistenceStoreProtocol
 
     private var cancellables = Set<AnyCancellable>()
 
@@ -180,22 +179,20 @@ final class QuizViewModel: ObservableObject {
     init(
         networkService: NetworkServiceProtocol,
         audioService: AudioServiceProtocol,
-        sessionStore: SessionStoreProtocol,
-        questionHistoryStore: QuestionHistoryStoreProtocol
+        persistenceStore: PersistenceStoreProtocol
     ) {
         self.networkService = networkService
         self.audioService = audioService
-        self.sessionStore = sessionStore
-        self.questionHistoryStore = questionHistoryStore
+        self.persistenceStore = persistenceStore
 
         // Load saved settings
-        self.settings = sessionStore.loadSettings()
+        self.settings = persistenceStore.loadSettings()
 
         // Auto-persist settings whenever they change
         $settings
             .dropFirst()          // Skip the initial value replayed by @Published
             .removeDuplicates()   // Only persist actual changes (QuizSettings is Equatable)
-            .sink { [sessionStore] in sessionStore.saveSettings($0) }
+            .sink { [persistenceStore] in persistenceStore.saveSettings($0) }
             .store(in: &cancellables)
     }
 
@@ -216,7 +213,7 @@ final class QuizViewModel: ObservableObject {
         let quizLanguage = language ?? settings.language
 
         // Check if question history is at capacity
-        if questionHistoryStore.isAtCapacity {
+        if persistenceStore.isAtCapacity {
             quizState = .error(
                 message: "Question history is full. Please reset your history in Settings to continue.",
                 context: .initialization
@@ -230,7 +227,7 @@ final class QuizViewModel: ObservableObject {
             }
 
             // Get excluded question IDs from history
-            let excludedIds = questionHistoryStore.getExclusionList()
+            let excludedIds = persistenceStore.getExclusionList()
 
             if Config.verboseLogging {
                 print("🎮 Excluding \(excludedIds.count) previously seen questions")
@@ -259,7 +256,7 @@ final class QuizViewModel: ObservableObject {
             )
 
             currentSession = session
-            sessionStore.saveSession(id: session.id)
+            persistenceStore.saveSession(id: session.id)
 
             // Start quiz and get first question with exclusion list
             let response = try await networkService.startQuiz(
@@ -274,7 +271,7 @@ final class QuizViewModel: ObservableObject {
             // Save question ID to history
             if let questionId = response.currentQuestion?.id {
                 do {
-                    try questionHistoryStore.addQuestionId(questionId)
+                    try persistenceStore.addQuestionId(questionId)
                 } catch QuestionHistoryError.capacityReached {
                     // Should not happen (checked before quiz start)
                     if Config.verboseLogging {
@@ -548,7 +545,7 @@ final class QuizViewModel: ObservableObject {
 
         do {
             try await networkService.endSession(sessionId: sessionId)
-            sessionStore.clearSession()
+            persistenceStore.clearSession()
             resetState()
 
             if Config.verboseLogging {
@@ -565,7 +562,7 @@ final class QuizViewModel: ObservableObject {
 
     /// Resume a saved session
     func resumeSession() async {
-        guard sessionStore.currentSessionId != nil else {
+        guard persistenceStore.currentSessionId != nil else {
             errorMessage = "No saved session found"
             return
         }
@@ -577,7 +574,7 @@ final class QuizViewModel: ObservableObject {
 
     /// Reset to home screen immediately (without network call)
     func resetToHome() {
-        sessionStore.clearSession()
+        persistenceStore.clearSession()
         resetState()
 
         if Config.verboseLogging {
@@ -774,7 +771,7 @@ final class QuizViewModel: ObservableObject {
         // Save question ID to history
         if let questionId = response.currentQuestion?.id {
             do {
-                try questionHistoryStore.addQuestionId(questionId)
+                try persistenceStore.addQuestionId(questionId)
             } catch QuestionHistoryError.capacityReached {
                 // Should not happen (checked before quiz start)
                 if Config.verboseLogging {
@@ -898,7 +895,7 @@ final class QuizViewModel: ObservableObject {
         if let session = currentSession, session.isFinished {
             // Quiz is complete
             quizState = .finished
-            sessionStore.clearSession()
+            persistenceStore.clearSession()
 
             if Config.verboseLogging {
                 print("🎮 Quiz finished! Final score: \(score)")
@@ -990,12 +987,12 @@ final class QuizViewModel: ObservableObject {
 
     /// Number of questions in history
     var questionHistoryCount: Int {
-        questionHistoryStore.askedQuestionIds.count
+        persistenceStore.askedQuestionIds.count
     }
 
     /// Reset question history (allows previously seen questions to appear again)
     func resetQuestionHistory() {
-        questionHistoryStore.clearHistory()
+        persistenceStore.clearHistory()
 
         if Config.verboseLogging {
             print("🗑️ Question history reset by user")
@@ -1011,8 +1008,7 @@ extension QuizViewModel {
         let viewModel = QuizViewModel(
             networkService: MockNetworkService(),
             audioService: MockAudioService(),
-            sessionStore: MockSessionStore(),
-            questionHistoryStore: MockQuestionHistoryStore()
+            persistenceStore: MockPersistenceStore()
         )
         viewModel.currentQuestion = Question.preview
         viewModel.quizState = .askingQuestion
@@ -1024,8 +1020,7 @@ extension QuizViewModel {
         let viewModel = QuizViewModel(
             networkService: MockNetworkService(),
             audioService: MockAudioService(),
-            sessionStore: MockSessionStore(),
-            questionHistoryStore: MockQuestionHistoryStore()
+            persistenceStore: MockPersistenceStore()
         )
         viewModel.currentQuestion = Question.preview
         viewModel.score = 1.0

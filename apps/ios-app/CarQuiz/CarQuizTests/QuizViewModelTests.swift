@@ -86,8 +86,7 @@ struct QuizViewModelResultStateTests {
         QuizViewModel(
             networkService: MockNetworkService(),
             audioService: MockAudioService(),
-            sessionStore: MockSessionStore(),
-            questionHistoryStore: MockQuestionHistoryStore()
+            persistenceStore: MockPersistenceStore()
         )
     }
 
@@ -305,8 +304,7 @@ struct QuizViewModelLoadingStateTests {
         let viewModel = QuizViewModel(
             networkService: mockNetwork,
             audioService: MockAudioService(),
-            sessionStore: MockSessionStore(),
-            questionHistoryStore: MockQuestionHistoryStore()
+            persistenceStore: MockPersistenceStore()
         )
         return (viewModel, mockNetwork)
     }
@@ -491,8 +489,7 @@ struct QuizViewModelAnswerConfirmationDismissTests {
         let viewModel = QuizViewModel(
             networkService: mockNetwork,
             audioService: MockAudioService(),
-            sessionStore: MockSessionStore(),
-            questionHistoryStore: MockQuestionHistoryStore()
+            persistenceStore: MockPersistenceStore()
         )
         return (viewModel, mockNetwork)
     }
@@ -609,8 +606,7 @@ struct QuizViewModelRecordingTests {
         let viewModel = QuizViewModel(
             networkService: mockNetwork,
             audioService: mockAudio,
-            sessionStore: MockSessionStore(),
-            questionHistoryStore: MockQuestionHistoryStore()
+            persistenceStore: MockPersistenceStore()
         )
         return (viewModel, mockAudio)
     }
@@ -746,8 +742,7 @@ struct QuizViewModelErrorStateTests {
         QuizViewModel(
             networkService: MockNetworkService(),
             audioService: MockAudioService(),
-            sessionStore: MockSessionStore(),
-            questionHistoryStore: MockQuestionHistoryStore()
+            persistenceStore: MockPersistenceStore()
         )
     }
 
@@ -786,13 +781,12 @@ struct QuizViewModelErrorStateTests {
 struct QuizViewModelSettingsPersistenceTests {
 
     @MainActor
-    private func makeViewModel() -> (QuizViewModel, MockSessionStore) {
-        let mockStore = MockSessionStore()
+    private func makeViewModel() -> (QuizViewModel, MockPersistenceStore) {
+        let mockStore = MockPersistenceStore()
         let viewModel = QuizViewModel(
             networkService: MockNetworkService(),
             audioService: MockAudioService(),
-            sessionStore: mockStore,
-            questionHistoryStore: MockQuestionHistoryStore()
+            persistenceStore: mockStore
         )
         return (viewModel, mockStore)
     }

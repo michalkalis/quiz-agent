@@ -16,8 +16,7 @@ struct ContentView: View {
         _viewModel = StateObject(wrappedValue: QuizViewModel(
             networkService: NetworkService(),
             audioService: AudioService(),
-            sessionStore: SessionStore(),
-            questionHistoryStore: QuestionHistoryStore()
+            persistenceStore: PersistenceStore()
         ))
     }
 

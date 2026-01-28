@@ -22,8 +22,6 @@ final class SessionStore: SessionStoreProtocol {
     // We use nonisolated(unsafe) to acknowledge this
     nonisolated(unsafe) private let userDefaults: UserDefaults
     private let sessionIdKey = "current_session_id"
-    private let languageKey = "preferred_language"
-    private let audioModeKey = "preferred_audio_mode"
     private let settingsKey = "quiz_settings"
 
     init(userDefaults: UserDefaults = .standard) {
@@ -33,16 +31,6 @@ final class SessionStore: SessionStoreProtocol {
     /// Get the currently stored session ID
     var currentSessionId: String? {
         userDefaults.string(forKey: sessionIdKey)
-    }
-
-    /// Legacy language preference (used only for migration to QuizSettings)
-    private var legacyPreferredLanguage: String? {
-        userDefaults.string(forKey: languageKey)
-    }
-
-    /// Legacy audio mode preference (used only for migration to QuizSettings)
-    private var legacyPreferredAudioMode: String? {
-        userDefaults.string(forKey: audioModeKey)
     }
 
     /// Save a session ID for later resumption
@@ -55,7 +43,6 @@ final class SessionStore: SessionStoreProtocol {
     }
 
     /// Clear the stored session ID
-    /// Note: Language and audio mode preferences are NOT cleared - they persist across sessions
     func clearSession() {
         userDefaults.removeObject(forKey: sessionIdKey)
 
@@ -85,27 +72,6 @@ final class SessionStore: SessionStoreProtocol {
     func loadSettings() -> QuizSettings {
         // Try to load saved settings
         guard let data = userDefaults.data(forKey: settingsKey) else {
-            // No saved settings, migrate from individual keys if they exist
-            if let language = legacyPreferredLanguage, let audioMode = legacyPreferredAudioMode {
-                let migratedSettings = QuizSettings(
-                    language: language,
-                    audioMode: audioMode,
-                    numberOfQuestions: QuizSettings.default.numberOfQuestions,
-                    category: QuizSettings.default.category,
-                    difficulty: QuizSettings.default.difficulty,
-                    autoAdvanceDelay: QuizSettings.default.autoAdvanceDelay
-                )
-
-                // Save migrated settings for future
-                saveSettings(migratedSettings)
-
-                if Config.verboseLogging {
-                    print("📦 SessionStore: Migrated settings from individual keys")
-                }
-
-                return migratedSettings
-            }
-
             if Config.verboseLogging {
                 print("📦 SessionStore: No saved settings found, using default")
             }

@@ -26,7 +26,6 @@ struct SettingsView: View {
                             ForEach(Language.supportedLanguages) { language in
                                 Button(language.nativeName) {
                                     viewModel.settings.language = language.id
-                                    viewModel.saveSettings()
                                 }
                             }
                         } label: {
@@ -44,7 +43,6 @@ struct SettingsView: View {
                             ForEach(Config.questionCountOptions, id: \.self) { count in
                                 Button("\(count) Questions") {
                                     viewModel.settings.numberOfQuestions = count
-                                    viewModel.saveSettings()
                                 }
                             }
                         } label: {
@@ -62,7 +60,6 @@ struct SettingsView: View {
                             ForEach(Config.difficultyOptions, id: \.0) { id, display in
                                 Button(display) {
                                     viewModel.settings.difficulty = id
-                                    viewModel.saveSettings()
                                 }
                             }
                         } label: {
@@ -112,7 +109,6 @@ struct SettingsView: View {
                             ForEach(Config.autoAdvanceDelayOptions, id: \.self) { seconds in
                                 Button("\(seconds) seconds") {
                                     viewModel.settings.autoAdvanceDelay = seconds
-                                    viewModel.saveSettings()
                                 }
                             }
                         } label: {

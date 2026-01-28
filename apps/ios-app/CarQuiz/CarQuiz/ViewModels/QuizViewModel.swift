@@ -145,6 +145,12 @@ final class QuizViewModel: ObservableObject {
         // Load saved settings
         self.settings = sessionStore.loadSettings()
 
+        // Auto-persist settings whenever they change
+        $settings
+            .dropFirst()          // Skip the initial value replayed by @Published
+            .removeDuplicates()   // Only persist actual changes (QuizSettings is Equatable)
+            .sink { [sessionStore] in sessionStore.saveSettings($0) }
+            .store(in: &cancellables)
     }
 
     // MARK: - Quiz Flow
@@ -185,7 +191,6 @@ final class QuizViewModel: ObservableObject {
             // Configure audio session with user's preferred mode
             do {
                 try audioService.setupAudioSession(mode: selectedAudioMode)
-                sessionStore.saveAudioMode(selectedAudioMode.id)
 
                 if Config.verboseLogging {
                     print("🎤 Audio session configured with \(selectedAudioMode.name)")
@@ -207,7 +212,6 @@ final class QuizViewModel: ObservableObject {
 
             currentSession = session
             sessionStore.saveSession(id: session.id)
-            // Settings are already persisted in SessionStore, no need to save individually
 
             // Start quiz and get first question with exclusion list
             let response = try await networkService.startQuiz(
@@ -525,37 +529,6 @@ final class QuizViewModel: ObservableObject {
         }
     }
 
-    // MARK: - Language Selection
-
-    /// Load saved language preference from storage
-    /// (Kept for backward compatibility - settings are now loaded in init)
-    func loadSavedLanguage() {
-        settings = sessionStore.loadSettings()
-
-        if Config.verboseLogging {
-            print("📦 Reloaded settings (language: \(settings.language))")
-        }
-    }
-
-    /// Load saved audio mode preference from storage
-    /// (Kept for backward compatibility - settings are now loaded in init)
-    func loadSavedAudioMode() {
-        settings = sessionStore.loadSettings()
-
-        if Config.verboseLogging {
-            print("📦 Reloaded settings (audio mode: \(settings.audioMode))")
-        }
-    }
-
-    /// Save current settings to persistent storage
-    func saveSettings() {
-        sessionStore.saveSettings(settings)
-
-        if Config.verboseLogging {
-            print("💾 Saved settings: \(settings)")
-        }
-    }
-
     /// Pause auto-advance for current question only (not permanent)
     func pauseQuiz() {
         autoAdvanceTask?.cancel()
@@ -602,7 +575,6 @@ final class QuizViewModel: ObservableObject {
             do {
                 try await audioService.switchAudioMode(newMode)
                 settings.audioMode = newMode.id
-                sessionStore.saveSettings(settings)
 
                 if Config.verboseLogging {
                     print("🔄 Switched to \(newMode.name)")
@@ -652,9 +624,8 @@ final class QuizViewModel: ObservableObject {
         do {
             try audioService.setPreferredInputDevice(device)
 
-            // Persist preference
+            // Persist preference (auto-persisted via $settings sink)
             settings.preferredInputDeviceId = device?.id
-            sessionStore.saveSettings(settings)
 
             if Config.verboseLogging {
                 let deviceName = device?.name ?? "Automatic"

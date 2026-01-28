@@ -48,7 +48,6 @@ struct HomeView: View {
                                 ForEach(Language.supportedLanguages) { language in
                                     Button(language.nativeName) {
                                         viewModel.settings.language = language.id
-                                        viewModel.saveSettings()
                                     }
                                 }
                             } label: {
@@ -66,7 +65,6 @@ struct HomeView: View {
                                 ForEach(Config.difficultyOptions, id: \.0) { id, display in
                                     Button(display) {
                                         viewModel.settings.difficulty = id
-                                        viewModel.saveSettings()
                                     }
                                 }
                             } label: {
@@ -84,7 +82,6 @@ struct HomeView: View {
                                 ForEach(Config.categoryOptions, id: \.id) { option in
                                     Button(option.display) {
                                         viewModel.settings.category = option.id
-                                        viewModel.saveSettings()
                                     }
                                 }
                             } label: {
@@ -126,8 +123,6 @@ struct HomeView: View {
         }
         .background(Theme.Colors.bgPrimary)
         .onAppear {
-            viewModel.loadSavedLanguage()
-            viewModel.loadSavedAudioMode()
             viewModel.refreshAudioDevices()
         }
         .sheet(isPresented: $viewModel.showingMicrophonePicker) {

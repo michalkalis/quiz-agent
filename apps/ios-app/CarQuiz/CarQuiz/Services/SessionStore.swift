@@ -10,11 +10,7 @@ import Foundation
 /// Protocol for session persistence
 protocol SessionStoreProtocol: Sendable {
     var currentSessionId: String? { get }
-    var preferredLanguage: String? { get }
-    var preferredAudioMode: String? { get }
     func saveSession(id: String)
-    func saveLanguage(_ languageCode: String)
-    func saveAudioMode(_ modeId: String)
     func clearSession()
     func saveSettings(_ settings: QuizSettings)
     func loadSettings() -> QuizSettings
@@ -39,13 +35,13 @@ final class SessionStore: SessionStoreProtocol {
         userDefaults.string(forKey: sessionIdKey)
     }
 
-    /// Get the user's preferred language
-    var preferredLanguage: String? {
+    /// Legacy language preference (used only for migration to QuizSettings)
+    private var legacyPreferredLanguage: String? {
         userDefaults.string(forKey: languageKey)
     }
 
-    /// Get the user's preferred audio mode
-    var preferredAudioMode: String? {
+    /// Legacy audio mode preference (used only for migration to QuizSettings)
+    private var legacyPreferredAudioMode: String? {
         userDefaults.string(forKey: audioModeKey)
     }
 
@@ -55,24 +51,6 @@ final class SessionStore: SessionStoreProtocol {
 
         if Config.verboseLogging {
             print("📦 SessionStore: Saved session ID: \(id)")
-        }
-    }
-
-    /// Save the user's preferred language
-    func saveLanguage(_ languageCode: String) {
-        userDefaults.set(languageCode, forKey: languageKey)
-
-        if Config.verboseLogging {
-            print("📦 SessionStore: Saved language: \(languageCode)")
-        }
-    }
-
-    /// Save the user's preferred audio mode
-    func saveAudioMode(_ modeId: String) {
-        userDefaults.set(modeId, forKey: audioModeKey)
-
-        if Config.verboseLogging {
-            print("📦 SessionStore: Saved audio mode: \(modeId)")
         }
     }
 
@@ -108,7 +86,7 @@ final class SessionStore: SessionStoreProtocol {
         // Try to load saved settings
         guard let data = userDefaults.data(forKey: settingsKey) else {
             // No saved settings, migrate from individual keys if they exist
-            if let language = preferredLanguage, let audioMode = preferredAudioMode {
+            if let language = legacyPreferredLanguage, let audioMode = legacyPreferredAudioMode {
                 let migratedSettings = QuizSettings(
                     language: language,
                     audioMode: audioMode,
@@ -159,20 +137,11 @@ final class MockSessionStore: SessionStoreProtocol {
     // Mock store for testing - marked as unsafe since it's mutable
     // In production, use SessionStore which uses thread-safe UserDefaults
     nonisolated(unsafe) var currentSessionId: String?
-    nonisolated(unsafe) var preferredLanguage: String?
-    nonisolated(unsafe) var preferredAudioMode: String?
     nonisolated(unsafe) var savedSettings: QuizSettings?
+    nonisolated(unsafe) var saveSettingsCallCount: Int = 0
 
     func saveSession(id: String) {
         currentSessionId = id
-    }
-
-    func saveLanguage(_ languageCode: String) {
-        preferredLanguage = languageCode
-    }
-
-    func saveAudioMode(_ modeId: String) {
-        preferredAudioMode = modeId
     }
 
     func clearSession() {
@@ -181,6 +150,7 @@ final class MockSessionStore: SessionStoreProtocol {
 
     func saveSettings(_ settings: QuizSettings) {
         savedSettings = settings
+        saveSettingsCallCount += 1
     }
 
     func loadSettings() -> QuizSettings {

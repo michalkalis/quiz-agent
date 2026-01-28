@@ -49,8 +49,8 @@ struct ContentView: View {
                     case .finished:
                         CompletionView(viewModel: viewModel)
 
-                    case .error:
-                        ErrorView(viewModel: viewModel)
+                    case .error(let message, _):
+                        ErrorView(viewModel: viewModel, errorMessage: message)
                     }
                 }
                 .animation(.easeInOut, value: viewModel.quizState)
@@ -77,6 +77,7 @@ struct ContentView: View {
 /// Error state view with themed styling
 struct ErrorView: View {
     @ObservedObject var viewModel: QuizViewModel
+    let errorMessage: String
 
     var body: some View {
         VStack(spacing: Theme.Spacing.lg) {
@@ -99,13 +100,11 @@ struct ErrorView: View {
                     .font(.displayXXL)
                     .foregroundColor(Theme.Colors.textPrimary)
 
-                if let errorMessage = viewModel.errorMessage {
-                    Text(errorMessage)
-                        .font(.textMD)
-                        .foregroundColor(Theme.Colors.textSecondary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, Theme.Spacing.xl)
-                }
+                Text(errorMessage)
+                    .font(.textMD)
+                    .foregroundColor(Theme.Colors.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, Theme.Spacing.xl)
             }
 
             Spacer()

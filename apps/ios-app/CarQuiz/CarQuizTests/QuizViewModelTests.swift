@@ -2,8 +2,7 @@
 //  QuizViewModelTests.swift
 //  CarQuizTests
 //
-//  Tests for QuizViewModel, focusing on question/evaluation pairing
-//  to prevent race conditions where ResultView shows wrong question data.
+//  Tests for QuizViewModel state machine and quiz flow.
 //
 
 import Foundation
@@ -76,10 +75,10 @@ private func makeQuestion(id: String, source: String) -> Question {
     )
 }
 
-// MARK: - Tests
+// MARK: - Result State Tests
 
-@Suite("QuizViewModel AnsweredQuestion Tests")
-struct QuizViewModelAnsweredQuestionTests {
+@Suite("QuizViewModel Result State Tests")
+struct QuizViewModelResultStateTests {
 
     /// Creates a fresh ViewModel for each test
     @MainActor
@@ -92,113 +91,77 @@ struct QuizViewModelAnsweredQuestionTests {
         )
     }
 
-    @Test("answeredQuestion is set when evaluation is received")
+    @Test("resultQuestion and resultEvaluation are bundled in showingResult state")
     @MainActor
-    func answeredQuestionCapturedOnEvaluation() async throws {
-        // Arrange
+    func resultDataBundledInState() async throws {
         let viewModel = makeViewModel()
         let questionA = makeQuestion(id: "q_001", source: "Source for question A")
-        viewModel.currentQuestion = questionA
-        viewModel.quizState = .processing
-
-        // Create a mock session
-        viewModel.currentSession = QuizSession(
-            id: "test_session",
-            mode: "single",
-            phase: "asking",
-            maxQuestions: 10,
-            currentDifficulty: "medium",
-            category: nil,
-            language: "en",
-            participants: [
-                Participant(
-                    id: "p1",
-                    userId: nil,
-                    displayName: "Player",
-                    score: 0,
-                    answeredCount: 0,
-                    correctCount: 0,
-                    lastAnswer: nil,
-                    lastResult: nil,
-                    isHost: true,
-                    isReady: true,
-                    joinedAt: Date()
-                )
-            ],
-            expiresAt: Date().addingTimeInterval(30 * 60),
-            createdAt: Date()
+        let evaluation = Evaluation(
+            userAnswer: "Paris",
+            result: .correct,
+            points: 1.0,
+            correctAnswer: "Paris"
         )
 
-        // Simulate receiving a response with evaluation
-        let questionB = makeQuestion(id: "q_002", source: "Source for question B")
-        let response = makeQuizResponse(
-            evaluationFor: "q_001",
-            userAnswer: "My Answer",
-            isCorrect: true,
-            nextQuestion: questionB
-        )
+        // Set state with associated values
+        viewModel.quizState = .showingResult(question: questionA, evaluation: evaluation)
 
-        // Act - Simulate what confirmAnswer does (calls handleQuizResponse internally)
-        // Since handleQuizResponse is private, we test through the public API
-        let mockNetwork = viewModel as? any ObservableObject
-        #expect(mockNetwork != nil)
-
-        // Before: answeredQuestion should be nil
-        #expect(viewModel.answeredQuestion == nil)
-
-        // Directly test the property setting logic
-        // (In production, this happens via confirmAnswer -> handleQuizResponse)
-        viewModel.answeredQuestion = viewModel.currentQuestion  // Simulating snapshot
-
-        // Assert
-        #expect(viewModel.answeredQuestion != nil)
-        #expect(viewModel.answeredQuestion?.id == "q_001")
-        #expect(viewModel.answeredQuestion?.sourceExcerpt == "Source for question A")
+        // Computed accessors should extract the data
+        #expect(viewModel.resultQuestion?.id == "q_001")
+        #expect(viewModel.resultQuestion?.sourceExcerpt == "Source for question A")
+        #expect(viewModel.resultEvaluation?.correctAnswer == "Paris")
+        #expect(viewModel.quizState.isShowingResult)
     }
 
-    @Test("answeredQuestion remains stable when currentQuestion changes")
+    @Test("resultQuestion is nil when not in showingResult state")
     @MainActor
-    func answeredQuestionStableDuringResultDisplay() async throws {
-        // Arrange
+    func resultDataNilOutsideShowingResult() async throws {
+        let viewModel = makeViewModel()
+
+        // In idle state, no result data
+        #expect(viewModel.resultQuestion == nil)
+        #expect(viewModel.resultEvaluation == nil)
+        #expect(!viewModel.quizState.isShowingResult)
+    }
+
+    @Test("result data is structurally bound — currentQuestion changes don't affect it")
+    @MainActor
+    func resultDataStableWhenCurrentQuestionChanges() async throws {
         let viewModel = makeViewModel()
         let questionA = makeQuestion(id: "q_001", source: "Source A")
         let questionB = makeQuestion(id: "q_002", source: "Source B")
-
-        // Set up state as if we just received an evaluation
-        viewModel.currentQuestion = questionA
-        viewModel.answeredQuestion = questionA  // Snapshot taken
-        viewModel.lastEvaluation = Evaluation(
+        let evaluation = Evaluation(
             userAnswer: "Answer A",
             result: .correct,
             points: 1.0,
             correctAnswer: "Expected A"
         )
-        viewModel.quizState = .showingResult
-
-        // Act - Simulate what would happen if currentQuestion was prematurely updated
-        // (This was the bug - currentQuestion could change while ResultView was displayed)
-        viewModel.currentQuestion = questionB
-
-        // Assert - answeredQuestion should still point to question A
-        #expect(viewModel.answeredQuestion?.id == "q_001")
-        #expect(viewModel.answeredQuestion?.sourceExcerpt == "Source A")
-
-        // The bug was that ResultView read currentQuestion for source display
-        // Now it should read answeredQuestion which is stable
-        #expect(viewModel.currentQuestion?.id == "q_002")  // currentQuestion changed
-        #expect(viewModel.answeredQuestion?.id == "q_001")  // answeredQuestion stable
-    }
-
-    @Test("answeredQuestion is cleared after transition to next question")
-    @MainActor
-    func answeredQuestionClearedAfterTransition() async throws {
-        // Arrange
-        let viewModel = makeViewModel()
-        let questionA = makeQuestion(id: "q_001", source: "Source A")
 
         viewModel.currentQuestion = questionA
-        viewModel.answeredQuestion = questionA
-        viewModel.quizState = .showingResult
+        viewModel.quizState = .showingResult(question: questionA, evaluation: evaluation)
+
+        // Simulate next question arriving (e.g., stored in nextQuestion internally)
+        viewModel.currentQuestion = questionB
+
+        // Result data is in the enum, not affected by currentQuestion
+        #expect(viewModel.resultQuestion?.id == "q_001")
+        #expect(viewModel.resultQuestion?.sourceExcerpt == "Source A")
+        #expect(viewModel.currentQuestion?.id == "q_002")
+    }
+
+    @Test("proceedToNextQuestion transitions away from showingResult")
+    @MainActor
+    func proceedClearsResultState() async throws {
+        let viewModel = makeViewModel()
+        let questionA = makeQuestion(id: "q_001", source: "Source A")
+        let evaluation = Evaluation(
+            userAnswer: "A1",
+            result: .correct,
+            points: 1.0,
+            correctAnswer: "A1"
+        )
+
+        viewModel.quizState = .showingResult(question: questionA, evaluation: evaluation)
         viewModel.currentSession = QuizSession(
             id: "test_session",
             mode: "single",
@@ -212,99 +175,44 @@ struct QuizViewModelAnsweredQuestionTests {
             createdAt: Date()
         )
 
-        // Act - Proceed to next question
         await viewModel.proceedToNextQuestion()
 
-        // Assert
-        #expect(viewModel.answeredQuestion == nil)
-    }
-
-    @Test("answeredQuestion matches evaluation in ResultView scenario")
-    @MainActor
-    func answeredQuestionMatchesEvaluation() async throws {
-        // Arrange
-        let viewModel = makeViewModel()
-        let questionA = makeQuestion(id: "q_001", source: "Capital of France source")
-        let questionB = makeQuestion(id: "q_002", source: "Chemical formula source")
-
-        // Set up state where evaluation is for question A
-        viewModel.currentQuestion = questionA
-        viewModel.answeredQuestion = questionA  // Correctly snapshotted
-
-        let evaluationForA = Evaluation(
-            userAnswer: "Paris",
-            result: .correct,
-            points: 1.0,
-            correctAnswer: "Paris"
-        )
-        viewModel.lastEvaluation = evaluationForA
-        viewModel.quizState = .showingResult
-
-        // Act - What ResultView would see
-        // Before fix: it would read currentQuestion which could be B
-        // After fix: it reads answeredQuestion which is stable as A
-
-        // Assert - answeredQuestion should have the source that matches the evaluation
-        #expect(viewModel.answeredQuestion?.id == "q_001")
-        #expect(viewModel.answeredQuestion?.sourceExcerpt == "Capital of France source")
-        #expect(viewModel.lastEvaluation?.correctAnswer == "Paris")
-
-        // The source and evaluation should be from the same question
-        // This is the critical invariant that the fix maintains
-    }
-
-    @Test("answeredQuestion is nil initially")
-    @MainActor
-    func answeredQuestionNilInitially() async throws {
-        // Arrange & Act
-        let viewModel = makeViewModel()
-
-        // Assert
-        #expect(viewModel.answeredQuestion == nil)
+        // After proceeding, result data is gone (state is no longer .showingResult)
+        #expect(viewModel.resultQuestion == nil)
+        #expect(viewModel.resultEvaluation == nil)
     }
 
     @Test("resetToHome resets quiz state cleanly")
     @MainActor
     func resetToHomeResetsState() async throws {
-        // Arrange
         let viewModel = makeViewModel()
-        viewModel.currentQuestion = makeQuestion(id: "q_001", source: "Test")
-        viewModel.answeredQuestion = makeQuestion(id: "q_001", source: "Test")
-        viewModel.quizState = .showingResult
+        let question = makeQuestion(id: "q_001", source: "Test")
+        let evaluation = Evaluation(
+            userAnswer: "Test",
+            result: .correct,
+            points: 1.0,
+            correctAnswer: "Test"
+        )
+
+        viewModel.currentQuestion = question
+        viewModel.quizState = .showingResult(question: question, evaluation: evaluation)
         viewModel.score = 5.0
         viewModel.questionsAnswered = 3
 
-        // Act
         viewModel.resetToHome()
 
-        // Assert - all state should be reset
         #expect(viewModel.quizState == .idle)
         #expect(viewModel.currentQuestion == nil)
-        #expect(viewModel.answeredQuestion == nil)
+        #expect(viewModel.resultQuestion == nil)
+        #expect(viewModel.resultEvaluation == nil)
         #expect(viewModel.score == 0.0)
         #expect(viewModel.questionsAnswered == 0)
         #expect(viewModel.errorMessage == nil)
     }
 
-    @Test("answeredQuestion cleared on reset")
-    @MainActor
-    func answeredQuestionClearedOnReset() async throws {
-        // Arrange
-        let viewModel = makeViewModel()
-        viewModel.answeredQuestion = makeQuestion(id: "q_001", source: "Test")
-        viewModel.quizState = .showingResult
-
-        // Act
-        viewModel.resetToHome()
-
-        // Assert
-        #expect(viewModel.answeredQuestion == nil)
-    }
-
     @Test("rapid question transitions maintain correct pairing")
     @MainActor
     func rapidTransitionsMaintainCorrectPairing() async throws {
-        // Arrange - Simulate answering multiple questions rapidly
         let viewModel = makeViewModel()
         viewModel.currentSession = QuizSession(
             id: "test_session",
@@ -321,40 +229,37 @@ struct QuizViewModelAnsweredQuestionTests {
 
         // Question 1
         let q1 = makeQuestion(id: "q_001", source: "Source 1")
-        viewModel.currentQuestion = q1
-        viewModel.answeredQuestion = q1
-        viewModel.lastEvaluation = Evaluation(
+        let eval1 = Evaluation(
             userAnswer: "A1",
             result: .correct,
             points: 1.0,
             correctAnswer: "A1"
         )
-        viewModel.quizState = .showingResult
+        viewModel.currentQuestion = q1
+        viewModel.quizState = .showingResult(question: q1, evaluation: eval1)
 
-        // Assert Q1 state
-        #expect(viewModel.answeredQuestion?.id == "q_001")
-        #expect(viewModel.answeredQuestion?.sourceExcerpt == "Source 1")
+        #expect(viewModel.resultQuestion?.id == "q_001")
+        #expect(viewModel.resultQuestion?.sourceExcerpt == "Source 1")
 
         // Rapidly transition to Q2
         await viewModel.proceedToNextQuestion()
-        #expect(viewModel.answeredQuestion == nil)
+        #expect(viewModel.resultQuestion == nil)
 
         // Question 2
         let q2 = makeQuestion(id: "q_002", source: "Source 2")
-        viewModel.currentQuestion = q2
-        viewModel.answeredQuestion = q2
-        viewModel.lastEvaluation = Evaluation(
+        let eval2 = Evaluation(
             userAnswer: "A2",
             result: .incorrect,
             points: 0.0,
             correctAnswer: "A2 Expected"
         )
-        viewModel.quizState = .showingResult
+        viewModel.currentQuestion = q2
+        viewModel.quizState = .showingResult(question: q2, evaluation: eval2)
 
-        // Assert Q2 state - should not have Q1's source
-        #expect(viewModel.answeredQuestion?.id == "q_002")
-        #expect(viewModel.answeredQuestion?.sourceExcerpt == "Source 2")
-        #expect(viewModel.answeredQuestion?.sourceExcerpt != "Source 1")
+        // Assert Q2 state — should not have Q1's source
+        #expect(viewModel.resultQuestion?.id == "q_002")
+        #expect(viewModel.resultQuestion?.sourceExcerpt == "Source 2")
+        #expect(viewModel.resultQuestion?.sourceExcerpt != "Source 1")
     }
 }
 
@@ -445,7 +350,7 @@ struct QuizViewModelLoadingStateTests {
         await viewModel.skipQuestion()
 
         // After skip completes, state transitions to showingResult
-        #expect(viewModel.quizState == .showingResult)
+        #expect(viewModel.quizState.isShowingResult)
     }
 
     @Test("resubmitAnswer sets quizState to processing then resolves to showingResult")
@@ -464,7 +369,7 @@ struct QuizViewModelLoadingStateTests {
 
         await viewModel.resubmitAnswer("Paris")
 
-        #expect(viewModel.quizState == .showingResult)
+        #expect(viewModel.quizState.isShowingResult)
     }
 
     @Test("startNewQuiz transitions to askingQuestion on success")
@@ -487,8 +392,7 @@ struct QuizViewModelLoadingStateTests {
 
         await viewModel.startNewQuiz()
 
-        #expect(viewModel.quizState == .error)
-        #expect(viewModel.errorMessage != nil)
+        #expect(viewModel.quizState.isError)
     }
 
     @Test("resetToHome resets to idle cleanly")
@@ -548,8 +452,8 @@ struct QuizViewModelLoadingStateTests {
 
         // State should resolve to showingResult (the skip call goes through
         // handleQuizResponse which transitions to showingResult)
-        #expect(viewModel.quizState == .showingResult)
-        #expect(viewModel.lastEvaluation != nil)
+        #expect(viewModel.quizState.isShowingResult)
+        #expect(viewModel.resultEvaluation != nil)
     }
 }
 
@@ -639,13 +543,13 @@ struct QuizViewModelAnswerConfirmationDismissTests {
         await viewModel.confirmAnswer()
 
         // Verify confirmAnswer transitioned to showingResult
-        #expect(viewModel.quizState == .showingResult)
+        #expect(viewModel.quizState.isShowingResult)
 
         // Now if onDismiss fires (sheet animation completing), it should be a no-op
         viewModel.handleAnswerConfirmationDismissed()
 
         // State should remain .showingResult, NOT reset to .askingQuestion
-        #expect(viewModel.quizState == .showingResult)
+        #expect(viewModel.quizState.isShowingResult)
     }
 
     @Test("handleAnswerConfirmationDismissed is no-op after rerecordAnswer")
@@ -802,25 +706,77 @@ struct QuizViewModelRecordingTests {
         #expect(viewModel.errorMessage == nil)
     }
 
-    @Test("retryLastOperation after recording error returns to askingQuestion")
+    @Test("retryLastOperation from error with recording context returns to askingQuestion")
     @MainActor
     func retryAfterRecordingErrorReturnsToAskingQuestion() async throws {
         let (viewModel, _) = makeViewModel(shouldFailRecording: true)
-        viewModel.quizState = .askingQuestion
 
-        // Trigger a recording error (sets errorContext to .recording internally)
-        await viewModel.toggleRecording()
-        #expect(viewModel.quizState == .askingQuestion)
-        #expect(viewModel.errorMessage != nil)
+        // Put ViewModel into an error state with recording context
+        // (In production, recording errors stay inline, but the error screen
+        // could be reached via other paths. Test the retry logic directly.)
+        viewModel.quizState = .error(message: "Recording failed", context: .recording)
 
-        // Simulate user navigating to error screen
-        viewModel.quizState = .error
-
-        // Retry should return to askingQuestion (not start a new quiz)
         await viewModel.retryLastOperation()
 
         #expect(viewModel.quizState == .askingQuestion)
         #expect(viewModel.errorMessage == nil)
+    }
+
+    @Test("retryLastOperation from error with initialization context starts new quiz")
+    @MainActor
+    func retryAfterInitErrorStartsNewQuiz() async throws {
+        let (viewModel, _) = makeViewModel()
+
+        viewModel.quizState = .error(message: "Failed to start", context: .initialization)
+
+        await viewModel.retryLastOperation()
+
+        // Should have started a new quiz (transitions to askingQuestion on success)
+        #expect(viewModel.quizState == .askingQuestion)
+    }
+}
+
+// MARK: - Error State Tests
+
+@Suite("QuizViewModel Error State Tests")
+struct QuizViewModelErrorStateTests {
+
+    @MainActor
+    private func makeViewModel() -> QuizViewModel {
+        QuizViewModel(
+            networkService: MockNetworkService(),
+            audioService: MockAudioService(),
+            sessionStore: MockSessionStore(),
+            questionHistoryStore: MockQuestionHistoryStore()
+        )
+    }
+
+    @Test("error state carries message and context")
+    @MainActor
+    func errorStateCarriesData() async throws {
+        let viewModel = makeViewModel()
+        viewModel.quizState = .error(message: "Network error", context: .submission)
+
+        #expect(viewModel.quizState.isError)
+        #expect(viewModel.shouldRetryWithNewSession == false)
+    }
+
+    @Test("shouldRetryWithNewSession is true for initialization errors")
+    @MainActor
+    func shouldRetryWithNewSessionForInitErrors() async throws {
+        let viewModel = makeViewModel()
+        viewModel.quizState = .error(message: "Failed to start", context: .initialization)
+
+        #expect(viewModel.shouldRetryWithNewSession == true)
+    }
+
+    @Test("shouldRetryWithNewSession is false when not in error state")
+    @MainActor
+    func shouldRetryFalseWhenNotInError() async throws {
+        let viewModel = makeViewModel()
+        viewModel.quizState = .idle
+
+        #expect(viewModel.shouldRetryWithNewSession == false)
     }
 }
 

@@ -18,6 +18,6 @@ Thorough code review found 10 issues ranging from unnecessary complexity (actor-
 ## Subtask 6: Consolidate Error State into ViewModel ✅
 ## Subtask 7: Move Recording Lifecycle into ViewModel ✅
 ## Subtask 8: Consolidate Persistence
-## Subtask 9: Refactor `QuizState` to Carry Associated Values
+## Subtask 9: Refactor `QuizState` to Carry Associated Values ✅
 
 See full plan details in the implementation thread.

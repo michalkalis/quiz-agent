@@ -53,7 +53,7 @@ struct ResultView: View {
                 .padding(.horizontal)
 
                 // MARK: - Result Badge
-                if let evaluation = viewModel.lastEvaluation {
+                if let evaluation = viewModel.resultEvaluation {
                     VStack(spacing: Theme.Spacing.lg) {
                         if showEvaluation {
                             ResultBadge(
@@ -89,8 +89,8 @@ struct ResultView: View {
                         .padding(.horizontal)
 
                         // Source attribution section
-                        if let sourceExcerpt = viewModel.answeredQuestion?.sourceExcerpt,
-                           viewModel.answeredQuestion?.sourceUrl != nil,
+                        if let sourceExcerpt = viewModel.resultQuestion?.sourceExcerpt,
+                           viewModel.resultQuestion?.sourceUrl != nil,
                            showEvaluation {
                             SourceCard(
                                 excerpt: sourceExcerpt,
@@ -144,7 +144,7 @@ struct ResultView: View {
                     .disabled(viewModel.currentQuestionPaused)
 
                     // View Source button
-                    if viewModel.answeredQuestion?.sourceUrl != nil {
+                    if viewModel.resultQuestion?.sourceUrl != nil {
                         Button {
                             showSourceWebView = true
                         } label: {
@@ -162,7 +162,7 @@ struct ResultView: View {
             }
         }
         .background(Theme.Colors.bgPrimary)
-        .animation(.spring(response: 0.5, dampingFraction: 0.7), value: viewModel.lastEvaluation)
+        .animation(.spring(response: 0.5, dampingFraction: 0.7), value: showEvaluation)
         .onAppear {
             showEvaluation = true
         }
@@ -181,7 +181,7 @@ struct ResultView: View {
             Text("Are you sure you want to quit? Your progress will be saved, but the current session will end.")
         }
         .sheet(isPresented: $showSourceWebView) {
-            if let sourceUrl = viewModel.answeredQuestion?.sourceUrl {
+            if let sourceUrl = viewModel.resultQuestion?.sourceUrl {
                 SourceWebView(url: sourceUrl, isPresented: $showSourceWebView)
             }
         }

@@ -62,7 +62,7 @@ struct MinimizedQuizView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: Theme.Components.widgetMicHeight)
-            } else if viewModel.quizState == .showingResult {
+            } else if viewModel.quizState.isShowingResult {
                 HStack(spacing: Theme.Spacing.xs) {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.system(size: Theme.Typography.sizeXS))

@@ -8,7 +8,7 @@
 import Foundation
 
 /// Represents a quiz question
-struct Question: Codable, Identifiable, Sendable {
+struct Question: Codable, Identifiable, Equatable, Sendable {
     let id: String
     let question: String
     let type: QuestionType

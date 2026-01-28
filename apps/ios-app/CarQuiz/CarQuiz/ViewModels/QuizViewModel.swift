@@ -8,23 +8,53 @@
 import Foundation
 import Combine
 
-/// Quiz state machine
-enum QuizState: Equatable, Sendable {
-    case idle
-    case askingQuestion
-    case recording
-    case processing
-    case showingResult
-    case finished
-    case error
-}
-
 /// Error context for distinguishing error types
-enum ErrorContext {
+enum ErrorContext: Sendable {
     case initialization  // Error during session creation or quiz start
     case submission      // Error during answer submission
     case recording       // Error during audio recording
     case general         // Other errors
+}
+
+/// Quiz state machine
+enum QuizState: Sendable {
+    case idle
+    case askingQuestion
+    case recording
+    case processing
+    case showingResult(question: Question, evaluation: Evaluation)
+    case finished
+    case error(message: String, context: ErrorContext)
+}
+
+// Custom Equatable: compares cases only (ignores associated values) to preserve animation behavior
+extension QuizState: Equatable {
+    static func == (lhs: QuizState, rhs: QuizState) -> Bool {
+        switch (lhs, rhs) {
+        case (.idle, .idle),
+             (.askingQuestion, .askingQuestion),
+             (.recording, .recording),
+             (.processing, .processing),
+             (.showingResult, .showingResult),
+             (.finished, .finished),
+             (.error, .error):
+            return true
+        default:
+            return false
+        }
+    }
+}
+
+extension QuizState {
+    var isShowingResult: Bool {
+        if case .showingResult = self { return true }
+        return false
+    }
+
+    var isError: Bool {
+        if case .error = self { return true }
+        return false
+    }
 }
 
 /// Main quiz view model coordinating all services
@@ -35,12 +65,9 @@ final class QuizViewModel: ObservableObject {
     @Published var quizState: QuizState = .idle
     @Published var currentQuestion: Question?
     @Published var currentSession: QuizSession?
-    @Published var lastEvaluation: Evaluation?
-    @Published var answeredQuestion: Question?  // Snapshot of question being evaluated (stable during ResultView)
     @Published var score: Double = 0.0
     @Published var questionsAnswered: Int = 0
-    @Published var errorMessage: String?
-    private var errorContext: ErrorContext = .initialization
+    @Published var errorMessage: String?  // Inline errors shown in QuestionView (e.g., recording failures)
 
     // Answer confirmation modal state
     @Published var showAnswerConfirmation = false
@@ -104,7 +131,26 @@ final class QuizViewModel: ObservableObject {
     /// Whether minimize is allowed in current state
     /// Enabled during active quiz states (question, recording, processing, results)
     var canMinimize: Bool {
-        quizState == .askingQuestion || quizState == .recording || quizState == .processing || quizState == .showingResult
+        switch quizState {
+        case .askingQuestion, .recording, .processing, .showingResult:
+            return true
+        default:
+            return false
+        }
+    }
+
+    // MARK: - Result Accessors (extract associated values for Views)
+
+    /// The question being displayed on the result screen
+    var resultQuestion: Question? {
+        if case .showingResult(let question, _) = quizState { return question }
+        return nil
+    }
+
+    /// The evaluation being displayed on the result screen
+    var resultEvaluation: Evaluation? {
+        if case .showingResult(_, let evaluation) = quizState { return evaluation }
+        return nil
     }
 
     // MARK: - Re-entrancy Guard
@@ -171,8 +217,10 @@ final class QuizViewModel: ObservableObject {
 
         // Check if question history is at capacity
         if questionHistoryStore.isAtCapacity {
-            errorMessage = "Question history is full. Please reset your history in Settings to continue."
-            quizState = .error
+            quizState = .error(
+                message: "Question history is full. Please reset your history in Settings to continue.",
+                context: .initialization
+            )
             return
         }
 
@@ -246,9 +294,10 @@ final class QuizViewModel: ObservableObject {
             }
 
         } catch {
-            errorMessage = "Failed to start quiz: \(error.localizedDescription)"
-            errorContext = .initialization
-            quizState = .error
+            quizState = .error(
+                message: "Failed to start quiz: \(error.localizedDescription)",
+                context: .initialization
+            )
 
             if Config.verboseLogging {
                 print("❌ Error starting quiz: \(error)")
@@ -283,7 +332,6 @@ final class QuizViewModel: ObservableObject {
             // Rollback to asking state so user can retry
             quizState = .askingQuestion
             errorMessage = "Recording failed: \(error.localizedDescription)"
-            errorContext = .recording
 
             if Config.verboseLogging {
                 print("❌ Recording failed to start: \(error)")
@@ -298,7 +346,6 @@ final class QuizViewModel: ObservableObject {
             await submitVoiceAnswer(audioData: data)
         } catch {
             errorMessage = "Recording failed: \(error.localizedDescription)"
-            errorContext = .recording
             quizState = .askingQuestion
 
             if Config.verboseLogging {
@@ -310,8 +357,7 @@ final class QuizViewModel: ObservableObject {
     /// Submit a voice answer
     func submitVoiceAnswer(audioData: Data) async {
         guard let sessionId = currentSession?.id else {
-            errorMessage = "No active session"
-            quizState = .error
+            quizState = .error(message: "No active session", context: .general)
             return
         }
 
@@ -334,10 +380,11 @@ final class QuizViewModel: ObservableObject {
                 if Config.verboseLogging {
                     print("⚠️ No evaluation in response - speech may not have been recognized")
                 }
-                // Return to asking state so user can re-record
-                errorMessage = "Could not understand your answer. Please speak clearly and try again."
-                errorContext = .submission
-                quizState = .error
+                // Return to error state so user can re-record
+                quizState = .error(
+                    message: "Could not understand your answer. Please speak clearly and try again.",
+                    context: .submission
+                )
                 return
             }
 
@@ -361,17 +408,19 @@ final class QuizViewModel: ObservableObject {
             }
 
             // Other network errors go to error screen
-            errorMessage = "Failed to submit answer: \(error.localizedDescription)"
-            errorContext = .submission
-            quizState = .error
+            quizState = .error(
+                message: "Failed to submit answer: \(error.localizedDescription)",
+                context: .submission
+            )
 
             if Config.verboseLogging {
                 print("❌ Error submitting answer: \(error)")
             }
         } catch {
-            errorMessage = "Failed to submit answer: \(error.localizedDescription)"
-            errorContext = .submission
-            quizState = .error
+            quizState = .error(
+                message: "Failed to submit answer: \(error.localizedDescription)",
+                context: .submission
+            )
 
             if Config.verboseLogging {
                 print("❌ Error submitting answer: \(error)")
@@ -407,12 +456,16 @@ final class QuizViewModel: ObservableObject {
 
     /// Whether to retry with a new session (for initialization errors)
     var shouldRetryWithNewSession: Bool {
-        errorContext == .initialization
+        if case .error(_, let context) = quizState {
+            return context == .initialization
+        }
+        return false
     }
 
     /// Retry the last operation based on error context
     func retryLastOperation() async {
-        switch errorContext {
+        guard case .error(_, let context) = quizState else { return }
+        switch context {
         case .submission, .recording:
             // Return to question for re-recording or re-submission
             quizState = .askingQuestion
@@ -447,8 +500,10 @@ final class QuizViewModel: ObservableObject {
             await handleQuizResponse(response)
 
         } catch {
-            errorMessage = "Failed to resubmit answer: \(error.localizedDescription)"
-            quizState = .error
+            quizState = .error(
+                message: "Failed to resubmit answer: \(error.localizedDescription)",
+                context: .submission
+            )
 
             if Config.verboseLogging {
                 print("❌ Error resubmitting answer: \(error)")
@@ -476,9 +531,10 @@ final class QuizViewModel: ObservableObject {
 
             await handleQuizResponse(response)
         } catch {
-            errorMessage = "Failed to skip question: \(error.localizedDescription)"
-            errorContext = .submission
-            quizState = .error
+            quizState = .error(
+                message: "Failed to skip question: \(error.localizedDescription)",
+                context: .submission
+            )
 
             if Config.verboseLogging {
                 print("❌ Error skipping question: \(error)")
@@ -689,24 +745,25 @@ final class QuizViewModel: ObservableObject {
             if Config.verboseLogging {
                 print("❌ ERROR: No evaluation in response, cannot show result")
             }
-            errorMessage = "Could not evaluate your answer. Please try again."
-            errorContext = .submission
-            quizState = .error
+            quizState = .error(
+                message: "Could not evaluate your answer. Please try again.",
+                context: .submission
+            )
             return
         }
 
-        // CRITICAL: Snapshot the current question BEFORE updating any state
-        // This ensures ResultView displays the correct source attribution
-        // for the question being evaluated (not the next question)
-        answeredQuestion = currentQuestion
-
-        lastEvaluation = evaluation
+        // CRITICAL: Capture the current question for the result state
+        // The associated value bundles question + evaluation together,
+        // making it impossible to show stale/mismatched data
+        guard let question = currentQuestion else {
+            quizState = .error(message: "No question to evaluate", context: .general)
+            return
+        }
 
         // Update score and question count
         if let participant = response.session.participants.first {
             score = participant.score
             questionsAnswered = participant.answeredCount
-
         }
 
         // Store NEXT question separately (don't update currentQuestion yet!)
@@ -732,7 +789,7 @@ final class QuizViewModel: ObservableObject {
 
         // IMPORTANT: Show result screen BEFORE playing audio
         // This ensures ResultView is visible when audio starts playing
-        quizState = .showingResult
+        quizState = .showingResult(question: question, evaluation: evaluation)
 
         // Play feedback audio and start countdown in background
         Task {
@@ -798,7 +855,7 @@ final class QuizViewModel: ObservableObject {
             if Task.isCancelled { return }
 
             await MainActor.run {
-                guard self.quizState == .showingResult else {
+                guard self.quizState.isShowingResult else {
                     if Config.verboseLogging {
                         print("⏱️ Auto-advance aborted - not in showingResult state")
                     }
@@ -820,7 +877,7 @@ final class QuizViewModel: ObservableObject {
         autoAdvanceTask = nil
 
         // Only proceed if currently showing results
-        guard quizState == .showingResult else {
+        guard quizState.isShowingResult else {
             if Config.verboseLogging {
                 print("⚠️ Ignoring proceedToNextQuestion - not in showingResult state")
             }
@@ -829,9 +886,6 @@ final class QuizViewModel: ObservableObject {
 
         // Reset per-question pause when moving to next question
         currentQuestionPaused = false
-
-        // Clear the answered question snapshot (no longer needed after result screen)
-        answeredQuestion = nil
 
         // CRITICAL: Stop any playing feedback audio before transitioning
         // This ensures clean state transition from ResultView to QuestionView
@@ -922,8 +976,6 @@ final class QuizViewModel: ObservableObject {
         quizState = .idle
         currentQuestion = nil
         currentSession = nil
-        lastEvaluation = nil
-        answeredQuestion = nil
         score = 0.0
         questionsAnswered = 0
         errorMessage = nil
@@ -976,11 +1028,12 @@ extension QuizViewModel {
             questionHistoryStore: MockQuestionHistoryStore()
         )
         viewModel.currentQuestion = Question.preview
-        viewModel.answeredQuestion = Question.preview  // Snapshot for result screen
-        viewModel.lastEvaluation = Evaluation.previewCorrect
         viewModel.score = 1.0
         viewModel.questionsAnswered = 1
-        viewModel.quizState = .showingResult
+        viewModel.quizState = .showingResult(
+            question: Question.preview,
+            evaluation: Evaluation.previewCorrect
+        )
         viewModel.settings.audioMode = AudioMode.default.id
         return viewModel
     }()

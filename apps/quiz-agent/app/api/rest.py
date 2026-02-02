@@ -481,12 +481,16 @@ async def submit_input(session_id: str, request: SubmitInputRequest, audio: bool
     if not current_question:
         raise HTTPException(status_code=500, detail="Current question not found")
 
-    # Parse input with AI agent
-    intents = await input_parser.parse(
-        user_input=request.input,
-        current_question=current_question.question,
-        phase=session.phase
-    )
+    # Fast-path: skip AI parsing for literal "skip" command
+    if request.input.strip().lower() == "skip":
+        intents = [{"intent_type": "skip", "extracted_data": {}}]
+    else:
+        # Parse input with AI agent
+        intents = await input_parser.parse(
+            user_input=request.input,
+            current_question=current_question.question,
+            phase=session.phase
+        )
 
     feedback_received = []
     evaluation_result = None

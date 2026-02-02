@@ -56,7 +56,7 @@ struct ResultView: View {
                             ResultBadge(
                                 type: resultBadgeType(for: evaluation.result),
                                 points: evaluation.points,
-                                isMinimal: evaluation.result == .skipped
+                                isMinimal: evaluation.result == .skipped || evaluation.result == .incorrect
                             )
                             .transition(.scale.combined(with: .opacity))
                         } else {
@@ -156,15 +156,9 @@ struct ResultView: View {
             }
         }
         .background(Theme.Colors.bgPrimary)
-        .gesture(
-            DragGesture()
-                .onEnded { value in
-                    if value.translation.height > 100 && viewModel.canMinimize {
-                        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                            viewModel.isMinimized = true
-                        }
-                    }
-                }
+        .interactiveMinimize(
+            isMinimized: $viewModel.isMinimized,
+            canMinimize: viewModel.canMinimize
         )
         .animation(.spring(response: 0.5, dampingFraction: 0.7), value: showEvaluation)
         .onAppear {

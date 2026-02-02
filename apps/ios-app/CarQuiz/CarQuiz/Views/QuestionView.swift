@@ -106,15 +106,9 @@ struct QuestionView: View {
         }
         .padding()
         .background(Theme.Colors.bgPrimary)
-        .gesture(
-            DragGesture()
-                .onEnded { value in
-                    if value.translation.height > 100 && viewModel.canMinimize {
-                        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                            viewModel.isMinimized = true
-                        }
-                    }
-                }
+        .interactiveMinimize(
+            isMinimized: $viewModel.isMinimized,
+            canMinimize: viewModel.canMinimize
         )
         .sheet(isPresented: $viewModel.showAnswerConfirmation, onDismiss: {
             viewModel.handleAnswerConfirmationDismissed()

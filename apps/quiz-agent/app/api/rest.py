@@ -491,6 +491,7 @@ async def submit_input(session_id: str, request: SubmitInputRequest, audio: bool
     feedback_received = []
     evaluation_result = None
     user_answer = None
+    enhanced_feedback_audio = None  # Initialize here for skip/other intents
 
     # Process intents
     for intent in intents:

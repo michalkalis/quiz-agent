@@ -19,6 +19,7 @@ enum ErrorContext: Sendable {
 /// Quiz state machine
 enum QuizState: Sendable {
     case idle
+    case startingQuiz
     case askingQuestion
     case recording
     case processing
@@ -32,6 +33,7 @@ extension QuizState: Equatable {
     static func == (lhs: QuizState, rhs: QuizState) -> Bool {
         switch (lhs, rhs) {
         case (.idle, .idle),
+             (.startingQuiz, .startingQuiz),
              (.askingQuestion, .askingQuestion),
              (.recording, .recording),
              (.processing, .processing),
@@ -170,6 +172,9 @@ final class QuizViewModel: ObservableObject {
     // Auto-advance task for result screen
     private var autoAdvanceTask: Task<Void, Never>?
 
+    // Voice submission task for cancellation support
+    private var voiceSubmissionTask: Task<Void, Never>?
+
     // Next question data (from response, displayed after showing results)
     private var nextQuestionAudioUrl: String?
     private var nextQuestion: Question?
@@ -204,6 +209,7 @@ final class QuizViewModel: ObservableObject {
         difficulty: String? = nil,
         language: String? = nil
     ) async {
+        quizState = .startingQuiz
         errorMessage = nil
         autoAdvanceEnabled = true  // Reset auto-advance for new quiz
 
@@ -351,7 +357,7 @@ final class QuizViewModel: ObservableObject {
         }
     }
 
-    /// Submit a voice answer
+    /// Submit a voice answer with timeout and cancellation support
     func submitVoiceAnswer(audioData: Data) async {
         guard let sessionId = currentSession?.id else {
             quizState = .error(message: "No active session", context: .general)
@@ -361,67 +367,132 @@ final class QuizViewModel: ObservableObject {
         quizState = .processing
         errorMessage = nil
 
-        do {
-            if Config.verboseLogging {
-                print("🎤 Submitting voice answer: \(audioData.count) bytes")
-            }
+        // Create a task that can be cancelled via cancelProcessing()
+        voiceSubmissionTask = Task { [weak self] in
+            guard let self else { return }
 
-            let response = try await networkService.submitVoiceAnswer(
-                sessionId: sessionId,
-                audioData: audioData,
-                fileName: "answer.m4a"
-            )
-
-            // Check if response has a valid evaluation before showing confirmation
-            guard let evaluation = response.evaluation else {
+            do {
                 if Config.verboseLogging {
-                    print("⚠️ No evaluation in response - speech may not have been recognized")
+                    print("🎤 Submitting voice answer: \(audioData.count) bytes")
                 }
-                // Return to error state so user can re-record
-                quizState = .error(
-                    message: "Could not understand your answer. Please speak clearly and try again.",
-                    context: .submission
-                )
-                return
-            }
 
-            // Store response and show confirmation modal
-            pendingResponse = response
-            transcribedAnswer = evaluation.userAnswer
-            showAnswerConfirmation = true
+                // Race the network call against a 30-second timeout
+                let response = try await withUserFacingTimeout(seconds: 30) {
+                    try await self.networkService.submitVoiceAnswer(
+                        sessionId: sessionId,
+                        audioData: audioData,
+                        fileName: "answer.m4a"
+                    )
+                }
 
-            // Don't call handleQuizResponse yet - wait for user confirmation
+                // Check for cancellation before updating UI
+                try Task.checkCancellation()
 
-        } catch let error as NetworkError {
-            // Handle "speech not understood" errors gracefully - let user re-record
-            if case .serverError(let statusCode, let message) = error, statusCode == 400 {
-                errorMessage = message
-                quizState = .askingQuestion  // Return to ready state for re-recording
+                // Check if response has a valid evaluation before showing confirmation
+                guard let evaluation = response.evaluation else {
+                    if Config.verboseLogging {
+                        print("⚠️ No evaluation in response - speech may not have been recognized")
+                    }
+                    // Return to error state so user can re-record
+                    await MainActor.run {
+                        self.quizState = .error(
+                            message: "Could not understand your answer. Please speak clearly and try again.",
+                            context: .submission
+                        )
+                    }
+                    return
+                }
+
+                // Store response and show confirmation modal
+                await MainActor.run {
+                    self.pendingResponse = response
+                    self.transcribedAnswer = evaluation.userAnswer
+                    self.showAnswerConfirmation = true
+                }
+
+                // Don't call handleQuizResponse yet - wait for user confirmation
+
+            } catch is CancellationError {
+                // User cancelled - state already cleaned up by cancelProcessing()
+                if Config.verboseLogging {
+                    print("🚫 Voice submission task was cancelled")
+                }
+            } catch is TimeoutError {
+                await MainActor.run {
+                    self.quizState = .error(
+                        message: "Request timed out. Please try again.",
+                        context: .submission
+                    )
+                }
 
                 if Config.verboseLogging {
-                    print("⚠️ Speech not understood, returning to question: \(message)")
+                    print("⏱️ Voice submission timed out after 30 seconds")
                 }
-                return
+            } catch let error as NetworkError {
+                // Handle "speech not understood" errors gracefully - let user re-record
+                if case .serverError(let statusCode, let message) = error, statusCode == 400 {
+                    await MainActor.run {
+                        self.errorMessage = message
+                        self.quizState = .askingQuestion  // Return to ready state for re-recording
+                    }
+
+                    if Config.verboseLogging {
+                        print("⚠️ Speech not understood, returning to question: \(message)")
+                    }
+                    return
+                }
+
+                // Other network errors go to error screen
+                await MainActor.run {
+                    self.quizState = .error(
+                        message: "Failed to submit answer: \(error.localizedDescription)",
+                        context: .submission
+                    )
+                }
+
+                if Config.verboseLogging {
+                    print("❌ Error submitting answer: \(error)")
+                }
+            } catch {
+                await MainActor.run {
+                    self.quizState = .error(
+                        message: "Failed to submit answer: \(error.localizedDescription)",
+                        context: .submission
+                    )
+                }
+
+                if Config.verboseLogging {
+                    print("❌ Error submitting answer: \(error)")
+                }
+            }
+        }
+
+        // Wait for the task to complete
+        await voiceSubmissionTask?.value
+    }
+
+    /// User-facing timeout error
+    private struct TimeoutError: Error {}
+
+    /// Runs an async operation with a timeout, throwing TimeoutError if exceeded
+    private func withUserFacingTimeout<T: Sendable>(
+        seconds: Int,
+        operation: @escaping @Sendable () async throws -> T
+    ) async throws -> T {
+        try await withThrowingTaskGroup(of: T.self) { group in
+            group.addTask {
+                try await operation()
             }
 
-            // Other network errors go to error screen
-            quizState = .error(
-                message: "Failed to submit answer: \(error.localizedDescription)",
-                context: .submission
-            )
-
-            if Config.verboseLogging {
-                print("❌ Error submitting answer: \(error)")
+            group.addTask {
+                try await Task.sleep(nanoseconds: UInt64(seconds) * 1_000_000_000)
+                throw TimeoutError()
             }
-        } catch {
-            quizState = .error(
-                message: "Failed to submit answer: \(error.localizedDescription)",
-                context: .submission
-            )
 
-            if Config.verboseLogging {
-                print("❌ Error submitting answer: \(error)")
-            }
+            // Return first result, cancel the other
+            let result = try await group.next()!
+            group.cancelAll()
+            return result
         }
     }
 
@@ -449,6 +520,21 @@ final class QuizViewModel: ObservableObject {
         pendingResponse = nil
         quizState = .askingQuestion  // Return to ready state, not recording
         errorMessage = nil
+    }
+
+    /// Cancel the processing operation and return to question state
+    func cancelProcessing() {
+        voiceSubmissionTask?.cancel()
+        voiceSubmissionTask = nil
+        showAnswerConfirmation = false
+        pendingResponse = nil
+        transcribedAnswer = ""
+        quizState = .askingQuestion
+        errorMessage = nil
+
+        if Config.verboseLogging {
+            print("🚫 Voice submission cancelled by user")
+        }
     }
 
     /// Whether to retry with a new session (for initialization errors)
@@ -511,6 +597,9 @@ final class QuizViewModel: ObservableObject {
     /// Skip the current question
     func skipQuestion() async {
         guard let sessionId = currentSession?.id else { return }
+
+        // Stop any playing question audio immediately
+        await stopAnyPlayingAudio()
 
         quizState = .processing
         errorMessage = nil
@@ -959,9 +1048,11 @@ final class QuizViewModel: ObservableObject {
     }
 
     private func resetState() {
-        // Cancel any pending auto-advance task
+        // Cancel any pending tasks
         autoAdvanceTask?.cancel()
         autoAdvanceTask = nil
+        voiceSubmissionTask?.cancel()
+        voiceSubmissionTask = nil
 
         // Stop any playing audio
         Task {
@@ -981,6 +1072,9 @@ final class QuizViewModel: ObservableObject {
         autoAdvanceCountdown = 0
         currentQuestionPaused = false
         autoAdvanceEnabled = true
+        pendingResponse = nil
+        transcribedAnswer = ""
+        showAnswerConfirmation = false
     }
 
     // MARK: - Question History Management

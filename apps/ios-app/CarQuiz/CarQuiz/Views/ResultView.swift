@@ -18,36 +18,33 @@ struct ResultView: View {
         ScrollView {
             VStack(spacing: Theme.Spacing.lg) {
                 // MARK: - Header Section
-                HStack(spacing: Theme.Spacing.sm) {
-                    // Progress badge
+                // Drag indicator pill
+                Capsule()
+                    .fill(Theme.Colors.textSecondary.opacity(0.4))
+                    .frame(width: 36, height: 5)
+                    .padding(.top, Theme.Spacing.sm)
+
+                // Inline header: Q X/10 • Y pts | Close button
+                HStack {
+                    // Progress and score inline
                     if let session = viewModel.currentSession {
-                        ProgressBadge(
-                            current: viewModel.questionsAnswered,
-                            total: session.maxQuestions
-                        )
+                        Text("Q \(viewModel.questionsAnswered)/\(session.maxQuestions)  •  \(Int(viewModel.score)) pts")
+                            .font(.system(size: Theme.Typography.sizeSM, weight: .medium))
+                            .foregroundColor(Theme.Colors.textSecondary)
                     }
 
                     Spacer()
 
-                    // Score card
-                    ScoreCard(
-                        score: viewModel.score,
-                        totalQuestions: viewModel.currentSession?.maxQuestions ?? 10
-                    )
-                    .frame(width: 100)
-
-                    // Minimize button
+                    // Close button
                     Button {
-                        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                            viewModel.isMinimized = true
-                        }
+                        showQuitConfirmation = true
                     } label: {
-                        Image(systemName: "chevron.down")
-                            .font(.system(size: Theme.Components.iconSM))
+                        Image(systemName: "xmark")
+                            .font(.system(size: Theme.Typography.sizeMD, weight: .semibold))
                             .foregroundColor(Theme.Colors.textSecondary)
-                            .padding(Theme.Spacing.xs)
+                            .padding(Theme.Spacing.sm)
                             .background(Theme.Colors.bgCard)
-                            .cornerRadius(Theme.Radius.sm)
+                            .clipShape(Circle())
                     }
                 }
                 .padding(.horizontal)
@@ -58,7 +55,8 @@ struct ResultView: View {
                         if showEvaluation {
                             ResultBadge(
                                 type: resultBadgeType(for: evaluation.result),
-                                points: evaluation.points
+                                points: evaluation.points,
+                                isMinimal: evaluation.result == .skipped
                             )
                             .transition(.scale.combined(with: .opacity))
                         } else {
@@ -132,15 +130,11 @@ struct ResultView: View {
                         viewModel.continueToNext()
                     }
 
-                    Button(action: {
+                    Button("Stay Here") {
                         viewModel.pauseQuiz()
-                    }) {
-                        HStack(spacing: Theme.Spacing.xs) {
-                            Image(systemName: "hand.raised.fill")
-                            Text("Stay Here")
-                        }
                     }
-                    .buttonStyle(.secondary)
+                    .font(.system(size: Theme.Typography.sizeSM, weight: .medium))
+                    .foregroundColor(Theme.Colors.textSecondary)
                     .disabled(viewModel.currentQuestionPaused)
 
                     // View Source button
@@ -162,6 +156,16 @@ struct ResultView: View {
             }
         }
         .background(Theme.Colors.bgPrimary)
+        .gesture(
+            DragGesture()
+                .onEnded { value in
+                    if value.translation.height > 100 && viewModel.canMinimize {
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                            viewModel.isMinimized = true
+                        }
+                    }
+                }
+        )
         .animation(.spring(response: 0.5, dampingFraction: 0.7), value: showEvaluation)
         .onAppear {
             showEvaluation = true

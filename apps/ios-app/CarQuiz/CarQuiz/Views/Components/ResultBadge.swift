@@ -18,44 +18,53 @@ struct ResultBadge: View {
 
     let type: ResultType
     var points: Double = 0
+    var isMinimal: Bool = false
 
     var body: some View {
-        VStack(spacing: 12) {
-            // Icon in frosted circle
-            ZStack {
-                Circle()
-                    .fill(Color.white.opacity(0.19)) // #FFFFFF30
-                    .frame(
-                        width: Theme.Components.resultIconCircle,
-                        height: Theme.Components.resultIconCircle
-                    )
-
-                Image(systemName: iconName)
-                    .font(.system(size: Theme.Components.resultIcon, weight: .medium))
-                    .foregroundColor(Theme.Colors.textOnAccent)
-            }
-
-            // Title
+        if isMinimal && type == .skipped {
+            // Minimal style: simple colored text, no background/icon/points
             Text(titleText)
-                .font(.system(size: 32, weight: .heavy, design: .default))
-                .foregroundColor(Theme.Colors.textOnAccent)
-
-            // Points
-            Text(pointsText)
                 .font(.system(size: Theme.Typography.sizeLG, weight: .bold))
-                .foregroundColor(Theme.Colors.textOnAccent)
-                .opacity(0.9)
+                .foregroundColor(Theme.Colors.error)
+        } else {
+            // Full style: gradient card with icon and points
+            VStack(spacing: 12) {
+                // Icon in frosted circle
+                ZStack {
+                    Circle()
+                        .fill(Color.white.opacity(0.19)) // #FFFFFF30
+                        .frame(
+                            width: Theme.Components.resultIconCircle,
+                            height: Theme.Components.resultIconCircle
+                        )
+
+                    Image(systemName: iconName)
+                        .font(.system(size: Theme.Components.resultIcon, weight: .medium))
+                        .foregroundColor(Theme.Colors.textOnAccent)
+                }
+
+                // Title
+                Text(titleText)
+                    .font(.system(size: 32, weight: .heavy, design: .default))
+                    .foregroundColor(Theme.Colors.textOnAccent)
+
+                // Points
+                Text(pointsText)
+                    .font(.system(size: Theme.Typography.sizeLG, weight: .bold))
+                    .foregroundColor(Theme.Colors.textOnAccent)
+                    .opacity(0.9)
+            }
+            .padding(Theme.Spacing.lg)
+            .frame(maxWidth: .infinity)
+            .background(backgroundGradient)
+            .cornerRadius(Theme.Radius.xl)
+            .shadow(
+                color: shadowColor,
+                radius: 24,
+                x: 0,
+                y: 8
+            )
         }
-        .padding(Theme.Spacing.lg)
-        .frame(maxWidth: .infinity)
-        .background(backgroundGradient)
-        .cornerRadius(Theme.Radius.xl)
-        .shadow(
-            color: shadowColor,
-            radius: 24,
-            x: 0,
-            y: 8
-        )
     }
 
     // MARK: - Computed Properties
@@ -123,6 +132,7 @@ struct ResultBadge: View {
         ResultBadge(type: .incorrect, points: 0)
         ResultBadge(type: .partiallyCorrect, points: 0.5)
         ResultBadge(type: .skipped)
+        ResultBadge(type: .skipped, isMinimal: true)
     }
     .padding()
     .background(Theme.Colors.bgPrimary)

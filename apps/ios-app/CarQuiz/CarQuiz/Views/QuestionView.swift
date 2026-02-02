@@ -13,57 +13,51 @@ struct QuestionView: View {
     @State private var showEndQuizConfirmation = false
 
     var body: some View {
-        VStack(spacing: Theme.Spacing.lg) {
-            // Header: Progress, Score, and Minimize
+        VStack(spacing: Theme.Spacing.md) {
+            // Drag indicator pill
+            Capsule()
+                .fill(Theme.Colors.textSecondary.opacity(0.4))
+                .frame(width: 36, height: 5)
+                .padding(.top, Theme.Spacing.sm)
+
+            // Close button (top-right)
             HStack {
-                // Progress badge
-                if let session = viewModel.currentSession,
-                   viewModel.questionsAnswered < session.maxQuestions {
-                    ProgressBadge(
-                        current: viewModel.questionsAnswered + 1,
-                        total: session.maxQuestions
-                    )
-                }
-
                 Spacer()
-
-                // Score card (compact)
-                ScoreCard(
-                    score: viewModel.score,
-                    totalQuestions: viewModel.currentSession?.maxQuestions ?? 10
-                )
-                .frame(width: 100)
-
-                // Minimize button
                 Button {
-                    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                        viewModel.isMinimized = true
-                    }
+                    showEndQuizConfirmation = true
                 } label: {
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: Theme.Components.iconSM))
+                    Image(systemName: "xmark")
+                        .font(.system(size: Theme.Typography.sizeMD, weight: .semibold))
                         .foregroundColor(Theme.Colors.textSecondary)
-                        .padding(Theme.Spacing.xs)
+                        .padding(Theme.Spacing.sm)
                         .background(Theme.Colors.bgCard)
-                        .cornerRadius(Theme.Radius.sm)
+                        .clipShape(Circle())
                 }
-                .disabled(!viewModel.canMinimize)
+                .disabled(!canInteract)
             }
             .padding(.horizontal)
-
-            Spacer()
 
             // Question content
             if let question = viewModel.currentQuestion {
                 VStack(spacing: Theme.Spacing.md) {
-                    // Topic badge
-                    CategoryBadge(category: question.topic)
+                    // Inline badges: progress + category
+                    HStack(spacing: Theme.Spacing.sm) {
+                        if let session = viewModel.currentSession,
+                           viewModel.questionsAnswered < session.maxQuestions {
+                            ProgressBadge(
+                                current: viewModel.questionsAnswered + 1,
+                                total: session.maxQuestions
+                            )
+                        }
+                        CategoryBadge(category: question.topic)
+                    }
 
                     // Question text in card
                     Text(question.question)
                         .font(.system(size: Theme.Typography.sizeXL, weight: .bold))
                         .foregroundColor(Theme.Colors.textPrimary)
                         .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
                         .padding(Theme.Spacing.lg)
                         .frame(maxWidth: .infinity)
                         .background(Theme.Colors.bgCard)
@@ -83,36 +77,20 @@ struct QuestionView: View {
                 .font(.system(size: Theme.Typography.sizeSM, weight: .medium))
                 .foregroundColor(hintColor)
                 .frame(height: 24)
-                .padding(.bottom, Theme.Spacing.md)
+                .padding(.bottom, Theme.Spacing.sm)
 
             // Microphone button
             MicButton(state: micButtonState, action: handleMicrophoneTap)
 
-            // Skip & End Quiz buttons
-            HStack(spacing: Theme.Spacing.md) {
-                Button {
-                    Task { await viewModel.skipQuestion() }
-                } label: {
-                    HStack(spacing: Theme.Spacing.xs) {
-                        Image(systemName: "forward.fill")
-                        Text("Skip")
-                    }
-                }
-                .buttonStyle(.secondary)
-                .disabled(!canInteract)
-
-                Button {
-                    showEndQuizConfirmation = true
-                } label: {
-                    HStack(spacing: Theme.Spacing.xs) {
-                        Image(systemName: "xmark.circle.fill")
-                        Text("End Quiz")
-                    }
-                }
-                .buttonStyle(.danger)
-                .disabled(!canInteract)
+            // Skip button (smaller, text only)
+            Button {
+                Task { await viewModel.skipQuestion() }
+            } label: {
+                Text("Skip")
+                    .font(.system(size: Theme.Typography.sizeSM, weight: .medium))
             }
-            .padding(.horizontal)
+            .buttonStyle(.secondary)
+            .disabled(!canInteract)
 
             // Error message
             if let error = viewModel.errorMessage {
@@ -121,18 +99,29 @@ struct QuestionView: View {
                     .foregroundColor(Theme.Colors.error)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)
-                    .padding(.top, Theme.Spacing.sm)
+                    .padding(.top, Theme.Spacing.xs)
             }
 
-            Spacer(minLength: Theme.Spacing.lg)
+            Spacer(minLength: Theme.Spacing.xs)
         }
         .padding()
         .background(Theme.Colors.bgPrimary)
+        .gesture(
+            DragGesture()
+                .onEnded { value in
+                    if value.translation.height > 100 && viewModel.canMinimize {
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                            viewModel.isMinimized = true
+                        }
+                    }
+                }
+        )
         .sheet(isPresented: $viewModel.showAnswerConfirmation, onDismiss: {
             viewModel.handleAnswerConfirmationDismissed()
         }) {
             AnswerConfirmationView(
-                isProcessing: viewModel.quizState == .processing,
+                // Fixed: processing = in .processing state AND no transcription yet
+                isProcessing: viewModel.quizState == .processing && viewModel.transcribedAnswer.isEmpty,
                 transcribedAnswer: viewModel.transcribedAnswer,
                 onConfirm: {
                     Task {
@@ -141,6 +130,9 @@ struct QuestionView: View {
                 },
                 onReRecord: {
                     viewModel.rerecordAnswer()
+                },
+                onCancel: {
+                    viewModel.cancelProcessing()
                 }
             )
         }

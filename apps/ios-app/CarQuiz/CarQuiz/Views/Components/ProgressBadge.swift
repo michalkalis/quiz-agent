@@ -7,17 +7,17 @@
 
 import SwiftUI
 
-/// Pill badge showing "Question X of Y" progress
+/// Compact pill badge showing "Q X/Y" progress
 struct ProgressBadge: View {
     let current: Int
     let total: Int
 
     var body: some View {
-        Text("Question \(current) of \(total)")
+        Text("Q \(current)/\(total)")
             .font(.labelMD)
             .foregroundColor(Theme.Colors.textPrimary)
-            .padding(.vertical, Theme.Spacing.xs)
-            .padding(.horizontal, Theme.Spacing.md)
+            .padding(.vertical, 4)
+            .padding(.horizontal, Theme.Spacing.sm)
             .background(Theme.Colors.bgElevated)
             .cornerRadius(Theme.Radius.full)
             .overlay(

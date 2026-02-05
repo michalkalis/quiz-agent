@@ -5,6 +5,20 @@ from openai import OpenAI
 from typing import List, Optional
 import os
 
+# Module-level cached client to avoid creating a new instance per call
+_openai_client: Optional[OpenAI] = None
+
+
+def _get_openai_client(api_key: Optional[str] = None) -> OpenAI:
+    """Get or create a cached OpenAI client."""
+    global _openai_client
+    if api_key:
+        # Explicit key bypasses cache (for testing or alternate keys)
+        return OpenAI(api_key=api_key)
+    if _openai_client is None:
+        _openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+    return _openai_client
+
 
 def generate_embedding(
     text: str,
@@ -26,7 +40,7 @@ def generate_embedding(
         >>> len(embedding)
         1536
     """
-    client = OpenAI(api_key=api_key or os.getenv("OPENAI_API_KEY"))
+    client = _get_openai_client(api_key)
 
     response = client.embeddings.create(
         model=model,

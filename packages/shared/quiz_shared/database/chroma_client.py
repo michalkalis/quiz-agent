@@ -40,7 +40,10 @@ class ChromaDBClient:
         except Exception:
             return self.client.create_collection(
                 name=self.collection_name,
-                metadata={"description": "Pub quiz questions with embeddings"}
+                metadata={
+                    "description": "Pub quiz questions with embeddings",
+                    "hnsw:space": "cosine",
+                },
             )
 
     def add_question(self, question: Question) -> bool:
@@ -428,8 +431,7 @@ class ChromaDBClient:
                 distances = results['distances'][0] if 'distances' in results else []
 
                 for i, qid in enumerate(ids):
-                    # ChromaDB returns distance, convert to similarity
-                    # similarity = 1 - distance
+                    # ChromaDB returns cosine distance [0, 1], convert to similarity
                     similarity = 1 - distances[i] if distances else 0.0
 
                     if similarity >= threshold:

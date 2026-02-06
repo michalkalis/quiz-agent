@@ -522,5 +522,6 @@ def _dict_to_question(data: Dict[str, Any], source: str = "imported") -> Questio
         category=data.get("category", "general"),
         difficulty=data.get("difficulty", "medium"),
         tags=data.get("tags", []),
+        language_dependent=data.get("language_dependent", False),
         source=source
     )

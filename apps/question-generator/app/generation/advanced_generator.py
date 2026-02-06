@@ -421,6 +421,7 @@ class AdvancedQuestionGenerator:
             category=category,
             difficulty=difficulty,
             tags=tags,
+            language_dependent=data.get("language_dependent", False),
             source="generated",
             review_status="pending_review",
             quality_ratings=quality_ratings,

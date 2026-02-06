@@ -72,6 +72,7 @@ class ChromaDBClient:
                 "usage_count": question.usage_count,
                 "user_ratings": json.dumps(question.user_ratings),
                 "review_status": question.review_status,
+                "language_dependent": question.language_dependent,
             }
 
             # Add optional fields
@@ -490,6 +491,7 @@ class ChromaDBClient:
                 "usage_count": question.usage_count,
                 "user_ratings": json.dumps(question.user_ratings),
                 "review_status": question.review_status,
+                "language_dependent": question.language_dependent,
             }
 
             # Add optional fields
@@ -631,6 +633,7 @@ class ChromaDBClient:
             category=metadata.get("category", "general"),
             difficulty=metadata.get("difficulty", "medium"),
             tags=tags,
+            language_dependent=metadata.get("language_dependent", False),
             created_at=datetime.fromisoformat(metadata.get("created_at", datetime.now().isoformat())),
             created_by=metadata.get("created_by"),
             source=metadata.get("source", "generated"),

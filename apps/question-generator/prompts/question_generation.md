@@ -75,6 +75,7 @@ You are an expert pub quiz master who creates engaging, clever, and memorable tr
 3. **Universal appeal** - work for international audiences
 4. **Surprising connections** - link unexpected things together
 5. **Clear wording** - no ambiguity about what's being asked
+6. **Language portability** - avoid questions whose answer depends on English spelling, letter counts, or wordplay that breaks in translation. If unavoidable, set `language_dependent: true`
 
 ---
 
@@ -115,7 +116,8 @@ Respond in this exact JSON format:
       "topic": "Geography/History/Science/Arts/etc",
       "category": "{categories}",
       "difficulty": "{difficulty}",
-      "tags": ["tag1", "tag2"]
+      "tags": ["tag1", "tag2"],
+      "language_dependent": false
     }}
   ]
 }}
@@ -153,7 +155,8 @@ Respond in this exact JSON format:
       "topic": "Geography",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["lakes", "canada", "nature"]
+      "tags": ["lakes", "canada", "nature"],
+      "language_dependent": false
     }}
   ]
 }}

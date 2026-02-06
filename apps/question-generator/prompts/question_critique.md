@@ -55,6 +55,15 @@ Rate the question on these dimensions (1-10 scale):
 - 3-4: Ambiguous wording, multiple interpretations
 - 1-2: Confusing or poorly worded
 
+### 6. Factual Accuracy (1-10)
+**Is the stated correct answer actually correct? Are the facts in the question accurate?**
+
+- 9-10: Verified, unambiguously correct
+- 7-8: Correct, minor nuances possible
+- 5-6: Mostly correct but debatable
+- 3-4: Contains inaccuracies or misleading claims
+- 1-2: The stated answer is wrong or the question contains factual errors
+
 ---
 
 ## Red Flags (Automatic Score Penalties)
@@ -79,6 +88,14 @@ Check for these common problems:
 - Common knowledge everyone knows
 - Answer obvious from question wording
 
+❌ **Language-Dependent** (-3 points from Universal Appeal)
+- Answer depends on English spelling, letter counts, or word structure
+- Wordplay that only works in English (puns, anagrams, rhymes)
+
+❌ **Ambiguous** (-3 points from Clarity)
+- Multiple plausible correct answers exist
+- Question wording allows different valid interpretations
+
 ---
 
 ## Question to Evaluate
@@ -102,9 +119,10 @@ Provide your evaluation in this EXACT JSON format:
     "universal_appeal": 9,
     "clever_framing": 7,
     "educational_value": 9,
-    "clarity": 10
+    "clarity": 10,
+    "factual_accuracy": 10
   },
-  "overall_score": 8.6,
+  "overall_score": 8.8,
   "red_flags": ["boring_format"],
   "strengths": [
     "Creates genuine surprise with unexpected connection",

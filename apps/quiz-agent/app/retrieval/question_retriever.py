@@ -179,6 +179,10 @@ class QuestionRetriever:
             "review_status": "approved",  # ONLY use human-reviewed approved questions
         }
 
+        # Exclude language-dependent questions for non-English sessions
+        if session.language and session.language != "en":
+            filters["language_dependent"] = False
+
         # Add category filter if specified
         if session.preferred_categories:
             filters["category"] = {"$in": session.preferred_categories}
@@ -233,12 +237,17 @@ class QuestionRetriever:
             List of candidate questions
         """
 
+        # Build language filter for non-English sessions
+        lang_filter = {}
+        if session.language and session.language != "en":
+            lang_filter["language_dependent"] = False
+
         # Fallback 1: Simpler semantic query (just "question")
         print(f"DEBUG: Fallback 1 - Simpler semantic query")
         simple_query = "quiz question"
         candidates = self.chroma.search_questions(
             query_text=simple_query,
-            filters={"difficulty": question_difficulty, "type": "text", "review_status": "approved"},
+            filters={"difficulty": question_difficulty, "type": "text", "review_status": "approved", **lang_filter},
             n_results=n_candidates,
             excluded_ids=excluded_ids
         )
@@ -254,7 +263,7 @@ class QuestionRetriever:
         for fallback_difficulty in difficulty_fallback:
             candidates = self.chroma.search_questions(
                 query_text=simple_query,
-                filters={"difficulty": fallback_difficulty, "type": "text", "review_status": "approved"},
+                filters={"difficulty": fallback_difficulty, "type": "text", "review_status": "approved", **lang_filter},
                 n_results=n_candidates,
                 excluded_ids=excluded_ids
             )
@@ -266,7 +275,7 @@ class QuestionRetriever:
         print(f"DEBUG: Fallback 3 - Minimal constraints")
         candidates = self.chroma.search_questions(
             query_text="question",
-            filters={"type": "text", "review_status": "approved"},
+            filters={"type": "text", "review_status": "approved", **lang_filter},
             n_results=n_candidates,
             excluded_ids=excluded_ids
         )

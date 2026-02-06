@@ -199,6 +199,7 @@ class QuestionGenerator:
             category=category,
             difficulty=difficulty,
             tags=tags,
+            language_dependent=data.get("language_dependent", False),
             source="generated"
         )
 

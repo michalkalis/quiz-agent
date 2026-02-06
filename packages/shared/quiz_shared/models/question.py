@@ -48,6 +48,10 @@ class Question(BaseModel):
         default_factory=list,
         description="Additional tags: ['europe', 'capitals', 'france']"
     )
+    language_dependent: bool = Field(
+        False,
+        description="True if question relies on English language properties (wordplay, spelling, letter counts, acronyms)"
+    )
 
     # Metadata
     created_at: datetime = Field(default_factory=datetime.now)

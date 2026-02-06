@@ -37,7 +37,7 @@ Write the question using the pattern and reasoning from Step 1.
 
 Rate your own question 1-10 on:
 - **Surprise Factor** (1-10): Does it create an "aha!" moment?
-- **Universal Appeal** (1-10): Works for international audience?
+- **Universal Appeal** (1-10): Works for international audience? Translatable to other languages?
 - **Clever Framing** (1-10): Avoids boring "What is..." format?
 - **Educational Value** (1-10): Teaches something interesting?
 
@@ -83,8 +83,8 @@ Learn these PATTERNS, not just examples. Mix and match creatively!
 
 **Examples:**
 - "Which writer's name is an anagram of 'I am a weakish speller'?" → William Shakespeare
-- "What is the only number spelled with the same number of letters as its value?" → Four
 - "Which chemical element's symbol comes from its Latin name 'Aurum'?" → Gold
+- "Which planet's name is the only one derived from Greek mythology rather than Roman?" → Uranus
 
 **Why it works:** Engages problem-solving. Satisfying "aha!" when revealed.
 
@@ -149,6 +149,12 @@ Before finalizing each question, check these red flags:
 - Culture-specific (e.g., "Which US state...")
 - Too easy (everyone knows) or too hard (nobody knows)
 
+❌ **Language-Dependent Red Flags:**
+- Answer depends on English spelling, letter counts, or word structure
+- Wordplay that only works in English (puns, anagrams, rhymes)
+- English-specific acronyms or abbreviations as the core of the question
+→ If the question is otherwise excellent but unavoidably language-dependent, mark `language_dependent: true` in the output
+
 **If you hit ANY red flag, STOP and regenerate using a different pattern!**
 
 ---
@@ -164,10 +170,11 @@ Questions should create joy, surprise, or wonder—not test rote memory.
 **Bad:** "What is the chemical symbol for mercury?" → Hg
 
 ### PRINCIPLE 2: Universal over Niche
-Questions should work for diverse international audiences, not just specific subcultures.
+Questions should work for diverse international audiences, not just specific subcultures. Questions should also be language-portable: avoid questions whose answer depends on English spelling, letter counts, or wordplay that breaks in translation.
 
 **Good:** "Which country has a flag that is not rectangular or square?" → Nepal
 **Bad:** "Which quarterback won the Super Bowl in 2015?" → (US-specific sports)
+**Bad:** "What is the only number spelled with the same number of letters as its value?" → Four (only works in English)
 
 ### PRINCIPLE 3: Narrative over Facts
 Questions should tell a story or create context, not just state isolated facts.
@@ -178,7 +185,7 @@ Questions should tell a story or create context, not just state isolated facts.
 ### PRINCIPLE 4: Clever over Straightforward
 Questions should have creative framing or unexpected angles.
 
-**Good:** "Which fruit is botanically classified as a berry, despite its name suggesting otherwise?" → Strawberry (it's not a berry; raspberries and strawberries are not, but bananas are!)
+**Good:** "Which common yellow fruit is botanically classified as a berry, while strawberries are not?" → Banana
 **Bad:** "What fruit is red and commonly used in pies?" → Apple
 
 ---
@@ -192,6 +199,14 @@ Questions should have creative framing or unexpected angles.
 - Universal appeal (not culture-specific or niche)
 - Appropriate difficulty for stated level
 - Creative framing (not boring "What is..." format)
+
+---
+
+## Difficulty Design Guide
+
+- **Easy:** The answer should be gettable by most adults. Use well-known subjects with a surprising angle. The cleverness is in the framing, not the obscurity of the answer.
+- **Medium:** Requires some specific knowledge but the answer is recognizable once revealed. Good for "I knew that!" or "I should have known that!" moments.
+- **Hard:** Obscure facts or deep expertise. The answer may surprise even knowledgeable players, but should still be interesting and educational when revealed - never arbitrary.
 
 ---
 
@@ -271,6 +286,7 @@ For EACH question, respond with this EXACT structure:
       "category": "{categories}",
       "difficulty": "{difficulty}",
       "tags": ["tag1", "tag2"],
+      "language_dependent": false,
       "self_critique": {
         "surprise_factor": 9,
         "universal_appeal": 8,

@@ -311,6 +311,7 @@ def _dict_to_question(data: dict, source: str = "imported") -> Question:
         category=data.get("category", "general"),
         difficulty=data.get("difficulty", "medium"),
         tags=data.get("tags", []),
+        language_dependent=data.get("language_dependent", False),
         source=source,
         review_status="pending_review",
         quality_ratings=quality_ratings,

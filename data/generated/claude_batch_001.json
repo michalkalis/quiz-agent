@@ -1,0 +1,395 @@
+{
+  "questions": [
+    {
+      "question": "Which creature has survived all five mass extinction events, has blue blood because it uses copper instead of iron, and its blood is essential for testing the safety of every vaccine used today?",
+      "type": "text",
+      "correct_answer": "Horseshoe crab",
+      "possible_answers": null,
+      "alternative_answers": ["horseshoe crab", "horseshoe crabs"],
+      "topic": "Nature",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["biology", "medicine", "evolution", "animals"],
+      "language_dependent": false,
+      "source": "generated",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "The Biological Oddity + Surprising Connection",
+          "why_interesting": "Combines three astonishing facts — ancient survival, alien-colored blood, and modern medical dependency — into one creature most people overlook",
+          "universal_appeal": "Vaccines and evolution are universally understood concepts; no cultural barriers",
+          "boring_check": "Confirmed no red flags — narrative framing, not 'What animal has blue blood?'"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 10,
+          "clarity": 9,
+          "factual_accuracy": 10,
+          "overall_score": 9.3,
+          "reasoning": "Triple-layered surprise with vaccine connection making it feel urgent and modern. The answer 'horseshoe crab' is itself unexpected. Factually verified: LAL (Limulus Amebocyte Lysate) is used for endotoxin testing."
+        },
+        "ai_score": 9.3
+      }
+    },
+    {
+      "question": "Which planet in our solar system rotates so slowly that a single day on it is actually longer than its entire year?",
+      "type": "text",
+      "correct_answer": "Venus",
+      "possible_answers": null,
+      "alternative_answers": ["venus"],
+      "topic": "Space",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["astronomy", "planets", "solar system"],
+      "language_dependent": false,
+      "source": "generated",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "The Hidden Property",
+          "why_interesting": "The concept of a day being longer than a year is genuinely mind-bending — it challenges our fundamental understanding of time",
+          "universal_appeal": "Venus is universally known; the concept of days and years is understood by all",
+          "boring_check": "Confirmed no red flags — the paradoxical framing is the hook, not a dry fact"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 10,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 10,
+          "factual_accuracy": 10,
+          "overall_score": 9.2,
+          "reasoning": "The mind-bending paradox creates a strong reaction. Venus rotates in 243 Earth days but orbits in 225. Clear, unambiguous, and the answer is recognizable. Venus also rotates retrograde, adding another layer for curious players."
+        },
+        "ai_score": 9.2
+      }
+    },
+    {
+      "question": "Which classic board game was originally created by a woman in 1903 specifically to demonstrate the dangers of monopolies — the exact opposite of how most people play it today?",
+      "type": "text",
+      "correct_answer": "Monopoly",
+      "possible_answers": null,
+      "alternative_answers": ["monopoly", "the landlord's game", "landlords game"],
+      "topic": "History",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["games", "history", "culture", "irony"],
+      "language_dependent": false,
+      "source": "generated",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "The Historical Quirk + Surprising Connection",
+          "why_interesting": "The irony that a game celebrating capitalism was designed to critique it is delicious — it flips a universally known game on its head",
+          "universal_appeal": "Monopoly is played worldwide; the irony transcends culture",
+          "boring_check": "Confirmed no red flags — the ironic twist is the hook"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 9.0,
+          "reasoning": "Elizabeth Magie created 'The Landlord's Game' in 1903 to illustrate Georgist economic theory. Charles Darrow later commercialized it. The ironic twist makes this highly memorable. Slight deduction on factual accuracy because the full history involves some nuance around Darrow's role."
+        },
+        "ai_score": 9.0
+      }
+    },
+    {
+      "question": "Which mammal has fingerprints so similar to human ones that even forensic experts have difficulty telling them apart under a microscope?",
+      "type": "text",
+      "correct_answer": "Koala",
+      "possible_answers": null,
+      "alternative_answers": ["koala", "koalas", "koala bear"],
+      "topic": "Nature",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["biology", "animals", "forensics"],
+      "language_dependent": false,
+      "source": "generated",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "The Biological Oddity",
+          "why_interesting": "The forensic angle bridges nature and crime investigation — two topics everyone finds fascinating. The answer is completely unexpected.",
+          "universal_appeal": "Koalas and fingerprints are universally understood concepts",
+          "boring_check": "Confirmed no red flags — the forensic framing elevates it beyond 'which animal has fingerprints'"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 10,
+          "factual_accuracy": 9,
+          "overall_score": 9.0,
+          "reasoning": "Koala fingerprints evolved independently from primate fingerprints (convergent evolution), which adds another layer. Well-documented in Henneberg et al. (1997). The forensic framing makes it memorable."
+        },
+        "ai_score": 9.0
+      }
+    },
+    {
+      "question": "Which country once declared war on emus in 1932, deployed soldiers with machine guns — and lost?",
+      "type": "text",
+      "correct_answer": "Australia",
+      "possible_answers": null,
+      "alternative_answers": ["australia"],
+      "topic": "History",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["history", "animals", "australia", "humor"],
+      "language_dependent": false,
+      "source": "generated",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "The Historical Quirk",
+          "why_interesting": "The absurdity of a modern military losing to birds is inherently comedic. The 'and lost' punchline sells it.",
+          "universal_appeal": "Military vs animals is universally funny; no cultural barriers",
+          "boring_check": "Confirmed no red flags — comedic narrative framing"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 10,
+          "educational_value": 8,
+          "clarity": 10,
+          "factual_accuracy": 9,
+          "overall_score": 9.0,
+          "reasoning": "The Great Emu War is historically documented. The Royal Australian Artillery was deployed against ~20,000 emus damaging crops in Western Australia. After several failed engagements, the military withdrew. 'Lost' is slightly simplified — they killed some emus but failed the objective."
+        },
+        "ai_score": 9.0
+      }
+    },
+    {
+      "question": "Which popular condiment was sold as a patented medicine in the 1830s, marketed as a cure for diarrhea, jaundice, and indigestion?",
+      "type": "text",
+      "correct_answer": "Ketchup",
+      "possible_answers": null,
+      "alternative_answers": ["ketchup", "tomato ketchup", "catsup"],
+      "topic": "Food",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["food", "history", "medicine"],
+      "language_dependent": false,
+      "source": "generated",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "The Historical Quirk",
+          "why_interesting": "The juxtaposition of a common condiment with serious medical claims is absurd and memorable",
+          "universal_appeal": "Ketchup is globally recognized; medicine is universal",
+          "boring_check": "Confirmed no red flags — narrative framing with specific historical detail"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "clarity": 10,
+          "factual_accuracy": 9,
+          "overall_score": 8.8,
+          "reasoning": "Dr. John Cook Bennett promoted concentrated tomato extract as a medicine in the 1830s. The specific ailments listed are historically documented. Strong question with clear answer, though the format 'Which condiment' is slightly conventional."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "Which everyday breakfast beverage was banned five times in Sweden, with King Gustav III even ordering an experiment on condemned prisoners to prove it was lethal?",
+      "type": "text",
+      "correct_answer": "Coffee",
+      "possible_answers": null,
+      "alternative_answers": ["coffee"],
+      "topic": "History",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": ["food", "history", "culture", "sweden"],
+      "language_dependent": false,
+      "source": "generated",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "The Historical Quirk",
+          "why_interesting": "The prisoner experiment angle is darkly fascinating, and coffee is such a mundane part of daily life that the drama feels absurd",
+          "universal_appeal": "Coffee is universally consumed; the story is inherently entertaining",
+          "boring_check": "Confirmed no red flags — rich narrative with specific historical details"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 10,
+          "factual_accuracy": 8,
+          "overall_score": 8.8,
+          "reasoning": "The Swedish coffee bans are well-documented (1756-1817). Gustav III's twin experiment is a famous historical anecdote. Slight factual accuracy deduction because some details of the prisoner experiment may be embellished in retellings. The 'breakfast beverage' clue makes it easy-difficulty but the story is what delights."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "Which common metal has such a low melting point that it will literally melt if you hold it in your hand?",
+      "type": "text",
+      "correct_answer": "Gallium",
+      "possible_answers": null,
+      "alternative_answers": ["gallium"],
+      "topic": "Science",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["chemistry", "elements", "metals", "science"],
+      "language_dependent": false,
+      "source": "generated",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "The Hidden Property",
+          "why_interesting": "Challenges the assumption that all metals are 'hard' — the visceral image of metal melting in your palm is unforgettable",
+          "universal_appeal": "Metals and melting are universally understood physical concepts",
+          "boring_check": "Confirmed no red flags — vivid physical description, not dry chemistry"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 8,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "clarity": 10,
+          "factual_accuracy": 10,
+          "overall_score": 8.8,
+          "reasoning": "Gallium melts at 29.76C (85.57F), well below body temperature of 37C. The vivid 'hold it in your hand' image is memorable. Marked hard because 'gallium' is not widely known, but the reveal is satisfying and educational."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "Which natural structure on Earth is so massive it can be seen from space, yet each of its individual builders is typically smaller than a fingernail?",
+      "type": "text",
+      "correct_answer": "The Great Barrier Reef",
+      "possible_answers": null,
+      "alternative_answers": ["great barrier reef", "coral reef", "the great barrier reef"],
+      "topic": "Nature",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": ["nature", "geography", "ocean", "biology"],
+      "language_dependent": false,
+      "source": "generated",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "The Scale Surprise",
+          "why_interesting": "The contrast between the massive structure visible from orbit and the tiny coral polyps that build it is a beautiful scale juxtaposition",
+          "universal_appeal": "The Great Barrier Reef is globally famous; the scale concept is universally understandable",
+          "boring_check": "Confirmed no red flags — the contrast framing drives the question, not 'What is the largest reef?'"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.5,
+          "reasoning": "The Great Barrier Reef stretches 2,300+ km and is visible from space (confirmed by astronauts). Individual coral polyps are typically 1-3mm. The contrast is genuinely awe-inspiring. Slight deduction because the answer may be guessable for well-traveled people."
+        },
+        "ai_score": 8.5
+      }
+    },
+    {
+      "question": "Which common substance that you use every day can exist in at least 18 different crystalline forms, most of which only appear under extreme pressure?",
+      "type": "text",
+      "correct_answer": "Ice",
+      "possible_answers": null,
+      "alternative_answers": ["ice", "water", "water ice", "frozen water"],
+      "topic": "Science",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["physics", "chemistry", "water", "science"],
+      "language_dependent": false,
+      "source": "generated",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "The Hidden Property",
+          "why_interesting": "People think of ice as one simple thing — revealing it has 18+ exotic forms that scientists are still discovering challenges that assumption completely",
+          "universal_appeal": "Water/ice is the most universally known substance on Earth",
+          "boring_check": "Confirmed no red flags — the mystery framing ('common substance you use every day') creates intrigue"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "clarity": 8,
+          "factual_accuracy": 10,
+          "overall_score": 8.5,
+          "reasoning": "Ice phases I through XIX+ are well-documented in physics. Most exotic forms exist only under extreme pressures found in planetary interiors. Slight clarity deduction because 'common substance' could theoretically have other answers, but 'use every day' + '18 crystalline forms' narrows it conclusively."
+        },
+        "ai_score": 8.5
+      }
+    }
+  ],
+  "metadata": {
+    "model": "claude-opus-4-6",
+    "provider": "anthropic",
+    "generated_at": "2026-02-06T12:00:00Z",
+    "total_generated": 12,
+    "total_selected": 10,
+    "pipeline": "claude_code_session",
+    "prompt_version": "v2_cot",
+    "difficulty_distribution": {
+      "easy": 2,
+      "medium": 5,
+      "hard": 3
+    },
+    "topic_distribution": {
+      "Nature": 3,
+      "History": 3,
+      "Science": 2,
+      "Space": 1,
+      "Food": 1
+    }
+  }
+}

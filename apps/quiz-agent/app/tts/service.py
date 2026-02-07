@@ -5,10 +5,13 @@ Provides voice synthesis for quiz questions and feedback with intelligent cachin
 
 import asyncio
 import io
+import logging
 import os
 import random
 from typing import Optional
 from openai import AsyncOpenAI
+
+logger = logging.getLogger(__name__)
 
 from .cache import TTSCache
 from .voices import (
@@ -20,8 +23,8 @@ from .voices import (
 )
 
 # Volume boost setting (in decibels)
-# +3.5dB ≈ 50% louder, compensates for quiet OpenAI TTS output
-VOLUME_BOOST_DB = 3.5
+# +6dB ≈ double perceived loudness, compensates for quiet OpenAI TTS output
+VOLUME_BOOST_DB = 6.0
 
 
 def boost_volume(audio_data: bytes, gain_db: float = VOLUME_BOOST_DB) -> bytes:
@@ -29,7 +32,7 @@ def boost_volume(audio_data: bytes, gain_db: float = VOLUME_BOOST_DB) -> bytes:
 
     Args:
         audio_data: Raw audio bytes (MP3 format)
-        gain_db: Gain in decibels (+3.5dB ≈ 50% louder)
+        gain_db: Gain in decibels (+6dB ≈ double perceived loudness)
 
     Returns:
         Volume-boosted audio bytes in MP3 format
@@ -54,7 +57,7 @@ def boost_volume(audio_data: bytes, gain_db: float = VOLUME_BOOST_DB) -> bytes:
 
     except Exception as e:
         # If volume boost fails, return original audio (graceful fallback)
-        print(f"⚠️ Volume boost failed (returning original): {e}")
+        logger.warning(f"Volume boost failed (returning original): {e}")
         return audio_data
 
 
@@ -144,7 +147,7 @@ class TTSService:
                 # Read audio bytes
                 audio_data = response.content
 
-                # Apply volume boost (+3.5dB ≈ 50% louder)
+                # Apply volume boost (+6dB ≈ double perceived loudness)
                 audio_data = boost_volume(audio_data)
 
                 # Cache result (cache the boosted version)

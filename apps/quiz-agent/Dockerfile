@@ -6,6 +6,9 @@ FROM python:3.11-slim as builder
 
 WORKDIR /build
 
+# Install ffmpeg (required by pydub for audio processing)
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg && rm -rf /var/lib/apt/lists/*
+
 # Install pip
 RUN pip install --no-cache-dir --upgrade pip
 
@@ -26,12 +29,16 @@ RUN pip install --no-cache-dir \
     openai>=1.0.0 \
     python-multipart>=0.0.6 \
     requests>=2.31.0 \
-    rich>=13.0.0
+    rich>=13.0.0 \
+    pydub>=0.25.0
 
 # Production stage
 FROM python:3.11-slim
 
 WORKDIR /app
+
+# Install ffmpeg (required by pydub for audio processing)
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg && rm -rf /var/lib/apt/lists/*
 
 # Copy installed packages from builder
 COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages

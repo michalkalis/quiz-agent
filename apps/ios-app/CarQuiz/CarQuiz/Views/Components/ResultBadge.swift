@@ -21,7 +21,7 @@ struct ResultBadge: View {
     var isMinimal: Bool = false
 
     var body: some View {
-        if isMinimal && type == .skipped {
+        if isMinimal && (type == .skipped || type == .incorrect) {
             // Minimal style: simple colored text, no background/icon/points
             Text(titleText)
                 .font(.system(size: Theme.Typography.sizeLG, weight: .bold))
@@ -129,9 +129,8 @@ struct ResultBadge: View {
 #Preview {
     VStack(spacing: 20) {
         ResultBadge(type: .correct, points: 1.0)
-        ResultBadge(type: .incorrect, points: 0)
+        ResultBadge(type: .incorrect, points: 0, isMinimal: true)
         ResultBadge(type: .partiallyCorrect, points: 0.5)
-        ResultBadge(type: .skipped)
         ResultBadge(type: .skipped, isMinimal: true)
     }
     .padding()

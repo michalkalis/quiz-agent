@@ -99,7 +99,8 @@ struct HomeView: View {
                 VStack(spacing: Theme.Spacing.sm) {
                     PrimaryButton(
                         title: "Start Quiz",
-                        icon: "play.fill"
+                        icon: "play.fill",
+                        isLoading: viewModel.quizState == .startingQuiz
                     ) {
                         Task {
                             await viewModel.startNewQuiz()

@@ -12,6 +12,7 @@ struct AnswerConfirmationView: View {
     let transcribedAnswer: String
     let onConfirm: () -> Void
     let onReRecord: () -> Void
+    var onCancel: (() -> Void)? = nil
 
     var body: some View {
         VStack(spacing: Theme.Spacing.lg) {
@@ -25,6 +26,15 @@ struct AnswerConfirmationView: View {
                 Text("Processing...")
                     .font(.displayMD)
                     .foregroundColor(Theme.Colors.textSecondary)
+
+                // Cancel button during processing
+                if let onCancel = onCancel {
+                    Button("Cancel") {
+                        onCancel()
+                    }
+                    .buttonStyle(.secondary)
+                    .padding(.top, Theme.Spacing.md)
+                }
             } else {
                 // Transcription result state
                 Text("Your Answer")
@@ -71,15 +81,25 @@ struct AnswerConfirmationView: View {
         .background(Theme.Colors.bgPrimary)
         .presentationDetents([.medium])
         .presentationDragIndicator(.visible)
-        .interactiveDismissDisabled(true)
+        .interactiveDismissDisabled(false)
     }
 }
 
-#Preview {
+#Preview("Transcription Result") {
     AnswerConfirmationView(
         isProcessing: false,
         transcribedAnswer: "The capital of France is Paris.",
         onConfirm: {},
         onReRecord: {}
+    )
+}
+
+#Preview("Processing with Cancel") {
+    AnswerConfirmationView(
+        isProcessing: true,
+        transcribedAnswer: "",
+        onConfirm: {},
+        onReRecord: {},
+        onCancel: {}
     )
 }

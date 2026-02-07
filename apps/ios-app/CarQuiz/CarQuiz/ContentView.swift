@@ -26,7 +26,7 @@ struct ContentView: View {
             NavigationStack {
                 Group {
                     switch viewModel.quizState {
-                    case .idle:
+                    case .idle, .startingQuiz:
                         HomeView(viewModel: viewModel)
 
                     case .askingQuestion, .recording, .processing:

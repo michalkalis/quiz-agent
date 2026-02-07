@@ -76,6 +76,12 @@ You are an expert pub quiz master who creates engaging, clever, and memorable tr
 4. **Surprising connections** - link unexpected things together
 5. **Clear wording** - no ambiguity about what's being asked
 6. **Language portability** - avoid questions whose answer depends on English spelling, letter counts, or wordplay that breaks in translation. If unavoidable, set `language_dependent: true`
+7. **Logic questions** - When `topics` includes "Logic", generate reasoning-based questions instead of trivia. These test pattern recognition and lateral thinking, not factual knowledge. Use `topic: "Logic"` and tag with the sub-type. Four sub-types:
+   - **Number sequences** (tag: `number-sequence`): "What comes next: 2, 6, 18, 54, ...?" → 162 (each ×3). Show 4–5 numbers; the pattern must be unambiguous.
+   - **Verbal analogies** (tag: `analogy`): "Caterpillar is to butterfly as tadpole is to what?" → Frog. Frame creatively, include alternative_answers for synonyms.
+   - **Odd one out** (tag: `odd-one-out`): "Which doesn't belong: Salmon, Tuna, Dolphin, Cod?" → Dolphin (mammal, not fish). The criterion must be unambiguous.
+   - **Lateral thinking** (tag: `lateral-thinking`): Situation puzzles with surprising logical answers. Keep answers concise for voice evaluation.
+   - Always populate the `explanation` field with the reasoning behind the answer.
 
 ---
 

@@ -98,6 +98,29 @@ Check for these common problems:
 
 ---
 
+## Evaluating Logic Questions
+
+When the question's topic is "Logic" (number sequences, analogies, odd-one-out, lateral thinking), adjust your evaluation criteria:
+
+### Reinterpreted Dimensions
+
+- **Surprise Factor** → Measures the **elegance of the pattern** or cleverness of the puzzle, not factual surprise. A beautiful Fibonacci variant scores higher than a brute-force complex sequence. A lateral thinking puzzle with a delightful twist scores 9-10.
+- **Educational Value** → Measures **reasoning skill development** (pattern recognition, classification, creative thinking), not factual knowledge gained. A question that exercises a new way of thinking scores high.
+- **Clever Framing** → Still applies: creative presentation of the puzzle. "What comes next: 1, 1, 2, 3, 5, 8, ...?" is fine, but "Each number in this sequence is the sum of its two predecessors. What follows 8?" is more engaging.
+- **Universal Appeal** → Logic questions are inherently universal (numbers and reasoning transcend language/culture), so they generally score high here. Exception: lateral thinking puzzles that rely on English wordplay.
+- **Clarity** → Especially important for logic questions. Sequences must be unambiguous (only one valid pattern). Analogies must have a single clear relationship. Odd-one-out must have exactly one defensible answer.
+
+### Logic-Specific Red Flags
+
+❌ **Trivially simple patterns** at medium/hard difficulty (just +1, +2, ×2)
+❌ **Ambiguous sequences** where multiple valid continuations exist
+❌ **Dry academic phrasing** ("A is to B as C is to D" with no creative framing)
+❌ **Ambiguous odd-one-out** where 2+ items could reasonably be the outlier
+❌ **Overly complex lateral thinking** requiring visual aids or paragraphs of explanation
+❌ **Missing explanation** field — logic questions MUST explain the reasoning/pattern
+
+---
+
 ## Question to Evaluate
 
 **Question:** {question}

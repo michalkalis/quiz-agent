@@ -126,6 +126,89 @@ Learn these PATTERNS, not just examples. Mix and match creatively!
 
 ---
 
+### Pattern 7: The Number Sequence
+**Template:** "What comes next in the sequence: [a], [b], [c], [d], ...?"
+
+**Examples by difficulty:**
+- **Easy:** "What comes next: 3, 6, 12, 24, ...?" → 48 (doubles each time)
+- **Medium:** "What comes next: 1, 1, 2, 3, 5, 8, ...?" → 13 (Fibonacci — each number is the sum of the two before it)
+- **Hard:** "What comes next: 2, 3, 5, 9, 17, ...?" → 33 (each number is double the previous minus 1)
+
+**Pattern types to use:** Arithmetic progressions, geometric sequences, Fibonacci variants, alternating operations (e.g., +2, ×3, +2, ×3), triangular/square numbers, digit-based patterns (sum of digits, digit reversal).
+
+**Key rules:**
+- Show at least 4–5 numbers so the pattern is discoverable, not ambiguous
+- The pattern should have exactly ONE elegant explanation — avoid sequences with multiple valid continuations
+- Easy = single operation (add, multiply). Medium = compound but recognizable (Fibonacci, powers). Hard = layered patterns (alternating operations, nested sequences)
+- Always include the pattern explanation in the `explanation` field
+
+**Why it works:** Engages mathematical intuition. The "aha!" comes from spotting the hidden rule.
+
+---
+
+### Pattern 8: The Verbal Analogy
+**Template:** "[A] is to [B] as [C] is to what?"
+
+**Examples:**
+- "Conductor is to orchestra as director is to what?" → Film / Movie (leader-to-group relationship)
+- "Caterpillar is to butterfly as tadpole is to what?" → Frog (metamorphosis stages)
+- "Pen is to writer as scalpel is to what?" → Surgeon (tool-to-professional relationship)
+
+**Relationship types to use:** Cause/effect, part/whole, tool/professional, category membership, stages of transformation, degree of intensity, creator/creation.
+
+**Key rules:**
+- Frame creatively — avoid dry academic phrasing like "X is to Y as..."
+- Good: "If a conductor leads an orchestra, who leads a film set?" (narrative framing)
+- The relationship should be non-trivial but unambiguous once identified
+- Include `alternative_answers` generously — analogies often have acceptable near-synonyms
+- Most analogies are `language_dependent: false`, but mark `true` if the relationship depends on English wordplay
+
+**Why it works:** Tests relational reasoning, not recall. Satisfying when the connection clicks.
+
+---
+
+### Pattern 9: The Odd One Out
+**Template:** "Which doesn't belong: [A], [B], [C], [D]? And why?"
+
+**Examples:**
+- "Which doesn't belong: Mars, Venus, Jupiter, Moon?" → Moon (it's a satellite, not a planet)
+- "Which doesn't belong: Piano, Violin, Guitar, Drums?" → Piano (strings are struck, not bowed/plucked — or: Drums, the only non-pitched instrument) — **Avoid ambiguity like this! Pick items where ONE answer is clearly correct.**
+- **Better:** "Which doesn't belong: Salmon, Tuna, Dolphin, Cod?" → Dolphin (mammal, not a fish)
+- "Which doesn't belong: Tokyo, Beijing, Bangkok, Seoul?" → Bangkok (not in East Asia — it's in Southeast Asia)
+
+**Key rules:**
+- The distinction must be clever but unambiguous — exactly ONE item should differ on a single, clear criterion
+- Avoid trivially obvious groupings (3 fruits and a car)
+- The fun is in the non-obvious reason. "Dolphin among fish" is good because they all live in water
+- Always explain the reasoning in the `explanation` field
+- Provide 4–5 items (4 is ideal for voice-based quiz)
+- Set `correct_answer` to the odd item, put the reasoning in `explanation`
+
+**Why it works:** Tests classification and lateral thinking. The "trick" of the hidden criterion creates delight.
+
+---
+
+### Pattern 10: The Lateral Thinking Puzzle
+**Template:** A situation with a surprising but logical explanation.
+
+**Examples:**
+- "A man walks into a bar and asks for a glass of water. The bartender pulls out a gun and points it at him. The man says 'thank you' and leaves. Why?" → The man had hiccups — the bartender scared them away
+- "A woman pushes her car to a hotel and tells the owner she's bankrupt. What's going on?" → She's playing Monopoly
+- "How can you drop an egg from 2 meters onto a concrete floor without breaking it?" → Concrete floors are very hard to break (with an egg)
+
+**Key rules:**
+- The answer must be surprising yet perfectly logical once revealed
+- Keep answers concise — they must work in a voice-based quiz (1–2 sentences max)
+- Set `correct_answer` to a short answer capturing the key insight
+- Use `alternative_answers` for different phrasings of the same insight (e.g., ["he had hiccups", "hiccups", "the man had the hiccups"])
+- Avoid puzzles that require visual diagrams or complex spatial reasoning
+- Easy = wordplay misdirection. Medium = situation reframing. Hard = multi-step logical deduction
+- Mark `language_dependent: true` if the puzzle relies on English wordplay or double meanings
+
+**Why it works:** Maximum "aha!" moment. Tests creative thinking rather than knowledge.
+
+---
+
 ## The Boring Detector: Red Flags to AVOID
 
 Before finalizing each question, check these red flags:
@@ -155,6 +238,14 @@ Before finalizing each question, check these red flags:
 - English-specific acronyms or abbreviations as the core of the question
 → If the question is otherwise excellent but unavoidably language-dependent, mark `language_dependent: true` in the output
 
+❌ **Logic Question Red Flags:**
+- Number sequences with trivially simple patterns (just +1, +2, or ×2 at easy difficulty is fine, but not at medium/hard)
+- Sequences where multiple valid continuations exist (ambiguous pattern)
+- Analogies presented in dry academic format ("A is to B as C is to D")
+- Odd-one-out where multiple items could be the odd one (ambiguous grouping criterion)
+- Lateral thinking puzzles that require a diagram or visual aid
+- Logic puzzles with overly long or complex answers (must work in voice quiz)
+
 **If you hit ANY red flag, STOP and regenerate using a different pattern!**
 
 ---
@@ -178,6 +269,7 @@ Questions should work for diverse international audiences, not just specific sub
 
 ### PRINCIPLE 3: Narrative over Facts
 Questions should tell a story or create context, not just state isolated facts.
+**For logic questions:** This translates to "Elegant Pattern over Brute Complexity" — a beautiful sequence with a clever rule beats a complicated one that's just hard to compute.
 
 **Good:** "Which Pharaoh's tomb was discovered almost completely intact in 1922, revealing treasures that had been hidden for over 3,000 years?" → Tutankhamun
 **Bad:** "Who was the youngest Pharaoh?" → Tutankhamun
@@ -199,6 +291,13 @@ Questions should have creative framing or unexpected angles.
 - Universal appeal (not culture-specific or niche)
 - Appropriate difficulty for stated level
 - Creative framing (not boring "What is..." format)
+
+**For Logic questions specifically:**
+- "Surprise Factor" means an elegant or unexpected pattern, not a surprising fact
+- "Educational Value" means developing reasoning skills (pattern recognition, lateral thinking, classification)
+- Sequences must have exactly one valid continuation
+- Analogies must have a clear, unambiguous relationship
+- Answers must be concise enough for voice-based evaluation
 
 ---
 
@@ -312,6 +411,16 @@ For EACH question, respond with this EXACT structure:
 - Set `correct_answer` to the letter identifier ("a", "b", "c", or "d")
 - Set `alternative_answers` to empty array
 - Make distractors plausible but clearly wrong to knowledgeable person
+
+**For logic questions (topic: "Logic"):**
+- Set `topic` to "Logic"
+- Use appropriate tags: `["number-sequence"]`, `["analogy"]`, `["odd-one-out"]`, or `["lateral-thinking"]`
+- Always populate the `explanation` field with the reasoning/pattern (e.g., "Each number doubles the previous one" or "Dolphin is a mammal, the rest are fish")
+- For number sequences: `correct_answer` is the next number(s), `explanation` describes the pattern
+- For analogies: `correct_answer` is the answer word, `alternative_answers` lists acceptable synonyms
+- For odd-one-out: `correct_answer` is the odd item, `explanation` explains why
+- For lateral thinking: `correct_answer` is a concise key insight, `alternative_answers` lists acceptable phrasings
+- Most logic questions are `language_dependent: false` unless they rely on English wordplay
 
 ---
 

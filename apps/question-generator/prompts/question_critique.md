@@ -136,15 +136,15 @@ When the question's topic is "Logic" (number sequences, analogies, odd-one-out, 
 Provide your evaluation in this EXACT JSON format:
 
 ```json
-{
-  "scores": {
+{{
+  "scores": {{
     "surprise_factor": 8,
     "universal_appeal": 9,
     "clever_framing": 7,
     "educational_value": 9,
     "clarity": 10,
     "factual_accuracy": 10
-  },
+  }},
   "overall_score": 8.8,
   "red_flags": ["boring_format"],
   "strengths": [
@@ -162,7 +162,7 @@ Provide your evaluation in this EXACT JSON format:
   ],
   "verdict": "good",
   "reasoning": "Strong question with surprising fact and universal appeal, but format could be more creative. Would work well in a pub quiz."
-}
+}}
 ```
 
 **Verdict options:**

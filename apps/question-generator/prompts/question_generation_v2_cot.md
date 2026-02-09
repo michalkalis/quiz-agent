@@ -367,15 +367,15 @@ Questions should have creative framing or unexpected angles.
 For EACH question, respond with this EXACT structure:
 
 ```json
-{
+{{
   "questions": [
-    {
-      "reasoning": {
+    {{
+      "reasoning": {{
         "pattern_used": "Pattern name from library",
         "why_interesting": "Explanation of surprise factor",
         "universal_appeal": "Why this works internationally",
         "boring_check": "Confirmed no red flags"
-      },
+      }},
       "question": "Your question text here?",
       "type": "{type}",
       "correct_answer": "Correct answer",
@@ -386,17 +386,17 @@ For EACH question, respond with this EXACT structure:
       "difficulty": "{difficulty}",
       "tags": ["tag1", "tag2"],
       "language_dependent": false,
-      "self_critique": {
+      "self_critique": {{
         "surprise_factor": 9,
         "universal_appeal": 8,
         "clever_framing": 9,
         "educational_value": 10,
         "overall_score": 9.0,
         "reasoning": "Why this question scores well"
-      }
-    }
+      }}
+    }}
   ]
-}
+}}
 ```
 
 **For text questions:**
@@ -407,7 +407,7 @@ For EACH question, respond with this EXACT structure:
 
 **For multiple choice questions:**
 - Set `type` to "text_multichoice"
-- Provide 4 options in `possible_answers` dict: `{"a": "Option A", "b": "Option B", "c": "Option C", "d": "Option D"}`
+- Provide 4 options in `possible_answers` dict: `{{"a": "Option A", "b": "Option B", "c": "Option C", "d": "Option D"}}`
 - Set `correct_answer` to the letter identifier ("a", "b", "c", or "d")
 - Set `alternative_answers` to empty array
 - Make distractors plausible but clearly wrong to knowledgeable person

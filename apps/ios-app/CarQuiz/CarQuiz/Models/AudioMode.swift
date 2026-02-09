@@ -30,8 +30,8 @@ struct AudioMode: Identifiable, Hashable, Sendable {
         )
     ]
 
-    /// Default mode (Call Mode - preserves existing behavior)
-    static let `default` = supportedModes[0]
+    /// Default mode (Media Mode - car-friendly, no call UI)
+    static let `default` = supportedModes[1]
 
     /// Find mode by ID
     /// - Parameter id: Mode identifier ("call" or "media")

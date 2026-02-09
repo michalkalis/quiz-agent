@@ -41,7 +41,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// Default settings matching app defaults
     static let `default` = QuizSettings(
         language: "en",
-        audioMode: "call",
+        audioMode: "media",
         numberOfQuestions: 10,
         category: nil,  // All categories
         difficulty: "medium",

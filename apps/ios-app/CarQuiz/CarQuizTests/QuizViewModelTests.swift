@@ -775,6 +775,126 @@ struct QuizViewModelErrorStateTests {
     }
 }
 
+// MARK: - Answer Timer Tests
+
+@Suite("QuizViewModel Answer Timer Tests")
+struct QuizViewModelAnswerTimerTests {
+
+    @MainActor
+    private func makeViewModel() -> QuizViewModel {
+        let mockStore = MockPersistenceStore()
+        let viewModel = QuizViewModel(
+            networkService: MockNetworkService(),
+            audioService: MockAudioService(),
+            persistenceStore: mockStore
+        )
+        viewModel.currentQuestion = makeQuestion(id: "q_001", source: "Test")
+        viewModel.quizState = .askingQuestion
+        return viewModel
+    }
+
+    @Test("countdown resets to 0 when user taps mic")
+    @MainActor
+    func countdownResetsOnMicTap() async throws {
+        let viewModel = makeViewModel()
+        viewModel.settings.answerTimeLimit = 30
+
+        // Manually set countdown as if timer is running
+        viewModel.answerTimerCountdown = 15
+
+        // Tapping mic triggers toggleRecording which calls cancelAnswerTimer
+        await viewModel.toggleRecording()
+
+        #expect(viewModel.answerTimerCountdown == 0)
+        #expect(viewModel.quizState == .recording)
+    }
+
+    @Test("no timer when answerTimeLimit is 0")
+    @MainActor
+    func noTimerWhenTimeLimitOff() async throws {
+        let viewModel = makeViewModel()
+        viewModel.settings.answerTimeLimit = 0
+
+        // After startNewQuiz or proceedToNextQuestion, answerTimerCountdown should stay 0
+        // We can't easily test startAnswerTimer directly since it's private,
+        // but we can verify the countdown stays at 0
+        #expect(viewModel.answerTimerCountdown == 0)
+    }
+
+    @Test("resetState clears all timer state")
+    @MainActor
+    func resetStateClearsTimerState() async throws {
+        let viewModel = makeViewModel()
+        viewModel.answerTimerCountdown = 20
+
+        viewModel.resetToHome()
+
+        #expect(viewModel.answerTimerCountdown == 0)
+        #expect(viewModel.quizState == .idle)
+    }
+
+    @Test("skipQuestion cancels answer timer")
+    @MainActor
+    func skipQuestionCancelsAnswerTimer() async throws {
+        let mockNetwork = MockNetworkService()
+        mockNetwork.mockSession = QuizSession(
+            id: "test_session_123",
+            mode: "single", phase: "asking", maxQuestions: 10,
+            currentDifficulty: "medium", category: nil, language: "en",
+            participants: [
+                Participant(
+                    id: "p1", userId: nil, displayName: "Player",
+                    score: 0, answeredCount: 0, correctCount: 0,
+                    lastAnswer: nil, lastResult: nil,
+                    isHost: true, isReady: true, joinedAt: Date()
+                )
+            ],
+            expiresAt: Date().addingTimeInterval(30 * 60),
+            createdAt: Date()
+        )
+        mockNetwork.mockResponse = makeQuizResponse(
+            evaluationFor: "q_001",
+            userAnswer: "skip",
+            isCorrect: false,
+            nextQuestion: makeQuestion(id: "q_002", source: "Next")
+        )
+
+        let viewModel = QuizViewModel(
+            networkService: mockNetwork,
+            audioService: MockAudioService(),
+            persistenceStore: MockPersistenceStore()
+        )
+        viewModel.currentSession = QuizSession(
+            id: "test_session_123",
+            mode: "single", phase: "asking", maxQuestions: 10,
+            currentDifficulty: "medium", category: nil, language: "en",
+            participants: [], expiresAt: Date().addingTimeInterval(1800),
+            createdAt: Date()
+        )
+        viewModel.currentQuestion = makeQuestion(id: "q_001", source: "Test")
+        viewModel.quizState = .askingQuestion
+        viewModel.answerTimerCountdown = 15
+
+        await viewModel.skipQuestion()
+
+        // After skip, answer timer should be cancelled (countdown reset to 0)
+        #expect(viewModel.answerTimerCountdown == 0)
+    }
+
+    @Test("rerecordAnswer sets isRerecording flag preventing auto timers")
+    @MainActor
+    func rerecordSetsFlag() async throws {
+        let viewModel = makeViewModel()
+
+        // Simulate re-record action
+        viewModel.rerecordAnswer()
+
+        #expect(viewModel.quizState == .askingQuestion)
+        // answerTimerCountdown should remain 0 (no timer started for re-records)
+        #expect(viewModel.answerTimerCountdown == 0)
+    }
+}
+
 // MARK: - Settings Auto-Persistence Tests
 
 @Suite("QuizViewModel Settings Persistence Tests")

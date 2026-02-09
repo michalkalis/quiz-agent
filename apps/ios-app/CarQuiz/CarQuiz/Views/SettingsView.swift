@@ -115,6 +115,29 @@ struct SettingsView: View {
                             menuLabel(value: "\(viewModel.settings.autoAdvanceDelay)s")
                         }
                     }
+
+                    // Answer Time Limit
+                    SettingsInputField(
+                        label: "Answer Time Limit",
+                        icon: "hourglass",
+                        value: viewModel.settings.answerTimeLimit == 0
+                            ? "Off"
+                            : "\(viewModel.settings.answerTimeLimit)s"
+                    ) {
+                        Menu {
+                            ForEach(Config.answerTimeLimitOptions, id: \.self) { seconds in
+                                Button(seconds == 0 ? "Off" : "\(seconds) seconds") {
+                                    viewModel.settings.answerTimeLimit = seconds
+                                }
+                            }
+                        } label: {
+                            menuLabel(
+                                value: viewModel.settings.answerTimeLimit == 0
+                                    ? "Off"
+                                    : "\(viewModel.settings.answerTimeLimit)s"
+                            )
+                        }
+                    }
                 }
 
                 // MARK: - Question History Section

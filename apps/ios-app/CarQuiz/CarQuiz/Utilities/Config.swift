@@ -81,6 +81,15 @@ enum Config {
     /// Available auto-advance delay options (in seconds)
     static let autoAdvanceDelayOptions = [5, 8, 10, 15]
 
+    /// Available answer time limit options (in seconds, 0 = Off)
+    static let answerTimeLimitOptions = [0, 15, 20, 30, 45, 60]
+
+    /// Duration for auto-stop recording (seconds)
+    static let autoRecordingDuration: TimeInterval = 4.0
+
+    /// Window for re-record button before it disables (seconds)
+    static let rerecordWindowDuration: Int = 5
+
     // MARK: - Debug Settings
 
     /// Enable verbose logging in debug builds

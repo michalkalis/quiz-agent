@@ -64,6 +64,7 @@ struct PersistenceStoreSessionTests {
             category: "adults",
             difficulty: "hard",
             autoAdvanceDelay: 5,
+            answerTimeLimit: 45,
             preferredInputDeviceId: "device_123"
         )
 

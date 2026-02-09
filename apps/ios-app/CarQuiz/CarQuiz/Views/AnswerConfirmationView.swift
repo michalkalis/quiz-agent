@@ -14,6 +14,9 @@ struct AnswerConfirmationView: View {
     let onReRecord: () -> Void
     var onCancel: (() -> Void)? = nil
 
+    @State private var rerecordCountdown: Int = Config.rerecordWindowDuration
+    @State private var countdownTask: Task<Void, Never>?
+
     var body: some View {
         VStack(spacing: Theme.Spacing.lg) {
             if isProcessing {
@@ -57,14 +60,20 @@ struct AnswerConfirmationView: View {
 
                 // Action buttons
                 HStack(spacing: Theme.Spacing.md) {
-                    // Re-record button
+                    // Re-record button with countdown
                     Button(action: onReRecord) {
                         HStack(spacing: Theme.Spacing.xs) {
                             Image(systemName: "mic.circle.fill")
-                            Text("Re-record")
+                            if rerecordCountdown > 0 {
+                                Text("Re-record (\(rerecordCountdown)s)")
+                            } else {
+                                Text("Re-record")
+                            }
                         }
                     }
                     .buttonStyle(.secondary)
+                    .disabled(rerecordCountdown == 0)
+                    .opacity(rerecordCountdown == 0 ? 0.4 : 1.0)
 
                     // Confirm button
                     Button(action: onConfirm) {
@@ -75,13 +84,30 @@ struct AnswerConfirmationView: View {
                     }
                     .buttonStyle(.primary)
                 }
+                .onAppear {
+                    startRerecordCountdown()
+                }
+                .onDisappear {
+                    countdownTask?.cancel()
+                }
             }
         }
         .padding(Theme.Spacing.xl)
         .background(Theme.Colors.bgPrimary)
         .presentationDetents([.medium])
-        .presentationDragIndicator(.visible)
-        .interactiveDismissDisabled(false)
+        .presentationDragIndicator(.hidden)
+        .interactiveDismissDisabled(true)
+    }
+
+    private func startRerecordCountdown() {
+        rerecordCountdown = Config.rerecordWindowDuration
+        countdownTask = Task {
+            for remaining in (0..<Config.rerecordWindowDuration).reversed() {
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                if Task.isCancelled { return }
+                rerecordCountdown = remaining
+            }
+        }
     }
 }
 

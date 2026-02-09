@@ -76,8 +76,11 @@ final class QuizViewModel: ObservableObject {
     @Published var transcribedAnswer = ""
     private var pendingResponse: QuizResponse? = nil
 
-    // NEW: Auto-advance countdown for ResultView binding (single source of truth)
+    // Auto-advance countdown for ResultView binding (single source of truth)
     @Published var autoAdvanceCountdown: Int = 0
+
+    // Answer timer countdown (visible on QuestionView)
+    @Published var answerTimerCountdown: Int = 0
 
     // Auto-advance enabled state (global setting toggle)
     @Published var autoAdvanceEnabled: Bool = true
@@ -175,6 +178,15 @@ final class QuizViewModel: ObservableObject {
     // Voice submission task for cancellation support
     private var voiceSubmissionTask: Task<Void, Never>?
 
+    // Answer timer task (countdown before auto-recording)
+    private var answerTimerTask: Task<Void, Never>?
+
+    // Auto-stop recording task (stops recording after Config.autoRecordingDuration)
+    private var autoStopRecordingTask: Task<Void, Never>?
+
+    // Whether the current recording is a re-record (bypasses all timers)
+    private var isRerecording: Bool = false
+
     // Next question data (from response, displayed after showing results)
     private var nextQuestionAudioUrl: String?
     private var nextQuestion: Question?
@@ -212,6 +224,7 @@ final class QuizViewModel: ObservableObject {
         quizState = .startingQuiz
         errorMessage = nil
         autoAdvanceEnabled = true  // Reset auto-advance for new quiz
+        isRerecording = false
 
         // Use provided parameters or fall back to settings
         let quizMaxQuestions = maxQuestions ?? settings.numberOfQuestions
@@ -294,6 +307,9 @@ final class QuizViewModel: ObservableObject {
             if let audioInfo = response.audio,
                let questionUrl = audioInfo.questionUrl {
                 await playQuestionAudio(from: questionUrl)
+            } else {
+                // No audio — start answer timer immediately
+                startAnswerTimer()
             }
 
         } catch {
@@ -314,8 +330,10 @@ final class QuizViewModel: ObservableObject {
     func toggleRecording() async {
         switch quizState {
         case .askingQuestion:
+            cancelAnswerTimer()
             await startRecording()
         case .recording:
+            cancelAutoStopRecordingTimer()
             await stopRecordingAndSubmit()
         default:
             break
@@ -325,12 +343,14 @@ final class QuizViewModel: ObservableObject {
     /// Start recording the user's voice answer
     /// Handles audio preparation, state transitions, and error rollback
     private func startRecording() async {
+        cancelAnswerTimer()
         errorMessage = nil
         quizState = .recording
 
         do {
             await audioService.prepareForRecording()
             try audioService.startRecording()
+            startAutoStopRecordingTimer()
         } catch {
             // Rollback to asking state so user can retry
             quizState = .askingQuestion
@@ -344,6 +364,7 @@ final class QuizViewModel: ObservableObject {
 
     /// Stop recording and submit the audio for evaluation
     private func stopRecordingAndSubmit() async {
+        cancelAutoStopRecordingTimer()
         do {
             let data = try await audioService.stopRecording()
             await submitVoiceAnswer(audioData: data)
@@ -518,6 +539,7 @@ final class QuizViewModel: ObservableObject {
     func rerecordAnswer() {
         showAnswerConfirmation = false
         pendingResponse = nil
+        isRerecording = true
         quizState = .askingQuestion  // Return to ready state, not recording
         errorMessage = nil
     }
@@ -526,6 +548,8 @@ final class QuizViewModel: ObservableObject {
     func cancelProcessing() {
         voiceSubmissionTask?.cancel()
         voiceSubmissionTask = nil
+        cancelAnswerTimer()
+        cancelAutoStopRecordingTimer()
         showAnswerConfirmation = false
         pendingResponse = nil
         transcribedAnswer = ""
@@ -598,6 +622,8 @@ final class QuizViewModel: ObservableObject {
     func skipQuestion() async {
         guard let sessionId = currentSession?.id else { return }
 
+        cancelAnswerTimer()
+
         // Stop any playing question audio immediately
         await stopAnyPlayingAudio()
 
@@ -631,6 +657,9 @@ final class QuizViewModel: ObservableObject {
     /// End the current quiz session
     func endQuiz() async {
         guard let sessionId = currentSession?.id else { return }
+
+        cancelAnswerTimer()
+        cancelAutoStopRecordingTimer()
 
         do {
             try await networkService.endSession(sessionId: sessionId)
@@ -808,6 +837,78 @@ final class QuizViewModel: ObservableObject {
         }
     }
 
+    // MARK: - Answer Timer
+
+    /// Start countdown timer that auto-starts recording when it expires
+    private func startAnswerTimer() {
+        let limit = settings.answerTimeLimit
+        guard limit > 0, !isRerecording else { return }
+
+        cancelAnswerTimer()
+        answerTimerCountdown = limit
+
+        answerTimerTask = Task { [weak self] in
+            guard let self else { return }
+
+            for remaining in (0...limit).reversed() {
+                if Task.isCancelled { return }
+
+                await MainActor.run {
+                    self.answerTimerCountdown = remaining
+                }
+
+                if remaining > 0 {
+                    try? await Task.sleep(nanoseconds: 1_000_000_000)
+                }
+            }
+
+            if Task.isCancelled { return }
+
+            // Auto-start recording when timer expires
+            await MainActor.run {
+                guard self.quizState == .askingQuestion else { return }
+                Task {
+                    await self.startRecording()
+                }
+            }
+        }
+    }
+
+    /// Cancel the answer countdown timer
+    private func cancelAnswerTimer() {
+        answerTimerTask?.cancel()
+        answerTimerTask = nil
+        answerTimerCountdown = 0
+    }
+
+    /// Start a timer that auto-stops recording after Config.autoRecordingDuration
+    private func startAutoStopRecordingTimer() {
+        guard !isRerecording else { return }
+
+        cancelAutoStopRecordingTimer()
+
+        autoStopRecordingTask = Task { [weak self] in
+            guard let self else { return }
+
+            try? await Task.sleep(nanoseconds: UInt64(Config.autoRecordingDuration * 1_000_000_000))
+
+            if Task.isCancelled { return }
+
+            await MainActor.run {
+                guard self.quizState == .recording else { return }
+                Task {
+                    await self.stopRecordingAndSubmit()
+                }
+            }
+        }
+    }
+
+    /// Cancel the auto-stop recording timer
+    private func cancelAutoStopRecordingTimer() {
+        autoStopRecordingTask?.cancel()
+        autoStopRecordingTask = nil
+    }
+
     private func handleQuizResponse(_ response: QuizResponse) async {
         // Guard against concurrent calls (safe: @MainActor serializes access)
         guard !isProcessingResponse else {
@@ -970,8 +1071,9 @@ final class QuizViewModel: ObservableObject {
             return
         }
 
-        // Reset per-question pause when moving to next question
+        // Reset per-question pause and re-record state when moving to next question
         currentQuestionPaused = false
+        isRerecording = false
 
         // CRITICAL: Stop any playing feedback audio before transitioning
         // This ensures clean state transition from ResultView to QuestionView
@@ -1002,6 +1104,9 @@ final class QuizViewModel: ObservableObject {
             if let questionUrl = nextQuestionAudioUrl {
                 await playQuestionAudio(from: questionUrl)
                 nextQuestionAudioUrl = nil  // Clear after use
+            } else {
+                // No audio — start answer timer immediately
+                startAnswerTimer()
             }
 
             if Config.verboseLogging {
@@ -1019,6 +1124,11 @@ final class QuizViewModel: ObservableObject {
                 print("⚠️ Failed to play question audio: \(error)")
             }
             // Don't fail the quiz if audio doesn't play
+        }
+
+        // Start answer timer after audio finishes (or fails), if still asking
+        if quizState == .askingQuestion {
+            startAnswerTimer()
         }
     }
 
@@ -1053,6 +1163,10 @@ final class QuizViewModel: ObservableObject {
         autoAdvanceTask = nil
         voiceSubmissionTask?.cancel()
         voiceSubmissionTask = nil
+        answerTimerTask?.cancel()
+        answerTimerTask = nil
+        autoStopRecordingTask?.cancel()
+        autoStopRecordingTask = nil
 
         // Stop any playing audio
         Task {
@@ -1070,8 +1184,10 @@ final class QuizViewModel: ObservableObject {
         nextQuestionAudioUrl = nil
         nextQuestion = nil
         autoAdvanceCountdown = 0
+        answerTimerCountdown = 0
         currentQuestionPaused = false
         autoAdvanceEnabled = true
+        isRerecording = false
         pendingResponse = nil
         transcribedAnswer = ""
         showAnswerConfirmation = false

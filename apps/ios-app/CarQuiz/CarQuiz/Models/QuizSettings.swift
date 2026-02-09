@@ -30,6 +30,9 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// Auto-advance delay in seconds for result screen
     var autoAdvanceDelay: Int
 
+    /// Answer time limit in seconds (0 = Off, no auto-recording)
+    var answerTimeLimit: Int
+
     /// Preferred input device UID (nil = automatic selection)
     var preferredInputDeviceId: String?
 
@@ -43,6 +46,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
         category: nil,  // All categories
         difficulty: "medium",
         autoAdvanceDelay: 8,
+        answerTimeLimit: 30,
         preferredInputDeviceId: nil  // Automatic
     )
 
@@ -56,6 +60,9 @@ struct QuizSettings: Codable, Equatable, Sendable {
 
     /// Valid auto-advance delay options (seconds)
     static let autoAdvanceDelayOptions = [5, 8, 10, 15]
+
+    /// Valid answer time limit options (seconds, 0 = Off)
+    static let answerTimeLimitOptions = [0, 15, 20, 30, 45, 60]
 
     /// Valid category options (nil means "All Categories")
     static let categoryOptions: [String?] = [nil, "adults", "general"]
@@ -91,6 +98,7 @@ extension QuizSettings {
         category: "adults",
         difficulty: "hard",
         autoAdvanceDelay: 5,
+        answerTimeLimit: 45,
         preferredInputDeviceId: nil
     )
 }

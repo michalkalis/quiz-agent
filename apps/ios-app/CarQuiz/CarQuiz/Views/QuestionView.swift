@@ -72,6 +72,11 @@ struct QuestionView: View {
 
             Spacer()
 
+            // Answer timer badge
+            if viewModel.answerTimerCountdown > 0 && viewModel.quizState == .askingQuestion {
+                AnswerTimerBadge(seconds: viewModel.answerTimerCountdown)
+            }
+
             // Recording status hint
             Text(hintText)
                 .font(.system(size: Theme.Typography.sizeSM, weight: .medium))
@@ -154,6 +159,8 @@ struct QuestionView: View {
             return "Recording..."
         case .processing:
             return "Processing your answer..."
+        case .askingQuestion where viewModel.answerTimerCountdown > 0:
+            return "Recording starts automatically..."
         default:
             return "Tap to answer"
         }
@@ -192,6 +199,29 @@ struct QuestionView: View {
 
     private func handleMicrophoneTap() {
         Task { await viewModel.toggleRecording() }
+    }
+}
+
+// MARK: - Answer Timer Badge
+
+private struct AnswerTimerBadge: View {
+    let seconds: Int
+
+    var body: some View {
+        HStack(spacing: Theme.Spacing.xs) {
+            Image(systemName: "hourglass")
+                .font(.system(size: Theme.Typography.sizeSM))
+            Text("\(seconds)s")
+                .font(.system(size: Theme.Typography.sizeMD, weight: .semibold))
+                .monospacedDigit()
+        }
+        .foregroundColor(seconds <= 5 ? Theme.Colors.error : Theme.Colors.accentPrimary)
+        .padding(.horizontal, Theme.Spacing.md)
+        .padding(.vertical, Theme.Spacing.xs)
+        .background(
+            (seconds <= 5 ? Theme.Colors.errorBg : Theme.Colors.accentPrimary.opacity(0.15))
+        )
+        .cornerRadius(Theme.Radius.lg)
     }
 }
 

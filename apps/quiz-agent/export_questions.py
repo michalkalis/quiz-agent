@@ -63,6 +63,8 @@ for q in questions:
         "media_url": q.media_url,
         "media_duration_seconds": q.media_duration_seconds,
         "explanation": q.explanation,
+        "source_url": q.source_url,
+        "source_excerpt": q.source_excerpt,
     }
     questions_data.append(q_dict)
 

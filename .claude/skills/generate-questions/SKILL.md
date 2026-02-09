@@ -90,6 +90,8 @@ Save the questions to `data/generated/claude_batch_NNN.json` where NNN is the ne
       "tags": ["tag1", "tag2"],
       "language_dependent": false,
       "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/...",
+      "source_excerpt": "Brief 1-2 sentence excerpt confirming the answer.",
       "review_status": "pending_review",
       "generation_metadata": {
         "model": "claude-opus-4-6",
@@ -138,9 +140,16 @@ Then remind them to start the question generator if not already running:
 ```
 And visit `http://localhost:8003/web/review` to rate them.
 
+### 8. Suggest Verification
+
+After import, suggest running the verification skill:
+
+> "Consider running `/verify-questions data/generated/claude_batch_NNN.json` to fact-check answers and populate source attribution (URLs + excerpts) for the iOS app's source card."
+
 ## Important
 
 - **Factual accuracy is critical.** Only include facts you are confident about. If unsure, skip the question — never guess.
 - **Avoid duplicating questions** already generated. Check existing files in `data/generated/` before finalizing.
 - **alternative_answers** should include lowercase variants and common alternative phrasings.
 - **language_dependent** should be `true` only if the question fundamentally relies on English spelling/wordplay.
+- **source_url / source_excerpt** — Include when you're confident of a reliable source. These power the iOS app's SourceCard on the result screen. If unsure, leave null and let `/verify-questions` find them.

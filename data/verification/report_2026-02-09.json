@@ -1,0 +1,706 @@
+{
+  "metadata": {
+    "verified_at": "2026-02-09T14:52:31.569564",
+    "source_file": "apps/quiz-agent/questions_export.json",
+    "total_questions": 69,
+    "sources_found": 65,
+    "verdicts": {
+      "correct": 56,
+      "needs_fix": 4,
+      "needs_review": 4,
+      "incorrect": 5
+    }
+  },
+  "questions": [
+    {
+      "id": "q_imported_6f073fdd0ab9",
+      "question": "Which writer’s name is an anagram of “I am a weakish speller”?",
+      "stored_answer": "William Shakespeare",
+      "verdict": "correct",
+      "notes": "Verified. 'William Shakespeare' is an anagram of 'I am a weakish speller' (both 18 letters). Note: this question is language-dependent (English only).",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/William_Shakespeare",
+      "source_excerpt": "William Shakespeare was an English playwright widely regarded as the greatest writer in the English language."
+    },
+    {
+      "id": "q_imported_c6f7b01aa938",
+      "question": "What is the only number spelled with the same number of letters as its value?",
+      "stored_answer": "Four",
+      "verdict": "correct",
+      "notes": "Verified. F-O-U-R = 4 letters = 4 value. Note: language-dependent (English only).",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Four",
+      "source_excerpt": "Four is the only number in English whose name has the same number of letters as its value."
+    },
+    {
+      "id": "q_imported_22cb9ec69230",
+      "question": "Which fast food chain once accepted payment in seashells on a remote island for a promotional campaign?",
+      "stored_answer": "Burger King",
+      "verdict": "incorrect",
+      "notes": "No evidence found for Burger King accepting seashells on a remote island. Web search only found Burger King Brazil's 'Whopper Island' campaign (renaming McDonald Island). The seashells claim appears fabricated by GPT-4.",
+      "suggested_fix": "Remove this question entirely.",
+      "source_url": null,
+      "source_excerpt": null
+    },
+    {
+      "id": "q_imported_f24a99559613",
+      "question": "In Celsius and Fahrenheit, what is the one temperature that reads the same?",
+      "stored_answer": "-40",
+      "verdict": "correct",
+      "notes": "Verified mathematically. If F = C, then C = C*9/5 + 32, solving gives C = -40.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Fahrenheit",
+      "source_excerpt": "The Fahrenheit and Celsius scales converge at -40 degrees, the only temperature that is the same in both scales."
+    },
+    {
+      "id": "q_imported_9e6d81f08117",
+      "question": "Which color in the hexadecimal code “#00FF00” represents maximum intensity?",
+      "stored_answer": "Green",
+      "verdict": "correct",
+      "notes": "Verified. #RRGGBB format: 00=Red, FF=Green(max), 00=Blue.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Web_colors",
+      "source_excerpt": "In hexadecimal color notation #RRGGBB, the value #00FF00 represents pure green at maximum intensity."
+    },
+    {
+      "id": "q_imported_05b0ca937e35",
+      "question": "Which country legally banned time travel in films unless scientifically explained?",
+      "stored_answer": "China",
+      "verdict": "needs_review",
+      "notes": "Partially true. China's SARFT issued guidelines in 2011 discouraging time travel plots in TV dramas, citing 'disrespect of history.' However, it was regulatory guidance/censorship, not a formal 'legal ban.' The question says 'legally banned' which overstates it.",
+      "suggested_fix": "Consider rewording to: 'Which country's TV regulator issued guidelines in 2011 discouraging time travel storylines, calling them disrespectful to history?'",
+      "source_url": "https://www.hollywoodreporter.com/news/general-news/china-bans-time-travel-films-177801/",
+      "source_excerpt": "China's State Administration for Radio, Film & Television issued guidelines in 2011 discouraging time travel plots, saying producers were 'treating serious history in a frivolous way.'"
+    },
+    {
+      "id": "q_imported_351352512815",
+      "question": "Which food product was first advertised using the slogan “it melts in your mouth, not in your hand”?",
+      "stored_answer": "M&Ms",
+      "verdict": "correct",
+      "notes": "Verified. M&Ms slogan since 1954.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/M%26M%27s",
+      "source_excerpt": "M&M's are known for their longtime slogan 'Melts in your mouth, not in your hand,' introduced in 1954."
+    },
+    {
+      "id": "q_imported_3c14d8f17bc5",
+      "question": "What was the first feature-length film ever made entirely with CGI?",
+      "stored_answer": "Toy Story",
+      "verdict": "correct",
+      "notes": "Verified. Toy Story (1995) by Pixar was the first entirely CGI feature film.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Toy_Story",
+      "source_excerpt": "Toy Story is a 1995 American animated film produced by Pixar, the first feature film to be made entirely using computer-generated imagery."
+    },
+    {
+      "id": "q_imported_b5b2b2e894fe",
+      "question": "Which singer has a documented vocal range of more than five octaves, one of the widest ever?",
+      "stored_answer": "Mariah Carey",
+      "verdict": "correct",
+      "notes": "Verified. Mariah Carey's vocal range spans approximately five octaves.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Mariah_Carey",
+      "source_excerpt": "Mariah Carey possesses a five-octave vocal range and is known for her use of the whistle register."
+    },
+    {
+      "id": "q_imported_6d19afb101f2",
+      "question": "Which drink was originally invented as a cure for morphine addiction?",
+      "stored_answer": "Coca-Cola",
+      "verdict": "needs_review",
+      "notes": "Oversimplified. John Pemberton, a morphine-addicted Civil War veteran, created Coca-Cola. He was seeking a morphine substitute, but the drink was marketed as a patent medicine/nerve tonic, not specifically as a 'cure for morphine addiction.' The connection to morphine is real but the framing is misleading.",
+      "suggested_fix": "Consider: 'Which drink was created in 1886 by a pharmacist who was searching for a substitute for his morphine habit?' Answer: Coca-Cola.",
+      "source_url": "https://en.wikipedia.org/wiki/John_Stith_Pemberton",
+      "source_excerpt": "John Stith Pemberton was an American pharmacist and Confederate veteran who created the original formula for Coca-Cola. Pemberton developed an addiction to morphine after being wounded in the Civil War."
+    },
+    {
+      "id": "q_imported_8c2dbaa096ab",
+      "question": "Which bird can sleep while flying?",
+      "stored_answer": "Alpine swift",
+      "verdict": "correct",
+      "notes": "Verified. Alpine swifts can stay airborne for over 200 days. Note: frigatebirds also sleep in flight.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Alpine_swift",
+      "source_excerpt": "Alpine swifts can stay airborne for over 200 consecutive days, sleeping on the wing during flight."
+    },
+    {
+      "id": "q_imported_3c8e3f12ed10",
+      "question": "Which element is named after the creator of the periodic table?",
+      "stored_answer": "Mendelevium",
+      "verdict": "correct",
+      "notes": "Verified. Mendelevium (Md, element 101) named after Dmitri Mendeleev.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Mendelevium",
+      "source_excerpt": "Mendelevium is a synthetic element named after Dmitri Mendeleev, the father of the periodic table."
+    },
+    {
+      "id": "q_imported_607a6177522e",
+      "question": "What do the numbers in a barcode primarily encode?",
+      "stored_answer": "Country and manufacturer",
+      "verdict": "needs_review",
+      "notes": "Oversimplified. UPC/EAN barcodes encode a GS1 company prefix (which includes country of issuing GS1 organization), a product reference number, and a check digit. 'Country and manufacturer' omits the product code and oversimplifies the country prefix (it indicates the GS1 organization, not necessarily country of origin).",
+      "suggested_fix": "Better answer: 'A company prefix, product number, and check digit' or simplify question to 'What numeric system do most retail barcodes use?' Answer: Universal Product Code (UPC).",
+      "source_url": "https://en.wikipedia.org/wiki/Universal_Product_Code",
+      "source_excerpt": "A UPC barcode encodes a GS1 company prefix identifying the manufacturer, a product reference number, and a check digit."
+    },
+    {
+      "id": "q_imported_041e819df04e",
+      "question": "How fast does the Earth spin at the equator?",
+      "stored_answer": "About 1,670 km/h (1,038 mph)",
+      "verdict": "correct",
+      "notes": "Verified. Earth circumference ~40,075 km / 24 hours = ~1,670 km/h.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Earth%27s_rotation",
+      "source_excerpt": "At the equator, the surface of the Earth moves at approximately 1,670 kilometers per hour due to Earth's rotation."
+    },
+    {
+      "id": "q_imported_ea7713711001",
+      "question": "Scientists in 2021 thawed a 24,000-year-old creature from Siberian permafrost, and it immediately began cloning itself—what microscopic animal was it?",
+      "stored_answer": "A bdelloid rotifer",
+      "verdict": "correct",
+      "notes": "Verified. Published in Current Biology, June 2021.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Bdelloidea",
+      "source_excerpt": "In 2021, scientists revived a bdelloid rotifer from 24,000-year-old Siberian permafrost; it immediately began reproducing asexually."
+    },
+    {
+      "id": "q_imported_c0444c3e7e33",
+      "question": "Which 27-km-long machine, buried beneath Switzerland and France, is colder than outer space and smashes protons at nearly light speed?",
+      "stored_answer": "The Large Hadron Collider at CERN",
+      "verdict": "correct",
+      "notes": "Verified. LHC is 27 km circumference, operates at 1.9 K (colder than outer space at 2.7 K).",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Large_Hadron_Collider",
+      "source_excerpt": "The Large Hadron Collider (LHC) is the world's largest particle accelerator, with a 27-kilometre ring of superconducting magnets beneath the France-Switzerland border at CERN."
+    },
+    {
+      "id": "q_imported_1c847d01902b",
+      "question": "Which U.S. president allegedly had to be pried out of an undersized bathtub on inauguration day, inspiring a custom tub big enough for four men?",
+      "stored_answer": "William Howard Taft",
+      "verdict": "correct",
+      "notes": "Verified. The Taft bathtub story is well-known. Question appropriately uses 'allegedly.' He did have a large custom bathtub installed.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/William_Howard_Taft",
+      "source_excerpt": "William Howard Taft, the 27th president, weighed over 300 pounds and reportedly had a large bathtub installed in the White House."
+    },
+    {
+      "id": "q_imported_541d7d2ceb92",
+      "question": "Which Russian empress celebrated the winter of 1740 by ordering a full-scale palace made entirely of ice, complete with ice cannons that fired frozen cannonballs?",
+      "stored_answer": "Empress Anna of Russia",
+      "verdict": "correct",
+      "notes": "Verified. The Ice Palace of 1740 was commissioned by Empress Anna of Russia.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Ice_Palace_(Saint_Petersburg)",
+      "source_excerpt": "The Ice Palace was built in Saint Petersburg during the winter of 1739-1740 on the orders of Empress Anna of Russia."
+    },
+    {
+      "id": "q_imported_afbfa70fcf8b",
+      "question": "The shortest war in recorded history ended after just 38 minutes on 27 August 1896 between Britain and which sultanate?",
+      "stored_answer": "Zanzibar",
+      "verdict": "correct",
+      "notes": "Verified. Anglo-Zanzibar War, 27 August 1896, lasted 38-45 minutes.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Anglo-Zanzibar_War",
+      "source_excerpt": "The Anglo-Zanzibar War was fought between the United Kingdom and the Zanzibar Sultanate on 27 August 1896, lasting between 38 and 45 minutes."
+    },
+    {
+      "id": "q_imported_50f327a84fc0",
+      "question": "Which land-locked South American country keeps a 5,000-strong “navy” patrolling Lake Titicaca as a reminder of the coast it lost in 1879?",
+      "stored_answer": "Bolivia",
+      "verdict": "correct",
+      "notes": "Verified. Bolivia lost its coastline in the War of the Pacific (1879-1884) and maintains a navy.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Bolivian_Navy",
+      "source_excerpt": "The Bolivian Naval Force operates on Lake Titicaca and rivers despite Bolivia being landlocked since losing its coast in the War of the Pacific (1879-1884)."
+    },
+    {
+      "id": "q_imported_e2eb266355c6",
+      "question": "Which African nation is the largest country completely surrounded by another single country?",
+      "stored_answer": "Lesotho",
+      "verdict": "correct",
+      "notes": "Verified. Lesotho is entirely surrounded by South Africa, the largest such enclave.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Lesotho",
+      "source_excerpt": "Lesotho is an enclaved country entirely surrounded by South Africa, making it the largest country in the world completely enclosed by another single country."
+    },
+    {
+      "id": "q_imported_bdc271fd6fc8",
+      "question": "Which country sets its clocks to UTC + 5:45, making it 15 minutes ahead of India and 15 minutes behind Bangladesh?",
+      "stored_answer": "Nepal",
+      "verdict": "correct",
+      "notes": "Verified. Nepal is UTC+5:45, India UTC+5:30, Bangladesh UTC+6:00.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Nepal_Standard_Time",
+      "source_excerpt": "Nepal Standard Time is UTC+05:45, one of only a few time zones with a 45-minute offset, making it 15 minutes ahead of India."
+    },
+    {
+      "id": "q_imported_5617d4bf78e4",
+      "question": "In which Winter Olympic event do athletes hurtle head-first down an ice track at over 130 km/h on a sled with no brakes or steering wheel?",
+      "stored_answer": "Skeleton",
+      "verdict": "correct",
+      "notes": "Verified. Skeleton is the headfirst sliding sport (luge is feet-first).",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Skeleton_(sport)",
+      "source_excerpt": "Skeleton is a winter sliding sport in which a person rides a small sled, known as a skeleton bobsled, head-first and face-down down a frozen track."
+    },
+    {
+      "id": "q_imported_8a1782fa5e5b",
+      "question": "Which bird courts mates by constructing stick “avenues” and decorating them with stolen shiny objects like bottle caps and coins?",
+      "stored_answer": "The bowerbird",
+      "verdict": "correct",
+      "notes": "Verified. Bowerbirds build elaborate structures (bowers) decorated with colorful objects to attract mates.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Bowerbird",
+      "source_excerpt": "Bowerbirds are best known for the highly complex behaviours of males, which build a structure called a bower and decorate it with sticks, flowers, and colourful objects to attract a mate."
+    },
+    {
+      "id": "q_imported_884dc07336b6",
+      "question": "Which Renaissance marble is the only sculpture that Michelangelo ever signed, after he overheard viewers giving the credit to someone else?",
+      "stored_answer": "The Pietà",
+      "verdict": "correct",
+      "notes": "Verified. Michelangelo signed the Pietà after overhearing it attributed to another sculptor.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Piet%C3%A0_(Michelangelo)",
+      "source_excerpt": "According to Vasari, Michelangelo overheard pilgrims attributing the work to another sculptor, and carved his name on the sash across the Virgin's breast, making it the only work he ever signed."
+    },
+    {
+      "id": "q_imported_5653abe73817",
+      "question": "Which Dutch artist drew a lithograph of an endless staircase, later inspiring physicists to build a real water loop that appeared to flow uphill?",
+      "stored_answer": "M. C. Escher – “Ascending and Descending”",
+      "verdict": "needs_fix",
+      "notes": "Multiple errors: (1) The question describes 'an endless staircase' (Ascending and Descending, 1960) but then says 'inspiring physicists to build a real water loop' which conflates it with 'Waterfall' (1961) - a different artwork. (2) The Penrose stairs inspired Escher, not vice versa. (3) No physicists built 'a real water loop that flows uphill' - James Dyson (inventor, not physicist) made an optical illusion fountain. (4) Ascending and Descending is a lithograph, that part is correct.",
+      "suggested_fix": "Rework entirely or remove. Could use: 'Which Dutch artist created lithographs of impossible structures like endless staircases and perpetual waterfalls, inspiring mathematicians and architects alike?' Answer: M. C. Escher.",
+      "source_url": "https://en.wikipedia.org/wiki/Waterfall_(M._C._Escher)",
+      "source_excerpt": "Waterfall is a lithograph by M. C. Escher first printed in October 1961, depicting a perpetual motion machine where water appears to flow uphill."
+    },
+    {
+      "id": "q_imported_847a12b5375a",
+      "question": "What is the official name for the dot above a lowercase “i” or “j,” a word that also means a tiny but crucial detail?",
+      "stored_answer": "A tittle",
+      "verdict": "correct",
+      "notes": "Verified. A tittle is the dot above i and j. Note: language-dependent.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Tittle",
+      "source_excerpt": "A tittle or superscript dot is a small distinguishing mark, such as a diacritic or the dot on a lowercase i or j."
+    },
+    {
+      "id": "q_imported_7b96f22520b3",
+      "question": "Which word contains all five standard vowels exactly once, in alphabetical order?",
+      "stored_answer": "Facetious",
+      "verdict": "correct",
+      "notes": "Verified. F-A-C-E-T-I-O-U-S contains A,E,I,O,U in order. Note: 'abstemious' also qualifies. Language-dependent.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/English_words_with_uncommon_properties",
+      "source_excerpt": "The words 'abstemious' and 'facetious' contain all five vowels in alphabetical order."
+    },
+    {
+      "id": "q_imported_b3563799fdf4",
+      "question": "What number comes next in this sequence of U.S. states admitted to the union: 47, 48, 49…?",
+      "stored_answer": "50 (Hawaii)",
+      "verdict": "correct",
+      "notes": "Verified. 47=New Mexico, 48=Arizona, 49=Alaska, 50=Hawaii.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/List_of_U.S._states_by_date_of_admission_to_the_Union",
+      "source_excerpt": "Hawaii was admitted as the 50th state on August 21, 1959, following Alaska as the 49th state earlier that year."
+    },
+    {
+      "id": "q_imported_c1d6b5d4030a",
+      "question": "Which element is named after a mischievous Norse god?",
+      "stored_answer": "Thorium",
+      "verdict": "needs_fix",
+      "notes": "Answer (Thorium) is correct - it IS named after Thor. But the question says 'mischievous Norse god' which describes Loki, not Thor. Thor is the god of thunder, not mischief.",
+      "suggested_fix": "Change question to: 'Which element is named after the Norse god of thunder?' Answer remains Thorium.",
+      "source_url": "https://en.wikipedia.org/wiki/Thorium",
+      "source_excerpt": "Thorium was named after Thor, the Norse god of thunder."
+    },
+    {
+      "id": "q_imported_3a0162e5fdad",
+      "question": "Which artist painted a hyper-realistic bowl of fruit that was so detailed, birds tried to peck it?",
+      "stored_answer": "Zeuxis",
+      "verdict": "correct",
+      "notes": "Verified. From Pliny the Elder's account. Zeuxis painted grapes so realistic that birds pecked at them (question says 'bowl of fruit' but the story is about grapes specifically - minor inaccuracy in framing).",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Zeuxis",
+      "source_excerpt": "According to Pliny the Elder, Zeuxis painted grapes with such skill that birds flew towards the painting to peck at them."
+    },
+    {
+      "id": "q_imported_ac34fc211f34",
+      "question": "Which mathematician’s name, when reversed, is almost “I’m a robot”?",
+      "stored_answer": "Turing (→ “gniruT”)",
+      "verdict": "incorrect",
+      "notes": "Fabricated by GPT-4. 'Turing' reversed is 'gniruT' which bears no resemblance to 'I'm a robot'. No web sources confirm this claim.",
+      "suggested_fix": "Remove this question entirely.",
+      "source_url": null,
+      "source_excerpt": null
+    },
+    {
+      "id": "q_imported_a01490443fc9",
+      "question": "What common English word becomes its own antonym when prefixed with “in”?",
+      "stored_answer": "Flammable / Inflammable",
+      "verdict": "needs_fix",
+      "notes": "The question says the word 'becomes its own antonym' with prefix 'in', but flammable and inflammable are SYNONYMS, not antonyms. The 'in-' in inflammable comes from Latin 'inflammare' (to set fire to), not the negating prefix. The question's premise is factually wrong.",
+      "suggested_fix": "Rework: 'Which English word confusingly keeps the same meaning even when you add the prefix \"in-\", despite \"in-\" usually meaning \"not\"?' Answer: Flammable (inflammable means the same thing).",
+      "source_url": "https://www.merriam-webster.com/grammar/flammable-or-inflammable",
+      "source_excerpt": "Both flammable and inflammable mean 'easily set on fire.' The in- in inflammable is not a negative prefix; it comes from Latin inflammare meaning 'to cause to catch fire.'"
+    },
+    {
+      "id": "q_imported_6c7d5e060ca3",
+      "question": "Which city is home to a library where books are shelved by color rather than subject?",
+      "stored_answer": "Stockholm",
+      "verdict": "incorrect",
+      "notes": "No evidence found for a Stockholm library shelving books by color. The Stockholm Public Library is famous for Gunnar Asplund's rotunda architecture and being Sweden's first open-shelf library, but books are shelved by subject/Dewey system, not color. Claim appears fabricated.",
+      "suggested_fix": "Remove this question entirely.",
+      "source_url": null,
+      "source_excerpt": null
+    },
+    {
+      "id": "q_imported_75595e4bc825",
+      "question": "Which animal has cube-shaped feces, a feature believed to help mark territory?",
+      "stored_answer": "Wombat",
+      "verdict": "correct",
+      "notes": "Verified. Wombats produce cube-shaped droppings.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Wombat",
+      "source_excerpt": "Wombats are known for producing distinctive cube-shaped droppings, thought to be used for territorial marking and to prevent them from rolling away."
+    },
+    {
+      "id": "q_imported_967933d56172",
+      "question": "Which Shakespeare play has the most deaths on stage?",
+      "stored_answer": "Titus Andronicus",
+      "verdict": "correct",
+      "notes": "Verified. Titus Andronicus has the most on-stage deaths (~14) of any Shakespeare play.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Titus_Andronicus",
+      "source_excerpt": "Titus Andronicus is Shakespeare's bloodiest and most violent play, featuring 14 killings, with most occurring on stage."
+    },
+    {
+      "id": "q_imported_3a6984e88b51",
+      "question": "Which U.S. president had a pet alligator in the White House?",
+      "stored_answer": "John Quincy Adams",
+      "verdict": "needs_review",
+      "notes": "Likely a myth. Snopes rates this 'Unproven.' The White House Historical Association found no primary documentation. Adams was a meticulous diarist but never mentioned an alligator. The story originated from Harriet Taylor Upton's 1888 account.",
+      "suggested_fix": "Either add 'According to popular legend...' to the question, or remove it. The answer is the commonly cited one but the underlying claim is unverified.",
+      "source_url": "https://www.snopes.com/fact-check/alligators-white-house-pets/",
+      "source_excerpt": "Snopes rates the claim that John Quincy Adams kept an alligator in the White House as 'Unproven.' The White House Historical Association found no primary documentation supporting it."
+    },
+    {
+      "id": "q_imported_b74156dbbd82",
+      "question": "What is the only country whose flag is not square or rectangular?",
+      "stored_answer": "Nepal",
+      "verdict": "correct",
+      "notes": "Verified. Nepal's flag is the only non-rectangular national flag (double-pennant shape).",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Flag_of_Nepal",
+      "source_excerpt": "The flag of Nepal is the world's only non-rectangular national flag, consisting of two stacked triangles."
+    },
+    {
+      "id": "q_imported_ebd095d5847f",
+      "question": "Which muscle in the human body is, proportionally, the strongest?",
+      "stored_answer": "Masseter (jaw muscle)",
+      "verdict": "correct",
+      "notes": "Verified. The masseter (jaw muscle) is often cited as the strongest muscle relative to its size.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Masseter_muscle",
+      "source_excerpt": "The masseter is one of the muscles of mastication and is considered the strongest muscle in the human body based on its weight."
+    },
+    {
+      "id": "q_imported_e7e07f513a73",
+      "question": "Which city was originally named “Edo”?",
+      "stored_answer": "Tokyo",
+      "verdict": "correct",
+      "notes": "Verified. Tokyo was known as Edo until 1868 when Emperor Meiji renamed it.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Tokyo",
+      "source_excerpt": "Tokyo was originally known as Edo, meaning 'estuary.' It was renamed Tokyo ('Eastern Capital') in 1868 when it became the imperial capital."
+    },
+    {
+      "id": "q_imported_7df1ab24ade4",
+      "question": "Which singer once held a note so high it shattered a glass during a live commercial?",
+      "stored_answer": "Ella Fitzgerald",
+      "verdict": "correct",
+      "notes": "Verified. This was a 1972 Memorex tape commercial. Ella Fitzgerald's voice (recorded and played on Memorex tape) shattered a glass.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Memorex",
+      "source_excerpt": "Memorex's famous 'Is it live, or is it Memorex?' ad campaign featured Ella Fitzgerald's recorded voice shattering a wine glass."
+    },
+    {
+      "id": "q_imported_d9d79a4e37d9",
+      "question": "Which board game was banned in the Soviet Union for promoting capitalist values?",
+      "stored_answer": "Monopoly",
+      "verdict": "correct",
+      "notes": "Verified. Monopoly was banned/suppressed in the Soviet Union for promoting capitalist values.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Monopoly_(game)",
+      "source_excerpt": "Monopoly was banned in the Soviet Union and other communist countries for promoting capitalism."
+    },
+    {
+      "id": "q_imported_488300b2f044",
+      "question": "Which athlete’s name is also a unit of measurement in physics?",
+      "stored_answer": "Newton (Isaac Newton)",
+      "verdict": "needs_fix",
+      "notes": "Isaac Newton was a scientist and mathematician, NOT an athlete. The question framing ('Which athlete's name...') is factually incorrect, even though the Newton (N) unit of force is real.",
+      "suggested_fix": "Change question to: 'Which famous scientist's surname is also an SI unit of force in physics?' Answer: Newton (Isaac Newton).",
+      "source_url": "https://en.wikipedia.org/wiki/Newton_(unit)",
+      "source_excerpt": "The newton (symbol: N) is the unit of force in the International System of Units (SI), named after Isaac Newton."
+    },
+    {
+      "id": "q_imported_cd3ca4238404",
+      "question": "Which fruit was once so rare and expensive that people rented them as centerpieces?",
+      "stored_answer": "Pineapple",
+      "verdict": "correct",
+      "notes": "Verified. Pineapples were extremely expensive in 17th-18th century Europe and were sometimes rented as table centerpieces.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Pineapple",
+      "source_excerpt": "In 18th-century Europe, pineapples were so rare and expensive that they were displayed as symbols of wealth, sometimes rented for the evening as table centerpieces."
+    },
+    {
+      "id": "q_imported_ea873143c525",
+      "question": "Which mammal can survive entirely on a diet of blood?",
+      "stored_answer": "Vampire bat",
+      "verdict": "correct",
+      "notes": "Verified. Vampire bats (Desmodus rotundus) are obligate blood feeders (sanguivores).",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Vampire_bat",
+      "source_excerpt": "Vampire bats are the only mammals that feed entirely on blood, a diet called hematophagy."
+    },
+    {
+      "id": "q_imported_88ee60a7564e",
+      "question": "What is the only letter not used in any U.S. state name?",
+      "stored_answer": "Q",
+      "verdict": "correct",
+      "notes": "Verified. Q does not appear in any U.S. state name. Note: US-specific, language-dependent.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/List_of_states_and_territories_of_the_United_States",
+      "source_excerpt": "The letter Q is the only letter of the alphabet that does not appear in any U.S. state name."
+    },
+    {
+      "id": "q_imported_d8dd12197fbb",
+      "question": "Which classical composer had a catalog so large it’s numbered with “K.” followed by over 600 works?",
+      "stored_answer": "Mozart",
+      "verdict": "correct",
+      "notes": "Verified. The Koechel catalog (K.) numbers Mozart's works, with K.626 (Requiem) being the last.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/K%C3%B6chel_catalogue",
+      "source_excerpt": "The Koechel catalogue is a chronological catalogue of compositions by Wolfgang Amadeus Mozart, numbering over 600 works."
+    },
+    {
+      "id": "q_imported_dde768e83d24",
+      "question": "Which historical figure is buried in three countries simultaneously due to shifting borders?",
+      "stored_answer": "Nicolaus Copernicus",
+      "verdict": "incorrect",
+      "notes": "Fabricated. Copernicus was buried in Frombork Cathedral, Poland. He is not buried in three countries. His remains were identified via DNA in 2005 and reburied in 2010 at the same location.",
+      "suggested_fix": "Remove this question entirely.",
+      "source_url": null,
+      "source_excerpt": null
+    },
+    {
+      "id": "q_imported_5f8d79aa269a",
+      "question": "Which number is both a square and a cube (excluding 1)?",
+      "stored_answer": "64",
+      "verdict": "correct",
+      "notes": "Verified. 64 = 8^2 = 4^3. It's the smallest such number after 1 (though infinitely many exist: any n^6).",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/64_(number)",
+      "source_excerpt": "64 is the smallest positive integer that is both a perfect square (8^2) and a perfect cube (4^3), other than 1."
+    },
+    {
+      "id": "q_imported_4d154f806a32",
+      "question": "What color is the “black box” on an airplane?",
+      "stored_answer": "Orange",
+      "verdict": "correct",
+      "notes": "Verified. Flight data recorders ('black boxes') are painted bright orange for visibility.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Flight_recorder",
+      "source_excerpt": "Despite being called 'black boxes,' flight recorders are painted bright orange to aid in recovery after an accident."
+    },
+    {
+      "id": "q_imported_f56d77ce7d82",
+      "question": "What common item did NASA spend millions to develop, while Soviets just used pencils?",
+      "stored_answer": "Space pen",
+      "verdict": "incorrect",
+      "notes": "This is a well-known urban myth debunked by Snopes, Scientific American, and PolitiFact. NASA did NOT spend millions developing a space pen. Paul Fisher privately invested ~$1M of his own money. Both NASA and Soviets initially used pencils, then both adopted the Fisher Space Pen.",
+      "suggested_fix": "Remove this question or rework it: 'Which pen was privately developed by Paul Fisher to write in zero gravity, and was later adopted by both NASA and Soviet cosmonauts?'",
+      "source_url": "https://www.scientificamerican.com/article/fact-or-fiction-nasa-spen/",
+      "source_excerpt": null
+    },
+    {
+      "id": "q_geo_001",
+      "question": "What is the capital of France?",
+      "stored_answer": "Paris",
+      "verdict": "correct",
+      "notes": "Verified. Paris is the capital of France.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Paris",
+      "source_excerpt": "Paris is the capital and most populous city of France."
+    },
+    {
+      "id": "q_geo_003",
+      "question": "What is the smallest country in the world?",
+      "stored_answer": "Vatican City",
+      "verdict": "correct",
+      "notes": "Verified. Vatican City is the smallest country by area (0.44 km^2).",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Vatican_City",
+      "source_excerpt": "Vatican City is the smallest internationally recognized independent state in the world, with an area of 0.44 km^2."
+    },
+    {
+      "id": "q_geo_004",
+      "question": "Which ocean is the largest?",
+      "stored_answer": "Pacific Ocean",
+      "verdict": "correct",
+      "notes": "Verified. The Pacific Ocean is the largest ocean.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Pacific_Ocean",
+      "source_excerpt": "The Pacific Ocean is the largest and deepest of Earth's five oceanic divisions, covering about 165.25 million km^2."
+    },
+    {
+      "id": "q_hist_001",
+      "question": "In what year did World War II end?",
+      "stored_answer": "1945",
+      "verdict": "correct",
+      "notes": "Verified. WWII ended in 1945 (Europe: May 8, Japan: September 2).",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/World_War_II",
+      "source_excerpt": "World War II ended in 1945 with the surrender of Germany in May and Japan in September."
+    },
+    {
+      "id": "q_hist_002",
+      "question": "Who was the first President of the United States?",
+      "stored_answer": "George Washington",
+      "verdict": "correct",
+      "notes": "Verified. George Washington was the first U.S. president (1789-1797).",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/George_Washington",
+      "source_excerpt": "George Washington served as the first president of the United States from 1789 to 1797."
+    },
+    {
+      "id": "q_hist_003",
+      "question": "In what year did the Berlin Wall fall?",
+      "stored_answer": "1989",
+      "verdict": "correct",
+      "notes": "Verified. The Berlin Wall fell on November 9, 1989.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Berlin_Wall",
+      "source_excerpt": "The Berlin Wall fell on 9 November 1989, after 28 years dividing East and West Berlin."
+    },
+    {
+      "id": "q_sci_001",
+      "question": "What element has the chemical symbol Au?",
+      "stored_answer": "Gold",
+      "verdict": "correct",
+      "notes": "Verified. Au (from Latin 'aurum') is the chemical symbol for gold.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Gold",
+      "source_excerpt": "Gold is a chemical element with the symbol Au (from Latin aurum) and atomic number 79."
+    },
+    {
+      "id": "q_sci_003",
+      "question": "What planet is known as the Red Planet?",
+      "stored_answer": "Mars",
+      "verdict": "correct",
+      "notes": "Verified. Mars is called the Red Planet due to iron oxide on its surface.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Mars",
+      "source_excerpt": "Mars is often called the 'Red Planet' because the iron oxide prevalent on its surface gives it a reddish appearance."
+    },
+    {
+      "id": "q_sci_004",
+      "question": "What is H2O commonly known as?",
+      "stored_answer": "Water",
+      "verdict": "correct",
+      "notes": "Verified. H2O is the chemical formula for water.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Water",
+      "source_excerpt": "Water is an inorganic compound with the chemical formula H2O."
+    },
+    {
+      "id": "q_sci_005",
+      "question": "How many bones are in the human body?",
+      "stored_answer": "206",
+      "verdict": "correct",
+      "notes": "Verified. An adult human body typically has 206 bones.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Human_skeleton",
+      "source_excerpt": "The adult human skeleton typically consists of 206 bones."
+    },
+    {
+      "id": "q_mov_001",
+      "question": "Who directed the movie 'Inception'?",
+      "stored_answer": "Christopher Nolan",
+      "verdict": "correct",
+      "notes": "Verified. Christopher Nolan directed Inception (2010).",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Inception",
+      "source_excerpt": "Inception is a 2010 science fiction action film written and directed by Christopher Nolan."
+    },
+    {
+      "id": "q_mov_002",
+      "question": "What year was the first Toy Story movie released?",
+      "stored_answer": "1995",
+      "verdict": "correct",
+      "notes": "Verified. Toy Story was released on November 22, 1995.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Toy_Story",
+      "source_excerpt": "Toy Story was released theatrically on November 22, 1995, as the first feature film to be made entirely using CGI."
+    },
+    {
+      "id": "q_mus_001",
+      "question": "Which band released the album 'Abbey Road'?",
+      "stored_answer": "The Beatles",
+      "verdict": "correct",
+      "notes": "Verified. Abbey Road (1969) is an album by The Beatles.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Abbey_Road",
+      "source_excerpt": "Abbey Road is the eleventh studio album by the English rock band the Beatles, released on 26 September 1969."
+    },
+    {
+      "id": "q_mus_002",
+      "question": "Who is known as the King of Pop?",
+      "stored_answer": "Michael Jackson",
+      "verdict": "correct",
+      "notes": "Verified. Michael Jackson is universally known as the King of Pop.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Michael_Jackson",
+      "source_excerpt": "Michael Joseph Jackson was an American singer, songwriter, and dancer, dubbed the 'King of Pop.'"
+    },
+    {
+      "id": "q_spt_001",
+      "question": "How many players are on a soccer team on the field?",
+      "stored_answer": "11",
+      "verdict": "correct",
+      "notes": "Verified. A soccer (football) team has 11 players on the field.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Association_football",
+      "source_excerpt": "Each team consists of a maximum of eleven players, one of whom must be a goalkeeper."
+    },
+    {
+      "id": "q_spt_002",
+      "question": "In which sport would you perform a slam dunk?",
+      "stored_answer": "Basketball",
+      "verdict": "correct",
+      "notes": "Verified. A slam dunk is a basketball move.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Slam_dunk",
+      "source_excerpt": "A slam dunk is a type of basketball shot that is performed when a player jumps in the air and scores by putting the ball directly through the basket."
+    },
+    {
+      "id": "q_tech_001",
+      "question": "What does CPU stand for?",
+      "stored_answer": "Central Processing Unit",
+      "verdict": "correct",
+      "notes": "Verified. CPU stands for Central Processing Unit.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Central_processing_unit",
+      "source_excerpt": "A central processing unit (CPU) is the primary component of a computer that performs most of the processing."
+    },
+    {
+      "id": "q_tech_002",
+      "question": "Who founded Microsoft?",
+      "stored_answer": "Bill Gates",
+      "verdict": "correct",
+      "notes": "Verified. Bill Gates co-founded Microsoft with Paul Allen in 1975.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Microsoft",
+      "source_excerpt": "Microsoft Corporation was founded by Bill Gates and Paul Allen on April 4, 1975."
+    }
+  ]
+}

@@ -88,6 +88,10 @@ class ChromaDBClient:
                 metadata["media_duration_seconds"] = question.media_duration_seconds
             if question.explanation:
                 metadata["explanation"] = question.explanation
+            if question.source_url:
+                metadata["source_url"] = question.source_url
+            if question.source_excerpt:
+                metadata["source_excerpt"] = question.source_excerpt
 
             # Review workflow fields
             if question.reviewed_by:
@@ -507,6 +511,10 @@ class ChromaDBClient:
                 metadata["media_duration_seconds"] = question.media_duration_seconds
             if question.explanation:
                 metadata["explanation"] = question.explanation
+            if question.source_url:
+                metadata["source_url"] = question.source_url
+            if question.source_excerpt:
+                metadata["source_excerpt"] = question.source_excerpt
 
             # Review workflow fields
             if question.reviewed_by:
@@ -642,6 +650,8 @@ class ChromaDBClient:
             media_url=metadata.get("media_url"),
             media_duration_seconds=metadata.get("media_duration_seconds"),
             explanation=metadata.get("explanation"),
+            source_url=metadata.get("source_url"),
+            source_excerpt=metadata.get("source_excerpt"),
             review_status=metadata.get("review_status", "pending_review"),
             reviewed_by=metadata.get("reviewed_by"),
             reviewed_at=reviewed_at,

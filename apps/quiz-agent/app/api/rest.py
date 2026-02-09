@@ -168,7 +168,9 @@ def question_to_dict(question: Question) -> Dict[str, Any]:
         "possible_answers": question.possible_answers,
         "difficulty": question.difficulty,
         "topic": question.topic,
-        "category": question.category
+        "category": question.category,
+        "source_url": question.source_url,
+        "source_excerpt": question.source_excerpt,
         # Note: correct_answer is NOT included for security
     }
 

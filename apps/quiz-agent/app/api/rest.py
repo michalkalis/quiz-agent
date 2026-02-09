@@ -402,13 +402,22 @@ async def start_quiz(session_id: str, request: StartQuizRequest, audio: bool = F
                     "3. Then try starting the quiz again"
                 )
             else:
+                filter_lines = [
+                    f"- Difficulty: {session.current_difficulty}",
+                    "- Type: text",
+                    "- Review status: approved",
+                ]
+                if session.language and session.language != "en":
+                    filter_lines.append(f"- Language-dependent: excluded (session language: {session.language})")
+                if session.preferred_categories:
+                    filter_lines.append(f"- Categories: {session.preferred_categories}")
+                filters_str = "\n".join(filter_lines)
                 error_detail = (
                     f"No questions match the criteria. "
-                    f"Database has {total_count} questions, but none match:\n"
-                    f"- Difficulty: {session.current_difficulty}\n"
-                    f"- Type: text\n"
-                    f"- Category: not in ['children']\n\n"
-                    "Try a different difficulty or ensure questions are properly categorized."
+                    f"Database has {total_count} approved questions, but none match:\n"
+                    f"{filters_str}\n\n"
+                    "This may indicate that question metadata is missing. "
+                    "Run: python scripts/backfill_chroma_metadata.py"
                 )
 
             raise HTTPException(status_code=500, detail=error_detail)

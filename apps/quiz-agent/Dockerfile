@@ -48,6 +48,9 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 COPY --from=builder /build/app /app
 COPY --from=builder /build/packages/shared /packages/shared
 
+# Copy migration scripts (for running via fly ssh console)
+COPY scripts /scripts
+
 # Create data directory for persistent storage
 RUN mkdir -p /data/chroma
 

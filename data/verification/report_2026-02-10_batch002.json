@@ -1,0 +1,135 @@
+{
+  "metadata": {
+    "verified_at": "2026-02-10T13:30:00Z",
+    "source_file": "data/generated/claude_batch_002.json",
+    "total_questions": 12,
+    "verdicts": {
+      "correct": 9,
+      "needs_fix": 1,
+      "needs_review": 2,
+      "incorrect": 0
+    }
+  },
+  "questions": [
+    {
+      "id": "q_sticky_rice",
+      "question": "The Great Wall of China is famous for its length, but what surprising material makes up much of the mortar holding its stones together — a material you'd more commonly find at breakfast?",
+      "stored_answer": "Sticky rice",
+      "verdict": "correct",
+      "notes": "Verified. Researchers at Zhejiang University confirmed sticky rice (glutinous rice) was used in mortar for the Great Wall and other Ming dynasty structures. The amylopectin in glutinous rice creates a strong binding agent with calcium carbonate.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Sticky_rice_mortar",
+      "source_excerpt": "Sticky rice mortar is a traditional Chinese building material made by mixing sticky rice soup with slaked lime. It was used in the construction of important buildings, including the Great Wall of China, and has been shown to be stronger and more water-resistant than pure lime mortar."
+    },
+    {
+      "id": "q_look_and_say",
+      "question": "What comes next in this sequence: 1, 11, 21, 1211, 111221, ...?",
+      "stored_answer": "312211",
+      "verdict": "correct",
+      "notes": "Verified. This is the well-known look-and-say sequence (also called the Morris number sequence). Each term describes the previous one: 111221 is read as 'three 1s, two 2s, one 1' → 312211.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Look-and-say_sequence",
+      "source_excerpt": "In mathematics, the look-and-say sequence is the sequence of integers beginning as follows: 1, 11, 21, 1211, 111221, 312211, 13112221, 1113213211, ... To generate a member of the sequence from the previous member, read off the digits of the previous member, counting the number of digits in groups of the same digit."
+    },
+    {
+      "id": "q_tyrian_purple",
+      "question": "Before synthetic dyes were invented in 1856, producing the colour purple required harvesting roughly 12,000 of a certain sea creature for just 1.5 grams of dye. What creature was it?",
+      "stored_answer": "Sea snails",
+      "verdict": "correct",
+      "notes": "Verified. Tyrian purple was produced from murex sea snails (Bolinus brandaris and related species). Sources vary on exact numbers: ~12,000 snails for 1.4g is commonly cited. The 1856 date matches William Perkin's discovery of mauveine, the first synthetic aniline dye. Alternative answers correctly include murex snails and Bolinus brandaris.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Tyrian_purple",
+      "source_excerpt": "Tyrian purple is a reddish-purple natural dye. It is a secretion produced by several species of predatory sea snails in the family Muricidae. According to Pliny the Elder, it took approximately 12,000 shellfish to produce 1.4 grams of dye."
+    },
+    {
+      "id": "q_modern_pentathlon",
+      "question": "Which Olympic sport requires athletes to compete in five completely different disciplines — fencing, swimming, horse riding, running, and shooting — all in a single competition?",
+      "stored_answer": "Modern pentathlon",
+      "verdict": "needs_review",
+      "notes": "The answer 'modern pentathlon' is correct historically. However, as of 2025, horse riding (equestrian show jumping) has been replaced by obstacle course racing in senior competitions. The question lists 'horse riding' which was accurate for 100+ years but is now outdated. The five disciplines listed match the traditional format. Consider updating or adding a note about the recent change.",
+      "suggested_fix": "Consider updating 'horse riding' to 'obstacle course racing' to reflect the 2025 rule change, or add a note that the question refers to the traditional format.",
+      "source_url": "https://en.wikipedia.org/wiki/Modern_pentathlon",
+      "source_excerpt": "Modern pentathlon is an Olympic sport that comprises five different events: fencing, freestyle swimming, equestrian show jumping, and a combined event of pistol shooting and cross country running. Equestrian show jumping was replaced by obstacle course racing for senior competitions in 2025."
+    },
+    {
+      "id": "q_statue_liberty",
+      "question": "When the Statue of Liberty was first unveiled in 1886, it wasn't the green colour we know today. What colour was it originally?",
+      "stored_answer": "Shiny copper brown",
+      "verdict": "correct",
+      "notes": "Verified. The Statue of Liberty was copper-colored (dull brown, like a new penny) when first unveiled on October 28, 1886. The green patina developed over approximately 20 years due to oxidation of the copper surface.",
+      "suggested_fix": null,
+      "source_url": "https://www.history.com/articles/statue-of-liberty-green-color-change",
+      "source_excerpt": "When the Statue of Liberty was unveiled on October 28, 1886, the copper skin of the statue gleamed like a shiny new penny. Within 20 years, however, the copper had oxidized to form the green patina we see today."
+    },
+    {
+      "id": "q_audiobooks",
+      "question": "A woman reads five books every single week and finishes each one, yet she has never read a single page. How is this possible?",
+      "stored_answer": "She listens to audiobooks",
+      "verdict": "correct",
+      "notes": "Logic/lateral thinking puzzle. The answer is self-consistent and satisfying. No factual verification needed — the puzzle relies on reframing the word 'reads.'",
+      "suggested_fix": null,
+      "source_url": null,
+      "source_excerpt": null
+    },
+    {
+      "id": "q_robot_robota",
+      "question": "The word 'robot' didn't exist before 1920 — it first appeared in a Czech play and comes from the Czech word 'robota.' What does robota mean?",
+      "stored_answer": "Forced labour",
+      "verdict": "correct",
+      "notes": "Verified. The word 'robot' appeared in Karel Čapek's play R.U.R. (Rossum's Universal Robots), published in 1920 and premiered in 1921. 'Robota' means forced labour or serfdom in Czech. Note: the word was actually suggested by Karel's brother Josef Čapek. The meaning 'forced labour/drudgery' is well-documented.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/R.U.R.",
+      "source_excerpt": "R.U.R. is a 1920 science fiction play by the Czech writer Karel Čapek. The play introduced the word 'robot' to the world, derived from the Czech word 'robota' meaning forced labour or serfdom."
+    },
+    {
+      "id": "q_boxing_women",
+      "question": "Two boxers are in a championship boxing match scheduled for 12 rounds. One of them gets knocked out after 6 rounds, yet no man threw a punch. How is this possible?",
+      "stored_answer": "The boxers are women",
+      "verdict": "correct",
+      "notes": "Logic/lateral thinking puzzle. The answer is self-consistent — 'no man threw a punch' is the key misdirection. No factual verification needed.",
+      "suggested_fix": null,
+      "source_url": null,
+      "source_excerpt": null
+    },
+    {
+      "id": "q_lapis_lazuli",
+      "question": "The vivid blue pigment used in many Renaissance paintings was more expensive per gram than gold. What semi-precious stone was ground into powder to produce it?",
+      "stored_answer": "Lapis lazuli",
+      "verdict": "correct",
+      "notes": "Verified. Ultramarine pigment was produced by grinding lapis lazuli stone, sourced primarily from Afghanistan. It was indeed more expensive per gram than gold during the Renaissance. The pigment was reserved for the most important figures in paintings, particularly the Virgin Mary.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Ultramarine",
+      "source_excerpt": "Natural ultramarine is the most difficult pigment to grind by hand, and for all except the highest quality, the final product is less saturated than synthetic ultramarine. At the beginning of the 14th century, the price of the pigment in Europe exceeded that of gold."
+    },
+    {
+      "id": "q_machiavellian_odd_one",
+      "question": "Which of these words does NOT come from a fictional literary character: utopian, quixotic, machiavellian, lilliputian?",
+      "stored_answer": "Machiavellian",
+      "verdict": "correct",
+      "notes": "Verified. Utopian comes from Thomas More's fictional island Utopia (1516). Quixotic comes from Don Quixote (Cervantes, 1605). Lilliputian comes from the tiny people of Lilliput in Gulliver's Travels (Swift, 1726). Machiavellian comes from Niccolò Machiavelli (1469-1527), a real historical person, not a fictional character.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Utopia_(book)",
+      "source_excerpt": "Utopia is a work of fiction and socio-political satire by Thomas More, published in 1516 in Latin. The word 'utopia' coined by More has since come to mean an imagined place or state of things in which everything is perfect."
+    },
+    {
+      "id": "q_olive_oil",
+      "question": "In the ancient Greek Olympics, athletes competed completely naked. What was the only substance they were allowed to apply to their bodies before competing?",
+      "stored_answer": "Olive oil",
+      "verdict": "needs_fix",
+      "notes": "The answer 'olive oil' is correct as the primary substance, but the question's claim it was 'the only substance' is misleading. Sources confirm athletes applied olive oil AND then dusted themselves with fine sand/powder on top. The oil was the base layer but was not the only thing applied. The question premise oversimplifies the practice.",
+      "suggested_fix": "Reword to: 'In the ancient Greek Olympics, athletes competed completely naked. What substance did they rub all over their bodies before competing?' — removing the 'only' claim.",
+      "source_url": "https://ancientandmodernolympics.wordpress.com/2012/03/30/why-did-ancient-athletes-cover-themselves-in-oil/",
+      "source_excerpt": "Ancient athletes in training and competition would cover themselves in oil before starting. In the dressing room of the gymnasion they undressed and anointed their skin with olive oil, then dusted themselves with fine sand."
+    },
+    {
+      "id": "q_nerd_dr_seuss",
+      "question": "Which common English word — now used to describe someone intensely studious or obsessive about a subject — first appeared as a made-up creature in a Dr. Seuss children's book in 1950?",
+      "stored_answer": "Nerd",
+      "verdict": "correct",
+      "notes": "Verified. The word 'nerd' first appeared in print in Dr. Seuss's 'If I Ran the Zoo' (1950) as a fictional creature name. By 1951, it appeared in Newsweek as slang. While the exact path from creature to slang meaning is debated, the first print appearance in Dr. Seuss is well-documented.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/If_I_Ran_the_Zoo",
+      "source_excerpt": "If I Ran the Zoo is a 1950 children's picture book by Dr. Seuss. The book is often credited with the first documented appearance of the word 'nerd', appearing in the lines: 'And then, just to show them, I'll sail to Ka-Troo / And Bring Back an It-Kutch, a Preep, and a Proo, / A Nerkle, a Nerd, and a Seersucker too!'"
+    }
+  ]
+}

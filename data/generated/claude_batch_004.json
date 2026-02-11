@@ -1,0 +1,404 @@
+{
+  "questions": [
+    {
+      "question": "The world's first webcam wasn't created for security or communication. It was set up at the University of Cambridge so researchers could check the status of what everyday object without leaving their desks?",
+      "type": "text",
+      "correct_answer": "A coffee pot",
+      "possible_answers": null,
+      "alternative_answers": ["a coffee pot", "coffee pot", "the coffee pot", "coffee machine", "a coffee machine"],
+      "topic": "Technology",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["internet history", "webcam", "cambridge", "invention"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Surprising Connection",
+          "why_interesting": "The first webcam — a technology now used for video calls, security, and streaming — was created for something as mundane as checking if the coffee was ready. The absurd origin vs. the technology's global impact is delightful.",
+          "universal_appeal": "Coffee and webcams are universally understood; the laziness-driven innovation story is relatable across cultures",
+          "boring_check": "The answer (coffee pot) is the surprise — not a person or place. The mundane origin of a world-changing technology is the 'aha!' moment."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.8,
+          "reasoning": "The Trojan Room Coffee Pot is a well-documented piece of internet history. The contrast between the mundane motivation and the world-changing technology is perfect pub quiz material."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "Before Wi-Fi had its catchy name, the technology was known by its technical standard 'IEEE 802.11b Direct Sequence.' A branding agency was hired to make it catchier. Despite what most people believe, what does 'Wi-Fi' actually stand for?",
+      "type": "text",
+      "correct_answer": "Nothing — it's a made-up brand name",
+      "possible_answers": null,
+      "alternative_answers": ["nothing", "it doesn't stand for anything", "it's not an acronym", "it means nothing", "it's a made-up word", "it's a brand name"],
+      "topic": "Technology",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["branding", "wireless", "tech misconceptions"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Hidden Property",
+          "why_interesting": "Almost everyone assumes Wi-Fi stands for 'Wireless Fidelity' — learning it means absolutely nothing is a genuine myth-buster that creates a strong 'wait, really?' reaction",
+          "universal_appeal": "Wi-Fi is used by billions worldwide; the misconception is equally universal",
+          "boring_check": "The answer ('nothing') is the surprise — it's a myth-busting question, not name recall."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 8,
+          "factual_accuracy": 9,
+          "overall_score": 8.8,
+          "reasoning": "Busts one of the most widespread tech myths. The Wi-Fi Alliance's founding member Phil Belanger has confirmed Wi-Fi is not an acronym. Generates great pub debate."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "What children's toy, made of interlocking plastic bricks, is manufactured with a precision tolerance of just 2 micrometres — more precise than most surgical instruments?",
+      "type": "text",
+      "correct_answer": "LEGO",
+      "possible_answers": null,
+      "alternative_answers": ["lego", "lego bricks", "legos"],
+      "topic": "Technology",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": ["manufacturing", "precision", "toys", "engineering"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Scale Surprise / Hidden Property",
+          "why_interesting": "The contrast between a children's toy and surgical-grade precision is staggering — it explains why LEGO bricks from 1958 still fit perfectly with bricks made today",
+          "universal_appeal": "LEGO is globally beloved; manufacturing precision is universally impressive",
+          "boring_check": "While LEGO is a brand name, the surprise is the precision stat (2 micrometres), not the name itself. The answer is easily guessable, hence easy difficulty."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.8,
+          "reasoning": "The surgical-instrument comparison elevates a familiar toy into an engineering marvel. Easy because LEGO is guessable from 'interlocking plastic bricks,' but the precision fact is the real takeaway."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "In computing, a 'byte' is made up of 8 bits. What is the humorous but official name for a unit of just 4 bits — half a byte?",
+      "type": "text",
+      "correct_answer": "A nibble",
+      "possible_answers": null,
+      "alternative_answers": ["nibble", "a nibble", "nybble", "a nybble"],
+      "topic": "Technology",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["computing", "data units", "tech humor"],
+      "language_dependent": true,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Wordplay Revelation / Hidden Property",
+          "why_interesting": "The byte→nibble wordplay (a nibble is half a bite/byte) reveals the playful side of early computing culture. The pun is genuinely clever and the term is officially used.",
+          "universal_appeal": "Computing terms are globally used; the pun works in English. Marked language_dependent because the byte/bite/nibble wordplay is English-specific.",
+          "boring_check": "The answer (nibble) is a delightful surprise — a real technical term that's also a pun. Not name recall."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 8,
+          "clever_framing": 9,
+          "educational_value": 8,
+          "clarity": 9,
+          "factual_accuracy": 10,
+          "overall_score": 8.8,
+          "reasoning": "The byte→nibble wordplay is a perfect example of computing culture's playful naming conventions. Hard because most non-programmers don't know this term."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "The first computer 'bug' was a real insect found trapped inside a computer relay in 1947, which was then taped into the logbook with the note 'First actual case of bug being found.' What type of insect was it?",
+      "type": "text",
+      "correct_answer": "A moth",
+      "possible_answers": null,
+      "alternative_answers": ["a moth", "moth"],
+      "topic": "Technology",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": ["computing history", "debugging", "etymology"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Historical Quirk / Surprising Connection",
+          "why_interesting": "The origin of the word 'bug' in computing from an actual insect is a perfect example of how literal language becomes metaphorical — and the logbook entry makes it vivid",
+          "universal_appeal": "'Bug' in computing is used globally; the origin story transcends cultures",
+          "boring_check": "The answer (moth) is the specific surprising detail. The logbook annotation adds narrative charm."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.7,
+          "reasoning": "A well-documented piece of computing history (the moth is preserved at the Smithsonian). Easy because 'moth' is a reasonable guess, but the specific type of insect is still a fun reveal."
+        },
+        "ai_score": 8.7
+      }
+    },
+    {
+      "question": "I have cities, but no houses. I have mountains, but no trees. I have water, but no fish. What am I?",
+      "type": "text",
+      "correct_answer": "A map",
+      "possible_answers": null,
+      "alternative_answers": ["a map", "map"],
+      "explanation": "A map shows cities, mountains, and water, but only as representations — there are no actual houses, trees, or fish on it.",
+      "topic": "Logic",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": ["lateral-thinking", "riddle"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Lateral Thinking Puzzle",
+          "why_interesting": "Classic riddle with an elegant answer. The three parallel contradictions build tension, and 'a map' resolves them all simultaneously with a satisfying click.",
+          "universal_appeal": "Maps are universal; the riddle structure works across all cultures and languages",
+          "boring_check": "Clean lateral thinking with one clear answer. The triple contradiction format is engaging."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 10,
+          "clever_framing": 9,
+          "educational_value": 6,
+          "clarity": 9,
+          "factual_accuracy": 10,
+          "overall_score": 8.7,
+          "reasoning": "A polished classic riddle. Easy difficulty because the answer clicks once you reframe 'have' from physical to representational."
+        },
+        "ai_score": 8.7
+      }
+    },
+    {
+      "question": "What was Google's original name when its founders first built the search engine as a research project at Stanford University in 1996?",
+      "type": "text",
+      "correct_answer": "BackRub",
+      "possible_answers": null,
+      "alternative_answers": ["backrub", "back rub"],
+      "topic": "Technology",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["google", "tech history", "startups", "silicon valley"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Historical Quirk",
+          "why_interesting": "The contrast between the ridiculous name 'BackRub' and the trillion-dollar company Google became is wonderfully absurd. It was called BackRub because it analysed 'back links.'",
+          "universal_appeal": "Google is used by billions worldwide; the origin story works across all cultures",
+          "boring_check": "While the answer is a name, it's the absurdity of the name that creates the surprise — 'BackRub' is so unexpected that it generates genuine laughter."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.7,
+          "reasoning": "The 'BackRub' name is so absurd compared to Google's current status that the answer itself is the joke. Hard because almost nobody knows this."
+        },
+        "ai_score": 8.7
+      }
+    },
+    {
+      "question": "The microwave oven was invented entirely by accident in 1945 when an engineer walked past a piece of radar equipment and noticed something in his pocket had melted. What had melted?",
+      "type": "text",
+      "correct_answer": "A candy bar",
+      "possible_answers": null,
+      "alternative_answers": ["a candy bar", "candy bar", "a chocolate bar", "chocolate bar", "chocolate", "peanut cluster bar"],
+      "topic": "Technology",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["invention", "accidental discovery", "food", "radar"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Historical Quirk / Surprising Connection",
+          "why_interesting": "A world-changing kitchen appliance born from a melted chocolate bar is a perfect accidental invention story — the mundane (chocolate) meeting the military (radar) is unexpected",
+          "universal_appeal": "Microwave ovens and chocolate are both globally familiar; accidental invention stories are universally appealing",
+          "boring_check": "The answer (chocolate bar) is a common object — not a name. The accidental discovery narrative is engaging."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.7,
+          "reasoning": "Percy Spencer's chocolate bar story is well-documented (Raytheon, 1945). The mundane answer contrasted with the revolutionary result is satisfying."
+        },
+        "ai_score": 8.7
+      }
+    },
+    {
+      "question": "What percentage of all the world's money exists only as digital data — with no physical coins or banknotes to represent it? Is it roughly 30%, 60%, or over 90%?",
+      "type": "text",
+      "correct_answer": "Over 90%",
+      "possible_answers": null,
+      "alternative_answers": ["over 90%", "over 90 percent", "90%", "more than 90%", "about 92%", "92%", "over ninety percent"],
+      "topic": "Technology",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["digital economy", "banking", "money", "finance"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Scale Surprise",
+          "why_interesting": "The idea that over 90% of all money is purely digital — invisible ones and zeros — challenges the intuitive notion of money as something physical you can hold",
+          "universal_appeal": "Money is universal; the digital-vs-physical distinction works across all cultures and economies",
+          "boring_check": "The answer is a surprising statistic, not a name. The multiple-choice framing (30% / 60% / 90%+) creates engagement through estimation."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 8,
+          "overall_score": 8.7,
+          "reasoning": "The staggering percentage challenges everyday assumptions about money. Multiple-choice format makes it accessible while the extreme answer is still surprising."
+        },
+        "ai_score": 8.7
+      }
+    },
+    {
+      "question": "Your smartphone has more computing power than the computers that guided Apollo 11 to the Moon in 1969. Roughly how many times more powerful is a modern smartphone than the Apollo guidance computer — 1,000 times, 100,000 times, or 100 million times?",
+      "type": "text",
+      "correct_answer": "About 100 million times",
+      "possible_answers": null,
+      "alternative_answers": ["100 million times", "about 100 million times", "a hundred million times", "100 million", "120 million times"],
+      "topic": "Technology",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["computing power", "space exploration", "apollo", "smartphones"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Scale Surprise",
+          "why_interesting": "The contrast between the most ambitious human achievement (Moon landing) and the device in everyone's pocket creates a powerful sense of technological progress",
+          "universal_appeal": "Smartphones and the Moon landing are both globally understood reference points",
+          "boring_check": "The answer is a surprising scale comparison, not a name. The multiple-choice format helps calibrate the surprise."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 8,
+          "overall_score": 8.5,
+          "reasoning": "Well-known comparison but still effective — the specific magnitude (100,000x) is the educational takeaway. Slightly lower scores because the general concept is increasingly well-known."
+        },
+        "ai_score": 8.5
+      }
+    }
+  ],
+  "metadata": {
+    "model": "claude-opus-4-6",
+    "provider": "anthropic",
+    "generated_at": "2026-02-10T13:00:00Z",
+    "total_generated": 15,
+    "total_selected": 10,
+    "pipeline": "claude_code_session",
+    "prompt_version": "v2_cot"
+  }
+}

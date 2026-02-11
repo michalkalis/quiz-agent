@@ -1,0 +1,501 @@
+{
+  "questions": [
+    {
+      "question": "Vinyl records are enjoying a comeback today, but during the Cold War, what unexpected item was used in the Soviet Union to press bootleg music recordings — creating what became known as 'bone music'?",
+      "type": "text",
+      "correct_answer": "Used X-ray films",
+      "possible_answers": null,
+      "alternative_answers": [
+        "x-ray films",
+        "x-rays",
+        "medical x-rays",
+        "x-ray photographs",
+        "used x-rays",
+        "x ray films"
+      ],
+      "topic": "Music",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": [
+        "music history",
+        "vinyl",
+        "soviet union",
+        "cold war"
+      ],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Ribs_(recordings)",
+      "source_excerpt": "Ribs, also known as bone music or jazz on bones, were improvised gramophone recordings made from X-ray films. Mostly made through the 1950s and 1960s, these were a black market method of distributing music banned from broadcast in the Soviet Union.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Surprising Connection",
+          "why_interesting": "The image of playing banned music off a chest X-ray is haunting and vivid — 'bone music' is a perfect name. The collision of medicine, politics, and music is unforgettable.",
+          "universal_appeal": "Music, censorship, and resourcefulness are universal themes. The visual of an X-ray record transcends cultures.",
+          "boring_check": "The answer (X-ray films) is the surprise — not a person's name. The 'bone music' nickname adds poetry."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 8,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.8,
+          "reasoning": "A haunting intersection of medical imagery, political censorship, and musical passion. The 'bone music' nickname is poetic. Hard because few people know this history."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "A musician plays the exact same note at the exact same pitch on a piano and on a violin. Yet anyone listening can instantly tell which instrument is playing. What property of sound makes this possible?",
+      "type": "text",
+      "correct_answer": "Timbre",
+      "possible_answers": null,
+      "alternative_answers": [
+        "timbre",
+        "tone colour",
+        "tone quality",
+        "tone color",
+        "the timbre"
+      ],
+      "topic": "Music",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": [
+        "acoustics",
+        "music theory",
+        "sound physics"
+      ],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Timbre",
+      "source_excerpt": "In music, timbre, also known as tone color or tone quality, is the perceived sound quality of a musical note, sound or tone. Timbre distinguishes different types of sound production, such as choir voices and musical instruments.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Hidden Property",
+          "why_interesting": "Everyone intuitively knows instruments sound different, but most people don't know the word 'timbre' or the physics behind it — the question puts a name to a universal experience",
+          "universal_appeal": "Musical instrument recognition is universal; the 'aha!' of naming the phenomenon works across cultures",
+          "boring_check": "The answer is a concept (timbre), not a person or place. It names something everyone experiences but few can articulate."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 10,
+          "overall_score": 8.8,
+          "reasoning": "Elegant question that names a universal experience. The simplicity of the setup (same note, different instrument) makes the concept immediately graspable."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "The sound designers of the original Star Wars created the iconic blaster sound effect by hitting an everyday object with a wrench. What was that object?",
+      "type": "text",
+      "correct_answer": "A guy-wire",
+      "possible_answers": null,
+      "alternative_answers": [
+        "a guy-wire",
+        "guy wire",
+        "a tensioned cable",
+        "a steel cable",
+        "antenna guy wire",
+        "radio tower cable",
+        "a guy-wire on a radio tower"
+      ],
+      "topic": "Movies",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": [
+        "sound design",
+        "star wars",
+        "filmmaking",
+        "special effects"
+      ],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://nerdist.com/article/star-wars-blasters-sound-effect-origin-ben-burtt/",
+      "source_excerpt": "The blaster sound effect started with sound designer Ben Burtt hitting a guy-wire on a radio tower with a wrench until he found the right tone.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Surprising Connection",
+          "why_interesting": "The most iconic sci-fi sound in cinema came from hitting a mundane steel cable — the contrast between the futuristic result and the low-tech origin is delightful",
+          "universal_appeal": "Star Wars blaster sounds are globally recognized; the 'how they made it' angle fascinates across cultures",
+          "boring_check": "The answer (guy-wire) is a specific object — not a name. The 'wrench hitting a cable' origin is the surprising fact."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 8,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 8,
+          "factual_accuracy": 9,
+          "overall_score": 8.7,
+          "reasoning": "Ben Burtt's sound design story is well-documented. The contrast between the futuristic sound and its mundane origin is the 'aha!' moment."
+        },
+        "ai_score": 8.7
+      }
+    },
+    {
+      "question": "The 'Happy Birthday' song earned its copyright owners roughly two million dollars per year in licensing fees. In what year was it finally ruled to be in the public domain — 1975, 1995, or 2015?",
+      "type": "text",
+      "correct_answer": "2015",
+      "possible_answers": null,
+      "alternative_answers": [
+        "2015"
+      ],
+      "topic": "Music",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": [
+        "copyright",
+        "music law",
+        "popular culture"
+      ],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Happy_Birthday_to_You",
+      "source_excerpt": "In 2015, a federal judge declared that the Warner/Chappell copyright claim to the song was invalid. Warner/Chappell had been collecting about $2 million per year in licensing fees for the song.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Scale Surprise / Historical Quirk",
+          "why_interesting": "The idea that 'Happy Birthday' — the most universally sung song — was under copyright until 2015 is absurd and surprising. The $2M/year figure makes it concrete.",
+          "universal_appeal": "Everyone knows 'Happy Birthday'; the copyright angle works globally",
+          "boring_check": "The answer is a year, but the question is framed as a multiple-choice with context about licensing fees — it's more of a 'when did this absurdity end' question than pure date recall."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.7,
+          "reasoning": "The recency of 2015 is the surprise — most people guess much earlier. The $2M/year context makes the copyright absurdity tangible."
+        },
+        "ai_score": 8.7
+      }
+    },
+    {
+      "question": "Which of these instruments doesn't belong: guitar, piano, harp, violin? And why?",
+      "type": "text",
+      "correct_answer": "Piano",
+      "possible_answers": null,
+      "alternative_answers": [
+        "piano",
+        "the piano"
+      ],
+      "explanation": "All four have strings, but the guitar, harp, and violin produce sound by directly plucking or bowing their strings. The piano uses internal hammers to strike its strings — technically making it a percussion instrument, not a string instrument.",
+      "topic": "Music",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": [
+        "odd-one-out",
+        "instruments",
+        "music classification"
+      ],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://www.britannica.com/story/is-the-piano-a-percussion-or-a-stringed-instrument",
+      "source_excerpt": "The piano can be classified as both a percussion and a stringed instrument. Sound is produced by hammers striking strings, making it a percussion instrument by that mechanism, but it is also a chordophone because the sound comes from vibrating strings.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Odd One Out",
+          "why_interesting": "Everyone thinks of a piano as a string instrument — learning it's technically percussion because of its hammer mechanism is a genuine 'aha!' that changes how you think about it",
+          "universal_appeal": "All four instruments are globally recognized; the classification surprise is universal",
+          "boring_check": "Clean odd-one-out with one defensible answer. The criterion (how strings are activated) is elegant and non-obvious."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.7,
+          "reasoning": "The piano-as-percussion revelation is a classic 'aha!' that changes perspective. Clean criterion with one defensible answer."
+        },
+        "ai_score": 8.7
+      }
+    },
+    {
+      "question": "When a piece of music gives you chills or goosebumps, your brain releases the same chemical it releases when you eat chocolate or fall in love. What is that chemical?",
+      "type": "text",
+      "correct_answer": "Dopamine",
+      "possible_answers": null,
+      "alternative_answers": [
+        "dopamine"
+      ],
+      "topic": "Music",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": [
+        "neuroscience",
+        "music psychology",
+        "brain chemistry"
+      ],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://www.mcgill.ca/newsroom/channels/news/musical-chills-why-they-give-us-thrills-170538",
+      "source_excerpt": "Scientists have found that the pleasurable experience of listening to music releases dopamine, a neurotransmitter in the brain important for more tangible pleasures associated with rewards such as food, drugs and sex.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Surprising Connection",
+          "why_interesting": "Connecting the emotional power of music to brain chemistry — and equating it with chocolate and love — makes the abstract tangible and relatable",
+          "universal_appeal": "Music-induced chills are a universal human experience; dopamine is increasingly well-known globally",
+          "boring_check": "The answer (dopamine) is a scientific concept, not a name. The connection to music, chocolate, and love is the engaging framing."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.7,
+          "reasoning": "Connects a universal experience (music chills) to neuroscience in an accessible way. The chocolate and love comparisons make it memorable."
+        },
+        "ai_score": 8.7
+      }
+    },
+    {
+      "question": "The iconic theme from Jaws — often called the scariest movie music ever written — consists of just how many different notes being alternated?",
+      "type": "text",
+      "correct_answer": "Two",
+      "possible_answers": null,
+      "alternative_answers": [
+        "two",
+        "2",
+        "two notes"
+      ],
+      "topic": "Movies",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": [
+        "film music",
+        "jaws",
+        "john williams",
+        "minimalism"
+      ],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Jaws_(soundtrack)",
+      "source_excerpt": "The main 'shark' theme is a simple alternating pattern of two notes — E and F — resembling the sound of a tuba. When Williams first played the theme for Spielberg, the director laughed, initially thinking it was a joke.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Scale Surprise (minimalism)",
+          "why_interesting": "The contrast between the terrifying emotional impact and the extreme simplicity (just 2 notes) is the perfect 'less is more' moment",
+          "universal_appeal": "The Jaws theme is globally recognized — even people who haven't seen the film know the sound",
+          "boring_check": "The answer is a surprising number (two), not a name. The simplicity is the 'aha!' moment."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.5,
+          "reasoning": "Clean and memorable. The 'just two notes' revelation is satisfying because everyone knows the theme but few have thought about its simplicity."
+        },
+        "ai_score": 8.5
+      }
+    },
+    {
+      "question": "The famous opening crawl of Star Wars — yellow text scrolling into the distance — was created in 1977 without any computers. How was it actually filmed?",
+      "type": "text",
+      "correct_answer": "The text was printed on a physical surface and filmed with a camera slowly moving over it",
+      "possible_answers": null,
+      "alternative_answers": [
+        "they filmed a camera moving over printed text",
+        "physical text with a moving camera",
+        "printed on a card and filmed",
+        "printed on black paper",
+        "filmed a physical model"
+      ],
+      "topic": "Movies",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": [
+        "filmmaking",
+        "star wars",
+        "special effects",
+        "practical effects"
+      ],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Star_Wars_opening_crawl",
+      "source_excerpt": "The opening crawl was created by filming physical text printed on a long piece of black paper, with a camera moving slowly along its length. The process was time-consuming due to focus problems.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Historical Quirk",
+          "why_interesting": "The 'no computers' constraint forces you to think about how this iconic effect was achieved practically — the low-tech solution is both obvious in hindsight and surprising",
+          "universal_appeal": "Star Wars is globally recognized; the 'how they did it before CGI' angle fascinates across cultures",
+          "boring_check": "The answer is a technique/method, not a name. The practical ingenuity is the surprise."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.5,
+          "reasoning": "Easy because the answer is logical once you think about it, but most people have never considered how the crawl was made pre-computers."
+        },
+        "ai_score": 8.5
+      }
+    },
+    {
+      "question": "Film projectors have traditionally run at 24 frames per second. This specific number wasn't chosen for visual quality — it was the minimum speed needed for what other technical requirement to work properly?",
+      "type": "text",
+      "correct_answer": "For the optical soundtrack (audio) to sound acceptable",
+      "possible_answers": null,
+      "alternative_answers": [
+        "sound quality",
+        "audio quality",
+        "the soundtrack",
+        "optical soundtrack",
+        "for the sound to work",
+        "audio",
+        "sound"
+      ],
+      "topic": "Movies",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": [
+        "cinema technology",
+        "film history",
+        "audio engineering"
+      ],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://www.filmsfatale.com/blog/2020/5/14/film-history-frames-per-second",
+      "source_excerpt": "With the birth of the sound era, it became necessary to shoot and project at 24 frames-per-second, in order to produce clear sound on the optical soundtrack. 24 fps was the slowest frame rate possible to get intelligible sound from the optical track.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Hidden Property",
+          "why_interesting": "Most people assume 24fps was chosen because it looks 'right' to the human eye — learning it was actually an audio constraint reframes how we think about cinema technology",
+          "universal_appeal": "24fps is a universal standard; the 'why' question crosses all cultures",
+          "boring_check": "The answer is a surprising reason (audio, not video), not a name or date. It challenges a universal assumption."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 8,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 8,
+          "factual_accuracy": 8,
+          "overall_score": 8.5,
+          "reasoning": "Challenges the common assumption that 24fps is about visual perception. The audio constraint explanation is both surprising and educational."
+        },
+        "ai_score": 8.5
+      }
+    },
+    {
+      "question": "The 'Wilhelm Scream' — a specific recording of a man screaming — has been deliberately reused as an inside joke in over 400 films and TV shows since 1951. What was happening to the character in the original recording?",
+      "type": "text",
+      "correct_answer": "He was being bitten or dragged by an alligator",
+      "possible_answers": null,
+      "alternative_answers": [
+        "bitten by an alligator",
+        "attacked by an alligator",
+        "dragged by an alligator",
+        "alligator attack",
+        "alligator bite",
+        "an alligator"
+      ],
+      "topic": "Movies",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": [
+        "sound effects",
+        "film history",
+        "cinema Easter eggs"
+      ],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Wilhelm_scream",
+      "source_excerpt": "The Wilhelm scream originates from a series of sound effects recorded for the 1951 film Distant Drums. In a scene, soldiers are wading through a swamp and one is bitten and dragged underwater by an alligator.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Historical Quirk / Surprising Connection",
+          "why_interesting": "The idea of a single scream being reused for 75+ years as a filmmaker's inside joke is delightful — and the mundane origin (alligator scene in a B-movie) adds to the absurdity",
+          "universal_appeal": "Film buffs worldwide know the Wilhelm Scream; the origin story works across cultures",
+          "boring_check": "The answer is a specific scenario (alligator attack), not a name. The 400+ films statistic and inside-joke angle add narrative."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 8,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.3,
+          "reasoning": "Fun cinema trivia that rewards film enthusiasts while being accessible to general audiences. The 'alligator' answer is memorable and slightly absurd."
+        },
+        "ai_score": 8.3
+      }
+    }
+  ],
+  "metadata": {
+    "model": "claude-opus-4-6",
+    "provider": "anthropic",
+    "generated_at": "2026-02-10T12:45:00Z",
+    "total_generated": 16,
+    "total_selected": 10,
+    "pipeline": "claude_code_session",
+    "prompt_version": "v2_cot"
+  }
+}

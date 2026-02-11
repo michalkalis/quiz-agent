@@ -1,0 +1,115 @@
+{
+  "metadata": {
+    "verified_at": "2026-02-10T14:00:00Z",
+    "source_file": "data/generated/claude_batch_004.json",
+    "total_questions": 10,
+    "verdicts": {
+      "correct": 7,
+      "needs_fix": 2,
+      "needs_review": 1,
+      "incorrect": 0
+    }
+  },
+  "questions": [
+    {
+      "id": "q_coffee_pot_webcam",
+      "question": "The world's first webcam wasn't created for security or communication. It was set up at the University of Cambridge so researchers could check the status of what everyday object without leaving their desks?",
+      "stored_answer": "A coffee pot",
+      "verdict": "correct",
+      "notes": "Verified. The Trojan Room coffee pot webcam was created in 1991 by Quentin Stafford-Fraser and Paul Jardetzky at the University of Cambridge Computer Laboratory. It was connected to the internet in November 1993 and remained active until August 22, 2001.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Trojan_Room_coffee_pot",
+      "source_excerpt": "The Trojan Room coffee pot was a coffee machine located in the Computer Laboratory of the University of Cambridge. A camera was set up to provide a live picture of the coffee pot to all desktop computers on the office network, to save people the disappointment of finding the coffee machine empty."
+    },
+    {
+      "id": "q_wifi_meaning",
+      "question": "Before Wi-Fi had its catchy name, the technology was known by its technical standard 'IEEE 802.11b Direct Sequence.' A branding agency was hired to make it catchier. Despite what most people believe, what does 'Wi-Fi' actually stand for?",
+      "stored_answer": "Nothing — it's a made-up brand name",
+      "verdict": "correct",
+      "notes": "Verified. Wi-Fi is not an acronym and does not stand for 'Wireless Fidelity.' It was created by branding firm Interbrand for the Wi-Fi Alliance. Phil Belanger, a founding member of the Wi-Fi Alliance, has confirmed this. The 'Wireless Fidelity' tagline was added later as a marketing afterthought and was eventually discontinued.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Wi-Fi",
+      "source_excerpt": "The name Wi-Fi, commercially used at least as early as August 1999, was coined by the brand-consulting firm Interbrand. The Wi-Fi Alliance had hired Interbrand to create a name that was 'a little catchier than IEEE 802.11b Direct Sequence.'"
+    },
+    {
+      "id": "q_lego_precision",
+      "question": "What children's toy, made of interlocking plastic bricks, is manufactured with a precision tolerance of just 2 micrometres — more precise than most surgical instruments?",
+      "stored_answer": "LEGO",
+      "verdict": "needs_review",
+      "notes": "The answer 'LEGO' is correct, and LEGO's manufacturing precision is indeed remarkable. However, the specific '2 micrometres' figure is imprecise. Sources cite varying tolerances: mold precision of 10 microns, stud diameter tolerance of ±10 microns, and critical fit tolerances as tight as 1 micron. The commonly cited figure is '0.002mm' (2 microns) for mold precision, but some sources say 10 microns. The 'more precise than most surgical instruments' comparison is unverified. The core fact (LEGO's extraordinary precision) is correct but the specific numbers should be treated as approximate.",
+      "suggested_fix": "Consider softening to 'a precision tolerance of just a few micrometres' instead of exactly '2 micrometres' to avoid nitpicking debates.",
+      "source_url": "https://en.wikipedia.org/wiki/Lego",
+      "source_excerpt": "The moulds are permitted a tolerance of up to 0.002 millimetres (0.0008 in), to ensure precision fit. Out of every million elements produced, approximately 18 may fail to meet the standard required."
+    },
+    {
+      "id": "q_nibble",
+      "question": "In computing, a 'byte' is made up of 8 bits. What is the humorous but official name for a unit of just 4 bits — half a byte?",
+      "stored_answer": "A nibble",
+      "verdict": "correct",
+      "notes": "Verified. A nibble (also spelled nybble) is a four-bit aggregation, or half a byte. The name is a pun on 'byte' (homophone of 'bite') — a nibble is half a bite. The term dates back to 1958 when Professor David B. Benson coined it.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Nibble",
+      "source_excerpt": "In computing, a nibble is a four-bit aggregation, or half an octet. It is also known as half-byte or tetrade. The nibble is used to describe the amount of memory used to store a digit of a number stored in packed decimal format."
+    },
+    {
+      "id": "q_first_bug_moth",
+      "question": "The first computer 'bug' was a real insect found trapped inside a computer relay in 1947, which was then taped into the logbook with the note 'First actual case of bug being found.' What type of insect was it?",
+      "stored_answer": "A moth",
+      "verdict": "correct",
+      "notes": "Verified. On September 9, 1947, a moth was found trapped in a relay of the Harvard Mark II computer. It was taped into the logbook with the annotation 'First actual case of bug being found.' Note: the term 'bug' for engineering errors predates this incident (Thomas Edison used it in the 1870s), but this was the first literal insect found in a computer. The moth and logbook are preserved at the Smithsonian National Museum of American History.",
+      "suggested_fix": null,
+      "source_url": "https://americanhistory.si.edu/collections/object/nmah_334663",
+      "source_excerpt": "The log book from the Mark II computer at Harvard University, with a moth taped to the page and the annotation 'First actual case of bug being found.' The entry is dated September 9, 1947."
+    },
+    {
+      "id": "q_map_riddle",
+      "question": "I have cities, but no houses. I have mountains, but no trees. I have water, but no fish. What am I?",
+      "stored_answer": "A map",
+      "verdict": "correct",
+      "notes": "Logic/riddle puzzle. The answer 'a map' is self-consistent and satisfying. A map has cities (labels), mountains (contour lines), and water (blue areas) but none of the physical things within them. No factual verification needed.",
+      "suggested_fix": null,
+      "source_url": null,
+      "source_excerpt": null
+    },
+    {
+      "id": "q_backrub_google",
+      "question": "What was Google's original name when its founders first built the search engine as a research project at Stanford University in 1996?",
+      "stored_answer": "BackRub",
+      "verdict": "correct",
+      "notes": "Verified. Google began as a research project called 'BackRub' by Larry Page and Sergey Brin at Stanford University in 1996. It was named BackRub because it analysed 'backlinks' to determine website importance. They later renamed it Google (a misspelling of 'googol') and incorporated on September 4, 1998.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/History_of_Google",
+      "source_excerpt": "Google has its origins in 'BackRub', a research project started in 1996 by Larry Page and Sergey Brin when they were both PhD students at Stanford University. Page and Brin originally nicknamed the new search engine 'BackRub' because the system checked backlinks to estimate the importance of a site."
+    },
+    {
+      "id": "q_microwave_chocolate",
+      "question": "The microwave oven was invented entirely by accident in 1945 when an engineer walked past a piece of radar equipment and noticed something in his pocket had melted. What had melted?",
+      "stored_answer": "A chocolate bar",
+      "verdict": "needs_fix",
+      "notes": "The core story is verified — Percy Spencer at Raytheon discovered microwave heating accidentally in 1945 while working with magnetron radar equipment. However, sources consistently describe the item as a 'candy bar' or 'peanut cluster bar' (possibly a Mr. Goodbar or PAYDAY), not specifically a 'chocolate bar.' While candy bars contain chocolate, the distinction matters for quiz accuracy.",
+      "suggested_fix": "Change correct_answer to 'A candy bar' and add 'chocolate bar' to alternative_answers instead. Sources say Percy Spencer was a lover of PAYDAY candy bars.",
+      "source_url": "https://en.wikipedia.org/wiki/Percy_Spencer",
+      "source_excerpt": "While working with an active radar set, Spencer noticed that a candy bar in his pocket had melted. He decided to experiment, first with popcorn kernels, then with an egg."
+    },
+    {
+      "id": "q_digital_money",
+      "question": "What percentage of all the world's money exists only as digital data — with no physical coins or banknotes to represent it? Is it roughly 30%, 60%, or over 90%?",
+      "stored_answer": "Over 90%",
+      "verdict": "correct",
+      "notes": "Verified. Multiple sources consistently cite that approximately 92% (or roughly 90%+) of the world's currency exists only in digital form. Only about 8-10% exists as physical cash. This is based on comparing physical currency in circulation (M0) to the broader money supply (M2).",
+      "suggested_fix": null,
+      "source_url": "https://medium.com/@acs_usj/from-paper-to-pixels-why-92-of-the-worlds-currency-exists-digitally-d9681ad812a6",
+      "source_excerpt": "Only an estimated 8% of global currency is physical cash. The remaining 92% exists as digital money on computer servers, moved around electronically through debit and credit card transactions, online banking, and mobile payment applications."
+    },
+    {
+      "id": "q_phone_vs_apollo",
+      "question": "Your smartphone has more computing power than the computers that guided Apollo 11 to the Moon in 1969. Roughly how many times more powerful is a modern smartphone than the Apollo guidance computer — 100 times, 100,000 times, or 100 million times?",
+      "stored_answer": "About 100,000 times",
+      "verdict": "needs_fix",
+      "notes": "The correct answer should be approximately 100 MILLION times, not 100,000 times. Multiple authoritative sources (ZME Science, RealClearScience, Popular Mechanics) consistently state that modern smartphones are roughly 100+ million times more powerful than the Apollo guidance computer in terms of processing speed. The AGC operated at 0.043 MHz with 64KB of memory; a modern iPhone processes instructions approximately 120 million times faster. The stored answer significantly understates the difference.",
+      "suggested_fix": "Change correct_answer to 'About 100 million times' and update alternative_answers accordingly. Also change the wrong options in the question text to make '100 million' the correct multiple-choice answer: e.g., '1,000 times, 100,000 times, or 100 million times?'",
+      "source_url": "https://www.zmescience.com/feature-post/technology-articles/computer-science/smartphone-power-compared-to-apollo-432/",
+      "source_excerpt": "A modern smartphone is millions of times more powerful than the Apollo 11 guidance computers. The iPhone's processor can perform instructions approximately 120,000,000 times faster than the Apollo guidance computer."
+    }
+  ]
+}

@@ -1,0 +1,115 @@
+{
+  "metadata": {
+    "verified_at": "2026-02-10T14:00:00Z",
+    "source_file": "data/generated/claude_batch_003.json",
+    "total_questions": 10,
+    "verdicts": {
+      "correct": 9,
+      "needs_fix": 0,
+      "needs_review": 1,
+      "incorrect": 0
+    }
+  },
+  "questions": [
+    {
+      "id": "q_bone_music",
+      "question": "Vinyl records are enjoying a comeback today, but during World War II when materials were scarce, what unexpected item was used in the Soviet Union to press bootleg music recordings — creating what became known as 'bone music'?",
+      "stored_answer": "Used X-ray films",
+      "verdict": "correct",
+      "notes": "Verified. 'Bone music' or 'music on ribs' were bootleg recordings pressed onto used medical X-ray films in the Soviet Union, primarily in the 1950s-60s. Note: the question says 'World War II' but the practice peaked in the 1950s-60s Cold War era, not during WWII specifically. However, the practice did start during the late Stalin era (late 1940s), so the timeframe is close enough.",
+      "suggested_fix": "Consider changing 'during World War II' to 'during the Cold War' for greater accuracy.",
+      "source_url": "https://en.wikipedia.org/wiki/Ribs_(recordings)",
+      "source_excerpt": "Ribs, also known as bone music or jazz on bones, were improvised gramophone recordings made from X-ray films. Mostly made through the 1950s and 1960s, these were a black market method of distributing music banned from broadcast in the Soviet Union."
+    },
+    {
+      "id": "q_timbre",
+      "question": "A musician plays the exact same note at the exact same pitch on a piano and on a violin. Yet anyone listening can instantly tell which instrument is playing. What property of sound makes this possible?",
+      "stored_answer": "Timbre",
+      "verdict": "correct",
+      "notes": "Verified. Timbre (also called tone colour or tone quality) is the property of sound that distinguishes instruments playing the same note at the same pitch and volume. It is determined by the harmonic content, attack/decay characteristics, and frequency spectrum of the sound.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Timbre",
+      "source_excerpt": "In music, timbre, also known as tone color or tone quality, is the perceived sound quality of a musical note, sound or tone. Timbre distinguishes different types of sound production, such as choir voices and musical instruments."
+    },
+    {
+      "id": "q_blaster_sound",
+      "question": "The sound designers of the original Star Wars created the iconic blaster sound effect by hitting an everyday object with a wrench. What was that object?",
+      "stored_answer": "A guy-wire",
+      "verdict": "correct",
+      "notes": "Verified. Ben Burtt created the Star Wars blaster sound by hitting guy-wires (steel support cables) on radio towers with a wrench. Some sources mention a hammer rather than wrench, but wrench is the more commonly cited tool. The discovery was partly inspired by Burtt's father hitting a radio tower cable with a rock.",
+      "suggested_fix": null,
+      "source_url": "https://nerdist.com/article/star-wars-blasters-sound-effect-origin-ben-burtt/",
+      "source_excerpt": "The blaster sound effect started with sound designer Ben Burtt hitting a guy-wire on a radio tower with a wrench until he found the right tone."
+    },
+    {
+      "id": "q_happy_birthday",
+      "question": "The 'Happy Birthday' song earned its copyright owners roughly two million dollars per year in licensing fees. In what year was it finally ruled to be in the public domain — 1975, 1995, or 2015?",
+      "stored_answer": "2015",
+      "verdict": "correct",
+      "notes": "Verified. On September 22, 2015, Federal Judge George H. King ruled that Warner/Chappell's copyright claim over the lyrics to 'Happy Birthday to You' was invalid. Warner/Chappell had been collecting approximately $2 million per year in licensing fees. A $14 million settlement was reached in February 2016.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Happy_Birthday_to_You",
+      "source_excerpt": "In 2015, a federal judge declared that the Warner/Chappell copyright claim to the song was invalid. Warner/Chappell had been collecting about $2 million per year in licensing fees for the song."
+    },
+    {
+      "id": "q_piano_odd_one",
+      "question": "Which of these instruments doesn't belong: guitar, piano, harp, violin? And why?",
+      "stored_answer": "Piano",
+      "verdict": "needs_review",
+      "notes": "The answer 'Piano' with the reasoning that it uses hammers (percussion) while the others are directly plucked/bowed is a defensible answer, but it's not clear-cut. The piano is officially classified as BOTH a stringed and a percussion instrument (Hornbostel-Sachs classifies it as a chordophone). Britannica states 'the piano is generally considered to be both a stringed and a percussion instrument.' The distinction is valid for a pub quiz but purists may argue it's ambiguous.",
+      "suggested_fix": "Consider adding to the explanation that 'the piano is often classified as both, but uniquely among these four it uses hammers to strike its strings rather than direct plucking or bowing.' This acknowledges the nuance while keeping the answer defensible.",
+      "source_url": "https://www.britannica.com/story/is-the-piano-a-percussion-or-a-stringed-instrument",
+      "source_excerpt": "The piano can be classified as both a percussion and a stringed instrument. Sound is produced by hammers striking strings, making it a percussion instrument by that mechanism, but it is also a chordophone because the sound comes from vibrating strings."
+    },
+    {
+      "id": "q_dopamine",
+      "question": "When a piece of music gives you chills or goosebumps, your brain releases the same chemical it releases when you eat chocolate or fall in love. What is that chemical?",
+      "stored_answer": "Dopamine",
+      "verdict": "correct",
+      "notes": "Verified. Research at McGill University and other institutions has confirmed that pleasurable music triggers dopamine release in the brain, specifically in the caudate nucleus (during anticipation) and the nucleus accumbens (during the emotional peak). This is the same neurotransmitter released during eating, sex, and drug use.",
+      "suggested_fix": null,
+      "source_url": "https://www.mcgill.ca/newsroom/channels/news/musical-chills-why-they-give-us-thrills-170538",
+      "source_excerpt": "Scientists have found that the pleasurable experience of listening to music releases dopamine, a neurotransmitter in the brain important for more tangible pleasures associated with rewards such as food, drugs and sex."
+    },
+    {
+      "id": "q_jaws_two_notes",
+      "question": "The iconic theme from Jaws — often called the scariest movie music ever written — consists of just how many different notes being alternated?",
+      "stored_answer": "Two",
+      "verdict": "correct",
+      "notes": "Verified. The Jaws theme by John Williams consists of two alternating notes: E and F (an ascending minor second). Spielberg initially thought Williams was joking when he first demonstrated the simple two-note idea.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Jaws_(soundtrack)",
+      "source_excerpt": "The main 'shark' theme is a simple alternating pattern of two notes — E and F — resembling the sound of a tuba. When Williams first played the theme for Spielberg, the director laughed, initially thinking it was a joke."
+    },
+    {
+      "id": "q_star_wars_crawl",
+      "question": "The famous opening crawl of Star Wars — yellow text scrolling into the distance — was created in 1977 without any computers. How was it actually filmed?",
+      "stored_answer": "The text was printed on a physical surface and filmed with a camera slowly moving over it",
+      "verdict": "correct",
+      "notes": "Verified. The opening crawl was filmed using physical text printed on a piece of black paper approximately two feet wide and six feet long. A camera moved slowly along the surface to create the scrolling effect. Multiple takes were needed due to focus and blemish issues.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Star_Wars_opening_crawl",
+      "source_excerpt": "The opening crawl was created by filming physical text printed on a long piece of black paper, with a camera moving slowly along its length. The process was time-consuming due to focus problems."
+    },
+    {
+      "id": "q_24fps",
+      "question": "Film projectors have traditionally run at 24 frames per second. This specific number wasn't chosen for visual quality — it was the minimum speed needed for what other technical requirement to work properly?",
+      "stored_answer": "For the optical soundtrack (audio) to sound acceptable",
+      "verdict": "correct",
+      "notes": "Verified. 24 fps became standard because it was the minimum frame rate at which optical soundtracks (sound-on-film) could produce acceptable audio quality. Higher rates would have worked but cost more film. The standard was established between 1927-1930 as sound films became the norm.",
+      "suggested_fix": null,
+      "source_url": "https://www.filmsfatale.com/blog/2020/5/14/film-history-frames-per-second",
+      "source_excerpt": "With the birth of the sound era, it became necessary to shoot and project at 24 frames-per-second, in order to produce clear sound on the optical soundtrack. 24 fps was the slowest frame rate possible to get intelligible sound from the optical track."
+    },
+    {
+      "id": "q_wilhelm_scream",
+      "question": "The 'Wilhelm Scream' — a specific recording of a man screaming — has been deliberately reused as an inside joke in over 400 films and TV shows since 1951. What was happening to the character in the original recording?",
+      "stored_answer": "He was being bitten or dragged by an alligator",
+      "verdict": "correct",
+      "notes": "Verified. The Wilhelm Scream originates from the 1951 film 'Distant Drums.' The sound was recorded for a scene where a soldier is bitten and dragged underwater by an alligator while wading through a swamp. The effect's original title was 'man bitten by alligators, short screams.'",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Wilhelm_scream",
+      "source_excerpt": "The Wilhelm scream originates from a series of sound effects recorded for the 1951 film Distant Drums. In a scene, soldiers are wading through a swamp and one is bitten and dragged underwater by an alligator."
+    }
+  ]
+}

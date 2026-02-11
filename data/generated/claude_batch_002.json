@@ -1,0 +1,485 @@
+{
+  "questions": [
+    {
+      "question": "The Great Wall of China is famous for its length, but what surprising material makes up much of the mortar holding its stones together — a material you'd more commonly find at breakfast?",
+      "type": "text",
+      "correct_answer": "Sticky rice",
+      "possible_answers": null,
+      "alternative_answers": ["sticky rice", "glutinous rice", "rice", "rice flour"],
+      "topic": "Arts",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["architecture", "china", "building materials", "food"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Surprising Connection",
+          "why_interesting": "The collision of ancient engineering and a breakfast staple creates a genuine 'wait, really?' moment — the answer itself is the surprise, not a famous name",
+          "universal_appeal": "The Great Wall is globally known; rice is universally familiar. The connection surprises everyone.",
+          "boring_check": "Not a name-recall question. The answer (sticky rice) is the delightful surprise."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 9.0,
+          "reasoning": "The answer itself teaches something wonderful. Sticky rice mortar has been verified by researchers — the amylopectin in glutinous rice creates an extremely strong binding agent."
+        },
+        "ai_score": 9.0
+      }
+    },
+    {
+      "question": "What comes next in this sequence: 1, 11, 21, 1211, 111221, ...?",
+      "type": "text",
+      "correct_answer": "312211",
+      "possible_answers": null,
+      "alternative_answers": ["312211"],
+      "explanation": "This is the 'look-and-say' sequence. Each term describes the previous one: 1 is 'one 1' → 11; 11 is 'two 1s' → 21; 21 is 'one 2, one 1' → 1211; and so on. So 111221 is 'three 1s, two 2s, one 1' → 312211.",
+      "topic": "Logic",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["number-sequence", "pattern recognition", "look-and-say"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Number Sequence",
+          "why_interesting": "The look-and-say sequence is one of the most elegant 'aha!' patterns — once you see it, it's obvious, but finding the rule requires a creative leap",
+          "universal_appeal": "Numbers are universal; no cultural knowledge required",
+          "boring_check": "Not a trivial arithmetic sequence. The pattern is genuinely clever and has exactly one valid continuation."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 8,
+          "factual_accuracy": 10,
+          "overall_score": 9.0,
+          "reasoning": "A classic puzzle with a beautiful 'aha!' when the self-describing pattern clicks. Hard because it requires a non-standard way of thinking about numbers."
+        },
+        "ai_score": 9.0
+      }
+    },
+    {
+      "question": "Before synthetic dyes were invented in 1856, producing the colour purple required harvesting roughly 12,000 of a certain sea creature for just 1.5 grams of dye. What creature was it?",
+      "type": "text",
+      "correct_answer": "Sea snails",
+      "possible_answers": null,
+      "alternative_answers": ["sea snails", "murex snails", "murex", "snails", "bolinus brandaris", "murex brandaris"],
+      "topic": "Arts",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["colour", "dye", "ancient history", "marine biology"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Scale Surprise / Surprising Connection",
+          "why_interesting": "The staggering scale (12,000 creatures for 1.5g) explains why purple was reserved for royalty — the answer connects biology, economics, and history",
+          "universal_appeal": "Purple's association with royalty is globally known; the 'why' is universally surprising",
+          "boring_check": "The answer (sea snails) is the surprise, not a famous name. The scale creates genuine wonder."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 9.0,
+          "reasoning": "Explains a cultural phenomenon (purple = royalty) through a surprising biological/economic fact. The 12,000-to-1.5g ratio is jaw-dropping."
+        },
+        "ai_score": 9.0
+      }
+    },
+    {
+      "question": "Which Olympic sport requires athletes to compete in five completely different disciplines — fencing, swimming, horse riding, running, and shooting — all in a single competition?",
+      "type": "text",
+      "correct_answer": "Modern pentathlon",
+      "possible_answers": null,
+      "alternative_answers": ["modern pentathlon", "pentathlon", "the modern pentathlon"],
+      "topic": "Sports",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["olympics", "multi-sport", "fencing", "horse riding"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Surprising Connection",
+          "why_interesting": "The sheer absurdity of combining 5 wildly different skills creates wonder — fencing AND swimming AND horse riding? The combination itself is the surprise",
+          "universal_appeal": "The Olympics are globally known; the bizarre combination transcends cultures",
+          "boring_check": "Not name-recall — the answer is a sport most people haven't heard of, and the 5-discipline combination is genuinely surprising"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 8,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.7,
+          "reasoning": "The combination of 5 unrelated disciplines in one event is inherently fascinating. Most people are surprised to learn this sport exists at the Olympics."
+        },
+        "ai_score": 8.7
+      }
+    },
+    {
+      "question": "When the Statue of Liberty was first unveiled in 1886, it wasn't the green colour we know today. What colour was it originally?",
+      "type": "text",
+      "correct_answer": "Shiny copper brown",
+      "possible_answers": null,
+      "alternative_answers": ["copper", "brown", "copper brown", "shiny copper", "reddish brown", "copper colored", "copper coloured", "like a penny"],
+      "topic": "Arts",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": ["architecture", "landmarks", "chemistry", "oxidation"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Hidden Property",
+          "why_interesting": "Everyone 'knows' the Statue of Liberty is green — learning it was originally copper-brown like a new penny creates a genuine 'I never thought about that' moment",
+          "universal_appeal": "The Statue of Liberty is one of the most globally recognized landmarks",
+          "boring_check": "The answer (copper brown) is the surprise — not a name. Simple but effective 'aha!' moment."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.7,
+          "reasoning": "Simple but effective — challenges a universal assumption. Easy difficulty because the answer is logical once you think about copper oxidation."
+        },
+        "ai_score": 8.7
+      }
+    },
+    {
+      "question": "A woman reads five books every single week and finishes each one, yet she has never read a single page. How is this possible?",
+      "type": "text",
+      "correct_answer": "She listens to audiobooks",
+      "possible_answers": null,
+      "alternative_answers": ["audiobooks", "she listens to audiobooks", "audio books", "she uses audiobooks", "listens to them"],
+      "explanation": "The word 'reads' is used loosely — she consumes books by listening to audiobooks, not by reading physical pages.",
+      "topic": "Logic",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["lateral-thinking", "wordplay", "books"],
+      "language_dependent": true,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Lateral Thinking Puzzle",
+          "why_interesting": "Plays on the modern ambiguity of 'reading' a book — the answer is satisfying because it's perfectly logical yet requires reframing the word 'read'",
+          "universal_appeal": "Audiobooks are globally popular; the concept translates well across cultures",
+          "boring_check": "Classic lateral thinking — the answer is a modern twist that feels clever, not tricky"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 7,
+          "clarity": 9,
+          "factual_accuracy": 10,
+          "overall_score": 8.7,
+          "reasoning": "Clean lateral thinking puzzle with a modern, relatable answer. Marked language_dependent because the 'read' double meaning may not translate perfectly."
+        },
+        "ai_score": 8.7
+      }
+    },
+    {
+      "question": "The word 'robot' didn't exist before 1920 — it first appeared in a Czech play and comes from the Czech word 'robota.' What does robota mean?",
+      "type": "text",
+      "correct_answer": "Forced labour",
+      "possible_answers": null,
+      "alternative_answers": ["forced labour", "forced labor", "hard work", "drudgery", "compulsory work", "serfdom", "servitude"],
+      "topic": "Literature",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["words", "etymology", "czech", "science fiction"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Surprising Connection",
+          "why_interesting": "The word 'robot' is globally used but its origin — a Czech play about artificial workers, with 'robota' meaning forced labour — reframes how we think about the concept",
+          "universal_appeal": "Robots and the word 'robot' are universally known; the Czech origin surprises almost everyone",
+          "boring_check": "The answer (forced labour) is the surprise — it gives the word 'robot' a darker, more interesting connotation"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 8,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.7,
+          "reasoning": "Connects a universally known modern word to its surprisingly dark literary origin. The answer (forced labour) reframes how we think about 'robots' today."
+        },
+        "ai_score": 8.7
+      }
+    },
+    {
+      "question": "Two boxers are in a championship boxing match scheduled for 12 rounds. One of them gets knocked out after 6 rounds, yet no man threw a punch. How is this possible?",
+      "type": "text",
+      "correct_answer": "The boxers are women",
+      "possible_answers": null,
+      "alternative_answers": ["the boxers are women", "they are women", "women's boxing", "they're women", "female boxers", "it's a women's match"],
+      "explanation": "The question says 'no man threw a punch' — not 'no person threw a punch.' The boxers are women.",
+      "topic": "Sports",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["lateral-thinking", "boxing", "gender assumptions"],
+      "language_dependent": true,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Lateral Thinking Puzzle",
+          "why_interesting": "Exposes unconscious gender assumptions — most people automatically picture male boxers, making the reveal both surprising and thought-provoking",
+          "universal_appeal": "Boxing is globally understood; the gender assumption puzzle works across cultures",
+          "boring_check": "Clean lateral thinking with a social commentary angle. Marked language_dependent because 'man' vs 'person' distinction is key."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 7,
+          "clarity": 9,
+          "factual_accuracy": 10,
+          "overall_score": 8.7,
+          "reasoning": "Effective assumption-challenger. The 'no man' phrasing is the key misdirection. Works well as a pub quiz question that generates discussion."
+        },
+        "ai_score": 8.7
+      }
+    },
+    {
+      "question": "The vivid blue pigment used in many Renaissance paintings was more expensive per gram than gold. What semi-precious stone was ground into powder to produce it?",
+      "type": "text",
+      "correct_answer": "Lapis lazuli",
+      "possible_answers": null,
+      "alternative_answers": ["lapis lazuli", "lapis", "ultramarine"],
+      "topic": "Arts",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["art history", "pigment", "renaissance", "minerals"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Hidden Property / Scale Surprise",
+          "why_interesting": "The fact that a common colour in paintings was made from a semi-precious stone more expensive than gold explains why blue was used so sparingly — it adds a whole new layer to viewing Renaissance art",
+          "universal_appeal": "Renaissance paintings are globally exhibited and appreciated; colour and cost are universally understood",
+          "boring_check": "The answer (lapis lazuli) is a specific material — it's a surprising fact, not name-recall. The 'more expensive than gold' detail creates genuine wonder."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.8,
+          "reasoning": "Changes how you look at Renaissance paintings forever — you'll never see blue the same way. Hard because lapis lazuli isn't common knowledge."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "Which of these words does NOT come from a fictional literary character: utopian, quixotic, machiavellian, lilliputian?",
+      "type": "text",
+      "correct_answer": "Machiavellian",
+      "possible_answers": null,
+      "alternative_answers": ["machiavellian"],
+      "explanation": "Utopian comes from Thomas More's fictional island 'Utopia', quixotic from Don Quixote, and lilliputian from the tiny people of Lilliput in Gulliver's Travels. Machiavellian comes from Niccolò Machiavelli — a real historical person, not a fictional character.",
+      "topic": "Literature",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["odd-one-out", "etymology", "vocabulary", "literature"],
+      "language_dependent": true,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Odd One Out",
+          "why_interesting": "All four words feel like they come from literature, but one comes from a real person — the distinction is clean and the reasoning is satisfying",
+          "universal_appeal": "These words are used internationally in many languages; the literary origins are globally interesting",
+          "boring_check": "Logic question with a clean, unambiguous criterion. Teaches etymology in an engaging way."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 8,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.7,
+          "reasoning": "Clean odd-one-out with a single defensible answer. The 'fiction vs. real person' criterion is elegant and educational."
+        },
+        "ai_score": 8.7
+      }
+    },
+    {
+      "question": "In the ancient Greek Olympics, athletes competed completely naked. What substance did they rub all over their bodies before competing?",
+      "type": "text",
+      "correct_answer": "Olive oil",
+      "possible_answers": null,
+      "alternative_answers": ["olive oil", "oil"],
+      "topic": "Sports",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["ancient olympics", "ancient greece", "sports history"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Historical Quirk",
+          "why_interesting": "The image of oiled-up naked athletes at the Olympics is vivid and memorable — it's a far cry from modern sporting events and the answer (olive oil) is both surprising and logical",
+          "universal_appeal": "The Olympics are globally known; ancient customs fascinate across cultures",
+          "boring_check": "The answer (olive oil) is a common kitchen item used in an unexpected context — not a name-recall question"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.7,
+          "reasoning": "The naked-plus-olive-oil detail is vividly memorable. Easy to verify historically and the answer creates a great visual/conversational moment."
+        },
+        "ai_score": 8.7
+      }
+    },
+    {
+      "question": "Which common English word — now used to describe someone intensely studious or obsessive about a subject — first appeared as a made-up creature in a Dr. Seuss children's book in 1950?",
+      "type": "text",
+      "correct_answer": "Nerd",
+      "possible_answers": null,
+      "alternative_answers": ["nerd", "a nerd"],
+      "topic": "Literature",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["words", "etymology", "dr seuss", "pop culture"],
+      "language_dependent": true,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Surprising Connection",
+          "why_interesting": "The word 'nerd' is used globally but nobody expects it to originate from a Dr. Seuss creature — the collision of children's literature and modern slang is delightful",
+          "universal_appeal": "The word 'nerd' has been adopted into many languages; Dr. Seuss is internationally known. Marked language_dependent because it's about an English word.",
+          "boring_check": "The answer (nerd) is a word, not a person's name. The Dr. Seuss origin is genuinely surprising."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 8,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 8,
+          "overall_score": 8.5,
+          "reasoning": "Surprising origin for a universally known word. Slightly lower accuracy because while the first print appearance is in Dr. Seuss's 'If I Ran the Zoo,' the exact path from creature to slang is debated."
+        },
+        "ai_score": 8.5
+      }
+    }
+  ],
+  "metadata": {
+    "model": "claude-opus-4-6",
+    "provider": "anthropic",
+    "generated_at": "2026-02-10T12:30:00Z",
+    "total_generated": 18,
+    "total_selected": 12,
+    "pipeline": "claude_code_session",
+    "prompt_version": "v2_cot"
+  }
+}

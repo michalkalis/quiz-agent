@@ -98,6 +98,27 @@ struct SettingsView: View {
                             .labelsHidden()
                             .tint(Theme.Colors.accentPrimary)
                         }
+
+                        // Barge-In (iOS 26+, requires voice commands)
+                        VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
+                            SettingsInputField(
+                                label: "Barge-In",
+                                icon: "hand.raised.fill",
+                                value: viewModel.settings.bargeInEnabled ? "On" : "Off"
+                            ) {
+                                Toggle(
+                                    "",
+                                    isOn: $viewModel.settings.bargeInEnabled
+                                )
+                                .labelsHidden()
+                                .tint(Theme.Colors.accentPrimary)
+                            }
+
+                            Text("Interrupt question audio by speaking. Works best with Bluetooth or CarPlay.")
+                                .font(.system(size: Theme.Typography.sizeXS))
+                                .foregroundColor(Theme.Colors.textTertiary)
+                                .padding(.horizontal, 4)
+                        }
                     }
 
                     // Audio Mode

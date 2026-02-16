@@ -26,6 +26,9 @@ protocol VoiceCommandServiceProtocol: AnyObject, Sendable {
     /// Stream of silence detection events (voice activity detection)
     var silenceEvents: AsyncStream<SilenceEvent> { get }
 
+    /// Stream of barge-in events (speech detected during TTS on external audio route)
+    var bargeInEvents: AsyncStream<Void> { get }
+
     /// Current listening state for UI
     var listeningState: VoiceCommandListeningState { get }
 
@@ -41,6 +44,9 @@ protocol VoiceCommandServiceProtocol: AnyObject, Sendable {
 
     /// Suppress all commands except "stop" during answer recording.
     func setRecordingActive(_ active: Bool)
+
+    /// Signal whether TTS is currently playing (for barge-in detection).
+    func setTTSPlaybackActive(_ active: Bool)
 }
 
 // MARK: - Implementation (iOS 26+)
@@ -52,12 +58,14 @@ final class VoiceCommandService: VoiceCommandServiceProtocol {
 
     let commands: AsyncStream<VoiceCommand>
     let silenceEvents: AsyncStream<SilenceEvent>
+    let bargeInEvents: AsyncStream<Void>
     private(set) var listeningState: VoiceCommandListeningState = .disabled
 
     // MARK: - Private State
 
     private let commandContinuation: AsyncStream<VoiceCommand>.Continuation
     private let silenceContinuation: AsyncStream<SilenceEvent>.Continuation
+    private let bargeInContinuation: AsyncStream<Void>.Continuation
 
     private var audioEngine: AVAudioEngine?
     private var listeningTask: Task<Void, Never>?
@@ -68,6 +76,9 @@ final class VoiceCommandService: VoiceCommandServiceProtocol {
 
     /// When true, only "stop" is matched (during answer recording)
     private var isRecordingActive = false
+
+    /// When true, TTS is playing and barge-in detection is active
+    private var isTTSPlaybackActive = false
 
     /// Silence detection state machine
     private enum SilenceState {
@@ -91,11 +102,16 @@ final class VoiceCommandService: VoiceCommandServiceProtocol {
         var silenceCont: AsyncStream<SilenceEvent>.Continuation!
         self.silenceEvents = AsyncStream { silenceCont = $0 }
         self.silenceContinuation = silenceCont
+
+        var bargeInCont: AsyncStream<Void>.Continuation!
+        self.bargeInEvents = AsyncStream { bargeInCont = $0 }
+        self.bargeInContinuation = bargeInCont
     }
 
     deinit {
         commandContinuation.finish()
         silenceContinuation.finish()
+        bargeInContinuation.finish()
     }
 
     private var analyzer: SpeechAnalyzer?
@@ -200,6 +216,16 @@ final class VoiceCommandService: VoiceCommandServiceProtocol {
                 guard let self, !Task.isCancelled else { break }
 
                 if result.speechDetected {
+                    // Barge-in: if TTS is playing and output is external, interrupt
+                    if self.isTTSPlaybackActive && self.isExternalAudioRoute() {
+                        self.bargeInContinuation.yield(())
+                        if Config.verboseLogging {
+                            print("🗣️ Barge-in: speech detected during TTS on external route")
+                        }
+                        // Don't update silence state — barge-in handler will reset things
+                        continue
+                    }
+
                     // Speech is detected
                     switch self.silenceState {
                     case .idle:
@@ -367,6 +393,28 @@ final class VoiceCommandService: VoiceCommandServiceProtocol {
             print("🎙️ Recording active: \(active) — \(active ? "only 'stop' allowed" : "all commands enabled")")
         }
     }
+
+    // MARK: - Barge-In Detection
+
+    func setTTSPlaybackActive(_ active: Bool) {
+        isTTSPlaybackActive = active
+
+        if Config.verboseLogging {
+            print("🎙️ TTS playback active: \(active)")
+        }
+    }
+
+    /// Check if audio output is going to an external device (Bluetooth, CarPlay, AirPlay)
+    /// where echo from TTS is unlikely to reach the mic.
+    private func isExternalAudioRoute() -> Bool {
+        let outputs = AVAudioSession.sharedInstance().currentRoute.outputs
+        let externalPorts: Set<AVAudioSession.Port> = [
+            .bluetoothA2DP, .bluetoothHFP, .bluetoothLE,
+            .carAudio, .airPlay, .headphones, .headsetMic,
+        ]
+
+        return outputs.contains { externalPorts.contains($0.portType) }
+    }
 }
 
 // MARK: - Mock for Testing
@@ -375,8 +423,10 @@ final class VoiceCommandService: VoiceCommandServiceProtocol {
 final class MockVoiceCommandService: VoiceCommandServiceProtocol {
     let commands: AsyncStream<VoiceCommand>
     let silenceEvents: AsyncStream<SilenceEvent>
+    let bargeInEvents: AsyncStream<Void>
     private let commandContinuation: AsyncStream<VoiceCommand>.Continuation
     private let silenceContinuation: AsyncStream<SilenceEvent>.Continuation
+    private let bargeInContinuation: AsyncStream<Void>.Continuation
 
     private(set) var listeningState: VoiceCommandListeningState = .disabled
 
@@ -384,6 +434,7 @@ final class MockVoiceCommandService: VoiceCommandServiceProtocol {
     var isListening = false
     var playbackText: String?
     var recordingActive = false
+    var ttsPlaybackActive = false
     var startListeningCallCount = 0
     var stopListeningCallCount = 0
 
@@ -395,6 +446,10 @@ final class MockVoiceCommandService: VoiceCommandServiceProtocol {
         var silenceCont: AsyncStream<SilenceEvent>.Continuation!
         self.silenceEvents = AsyncStream { silenceCont = $0 }
         self.silenceContinuation = silenceCont
+
+        var bargeInCont: AsyncStream<Void>.Continuation!
+        self.bargeInEvents = AsyncStream { bargeInCont = $0 }
+        self.bargeInContinuation = bargeInCont
     }
 
     func startListening() async {
@@ -417,6 +472,10 @@ final class MockVoiceCommandService: VoiceCommandServiceProtocol {
         recordingActive = active
     }
 
+    func setTTSPlaybackActive(_ active: Bool) {
+        ttsPlaybackActive = active
+    }
+
     /// Simulate a detected command (for tests)
     func simulateCommand(_ command: VoiceCommand) {
         commandContinuation.yield(command)
@@ -427,6 +486,11 @@ final class MockVoiceCommandService: VoiceCommandServiceProtocol {
         silenceContinuation.yield(event)
     }
 
+    /// Simulate a barge-in event (for tests)
+    func simulateBargeIn() {
+        bargeInContinuation.yield(())
+    }
+
     /// Finish the command stream (for tests)
     func finishCommands() {
         commandContinuation.finish()
@@ -435,5 +499,10 @@ final class MockVoiceCommandService: VoiceCommandServiceProtocol {
     /// Finish the silence events stream (for tests)
     func finishSilenceEvents() {
         silenceContinuation.finish()
+    }
+
+    /// Finish the barge-in events stream (for tests)
+    func finishBargeInEvents() {
+        bargeInContinuation.finish()
     }
 }

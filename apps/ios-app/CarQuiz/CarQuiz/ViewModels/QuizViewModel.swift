@@ -168,6 +168,7 @@ final class QuizViewModel: ObservableObject {
 
     @Published var voiceCommandState: VoiceCommandListeningState = .disabled
     private var voiceCommandTask: Task<Void, Never>?
+    private var bargeInTask: Task<Void, Never>?
 
     // MARK: - Auto-Record State
 
@@ -1209,8 +1210,9 @@ final class QuizViewModel: ObservableObject {
     }
 
     private func playQuestionAudio(from urlString: String) async {
-        // Set echo cancellation text before playback
+        // Set echo cancellation text and TTS active flag before playback
         voiceCommandService?.setPlaybackText(currentQuestion?.question)
+        voiceCommandService?.setTTSPlaybackActive(true)
 
         do {
             let audioData = try await networkService.downloadAudio(from: urlString)
@@ -1222,10 +1224,11 @@ final class QuizViewModel: ObservableObject {
             // Don't fail the quiz if audio doesn't play
         }
 
-        // Clear echo cancellation after playback
+        // Clear echo cancellation and TTS active flag after playback
         voiceCommandService?.setPlaybackText(nil)
+        voiceCommandService?.setTTSPlaybackActive(false)
 
-        // After TTS finishes, choose auto-record or timer path
+        // After TTS finishes (or was interrupted by barge-in), choose next path
         guard quizState == .askingQuestion else { return }
 
         if settings.autoRecordEnabled && voiceCommandService != nil && !isRerecording {
@@ -1277,6 +1280,8 @@ final class QuizViewModel: ObservableObject {
         autoStopRecordingTask = nil
         silenceDetectionTask?.cancel()
         silenceDetectionTask = nil
+        bargeInTask?.cancel()
+        bargeInTask = nil
 
         // Stop voice commands
         stopVoiceCommands()
@@ -1326,6 +1331,16 @@ final class QuizViewModel: ObservableObject {
             }
         }
 
+        // Subscribe to barge-in events (speech during TTS on external audio)
+        if settings.bargeInEnabled {
+            bargeInTask = Task { [weak self] in
+                for await _ in service.bargeInEvents {
+                    guard let self, !Task.isCancelled else { break }
+                    await self.handleBargeIn()
+                }
+            }
+        }
+
         // Sync UI state
         voiceCommandState = .listening
     }
@@ -1334,8 +1349,38 @@ final class QuizViewModel: ObservableObject {
     private func stopVoiceCommands() {
         voiceCommandTask?.cancel()
         voiceCommandTask = nil
+        bargeInTask?.cancel()
+        bargeInTask = nil
         voiceCommandService?.stopListening()
         voiceCommandState = .disabled
+    }
+
+    /// Handle barge-in: user spoke during TTS playback on external audio route
+    private func handleBargeIn() async {
+        // Only barge-in during question playback
+        guard quizState == .askingQuestion else { return }
+
+        if Config.verboseLogging {
+            print("🗣️ Barge-in triggered — stopping TTS and starting recording")
+        }
+
+        // 1. Stop TTS immediately
+        await stopAnyPlayingAudio()
+
+        // 2. Clear echo cancellation state
+        voiceCommandService?.setPlaybackText(nil)
+        voiceCommandService?.setTTSPlaybackActive(false)
+
+        // 3. Wait for audio hardware to settle
+        try? await Task.sleep(nanoseconds: 500_000_000) // 500ms
+
+        // 4. Guard again — state may have changed during sleep
+        guard quizState == .askingQuestion else { return }
+
+        // 5. Auto-start recording (same as post-TTS flow)
+        cancelAnswerTimer()
+        isAutoRecording = true
+        await startRecording()
     }
 
     /// Dispatch a voice command to the appropriate action based on current state

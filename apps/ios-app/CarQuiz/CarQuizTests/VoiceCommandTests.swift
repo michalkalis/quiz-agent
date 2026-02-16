@@ -489,3 +489,160 @@ struct AutoRecordViewModelTests {
         #expect(viewModel.quizState == .askingQuestion)
     }
 }
+
+// MARK: - Phase 3: Barge-In Detection Tests
+
+@Suite("QuizSettings Barge-In Tests")
+struct QuizSettingsBargeInTests {
+
+    @Test("default settings have bargeInEnabled = true")
+    func defaultBargeInEnabled() {
+        let settings = QuizSettings.default
+        #expect(settings.bargeInEnabled == true)
+    }
+
+    @Test("backward-compatible decoding — missing bargeInEnabled defaults to true")
+    func backwardCompatibleBargeIn() throws {
+        let json = """
+        {
+            "language": "en",
+            "audioMode": "media",
+            "numberOfQuestions": 10,
+            "difficulty": "medium",
+            "autoAdvanceDelay": 8,
+            "answerTimeLimit": 30
+        }
+        """
+        let data = json.data(using: .utf8)!
+        let settings = try JSONDecoder().decode(QuizSettings.self, from: data)
+
+        #expect(settings.bargeInEnabled == true)
+    }
+
+    @Test("bargeInEnabled persists when set to false")
+    func bargeInDisabledPersists() throws {
+        let json = """
+        {
+            "language": "en",
+            "audioMode": "media",
+            "numberOfQuestions": 10,
+            "difficulty": "medium",
+            "autoAdvanceDelay": 8,
+            "answerTimeLimit": 30,
+            "bargeInEnabled": false
+        }
+        """
+        let data = json.data(using: .utf8)!
+        let settings = try JSONDecoder().decode(QuizSettings.self, from: data)
+
+        #expect(settings.bargeInEnabled == false)
+    }
+
+    @Test("all three voice settings decode together")
+    func allVoiceSettingsDecode() throws {
+        let json = """
+        {
+            "language": "en",
+            "audioMode": "media",
+            "numberOfQuestions": 10,
+            "difficulty": "medium",
+            "autoAdvanceDelay": 8,
+            "answerTimeLimit": 30,
+            "voiceCommandsEnabled": true,
+            "autoRecordEnabled": false,
+            "bargeInEnabled": false
+        }
+        """
+        let data = json.data(using: .utf8)!
+        let settings = try JSONDecoder().decode(QuizSettings.self, from: data)
+
+        #expect(settings.voiceCommandsEnabled == true)
+        #expect(settings.autoRecordEnabled == false)
+        #expect(settings.bargeInEnabled == false)
+    }
+}
+
+@Suite("Barge-In Mock Service Tests")
+struct BargeInMockServiceTests {
+
+    @Test("mock service tracks TTS playback active state")
+    @MainActor
+    func mockTracksTTSPlaybackActive() async throws {
+        let mock = MockVoiceCommandService()
+
+        mock.setTTSPlaybackActive(true)
+        #expect(mock.ttsPlaybackActive == true)
+
+        mock.setTTSPlaybackActive(false)
+        #expect(mock.ttsPlaybackActive == false)
+    }
+
+    @Test("mock service simulates barge-in events")
+    @MainActor
+    func mockSimulatesBargeIn() async throws {
+        let mock = MockVoiceCommandService()
+        await mock.startListening()
+
+        // Simulate barge-in
+        mock.simulateBargeIn()
+
+        // Verify service is still listening
+        #expect(mock.isListening == true)
+    }
+}
+
+@Suite("Barge-In ViewModel Tests")
+struct BargeInViewModelTests {
+
+    @MainActor
+    private func makeViewModel(bargeInEnabled: Bool = true) -> (QuizViewModel, MockVoiceCommandService) {
+        let mockVoice = MockVoiceCommandService()
+        let mockNetwork = MockNetworkService()
+        mockNetwork.mockSession = QuizSession(
+            id: "test_session_123",
+            mode: "single", phase: "asking", maxQuestions: 10,
+            currentDifficulty: "medium", category: nil, language: "en",
+            participants: [
+                Participant(
+                    id: "p1", userId: nil, displayName: "Player",
+                    score: 0, answeredCount: 0, correctCount: 0,
+                    lastAnswer: nil, lastResult: nil,
+                    isHost: true, isReady: true, joinedAt: Date()
+                )
+            ],
+            expiresAt: Date().addingTimeInterval(30 * 60),
+            createdAt: Date()
+        )
+
+        let viewModel = QuizViewModel(
+            networkService: mockNetwork,
+            audioService: MockAudioService(),
+            persistenceStore: MockPersistenceStore(),
+            voiceCommandService: mockVoice
+        )
+        viewModel.settings.bargeInEnabled = bargeInEnabled
+        return (viewModel, mockVoice)
+    }
+
+    @Test("barge-in setting toggle reflects in settings model")
+    @MainActor
+    func bargeInSettingToggle() async throws {
+        let (viewModel, _) = makeViewModel(bargeInEnabled: true)
+        #expect(viewModel.settings.bargeInEnabled == true)
+
+        viewModel.settings.bargeInEnabled = false
+        #expect(viewModel.settings.bargeInEnabled == false)
+    }
+
+    @Test("TTS playback active is set correctly via mock")
+    @MainActor
+    func ttsPlaybackActiveSet() async throws {
+        let (_, mockVoice) = makeViewModel()
+
+        mockVoice.setTTSPlaybackActive(true)
+        #expect(mockVoice.ttsPlaybackActive == true)
+
+        mockVoice.setTTSPlaybackActive(false)
+        #expect(mockVoice.ttsPlaybackActive == false)
+    }
+}

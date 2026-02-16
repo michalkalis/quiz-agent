@@ -43,6 +43,10 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// Requires iOS 26+ for SpeechDetector VAD
     var autoRecordEnabled: Bool
 
+    /// Whether barge-in is enabled (interrupt TTS by speaking to answer immediately)
+    /// Only active on external audio routes (Bluetooth/CarPlay) to avoid echo issues
+    var bargeInEnabled: Bool
+
     // MARK: - Memberwise Init
 
     init(
@@ -55,7 +59,8 @@ struct QuizSettings: Codable, Equatable, Sendable {
         answerTimeLimit: Int,
         preferredInputDeviceId: String?,
         voiceCommandsEnabled: Bool = true,
-        autoRecordEnabled: Bool = true
+        autoRecordEnabled: Bool = true,
+        bargeInEnabled: Bool = true
     ) {
         self.language = language
         self.audioMode = audioMode
@@ -67,6 +72,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
         self.preferredInputDeviceId = preferredInputDeviceId
         self.voiceCommandsEnabled = voiceCommandsEnabled
         self.autoRecordEnabled = autoRecordEnabled
+        self.bargeInEnabled = bargeInEnabled
     }
 
     // MARK: - Default Configuration
@@ -82,7 +88,8 @@ struct QuizSettings: Codable, Equatable, Sendable {
         answerTimeLimit: 30,
         preferredInputDeviceId: nil,
         voiceCommandsEnabled: true,
-        autoRecordEnabled: true
+        autoRecordEnabled: true,
+        bargeInEnabled: true
     )
 
     // MARK: - Backward-Compatible Decoding
@@ -100,6 +107,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
         preferredInputDeviceId = try container.decodeIfPresent(String.self, forKey: .preferredInputDeviceId)
         voiceCommandsEnabled = try container.decodeIfPresent(Bool.self, forKey: .voiceCommandsEnabled) ?? true
         autoRecordEnabled = try container.decodeIfPresent(Bool.self, forKey: .autoRecordEnabled) ?? true
+        bargeInEnabled = try container.decodeIfPresent(Bool.self, forKey: .bargeInEnabled) ?? true
     }
 
     // MARK: - Validation Helpers

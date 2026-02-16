@@ -36,6 +36,39 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// Preferred input device UID (nil = automatic selection)
     var preferredInputDeviceId: String?
 
+    /// Whether voice commands are enabled (requires iOS 26+)
+    var voiceCommandsEnabled: Bool
+
+    /// Whether auto-record is enabled (auto-start recording after TTS + silence detection to auto-stop)
+    /// Requires iOS 26+ for SpeechDetector VAD
+    var autoRecordEnabled: Bool
+
+    // MARK: - Memberwise Init
+
+    init(
+        language: String,
+        audioMode: String,
+        numberOfQuestions: Int,
+        category: String?,
+        difficulty: String,
+        autoAdvanceDelay: Int,
+        answerTimeLimit: Int,
+        preferredInputDeviceId: String?,
+        voiceCommandsEnabled: Bool = true,
+        autoRecordEnabled: Bool = true
+    ) {
+        self.language = language
+        self.audioMode = audioMode
+        self.numberOfQuestions = numberOfQuestions
+        self.category = category
+        self.difficulty = difficulty
+        self.autoAdvanceDelay = autoAdvanceDelay
+        self.answerTimeLimit = answerTimeLimit
+        self.preferredInputDeviceId = preferredInputDeviceId
+        self.voiceCommandsEnabled = voiceCommandsEnabled
+        self.autoRecordEnabled = autoRecordEnabled
+    }
+
     // MARK: - Default Configuration
 
     /// Default settings matching app defaults
@@ -43,12 +76,31 @@ struct QuizSettings: Codable, Equatable, Sendable {
         language: "en",
         audioMode: "media",
         numberOfQuestions: 10,
-        category: nil,  // All categories
+        category: nil,
         difficulty: "medium",
         autoAdvanceDelay: 8,
         answerTimeLimit: 30,
-        preferredInputDeviceId: nil  // Automatic
+        preferredInputDeviceId: nil,
+        voiceCommandsEnabled: true,
+        autoRecordEnabled: true
     )
+
+    // MARK: - Backward-Compatible Decoding
+
+    /// Custom decoder handles missing voiceCommandsEnabled in persisted data
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        language = try container.decode(String.self, forKey: .language)
+        audioMode = try container.decode(String.self, forKey: .audioMode)
+        numberOfQuestions = try container.decode(Int.self, forKey: .numberOfQuestions)
+        category = try container.decodeIfPresent(String.self, forKey: .category)
+        difficulty = try container.decode(String.self, forKey: .difficulty)
+        autoAdvanceDelay = try container.decode(Int.self, forKey: .autoAdvanceDelay)
+        answerTimeLimit = try container.decode(Int.self, forKey: .answerTimeLimit)
+        preferredInputDeviceId = try container.decodeIfPresent(String.self, forKey: .preferredInputDeviceId)
+        voiceCommandsEnabled = try container.decodeIfPresent(Bool.self, forKey: .voiceCommandsEnabled) ?? true
+        autoRecordEnabled = try container.decodeIfPresent(Bool.self, forKey: .autoRecordEnabled) ?? true
+    }
 
     // MARK: - Validation Helpers
 
@@ -99,7 +151,8 @@ extension QuizSettings {
         difficulty: "hard",
         autoAdvanceDelay: 5,
         answerTimeLimit: 45,
-        preferredInputDeviceId: nil
+        preferredInputDeviceId: nil,
+        voiceCommandsEnabled: true
     )
 }
 #endif

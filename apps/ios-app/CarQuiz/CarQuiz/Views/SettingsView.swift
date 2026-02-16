@@ -70,6 +70,36 @@ struct SettingsView: View {
 
                 // MARK: - Audio Settings Section
                 SettingsSection(title: "Audio Settings") {
+                    // Voice Commands (iOS 26+)
+                    if viewModel.voiceCommandsAvailable {
+                        SettingsInputField(
+                            label: "Voice Commands",
+                            icon: "mic.badge.xmark",
+                            value: viewModel.settings.voiceCommandsEnabled ? "On" : "Off"
+                        ) {
+                            Toggle(
+                                "",
+                                isOn: $viewModel.settings.voiceCommandsEnabled
+                            )
+                            .labelsHidden()
+                            .tint(Theme.Colors.accentPrimary)
+                        }
+
+                        // Auto-Record (iOS 26+, requires voice commands)
+                        SettingsInputField(
+                            label: "Auto-Record",
+                            icon: "waveform.badge.mic",
+                            value: viewModel.settings.autoRecordEnabled ? "On" : "Off"
+                        ) {
+                            Toggle(
+                                "",
+                                isOn: $viewModel.settings.autoRecordEnabled
+                            )
+                            .labelsHidden()
+                            .tint(Theme.Colors.accentPrimary)
+                        }
+                    }
+
                     // Audio Mode
                     SettingsInputField(
                         label: "Audio Mode",

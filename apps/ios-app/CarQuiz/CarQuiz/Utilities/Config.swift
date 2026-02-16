@@ -84,8 +84,12 @@ enum Config {
     /// Available answer time limit options (in seconds, 0 = Off)
     static let answerTimeLimitOptions = [0, 15, 20, 30, 45, 60]
 
-    /// Duration for auto-stop recording (seconds)
-    static let autoRecordingDuration: TimeInterval = 4.0
+    /// Duration for auto-stop recording — hard safety limit (seconds)
+    /// Increased from 4s to 15s for Phase 2 silence detection (users may speak longer answers)
+    static let autoRecordingDuration: TimeInterval = 15.0
+
+    /// Delay after TTS finishes before auto-starting recording (milliseconds)
+    static let autoRecordDelayMs: UInt64 = 500
 
     /// Window for re-record button before it disables (seconds)
     static let rerecordWindowDuration: Int = 5

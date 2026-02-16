@@ -164,11 +164,25 @@ final class QuizViewModel: ObservableObject {
     /// Safe because this class is @MainActor — all access is serialized on the main thread.
     private var isProcessingResponse = false
 
+    // MARK: - Voice Command State
+
+    @Published var voiceCommandState: VoiceCommandListeningState = .disabled
+    private var voiceCommandTask: Task<Void, Never>?
+
+    // MARK: - Auto-Record State
+
+    /// Whether auto-record is active for the current recording (for UI hints)
+    @Published var isAutoRecording: Bool = false
+
+    /// Whether speech has been detected during auto-record (for UI hints)
+    @Published var speechDetectedDuringAutoRecord: Bool = false
+
     // MARK: - Dependencies
 
     private let networkService: NetworkServiceProtocol
     private let audioService: AudioServiceProtocol
     private let persistenceStore: PersistenceStoreProtocol
+    private let voiceCommandService: VoiceCommandServiceProtocol?
 
     private var cancellables = Set<AnyCancellable>()
 
@@ -184,6 +198,9 @@ final class QuizViewModel: ObservableObject {
     // Auto-stop recording task (stops recording after Config.autoRecordingDuration)
     private var autoStopRecordingTask: Task<Void, Never>?
 
+    // Silence detection task (monitors speech activity during auto-record)
+    private var silenceDetectionTask: Task<Void, Never>?
+
     // Whether the current recording is a re-record (bypasses all timers)
     private var isRerecording: Bool = false
 
@@ -196,11 +213,13 @@ final class QuizViewModel: ObservableObject {
     init(
         networkService: NetworkServiceProtocol,
         audioService: AudioServiceProtocol,
-        persistenceStore: PersistenceStoreProtocol
+        persistenceStore: PersistenceStoreProtocol,
+        voiceCommandService: VoiceCommandServiceProtocol? = nil
     ) {
         self.networkService = networkService
         self.audioService = audioService
         self.persistenceStore = persistenceStore
+        self.voiceCommandService = voiceCommandService
 
         // Load saved settings
         self.settings = persistenceStore.loadSettings()
@@ -303,13 +322,16 @@ final class QuizViewModel: ObservableObject {
                 }
             }
 
+            // Start voice command listening
+            startVoiceCommands()
+
             // Play question audio if available
             if let audioInfo = response.audio,
                let questionUrl = audioInfo.questionUrl {
                 await playQuestionAudio(from: questionUrl)
             } else {
-                // No audio — start answer timer immediately
-                startAnswerTimer()
+                // No audio — auto-record or timer based on settings
+                await startRecordingOrTimer()
             }
 
         } catch {
@@ -346,13 +368,24 @@ final class QuizViewModel: ObservableObject {
         cancelAnswerTimer()
         errorMessage = nil
         quizState = .recording
+        voiceCommandService?.setRecordingActive(true)
 
         do {
             await audioService.prepareForRecording()
             try audioService.startRecording()
+
+            if isAutoRecording, let service = voiceCommandService {
+                // Auto-record path: use silence detection to auto-stop
+                speechDetectedDuringAutoRecord = false
+                startSilenceDetection(service: service)
+            }
+
+            // Always start the hard safety limit timer
             startAutoStopRecordingTimer()
         } catch {
             // Rollback to asking state so user can retry
+            isAutoRecording = false
+            speechDetectedDuringAutoRecord = false
             quizState = .askingQuestion
             errorMessage = "Recording failed: \(error.localizedDescription)"
 
@@ -362,9 +395,42 @@ final class QuizViewModel: ObservableObject {
         }
     }
 
+    /// Subscribe to silence events and auto-stop recording when silence threshold reached
+    private func startSilenceDetection(service: VoiceCommandServiceProtocol) {
+        cancelSilenceDetection()
+
+        silenceDetectionTask = Task { [weak self] in
+            for await event in service.silenceEvents {
+                guard let self, !Task.isCancelled else { break }
+                guard self.quizState == .recording else { continue }
+
+                switch event {
+                case .speechStarted:
+                    self.speechDetectedDuringAutoRecord = true
+                case .silenceAfterSpeech(let duration):
+                    if Config.verboseLogging {
+                        print("🔇 Auto-record: silence threshold reached (\(String(format: "%.1f", duration))s), auto-stopping")
+                    }
+                    await self.stopRecordingAndSubmit()
+                    return
+                }
+            }
+        }
+    }
+
+    /// Cancel silence detection subscription
+    private func cancelSilenceDetection() {
+        silenceDetectionTask?.cancel()
+        silenceDetectionTask = nil
+    }
+
     /// Stop recording and submit the audio for evaluation
     private func stopRecordingAndSubmit() async {
         cancelAutoStopRecordingTimer()
+        cancelSilenceDetection()
+        voiceCommandService?.setRecordingActive(false)
+        isAutoRecording = false
+        speechDetectedDuringAutoRecord = false
         do {
             let data = try await audioService.stopRecording()
             await submitVoiceAnswer(audioData: data)
@@ -550,6 +616,9 @@ final class QuizViewModel: ObservableObject {
         voiceSubmissionTask = nil
         cancelAnswerTimer()
         cancelAutoStopRecordingTimer()
+        cancelSilenceDetection()
+        isAutoRecording = false
+        speechDetectedDuringAutoRecord = false
         showAnswerConfirmation = false
         pendingResponse = nil
         transcribedAnswer = ""
@@ -837,6 +906,23 @@ final class QuizViewModel: ObservableObject {
         }
     }
 
+    // MARK: - Auto-Record or Timer
+
+    /// Choose between auto-record (Phase 2) or answer timer (Phase 1) based on settings
+    private func startRecordingOrTimer() async {
+        guard quizState == .askingQuestion else { return }
+
+        if settings.autoRecordEnabled && voiceCommandService != nil && !isRerecording {
+            // Auto-record path: 500ms pause → auto-start recording
+            try? await Task.sleep(nanoseconds: Config.autoRecordDelayMs * 1_000_000)
+            guard quizState == .askingQuestion else { return }
+            isAutoRecording = true
+            await startRecording()
+        } else {
+            startAnswerTimer()
+        }
+    }
+
     // MARK: - Answer Timer
 
     /// Start countdown timer that auto-starts recording when it expires
@@ -937,6 +1023,13 @@ final class QuizViewModel: ObservableObject {
                 context: .submission
             )
             return
+        }
+
+        // Validate question ID matches between evaluation and current question
+        if let evalQuestionId = evaluation.questionId,
+           let currentQId = currentQuestion?.id,
+           evalQuestionId != currentQId {
+            print("⚠️ MISMATCH: evaluation.questionId=\(evalQuestionId) != currentQuestion.id=\(currentQId)")
         }
 
         // CRITICAL: Capture the current question for the result state
@@ -1105,8 +1198,8 @@ final class QuizViewModel: ObservableObject {
                 await playQuestionAudio(from: questionUrl)
                 nextQuestionAudioUrl = nil  // Clear after use
             } else {
-                // No audio — start answer timer immediately
-                startAnswerTimer()
+                // No audio — auto-record or timer based on settings
+                await startRecordingOrTimer()
             }
 
             if Config.verboseLogging {
@@ -1116,6 +1209,9 @@ final class QuizViewModel: ObservableObject {
     }
 
     private func playQuestionAudio(from urlString: String) async {
+        // Set echo cancellation text before playback
+        voiceCommandService?.setPlaybackText(currentQuestion?.question)
+
         do {
             let audioData = try await networkService.downloadAudio(from: urlString)
             _ = try await audioService.playOpusAudio(audioData)
@@ -1126,8 +1222,20 @@ final class QuizViewModel: ObservableObject {
             // Don't fail the quiz if audio doesn't play
         }
 
-        // Start answer timer after audio finishes (or fails), if still asking
-        if quizState == .askingQuestion {
+        // Clear echo cancellation after playback
+        voiceCommandService?.setPlaybackText(nil)
+
+        // After TTS finishes, choose auto-record or timer path
+        guard quizState == .askingQuestion else { return }
+
+        if settings.autoRecordEnabled && voiceCommandService != nil && !isRerecording {
+            // Auto-record path: 500ms pause → auto-start recording
+            try? await Task.sleep(nanoseconds: Config.autoRecordDelayMs * 1_000_000)
+            guard quizState == .askingQuestion else { return }
+            isAutoRecording = true
+            await startRecording()
+        } else {
+            // Legacy path: countdown timer → fixed duration recording
             startAnswerTimer()
         }
     }
@@ -1167,6 +1275,11 @@ final class QuizViewModel: ObservableObject {
         answerTimerTask = nil
         autoStopRecordingTask?.cancel()
         autoStopRecordingTask = nil
+        silenceDetectionTask?.cancel()
+        silenceDetectionTask = nil
+
+        // Stop voice commands
+        stopVoiceCommands()
 
         // Stop any playing audio
         Task {
@@ -1188,9 +1301,79 @@ final class QuizViewModel: ObservableObject {
         currentQuestionPaused = false
         autoAdvanceEnabled = true
         isRerecording = false
+        isAutoRecording = false
+        speechDetectedDuringAutoRecord = false
         pendingResponse = nil
         transcribedAnswer = ""
         showAnswerConfirmation = false
+    }
+
+    // MARK: - Voice Commands
+
+    /// Start listening for voice commands and subscribe to the command stream
+    private func startVoiceCommands() {
+        guard let service = voiceCommandService, settings.voiceCommandsEnabled else {
+            voiceCommandState = .disabled
+            return
+        }
+
+        voiceCommandTask = Task { [weak self] in
+            await service.startListening()
+
+            for await command in service.commands {
+                guard let self, !Task.isCancelled else { break }
+                await self.handleVoiceCommand(command)
+            }
+        }
+
+        // Sync UI state
+        voiceCommandState = .listening
+    }
+
+    /// Stop voice command listening
+    private func stopVoiceCommands() {
+        voiceCommandTask?.cancel()
+        voiceCommandTask = nil
+        voiceCommandService?.stopListening()
+        voiceCommandState = .disabled
+    }
+
+    /// Dispatch a voice command to the appropriate action based on current state
+    private func handleVoiceCommand(_ command: VoiceCommand) async {
+        // Update UI state briefly
+        voiceCommandState = .commandDetected(command)
+
+        switch command {
+        case .start:
+            if quizState == .askingQuestion {
+                cancelAnswerTimer()
+                await startRecording()
+            } else if showAnswerConfirmation {
+                rerecordAnswer()
+            }
+
+        case .stop:
+            if quizState == .recording {
+                cancelAutoStopRecordingTimer()
+                await stopRecordingAndSubmit()
+            }
+
+        case .skip:
+            if quizState == .askingQuestion {
+                await skipQuestion()
+            }
+
+        case .ok:
+            if showAnswerConfirmation && !isProcessingResponse {
+                await confirmAnswer()
+            }
+        }
+
+        // Reset to listening after brief delay
+        try? await Task.sleep(nanoseconds: 300_000_000)
+        if voiceCommandTask != nil {
+            voiceCommandState = .listening
+        }
     }
 
     // MARK: - Question History Management
@@ -1207,6 +1390,11 @@ final class QuizViewModel: ObservableObject {
         if Config.verboseLogging {
             print("🗑️ Question history reset by user")
         }
+    }
+
+    /// Whether voice commands are available (service exists and setting enabled)
+    var voiceCommandsAvailable: Bool {
+        voiceCommandService != nil
     }
 }
 

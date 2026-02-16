@@ -20,9 +20,15 @@ struct QuestionView: View {
                 .frame(width: 36, height: 5)
                 .padding(.top, Theme.Spacing.sm)
 
-            // Close button (top-right)
+            // Top bar: voice indicator + close button
             HStack {
+                // Voice command indicator (left)
+                if viewModel.voiceCommandsAvailable {
+                    VoiceCommandIndicator(state: viewModel.voiceCommandState)
+                }
+
                 Spacer()
+
                 Button {
                     showEndQuizConfirmation = true
                 } label: {
@@ -155,6 +161,10 @@ struct QuestionView: View {
 
     private var hintText: String {
         switch viewModel.quizState {
+        case .recording where viewModel.isAutoRecording && viewModel.speechDetectedDuringAutoRecord:
+            return "Speaking..."
+        case .recording where viewModel.isAutoRecording:
+            return "Listening..."
         case .recording:
             return "Recording..."
         case .processing:
@@ -168,6 +178,10 @@ struct QuestionView: View {
 
     private var hintColor: Color {
         switch viewModel.quizState {
+        case .recording where viewModel.isAutoRecording && viewModel.speechDetectedDuringAutoRecord:
+            return Theme.Colors.recording
+        case .recording where viewModel.isAutoRecording:
+            return Theme.Colors.accentPrimary
         case .recording:
             return Theme.Colors.recording
         case .processing:

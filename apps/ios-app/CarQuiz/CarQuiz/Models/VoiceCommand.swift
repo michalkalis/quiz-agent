@@ -9,10 +9,13 @@ import Foundation
 
 /// Voice commands recognized by VoiceCommandService
 enum VoiceCommand: String, Sendable, CaseIterable {
-    case start  // Start recording or re-record
-    case stop   // Stop recording + submit
-    case skip   // Skip current question
-    case ok     // Confirm transcribed answer
+    case start   // Start recording or re-record
+    case stop    // Stop recording + submit
+    case skip    // Skip current question
+    case `repeat` // Replay current question audio
+    case score   // Announce current score via TTS
+    case help    // List available commands via TTS
+    case ok      // Confirm transcribed answer
 }
 
 /// UI-facing listening state for voice command indicator
@@ -35,14 +38,15 @@ enum SilenceEvent: Sendable, Equatable {
 extension VoiceCommand {
 
     /// Match a transcription string to a voice command.
-    /// Uses priority ordering: start > stop > skip > ok
-    /// Returns nil if no command word is found.
+    /// Uses priority ordering: start > stop > skip > repeat > score > help > ok
+    /// Uses word-boundary matching (split into words) to prevent false positives
+    /// like "book" matching "ok" or "helpful" matching "help".
     static func match(from transcription: String) -> VoiceCommand? {
-        let text = transcription.lowercased()
+        let words = Set(transcription.lowercased().split(separator: " ").map(String.init))
 
-        // Priority order prevents ambiguity when multiple words appear
-        for command in [VoiceCommand.start, .stop, .skip, .ok] {
-            if text.contains(command.rawValue) {
+        // Priority order: time-sensitive commands first, "ok" last (least ambiguous)
+        for command in [VoiceCommand.start, .stop, .skip, .repeat, .score, .help, .ok] {
+            if words.contains(command.rawValue) {
                 return command
             }
         }

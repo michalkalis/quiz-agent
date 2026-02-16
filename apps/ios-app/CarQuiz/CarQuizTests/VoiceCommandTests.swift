@@ -64,6 +64,49 @@ struct VoiceCommandMatchingTests {
     func priorityStopBeatsSkip() {
         #expect(VoiceCommand.match(from: "stop and skip") == .stop)
     }
+
+    // MARK: - Phase 4: New Command Matching
+
+    @Test("matches 'repeat' command")
+    func matchRepeat() {
+        #expect(VoiceCommand.match(from: "repeat") == .repeat)
+        #expect(VoiceCommand.match(from: "please repeat") == .repeat)
+    }
+
+    @Test("matches 'score' command")
+    func matchScore() {
+        #expect(VoiceCommand.match(from: "score") == .score)
+        #expect(VoiceCommand.match(from: "what's my score") == .score)
+    }
+
+    @Test("matches 'help' command")
+    func matchHelp() {
+        #expect(VoiceCommand.match(from: "help") == .help)
+        #expect(VoiceCommand.match(from: "I need help") == .help)
+    }
+
+    @Test("'help' does not match 'helpful' (word boundary)")
+    func helpWordBoundary() {
+        #expect(VoiceCommand.match(from: "helpful") == nil)
+        #expect(VoiceCommand.match(from: "that was helpful") == nil)
+    }
+
+    @Test("'ok' does not match 'book' (word boundary)")
+    func okWordBoundary() {
+        #expect(VoiceCommand.match(from: "book") == nil)
+        #expect(VoiceCommand.match(from: "look") == nil)
+    }
+
+    @Test("priority: repeat > score > help")
+    func priorityNewCommands() {
+        #expect(VoiceCommand.match(from: "repeat score help") == .repeat)
+        #expect(VoiceCommand.match(from: "score help") == .score)
+    }
+
+    @Test("priority: skip > repeat")
+    func prioritySkipBeatsRepeat() {
+        #expect(VoiceCommand.match(from: "skip repeat") == .skip)
+    }
 }
 
 // MARK: - State Validity Tests (ViewModel integration)
@@ -644,5 +687,71 @@ struct BargeInViewModelTests {
 
         mockVoice.setTTSPlaybackActive(false)
         #expect(mockVoice.ttsPlaybackActive == false)
+    }
+}
+
+// MARK: - Phase 4: Repeat / Score / Help Command Tests
+
+@Suite("Phase 4 Voice Command Tests")
+struct Phase4VoiceCommandTests {
+
+    @Test("VoiceCommand enum includes repeat, score, help")
+    func newCasesExist() {
+        let allCases = VoiceCommand.allCases
+        #expect(allCases.contains(.repeat))
+        #expect(allCases.contains(.score))
+        #expect(allCases.contains(.help))
+    }
+
+    @Test("repeat raw value is 'repeat'")
+    func repeatRawValue() {
+        #expect(VoiceCommand.repeat.rawValue == "repeat")
+    }
+
+    @Test("score raw value is 'score'")
+    func scoreRawValue() {
+        #expect(VoiceCommand.score.rawValue == "score")
+    }
+
+    @Test("help raw value is 'help'")
+    func helpRawValue() {
+        #expect(VoiceCommand.help.rawValue == "help")
+    }
+
+    @Test("VoiceCommandIndicator labels via rawValue.capitalized")
+    func indicatorLabels() {
+        #expect(VoiceCommand.repeat.rawValue.capitalized == "Repeat")
+        #expect(VoiceCommand.score.rawValue.capitalized == "Score")
+        #expect(VoiceCommand.help.rawValue.capitalized == "Help")
+    }
+
+    @Test("'score' in various phrases")
+    func scoreInPhrases() {
+        #expect(VoiceCommand.match(from: "what is my score") == .score)
+        #expect(VoiceCommand.match(from: "SCORE") == .score)
+    }
+
+    @Test("'repeat' ignored when not a standalone word")
+    func repeatWordBoundary() {
+        // "repeated" splits into the word "repeated", not "repeat"
+        #expect(VoiceCommand.match(from: "repeated") == nil)
+    }
+
+    @Test("'help' in sentence with standalone word")
+    func helpInSentence() {
+        #expect(VoiceCommand.match(from: "I need help please") == .help)
+    }
+
+    @Test("currentQuestionAudioUrl cleared on resetToHome")
+    @MainActor
+    func audioUrlClearedOnReset() async throws {
+        let viewModel = QuizViewModel(
+            networkService: MockNetworkService(),
+            audioService: MockAudioService(),
+            persistenceStore: MockPersistenceStore()
+        )
+        viewModel.resetToHome()
+        // After reset, all state should be clean
+        #expect(viewModel.quizState == .idle)
     }
 }

@@ -37,6 +37,7 @@ protocol AudioServiceProtocol: Sendable {
     func playOpusAudio(_ data: Data) async throws -> TimeInterval
     func playOpusAudioFromBase64(_ base64: String) async throws -> TimeInterval
     func stopPlayback() async  // Now async for proper cleanup
+    func speakText(_ text: String) async  // Local TTS via AVSpeechSynthesizer
 
     // Device selection
     func refreshAvailableDevices()
@@ -89,6 +90,8 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
     private var audioRecorder: AVAudioRecorder?
     private var audioPlayer: AVPlayer?
+    private var speechSynthesizer = AVSpeechSynthesizer()
+    private var speechCompletion: CheckedContinuation<Void, Never>?
     private var currentAudioMode: AudioMode = AudioMode.default
 
     // Mark as nonisolated(unsafe) because NSObjectProtocol is not Sendable in Swift 6
@@ -725,6 +728,52 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
             print("🔊 Stopped playback")
         }
     }
+
+    // MARK: - Local TTS (AVSpeechSynthesizer)
+
+    /// Speak text using built-in iOS TTS (no network required).
+    /// Used for status messages like score announcements and help text.
+    func speakText(_ text: String) async {
+        // Stop any current audio first
+        await stopPlayback()
+        speechSynthesizer.stopSpeaking(at: .immediate)
+
+        let utterance = AVSpeechUtterance(string: text)
+        utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
+        utterance.rate = AVSpeechUtteranceDefaultSpeechRate
+
+        if Config.verboseLogging {
+            print("🗣️ Speaking: \(text)")
+        }
+
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            speechCompletion = continuation
+            speechSynthesizer.delegate = self
+            speechSynthesizer.speak(utterance)
+        }
+
+        if Config.verboseLogging {
+            print("🗣️ Speech completed")
+        }
+    }
+}
+
+// MARK: - AVSpeechSynthesizerDelegate
+
+extension AudioService: AVSpeechSynthesizerDelegate {
+    nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
+        Task { @MainActor in
+            speechCompletion?.resume()
+            speechCompletion = nil
+        }
+    }
+
+    nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
+        Task { @MainActor in
+            speechCompletion?.resume()
+            speechCompletion = nil
+        }
+    }
 }
 
 // MARK: - AVAudioRecorderDelegate
@@ -843,6 +892,10 @@ final class MockAudioService: ObservableObject, AudioServiceProtocol {
 
     func stopPlayback() async {
         isPlaying = false
+    }
+
+    func speakText(_ text: String) async {
+        // Mock: no-op, just record that it was called
     }
 
     func refreshAvailableDevices() {

@@ -209,6 +209,9 @@ final class QuizViewModel: ObservableObject {
     private var nextQuestionAudioUrl: String?
     private var nextQuestion: Question?
 
+    // Current question audio URL for "repeat" command
+    private var currentQuestionAudioUrl: String?
+
     // MARK: - Initialization
 
     init(
@@ -1210,6 +1213,9 @@ final class QuizViewModel: ObservableObject {
     }
 
     private func playQuestionAudio(from urlString: String) async {
+        // Store URL for "repeat" command
+        currentQuestionAudioUrl = urlString
+
         // Set echo cancellation text and TTS active flag before playback
         voiceCommandService?.setPlaybackText(currentQuestion?.question)
         voiceCommandService?.setTTSPlaybackActive(true)
@@ -1301,6 +1307,7 @@ final class QuizViewModel: ObservableObject {
         errorMessage = nil
         nextQuestionAudioUrl = nil
         nextQuestion = nil
+        currentQuestionAudioUrl = nil
         autoAdvanceCountdown = 0
         answerTimerCountdown = 0
         currentQuestionPaused = false
@@ -1406,6 +1413,27 @@ final class QuizViewModel: ObservableObject {
         case .skip:
             if quizState == .askingQuestion {
                 await skipQuestion()
+            }
+
+        case .repeat:
+            if quizState == .askingQuestion, let audioUrl = currentQuestionAudioUrl {
+                cancelAnswerTimer()
+                await stopAnyPlayingAudio()
+                await playQuestionAudio(from: audioUrl)
+            }
+
+        case .score:
+            if quizState == .askingQuestion || quizState.isShowingResult {
+                let total = currentSession?.maxQuestions ?? 0
+                let current = questionsAnswered + (quizState == .askingQuestion ? 1 : 0)
+                let text = "Your score is \(Int(score)) out of \(questionsAnswered). Question \(current) of \(total)."
+                await audioService.speakText(text)
+            }
+
+        case .help:
+            if quizState == .askingQuestion {
+                let text = "Say skip to skip, start to record, stop to submit, or ok to confirm."
+                await audioService.speakText(text)
             }
 
         case .ok:

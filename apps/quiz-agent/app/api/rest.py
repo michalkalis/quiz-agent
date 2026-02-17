@@ -485,10 +485,13 @@ async def submit_input(session_id: str, request: SubmitInputRequest, audio: bool
     if session.phase not in ["asking", "awaiting_answer"]:
         raise HTTPException(status_code=400, detail="Not waiting for input")
 
+    # Snapshot question ID at request start (defense-in-depth against race conditions)
+    evaluated_question_id = session.current_question_id
+
     # Get current question
     if not chroma_client:
         raise HTTPException(status_code=500, detail="ChromaDB client not initialized")
-    current_question = chroma_client.get_question(session.current_question_id)
+    current_question = chroma_client.get_question(evaluated_question_id)
     if not current_question:
         raise HTTPException(status_code=500, detail="Current question not found")
 
@@ -532,7 +535,8 @@ async def submit_input(session_id: str, request: SubmitInputRequest, audio: bool
                 "user_answer": user_answer,
                 "result": result,
                 "points": score_delta,
-                "correct_answer": translated_correct_answer
+                "correct_answer": translated_correct_answer,
+                "question_id": evaluated_question_id
             }
 
             # Generate enhanced feedback audio for non-perfect answers
@@ -582,7 +586,8 @@ async def submit_input(session_id: str, request: SubmitInputRequest, audio: bool
                 "user_answer": "skipped",
                 "result": "skipped",
                 "points": 0.0,
-                "correct_answer": translated_correct_answer_skip
+                "correct_answer": translated_correct_answer_skip,
+                "question_id": evaluated_question_id
             }
             feedback_received.append("skipped question")
 
@@ -943,10 +948,13 @@ async def transcribe_and_submit(
                 detail=f"Unsupported audio format. Supported: {', '.join(VoiceTranscriber.SUPPORTED_FORMATS)}"
             )
 
+        # Snapshot question ID at request start (defense-in-depth against race conditions)
+        evaluated_question_id = session.current_question_id
+
         # Get current question for context
         if not chroma_client:
             raise HTTPException(status_code=500, detail="ChromaDB client not initialized")
-        current_question = chroma_client.get_question(session.current_question_id)
+        current_question = chroma_client.get_question(evaluated_question_id)
         if not current_question:
             raise HTTPException(status_code=500, detail="Current question not found")
 
@@ -1033,7 +1041,8 @@ async def transcribe_and_submit(
                     "user_answer": user_answer,
                     "result": result,
                     "points": score_delta,
-                    "correct_answer": translated_correct_answer_voice
+                    "correct_answer": translated_correct_answer_voice,
+                    "question_id": evaluated_question_id
                 }
 
                 # Generate enhanced feedback audio for all answers
@@ -1083,7 +1092,8 @@ async def transcribe_and_submit(
                     "user_answer": "skipped",
                     "result": "skipped",
                     "points": 0.0,
-                    "correct_answer": translated_correct_answer_voice_skip
+                    "correct_answer": translated_correct_answer_voice_skip,
+                    "question_id": evaluated_question_id
                 }
                 feedback_received.append("skipped question")
 

@@ -125,6 +125,21 @@ class Question(BaseModel):
         description="Cached embedding vector (1536-dim for text-embedding-3-small)"
     )
 
+    # Time-sensitive question support
+    expires_at: Optional[datetime] = None
+    freshness_tag: Optional[str] = None  # e.g., "2024-news", "trending-feb-2024"
+
+    def is_expired(self) -> bool:
+        """Check if this question has expired."""
+        if self.expires_at is None:
+            return False
+        from datetime import timezone
+        now = datetime.now(timezone.utc)
+        expires = self.expires_at
+        if expires.tzinfo is None:
+            expires = expires.replace(tzinfo=timezone.utc)
+        return now > expires
+
     def calculate_avg_rating(self) -> float:
         """Calculate average rating from user_ratings dict."""
         if not self.user_ratings:

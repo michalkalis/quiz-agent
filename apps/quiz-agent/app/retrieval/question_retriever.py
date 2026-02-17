@@ -80,6 +80,9 @@ class QuestionRetriever:
             excluded_ids=all_excluded_ids
         )
 
+        # Filter out expired questions
+        candidates = [c for c in candidates if not c.is_expired()]
+
         if not candidates:
             print(f"DEBUG: No candidates from semantic search, trying fallback strategies")
             candidates = self._fallback_retrieval(
@@ -88,6 +91,8 @@ class QuestionRetriever:
                 n_candidates,
                 all_excluded_ids
             )
+            # Filter out expired questions from fallback results too
+            candidates = [c for c in candidates if not c.is_expired()]
 
         if not candidates:
             return self._handle_no_candidates(session, question_difficulty)

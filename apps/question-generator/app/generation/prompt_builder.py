@@ -3,7 +3,7 @@
 import os
 from typing import List, Optional
 
-from .examples import EXCELLENT_EXAMPLES, OK_EXAMPLES, BAD_EXAMPLES_TEMPLATE
+from .examples import EXCELLENT_EXAMPLES, OK_EXAMPLES, BAD_EXAMPLES_TEMPLATE, load_gold_standard, load_anti_patterns
 
 
 class PromptBuilder:
@@ -42,6 +42,7 @@ class PromptBuilder:
         user_bad_examples: Optional[List[str]] = None,
         excellent_examples: Optional[str] = None,
         ok_examples: Optional[str] = None,
+        **kwargs,
     ) -> str:
         """Build complete prompt with all variables filled.
 
@@ -56,13 +57,18 @@ class PromptBuilder:
             user_bad_examples: Questions users rated poorly
             excellent_examples: Custom excellent examples (or use defaults)
             ok_examples: Custom OK examples (or use defaults)
+            **kwargs: Extra template variables (e.g., facts_section for V3 prompt)
 
         Returns:
             Complete prompt ready for LLM
         """
-        # Use defaults if not provided
+        # Use dynamic sampling from gold-standard library (falls back to hardcoded)
         if excellent_examples is None:
-            excellent_examples = EXCELLENT_EXAMPLES
+            excellent_examples = load_gold_standard(
+                n=10,
+                topics=topics,
+                difficulty=difficulty,
+            )
 
         if ok_examples is None:
             ok_examples = OK_EXAMPLES
@@ -81,28 +87,37 @@ class PromptBuilder:
             for q in avoid_questions[:10]:  # Limit to 10 to keep prompt reasonable
                 avoid_section += f"- {q}\n"
 
-        # Build user feedback section (bad examples from users)
+        # Build user feedback section (bad examples from users + anti-patterns)
         bad_examples_section = ""
+        anti_pattern_text = load_anti_patterns(n=5)
+        if anti_pattern_text:
+            bad_examples_section = f"\n## Auto-Selected Anti-Patterns (Avoid these!)\n\n{anti_pattern_text}\n"
         if user_bad_examples:
             examples_text = "\n".join(f"- {q}" for q in user_bad_examples[:10])
-            bad_examples_section = BAD_EXAMPLES_TEMPLATE.format(
+            bad_examples_section += BAD_EXAMPLES_TEMPLATE.format(
                 user_bad_examples=examples_text
             )
 
+        # Build format variables dict
+        format_vars = {
+            "excellent_examples": excellent_examples,
+            "ok_examples": ok_examples,
+            "bad_examples_section": bad_examples_section,
+            "count": count,
+            "difficulty": difficulty,
+            "topics": ", ".join(topics) if topics else "any",
+            "categories": ", ".join(categories) if categories else "general",
+            "type": question_type,
+            "topic_section": topic_section,
+            "avoid_section": avoid_section,
+            "user_feedback_section": "",  # Reserved for future use
+        }
+
+        # Merge any extra template variables (e.g., facts_section for V3)
+        format_vars.update(kwargs)
+
         # Format main template
-        prompt = self.template.format(
-            excellent_examples=excellent_examples,
-            ok_examples=ok_examples,
-            bad_examples_section=bad_examples_section,
-            count=count,
-            difficulty=difficulty,
-            topics=", ".join(topics) if topics else "any",
-            categories=", ".join(categories) if categories else "general",
-            type=question_type,
-            topic_section=topic_section,
-            avoid_section=avoid_section,
-            user_feedback_section=""  # Reserved for future use
-        )
+        prompt = self.template.format(**format_vars)
 
         return prompt
 

@@ -1,5 +1,6 @@
 """In-memory session manager with TTL and automatic cleanup."""
 
+import copy
 import uuid
 import asyncio
 from datetime import datetime, timedelta, timezone
@@ -129,11 +130,14 @@ class SessionManager:
     def get_session(self, session_id: str) -> Optional[QuizSession]:
         """Get session by ID.
 
+        Returns a deep copy so callers get an isolated snapshot.
+        Mutations won't affect the stored session until update_session() is called.
+
         Args:
             session_id: Session ID
 
         Returns:
-            QuizSession or None if not found/expired
+            QuizSession (deep copy) or None if not found/expired
         """
         with self._lock:
             session = self._sessions.get(session_id)
@@ -143,7 +147,7 @@ class SessionManager:
             self.delete_session(session_id)
             return None
 
-        return session
+        return copy.deepcopy(session) if session else None
 
     def update_session(self, session: QuizSession) -> bool:
         """Update session state.

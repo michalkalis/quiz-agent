@@ -1,0 +1,142 @@
+[
+  {
+    "question": "What is the capital of Australia?",
+    "answer": "Canberra",
+    "why_bad": "Boring 'what is the capital of' format. No narrative, no surprise, no delight. Pure rote memorization that feels like a geography textbook quiz.",
+    "violated_principles": ["Delight over Memorization", "Clever over Straightforward"],
+    "red_flags": ["boring_format", "pure_memorization", "predictable"]
+  },
+  {
+    "question": "Who wrote Romeo and Juliet?",
+    "answer": "William Shakespeare",
+    "why_bad": "Textbook question with a universally known answer. No interesting angle or framing. Feels like a school exam, not a pub quiz.",
+    "violated_principles": ["Delight over Memorization", "Clever over Straightforward"],
+    "red_flags": ["boring_format", "predictable", "pure_memorization"]
+  },
+  {
+    "question": "What is the largest ocean on Earth?",
+    "answer": "Pacific Ocean",
+    "why_bad": "Simple recall question with no twist. Everyone who paid attention in school knows this. No surprise or engagement factor.",
+    "violated_principles": ["Delight over Memorization", "Clever over Straightforward"],
+    "red_flags": ["boring_format", "predictable", "pure_memorization"]
+  },
+  {
+    "question": "In what year was the Declaration of Independence signed?",
+    "answer": "1776",
+    "why_bad": "Pure date memorization. The most boring type of history question. No narrative or interesting context provided.",
+    "violated_principles": ["Delight over Memorization", "Narrative over Facts"],
+    "red_flags": ["boring_format", "pure_memorization"]
+  },
+  {
+    "question": "In the video game Dark Souls III, what is the name of the final boss in the Ringed City DLC?",
+    "answer": "Slave Knight Gael",
+    "why_bad": "Extremely niche. Only people who have played a specific DLC of a specific game would know this. Excludes 99% of quiz participants.",
+    "violated_principles": ["Universal over Niche"],
+    "red_flags": ["niche_reference"]
+  },
+  {
+    "question": "Which professional darts player is nicknamed 'The Power'?",
+    "answer": "Phil Taylor",
+    "why_bad": "Niche sports reference. Professional darts has a limited following, and player nicknames are known only to dedicated fans.",
+    "violated_principles": ["Universal over Niche"],
+    "red_flags": ["niche_reference"]
+  },
+  {
+    "question": "What is the name of the rarest shiny variant in Pokemon Scarlet and Violet?",
+    "answer": "Authentic Sinistea",
+    "why_bad": "Triple niche: requires knowledge of a specific game, the shiny mechanic, and rarity tiers within that mechanic. Alienates most people.",
+    "violated_principles": ["Universal over Niche"],
+    "red_flags": ["niche_reference"]
+  },
+  {
+    "question": "In competitive StarCraft II, which Zerg unit composition is considered the strongest counter to a Protoss Skytoss army?",
+    "answer": "Corruptor-Viper-Infestor",
+    "why_bad": "Requires deep knowledge of a specific esports meta. Meaningless jargon to anyone who doesn't play competitive StarCraft.",
+    "violated_principles": ["Universal over Niche"],
+    "red_flags": ["niche_reference"]
+  },
+  {
+    "question": "What is the chemical symbol for tungsten?",
+    "answer": "W (from Wolfram)",
+    "why_bad": "Pure memorization of a periodic table entry. No interesting framing or context. Feels like a chemistry homework problem.",
+    "violated_principles": ["Delight over Memorization", "Narrative over Facts"],
+    "red_flags": ["pure_memorization", "boring_format"]
+  },
+  {
+    "question": "What is the atomic number of iron?",
+    "answer": "26",
+    "why_bad": "Raw number recall with no narrative hook. There is nothing engaging about remembering an arbitrary number from the periodic table.",
+    "violated_principles": ["Delight over Memorization", "Narrative over Facts"],
+    "red_flags": ["pure_memorization", "boring_format"]
+  },
+  {
+    "question": "How many bones are in the adult human body?",
+    "answer": "206",
+    "why_bad": "Arbitrary number memorization. Could be improved by framing around a surprising fact (e.g., 'babies have about 270 bones that fuse into how many?').",
+    "violated_principles": ["Delight over Memorization", "Clever over Straightforward"],
+    "red_flags": ["pure_memorization", "boring_format"]
+  },
+  {
+    "question": "In what year did World War I begin?",
+    "answer": "1914",
+    "why_bad": "Pure date recall. A date question without any interesting framing or connection. History should tell stories, not quiz dates.",
+    "violated_principles": ["Delight over Memorization", "Narrative over Facts"],
+    "red_flags": ["pure_memorization", "boring_format"]
+  },
+  {
+    "question": "Which planet is closest to the Sun?",
+    "answer": "Mercury",
+    "why_bad": "Utterly predictable answer that virtually everyone knows. No challenge, no surprise, no delight. A question with zero engagement.",
+    "violated_principles": ["Delight over Memorization", "Clever over Straightforward"],
+    "red_flags": ["predictable", "boring_format"]
+  },
+  {
+    "question": "What color are flamingos?",
+    "answer": "Pink",
+    "why_bad": "The answer is in the common mental image of the animal. Zero challenge or surprise. Could be improved: 'What color are flamingos born?'",
+    "violated_principles": ["Clever over Straightforward"],
+    "red_flags": ["predictable"]
+  },
+  {
+    "question": "How many sides does a triangle have?",
+    "answer": "Three",
+    "why_bad": "The answer is literally in the name. This is not trivia; it is a definition. Insults the intelligence of any adult participant.",
+    "violated_principles": ["Clever over Straightforward", "Delight over Memorization"],
+    "red_flags": ["predictable"]
+  },
+  {
+    "question": "What do you call a baby dog?",
+    "answer": "A puppy",
+    "why_bad": "Preschool-level question with universal knowledge. No trivia value whatsoever for an adult audience.",
+    "violated_principles": ["Clever over Straightforward"],
+    "red_flags": ["predictable"]
+  },
+  {
+    "question": "What English word, derived from the Old French 'desporter' meaning 'to carry away,' became a Middle English term for 'pleasant pastime' before evolving to specifically mean physical competitive activities governed by rules?",
+    "answer": "Sport",
+    "why_bad": "The etymology is interesting but the question is so long and convoluted that it loses all engagement. The answer is anticlimactically simple.",
+    "violated_principles": ["Clever over Straightforward"],
+    "red_flags": ["too_long", "boring_format"]
+  },
+  {
+    "question": "Which chemical compound, with the molecular formula C8H10N4O2, is a trimethylxanthine alkaloid that acts as a central nervous system stimulant by blocking adenosine receptors, and is the most widely consumed psychoactive substance on Earth?",
+    "answer": "Caffeine",
+    "why_bad": "Buries a simple answer under layers of unnecessary jargon. The question is exhausting to parse and the payoff does not match the effort.",
+    "violated_principles": ["Clever over Straightforward", "Delight over Memorization"],
+    "red_flags": ["too_long", "pure_memorization"]
+  },
+  {
+    "question": "What word in English rhymes with 'orange'?",
+    "answer": "Sporange (a rare botanical term) or 'door hinge' as a near-rhyme",
+    "why_bad": "The common belief is that nothing rhymes with orange, but the 'correct' answer is an obscure word most people have never encountered. Feels like a trick question with an unsatisfying answer.",
+    "violated_principles": ["Universal over Niche"],
+    "red_flags": ["language_dependent", "ambiguous"]
+  },
+  {
+    "question": "Which English word changes its pronunciation when the first letter is capitalized?",
+    "answer": "Polish/polish",
+    "why_bad": "Only works in written English. In a voice-based quiz, participants cannot see the capitalization. Also highly language-dependent and excludes non-native speakers.",
+    "violated_principles": ["Universal over Niche"],
+    "red_flags": ["language_dependent", "ambiguous"]
+  }
+]

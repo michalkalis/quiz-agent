@@ -49,6 +49,11 @@ from .tts.service import TTSService
 from .translation import TranslationService
 from .api import rest, admin
 
+try:
+    from .monitoring.question_monitor import QuestionMonitor
+except ImportError:
+    QuestionMonitor = None
+
 
 # Global service instances
 session_manager: SessionManager = None
@@ -163,6 +168,25 @@ async def lifespan(app: FastAPI):
         traceback.print_exc()
         raise
 
+    # Question health check on startup
+    try:
+        if QuestionMonitor is not None:
+            monitor = QuestionMonitor(chroma_client=chroma_client.client)
+            health = monitor.check_health()
+            if health.alerts:
+                print(f"\n{'='*60}")
+                print("QUESTION DATABASE HEALTH CHECK")
+                for alert in health.alerts:
+                    print(f"  {alert}")
+                print(f"{'='*60}\n")
+            app.state.question_monitor = monitor
+        else:
+            print("WARNING: QuestionMonitor not available (import failed)")
+            app.state.question_monitor = None
+    except Exception as e:
+        print(f"Question health monitor initialization failed: {e}")
+        app.state.question_monitor = None
+
     # Pre-generate static feedback audio
     try:
         print("Pre-generating static feedback audio...")
@@ -232,6 +256,16 @@ app.add_middleware(
 # Include API routes
 app.include_router(rest.router)
 app.include_router(admin.router)
+
+
+@app.get("/api/v1/admin/health")
+async def get_question_health():
+    """Get question database health status."""
+    monitor = getattr(app.state, "question_monitor", None)
+    if not monitor:
+        return {"error": "Health monitor not initialized"}
+    status = monitor.check_health()
+    return status.to_dict()
 
 
 # Root endpoint

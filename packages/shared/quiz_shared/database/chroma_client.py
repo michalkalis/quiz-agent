@@ -105,6 +105,12 @@ class ChromaDBClient:
             if question.generation_metadata:
                 metadata["generation_metadata"] = json.dumps(question.generation_metadata)
 
+            # Time-sensitive fields
+            if question.expires_at:
+                metadata["expires_at"] = question.expires_at.isoformat()
+            if question.freshness_tag:
+                metadata["freshness_tag"] = question.freshness_tag
+
             # Add to collection
             self.collection.add(
                 ids=[question.id],
@@ -528,6 +534,12 @@ class ChromaDBClient:
             if question.generation_metadata:
                 metadata["generation_metadata"] = json.dumps(question.generation_metadata)
 
+            # Time-sensitive fields
+            if question.expires_at:
+                metadata["expires_at"] = question.expires_at.isoformat()
+            if question.freshness_tag:
+                metadata["freshness_tag"] = question.freshness_tag
+
             # Use upsert to update existing question
             self.collection.upsert(
                 ids=[question.id],
@@ -630,6 +642,10 @@ class ChromaDBClient:
         if "reviewed_at" in metadata:
             reviewed_at = datetime.fromisoformat(metadata["reviewed_at"])
 
+        expires_at = None
+        if "expires_at" in metadata:
+            expires_at = datetime.fromisoformat(metadata["expires_at"])
+
         return Question(
             id=question_id,
             question=question_text,
@@ -658,5 +674,7 @@ class ChromaDBClient:
             review_notes=metadata.get("review_notes"),
             quality_ratings=quality_ratings,
             generation_metadata=generation_metadata,
-            embedding=embedding
+            embedding=embedding,
+            expires_at=expires_at,
+            freshness_tag=metadata.get("freshness_tag"),
         )

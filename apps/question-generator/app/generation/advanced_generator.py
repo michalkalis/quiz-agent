@@ -20,6 +20,11 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../../..", "packa
 from quiz_shared.models.question import Question
 from .prompt_builder import PromptBuilder
 
+try:
+    from ..sourcing.models import Fact
+except ImportError:
+    Fact = None  # sourcing package not installed
+
 
 class AdvancedQuestionGenerator:
     """Multi-stage question generator with quality optimization."""
@@ -67,10 +72,22 @@ class AdvancedQuestionGenerator:
 
         self.prompt_builder = PromptBuilder(template_path=template_path)
 
-        # Load critique prompt
-        critique_template_path = os.path.join(
+        # Load V3 fact-first template (used when source_facts provided)
+        v3_template_path = os.path.join(
+            current_dir, "..", "..", "prompts", "question_generation_v3_fact_first.md"
+        )
+        self.v3_prompt_builder = None
+        if os.path.exists(v3_template_path):
+            self.v3_prompt_builder = PromptBuilder(template_path=v3_template_path)
+
+        # Load critique prompt (prefer V2 calibrated version)
+        critique_v2_path = os.path.join(
+            current_dir, "..", "..", "prompts", "question_critique_v2.md"
+        )
+        critique_v1_path = os.path.join(
             current_dir, "..", "..", "prompts", "question_critique.md"
         )
+        critique_template_path = critique_v2_path if os.path.exists(critique_v2_path) else critique_v1_path
         with open(critique_template_path, "r", encoding="utf-8") as f:
             self.critique_template = f.read()
 
@@ -87,6 +104,7 @@ class AdvancedQuestionGenerator:
         enable_best_of_n: bool = True,
         n_multiplier: int = 3,
         min_quality_score: float = 7.0,
+        source_facts: Optional[list] = None,
     ) -> List[Question]:
         """Generate questions using multi-stage quality pipeline.
 
@@ -108,6 +126,8 @@ class AdvancedQuestionGenerator:
             enable_best_of_n: Use Best-of-N selection (default: True)
             n_multiplier: Generate this many times count (default: 3x)
             min_quality_score: Minimum acceptable score (default: 7.0/10)
+            source_facts: Optional list of Fact objects for fact-first generation.
+                When provided, uses V3 fact-first prompt template instead of V2.
 
         Returns:
             List of Question objects with quality metadata
@@ -136,6 +156,7 @@ class AdvancedQuestionGenerator:
                 excluded_topics=excluded_topics,
                 avoid_questions=avoid_questions,
                 user_bad_examples=user_bad_examples,
+                source_facts=source_facts,
             )
 
             print(f"Generated {len(raw_questions)} raw questions")
@@ -181,6 +202,7 @@ class AdvancedQuestionGenerator:
                 excluded_topics=excluded_topics,
                 avoid_questions=avoid_questions,
                 user_bad_examples=user_bad_examples,
+                source_facts=source_facts,
             )
 
     async def _generate_batch(
@@ -193,10 +215,27 @@ class AdvancedQuestionGenerator:
         excluded_topics: Optional[List[str]],
         avoid_questions: Optional[List[str]],
         user_bad_examples: Optional[List[str]],
+        source_facts: Optional[list] = None,
     ) -> List[Question]:
-        """Generate a batch of questions."""
+        """Generate a batch of questions.
+
+        Args:
+            source_facts: Optional list of Fact objects. When provided,
+                uses V3 fact-first prompt template with facts injected.
+        """
+        # Determine which prompt builder and version to use
+        use_fact_first = source_facts and self.v3_prompt_builder is not None
+        prompt_builder = self.v3_prompt_builder if use_fact_first else self.prompt_builder
+        prompt_version = "v3_fact_first" if use_fact_first else self.prompt_version
+
+        # Build the facts section for V3 prompt
+        extra_kwargs = {}
+        if use_fact_first:
+            facts_section = self._format_facts_section(source_facts)
+            extra_kwargs["facts_section"] = facts_section
+
         # Build prompt
-        prompt = self.prompt_builder.build_prompt(
+        prompt = prompt_builder.build_prompt(
             count=count,
             difficulty=difficulty,
             topics=topics,
@@ -204,7 +243,8 @@ class AdvancedQuestionGenerator:
             question_type=question_type,
             excluded_topics=excluded_topics,
             avoid_questions=avoid_questions,
-            user_bad_examples=user_bad_examples
+            user_bad_examples=user_bad_examples,
+            **extra_kwargs,
         )
 
         # Call LLM
@@ -223,14 +263,54 @@ class AdvancedQuestionGenerator:
         for q in questions:
             q.generation_metadata = {
                 "model": self.generation_model,
-                "prompt_version": self.prompt_version,
+                "prompt_version": prompt_version,
                 "temperature": self.generation_llm.temperature,
                 "stage": "initial_generation",
             }
-            # Extract self-critique if present (from V2 CoT prompt)
-            # This will be in the parsed data if using V2 prompt
+            if use_fact_first:
+                q.generation_metadata["pipeline"] = "fact_first"
+            # Extract self-critique if present (from V2/V3 CoT prompt)
+            # This will be in the parsed data if using V2/V3 prompt
 
         return questions
+
+    @staticmethod
+    def _format_facts_section(facts: list) -> str:
+        """Format a list of Fact objects into a text section for the prompt.
+
+        Args:
+            facts: List of Fact objects (or dicts with 'text', 'source_url', etc.)
+
+        Returns:
+            Formatted string of numbered facts for injection into the prompt
+        """
+        lines = []
+        for i, fact in enumerate(facts, 1):
+            # Support both Fact dataclass objects and plain dicts
+            if hasattr(fact, "text"):
+                text = fact.text
+                source_url = getattr(fact, "source_url", None)
+                source_name = getattr(fact, "source_name", "unknown")
+                topic = getattr(fact, "topic", "General")
+                surprise = getattr(fact, "surprise_rating", 5.0)
+            elif isinstance(fact, dict):
+                text = fact.get("text", "")
+                source_url = fact.get("source_url")
+                source_name = fact.get("source_name", "unknown")
+                topic = fact.get("topic", "General")
+                surprise = fact.get("surprise_rating", 5.0)
+            else:
+                continue
+
+            line = f"**Fact {i}** [Topic: {topic}, Surprise: {surprise}/10]"
+            line += f"\n  {text}"
+            if source_url:
+                line += f"\n  Source: {source_name} ({source_url})"
+            else:
+                line += f"\n  Source: {source_name}"
+            lines.append(line)
+
+        return "\n\n".join(lines)
 
     async def _critique_question(self, question: Question) -> Dict[str, Any]:
         """Critique a question using LLM judge.
@@ -267,9 +347,9 @@ class AdvancedQuestionGenerator:
             end = response.content.rfind('}') + 1
 
             if start == -1 or end <= start:
-                # Fallback: simple scoring
+                # Fallback: assume mediocre (not generous) when parsing fails
                 return {
-                    "overall_score": 7.0,
+                    "overall_score": 5.0,
                     "verdict": "acceptable",
                     "critique_model": self.critique_model,
                     "error": "No JSON in critique response"
@@ -281,12 +361,20 @@ class AdvancedQuestionGenerator:
             # Add critique model info
             critique_data["critique_model"] = self.critique_model
 
+            # Score normalization: if all 6 dimensions scored >8, likely inflated
+            scores = critique_data.get("scores", {})
+            if scores and all(v > 8 for v in scores.values() if isinstance(v, (int, float))):
+                original = critique_data.get("overall_score", 0)
+                critique_data["overall_score"] = max(0, original - 0.5)
+                critique_data["score_normalized"] = True
+                critique_data["original_score"] = original
+
             return critique_data
 
         except Exception as e:
             print(f"Error parsing critique: {e}")
             return {
-                "overall_score": 7.0,
+                "overall_score": 5.0,
                 "verdict": "acceptable",
                 "critique_model": self.critique_model,
                 "error": str(e)

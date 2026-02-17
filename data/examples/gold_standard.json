@@ -1,0 +1,452 @@
+[
+  {
+    "question": "Which spice was so prized the Dutch traded Manhattan for a tiny Indonesian island to control it?",
+    "answer": "Nutmeg",
+    "why_excellent": "Surprising historical connection between familiar Manhattan and an exotic spice. Creates an 'aha!' moment linking colonial trade with modern geography.",
+    "pattern": "Surprising Connection",
+    "source": "historical record",
+    "difficulty": "medium",
+    "topic": "history"
+  },
+  {
+    "question": "What everyday material connects a pencil, a tennis racket, and a diamond?",
+    "answer": "Carbon (graphite in pencils, carbon fiber in rackets, pure carbon in diamonds)",
+    "why_excellent": "Links three completely different objects through a single element, revealing hidden chemistry in everyday life.",
+    "pattern": "Surprising Connection",
+    "source": "common knowledge",
+    "difficulty": "medium",
+    "topic": "science"
+  },
+  {
+    "question": "Which fashion item was originally designed for Egyptian butchers to keep blood off their clothes?",
+    "answer": "The apron (later adopted by high fashion as a garment concept)",
+    "why_excellent": "Connects a mundane kitchen item to ancient Egyptian practicality, subverting expectations about fashion origins.",
+    "pattern": "Surprising Connection",
+    "source": "Wikipedia",
+    "difficulty": "hard",
+    "topic": "history"
+  },
+  {
+    "question": "Which popular board game was originally created to demonstrate the evils of unchecked capitalism?",
+    "answer": "Monopoly (based on Elizabeth Magie's 'The Landlord's Game' from 1903)",
+    "why_excellent": "The irony of Monopoly being designed to critique monopolies, yet becoming a celebration of them, creates a delightful surprise.",
+    "pattern": "Surprising Connection",
+    "source": "Wikipedia",
+    "difficulty": "medium",
+    "topic": "history"
+  },
+  {
+    "question": "Which musical instrument shares its name with a type of surgery?",
+    "answer": "The drum (tympanoplasty involves the eardrum/tympanic membrane, and 'tympani' are drums)",
+    "why_excellent": "Surprising etymological link between music and medicine through shared Latin/Greek roots.",
+    "pattern": "Surprising Connection",
+    "source": "common knowledge",
+    "difficulty": "hard",
+    "topic": "language"
+  },
+  {
+    "question": "Which fruit shares about 60% of its DNA with humans?",
+    "answer": "Banana",
+    "why_excellent": "The genetic similarity between bananas and humans is a genuine surprise that reveals the deep shared ancestry of all life on Earth.",
+    "pattern": "Surprising Connection",
+    "source": "National Human Genome Research Institute",
+    "difficulty": "medium",
+    "topic": "science"
+  },
+  {
+    "question": "Ketchup was sold in the 1830s as a cure for which common ailment?",
+    "answer": "Diarrhea (Dr. John Cook Bennett marketed tomato ketchup as medicine)",
+    "why_excellent": "Transforms a ubiquitous condiment into a historical oddity, linking food to quack medicine.",
+    "pattern": "Surprising Connection",
+    "source": "historical record",
+    "difficulty": "hard",
+    "topic": "food"
+  },
+  {
+    "question": "Which company originally started as a playing card manufacturer in 1889?",
+    "answer": "Nintendo",
+    "why_excellent": "Links the biggest name in video games to its humble origins as a Japanese card company, over a century before the Game Boy.",
+    "pattern": "Surprising Connection",
+    "source": "Wikipedia",
+    "difficulty": "medium",
+    "topic": "technology"
+  },
+  {
+    "question": "Which Olympic sport was once judged partly on the elegance of a competitor's dive into the water during the swimming events?",
+    "answer": "Diving (originally part of swimming competitions at the 1904 Olympics)",
+    "why_excellent": "Connects the origin of an entire Olympic discipline to a subsection of another sport.",
+    "pattern": "Surprising Connection",
+    "source": "International Olympic Committee records",
+    "difficulty": "hard",
+    "topic": "sports"
+  },
+  {
+    "question": "The world's oldest known recipe, found on a 4,000-year-old Sumerian tablet, is for which type of product?",
+    "answer": "Beer",
+    "why_excellent": "Connects ancient civilization with a universally known beverage, surprising people that beer predates most written history.",
+    "pattern": "Surprising Connection",
+    "source": "University of Pennsylvania Museum",
+    "difficulty": "medium",
+    "topic": "history"
+  },
+  {
+    "question": "Which animal's fingerprints are virtually indistinguishable from human fingerprints, even under a microscope?",
+    "answer": "Koala",
+    "why_excellent": "A marsupial having human-like fingerprints despite 70 million years of separate evolution is a genuinely astonishing convergent evolution fact.",
+    "pattern": "Hidden Property",
+    "source": "Journal of Natural History",
+    "difficulty": "medium",
+    "topic": "nature"
+  },
+  {
+    "question": "Which common fruit floats in water because it is 25% air?",
+    "answer": "Apple",
+    "why_excellent": "Reveals a hidden physical property of something everyone eats, explaining why bobbing for apples works.",
+    "pattern": "Hidden Property",
+    "source": "USDA",
+    "difficulty": "easy",
+    "topic": "food"
+  },
+  {
+    "question": "Which planet has a hexagon-shaped storm at its north pole?",
+    "answer": "Saturn",
+    "why_excellent": "A geometric storm pattern on a gas giant defies expectations about natural phenomena. Visually striking and universally fascinating.",
+    "pattern": "Hidden Property",
+    "source": "NASA/Cassini mission",
+    "difficulty": "medium",
+    "topic": "science"
+  },
+  {
+    "question": "Which human organ can regenerate itself even after up to 75% of it has been removed?",
+    "answer": "The liver",
+    "why_excellent": "Most people know the liver filters toxins but have no idea it can regrow, making this a genuine hidden superpower of the human body.",
+    "pattern": "Hidden Property",
+    "source": "American Liver Foundation",
+    "difficulty": "medium",
+    "topic": "science"
+  },
+  {
+    "question": "Which gemstone is actually harder than diamond when measured along certain crystal planes?",
+    "answer": "Lonsdaleite (hexagonal diamond, found in meteorites)",
+    "why_excellent": "Challenges the universal belief that diamond is the hardest substance. The meteorite connection adds extra intrigue.",
+    "pattern": "Hidden Property",
+    "source": "Physical Review Letters (2009)",
+    "difficulty": "hard",
+    "topic": "science"
+  },
+  {
+    "question": "Which everyday metal is so reactive that it explodes on contact with water and must be stored in oil?",
+    "answer": "Sodium (or potassium)",
+    "why_excellent": "Table salt contains this explosive metal, which is a mind-bending hidden property of something utterly familiar.",
+    "pattern": "Hidden Property",
+    "source": "common knowledge",
+    "difficulty": "easy",
+    "topic": "science"
+  },
+  {
+    "question": "Which part of the human body has no blood supply and gets its oxygen directly from the air?",
+    "answer": "The cornea (of the eye)",
+    "why_excellent": "Reveals a surprising property of an organ everyone uses every waking moment. The cornea is the only body part that breathes directly.",
+    "pattern": "Hidden Property",
+    "source": "American Academy of Ophthalmology",
+    "difficulty": "medium",
+    "topic": "science"
+  },
+  {
+    "question": "Which common household liquid is more acidic than vinegar?",
+    "answer": "Lemon juice (pH ~2 vs vinegar's ~2.5)",
+    "why_excellent": "Challenges the assumption that vinegar is the most acidic thing in your kitchen, using a familiar comparison.",
+    "pattern": "Hidden Property",
+    "source": "common knowledge",
+    "difficulty": "easy",
+    "topic": "food"
+  },
+  {
+    "question": "What five-letter English word becomes shorter when you add two letters to it?",
+    "answer": "Short (add 'er' to get 'shorter')",
+    "why_excellent": "A pure wordplay puzzle that creates an 'aha!' moment. The paradox of a word becoming 'shorter' by getting longer is delightful.",
+    "pattern": "Wordplay Revelation",
+    "source": "common knowledge",
+    "difficulty": "easy",
+    "topic": "language"
+  },
+  {
+    "question": "Which English word has three consecutive double letters?",
+    "answer": "Bookkeeper",
+    "why_excellent": "A hidden pattern in a familiar word that most people have never noticed. Elegant and satisfying to discover.",
+    "pattern": "Wordplay Revelation",
+    "source": "common knowledge",
+    "difficulty": "medium",
+    "topic": "language"
+  },
+  {
+    "question": "What word in the English language is always spelled incorrectly?",
+    "answer": "Incorrectly",
+    "why_excellent": "A self-referential riddle that creates a satisfying logical loop. The answer is hiding in plain sight in the question.",
+    "pattern": "Wordplay Revelation",
+    "source": "common knowledge",
+    "difficulty": "easy",
+    "topic": "language"
+  },
+  {
+    "question": "Which common English word contains the letters 'ueue' in sequence?",
+    "answer": "Queue",
+    "why_excellent": "Highlights an absurdity of English spelling, where four of the five letters are essentially silent. Universally accessible.",
+    "pattern": "Wordplay Revelation",
+    "source": "common knowledge",
+    "difficulty": "easy",
+    "topic": "language"
+  },
+  {
+    "question": "What nine-letter word in English still remains a word each time you remove a letter, all the way down to a single letter?",
+    "answer": "Startling (startling > starting > staring > string > sting > sing > sin > in > I)",
+    "why_excellent": "A cascading word puzzle that reveals hidden words nested inside a familiar term. The full chain is deeply satisfying.",
+    "pattern": "Wordplay Revelation",
+    "source": "common knowledge",
+    "difficulty": "hard",
+    "topic": "language"
+  },
+  {
+    "question": "Which country has more pyramids than Egypt?",
+    "answer": "Sudan (over 200 pyramids compared to Egypt's roughly 130)",
+    "why_excellent": "Directly challenges the universal assumption that Egypt has the most pyramids. The margin is not even close.",
+    "pattern": "Scale Surprise",
+    "source": "UNESCO World Heritage",
+    "difficulty": "medium",
+    "topic": "geography"
+  },
+  {
+    "question": "Oxford University is older than which ancient empire?",
+    "answer": "The Aztec Empire (Oxford teaching from 1096; Aztec Empire founded ~1428)",
+    "why_excellent": "Juxtaposes a familiar institution with an ancient civilization, revealing that Oxford is far older than most people assume.",
+    "pattern": "Scale Surprise",
+    "source": "University of Oxford records",
+    "difficulty": "medium",
+    "topic": "history"
+  },
+  {
+    "question": "Was Cleopatra closer in time to the building of the Great Pyramid or to the Moon landing?",
+    "answer": "The Moon landing (Great Pyramid built ~2560 BC; Cleopatra died 30 BC; Moon landing 1969 AD)",
+    "why_excellent": "Forces a complete recalibration of historical timelines. The math is staggering and universally surprising.",
+    "pattern": "Scale Surprise",
+    "source": "historical record",
+    "difficulty": "medium",
+    "topic": "history"
+  },
+  {
+    "question": "Which country has the most time zones?",
+    "answer": "France (11 time zones, due to its overseas territories)",
+    "why_excellent": "Challenges the assumption that the largest countries (Russia, USA) would have the most time zones. France's colonial legacy creates this surprise.",
+    "pattern": "Scale Surprise",
+    "source": "CIA World Factbook",
+    "difficulty": "medium",
+    "topic": "geography"
+  },
+  {
+    "question": "There are more possible iterations of a game of chess than there are atoms in the observable universe. Approximately how many possible chess games are there?",
+    "answer": "About 10 to the power of 120 (the Shannon number), vs roughly 10 to the power of 80 atoms",
+    "why_excellent": "Uses a concrete comparison (atoms in the universe) to make an incomprehensibly large number tangible and astonishing.",
+    "pattern": "Scale Surprise",
+    "source": "Claude Shannon, 1950",
+    "difficulty": "hard",
+    "topic": "science"
+  },
+  {
+    "question": "Which is heavier: all the ants on Earth, or all the humans?",
+    "answer": "They weigh approximately the same (both roughly 300-400 million tonnes)",
+    "why_excellent": "Forces you to reconcile the tiny size of individual ants with their unfathomable numbers. The near-equality is astonishing.",
+    "pattern": "Scale Surprise",
+    "source": "Proceedings of the National Academy of Sciences",
+    "difficulty": "medium",
+    "topic": "nature"
+  },
+  {
+    "question": "How many trees are there on Earth: closer to 400 million, 40 billion, or 3 trillion?",
+    "answer": "About 3 trillion (roughly 400 trees per person)",
+    "why_excellent": "The sheer scale of 3 trillion trees, and the per-person ratio, reframes our understanding of the planet's forests.",
+    "pattern": "Scale Surprise",
+    "source": "Nature journal (2015)",
+    "difficulty": "medium",
+    "topic": "nature"
+  },
+  {
+    "question": "Which children's toy was originally developed as a wallpaper cleaner?",
+    "answer": "Play-Doh",
+    "why_excellent": "A beloved childhood staple with a completely unexpected industrial origin. The pivot from cleaning product to toy is fascinating.",
+    "pattern": "Historical Quirk",
+    "source": "Wikipedia",
+    "difficulty": "medium",
+    "topic": "history"
+  },
+  {
+    "question": "Which soft drink was originally marketed as a nerve tonic and headache remedy?",
+    "answer": "Coca-Cola",
+    "why_excellent": "Links the world's most iconic brand to its medicinal origins, a story most people vaguely know but find endlessly interesting.",
+    "pattern": "Historical Quirk",
+    "source": "Wikipedia",
+    "difficulty": "easy",
+    "topic": "food"
+  },
+  {
+    "question": "Edible honey has been found in tombs over 3,000 years old in which country?",
+    "answer": "Egypt",
+    "why_excellent": "The idea that honey literally never spoils, combined with the romance of Egyptian tombs, makes this unforgettable.",
+    "pattern": "Historical Quirk",
+    "source": "Smithsonian Magazine",
+    "difficulty": "easy",
+    "topic": "food"
+  },
+  {
+    "question": "Which famous structure was originally built as a temporary exhibit meant to be dismantled after 20 years?",
+    "answer": "The Eiffel Tower",
+    "why_excellent": "One of the most recognizable structures on Earth was never meant to last. The contrast between intent and outcome is compelling.",
+    "pattern": "Historical Quirk",
+    "source": "Wikipedia",
+    "difficulty": "easy",
+    "topic": "history"
+  },
+  {
+    "question": "Which war lasted only 38 to 45 minutes, making it the shortest war in recorded history?",
+    "answer": "The Anglo-Zanzibar War of 1896",
+    "why_excellent": "The absurdity of a war lasting less than an hour is inherently amusing and challenges what we think of as 'war.'",
+    "pattern": "Historical Quirk",
+    "source": "Wikipedia",
+    "difficulty": "medium",
+    "topic": "history"
+  },
+  {
+    "question": "Which U.S. president was also a licensed bartender?",
+    "answer": "Abraham Lincoln (he co-owned a tavern in New Salem, Illinois)",
+    "why_excellent": "Juxtaposes the gravitas of the presidency with the humbleness of bartending, humanizing a legendary figure.",
+    "pattern": "Historical Quirk",
+    "source": "Abraham Lincoln Presidential Library",
+    "difficulty": "hard",
+    "topic": "history"
+  },
+  {
+    "question": "Which major tech company was originally called 'BackRub'?",
+    "answer": "Google (the search engine was called BackRub when created by Larry Page and Sergey Brin in 1996)",
+    "why_excellent": "The contrast between the awkward original name and the now-ubiquitous brand is amusing and surprising.",
+    "pattern": "Historical Quirk",
+    "source": "Stanford University archives",
+    "difficulty": "medium",
+    "topic": "technology"
+  },
+  {
+    "question": "Which popular snack food was accidentally invented when a chef made fries extra thin and crispy to spite a complaining customer?",
+    "answer": "Potato chips (attributed to George Crum at Moon's Lake House, Saratoga Springs, 1853)",
+    "why_excellent": "An act of kitchen spite leading to one of the world's favorite snacks is a delightful origin story.",
+    "pattern": "Historical Quirk",
+    "source": "historical record",
+    "difficulty": "easy",
+    "topic": "food"
+  },
+  {
+    "question": "Which planet rains diamonds?",
+    "answer": "Neptune (and Saturn), where extreme pressure turns methane into diamond rain",
+    "why_excellent": "An utterly alien concept that sounds like science fiction but is supported by planetary science. Universally awe-inspiring.",
+    "pattern": "Biological/Physical Oddity",
+    "source": "NASA",
+    "difficulty": "medium",
+    "topic": "science"
+  },
+  {
+    "question": "Which sea creature has three hearts, nine brains, and blue blood?",
+    "answer": "Octopus",
+    "why_excellent": "The sheer biological strangeness of the octopus makes it sound like an alien, yet it lives on our own planet.",
+    "pattern": "Biological/Physical Oddity",
+    "source": "Smithsonian National Museum of Natural History",
+    "difficulty": "easy",
+    "topic": "nature"
+  },
+  {
+    "question": "Which animal can survive being frozen solid and thaw back to life?",
+    "answer": "Wood frog (Rana sylvatica)",
+    "why_excellent": "A seemingly impossible survival strategy that sounds magical but is real biology. Challenges our definition of 'alive.'",
+    "pattern": "Biological/Physical Oddity",
+    "source": "Journal of Experimental Biology",
+    "difficulty": "medium",
+    "topic": "nature"
+  },
+  {
+    "question": "Which animal sleeps with one half of its brain at a time, keeping the other half alert?",
+    "answer": "Dolphin (unihemispheric slow-wave sleep)",
+    "why_excellent": "Half-brain sleeping is a genuinely mind-bending adaptation that reimagines what sleep even means.",
+    "pattern": "Biological/Physical Oddity",
+    "source": "Nature journal",
+    "difficulty": "medium",
+    "topic": "nature"
+  },
+  {
+    "question": "Which creature's heart is located in its head?",
+    "answer": "Shrimp",
+    "why_excellent": "A simple anatomical fact that sounds absurd and is instantly memorable. Great for generating conversation.",
+    "pattern": "Biological/Physical Oddity",
+    "source": "Marine Biology textbooks",
+    "difficulty": "easy",
+    "topic": "nature"
+  },
+  {
+    "question": "Which is the only mammal that can truly fly?",
+    "answer": "Bat (flying squirrels glide, not fly)",
+    "why_excellent": "Challenges the common misconception about flying squirrels and highlights bat uniqueness among mammals.",
+    "pattern": "Biological/Physical Oddity",
+    "source": "common knowledge",
+    "difficulty": "easy",
+    "topic": "nature"
+  },
+  {
+    "question": "What percentage of the human body is made up of water: closer to 30%, 60%, or 90%?",
+    "answer": "About 60%",
+    "why_excellent": "Forces people to confront how much of their own body is just water, a simple fact with existential implications.",
+    "pattern": "Biological/Physical Oddity",
+    "source": "USGS",
+    "difficulty": "easy",
+    "topic": "science"
+  },
+  {
+    "question": "In a room of just 23 people, what is the probability that two share a birthday: about 10%, 30%, or 50%?",
+    "answer": "About 50% (the birthday paradox)",
+    "why_excellent": "One of the most famous counterintuitive results in probability. Nearly everyone guesses wrong, making it perfect for quizzes.",
+    "pattern": "Number Sequence",
+    "source": "mathematics (birthday problem)",
+    "difficulty": "medium",
+    "topic": "science"
+  },
+  {
+    "question": "If you fold a standard piece of paper in half 42 times (if you could), how far would it reach: the ceiling, the top of Everest, or the Moon?",
+    "answer": "The Moon (exponential doubling reaches approximately 440,000 km)",
+    "why_excellent": "Demonstrates the mind-bending power of exponential growth using an everyday object. Almost nobody believes the answer.",
+    "pattern": "Number Sequence",
+    "source": "mathematics",
+    "difficulty": "medium",
+    "topic": "science"
+  },
+  {
+    "question": "A bat and a ball cost $1.10 together. The bat costs $1.00 more than the ball. How much does the ball cost?",
+    "answer": "5 cents (not 10 cents as most people instinctively answer)",
+    "why_excellent": "The classic cognitive reflection test. Nearly everyone gets it wrong on first instinct, creating a perfect 'aha!' moment.",
+    "pattern": "Verbal Analogy",
+    "source": "Shane Frederick, Cognitive Reflection Test (2005)",
+    "difficulty": "easy",
+    "topic": "science"
+  },
+  {
+    "question": "Mars is red, but what colour is a Martian sunset?",
+    "answer": "Blue (due to fine dust particles in the Martian atmosphere scattering light differently than on Earth)",
+    "why_excellent": "Inverts our Earth-based expectations perfectly: red planet, blue sunset versus blue planet, red sunset. Elegant symmetry.",
+    "pattern": "Verbal Analogy",
+    "source": "NASA/Mars rover imagery",
+    "difficulty": "medium",
+    "topic": "science"
+  },
+  {
+    "question": "Which of these is NOT a real element on the periodic table: Einsteinium, Kryptonite, Californium, or Oganesson?",
+    "answer": "Kryptonite (Superman's fictional weakness; the other three are all real elements)",
+    "why_excellent": "The real element names sound so fantastical that the fictional one blends right in. Tests cultural vs scientific knowledge.",
+    "pattern": "Odd One Out",
+    "source": "IUPAC periodic table",
+    "difficulty": "easy",
+    "topic": "science"
+  }
+]

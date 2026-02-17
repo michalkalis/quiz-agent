@@ -146,6 +146,36 @@ After import, suggest running the verification skill:
 
 > "Consider running `/verify-questions data/generated/claude_batch_NNN.json` to fact-check answers and populate source attribution (URLs + excerpts) for the iOS app's source card."
 
+## Optional: Fact-First Mode (Source-Grounded Generation)
+
+When the user says "use fact-first mode", "source-grounded", or passes `--fact-first`, the pipeline adds a Stage 0 before generation:
+
+### Stage 0: FACT SOURCING
+1. Import and run `FactSourcer` from `apps/question-generator/app/sourcing/`
+2. Gather facts from Wikipedia (en, sk, cs), Open Trivia DB, and news RSS feeds
+3. Deduplicate and collect ~30+ facts relevant to requested topics
+4. Pass these facts into the V3 fact-first prompt template (`prompts/question_generation_v3_fact_first.md`)
+
+### How it changes the pipeline
+- **Stage 1 (GENERATE)** uses the V3 prompt with `{facts_section}` injected, instructing the LLM to ONLY use provided facts
+- **Stage 2 (CRITIQUE)** and **Stage 3 (SELECT)** remain unchanged
+- **Stage 4 (OUTPUT)** tags metadata with `"pipeline": "fact_first"` and `"prompt_version": "v3_fact_first"`
+- Questions include `source_url` and `source_excerpt` from the sourced facts
+
+### When to use fact-first mode
+- When factual accuracy is paramount (reduces hallucination risk)
+- When you want questions grounded in verifiable sources
+- When sourcing from current events or trending topics
+- When generating questions about specific cultural topics (SK/CZ Wikipedia)
+
+### CLI usage
+```bash
+.venv/bin/python scripts/generate_questions_claude.py --fact-first --count 10 --topics "science,history"
+```
+
+### In Claude Code session
+When the user requests fact-first mode, run the sourcing step first, then use the sourced facts as the basis for question generation, following the same quality criteria as standard mode.
+
 ## Important
 
 - **Factual accuracy is critical.** Only include facts you are confident about. If unsure, skip the question — never guess.

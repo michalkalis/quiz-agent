@@ -54,6 +54,8 @@ Rate your own question 1-10 on:
 
 Learn these PATTERNS, not just examples. Mix and match creatively!
 
+**PATTERN DIVERSITY RULE:** In a batch of 10 questions, use at least 4 different patterns. No single pattern may appear more than 3 times. If you catch yourself using the same pattern repeatedly, STOP and switch to a different one.
+
 ### Pattern 1: The Surprising Connection
 **Template:** "Which [common thing] has [unexpected property/connection]?"
 
@@ -421,6 +423,18 @@ For EACH question, respond with this EXACT structure:
 - For odd-one-out: `correct_answer` is the odd item, `explanation` explains why
 - For lateral thinking: `correct_answer` is a concise key insight, `alternative_answers` lists acceptable phrasings
 - Most logic questions are `language_dependent: false` unless they rely on English wordplay
+
+---
+
+## Brevity Guidance
+
+**The best pub quiz questions are punchy.** Avoid unnecessarily long questions or multi-sentence answers.
+
+- **Questions:** Aim for 1-2 sentences. If you need 3+ sentences, the question is probably trying too hard.
+- **Answers:** 1-3 words is ideal. If the answer requires a full sentence, consider whether the question is well-framed.
+- **Exception:** Lateral thinking puzzles may need a slightly longer setup, but the answer should still be concise.
+
+**Self-test:** Read your question aloud. If it takes more than 10 seconds, trim it.
 
 ---
 

@@ -37,6 +37,11 @@ from app.generation.storage import QuestionStorage
 
 import anthropic
 
+try:
+    import openai as openai_lib
+except ImportError:
+    openai_lib = None
+
 
 # ---------------------------------------------------------------------------
 # Anthropic client helpers
@@ -110,6 +115,20 @@ def call_claude_thinking(
             response_text = block.text
 
     return thinking_text, response_text
+
+
+def call_openai(prompt: str, *, model: str, temperature: float = 0.3, max_tokens: int = 4096) -> str:
+    """Call OpenAI API for cross-provider critique."""
+    if openai_lib is None:
+        raise RuntimeError("openai package not installed. Run: pip install openai")
+    client = openai_lib.OpenAI()
+    response = client.chat.completions.create(
+        model=model,
+        temperature=temperature,
+        max_tokens=max_tokens,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    return response.choices[0].message.content
 
 
 # ---------------------------------------------------------------------------
@@ -214,12 +233,48 @@ def dict_to_question(data: dict, default_difficulty: str, default_category: str)
 # Pipeline stages
 # ---------------------------------------------------------------------------
 
+def format_facts_for_prompt(facts: list) -> str:
+    """Format a list of Fact objects into a text section for the prompt.
+
+    Args:
+        facts: List of Fact objects from the sourcing layer
+
+    Returns:
+        Formatted string of numbered facts for injection into the prompt
+    """
+    lines = []
+    for i, fact in enumerate(facts, 1):
+        text = getattr(fact, "text", "")
+        source_url = getattr(fact, "source_url", None)
+        source_name = getattr(fact, "source_name", "unknown")
+        topic = getattr(fact, "topic", "General")
+        surprise = getattr(fact, "surprise_rating", 5.0)
+
+        line = f"**Fact {i}** [Topic: {topic}, Surprise: {surprise}/10]"
+        line += f"\n  {text}"
+        if source_url:
+            line += f"\n  Source: {source_name} ({source_url})"
+        else:
+            line += f"\n  Source: {source_name}"
+        lines.append(line)
+
+    return "\n\n".join(lines)
+
+
 def stage_generate(
     client: anthropic.Anthropic,
     args: argparse.Namespace,
     prompt_builder: PromptBuilder,
+    facts: list | None = None,
 ) -> list[Question]:
-    """Stage 1: Generate questions in batches."""
+    """Stage 1: Generate questions in batches.
+
+    Args:
+        client: Anthropic client
+        args: Parsed CLI arguments
+        prompt_builder: PromptBuilder instance (V2 or V3 template)
+        facts: Optional list of Fact objects for fact-first generation
+    """
     multiplier = max(args.best_of_n, 1)
     total = args.count * multiplier
     batch_size = 10  # questions per API call
@@ -228,6 +283,14 @@ def stage_generate(
     topics = [t.strip() for t in args.topics.split(",")] if args.topics else None
     categories = [c.strip() for c in args.categories.split(",")]
     excluded = [t.strip() for t in args.excluded_topics.split(",")] if args.excluded_topics else None
+
+    # Build extra kwargs for fact-first mode
+    extra_kwargs = {}
+    is_fact_first = facts is not None and len(facts) > 0
+    if is_fact_first:
+        extra_kwargs["facts_section"] = format_facts_for_prompt(facts)
+
+    prompt_version = "v3_fact_first" if is_fact_first else "v2_cot"
 
     batches = (total + batch_size - 1) // batch_size  # ceiling division
 
@@ -245,6 +308,7 @@ def stage_generate(
             categories=categories,
             question_type=args.type,
             excluded_topics=excluded,
+            **extra_kwargs,
         )
 
         t0 = time.time()
@@ -265,10 +329,12 @@ def stage_generate(
             q.generation_metadata.update({
                 "model": args.model,
                 "provider": "anthropic",
-                "prompt_version": "v2_cot",
+                "prompt_version": prompt_version,
                 "temperature": 0.8,
                 "stage": "initial_generation",
             })
+            if is_fact_first:
+                q.generation_metadata["pipeline"] = "fact_first"
 
         all_questions.extend(parsed)
 
@@ -280,8 +346,24 @@ def stage_critique(
     questions: list[Question],
     args: argparse.Namespace,
     critique_template: str,
+    critique_model: str | None = None,
 ) -> list[tuple[Question, float]]:
-    """Stage 2: Critique each question with LLM judge."""
+    """Stage 2: Critique each question with LLM judge.
+
+    Args:
+        critique_model: Override model for critique. When set and starts with
+            "gpt-" / "o1-" / "o3-", uses OpenAI API. When set and starts with
+            "claude-", uses Claude API with that model. When None, uses args.model.
+    """
+    # Determine which model (and provider) to use for critique
+    critique_model_used = critique_model or args.model
+    use_openai = critique_model_used.startswith(("gpt-", "o1-", "o3-"))
+
+    if use_openai:
+        print(f"  Critique model: {critique_model_used} (OpenAI)")
+    else:
+        print(f"  Critique model: {critique_model_used} (Anthropic)")
+
     scored: list[tuple[Question, float]] = []
 
     for i, q in enumerate(questions):
@@ -295,16 +377,25 @@ def stage_critique(
 
         try:
             thinking_text = ""
-            if args.thinking:
+
+            if use_openai:
+                # Cross-provider critique via OpenAI
+                response_text = call_openai(
+                    critique_prompt,
+                    model=critique_model_used,
+                    temperature=0.3,
+                    max_tokens=4096,
+                )
+            elif args.thinking:
                 thinking_text, response_text = call_claude_thinking(
                     client, critique_prompt,
-                    model=args.model,
+                    model=critique_model_used,
                     thinking_budget=8000,
                 )
             else:
                 response_text = call_claude(
                     client, critique_prompt,
-                    model=args.model,
+                    model=critique_model_used,
                     temperature=0.3,
                     max_tokens=4096,
                 )
@@ -319,10 +410,10 @@ def stage_critique(
             q.generation_metadata = q.generation_metadata or {}
             q.generation_metadata.update({
                 "critique": critique_data,
-                "critique_model": args.model,
+                "critique_model": critique_model_used,
                 "critique_score": score,
                 "critique_verdict": verdict,
-                "thinking_enabled": args.thinking,
+                "thinking_enabled": args.thinking and not use_openai,
             })
             if thinking_text and args.verbose:
                 q.generation_metadata["critique_thinking"] = thinking_text[:500]
@@ -405,8 +496,8 @@ def stage_output(
                 "generated_at": datetime.now(timezone.utc).isoformat(),
                 "total_generated": len(all_scored),
                 "total_selected": len(questions),
-                "pipeline": "claude_best_of_n" if args.best_of_n > 0 else "claude_direct",
-                "prompt_version": "v2_cot",
+                "pipeline": "fact_first" if getattr(args, "fact_first", False) else ("claude_best_of_n" if args.best_of_n > 0 else "claude_direct"),
+                "prompt_version": "v3_fact_first" if getattr(args, "fact_first", False) else "v2_cot",
                 "thinking_enabled": args.thinking,
                 "min_score": args.min_score,
             },
@@ -443,12 +534,14 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--type", default="text", choices=["text", "text_multichoice"])
     p.add_argument("--excluded-topics", default=None, help="Comma-separated topics to avoid")
     p.add_argument("--model", default="claude-opus-4-6", help="Claude model (default: claude-opus-4-6)")
+    p.add_argument("--critique-model", default=None, help="Use a different model for critique stage (e.g. 'gpt-4o' for cross-provider critique). Default: same as --model")
     p.add_argument("--best-of-n", type=int, default=3, help="Multiplier for best-of-N selection. 0 = skip critique. (default: 3)")
     p.add_argument("--min-score", type=float, default=7.0, help="Minimum quality score (default: 7.0)")
     p.add_argument("--thinking", action="store_true", help="Use extended thinking for critique stage")
     p.add_argument("--output", "-o", default=None, help="Save JSON to file")
     p.add_argument("--input", "-i", default=None, help="Import pre-generated JSON file (skip generation, run import only)")
     p.add_argument("--import-to-db", action="store_true", help="Import to ChromaDB as pending_review")
+    p.add_argument("--fact-first", action="store_true", help="Use fact-first (source-grounded) generation: source facts from Wikipedia, OpenTDB, news, then generate questions grounded in those facts")
     p.add_argument("--verbose", "-v", action="store_true", help="Show detailed progress")
     return p
 
@@ -506,29 +599,72 @@ def main() -> None:
     # --- Generation mode: call Claude API ---
     print(f"Claude Question Generator")
     print(f"Model: {args.model}  |  Count: {args.count}  |  Difficulty: {args.difficulty}")
+    if args.fact_first:
+        print("Mode: Fact-First (source-grounded generation)")
     if args.best_of_n > 0:
         print(f"Pipeline: Best-of-{args.best_of_n} (generate {args.count * args.best_of_n}, critique, select top {args.count})")
     else:
         print("Pipeline: Direct generation (no critique)")
     print()
 
+    # --- Fact-First: Source facts before generation ---
+    sourced_facts = None
+    if args.fact_first:
+        print("Stage 0: FACT SOURCING")
+        t_start = time.time()
+        try:
+            import asyncio
+            from app.sourcing import FactSourcer
+
+            topics = [t.strip() for t in args.topics.split(",")] if args.topics else None
+            sourcer = FactSourcer(
+                enable_wikipedia=True,
+                enable_opentdb=True,
+                enable_news=True,
+                enable_czech_slovak=True,
+            )
+            fact_batch = asyncio.run(sourcer.gather_facts(
+                count=max(args.count * 3, 30),
+                topics=topics,
+            ))
+            sourced_facts = fact_batch.facts
+            print(f"  Sourced {len(sourced_facts)} facts ({time.time() - t_start:.1f}s)\n")
+
+            if not sourced_facts:
+                print("  Warning: No facts sourced. Falling back to standard generation.")
+        except ImportError as e:
+            print(f"  Error importing sourcing module: {e}")
+            print("  Falling back to standard generation.\n")
+        except Exception as e:
+            print(f"  Error during fact sourcing: {e}")
+            print("  Falling back to standard generation.\n")
+
     # --- Setup ---
     client = create_client()
 
-    # Load v2_cot prompt template
+    # Load prompt template (V3 fact-first or V2 CoT)
     prompts_dir = os.path.join(PROJECT_ROOT, "apps", "question-generator", "prompts")
-    template_path = os.path.join(prompts_dir, "question_generation_v2_cot.md")
+    if sourced_facts:
+        template_path = os.path.join(prompts_dir, "question_generation_v3_fact_first.md")
+        if not os.path.exists(template_path):
+            print("  Warning: V3 fact-first template not found, falling back to V2.")
+            template_path = os.path.join(prompts_dir, "question_generation_v2_cot.md")
+            sourced_facts = None  # fall back
+    else:
+        template_path = os.path.join(prompts_dir, "question_generation_v2_cot.md")
     prompt_builder = PromptBuilder(template_path=template_path)
 
-    # Load critique template
-    critique_path = os.path.join(prompts_dir, "question_critique.md")
+    # Load critique template (prefer v2, fall back to v1)
+    critique_path = os.path.join(prompts_dir, "question_critique_v2.md")
+    if not os.path.exists(critique_path):
+        critique_path = os.path.join(prompts_dir, "question_critique.md")
     with open(critique_path, "r", encoding="utf-8") as f:
         critique_template = f.read()
 
     # --- Stage 1: Generate ---
     print("Stage 1: GENERATE")
     t_start = time.time()
-    questions = stage_generate(client, args, prompt_builder)
+    questions = stage_generate(client, args, prompt_builder, facts=sourced_facts)
     print(f"  Total: {len(questions)} questions generated ({time.time() - t_start:.1f}s)\n")
 
     if not questions:
@@ -539,7 +675,7 @@ def main() -> None:
     if args.best_of_n > 0:
         print("Stage 2: CRITIQUE")
         t_start = time.time()
-        scored = stage_critique(client, questions, args, critique_template)
+        scored = stage_critique(client, questions, args, critique_template, critique_model=args.critique_model)
         print(f"  Critiqued {len(scored)} questions ({time.time() - t_start:.1f}s)\n")
 
         print("Stage 3: SELECT")

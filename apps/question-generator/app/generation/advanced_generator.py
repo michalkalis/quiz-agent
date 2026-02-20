@@ -36,6 +36,7 @@ class AdvancedQuestionGenerator:
         generation_temperature: float = 0.8,
         critique_temperature: float = 0.3,
         prompt_version: str = "v2_cot",
+        verbose: bool = False,
     ):
         """Initialize advanced question generator.
 
@@ -45,7 +46,9 @@ class AdvancedQuestionGenerator:
             generation_temperature: Temperature for generation (0.8 for creativity)
             critique_temperature: Temperature for critique (0.3 for consistency)
             prompt_version: Prompt template version (v2_cot uses Chain of Thought)
+            verbose: Enable verbose logging of raw responses and parsed fields
         """
+        self.verbose = verbose
         self.generation_llm = ChatOpenAI(
             model=generation_model,
             temperature=generation_temperature
@@ -278,6 +281,17 @@ class AdvancedQuestionGenerator:
         return questions
 
     @staticmethod
+    def _strip_markdown_fences(content: str) -> str:
+        """Remove ```json ... ``` wrappers that LLMs sometimes add around JSON."""
+        content = content.strip()
+        if content.startswith("```"):
+            first_nl = content.find("\n")
+            last_fence = content.rfind("```")
+            if first_nl != -1 and last_fence > first_nl:
+                content = content[first_nl + 1:last_fence].strip()
+        return content
+
+    @staticmethod
     def _jaccard_similarity(text_a: str, text_b: str) -> float:
         """Compute Jaccard word-overlap similarity between two texts."""
         words_a = set(text_a.lower().split())
@@ -383,8 +397,9 @@ class AdvancedQuestionGenerator:
 
         # Parse critique JSON
         try:
-            start = response.content.find('{')
-            end = response.content.rfind('}') + 1
+            critique_content = self._strip_markdown_fences(response.content)
+            start = critique_content.find('{')
+            end = critique_content.rfind('}') + 1
 
             if start == -1 or end <= start:
                 # Fallback: assume mediocre (not generous) when parsing fails
@@ -395,7 +410,7 @@ class AdvancedQuestionGenerator:
                     "error": "No JSON in critique response"
                 }
 
-            json_str = response.content[start:end]
+            json_str = critique_content[start:end]
             critique_data = json.loads(json_str)
 
             # Add critique model info
@@ -441,6 +456,12 @@ class AdvancedQuestionGenerator:
         questions = []
 
         try:
+            # Strip markdown code fences that LLMs sometimes wrap around JSON
+            content = self._strip_markdown_fences(content)
+
+            if self.verbose:
+                print(f"  [verbose] Raw response preview: {content[:200]}...")
+
             # Extract JSON
             start = content.find('{')
             end = content.rfind('}') + 1
@@ -464,6 +485,9 @@ class AdvancedQuestionGenerator:
             # Convert to Question objects
             for q_data in questions_data:
                 try:
+                    if self.verbose:
+                        has_fields = {k: k in q_data for k in ("reasoning", "self_critique", "surprise_factor")}
+                        print(f"  [verbose] Question fields: {has_fields}")
                     question = self._dict_to_question(
                         q_data,
                         default_difficulty=default_difficulty,
@@ -517,6 +541,18 @@ class AdvancedQuestionGenerator:
         # Extract V2-specific fields
         reasoning = data.get("reasoning", {})
         self_critique = data.get("self_critique", {})
+
+        # Handle flattened self_critique: GPT-4o sometimes puts dimensions at top level
+        if not self_critique and "surprise_factor" in data:
+            self_critique = {
+                k: data[k]
+                for k in ("surprise_factor", "universal_appeal", "clever_framing",
+                          "educational_value", "answerability", "overall_score", "reasoning")
+                if k in data and k != "reasoning"  # avoid clobbering CoT reasoning
+            }
+            # Also grab "reasoning" under a different key to avoid conflict
+            if "self_critique_reasoning" in data:
+                self_critique["reasoning"] = data["self_critique_reasoning"]
 
         # Build generation metadata
         generation_metadata = {}

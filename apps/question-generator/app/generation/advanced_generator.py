@@ -491,6 +491,7 @@ class AdvancedQuestionGenerator:
                 "universal_appeal": self_critique.get("universal_appeal", 0),
                 "clever_framing": self_critique.get("clever_framing", 0),
                 "educational_value": self_critique.get("educational_value", 0),
+                "answerability": self_critique.get("answerability", 0),
             }
             generation_metadata["self_critique"] = self_critique
             generation_metadata["ai_score"] = self_critique.get("overall_score", 0)

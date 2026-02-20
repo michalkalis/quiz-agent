@@ -14,7 +14,7 @@ def _get_data_dir() -> str:
 
 
 def load_gold_standard(
-    n: int = 10,
+    n: int = 5,
     topics: Optional[list[str]] = None,
     difficulty: Optional[str] = None,
 ) -> str:
@@ -49,12 +49,17 @@ def load_gold_standard(
     selected = random.sample(examples, min(n, len(examples)))
 
     # Format as prompt text
+    # First n-2 examples: full Q+A. Last 2: pattern-only (no answer) to reduce copying.
     lines = []
+    full_count = max(len(selected) - 2, 1)
     for i, ex in enumerate(selected, 1):
         lines.append(f"**Example {i}: {ex.get('pattern', 'Unknown Pattern')}**")
         lines.append(f'Q: "{ex["question"]}"')
-        lines.append(f'A: {ex["answer"]}')
-        lines.append(f'**WHY EXCELLENT:** {ex["why_excellent"]}')
+        if i <= full_count:
+            lines.append(f'A: {ex["answer"]}')
+            lines.append(f'**WHY EXCELLENT:** {ex["why_excellent"]}')
+        else:
+            lines.append(f'*(Answer omitted — study the question structure and pattern, not the answer.)*')
         lines.append("")
 
     return "\n".join(lines)

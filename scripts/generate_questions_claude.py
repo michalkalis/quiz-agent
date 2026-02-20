@@ -262,6 +262,42 @@ def format_facts_for_prompt(facts: list) -> str:
     return "\n\n".join(lines)
 
 
+def jaccard_similarity(text_a: str, text_b: str) -> float:
+    """Compute Jaccard word-overlap similarity between two texts."""
+    words_a = set(text_a.lower().split())
+    words_b = set(text_b.lower().split())
+    if not words_a or not words_b:
+        return 0.0
+    intersection = len(words_a & words_b)
+    union = len(words_a | words_b)
+    return intersection / union if union else 0.0
+
+
+def dedup_against_gold_standard(
+    questions: list[Question], threshold: float = 0.80
+) -> list[Question]:
+    """Remove questions that are too similar to gold standard examples."""
+    gold_path = os.path.join(PROJECT_ROOT, "data", "examples", "gold_standard.json")
+    if not os.path.exists(gold_path):
+        return questions
+
+    with open(gold_path, "r", encoding="utf-8") as f:
+        gold_examples = json.load(f)
+    gold_texts = [ex.get("question", "") for ex in gold_examples]
+
+    unique = []
+    for q in questions:
+        is_copy = False
+        for gold_q in gold_texts:
+            if jaccard_similarity(q.question, gold_q) > threshold:
+                print(f"  Dedup: removed near-copy of gold standard: {q.question[:60]}...")
+                is_copy = True
+                break
+        if not is_copy:
+            unique.append(q)
+    return unique
+
+
 def stage_generate(
     client: anthropic.Anthropic,
     args: argparse.Namespace,
@@ -338,6 +374,9 @@ def stage_generate(
                 q.generation_metadata["pipeline"] = "fact_first"
 
         all_questions.extend(parsed)
+
+    # Dedup against gold standard to prevent verbatim copying
+    all_questions = dedup_against_gold_standard(all_questions)
 
     return all_questions
 

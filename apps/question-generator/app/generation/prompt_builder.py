@@ -65,7 +65,7 @@ class PromptBuilder:
         # Use dynamic sampling from gold-standard library (falls back to hardcoded)
         if excellent_examples is None:
             excellent_examples = load_gold_standard(
-                n=10,
+                n=5,
                 topics=topics,
                 difficulty=difficulty,
             )

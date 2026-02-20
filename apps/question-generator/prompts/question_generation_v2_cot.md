@@ -388,6 +388,11 @@ The player should be able to reason, estimate, or deduce toward the answer — n
 
 ## EXCELLENT Questions (Score: 9-10/10) - Your Gold Standard
 
+> **⚠️ WARNING: These examples demonstrate PATTERNS and QUALITY STANDARDS only.**
+> **NEVER reproduce, paraphrase, or closely imitate any example question below.**
+> **Use them to understand what makes a great question, then create ENTIRELY ORIGINAL questions.**
+> **Any question with >50% word overlap with an example will be automatically rejected.**
+
 {excellent_examples}
 
 **Why these are excellent:**

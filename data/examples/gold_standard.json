@@ -28,7 +28,7 @@
     "engagement_type": "reasoning"
   },
   {
-    "question": "Which fashion item was originally designed for Egyptian butchers to keep blood off their clothes?",
+    "question": "In ancient Egypt, butchers wore a specific garment to keep blood off their clothes. What was it?",
     "answer": "The apron (later adopted by high fashion as a garment concept)",
     "why_excellent": "Connects a mundane kitchen item to ancient Egyptian practicality, subverting expectations about fashion origins.",
     "pattern": "Surprising Connection",
@@ -46,7 +46,7 @@
     "engagement_type": "recall"
   },
   {
-    "question": "Which popular board game was originally created to demonstrate the evils of unchecked capitalism?",
+    "question": "In 1903, a board game was created to demonstrate the evils of unchecked capitalism. What game is it?",
     "answer": "Monopoly (based on Elizabeth Magie's 'The Landlord's Game' from 1903)",
     "why_excellent": "The irony of Monopoly being designed to critique monopolies, yet becoming a celebration of them, creates a delightful surprise.",
     "pattern": "Surprising Connection",
@@ -80,7 +80,7 @@
     "engagement_type": "recall"
   },
   {
-    "question": "Which fruit shares about 60% of its genes with humans?",
+    "question": "Humans share about 60% of their genes with a common fruit. What is it?",
     "answer": "Banana",
     "why_excellent": "The genetic similarity between bananas and humans is a genuine surprise that reveals the deep shared ancestry of all life on Earth.",
     "pattern": "Surprising Connection",
@@ -109,7 +109,7 @@
     "engagement_type": "recall"
   },
   {
-    "question": "Which company originally started as a playing card manufacturer in 1889?",
+    "question": "In 1889, a Japanese company began manufacturing playing cards. Today it's one of the biggest names in video games. What company?",
     "answer": "Nintendo",
     "why_excellent": "Links the biggest name in video games to its humble origins as a Japanese card company, over a century before the Game Boy.",
     "pattern": "Surprising Connection",
@@ -165,7 +165,7 @@
     "engagement_type": "recall"
   },
   {
-    "question": "Which common fruit floats in water because it is 25% air?",
+    "question": "One common fruit floats in water because it's 25% air — that's why bobbing for them works. What fruit?",
     "answer": "Apple",
     "why_excellent": "Reveals a hidden physical property of something everyone eats, explaining why bobbing for apples works.",
     "pattern": "Hidden Property",
@@ -179,7 +179,7 @@
     "engagement_type": "recall"
   },
   {
-    "question": "Which planet has a hexagon-shaped storm at its north pole?",
+    "question": "One planet in our solar system has a perfect hexagon-shaped storm at its north pole. Name it.",
     "answer": "Saturn",
     "why_excellent": "A geometric storm pattern on a gas giant defies expectations about natural phenomena. Visually striking and universally fascinating.",
     "pattern": "Hidden Property",
@@ -196,7 +196,7 @@
     "engagement_type": "recall"
   },
   {
-    "question": "Which human organ can regenerate itself even after up to 75% of it has been removed?",
+    "question": "Even after 75% of it has been removed, one human organ can fully regenerate itself. What is it?",
     "answer": "The liver",
     "why_excellent": "Most people know the liver filters toxins but have no idea it can regrow, making this a genuine hidden superpower of the human body.",
     "pattern": "Hidden Property",
@@ -238,7 +238,7 @@
     "engagement_type": "reasoning"
   },
   {
-    "question": "Which part of the human body has no blood supply and gets its oxygen directly from the air?",
+    "question": "One part of the human body has no blood supply and gets its oxygen directly from the air. What is it?",
     "answer": "The cornea (of the eye)",
     "why_excellent": "Reveals a surprising property of an organ everyone uses every waking moment. The cornea is the only body part that breathes directly.",
     "pattern": "Hidden Property",
@@ -252,7 +252,7 @@
     "engagement_type": "recall"
   },
   {
-    "question": "Which common household liquid is more acidic than vinegar?",
+    "question": "Name a common household liquid that is more acidic than vinegar.",
     "answer": "Lemon juice (pH ~2 vs vinegar's ~2.5)",
     "why_excellent": "Challenges the assumption that vinegar is the most acidic thing in your kitchen, using a familiar comparison.",
     "pattern": "Hidden Property",
@@ -382,7 +382,7 @@
     "engagement_type": "estimation"
   },
   {
-    "question": "Which country has the most time zones?",
+    "question": "Thanks to its overseas territories, one country spans 12 time zones — more than any other. What country?",
     "answer": "France (12 time zones, due to its overseas territories)",
     "why_excellent": "Challenges the assumption that the largest countries (Russia, USA) would have the most time zones. France's colonial legacy creates this surprise.",
     "pattern": "Scale Surprise",
@@ -447,7 +447,7 @@
     "engagement_type": "estimation"
   },
   {
-    "question": "Which children's toy was originally developed as a wallpaper cleaner?",
+    "question": "Before becoming a beloved children's toy, this product was manufactured to clean wallpaper. What is it?",
     "answer": "Play-Doh",
     "why_excellent": "A beloved childhood staple with a completely unexpected industrial origin. The pivot from cleaning product to toy is fascinating.",
     "pattern": "Historical Quirk",
@@ -461,7 +461,7 @@
     "engagement_type": "recall"
   },
   {
-    "question": "Which soft drink was originally marketed as a nerve tonic and headache remedy?",
+    "question": "In the 1880s, a pharmacist created a 'nerve tonic' that became the world's most famous soft drink. What is it?",
     "answer": "Coca-Cola",
     "why_excellent": "Links the world's most iconic brand to its medicinal origins, a story most people vaguely know but find endlessly interesting.",
     "pattern": "Historical Quirk",
@@ -489,7 +489,7 @@
     "engagement_type": "recall"
   },
   {
-    "question": "Which famous structure was originally built as a temporary exhibit meant to be dismantled after 20 years?",
+    "question": "One of the world's most recognizable structures was built as a temporary exhibit, meant to be dismantled after 20 years. Name it.",
     "answer": "The Eiffel Tower",
     "why_excellent": "One of the most recognizable structures on Earth was never meant to last. The contrast between intent and outcome is compelling.",
     "pattern": "Historical Quirk",
@@ -534,7 +534,7 @@
     }
   },
   {
-    "question": "Which major tech company was originally called 'BackRub'?",
+    "question": "In 1996, two Stanford students created a search engine called 'BackRub.' What is it called today?",
     "answer": "Google (the search engine was called BackRub when created by Larry Page and Sergey Brin in 1996)",
     "why_excellent": "The contrast between the awkward original name and the now-ubiquitous brand is amusing and surprising.",
     "pattern": "Historical Quirk",
@@ -562,7 +562,7 @@
     "engagement_type": "recall"
   },
   {
-    "question": "Which planet rains diamonds?",
+    "question": "On one planet in our solar system, extreme pressure turns methane into diamond rain. Name it.",
     "answer": "Neptune (and Saturn), where extreme pressure turns methane into diamond rain",
     "why_excellent": "An utterly alien concept that sounds like science fiction but is supported by planetary science. Universally awe-inspiring.",
     "pattern": "Biological/Physical Oddity",
@@ -590,7 +590,7 @@
     "engagement_type": "recall"
   },
   {
-    "question": "Which animal can survive being frozen solid and thaw back to life?",
+    "question": "One animal can survive being frozen completely solid and thaw back to life. What is it?",
     "answer": "Wood frog (Rana sylvatica)",
     "why_excellent": "A seemingly impossible survival strategy that sounds magical but is real biology. Challenges our definition of 'alive.'",
     "pattern": "Biological/Physical Oddity",

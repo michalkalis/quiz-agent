@@ -278,6 +278,9 @@ class AdvancedQuestionGenerator:
         # Dedup against gold standard to prevent verbatim copying
         questions = self._dedup_against_gold_standard(questions)
 
+        # Warn if batch lacks structural diversity
+        self._check_batch_diversity(questions)
+
         return questions
 
     @staticmethod
@@ -327,6 +330,19 @@ class AdvancedQuestionGenerator:
             if not is_copy:
                 unique.append(q)
         return unique
+
+    @staticmethod
+    def _check_batch_diversity(questions: List[Question], threshold: float = 0.30) -> None:
+        """Warn if more than threshold fraction of questions start with 'Which'."""
+        if not questions:
+            return
+        which_count = sum(1 for q in questions if q.question.strip().startswith("Which"))
+        ratio = which_count / len(questions)
+        if ratio > threshold:
+            print(
+                f"  ⚠ Diversity warning: {which_count}/{len(questions)} "
+                f"({ratio:.0%}) questions start with 'Which' (target: ≤{threshold:.0%})"
+            )
 
     @staticmethod
     def _format_facts_section(facts: list) -> str:

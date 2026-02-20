@@ -17,6 +17,16 @@ Generate {count} pub quiz questions with these specifications:
 
 ---
 
+## STRUCTURAL DIVERSITY REQUIREMENT
+
+**Before generating ANY questions, read this rule:**
+
+- **No more than 30% of your batch may start with "Which"** — vary your openers: "What," "How," "If," "In [year]," "Name the," "True or false:," "One [noun]...," etc.
+- Use at least 4 different question-opening structures in every batch
+- If you catch yourself starting another question with "Which," STOP and rephrase it
+
+---
+
 ## CRITICAL: Quality-First Generation Process
 
 You MUST follow this structured thinking process for EACH question:

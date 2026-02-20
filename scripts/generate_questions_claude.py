@@ -298,6 +298,19 @@ def dedup_against_gold_standard(
     return unique
 
 
+def check_batch_diversity(questions: list[Question], threshold: float = 0.30) -> None:
+    """Warn if more than threshold fraction of questions start with 'Which'."""
+    if not questions:
+        return
+    which_count = sum(1 for q in questions if q.question.strip().startswith("Which"))
+    ratio = which_count / len(questions)
+    if ratio > threshold:
+        print(
+            f"  ⚠ Diversity warning: {which_count}/{len(questions)} "
+            f"({ratio:.0%}) questions start with 'Which' (target: ≤{threshold:.0%})"
+        )
+
+
 def stage_generate(
     client: anthropic.Anthropic,
     args: argparse.Namespace,
@@ -377,6 +390,9 @@ def stage_generate(
 
     # Dedup against gold standard to prevent verbatim copying
     all_questions = dedup_against_gold_standard(all_questions)
+
+    # Warn if batch lacks structural diversity
+    check_batch_diversity(all_questions)
 
     return all_questions
 

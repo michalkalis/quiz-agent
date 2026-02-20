@@ -6,7 +6,12 @@
     "pattern": "Surprising Connection",
     "source": "historical record",
     "difficulty": "medium",
-    "topic": "history"
+    "topic": "history",
+    "human_rating": 9,
+    "decision": "keep",
+    "rated_by": "michal",
+    "generator": "claude",
+    "engagement_type": "recall"
   },
   {
     "question": "What everyday material connects a pencil, a tennis racket, and a diamond?",
@@ -15,7 +20,12 @@
     "pattern": "Surprising Connection",
     "source": "common knowledge",
     "difficulty": "medium",
-    "topic": "science"
+    "topic": "science",
+    "human_rating": 9,
+    "decision": "keep",
+    "rated_by": "michal",
+    "generator": "claude",
+    "engagement_type": "reasoning"
   },
   {
     "question": "Which fashion item was originally designed for Egyptian butchers to keep blood off their clothes?",
@@ -24,7 +34,16 @@
     "pattern": "Surprising Connection",
     "source": "Wikipedia",
     "difficulty": "hard",
-    "topic": "history"
+    "topic": "history",
+    "human_rating": 8,
+    "decision": "keep",
+    "rated_by": "michal",
+    "generator": "claude",
+    "dimension_flags": {
+      "surprise": "lower"
+    },
+    "fix_notes": "Flagged as potentially fabricated origin story - needs source verification",
+    "engagement_type": "recall"
   },
   {
     "question": "Which popular board game was originally created to demonstrate the evils of unchecked capitalism?",
@@ -33,7 +52,15 @@
     "pattern": "Surprising Connection",
     "source": "Wikipedia",
     "difficulty": "medium",
-    "topic": "history"
+    "topic": "history",
+    "human_rating": 6,
+    "decision": "keep",
+    "rated_by": "michal",
+    "generator": "claude",
+    "dimension_flags": {
+      "surprise": "low"
+    },
+    "engagement_type": "recall"
   },
   {
     "question": "Which musical instrument shares its name with a type of surgery?",
@@ -42,16 +69,30 @@
     "pattern": "Surprising Connection",
     "source": "common knowledge",
     "difficulty": "hard",
-    "topic": "language"
+    "topic": "language",
+    "human_rating": 6,
+    "decision": "keep",
+    "rated_by": "michal",
+    "generator": "claude",
+    "dimension_flags": {
+      "universal_appeal": "language-specific"
+    },
+    "engagement_type": "recall"
   },
   {
-    "question": "Which fruit shares about 60% of its DNA with humans?",
+    "question": "Which fruit shares about 60% of its genes with humans?",
     "answer": "Banana",
     "why_excellent": "The genetic similarity between bananas and humans is a genuine surprise that reveals the deep shared ancestry of all life on Earth.",
     "pattern": "Surprising Connection",
     "source": "National Human Genome Research Institute",
     "difficulty": "medium",
-    "topic": "science"
+    "topic": "science",
+    "human_rating": 9,
+    "decision": "keep",
+    "rated_by": "michal",
+    "generator": "claude",
+    "engagement_type": "recall",
+    "fix_notes": "Fixed: '60% of its DNA' → '60% of its genes'"
   },
   {
     "question": "Ketchup was sold in the 1830s as a cure for which common ailment?",
@@ -60,7 +101,12 @@
     "pattern": "Surprising Connection",
     "source": "historical record",
     "difficulty": "hard",
-    "topic": "food"
+    "topic": "food",
+    "human_rating": 10,
+    "decision": "keep",
+    "rated_by": "michal",
+    "generator": "claude",
+    "engagement_type": "recall"
   },
   {
     "question": "Which company originally started as a playing card manufacturer in 1889?",
@@ -69,7 +115,12 @@
     "pattern": "Surprising Connection",
     "source": "Wikipedia",
     "difficulty": "medium",
-    "topic": "technology"
+    "topic": "technology",
+    "human_rating": 7,
+    "decision": "keep",
+    "rated_by": "michal",
+    "generator": "claude",
+    "engagement_type": "recall"
   },
   {
     "question": "Which Olympic sport was once judged partly on the elegance of a competitor's dive into the water during the swimming events?",
@@ -78,7 +129,12 @@
     "pattern": "Surprising Connection",
     "source": "International Olympic Committee records",
     "difficulty": "hard",
-    "topic": "sports"
+    "topic": "sports",
+    "human_rating": 8,
+    "decision": "keep",
+    "rated_by": "michal",
+    "generator": "claude",
+    "engagement_type": "recall"
   },
   {
     "question": "The world's oldest known recipe, found on a 4,000-year-old Sumerian tablet, is for which type of product?",
@@ -87,7 +143,12 @@
     "pattern": "Surprising Connection",
     "source": "University of Pennsylvania Museum",
     "difficulty": "medium",
-    "topic": "history"
+    "topic": "history",
+    "human_rating": 9,
+    "decision": "keep",
+    "rated_by": "michal",
+    "generator": "claude",
+    "engagement_type": "recall"
   },
   {
     "question": "Which animal's fingerprints are virtually indistinguishable from human fingerprints, even under a microscope?",
@@ -96,7 +157,12 @@
     "pattern": "Hidden Property",
     "source": "Journal of Natural History",
     "difficulty": "medium",
-    "topic": "nature"
+    "topic": "nature",
+    "human_rating": 8,
+    "decision": "keep",
+    "rated_by": "michal",
+    "generator": "claude",
+    "engagement_type": "recall"
   },
   {
     "question": "Which common fruit floats in water because it is 25% air?",
@@ -105,7 +171,12 @@
     "pattern": "Hidden Property",
     "source": "USDA",
     "difficulty": "easy",
-    "topic": "food"
+    "topic": "food",
+    "human_rating": 7,
+    "decision": "keep",
+    "rated_by": "michal",
+    "generator": "claude",
+    "engagement_type": "recall"
   },
   {
     "question": "Which planet has a hexagon-shaped storm at its north pole?",
@@ -114,7 +185,15 @@
     "pattern": "Hidden Property",
     "source": "NASA/Cassini mission",
     "difficulty": "medium",
-    "topic": "science"
+    "topic": "science",
+    "human_rating": 8,
+    "decision": "keep",
+    "rated_by": "michal",
+    "generator": "claude",
+    "dimension_flags": {
+      "universal_appeal": "niche"
+    },
+    "engagement_type": "recall"
   },
   {
     "question": "Which human organ can regenerate itself even after up to 75% of it has been removed?",
@@ -123,25 +202,40 @@
     "pattern": "Hidden Property",
     "source": "American Liver Foundation",
     "difficulty": "medium",
-    "topic": "science"
+    "topic": "science",
+    "human_rating": 7,
+    "decision": "keep",
+    "rated_by": "michal",
+    "generator": "claude",
+    "engagement_type": "recall"
   },
   {
-    "question": "Which gemstone is actually harder than diamond when measured along certain crystal planes?",
-    "answer": "Lonsdaleite (hexagonal diamond, found in meteorites)",
-    "why_excellent": "Challenges the universal belief that diamond is the hardest substance. The meteorite connection adds extra intrigue.",
-    "pattern": "Hidden Property",
-    "source": "Physical Review Letters (2009)",
-    "difficulty": "hard",
-    "topic": "science"
+    "question": "If you drove your car straight up at highway speed, how long would it take to reach space: about 10 minutes, 1 hour, or 6 hours?",
+    "answer": "About 1 hour (space begins at ~100 km altitude; at 100 km/h that's roughly 1 hour)",
+    "why_excellent": "Turns an abstract distance (edge of space) into something tangible using a car analogy everyone understands. The estimation format creates engagement — you reason about speed and distance.",
+    "pattern": "Estimation Challenge",
+    "source": "Kármán line definition (100 km), basic physics",
+    "difficulty": "medium",
+    "topic": "science",
+    "human_rating": 9,
+    "decision": "keep",
+    "rated_by": "auto",
+    "generator": "human",
+    "engagement_type": "estimation"
   },
   {
-    "question": "Which everyday metal is so reactive that it explodes on contact with water and must be stored in oil?",
-    "answer": "Sodium (or potassium)",
-    "why_excellent": "Table salt contains this explosive metal, which is a mind-bending hidden property of something utterly familiar.",
-    "pattern": "Hidden Property",
-    "source": "common knowledge",
-    "difficulty": "easy",
-    "topic": "science"
+    "question": "Which country consumes the most coffee per person: Brazil, the United States, or Finland?",
+    "answer": "Finland (about 12 kg per person per year, nearly double the US)",
+    "why_excellent": "Counterintuitive — most people assume Brazil (grows it) or the US (Starbucks culture). The comparison format lets you reason: 'growers don't always consume most' and 'cold Nordic countries might drink more.'",
+    "pattern": "Comparison Bet",
+    "source": "International Coffee Organization statistics",
+    "difficulty": "medium",
+    "topic": "geography",
+    "human_rating": 9,
+    "decision": "keep",
+    "rated_by": "auto",
+    "generator": "human",
+    "engagement_type": "reasoning"
   },
   {
     "question": "Which part of the human body has no blood supply and gets its oxygen directly from the air?",
@@ -150,7 +244,12 @@
     "pattern": "Hidden Property",
     "source": "American Academy of Ophthalmology",
     "difficulty": "medium",
-    "topic": "science"
+    "topic": "science",
+    "human_rating": 7,
+    "decision": "keep",
+    "rated_by": "michal",
+    "generator": "claude",
+    "engagement_type": "recall"
   },
   {
     "question": "Which common household liquid is more acidic than vinegar?",
@@ -159,7 +258,12 @@
     "pattern": "Hidden Property",
     "source": "common knowledge",
     "difficulty": "easy",
-    "topic": "food"
+    "topic": "food",
+    "human_rating": 7,
+    "decision": "keep",
+    "rated_by": "michal",
+    "generator": "claude",
+    "engagement_type": "recall"
   },
   {
     "question": "What five-letter English word becomes shorter when you add two letters to it?",
@@ -168,16 +272,29 @@
     "pattern": "Wordplay Revelation",
     "source": "common knowledge",
     "difficulty": "easy",
-    "topic": "language"
+    "topic": "language",
+    "human_rating": 9,
+    "decision": "keep",
+    "rated_by": "michal",
+    "generator": "claude",
+    "dimension_flags": {
+      "fun": "high"
+    },
+    "engagement_type": "reasoning"
   },
   {
-    "question": "Which English word has three consecutive double letters?",
-    "answer": "Bookkeeper",
-    "why_excellent": "A hidden pattern in a familiar word that most people have never noticed. Elegant and satisfying to discover.",
-    "pattern": "Wordplay Revelation",
-    "source": "common knowledge",
+    "question": "If all the world's ice melted, would sea levels rise by about 2 meters, 20 meters, or 70 meters?",
+    "answer": "About 70 meters (enough to submerge most coastal cities)",
+    "why_excellent": "Three options that span a massive range. Most people massively underestimate. The estimation format lets you reason: 'Antarctica is huge, Greenland too... it must be a LOT of water.' The scale of 70m is shocking.",
+    "pattern": "Estimation Challenge",
+    "source": "National Snow and Ice Data Center / USGS",
     "difficulty": "medium",
-    "topic": "language"
+    "topic": "science",
+    "human_rating": 9,
+    "decision": "keep",
+    "rated_by": "auto",
+    "generator": "human",
+    "engagement_type": "estimation"
   },
   {
     "question": "What word in the English language is always spelled incorrectly?",
@@ -186,25 +303,41 @@
     "pattern": "Wordplay Revelation",
     "source": "common knowledge",
     "difficulty": "easy",
-    "topic": "language"
+    "topic": "language",
+    "human_rating": 9,
+    "decision": "keep",
+    "rated_by": "michal",
+    "generator": "claude",
+    "fix_notes": "Similar self-referential twist as other wordplay questions - watch for overlap",
+    "engagement_type": "reasoning"
   },
   {
-    "question": "Which common English word contains the letters 'ueue' in sequence?",
-    "answer": "Queue",
-    "why_excellent": "Highlights an absurdity of English spelling, where four of the five letters are essentially silent. Universally accessible.",
-    "pattern": "Wordplay Revelation",
-    "source": "common knowledge",
-    "difficulty": "easy",
-    "topic": "language"
+    "question": "If you shuffled a deck of cards perfectly randomly, what are the chances that exact arrangement has ever existed before in history: roughly 50/50, about 1 in a million, or essentially zero?",
+    "answer": "Essentially zero — 52! (52 factorial) is so astronomically large that no two random shuffles in history have likely ever matched",
+    "why_excellent": "The three options span from 'plausible' to 'impossible,' creating real tension. Players can reason about it: 'there are only 52 cards but... how many ways can you arrange them?' The answer (essentially zero) is genuinely mind-blowing.",
+    "pattern": "Estimation Challenge",
+    "source": "Mathematics — 52! ≈ 8×10^67",
+    "difficulty": "medium",
+    "topic": "science",
+    "human_rating": 9,
+    "decision": "keep",
+    "rated_by": "auto",
+    "generator": "human",
+    "engagement_type": "estimation"
   },
   {
-    "question": "What nine-letter word in English still remains a word each time you remove a letter, all the way down to a single letter?",
-    "answer": "Startling (startling > starting > staring > string > sting > sing > sin > in > I)",
-    "why_excellent": "A cascading word puzzle that reveals hidden words nested inside a familiar term. The full chain is deeply satisfying.",
-    "pattern": "Wordplay Revelation",
-    "source": "common knowledge",
-    "difficulty": "hard",
-    "topic": "language"
+    "question": "Bubble wrap was originally invented and marketed as what kind of home product?",
+    "answer": "Textured wallpaper (inventors sealed two shower curtains together to create 3D wallpaper in 1957)",
+    "why_excellent": "Everyone knows bubble wrap, so you can reason backward: 'What problem does sealed air bubbles solve besides packaging?' The wallpaper origin is delightfully absurd. A reverse-engineer question where you construct hypotheses.",
+    "pattern": "Reverse Engineer",
+    "source": "Sealed Air Corporation history",
+    "difficulty": "medium",
+    "topic": "history",
+    "human_rating": 8,
+    "decision": "keep",
+    "rated_by": "auto",
+    "generator": "human",
+    "engagement_type": "reasoning"
   },
   {
     "question": "Which country has more pyramids than Egypt?",
@@ -213,7 +346,12 @@
     "pattern": "Scale Surprise",
     "source": "UNESCO World Heritage",
     "difficulty": "medium",
-    "topic": "geography"
+    "topic": "geography",
+    "human_rating": 8,
+    "decision": "keep",
+    "rated_by": "michal",
+    "generator": "claude",
+    "engagement_type": "recall"
   },
   {
     "question": "Oxford University is older than which ancient empire?",
@@ -222,7 +360,12 @@
     "pattern": "Scale Surprise",
     "source": "University of Oxford records",
     "difficulty": "medium",
-    "topic": "history"
+    "topic": "history",
+    "human_rating": 9,
+    "decision": "keep",
+    "rated_by": "michal",
+    "generator": "claude",
+    "engagement_type": "reasoning"
   },
   {
     "question": "Was Cleopatra closer in time to the building of the Great Pyramid or to the Moon landing?",
@@ -231,16 +374,30 @@
     "pattern": "Scale Surprise",
     "source": "historical record",
     "difficulty": "medium",
-    "topic": "history"
+    "topic": "history",
+    "human_rating": 9,
+    "decision": "keep",
+    "rated_by": "michal",
+    "generator": "claude",
+    "engagement_type": "estimation"
   },
   {
     "question": "Which country has the most time zones?",
-    "answer": "France (11 time zones, due to its overseas territories)",
+    "answer": "France (12 time zones, due to its overseas territories)",
     "why_excellent": "Challenges the assumption that the largest countries (Russia, USA) would have the most time zones. France's colonial legacy creates this surprise.",
     "pattern": "Scale Surprise",
     "source": "CIA World Factbook",
     "difficulty": "medium",
-    "topic": "geography"
+    "topic": "geography",
+    "human_rating": 8,
+    "decision": "keep",
+    "rated_by": "michal",
+    "generator": "claude",
+    "engagement_type": "recall",
+    "dimension_flags": {
+      "difficulty": "hard"
+    },
+    "fix_notes": "Fixed: answer from 11 to 12 time zones"
   },
   {
     "question": "There are more possible iterations of a game of chess than there are atoms in the observable universe. Approximately how many possible chess games are there?",
@@ -249,16 +406,28 @@
     "pattern": "Scale Surprise",
     "source": "Claude Shannon, 1950",
     "difficulty": "hard",
-    "topic": "science"
+    "topic": "science",
+    "human_rating": 8,
+    "decision": "keep",
+    "rated_by": "michal",
+    "generator": "claude",
+    "fix_notes": "OK if answerable by non-academics",
+    "engagement_type": "estimation"
   },
   {
     "question": "Which is heavier: all the ants on Earth, or all the humans?",
-    "answer": "They weigh approximately the same (both roughly 300-400 million tonnes)",
-    "why_excellent": "Forces you to reconcile the tiny size of individual ants with their unfathomable numbers. The near-equality is astonishing.",
+    "answer": "All the humans — but ants are surprisingly close at about 80 million tonnes vs 400 million for humans",
+    "why_excellent": "Forces you to reconcile the tiny size of individual ants with their unfathomable numbers. The comparison format creates a natural engagement path — you can estimate and reason your way to an answer.",
     "pattern": "Scale Surprise",
-    "source": "Proceedings of the National Academy of Sciences",
+    "source": "Proceedings of the National Academy of Sciences (2022 update)",
     "difficulty": "medium",
-    "topic": "nature"
+    "topic": "nature",
+    "human_rating": 9,
+    "decision": "keep",
+    "rated_by": "michal",
+    "generator": "claude",
+    "engagement_type": "estimation",
+    "fix_notes": "Fixed: updated from 'equal' to reflect 2022 research — ants ~80M tonnes vs humans ~400M tonnes"
   },
   {
     "question": "How many trees are there on Earth: closer to 400 million, 40 billion, or 3 trillion?",
@@ -267,7 +436,15 @@
     "pattern": "Scale Surprise",
     "source": "Nature journal (2015)",
     "difficulty": "medium",
-    "topic": "nature"
+    "topic": "nature",
+    "human_rating": 9,
+    "decision": "keep",
+    "rated_by": "michal",
+    "generator": "claude",
+    "dimension_flags": {
+      "fun": "high"
+    },
+    "engagement_type": "estimation"
   },
   {
     "question": "Which children's toy was originally developed as a wallpaper cleaner?",
@@ -276,7 +453,12 @@
     "pattern": "Historical Quirk",
     "source": "Wikipedia",
     "difficulty": "medium",
-    "topic": "history"
+    "topic": "history",
+    "human_rating": 7,
+    "decision": "keep",
+    "rated_by": "auto",
+    "generator": "claude",
+    "engagement_type": "recall"
   },
   {
     "question": "Which soft drink was originally marketed as a nerve tonic and headache remedy?",
@@ -285,7 +467,12 @@
     "pattern": "Historical Quirk",
     "source": "Wikipedia",
     "difficulty": "easy",
-    "topic": "food"
+    "topic": "food",
+    "human_rating": 6,
+    "decision": "keep",
+    "rated_by": "auto",
+    "generator": "claude",
+    "engagement_type": "recall"
   },
   {
     "question": "Edible honey has been found in tombs over 3,000 years old in which country?",
@@ -294,7 +481,12 @@
     "pattern": "Historical Quirk",
     "source": "Smithsonian Magazine",
     "difficulty": "easy",
-    "topic": "food"
+    "topic": "food",
+    "human_rating": 7,
+    "decision": "keep",
+    "rated_by": "auto",
+    "generator": "claude",
+    "engagement_type": "recall"
   },
   {
     "question": "Which famous structure was originally built as a temporary exhibit meant to be dismantled after 20 years?",
@@ -303,7 +495,12 @@
     "pattern": "Historical Quirk",
     "source": "Wikipedia",
     "difficulty": "easy",
-    "topic": "history"
+    "topic": "history",
+    "human_rating": 7,
+    "decision": "keep",
+    "rated_by": "auto",
+    "generator": "claude",
+    "engagement_type": "recall"
   },
   {
     "question": "Which war lasted only 38 to 45 minutes, making it the shortest war in recorded history?",
@@ -312,7 +509,12 @@
     "pattern": "Historical Quirk",
     "source": "Wikipedia",
     "difficulty": "medium",
-    "topic": "history"
+    "topic": "history",
+    "human_rating": 7,
+    "decision": "keep",
+    "rated_by": "auto",
+    "generator": "claude",
+    "engagement_type": "recall"
   },
   {
     "question": "Which U.S. president was also a licensed bartender?",
@@ -321,7 +523,15 @@
     "pattern": "Historical Quirk",
     "source": "Abraham Lincoln Presidential Library",
     "difficulty": "hard",
-    "topic": "history"
+    "topic": "history",
+    "human_rating": 5,
+    "decision": "keep",
+    "rated_by": "auto",
+    "generator": "claude",
+    "engagement_type": "recall",
+    "dimension_flags": {
+      "universal_appeal": "US-specific"
+    }
   },
   {
     "question": "Which major tech company was originally called 'BackRub'?",
@@ -330,7 +540,12 @@
     "pattern": "Historical Quirk",
     "source": "Stanford University archives",
     "difficulty": "medium",
-    "topic": "technology"
+    "topic": "technology",
+    "human_rating": 7,
+    "decision": "keep",
+    "rated_by": "auto",
+    "generator": "claude",
+    "engagement_type": "recall"
   },
   {
     "question": "Which popular snack food was accidentally invented when a chef made fries extra thin and crispy to spite a complaining customer?",
@@ -339,7 +554,12 @@
     "pattern": "Historical Quirk",
     "source": "historical record",
     "difficulty": "easy",
-    "topic": "food"
+    "topic": "food",
+    "human_rating": 7,
+    "decision": "keep",
+    "rated_by": "auto",
+    "generator": "claude",
+    "engagement_type": "recall"
   },
   {
     "question": "Which planet rains diamonds?",
@@ -348,7 +568,12 @@
     "pattern": "Biological/Physical Oddity",
     "source": "NASA",
     "difficulty": "medium",
-    "topic": "science"
+    "topic": "science",
+    "human_rating": 7,
+    "decision": "keep",
+    "rated_by": "auto",
+    "generator": "claude",
+    "engagement_type": "recall"
   },
   {
     "question": "Which sea creature has three hearts, nine brains, and blue blood?",
@@ -357,7 +582,12 @@
     "pattern": "Biological/Physical Oddity",
     "source": "Smithsonian National Museum of Natural History",
     "difficulty": "easy",
-    "topic": "nature"
+    "topic": "nature",
+    "human_rating": 6,
+    "decision": "keep",
+    "rated_by": "auto",
+    "generator": "claude",
+    "engagement_type": "recall"
   },
   {
     "question": "Which animal can survive being frozen solid and thaw back to life?",
@@ -366,7 +596,12 @@
     "pattern": "Biological/Physical Oddity",
     "source": "Journal of Experimental Biology",
     "difficulty": "medium",
-    "topic": "nature"
+    "topic": "nature",
+    "human_rating": 6,
+    "decision": "keep",
+    "rated_by": "auto",
+    "generator": "claude",
+    "engagement_type": "recall"
   },
   {
     "question": "Which animal sleeps with one half of its brain at a time, keeping the other half alert?",
@@ -375,7 +610,12 @@
     "pattern": "Biological/Physical Oddity",
     "source": "Nature journal",
     "difficulty": "medium",
-    "topic": "nature"
+    "topic": "nature",
+    "human_rating": 7,
+    "decision": "keep",
+    "rated_by": "auto",
+    "generator": "claude",
+    "engagement_type": "recall"
   },
   {
     "question": "Which creature's heart is located in its head?",
@@ -384,7 +624,12 @@
     "pattern": "Biological/Physical Oddity",
     "source": "Marine Biology textbooks",
     "difficulty": "easy",
-    "topic": "nature"
+    "topic": "nature",
+    "human_rating": 6,
+    "decision": "keep",
+    "rated_by": "auto",
+    "generator": "claude",
+    "engagement_type": "recall"
   },
   {
     "question": "Which is the only mammal that can truly fly?",
@@ -393,60 +638,95 @@
     "pattern": "Biological/Physical Oddity",
     "source": "common knowledge",
     "difficulty": "easy",
-    "topic": "nature"
+    "topic": "nature",
+    "human_rating": 6,
+    "decision": "keep",
+    "rated_by": "auto",
+    "generator": "claude",
+    "engagement_type": "recall"
   },
   {
     "question": "What percentage of the human body is made up of water: closer to 30%, 60%, or 90%?",
     "answer": "About 60%",
-    "why_excellent": "Forces people to confront how much of their own body is just water, a simple fact with existential implications.",
-    "pattern": "Biological/Physical Oddity",
+    "why_excellent": "The estimation format with three options creates an engagement path — you can reason about what you know about the body. Forces people to confront how much of their own body is just water.",
+    "pattern": "Estimation Challenge",
     "source": "USGS",
     "difficulty": "easy",
-    "topic": "science"
+    "topic": "science",
+    "human_rating": 8,
+    "decision": "keep",
+    "rated_by": "auto",
+    "generator": "claude",
+    "engagement_type": "estimation"
   },
   {
     "question": "In a room of just 23 people, what is the probability that two share a birthday: about 10%, 30%, or 50%?",
     "answer": "About 50% (the birthday paradox)",
-    "why_excellent": "One of the most famous counterintuitive results in probability. Nearly everyone guesses wrong, making it perfect for quizzes.",
-    "pattern": "Number Sequence",
+    "why_excellent": "One of the most famous counterintuitive results in probability. The estimation format creates engagement — you reason about the odds, and nearly everyone guesses wrong.",
+    "pattern": "Estimation Challenge",
     "source": "mathematics (birthday problem)",
     "difficulty": "medium",
-    "topic": "science"
+    "topic": "science",
+    "human_rating": 8,
+    "decision": "keep",
+    "rated_by": "auto",
+    "generator": "claude",
+    "engagement_type": "estimation"
   },
   {
     "question": "If you fold a standard piece of paper in half 42 times (if you could), how far would it reach: the ceiling, the top of Everest, or the Moon?",
     "answer": "The Moon (exponential doubling reaches approximately 440,000 km)",
-    "why_excellent": "Demonstrates the mind-bending power of exponential growth using an everyday object. Almost nobody believes the answer.",
-    "pattern": "Number Sequence",
+    "why_excellent": "Demonstrates the mind-bending power of exponential growth using an everyday object. The three options create a clear engagement path — you reason about doubling and scale.",
+    "pattern": "Estimation Challenge",
     "source": "mathematics",
     "difficulty": "medium",
-    "topic": "science"
+    "topic": "science",
+    "human_rating": 9,
+    "decision": "keep",
+    "rated_by": "auto",
+    "generator": "claude",
+    "engagement_type": "estimation"
   },
   {
     "question": "A bat and a ball cost $1.10 together. The bat costs $1.00 more than the ball. How much does the ball cost?",
     "answer": "5 cents (not 10 cents as most people instinctively answer)",
-    "why_excellent": "The classic cognitive reflection test. Nearly everyone gets it wrong on first instinct, creating a perfect 'aha!' moment.",
-    "pattern": "Verbal Analogy",
+    "why_excellent": "The classic cognitive reflection test. Maximum engagement — you DO the math, get tricked by intuition, then discover the real answer. Perfect reasoning puzzle.",
+    "pattern": "Lateral Thinking Puzzle",
     "source": "Shane Frederick, Cognitive Reflection Test (2005)",
     "difficulty": "easy",
-    "topic": "science"
+    "topic": "science",
+    "human_rating": 9,
+    "decision": "keep",
+    "rated_by": "auto",
+    "generator": "claude",
+    "engagement_type": "reasoning"
   },
   {
     "question": "Mars is red, but what colour is a Martian sunset?",
     "answer": "Blue (due to fine dust particles in the Martian atmosphere scattering light differently than on Earth)",
-    "why_excellent": "Inverts our Earth-based expectations perfectly: red planet, blue sunset versus blue planet, red sunset. Elegant symmetry.",
+    "why_excellent": "Inverts our Earth-based expectations perfectly: red planet, blue sunset versus blue planet, red sunset. You can reason by analogy — if Earth is blue with red sunsets, maybe Mars inverts it.",
     "pattern": "Verbal Analogy",
     "source": "NASA/Mars rover imagery",
     "difficulty": "medium",
-    "topic": "science"
+    "topic": "science",
+    "human_rating": 8,
+    "decision": "keep",
+    "rated_by": "auto",
+    "generator": "claude",
+    "engagement_type": "reasoning"
   },
   {
     "question": "Which of these is NOT a real element on the periodic table: Einsteinium, Kryptonite, Californium, or Oganesson?",
     "answer": "Kryptonite (Superman's fictional weakness; the other three are all real elements)",
-    "why_excellent": "The real element names sound so fantastical that the fictional one blends right in. Tests cultural vs scientific knowledge.",
+    "why_excellent": "The real element names sound so fantastical that the fictional one blends right in. Elimination and reasoning create an engagement path — you can work through each option.",
     "pattern": "Odd One Out",
     "source": "IUPAC periodic table",
     "difficulty": "easy",
-    "topic": "science"
+    "topic": "science",
+    "human_rating": 8,
+    "decision": "keep",
+    "rated_by": "auto",
+    "generator": "claude",
+    "engagement_type": "reasoning"
   }
 ]

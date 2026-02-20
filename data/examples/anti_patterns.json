@@ -138,5 +138,33 @@
     "why_bad": "Only works in written English. In a voice-based quiz, participants cannot see the capitalization. Also highly language-dependent and excludes non-native speakers.",
     "violated_principles": ["Universal over Niche"],
     "red_flags": ["language_dependent", "ambiguous"]
+  },
+  {
+    "question": "Which animal's fingerprints are virtually indistinguishable from human fingerprints?",
+    "answer": "Koala",
+    "why_bad": "Fascinating fact but a dead-end question: there is zero reasoning path to 'koala.' You either know this obscure biology fact or you're guessing randomly among thousands of animals. Interesting to learn, not fun to play.",
+    "violated_principles": ["Engagement Path over Dead End"],
+    "red_flags": ["dead_end", "no_reasoning_path"]
+  },
+  {
+    "question": "Which English word has three consecutive double letters?",
+    "answer": "Bookkeeper",
+    "why_bad": "Interesting linguistic fact, but impossible to work toward. There's no mental process that leads you from 'three consecutive double letters' to 'bookkeeper.' Pure memory search with no engagement path.",
+    "violated_principles": ["Engagement Path over Dead End"],
+    "red_flags": ["dead_end", "no_reasoning_path"]
+  },
+  {
+    "question": "Which creature's heart is located in its head?",
+    "answer": "Shrimp",
+    "why_bad": "Quirky anatomy fact with no deductive path. Why would anyone guess 'shrimp' over 'ant' or 'jellyfish'? The question format ('Which creature...') combined with an arbitrary anatomical fact creates a dead end. Compare with: 'Which is bigger: a shrimp's heart or its brain?' — same fact, but now the player can reason.",
+    "violated_principles": ["Engagement Path over Dead End", "Clever over Straightforward"],
+    "red_flags": ["dead_end", "no_reasoning_path", "structural_monotony"]
+  },
+  {
+    "question": "Which soft drink was originally marketed as a nerve tonic?",
+    "answer": "Coca-Cola",
+    "why_bad": "The 'Which [product] was originally [surprising use]?' format is overused and creates structural monotony. While the fact is interesting, the player has no way to reason from 'nerve tonic' to 'Coca-Cola' — it's pure recall. Better framing: 'In the 1880s, a pharmacist created a nerve tonic that became the world's most famous drink. What is it?'",
+    "violated_principles": ["Engagement Path over Dead End"],
+    "red_flags": ["structural_monotony", "no_reasoning_path"]
   }
 ]

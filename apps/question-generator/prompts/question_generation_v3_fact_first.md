@@ -54,8 +54,9 @@ Rate your own question 1-10 on:
 - **Universal Appeal** (1-10): Works for international audience? Translatable to other languages?
 - **Clever Framing** (1-10): Avoids boring "What is..." format?
 - **Educational Value** (1-10): Teaches something interesting?
+- **Answerability** (1-10): Can the player reason, estimate, or deduce toward the answer? (9-10: multiple reasoning paths. 5-6: mostly recall. 1-2: impossible to guess.)
 
-**Overall Score:** Average of the 4 dimensions
+**Overall Score:** Average of the 5 dimensions
 
 ### Step 5: DECISION
 - If score >= 8: Keep it
@@ -67,7 +68,7 @@ Rate your own question 1-10 on:
 
 Use these patterns to transform raw facts into engaging questions. Mix and match creatively!
 
-**PATTERN DIVERSITY RULE:** In a batch of 10 questions, use at least 4 different patterns. No single pattern may appear more than 3 times.
+**PATTERN DIVERSITY RULE:** In a batch of 10 questions, use at least 4 different patterns. No single pattern may appear more than 3 times. At least 3 must use reasoning patterns (7-13). No more than 4 can be pure fact-recall (1-6).
 
 1. **The Surprising Connection** — "Which [common thing] has [unexpected property/connection]?"
 2. **The Hidden Property** — "Which [familiar thing] has [bizarre/counterintuitive property]?"
@@ -79,8 +80,11 @@ Use these patterns to transform raw facts into engaging questions. Mix and match
 8. **The Verbal Analogy** — Creative analogy framing (only if fact supports it)
 9. **The Odd One Out** — "Which doesn't belong: [A], [B], [C], [D]?" (only if fact supports it)
 10. **The Lateral Thinking Puzzle** — A situation with a surprising but logical explanation (only if fact supports it)
+11. **The Estimation Challenge** — "Closer to A, B, or C?" with three wildly different options. Player reasons about scale.
+12. **The Comparison Bet** — "Which is more/heavier/older: A or B?" Binary comparison that challenges assumptions.
+13. **The Reverse Engineer** — Give the answer, ask what led to it. "X was invented to solve what problem?"
 
-**Key:** Not every pattern fits every fact. Choose the pattern that makes the fact MOST engaging.
+**Key:** Not every pattern fits every fact. Choose the pattern that makes the fact MOST engaging. **Prefer patterns 7-13** (reasoning patterns) over 1-6 (fact-recall) when the fact supports it.
 
 ---
 
@@ -95,6 +99,9 @@ Before finalizing each question, check these red flags:
 - Language-dependent wordplay (puns, anagrams that only work in English)
 - Predictable answers from question wording
 - Simply rephrasing the source fact as a question without creative framing
+- More than 30% of batch starts with "Which" (structural monotony)
+- More than 40% of batch uses pure fact-recall patterns (1-6 only)
+- No estimation, comparison, or reasoning questions in the batch
 
 **If you hit ANY red flag, STOP and try a different pattern or pick a different fact!**
 
@@ -108,6 +115,7 @@ Every question must align with these principles:
 2. **Universal over Niche** — International audience. No US-specific, no English wordplay.
 3. **Narrative over Facts** — Tell a story. Not isolated facts.
 4. **Clever over Straightforward** — Creative framing. Never "What is..." or "Who wrote...".
+5. **Engagement Path over Dead End** — The player should be able to reason, estimate, or deduce toward the answer. Not just search memory for a specific fact. High engagement: "Which is heavier: all ants or all humans?" (player estimates). Low engagement: "Which animal has human-like fingerprints?" (no reasoning path).
 
 ---
 
@@ -203,7 +211,8 @@ For EACH question, respond with this EXACT structure:
         "universal_appeal": 8,
         "clever_framing": 9,
         "educational_value": 10,
-        "overall_score": 9.0,
+        "answerability": 8,
+        "overall_score": 8.8,
         "reasoning": "Why this question scores well"
       }}
     }}

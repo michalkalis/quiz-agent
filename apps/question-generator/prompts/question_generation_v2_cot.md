@@ -40,8 +40,9 @@ Rate your own question 1-10 on:
 - **Universal Appeal** (1-10): Works for international audience? Translatable to other languages?
 - **Clever Framing** (1-10): Avoids boring "What is..." format?
 - **Educational Value** (1-10): Teaches something interesting?
+- **Answerability** (1-10): Can the player reason, estimate, or deduce toward the answer? (9-10: multiple reasoning paths. 5-6: mostly recall. 1-2: impossible to guess.)
 
-**Overall Score:** Average of the 4 dimensions
+**Overall Score:** Average of the 5 dimensions
 
 ### Step 4: DECISION
 
@@ -54,7 +55,12 @@ Rate your own question 1-10 on:
 
 Learn these PATTERNS, not just examples. Mix and match creatively!
 
-**PATTERN DIVERSITY RULE:** In a batch of 10 questions, use at least 4 different patterns. No single pattern may appear more than 3 times. If you catch yourself using the same pattern repeatedly, STOP and switch to a different one.
+**PATTERN DIVERSITY RULE:** In a batch of 10 questions:
+- Use at least 4 different patterns
+- No single pattern may appear more than 3 times
+- **At least 3 must use reasoning patterns (7-13)** — questions where the player can work toward the answer
+- **No more than 4 can be pure fact-recall (patterns 1-6 only)** — questions where you either know it or you don't
+- If you catch yourself using the same pattern repeatedly, STOP and switch to a different one
 
 ### Pattern 1: The Surprising Connection
 **Template:** "Which [common thing] has [unexpected property/connection]?"
@@ -211,6 +217,60 @@ Learn these PATTERNS, not just examples. Mix and match creatively!
 
 ---
 
+### Pattern 11: The Estimation Challenge
+**Template:** "Closer to A, B, or C?" — Give three wildly different options for a quantity.
+
+**Examples:**
+- "How many trees are on Earth: closer to 400 million, 40 billion, or 3 trillion?" → 3 trillion
+- "If you fold a piece of paper 42 times, would it reach the ceiling, Everest, or the Moon?" → The Moon
+- "What percentage of the human body is water: closer to 30%, 60%, or 90%?" → About 60%
+
+**Key rules:**
+- The three options should span orders of magnitude (making it feel like a genuine guess)
+- The correct answer should be surprising (ideally the most extreme option)
+- The player can reason about the scale using reference points they know
+- Frame the options so elimination is possible: "Is it definitely not X? Then probably Y or Z..."
+
+**Why it works:** Creates maximum engagement — the player MUST choose, and can reason their way through by estimating. No dead ends.
+
+---
+
+### Pattern 12: The Comparison Bet
+**Template:** "Which is more/heavier/older/faster: A or B?" — Force a binary comparison between two surprising things.
+
+**Examples:**
+- "Which is heavier: all the ants on Earth or all the humans?" → Humans, but ants are surprisingly close
+- "Was Cleopatra closer in time to the building of the Great Pyramid or to the Moon landing?" → The Moon landing
+- "Which country has more pyramids: Egypt or Sudan?" → Sudan (over 200 vs ~130)
+
+**Key rules:**
+- Both options should seem plausible — the comparison should be genuinely hard to call
+- The answer should challenge a common assumption (e.g., "Egypt obviously has more pyramids")
+- Include context in the answer that explains *why* the surprising option wins
+- The player should be able to reason about it: "Well, ants are tiny but there are trillions..."
+
+**Why it works:** Binary choices feel low-stakes to attempt. Players commit to a side and reason about it. The reveal is satisfying whether they guessed right or wrong.
+
+---
+
+### Pattern 13: The Reverse Engineer
+**Template:** Give the answer or outcome, ask what led to it. "X was invented to solve what problem?"
+
+**Examples:**
+- "Bubble wrap was originally invented as what kind of home decoration?" → Textured wallpaper
+- "Play-Doh was originally manufactured to clean what?" → Wallpaper (soot from coal heating)
+- "The can opener was invented 48 years after the tin can. How did people open cans before that?" → Hammer and chisel (or bayonets for soldiers)
+
+**Key rules:**
+- The outcome/invention should be universally known
+- The original purpose should be surprising and delightful
+- The player can reason backward: "What problem would this solve?"
+- Avoid questions where the answer is an arbitrary fact with no logical path
+
+**Why it works:** Reverse-engineering engages a different kind of thinking than forward recall. The player constructs hypotheses and tests them mentally.
+
+---
+
 ## The Boring Detector: Red Flags to AVOID
 
 Before finalizing each question, check these red flags:
@@ -248,6 +308,12 @@ Before finalizing each question, check these red flags:
 - Lateral thinking puzzles that require a diagram or visual aid
 - Logic puzzles with overly long or complex answers (must work in voice quiz)
 
+❌ **Structural Monotony Red Flags:**
+- More than 30% of a batch starts with "Which"
+- More than 40% of a batch uses pure fact-recall patterns (patterns 1-6 only)
+- All questions follow the same "Which [noun] [verb] [property]?" structure
+- No estimation, comparison, or reasoning questions in the batch
+
 **If you hit ANY red flag, STOP and regenerate using a different pattern!**
 
 ---
@@ -281,6 +347,15 @@ Questions should have creative framing or unexpected angles.
 
 **Good:** "Which common yellow fruit is botanically classified as a berry, while strawberries are not?" → Banana
 **Bad:** "What fruit is red and commonly used in pies?" → Apple
+
+### PRINCIPLE 5: Engagement Path over Dead End
+The player should be able to reason, estimate, or deduce toward the answer — not just search memory for a specific fact. The fun is in the *process* of reaching the answer, not memory retrieval.
+
+**High engagement:** "Which is heavier: all ants on Earth or all humans?" (player can estimate, compare, reason about scale)
+**High engagement:** "What five-letter word becomes shorter when you add two letters?" (player can puzzle through the wordplay)
+**High engagement:** "If you fold a piece of paper 42 times, would it reach the ceiling, Everest, or the Moon?" (player reasons about exponential growth)
+**Low engagement:** "Which animal's fingerprints are indistinguishable from humans?" (no path — you know "koala" or you don't)
+**Low engagement:** "Which English word has three consecutive double letters?" (interesting fact, impossible to work toward)
 
 ---
 
@@ -393,7 +468,8 @@ For EACH question, respond with this EXACT structure:
         "universal_appeal": 8,
         "clever_framing": 9,
         "educational_value": 10,
-        "overall_score": 9.0,
+        "answerability": 8,
+        "overall_score": 8.8,
         "reasoning": "Why this question scores well"
       }}
     }}

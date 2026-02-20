@@ -131,6 +131,21 @@ Rate the question on these dimensions (1-10 scale):
 - 3-4: Contains inaccuracies or misleading claims
 - 1-2: The stated answer is wrong or the question contains factual errors
 
+### 7. Answerability / Engagement Path (1-10)
+**Can the player reason, estimate, or deduce toward the answer?**
+
+- 9-10: Multiple reasoning paths to the answer (estimation, elimination, deduction)
+- 7-8: At least one reasonable path to guess correctly
+- 5-6: Knowledgeable person might guess, but mostly recall
+- 3-4: Pure fact recall — you either know it or you don't
+- 1-2: Impossible to guess even with deep reasoning
+
+**Calibration anchors:**
+- 9/10 answerability: "Which is heavier: all ants on Earth or all humans?" (can estimate insect biomass vs human population)
+- 7/10 answerability: "Was Cleopatra closer to the pyramids or the Moon landing?" (can reason about historical timelines)
+- 5/10 answerability: "Which spice was traded for Manhattan?" (can't reason to "nutmeg" but might guess spices)
+- 2/10 answerability: "Which English word has 3 consecutive double letters?" (impossible to deduce "bookkeeper")
+
 ---
 
 ## Red Flags (Automatic Score Penalties)
@@ -166,6 +181,11 @@ Check for these common problems:
 **Unnecessarily Long** (-1 point from Clever Framing)
 - Question or answer is verbose when it could be punchy
 - Multi-sentence answers where one word would suffice
+
+**Dead-End Question** (-2 points from Answerability)
+- Pure fact recall with no reasoning path
+- "Interesting but unguessable" — fascinating fact that's impossible to work toward
+- Question starts with "Which [noun] [verb]..." and requires a specific obscure answer
 
 ---
 
@@ -214,7 +234,8 @@ Provide your evaluation in this EXACT JSON format:
     "clever_framing": 5,
     "educational_value": 6,
     "clarity": 8,
-    "factual_accuracy": 9
+    "factual_accuracy": 9,
+    "answerability": 5
   }},
   "overall_score": 6.2,
   "red_flags": [],

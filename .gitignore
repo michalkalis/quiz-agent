@@ -42,6 +42,10 @@ DerivedData/
 
 # Claude Code local settings
 .claude/*.local.json
+.claude/.last-check
+
+# Pencil design tool — scratch/untitled files
+untitled.pen
 
 # OS
 .DS_Store

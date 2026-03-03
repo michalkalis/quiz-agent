@@ -2,6 +2,7 @@
 name: generate-questions
 description: Generate high-quality quiz questions using Claude and save for review
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
+model: sonnet
 argument-hint: "[count] [difficulty] [topics]"
 ---
 

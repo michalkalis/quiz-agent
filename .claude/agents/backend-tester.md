@@ -1,7 +1,7 @@
 ---
 name: backend-tester
 description: Run backend pytest suite and report results concisely. Use proactively after Python code changes.
-tools: Bash, Read
+allowed-tools: Bash, Read
 model: haiku
 ---
 

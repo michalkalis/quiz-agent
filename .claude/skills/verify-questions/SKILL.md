@@ -2,6 +2,7 @@
 name: verify-questions
 description: Verify question-answer accuracy and populate source URLs/excerpts
 allowed-tools: Read, Write, Bash, Glob, Grep, WebSearch, WebFetch, AskUserQuestion
+model: sonnet
 argument-hint: "[path/to/questions.json]"
 ---
 

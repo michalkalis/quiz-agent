@@ -14,8 +14,8 @@ Review recent code changes and provide actionable feedback.
 
 1. **Get recent changes:**
    ```bash
-   git diff HEAD~1 --stat
-   git diff HEAD~1
+   git diff $(git merge-base HEAD main)...HEAD --stat
+   git diff $(git merge-base HEAD main)...HEAD
    ```
 
 2. **Review for:**

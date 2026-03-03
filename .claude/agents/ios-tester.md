@@ -1,7 +1,7 @@
 ---
 name: ios-tester
 description: Run iOS tests and report results concisely. Use proactively after iOS code changes.
-tools: Bash, Read
+allowed-tools: Bash, Read
 model: haiku
 ---
 

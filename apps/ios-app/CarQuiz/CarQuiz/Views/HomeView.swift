@@ -17,6 +17,7 @@ struct HomeView: View {
 
                 VStack(spacing: Theme.Spacing.sm) {
                     AppLogo(size: 80)
+                        .accessibilityHidden(true)
 
                     Text("CarQuiz")
                         .font(.system(size: Theme.Typography.sizeXXL, weight: .bold, design: .default))
@@ -140,6 +141,7 @@ struct HomeView: View {
             Image(systemName: "chevron.down")
                 .font(.caption)
                 .foregroundColor(Theme.Colors.textSecondary)
+                .accessibilityHidden(true)
         }
     }
 }

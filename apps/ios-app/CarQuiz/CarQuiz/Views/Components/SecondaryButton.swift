@@ -20,11 +20,13 @@ struct SecondaryButton: View {
                 if let icon = icon {
                     Image(systemName: icon)
                         .font(.system(size: Theme.Components.iconSM))
+                        .accessibilityHidden(true)
                 }
 
                 Text(title)
             }
         }
+        .accessibilityLabel(title)
         .buttonStyle(.secondary)
     }
 }

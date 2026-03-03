@@ -21,14 +21,17 @@ struct PrimaryButton: View {
                 if isLoading {
                     ProgressView()
                         .tint(.white)
+                        .accessibilityHidden(true)
                 } else if let icon = icon {
                     Image(systemName: icon)
                         .font(.system(size: Theme.Components.iconMD))
+                        .accessibilityHidden(true)
                 }
 
                 Text(title)
             }
         }
+        .accessibilityLabel(isLoading ? "Loading" : title)
         .buttonStyle(.primary)
         .disabled(isLoading)
     }

@@ -19,6 +19,7 @@ struct QuestionView: View {
                 .fill(Theme.Colors.textSecondary.opacity(0.4))
                 .frame(width: 36, height: 5)
                 .padding(.top, Theme.Spacing.sm)
+                .accessibilityHidden(true)
 
             // Top bar: voice indicator + close button
             HStack {
@@ -39,6 +40,7 @@ struct QuestionView: View {
                         .background(Theme.Colors.bgCard)
                         .clipShape(Circle())
                 }
+                .accessibilityLabel("End quiz")
                 .disabled(!canInteract)
             }
             .padding(.horizontal)
@@ -225,6 +227,7 @@ private struct AnswerTimerBadge: View {
         HStack(spacing: Theme.Spacing.xs) {
             Image(systemName: "hourglass")
                 .font(.system(size: Theme.Typography.sizeSM))
+                .accessibilityHidden(true)
             Text("\(seconds)s")
                 .font(.system(size: Theme.Typography.sizeMD, weight: .semibold))
                 .monospacedDigit()
@@ -236,6 +239,8 @@ private struct AnswerTimerBadge: View {
             (seconds <= 5 ? Theme.Colors.errorBg : Theme.Colors.accentPrimary.opacity(0.15))
         )
         .cornerRadius(Theme.Radius.lg)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(seconds) seconds remaining")
     }
 }
 

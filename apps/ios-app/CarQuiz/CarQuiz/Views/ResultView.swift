@@ -23,6 +23,7 @@ struct ResultView: View {
                     .fill(Theme.Colors.textSecondary.opacity(0.4))
                     .frame(width: 36, height: 5)
                     .padding(.top, Theme.Spacing.sm)
+                    .accessibilityHidden(true)
 
                 // Inline header: Q X/10 • Y pts | Close button
                 HStack {
@@ -46,6 +47,7 @@ struct ResultView: View {
                             .background(Theme.Colors.bgCard)
                             .clipShape(Circle())
                     }
+                    .accessibilityLabel("End quiz")
                 }
                 .padding(.horizontal)
 

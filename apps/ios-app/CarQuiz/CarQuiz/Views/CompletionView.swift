@@ -26,6 +26,7 @@ struct CompletionView: View {
                             .background(Theme.Colors.bgCard)
                             .cornerRadius(Theme.Radius.full)
                     }
+                    .accessibilityLabel("Close")
                 }
                 .padding(.horizontal)
 
@@ -43,6 +44,7 @@ struct CompletionView: View {
                 // Trophy Icon
                 TrophyIcon(size: 120)
                     .padding(.vertical, Theme.Spacing.lg)
+                    .accessibilityHidden(true)
 
                 // MARK: - Score Card
                 VStack(spacing: Theme.Spacing.sm) {

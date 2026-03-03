@@ -37,6 +37,7 @@ struct MicButton: View {
                         x: 0,
                         y: 0
                     )
+                    .accessibilityHidden(true)
 
                 // Inner glow circle
                 Circle()
@@ -45,15 +46,37 @@ struct MicButton: View {
                         width: Theme.Components.micGlowInner,
                         height: Theme.Components.micGlowInner
                     )
+                    .accessibilityHidden(true)
 
                 // Icon
                 Image(systemName: iconName)
                     .font(.system(size: Theme.Components.micIconLarge, weight: .medium))
                     .foregroundColor(.white)
+                    .accessibilityHidden(true)
             }
         }
+        .accessibilityLabel(micLabel)
+        .accessibilityHint(micHint)
         .disabled(state == .processing)
         .modifier(PulsingMicAnimation(isActive: state == .recording))
+    }
+
+    // MARK: - Accessibility
+
+    private var micLabel: String {
+        switch state {
+        case .idle: return "Start recording answer"
+        case .recording: return "Stop recording"
+        case .processing: return "Processing answer"
+        }
+    }
+
+    private var micHint: String {
+        switch state {
+        case .idle: return "Tap to record your answer"
+        case .recording: return "Tap to stop recording"
+        case .processing: return ""
+        }
     }
 
     // MARK: - Computed Properties

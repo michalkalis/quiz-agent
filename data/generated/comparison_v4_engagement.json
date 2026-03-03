@@ -1,0 +1,242 @@
+{
+  "metadata": {
+    "generated_at": "2026-02-20 15:34:46.973698",
+    "model": "gpt-4o",
+    "critique_model": "gpt-4o-mini",
+    "prompt_version": "v2_cot (updated with engagement path, patterns 11-13, answerability)",
+    "count": 10,
+    "avoided_gold_standard": true
+  },
+  "questions": [
+    {
+      "question": "Oxford University is older than which ancient empire?",
+      "answer": "The Aztec Empire",
+      "topic": "history",
+      "difficulty": "medium",
+      "pattern": "unknown",
+      "self_critique_answerability": "N/A",
+      "self_critique_overall": "N/A",
+      "external_critique": {
+        "overall_score": 5.6,
+        "answerability": 5,
+        "scores": {
+          "surprise_factor": 5,
+          "universal_appeal": 6,
+          "clever_framing": 4,
+          "educational_value": 6,
+          "clarity": 8,
+          "factual_accuracy": 9,
+          "answerability": 5
+        },
+        "verdict": "acceptable"
+      }
+    },
+    {
+      "question": "Which country has more pyramids: Egypt or Sudan?",
+      "answer": "Sudan",
+      "topic": "geography",
+      "difficulty": "medium",
+      "pattern": "unknown",
+      "self_critique_answerability": "N/A",
+      "self_critique_overall": "N/A",
+      "external_critique": {
+        "overall_score": 6.0,
+        "answerability": 5,
+        "scores": {
+          "surprise_factor": 5,
+          "universal_appeal": 7,
+          "clever_framing": 5,
+          "educational_value": 6,
+          "clarity": 8,
+          "factual_accuracy": 9,
+          "answerability": 5
+        },
+        "verdict": "acceptable"
+      }
+    },
+    {
+      "question": "Which animal has cube-shaped feces, believed to help mark territory?",
+      "answer": "Wombat",
+      "topic": "nature",
+      "difficulty": "medium",
+      "pattern": "unknown",
+      "self_critique_answerability": "N/A",
+      "self_critique_overall": "N/A",
+      "external_critique": {
+        "overall_score": 6.0,
+        "answerability": 5,
+        "scores": {
+          "surprise_factor": 6,
+          "universal_appeal": 7,
+          "clever_framing": 5,
+          "educational_value": 6,
+          "clarity": 8,
+          "factual_accuracy": 9,
+          "answerability": 5
+        },
+        "verdict": "acceptable"
+      }
+    },
+    {
+      "question": "A man walks into a bar and asks for a glass of water. The bartender pulls out a gun and points it at him. The man says 'thank you' and leaves. Why?",
+      "answer": "The man had hiccups, and the bartender scared them away.",
+      "topic": "Logic",
+      "difficulty": "medium",
+      "pattern": "unknown",
+      "self_critique_answerability": "N/A",
+      "self_critique_overall": "N/A",
+      "external_critique": {
+        "overall_score": 7.0,
+        "answerability": 6,
+        "scores": {
+          "surprise_factor": 7,
+          "universal_appeal": 8,
+          "clever_framing": 6,
+          "educational_value": 7,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "answerability": 6
+        },
+        "verdict": "good"
+      }
+    },
+    {
+      "question": "Bubble wrap was originally invented as what kind of home decoration?",
+      "answer": "Textured wallpaper",
+      "topic": "science",
+      "difficulty": "medium",
+      "pattern": "unknown",
+      "self_critique_answerability": "N/A",
+      "self_critique_overall": "N/A",
+      "external_critique": {
+        "overall_score": 6.0,
+        "answerability": 5,
+        "scores": {
+          "surprise_factor": 6,
+          "universal_appeal": 7,
+          "clever_framing": 5,
+          "educational_value": 6,
+          "clarity": 8,
+          "factual_accuracy": 9,
+          "answerability": 5
+        },
+        "verdict": "acceptable"
+      }
+    },
+    {
+      "question": "Which country has more lakes than the rest of the world combined?",
+      "answer": "Canada",
+      "topic": "geography",
+      "difficulty": "medium",
+      "pattern": "unknown",
+      "self_critique_answerability": "N/A",
+      "self_critique_overall": "N/A",
+      "external_critique": {
+        "overall_score": 6.4,
+        "answerability": 6,
+        "scores": {
+          "surprise_factor": 5,
+          "universal_appeal": 8,
+          "clever_framing": 5,
+          "educational_value": 6,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "answerability": 6
+        },
+        "verdict": "acceptable"
+      }
+    },
+    {
+      "question": "Which soft drink was originally sold as a nerve tonic?",
+      "answer": "Coca-Cola",
+      "topic": "history",
+      "difficulty": "medium",
+      "pattern": "unknown",
+      "self_critique_answerability": "N/A",
+      "self_critique_overall": "N/A",
+      "external_critique": {
+        "overall_score": 6.0,
+        "answerability": 5,
+        "scores": {
+          "surprise_factor": 5,
+          "universal_appeal": 7,
+          "clever_framing": 5,
+          "educational_value": 6,
+          "clarity": 8,
+          "factual_accuracy": 9,
+          "answerability": 5
+        },
+        "verdict": "acceptable"
+      }
+    },
+    {
+      "question": "What five-letter word becomes shorter when you add two letters?",
+      "answer": "Short",
+      "topic": "Logic",
+      "difficulty": "medium",
+      "pattern": "unknown",
+      "self_critique_answerability": "N/A",
+      "self_critique_overall": "N/A",
+      "external_critique": {
+        "overall_score": 7.0,
+        "answerability": 6,
+        "scores": {
+          "surprise_factor": 7,
+          "universal_appeal": 8,
+          "clever_framing": 6,
+          "educational_value": 7,
+          "clarity": 9,
+          "factual_accuracy": 10,
+          "answerability": 6
+        },
+        "verdict": "good"
+      }
+    },
+    {
+      "question": "Which popular board game was originally created to demonstrate the evils of unchecked capitalism?",
+      "answer": "Monopoly",
+      "topic": "history",
+      "difficulty": "medium",
+      "pattern": "unknown",
+      "self_critique_answerability": "N/A",
+      "self_critique_overall": "N/A",
+      "external_critique": {
+        "overall_score": 6.4,
+        "answerability": 6,
+        "scores": {
+          "surprise_factor": 5,
+          "universal_appeal": 8,
+          "clever_framing": 5,
+          "educational_value": 6,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "answerability": 6
+        },
+        "verdict": "acceptable"
+      }
+    },
+    {
+      "question": "If you fold a piece of paper 42 times, would it reach the ceiling, Everest, or the Moon?",
+      "answer": "The Moon",
+      "topic": "science",
+      "difficulty": "medium",
+      "pattern": "unknown",
+      "self_critique_answerability": "N/A",
+      "self_critique_overall": "N/A",
+      "external_critique": {
+        "overall_score": 7.0,
+        "answerability": 6,
+        "scores": {
+          "surprise_factor": 7,
+          "universal_appeal": 8,
+          "clever_framing": 6,
+          "educational_value": 7,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "answerability": 6
+        },
+        "verdict": "good"
+      }
+    }
+  ]
+}

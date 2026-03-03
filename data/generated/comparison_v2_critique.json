@@ -1,0 +1,711 @@
+{
+  "questions": [
+    {
+      "id": "temp_4ee05c68",
+      "question": "Which popular candy was originally invented as a substitute for chocolate during World War II?",
+      "type": "text",
+      "possible_answers": null,
+      "correct_answer": "M&M's",
+      "alternative_answers": [],
+      "topic": "History",
+      "category": "general",
+      "difficulty": "medium",
+      "tags": [
+        "history",
+        "food"
+      ],
+      "language_dependent": false,
+      "created_at": "2026-02-17T20:58:27.131504",
+      "created_by": null,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "usage_count": 0,
+      "user_ratings": {},
+      "review_status": "pending_review",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "review_notes": null,
+      "quality_ratings": {
+        "surprise_factor": 8,
+        "universal_appeal": 9,
+        "clever_framing": 9,
+        "educational_value": 9
+      },
+      "generation_metadata": {
+        "model": "gpt-4o",
+        "prompt_version": "v2_cot",
+        "temperature": 0.8,
+        "stage": "initial_generation",
+        "scores": {
+          "surprise_factor": 6,
+          "universal_appeal": 8,
+          "clever_framing": 5,
+          "educational_value": 7,
+          "clarity": 9,
+          "factual_accuracy": 9
+        },
+        "overall_score": 6.7,
+        "red_flags": [],
+        "strengths": [
+          "The question addresses a well-known candy that many people enjoy, enhancing its universal appeal.",
+          "The historical context of the candy's invention during World War II adds an educational element."
+        ],
+        "weaknesses": [
+          "The framing is somewhat standard and lacks creativity, making it less engaging.",
+          "The surprise factor is moderate, as many people might already know that M&M's were created as a chocolate substitute."
+        ],
+        "improvement_suggestions": [
+          "Consider rephrasing the question to create a more engaging narrative, such as 'What candy, created during World War II, was designed to withstand heat and serve as a chocolate substitute for soldiers?'",
+          "Add a hint or interesting fact about the candy's development to enhance the educational value."
+        ],
+        "verdict": "good",
+        "reasoning": "This question is solid and has a reasonable level of interest, but it falls short of being exceptional due to its standard framing and moderate surprise factor. While it provides educational value and is factually accurate, the lack of creativity in the question's presentation and the predictability of the answer limit its overall impact.",
+        "critique_model": "gpt-4o-mini"
+      },
+      "media_url": null,
+      "media_duration_seconds": null,
+      "explanation": null,
+      "embedding": null,
+      "expires_at": null,
+      "freshness_tag": null
+    },
+    {
+      "id": "temp_8a8eadd5",
+      "question": "Which fruit contains a naturally occurring enzyme that can digest protein, making it useful as a meat tenderizer?",
+      "type": "text",
+      "possible_answers": null,
+      "correct_answer": "Pineapple",
+      "alternative_answers": [],
+      "topic": "Food",
+      "category": "general",
+      "difficulty": "medium",
+      "tags": [
+        "food",
+        "science"
+      ],
+      "language_dependent": false,
+      "created_at": "2026-02-17T20:58:27.131609",
+      "created_by": null,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "usage_count": 0,
+      "user_ratings": {},
+      "review_status": "pending_review",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "review_notes": null,
+      "quality_ratings": {
+        "surprise_factor": 8,
+        "universal_appeal": 8,
+        "clever_framing": 8,
+        "educational_value": 9
+      },
+      "generation_metadata": {
+        "model": "gpt-4o",
+        "prompt_version": "v2_cot",
+        "temperature": 0.8,
+        "stage": "initial_generation",
+        "scores": {
+          "surprise_factor": 6,
+          "universal_appeal": 8,
+          "clever_framing": 5,
+          "educational_value": 7,
+          "clarity": 9,
+          "factual_accuracy": 9
+        },
+        "overall_score": 6.7,
+        "red_flags": [],
+        "strengths": [
+          "The question addresses a unique aspect of a common fruit, which can spark curiosity.",
+          "The answer is factually accurate and clear, making it easy for participants to understand."
+        ],
+        "weaknesses": [
+          "The framing is somewhat standard and lacks creativity, making it less engaging.",
+          "While the fact is interesting, it may not be surprising enough for a pub quiz audience."
+        ],
+        "improvement_suggestions": [
+          "Consider rephrasing the question to create a more engaging narrative or context, such as highlighting the culinary uses of the enzyme.",
+          "Adding a hint or a fun fact about the enzyme's effects could enhance the educational value and surprise factor."
+        ],
+        "verdict": "good",
+        "reasoning": "This question is solid and provides a clear, factual answer that many might not know. However, it lacks a surprising element and creative framing, which would elevate it further. The educational value is decent, as it introduces a lesser-known fact about a common fruit, but it could be more engaging with a narrative twist.",
+        "critique_model": "gpt-4o-mini"
+      },
+      "media_url": null,
+      "media_duration_seconds": null,
+      "explanation": null,
+      "embedding": null,
+      "expires_at": null,
+      "freshness_tag": null
+    },
+    {
+      "id": "temp_ecd14ecd",
+      "question": "Which common household item was once used as currency in ancient China?",
+      "type": "text",
+      "possible_answers": null,
+      "correct_answer": "Tea bricks",
+      "alternative_answers": [],
+      "topic": "History",
+      "category": "general",
+      "difficulty": "medium",
+      "tags": [
+        "history",
+        "economics"
+      ],
+      "language_dependent": false,
+      "created_at": "2026-02-17T20:58:27.131540",
+      "created_by": null,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "usage_count": 0,
+      "user_ratings": {},
+      "review_status": "pending_review",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "review_notes": null,
+      "quality_ratings": {
+        "surprise_factor": 9,
+        "universal_appeal": 8,
+        "clever_framing": 8,
+        "educational_value": 9
+      },
+      "generation_metadata": {
+        "model": "gpt-4o",
+        "prompt_version": "v2_cot",
+        "temperature": 0.8,
+        "stage": "initial_generation",
+        "scores": {
+          "surprise_factor": 5,
+          "universal_appeal": 7,
+          "clever_framing": 5,
+          "educational_value": 6,
+          "clarity": 9,
+          "factual_accuracy": 9
+        },
+        "overall_score": 6.2,
+        "red_flags": [],
+        "strengths": [
+          "The question is clear and unambiguous, making it easy to understand.",
+          "The fact that tea bricks were used as currency is an interesting historical tidbit."
+        ],
+        "weaknesses": [
+          "The question's format is somewhat standard and lacks creative framing.",
+          "The surprise factor is limited as some people may already know about tea bricks."
+        ],
+        "improvement_suggestions": [
+          "Consider rephrasing the question to create a more engaging narrative or context.",
+          "Add a hint or context that emphasizes the uniqueness of using a household item as currency."
+        ],
+        "verdict": "acceptable",
+        "reasoning": "While the question is factually accurate and clear, it lacks a strong surprise factor and creative framing. The topic is interesting, but the standard format makes it feel less engaging. It provides some educational value, but it doesn't create a memorable 'aha!' moment. Overall, it meets the minimum bar for a pub quiz question but could benefit from enhancements to make it more captivating.",
+        "critique_model": "gpt-4o-mini"
+      },
+      "media_url": null,
+      "media_duration_seconds": null,
+      "explanation": null,
+      "embedding": null,
+      "expires_at": null,
+      "freshness_tag": null
+    },
+    {
+      "id": "temp_ef67f1f9",
+      "question": "Which vegetable's name is derived from the Latin word for 'milk' due to its milky sap?",
+      "type": "text",
+      "possible_answers": null,
+      "correct_answer": "Lettuce",
+      "alternative_answers": [],
+      "topic": "Language",
+      "category": "general",
+      "difficulty": "medium",
+      "tags": [
+        "language",
+        "food"
+      ],
+      "language_dependent": false,
+      "created_at": "2026-02-17T20:58:27.131552",
+      "created_by": null,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "usage_count": 0,
+      "user_ratings": {},
+      "review_status": "pending_review",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "review_notes": null,
+      "quality_ratings": {
+        "surprise_factor": 8,
+        "universal_appeal": 9,
+        "clever_framing": 8,
+        "educational_value": 8
+      },
+      "generation_metadata": {
+        "model": "gpt-4o",
+        "prompt_version": "v2_cot",
+        "temperature": 0.8,
+        "stage": "initial_generation",
+        "scores": {
+          "surprise_factor": 5,
+          "universal_appeal": 7,
+          "clever_framing": 5,
+          "educational_value": 6,
+          "clarity": 9,
+          "factual_accuracy": 9
+        },
+        "overall_score": 6.2,
+        "red_flags": [],
+        "strengths": [
+          "The question has a clear and accurate answer, which is factually correct.",
+          "The topic of vegetables has broad appeal and can engage a wide audience."
+        ],
+        "weaknesses": [
+          "The framing of the question is somewhat standard and lacks creativity.",
+          "The surprise factor is low as many people may already know that lettuce has a milky sap."
+        ],
+        "improvement_suggestions": [
+          "Consider rephrasing the question to make it more engaging, perhaps by adding a fun fact or context about lettuce.",
+          "Incorporate a narrative element that connects the Latin origin to a broader story about the vegetable."
+        ],
+        "verdict": "acceptable",
+        "reasoning": "The question is clear and factually accurate, but it lacks a strong surprise factor and creative framing. While it is educational, the information is not particularly surprising or unique, making it a competent but unremarkable question. It fits within the average range of pub quiz questions, hence the overall score of 6.2.",
+        "critique_model": "gpt-4o-mini"
+      },
+      "media_url": null,
+      "media_duration_seconds": null,
+      "explanation": null,
+      "embedding": null,
+      "expires_at": null,
+      "freshness_tag": null
+    },
+    {
+      "id": "temp_f15c2ed4",
+      "question": "Which animal can have a tongue longer than its entire body?",
+      "type": "text",
+      "possible_answers": null,
+      "correct_answer": "Chameleon",
+      "alternative_answers": [],
+      "topic": "Biology",
+      "category": "general",
+      "difficulty": "medium",
+      "tags": [
+        "biology",
+        "animals"
+      ],
+      "language_dependent": false,
+      "created_at": "2026-02-17T20:58:27.131562",
+      "created_by": null,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "usage_count": 0,
+      "user_ratings": {},
+      "review_status": "pending_review",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "review_notes": null,
+      "quality_ratings": {
+        "surprise_factor": 9,
+        "universal_appeal": 9,
+        "clever_framing": 8,
+        "educational_value": 9
+      },
+      "generation_metadata": {
+        "model": "gpt-4o",
+        "prompt_version": "v2_cot",
+        "temperature": 0.8,
+        "stage": "initial_generation",
+        "scores": {
+          "surprise_factor": 6,
+          "universal_appeal": 7,
+          "clever_framing": 5,
+          "educational_value": 6,
+          "clarity": 8,
+          "factual_accuracy": 9
+        },
+        "overall_score": 6.2,
+        "red_flags": [],
+        "strengths": [
+          "The question is factually accurate, as chameleons indeed have long tongues that can exceed their body length.",
+          "The topic of animal biology is generally appealing and accessible to a wide audience."
+        ],
+        "weaknesses": [
+          "The framing of the question is somewhat standard and lacks creativity, making it less engaging.",
+          "While the fact is interesting, it may not be surprising enough for many quiz participants, as some may already know this fact."
+        ],
+        "improvement_suggestions": [
+          "Rephrase the question to create a more engaging narrative, such as: 'Which animal, known for its color-changing abilities, can have a tongue longer than its entire body?'",
+          "Consider adding a hint or context that emphasizes the uniqueness of the chameleon's tongue to enhance the surprise factor."
+        ],
+        "verdict": "acceptable",
+        "reasoning": "The question is clear and factually accurate, but it suffers from a lack of creativity in its framing and a moderate surprise factor. While it is educational, it does not create a strong 'aha!' moment for most participants. Overall, it meets the minimum bar for a pub quiz question but could use some revisions to enhance its appeal.",
+        "critique_model": "gpt-4o-mini"
+      },
+      "media_url": null,
+      "media_duration_seconds": null,
+      "explanation": null,
+      "embedding": null,
+      "expires_at": null,
+      "freshness_tag": null
+    },
+    {
+      "id": "temp_2eb59150",
+      "question": "Which modern kitchen appliance was invented to detect enemy aircraft during World War II?",
+      "type": "text",
+      "possible_answers": null,
+      "correct_answer": "Microwave oven",
+      "alternative_answers": [],
+      "topic": "History",
+      "category": "general",
+      "difficulty": "medium",
+      "tags": [
+        "history",
+        "technology"
+      ],
+      "language_dependent": false,
+      "created_at": "2026-02-17T20:58:27.131571",
+      "created_by": null,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "usage_count": 0,
+      "user_ratings": {},
+      "review_status": "pending_review",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "review_notes": null,
+      "quality_ratings": {
+        "surprise_factor": 8,
+        "universal_appeal": 9,
+        "clever_framing": 9,
+        "educational_value": 9
+      },
+      "generation_metadata": {
+        "model": "gpt-4o",
+        "prompt_version": "v2_cot",
+        "temperature": 0.8,
+        "stage": "initial_generation",
+        "scores": {
+          "surprise_factor": 6,
+          "universal_appeal": 7,
+          "clever_framing": 5,
+          "educational_value": 6,
+          "clarity": 8,
+          "factual_accuracy": 9
+        },
+        "overall_score": 6.2,
+        "red_flags": [],
+        "strengths": [
+          "The question has a clear and factual answer that is historically significant.",
+          "It introduces an interesting connection between technology and history."
+        ],
+        "weaknesses": [
+          "The framing is somewhat standard and lacks creativity.",
+          "While the fact is interesting, it may not be widely known, reducing its surprise factor."
+        ],
+        "improvement_suggestions": [
+          "Consider rephrasing the question to create more intrigue, such as 'What kitchen appliance, originally developed for military use, changed the way we cook?'",
+          "Add a bit of context or narrative to enhance the educational value, perhaps mentioning how the technology was adapted for civilian use."
+        ],
+        "verdict": "acceptable",
+        "reasoning": "This question scores a 6.2, indicating it is acceptable but could be improved. While it has a clear and accurate answer, the framing is quite standard, which diminishes its appeal. The historical context is interesting, but it may not create a strong 'aha!' moment for many quiz participants. Enhancing the framing and providing a bit more context could elevate this question to a higher score.",
+        "critique_model": "gpt-4o-mini"
+      },
+      "media_url": null,
+      "media_duration_seconds": null,
+      "explanation": null,
+      "embedding": null,
+      "expires_at": null,
+      "freshness_tag": null
+    },
+    {
+      "id": "temp_e4d919db",
+      "question": "Which animal can sleep for up to three years at a time?",
+      "type": "text",
+      "possible_answers": null,
+      "correct_answer": "Snail",
+      "alternative_answers": [],
+      "topic": "Biology",
+      "category": "general",
+      "difficulty": "medium",
+      "tags": [
+        "biology",
+        "animals"
+      ],
+      "language_dependent": false,
+      "created_at": "2026-02-17T20:58:27.131582",
+      "created_by": null,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "usage_count": 0,
+      "user_ratings": {},
+      "review_status": "pending_review",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "review_notes": null,
+      "quality_ratings": {
+        "surprise_factor": 9,
+        "universal_appeal": 8,
+        "clever_framing": 8,
+        "educational_value": 9
+      },
+      "generation_metadata": {
+        "model": "gpt-4o",
+        "prompt_version": "v2_cot",
+        "temperature": 0.8,
+        "stage": "initial_generation",
+        "scores": {
+          "surprise_factor": 6,
+          "universal_appeal": 7,
+          "clever_framing": 5,
+          "educational_value": 6,
+          "clarity": 8,
+          "factual_accuracy": 9
+        },
+        "overall_score": 6.2,
+        "red_flags": [],
+        "strengths": [
+          "The fact that snails can sleep for extended periods is interesting and not widely known.",
+          "The question is clear and factually accurate."
+        ],
+        "weaknesses": [
+          "The framing is somewhat standard and lacks creativity.",
+          "While the fact is surprising to some, it may not create a strong 'aha!' moment for many quiz participants."
+        ],
+        "improvement_suggestions": [
+          "Consider rephrasing the question to make it more engaging, perhaps by adding context or a fun fact about sleep in the animal kingdom.",
+          "Explore a more creative framing that could evoke curiosity, such as 'Which creature takes hibernation to the extreme by sleeping for up to three years?'"
+        ],
+        "verdict": "acceptable",
+        "reasoning": "This question is competent and presents an interesting fact about snails that many people may not know. However, it lacks a strong element of surprise and clever framing that would elevate it to a higher score. The clarity is good, and the factual accuracy is solid, but the overall presentation feels a bit flat and predictable. With some adjustments to the framing, it could be more engaging.",
+        "critique_model": "gpt-4o-mini"
+      },
+      "media_url": null,
+      "media_duration_seconds": null,
+      "explanation": null,
+      "embedding": null,
+      "expires_at": null,
+      "freshness_tag": null
+    },
+    {
+      "id": "temp_ed870d6f",
+      "question": "Which sport was named after a British military officer and is played on horseback?",
+      "type": "text",
+      "possible_answers": null,
+      "correct_answer": "Polo",
+      "alternative_answers": [],
+      "topic": "Sports",
+      "category": "general",
+      "difficulty": "medium",
+      "tags": [
+        "sports",
+        "history"
+      ],
+      "language_dependent": false,
+      "created_at": "2026-02-17T20:58:27.131591",
+      "created_by": null,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "usage_count": 0,
+      "user_ratings": {},
+      "review_status": "pending_review",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "review_notes": null,
+      "quality_ratings": {
+        "surprise_factor": 8,
+        "universal_appeal": 9,
+        "clever_framing": 9,
+        "educational_value": 8
+      },
+      "generation_metadata": {
+        "model": "gpt-4o",
+        "prompt_version": "v2_cot",
+        "temperature": 0.8,
+        "stage": "initial_generation",
+        "scores": {
+          "surprise_factor": 5,
+          "universal_appeal": 8,
+          "clever_framing": 4,
+          "educational_value": 6,
+          "clarity": 9,
+          "factual_accuracy": 9
+        },
+        "overall_score": 6.2,
+        "red_flags": [
+          "Boring Format"
+        ],
+        "strengths": [
+          "Clear and straightforward question with no ambiguity.",
+          "Factual accuracy is high; the answer is correct."
+        ],
+        "weaknesses": [
+          "The question format is predictable and lacks creativity.",
+          "The surprise factor is low as many people may already know this fact."
+        ],
+        "improvement_suggestions": [
+          "Reframe the question to create a narrative or interesting angle, such as mentioning the historical context of polo.",
+          "Consider adding a twist or additional context to make it more engaging, perhaps by referencing its popularity in certain cultures."
+        ],
+        "verdict": "acceptable",
+        "reasoning": "This question is clear and factually accurate, but it suffers from a boring format and low surprise factor. While it may be known to some, it doesn't create an 'aha!' moment for most quiz participants. The educational value is moderate, as it provides a historical connection but lacks depth. Overall, it meets the minimum bar but could benefit from a more engaging presentation.",
+        "critique_model": "gpt-4o-mini"
+      },
+      "media_url": null,
+      "media_duration_seconds": null,
+      "explanation": null,
+      "embedding": null,
+      "expires_at": null,
+      "freshness_tag": null
+    },
+    {
+      "id": "temp_ba2f4c8a",
+      "question": "Which popular soft drink was originally marketed as a cure for morphine addiction?",
+      "type": "text",
+      "possible_answers": null,
+      "correct_answer": "Coca-Cola",
+      "alternative_answers": [],
+      "topic": "History",
+      "category": "general",
+      "difficulty": "medium",
+      "tags": [
+        "history",
+        "food"
+      ],
+      "language_dependent": false,
+      "created_at": "2026-02-17T20:58:27.131618",
+      "created_by": null,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "usage_count": 0,
+      "user_ratings": {},
+      "review_status": "pending_review",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "review_notes": null,
+      "quality_ratings": {
+        "surprise_factor": 9,
+        "universal_appeal": 9,
+        "clever_framing": 9,
+        "educational_value": 9
+      },
+      "generation_metadata": {
+        "model": "gpt-4o",
+        "prompt_version": "v2_cot",
+        "temperature": 0.8,
+        "stage": "initial_generation",
+        "scores": {
+          "surprise_factor": 6,
+          "universal_appeal": 7,
+          "clever_framing": 5,
+          "educational_value": 6,
+          "clarity": 8,
+          "factual_accuracy": 9
+        },
+        "overall_score": 6.2,
+        "red_flags": [],
+        "strengths": [
+          "The question addresses a historical aspect of a well-known product, which can pique interest.",
+          "The factual accuracy is high, as Coca-Cola was indeed marketed as a cure for morphine addiction."
+        ],
+        "weaknesses": [
+          "The framing is somewhat standard and lacks creativity, making it less engaging.",
+          "The surprise factor is moderate; while some may not know this fact, it is not particularly shocking or unexpected."
+        ],
+        "improvement_suggestions": [
+          "Consider rephrasing the question to create a more engaging narrative, such as 'What popular soft drink was once touted as a remedy for addiction, reflecting the medical trends of its time?'",
+          "Add a bit of context or a follow-up question that could enhance the educational value, such as discussing the origins of Coca-Cola."
+        ],
+        "verdict": "acceptable",
+        "reasoning": "This question is competent and provides a historical fact about a widely recognized product, but it lacks the creativity and surprise that would elevate it to a higher score. The clarity is good, and the factual accuracy is solid, but the framing is standard and the surprise factor is only moderate. Overall, it meets the minimum bar for a pub quiz question but could benefit from more engaging language and context.",
+        "critique_model": "gpt-4o-mini"
+      },
+      "media_url": null,
+      "media_duration_seconds": null,
+      "explanation": null,
+      "embedding": null,
+      "expires_at": null,
+      "freshness_tag": null
+    },
+    {
+      "id": "temp_efd45002",
+      "question": "Which country has the longest coastline in the world?",
+      "type": "text",
+      "possible_answers": null,
+      "correct_answer": "Canada",
+      "alternative_answers": [],
+      "topic": "Geography",
+      "category": "general",
+      "difficulty": "medium",
+      "tags": [
+        "geography",
+        "nature"
+      ],
+      "language_dependent": false,
+      "created_at": "2026-02-17T20:58:27.131600",
+      "created_by": null,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "usage_count": 0,
+      "user_ratings": {},
+      "review_status": "pending_review",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "review_notes": null,
+      "quality_ratings": {
+        "surprise_factor": 8,
+        "universal_appeal": 8,
+        "clever_framing": 8,
+        "educational_value": 9
+      },
+      "generation_metadata": {
+        "model": "gpt-4o",
+        "prompt_version": "v2_cot",
+        "temperature": 0.8,
+        "stage": "initial_generation",
+        "scores": {
+          "surprise_factor": 5,
+          "universal_appeal": 8,
+          "clever_framing": 4,
+          "educational_value": 6,
+          "clarity": 9,
+          "factual_accuracy": 10
+        },
+        "overall_score": 6.0,
+        "red_flags": [],
+        "strengths": [
+          "The question is factually accurate and has a clear answer.",
+          "Geography is a universally relevant topic, making it accessible to a broad audience."
+        ],
+        "weaknesses": [
+          "The question format is quite standard and lacks creativity.",
+          "The fact that Canada has the longest coastline is relatively well-known, reducing the surprise factor."
+        ],
+        "improvement_suggestions": [
+          "Consider rephrasing the question to include an interesting fact or context, such as the significance of coastlines in geography or ecology.",
+          "Use a more engaging framing, such as asking about the implications of having the longest coastline or how it compares to other countries."
+        ],
+        "verdict": "acceptable",
+        "reasoning": "This question is competent and factually correct, but it suffers from a lack of creativity and surprise. While geography is a universally appealing topic, the straightforward format and well-known nature of the answer make it less engaging. It meets the minimum bar for a pub quiz question but could benefit from a more creative approach to enhance its educational value and surprise factor.",
+        "critique_model": "gpt-4o-mini"
+      },
+      "media_url": null,
+      "media_duration_seconds": null,
+      "explanation": null,
+      "embedding": null,
+      "expires_at": null,
+      "freshness_tag": null
+    }
+  ],
+  "elapsed": 155.9304370880127,
+  "count": 10,
+  "avg": 6.280000000000001,
+  "min": 6.0,
+  "max": 6.7
+}

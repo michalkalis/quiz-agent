@@ -1,0 +1,727 @@
+{
+  "questions": [
+    {
+      "id": "temp_d0f02565",
+      "question": "Which iconic landmark holds the record for being the tallest twin buildings in the world?",
+      "type": "text",
+      "possible_answers": null,
+      "correct_answer": "Petronas Twin Towers",
+      "alternative_answers": [],
+      "topic": "Architecture",
+      "category": "general",
+      "difficulty": "medium",
+      "tags": [
+        "tallest",
+        "buildings"
+      ],
+      "language_dependent": false,
+      "created_at": "2026-02-17T21:01:10.438324",
+      "created_by": null,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "usage_count": 0,
+      "user_ratings": {},
+      "review_status": "pending_review",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "review_notes": null,
+      "quality_ratings": {
+        "surprise_factor": 8,
+        "universal_appeal": 9,
+        "clever_framing": 9,
+        "educational_value": 8
+      },
+      "generation_metadata": {
+        "model": "gpt-4o",
+        "prompt_version": "v3_fact_first",
+        "temperature": 0.8,
+        "stage": "initial_generation",
+        "pipeline": "fact_first",
+        "scores": {
+          "surprise_factor": 5,
+          "universal_appeal": 8,
+          "clever_framing": 5,
+          "educational_value": 6,
+          "clarity": 9,
+          "factual_accuracy": 9
+        },
+        "overall_score": 6.3,
+        "red_flags": [],
+        "strengths": [
+          "The question is factually accurate, with a clear and correct answer.",
+          "It has good universal appeal, as many people are familiar with the Petronas Twin Towers."
+        ],
+        "weaknesses": [
+          "The framing is somewhat standard and lacks creativity.",
+          "The surprise factor is low, as many people may already know the answer."
+        ],
+        "improvement_suggestions": [
+          "Consider rephrasing the question to include a more engaging context or narrative.",
+          "Add a unique twist or fact about the Petronas Twin Towers to enhance the educational value."
+        ],
+        "verdict": "acceptable",
+        "reasoning": "This question is competent but unremarkable. While it is factually accurate and clear, it suffers from a lack of creativity in its framing and a low surprise factor. The topic is accessible to a broad audience, but the question format is predictable. To improve, it could benefit from a more engaging narrative or an interesting fact that would make it more memorable.",
+        "critique_model": "gpt-4o-mini"
+      },
+      "media_url": null,
+      "media_duration_seconds": null,
+      "explanation": null,
+      "embedding": null,
+      "expires_at": null,
+      "freshness_tag": null
+    },
+    {
+      "id": "temp_facefcac",
+      "question": "Which famous entrepreneur owns companies in trains, airlines, and racing, all under the Virgin brand?",
+      "type": "text",
+      "possible_answers": null,
+      "correct_answer": "Richard Branson",
+      "alternative_answers": [],
+      "topic": "Business",
+      "category": "general",
+      "difficulty": "medium",
+      "tags": [
+        "entrepreneurship",
+        "business"
+      ],
+      "language_dependent": false,
+      "created_at": "2026-02-17T21:01:10.438516",
+      "created_by": null,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "usage_count": 0,
+      "user_ratings": {},
+      "review_status": "pending_review",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "review_notes": null,
+      "quality_ratings": {
+        "surprise_factor": 8,
+        "universal_appeal": 9,
+        "clever_framing": 8,
+        "educational_value": 8
+      },
+      "generation_metadata": {
+        "model": "gpt-4o",
+        "prompt_version": "v3_fact_first",
+        "temperature": 0.8,
+        "stage": "initial_generation",
+        "pipeline": "fact_first",
+        "scores": {
+          "surprise_factor": 5,
+          "universal_appeal": 8,
+          "clever_framing": 5,
+          "educational_value": 6,
+          "clarity": 9,
+          "factual_accuracy": 9
+        },
+        "overall_score": 6.3,
+        "red_flags": [],
+        "strengths": [
+          "The question is clear and unambiguous, making it easy for participants to understand.",
+          "Richard Branson is a well-known figure, which enhances the universal appeal of the question."
+        ],
+        "weaknesses": [
+          "The question format is somewhat standard and lacks creativity in framing.",
+          "The answer is predictable for those familiar with Richard Branson or the Virgin brand."
+        ],
+        "improvement_suggestions": [
+          "Consider rephrasing the question to include a more engaging narrative or context about the Virgin brand.",
+          "Add a surprising fact about Richard Branson or the Virgin companies to increase the surprise factor."
+        ],
+        "verdict": "acceptable",
+        "reasoning": "This question is clear and factually accurate, making it a solid addition to a quiz. However, it lacks surprise and clever framing, which limits its overall impact. The predictability of the answer for those familiar with Branson diminishes its excitement. While it is educational and has good universal appeal, it could benefit from a more engaging presentation.",
+        "critique_model": "gpt-4o-mini"
+      },
+      "media_url": null,
+      "media_duration_seconds": null,
+      "explanation": null,
+      "embedding": null,
+      "expires_at": null,
+      "freshness_tag": null
+    },
+    {
+      "id": "temp_5e79bb71",
+      "question": "Which Ed Sheeran song's remix led to the breakthrough of electronic music producer Kygo?",
+      "type": "text",
+      "possible_answers": null,
+      "correct_answer": "I See Fire",
+      "alternative_answers": [],
+      "topic": "Music",
+      "category": "general",
+      "difficulty": "medium",
+      "tags": [
+        "music",
+        "Kygo",
+        "remix"
+      ],
+      "language_dependent": false,
+      "created_at": "2026-02-17T21:01:10.438389",
+      "created_by": null,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "usage_count": 0,
+      "user_ratings": {},
+      "review_status": "pending_review",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "review_notes": null,
+      "quality_ratings": {
+        "surprise_factor": 8,
+        "universal_appeal": 8,
+        "clever_framing": 8,
+        "educational_value": 8
+      },
+      "generation_metadata": {
+        "model": "gpt-4o",
+        "prompt_version": "v3_fact_first",
+        "temperature": 0.8,
+        "stage": "initial_generation",
+        "pipeline": "fact_first",
+        "scores": {
+          "surprise_factor": 5,
+          "universal_appeal": 6,
+          "clever_framing": 5,
+          "educational_value": 6,
+          "clarity": 8,
+          "factual_accuracy": 9
+        },
+        "overall_score": 6.2,
+        "red_flags": [],
+        "strengths": [
+          "The question is factually accurate, with a clear correct answer.",
+          "It addresses a popular artist and a notable event in music, which can engage a broad audience."
+        ],
+        "weaknesses": [
+          "The surprise factor is low as the connection between Ed Sheeran and Kygo is somewhat known among music fans.",
+          "The framing is standard and lacks creativity, making it less engaging."
+        ],
+        "improvement_suggestions": [
+          "Consider rephrasing to create a more engaging narrative, such as highlighting the significance of the remix in a broader context.",
+          "Incorporate a more surprising element or unique angle to enhance the question's intrigue."
+        ],
+        "verdict": "acceptable",
+        "reasoning": "This question is competent and factually correct, but it lacks a strong surprise factor and creative framing. While it touches on a popular topic, the connection is not particularly surprising for those familiar with contemporary music. The educational value is moderate, as it provides insight into the career trajectory of Kygo, but it does not offer a deep or unexpected learning experience. Overall, it meets the minimum bar for a pub quiz question but could benefit from enhancements to make it more engaging.",
+        "critique_model": "gpt-4o-mini"
+      },
+      "media_url": null,
+      "media_duration_seconds": null,
+      "explanation": null,
+      "embedding": null,
+      "expires_at": null,
+      "freshness_tag": null
+    },
+    {
+      "id": "temp_e5eb2514",
+      "question": "Which nation recently issued a cold health alert due to falling temperatures, impacting parts of its mainland?",
+      "type": "text",
+      "possible_answers": null,
+      "correct_answer": "United Kingdom",
+      "alternative_answers": [],
+      "topic": "Weather",
+      "category": "general",
+      "difficulty": "medium",
+      "tags": [
+        "weather",
+        "UK"
+      ],
+      "language_dependent": false,
+      "created_at": "2026-02-17T21:01:10.438472",
+      "created_by": null,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "usage_count": 0,
+      "user_ratings": {},
+      "review_status": "pending_review",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "review_notes": null,
+      "quality_ratings": {
+        "surprise_factor": 6,
+        "universal_appeal": 9,
+        "clever_framing": 7,
+        "educational_value": 7
+      },
+      "generation_metadata": {
+        "model": "gpt-4o",
+        "prompt_version": "v3_fact_first",
+        "temperature": 0.8,
+        "stage": "initial_generation",
+        "pipeline": "fact_first",
+        "scores": {
+          "surprise_factor": 5,
+          "universal_appeal": 6,
+          "clever_framing": 5,
+          "educational_value": 6,
+          "clarity": 8,
+          "factual_accuracy": 9
+        },
+        "overall_score": 6.2,
+        "red_flags": [],
+        "strengths": [
+          "The question is factually accurate, with a clear and correct answer.",
+          "It addresses a relevant and timely topic, which can engage participants."
+        ],
+        "weaknesses": [
+          "The framing is somewhat standard and lacks creativity, making it less engaging.",
+          "The surprise factor is low, as alerts due to weather changes are common knowledge."
+        ],
+        "improvement_suggestions": [
+          "Consider rephrasing the question to include a more engaging narrative or context.",
+          "Add a unique angle or detail that would make the question more surprising or interesting."
+        ],
+        "verdict": "acceptable",
+        "reasoning": "The question is clear and factually accurate, but it suffers from a lack of creativity and surprise. While it addresses a timely topic, the framing is standard and does not evoke much interest. The educational value is moderate, as it informs about a specific event, but it does not teach something particularly unexpected or fascinating. Overall, it meets the minimum bar but could benefit from revisions to enhance its appeal.",
+        "critique_model": "gpt-4o-mini"
+      },
+      "media_url": null,
+      "media_duration_seconds": null,
+      "explanation": null,
+      "embedding": null,
+      "expires_at": null,
+      "freshness_tag": null
+    },
+    {
+      "id": "temp_28c6382a",
+      "question": "Foie gras, a luxury French delicacy, is primarily made from which organ of a duck or goose?",
+      "type": "text",
+      "possible_answers": null,
+      "correct_answer": "Liver",
+      "alternative_answers": [],
+      "topic": "Cuisine",
+      "category": "general",
+      "difficulty": "medium",
+      "tags": [
+        "cuisine",
+        "French"
+      ],
+      "language_dependent": false,
+      "created_at": "2026-02-17T21:01:10.438402",
+      "created_by": null,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "usage_count": 0,
+      "user_ratings": {},
+      "review_status": "pending_review",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "review_notes": null,
+      "quality_ratings": {
+        "surprise_factor": 7,
+        "universal_appeal": 8,
+        "clever_framing": 8,
+        "educational_value": 8
+      },
+      "generation_metadata": {
+        "model": "gpt-4o",
+        "prompt_version": "v3_fact_first",
+        "temperature": 0.8,
+        "stage": "initial_generation",
+        "pipeline": "fact_first",
+        "scores": {
+          "surprise_factor": 5,
+          "universal_appeal": 7,
+          "clever_framing": 5,
+          "educational_value": 6,
+          "clarity": 8,
+          "factual_accuracy": 9
+        },
+        "overall_score": 6.0,
+        "red_flags": [],
+        "strengths": [
+          "The question is factually accurate and the answer is clear.",
+          "The topic of cuisine has broad appeal, especially among food enthusiasts."
+        ],
+        "weaknesses": [
+          "The question format is somewhat predictable and lacks creative framing.",
+          "The surprise factor is low as many people familiar with cuisine may already know the answer."
+        ],
+        "improvement_suggestions": [
+          "Consider rephrasing the question to include a more engaging narrative or context, such as the cultural significance of foie gras.",
+          "Add an element of surprise by framing it in a way that highlights the luxury aspect or ethical debates surrounding foie gras."
+        ],
+        "verdict": "acceptable",
+        "reasoning": "The question is clear and accurate, but it falls short in terms of surprise and clever framing. While it may be interesting to those who enjoy cuisine, it does not evoke a strong 'aha!' moment and is somewhat predictable. The educational value is moderate, as it provides a specific fact about a well-known delicacy. Overall, it meets the minimum bar for a pub quiz question but could benefit from more creativity and engagement.",
+        "critique_model": "gpt-4o-mini"
+      },
+      "media_url": null,
+      "media_duration_seconds": null,
+      "explanation": null,
+      "embedding": null,
+      "expires_at": null,
+      "freshness_tag": null
+    },
+    {
+      "id": "temp_58b4534d",
+      "question": "Which UK political party experienced a notable U-turn in their local election strategy under Keir Starmer's leadership?",
+      "type": "text",
+      "possible_answers": null,
+      "correct_answer": "Labour Party",
+      "alternative_answers": [],
+      "topic": "Politics",
+      "category": "general",
+      "difficulty": "medium",
+      "tags": [
+        "politics",
+        "UK"
+      ],
+      "language_dependent": false,
+      "created_at": "2026-02-17T21:01:10.438423",
+      "created_by": null,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "usage_count": 0,
+      "user_ratings": {},
+      "review_status": "pending_review",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "review_notes": null,
+      "quality_ratings": {
+        "surprise_factor": 6,
+        "universal_appeal": 8,
+        "clever_framing": 7,
+        "educational_value": 8
+      },
+      "generation_metadata": {
+        "model": "gpt-4o",
+        "prompt_version": "v3_fact_first",
+        "temperature": 0.8,
+        "stage": "initial_generation",
+        "pipeline": "fact_first",
+        "scores": {
+          "surprise_factor": 5,
+          "universal_appeal": 6,
+          "clever_framing": 5,
+          "educational_value": 6,
+          "clarity": 8,
+          "factual_accuracy": 9
+        },
+        "overall_score": 5.8,
+        "red_flags": [
+          "Boring Format"
+        ],
+        "strengths": [
+          "The question is factually accurate and relevant to current political events.",
+          "It has a clear and straightforward wording."
+        ],
+        "weaknesses": [
+          "The question follows a predictable format, which makes it less engaging.",
+          "The topic may not be universally appealing, as it requires knowledge of UK politics."
+        ],
+        "improvement_suggestions": [
+          "Consider rephrasing the question to add a narrative element or context that makes it more engaging.",
+          "Provide a hint or context that could make the question more accessible to those less familiar with UK politics."
+        ],
+        "verdict": "acceptable",
+        "reasoning": "The question is factually accurate and clear, but it suffers from a predictable format and limited appeal outside of those familiar with UK politics. While it does provide some educational value regarding recent political strategies, it lacks a surprising or engaging element that would elevate it to a higher score. Overall, it meets the minimum bar for a pub quiz question but could benefit from more creativity and broader appeal.",
+        "critique_model": "gpt-4o-mini"
+      },
+      "media_url": null,
+      "media_duration_seconds": null,
+      "explanation": null,
+      "embedding": null,
+      "expires_at": null,
+      "freshness_tag": null
+    },
+    {
+      "id": "temp_1d6cc070",
+      "question": "Which frontrunner for a UK cabinet secretary position faced controversy over dismissed bullying complaints?",
+      "type": "text",
+      "possible_answers": null,
+      "correct_answer": "Antonia Romeo",
+      "alternative_answers": [],
+      "topic": "Politics",
+      "category": "general",
+      "difficulty": "medium",
+      "tags": [
+        "politics",
+        "controversy"
+      ],
+      "language_dependent": false,
+      "created_at": "2026-02-17T21:01:10.438456",
+      "created_by": null,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "usage_count": 0,
+      "user_ratings": {},
+      "review_status": "pending_review",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "review_notes": null,
+      "quality_ratings": {
+        "surprise_factor": 7,
+        "universal_appeal": 8,
+        "clever_framing": 7,
+        "educational_value": 8
+      },
+      "generation_metadata": {
+        "model": "gpt-4o",
+        "prompt_version": "v3_fact_first",
+        "temperature": 0.8,
+        "stage": "initial_generation",
+        "pipeline": "fact_first",
+        "scores": {
+          "surprise_factor": 5,
+          "universal_appeal": 6,
+          "clever_framing": 5,
+          "educational_value": 6,
+          "clarity": 8,
+          "factual_accuracy": 9
+        },
+        "overall_score": 5.8,
+        "red_flags": [],
+        "strengths": [
+          "The question is factually accurate and relevant to current events.",
+          "It addresses a topic that may engage those interested in politics."
+        ],
+        "weaknesses": [
+          "The framing is somewhat standard and lacks creativity.",
+          "The topic may not be universally known, limiting its appeal."
+        ],
+        "improvement_suggestions": [
+          "Consider rephrasing the question to add a more engaging narrative or context.",
+          "Provide additional context or background to make the question more accessible to a broader audience."
+        ],
+        "verdict": "acceptable",
+        "reasoning": "This question is factually correct and relevant but lacks the surprise and cleverness that would elevate it to a higher score. The topic of UK politics may not resonate with all quiz participants, which affects its universal appeal. While it is clear and accurate, the framing is quite standard, making it less engaging. Overall, it meets the minimum bar for a pub quiz question but could benefit from more creativity and broader context.",
+        "critique_model": "gpt-4o-mini"
+      },
+      "media_url": null,
+      "media_duration_seconds": null,
+      "explanation": null,
+      "embedding": null,
+      "expires_at": null,
+      "freshness_tag": null
+    },
+    {
+      "id": "temp_12544934",
+      "question": "Which zodiac sign balances the scales between Virgo and Scorpio?",
+      "type": "text",
+      "possible_answers": null,
+      "correct_answer": "Libra",
+      "alternative_answers": [],
+      "topic": "Astrology",
+      "category": "general",
+      "difficulty": "medium",
+      "tags": [
+        "zodiac",
+        "astrology"
+      ],
+      "language_dependent": false,
+      "created_at": "2026-02-17T21:01:10.438487",
+      "created_by": null,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "usage_count": 0,
+      "user_ratings": {},
+      "review_status": "pending_review",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "review_notes": null,
+      "quality_ratings": {
+        "surprise_factor": 8,
+        "universal_appeal": 7,
+        "clever_framing": 8,
+        "educational_value": 7
+      },
+      "generation_metadata": {
+        "model": "gpt-4o",
+        "prompt_version": "v3_fact_first",
+        "temperature": 0.8,
+        "stage": "initial_generation",
+        "pipeline": "fact_first",
+        "scores": {
+          "surprise_factor": 5,
+          "universal_appeal": 6,
+          "clever_framing": 5,
+          "educational_value": 5,
+          "clarity": 8,
+          "factual_accuracy": 9
+        },
+        "overall_score": 5.6,
+        "red_flags": [],
+        "strengths": [
+          "The question is clear and unambiguous, making it easy to understand.",
+          "The factual accuracy is high, as Libra is indeed the zodiac sign that fits the description."
+        ],
+        "weaknesses": [
+          "The question lacks a strong surprise factor, as many people familiar with astrology would likely know the answer.",
+          "The framing is somewhat standard and does not engage the audience creatively."
+        ],
+        "improvement_suggestions": [
+          "Consider adding a narrative element or context to make the question more engaging, such as a historical or mythological reference.",
+          "Rephrase the question to make it less predictable, perhaps by incorporating a riddle-like format."
+        ],
+        "verdict": "acceptable",
+        "reasoning": "This question is clear and factually accurate, but it lacks surprise and creativity. While it may be known to those interested in astrology, it does not offer a strong 'aha!' moment or educational value beyond basic knowledge. It meets the minimum bar but could benefit from more engaging framing and context.",
+        "critique_model": "gpt-4o-mini"
+      },
+      "media_url": null,
+      "media_duration_seconds": null,
+      "explanation": null,
+      "embedding": null,
+      "expires_at": null,
+      "freshness_tag": null
+    },
+    {
+      "id": "temp_56f67f0d",
+      "question": "Which influential US civil rights leader, known as an agent of change, recently passed away at the age of 84?",
+      "type": "text",
+      "possible_answers": null,
+      "correct_answer": "Jesse Jackson",
+      "alternative_answers": [],
+      "topic": "History",
+      "category": "general",
+      "difficulty": "medium",
+      "tags": [
+        "civil rights",
+        "history"
+      ],
+      "language_dependent": false,
+      "created_at": "2026-02-17T21:01:10.438413",
+      "created_by": null,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "usage_count": 0,
+      "user_ratings": {},
+      "review_status": "pending_review",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "review_notes": null,
+      "quality_ratings": {
+        "surprise_factor": 7,
+        "universal_appeal": 9,
+        "clever_framing": 8,
+        "educational_value": 9
+      },
+      "generation_metadata": {
+        "model": "gpt-4o",
+        "prompt_version": "v3_fact_first",
+        "temperature": 0.8,
+        "stage": "initial_generation",
+        "pipeline": "fact_first",
+        "scores": {
+          "surprise_factor": 4,
+          "universal_appeal": 6,
+          "clever_framing": 5,
+          "educational_value": 5,
+          "clarity": 8,
+          "factual_accuracy": 9
+        },
+        "overall_score": 5.4,
+        "red_flags": [
+          "Boring Format"
+        ],
+        "strengths": [
+          "The question is factually accurate regarding Jesse Jackson's recent passing.",
+          "The clarity of the question is good, making it easy to understand."
+        ],
+        "weaknesses": [
+          "The question format is predictable and lacks creativity.",
+          "The topic may not be widely known or relevant to all audiences, limiting its universal appeal."
+        ],
+        "improvement_suggestions": [
+          "Consider rephrasing the question to include a more engaging narrative or context about Jesse Jackson's contributions to civil rights.",
+          "Introduce an element of surprise or a unique angle to make the question more intriguing."
+        ],
+        "verdict": "acceptable",
+        "reasoning": "This question is factually correct and clear, but it suffers from a predictable format and lacks a strong surprise factor. While it addresses an important historical figure, the framing is straightforward and does not engage the audience effectively. The overall score reflects its adequacy but highlights the need for improvement to enhance its appeal and educational value.",
+        "critique_model": "gpt-4o-mini"
+      },
+      "media_url": null,
+      "media_duration_seconds": null,
+      "explanation": null,
+      "embedding": null,
+      "expires_at": null,
+      "freshness_tag": null
+    },
+    {
+      "id": "temp_cbd929fe",
+      "question": "Which country is overhauling its entry requirements, causing dual nationals to rush for passports?",
+      "type": "text",
+      "possible_answers": null,
+      "correct_answer": "United Kingdom",
+      "alternative_answers": [],
+      "topic": "Politics",
+      "category": "general",
+      "difficulty": "medium",
+      "tags": [
+        "immigration",
+        "UK"
+      ],
+      "language_dependent": false,
+      "created_at": "2026-02-17T21:01:10.438501",
+      "created_by": null,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "usage_count": 0,
+      "user_ratings": {},
+      "review_status": "pending_review",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "review_notes": null,
+      "quality_ratings": {
+        "surprise_factor": 7,
+        "universal_appeal": 8,
+        "clever_framing": 7,
+        "educational_value": 8
+      },
+      "generation_metadata": {
+        "model": "gpt-4o",
+        "prompt_version": "v3_fact_first",
+        "temperature": 0.8,
+        "stage": "initial_generation",
+        "pipeline": "fact_first",
+        "scores": {
+          "surprise_factor": 5,
+          "universal_appeal": 6,
+          "clever_framing": 4,
+          "educational_value": 5,
+          "clarity": 8,
+          "factual_accuracy": 9
+        },
+        "overall_score": 5.4,
+        "red_flags": [
+          "Boring Format"
+        ],
+        "strengths": [
+          "The question is factually accurate regarding the UK's entry requirements.",
+          "The topic is relevant and timely, reflecting current political changes."
+        ],
+        "weaknesses": [
+          "The framing is straightforward and lacks creativity, making it less engaging.",
+          "The question may not be universally accessible as it assumes knowledge of current events."
+        ],
+        "improvement_suggestions": [
+          "Reframe the question to include a more engaging narrative or context.",
+          "Consider adding a hint or context that makes the question more interesting and less predictable."
+        ],
+        "verdict": "acceptable",
+        "reasoning": "The question is factually correct and relevant, but it suffers from a lack of creativity in framing and a somewhat niche appeal. The straightforward nature of the question makes it predictable, which diminishes its surprise factor. While it is clear and accurate, it does not evoke strong interest or engagement, making it a marginal question that could benefit from revision.",
+        "critique_model": "gpt-4o-mini"
+      },
+      "media_url": null,
+      "media_duration_seconds": null,
+      "explanation": null,
+      "embedding": null,
+      "expires_at": null,
+      "freshness_tag": null
+    }
+  ],
+  "elapsed": 150.63818097114563,
+  "count": 10,
+  "avg": 5.8999999999999995,
+  "min": 5.4,
+  "max": 6.3,
+  "facts": 14
+}

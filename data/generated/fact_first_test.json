@@ -1,0 +1,374 @@
+{
+  "questions": [
+    {
+      "id": "temp_e4eeafe5",
+      "question": "Before becoming a telecom giant, what surprising product did Nokia originally sell?",
+      "type": "text",
+      "possible_answers": null,
+      "correct_answer": "Paper",
+      "alternative_answers": [],
+      "topic": "Company Origins",
+      "category": "general",
+      "difficulty": "medium",
+      "tags": [
+        "business history",
+        "technology"
+      ],
+      "language_dependent": false,
+      "created_at": "2026-02-17T20:52:01.556724",
+      "created_by": null,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "usage_count": 0,
+      "user_ratings": {},
+      "review_status": "pending_review",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "review_notes": null,
+      "quality_ratings": {
+        "surprise_factor": 9,
+        "universal_appeal": 9,
+        "clever_framing": 9,
+        "educational_value": 9
+      },
+      "generation_metadata": {
+        "model": "gpt-4o",
+        "prompt_version": "v3_fact_first",
+        "temperature": 0.8,
+        "stage": "initial_generation",
+        "pipeline": "fact_first",
+        "scores": {
+          "surprise_factor": 7,
+          "universal_appeal": 8,
+          "clever_framing": 6,
+          "educational_value": 7,
+          "clarity": 9,
+          "factual_accuracy": 9
+        },
+        "overall_score": 7.0,
+        "red_flags": [],
+        "strengths": [
+          "The question reveals a surprising fact about a well-known company, which can spark interest.",
+          "It is clear and unambiguous, making it easy for participants to understand."
+        ],
+        "weaknesses": [
+          "The framing is somewhat standard and could be more engaging.",
+          "While the fact is interesting, it may not be as surprising to those familiar with corporate histories."
+        ],
+        "improvement_suggestions": [
+          "Consider rephrasing the question to create a more engaging narrative, such as 'What unexpected product did Nokia start its journey with before becoming a telecom giant?'",
+          "Adding a bit of context about Nokia's evolution could enhance the educational value."
+        ],
+        "verdict": "good",
+        "reasoning": "This question scores well due to its surprising fact about Nokia's origins, which many may not know. It has good universal appeal, as it relates to a globally recognized company. However, the framing is somewhat standard, and while the fact is interesting, it may not elicit a strong 'aha!' moment for everyone. Overall, it is a solid question that could be improved with more creative wording.",
+        "critique_model": "gpt-4o-mini"
+      },
+      "media_url": null,
+      "media_duration_seconds": null,
+      "explanation": null,
+      "embedding": null,
+      "expires_at": null,
+      "freshness_tag": null
+    },
+    {
+      "id": "temp_bb06da40",
+      "question": "Which telecommunications giant originally started as a paper manufacturer?",
+      "type": "text",
+      "possible_answers": null,
+      "correct_answer": "Nokia",
+      "alternative_answers": [],
+      "topic": "Business and Industry",
+      "category": "general",
+      "difficulty": "medium",
+      "tags": [
+        "history",
+        "technology"
+      ],
+      "language_dependent": false,
+      "created_at": "2026-02-17T20:52:01.556750",
+      "created_by": null,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "usage_count": 0,
+      "user_ratings": {},
+      "review_status": "pending_review",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "review_notes": null,
+      "quality_ratings": {
+        "surprise_factor": 9,
+        "universal_appeal": 9,
+        "clever_framing": 9,
+        "educational_value": 9
+      },
+      "generation_metadata": {
+        "model": "gpt-4o",
+        "prompt_version": "v3_fact_first",
+        "temperature": 0.8,
+        "stage": "initial_generation",
+        "pipeline": "fact_first",
+        "scores": {
+          "surprise_factor": 6,
+          "universal_appeal": 7,
+          "clever_framing": 5,
+          "educational_value": 6,
+          "clarity": 8,
+          "factual_accuracy": 9
+        },
+        "overall_score": 6.2,
+        "red_flags": [],
+        "strengths": [
+          "The question is factually accurate, as Nokia did originally start as a paper manufacturer.",
+          "The topic of telecommunications and business is relevant and can engage a wide audience."
+        ],
+        "weaknesses": [
+          "The framing of the question is somewhat standard and lacks creativity, making it less engaging.",
+          "While the fact is interesting, it may not be surprising to those with a basic knowledge of business history."
+        ],
+        "improvement_suggestions": [
+          "Consider rephrasing the question to include a more engaging narrative or context, such as mentioning Nokia's evolution over time.",
+          "Add a hint or an interesting fact about Nokia's history to enhance the educational value and surprise factor."
+        ],
+        "verdict": "acceptable",
+        "reasoning": "The question is clear and factually accurate, but it suffers from a lack of creativity in its framing and a moderate surprise factor. While it does provide some educational value, it does not create a strong 'aha!' moment. Overall, it meets the minimum bar for a pub quiz question but could benefit from more engaging presentation.",
+        "critique_model": "gpt-4o-mini"
+      },
+      "media_url": null,
+      "media_duration_seconds": null,
+      "explanation": null,
+      "embedding": null,
+      "expires_at": null,
+      "freshness_tag": null
+    },
+    {
+      "id": "temp_4c06b036",
+      "question": "Which age group is currently facing the greatest challenges in the job market due to a weak employment economy?",
+      "type": "text",
+      "possible_answers": null,
+      "correct_answer": "16 to 24 year-olds",
+      "alternative_answers": [],
+      "topic": "Economics",
+      "category": "general",
+      "difficulty": "medium",
+      "tags": [
+        "economy",
+        "employment"
+      ],
+      "language_dependent": false,
+      "created_at": "2026-02-17T20:52:01.556788",
+      "created_by": null,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "usage_count": 0,
+      "user_ratings": {},
+      "review_status": "pending_review",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "review_notes": null,
+      "quality_ratings": {
+        "surprise_factor": 7,
+        "universal_appeal": 8,
+        "clever_framing": 7,
+        "educational_value": 9
+      },
+      "generation_metadata": {
+        "model": "gpt-4o",
+        "prompt_version": "v3_fact_first",
+        "temperature": 0.8,
+        "stage": "initial_generation",
+        "pipeline": "fact_first",
+        "scores": {
+          "surprise_factor": 5,
+          "universal_appeal": 6,
+          "clever_framing": 4,
+          "educational_value": 6,
+          "clarity": 8,
+          "factual_accuracy": 9
+        },
+        "overall_score": 5.6,
+        "red_flags": [],
+        "strengths": [
+          "The question addresses a relevant and timely topic, which can engage participants.",
+          "The answer is factually accurate and reflects current economic conditions."
+        ],
+        "weaknesses": [
+          "The framing is quite standard and lacks creativity, making it less engaging.",
+          "The topic may not be universally relatable, as economic challenges can vary significantly by region."
+        ],
+        "improvement_suggestions": [
+          "Reframe the question to include a narrative or context that makes it more engaging, such as a statistic or recent event.",
+          "Consider adding a multiple-choice format to increase engagement and surprise factor."
+        ],
+        "verdict": "acceptable",
+        "reasoning": "This question scores in the acceptable range due to its relevance and factual accuracy, but it suffers from a lack of creativity in framing and a somewhat niche appeal. The topic of job market challenges is important, but the question could be more engaging and surprising. It provides educational value but does not create a strong 'aha!' moment for most participants.",
+        "critique_model": "gpt-4o-mini"
+      },
+      "media_url": null,
+      "media_duration_seconds": null,
+      "explanation": null,
+      "embedding": null,
+      "expires_at": null,
+      "freshness_tag": null
+    },
+    {
+      "id": "temp_94f5ea01",
+      "question": "What profession does Maye Musk, the mother of tech entrepreneur Elon Musk, excel in?",
+      "type": "text",
+      "possible_answers": null,
+      "correct_answer": "Model",
+      "alternative_answers": [],
+      "topic": "Celebrity Families",
+      "category": "general",
+      "difficulty": "medium",
+      "tags": [
+        "celebrities",
+        "fashion"
+      ],
+      "language_dependent": false,
+      "created_at": "2026-02-17T20:52:01.556757",
+      "created_by": null,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "usage_count": 0,
+      "user_ratings": {},
+      "review_status": "pending_review",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "review_notes": null,
+      "quality_ratings": {
+        "surprise_factor": 8,
+        "universal_appeal": 9,
+        "clever_framing": 8,
+        "educational_value": 8
+      },
+      "generation_metadata": {
+        "model": "gpt-4o",
+        "prompt_version": "v3_fact_first",
+        "temperature": 0.8,
+        "stage": "initial_generation",
+        "pipeline": "fact_first",
+        "scores": {
+          "surprise_factor": 5,
+          "universal_appeal": 7,
+          "clever_framing": 4,
+          "educational_value": 5,
+          "clarity": 8,
+          "factual_accuracy": 9
+        },
+        "overall_score": 5.5,
+        "red_flags": [
+          "Boring Format"
+        ],
+        "strengths": [
+          "The question is factually accurate, as Maye Musk is indeed a model.",
+          "The question is clear and unambiguous, making it easy to understand."
+        ],
+        "weaknesses": [
+          "The question format is predictable and lacks creativity.",
+          "The topic may not be universally appealing, as it relies on knowledge of a specific celebrity family."
+        ],
+        "improvement_suggestions": [
+          "Consider rephrasing the question to make it more engaging, perhaps by incorporating a fun fact about Maye Musk.",
+          "Explore a framing that connects her profession to a broader context, such as her impact on the fashion industry or her role in the Musk family's public image."
+        ],
+        "verdict": "acceptable",
+        "reasoning": "This question scores a 5.5, indicating it is marginal and needs revision. While it is factually accurate and clear, the question's format is quite standard and lacks creativity, making it less engaging for quiz participants. The surprise factor is low as many people may already know Maye Musk's profession, and the question doesn't offer a compelling narrative or interesting angle. Overall, it meets the minimum bar but could benefit from a more creative approach.",
+        "critique_model": "gpt-4o-mini"
+      },
+      "media_url": null,
+      "media_duration_seconds": null,
+      "explanation": null,
+      "embedding": null,
+      "expires_at": null,
+      "freshness_tag": null
+    },
+    {
+      "id": "temp_e940944b",
+      "question": "What new challenge are dual nationals facing due to recent changes in UK immigration rules?",
+      "type": "text",
+      "possible_answers": null,
+      "correct_answer": "Scramble for British passports",
+      "alternative_answers": [],
+      "topic": "Current Events",
+      "category": "general",
+      "difficulty": "medium",
+      "tags": [
+        "immigration",
+        "policy"
+      ],
+      "language_dependent": false,
+      "created_at": "2026-02-17T20:52:01.556795",
+      "created_by": null,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "usage_count": 0,
+      "user_ratings": {},
+      "review_status": "pending_review",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "review_notes": null,
+      "quality_ratings": {
+        "surprise_factor": 8,
+        "universal_appeal": 9,
+        "clever_framing": 8,
+        "educational_value": 8
+      },
+      "generation_metadata": {
+        "model": "gpt-4o",
+        "prompt_version": "v3_fact_first",
+        "temperature": 0.8,
+        "stage": "initial_generation",
+        "pipeline": "fact_first",
+        "scores": {
+          "surprise_factor": 5,
+          "universal_appeal": 6,
+          "clever_framing": 4,
+          "educational_value": 6,
+          "clarity": 8,
+          "factual_accuracy": 9
+        },
+        "overall_score": 5.5,
+        "red_flags": [
+          "Boring format (-2 points from Clever Framing)",
+          "Niche reference (-3 points from Universal Appeal)"
+        ],
+        "strengths": [
+          "The question is factually accurate and relevant to current events.",
+          "The clarity of the question is good, making it easy to understand."
+        ],
+        "weaknesses": [
+          "The framing is quite standard and lacks creativity.",
+          "The topic may not be universally appealing, as it pertains specifically to UK immigration rules."
+        ],
+        "improvement_suggestions": [
+          "Reframe the question to make it more engaging, perhaps by adding context or a narrative element.",
+          "Consider broadening the scope of the question to include implications for dual nationals in other countries as well."
+        ],
+        "verdict": "acceptable",
+        "reasoning": "The question is clear and factually accurate, but it suffers from a lack of creativity in framing and a niche focus that may not resonate with a broad audience. While it addresses a relevant and timely topic, the way it is presented is somewhat mundane, leading to a lower overall score. It meets the minimum bar but could be improved significantly for a more engaging quiz experience.",
+        "critique_model": "gpt-4o-mini"
+      },
+      "media_url": null,
+      "media_duration_seconds": null,
+      "explanation": null,
+      "embedding": null,
+      "expires_at": null,
+      "freshness_tag": null
+    }
+  ],
+  "metadata": {
+    "pipeline": "fact_first",
+    "generation_model": "gpt-4o",
+    "critique_model": "gpt-4o-mini",
+    "facts_sourced": 10,
+    "fact_sources": [
+      "Open Trivia Database",
+      "BBC News"
+    ]
+  }
+}

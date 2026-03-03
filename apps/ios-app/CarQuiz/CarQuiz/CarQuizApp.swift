@@ -12,7 +12,7 @@ struct CarQuizApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ContentView(appState: appState)
                 .environmentObject(appState)
                 .onAppear {
                     Task {

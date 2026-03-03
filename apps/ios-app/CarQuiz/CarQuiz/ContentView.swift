@@ -11,13 +11,8 @@ struct ContentView: View {
     @EnvironmentObject var appState: AppState
     @StateObject private var viewModel: QuizViewModel
 
-    init() {
-        // Temporary initialization - will be replaced with proper dependency injection
-        _viewModel = StateObject(wrappedValue: QuizViewModel(
-            networkService: NetworkService(),
-            audioService: AudioService(),
-            persistenceStore: PersistenceStore()
-        ))
+    init(appState: AppState) {
+        _viewModel = StateObject(wrappedValue: appState.makeQuizViewModel())
     }
 
     var body: some View {
@@ -136,6 +131,7 @@ struct ErrorView: View {
 }
 
 #Preview {
-    ContentView()
-        .environmentObject(AppState())
+    let appState = AppState()
+    ContentView(appState: appState)
+        .environmentObject(appState)
 }

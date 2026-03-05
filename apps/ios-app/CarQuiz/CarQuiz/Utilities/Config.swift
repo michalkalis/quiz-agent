@@ -94,6 +94,23 @@ enum Config {
     /// Window for re-record button before it disables (seconds)
     static let rerecordWindowDuration: Int = 5
 
+    // MARK: - ElevenLabs Streaming STT
+
+    /// Feature flag: use ElevenLabs Scribe v2 Realtime for quiz answers instead of Whisper
+    static let useElevenLabsSTT: Bool = true
+
+    /// ElevenLabs Scribe v2 Realtime model ID
+    static let elevenLabsModel: String = "scribe_v2_realtime"
+
+    /// Audio format for ElevenLabs WebSocket (raw PCM, 16kHz, 16-bit, mono)
+    static let elevenLabsAudioFormat: String = "pcm_16000"
+
+    /// Interval for streaming audio chunks to ElevenLabs WebSocket (milliseconds)
+    static let sttStreamingChunkIntervalMs: UInt64 = 250
+
+    /// VAD silence threshold — ElevenLabs commits transcript after this many seconds of silence
+    static let elevenLabsVadSilenceThresholdSecs: Double = 1.5
+
     // MARK: - Debug Settings
 
     /// Enable verbose logging in debug builds

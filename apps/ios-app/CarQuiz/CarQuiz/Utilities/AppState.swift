@@ -15,6 +15,7 @@ final class AppState: ObservableObject {
     let audioService: AudioServiceProtocol
     let persistenceStore: PersistenceStoreProtocol
     let voiceCommandService: VoiceCommandServiceProtocol?
+    let sttService: ElevenLabsSTTServiceProtocol?
 
     init() {
         // Production dependencies
@@ -29,6 +30,13 @@ final class AppState: ObservableObject {
             self.voiceCommandService = nil
         }
 
+        // ElevenLabs streaming STT (controlled by feature flag)
+        if Config.useElevenLabsSTT {
+            self.sttService = ElevenLabsSTTService()
+        } else {
+            self.sttService = nil
+        }
+
         // Setup audio session with default mode
         try? audioService.setupAudioSession(mode: AudioMode.default)
 
@@ -36,6 +44,7 @@ final class AppState: ObservableObject {
             print("🚀 AppState initialized")
             print("📍 API Base URL: \(Config.apiBaseURL)")
             print("🎙️ Voice commands: \(voiceCommandService != nil ? "available" : "unavailable (requires iOS 26+)")")
+            print("🎙️ Streaming STT: \(sttService != nil ? "enabled (ElevenLabs)" : "disabled (using Whisper)")")
         }
     }
 
@@ -44,12 +53,14 @@ final class AppState: ObservableObject {
         networkService: NetworkServiceProtocol,
         audioService: AudioServiceProtocol,
         persistenceStore: PersistenceStoreProtocol,
-        voiceCommandService: VoiceCommandServiceProtocol? = nil
+        voiceCommandService: VoiceCommandServiceProtocol? = nil,
+        sttService: ElevenLabsSTTServiceProtocol? = nil
     ) {
         self.networkService = networkService
         self.audioService = audioService
         self.persistenceStore = persistenceStore
         self.voiceCommandService = voiceCommandService
+        self.sttService = sttService
     }
 
     /// Create a new QuizViewModel with injected dependencies
@@ -58,7 +69,8 @@ final class AppState: ObservableObject {
             networkService: networkService,
             audioService: audioService,
             persistenceStore: persistenceStore,
-            voiceCommandService: voiceCommandService
+            voiceCommandService: voiceCommandService,
+            sttService: sttService
         )
     }
 }

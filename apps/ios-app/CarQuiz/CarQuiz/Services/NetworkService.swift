@@ -16,6 +16,7 @@ protocol NetworkServiceProtocol: Sendable {
     func submitTextInput(sessionId: String, input: String, audio: Bool) async throws -> QuizResponse
     func downloadAudio(from urlString: String) async throws -> Data
     func endSession(sessionId: String) async throws
+    func fetchElevenLabsToken() async throws -> String
 }
 
 /// Thread-safe network service using Swift 6 actor
@@ -347,6 +348,43 @@ actor NetworkService: NetworkServiceProtocol {
         }
     }
 
+    // MARK: - ElevenLabs Token
+
+    func fetchElevenLabsToken() async throws -> String {
+        let endpoint = baseURL.appendingPathComponent("/api/v1/elevenlabs/token")
+
+        var request = URLRequest(url: endpoint)
+        request.httpMethod = "POST"
+        request.timeoutInterval = 10
+
+        if Config.verboseLogging {
+            print("🌐 POST \(endpoint) (ElevenLabs token)")
+        }
+
+        let (data, response) = try await session.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
+            if Config.verboseLogging {
+                print("❌ ElevenLabs token request failed: HTTP \(statusCode)")
+            }
+            throw NetworkError.serverError(statusCode: statusCode, message: "Failed to get ElevenLabs token")
+        }
+
+        struct TokenResponse: Decodable {
+            let token: String
+        }
+
+        let tokenResponse = try JSONDecoder().decode(TokenResponse.self, from: data)
+
+        if Config.verboseLogging {
+            print("✅ ElevenLabs token received")
+        }
+
+        return tokenResponse.token
+    }
+
     // MARK: - Helper Methods
 
     private func decodeQuizResponse(from data: Data) async throws -> QuizResponse {
@@ -475,6 +513,13 @@ final class MockNetworkService: NetworkServiceProtocol {
         if shouldFail {
             throw NetworkError.invalidResponse
         }
+    }
+
+    func fetchElevenLabsToken() async throws -> String {
+        if shouldFail {
+            throw NetworkError.invalidResponse
+        }
+        return "mock-elevenlabs-token"
     }
 }
 #endif

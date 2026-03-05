@@ -85,6 +85,22 @@ struct QuestionView: View {
                 AnswerTimerBadge(seconds: viewModel.answerTimerCountdown)
             }
 
+            // Live transcript from streaming STT
+            if viewModel.isStreamingSTT && !viewModel.liveTranscript.isEmpty {
+                Text(viewModel.liveTranscript)
+                    .font(.system(size: Theme.Typography.sizeMD, weight: .medium))
+                    .foregroundColor(Theme.Colors.textPrimary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, Theme.Spacing.lg)
+                    .padding(.vertical, Theme.Spacing.sm)
+                    .frame(maxWidth: .infinity)
+                    .background(Theme.Colors.bgCard.opacity(0.8))
+                    .cornerRadius(Theme.Radius.lg)
+                    .padding(.horizontal, Theme.Spacing.md)
+                    .transition(.opacity)
+                    .animation(.easeInOut(duration: 0.2), value: viewModel.liveTranscript)
+            }
+
             // Recording status hint
             Text(hintText)
                 .font(.system(size: Theme.Typography.sizeSM, weight: .medium))
@@ -163,6 +179,10 @@ struct QuestionView: View {
 
     private var hintText: String {
         switch viewModel.quizState {
+        case .recording where viewModel.isStreamingSTT && !viewModel.liveTranscript.isEmpty:
+            return "Transcribing..."
+        case .recording where viewModel.isStreamingSTT:
+            return "Listening..."
         case .recording where viewModel.isAutoRecording && viewModel.speechDetectedDuringAutoRecord:
             return "Speaking..."
         case .recording where viewModel.isAutoRecording:
@@ -180,6 +200,10 @@ struct QuestionView: View {
 
     private var hintColor: Color {
         switch viewModel.quizState {
+        case .recording where viewModel.isStreamingSTT && !viewModel.liveTranscript.isEmpty:
+            return Theme.Colors.accentPrimary
+        case .recording where viewModel.isStreamingSTT:
+            return Theme.Colors.accentPrimary
         case .recording where viewModel.isAutoRecording && viewModel.speechDetectedDuringAutoRecord:
             return Theme.Colors.recording
         case .recording where viewModel.isAutoRecording:

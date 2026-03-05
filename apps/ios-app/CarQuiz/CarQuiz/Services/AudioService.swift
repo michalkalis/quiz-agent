@@ -17,6 +17,9 @@ import AVKit
 import Combine
 import Foundation
 
+/// Callback for streaming PCM audio chunks (raw 16kHz 16-bit mono PCM data)
+typealias PCMChunkHandler = @Sendable (Data) -> Void
+
 /// Protocol for audio operations
 @MainActor
 protocol AudioServiceProtocol: Sendable {
@@ -38,6 +41,10 @@ protocol AudioServiceProtocol: Sendable {
     func playOpusAudioFromBase64(_ base64: String) async throws -> TimeInterval
     func stopPlayback() async  // Now async for proper cleanup
     func speakText(_ text: String) async  // Local TTS via AVSpeechSynthesizer
+
+    // Streaming PCM recording (for ElevenLabs STT)
+    func startStreamingRecording(onChunk: @escaping PCMChunkHandler) throws
+    func stopStreamingRecording()
 
     // Device selection
     func refreshAvailableDevices()
@@ -487,6 +494,108 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         return data
     }
 
+    // MARK: - Streaming PCM Recording (AVAudioEngine)
+
+    private var audioEngine: AVAudioEngine?
+
+    /// Start streaming PCM recording via AVAudioEngine.
+    /// Calls `onChunk` with raw 16kHz 16-bit mono PCM data at regular intervals.
+    /// Use `stopStreamingRecording()` to stop.
+    func startStreamingRecording(onChunk: @escaping PCMChunkHandler) throws {
+        let engine = AVAudioEngine()
+        let inputNode = engine.inputNode
+
+        // Target format: 16kHz, 16-bit, mono (matching ElevenLabs pcm_16000)
+        let targetFormat = AVAudioFormat(
+            commonFormat: .pcmFormatInt16,
+            sampleRate: 16000.0,
+            channels: 1,
+            interleaved: true
+        )!
+
+        // Get the hardware input format
+        let hardwareFormat = inputNode.outputFormat(forBus: 0)
+
+        if Config.verboseLogging {
+            print("🎤 Streaming: hardware format: \(hardwareFormat.sampleRate)Hz, \(hardwareFormat.channelCount)ch")
+            print("🎤 Streaming: target format: \(targetFormat.sampleRate)Hz, \(targetFormat.channelCount)ch")
+        }
+
+        // Create a converter from hardware format to target format
+        guard let converter = AVAudioConverter(from: hardwareFormat, to: targetFormat) else {
+            throw AudioError.recordingFailed
+        }
+
+        // Buffer for accumulating PCM data before sending
+        let chunkInterval = Config.sttStreamingChunkIntervalMs
+        let samplesPerChunk = Int(16000.0 * Double(chunkInterval) / 1000.0) // e.g., 4000 samples for 250ms
+
+        // Use nonisolated(unsafe) for the mutable buffer accessed in the tap closure.
+        // Safe because the tap callback is serial (one buffer at a time) and we only
+        // read/reset the accumulated buffer within the same closure.
+        nonisolated(unsafe) var accumulatedData = Data()
+
+        // Install a tap on the input node
+        let bufferSize = AVAudioFrameCount(hardwareFormat.sampleRate * Double(chunkInterval) / 1000.0)
+        inputNode.installTap(onBus: 0, bufferSize: bufferSize, format: hardwareFormat) { buffer, _ in
+            // Convert hardware buffer to 16kHz 16-bit mono
+            let frameCapacity = AVAudioFrameCount(
+                Double(buffer.frameLength) * targetFormat.sampleRate / hardwareFormat.sampleRate
+            )
+            guard let convertedBuffer = AVAudioPCMBuffer(
+                pcmFormat: targetFormat,
+                frameCapacity: frameCapacity
+            ) else { return }
+
+            var error: NSError?
+            let status = converter.convert(to: convertedBuffer, error: &error) { _, outStatus in
+                outStatus.pointee = .haveData
+                return buffer
+            }
+
+            guard status != .error, error == nil else { return }
+
+            // Extract raw PCM bytes
+            if let channelData = convertedBuffer.int16ChannelData {
+                let byteCount = Int(convertedBuffer.frameLength) * MemoryLayout<Int16>.size
+                let data = Data(bytes: channelData[0], count: byteCount)
+                accumulatedData.append(data)
+            }
+
+            // Send chunk when we've accumulated enough samples
+            let targetBytes = samplesPerChunk * MemoryLayout<Int16>.size
+            if accumulatedData.count >= targetBytes {
+                let chunk = accumulatedData.prefix(targetBytes)
+                accumulatedData = accumulatedData.dropFirst(targetBytes).asData
+                onChunk(Data(chunk))
+            }
+        }
+
+        engine.prepare()
+        try engine.start()
+
+        self.audioEngine = engine
+        isRecording = true
+
+        if Config.verboseLogging {
+            print("🎤 Streaming PCM recording started (16kHz, 16-bit, mono)")
+        }
+    }
+
+    /// Stop streaming PCM recording
+    func stopStreamingRecording() {
+        guard let engine = audioEngine else { return }
+
+        engine.inputNode.removeTap(onBus: 0)
+        engine.stop()
+        self.audioEngine = nil
+        isRecording = false
+
+        if Config.verboseLogging {
+            print("🎤 Streaming PCM recording stopped")
+        }
+    }
+
     // MARK: - Playback
 
     func playOpusAudio(_ data: Data) async throws -> TimeInterval {
@@ -826,6 +935,13 @@ enum AudioError: LocalizedError {
     }
 }
 
+// MARK: - Data SubSequence Helper
+
+private extension Data.SubSequence {
+    /// Convert Data.SubSequence back to Data
+    var asData: Data { Data(self) }
+}
+
 // MARK: - Mock for Testing
 
 #if DEBUG
@@ -896,6 +1012,17 @@ final class MockAudioService: ObservableObject, AudioServiceProtocol {
 
     func speakText(_ text: String) async {
         // Mock: no-op, just record that it was called
+    }
+
+    func startStreamingRecording(onChunk: @escaping PCMChunkHandler) throws {
+        if shouldFailRecording {
+            throw AudioError.recordingFailed
+        }
+        isRecording = true
+    }
+
+    func stopStreamingRecording() {
+        isRecording = false
     }
 
     func refreshAvailableDevices() {

@@ -1437,6 +1437,57 @@ async def get_session_feedback_audio(session_id: str, result: str):
         raise HTTPException(status_code=500, detail=f"Failed to generate feedback audio: {str(e)}")
 
 
+# ElevenLabs STT Token
+
+class ElevenLabsTokenResponse(BaseModel):
+    """Response with single-use ElevenLabs token for client-side WebSocket auth."""
+    token: str = Field(description="Single-use token for ElevenLabs WebSocket connection (expires in 15 minutes)")
+
+
+@router.post("/elevenlabs/token", response_model=ElevenLabsTokenResponse)
+async def get_elevenlabs_token():
+    """Generate a single-use ElevenLabs token for realtime STT.
+
+    The iOS client uses this token to connect directly to ElevenLabs
+    Scribe v2 Realtime WebSocket for streaming speech-to-text.
+    The token expires after 15 minutes and is consumed on first use.
+
+    Returns:
+        Single-use token for WebSocket authentication
+    """
+    import httpx
+
+    api_key = os.environ.get("ELEVENLABS_API_KEY")
+    if not api_key:
+        raise HTTPException(
+            status_code=503,
+            detail="ElevenLabs STT not configured (missing ELEVENLABS_API_KEY)"
+        )
+
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "https://api.elevenlabs.io/v1/single-use-token/realtime_scribe",
+                headers={"xi-api-key": api_key},
+                timeout=10.0,
+            )
+            response.raise_for_status()
+            data = response.json()
+
+        return ElevenLabsTokenResponse(token=data["token"])
+
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(
+            status_code=502,
+            detail=f"ElevenLabs API error: {e.response.status_code}"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=502,
+            detail=f"Failed to get ElevenLabs token: {str(e)}"
+        )
+
+
 # Health Check
 
 @router.get("/health")

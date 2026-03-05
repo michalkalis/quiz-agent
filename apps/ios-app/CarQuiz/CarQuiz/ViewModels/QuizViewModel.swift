@@ -178,12 +178,21 @@ final class QuizViewModel: ObservableObject {
     /// Whether speech has been detected during auto-record (for UI hints)
     @Published var speechDetectedDuringAutoRecord: Bool = false
 
+    // MARK: - Streaming STT State
+
+    /// Live transcript from ElevenLabs (updates as user speaks)
+    @Published var liveTranscript: String = ""
+
+    /// Whether streaming STT is active
+    @Published var isStreamingSTT: Bool = false
+
     // MARK: - Dependencies
 
     private let networkService: NetworkServiceProtocol
     private let audioService: AudioServiceProtocol
     private let persistenceStore: PersistenceStoreProtocol
     private let voiceCommandService: VoiceCommandServiceProtocol?
+    private let sttService: ElevenLabsSTTServiceProtocol?
 
     private var cancellables = Set<AnyCancellable>()
 
@@ -202,6 +211,12 @@ final class QuizViewModel: ObservableObject {
     // Silence detection task (monitors speech activity during auto-record)
     private var silenceDetectionTask: Task<Void, Never>?
 
+    // Streaming STT event listener task
+    private var sttEventTask: Task<Void, Never>?
+
+    // Streaming audio chunk sender task
+    private var sttChunkTask: Task<Void, Never>?
+
     // Whether the current recording is a re-record (bypasses all timers)
     private var isRerecording: Bool = false
 
@@ -218,12 +233,14 @@ final class QuizViewModel: ObservableObject {
         networkService: NetworkServiceProtocol,
         audioService: AudioServiceProtocol,
         persistenceStore: PersistenceStoreProtocol,
-        voiceCommandService: VoiceCommandServiceProtocol? = nil
+        voiceCommandService: VoiceCommandServiceProtocol? = nil,
+        sttService: ElevenLabsSTTServiceProtocol? = nil
     ) {
         self.networkService = networkService
         self.audioService = audioService
         self.persistenceStore = persistenceStore
         self.voiceCommandService = voiceCommandService
+        self.sttService = sttService
 
         // Load saved settings
         self.settings = persistenceStore.loadSettings()
@@ -368,26 +385,34 @@ final class QuizViewModel: ObservableObject {
 
     /// Start recording the user's voice answer
     /// Handles audio preparation, state transitions, and error rollback
+    /// Routes to streaming STT (ElevenLabs) or batch M4A (Whisper) based on feature flag
     private func startRecording() async {
         cancelAnswerTimer()
         errorMessage = nil
         quizState = .recording
         voiceCommandService?.setRecordingActive(true)
 
+        // Choose streaming STT or batch M4A based on feature flag
+        if Config.useElevenLabsSTT && sttService != nil {
+            await startStreamingRecording()
+        } else {
+            await startBatchRecording()
+        }
+    }
+
+    /// Start batch M4A recording (original Whisper path)
+    private func startBatchRecording() async {
         do {
             await audioService.prepareForRecording()
             try audioService.startRecording()
 
             if isAutoRecording, let service = voiceCommandService {
-                // Auto-record path: use silence detection to auto-stop
                 speechDetectedDuringAutoRecord = false
                 startSilenceDetection(service: service)
             }
 
-            // Always start the hard safety limit timer
             startAutoStopRecordingTimer()
         } catch {
-            // Rollback to asking state so user can retry
             isAutoRecording = false
             speechDetectedDuringAutoRecord = false
             quizState = .askingQuestion
@@ -397,6 +422,121 @@ final class QuizViewModel: ObservableObject {
                 print("❌ Recording failed to start: \(error)")
             }
         }
+    }
+
+    /// Start streaming recording with ElevenLabs Scribe v2 Realtime STT
+    private func startStreamingRecording() async {
+        guard let sttService else {
+            // Fallback to batch if STT service unavailable
+            await startBatchRecording()
+            return
+        }
+
+        do {
+            // 1. Get single-use token from backend
+            let token = try await networkService.fetchElevenLabsToken()
+
+            // 2. Connect to ElevenLabs WebSocket
+            let languageCode = currentSession?.language ?? settings.language
+            try await sttService.connect(token: token, languageCode: languageCode)
+
+            // 3. Start listening for STT events
+            liveTranscript = ""
+            isStreamingSTT = true
+            startSTTEventListener(sttService: sttService)
+
+            // 4. Start PCM recording and stream chunks to WebSocket
+            await audioService.prepareForRecording()
+            let sttRef = sttService
+            try audioService.startStreamingRecording { pcmData in
+                Task {
+                    try? await sttRef.sendAudioChunk(pcmData)
+                }
+            }
+
+            // 5. Start hard safety limit timer
+            startAutoStopRecordingTimer()
+
+            if Config.verboseLogging {
+                print("🎙️ Streaming STT recording started")
+            }
+
+        } catch {
+            // Fallback to batch recording on any setup failure
+            isStreamingSTT = false
+            liveTranscript = ""
+            await sttService.disconnect()
+
+            if Config.verboseLogging {
+                print("⚠️ Streaming STT setup failed, falling back to batch: \(error)")
+            }
+
+            await startBatchRecording()
+        }
+    }
+
+    /// Listen for STT events and update live transcript / handle committed text
+    private func startSTTEventListener(sttService: ElevenLabsSTTServiceProtocol) {
+        sttEventTask?.cancel()
+        sttEventTask = Task { [weak self] in
+            for await event in sttService.events {
+                guard let self, !Task.isCancelled else { break }
+
+                switch event {
+                case .partialTranscript(let text):
+                    self.liveTranscript = text
+
+                case .committedTranscript(let text):
+                    self.liveTranscript = text
+                    // Auto-stop recording and submit the committed text
+                    await self.handleCommittedTranscript(text)
+                    return
+
+                case .connected:
+                    break // Already handled in startStreamingRecording
+
+                case .disconnected(let error):
+                    if self.isStreamingSTT {
+                        if Config.verboseLogging {
+                            print("⚠️ STT disconnected unexpectedly: \(error?.localizedDescription ?? "unknown")")
+                        }
+                        // If we were mid-recording, fall back gracefully
+                        self.isStreamingSTT = false
+                        self.liveTranscript = ""
+                    }
+                    return
+                }
+            }
+        }
+    }
+
+    /// Handle committed transcript from ElevenLabs VAD
+    private func handleCommittedTranscript(_ text: String) async {
+        guard quizState == .recording else { return }
+
+        // Stop streaming recording
+        cancelAutoStopRecordingTimer()
+        cancelSilenceDetection()
+        voiceCommandService?.setRecordingActive(false)
+        audioService.stopStreamingRecording()
+        isAutoRecording = false
+        speechDetectedDuringAutoRecord = false
+
+        // Disconnect STT WebSocket
+        sttEventTask?.cancel()
+        sttEventTask = nil
+        await sttService?.disconnect()
+        isStreamingSTT = false
+
+        if Config.verboseLogging {
+            print("🎙️ Committed transcript: \(text)")
+        }
+
+        // Show confirmation modal with the transcribed text
+        transcribedAnswer = text
+        showAnswerConfirmation = true
+        // Stay in .recording → switch to a neutral state for the modal
+        quizState = .processing
     }
 
     /// Subscribe to silence events and auto-stop recording when silence threshold reached
@@ -435,15 +575,32 @@ final class QuizViewModel: ObservableObject {
         voiceCommandService?.setRecordingActive(false)
         isAutoRecording = false
         speechDetectedDuringAutoRecord = false
-        do {
-            let data = try await audioService.stopRecording()
-            await submitVoiceAnswer(audioData: data)
-        } catch {
-            errorMessage = "Recording failed: \(error.localizedDescription)"
-            quizState = .askingQuestion
 
-            if Config.verboseLogging {
-                print("❌ Recording stop failed: \(error)")
+        if isStreamingSTT {
+            // Streaming path: commit and let the event listener handle the response
+            do {
+                try await sttService?.commitAndClose()
+                // The STT event listener will call handleCommittedTranscript
+            } catch {
+                // Cleanup and fallback
+                isStreamingSTT = false
+                audioService.stopStreamingRecording()
+                await sttService?.disconnect()
+                errorMessage = "Transcription failed: \(error.localizedDescription)"
+                quizState = .askingQuestion
+            }
+        } else {
+            // Batch path: stop M4A recording and upload
+            do {
+                let data = try await audioService.stopRecording()
+                await submitVoiceAnswer(audioData: data)
+            } catch {
+                errorMessage = "Recording failed: \(error.localizedDescription)"
+                quizState = .askingQuestion
+
+                if Config.verboseLogging {
+                    print("❌ Recording stop failed: \(error)")
+                }
             }
         }
     }
@@ -589,10 +746,18 @@ final class QuizViewModel: ObservableObject {
 
     /// Confirm the transcribed answer and proceed to show result
     func confirmAnswer() async {
-        guard let response = pendingResponse else { return }
         showAnswerConfirmation = false
-        pendingResponse = nil
-        await handleQuizResponse(response)
+
+        // If we have a pending Whisper response, use it directly
+        if let response = pendingResponse {
+            pendingResponse = nil
+            await handleQuizResponse(response)
+            return
+        }
+
+        // Streaming STT path: submit the transcribed text via /sessions/{id}/input
+        guard !transcribedAnswer.isEmpty else { return }
+        await resubmitAnswer(transcribedAnswer)
     }
 
     /// Defense-in-depth cleanup if the answer confirmation sheet is dismissed
@@ -621,16 +786,32 @@ final class QuizViewModel: ObservableObject {
         cancelAnswerTimer()
         cancelAutoStopRecordingTimer()
         cancelSilenceDetection()
+        cleanupStreamingSTT()
         isAutoRecording = false
         speechDetectedDuringAutoRecord = false
         showAnswerConfirmation = false
         pendingResponse = nil
         transcribedAnswer = ""
+        liveTranscript = ""
         quizState = .askingQuestion
         errorMessage = nil
 
         if Config.verboseLogging {
             print("🚫 Voice submission cancelled by user")
+        }
+    }
+
+    /// Clean up streaming STT resources
+    private func cleanupStreamingSTT() {
+        sttEventTask?.cancel()
+        sttEventTask = nil
+        sttChunkTask?.cancel()
+        sttChunkTask = nil
+        if isStreamingSTT {
+            audioService.stopStreamingRecording()
+            Task { await sttService?.disconnect() }
+            isStreamingSTT = false
+            liveTranscript = ""
         }
     }
 
@@ -1286,8 +1467,15 @@ final class QuizViewModel: ObservableObject {
         autoStopRecordingTask = nil
         silenceDetectionTask?.cancel()
         silenceDetectionTask = nil
+        sttEventTask?.cancel()
+        sttEventTask = nil
+        sttChunkTask?.cancel()
+        sttChunkTask = nil
         bargeInTask?.cancel()
         bargeInTask = nil
+
+        // Clean up streaming STT
+        cleanupStreamingSTT()
 
         // Stop voice commands
         stopVoiceCommands()
@@ -1315,6 +1503,8 @@ final class QuizViewModel: ObservableObject {
         isRerecording = false
         isAutoRecording = false
         speechDetectedDuringAutoRecord = false
+        isStreamingSTT = false
+        liveTranscript = ""
         pendingResponse = nil
         transcribedAnswer = ""
         showAnswerConfirmation = false

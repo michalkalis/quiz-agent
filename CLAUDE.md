@@ -7,167 +7,53 @@ AI-powered quiz platform with voice-based interaction. Designed for hands-free t
 ```
 quiz-agent/
 ├── apps/
-│   ├── quiz-agent/          # FastAPI backend (Python)
-│   ├── question-generator/  # Question generation service (Python)
-│   ├── web-ui/             # Web interface (Next.js/React)
-│   └── ios-app/            # iOS app (Swift 6, SwiftUI) - IN PROGRESS
+│   ├── quiz-agent/          # FastAPI backend (Python 3.11+, ChromaDB, OpenAI)
+│   ├── question-generator/  # Question generation service (Python 3.11+)
+│   ├── web-ui/              # Web interface (Next.js, React, TailwindCSS)
+│   └── ios-app/             # iOS app (Swift 6, SwiftUI, iOS 18+) — IN PROGRESS
 ├── packages/
-│   └── shared/             # Shared Python models and utilities
-└── course-examples/        # Course materials and examples
+│   └── shared/              # Shared Python models (Question, QuizSession, Participant)
+├── docs/
+│   ├── product/             # PRDs, user stories
+│   └── research/            # Domain research, competitive analysis, UI reviews
+└── course-examples/         # Course materials
 ```
 
-## Apps Overview
+## Architecture
 
-### Quiz Agent Backend (apps/quiz-agent/)
-FastAPI REST API providing:
-- Session management (in-memory with TTL)
-- Voice transcription (Whisper API)
-- AI-powered answer evaluation (GPT-4)
-- Text-to-speech audio generation (OpenAI TTS)
-- RAG-based question retrieval (ChromaDB)
+- **Backend:** FastAPI + in-memory sessions + ChromaDB (semantic search) + SQLite (ratings)
+- **AI:** OpenAI for transcription (Whisper), evaluation (GPT-4), TTS
+- **iOS:** Native SwiftUI with MVVM + Service Layer, voice-first for driving
+- **API contract:** OpenAPI spec as single source of truth (see `.claude/rules/shared.md`)
 
-**Tech:** Python 3.11+, FastAPI, ChromaDB, OpenAI API
+## Quick Reference
 
-### Question Generator (apps/question-generator/)
-Admin tool for generating and managing quiz questions.
+| Task | Command |
+|------|---------|
+| Start backend | `cd apps/quiz-agent && uvicorn app.main:app --reload --port 8002` |
+| Start question-gen | `cd apps/question-generator && uvicorn app.main:app --reload --port 8003` |
+| Backend tests | `cd apps/quiz-agent && pytest tests/ -v` |
+| Open iOS project | `open apps/ios-app/CarQuiz/CarQuiz.xcodeproj` |
+| Build iOS (Local) | `cd apps/ios-app/CarQuiz && xcodebuild -scheme CarQuiz-Local -destination 'platform=iOS Simulator,name=iPhone 17 Pro'` |
+| iOS tests | `cd apps/ios-app/CarQuiz && xcodebuild test -scheme CarQuiz-Local -destination 'platform=iOS Simulator,name=iPhone 17 Pro'` |
+| Install deps | `uv pip install -e apps/quiz-agent && uv pip install -e packages/shared` |
 
-**Tech:** Python 3.11+, FastAPI, ChromaDB
+## iOS Schemes
 
-### Web UI (apps/web-ui/)
-Web-based interface for quiz management and question review.
+| Scheme | API URL |
+|--------|---------|
+| CarQuiz-Local | `http://localhost:8002` |
+| CarQuiz-Prod | `https://quiz-agent-api.fly.dev` |
 
-**Tech:** Next.js, React, TailwindCSS
+Models must be Codable and match backend Pydantic models. See `.claude/rules/ios.md` for full iOS guidelines.
 
-### iOS App (apps/ios-app/) - **IN PROGRESS**
+## Production
 
-Native iOS application for voice-based trivia quizzes designed for hands-free use while driving.
+- **URL:** https://quiz-agent-api.fly.dev (Fly.io, 3GB persistent volume)
+- **Deploy:** `fly deploy` from `apps/quiz-agent/`
 
-**Tech:** iOS 18.0+, Swift 6.0, SwiftUI, MVVM with Service Layer
+## Rules
 
-**Key Features:**
-- Voice recording and submission with background audio support
-- Text-to-speech question playback
-- Session persistence via UserDefaults
-- No authentication required (MVP)
-
-**Quick Start:**
-```bash
-open apps/ios-app/CarQuiz/CarQuiz.xcodeproj
-# Select scheme: CarQuiz-Local (localhost) or CarQuiz-Prod (Fly.io)
-# Then Cmd+R to build and run
-```
-
-**Environment Management:**
-The iOS app supports multiple environments via xcconfig files and Xcode schemes:
-- **CarQuiz-Local** → http://localhost:8002 (local development)
-- **CarQuiz-Prod** → https://quiz-agent-api.fly.dev (production)
-
-See `apps/ios-app/CarQuiz/README_ENVIRONMENTS.md` for details on the environment system.
-
-**Important:** Models must be Codable and match backend Pydantic models. See @.claude/rules/ios.md for detailed development guidelines.
-
-## Shared Packages
-
-### packages/shared/
-Common Python models and utilities shared across backend services:
-- `quiz_shared.models.session` - QuizSession, Participant
-- `quiz_shared.models.question` - Question model
-- `quiz_shared.models.participant` - Participant model
-
-## Getting Started
-
-Each app has its own README with detailed setup instructions. See:
-- `apps/quiz-agent/README.md` - Backend API
-- `apps/question-generator/README.md` - Question generator
-- `apps/web-ui/README.md` - Web interface
-- `apps/ios-app/README.md` - iOS app (to be created)
-
-## Development Workflow
-
-This is a **monolithic repository (monorepo)** approach, providing:
-- **API Contract Management:** OpenAPI spec as single source of truth
-- **Atomic Commits:** Update backend + iOS in single PR to prevent breakage
-- **Unified Version Control:** All apps versioned together
-- **Shared Dependencies:** Python packages in `packages/shared/`
-- **Cross-App Development:** Easy visibility into how services interact
-
-## Architecture Philosophy
-
-- **Backend:** FastAPI with in-memory session management (simple, fast, scalable)
-- **Frontend:** Client-agnostic API design (works with iOS, web, terminal, TV apps)
-- **AI Integration:** OpenAI for transcription, evaluation, and TTS
-- **Storage:** ChromaDB for semantic question search, SQLite for ratings
-- **iOS:** Native SwiftUI with MVVM (no over-engineering, focus on simplicity)
-
-## API Contracts Between Backend & iOS
-
-**Critical:** The iOS app and web UI consume the FastAPI backend. Maintain API contract integrity:
-
-### OpenAPI-Driven Development
-- Backend FastAPI auto-generates OpenAPI spec at `/docs` and `/openapi.json`
-- iOS uses Swift OpenAPI Generator (build-time code generation)
-- Web UI uses TypeScript generator (when implemented)
-- Single source of truth: OpenAPI spec, not manual model synchronization
-
-### When Making API Changes
-1. Update Pydantic models in `apps/quiz-agent/` or `packages/shared/`
-2. Verify OpenAPI spec updated: `curl http://localhost:8002/openapi.json`
-3. Test endpoint manually via `/docs`
-4. **Verify iOS still builds** (models must match Codable structs)
-5. Prefer atomic commits: update backend + iOS in same PR
-
-### Breaking Changes
-- Use API versioning (`/api/v2/`) for breaking changes
-- Add deprecation warnings before removing endpoints
-- Update all clients atomically when possible
-
-## Common Development Commands
-
-### Backend
-```bash
-# Start backend API
-cd apps/quiz-agent && uvicorn app.main:app --reload --port 8002
-
-# Start question generator
-cd apps/question-generator && uvicorn app.main:app --reload --port 8003
-
-# Run tests
-cd apps/quiz-agent && pytest tests/ -v
-
-# Install dependencies
-uv pip install -e apps/quiz-agent
-uv pip install -e packages/shared
-```
-
-### iOS
-```bash
-# Open in Xcode
-open apps/ios-app/CarQuiz/CarQuiz.xcodeproj
-
-# Build from command line (Local environment)
-cd apps/ios-app/CarQuiz && xcodebuild -scheme CarQuiz-Local -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
-
-# Build Production environment
-cd apps/ios-app/CarQuiz && xcodebuild -scheme CarQuiz-Prod -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
-
-# Run tests
-cd apps/ios-app/CarQuiz && xcodebuild test -scheme CarQuiz-Local -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
-```
-
-### Cross-Platform
-```bash
-# Download OpenAPI spec for iOS client generation
-curl http://localhost:8002/openapi.json > apps/ios-app/openapi.yaml
-```
-
-## Deployment
-
-**Production API:**
-- URL: https://quiz-agent-api.fly.dev
-- Features: TTS with Opus audio, 3-tier caching, iOS-ready endpoints
-- Hosting: Fly.io with persistent volumes (3GB)
-- Estimated cost: ~$110/mo at 100 daily users
-
-## License
-
-MIT
+Detailed development workflow, API contracts, testing, and deployment standards are in:
+- `.claude/rules/shared.md` — Git workflow, API contracts, testing, security
+- `.claude/rules/ios.md` — iOS-specific patterns, build commands, model mapping

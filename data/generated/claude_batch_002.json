@@ -5,11 +5,21 @@
       "type": "text",
       "correct_answer": "Sticky rice",
       "possible_answers": null,
-      "alternative_answers": ["sticky rice", "glutinous rice", "rice", "rice flour"],
-      "topic": "Arts",
+      "alternative_answers": [
+        "sticky rice",
+        "glutinous rice",
+        "rice",
+        "rice flour"
+      ],
+      "topic": "Art",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["architecture", "china", "building materials", "food"],
+      "tags": [
+        "architecture",
+        "china",
+        "building materials",
+        "food"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": null,
@@ -44,12 +54,18 @@
       "type": "text",
       "correct_answer": "312211",
       "possible_answers": null,
-      "alternative_answers": ["312211"],
+      "alternative_answers": [
+        "312211"
+      ],
       "explanation": "This is the 'look-and-say' sequence. Each term describes the previous one: 1 is 'one 1' → 11; 11 is 'two 1s' → 21; 21 is 'one 2, one 1' → 1211; and so on. So 111221 is 'three 1s, two 2s, one 1' → 312211.",
       "topic": "Logic",
       "category": "adults",
       "difficulty": "hard",
-      "tags": ["number-sequence", "pattern recognition", "look-and-say"],
+      "tags": [
+        "number-sequence",
+        "pattern recognition",
+        "look-and-say"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": null,
@@ -84,11 +100,23 @@
       "type": "text",
       "correct_answer": "Sea snails",
       "possible_answers": null,
-      "alternative_answers": ["sea snails", "murex snails", "murex", "snails", "bolinus brandaris", "murex brandaris"],
-      "topic": "Arts",
+      "alternative_answers": [
+        "sea snails",
+        "murex snails",
+        "murex",
+        "snails",
+        "bolinus brandaris",
+        "murex brandaris"
+      ],
+      "topic": "Art",
       "category": "adults",
       "difficulty": "hard",
-      "tags": ["colour", "dye", "ancient history", "marine biology"],
+      "tags": [
+        "colour",
+        "dye",
+        "ancient history",
+        "marine biology"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": null,
@@ -123,11 +151,20 @@
       "type": "text",
       "correct_answer": "Modern pentathlon",
       "possible_answers": null,
-      "alternative_answers": ["modern pentathlon", "pentathlon", "the modern pentathlon"],
+      "alternative_answers": [
+        "modern pentathlon",
+        "pentathlon",
+        "the modern pentathlon"
+      ],
       "topic": "Sports",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["olympics", "multi-sport", "fencing", "horse riding"],
+      "tags": [
+        "olympics",
+        "multi-sport",
+        "fencing",
+        "horse riding"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": null,
@@ -162,11 +199,25 @@
       "type": "text",
       "correct_answer": "Shiny copper brown",
       "possible_answers": null,
-      "alternative_answers": ["copper", "brown", "copper brown", "shiny copper", "reddish brown", "copper colored", "copper coloured", "like a penny"],
-      "topic": "Arts",
+      "alternative_answers": [
+        "copper",
+        "brown",
+        "copper brown",
+        "shiny copper",
+        "reddish brown",
+        "copper colored",
+        "copper coloured",
+        "like a penny"
+      ],
+      "topic": "Art",
       "category": "adults",
       "difficulty": "easy",
-      "tags": ["architecture", "landmarks", "chemistry", "oxidation"],
+      "tags": [
+        "architecture",
+        "landmarks",
+        "chemistry",
+        "oxidation"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": null,
@@ -201,12 +252,22 @@
       "type": "text",
       "correct_answer": "She listens to audiobooks",
       "possible_answers": null,
-      "alternative_answers": ["audiobooks", "she listens to audiobooks", "audio books", "she uses audiobooks", "listens to them"],
+      "alternative_answers": [
+        "audiobooks",
+        "she listens to audiobooks",
+        "audio books",
+        "she uses audiobooks",
+        "listens to them"
+      ],
       "explanation": "The word 'reads' is used loosely — she consumes books by listening to audiobooks, not by reading physical pages.",
       "topic": "Logic",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["lateral-thinking", "wordplay", "books"],
+      "tags": [
+        "lateral-thinking",
+        "wordplay",
+        "books"
+      ],
       "language_dependent": true,
       "source": "generated",
       "source_url": null,
@@ -241,11 +302,24 @@
       "type": "text",
       "correct_answer": "Forced labour",
       "possible_answers": null,
-      "alternative_answers": ["forced labour", "forced labor", "hard work", "drudgery", "compulsory work", "serfdom", "servitude"],
+      "alternative_answers": [
+        "forced labour",
+        "forced labor",
+        "hard work",
+        "drudgery",
+        "compulsory work",
+        "serfdom",
+        "servitude"
+      ],
       "topic": "Literature",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["words", "etymology", "czech", "science fiction"],
+      "tags": [
+        "words",
+        "etymology",
+        "czech",
+        "science fiction"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": null,
@@ -280,12 +354,23 @@
       "type": "text",
       "correct_answer": "The boxers are women",
       "possible_answers": null,
-      "alternative_answers": ["the boxers are women", "they are women", "women's boxing", "they're women", "female boxers", "it's a women's match"],
+      "alternative_answers": [
+        "the boxers are women",
+        "they are women",
+        "women's boxing",
+        "they're women",
+        "female boxers",
+        "it's a women's match"
+      ],
       "explanation": "The question says 'no man threw a punch' — not 'no person threw a punch.' The boxers are women.",
       "topic": "Sports",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["lateral-thinking", "boxing", "gender assumptions"],
+      "tags": [
+        "lateral-thinking",
+        "boxing",
+        "gender assumptions"
+      ],
       "language_dependent": true,
       "source": "generated",
       "source_url": null,
@@ -320,11 +405,20 @@
       "type": "text",
       "correct_answer": "Lapis lazuli",
       "possible_answers": null,
-      "alternative_answers": ["lapis lazuli", "lapis", "ultramarine"],
-      "topic": "Arts",
+      "alternative_answers": [
+        "lapis lazuli",
+        "lapis",
+        "ultramarine"
+      ],
+      "topic": "Art",
       "category": "adults",
       "difficulty": "hard",
-      "tags": ["art history", "pigment", "renaissance", "minerals"],
+      "tags": [
+        "art history",
+        "pigment",
+        "renaissance",
+        "minerals"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": null,
@@ -359,12 +453,19 @@
       "type": "text",
       "correct_answer": "Machiavellian",
       "possible_answers": null,
-      "alternative_answers": ["machiavellian"],
+      "alternative_answers": [
+        "machiavellian"
+      ],
       "explanation": "Utopian comes from Thomas More's fictional island 'Utopia', quixotic from Don Quixote, and lilliputian from the tiny people of Lilliput in Gulliver's Travels. Machiavellian comes from Niccolò Machiavelli — a real historical person, not a fictional character.",
       "topic": "Literature",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["odd-one-out", "etymology", "vocabulary", "literature"],
+      "tags": [
+        "odd-one-out",
+        "etymology",
+        "vocabulary",
+        "literature"
+      ],
       "language_dependent": true,
       "source": "generated",
       "source_url": null,
@@ -399,11 +500,18 @@
       "type": "text",
       "correct_answer": "Olive oil",
       "possible_answers": null,
-      "alternative_answers": ["olive oil", "oil"],
+      "alternative_answers": [
+        "olive oil",
+        "oil"
+      ],
       "topic": "Sports",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["ancient olympics", "ancient greece", "sports history"],
+      "tags": [
+        "ancient olympics",
+        "ancient greece",
+        "sports history"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": null,
@@ -438,11 +546,19 @@
       "type": "text",
       "correct_answer": "Nerd",
       "possible_answers": null,
-      "alternative_answers": ["nerd", "a nerd"],
+      "alternative_answers": [
+        "nerd",
+        "a nerd"
+      ],
       "topic": "Literature",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["words", "etymology", "dr seuss", "pop culture"],
+      "tags": [
+        "words",
+        "etymology",
+        "dr seuss",
+        "pop culture"
+      ],
       "language_dependent": true,
       "source": "generated",
       "source_url": null,

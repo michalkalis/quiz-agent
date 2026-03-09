@@ -523,5 +523,7 @@ def _dict_to_question(data: Dict[str, Any], source: str = "imported") -> Questio
         difficulty=data.get("difficulty", "medium"),
         tags=data.get("tags", []),
         language_dependent=data.get("language_dependent", False),
+        media_url=data.get("media_url"),
+        image_subtype=data.get("image_subtype"),
         source=source
     )

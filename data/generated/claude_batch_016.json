@@ -1,0 +1,612 @@
+{
+  "questions": [
+    {
+      "question": "Most people would guess the best-selling novel of all time is a modern blockbuster. In fact, it's a Victorian-era tale of London and Paris during the French Revolution, with over 200 million copies sold. What is it?",
+      "type": "text",
+      "correct_answer": "A Tale of Two Cities",
+      "possible_answers": null,
+      "alternative_answers": ["tale of two cities", "a tale of 2 cities", "Dickens A Tale of Two Cities"],
+      "topic": "Literature",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["novels", "best-sellers", "Charles Dickens", "Victorian literature"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Counter-intuitive Truth",
+          "why_interesting": "People assume modern mega-sellers (Harry Potter, Lord of the Rings) dominate, but a 160-year-old Dickens novel holds the record",
+          "universal_appeal": "The French Revolution, London, and Paris are globally known settings; Dickens is internationally recognised",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.8,
+          "reasoning": "The misdirection toward modern novels makes the Victorian-era answer genuinely surprising. Clues in the question (London, Paris, French Revolution) give an engagement path."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "Here is a strange number sequence: 1, 11, 21, 1211, 111221. Each term describes the previous one out loud. What comes next?",
+      "type": "text",
+      "correct_answer": "312211",
+      "possible_answers": null,
+      "alternative_answers": ["three-one-two-two-one-one"],
+      "explanation": "This is the 'look-and-say' sequence. Each term is a verbal description of the digits in the previous term: '1' is read as 'one 1' = 11; '11' is 'two 1s' = 21; '21' is 'one 2, one 1' = 1211; '1211' is 'one 1, one 2, two 1s' = 111221; '111221' is 'three 1s, two 2s, one 1' = 312211.",
+      "topic": "Logic",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["number-sequence", "look-and-say", "pattern-recognition", "verbal-description"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Number Sequence",
+          "why_interesting": "The look-and-say sequence is one of the most elegant self-referential patterns in mathematics, where numbers describe themselves. The 'aha' moment when you realise each term narrates the previous one is deeply satisfying.",
+          "universal_appeal": "Numbers are universal. The concept of describing digits works identically across all languages and cultures.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 8,
+          "factual_accuracy": 10,
+          "overall_score": 9.0,
+          "reasoning": "The hint 'describes the previous one out loud' is crucial for making this solvable. Without it, the sequence looks random. With it, the pattern clicks beautifully. Hard but fair."
+        },
+        "ai_score": 9.0
+      }
+    },
+    {
+      "question": "Arthur Conan Doyle grew so tired of Sherlock Holmes that he killed the detective off in a story, sending him plunging over Reichenbach Falls. The public backlash was enormous — 20,000 magazine subscribers cancelled in protest. What did Conan Doyle eventually have to do?",
+      "type": "text",
+      "correct_answer": "Bring Sherlock Holmes back to life",
+      "possible_answers": null,
+      "alternative_answers": ["resurrect Holmes", "bring him back", "revive Holmes", "write Holmes back to life", "bring Holmes back from the dead"],
+      "topic": "Literature",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["Sherlock Holmes", "Arthur Conan Doyle", "literary history", "fan backlash"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Historical Quirk",
+          "why_interesting": "The idea that an author hated his own most famous creation so much he killed him off — and that public pressure forced a resurrection — is a delightful literary drama",
+          "universal_appeal": "Sherlock Holmes is globally iconic. The creator-vs-creation tension is universally relatable.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.8,
+          "reasoning": "Strong narrative question. The Reichenbach Falls detail and 20,000 cancellations make it vivid. The answer is deducible from the setup: obviously the public won."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "Two fathers and two sons sit down for breakfast. They eat exactly three eggs, and each person has exactly one egg. No eggs are shared or left over. How is this possible?",
+      "type": "text",
+      "correct_answer": "They are three people: a grandfather, his son, and his grandson",
+      "possible_answers": null,
+      "alternative_answers": ["three generations", "grandfather father and son", "there are only three people", "one is both a father and a son", "grandpa dad and kid"],
+      "explanation": "There are only three people at the table: a grandfather, a father, and a son. The grandfather and the father are the 'two fathers,' and the father and the son are the 'two sons.' The father is counted in both groups.",
+      "topic": "Logic",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": ["lateral-thinking", "word-puzzle", "family", "counting"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Lateral Thinking Puzzle",
+          "why_interesting": "The puzzle exploits the assumption that 'two fathers and two sons' means four people. The elegant resolution that one person fills two roles creates a satisfying aha moment.",
+          "universal_appeal": "Family relationships are universal across all cultures. No specialized knowledge required.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 10,
+          "clever_framing": 9,
+          "educational_value": 8,
+          "clarity": 9,
+          "factual_accuracy": 10,
+          "overall_score": 9.0,
+          "reasoning": "Classic lateral thinking with a clean resolution. The breakfast framing makes it concrete and natural. Easy enough for most adults to work through but still produces an aha moment."
+        },
+        "ai_score": 9.0
+      }
+    },
+    {
+      "question": "Agatha Christie is the best-selling fiction writer in history. Her detective novels have been translated into more languages than any other individual author's works — closer to 50 languages, 100 languages, or over 100 languages?",
+      "type": "text",
+      "correct_answer": "Over 100 languages",
+      "possible_answers": null,
+      "alternative_answers": ["more than 100", "over a hundred", "103 languages", "about 100"],
+      "topic": "Literature",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": ["Agatha Christie", "translations", "publishing", "world records"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Estimation Challenge",
+          "why_interesting": "The sheer scale of Christie's global reach surprises people who think of her as a 'cozy English mystery writer.' Over 100 languages is staggering.",
+          "universal_appeal": "Agatha Christie is recognised worldwide. Translation count is a universally understandable metric.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.5,
+          "reasoning": "Solid estimation challenge. The three options span a reasonable range and the correct answer (over 100) is the most extreme, which creates a satisfying surprise. Players can reason through it."
+        },
+        "ai_score": 8.5
+      }
+    },
+    {
+      "question": "Four of these numbers share a hidden mathematical property. One is the impostor. Which doesn't belong: 49, 64, 81, 95, 121?",
+      "type": "text",
+      "correct_answer": "95",
+      "possible_answers": null,
+      "alternative_answers": ["ninety-five", "ninety five"],
+      "explanation": "49 (7x7), 64 (8x8), 81 (9x9), and 121 (11x11) are all perfect squares. 95 is not a perfect square — it falls between 81 (9x9) and 100 (10x10).",
+      "topic": "Logic",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["odd-one-out", "perfect-squares", "number-properties", "pattern-recognition"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Odd One Out",
+          "why_interesting": "The numbers are chosen so the perfect square property isn't immediately obvious — 95 looks like it could fit (it's in the right range) and 64 might seem suspicious (it's also a cube). But the criterion is unambiguous.",
+          "universal_appeal": "Numbers and multiplication are universal. No cultural knowledge required.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 7,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "clarity": 10,
+          "factual_accuracy": 10,
+          "overall_score": 8.7,
+          "reasoning": "Clean odd-one-out with an unambiguous answer. Player can test each number by thinking of square roots. Skipping 10x10=100 to jump to 11x11=121 adds a small extra challenge."
+        },
+        "ai_score": 8.7
+      }
+    },
+    {
+      "question": "You have 8 coins that look identical, but one is slightly heavier than the others. Using a traditional balance scale, what is the minimum number of weighings guaranteed to find the heavy coin?",
+      "type": "text",
+      "correct_answer": "2",
+      "possible_answers": null,
+      "alternative_answers": ["two", "two weighings"],
+      "explanation": "Divide the 8 coins into three groups: 3, 3, and 2. Weigh the two groups of 3 against each other. If one side is heavier, the heavy coin is in that group of 3 — weigh any two of those three against each other to find it. If the groups of 3 balance, the heavy coin is one of the remaining 2 — one weighing identifies it. Either way: 2 weighings.",
+      "topic": "Logic",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["balance-scale", "optimization", "deduction", "weighing-puzzle"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Process Revelation",
+          "why_interesting": "Most people's intuition says 3 or 4 weighings. The elegant solution — dividing into thirds rather than halves — reveals a beautiful principle about information theory and ternary search.",
+          "universal_appeal": "Coins and balance scales are universally understood. The puzzle requires pure logic, no cultural knowledge.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 10,
+          "overall_score": 8.8,
+          "reasoning": "The answer '2' is surprising — most people expect more. The solution strategy (divide into thirds) teaches a general principle. Clear and unambiguous with a single correct answer."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "Ian Fleming chose the name for his fictional super-spy specifically because he wanted the dullest, most ordinary name imaginable. He borrowed it from a real person — a man whose actual profession could not be further from espionage. What did the real James Bond do for a living?",
+      "type": "text",
+      "correct_answer": "He was an ornithologist",
+      "possible_answers": null,
+      "alternative_answers": ["ornithologist", "bird expert", "bird scientist", "birdwatcher", "he studied birds", "ornithology"],
+      "topic": "Literature",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["James Bond", "Ian Fleming", "character names", "literary origins"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Surprising Connection",
+          "why_interesting": "The world's most glamorous fictional spy is named after a bird expert. The contrast between suave espionage and quiet birdwatching is comedy gold.",
+          "universal_appeal": "James Bond is one of the most globally recognised fictional characters. The irony works across all cultures.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 8,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.8,
+          "reasoning": "The spy-vs-birdwatcher contrast is inherently funny and memorable. The 'dullest name' framing gives context for why Fleming chose it. Players can't really deduce the answer but the reveal is delightful."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "What comes next in this sequence: 2, 6, 12, 20, 30, 42, ...?",
+      "type": "text",
+      "correct_answer": "56",
+      "possible_answers": null,
+      "alternative_answers": ["fifty-six", "fifty six"],
+      "explanation": "These are pronic numbers (oblong numbers): each term equals n times (n+1). So: 1x2=2, 2x3=6, 3x4=12, 4x5=20, 5x6=30, 6x7=42, 7x8=56. Alternatively, the differences between consecutive terms are 4, 6, 8, 10, 12 — increasing by 2 each time — so the next difference is 14, giving 42+14=56.",
+      "topic": "Logic",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["number-sequence", "pronic-numbers", "pattern-recognition", "arithmetic"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Number Sequence",
+          "why_interesting": "Pronic numbers have two elegant explanations: n(n+1) products OR second differences constant at 2. Either path leads to the same answer, making it satisfying to solve.",
+          "universal_appeal": "Pure arithmetic, universally accessible. No cultural knowledge required.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "clarity": 9,
+          "factual_accuracy": 10,
+          "overall_score": 8.7,
+          "reasoning": "Multiple valid solution paths make this rewarding. The pattern is discoverable but not trivial. The sequence has exactly one valid continuation."
+        },
+        "ai_score": 8.7
+      }
+    },
+    {
+      "question": "In a room of just 23 people, what is the probability that at least two of them share a birthday — closer to 10%, 50%, or 90%?",
+      "type": "text",
+      "correct_answer": "About 50%",
+      "possible_answers": null,
+      "alternative_answers": ["50%", "fifty percent", "50 percent", "around 50%", "approximately 50%"],
+      "explanation": "This is the famous Birthday Paradox. With 23 people, the probability of a shared birthday is about 50.7%. With 70 people it rises to 99.9%. The key insight is that you're comparing all possible pairs — with 23 people there are 253 pairs, far more than people assume.",
+      "topic": "Logic",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["birthday-paradox", "probability", "estimation", "counter-intuitive"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Estimation Challenge",
+          "why_interesting": "The Birthday Paradox is one of the most famous counter-intuitive results in probability. Most people guess around 10% — the actual answer of 50% shocks people every time.",
+          "universal_appeal": "Birthdays and probability are universal concepts. This result is taught worldwide and surprises people across all cultures.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 10,
+          "clever_framing": 8,
+          "educational_value": 10,
+          "clarity": 9,
+          "factual_accuracy": 10,
+          "overall_score": 9.3,
+          "reasoning": "One of the most powerful counter-intuitive results in mathematics, presented as an estimation challenge. Players strongly lean toward 10%, making the 50% reveal genuinely shocking. Highly educational."
+        },
+        "ai_score": 9.3
+      }
+    },
+    {
+      "question": "Dr. Seuss wrote Green Eggs and Ham to settle a bet with his editor. The challenge: write an entire children's book using no more than a certain number of different words. How many was the limit — 50, 100, or 200?",
+      "type": "text",
+      "correct_answer": "50",
+      "possible_answers": null,
+      "alternative_answers": ["fifty", "50 words", "fifty words"],
+      "topic": "Literature",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["Dr. Seuss", "children's literature", "writing constraints", "literary bets"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Scale Surprise / Origin Story",
+          "why_interesting": "One of the most beloved children's books in history was born from a bet — and the constraint (50 words!) is astonishingly tight. It reframes the book as a masterpiece of creative limitation.",
+          "universal_appeal": "Dr. Seuss is internationally known. The concept of writing under tight constraints is universally interesting.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 9.0,
+          "reasoning": "The bet origin story is inherently engaging. The three options span a reasonable range and most people guess higher than 50. The fact that Seuss won the bet makes the story even more satisfying."
+        },
+        "ai_score": 9.0
+      }
+    },
+    {
+      "question": "You're in a foot race. Just before the finish line, you overtake the person in second place. What position do you finish in?",
+      "type": "text",
+      "correct_answer": "Second place",
+      "possible_answers": null,
+      "alternative_answers": ["second", "2nd", "2nd place", "number two"],
+      "explanation": "If you overtake the person in second place, you take their position — second place. You have not overtaken the person in first place, so you cannot be first.",
+      "topic": "Logic",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": ["lateral-thinking", "word-trick", "reasoning", "position"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Lateral Thinking Puzzle",
+          "why_interesting": "The instinctive answer is 'first place' but that's wrong. The puzzle exploits the confusion between 'overtaking someone' and 'gaining their position.' Simple but effective.",
+          "universal_appeal": "Racing and position concepts are universal. No cultural knowledge needed.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 10,
+          "clever_framing": 9,
+          "educational_value": 7,
+          "clarity": 9,
+          "factual_accuracy": 10,
+          "overall_score": 8.8,
+          "reasoning": "Clean lateral thinking puzzle that catches nearly everyone on first hearing. The 'just before the finish line' detail adds urgency that distracts from careful thinking. Easy but delightful."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "You have three boxes: one contains two gold coins, one contains two silver coins, and one contains one gold and one silver. All boxes are mislabelled. You pick one coin from the box labelled 'Gold and Silver' and it's gold. What does that box actually contain?",
+      "type": "text",
+      "correct_answer": "Two gold coins",
+      "possible_answers": null,
+      "alternative_answers": ["both gold", "two gold", "the two gold coins", "gold gold"],
+      "explanation": "Since ALL boxes are mislabelled, the box labelled 'Gold and Silver' cannot contain one of each. You drew a gold coin, so it can't be the two-silver box. Therefore it must be the two-gold box. From there, the other labels can be deduced too.",
+      "topic": "Logic",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["deduction", "probability", "mislabelled-boxes", "logical-reasoning"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Lateral Thinking Puzzle",
+          "why_interesting": "The key insight — that ALL labels are wrong, not just some — makes the problem solvable from a single draw. Most people miss this constraint and think it's a 50/50 guess.",
+          "universal_appeal": "Gold, silver, and boxes are universally understood. Pure logic puzzle with no cultural requirements.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 10,
+          "clarity": 8,
+          "factual_accuracy": 10,
+          "overall_score": 9.2,
+          "reasoning": "Elegant deduction puzzle. The 'all mislabelled' constraint is the crucial insight. Players who catch it can solve it immediately; those who miss it think it's impossible. Teaches a beautiful principle about constraints."
+        },
+        "ai_score": 9.2
+      }
+    },
+    {
+      "question": "Victor Hugo once sent his publisher what may be the shortest letter in literary history — it contained just a single character: '?' His publisher responded with an equally terse: '!' What was Hugo asking about?",
+      "type": "text",
+      "correct_answer": "How his novel Les Miserables was selling",
+      "possible_answers": null,
+      "alternative_answers": ["book sales", "sales of Les Miserables", "how Les Mis was doing", "his book's sales figures", "the sales of his book"],
+      "topic": "Literature",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["Victor Hugo", "Les Miserables", "literary anecdotes", "correspondence"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Historical Quirk",
+          "why_interesting": "The idea that an entire anxious author-publisher conversation happened in two punctuation marks is both funny and charming. It reveals the universality of an author's anxiety about sales.",
+          "universal_appeal": "Victor Hugo and Les Miserables are internationally known. The humour of the exchange transcends language.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 10,
+          "educational_value": 8,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 9.0,
+          "reasoning": "Charming literary anecdote with a punchline format. The question is deducible: what would an author ask a publisher with a single '?'. The exclamation point reply confirms it was good news."
+        },
+        "ai_score": 9.0
+      }
+    },
+    {
+      "question": "In 1939, an American author published a 50,000-word novel with one extraordinary constraint: he physically tied down one key on his typewriter to make sure he never used it. The banned letter was the most common letter in the English language. Which letter?",
+      "type": "text",
+      "correct_answer": "E",
+      "possible_answers": null,
+      "alternative_answers": ["the letter E", "e"],
+      "topic": "Literature",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["constrained writing", "lipogram", "Ernest Vincent Wright", "Gadsby"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Hidden Property / Record Breaker",
+          "why_interesting": "Writing 50,000 words without the letter E is an almost unimaginable constraint. The physical detail of tying down the typewriter key makes it vivid and memorable.",
+          "universal_appeal": "The concept of constrained writing and the letter E's frequency applies broadly. The feat is impressive regardless of language.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 8,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.8,
+          "reasoning": "The typewriter key detail makes this vivid. The clue 'most common letter in English' gives players an engagement path — most people know or can guess that E is the most common letter. Hard but gettable."
+        },
+        "ai_score": 8.8
+      }
+    }
+  ],
+  "metadata": {
+    "model": "claude-opus-4-6",
+    "provider": "anthropic",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "total_generated": 22,
+    "total_selected": 15,
+    "pipeline": "claude_code_session",
+    "prompt_version": "v2_cot",
+    "topics": ["Literature", "Logic"],
+    "difficulty_distribution": {
+      "easy": 3,
+      "medium": 8,
+      "hard": 4
+    }
+  }
+}

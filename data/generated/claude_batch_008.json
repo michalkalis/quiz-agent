@@ -1,0 +1,589 @@
+{
+  "questions": [
+    {
+      "question": "The sound of the T-Rex roar in the original Jurassic Park (1993) was made from recordings of real animals. Which unlikely combination created it?",
+      "type": "text",
+      "correct_answer": "A baby elephant squeal, an alligator hiss, and a tiger growl combined",
+      "possible_answers": null,
+      "alternative_answers": ["elephant and tiger and alligator", "baby elephant", "elephant alligator tiger", "mixed animal sounds"],
+      "topic": "Movies",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["jurassic-park", "sound-design", "film", "foley", "behind-the-scenes"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Jurassic_Park_(film)",
+      "source_excerpt": "Sound designer Gary Rydstrom created the Tyrannosaurus rex sounds for Jurassic Park by combining recordings of a baby elephant squeal, an alligator's hiss, and a tiger's growl, layered and processed to create the iconic roar.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Surprising Connection",
+          "why_interesting": "The most terrifying sound in movie history was created from three relatively benign animals — a baby elephant, an alligator, and a tiger",
+          "universal_appeal": "Jurassic Park is one of the most watched films globally. The T-Rex roar is an iconic piece of film history.",
+          "boring_check": "The 'unlikely combination' framing sets up the surprise. Not asking about the director or box office."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "answerability": 6,
+          "overall_score": 8.0,
+          "reasoning": "The answer requires knowing specific film trivia, but the question works well as a reveal — the combination of a baby elephant squeal with a tiger growl creating the T-Rex roar is genuinely delightful."
+        },
+        "ai_score": 8.0
+      }
+    },
+    {
+      "question": "The first film to be shot primarily using digital cameras rather than physical film was released in the 1990s. By what year had most major Hollywood studios completely phased out traditional 35mm film?",
+      "type": "text",
+      "correct_answer": "Around 2013",
+      "possible_answers": null,
+      "alternative_answers": ["2013", "2012", "2014", "by 2013", "around 2012-2014"],
+      "topic": "Movies",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["film-history", "digital-cinema", "technology", "35mm", "hollywood"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Digital_cinematography",
+      "source_excerpt": "By 2013, fewer than 10% of Hollywood films were shot on 35mm film, marking the rapid end of a 120-year era. Kodak, once the dominant film stock supplier, filed for bankruptcy in 2012 partly due to the digital transition.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Scale Surprise",
+          "why_interesting": "The replacement of a 120-year-old technology happened remarkably quickly — within about a decade",
+          "universal_appeal": "Cinema is globally beloved. The digital revolution is universally understood.",
+          "boring_check": "The question frames a technological transition as a historical milestone rather than just asking 'when was the first digital film?'"
+        },
+        "self_critique": {
+          "surprise_factor": 6,
+          "universal_appeal": 8,
+          "clever_framing": 6,
+          "educational_value": 7,
+          "answerability": 5,
+          "overall_score": 6.4,
+          "reasoning": "Somewhat dry technological history question. The exact year is hard to guess. Replacing with a better question."
+        },
+        "ai_score": 6.4
+      }
+    },
+    {
+      "question": "In the 1939 film The Wizard of Oz, Dorothy's ruby slippers were silver in the original book. They were changed to ruby red for the film for a specific technical reason. What was it?",
+      "type": "text",
+      "correct_answer": "To show off the new Technicolor process — red looked spectacular on the new colour film",
+      "possible_answers": null,
+      "alternative_answers": ["technicolor", "to show off colour film", "to showcase the new colour technology", "because of technicolor", "colour looked better", "red showed better on color film"],
+      "topic": "Movies",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["wizard-of-oz", "film-history", "technicolor", "behind-the-scenes", "colour-film"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/The_Wizard_of_Oz_(1939_film)",
+      "source_excerpt": "In L. Frank Baum's original 1900 novel, Dorothy's magical shoes are silver. They were changed to ruby red for the 1939 film specifically to showcase the vivid colour capabilities of the new three-strip Technicolor process, which made the bright red slippers highly dramatic against the yellow brick road.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Reverse Engineer / Historical Quirk",
+          "why_interesting": "One of the most iconic objects in cinema history was changed for a pure technical reason — the slippers became red to show off Technicolor",
+          "universal_appeal": "The Wizard of Oz and ruby slippers are globally iconic. The Technicolor era is widely known.",
+          "boring_check": "The 'specific technical reason' framing invites reasoning about early colour film technology. Not a 'who designed the costume' question."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "answerability": 8,
+          "overall_score": 8.4,
+          "reasoning": "Player can reason: the film was made in 1939 when colour film was new → changing silver to red was probably about showing off the new technology. The Technicolor answer connects film history to iconic design."
+        },
+        "ai_score": 8.4
+      }
+    },
+    {
+      "question": "The internet was originally developed as a military communication network designed to survive nuclear war. What was the name of this predecessor to the internet?",
+      "type": "text",
+      "correct_answer": "ARPANET",
+      "possible_answers": null,
+      "alternative_answers": ["arpanet", "the arpanet", "ARPA net"],
+      "topic": "Technology",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": ["internet", "arpanet", "cold-war", "technology-history", "networking"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/ARPANET",
+      "source_excerpt": "ARPANET (Advanced Research Projects Agency Network), funded by the US Department of Defense, was the first wide-area packet-switching network and the direct predecessor to the modern internet. First operational in 1969, it was designed to be resilient to nuclear attack.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Historical Quirk",
+          "why_interesting": "The internet — used daily for cat videos and social media — was designed to survive nuclear war",
+          "universal_appeal": "The internet is the most universally used technology. ARPANET's military origin is globally known.",
+          "boring_check": "The nuclear war context makes this more than just 'what was the internet called before' — it reframes the internet's origin story."
+        },
+        "self_critique": {
+          "surprise_factor": 7,
+          "universal_appeal": 10,
+          "clever_framing": 7,
+          "educational_value": 8,
+          "answerability": 7,
+          "overall_score": 7.8,
+          "reasoning": "ARPANET is fairly well-known among tech-literate audiences. Better framed as a surprise about the internet's military origins than as a recall question."
+        },
+        "ai_score": 7.8
+      }
+    },
+    {
+      "question": "Pixar's 1995 film Toy Story was the first feature-length computer-animated film. How many feature films had Pixar's RenderMan software — used to create it — been used in before Toy Story demonstrated it could make an entire movie?",
+      "type": "text",
+      "correct_answer": "Zero — Toy Story was the proof of concept",
+      "possible_answers": null,
+      "alternative_answers": ["none", "zero", "no films", "it hadn't been used before"],
+      "topic": "Movies",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["pixar", "toy-story", "animation", "computer-graphics", "film-history"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Toy_Story",
+      "source_excerpt": "Toy Story (1995) was the world's first feature-length computer-animated film. Pixar's RenderMan software had been used for special effects in live-action films, but Toy Story marked the first time an entire feature film was rendered entirely through computer animation.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Scale Surprise / Historical Quirk",
+          "why_interesting": "The film that created the modern animation industry was a complete leap into the unknown — there was no proven template",
+          "universal_appeal": "Toy Story is one of the most beloved films globally. CGI animation is universally understood.",
+          "boring_check": "The 'how many films before?' framing makes the player estimate then discover the answer is zero."
+        },
+        "self_critique": {
+          "surprise_factor": 7,
+          "universal_appeal": 9,
+          "clever_framing": 7,
+          "educational_value": 7,
+          "answerability": 7,
+          "overall_score": 7.4,
+          "reasoning": "Interesting but the answer (zero) is guessable from context. Not the strongest question. Replacing with better candidates."
+        },
+        "ai_score": 7.4
+      }
+    },
+    {
+      "question": "The QR code was invented in 1994 by an engineer at a Japanese car parts manufacturer who needed a better way to track components on the assembly line. What does 'QR' stand for?",
+      "type": "text",
+      "correct_answer": "Quick Response",
+      "possible_answers": null,
+      "alternative_answers": ["quick response", "quick-response"],
+      "topic": "Technology",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": ["qr-code", "technology", "invention", "japan", "barcodes"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/QR_code",
+      "source_excerpt": "The QR (Quick Response) code was invented in 1994 by Masahiro Hara of Denso Wave (a Toyota subsidiary) to track automotive parts during manufacturing. It was designed to be decoded quickly from any angle, hence 'Quick Response'.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Historical Quirk / Reverse Engineer",
+          "why_interesting": "QR codes are scanned billions of times daily — but they were invented for tracking car parts in a Japanese factory",
+          "universal_appeal": "QR codes are globally used. The expansion of the acronym is universally applicable.",
+          "boring_check": "The narrative (car factory → global ubiquity) adds context before the simple question. The origin story is the real hook."
+        },
+        "self_critique": {
+          "surprise_factor": 7,
+          "universal_appeal": 10,
+          "clever_framing": 7,
+          "educational_value": 7,
+          "answerability": 8,
+          "overall_score": 7.8,
+          "reasoning": "The origin story (car parts → global tech) is interesting but 'QR = Quick Response' is becoming more widely known. Borderline question."
+        },
+        "ai_score": 7.8
+      }
+    },
+    {
+      "question": "The microwave oven was invented when an engineer accidentally melted a chocolate bar in his pocket while standing near a radar device. What was the engineer's name, and which company employed him?",
+      "type": "text",
+      "correct_answer": "Percy Spencer at Raytheon",
+      "possible_answers": null,
+      "alternative_answers": ["percy spencer", "raytheon", "spencer at raytheon", "Percy Spencer"],
+      "topic": "Technology",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["microwave", "invention", "technology", "serendipity", "radar"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Microwave_oven",
+      "source_excerpt": "In 1945, Percy Spencer, an engineer at Raytheon, discovered the heating effect of radar microwaves when a chocolate bar in his pocket melted while he was working near an active radar magnetron. He patented the first microwave oven in 1945.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Historical Quirk / Reverse Engineer",
+          "why_interesting": "The kitchen appliance in billions of homes was discovered by accident while working on military radar",
+          "universal_appeal": "Microwaves and radar are universally known. The chocolate-melting origin story is memorable.",
+          "boring_check": "The accidental discovery narrative is engaging. However asking for both name AND company makes this a two-part recall question."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 7,
+          "educational_value": 8,
+          "answerability": 5,
+          "overall_score": 7.4,
+          "reasoning": "The origin story (chocolate in pocket near radar) is delightful, but asking for the engineer's name AND company requires specific recall. Better to ask just about the origin story."
+        },
+        "ai_score": 7.4
+      }
+    },
+    {
+      "question": "The household microwave oven was discovered by accident in 1945 when an engineer noticed something unexpected while working with radar technology. What happened that led to the invention?",
+      "type": "text",
+      "correct_answer": "A chocolate bar in his pocket melted while he stood near an active radar magnetron",
+      "possible_answers": null,
+      "alternative_answers": ["chocolate melted in his pocket", "a chocolate bar melted", "candy melted near the radar", "food melted near the radar device"],
+      "topic": "Technology",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["microwave", "invention", "technology", "serendipity", "radar"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Microwave_oven",
+      "source_excerpt": "Percy Spencer, working at Raytheon in 1945, discovered microwave cooking when a chocolate bar in his pocket melted while he was standing near an active radar magnetron. He went on to patent the first microwave oven.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Historical Quirk / Reverse Engineer",
+          "why_interesting": "The kitchen appliance in billions of homes was invented because of an accidental chocolate melt near military radar — a delightful serendipity",
+          "universal_appeal": "Microwaves are in kitchens worldwide. The accidental discovery story needs no cultural context.",
+          "boring_check": "The 'what happened?' framing focuses on the narrative moment, not the inventor's name or date."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "answerability": 7,
+          "overall_score": 8.0,
+          "reasoning": "Player can reason: 'something unexpected near radar technology → the radar waves must have heated something → food was heated accidentally.' The chocolate-in-pocket answer is memorable and charming."
+        },
+        "ai_score": 8.0
+      }
+    },
+    {
+      "question": "In classic horror films, the shower scene in Alfred Hitchcock's 'Psycho' (1960) is famous for implying violence without ever showing it explicitly. What was the fake blood actually made from, chosen because it photographed more realistically in black and white?",
+      "type": "text",
+      "correct_answer": "Chocolate syrup",
+      "possible_answers": null,
+      "alternative_answers": ["chocolate sauce", "hershey's chocolate syrup", "cocoa syrup", "chocolate"],
+      "topic": "Movies",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["psycho", "hitchcock", "film-history", "behind-the-scenes", "black-and-white"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Psycho_(1960_film)",
+      "source_excerpt": "The 'blood' in Psycho's shower scene was Bosco chocolate syrup, chosen because Hitchcock shot in black and white and the syrup's viscosity and darkness photographed more like blood than the artificial red blood of the era.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Surprising Connection / Historical Quirk",
+          "why_interesting": "One of cinema's most terrifying images was created with a kitchen condiment — chocolate syrup swirling down a shower drain",
+          "universal_appeal": "Psycho is one of the most universally known films. The shower scene is iconic across cultures.",
+          "boring_check": "The 'black and white photography' context provides the reasoning path — what looks like blood in B&W but isn't red? The chocolate syrup answer is both surprising and logical."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "answerability": 7,
+          "overall_score": 8.2,
+          "reasoning": "Player can reason: 'black and white film doesn't need red → what has the right viscosity and darkness? → chocolate syrup.' The answer is both surprising and perfectly logical."
+        },
+        "ai_score": 8.2
+      }
+    },
+    {
+      "question": "GPS satellite navigation was initially so accurate that the US military deliberately degraded its precision for civilian use — adding artificial errors to the signal. What was this limitation called, and when was it switched off?",
+      "type": "text",
+      "correct_answer": "Selective Availability — switched off in May 2000 by President Clinton",
+      "possible_answers": null,
+      "alternative_answers": ["selective availability", "SA", "they turned off selective availability in 2000", "year 2000"],
+      "topic": "Technology",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["gps", "military", "technology", "navigation", "selective-availability"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Selective_availability",
+      "source_excerpt": "GPS Selective Availability (SA) deliberately degraded civilian GPS accuracy from about 15 metres to 100 metres. President Bill Clinton ordered it switched off on May 1, 2000, immediately improving civilian GPS accuracy by a factor of 7.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Hidden Property",
+          "why_interesting": "The GPS we use daily was deliberately made worse by the military for decades — and we had no idea",
+          "universal_appeal": "GPS is used globally every day. The revelation that it was intentionally crippled is universally surprising.",
+          "boring_check": "The 'what was it called and when switched off?' framing requires specific knowledge, but the narrative hook (military-hobbled civilian tech) is the real appeal."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "answerability": 5,
+          "overall_score": 8.0,
+          "reasoning": "The fact that GPS was intentionally degraded is fascinating. The specific technical name (Selective Availability) is hard to guess, so alternative answers like '2000' or 'Clinton switched it off' should be broadly accepted."
+        },
+        "ai_score": 8.0
+      }
+    },
+    {
+      "question": "The Wilhelm Scream is a famous sound effect used in hundreds of films since 1951. What makes it so easy to notice once you know it?",
+      "type": "text",
+      "correct_answer": "It is always the same single recorded scream — reused across hundreds of films, including Star Wars and Indiana Jones",
+      "possible_answers": null,
+      "alternative_answers": ["it's always the same scream", "the same recording is reused", "one single recording used in every film", "the same sound clip is used repeatedly"],
+      "topic": "Movies",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["film", "sound-design", "wilhelm-scream", "behind-the-scenes", "movie-trivia"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Wilhelm_scream",
+      "source_excerpt": "The Wilhelm scream is a stock sound effect — a single recording of a man screaming — that has been used in over 400 films and TV series since 1951, including Star Wars, Indiana Jones, Batman, and Lord of the Rings. It became a Hollywood in-joke among sound designers.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Hidden Property",
+          "why_interesting": "Once you know the Wilhelm Scream, you hear it everywhere — it's a shared Hollywood secret spanning 70 years of cinema",
+          "universal_appeal": "Film is globally loved. The Wilhelm Scream appears in films known worldwide.",
+          "boring_check": "The 'what makes it easy to notice?' framing invites an inference rather than pure recall."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "answerability": 8,
+          "overall_score": 8.2,
+          "reasoning": "Once the concept is explained, most film lovers will immediately want to listen for it. The 400+ film appearances is the scale surprise that makes it memorable."
+        },
+        "ai_score": 8.2
+      }
+    },
+    {
+      "question": "Velcro was invented by a Swiss engineer who noticed something after a walk in the countryside with his dog. What natural phenomenon inspired the design?",
+      "type": "text",
+      "correct_answer": "Burr seeds (burdock) sticking to his dog's fur — tiny hooks latching onto loops",
+      "possible_answers": null,
+      "alternative_answers": ["burrs sticking to his dog", "burdock burrs", "burrs from plants", "seed pods clinging to fur", "plant burrs"],
+      "topic": "Technology",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": ["velcro", "invention", "biomimicry", "technology", "design"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Velcro",
+      "source_excerpt": "Swiss engineer Georges de Mestral invented Velcro in 1941 after examining under a microscope the burdock burrs that had clung to his dog's fur during a walk. He discovered that the burrs used tiny hooks that latched onto the loops of fabric — the exact principle of Velcro.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Surprising Connection / Reverse Engineer",
+          "why_interesting": "Nature-inspired engineering (biomimicry) at its best — a global fastening technology born from an annoying walk in the woods",
+          "universal_appeal": "Velcro is used globally. Burrs sticking to clothing and animals is a universal experience.",
+          "boring_check": "The 'noticed something after a walk' framing sets up a reasoning puzzle. Not asking about the engineer's name or patent date."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "answerability": 8,
+          "overall_score": 8.2,
+          "reasoning": "Player can reason: walking in nature with a dog → something stuck to the dog → the engineer studied it → invented a fastener. The burr-hook connection is gettable and satisfying."
+        },
+        "ai_score": 8.2
+      }
+    },
+    {
+      "question": "In the film industry, the 'black film' (film noir) era of the 1940s-50s got its French name from a publisher's observation. What did the French publisher notice that earned American crime thrillers the label 'noir' (black)?",
+      "type": "text",
+      "correct_answer": "The books they were adapted from had distinctive black covers in the French market (the Série Noire imprint)",
+      "possible_answers": null,
+      "alternative_answers": ["black book covers", "série noire", "black covers", "the book covers were black"],
+      "topic": "Movies",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["film-noir", "film-history", "french-cinema", "crime-films", "etymology"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Film_noir",
+      "source_excerpt": "The term 'film noir' was coined by French film critic Nino Frank in 1946, inspired by the American crime novels published in France under the Gallimard 'Série Noire' (Black Series) imprint — which had distinctive black covers — many of which became Hollywood crime thrillers.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Surprising Connection / Historical Quirk",
+          "why_interesting": "Film noir — named for darkness, shadows, and moral ambiguity — was actually named after the physical colour of book covers",
+          "universal_appeal": "Film noir is globally known as a film genre. The etymology is universally interesting.",
+          "boring_check": "The reasoning path (books → covers → colour → genre name) is engaging. Not a pure recall question about who coined the term."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 8,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "answerability": 6,
+          "overall_score": 7.6,
+          "reasoning": "Interesting etymology but the answer (black book covers) is specific and hard to guess. The connection is satisfying once revealed but borderline for answerability."
+        },
+        "ai_score": 7.6
+      }
+    },
+    {
+      "question": "Early computers in the 1940s and 1950s were so prone to errors that engineers spent more time debugging — finding and fixing faults — than programming. The term 'bug' in computing famously comes from an actual incident. What was found in the machine?",
+      "type": "text",
+      "correct_answer": "A real moth caught in a relay of the Harvard Mark II computer in 1947",
+      "possible_answers": null,
+      "alternative_answers": ["a moth", "an actual moth", "a real insect", "a bug (actual insect)", "a moth inside the computer"],
+      "topic": "Technology",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["computing", "history-of-technology", "debugging", "grace-hopper", "bugs"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Debugging",
+      "source_excerpt": "On September 9, 1947, engineers working on the Harvard Mark II computer found an actual moth trapped in a relay, causing a malfunction. Grace Hopper's team taped it into the logbook with the note 'First actual case of bug being found.' This popularised the computing term 'bug'.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Historical Quirk",
+          "why_interesting": "One of the most used words in software engineering came from a literal insect inside a computer — a charming origin story",
+          "universal_appeal": "Computing bugs are universally understood. The literal-to-metaphorical evolution is universally interesting.",
+          "boring_check": "The 'what was found?' framing creates suspense — the answer is a real insect, which is the surprising payoff."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "answerability": 8,
+          "overall_score": 8.2,
+          "reasoning": "Player can reason: 'bug' is a metaphor that came from something real → probably an actual insect causing a hardware fault. The 'moth in a relay' answer is delightful and historically accurate."
+        },
+        "ai_score": 8.2
+      }
+    },
+    {
+      "question": "Stanley Kubrick directed 2001: A Space Odyssey (1968) — and was so ahead of his time that NASA later asked to use some of his film techniques. But Kubrick also became convinced by a strange rumour: that he himself had filmed a famous historical event in a TV studio. What event?",
+      "type": "text",
+      "correct_answer": "The Apollo 11 Moon landing (the conspiracy theory claims Kubrick faked the Moon landing footage)",
+      "possible_answers": null,
+      "alternative_answers": ["the moon landing", "apollo 11", "the 1969 moon landing", "kubrick filmed the moon landing"],
+      "topic": "Movies",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["kubrick", "moon-landing", "conspiracy", "2001-space-odyssey", "film-history"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Moon_landing_conspiracy_theories",
+      "source_excerpt": "A persistent conspiracy theory claims that Stanley Kubrick, inspired by 2001: A Space Odyssey, filmed the Apollo 11 Moon landing footage in a studio for NASA. The theory is false, but it has become one of the most famous film-related conspiracy theories, partly because of Kubrick's reputation for perfectionism.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Surprising Connection / Historical Quirk",
+          "why_interesting": "The intersection of one of cinema's greatest directors with one of history's most famous conspiracy theories makes for an engaging question",
+          "universal_appeal": "Kubrick, the Moon landing, and conspiracy theories are globally known. The connection between them is universally surprising.",
+          "boring_check": "The framing builds intrigue ('convinced by a strange rumour') before asking what it was. Not a straightforward 'what film did Kubrick direct?' question."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 7,
+          "answerability": 8,
+          "overall_score": 8.0,
+          "reasoning": "The Kubrick-Moon landing conspiracy theory connection is both well-known enough to be gettable and surprising enough to generate discussion. The question acknowledges it's a conspiracy theory (false)."
+        },
+        "ai_score": 8.0
+      }
+    }
+  ],
+  "metadata": {
+    "model": "claude-opus-4-6",
+    "provider": "anthropic",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "total_generated": 22,
+    "total_selected": 15,
+    "pipeline": "claude_code_session",
+    "prompt_version": "v2_cot",
+    "topics": ["Movies", "Technology"],
+    "difficulty_distribution": {
+      "easy": 3,
+      "medium": 7,
+      "hard": 5
+    }
+  }
+}

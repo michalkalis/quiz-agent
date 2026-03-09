@@ -200,6 +200,8 @@ class QuestionGenerator:
             difficulty=difficulty,
             tags=tags,
             language_dependent=data.get("language_dependent", False),
+            media_url=data.get("media_url"),
+            image_subtype=data.get("image_subtype"),
             source="generated"
         )
 

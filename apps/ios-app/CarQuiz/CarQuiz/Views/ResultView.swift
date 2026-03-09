@@ -68,6 +68,24 @@ struct ResultView: View {
                                 .padding(.vertical, Theme.Spacing.xl)
                         }
 
+                        // Image reveal (for image questions)
+                        if let question = viewModel.resultQuestion,
+                           question.hasImage,
+                           let mediaUrl = question.mediaUrl,
+                           let url = URL(string: mediaUrl),
+                           showEvaluation {
+                            AsyncImage(url: url) { phase in
+                                if case .success(let image) = phase {
+                                    image
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fit)
+                                        .frame(maxHeight: 200)
+                                        .cornerRadius(Theme.Radius.lg)
+                                }
+                            }
+                            .padding(.horizontal)
+                        }
+
                         // Answer comparison
                         VStack(spacing: Theme.Spacing.md) {
                             // User's answer

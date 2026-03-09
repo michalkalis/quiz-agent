@@ -178,9 +178,10 @@ class QuestionRetriever:
         Returns:
             Metadata filters dict
         """
+        allowed_types = ["text", "image"]
         filters = {
             "difficulty": difficulty,
-            "type": "text",  # MVP: only text questions
+            "type": {"$in": allowed_types},
             "review_status": "approved",  # ONLY use human-reviewed approved questions
         }
 
@@ -252,7 +253,7 @@ class QuestionRetriever:
         simple_query = "quiz question"
         candidates = self.chroma.search_questions(
             query_text=simple_query,
-            filters={"difficulty": question_difficulty, "type": "text", "review_status": "approved", **lang_filter},
+            filters={"difficulty": question_difficulty, "type": {"$in": ["text", "image"]}, "review_status": "approved", **lang_filter},
             n_results=n_candidates,
             excluded_ids=excluded_ids
         )
@@ -268,7 +269,7 @@ class QuestionRetriever:
         for fallback_difficulty in difficulty_fallback:
             candidates = self.chroma.search_questions(
                 query_text=simple_query,
-                filters={"difficulty": fallback_difficulty, "type": "text", "review_status": "approved", **lang_filter},
+                filters={"difficulty": fallback_difficulty, "type": {"$in": ["text", "image"]}, "review_status": "approved", **lang_filter},
                 n_results=n_candidates,
                 excluded_ids=excluded_ids
             )
@@ -280,7 +281,7 @@ class QuestionRetriever:
         print(f"DEBUG: Fallback 3 - Minimal constraints")
         candidates = self.chroma.search_questions(
             query_text="question",
-            filters={"type": "text", "review_status": "approved", **lang_filter},
+            filters={"type": {"$in": ["text", "image"]}, "review_status": "approved", **lang_filter},
             n_results=n_candidates,
             excluded_ids=excluded_ids
         )
@@ -310,6 +311,32 @@ class QuestionRetriever:
             print(f"  - Difficulty: {question_difficulty}")
         return None
 
+    def _apply_image_cap(
+        self,
+        candidates: List[Question],
+        session: QuizSession,
+    ) -> List[Question]:
+        """Filter candidates to enforce image question limits.
+
+        Rules:
+        - Max image questions per session: min(3, max_questions // 4)
+        - Never two image questions in a row
+        """
+        max_questions = session.max_questions if hasattr(session, "max_questions") else 10
+        image_cap = min(3, max_questions // 4)
+
+        # Count image questions already asked
+        recent_questions = self._get_recent_questions(session, limit=len(session.asked_question_ids))
+        image_count = sum(1 for q in recent_questions if q.type == "image")
+        last_was_image = bool(recent_questions and recent_questions[-1].type == "image")
+
+        if image_count >= image_cap or last_was_image:
+            # Remove image candidates
+            text_only = [c for c in candidates if c.type != "image"]
+            return text_only if text_only else candidates
+
+        return candidates
+
     def _select_with_semantic_diversity(
         self,
         candidates: List[Question],
@@ -329,6 +356,9 @@ class QuestionRetriever:
         """
         if not candidates:
             return None
+
+        # Apply image question cap
+        candidates = self._apply_image_cap(candidates, session)
 
         # If no questions asked yet, just pick randomly
         if not session.asked_question_ids:

@@ -1,0 +1,589 @@
+{
+  "questions": [
+    {
+      "question": "Was Cleopatra born closer in time to the construction of the Great Pyramid or to the first Moon landing?",
+      "type": "text",
+      "correct_answer": "The Moon landing",
+      "possible_answers": null,
+      "alternative_answers": ["moon landing", "the apollo landing", "the 1969 moon landing", "apollo 11", "closer to the moon landing"],
+      "topic": "History",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": ["egypt", "history", "timeline", "cleopatra", "comparison"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Cleopatra",
+      "source_excerpt": "Cleopatra VII ruled Egypt from 51 to 30 BCE, approximately 2,490 years after the Great Pyramid was built (~2560 BCE) but only about 1,999 years before the Apollo 11 Moon landing in 1969 — making her roughly 500 years closer in time to the Moon landing.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Comparison Bet",
+          "why_interesting": "The association of Cleopatra with Egyptian antiquity makes people assume she lived near the Pyramids in time, but the Pyramids predate her by 2,500 years while the Moon landing was only 2,000 years later",
+          "universal_appeal": "Cleopatra, the Pyramids, and the Moon landing are among the most universally known historical events and figures",
+          "boring_check": "Binary comparison forces a choice. The surprising answer (Moon landing) rewires how people think about ancient history timelines. Not a 'What year' format."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "answerability": 9,
+          "overall_score": 8.8,
+          "reasoning": "Player can work this out: Cleopatra ~30 BCE, Pyramids ~2560 BCE = 2530 year gap; Moon landing 1969 = 1999 years after her death. Moon landing wins by ~500 years. Deeply satisfying timeline revelation."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "The Wright brothers made their first powered flight in 1903. Apollo 11 landed on the Moon in 1969. Did these two events occur within a single human lifetime — or more than one lifetime apart?",
+      "type": "text",
+      "correct_answer": "Within a single human lifetime",
+      "possible_answers": null,
+      "alternative_answers": ["within one lifetime", "less than a lifetime apart", "one human lifetime", "within a lifetime"],
+      "topic": "History",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["aviation", "space", "technology", "20th-century", "timeline"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Apollo_11",
+      "source_excerpt": "The Wright brothers' first powered flight occurred on December 17, 1903. The Apollo 11 Moon landing occurred on July 20, 1969 — just 66 years later, well within a single human lifetime.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Scale Surprise / Comparison Bet",
+          "why_interesting": "The leap from a 12-second flight in a field to landing on the Moon seems impossibly fast — but it took only 66 years, which a person born in 1903 could have witnessed in their lifetime",
+          "universal_appeal": "Aviation and space exploration are universally known milestones of human progress",
+          "boring_check": "The binary question (one lifetime or more?) with the surprising answer invites calculation. Not a 'What year' format."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "answerability": 8,
+          "overall_score": 8.6,
+          "reasoning": "Player can calculate: 1969-1903=66 years; average lifespan is 70-80 years. So yes, within one lifetime — a stunning illustration of 20th-century technological acceleration."
+        },
+        "ai_score": 8.6
+      }
+    },
+    {
+      "question": "For roughly how long did the Great Pyramid of Giza hold the record as the world's tallest man-made structure — about 200 years, 2,000 years, or nearly 4,000 years?",
+      "type": "text",
+      "correct_answer": "Nearly 4,000 years",
+      "possible_answers": null,
+      "alternative_answers": ["4000 years", "nearly four thousand years", "3800 years", "almost 4000 years", "close to 4000 years"],
+      "topic": "History",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["egypt", "architecture", "records", "ancient-history", "great-pyramid"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Great_Pyramid_of_Giza",
+      "source_excerpt": "The Great Pyramid of Giza, completed around 2560 BCE, remained the world's tallest man-made structure for approximately 3,800 years until Lincoln Cathedral in England surpassed it in 1311 CE.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Estimation Challenge",
+          "why_interesting": "Nearly 4,000 years is an almost incomprehensible span of dominance — longer than recorded history in most cultures",
+          "universal_appeal": "The Great Pyramid is one of the most universally recognised structures on Earth",
+          "boring_check": "Three options spanning 20x range. The correct answer (nearly 4,000 years) is the most extreme option, creating maximum surprise."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "answerability": 8,
+          "overall_score": 8.6,
+          "reasoning": "Player can reason: ancient structures tend to dominate for a long time since later civilisations often couldn't surpass them. The 4,000-year answer underscores just how extraordinary ancient Egyptian engineering was."
+        },
+        "ai_score": 8.6
+      }
+    },
+    {
+      "question": "Oxford University has been teaching students since around 1096 CE. The Aztec Empire was founded in Mesoamerica at some point later. Which came first — Oxford University or the Aztec Empire?",
+      "type": "text",
+      "correct_answer": "Oxford University",
+      "possible_answers": null,
+      "alternative_answers": ["oxford", "the university", "oxford came first", "oxford predates the aztec empire"],
+      "topic": "History",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["oxford", "aztecs", "medieval-history", "universities", "timeline"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/University_of_Oxford",
+      "source_excerpt": "The University of Oxford began teaching by 1096 CE and developed rapidly from 1167. The Aztec Empire was formally founded around 1428 CE — making Oxford more than 300 years older than the Aztec Empire.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Comparison Bet",
+          "why_interesting": "Most people assume the Aztecs are 'ancient' while Oxford is 'modern' — the comparison inverts this intuition completely",
+          "universal_appeal": "Both Oxford and the Aztec Empire are globally recognised. No specialist knowledge required.",
+          "boring_check": "Binary comparison with a counterintuitive answer. The juxtaposition of a European university and a Mesoamerican empire is unexpected and thought-provoking."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 8,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "answerability": 8,
+          "overall_score": 8.4,
+          "reasoning": "Player can reason: Aztecs are pre-Columbian (before 1492) and Oxford is medieval — which came first? The answer (Oxford by ~300 years) is genuinely surprising and reframes European and American timelines."
+        },
+        "ai_score": 8.4
+      }
+    },
+    {
+      "question": "The Anglo-Zanzibar War of 1896 holds the record as the shortest war in recorded history. Was it closer to 45 minutes, 45 hours, or 45 days in duration?",
+      "type": "text",
+      "correct_answer": "45 minutes",
+      "possible_answers": null,
+      "alternative_answers": ["about 45 minutes", "38 minutes", "less than an hour", "under an hour"],
+      "topic": "History",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["wars", "history", "british-empire", "zanzibar", "records"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Anglo-Zanzibar_War",
+      "source_excerpt": "The Anglo-Zanzibar War lasted between 38 and 45 minutes on August 27, 1896, making it the shortest war in recorded history. The Zanzibari sultanate surrendered after its wooden palace was shelled.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Estimation Challenge",
+          "why_interesting": "A war lasting less than an hour seems like a joke, but it was a real military engagement with casualties on both sides",
+          "universal_appeal": "Wars and military history are universally understood. The concept of a 'shortest war' needs no cultural context.",
+          "boring_check": "Three options spanning very different time scales. The correct answer (45 minutes) is the most shocking option, which is ideal."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 8,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "answerability": 9,
+          "overall_score": 8.4,
+          "reasoning": "Player can reason through the options: 45 days sounds long for the 'shortest war'; 45 hours is very short; 45 minutes seems absurd — but the question is asking, which suggests the most extreme answer might be right."
+        },
+        "ai_score": 8.4
+      }
+    },
+    {
+      "question": "New Zealand was one of the last major landmasses on Earth to be settled by humans. Roughly when did the first people arrive there — around 10,000 BCE, 3,000 BCE, or around 1250 CE?",
+      "type": "text",
+      "correct_answer": "Around 1250 CE",
+      "possible_answers": null,
+      "alternative_answers": ["1250 AD", "1250 CE", "about 1250", "around 1300 CE", "700 years ago"],
+      "topic": "History",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["new-zealand", "maori", "pacific", "settlement", "human-migration"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/M%C4%81ori_people",
+      "source_excerpt": "Archaeological and genetic evidence suggests that the Māori people first settled New Zealand around 1250–1300 CE, arriving by canoe from East Polynesia — making New Zealand one of the last habitable lands to be permanently settled by humans.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Estimation Challenge",
+          "why_interesting": "New Zealand looks ancient and isolated — most people assume it was settled in deep prehistory. The reality (only ~750 years ago) underscores how remarkable Polynesian navigation was.",
+          "universal_appeal": "New Zealand, Māori culture, and Pacific navigation are widely known and respected globally.",
+          "boring_check": "Three options spanning 12,000 years. The correct answer (1250 CE) is the most recent and surprising."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 8,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "answerability": 8,
+          "overall_score": 8.4,
+          "reasoning": "Player can reason: New Zealand is remote → must have been settled late → but how late? The 1250 CE answer reveals that New Zealand was uninhabited until the late medieval period."
+        },
+        "ai_score": 8.4
+      }
+    },
+    {
+      "question": "The Great Fire of London in 1666 destroyed approximately 13,200 houses and 87 churches. Officially, how many people died in the fire — 6, 6,000, or 60,000?",
+      "type": "text",
+      "correct_answer": "6",
+      "possible_answers": null,
+      "alternative_answers": ["six", "only 6", "just 6", "only six people"],
+      "topic": "History",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["london", "great-fire", "history", "17th-century", "disasters"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Great_Fire_of_London",
+      "source_excerpt": "The Great Fire of London (2–5 September 1666) destroyed around 13,200 houses and 87 churches. The official death toll was only 6, though historians believe the actual number may have been higher as poorer residents were often unrecorded.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Estimation Challenge",
+          "why_interesting": "The contrast between total urban destruction (13,200 houses) and only 6 official deaths seems impossible — the fire spread slowly enough for mass evacuation",
+          "universal_appeal": "The Great Fire of London is one of the most famous historical disasters, widely taught globally.",
+          "boring_check": "Three options spanning 10,000x range. The correct answer (6) is the most extreme and counterintuitive option."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 8,
+          "clever_framing": 9,
+          "educational_value": 8,
+          "answerability": 8,
+          "overall_score": 8.4,
+          "reasoning": "The setup (13,200 houses, 87 churches destroyed) primes the player for a high death toll. The answer (6 officially) is stunning. Player can work backward: the fire spread over several days, giving people time to flee."
+        },
+        "ai_score": 8.4
+      }
+    },
+    {
+      "question": "When the United Nations was founded in 1945 at the end of World War II, roughly how many independent nations existed in the world — about 50, about 120, or about 195?",
+      "type": "text",
+      "correct_answer": "About 50",
+      "possible_answers": null,
+      "alternative_answers": ["50", "fifty", "around 50", "approximately 50", "fewer than 60"],
+      "topic": "History",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": ["united-nations", "decolonisation", "history", "20th-century", "countries"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/United_Nations",
+      "source_excerpt": "The United Nations was founded in 1945 with 51 original member states. Today it has 193 members — the dramatic increase reflecting the wave of decolonisation that created dozens of new independent nations, particularly in Africa and Asia, during the 1950s–1970s.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Estimation Challenge",
+          "why_interesting": "Most people assume the map of the world has always looked roughly as it does now. The revelation that only ~50 nations existed in 1945 (vs 195 today) tells the story of decolonisation dramatically.",
+          "universal_appeal": "Nations, the UN, and world geography are universally known topics.",
+          "boring_check": "Three options spanning 4x range. The correct answer (50) makes it clear that most of today's countries didn't exist post-WWII."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "answerability": 8,
+          "overall_score": 8.4,
+          "reasoning": "Player can reason: many African and Asian nations gained independence in the 1950s-70s. So there must have been far fewer in 1945. The ~50 number is the 'aha!' that tells the story of post-colonial world-building."
+        },
+        "ai_score": 8.4
+      }
+    },
+    {
+      "question": "Canada has the world's longest coastline. How much longer is it than Russia's (the world's second longest) — roughly the same length, twice as long, or more than five times longer?",
+      "type": "text",
+      "correct_answer": "More than five times longer",
+      "possible_answers": null,
+      "alternative_answers": ["five times longer", "5 times longer", "more than 5 times", "over five times", "about five times as long"],
+      "topic": "Geography",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["canada", "coastline", "geography", "records", "russia"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/List_of_countries_by_length_of_coastline",
+      "source_excerpt": "Canada has the world's longest coastline at 202,080 km. Russia's coastline is approximately 37,653 km — making Canada's coastline more than five times longer than the second-place country.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Scale Surprise / Comparison Bet",
+          "why_interesting": "Canada's coastline dominance is extreme — five times the second-place country challenges assumptions about geographic scale",
+          "universal_appeal": "Canada and Russia are universally known as large countries. Coastline comparisons need no cultural context.",
+          "boring_check": "Three options with escalating surprise. 'More than five times longer' is the most extreme and most satisfying answer."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "answerability": 7,
+          "overall_score": 8.2,
+          "reasoning": "Canada's jagged Arctic coastline and thousands of islands create a massive edge. The 5× factor vs Russia is genuinely surprising — most people would guess 'roughly the same' or 'twice as long'."
+        },
+        "ai_score": 8.2
+      }
+    },
+    {
+      "question": "Around 6,000 years ago, the Sahara Desert — today the world's largest hot desert — looked completely different. What was it?",
+      "type": "text",
+      "correct_answer": "A lush, green landscape with rivers, lakes, and large human populations",
+      "possible_answers": null,
+      "alternative_answers": ["green", "fertile grassland", "savanna", "a grassland", "forested", "covered in rivers and lakes", "a green savanna", "humid and green"],
+      "topic": "Geography",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["sahara", "climate-change", "africa", "geography", "green-sahara"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/African_humid_period",
+      "source_excerpt": "The African Humid Period (approximately 11,000–5,000 years ago), sometimes called the 'Green Sahara,' was a time when the Sahara region received much more rainfall, supporting grasslands, rivers, lakes, and dense human populations where today there is largely barren desert.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Historical Quirk / Hidden Property",
+          "why_interesting": "The Sahara is the definition of 'desert' in popular imagination. That it was recently a green, inhabited landscape challenges our assumptions about geography and climate.",
+          "universal_appeal": "The Sahara is one of the world's most famous geographical features, universally known.",
+          "boring_check": "The open 'what was it?' framing invites creative reasoning rather than just recall. Not a 'What year' or 'Who was' format."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "answerability": 7,
+          "overall_score": 8.2,
+          "reasoning": "Player can reason: climate changes over millennia — what might a desert have been? Grassland or sea? The 'green savanna with lakes and people' answer is maximally surprising and very educational."
+        },
+        "ai_score": 8.2
+      }
+    },
+    {
+      "question": "Ancient Romans used a substance to whiten their teeth that is still found in cleaning products today. What was it?",
+      "type": "text",
+      "correct_answer": "Urine",
+      "possible_answers": null,
+      "alternative_answers": ["fermented urine", "human urine", "ammonia from urine", "urine (for the ammonia)"],
+      "topic": "History",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["roman-history", "hygiene", "chemistry", "ancient-rome", "historical-quirk"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Ancient_Roman_bathing",
+      "source_excerpt": "Romans collected and used fermented urine as a tooth whitener and mouthwash. The ammonia produced by fermentation is an effective cleaning agent; the practice was common enough that Emperor Vespasian taxed the collection of urine from public toilets.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Historical Quirk",
+          "why_interesting": "Disgusting yet chemically logical — ammonia is a genuine cleaning agent, and fermented urine would have been the most accessible source. The 'still found in cleaning products' hint makes it solvable.",
+          "universal_appeal": "Roman history is globally taught. The gross-out factor transcends cultural barriers.",
+          "boring_check": "The 'still found in cleaning products' hint invites reasoning toward ammonia → urine. Not pure recall."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "answerability": 7,
+          "overall_score": 8.2,
+          "reasoning": "Players can reason: what cleaning compound is found in modern products AND was available to Romans? Vinegar (acetic acid), salt, ash, or ammonia. Ammonia = urine. The answer is gross and memorable."
+        },
+        "ai_score": 8.2
+      }
+    },
+    {
+      "question": "Viking navigators could locate the Sun through thick cloud cover using a mineral crystal they called a 'sunstone.' What optical principle does this crystal exploit to reveal the Sun's hidden position?",
+      "type": "text",
+      "correct_answer": "Polarisation of light",
+      "possible_answers": null,
+      "alternative_answers": ["polarization", "light polarisation", "it polarizes light", "polarised light", "the polarisation of sunlight"],
+      "topic": "History",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["vikings", "navigation", "optics", "physics", "history-of-science"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Sunstone_(medieval)",
+      "source_excerpt": "The Viking 'sunstone' is believed to be Iceland spar (calcite), which works as a polarising crystal. Sunlight scattered by the atmosphere is polarised in a pattern centred on the Sun, and the crystal can reveal this pattern even through cloud cover, effectively locating the Sun's position.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Surprising Connection / Historical Quirk",
+          "why_interesting": "Vikings were expert navigators, but using a crystal to find the Sun through clouds sounds like magic — until the optics are explained",
+          "universal_appeal": "Vikings, navigation, and optics are all universally familiar concepts. Iceland spar (calcite) is a naturally occurring mineral.",
+          "boring_check": "Asking for the 'optical principle' invites scientific reasoning rather than pure historical recall. Players who know physics can work toward the answer."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "answerability": 6,
+          "overall_score": 8.2,
+          "reasoning": "The answer 'polarisation' is hard to guess precisely, but players who know physics can reason toward it. The key insight (atmospheric scattering polarises light) is genuinely educational. 'Polarisation' or 'it splits/filters light' should be accepted."
+        },
+        "ai_score": 8.2
+      }
+    },
+    {
+      "question": "The fax machine transmits documents over telephone lines — yet it was invented decades before the telephone itself. How many years before?",
+      "type": "text",
+      "correct_answer": "About 33 years",
+      "possible_answers": null,
+      "alternative_answers": ["33 years", "thirty-three years", "about 30 years", "over 30 years", "more than 30 years"],
+      "topic": "History",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": ["inventions", "technology", "fax", "telephone", "history-of-technology"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Fax",
+      "source_excerpt": "Alexander Bain patented the first fax machine (the 'electric printing telegraph') in 1843. Alexander Graham Bell patented the telephone in 1876 — 33 years later. Early fax-like devices transmitted over telegraph lines before telephone networks existed.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Historical Quirk / Reverse Engineer",
+          "why_interesting": "A fax machine 'uses phone lines' yet predates the phone — this logical impossibility makes people stop and think",
+          "universal_appeal": "Fax machines and telephones are globally understood technologies. The logical paradox needs no cultural context.",
+          "boring_check": "The question first establishes the paradox ('before the telephone itself') then asks for the gap. The setup generates curiosity before the question is even asked."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "answerability": 7,
+          "overall_score": 8.2,
+          "reasoning": "The core surprise is the paradox itself (fax before phone). Once the player accepts it, estimating '33 years' is reasonable: 'phone was late 19th century, so fax was mid-19th century.' The exact 33 years is satisfying."
+        },
+        "ai_score": 8.2
+      }
+    },
+    {
+      "question": "Russia is the world's largest country by land area. Is Russia larger or smaller than the continent of Antarctica?",
+      "type": "text",
+      "correct_answer": "Russia is larger",
+      "possible_answers": null,
+      "alternative_answers": ["larger", "russia is bigger", "russia is larger than antarctica", "bigger than antarctica"],
+      "topic": "Geography",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["russia", "antarctica", "geography", "land-area", "comparison"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Russia",
+      "source_excerpt": "Russia covers approximately 17.1 million square kilometres. Antarctica covers approximately 14.2 million square kilometres — making Russia roughly 20% larger than the Antarctic continent.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Comparison Bet",
+          "why_interesting": "Antarctica is thought of as a vast, forbidding continent. Russia is known to be huge. That Russia actually exceeds Antarctica in area is a genuine surprise.",
+          "universal_appeal": "Russia and Antarctica are both globally known and recognised. Pure geographical fact, no cultural context.",
+          "boring_check": "Binary comparison with a genuinely surprising answer. Not asking for numbers, just which is bigger."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "answerability": 7,
+          "overall_score": 8.0,
+          "reasoning": "Player can reason: Russia is famous for being enormous (11 time zones); Antarctica is a continent so also massive. The answer requires knowing Russia is ~17M km² and Antarctica ~14M km². The 20% margin makes this genuinely hard to call."
+        },
+        "ai_score": 8.0
+      }
+    },
+    {
+      "question": "The Amazon River discharges so much fresh water into the Atlantic Ocean that sailors in the early Age of Exploration used it to top up their fresh water supplies far out to sea. Roughly how far from the river's mouth is the ocean still detectably fresh — about 1 km, 16 km, or over 160 km?",
+      "type": "text",
+      "correct_answer": "Over 160 km",
+      "possible_answers": null,
+      "alternative_answers": ["160 km", "over 100 miles", "more than 160 km", "more than 100 miles", "about 160 kilometres"],
+      "topic": "Geography",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["amazon", "rivers", "geography", "ocean", "freshwater"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Amazon_River",
+      "source_excerpt": "The Amazon River discharges approximately 20% of all fresh water entering the world's oceans. Its freshwater plume extends roughly 160 km (100 miles) into the Atlantic Ocean, where reduced salinity was historically noted by early explorers.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Scale Surprise / Estimation Challenge",
+          "why_interesting": "The idea of fresh drinking water in the middle of the ocean — far from land — captures the scale of the Amazon's discharge",
+          "universal_appeal": "The Amazon is one of the world's most famous rivers. Ocean salinity is a universal concept.",
+          "boring_check": "Three options spanning 160x range. The correct answer (160 km+) is maximally surprising — sailors could find fresh water far out of sight of land."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 8,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "answerability": 8,
+          "overall_score": 8.0,
+          "reasoning": "Player can reason: Amazon is enormous; 20% of global river discharge → the plume must be vast. The '160 km' answer demonstrates that the Amazon essentially creates a freshwater zone in the open ocean."
+        },
+        "ai_score": 8.0
+      }
+    }
+  ],
+  "metadata": {
+    "model": "claude-opus-4-6",
+    "provider": "anthropic",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "total_generated": 22,
+    "total_selected": 15,
+    "pipeline": "claude_code_session",
+    "prompt_version": "v2_cot",
+    "topics": ["History", "Geography"],
+    "difficulty_distribution": {
+      "easy": 3,
+      "medium": 8,
+      "hard": 4
+    }
+  }
+}

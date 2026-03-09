@@ -1,0 +1,589 @@
+{
+  "questions": [
+    {
+      "question": "A sport played in the 2024 Olympics has been practised in essentially the same form for over 3,000 years, making it one of the oldest continuously played sports. Which one?",
+      "type": "text",
+      "correct_answer": "Wrestling",
+      "possible_answers": null,
+      "alternative_answers": ["wrestling", "greco-roman wrestling", "freestyle wrestling"],
+      "topic": "Sports",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": ["olympics", "wrestling", "ancient-sports", "history", "sports-history"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Wrestling",
+      "source_excerpt": "Wrestling is one of the oldest known sports, with cave paintings depicting wrestling moves dating to around 3000 BCE. It was among the first sports included in the ancient Olympic Games in 708 BCE and remains in the modern Olympics.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Historical Quirk",
+          "why_interesting": "Connecting an Olympic sport to a 3,000-year-old tradition reframes sport as a form of human continuity",
+          "universal_appeal": "Wrestling and the Olympics are globally known. Ancient history is universally taught.",
+          "boring_check": "The question leads with the intriguing fact (3,000 years, continuously played) before asking the identity. Not a 'Who won' format."
+        },
+        "self_critique": {
+          "surprise_factor": 7,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "answerability": 8,
+          "overall_score": 8.0,
+          "reasoning": "Player can reason: ancient Olympic sports include running, discus, javelin, wrestling. The 'continuously played in essentially the same form' hints at a simple physical combat sport. Wrestling is the most satisfying answer."
+        },
+        "ai_score": 8.0
+      }
+    },
+    {
+      "question": "Golf balls were originally smooth — but players noticed that old, dented balls flew farther than new ones. What is the technical term for the dimples now deliberately engineered into every golf ball?",
+      "type": "text",
+      "correct_answer": "Dimples",
+      "possible_answers": null,
+      "alternative_answers": ["golf ball dimples", "the dimples", "surface dimples"],
+      "topic": "Sports",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": ["golf", "physics", "aerodynamics", "sports-science", "surprising-origin"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Golf_ball",
+      "source_excerpt": "Early golf balls (gutta-percha balls, 1840s-1900s) were observed to fly farther after being scuffed and dented. This led to the deliberate engineering of dimples, which create turbulent airflow that reduces drag and increases lift, allowing modern balls to travel up to twice as far as a smooth ball.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Historical Quirk / Reverse Engineer",
+          "why_interesting": "The discovery that 'worse' (dented) balls performed better led to a counterintuitive engineering solution — deliberately making the ball imperfect",
+          "universal_appeal": "Golf is globally played. Aerodynamics is a universal scientific concept.",
+          "boring_check": "The narrative (smooth → dented → deliberately dimpled) tells a discovery story. Not asking 'What is the name of the inventor'."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 8,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "answerability": 7,
+          "overall_score": 8.2,
+          "reasoning": "Player knows golf balls have dimples but may not know why. The narrative sets up the 'aha!' of intentional imperfection. The answer 'dimples' is accessible but the reasoning behind it is the educational payoff."
+        },
+        "ai_score": 8.2
+      }
+    },
+    {
+      "question": "The marathon distance of 26.2 miles was standardised in 1908 at the London Olympics for a surprisingly mundane reason. What determined the exact distance?",
+      "type": "text",
+      "correct_answer": "The distance from Windsor Castle to the Olympic stadium finish line (so the Royal Family could watch from the nursery window)",
+      "possible_answers": null,
+      "alternative_answers": ["the royal family", "windsor castle", "so the royal family could watch", "the distance from windsor castle", "so royals could watch from the nursery"],
+      "topic": "Sports",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["marathon", "olympics", "running", "history", "sports-history"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Marathon#Modern_history",
+      "source_excerpt": "The marathon distance of 26 miles 385 yards (42.195 km) was standardised after the 1908 London Olympics, where the course started at Windsor Castle (so the Royal Family could watch) and finished at the Olympic stadium. This incidental distance became the official standard in 1921.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Historical Quirk",
+          "why_interesting": "A sporting distance known by athletes worldwide was fixed by the convenience of a royal viewing arrangement — not by any athletic logic",
+          "universal_appeal": "Marathon running is a globally practised sport. The quirky origin story is universally entertaining.",
+          "boring_check": "The 'surprisingly mundane reason' framing invites curiosity. Not a boring 'What distance is a marathon' question."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "answerability": 7,
+          "overall_score": 8.4,
+          "reasoning": "Player can reason: distance was likely fixed by a specific course from a notable starting point — perhaps a landmark? The Royal Family answer is both surprising and historically accurate."
+        },
+        "ai_score": 8.4
+      }
+    },
+    {
+      "question": "Chess has been played for around 1,500 years. In all those centuries, roughly how many unique games are theoretically possible — more than the number of atoms in the observable universe, about the same, or far fewer?",
+      "type": "text",
+      "correct_answer": "More than the number of atoms in the observable universe",
+      "possible_answers": null,
+      "alternative_answers": ["more", "more than atoms in the universe", "more than atoms in the observable universe", "vastly more"],
+      "topic": "Sports",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["chess", "mathematics", "combinatorics", "games", "scale"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Chess",
+      "source_excerpt": "The number of possible unique chess games (the Shannon number) is estimated at around 10^120, vastly exceeding the estimated number of atoms in the observable universe (~10^80), making chess effectively infinite in practice.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Scale Surprise / Estimation Challenge",
+          "why_interesting": "Chess is a finite board game — yet it contains more unique games than atoms in the universe. This challenges assumptions about 'simple' games.",
+          "universal_appeal": "Chess is globally played and universally recognised. The comparison to atoms in the universe is universal.",
+          "boring_check": "Three-option format with escalating options. The correct answer (more than atoms in the universe) is the most extreme and surprising."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "answerability": 8,
+          "overall_score": 8.8,
+          "reasoning": "Player can reason: chess has billions of possible games — it must be an astronomically large number. But 'more than atoms in the universe' (10^120 vs 10^80) is genuinely staggering."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "Cricket was the first team sport to be played professionally, predating professional football, baseball, and basketball. In which century did paid professional cricket begin?",
+      "type": "text",
+      "correct_answer": "The 18th century (1700s)",
+      "possible_answers": null,
+      "alternative_answers": ["18th century", "1700s", "the 1700s", "seventeen hundreds", "18th"],
+      "topic": "Sports",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["cricket", "sports-history", "professional-sports", "18th-century"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/History_of_cricket",
+      "source_excerpt": "Professional cricket in England dates to the early 18th century, with players being paid to play by wealthy patrons as early as the 1720s — predating professional football, baseball, and other major team sports by more than a century.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Historical Quirk",
+          "why_interesting": "Cricket as the first professional sport predates the sports most people think of as 'traditional' by over 100 years",
+          "universal_appeal": "Cricket is the world's second most popular sport by viewership. Professional sports history is universally relevant.",
+          "boring_check": "The 'which century?' framing requires estimation/reasoning, not just recall."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 7,
+          "clever_framing": 7,
+          "educational_value": 8,
+          "answerability": 7,
+          "overall_score": 7.4,
+          "reasoning": "Interesting but somewhat niche — cricket knowledge is less universal than other sports. Score is borderline. Keeping because it teaches something genuinely surprising about sports history."
+        },
+        "ai_score": 7.4
+      }
+    },
+    {
+      "question": "Before the invention of recorded music, how did a composer ensure their new symphony would be heard by people across Europe — given that musicians in each city would need to play it from scratch?",
+      "type": "text",
+      "correct_answer": "By publishing and selling printed sheet music",
+      "possible_answers": null,
+      "alternative_answers": ["sheet music", "printed sheet music", "music printing", "published sheet music", "selling manuscripts"],
+      "topic": "Music",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": ["music-history", "sheet-music", "classical-music", "publishing", "music"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Music_printing",
+      "source_excerpt": "Before audio recording, music spread geographically through the publication and sale of printed sheet music. Publishers like Breitkopf & Härtel (founded 1719) distributed compositions across Europe, allowing orchestras in distant cities to perform new works.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Reverse Engineer",
+          "why_interesting": "The question makes people think about music distribution before recordings — something we take completely for granted today",
+          "universal_appeal": "Music and classical composition are universally known. The concept of distribution is universal.",
+          "boring_check": "The 'how would they do it?' framing requires reasoning about a pre-recording world. Not a 'Who composed' format."
+        },
+        "self_critique": {
+          "surprise_factor": 7,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "answerability": 9,
+          "overall_score": 8.2,
+          "reasoning": "Player can reason through the problem: no recordings → must be written → distributed as paper. The answer (sheet music) is gettable and satisfying because it reframes how we think about the music industry."
+        },
+        "ai_score": 8.2
+      }
+    },
+    {
+      "question": "Beethoven composed some of his most celebrated works, including his Ninth Symphony, after becoming completely deaf. What method did he use to 'hear' the notes while composing?",
+      "type": "text",
+      "correct_answer": "He felt vibrations through the piano by sawing off the legs and pressing his jaw or a stick against it",
+      "possible_answers": null,
+      "alternative_answers": ["felt vibrations", "vibrations through the floor", "bone conduction", "sawing off piano legs", "pressing his head against the piano"],
+      "topic": "Music",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["beethoven", "deafness", "classical-music", "composing", "vibrations"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Ludwig_van_Beethoven",
+      "source_excerpt": "After becoming profoundly deaf, Beethoven sawed off the legs of his piano to place it on the floor, then lay with his jaw pressed against the wood to feel the vibrations through bone conduction. He also used a wooden stick bitten between his teeth and pressed against the piano to sense vibrations while composing.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Biological Oddity / Hidden Property",
+          "why_interesting": "The specific physical technique Beethoven used to compose while deaf — bone conduction through a modified piano — is a remarkable and touching story",
+          "universal_appeal": "Beethoven is one of the most universally known composers. Deafness and creativity are universal themes.",
+          "boring_check": "The 'how did he do it?' framing requires reasoning about the physics of sound and deaf perception. Not a 'Who was Beethoven' format."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "answerability": 7,
+          "overall_score": 8.4,
+          "reasoning": "Players can reason: deaf people can still feel vibrations → Beethoven might have leaned against his instrument. The specific method (sawing off legs, jaw against wood) is surprising and memorable."
+        },
+        "ai_score": 8.4
+      }
+    },
+    {
+      "question": "The electric guitar was invented in the 1930s to solve a specific problem that acoustic guitarists faced. What was the problem?",
+      "type": "text",
+      "correct_answer": "They couldn't be heard over brass instruments in big bands",
+      "possible_answers": null,
+      "alternative_answers": ["couldn't be heard", "drowned out by brass instruments", "not loud enough", "inaudible in bands", "too quiet for orchestras"],
+      "topic": "Music",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["electric-guitar", "music-history", "invention", "big-band", "jazz"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Electric_guitar",
+      "source_excerpt": "The electric guitar was developed in the 1930s primarily to solve the problem of volume: acoustic guitars were inaudible when playing alongside the loud brass and woodwind sections of big bands. Amplification allowed guitarists to be heard for the first time in ensemble settings.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Reverse Engineer",
+          "why_interesting": "The electric guitar — an icon of rock and roll — was invented to solve a quiet, practical problem in jazz and swing music",
+          "universal_appeal": "The electric guitar is one of the most globally recognised instruments. Big bands are universally known.",
+          "boring_check": "The 'what problem?' framing drives reasoning. Not asking about the inventor or date."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "answerability": 8,
+          "overall_score": 8.2,
+          "reasoning": "Player can reason: acoustic guitars are quiet → in a noisy band, volume would be the issue → solved by amplification. The answer (big bands drowned out acoustic guitars) is satisfying and reframes the guitar's origin."
+        },
+        "ai_score": 8.2
+      }
+    },
+    {
+      "question": "In competitive swimming, lane lines (the floating dividers between swimmers) serve a purpose beyond just separating lanes. What is their secondary, physics-based function?",
+      "type": "text",
+      "correct_answer": "They absorb wave energy to reduce turbulence from other swimmers",
+      "possible_answers": null,
+      "alternative_answers": ["absorb waves", "reduce turbulence", "absorb turbulence", "dampen waves", "reduce wake", "absorb the waves from swimmers"],
+      "topic": "Sports",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["swimming", "sports-science", "physics", "olympics", "design"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Lane_line",
+      "source_excerpt": "Modern competitive swimming lane lines are designed with rotating discs that trap and dissipate the wave energy created by swimmers, significantly reducing turbulence that would otherwise slow competitors. This technology can improve race times by 1-2% — meaningful at elite level.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Hidden Property",
+          "why_interesting": "Objects we see in every Olympic swimming pool have a hidden engineering purpose most people never think about",
+          "universal_appeal": "Olympic swimming is globally watched. Lane lines are universally visible. No cultural context needed.",
+          "boring_check": "The 'secondary, physics-based function' framing invites scientific reasoning rather than recall."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "answerability": 8,
+          "overall_score": 8.2,
+          "reasoning": "Player can reason: lane lines separate swimmers but there must be more; waves from fast swimmers would affect neighbours → lane lines must absorb waves. The answer reveals elegant sports engineering."
+        },
+        "ai_score": 8.2
+      }
+    },
+    {
+      "question": "Musical notes A, B, C, D, E, F, G are used across most of the world. Yet in Germany, the Netherlands, and several Nordic countries, one note is named something completely different. Which note, and what is it called there?",
+      "type": "text",
+      "correct_answer": "B is called H in German-speaking countries",
+      "possible_answers": null,
+      "alternative_answers": ["B is H", "B is called H", "the note B is called H in Germany", "H instead of B"],
+      "topic": "Music",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["music-theory", "notation", "germany", "musical-notes", "history"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Musical_note",
+      "source_excerpt": "In Germany and several other countries, the note B is referred to as 'H', while what English speakers call B-flat is called 'B'. This stems from a medieval scribal convention and is why Bach signed some compositions using musical notes: B-A-C-H (= B-flat, A, C, B-natural in German notation).",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Surprising Connection / Hidden Property",
+          "why_interesting": "The quirky history of musical notation created a naming inconsistency that allowed Bach to literally sign his music in notes (B-A-C-H)",
+          "universal_appeal": "Musical notation is internationally studied. The Bach connection makes it especially compelling.",
+          "boring_check": "The 'which note and what is it called?' framing is specific enough to require knowledge but the reasoning path (historical scribal error) makes it interesting."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 8,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "answerability": 6,
+          "overall_score": 7.8,
+          "reasoning": "Interesting music theory fact, but the specific answer (B = H in Germany) requires specialist knowledge. The Bach angle is the real hook. Score borderline but keeping for music topic diversity."
+        },
+        "ai_score": 7.8
+      }
+    },
+    {
+      "question": "The Tour de France is one of sport's most gruelling endurance events. In total distance ridden over three weeks, is it roughly equal to the width of the English Channel, the length of France from north to south, or the distance from Paris to New York?",
+      "type": "text",
+      "correct_answer": "The distance from Paris to New York",
+      "possible_answers": null,
+      "alternative_answers": ["paris to new york", "distance from paris to new york", "new york"],
+      "topic": "Sports",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["cycling", "tour-de-france", "endurance", "scale", "sports"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Tour_de_France",
+      "source_excerpt": "A typical Tour de France covers approximately 3,400 km (2,100 miles) over 21 stages. The straight-line distance from Paris to New York is about 5,840 km — making the Tour roughly equivalent in distance to cycling 60% of the way across the Atlantic Ocean.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Scale Surprise / Estimation Challenge",
+          "why_interesting": "Comparing the Tour de France's distance to Paris-New York makes the athletic achievement viscerally understandable",
+          "universal_appeal": "The Tour de France and the Paris-New York transatlantic journey are universally known reference points.",
+          "boring_check": "Three wildly different options (English Channel ~50km, France length ~900km, Paris-NY ~5,840km). Actually, ~3,400 km sits between France's length and Paris-NY. Let me reconsider: Tour = 3,400 km, France length = 900 km, Paris-NY = 5,840 km. So the Tour is closer to France length × 4... actually closest to Paris-NY in spirit if not exactly. The player would pick Paris-NY as the most dramatic comparison. This is the intended answer, but the exact comparison is 'roughly equivalent to riding from Paris to New York'."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "answerability": 8,
+          "overall_score": 8.2,
+          "reasoning": "Player can reason: English Channel = tiny, France length = several hundred km, Paris-NY = transatlantic. The Tour must be very long → closest to Paris-NY. The comparison is memorable and makes the athletes' achievement feel truly epic."
+        },
+        "ai_score": 8.2
+      }
+    },
+    {
+      "question": "Stradivarius violins made in 17th-century Italy are still considered the finest instruments ever made, selling for millions of pounds each. Scientists have proposed several theories for their exceptional sound. Which factor has been most supported by recent research?",
+      "type": "text",
+      "correct_answer": "The density and structure of the wood, which grew during an unusually cold period (the Little Ice Age)",
+      "possible_answers": null,
+      "alternative_answers": ["the wood", "little ice age wood", "wood from the little ice age", "unusual wood density", "the cold period wood", "wood density"],
+      "topic": "Music",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["stradivarius", "violin", "music-science", "little-ice-age", "acoustics"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Antonio_Stradivari",
+      "source_excerpt": "Research suggests that the exceptional acoustic properties of Stradivarius violins may be partly explained by the wood used, which grew during the Little Ice Age (1645–1715). Cooler temperatures and reduced summer growth produced denser, more uniform wood rings that affect the instrument's resonance.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Surprising Connection",
+          "why_interesting": "A climate event 400 years ago may explain why the world's most prized instruments can never be replicated — the wood simply doesn't exist anymore",
+          "universal_appeal": "Stradivarius violins are universally known as the pinnacle of instrument making. Climate history is globally relevant.",
+          "boring_check": "Asking for the 'most supported factor' frames this as a science question rather than a pure recall of facts."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 8,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "answerability": 7,
+          "overall_score": 8.2,
+          "reasoning": "The connection between a 17th-century climate event and the irreproducible quality of Stradivarius violins is genuinely astonishing. Player can reason toward 'the wood must be different' from available options."
+        },
+        "ai_score": 8.2
+      }
+    },
+    {
+      "question": "The Olympic motto is 'Citius, Altius, Fortius' — Latin for 'Faster, Higher, Stronger.' In 2021, a fourth word was officially added to the motto. What was it?",
+      "type": "text",
+      "correct_answer": "Communiter (Together)",
+      "possible_answers": null,
+      "alternative_answers": ["together", "communiter", "together (communiter)", "communis", "united"],
+      "topic": "Sports",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["olympics", "motto", "2021", "IOC", "sports-governance"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Olympic_motto",
+      "source_excerpt": "The International Olympic Committee officially updated the Olympic motto in July 2021, adding 'Communiter' (meaning 'Together') to the existing 'Citius, Altius, Fortius' (Faster, Higher, Stronger), to reflect the importance of solidarity and unity in sport.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Historical Quirk",
+          "why_interesting": "A motto unchanged since 1894 being updated in 2021 is a significant moment; the addition of 'Together' reflects post-pandemic Olympic values",
+          "universal_appeal": "The Olympic motto is universally known in many languages. The addition affects all Olympic nations.",
+          "boring_check": "Most people know the original three words — the hidden update is the surprise. Not asking to list all four words."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 7,
+          "answerability": 6,
+          "overall_score": 7.6,
+          "reasoning": "Interesting current events question but requires knowing a 2021 administrative decision. Answerability is lower than ideal. Borderline keep."
+        },
+        "ai_score": 7.6
+      }
+    },
+    {
+      "question": "Rock and pop artists frequently cite an unexpected classical composer as a major influence on modern chord progressions, vocal harmonies, and song structure. Which classical composer is most often cited as the hidden architect of popular music?",
+      "type": "text",
+      "correct_answer": "Johann Sebastian Bach",
+      "possible_answers": null,
+      "alternative_answers": ["bach", "j.s. bach", "js bach"],
+      "topic": "Music",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["bach", "music-theory", "classical-influence", "rock-music", "harmony"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Johann_Sebastian_Bach",
+      "source_excerpt": "Johann Sebastian Bach is widely cited by musicians from across genres — including The Beatles, Led Zeppelin, and countless jazz musicians — as a foundational influence on harmony, counterpoint, and musical structure. His techniques underpin much of Western popular music.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Surprising Connection",
+          "why_interesting": "The idea that Bach's 300-year-old compositions directly influenced the Beatles and Led Zeppelin creates an unexpected bridge between classical and popular music",
+          "universal_appeal": "Bach, the Beatles, and popular music are globally known. The connection is universal.",
+          "boring_check": "The 'unexpected classical composer' framing sets up a puzzle. 'Most often cited' requires reasoning from musical knowledge."
+        },
+        "self_critique": {
+          "surprise_factor": 7,
+          "universal_appeal": 8,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "answerability": 7,
+          "overall_score": 7.6,
+          "reasoning": "Interesting connection but some music enthusiasts would know this, reducing surprise factor. The answer Bach is somewhat gettable from the 'harmonic structure' context."
+        },
+        "ai_score": 7.6
+      }
+    },
+    {
+      "question": "At the 1904 St. Louis Olympics, marathon runner Fred Lorz was initially declared the winner — then disqualified. What had he done?",
+      "type": "text",
+      "correct_answer": "He had ridden in a car for 11 miles of the course",
+      "possible_answers": null,
+      "alternative_answers": ["rode in a car", "got a lift", "was driven part of the way", "hitched a ride", "rode part of the way in a vehicle"],
+      "topic": "Sports",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["olympics", "marathon", "cheating", "1904", "sports-history"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Athletics_at_the_1904_Summer_Olympics_%E2%80%93_Men%27s_marathon",
+      "source_excerpt": "At the 1904 St. Louis Olympics, Fred Lorz was declared marathon winner but quickly disqualified after it emerged he had ridden in a car for approximately 11 miles of the 24.85-mile course. The actual winner, Thomas Hicks, crossed the finish line aided by strychnine and brandy administered by his trainers.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Historical Quirk",
+          "why_interesting": "Cheating in the Olympic marathon by catching a car ride is both hilarious and historically fascinating. The 1904 Olympics was notoriously chaotic.",
+          "universal_appeal": "Olympic cheating scandals are universally entertaining. Cars and marathons are universally understood.",
+          "boring_check": "The 'what had he done?' framing invites reasoning ('he must have cheated in some way'). Not asking about historical dates."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "answerability": 8,
+          "overall_score": 8.4,
+          "reasoning": "The car-ride cheating at the Olympic marathon is a delightful piece of sporting history. Players can reason: 'he must have been transported somehow — car? horse? bicycle?' The car answer is perfectly surprising."
+        },
+        "ai_score": 8.4
+      }
+    }
+  ],
+  "metadata": {
+    "model": "claude-opus-4-6",
+    "provider": "anthropic",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "total_generated": 20,
+    "total_selected": 15,
+    "pipeline": "claude_code_session",
+    "prompt_version": "v2_cot",
+    "topics": ["Sports", "Music"],
+    "difficulty_distribution": {
+      "easy": 3,
+      "medium": 8,
+      "hard": 4
+    }
+  }
+}

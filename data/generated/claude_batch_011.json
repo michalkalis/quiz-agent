@@ -1,0 +1,604 @@
+{
+  "questions": [
+    {
+      "question": "In the animal kingdom, pregnancy is almost universally a female role. One group of fish breaks this rule completely — the males become pregnant, carry the developing young in a specialised pouch, and give birth. What are these fish?",
+      "type": "text",
+      "correct_answer": "Seahorses",
+      "possible_answers": null,
+      "alternative_answers": ["seahorse", "sea horses", "sea horse", "pipefish", "syngnathidae"],
+      "topic": "Nature",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": ["biology", "marine-life", "reproduction", "seahorse", "gender-roles"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Counter-intuitive Truth",
+          "why_interesting": "Male pregnancy reverses one of the most fundamental assumptions about reproduction in the animal kingdom. It challenges the universal expectation that females carry young.",
+          "universal_appeal": "Seahorses are known worldwide. The concept of pregnancy and gender roles is universally understood.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 10,
+          "overall_score": 9.0,
+          "reasoning": "The narrative setup about pregnancy being a female role creates misdirection before revealing the exception. Seahorses are gettable for most adults but the framing makes it engaging. Factually rock-solid."
+        },
+        "ai_score": 9.0
+      }
+    },
+    {
+      "question": "The platypus hunts underwater with its eyes, ears, and nostrils all closed. Instead, it detects prey using a sense that almost no other mammal possesses. What does it detect?",
+      "type": "text",
+      "correct_answer": "Electric fields",
+      "possible_answers": null,
+      "alternative_answers": ["electricity", "electrical signals", "electroreception", "electric signals", "electromagnetic fields", "electrical fields"],
+      "topic": "Nature",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["biology", "platypus", "electroreception", "mammals", "senses"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Hidden Property",
+          "why_interesting": "Electroreception is typically associated with sharks and rays, not mammals. The platypus having this 'sixth sense' while hunting blind is deeply counterintuitive.",
+          "universal_appeal": "The platypus is globally famous as one of nature's oddest creatures. The concept of extra senses is universally fascinating.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 9.0,
+          "reasoning": "The setup (eyes, ears, nostrils all closed) creates a genuine mystery. Players can reason: underwater, needs to find prey without sight or sound — must be something exotic. Electric fields is surprising but logical once revealed."
+        },
+        "ai_score": 9.0
+      }
+    },
+    {
+      "question": "Scientists estimated in 2022 that the total number of ants alive on Earth at any given moment is approximately: 2 billion, 200 billion, or 20 quadrillion?",
+      "type": "text",
+      "correct_answer": "20 quadrillion",
+      "possible_answers": null,
+      "alternative_answers": ["20 quadrillion ants", "quadrillions", "about 20 quadrillion"],
+      "topic": "Nature",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["biology", "ants", "scale", "insects", "population"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Estimation Challenge / Scale Surprise",
+          "why_interesting": "The number is so staggeringly large (20 quadrillion = 20,000,000,000,000,000) that it defies intuition. Even 200 billion feels like a huge number, but the truth is 100,000 times larger.",
+          "universal_appeal": "Ants exist on every continent except Antarctica. The concept of scale is universally engaging.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.8,
+          "reasoning": "Three options spanning many orders of magnitude make this a genuine estimation challenge. Players can reason: ants are everywhere, colonies contain millions, and there are millions of colonies — so the most extreme option wins. Based on the 2022 study published in PNAS."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "The Amazon rainforest — the most biodiverse ecosystem on Earth — depends on a yearly nutrient delivery from an unlikely source thousands of kilometres away. Where does this vital fertiliser come from?",
+      "type": "text",
+      "correct_answer": "The Sahara Desert",
+      "possible_answers": null,
+      "alternative_answers": ["Sahara", "Sahara desert", "the Sahara", "African desert dust", "Saharan dust", "dust from the Sahara"],
+      "topic": "Nature",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["ecology", "amazon", "sahara", "dust", "nutrients", "rainforest"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Surprising Connection",
+          "why_interesting": "The connection between the world's largest desert and the world's largest rainforest is deeply counterintuitive. A barren wasteland fertilising the most lush ecosystem on Earth reverses expectations.",
+          "universal_appeal": "Both the Amazon and the Sahara are globally recognised landmarks. No cultural specificity.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 8,
+          "factual_accuracy": 9,
+          "overall_score": 8.8,
+          "reasoning": "About 27 million tonnes of Saharan dust cross the Atlantic annually, delivering phosphorus to the Amazon basin. Players can reason: thousands of km away, unlikely source — perhaps wind-blown material from Africa? The desert-to-rainforest connection creates a memorable 'aha' moment."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "An octopus has three hearts. Two pump blood to the gills, and one pumps it to the rest of the body. But when an octopus swims, something unusual happens — what stops working?",
+      "type": "text",
+      "correct_answer": "The heart that pumps to the body stops beating",
+      "possible_answers": null,
+      "alternative_answers": ["its heart stops", "the systemic heart stops", "one of its hearts stops", "the main heart", "the body heart stops", "its third heart stops beating"],
+      "topic": "Nature",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["biology", "octopus", "hearts", "marine-life", "physiology"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Biological Oddity / Hidden Property",
+          "why_interesting": "Having three hearts is already surprising. Learning that one stops during swimming — making the octopus tire easily, which is why they prefer crawling — adds a delightful layer of biological weirdness.",
+          "universal_appeal": "Octopuses are fascinating to people worldwide. The concept of a heart stopping during exercise inverts human experience.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 9.0,
+          "reasoning": "The question gives away the three hearts as context, then asks the genuinely surprising follow-up. Players can reason: something physiological changes during exertion. The systemic heart stopping is counterintuitive — in humans, exercise makes the heart work harder, not stop."
+        },
+        "ai_score": 9.0
+      }
+    },
+    {
+      "question": "In 2016, scientists used radiocarbon dating on the eye lenses of Greenland sharks and discovered they are the longest-lived vertebrates known. Approximately how old was the oldest specimen — closer to 150 years, 300 years, or 500 years?",
+      "type": "text",
+      "correct_answer": "About 500 years",
+      "possible_answers": null,
+      "alternative_answers": ["500 years", "roughly 500 years", "around 400 years", "400 years", "nearly 400 years", "392 years"],
+      "topic": "Nature",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["biology", "sharks", "longevity", "marine-life", "greenland-shark"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Estimation Challenge / Scale Surprise",
+          "why_interesting": "A single shark alive today could have been born during the reign of Henry VIII. The idea of a vertebrate living for five centuries challenges assumptions about animal lifespans.",
+          "universal_appeal": "Sharks and extreme longevity are universally fascinating. No cultural specificity.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.8,
+          "reasoning": "Three options spanning a plausible range. Players can reason: the question says 'longest-lived vertebrate' so it must be extreme. The 2016 study estimated one specimen at ~392 years (margin of error reaching ~512 years), making 'about 500' the best answer among the three options."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "If you placed Mount Everest at the bottom of the Mariana Trench — the deepest point in the ocean — would Everest's summit peek above the water surface, sit just below the surface, or still be more than a kilometre underwater?",
+      "type": "text",
+      "correct_answer": "More than a kilometre underwater",
+      "possible_answers": null,
+      "alternative_answers": ["more than a km underwater", "over a kilometer underwater", "still underwater", "more than a mile underwater", "about 2 km underwater"],
+      "topic": "Nature",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["geography", "ocean", "mountains", "scale", "mariana-trench", "everest"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Scale Surprise / Estimation Challenge",
+          "why_interesting": "People tend to think of Everest as the ultimate measure of height and the Mariana Trench as roughly comparable in depth. The reality — Everest would be submerged by over 2 km — reveals how much deeper the ocean is than most people realise.",
+          "universal_appeal": "Mount Everest and ocean depth are universally known concepts. No cultural barriers.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.8,
+          "reasoning": "Everest is 8,849m; Mariana Trench is ~11,034m — leaving over 2,000m of water above Everest's summit. Three options with physical imagery make it estimatable. The most extreme answer wins, which follows the pattern of good scale surprises."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "Nintendo, the company behind Mario and the Switch, was founded in 1889 — decades before the invention of electronic computers. What product did Nintendo originally manufacture?",
+      "type": "text",
+      "correct_answer": "Playing cards",
+      "possible_answers": null,
+      "alternative_answers": ["cards", "hanafuda cards", "hanafuda", "card games", "Japanese playing cards"],
+      "topic": "History",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": ["business-history", "nintendo", "japan", "gaming", "origin-story"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Reverse Engineer / Origin Story",
+          "why_interesting": "Nintendo is synonymous with video games, so discovering it predates electronic computers by 60+ years is jarring. Playing cards is a delightful connection — still games, just analogue.",
+          "universal_appeal": "Nintendo is one of the most recognised brands worldwide. No cultural barriers.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 10,
+          "overall_score": 9.2,
+          "reasoning": "The 1889 date creates cognitive dissonance with the modern gaming brand. Players can reason: what kind of entertainment existed in 1889 Japan? Cards, toys, maybe games. The answer (hanafuda playing cards) connects beautifully to Nintendo's gaming identity."
+        },
+        "ai_score": 9.2
+      }
+    },
+    {
+      "question": "France's last execution by guillotine took place on 10 September 1977. What blockbuster film — now considered a landmark in cinema history — had been released in theatres just three months earlier?",
+      "type": "text",
+      "correct_answer": "Star Wars",
+      "possible_answers": null,
+      "alternative_answers": ["star wars", "Star Wars: A New Hope", "A New Hope", "star wars a new hope"],
+      "topic": "History",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["france", "guillotine", "star-wars", "1977", "timeline", "juxtaposition"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Historical Quirk / Surprising Connection",
+          "why_interesting": "The guillotine feels like an 18th-century relic, yet it was used in the same year that Star Wars premiered. This juxtaposition of archaic violence and futuristic fantasy is deeply jarring.",
+          "universal_appeal": "Star Wars is one of the most universally recognised films. The guillotine and the French Revolution are globally taught history.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 10,
+          "overall_score": 9.2,
+          "reasoning": "The juxtaposition is stunning: while audiences watched lightsaber battles in space, France was still using a blade from the Revolution. Players can reason: 1977 — what was the biggest film? Star Wars (May 1977). The guillotine execution was September 1977, confirmed as the last."
+        },
+        "ai_score": 9.2
+      }
+    },
+    {
+      "question": "The last samurai in Japan and the cowboys of the American Wild West existed during the same era. When Japan officially abolished the samurai class in 1876, a famous American frontier figure was still alive and would soon star in touring Wild West shows. Who was he?",
+      "type": "text",
+      "correct_answer": "Buffalo Bill",
+      "possible_answers": null,
+      "alternative_answers": ["Buffalo Bill Cody", "William Cody", "William Frederick Cody", "Wyatt Earp", "Billy the Kid"],
+      "topic": "History",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["samurai", "wild-west", "japan", "america", "timeline", "19th-century"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Historical Quirk / Surprising Connection",
+          "why_interesting": "Samurai and cowboys feel like they belong to entirely different historical eras and cultural worlds, but they overlapped in time. Buffalo Bill's Wild West show started in 1883, just 7 years after samurai were abolished.",
+          "universal_appeal": "Both samurai and cowboys are globally iconic cultural figures. No niche knowledge required.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 8,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 8,
+          "factual_accuracy": 9,
+          "overall_score": 8.7,
+          "reasoning": "The temporal overlap between samurai and cowboys is genuinely mind-bending. Multiple acceptable answers (Buffalo Bill, Wyatt Earp, Billy the Kid) make it gettable. The 'Wild West shows' clue points most directly to Buffalo Bill Cody, who started his show in 1883."
+        },
+        "ai_score": 8.7
+      }
+    },
+    {
+      "question": "Harvard University was founded in 1636. Isaac Newton and Gottfried Leibniz independently developed calculus in the late 1680s. So which came first — America's oldest university or the branch of mathematics that every university now teaches in freshman year?",
+      "type": "text",
+      "correct_answer": "Harvard University",
+      "possible_answers": null,
+      "alternative_answers": ["harvard", "the university", "Harvard came first"],
+      "topic": "History",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["education", "mathematics", "harvard", "history-of-science", "timeline"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Comparison Bet",
+          "why_interesting": "Calculus feels foundational and ancient, while American universities feel relatively modern. The inversion — Harvard predating calculus by 50 years — rewires assumptions about the timeline of knowledge.",
+          "universal_appeal": "Harvard is globally recognised. Calculus is taught worldwide. Both Newton and Leibniz are internationally known.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 8,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.8,
+          "reasoning": "Binary comparison with a genuinely surprising outcome. The question gives the dates openly (1636 vs late 1680s) so the player can verify the answer from the question itself — but the surprise is in the juxtaposition. Makes you rethink how 'old' American institutions really are."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "Alfred Nobel — the inventor of dynamite — was motivated to create the Nobel Prizes after a French newspaper accidentally published his obituary while he was still alive, calling him 'the merchant of death.' The first Nobel Prizes were awarded in what year — closer to 1850, 1901, or 1950?",
+      "type": "text",
+      "correct_answer": "1901",
+      "possible_answers": null,
+      "alternative_answers": ["in 1901", "around 1901", "the year 1901"],
+      "topic": "History",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["nobel-prize", "alfred-nobel", "dynamite", "obituary", "origin-story"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Origin Story / Estimation Challenge",
+          "why_interesting": "The backstory — a man so horrified by his own legacy that he dedicated his fortune to celebrating human achievement — is a powerful narrative. The premature obituary detail is the surprising hook.",
+          "universal_appeal": "The Nobel Prize is one of the most globally recognised awards. No cultural barriers.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.8,
+          "reasoning": "The narrative of Nobel reading his own damning obituary is compelling regardless of whether the player knows the exact date. Three options spanning 100 years make it a genuine estimation challenge. Nobel died in 1896 and the prizes began in 1901, five years after his death."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "The 1918 influenza pandemic killed an estimated 50 to 100 million people and is commonly called the 'Spanish Flu.' But it almost certainly did not originate in Spain. Why did Spain get the blame?",
+      "type": "text",
+      "correct_answer": "Spain was neutral in WWI and its press freely reported the outbreak, while wartime censors in other countries suppressed the news",
+      "possible_answers": null,
+      "alternative_answers": ["Spain was neutral in World War 1 so they reported it", "Spanish press reported it while other countries censored it", "wartime censorship", "other countries censored the news", "Spain was neutral and reported it openly", "press censorship during World War 1"],
+      "topic": "History",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["pandemic", "spanish-flu", "world-war-1", "censorship", "misconception"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Misconception Buster / Reverse Engineer",
+          "why_interesting": "The name 'Spanish Flu' is one of history's great misnomers. The reason — wartime censorship in belligerent nations vs free press in neutral Spain — teaches a broader lesson about how narratives are shaped by media and politics.",
+          "universal_appeal": "The 1918 pandemic and WWI are globally taught. The COVID-19 era made pandemic history more relevant than ever.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.8,
+          "reasoning": "Players can reason through this: 1918 = WWI, Spain was neutral, so maybe it has to do with the war? The answer (neutral Spain's press reported it openly while warring nations censored the news) is logical and teaches about media, censorship, and how names stick."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "Genetic studies suggest that roughly 1 in every 200 men alive today is a direct male-line descendant of a single person who lived in the 13th century — meaning about 16 million men carry his Y-chromosome. Who is this prolific ancestor?",
+      "type": "text",
+      "correct_answer": "Genghis Khan",
+      "possible_answers": null,
+      "alternative_answers": ["genghis khan", "Chinggis Khan", "Temujin", "Genghis"],
+      "topic": "History",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["genetics", "mongol-empire", "genghis-khan", "dna", "population"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Scale Surprise / Historical Quirk",
+          "why_interesting": "The intersection of modern genetics and medieval conquest creates a powerful narrative. One man's empire-building left a genetic legacy that persists 800 years later in 16 million living descendants.",
+          "universal_appeal": "Genghis Khan is one of the most universally recognised historical figures. DNA and ancestry are globally interesting topics.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 8,
+          "overall_score": 8.8,
+          "reasoning": "Players can reason: 13th century, vast male-line descendants, huge empire — Genghis Khan is the logical guess. The 2003 genetic study by Zerjal et al. is widely cited though somewhat debated in exact numbers. The core finding is well-established."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "Were woolly mammoths still walking the Earth when the ancient Egyptians began building the Great Pyramid of Giza around 2560 BCE?",
+      "type": "text",
+      "correct_answer": "Yes",
+      "possible_answers": null,
+      "alternative_answers": ["yes they were", "true", "yes, on Wrangel Island", "yes, a small population survived on Wrangel Island"],
+      "topic": "History",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": ["mammoths", "egypt", "pyramids", "ice-age", "timeline", "extinction"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Comparison Bet / Counter-intuitive Truth",
+          "why_interesting": "Mammoths are associated with the Ice Age — thousands of years before civilisation. The revelation that a population survived on Wrangel Island until ~2000 BCE (concurrent with Egyptian pyramid-building) shatters that assumption.",
+          "universal_appeal": "Mammoths and the Pyramids are among the most globally recognisable symbols of prehistory and ancient civilisation.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "clarity": 10,
+          "factual_accuracy": 9,
+          "overall_score": 9.0,
+          "reasoning": "Simple yes/no format but the answer is genuinely shocking. A small population of woolly mammoths survived on Russia's Wrangel Island until approximately 1650-2000 BCE, overlapping with early Egyptian civilisation. Crystal clear wording with no ambiguity."
+        },
+        "ai_score": 9.0
+      }
+    }
+  ],
+  "metadata": {
+    "model": "claude-opus-4-6",
+    "provider": "anthropic",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "total_generated": 22,
+    "total_selected": 15,
+    "pipeline": "claude_code_session",
+    "prompt_version": "v2_cot",
+    "topics": ["Nature", "History"],
+    "difficulty_distribution": {
+      "easy": 3,
+      "medium": 8,
+      "hard": 4
+    }
+  }
+}

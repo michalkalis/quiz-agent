@@ -106,8 +106,12 @@ class Question(BaseModel):
         description="AI generation details: {'model': 'gpt-4o', 'temperature': 0.8, 'prompt_version': 'v2', 'stage': 'regenerate', 'ai_score': 8.5, 'ai_reasoning': '...'}"
     )
 
-    # Media (for audio/image/video types - future)
+    # Media (for audio/image/video types)
     media_url: Optional[str] = Field(None, description="URL to audio/image/video file")
+    image_subtype: Optional[str] = Field(
+        None,
+        description="Image question subtype: silhouette | blind_map | hint_image"
+    )
     media_duration_seconds: Optional[int] = Field(
         None,
         description="Duration for audio/video"

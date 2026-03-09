@@ -60,17 +60,21 @@ struct QuestionView: View {
                         CategoryBadge(category: question.topic)
                     }
 
-                    // Question text in card
-                    Text(question.question)
-                        .font(.system(size: Theme.Typography.sizeXL, weight: .bold))
-                        .foregroundColor(Theme.Colors.textPrimary)
-                        .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(Theme.Spacing.lg)
-                        .frame(maxWidth: .infinity)
-                        .background(Theme.Colors.bgCard)
-                        .cornerRadius(Theme.Radius.xl)
-                        .padding(.horizontal, Theme.Spacing.md)
+                    // Image or text question card
+                    if question.hasImage {
+                        ImageQuestionView(question: question)
+                    } else {
+                        Text(question.question)
+                            .font(.system(size: Theme.Typography.sizeXL, weight: .bold))
+                            .foregroundColor(Theme.Colors.textPrimary)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding(Theme.Spacing.lg)
+                            .frame(maxWidth: .infinity)
+                            .background(Theme.Colors.bgCard)
+                            .cornerRadius(Theme.Radius.xl)
+                            .padding(.horizontal, Theme.Spacing.md)
+                    }
                 }
             } else {
                 ProgressView()

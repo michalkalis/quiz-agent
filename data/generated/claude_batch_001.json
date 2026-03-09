@@ -5,11 +5,19 @@
       "type": "text",
       "correct_answer": "Horseshoe crab",
       "possible_answers": null,
-      "alternative_answers": ["horseshoe crab", "horseshoe crabs"],
+      "alternative_answers": [
+        "horseshoe crab",
+        "horseshoe crabs"
+      ],
       "topic": "Nature",
       "category": "adults",
       "difficulty": "hard",
-      "tags": ["biology", "medicine", "evolution", "animals"],
+      "tags": [
+        "biology",
+        "medicine",
+        "evolution",
+        "animals"
+      ],
       "language_dependent": false,
       "source": "generated",
       "review_status": "pending_review",
@@ -42,11 +50,17 @@
       "type": "text",
       "correct_answer": "Venus",
       "possible_answers": null,
-      "alternative_answers": ["venus"],
-      "topic": "Space",
+      "alternative_answers": [
+        "venus"
+      ],
+      "topic": "Science",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["astronomy", "planets", "solar system"],
+      "tags": [
+        "astronomy",
+        "planets",
+        "solar system"
+      ],
       "language_dependent": false,
       "source": "generated",
       "review_status": "pending_review",
@@ -79,11 +93,20 @@
       "type": "text",
       "correct_answer": "Monopoly",
       "possible_answers": null,
-      "alternative_answers": ["monopoly", "the landlord's game", "landlords game"],
+      "alternative_answers": [
+        "monopoly",
+        "the landlord's game",
+        "landlords game"
+      ],
       "topic": "History",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["games", "history", "culture", "irony"],
+      "tags": [
+        "games",
+        "history",
+        "culture",
+        "irony"
+      ],
       "language_dependent": false,
       "source": "generated",
       "review_status": "pending_review",
@@ -116,11 +139,19 @@
       "type": "text",
       "correct_answer": "Koala",
       "possible_answers": null,
-      "alternative_answers": ["koala", "koalas", "koala bear"],
+      "alternative_answers": [
+        "koala",
+        "koalas",
+        "koala bear"
+      ],
       "topic": "Nature",
       "category": "adults",
       "difficulty": "hard",
-      "tags": ["biology", "animals", "forensics"],
+      "tags": [
+        "biology",
+        "animals",
+        "forensics"
+      ],
       "language_dependent": false,
       "source": "generated",
       "review_status": "pending_review",
@@ -153,11 +184,18 @@
       "type": "text",
       "correct_answer": "Australia",
       "possible_answers": null,
-      "alternative_answers": ["australia"],
+      "alternative_answers": [
+        "australia"
+      ],
       "topic": "History",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["history", "animals", "australia", "humor"],
+      "tags": [
+        "history",
+        "animals",
+        "australia",
+        "humor"
+      ],
       "language_dependent": false,
       "source": "generated",
       "review_status": "pending_review",
@@ -190,11 +228,19 @@
       "type": "text",
       "correct_answer": "Ketchup",
       "possible_answers": null,
-      "alternative_answers": ["ketchup", "tomato ketchup", "catsup"],
+      "alternative_answers": [
+        "ketchup",
+        "tomato ketchup",
+        "catsup"
+      ],
       "topic": "Food",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["food", "history", "medicine"],
+      "tags": [
+        "food",
+        "history",
+        "medicine"
+      ],
       "language_dependent": false,
       "source": "generated",
       "review_status": "pending_review",
@@ -227,11 +273,18 @@
       "type": "text",
       "correct_answer": "Coffee",
       "possible_answers": null,
-      "alternative_answers": ["coffee"],
+      "alternative_answers": [
+        "coffee"
+      ],
       "topic": "History",
       "category": "adults",
       "difficulty": "easy",
-      "tags": ["food", "history", "culture", "sweden"],
+      "tags": [
+        "food",
+        "history",
+        "culture",
+        "sweden"
+      ],
       "language_dependent": false,
       "source": "generated",
       "review_status": "pending_review",
@@ -264,11 +317,18 @@
       "type": "text",
       "correct_answer": "Gallium",
       "possible_answers": null,
-      "alternative_answers": ["gallium"],
+      "alternative_answers": [
+        "gallium"
+      ],
       "topic": "Science",
       "category": "adults",
       "difficulty": "hard",
-      "tags": ["chemistry", "elements", "metals", "science"],
+      "tags": [
+        "chemistry",
+        "elements",
+        "metals",
+        "science"
+      ],
       "language_dependent": false,
       "source": "generated",
       "review_status": "pending_review",
@@ -301,11 +361,20 @@
       "type": "text",
       "correct_answer": "The Great Barrier Reef",
       "possible_answers": null,
-      "alternative_answers": ["great barrier reef", "coral reef", "the great barrier reef"],
+      "alternative_answers": [
+        "great barrier reef",
+        "coral reef",
+        "the great barrier reef"
+      ],
       "topic": "Nature",
       "category": "adults",
       "difficulty": "easy",
-      "tags": ["nature", "geography", "ocean", "biology"],
+      "tags": [
+        "nature",
+        "geography",
+        "ocean",
+        "biology"
+      ],
       "language_dependent": false,
       "source": "generated",
       "review_status": "pending_review",
@@ -338,11 +407,21 @@
       "type": "text",
       "correct_answer": "Ice",
       "possible_answers": null,
-      "alternative_answers": ["ice", "water", "water ice", "frozen water"],
+      "alternative_answers": [
+        "ice",
+        "water",
+        "water ice",
+        "frozen water"
+      ],
       "topic": "Science",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["physics", "chemistry", "water", "science"],
+      "tags": [
+        "physics",
+        "chemistry",
+        "water",
+        "science"
+      ],
       "language_dependent": false,
       "source": "generated",
       "review_status": "pending_review",

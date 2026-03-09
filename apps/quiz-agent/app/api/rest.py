@@ -161,7 +161,7 @@ def session_to_response(session: QuizSession) -> SessionResponse:
 
 def question_to_dict(question: Question) -> Dict[str, Any]:
     """Convert Question to dict for API response."""
-    return {
+    result = {
         "id": question.id,
         "question": question.question,
         "type": question.type,
@@ -173,6 +173,11 @@ def question_to_dict(question: Question) -> Dict[str, Any]:
         "source_excerpt": question.source_excerpt,
         # Note: correct_answer is NOT included for security
     }
+    if question.media_url:
+        result["media_url"] = question.media_url
+    if question.image_subtype:
+        result["image_subtype"] = question.image_subtype
+    return result
 
 
 async def question_to_dict_translated(question: Question, language: str) -> Dict[str, Any]:

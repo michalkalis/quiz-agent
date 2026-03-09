@@ -84,6 +84,8 @@ class ChromaDBClient:
                 metadata["created_by"] = question.created_by
             if question.media_url:
                 metadata["media_url"] = question.media_url
+            if question.image_subtype:
+                metadata["image_subtype"] = question.image_subtype
             if question.media_duration_seconds:
                 metadata["media_duration_seconds"] = question.media_duration_seconds
             if question.explanation:
@@ -513,6 +515,8 @@ class ChromaDBClient:
                 metadata["created_by"] = question.created_by
             if question.media_url:
                 metadata["media_url"] = question.media_url
+            if question.image_subtype:
+                metadata["image_subtype"] = question.image_subtype
             if question.media_duration_seconds:
                 metadata["media_duration_seconds"] = question.media_duration_seconds
             if question.explanation:
@@ -664,6 +668,7 @@ class ChromaDBClient:
             usage_count=metadata.get("usage_count", 0),
             user_ratings=user_ratings,
             media_url=metadata.get("media_url"),
+            image_subtype=metadata.get("image_subtype"),
             media_duration_seconds=metadata.get("media_duration_seconds"),
             explanation=metadata.get("explanation"),
             source_url=metadata.get("source_url"),

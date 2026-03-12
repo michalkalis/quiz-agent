@@ -1,6 +1,7 @@
 ---
 name: start-local
 description: Start backend API, web UI, or question generator for local development
+model: haiku
 disable-model-invocation: true
 allowed-tools: Bash
 argument-hint: "[backend|web|questions|all]"

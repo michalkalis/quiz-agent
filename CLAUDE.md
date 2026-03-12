@@ -57,3 +57,4 @@ Models must be Codable and match backend Pydantic models. See `.claude/rules/ios
 Detailed development workflow, API contracts, testing, and deployment standards are in:
 - `.claude/rules/shared.md` — Git workflow, API contracts, testing, security
 - `.claude/rules/ios.md` — iOS-specific patterns, build commands, model mapping
+- `.claude/rules/backend.md` — Python/FastAPI standards, ChromaDB patterns

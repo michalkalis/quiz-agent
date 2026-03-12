@@ -1,7 +1,7 @@
 ---
 name: code-reviewer
 description: Review recent code changes for quality, security, and consistency. Use proactively after significant changes.
-tools: Bash, Read, Grep, Glob
+allowed-tools: Bash, Read, Grep, Glob
 model: sonnet
 ---
 

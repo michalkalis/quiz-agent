@@ -45,6 +45,8 @@ echo -e "${CYAN}│${RESET}    ${GREEN}/catchup${RESET}        - Summarize branc
 echo -e "${CYAN}│${RESET}    ${GREEN}/test-ios${RESET}       - Run iOS unit tests                 ${CYAN}│${RESET}"
 echo -e "${CYAN}│${RESET}    ${GREEN}/test-backend${RESET}   - Run pytest suite                   ${CYAN}│${RESET}"
 echo -e "${CYAN}│${RESET}    ${GREEN}/build-ios${RESET}      - Build iOS app                      ${CYAN}│${RESET}"
+echo -e "${CYAN}│${RESET}    ${GREEN}/gen-questions${RESET}  - Generate quiz questions             ${CYAN}│${RESET}"
+echo -e "${CYAN}│${RESET}    ${GREEN}/verify-qs${RESET}     - Verify question accuracy           ${CYAN}│${RESET}"
 echo -e "${CYAN}│${RESET}    ${GREEN}/best-practices${RESET} - Check Claude Code setup (weekly)   ${CYAN}│${RESET}"
 echo -e "${CYAN}├─────────────────────────────────────────────────────────┤${RESET}"
 echo -e "${CYAN}│${RESET}  ${YELLOW}PM & DESIGN${RESET} ${DIM}(invoke with /name)${RESET}                        ${CYAN}│${RESET}"

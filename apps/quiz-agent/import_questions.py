@@ -51,6 +51,16 @@ def import_questions(
 
     print(f"Loaded {len(questions)} questions from {questions_file}")
 
+    # Auto-generate IDs for questions that don't have one
+    id_generated = 0
+    for idx, q in enumerate(questions):
+        if "id" not in q or not q["id"]:
+            subtype = q.get("image_subtype", q.get("type", "text"))
+            q["id"] = f"q_img_{subtype}_{idx + 1:03d}"
+            id_generated += 1
+    if id_generated:
+        print(f"Auto-generated IDs for {id_generated} questions")
+
     # Import in batches
     total_imported = 0
     total_skipped = 0

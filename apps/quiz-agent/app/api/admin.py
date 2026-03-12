@@ -71,6 +71,9 @@ class QuestionImport(BaseModel):
     media_url: Optional[str] = None
     media_duration_seconds: Optional[int] = None
     explanation: Optional[str] = None
+    image_subtype: Optional[str] = None
+    language_dependent: bool = False
+    generation_metadata: Optional[Dict[str, Any]] = None
 
 
 class ImportQuestionsRequest(BaseModel):
@@ -175,6 +178,9 @@ async def import_questions(
                 media_url=q_data.media_url,
                 media_duration_seconds=q_data.media_duration_seconds,
                 explanation=q_data.explanation,
+                image_subtype=q_data.image_subtype,
+                language_dependent=q_data.language_dependent,
+                generation_metadata=q_data.generation_metadata,
                 usage_count=0,
                 user_ratings={},
                 review_status="approved"  # Auto-approve imports

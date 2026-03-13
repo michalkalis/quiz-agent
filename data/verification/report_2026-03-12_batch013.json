@@ -1,0 +1,165 @@
+{
+  "metadata": {
+    "verified_at": "2026-03-12T12:00:00Z",
+    "source_file": "data/generated/claude_batch_013.json",
+    "total_questions": 15,
+    "verdicts": {
+      "correct": 9,
+      "needs_fix": 3,
+      "needs_review": 2,
+      "incorrect": 1
+    }
+  },
+  "questions": [
+    {
+      "id": "batch013_q01",
+      "question": "In 1992, a cargo ship lost 28,800 rubber ducks in the Pacific Ocean. Oceanographers tracked them for decades as they washed ashore on five continents, revolutionising our understanding of what?",
+      "stored_answer": "Ocean currents",
+      "verdict": "correct",
+      "notes": "Verified. The 1992 Friendly Floatees spill of 28,800 bath toys was tracked by oceanographer Curtis Ebbesmeyer and used to model ocean currents. Minor note: the toys included ducks, beavers, turtles, and frogs — not all rubber ducks — but the question's core claim and answer are accurate.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Friendly_Floatees_spill",
+      "source_excerpt": "A consignment of 28,800 Friendly Floatees were washed into the Pacific Ocean on 10 January 1992. The toys became famous due to the work of Curtis Ebbesmeyer, an oceanographer who models ocean currents on the basis of flotsam movements."
+    },
+    {
+      "id": "batch013_q02",
+      "question": "Tennis balls at Wimbledon are kept at exactly 20 degrees Celsius before play. What happens to a tennis ball's bounce if it gets too cold?",
+      "stored_answer": "It bounces lower",
+      "verdict": "correct",
+      "notes": "Verified. Wimbledon tennis balls are refrigerated at 20°C (68°F). Cold temperatures cause gas molecules inside the rubber core to shrink, reducing internal pressure and resulting in a lower bounce.",
+      "suggested_fix": null,
+      "source_url": "https://www.coolingpost.com/features/refrigeration-ensures-the-perfect-service/",
+      "source_excerpt": "All of the tennis balls are refrigerated to keep them at a constant 20°C until they're used. Warmer temperatures make the ball's interior gas molecules expand, creating a higher bounce, while the molecules shrink at lower temps, giving less bounce."
+    },
+    {
+      "id": "batch013_q03",
+      "question": "Bluetooth wireless technology is named after a 10th-century Scandinavian king who was famous for uniting warring tribes. The Bluetooth logo itself is formed from two symbols — what are they?",
+      "stored_answer": "The king's initials in Viking runes",
+      "verdict": "correct",
+      "notes": "Verified. The Bluetooth logo is a bind rune merging the Younger Futhark runes Hagall (ᚼ) and Bjarkan (ᛒ), representing H and B — the initials of Harald Bluetooth.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Bluetooth",
+      "source_excerpt": "The Bluetooth logo is a bind rune merging the Younger Futhark runes ᚼ (Hagall) and ᛒ (Bjarkan), Harald's initials."
+    },
+    {
+      "id": "batch013_q04",
+      "question": "A basketball court, a tennis court, and an Olympic swimming pool — which one is the longest?",
+      "stored_answer": "An Olympic swimming pool",
+      "verdict": "correct",
+      "notes": "Verified. Olympic pool = 50m, NBA basketball court = 28.65m (94 ft), tennis court = 23.77m (78 ft). The pool wins by a large margin.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Olympic-size_swimming_pool",
+      "source_excerpt": "An Olympic-size swimming pool is 50 metres (164 ft) long. A basketball court measures 28.65 metres and a tennis court 23.77 metres in length."
+    },
+    {
+      "id": "batch013_q05",
+      "question": "The first text message ever sent, on December 3, 1992, was just two words. Given that it was sent as a test right before Christmas, what did it say?",
+      "stored_answer": "Merry Christmas",
+      "verdict": "correct",
+      "notes": "Verified. Neil Papworth of Sema Group sent 'Merry Christmas' to Richard Jarvis of Vodafone on 3 December 1992 over the Vodafone GSM network in the UK.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Neil_Papworth",
+      "source_excerpt": "The first SMS message was sent over the Vodafone GSM network in the United Kingdom on 3 December 1992, from Neil Papworth of Sema Group to Richard Jarvis of Vodafone. The text of the message was 'Merry Christmas.'"
+    },
+    {
+      "id": "batch013_q06",
+      "question": "Formula 1 pit crews can change all four tyres in under two seconds. During a pit stop, roughly how many crew members swarm the car at once: 5, 12, or over 20?",
+      "stored_answer": "Over 20",
+      "verdict": "correct",
+      "notes": "Verified. F1 pit stops involve up to 22 crew members: 3 per wheel (gun operator, tyre remover, tyre fitter) = 12 for tyres, plus front/rear jack operators, stabilizers, and other support roles.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Pit_stop",
+      "source_excerpt": "In Formula 1, there are up to 22 people involved in a pit stop. Twelve crew members handle the tyre changes (three per wheel), with additional members operating jacks, stabilizers, and other equipment."
+    },
+    {
+      "id": "batch013_q07",
+      "question": "Nintendo, the company behind Mario and the Switch, was founded long before computers or video games existed. In which century was Nintendo originally established — 18th, 19th, or 20th?",
+      "stored_answer": "19th century",
+      "verdict": "correct",
+      "notes": "Verified. Nintendo was founded on 23 September 1889 by Fusajiro Yamauchi in Kyoto, Japan, as a playing card (hanafuda) manufacturer.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Nintendo",
+      "source_excerpt": "Nintendo was founded as Nintendo Koppai on 23 September 1889 by craftsman Fusajiro Yamauchi in Shimogyō-ku, Kyoto, Japan, to produce and distribute Japanese playing cards (hanafuda)."
+    },
+    {
+      "id": "batch013_q08",
+      "question": "Fencing, athletics, swimming, horse riding, and shooting — these five sports make up one Olympic event where a single athlete must compete in all of them. Name this gruelling multi-discipline competition.",
+      "stored_answer": "Modern pentathlon",
+      "verdict": "needs_review",
+      "notes": "The answer 'modern pentathlon' is correct, and the five sports listed were historically accurate. However, as of the 2024 Paris Olympics, horse riding (equestrian show jumping) was the last edition with riding; it is being replaced by obstacle course racing for the 2028 LA Olympics. The question's list of five sports is now outdated. Consider updating the question to acknowledge this change or specify 'traditionally' in the framing.",
+      "suggested_fix": "Update question to: 'Fencing, athletics, swimming, horse riding, and shooting — these five sports traditionally made up one Olympic event. Horse riding was replaced in 2024, but name this multi-discipline competition.' Or simply note it may become outdated.",
+      "source_url": "https://en.wikipedia.org/wiki/Modern_pentathlon",
+      "source_excerpt": "Modern pentathlon is an Olympic multisport originally consisting of fencing, swimming, equestrian show jumping, pistol shooting, and cross-country running. As of 2024, obstacle course racing replaced equestrian show jumping."
+    },
+    {
+      "id": "batch013_q09",
+      "question": "When the first iPhone launched in 2007, it was missing a feature that even basic flip phones of the era had. Apple didn't add it until over a year later. What was it?",
+      "stored_answer": "Copy and paste",
+      "verdict": "needs_review",
+      "notes": "Copy and paste was indeed missing from the original iPhone (June 2007) and was added in iPhone OS 3.0 (June 2009) — roughly two years later, not 'over a year.' The question says 'over a year later' which is technically true but understates the gap. Also, multiple other features were missing that flip phones had (MMS, 3G, video recording), making the question somewhat ambiguous. MMS would be an equally valid answer. The answer is defensible but the question could be tighter.",
+      "suggested_fix": "Consider changing 'over a year later' to 'two years later' for accuracy. Also consider specifying 'text editing feature' to reduce ambiguity with MMS, which was also missing and ubiquitous on flip phones.",
+      "source_url": "https://en.wikipedia.org/wiki/IPhone_OS_3",
+      "source_excerpt": "iPhone OS 3 was released on June 17, 2009, and introduced copy and paste support. The original iPhone, released June 29, 2007, lacked cut, copy, and paste functionality."
+    },
+    {
+      "id": "batch013_q10",
+      "question": "In football (soccer), a goalkeeper once scored a goal from inside his own penalty area — a kick that travelled the entire length of the pitch. Is the world record for the longest goal scored by a goalkeeper closer to 75 metres, 95 metres, or 105 metres?",
+      "stored_answer": "About 95 metres",
+      "verdict": "needs_fix",
+      "notes": "The Guinness World Record for the longest goal is held by Tom King (Newport County) at 96.01 metres, scored on 19 January 2021. While 96.01m is numerically closer to 95m than to 105m, the stored answer 'About 95 metres' understates the record. More importantly, there are disputed claims of longer goals (Leandro Requena at ~101m, though not Guinness-ratified). The answer should be updated to reflect the actual figure more accurately.",
+      "suggested_fix": "Change stored answer to 'About 96 metres' or '95 metres' and update the question options to '75, 96, or 105 metres'. Alternatively, keep '95 metres' as the closest option but note in the question metadata that the exact record is 96.01m.",
+      "source_url": "https://www.guinnessworldrecords.com/news/2021/1/british-goalkeeper-tom-king-breaks-record-for-longest-football-goal-646285",
+      "source_excerpt": "The longest goal scored in a competitive football match is 96.01 m (105 yds), achieved by Tom King (UK), playing for Newport County against Cheltenham Town on 19 January 2021."
+    },
+    {
+      "id": "batch013_q11",
+      "question": "SpaceX lands its rocket boosters vertically after launch so they can be reused. Before the first successful landing in 2015, roughly how many attempts did they need — 1, 6, or over 20?",
+      "stored_answer": "6",
+      "verdict": "needs_fix",
+      "notes": "The first successful orbital booster landing was on December 21, 2015 (Flight 20, landing at Cape Canaveral). Before this, there were approximately 3 failed landing attempts on drone ships in 2015 (January CRS-5, April CRS-6, and the June CRS-7 rocket was lost entirely). CNN explicitly reported 'success after 3 failed attempts.' If counting Grasshopper/F9R prototype test flights (13 sub-orbital tests from 2012-2014), the number would be much higher but those were separate test vehicles, not orbital mission attempts. The answer '6' does not match either counting method — it should be approximately 3-4 for orbital attempts.",
+      "suggested_fix": "Change the options to '1, 4, or over 20' and update the answer to 'about 4' (three drone ship failures plus the successful fourth attempt). Alternatively, if counting all sub-orbital prototype tests as well, change to 'over 20' as the answer.",
+      "source_url": "https://en.wikipedia.org/wiki/Falcon_9_first-stage_landing_tests",
+      "source_excerpt": "Sixteen test flights were conducted from 2013 to 2016 as part of the Falcon 9 first-stage landing tests program. The first successful landing of an orbital rocket booster occurred on December 21, 2015."
+    },
+    {
+      "id": "batch013_q12",
+      "question": "Table tennis balls travel at speeds over 100 km/h, yet they weigh almost nothing. An official competition table tennis ball weighs exactly how many grams — closer to 2.7, 12, or 45?",
+      "stored_answer": "2.7 grams",
+      "verdict": "correct",
+      "notes": "Verified. ITTF regulations specify that the ball shall weigh 2.7 grams with a diameter of 40mm.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Table_tennis",
+      "source_excerpt": "The international rules specify that the game is played with a sphere having a mass of 2.7 grams (0.095 oz) and a diameter of 40 millimetres (1.57 in)."
+    },
+    {
+      "id": "batch013_q13",
+      "question": "The entire codebase for the Apollo 11 moon landing guidance computer was about 145,000 lines of code. A modern smartphone app like Instagram has roughly how many times more code — 5 times, 50 times, or 500 times?",
+      "stored_answer": "About 500 times",
+      "verdict": "needs_fix",
+      "notes": "The Apollo 11 AGC had approximately 145,000 lines of code — this is confirmed. However, Instagram's codebase is estimated at roughly 1 million lines of code (per multiple sources), which is approximately 7x the Apollo code, not 500x. Even Facebook's entire codebase (~62 million lines) would only be ~430x. The claim of 500x would require Instagram to have ~72.5 million lines, which is far beyond any credible estimate. The answer is significantly overstated.",
+      "suggested_fix": "Change the answer to '5 times' (or more precisely ~7x). Instagram at ~1 million lines is roughly 7x the Apollo 11 codebase. Alternatively, change the comparison app to 'a modern car's software' (~100-150 million lines) or 'Google's entire codebase' (2 billion lines) if wanting the extreme option.",
+      "source_url": "https://informationisbeautiful.net/visualizations/million-lines-of-code/",
+      "source_excerpt": "The Apollo 11 guidance computer required approximately 145,000 lines of code. Instagram operates with about 1 million lines of code — roughly 7 times more, not 500 times."
+    },
+    {
+      "id": "batch013_q14",
+      "question": "Only one athlete in Olympic history has won gold medals in both the Summer and Winter Games. They competed in two very different sports — bobsled in winter and athletics in summer. In which running event did they win their summer gold?",
+      "stored_answer": "100 metres hurdles",
+      "verdict": "incorrect",
+      "notes": "The only athlete to win gold in both Summer and Winter Olympics in different sports is Eddie Eagan (USA). He won gold in boxing (light-heavyweight) at the 1920 Summer Olympics and gold in four-man bobsled at the 1932 Winter Olympics. His summer sport was BOXING, not athletics/hurdles. The question appears to confuse Eagan with athletes like Lauryn Williams or Lolo Jones, who competed in both track (hurdles) and bobsled but did NOT win gold in both. Williams won silver in 100m (2004 Summer) and silver in bobsled (2014 Winter). The entire premise and answer are wrong.",
+      "suggested_fix": "Rewrite the question entirely. Either: (a) Change to be about Eddie Eagan: 'Only one athlete in Olympic history has won gold medals in both the Summer and Winter Games in different sports. They won winter gold in bobsled. What was their summer sport?' Answer: 'Boxing'. Or (b) Change to be about dual-sport athletes without the 'gold in both' claim.",
+      "source_url": "https://en.wikipedia.org/wiki/Eddie_Eagan",
+      "source_excerpt": "Eddie Eagan is the only athlete to have won gold in both the Summer and Winter Olympic Games in different events. He won gold in light-heavyweight boxing at the 1920 Summer Olympics and in four-man bobsled at the 1932 Winter Olympics."
+    },
+    {
+      "id": "batch013_q15",
+      "question": "Wi-Fi doesn't actually stand for 'Wireless Fidelity' — that's a common misconception. The Wi-Fi Alliance hired a branding company to create the name. What does 'Wi-Fi' actually stand for?",
+      "stored_answer": "Nothing — it's a made-up brand name",
+      "verdict": "correct",
+      "notes": "Verified. According to a founding member of the Wi-Fi Alliance, 'Wi-Fi' has no expanded meaning and was simply chosen as a more memorable name. The 'Wireless Fidelity' tagline was briefly used in marketing but quickly dropped.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Wi-Fi",
+      "source_excerpt": "The name Wi-Fi has no further meaning, and was never officially short for 'Wireless Fidelity'. The Wi-Fi Alliance used the advertising slogan 'The Standard for Wireless Fidelity' for a short time after the brand name was created, but later dropped it."
+    }
+  ]
+}

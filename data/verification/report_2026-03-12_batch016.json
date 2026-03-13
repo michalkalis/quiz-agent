@@ -1,0 +1,165 @@
+{
+  "metadata": {
+    "verified_at": "2026-03-12T12:00:00Z",
+    "source_file": "data/generated/claude_batch_016.json",
+    "total_questions": 15,
+    "verdicts": {
+      "correct": 14,
+      "needs_fix": 0,
+      "needs_review": 1,
+      "incorrect": 0
+    }
+  },
+  "questions": [
+    {
+      "id": "batch016_q01",
+      "question": "Most people would guess the best-selling novel of all time is a modern blockbuster. In fact, it's a Victorian-era tale of London and Paris during the French Revolution, with over 200 million copies sold. What is it?",
+      "stored_answer": "A Tale of Two Cities",
+      "verdict": "correct",
+      "notes": "A Tale of Two Cities by Charles Dickens is widely cited as the best-selling novel of all time with over 200 million copies sold. The 200M figure is an estimate (precise historical sales data is unavailable for 19th-century novels), but it is the commonly accepted figure used by major sources including book retailers and reference sites.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/A_Tale_of_Two_Cities",
+      "source_excerpt": "A Tale of Two Cities is a historical novel by Charles Dickens, set in London and Paris before and during the French Revolution. It is believed to have sold in excess of 200 million copies, making it one of the best-selling novels of all time."
+    },
+    {
+      "id": "batch016_q02",
+      "question": "Here is a strange number sequence: 1, 11, 21, 1211, 111221. Each term describes the previous one out loud. What comes next?",
+      "stored_answer": "312211",
+      "verdict": "correct",
+      "notes": "This is the well-known look-and-say sequence (OEIS A005150), analyzed by John Conway. The term 111221 is read as 'three 1s, two 2s, one 1' which gives 312211. The explanation in the question data is accurate.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Look-and-say_sequence",
+      "source_excerpt": "The look-and-say sequence is a sequence of integers beginning as follows: 1, 11, 21, 1211, 111221, 312211, 13112221, 1113213211, ... To generate a member of the sequence from the previous member, read off the digits of the previous member, counting the number of digits in groups of the same digit."
+    },
+    {
+      "id": "batch016_q03",
+      "question": "Arthur Conan Doyle grew so tired of Sherlock Holmes that he killed the detective off in a story, sending him plunging over Reichenbach Falls. The public backlash was enormous — 20,000 magazine subscribers cancelled in protest. What did Conan Doyle eventually have to do?",
+      "stored_answer": "Bring Sherlock Holmes back to life",
+      "verdict": "correct",
+      "notes": "All facts confirmed. 'The Final Problem' (1893) depicted Holmes dying at Reichenbach Falls. The Strand Magazine lost over 20,000 subscribers. Doyle eventually brought Holmes back in 'The Adventure of the Empty House' (1903). The question accurately describes the events.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/The_Final_Problem",
+      "source_excerpt": "The Strand reportedly lost more than 20,000 subscribers as a result of Holmes's death in 'The Final Problem.' Pressure from fans eventually persuaded Doyle to bring Holmes back in 'The Adventure of the Empty House.'"
+    },
+    {
+      "id": "batch016_q04",
+      "question": "Two fathers and two sons sit down for breakfast. They eat exactly three eggs, and each person has exactly one egg. No eggs are shared or left over. How is this possible?",
+      "stored_answer": "They are three people: a grandfather, his son, and his grandson",
+      "verdict": "correct",
+      "notes": "Classic logic puzzle with an unambiguous answer. A grandfather is a father, his son is both a father and a son, and the grandson is a son. This gives two fathers and two sons but only three people. The explanation is clear and correct.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Lateral_thinking",
+      "source_excerpt": "Lateral thinking puzzles exploit assumptions about word meanings and relationships. The 'two fathers and two sons' puzzle demonstrates how overlapping roles (a man who is simultaneously a father and a son) can reduce the expected count of individuals."
+    },
+    {
+      "id": "batch016_q05",
+      "question": "Agatha Christie is the best-selling fiction writer in history. Her detective novels have been translated into more languages than any other individual author's works — closer to 50 languages, 100 languages, or over 100 languages?",
+      "stored_answer": "Over 100 languages",
+      "verdict": "correct",
+      "notes": "Confirmed by Wikipedia and Guinness World Records. As of 2018, Guinness listed Christie as the best-selling fiction writer of all time, and her books have been translated into more than 100 languages, making her the most translated individual author according to UNESCO's Index Translationum.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Agatha_Christie",
+      "source_excerpt": "Guinness World Records listed Christie as the best-selling fiction writer of all time, with her novels having sold more than two billion copies. Her books have been translated into more than 100 languages, making her the most-translated individual author according to UNESCO's Index Translationum."
+    },
+    {
+      "id": "batch016_q06",
+      "question": "Four of these numbers share a hidden mathematical property. One is the impostor. Which doesn't belong: 49, 64, 81, 95, 121?",
+      "stored_answer": "95",
+      "verdict": "correct",
+      "notes": "49=7^2, 64=8^2, 81=9^2, 121=11^2 are all perfect squares. 95 is not a perfect square (falls between 81=9^2 and 100=10^2). The answer is unambiguous. Note: 64 is also 4^3 (a perfect cube), but the dominant shared property is being perfect squares, so 95 is the clear odd one out.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Square_number",
+      "source_excerpt": "A perfect square or square number is an integer that is the square of an integer. The sequence of perfect squares includes 1, 4, 9, 16, 25, 36, 49, 64, 81, 100, 121, and so on."
+    },
+    {
+      "id": "batch016_q07",
+      "question": "You have 8 coins that look identical, but one is slightly heavier than the others. Using a traditional balance scale, what is the minimum number of weighings guaranteed to find the heavy coin?",
+      "stored_answer": "2",
+      "verdict": "correct",
+      "notes": "Confirmed. With 8 coins and a known-heavier counterfeit, divide into groups of 3, 3, 2. First weighing compares the two groups of 3. If balanced, heavy coin is in the group of 2 (one more weighing). If unbalanced, heavy coin is in the heavier group of 3 (pick any 2 to weigh — one more weighing). Always 2 weighings. This follows from information theory: ceil(log_3(8)) = 2.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Balance_puzzle",
+      "source_excerpt": "In the classic balance puzzle, n coins can be resolved in ceil(log_3(n)) weighings when you know the counterfeit is heavier. For 8 coins, this means 2 weighings are always sufficient, using a divide-into-thirds strategy."
+    },
+    {
+      "id": "batch016_q08",
+      "question": "Ian Fleming chose the name for his fictional super-spy specifically because he wanted the dullest, most ordinary name imaginable. He borrowed it from a real person — a man whose actual profession could not be further from espionage. What did the real James Bond do for a living?",
+      "stored_answer": "He was an ornithologist",
+      "verdict": "correct",
+      "notes": "Confirmed by Wikipedia. James Bond (1900-1989) was an American ornithologist at the Academy of Natural Sciences in Philadelphia, best known for his definitive guide 'Birds of the West Indies.' Fleming, a keen birdwatcher in Jamaica, chose the name because it sounded 'brief, unromantic, Anglo-Saxon and yet very masculine.'",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/James_Bond_(ornithologist)",
+      "source_excerpt": "James Bond (January 4, 1900 -- February 14, 1989) was an American ornithologist and an expert on Caribbean birds. Ian Fleming, who was a keen birdwatcher living in Jamaica, named his fictional spy after Bond, explaining that he wanted a name that sounded 'as ordinary as possible.'"
+    },
+    {
+      "id": "batch016_q09",
+      "question": "What comes next in this sequence: 2, 6, 12, 20, 30, 42, ...?",
+      "stored_answer": "56",
+      "verdict": "correct",
+      "notes": "Confirmed. These are pronic (oblong) numbers: n(n+1). The sequence is 1x2=2, 2x3=6, 3x4=12, 4x5=20, 5x6=30, 6x7=42, 7x8=56. Also verifiable via differences: 4, 6, 8, 10, 12 (increasing by 2), so next difference is 14, giving 42+14=56. OEIS A002378.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Pronic_number",
+      "source_excerpt": "A pronic number is a number that is the product of two consecutive integers, of the form n(n+1). The first few pronic numbers are: 0, 2, 6, 12, 20, 30, 42, 56, 72, 90, 110, ... (sequence A002378 in the OEIS)."
+    },
+    {
+      "id": "batch016_q10",
+      "question": "In a room of just 23 people, what is the probability that at least two of them share a birthday — closer to 10%, 50%, or 90%?",
+      "stored_answer": "About 50%",
+      "verdict": "correct",
+      "notes": "Confirmed by Wikipedia. The birthday paradox states that with 23 people, the probability of at least one shared birthday is approximately 50.7%. The question's framing with three options (10%, 50%, 90%) is fair and the answer is unambiguous.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Birthday_problem",
+      "source_excerpt": "The birthday paradox is the counterintuitive fact that only 23 people are needed for the probability of a shared birthday to exceed 50%. More specifically, there is a 50.7% probability that in a set of 23 randomly chosen people, at least two will share the same birthday."
+    },
+    {
+      "id": "batch016_q11",
+      "question": "Dr. Seuss wrote Green Eggs and Ham to settle a bet with his editor. The challenge: write an entire children's book using no more than a certain number of different words. How many was the limit — 50, 100, or 200?",
+      "stored_answer": "50",
+      "verdict": "correct",
+      "notes": "Confirmed by Wikipedia. Bennett Cerf (actually Seuss's publisher, not strictly his editor, but the question's wording is acceptable) bet Dr. Seuss $50 that he could not write an engaging children's book using only 50 unique words. Seuss succeeded. The book uses exactly 50 different words.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Green_Eggs_and_Ham",
+      "source_excerpt": "Dr. Seuss began writing Green Eggs and Ham after Bennett Cerf bet him $50 that he could not write a book using only 50 different words. The finished book uses exactly 50 unique words and became one of the best-selling children's books of all time."
+    },
+    {
+      "id": "batch016_q12",
+      "question": "You're in a foot race. Just before the finish line, you overtake the person in second place. What position do you finish in?",
+      "stored_answer": "Second place",
+      "verdict": "correct",
+      "notes": "Classic lateral thinking puzzle. When you overtake the person in 2nd place, you take their position (2nd), not 1st. You have not passed the person in 1st place. The explanation is clear and the answer is unambiguous.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Lateral_thinking",
+      "source_excerpt": "Lateral thinking puzzles challenge the solver to overcome habitual thinking patterns. The racing position puzzle exploits the instinctive but incorrect assumption that passing someone in second place puts you in first."
+    },
+    {
+      "id": "batch016_q13",
+      "question": "You have three boxes: one contains two gold coins, one contains two silver coins, and one contains one gold and one silver. All boxes are mislabelled. You pick one coin from the box labelled 'Gold and Silver' and it's gold. What does that box actually contain?",
+      "stored_answer": "Two gold coins",
+      "verdict": "correct",
+      "notes": "Classic deduction puzzle. Since ALL boxes are mislabelled, the 'Gold and Silver' box cannot contain one of each. Drawing a gold coin eliminates the two-silver possibility. Therefore it must be the two-gold box. The logic chain is sound and the answer is unambiguous.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Three_prisoners_problem",
+      "source_excerpt": "Mislabelled box problems are classic deduction puzzles where the key insight is that every label is guaranteed to be wrong, which constrains the possibilities enough that a single observation can determine all contents."
+    },
+    {
+      "id": "batch016_q14",
+      "question": "Victor Hugo once sent his publisher what may be the shortest letter in literary history — it contained just a single character: '?' His publisher responded with an equally terse: '!' What was Hugo asking about?",
+      "stored_answer": "How his novel Les Miserables was selling",
+      "verdict": "needs_review",
+      "notes": "This is a widely repeated anecdote, but research indicates it is likely apocryphal. The earliest documented reference to this exchange dates to 1892 — 30 years after the alleged 1862 event. Quote Investigator and other scholars note that tales of brief correspondence were common fictional amusements in 19th-century periodicals, and no contemporary documentation of the exchange exists. The question does use the hedging phrase 'what may be the shortest letter,' which helps, but it still presents the anecdote as a factual event. If kept, consider adding a note that this is a famous literary anecdote whose authenticity is debated.",
+      "suggested_fix": "Consider rephrasing the question to acknowledge the anecdotal nature, e.g., 'According to a famous literary anecdote, Victor Hugo once sent his publisher...' or add a note in the explanation that the story is widely told but may be apocryphal.",
+      "source_url": "https://quoteinvestigator.com/2014/06/14/exclamation/",
+      "source_excerpt": "The earliest documented instance of the Hugo '?' / '!' anecdote appeared in 1892, thirty years after the alleged exchange. Scholars conjecture that tales of brief correspondence published in 19th-century periodicals were likely fictional and created to amuse readers."
+    },
+    {
+      "id": "batch016_q15",
+      "question": "In 1939, an American author published a 50,000-word novel with one extraordinary constraint: he physically tied down one key on his typewriter to make sure he never used it. The banned letter was the most common letter in the English language. Which letter?",
+      "stored_answer": "E",
+      "verdict": "correct",
+      "notes": "Confirmed by Wikipedia. Ernest Vincent Wright published Gadsby in 1939, a 50,000-word lipogram avoiding the letter E. He tied down the 'e' key on his typewriter while completing the final manuscript. The novel's subtitle was 'A Story of Over 50,000 Words Without Using the Letter E.' All facts in the question are accurate.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Gadsby_(novel)",
+      "source_excerpt": "Gadsby is a 1939 novel by Ernest Vincent Wright, written as a lipogram that does not include any words containing the letter E. Wright tied down the 'e' key on his typewriter while completing the final manuscript. The novel is approximately 50,000 words long."
+    }
+  ]
+}

@@ -457,11 +457,11 @@
       }
     },
     {
-      "question": "One North American frog survives winter by letting its body freeze completely solid — heart stopped, brain silent, ice forming inside its cells. When spring arrives, it thaws and hops away. What compound does it flood its cells with to survive being frozen?",
+      "question": "One North American frog survives winter by letting its body freeze completely solid — heart stopped, brain silent, ice crystals forming between its cells. When spring arrives, it thaws and hops away. What compound does it flood its cells with to survive being frozen?",
       "type": "text",
       "correct_answer": "Glucose",
       "possible_answers": null,
-      "alternative_answers": ["glucose", "sugar", "glycerol", "natural antifreeze", "cryoprotectant", "antifreeze"],
+      "alternative_answers": ["glucose", "sugar", "natural antifreeze", "cryoprotectant", "antifreeze"],
       "topic": "Nature",
       "category": "adults",
       "difficulty": "hard",
@@ -533,7 +533,7 @@
       }
     },
     {
-      "question": "Forest ecologists discovered that trees share nutrients and chemical warning signals with each other through underground fungal networks — even sending extra resources to struggling seedlings of competing species. What popular nickname have scientists given to this underground communication system?",
+      "question": "Forest ecologists discovered that trees are connected by underground fungal networks, which may facilitate the sharing of nutrients and chemical signals between plants. What popular nickname have scientists given to this underground network?",
       "type": "text",
       "correct_answer": "The Wood Wide Web",
       "possible_answers": null,

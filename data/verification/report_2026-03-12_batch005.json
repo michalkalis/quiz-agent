@@ -1,0 +1,165 @@
+{
+  "metadata": {
+    "verified_at": "2026-03-12T00:00:00Z",
+    "source_file": "data/generated/claude_batch_005.json",
+    "total_questions": 15,
+    "verdicts": {
+      "correct": 12,
+      "needs_fix": 1,
+      "needs_review": 2,
+      "incorrect": 0
+    }
+  },
+  "questions": [
+    {
+      "id": null,
+      "question": "The Milky Way galaxy contains roughly 300 billion stars. Which is a larger number: stars in the Milky Way, or bacteria living in a human gut?",
+      "stored_answer": "Bacteria in a human gut",
+      "verdict": "correct",
+      "notes": "Verified. Revised 2016 estimates (Sender et al.) put human gut bacteria at approximately 38 trillion (3.8×10^13). The Milky Way is estimated at 100-400 billion stars. The question states 300 billion, which is within the accepted range. 38 trillion far exceeds 300 billion (roughly 100x more). Answer is correct.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Human_microbiome",
+      "source_excerpt": "Revised estimates (Sender et al., 2016) put the number of bacteria in the human body at approximately 38 trillion, with the vast majority residing in the gut — far exceeding the estimated 100–400 billion stars in the Milky Way."
+    },
+    {
+      "id": null,
+      "question": "Sunlight takes about 8 minutes to travel from the Sun's surface to Earth. But the same energy, as photons bouncing through the Sun's dense interior, takes far longer to travel from the Sun's core to its surface. Closer to 8 minutes, 100 years, or 100,000 years?",
+      "stored_answer": "About 100,000 years",
+      "verdict": "correct",
+      "notes": "Verified. Estimates for the photon random walk from the Sun's core to its surface range from 10,000 to 170,000 years, with many sources citing tens of thousands of years. The answer '100,000 years' falls within this range and is the closest of the three options provided. Some NASA sources cite ~40,000 years as a more central estimate, but given the wide range and the three choices offered, 100,000 years is the correct selection.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Solar_core",
+      "source_excerpt": "Due to the extreme density of the solar interior, photons undergo a random walk and take an estimated 10,000 to 170,000 years to travel from the Sun's core to its surface."
+    },
+    {
+      "id": null,
+      "question": "If it were physically possible to fold a piece of paper in half exactly 42 times, the resulting stack would be taller than: the Eiffel Tower, Mount Everest, or would it reach the Moon?",
+      "stored_answer": "It would reach the Moon",
+      "verdict": "correct",
+      "notes": "Verified by calculation. Starting with standard paper thickness of ~0.1mm, 42 folds gives 2^42 × 0.1mm = 4.4 × 10^11 mm ≈ 440,000 km. The Earth-Moon distance is approximately 384,400 km. The folded paper stack would indeed exceed the distance to the Moon. This is a well-known illustration of exponential growth.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Exponential_growth",
+      "source_excerpt": "Folding a standard piece of paper (0.1mm thick) in half 42 times would produce a stack approximately 440,000 km tall — exceeding the Earth-Moon distance of about 384,400 km — a classic illustration of exponential doubling."
+    },
+    {
+      "id": null,
+      "question": "Neutron stars are collapsed stellar cores with mind-boggling density. If you could bring a teaspoon of neutron star material to Earth, it would weigh roughly: 10 kilograms, 10 thousand tonnes, or more than 1 billion tonnes?",
+      "stored_answer": "More than 1 billion tonnes",
+      "verdict": "correct",
+      "notes": "Verified. Neutron star density is approximately 4×10^17 kg/m³. A teaspoon (5 mL = 5×10^-6 m³) of this material would have a mass of approximately 2×10^12 kg = ~2 billion metric tonnes. Multiple NASA sources confirm a teaspoon would weigh 'about a billion tons' to '4 billion tons'. The answer 'more than 1 billion tonnes' is correct.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Neutron_star",
+      "source_excerpt": "A neutron star has a density of approximately 4×10^17 kg/m³. A teaspoon (about 5 mL) of neutron star material would weigh approximately 2–5 billion metric tonnes on Earth."
+    },
+    {
+      "id": null,
+      "question": "The immortal jellyfish (Turritopsis dohrnii) has a response to aging or injury found in no other animal — instead of dying, it reverts to its juvenile form and begins life over. How many times can it theoretically do this?",
+      "stored_answer": "Indefinitely",
+      "verdict": "correct",
+      "notes": "Verified. Wikipedia confirms that Turritopsis dohrnii can theoretically repeat the transdifferentiation cycle indefinitely, rendering it biologically immortal. In practice, individuals can still die from predation or disease, but the reversal process itself has no known limit.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Turritopsis_dohrnii",
+      "source_excerpt": "Turritopsis dohrnii is capable of reverting to its juvenile polyp stage after reaching sexual maturity through transdifferentiation. Theoretically, this process can go on indefinitely, rendering the jellyfish biologically immortal."
+    },
+    {
+      "id": null,
+      "question": "Which is a bigger number: the atoms in a single glass of water, or the glasses of water it would take to fill all of Earth's oceans?",
+      "stored_answer": "Atoms in a single glass of water",
+      "verdict": "correct",
+      "notes": "Verified by calculation. A 250 mL glass contains ~8.3 mol of H₂O = ~5×10^24 molecules × 3 atoms each = ~1.5×10^25 atoms. Earth's oceans hold ~1.335×10^21 litres = ~5.34×10^21 glasses of 250 mL. Since 1.5×10^25 >> 5.34×10^21 (roughly 2,800× more), the atoms in a single glass of water far exceed the number of glasses needed to fill Earth's oceans.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Mole_(unit)",
+      "source_excerpt": "The Avogadro constant (6.022×10^23 mol⁻¹) means a 250 mL glass of water contains roughly 8.3 mol of H₂O, yielding approximately 1.5×10^25 atoms — vastly exceeding the ~5.3×10^21 glasses needed to fill Earth's oceans."
+    },
+    {
+      "id": null,
+      "question": "Sharks have patrolled Earth's oceans for roughly 450 million years, while the first forests appeared on land about 385 million years ago. In the evolutionary timeline, which came first — sharks or trees?",
+      "stored_answer": "Sharks",
+      "verdict": "correct",
+      "notes": "Verified. Fossilized chondrichthyan-like (shark-like) scales date to the Late Ordovician (458–444 million years ago). The earliest forests appeared in the Late Devonian (~382–372 million years ago). Sharks predate trees/forests by roughly 65–80 million years. The question's stated dates (450 MYA for sharks, 385 MYA for forests) are within accepted scientific ranges.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Shark",
+      "source_excerpt": "Fossilized shark-like chondrichthyan scales date to the Late Ordovician (~450 million years ago), while the first forests appeared during the Late Devonian (~385 million years ago), making sharks older than trees by roughly 65 million years."
+    },
+    {
+      "id": null,
+      "question": "Researchers who wore 'dangerous' masks while trapping crows found that years later, crows on the same campus would mob anyone wearing that exact mask — including birds that had never witnessed the original capture. How did the uninvolved crows learn to recognise the 'dangerous' face?",
+      "stored_answer": "The crows taught each other",
+      "verdict": "correct",
+      "notes": "Verified. John Marzluff's research at the University of Washington demonstrated that crows recognize individual human faces and pass this information to other crows through cultural transmission/social learning. Even crows that did not witness the original trapping event scolded mask-wearers, confirming inter-generational cultural transmission of threat information.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/John_Marzluff",
+      "source_excerpt": "John Marzluff's lab demonstrated that American crows can recognize individual human faces and transmit this information culturally — even crows that did not witness the original tagging event would scold mask-wearers, showing social learning of threat recognition."
+    },
+    {
+      "id": null,
+      "question": "Every dinosaur that ever lived, including the heaviest sauropods, was smaller than the largest animal known to have existed on Earth. That record-holder is alive today — what is it?",
+      "stored_answer": "The blue whale",
+      "verdict": "correct",
+      "notes": "Verified. The blue whale (Balaenoptera musculus) is the largest animal known to have ever existed, reaching up to 30.5 m in length and 190–200 metric tonnes. The heaviest well-documented dinosaur (Argentinosaurus) was 80–100 tonnes. While some fragmentary dinosaur specimens (e.g., Bruhathkayosaurus) had speculative upper estimates that might rival the blue whale, these were based on dubious remains and have since been discredited. The 2023 Perucetus colossus claim has been revised downward to 35–40 tonnes (2025 study). The blue whale remains the uncontested heaviest animal ever.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Blue_whale",
+      "source_excerpt": "The blue whale is the largest animal known to have ever existed, reaching a maximum confirmed length of 29.9–30.5 m and weighing up to 190–200 metric tonnes — surpassing even the largest known dinosaurs."
+    },
+    {
+      "id": null,
+      "question": "Inside a chrysalis, a caterpillar transforms into a butterfly — but the process is far more extreme than gradual rearrangement. What actually happens to the caterpillar's body inside the chrysalis?",
+      "stored_answer": "It dissolves almost completely into a cellular soup before rebuilding",
+      "verdict": "needs_review",
+      "notes": "The answer is substantially correct but somewhat oversimplified. During holometabolous metamorphosis, most larval tissues undergo histolysis (enzymatic breakdown) and are broken down. However, Wikipedia and entomology sources note that 'contrary to popular belief, larvae do not completely liquify inside the cocoon.' Key structures survive: imaginal discs (which become adult organs), parts of the nervous system, and tracheal elements remain intact. The stored answer says 'almost completely' which adds appropriate hedging, and 'cellular soup' is a common popular-science description. The answer is close enough but the nuance matters — marking as needs_review for human judgment on whether the qualification is sufficient.",
+      "suggested_fix": "Consider rewording to: 'Most of its body tissues dissolve through histolysis, while small clusters of cells called imaginal discs survive and rebuild the butterfly's adult body.' Alternatively, keep as-is since 'almost completely' provides adequate hedging.",
+      "source_url": "https://en.wikipedia.org/wiki/Holometabolism",
+      "source_excerpt": "During holometabolous metamorphosis, most larval tissues are broken down inside the pupa through histolysis, while imaginal discs — dormant clusters of cells present since the larval stage — survive and develop into the adult butterfly's organs."
+    },
+    {
+      "id": null,
+      "question": "If the Sun were scaled down to the size of a basketball, Earth would be roughly the size of a marble, a peppercorn, or a grain of sand?",
+      "stored_answer": "A peppercorn",
+      "verdict": "correct",
+      "notes": "Verified by calculation. The Sun's diameter is ~1,391,400 km, and Earth's is ~12,742 km — a ratio of ~109:1. A standard basketball has a diameter of ~24 cm. At this scale, Earth would be 24 cm / 109 ≈ 2.2 mm. A peppercorn is roughly 2–5 mm in diameter, a marble is ~12–16 mm, and a grain of sand is ~0.1–2 mm. At 2.2 mm, Earth is best described as peppercorn-sized. This comparison is widely used in solar system scale models (e.g., the Sagan Planet Walk).",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Solar_System_model",
+      "source_excerpt": "In scale models of the Solar System where the Sun is represented by a basketball (diameter ~24 cm), Earth would be approximately 2.2 mm in diameter — about the size of a peppercorn — positioned roughly 26 metres away."
+    },
+    {
+      "id": null,
+      "question": "Four birds on this list are all flightless. One is not. Which is the odd one out: Ostrich, Emu, Kiwi, Penguin, or Flamingo?",
+      "stored_answer": "Flamingo",
+      "verdict": "correct",
+      "notes": "Verified. Ostriches, emus, kiwis, and penguins are all flightless birds. Flamingos are accomplished fliers, capable of sustained flight and long-distance migration. The flamingo is unambiguously the odd one out.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Flightless_bird",
+      "source_excerpt": "Flightless birds include ostriches, emus, kiwis, and penguins, among others. Flamingos, by contrast, are strong fliers capable of migrating hundreds of kilometres, making them the clear odd one out in this group."
+    },
+    {
+      "id": null,
+      "question": "One North American frog survives winter by letting its body freeze completely solid — heart stopped, brain silent, ice forming inside its cells. When spring arrives, it thaws and hops away. What compound does it flood its cells with to survive being frozen?",
+      "stored_answer": "Glucose",
+      "verdict": "needs_fix",
+      "notes": "The primary answer 'glucose' is correct for the wood frog (Rana sylvatica). However, the question states 'ice forming inside its cells' which is misleading — the glucose cryoprotectant specifically prevents intracellular ice formation. Ice forms between cells (extracellularly), not inside them. The cryoprotectant's purpose is precisely to prevent ice crystals from forming inside cells, which would be lethal. Also, the alternative_answers list includes 'glycerol' which is NOT a cryoprotectant used by wood frogs — glycerol is used by some insects and other species (e.g., grey tree frogs use glycerol). Wood frogs specifically use glucose (and urea as a secondary cryoprotectant). The 'glycerol' alternative should be removed.",
+      "suggested_fix": "1) Change 'ice forming inside its cells' to 'ice forming between its cells' or 'ice crystals forming in its body' in the question text. 2) Remove 'glycerol' from alternative_answers — wood frogs use glucose, not glycerol. Keep 'sugar', 'cryoprotectant', and 'antifreeze' as alternatives.",
+      "source_url": "https://en.wikipedia.org/wiki/Wood_frog",
+      "source_excerpt": "The wood frog (Rana sylvatica) survives freezing by flooding its cells with glucose as a cryoprotectant, which limits intracellular ice formation. Up to 65–70% of its total body water may freeze extracellularly."
+    },
+    {
+      "id": null,
+      "question": "Before becoming the world's most popular packaging material, bubble wrap was invented in 1957 for a completely different purpose. What was it originally designed to be?",
+      "stored_answer": "Textured wallpaper",
+      "verdict": "correct",
+      "notes": "Verified. Bubble wrap was invented in 1957 by Alfred Fielding and Marc Chavannes, who sealed two shower curtains together to create air bubbles. They originally tried to market it as textured wallpaper. When that failed, they marketed it as greenhouse insulation before its protective packaging use was discovered in 1961.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Bubble_wrap",
+      "source_excerpt": "Bubble wrap was invented in 1957 by engineers Alfred Fielding and Marc Chavannes, who sealed two shower curtains together with air bubbles and originally tried to sell it as textured wallpaper."
+    },
+    {
+      "id": null,
+      "question": "Forest ecologists discovered that trees share nutrients and chemical warning signals with each other through underground fungal networks — even sending extra resources to struggling seedlings of competing species. What popular nickname have scientists given to this underground communication system?",
+      "stored_answer": "The Wood Wide Web",
+      "verdict": "needs_review",
+      "notes": "The answer 'Wood Wide Web' is correct — this is indeed the popular nickname for mycorrhizal networks. However, the question's premise contains claims that have been significantly challenged in recent scientific literature. A 2023 paper in Nature Ecology & Evolution found that popular claims about the Wood Wide Web are 'largely disconnected from evidence.' Specifically: (1) the claim that trees 'send extra resources to struggling seedlings of competing species' has 'no peer-reviewed, published evidence' supporting preferential resource sharing via these networks; (2) whether interplant nutrient transfer actually occurs through fungal networks in forests remains 'unresolved.' While the answer itself is correct, the question's premise presents contested scientific claims as established fact. Marking as needs_review for human judgment on whether the premise should be softened.",
+      "suggested_fix": "Consider softening the premise to: 'Forest ecologists discovered that trees are connected by underground fungal networks, which may facilitate the sharing of nutrients and chemical signals between plants. What popular nickname have scientists given to this underground network?' This avoids the contested claim about sending resources to competing species' seedlings.",
+      "source_url": "https://en.wikipedia.org/wiki/Mycorrhizal_network",
+      "source_excerpt": "Mycorrhizal networks — popularly called the 'Wood Wide Web' — are underground fungal connections between trees. While they facilitate nutrient exchange, a 2023 review in Nature Ecology & Evolution found that many popular claims about resource sharing are 'largely disconnected from evidence.'"
+    }
+  ]
+}

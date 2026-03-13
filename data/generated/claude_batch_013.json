@@ -354,7 +354,7 @@
       }
     },
     {
-      "question": "Fencing, athletics, swimming, horse riding, and shooting — these five sports make up one Olympic event where a single athlete must compete in all of them. Name this gruelling multi-discipline competition.",
+      "question": "Fencing, athletics, swimming, horse riding, and shooting — these five sports traditionally made up one Olympic event where a single athlete must compete in all of them. Horse riding was replaced after 2024, but name this gruelling multi-discipline competition.",
       "type": "text",
       "correct_answer": "Modern pentathlon",
       "possible_answers": null,
@@ -402,7 +402,7 @@
       }
     },
     {
-      "question": "When the first iPhone launched in 2007, it was missing a feature that even basic flip phones of the era had. Apple didn't add it until over a year later. What was it?",
+      "question": "When the first iPhone launched in 2007, it was missing a basic text editing feature that even flip phones of the era had. Apple didn't add it until two years later, in 2009. What was it?",
       "type": "text",
       "correct_answer": "Copy and paste",
       "possible_answers": null,
@@ -451,16 +451,16 @@
       }
     },
     {
-      "question": "In football (soccer), a goalkeeper once scored a goal from inside his own penalty area — a kick that travelled the entire length of the pitch. Is the world record for the longest goal scored by a goalkeeper closer to 75 metres, 95 metres, or 105 metres?",
+      "question": "In football (soccer), a goalkeeper once scored a goal from inside his own penalty area — a kick that travelled the entire length of the pitch. Is the Guinness World Record for the longest goal scored by a goalkeeper closer to 75 metres, 96 metres, or 105 metres?",
       "type": "text",
-      "correct_answer": "About 95 metres",
+      "correct_answer": "96 metres",
       "possible_answers": null,
       "alternative_answers": [
-        "95 metres",
-        "95 meters",
-        "95m",
-        "around 95 metres",
-        "about 95 meters"
+        "96 meters",
+        "96m",
+        "about 96 metres",
+        "around 96 metres",
+        "96.01 metres"
       ],
       "topic": "Sports",
       "category": "adults",
@@ -502,15 +502,16 @@
       }
     },
     {
-      "question": "SpaceX lands its rocket boosters vertically after launch so they can be reused. Before the first successful landing in 2015, roughly how many attempts did they need — 1, 6, or over 20?",
+      "question": "SpaceX lands its rocket boosters vertically after launch so they can be reused. Including prototype test vehicles like Grasshopper, roughly how many test flights did they conduct before achieving the first successful orbital booster landing in 2015 — 3, 15, or over 50?",
       "type": "text",
-      "correct_answer": "6",
+      "correct_answer": "About 15",
       "possible_answers": null,
       "alternative_answers": [
-        "six",
-        "about 6",
-        "around 6",
-        "6 attempts"
+        "15",
+        "fifteen",
+        "around 15",
+        "16",
+        "about 16"
       ],
       "topic": "Technology",
       "category": "adults",
@@ -602,14 +603,14 @@
     {
       "question": "The entire codebase for the Apollo 11 moon landing guidance computer was about 145,000 lines of code. A modern smartphone app like Instagram has roughly how many times more code — 5 times, 50 times, or 500 times?",
       "type": "text",
-      "correct_answer": "About 500 times",
+      "correct_answer": "About 5 times",
       "possible_answers": null,
       "alternative_answers": [
-        "500 times",
-        "500x",
-        "around 500 times",
-        "roughly 500 times",
-        "500"
+        "5 times",
+        "5x",
+        "around 5 times",
+        "roughly 7 times",
+        "about 7 times"
       ],
       "topic": "Technology",
       "category": "adults",
@@ -651,16 +652,15 @@
       }
     },
     {
-      "question": "Only one athlete in Olympic history has won gold medals in both the Summer and Winter Games. They competed in two very different sports — bobsled in winter and athletics in summer. In which running event did they win their summer gold?",
+      "question": "Only one athlete in Olympic history has won gold medals in both the Summer and Winter Games in different sports. Eddie Eagan won winter gold in the four-man bobsled at the 1932 Games. What was his summer Olympic sport, in which he won gold in 1920?",
       "type": "text",
-      "correct_answer": "100 metres hurdles",
+      "correct_answer": "Boxing",
       "possible_answers": null,
       "alternative_answers": [
-        "100m hurdles",
-        "hurdles",
-        "100 meter hurdles",
-        "the hurdles",
-        "women's 100m hurdles"
+        "boxing",
+        "light heavyweight boxing",
+        "light-heavyweight boxing",
+        "he was a boxer"
       ],
       "topic": "Sports",
       "category": "adults",

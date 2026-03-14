@@ -221,6 +221,37 @@ async def import_questions(
     )
 
 
+@router.get("/questions")
+async def list_questions(
+    _: None = Header(None, dependencies=[verify_admin_key]),
+    search: Optional[str] = None,
+    topic: Optional[str] = None,
+    limit: int = 1000
+):
+    """List all questions, optionally filtered by text search or topic."""
+    if not chroma_client:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+
+    all_questions = chroma_client.get_all_questions(limit=limit)
+
+    results = []
+    for q in all_questions:
+        if search and search.lower() not in q.question.lower():
+            continue
+        if topic and q.topic.lower() != topic.lower():
+            continue
+        results.append({
+            "id": q.id,
+            "question": q.question,
+            "correct_answer": q.correct_answer,
+            "topic": q.topic,
+            "difficulty": q.difficulty,
+            "type": q.type,
+        })
+
+    return {"total": len(results), "questions": results}
+
+
 @router.get("/questions/stats", response_model=QuestionStats)
 async def get_question_stats(
     _: None = Header(None, dependencies=[verify_admin_key])

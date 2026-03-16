@@ -14,6 +14,7 @@ struct ResultView: View {
     @State private var showEvaluation = false
     @State private var showQuitConfirmation = false
     @State private var showSourceWebView = false
+    @State private var questionRating: Int = 0
 
     var body: some View {
         ScrollView {
@@ -125,6 +126,14 @@ struct ResultView: View {
                         .scaleEffect(1.5)
                         .tint(Theme.Colors.accentPrimary)
                         .padding(.vertical, Theme.Spacing.xxl)
+                }
+
+                // MARK: - Question Rating
+                if showEvaluation {
+                    QuestionRatingRow(rating: $questionRating) { rating in
+                        viewModel.rateQuestion(rating)
+                    }
+                    .padding(.horizontal)
                 }
 
                 // MARK: - Auto-advance indicator
@@ -338,6 +347,37 @@ private struct SourceCard: View {
         .cornerRadius(Theme.Radius.md)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Source information")
+    }
+}
+
+// MARK: - Question Rating Row
+
+private struct QuestionRatingRow: View {
+    @Binding var rating: Int
+    let onRate: (Int) -> Void
+
+    var body: some View {
+        HStack(spacing: Theme.Spacing.sm) {
+            Text("Rate this question:")
+                .font(.textXS)
+                .foregroundColor(Theme.Colors.textSecondary)
+
+            HStack(spacing: 4) {
+                ForEach(1...5, id: \.self) { star in
+                    Button {
+                        rating = star
+                        onRate(star)
+                    } label: {
+                        Image(systemName: star <= rating ? "star.fill" : "star")
+                            .font(.textSM)
+                            .foregroundColor(star <= rating ? Theme.Colors.warning : Theme.Colors.textMuted)
+                    }
+                    .accessibilityLabel("\(star) star\(star == 1 ? "" : "s")")
+                }
+            }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Rate this question, \(rating > 0 ? "\(rating) of 5 stars" : "not rated")")
     }
 }
 

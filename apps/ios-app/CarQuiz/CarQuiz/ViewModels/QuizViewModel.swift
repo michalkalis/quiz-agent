@@ -837,6 +837,14 @@ final class QuizViewModel: ObservableObject {
         }
     }
 
+    /// Rate the current question (1-5 stars)
+    func rateQuestion(_ rating: Int) {
+        guard let sessionId = currentSession?.id else { return }
+        Task {
+            try? await networkService.rateQuestion(sessionId: sessionId, rating: rating)
+        }
+    }
+
     /// Resubmit an edited text answer
     func resubmitAnswer(_ newAnswer: String) async {
         guard let sessionId = currentSession?.id else {

@@ -12,6 +12,9 @@ struct QuestionView: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var showEndQuizConfirmation = false
+    @State private var showTextInput = false
+    @State private var textAnswer = ""
+    @FocusState private var isTextFieldFocused: Bool
 
     var body: some View {
         VStack(spacing: Theme.Spacing.md) {
@@ -118,17 +121,64 @@ struct QuestionView: View {
             // Microphone button
             MicButton(state: micButtonState, action: handleMicrophoneTap)
 
-            // Skip button (smaller, text only)
-            Button {
-                Task { await viewModel.skipQuestion() }
-            } label: {
-                Text("Skip")
-                    .font(.textMDMedium)
+            // Skip + Type answer buttons
+            HStack(spacing: Theme.Spacing.sm) {
+                Button {
+                    Task { await viewModel.skipQuestion() }
+                } label: {
+                    Text("Skip")
+                        .font(.textMDMedium)
+                }
+                .accessibilityLabel("Skip question")
+                .accessibilityHint("Skip this question and move to the next one")
+                .buttonStyle(.secondary)
+                .disabled(!canInteract)
+
+                Button {
+                    showTextInput.toggle()
+                    if showTextInput { isTextFieldFocused = true }
+                } label: {
+                    Image(systemName: "keyboard")
+                        .font(.system(size: Theme.Components.iconSM))
+                }
+                .accessibilityLabel("Type answer")
+                .accessibilityHint("Switch to typing your answer instead of speaking")
+                .buttonStyle(.secondary)
+                .disabled(!canInteract)
             }
-            .accessibilityLabel("Skip question")
-            .accessibilityHint("Skip this question and move to the next one")
-            .buttonStyle(.secondary)
-            .disabled(!canInteract)
+
+            // Text input fallback
+            if showTextInput {
+                HStack(spacing: Theme.Spacing.xs) {
+                    TextField("Type your answer...", text: $textAnswer)
+                        .font(.textMD)
+                        .textFieldStyle(.roundedBorder)
+                        .focused($isTextFieldFocused)
+                        .submitLabel(.send)
+                        .onSubmit {
+                            guard !textAnswer.isEmpty else { return }
+                            let answer = textAnswer
+                            textAnswer = ""
+                            showTextInput = false
+                            Task { await viewModel.resubmitAnswer(answer) }
+                        }
+
+                    Button {
+                        guard !textAnswer.isEmpty else { return }
+                        let answer = textAnswer
+                        textAnswer = ""
+                        showTextInput = false
+                        Task { await viewModel.resubmitAnswer(answer) }
+                    } label: {
+                        Image(systemName: "arrow.up.circle.fill")
+                            .font(.system(size: Theme.Components.iconLG))
+                            .foregroundColor(textAnswer.isEmpty ? Theme.Colors.textMuted : Theme.Colors.accentPrimary)
+                    }
+                    .accessibilityLabel("Submit typed answer")
+                    .disabled(textAnswer.isEmpty)
+                }
+                .padding(.horizontal, Theme.Spacing.md)
+            }
 
             // Error message
             if let error = viewModel.errorMessage {

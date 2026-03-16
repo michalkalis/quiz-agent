@@ -10,13 +10,14 @@ import SwiftUI
 struct MinimizedQuizView: View {
     @ObservedObject var viewModel: QuizViewModel
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var showEndQuizConfirmation = false
 
     var body: some View {
         VStack(spacing: Theme.Spacing.xs) {
             // Progress text
             Text("\(viewModel.questionsAnswered + 1)/\(viewModel.currentSession?.maxQuestions ?? 10)")
-                .font(.system(size: Theme.Typography.sizeXS, weight: .semibold))
+                .font(.labelSM)
                 .foregroundColor(Theme.Colors.textSecondary)
 
             // Score
@@ -27,7 +28,7 @@ struct MinimizedQuizView: View {
             // State-specific mic button
             if viewModel.quizState == .askingQuestion {
                 Button {
-                    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                    withAnimation(reduceMotion ? nil : .spring(response: 0.4, dampingFraction: 0.8)) {
                         viewModel.isMinimized = false
                     }
                 } label: {
@@ -42,11 +43,11 @@ struct MinimizedQuizView: View {
             } else if viewModel.quizState == .recording {
                 HStack(spacing: Theme.Spacing.xs) {
                     Image(systemName: "waveform")
-                        .font(.system(size: Theme.Typography.sizeXS))
+                        .font(.textXS)
                         .foregroundColor(Theme.Colors.recording)
-                        .symbolEffect(.pulse)
+                        .symbolEffect(.pulse, isActive: !reduceMotion)
                     Text("Recording...")
-                        .font(.system(size: Theme.Typography.sizeXS))
+                        .font(.textXS)
                         .foregroundColor(Theme.Colors.textSecondary)
                 }
                 .frame(maxWidth: .infinity)
@@ -57,7 +58,7 @@ struct MinimizedQuizView: View {
                         .scaleEffect(0.7)
                         .tint(Theme.Colors.accentPrimary)
                     Text("Processing...")
-                        .font(.system(size: Theme.Typography.sizeXS))
+                        .font(.textXS)
                         .foregroundColor(Theme.Colors.textSecondary)
                 }
                 .frame(maxWidth: .infinity)
@@ -65,10 +66,10 @@ struct MinimizedQuizView: View {
             } else if viewModel.quizState.isShowingResult {
                 HStack(spacing: Theme.Spacing.xs) {
                     Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: Theme.Typography.sizeXS))
+                        .font(.textXS)
                         .foregroundColor(Theme.Colors.success)
                     Text("Review")
-                        .font(.system(size: Theme.Typography.sizeXS))
+                        .font(.textXS)
                         .foregroundColor(Theme.Colors.textSecondary)
                 }
                 .frame(maxWidth: .infinity)
@@ -106,8 +107,11 @@ struct MinimizedQuizView: View {
             x: 0,
             y: 4
         )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Quiz in progress. Question \(viewModel.questionsAnswered + 1) of \(viewModel.currentSession?.maxQuestions ?? 10). Score: \(String(format: "%.1f", viewModel.score))")
+        .accessibilityHint("Tap to expand quiz")
         .onTapGesture {
-            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+            withAnimation(reduceMotion ? nil : .spring(response: 0.4, dampingFraction: 0.8)) {
                 viewModel.isMinimized = false
             }
         }

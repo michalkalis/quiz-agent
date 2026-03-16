@@ -19,6 +19,7 @@ struct CategoryBadge: View {
             .padding(.horizontal, Theme.Spacing.sm)
             .background(Theme.Colors.accentPrimary.opacity(0.1))
             .cornerRadius(Theme.Radius.sm)
+            .accessibilityLabel("Category: \(category.capitalized)")
     }
 }
 

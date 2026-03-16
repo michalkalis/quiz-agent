@@ -19,13 +19,15 @@ struct CountdownTimer: View {
                 .foregroundColor(Theme.Colors.warning)
 
             Text(displayText)
-                .font(.system(size: Theme.Typography.sizeMD, weight: .bold))
+                .font(.displayMDBold)
                 .foregroundColor(Theme.Colors.warning)
         }
         .padding(.vertical, Theme.Spacing.sm)
         .padding(.horizontal, Theme.Spacing.lg)
         .background(Theme.Colors.warningBg)
         .cornerRadius(Theme.Radius.full)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Next question in \(seconds) seconds")
     }
 
     private var displayText: String {

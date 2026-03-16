@@ -20,21 +20,22 @@ struct HomeView: View {
                         .accessibilityHidden(true)
 
                     Text("CarQuiz")
-                        .font(.system(size: Theme.Typography.sizeXXL, weight: .bold, design: .default))
+                        .font(.displayXXL)
                         .foregroundColor(Theme.Colors.textPrimary)
 
                     Text("Hands-Free Trivia While You Drive")
-                        .font(.system(size: Theme.Typography.sizeSM))
+                        .font(.textSM)
                         .foregroundColor(Theme.Colors.textSecondary)
                         .multilineTextAlignment(.center)
                 }
+                .accessibilityElement(children: .combine)
                 .padding(.top, Theme.Spacing.lg)
 
                 // MARK: - Quick Settings Section
 
                 VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
                     Text("Quick Settings")
-                        .font(.system(size: Theme.Typography.sizeMD, weight: .semibold))
+                        .font(.displayMD)
                         .foregroundColor(Theme.Colors.textPrimary)
                         .padding(.horizontal, 4)
 
@@ -114,9 +115,12 @@ struct HomeView: View {
                         HStack(spacing: 8) {
                             Image(systemName: "gearshape")
                                 .font(.system(size: Theme.Components.iconSM))
+                                .accessibilityHidden(true)
                             Text("More Settings")
                         }
                     }
+                    .accessibilityLabel("More Settings")
+                    .accessibilityHint("Opens full settings screen")
                     .buttonStyle(.secondary)
                 }
                 .padding(.horizontal, Theme.Spacing.lg)
@@ -163,11 +167,11 @@ private struct QuickSettingRow<Content: View>: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.system(size: Theme.Typography.sizeXS, weight: .semibold))
+                    .font(.labelSM)
                     .foregroundColor(Theme.Colors.textSecondary)
 
                 Text(value)
-                    .font(.system(size: Theme.Typography.sizeSM))
+                    .font(.textSM)
                     .foregroundColor(Theme.Colors.textPrimary)
             }
 
@@ -178,6 +182,8 @@ private struct QuickSettingRow<Content: View>: View {
         .padding(Theme.Spacing.md)
         .background(Theme.Colors.bgCard)
         .cornerRadius(Theme.Radius.xl)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title): \(value)")
     }
 }
 

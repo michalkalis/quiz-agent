@@ -142,7 +142,8 @@ struct VoiceCommandStateValidityTests {
                 id: "q_002", question: "Next?", type: .text,
                 possibleAnswers: nil, difficulty: "medium",
                 topic: "Test", category: "test",
-                sourceUrl: nil, sourceExcerpt: nil
+                sourceUrl: nil, sourceExcerpt: nil,
+                mediaUrl: nil, imageSubtype: nil
             ),
             evaluation: Evaluation(
                 userAnswer: "Test",
@@ -205,7 +206,8 @@ struct VoiceCommandStateValidityTests {
             id: "q_001", question: "Test?", type: .text,
             possibleAnswers: nil, difficulty: "medium",
             topic: "Test", category: "test",
-            sourceUrl: nil, sourceExcerpt: nil
+            sourceUrl: nil, sourceExcerpt: nil,
+            mediaUrl: nil, imageSubtype: nil
         )
         viewModel.quizState = .askingQuestion
 
@@ -467,7 +469,8 @@ struct AutoRecordViewModelTests {
                 id: "q_002", question: "Next?", type: .text,
                 possibleAnswers: nil, difficulty: "medium",
                 topic: "Test", category: "test",
-                sourceUrl: nil, sourceExcerpt: nil
+                sourceUrl: nil, sourceExcerpt: nil,
+                mediaUrl: nil, imageSubtype: nil
             ),
             evaluation: Evaluation(
                 userAnswer: "Test",
@@ -510,7 +513,8 @@ struct AutoRecordViewModelTests {
             id: "q_001", question: "Test?", type: .text,
             possibleAnswers: nil, difficulty: "medium",
             topic: "Test", category: "test",
-            sourceUrl: nil, sourceExcerpt: nil
+            sourceUrl: nil, sourceExcerpt: nil,
+            mediaUrl: nil, imageSubtype: nil
         )
 
         // With auto-record disabled, toggleRecording should still work normally

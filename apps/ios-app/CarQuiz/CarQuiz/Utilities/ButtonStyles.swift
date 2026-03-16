@@ -13,10 +13,11 @@ import SwiftUI
 /// Used for main CTAs like "Start Quiz", "Continue"
 struct PrimaryButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: Theme.Typography.sizeMD, weight: .semibold))
+            .font(.displayMD)
             .foregroundColor(Theme.Colors.textOnAccent)
             .padding(.vertical, Theme.Spacing.md)
             .padding(.horizontal, Theme.Spacing.xl)
@@ -38,7 +39,7 @@ struct PrimaryButtonStyle: ButtonStyle {
                 y: 4
             )
             .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
-            .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.15), value: configuration.isPressed)
     }
 }
 
@@ -48,10 +49,11 @@ struct PrimaryButtonStyle: ButtonStyle {
 /// Used for secondary actions like "Settings", "Stay Here"
 struct SecondaryButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: Theme.Typography.sizeMD, weight: .medium))
+            .font(.textMDBodyMedium)
             .foregroundColor(isEnabled ? Theme.Colors.textPrimary : Theme.Colors.textTertiary)
             .padding(.vertical, Theme.Spacing.md)
             .padding(.horizontal, Theme.Spacing.xl)
@@ -62,7 +64,7 @@ struct SecondaryButtonStyle: ButtonStyle {
                     .stroke(Theme.Colors.border, lineWidth: 2)
             )
             .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
-            .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.15), value: configuration.isPressed)
     }
 }
 
@@ -70,6 +72,8 @@ struct SecondaryButtonStyle: ButtonStyle {
 
 /// Red styled button for destructive actions
 struct DangerButtonStyle: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.roundedMD)
@@ -86,7 +90,7 @@ struct DangerButtonStyle: ButtonStyle {
                 y: 4
             )
             .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
-            .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.15), value: configuration.isPressed)
     }
 }
 
@@ -95,13 +99,14 @@ struct DangerButtonStyle: ButtonStyle {
 /// Minimal text-only button style
 struct TextButtonStyle: ButtonStyle {
     var color: Color = Theme.Colors.accentPrimary
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.textMDMedium)
             .foregroundColor(color)
             .opacity(configuration.isPressed ? 0.7 : 1.0)
-            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.1), value: configuration.isPressed)
     }
 }
 

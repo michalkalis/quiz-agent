@@ -25,16 +25,19 @@ struct AnswerConfirmationView: View {
                     .scaleEffect(1.5)
                     .tint(Theme.Colors.accentPrimary)
                     .padding()
+                    .accessibilityHidden(true)
 
                 Text("Processing...")
                     .font(.displayMD)
                     .foregroundColor(Theme.Colors.textSecondary)
+                    .accessibilityLabel("Processing your answer")
 
                 // Cancel button during processing
                 if let onCancel = onCancel {
                     Button("Cancel") {
                         onCancel()
                     }
+                    .accessibilityLabel("Cancel processing")
                     .buttonStyle(.secondary)
                     .padding(.top, Theme.Spacing.md)
                 }
@@ -53,6 +56,7 @@ struct AnswerConfirmationView: View {
                         .frame(maxWidth: .infinity)
                         .background(Theme.Colors.bgSecondary)
                         .cornerRadius(Theme.Radius.sm)
+                        .accessibilityLabel("Your transcribed answer: \(transcribedAnswer)")
                 }
                 .frame(maxHeight: 200)
 
@@ -64,6 +68,7 @@ struct AnswerConfirmationView: View {
                     Button(action: onReRecord) {
                         HStack(spacing: Theme.Spacing.xs) {
                             Image(systemName: "mic.circle.fill")
+                                .accessibilityHidden(true)
                             if rerecordCountdown > 0 {
                                 Text("Re-record (\(rerecordCountdown)s)")
                             } else {
@@ -71,6 +76,8 @@ struct AnswerConfirmationView: View {
                             }
                         }
                     }
+                    .accessibilityLabel(rerecordCountdown > 0 ? "Re-record, \(rerecordCountdown) seconds remaining" : "Re-record")
+                    .accessibilityHint("Record your answer again")
                     .buttonStyle(.secondary)
                     .disabled(rerecordCountdown == 0)
                     .opacity(rerecordCountdown == 0 ? 0.4 : 1.0)
@@ -79,9 +86,12 @@ struct AnswerConfirmationView: View {
                     Button(action: onConfirm) {
                         HStack(spacing: Theme.Spacing.xs) {
                             Image(systemName: "checkmark.circle.fill")
+                                .accessibilityHidden(true)
                             Text("Confirm")
                         }
                     }
+                    .accessibilityLabel("Confirm answer")
+                    .accessibilityHint("Submit your transcribed answer")
                     .buttonStyle(.primary)
                 }
                 .onAppear {

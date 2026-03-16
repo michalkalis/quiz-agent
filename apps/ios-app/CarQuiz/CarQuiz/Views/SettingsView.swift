@@ -115,7 +115,7 @@ struct SettingsView: View {
                             }
 
                             Text("Interrupt question audio by speaking. Works best with Bluetooth or CarPlay.")
-                                .font(.system(size: Theme.Typography.sizeXS))
+                                .font(.textXS)
                                 .foregroundColor(Theme.Colors.textTertiary)
                                 .padding(.horizontal, 4)
                         }
@@ -144,7 +144,7 @@ struct SettingsView: View {
                             viewModel.showingMicrophonePicker = true
                         } label: {
                             Text(viewModel.currentInputDeviceName)
-                                .font(.system(size: Theme.Typography.sizeSM))
+                                .font(.textSM)
                                 .foregroundColor(Theme.Colors.textPrimary)
                                 .lineLimit(1)
                         }
@@ -202,8 +202,9 @@ struct SettingsView: View {
 
                         HStack {
                             Text("\(viewModel.questionHistoryCount) / 500 questions")
-                                .font(.system(size: Theme.Typography.sizeXS))
+                                .font(.textXS)
                                 .foregroundColor(questionCountColor)
+                                .accessibilityLabel("\(viewModel.questionHistoryCount) of 500 questions seen")
 
                             Spacer()
                         }
@@ -213,15 +214,18 @@ struct SettingsView: View {
                         } label: {
                             HStack {
                                 Image(systemName: "trash")
+                                    .accessibilityHidden(true)
                                 Text("Reset History")
                             }
-                            .font(.system(size: Theme.Typography.sizeSM, weight: .medium))
+                            .font(.textMDMedium)
                             .foregroundColor(Theme.Colors.error)
                             .padding(.vertical, Theme.Spacing.sm)
                             .frame(maxWidth: .infinity)
                             .background(Theme.Colors.errorBg)
                             .cornerRadius(Theme.Radius.md)
                         }
+                        .accessibilityLabel("Reset History")
+                        .accessibilityHint("Clears all question history so you can see previously answered questions again")
                         .disabled(viewModel.questionHistoryCount == 0)
                     }
                     .padding(Theme.Spacing.md)
@@ -231,7 +235,7 @@ struct SettingsView: View {
 
                 // Helper text
                 Text("Resetting history allows you to see previously answered questions again.")
-                    .font(.system(size: Theme.Typography.sizeXS))
+                    .font(.textXS)
                     .foregroundColor(Theme.Colors.textTertiary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)
@@ -259,11 +263,12 @@ struct SettingsView: View {
     private func menuLabel(value: String) -> some View {
         HStack(spacing: Theme.Spacing.xs) {
             Text(value)
-                .font(.system(size: Theme.Typography.sizeSM))
+                .font(.textSM)
                 .foregroundColor(Theme.Colors.textPrimary)
             Image(systemName: "chevron.down")
-                .font(.system(size: Theme.Typography.sizeXS))
+                .font(.textXS)
                 .foregroundColor(Theme.Colors.textSecondary)
+                .accessibilityHidden(true)
         }
     }
 
@@ -288,7 +293,7 @@ private struct SettingsSection<Content: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
             Text(title)
-                .font(.system(size: Theme.Typography.sizeMD, weight: .semibold))
+                .font(.displayMD)
                 .foregroundColor(Theme.Colors.textPrimary)
                 .padding(.horizontal, 4)
 
@@ -308,7 +313,7 @@ private struct SettingsInputField<Content: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
             Text(label)
-                .font(.system(size: Theme.Typography.sizeXS, weight: .semibold))
+                .font(.labelSM)
                 .foregroundColor(Theme.Colors.textSecondary)
 
             HStack(spacing: Theme.Spacing.sm) {
@@ -327,6 +332,8 @@ private struct SettingsInputField<Content: View>: View {
                 RoundedRectangle(cornerRadius: Theme.Radius.xl)
                     .stroke(Theme.Colors.border, lineWidth: 1.5)
             )
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("\(label): \(value)")
         }
     }
 }

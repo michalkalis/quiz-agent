@@ -11,6 +11,7 @@ struct InteractiveMinimizeModifier: ViewModifier {
     @Binding var isMinimized: Bool
     let canMinimize: Bool
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var dragOffset: CGFloat = 0
 
     // Thresholds for triggering minimize
@@ -41,7 +42,7 @@ struct InteractiveMinimizeModifier: ViewModifier {
                     }
                     .onEnded { value in
                         guard canMinimize else {
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                            withAnimation(reduceMotion ? nil : .spring(response: 0.3, dampingFraction: 0.8)) {
                                 dragOffset = 0
                             }
                             return
@@ -58,13 +59,13 @@ struct InteractiveMinimizeModifier: ViewModifier {
 
                         if shouldMinimize {
                             // Animate minimize
-                            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                            withAnimation(reduceMotion ? nil : .spring(response: 0.4, dampingFraction: 0.8)) {
                                 isMinimized = true
                                 dragOffset = 0
                             }
                         } else {
                             // Snap back to original position
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                            withAnimation(reduceMotion ? nil : .spring(response: 0.3, dampingFraction: 0.8)) {
                                 dragOffset = 0
                             }
                         }

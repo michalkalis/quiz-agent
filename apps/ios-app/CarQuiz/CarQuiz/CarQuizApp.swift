@@ -14,12 +14,6 @@ struct CarQuizApp: App {
         WindowGroup {
             ContentView(appState: appState)
                 .environmentObject(appState)
-                .onAppear {
-                    Task {
-                        // Request microphone permission on first launch
-                        _ = await appState.audioService.requestMicrophonePermission()
-                    }
-                }
         }
     }
 }

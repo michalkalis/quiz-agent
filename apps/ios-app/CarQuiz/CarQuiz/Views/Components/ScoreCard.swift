@@ -16,11 +16,11 @@ struct ScoreCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(label)
-                .font(.system(size: Theme.Typography.sizeXS, weight: .medium))
+                .font(.textSMMedium)
                 .foregroundColor(Theme.Colors.textSecondary)
 
             Text(formattedScore)
-                .font(.system(size: Theme.Typography.sizeXXL, weight: .heavy, design: .default))
+                .font(.displayXXLHeavy)
                 .foregroundColor(Theme.Colors.textPrimary)
                 .lineSpacing(-4)
         }
@@ -31,6 +31,8 @@ struct ScoreCard: View {
             RoundedRectangle(cornerRadius: Theme.Radius.xl)
                 .stroke(Theme.Gradients.cardBorder(), lineWidth: 2)
         )
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(label): \(formattedScore)")
     }
 
     private var formattedScore: String {

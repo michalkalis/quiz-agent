@@ -18,7 +18,7 @@ struct LevelBadge: View {
                 .foregroundColor(Color(hex: "#FCD34D")) // Gold
 
             Text("Level \(level)")
-                .font(.system(size: Theme.Typography.sizeSM, weight: .bold))
+                .font(.labelMDBold)
                 .foregroundColor(Theme.Colors.textOnAccent)
         }
         .padding(.vertical, 10)

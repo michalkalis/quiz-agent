@@ -33,13 +33,14 @@ struct CompletionView: View {
                 // MARK: - Trophy Section
                 VStack(spacing: Theme.Spacing.md) {
                     Text("Quiz Master!")
-                        .font(.system(size: Theme.Typography.sizeXXL, weight: .bold))
+                        .font(.displayXXL)
                         .foregroundColor(Theme.Colors.textPrimary)
 
                     Text(congratulatoryMessage)
-                        .font(.system(size: Theme.Typography.sizeMD))
+                        .font(.textMD)
                         .foregroundColor(Theme.Colors.textSecondary)
                 }
+                .accessibilityElement(children: .combine)
 
                 // Trophy Icon
                 TrophyIcon(size: 120)
@@ -49,7 +50,7 @@ struct CompletionView: View {
                 // MARK: - Score Card
                 VStack(spacing: Theme.Spacing.sm) {
                     Text("Final Score")
-                        .font(.system(size: Theme.Typography.sizeXS, weight: .medium))
+                        .font(.textSMMedium)
                         .foregroundColor(Theme.Colors.textSecondary)
 
                     Text(formattedScore)
@@ -57,7 +58,7 @@ struct CompletionView: View {
                         .foregroundColor(Theme.Colors.accentPrimary)
 
                     Text("\(Int(scorePercentage))% Accuracy")
-                        .font(.system(size: Theme.Typography.sizeMD, weight: .medium))
+                        .font(.textMDBodyMedium)
                         .foregroundColor(Theme.Colors.textSecondary)
                 }
                 .padding(Theme.Spacing.xl)
@@ -68,6 +69,8 @@ struct CompletionView: View {
                     RoundedRectangle(cornerRadius: Theme.Radius.xl)
                         .stroke(Theme.Gradients.cardBorder(), lineWidth: 2)
                 )
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("Final score: \(formattedScore), \(Int(scorePercentage)) percent accuracy")
                 .padding(.horizontal)
 
                 // MARK: - Stats Row

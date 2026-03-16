@@ -81,7 +81,7 @@ struct AudioDevicePickerView: View {
             HStack(spacing: Theme.Spacing.sm) {
                 // Device icon
                 Image(systemName: device.isAutomatic ? "wand.and.stars" : device.icon)
-                    .font(.system(size: Theme.Typography.sizeLG))
+                    .font(.textLG)
                     .foregroundColor(device.isAutomatic ? Theme.Colors.accentPrimary : Theme.Colors.accentPrimary)
                     .frame(width: Theme.Components.iconLG)
 

@@ -134,15 +134,16 @@ struct MicButton: View {
 
 private struct PulsingMicAnimation: ViewModifier {
     let isActive: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var isPulsing = false
 
     func body(content: Content) -> some View {
         content
-            .scaleEffect(isActive && isPulsing ? 1.05 : 1.0)
+            .scaleEffect(isActive && isPulsing && !reduceMotion ? 1.05 : 1.0)
             .animation(
-                isActive
+                reduceMotion ? nil : (isActive
                     ? .easeInOut(duration: 0.6).repeatForever(autoreverses: true)
-                    : .default,
+                    : .default),
                 value: isPulsing
             )
             .onChange(of: isActive) { _, newValue in

@@ -10,6 +10,7 @@ import SwiftUI
 struct ResultView: View {
     @ObservedObject var viewModel: QuizViewModel
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var showEvaluation = false
     @State private var showQuitConfirmation = false
     @State private var showSourceWebView = false
@@ -30,8 +31,9 @@ struct ResultView: View {
                     // Progress and score inline
                     if let session = viewModel.currentSession {
                         Text("Q \(viewModel.questionsAnswered)/\(session.maxQuestions)  •  \(Int(viewModel.score)) pts")
-                            .font(.system(size: Theme.Typography.sizeSM, weight: .medium))
+                            .font(.textMDMedium)
                             .foregroundColor(Theme.Colors.textSecondary)
+                            .accessibilityLabel("Question \(viewModel.questionsAnswered) of \(session.maxQuestions), \(Int(viewModel.score)) points")
                     }
 
                     Spacer()
@@ -41,7 +43,7 @@ struct ResultView: View {
                         showQuitConfirmation = true
                     } label: {
                         Image(systemName: "xmark")
-                            .font(.system(size: Theme.Typography.sizeMD, weight: .semibold))
+                            .font(.displayMD)
                             .foregroundColor(Theme.Colors.textSecondary)
                             .padding(Theme.Spacing.sm)
                             .background(Theme.Colors.bgCard)
@@ -63,7 +65,7 @@ struct ResultView: View {
                             .transition(.scale.combined(with: .opacity))
                         } else {
                             Text("Let's see...")
-                                .font(.system(size: Theme.Typography.sizeLG, weight: .bold))
+                                .font(.displayLG)
                                 .foregroundColor(Theme.Colors.textSecondary)
                                 .padding(.vertical, Theme.Spacing.xl)
                         }
@@ -83,6 +85,7 @@ struct ResultView: View {
                                         .cornerRadius(Theme.Radius.lg)
                                 }
                             }
+                            .accessibilityLabel("Question image")
                             .padding(.horizontal)
                         }
 
@@ -133,15 +136,19 @@ struct ResultView: View {
                             ProgressView()
                                 .scaleEffect(0.8)
                                 .tint(Theme.Colors.accentPrimary)
+                                .accessibilityHidden(true)
                             Text("Loading next question...")
-                                .font(.system(size: Theme.Typography.sizeXS))
+                                .font(.textXS)
                                 .foregroundColor(Theme.Colors.textSecondary)
                         }
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel("Loading next question")
                     }
                 } else if viewModel.currentQuestionPaused {
                     Text("Staying on this question")
-                        .font(.system(size: Theme.Typography.sizeXS))
+                        .font(.textXS)
                         .foregroundColor(Theme.Colors.textSecondary)
+                        .accessibilityLabel("Paused, staying on this question")
                 }
 
                 // MARK: - Action Buttons
@@ -153,7 +160,9 @@ struct ResultView: View {
                     Button("Stay Here") {
                         viewModel.pauseQuiz()
                     }
-                    .font(.system(size: Theme.Typography.sizeSM, weight: .medium))
+                    .accessibilityLabel("Stay Here")
+                    .accessibilityHint("Pause auto-advance and stay on this result")
+                    .font(.textMDMedium)
                     .foregroundColor(Theme.Colors.textSecondary)
                     .disabled(viewModel.currentQuestionPaused)
 
@@ -164,11 +173,14 @@ struct ResultView: View {
                         } label: {
                             HStack(spacing: 4) {
                                 Image(systemName: "link")
-                                    .font(.system(size: Theme.Typography.sizeXS))
+                                    .font(.textXS)
+                                    .accessibilityHidden(true)
                                 Text("View Source")
                             }
                             .foregroundColor(Theme.Colors.accentPrimary)
                         }
+                        .accessibilityLabel("View Source")
+                        .accessibilityHint("Opens the source article")
                     }
                 }
                 .padding(.horizontal)
@@ -180,7 +192,7 @@ struct ResultView: View {
             isMinimized: $viewModel.isMinimized,
             canMinimize: viewModel.canMinimize
         )
-        .animation(.spring(response: 0.5, dampingFraction: 0.7), value: showEvaluation)
+        .animation(reduceMotion ? nil : .spring(response: 0.5, dampingFraction: 0.7), value: showEvaluation)
         .onAppear {
             showEvaluation = true
         }
@@ -236,12 +248,12 @@ private struct AnswerCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
             Text(label)
-                .font(.system(size: Theme.Typography.sizeXS, weight: .semibold))
+                .font(.labelSM)
                 .foregroundColor(Theme.Colors.textSecondary)
                 .textCase(.uppercase)
 
             Text(answer)
-                .font(.system(size: Theme.Typography.sizeMD))
+                .font(.textMD)
                 .foregroundColor(Theme.Colors.textPrimary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -252,6 +264,8 @@ private struct AnswerCard: View {
             RoundedRectangle(cornerRadius: Theme.Radius.md)
                 .stroke(borderColor, lineWidth: 1.5)
         )
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(label) \(answer)")
     }
 
     private var backgroundColor: Color {
@@ -285,12 +299,12 @@ private struct SourceCard: View {
                 Image(systemName: "link.circle.fill")
                     .foregroundColor(Theme.Colors.accentPrimary)
                 Text("Source")
-                    .font(.system(size: Theme.Typography.sizeMD, weight: .semibold))
+                    .font(.displayMD)
                     .foregroundColor(Theme.Colors.textPrimary)
             }
 
             Text(excerpt)
-                .font(.system(size: Theme.Typography.sizeSM))
+                .font(.textSM)
                 .foregroundColor(Theme.Colors.textSecondary)
                 .padding(Theme.Spacing.md)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -301,14 +315,19 @@ private struct SourceCard: View {
                 HStack(spacing: Theme.Spacing.xs) {
                     Text("Read Full Article")
                     Image(systemName: "arrow.up.forward.circle")
+                        .accessibilityHidden(true)
                 }
-                .font(.system(size: Theme.Typography.sizeSM))
+                .font(.textSM)
                 .foregroundColor(Theme.Colors.accentPrimary)
             }
+            .accessibilityLabel("Read Full Article")
+            .accessibilityHint("Opens the source article in a browser")
         }
         .padding(Theme.Spacing.md)
         .background(Theme.Colors.bgCard)
         .cornerRadius(Theme.Radius.md)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Source information")
     }
 }
 

@@ -10,6 +10,7 @@ import SwiftUI
 struct QuestionView: View {
     @ObservedObject var viewModel: QuizViewModel
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var showEndQuizConfirmation = false
 
     var body: some View {
@@ -34,7 +35,7 @@ struct QuestionView: View {
                     showEndQuizConfirmation = true
                 } label: {
                     Image(systemName: "xmark")
-                        .font(.system(size: Theme.Typography.sizeMD, weight: .semibold))
+                        .font(.displayMD)
                         .foregroundColor(Theme.Colors.textSecondary)
                         .padding(Theme.Spacing.sm)
                         .background(Theme.Colors.bgCard)
@@ -65,7 +66,7 @@ struct QuestionView: View {
                         ImageQuestionView(question: question)
                     } else {
                         Text(question.question)
-                            .font(.system(size: Theme.Typography.sizeXL, weight: .bold))
+                            .font(.displayXL)
                             .foregroundColor(Theme.Colors.textPrimary)
                             .multilineTextAlignment(.center)
                             .fixedSize(horizontal: false, vertical: true)
@@ -92,7 +93,7 @@ struct QuestionView: View {
             // Live transcript from streaming STT
             if viewModel.isStreamingSTT && !viewModel.liveTranscript.isEmpty {
                 Text(viewModel.liveTranscript)
-                    .font(.system(size: Theme.Typography.sizeMD, weight: .medium))
+                    .font(.textMDBodyMedium)
                     .foregroundColor(Theme.Colors.textPrimary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, Theme.Spacing.lg)
@@ -102,15 +103,17 @@ struct QuestionView: View {
                     .cornerRadius(Theme.Radius.lg)
                     .padding(.horizontal, Theme.Spacing.md)
                     .transition(.opacity)
-                    .animation(.easeInOut(duration: 0.2), value: viewModel.liveTranscript)
+                    .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: viewModel.liveTranscript)
+                    .accessibilityLabel("Transcription: \(viewModel.liveTranscript)")
             }
 
             // Recording status hint
             Text(hintText)
-                .font(.system(size: Theme.Typography.sizeSM, weight: .medium))
+                .font(.textMDMedium)
                 .foregroundColor(hintColor)
                 .frame(height: 24)
                 .padding(.bottom, Theme.Spacing.sm)
+                .accessibilityLabel("Status: \(hintText)")
 
             // Microphone button
             MicButton(state: micButtonState, action: handleMicrophoneTap)
@@ -120,19 +123,23 @@ struct QuestionView: View {
                 Task { await viewModel.skipQuestion() }
             } label: {
                 Text("Skip")
-                    .font(.system(size: Theme.Typography.sizeSM, weight: .medium))
+                    .font(.textMDMedium)
             }
+            .accessibilityLabel("Skip question")
+            .accessibilityHint("Skip this question and move to the next one")
             .buttonStyle(.secondary)
             .disabled(!canInteract)
 
             // Error message
             if let error = viewModel.errorMessage {
                 Text(error)
-                    .font(.system(size: Theme.Typography.sizeXS))
+                    .font(.textXS)
                     .foregroundColor(Theme.Colors.error)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)
                     .padding(.top, Theme.Spacing.xs)
+                    .accessibilityLabel("Error: \(error)")
+                    .accessibilityAddTraits(.isStaticText)
             }
 
             Spacer(minLength: Theme.Spacing.xs)
@@ -254,10 +261,10 @@ private struct AnswerTimerBadge: View {
     var body: some View {
         HStack(spacing: Theme.Spacing.xs) {
             Image(systemName: "hourglass")
-                .font(.system(size: Theme.Typography.sizeSM))
+                .font(.textSM)
                 .accessibilityHidden(true)
             Text("\(seconds)s")
-                .font(.system(size: Theme.Typography.sizeMD, weight: .semibold))
+                .font(.displayMD)
                 .monospacedDigit()
         }
         .foregroundColor(seconds <= 5 ? Theme.Colors.error : Theme.Colors.accentPrimary)
@@ -275,13 +282,14 @@ private struct AnswerTimerBadge: View {
 // MARK: - Pulsing Animation
 
 struct PulsingAnimation: ViewModifier {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var isPulsing = false
 
     func body(content: Content) -> some View {
         content
-            .scaleEffect(isPulsing ? 1.2 : 1.0)
-            .opacity(isPulsing ? 0.6 : 1.0)
-            .animation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true), value: isPulsing)
+            .scaleEffect(isPulsing && !reduceMotion ? 1.2 : 1.0)
+            .opacity(isPulsing && !reduceMotion ? 0.6 : 1.0)
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.8).repeatForever(autoreverses: true), value: isPulsing)
             .onAppear {
                 isPulsing = true
             }

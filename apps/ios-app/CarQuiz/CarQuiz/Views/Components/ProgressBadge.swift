@@ -24,6 +24,7 @@ struct ProgressBadge: View {
                 RoundedRectangle(cornerRadius: Theme.Radius.full)
                     .stroke(Theme.Colors.border, lineWidth: 1.5)
             )
+            .accessibilityLabel("Question \(current) of \(total)")
     }
 }
 

@@ -21,6 +21,14 @@ enum QuestionHistoryError: Error {
 
 /// Protocol for unified persistence (session + settings + question history)
 protocol PersistenceStoreProtocol: Sendable {
+    // MARK: - Onboarding
+
+    /// Whether the user has completed the onboarding flow
+    var hasCompletedOnboarding: Bool { get }
+
+    /// Mark onboarding as completed
+    func completeOnboarding()
+
     // MARK: - Session
 
     /// Get the currently stored session ID
@@ -73,6 +81,7 @@ final class PersistenceStore: PersistenceStoreProtocol {
     nonisolated(unsafe) private let userDefaults: UserDefaults
 
     // Keys
+    private let onboardingKey = "has_completed_onboarding"
     private let sessionIdKey = "current_session_id"
     private let settingsKey = "quiz_settings"
     private let historyKey = "asked_question_history"
@@ -80,6 +89,16 @@ final class PersistenceStore: PersistenceStoreProtocol {
 
     init(userDefaults: UserDefaults = .standard) {
         self.userDefaults = userDefaults
+    }
+
+    // MARK: - Onboarding
+
+    var hasCompletedOnboarding: Bool {
+        userDefaults.bool(forKey: onboardingKey)
+    }
+
+    func completeOnboarding() {
+        userDefaults.set(true, forKey: onboardingKey)
     }
 
     // MARK: - Session
@@ -228,6 +247,13 @@ final class PersistenceStore: PersistenceStoreProtocol {
 
 #if DEBUG
 final class MockPersistenceStore: PersistenceStoreProtocol {
+    // Onboarding state
+    nonisolated(unsafe) var hasCompletedOnboarding: Bool = true
+
+    func completeOnboarding() {
+        hasCompletedOnboarding = true
+    }
+
     // Session state
     nonisolated(unsafe) var currentSessionId: String?
 

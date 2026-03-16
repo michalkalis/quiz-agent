@@ -18,14 +18,14 @@ struct ProgressBarView: View {
             // Label row
             HStack {
                 Text(title)
-                    .font(.system(size: Theme.Typography.sizeXS, weight: .semibold))
+                    .font(.labelSM)
                     .foregroundColor(Theme.Colors.textSecondary)
 
                 Spacer()
 
                 if showPercentage {
                     Text("\(Int(progress * 100))%")
-                        .font(.system(size: Theme.Typography.sizeXS, weight: .bold))
+                        .font(.labelSMBold)
                         .foregroundColor(Theme.Colors.accentPrimary)
                 }
             }
@@ -46,6 +46,8 @@ struct ProgressBarView: View {
             }
             .frame(height: 8)
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(title): \(Int(progress * 100)) percent")
     }
 }
 

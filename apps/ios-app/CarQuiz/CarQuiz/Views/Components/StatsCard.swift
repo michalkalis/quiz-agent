@@ -21,11 +21,11 @@ struct StatsCard: View {
                 .foregroundColor(iconColor)
 
             Text(value)
-                .font(.system(size: Theme.Typography.sizeXXL, weight: .heavy, design: .default))
+                .font(.displayXXLHeavy)
                 .foregroundColor(Theme.Colors.textPrimary)
 
             Text(label)
-                .font(.system(size: Theme.Typography.sizeXS, weight: .medium))
+                .font(.textSMMedium)
                 .foregroundColor(Theme.Colors.textSecondary)
         }
         .padding(Theme.Spacing.lg)
@@ -36,6 +36,8 @@ struct StatsCard: View {
             RoundedRectangle(cornerRadius: Theme.Radius.lg)
                 .stroke(Theme.Gradients.cardBorder(), lineWidth: 2)
         )
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(label): \(value)")
     }
 }
 

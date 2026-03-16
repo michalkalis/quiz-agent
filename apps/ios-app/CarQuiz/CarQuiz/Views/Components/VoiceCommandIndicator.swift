@@ -10,26 +10,29 @@ import SwiftUI
 struct VoiceCommandIndicator: View {
     let state: VoiceCommandListeningState
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var isPulsing = false
 
     var body: some View {
         HStack(spacing: Theme.Spacing.xs / 2) {
             Image(systemName: iconName)
-                .font(.system(size: Theme.Typography.sizeXS))
+                .font(.textXS)
 
             Text(label)
-                .font(.system(size: Theme.Typography.sizeXXS, weight: .medium))
+                .font(.textXXSMedium)
         }
         .foregroundColor(foregroundColor)
         .padding(.horizontal, Theme.Spacing.sm)
         .padding(.vertical, Theme.Spacing.xs / 2)
         .background(backgroundColor)
         .cornerRadius(Theme.Radius.full)
-        .opacity(isPulsing ? 0.7 : 1.0)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilityDescription)
+        .opacity(isPulsing && !reduceMotion ? 0.7 : 1.0)
         .animation(
-            state == .listening
+            reduceMotion ? nil : (state == .listening
                 ? .easeInOut(duration: 1.5).repeatForever(autoreverses: true)
-                : .default,
+                : .default),
             value: isPulsing
         )
         .onChange(of: state) { _, newState in
@@ -59,6 +62,17 @@ struct VoiceCommandIndicator: View {
             return "Voice"
         case .commandDetected(let command):
             return command.rawValue.capitalized
+        }
+    }
+
+    private var accessibilityDescription: String {
+        switch state {
+        case .disabled:
+            return "Voice commands disabled"
+        case .listening:
+            return "Listening for voice commands"
+        case .commandDetected(let command):
+            return "Voice command detected: \(command.rawValue)"
         }
     }
 

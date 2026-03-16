@@ -10,6 +10,22 @@ import SwiftUI
 struct ImageQuestionView: View {
     let question: Question
 
+    private var imageAccessibilityLabel: String {
+        if let subtype = question.imageSubtype {
+            switch subtype {
+            case "silhouette":
+                return "Silhouette image for question"
+            case "blind_map":
+                return "Map image for question"
+            case "hint_image":
+                return "Hint image for question"
+            default:
+                return "Image for question"
+            }
+        }
+        return "Image for question"
+    }
+
     var body: some View {
         VStack(spacing: Theme.Spacing.md) {
             // Image (primary content)
@@ -32,6 +48,7 @@ struct ImageQuestionView: View {
                                     .font(.system(size: 40))
                                     .foregroundColor(Theme.Colors.textSecondary.opacity(0.4))
                             )
+                            .accessibilityLabel("Image failed to load")
                     case .empty:
                         RoundedRectangle(cornerRadius: Theme.Radius.lg)
                             .fill(Theme.Colors.bgCard)
@@ -40,16 +57,18 @@ struct ImageQuestionView: View {
                                 ProgressView()
                                     .tint(Theme.Colors.accentPrimary)
                             )
+                            .accessibilityLabel("Loading image")
                     @unknown default:
                         EmptyView()
                     }
                 }
+                .accessibilityLabel(imageAccessibilityLabel)
                 .padding(.horizontal, Theme.Spacing.md)
             }
 
             // Question text (always visible — fallback for driving mode)
             Text(question.question)
-                .font(.system(size: Theme.Typography.sizeLG, weight: .bold))
+                .font(.displayLG)
                 .foregroundColor(Theme.Colors.textPrimary)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)

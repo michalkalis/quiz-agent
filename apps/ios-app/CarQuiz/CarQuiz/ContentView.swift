@@ -10,12 +10,27 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject var appState: AppState
     @StateObject private var viewModel: QuizViewModel
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var showOnboarding: Bool
 
     init(appState: AppState) {
         _viewModel = StateObject(wrappedValue: appState.makeQuizViewModel())
+        _showOnboarding = State(initialValue: !appState.persistenceStore.hasCompletedOnboarding)
     }
 
     var body: some View {
+        if showOnboarding {
+            OnboardingView(audioService: appState.audioService) {
+                appState.persistenceStore.completeOnboarding()
+                showOnboarding = false
+            }
+        } else {
+            mainContent
+        }
+    }
+
+    @ViewBuilder
+    private var mainContent: some View {
         ZStack {
             // Main navigation content
             NavigationStack {
@@ -47,7 +62,7 @@ struct ContentView: View {
                         ErrorView(viewModel: viewModel, errorMessage: message)
                     }
                 }
-                .animation(.easeInOut, value: viewModel.quizState)
+                .animation(reduceMotion ? nil : .easeInOut, value: viewModel.quizState)
             }
 
             // Floating minimized quiz view overlay
@@ -60,11 +75,7 @@ struct ContentView: View {
                 }
             }
         }
-        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: viewModel.isMinimized)
-        .onAppear {
-            // Initialize ViewModel with app-wide dependencies
-            // This ensures proper dependency injection
-        }
+        .animation(reduceMotion ? nil : .spring(response: 0.4, dampingFraction: 0.8), value: viewModel.isMinimized)
     }
 }
 
@@ -87,6 +98,7 @@ struct ErrorView: View {
                     .font(.system(size: Theme.Components.trophyIconSize))
                     .foregroundColor(Theme.Colors.error)
             }
+            .accessibilityHidden(true)
 
             // Error message
             VStack(spacing: Theme.Spacing.xs) {
@@ -100,6 +112,8 @@ struct ErrorView: View {
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, Theme.Spacing.xl)
             }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Error: \(errorMessage)")
 
             Spacer()
 

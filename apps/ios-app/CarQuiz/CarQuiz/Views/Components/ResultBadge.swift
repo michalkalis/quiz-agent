@@ -24,8 +24,9 @@ struct ResultBadge: View {
         if isMinimal && (type == .skipped || type == .incorrect) {
             // Minimal style: simple colored text, no background/icon/points
             Text(titleText)
-                .font(.system(size: Theme.Typography.sizeLG, weight: .bold))
+                .font(.displayLG)
                 .foregroundColor(Theme.Colors.error)
+                .accessibilityLabel(accessibilityResultLabel)
         } else {
             // Full style: gradient card with icon and points
             VStack(spacing: 12) {
@@ -50,7 +51,7 @@ struct ResultBadge: View {
 
                 // Points
                 Text(pointsText)
-                    .font(.system(size: Theme.Typography.sizeLG, weight: .bold))
+                    .font(.displayLG)
                     .foregroundColor(Theme.Colors.textOnAccent)
                     .opacity(0.9)
             }
@@ -64,6 +65,8 @@ struct ResultBadge: View {
                 x: 0,
                 y: 8
             )
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(accessibilityResultLabel)
         }
     }
 
@@ -114,6 +117,14 @@ struct ResultBadge: View {
             return "Partial"
         case .skipped:
             return "Skipped"
+        }
+    }
+
+    private var accessibilityResultLabel: String {
+        if points > 0 {
+            return "\(titleText), \(String(format: "%.1f", points)) points"
+        } else {
+            return titleText
         }
     }
 

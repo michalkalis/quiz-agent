@@ -2,7 +2,7 @@
 //  Font+Theme.swift
 //  CarQuiz
 //
-//  Typography extensions using system fonts (SF Pro variants)
+//  Typography extensions using Dynamic Type text styles (SF Pro variants)
 //
 
 import SwiftUI
@@ -11,84 +11,121 @@ extension Font {
 
     // MARK: - Display Fonts (SF Pro Display - for titles and headlines)
 
-    /// Extra large title - 36pt bold
+    /// Extra large title - largeTitle bold
     static var displayXXL: Font {
-        .system(size: Theme.Typography.sizeXXL, weight: .bold, design: .default)
+        .largeTitle.weight(.bold)
     }
 
-    /// Large title - 28pt bold
+    /// Large title - title bold
     static var displayXL: Font {
-        .system(size: Theme.Typography.sizeXL, weight: .bold, design: .default)
+        .title.weight(.bold)
     }
 
-    /// Title - 20pt bold
+    /// Title - title3 bold
     static var displayLG: Font {
-        .system(size: Theme.Typography.sizeLG, weight: .bold, design: .default)
+        .title3.weight(.bold)
     }
 
-    /// Subtitle - 17pt semibold
+    /// Subtitle - body semibold
     static var displayMD: Font {
-        .system(size: Theme.Typography.sizeMD, weight: .semibold, design: .default)
+        .body.weight(.semibold)
     }
 
     // MARK: - Rounded Fonts (SF Pro Rounded - for buttons and badges)
 
-    /// Large rounded text - 20pt bold
+    /// Large rounded text - title3 bold rounded
     static var roundedLG: Font {
-        .system(size: Theme.Typography.sizeLG, weight: .bold, design: .rounded)
+        .system(.title3, design: .rounded).weight(.bold)
     }
 
-    /// Medium rounded text - 17pt semibold
+    /// Medium rounded text - body semibold rounded
     static var roundedMD: Font {
-        .system(size: Theme.Typography.sizeMD, weight: .semibold, design: .rounded)
+        .system(.body, design: .rounded).weight(.semibold)
     }
 
-    /// Small rounded text - 15pt semibold
+    /// Small rounded text - subheadline semibold rounded
     static var roundedSM: Font {
-        .system(size: Theme.Typography.sizeSM, weight: .semibold, design: .rounded)
+        .system(.subheadline, design: .rounded).weight(.semibold)
     }
 
     // MARK: - Text Fonts (SF Pro Text - for body text and labels)
 
-    /// Body text - 17pt regular
+    /// Large text - title3 regular
+    static var textLG: Font {
+        .title3
+    }
+
+    /// Body text - body regular
     static var textMD: Font {
-        .system(size: Theme.Typography.sizeMD, weight: .regular, design: .default)
+        .body
     }
 
-    /// Small body text - 15pt regular
+    /// Small body text - subheadline regular
     static var textSM: Font {
-        .system(size: Theme.Typography.sizeSM, weight: .regular, design: .default)
+        .subheadline
     }
 
-    /// Caption text - 13pt regular
+    /// Caption text - footnote regular
     static var textXS: Font {
-        .system(size: Theme.Typography.sizeXS, weight: .regular, design: .default)
+        .footnote
     }
 
-    /// Extra small text - 11pt regular
+    /// Extra small text - caption2 regular
     static var textXXS: Font {
-        .system(size: Theme.Typography.sizeXXS, weight: .regular, design: .default)
+        .caption2
     }
 
     // MARK: - Label Fonts (with weight variations)
 
-    /// Label - 15pt semibold
+    /// Label - subheadline semibold
     static var labelMD: Font {
-        .system(size: Theme.Typography.sizeSM, weight: .semibold, design: .default)
+        .subheadline.weight(.semibold)
     }
 
-    /// Small label - 13pt semibold
+    /// Small label - footnote semibold
     static var labelSM: Font {
-        .system(size: Theme.Typography.sizeXS, weight: .semibold, design: .default)
+        .footnote.weight(.semibold)
     }
 
-    /// Medium weight body - 15pt medium
+    /// Medium weight body - subheadline medium
     static var textMDMedium: Font {
-        .system(size: Theme.Typography.sizeSM, weight: .medium, design: .default)
+        .subheadline.weight(.medium)
     }
 
-    /// Medium weight small - 13pt medium
+    /// Medium weight small - footnote medium
     static var textSMMedium: Font {
-        .system(size: Theme.Typography.sizeXS, weight: .medium, design: .default)
+        .footnote.weight(.medium)
+    }
+
+    // MARK: - Additional Display Variants
+
+    /// Extra large title heavy - largeTitle heavy (for score displays)
+    static var displayXXLHeavy: Font {
+        .largeTitle.weight(.heavy)
+    }
+
+    /// Body bold - body bold
+    static var displayMDBold: Font {
+        .body.weight(.bold)
+    }
+
+    /// Body medium - body medium
+    static var textMDBodyMedium: Font {
+        .body.weight(.medium)
+    }
+
+    /// Small bold - subheadline bold (for badges)
+    static var labelMDBold: Font {
+        .subheadline.weight(.bold)
+    }
+
+    /// Extra small bold - footnote bold (for percentage displays)
+    static var labelSMBold: Font {
+        .footnote.weight(.bold)
+    }
+
+    /// Extra small medium - caption2 medium
+    static var textXXSMedium: Font {
+        .caption2.weight(.medium)
     }
 }

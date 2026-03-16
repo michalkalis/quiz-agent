@@ -72,7 +72,9 @@ private func makeQuestion(id: String, source: String) -> Question {
         topic: "Test Topic",
         category: "test",
         sourceUrl: "https://example.com/\(id)",
-        sourceExcerpt: source
+        sourceExcerpt: source,
+        mediaUrl: nil,
+        imageSubtype: nil
     )
 }
 

@@ -206,19 +206,19 @@ enum Theme {
             )
         }
 
-        /// Card gradient border
+        /// Card gradient border (adaptive)
         static func cardBorder() -> LinearGradient {
             LinearGradient(
-                colors: [Color(hex: "#E0E7FF"), Color(hex: "#DDD6FE")],
+                colors: [Color(light: "#E0E7FF", dark: "#3730A3"), Color(light: "#DDD6FE", dark: "#4C1D95")],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
         }
 
-        /// Stats card background gradient (white to off-white)
+        /// Stats card background gradient (adaptive)
         static func statsCard() -> LinearGradient {
             LinearGradient(
-                colors: [Color(hex: "#FFFFFF"), Color(hex: "#F8FAFC")],
+                colors: [Color(light: "#FFFFFF", dark: "#27272A"), Color(light: "#F8FAFC", dark: "#1C1C1E")],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )

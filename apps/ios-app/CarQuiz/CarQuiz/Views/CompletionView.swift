@@ -77,9 +77,21 @@ struct CompletionView: View {
                 HStack(spacing: Theme.Spacing.md) {
                     StatsCard(
                         icon: "checkmark.circle.fill",
-                        value: "\(viewModel.questionsAnswered)",
-                        label: "Answered",
+                        value: "\(Int(viewModel.score))",
+                        label: "Correct",
                         iconColor: Theme.Colors.success
+                    )
+                    StatsCard(
+                        icon: "xmark.circle.fill",
+                        value: "\(viewModel.questionsAnswered - Int(viewModel.score))",
+                        label: "Missed",
+                        iconColor: Theme.Colors.error
+                    )
+                    StatsCard(
+                        icon: "number",
+                        value: "\(viewModel.questionsAnswered)",
+                        label: "Total",
+                        iconColor: Theme.Colors.accentPrimary
                     )
                 }
                 .padding(.horizontal)

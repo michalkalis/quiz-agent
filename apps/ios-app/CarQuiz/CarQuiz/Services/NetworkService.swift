@@ -16,6 +16,7 @@ protocol NetworkServiceProtocol: Sendable {
     func submitTextInput(sessionId: String, input: String, audio: Bool) async throws -> QuizResponse
     func downloadAudio(from urlString: String) async throws -> Data
     func endSession(sessionId: String) async throws
+    func extendSession(sessionId: String, minutes: Int) async throws
     func fetchElevenLabsToken() async throws -> String
 }
 
@@ -163,6 +164,28 @@ actor NetworkService: NetworkServiceProtocol {
 
         if Config.verboseLogging {
             print("🌐 DELETE \(endpoint)")
+        }
+
+        let (_, response) = try await session.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw NetworkError.invalidResponse
+        }
+    }
+
+    // MARK: - Session Extend
+
+    func extendSession(sessionId: String, minutes: Int = 30) async throws {
+        let endpoint = baseURL.appendingPathComponent("/api/v1/sessions/\(sessionId)/extend")
+
+        var request = URLRequest(url: endpoint)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONEncoder().encode(["minutes": minutes])
+
+        if Config.verboseLogging {
+            print("🌐 POST \(endpoint) (extend \(minutes)min)")
         }
 
         let (_, response) = try await session.data(for: request)
@@ -510,6 +533,12 @@ final class MockNetworkService: NetworkServiceProtocol {
     }
 
     func endSession(sessionId: String) async throws {
+        if shouldFail {
+            throw NetworkError.invalidResponse
+        }
+    }
+
+    func extendSession(sessionId: String, minutes: Int) async throws {
         if shouldFail {
             throw NetworkError.invalidResponse
         }

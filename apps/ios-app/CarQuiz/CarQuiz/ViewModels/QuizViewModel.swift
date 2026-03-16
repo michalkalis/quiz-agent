@@ -1256,6 +1256,13 @@ final class QuizViewModel: ObservableObject {
         // This ensures ResultView is visible when audio starts playing
         quizState = .showingResult(question: question, evaluation: evaluation)
 
+        // Auto-extend session TTL to prevent timeout on long drives
+        if let sessionId = currentSession?.id {
+            Task {
+                try? await networkService.extendSession(sessionId: sessionId, minutes: 30)
+            }
+        }
+
         // Play feedback audio and start countdown in background
         Task {
             var feedbackDuration: TimeInterval = 0.0

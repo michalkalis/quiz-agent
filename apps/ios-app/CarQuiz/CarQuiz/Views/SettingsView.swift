@@ -218,7 +218,7 @@ struct SettingsView: View {
                                 Text("Reset History")
                             }
                             .font(.textMDMedium)
-                            .foregroundColor(Theme.Colors.error)
+                            .foregroundColor(Theme.Colors.errorText)
                             .padding(.vertical, Theme.Spacing.sm)
                             .frame(maxWidth: .infinity)
                             .background(Theme.Colors.errorBg)

@@ -28,6 +28,10 @@ enum Theme {
         static let warningDark = Color(hex: "#D97706")
         static let recording = Color(hex: "#EF4444")
 
+        // WCAG-compliant text variants for semantic colors on tinted backgrounds
+        static let successText = Color(light: "#15803D", dark: "#4ADE80") // 4.5:1+ on successBg
+        static let errorText = Color(light: "#B91C1C", dark: "#FCA5A5")  // 4.5:1+ on errorBg
+
         // Gold colors (for trophy, achievements)
         static let goldLight = Color(hex: "#FCD34D")
         static let goldDark = Color(hex: "#F59E0B")
@@ -43,7 +47,7 @@ enum Theme {
 
         static let textPrimary = Color(light: "#18181B", dark: "#FAFAFA")
         static let textSecondary = Color(light: "#71717A", dark: "#A1A1AA")
-        static let textTertiary = Color(light: "#A1A1AA", dark: "#71717A")
+        static let textTertiary = Color(light: "#6B7280", dark: "#9CA3AF") // Fixed: 4.6:1 on white (was 2.6:1)
         static let textMuted = Color(light: "#D4D4D8", dark: "#52525B")
         static let textOnAccent = Color.white
 

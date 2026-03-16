@@ -193,6 +193,7 @@ struct ResultView: View {
             canMinimize: viewModel.canMinimize
         )
         .animation(reduceMotion ? nil : .spring(response: 0.5, dampingFraction: 0.7), value: showEvaluation)
+        .sensoryFeedback(resultHaptic, trigger: showEvaluation)
         .onAppear {
             showEvaluation = true
         }
@@ -218,6 +219,15 @@ struct ResultView: View {
     }
 
     // MARK: - Helper Functions
+
+    private var resultHaptic: SensoryFeedback {
+        guard let evaluation = viewModel.resultEvaluation else { return .impact }
+        switch evaluation.result {
+        case .correct: return .success
+        case .incorrect, .skipped: return .error
+        case .partiallyCorrect, .partiallyIncorrect: return .warning
+        }
+    }
 
     private func resultBadgeType(for result: Evaluation.EvaluationResult) -> ResultBadge.ResultType {
         switch result {

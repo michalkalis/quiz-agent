@@ -146,6 +146,7 @@ struct QuestionView: View {
         }
         .padding()
         .background(Theme.Colors.bgPrimary)
+        .sensoryFeedback(.start, trigger: viewModel.quizState == .recording)
         .interactiveMinimize(
             isMinimized: $viewModel.isMinimized,
             canMinimize: viewModel.canMinimize

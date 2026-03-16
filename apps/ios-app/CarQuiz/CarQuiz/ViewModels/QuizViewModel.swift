@@ -1652,11 +1652,24 @@ final class QuizViewModel: ObservableObject {
             if quizState == .askingQuestion {
                 let text = "Say skip to skip, start to record, stop to submit, or ok to confirm."
                 await audioService.speakText(text)
+            } else if quizState == .finished {
+                let text = "Say again to play again, or home to go back."
+                await audioService.speakText(text)
             }
 
         case .ok:
             if showAnswerConfirmation && !isProcessingResponse {
                 await confirmAnswer()
+            }
+
+        case .again:
+            if quizState == .finished {
+                await startNewQuiz()
+            }
+
+        case .home:
+            if quizState == .finished {
+                resetToHome()
             }
         }
 

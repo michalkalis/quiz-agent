@@ -27,6 +27,7 @@ struct CompletionView: View {
                             .cornerRadius(Theme.Radius.full)
                     }
                     .accessibilityLabel("Close")
+                    .accessibilityIdentifier("completion.close")
                 }
                 .padding(.horizontal)
 
@@ -71,6 +72,7 @@ struct CompletionView: View {
                 )
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel("Final score: \(formattedScore), \(Int(scorePercentage)) percent accuracy")
+                .accessibilityIdentifier("completion.score")
                 .padding(.horizontal)
 
                 // MARK: - Stats Row
@@ -108,10 +110,12 @@ struct CompletionView: View {
                             await viewModel.startNewQuiz()
                         }
                     }
+                    .accessibilityIdentifier("completion.playAgain")
 
                     SecondaryButton(title: "Back to Home") {
                         viewModel.resetToHome()
                     }
+                    .accessibilityIdentifier("completion.backToHome")
                 }
                 .padding(.horizontal)
                 .padding(.bottom, Theme.Spacing.lg)

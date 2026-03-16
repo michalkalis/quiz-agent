@@ -55,6 +55,7 @@ struct HomeView: View {
                             } label: {
                                 settingsMenuLabel(value: Language.forCode(viewModel.settings.language)?.nativeName ?? "Select")
                             }
+                            .accessibilityIdentifier("home.languagePicker")
                         }
 
                         // Difficulty
@@ -72,6 +73,7 @@ struct HomeView: View {
                             } label: {
                                 settingsMenuLabel(value: viewModel.settings.difficultyDisplayName())
                             }
+                            .accessibilityIdentifier("home.difficultyPicker")
                         }
 
                         // Category
@@ -89,6 +91,7 @@ struct HomeView: View {
                             } label: {
                                 settingsMenuLabel(value: viewModel.settings.categoryDisplayName())
                             }
+                            .accessibilityIdentifier("home.categoryPicker")
                         }
                     }
                 }
@@ -108,6 +111,7 @@ struct HomeView: View {
                             await viewModel.startNewQuiz()
                         }
                     }
+                    .accessibilityIdentifier("home.startQuiz")
 
                     NavigationLink {
                         SettingsView(viewModel: viewModel)
@@ -121,6 +125,7 @@ struct HomeView: View {
                     }
                     .accessibilityLabel("More Settings")
                     .accessibilityHint("Opens full settings screen")
+                    .accessibilityIdentifier("home.moreSettings")
                     .buttonStyle(.secondary)
                 }
                 .padding(.horizontal, Theme.Spacing.lg)

@@ -51,6 +51,7 @@ struct ResultView: View {
                             .clipShape(Circle())
                     }
                     .accessibilityLabel("End quiz")
+                    .accessibilityIdentifier("result.endQuiz")
                 }
                 .padding(.horizontal)
 
@@ -165,12 +166,14 @@ struct ResultView: View {
                     PrimaryButton(title: "Continue", icon: "arrow.right") {
                         viewModel.continueToNext()
                     }
+                    .accessibilityIdentifier("result.continue")
 
                     Button("Stay Here") {
                         viewModel.pauseQuiz()
                     }
                     .accessibilityLabel("Stay Here")
                     .accessibilityHint("Pause auto-advance and stay on this result")
+                    .accessibilityIdentifier("result.stayHere")
                     .font(.textMDMedium)
                     .foregroundColor(Theme.Colors.textSecondary)
                     .disabled(viewModel.currentQuestionPaused)
@@ -190,6 +193,7 @@ struct ResultView: View {
                         }
                         .accessibilityLabel("View Source")
                         .accessibilityHint("Opens the source article")
+                        .accessibilityIdentifier("result.viewSource")
                     }
                 }
                 .padding(.horizontal)
@@ -373,6 +377,7 @@ private struct QuestionRatingRow: View {
                             .foregroundColor(star <= rating ? Theme.Colors.warning : Theme.Colors.textMuted)
                     }
                     .accessibilityLabel("\(star) star\(star == 1 ? "" : "s")")
+                    .accessibilityIdentifier("result.ratingStar.\(star)")
                 }
             }
         }

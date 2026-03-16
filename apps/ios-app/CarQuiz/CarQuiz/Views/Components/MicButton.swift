@@ -57,6 +57,7 @@ struct MicButton: View {
         }
         .accessibilityLabel(micLabel)
         .accessibilityHint(micHint)
+        .accessibilityIdentifier("micButton")
         .disabled(state == .processing)
         .modifier(PulsingMicAnimation(isActive: state == .recording))
     }

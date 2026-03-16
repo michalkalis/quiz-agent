@@ -45,6 +45,7 @@ struct QuestionView: View {
                         .clipShape(Circle())
                 }
                 .accessibilityLabel("End quiz")
+                .accessibilityIdentifier("question.endQuiz")
                 .disabled(!canInteract)
             }
             .padding(.horizontal)
@@ -78,6 +79,7 @@ struct QuestionView: View {
                             .background(Theme.Colors.bgCard)
                             .cornerRadius(Theme.Radius.xl)
                             .padding(.horizontal, Theme.Spacing.md)
+                            .accessibilityIdentifier("question.text")
                     }
                 }
             } else {
@@ -120,6 +122,7 @@ struct QuestionView: View {
 
             // Microphone button
             MicButton(state: micButtonState, action: handleMicrophoneTap)
+                .accessibilityIdentifier("question.micButton")
 
             // Skip + Type answer buttons
             HStack(spacing: Theme.Spacing.sm) {
@@ -131,6 +134,7 @@ struct QuestionView: View {
                 }
                 .accessibilityLabel("Skip question")
                 .accessibilityHint("Skip this question and move to the next one")
+                .accessibilityIdentifier("question.skip")
                 .buttonStyle(.secondary)
                 .disabled(!canInteract)
 
@@ -143,6 +147,7 @@ struct QuestionView: View {
                 }
                 .accessibilityLabel("Type answer")
                 .accessibilityHint("Switch to typing your answer instead of speaking")
+                .accessibilityIdentifier("question.textInputToggle")
                 .buttonStyle(.secondary)
                 .disabled(!canInteract)
             }
@@ -154,6 +159,7 @@ struct QuestionView: View {
                         .font(.textMD)
                         .textFieldStyle(.roundedBorder)
                         .focused($isTextFieldFocused)
+                        .accessibilityIdentifier("question.textField")
                         .submitLabel(.send)
                         .onSubmit {
                             guard !textAnswer.isEmpty else { return }
@@ -175,6 +181,7 @@ struct QuestionView: View {
                             .foregroundColor(textAnswer.isEmpty ? Theme.Colors.textMuted : Theme.Colors.accentPrimary)
                     }
                     .accessibilityLabel("Submit typed answer")
+                    .accessibilityIdentifier("question.textSubmit")
                     .disabled(textAnswer.isEmpty)
                 }
                 .padding(.horizontal, Theme.Spacing.md)
@@ -189,6 +196,7 @@ struct QuestionView: View {
                     .padding(.horizontal)
                     .padding(.top, Theme.Spacing.xs)
                     .accessibilityLabel("Error: \(error)")
+                    .accessibilityIdentifier("question.error")
                     .accessibilityAddTraits(.isStaticText)
             }
 

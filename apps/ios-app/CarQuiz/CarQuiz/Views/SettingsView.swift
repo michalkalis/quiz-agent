@@ -83,6 +83,7 @@ struct SettingsView: View {
                             )
                             .labelsHidden()
                             .tint(Theme.Colors.accentPrimary)
+                            .accessibilityIdentifier("settings.voiceCommands")
                         }
 
                         // Auto-Record (iOS 26+, requires voice commands)
@@ -97,6 +98,7 @@ struct SettingsView: View {
                             )
                             .labelsHidden()
                             .tint(Theme.Colors.accentPrimary)
+                            .accessibilityIdentifier("settings.autoRecord")
                         }
 
                         // Barge-In (iOS 26+, requires voice commands)
@@ -112,6 +114,7 @@ struct SettingsView: View {
                                 )
                                 .labelsHidden()
                                 .tint(Theme.Colors.accentPrimary)
+                                .accessibilityIdentifier("settings.bargeIn")
                             }
 
                             Text("Interrupt question audio by speaking. Works best with Bluetooth or CarPlay.")
@@ -226,6 +229,7 @@ struct SettingsView: View {
                         }
                         .accessibilityLabel("Reset History")
                         .accessibilityHint("Clears all question history so you can see previously answered questions again")
+                        .accessibilityIdentifier("settings.resetHistory")
                         .disabled(viewModel.questionHistoryCount == 0)
                     }
                     .padding(Theme.Spacing.md)

@@ -47,10 +47,12 @@ struct OnboardingView: View {
                     PrimaryButton(title: "Continue", icon: "arrow.right") {
                         currentPage += 1
                     }
+                    .accessibilityIdentifier("onboarding.continue")
                 } else {
                     PrimaryButton(title: "Get Started", icon: "play.fill") {
                         onComplete()
                     }
+                    .accessibilityIdentifier("onboarding.getStarted")
                 }
 
                 // Skip (not on last page)
@@ -61,6 +63,7 @@ struct OnboardingView: View {
                     .font(.textMDMedium)
                     .foregroundColor(Theme.Colors.textSecondary)
                     .accessibilityHint("Skip onboarding and go to the app")
+                    .accessibilityIdentifier("onboarding.skip")
                 }
             }
             .padding(.horizontal, Theme.Spacing.lg)
@@ -200,6 +203,7 @@ struct OnboardingView: View {
                     .cornerRadius(Theme.Radius.full)
                 }
                 .accessibilityHint("Opens system dialog to allow microphone access")
+                .accessibilityIdentifier("onboarding.allowMic")
             }
 
             Spacer()

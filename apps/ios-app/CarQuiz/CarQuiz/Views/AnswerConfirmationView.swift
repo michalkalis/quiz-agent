@@ -38,6 +38,7 @@ struct AnswerConfirmationView: View {
                         onCancel()
                     }
                     .accessibilityLabel("Cancel processing")
+                    .accessibilityIdentifier("confirmation.cancel")
                     .buttonStyle(.secondary)
                     .padding(.top, Theme.Spacing.md)
                 }
@@ -57,6 +58,7 @@ struct AnswerConfirmationView: View {
                         .background(Theme.Colors.bgSecondary)
                         .cornerRadius(Theme.Radius.sm)
                         .accessibilityLabel("Your transcribed answer: \(transcribedAnswer)")
+                        .accessibilityIdentifier("confirmation.answer")
                 }
                 .frame(maxHeight: 200)
 
@@ -78,6 +80,7 @@ struct AnswerConfirmationView: View {
                     }
                     .accessibilityLabel(rerecordCountdown > 0 ? "Re-record, \(rerecordCountdown) seconds remaining" : "Re-record")
                     .accessibilityHint("Record your answer again")
+                    .accessibilityIdentifier("confirmation.reRecord")
                     .buttonStyle(.secondary)
                     .disabled(rerecordCountdown == 0)
                     .opacity(rerecordCountdown == 0 ? 0.4 : 1.0)
@@ -92,6 +95,7 @@ struct AnswerConfirmationView: View {
                     }
                     .accessibilityLabel("Confirm answer")
                     .accessibilityHint("Submit your transcribed answer")
+                    .accessibilityIdentifier("confirmation.confirm")
                     .buttonStyle(.primary)
                 }
                 .onAppear {

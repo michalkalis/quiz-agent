@@ -16,6 +16,8 @@ enum VoiceCommand: String, Sendable, CaseIterable {
     case score   // Announce current score via TTS
     case help    // List available commands via TTS
     case ok      // Confirm transcribed answer
+    case again   // Play again (CompletionView)
+    case home    // Return to home (CompletionView)
 }
 
 /// UI-facing listening state for voice command indicator
@@ -45,7 +47,7 @@ extension VoiceCommand {
         let words = Set(transcription.lowercased().split(separator: " ").map(String.init))
 
         // Priority order: time-sensitive commands first, "ok" last (least ambiguous)
-        for command in [VoiceCommand.start, .stop, .skip, .repeat, .score, .help, .ok] {
+        for command in [VoiceCommand.start, .stop, .skip, .repeat, .score, .help, .ok, .again, .home] {
             if words.contains(command.rawValue) {
                 return command
             }

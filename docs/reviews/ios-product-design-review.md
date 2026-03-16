@@ -1,22 +1,35 @@
 # CarQuiz iOS App — Product & Design Review
 
-**Date:** 2026-03-15
+**Date:** 2026-03-15 (reviewed), 2026-03-16 (implemented)
 **App Version:** Pre-launch MVP (develop branch)
 **Reviewed by:** Claude Code (automated analysis)
 **Scope:** Product feature assessment, UI/UX design review, Apple HIG compliance audit
 
 ---
 
+## Implementation Status (2026-03-16)
+
+All P0 and P1 items have been implemented and committed. See commits on develop branch.
+
+| Priority | Items | Status |
+|----------|:-----:|--------|
+| **P0** | 5/5 | Done — VoiceOver, Reduce Motion, Dynamic Type, Onboarding, Mic Permission |
+| **P1** | 6/6 | Done — Contrast fixes, Haptics, Text input, Audio errors, Rating, Session extend |
+| **P2** | 2/6 | Done — Completion stats, Dark-mode gradients. Remaining: voice quiz restart, MCQ UI, accessibilityIdentifier, explanations |
+| **P3** | 0/5 | Not started — Streak tracking, CarPlay, auto-confirm, collapsible settings, multiplayer |
+
+---
+
 ## Executive Summary
 
-CarQuiz is a **voice-first, hands-free trivia app** with a solid core feature set. The voice interaction loop (auto-record, barge-in, voice commands) is genuinely differentiated — no competitor offers this. However, the app has **critical accessibility gaps** that could block App Store approval and **several high-value backend features** that the iOS app doesn't expose.
+CarQuiz is a **voice-first, hands-free trivia app** with a solid core feature set. The voice interaction loop (auto-record, barge-in, voice commands) is genuinely differentiated — no competitor offers this. ~~However, the app has **critical accessibility gaps** that could block App Store approval and **several high-value backend features** that the iOS app doesn't expose.~~ **Update:** All critical accessibility and feature gaps have been addressed (see Implementation Status above).
 
-**Top 5 priorities before launch:**
-1. Add VoiceOver accessibility labels across all screens (App Store risk)
-2. Respect Reduce Motion accessibility setting (13+ unguarded animations)
-3. Support Dynamic Type (all font sizes hard-coded)
-4. Add onboarding flow for first-time users
-5. Move microphone permission request to in-context (HIG violation)
+**~~Top 5 priorities before launch~~ (all implemented):**
+1. ~~Add VoiceOver accessibility labels across all screens~~ Done
+2. ~~Respect Reduce Motion accessibility setting~~ Done
+3. ~~Support Dynamic Type~~ Done
+4. ~~Add onboarding flow for first-time users~~ Done
+5. ~~Move microphone permission request to in-context~~ Done
 
 ---
 

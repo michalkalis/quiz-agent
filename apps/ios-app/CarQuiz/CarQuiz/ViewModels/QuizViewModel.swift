@@ -273,7 +273,7 @@ final class QuizViewModel: ObservableObject {
 
         // Check if question history is at capacity
         if persistenceStore.isAtCapacity {
-            quizState = .error(
+            setError(
                 message: "Question history is full. Please reset your history in Settings to continue.",
                 context: .initialization
             )
@@ -356,7 +356,7 @@ final class QuizViewModel: ObservableObject {
             }
 
         } catch {
-            quizState = .error(
+            setError(
                 message: "Failed to start quiz: \(error.localizedDescription)",
                 context: .initialization
             )
@@ -608,7 +608,7 @@ final class QuizViewModel: ObservableObject {
     /// Submit a voice answer with timeout and cancellation support
     func submitVoiceAnswer(audioData: Data) async {
         guard let sessionId = currentSession?.id else {
-            quizState = .error(message: "No active session", context: .general)
+            setError(message: "No active session", context: .general)
             return
         }
 
@@ -643,7 +643,7 @@ final class QuizViewModel: ObservableObject {
                     }
                     // Return to error state so user can re-record
                     await MainActor.run {
-                        self.quizState = .error(
+                        self.setError(
                             message: "Could not understand your answer. Please speak clearly and try again.",
                             context: .submission
                         )
@@ -667,7 +667,7 @@ final class QuizViewModel: ObservableObject {
                 }
             } catch is TimeoutError {
                 await MainActor.run {
-                    self.quizState = .error(
+                    self.setError(
                         message: "Request timed out. Please try again.",
                         context: .submission
                     )
@@ -692,7 +692,7 @@ final class QuizViewModel: ObservableObject {
 
                 // Other network errors go to error screen
                 await MainActor.run {
-                    self.quizState = .error(
+                    self.setError(
                         message: "Failed to submit answer: \(error.localizedDescription)",
                         context: .submission
                     )
@@ -703,7 +703,7 @@ final class QuizViewModel: ObservableObject {
                 }
             } catch {
                 await MainActor.run {
-                    self.quizState = .error(
+                    self.setError(
                         message: "Failed to submit answer: \(error.localizedDescription)",
                         context: .submission
                     )
@@ -815,6 +815,19 @@ final class QuizViewModel: ObservableObject {
         }
     }
 
+    /// Announce an error message via local TTS for hands-free awareness
+    private func announceError(_ message: String) {
+        Task {
+            await audioService.speakText(message)
+        }
+    }
+
+    /// Set error state and announce it audibly
+    private func setError(message: String, context: ErrorContext) {
+        quizState = .error(message: message, context: context)
+        announceError(message)
+    }
+
     /// Whether to retry with a new session (for initialization errors)
     var shouldRetryWithNewSession: Bool {
         if case .error(_, let context) = quizState {
@@ -869,7 +882,7 @@ final class QuizViewModel: ObservableObject {
             await handleQuizResponse(response)
 
         } catch {
-            quizState = .error(
+            setError(
                 message: "Failed to resubmit answer: \(error.localizedDescription)",
                 context: .submission
             )
@@ -905,7 +918,7 @@ final class QuizViewModel: ObservableObject {
 
             await handleQuizResponse(response)
         } catch {
-            quizState = .error(
+            setError(
                 message: "Failed to skip question: \(error.localizedDescription)",
                 context: .submission
             )
@@ -1211,7 +1224,7 @@ final class QuizViewModel: ObservableObject {
             if Config.verboseLogging {
                 print("❌ ERROR: No evaluation in response, cannot show result")
             }
-            quizState = .error(
+            setError(
                 message: "Could not evaluate your answer. Please try again.",
                 context: .submission
             )
@@ -1229,7 +1242,7 @@ final class QuizViewModel: ObservableObject {
         // The associated value bundles question + evaluation together,
         // making it impossible to show stale/mismatched data
         guard let question = currentQuestion else {
-            quizState = .error(message: "No question to evaluate", context: .general)
+            setError(message: "No question to evaluate", context: .general)
             return
         }
 

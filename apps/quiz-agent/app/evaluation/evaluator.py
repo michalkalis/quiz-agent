@@ -79,6 +79,10 @@ class AnswerEvaluator:
             if normalize_text(user_answer) == normalize_text(alt):
                 return "correct", 1.0
 
+        # MCQ fast-path: match against option keys or values (no partial credit)
+        if question.possible_answers:
+            return self._evaluate_mcq(user_answer, question)
+
         # LLM evaluation for nuanced scoring
         result = await self._llm_evaluate(
             user_answer=user_answer,
@@ -95,6 +99,36 @@ class AnswerEvaluator:
         }
 
         return result, score_map.get(result, 0.0)
+
+    def _evaluate_mcq(
+        self,
+        user_answer: str,
+        question: Question,
+    ) -> Tuple[str, float]:
+        """Evaluate an MCQ answer by matching keys ('a') or values ('Paris').
+
+        No partial credit for MCQ — user picked from finite options.
+
+        Args:
+            user_answer: User's answer (could be a key like "a" or value like "Paris")
+            question: Question with possible_answers dict
+
+        Returns:
+            Tuple of (result, score_delta)
+        """
+        # TODO: Implement MCQ matching logic (~12 lines)
+        #
+        # 1. Normalize user_answer
+        # 2. Try matching against keys ("a", "b", "c", "d") — case-insensitive
+        # 3. Try matching against values ("Paris", "London") — normalized
+        # 4. If a match is found:
+        #    - Check if the matched key is the correct_answer
+        #    - Return ("correct", 1.0) or ("incorrect", 0.0)
+        # 5. If no match found, return ("incorrect", 0.0) — don't fall through to LLM
+        #
+        # Consider: correct_answer could be the key ("a") or the value ("Paris")
+        # You need to handle both cases.
+        raise NotImplementedError("MCQ matching logic — implement me!")
 
     async def _llm_evaluate(
         self,

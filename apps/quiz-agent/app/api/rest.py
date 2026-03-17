@@ -177,6 +177,8 @@ def question_to_dict(question: Question) -> Dict[str, Any]:
         result["media_url"] = question.media_url
     if question.image_subtype:
         result["image_subtype"] = question.image_subtype
+    if question.explanation:
+        result["explanation"] = question.explanation
     return result
 
 
@@ -541,8 +543,10 @@ async def submit_input(session_id: str, request: SubmitInputRequest, audio: bool
                 "result": result,
                 "points": score_delta,
                 "correct_answer": translated_correct_answer,
-                "question_id": evaluated_question_id
+                "question_id": evaluated_question_id,
             }
+            if current_question.explanation:
+                evaluation_result["explanation"] = current_question.explanation
 
             # Generate enhanced feedback audio for non-perfect answers
             enhanced_feedback_audio = None
@@ -592,8 +596,10 @@ async def submit_input(session_id: str, request: SubmitInputRequest, audio: bool
                 "result": "skipped",
                 "points": 0.0,
                 "correct_answer": translated_correct_answer_skip,
-                "question_id": evaluated_question_id
+                "question_id": evaluated_question_id,
             }
+            if current_question.explanation:
+                evaluation_result["explanation"] = current_question.explanation
             feedback_received.append("skipped question")
 
         elif intent_type == "rating":

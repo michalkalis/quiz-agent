@@ -90,42 +90,16 @@ struct QuestionView: View {
 
             Spacer()
 
-            // Answer timer badge
-            if viewModel.answerTimerCountdown > 0 && viewModel.quizState == .askingQuestion {
-                AnswerTimerBadge(seconds: viewModel.answerTimerCountdown)
-            }
+            // Branch: MCQ options vs voice recording
+            if let question = viewModel.currentQuestion, question.isMultipleChoice {
+                // MCQ path: show option picker + skip only
+                MCQOptionPicker(
+                    options: question.sortedAnswerOptions,
+                    onSelect: { key, value in
+                        Task { await viewModel.submitMCQAnswer(key: key, value: value) }
+                    }
+                )
 
-            // Live transcript from streaming STT
-            if viewModel.isStreamingSTT && !viewModel.liveTranscript.isEmpty {
-                Text(viewModel.liveTranscript)
-                    .font(.textMDBodyMedium)
-                    .foregroundColor(Theme.Colors.textPrimary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, Theme.Spacing.lg)
-                    .padding(.vertical, Theme.Spacing.sm)
-                    .frame(maxWidth: .infinity)
-                    .background(Theme.Colors.bgCard.opacity(0.8))
-                    .cornerRadius(Theme.Radius.lg)
-                    .padding(.horizontal, Theme.Spacing.md)
-                    .transition(.opacity)
-                    .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: viewModel.liveTranscript)
-                    .accessibilityLabel("Transcription: \(viewModel.liveTranscript)")
-            }
-
-            // Recording status hint
-            Text(hintText)
-                .font(.textMDMedium)
-                .foregroundColor(hintColor)
-                .frame(height: 24)
-                .padding(.bottom, Theme.Spacing.sm)
-                .accessibilityLabel("Status: \(hintText)")
-
-            // Microphone button
-            MicButton(state: micButtonState, action: handleMicrophoneTap)
-                .accessibilityIdentifier("question.micButton")
-
-            // Skip + Type answer buttons
-            HStack(spacing: Theme.Spacing.sm) {
                 Button {
                     Task { await viewModel.skipQuestion() }
                 } label: {
@@ -137,54 +111,105 @@ struct QuestionView: View {
                 .accessibilityIdentifier("question.skip")
                 .buttonStyle(.secondary)
                 .disabled(!canInteract)
+            } else {
+                // Non-MCQ path: voice recording UI
 
-                Button {
-                    showTextInput.toggle()
-                    if showTextInput { isTextFieldFocused = true }
-                } label: {
-                    Image(systemName: "keyboard")
-                        .font(.system(size: Theme.Components.iconSM))
+                // Answer timer badge
+                if viewModel.answerTimerCountdown > 0 && viewModel.quizState == .askingQuestion {
+                    AnswerTimerBadge(seconds: viewModel.answerTimerCountdown)
                 }
-                .accessibilityLabel("Type answer")
-                .accessibilityHint("Switch to typing your answer instead of speaking")
-                .accessibilityIdentifier("question.textInputToggle")
-                .buttonStyle(.secondary)
-                .disabled(!canInteract)
-            }
 
-            // Text input fallback
-            if showTextInput {
-                HStack(spacing: Theme.Spacing.xs) {
-                    TextField("Type your answer...", text: $textAnswer)
-                        .font(.textMD)
-                        .textFieldStyle(.roundedBorder)
-                        .focused($isTextFieldFocused)
-                        .accessibilityIdentifier("question.textField")
-                        .submitLabel(.send)
-                        .onSubmit {
+                // Live transcript from streaming STT
+                if viewModel.isStreamingSTT && !viewModel.liveTranscript.isEmpty {
+                    Text(viewModel.liveTranscript)
+                        .font(.textMDBodyMedium)
+                        .foregroundColor(Theme.Colors.textPrimary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, Theme.Spacing.lg)
+                        .padding(.vertical, Theme.Spacing.sm)
+                        .frame(maxWidth: .infinity)
+                        .background(Theme.Colors.bgCard.opacity(0.8))
+                        .cornerRadius(Theme.Radius.lg)
+                        .padding(.horizontal, Theme.Spacing.md)
+                        .transition(.opacity)
+                        .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: viewModel.liveTranscript)
+                        .accessibilityLabel("Transcription: \(viewModel.liveTranscript)")
+                }
+
+                // Recording status hint
+                Text(hintText)
+                    .font(.textMDMedium)
+                    .foregroundColor(hintColor)
+                    .frame(height: 24)
+                    .padding(.bottom, Theme.Spacing.sm)
+                    .accessibilityLabel("Status: \(hintText)")
+
+                // Microphone button
+                MicButton(state: micButtonState, action: handleMicrophoneTap)
+                    .accessibilityIdentifier("question.micButton")
+
+                // Skip + Type answer buttons
+                HStack(spacing: Theme.Spacing.sm) {
+                    Button {
+                        Task { await viewModel.skipQuestion() }
+                    } label: {
+                        Text("Skip")
+                            .font(.textMDMedium)
+                    }
+                    .accessibilityLabel("Skip question")
+                    .accessibilityHint("Skip this question and move to the next one")
+                    .accessibilityIdentifier("question.skip")
+                    .buttonStyle(.secondary)
+                    .disabled(!canInteract)
+
+                    Button {
+                        showTextInput.toggle()
+                        if showTextInput { isTextFieldFocused = true }
+                    } label: {
+                        Image(systemName: "keyboard")
+                            .font(.system(size: Theme.Components.iconSM))
+                    }
+                    .accessibilityLabel("Type answer")
+                    .accessibilityHint("Switch to typing your answer instead of speaking")
+                    .accessibilityIdentifier("question.textInputToggle")
+                    .buttonStyle(.secondary)
+                    .disabled(!canInteract)
+                }
+
+                // Text input fallback
+                if showTextInput {
+                    HStack(spacing: Theme.Spacing.xs) {
+                        TextField("Type your answer...", text: $textAnswer)
+                            .font(.textMD)
+                            .textFieldStyle(.roundedBorder)
+                            .focused($isTextFieldFocused)
+                            .accessibilityIdentifier("question.textField")
+                            .submitLabel(.send)
+                            .onSubmit {
+                                guard !textAnswer.isEmpty else { return }
+                                let answer = textAnswer
+                                textAnswer = ""
+                                showTextInput = false
+                                Task { await viewModel.resubmitAnswer(answer) }
+                            }
+
+                        Button {
                             guard !textAnswer.isEmpty else { return }
                             let answer = textAnswer
                             textAnswer = ""
                             showTextInput = false
                             Task { await viewModel.resubmitAnswer(answer) }
+                        } label: {
+                            Image(systemName: "arrow.up.circle.fill")
+                                .font(.system(size: Theme.Components.iconLG))
+                                .foregroundColor(textAnswer.isEmpty ? Theme.Colors.textMuted : Theme.Colors.accentPrimary)
                         }
-
-                    Button {
-                        guard !textAnswer.isEmpty else { return }
-                        let answer = textAnswer
-                        textAnswer = ""
-                        showTextInput = false
-                        Task { await viewModel.resubmitAnswer(answer) }
-                    } label: {
-                        Image(systemName: "arrow.up.circle.fill")
-                            .font(.system(size: Theme.Components.iconLG))
-                            .foregroundColor(textAnswer.isEmpty ? Theme.Colors.textMuted : Theme.Colors.accentPrimary)
+                        .accessibilityLabel("Submit typed answer")
+                        .accessibilityIdentifier("question.textSubmit")
+                        .disabled(textAnswer.isEmpty)
                     }
-                    .accessibilityLabel("Submit typed answer")
-                    .accessibilityIdentifier("question.textSubmit")
-                    .disabled(textAnswer.isEmpty)
+                    .padding(.horizontal, Theme.Spacing.md)
                 }
-                .padding(.horizontal, Theme.Spacing.md)
             }
 
             // Error message

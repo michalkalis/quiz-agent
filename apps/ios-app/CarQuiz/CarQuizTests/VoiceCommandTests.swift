@@ -143,14 +143,16 @@ struct VoiceCommandStateValidityTests {
                 possibleAnswers: nil, difficulty: "medium",
                 topic: "Test", category: "test",
                 sourceUrl: nil, sourceExcerpt: nil,
-                mediaUrl: nil, imageSubtype: nil
+                mediaUrl: nil, imageSubtype: nil,
+                explanation: nil
             ),
             evaluation: Evaluation(
                 userAnswer: "Test",
                 result: .correct,
                 points: 1.0,
                 correctAnswer: "Expected",
-                questionId: "q_001"
+                questionId: "q_001",
+                explanation: nil
             ),
             feedbackReceived: [],
             audio: nil
@@ -207,7 +209,8 @@ struct VoiceCommandStateValidityTests {
             possibleAnswers: nil, difficulty: "medium",
             topic: "Test", category: "test",
             sourceUrl: nil, sourceExcerpt: nil,
-            mediaUrl: nil, imageSubtype: nil
+            mediaUrl: nil, imageSubtype: nil,
+            explanation: nil
         )
         viewModel.quizState = .askingQuestion
 
@@ -470,14 +473,16 @@ struct AutoRecordViewModelTests {
                 possibleAnswers: nil, difficulty: "medium",
                 topic: "Test", category: "test",
                 sourceUrl: nil, sourceExcerpt: nil,
-                mediaUrl: nil, imageSubtype: nil
+                mediaUrl: nil, imageSubtype: nil,
+                explanation: nil
             ),
             evaluation: Evaluation(
                 userAnswer: "Test",
                 result: .correct,
                 points: 1.0,
                 correctAnswer: "Expected",
-                questionId: "q_001"
+                questionId: "q_001",
+                explanation: nil
             ),
             feedbackReceived: [],
             audio: nil
@@ -514,7 +519,8 @@ struct AutoRecordViewModelTests {
             possibleAnswers: nil, difficulty: "medium",
             topic: "Test", category: "test",
             sourceUrl: nil, sourceExcerpt: nil,
-            mediaUrl: nil, imageSubtype: nil
+            mediaUrl: nil, imageSubtype: nil,
+            explanation: nil
         )
 
         // With auto-record disabled, toggleRecording should still work normally

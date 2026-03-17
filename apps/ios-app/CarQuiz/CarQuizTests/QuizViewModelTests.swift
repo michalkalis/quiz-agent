@@ -54,7 +54,8 @@ private func makeQuizResponse(
             result: isCorrect ? .correct : .incorrect,
             points: isCorrect ? 1.0 : 0.0,
             correctAnswer: "Expected Answer",
-            questionId: questionId
+            questionId: questionId,
+            explanation: nil
         ),
         feedbackReceived: ["answer: \(isCorrect ? "correct" : "incorrect")"],
         audio: nil
@@ -74,7 +75,8 @@ private func makeQuestion(id: String, source: String) -> Question {
         sourceUrl: "https://example.com/\(id)",
         sourceExcerpt: source,
         mediaUrl: nil,
-        imageSubtype: nil
+        imageSubtype: nil,
+        explanation: nil
     )
 }
 
@@ -103,7 +105,8 @@ struct QuizViewModelResultStateTests {
             result: .correct,
             points: 1.0,
             correctAnswer: "Paris",
-            questionId: "q_001"
+            questionId: "q_001",
+            explanation: nil
         )
 
         // Set state with associated values
@@ -138,7 +141,8 @@ struct QuizViewModelResultStateTests {
             result: .correct,
             points: 1.0,
             correctAnswer: "Expected A",
-            questionId: "q_001"
+            questionId: "q_001",
+            explanation: nil
         )
 
         viewModel.currentQuestion = questionA
@@ -163,7 +167,8 @@ struct QuizViewModelResultStateTests {
             result: .correct,
             points: 1.0,
             correctAnswer: "A1",
-            questionId: "q_001"
+            questionId: "q_001",
+            explanation: nil
         )
 
         viewModel.quizState = .showingResult(question: questionA, evaluation: evaluation)
@@ -197,7 +202,8 @@ struct QuizViewModelResultStateTests {
             result: .correct,
             points: 1.0,
             correctAnswer: "Test",
-            questionId: "q_001"
+            questionId: "q_001",
+            explanation: nil
         )
 
         viewModel.currentQuestion = question
@@ -240,7 +246,8 @@ struct QuizViewModelResultStateTests {
             result: .correct,
             points: 1.0,
             correctAnswer: "A1",
-            questionId: "q_001"
+            questionId: "q_001",
+            explanation: nil
         )
         viewModel.currentQuestion = q1
         viewModel.quizState = .showingResult(question: q1, evaluation: eval1)
@@ -259,7 +266,8 @@ struct QuizViewModelResultStateTests {
             result: .incorrect,
             points: 0.0,
             correctAnswer: "A2 Expected",
-            questionId: "q_002"
+            questionId: "q_002",
+            explanation: nil
         )
         viewModel.currentQuestion = q2
         viewModel.quizState = .showingResult(question: q2, evaluation: eval2)

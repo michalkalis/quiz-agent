@@ -91,6 +91,10 @@ final class QuizViewModel: ObservableObject {
     // Minimize state
     @Published var isMinimized: Bool = false
 
+    // MARK: - Quiz Stats
+
+    @Published var quizStats: QuizStats = .empty
+
     // MARK: - Quiz Settings
 
     @Published var settings: QuizSettings = .default
@@ -211,6 +215,9 @@ final class QuizViewModel: ObservableObject {
     // Silence detection task (monitors speech activity during auto-record)
     private var silenceDetectionTask: Task<Void, Never>?
 
+    // Auto-confirm countdown task (2s before auto-confirming transcribed answer)
+    private var autoConfirmTask: Task<Void, Never>?
+
     // Streaming STT event listener task
     private var sttEventTask: Task<Void, Never>?
 
@@ -242,8 +249,9 @@ final class QuizViewModel: ObservableObject {
         self.voiceCommandService = voiceCommandService
         self.sttService = sttService
 
-        // Load saved settings
+        // Load saved settings and stats
         self.settings = persistenceStore.loadSettings()
+        self.quizStats = persistenceStore.loadStats()
 
         // Auto-persist settings whenever they change
         $settings
@@ -535,6 +543,7 @@ final class QuizViewModel: ObservableObject {
         // Show confirmation modal with the transcribed text
         transcribedAnswer = text
         showAnswerConfirmation = true
+        startAutoConfirmIfEnabled()
         // Stay in .recording → switch to a neutral state for the modal
         quizState = .processing
     }
@@ -656,6 +665,7 @@ final class QuizViewModel: ObservableObject {
                     self.pendingResponse = response
                     self.transcribedAnswer = evaluation.userAnswer
                     self.showAnswerConfirmation = true
+                    self.startAutoConfirmIfEnabled()
                 }
 
                 // Don't call handleQuizResponse yet - wait for user confirmation
@@ -760,6 +770,25 @@ final class QuizViewModel: ObservableObject {
         await resubmitAnswer(transcribedAnswer)
     }
 
+    /// Start a 2-second auto-confirm countdown if enabled.
+    /// Cancelled by rerecordAnswer() or cancelProcessing().
+    private func startAutoConfirmIfEnabled() {
+        guard settings.autoConfirmEnabled else { return }
+        autoConfirmTask?.cancel()
+        autoConfirmTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            guard let self, !Task.isCancelled else { return }
+            guard self.showAnswerConfirmation else { return }
+            await self.confirmAnswer()
+        }
+    }
+
+    /// Cancel any pending auto-confirm timer
+    private func cancelAutoConfirm() {
+        autoConfirmTask?.cancel()
+        autoConfirmTask = nil
+    }
+
     /// Defense-in-depth cleanup if the answer confirmation sheet is dismissed
     /// without Confirm or Re-record (e.g., programmatic dismiss, future changes).
     /// No-op when pendingResponse was already consumed by confirmAnswer/rerecordAnswer.
@@ -772,6 +801,7 @@ final class QuizViewModel: ObservableObject {
 
     /// Reject the transcribed answer and return to ready-to-record state
     func rerecordAnswer() {
+        cancelAutoConfirm()
         showAnswerConfirmation = false
         pendingResponse = nil
         isRerecording = true
@@ -781,6 +811,7 @@ final class QuizViewModel: ObservableObject {
 
     /// Cancel the processing operation and return to question state
     func cancelProcessing() {
+        cancelAutoConfirm()
         voiceSubmissionTask?.cancel()
         voiceSubmissionTask = nil
         cancelAnswerTimer()
@@ -856,6 +887,37 @@ final class QuizViewModel: ObservableObject {
         Task {
             try? await networkService.rateQuestion(sessionId: sessionId, rating: rating)
         }
+    }
+
+    /// Submit a multiple-choice answer directly (bypasses confirmation modal)
+    ///
+    /// Sends the answer **value** (e.g., "Paris") via the text input endpoint.
+    /// The backend MCQ fast-path matches both keys and values, so this works
+    /// regardless of whether the evaluator checks by key or value.
+    func submitMCQAnswer(key: String, value: String) async {
+        // TODO: Implement MCQ submission flow (~20 lines)
+        //
+        // This method is called when the user taps an MCQ option (or uses voice "A"/"B"/"C"/"D").
+        //
+        // Decisions to make:
+        // 1. What to submit: the key ("a") or value ("Paris")?
+        //    - Submitting value works with existing text evaluator
+        //    - Submitting key is more precise for MCQ fast-path
+        //    - Consider: what if the value contains special characters?
+        //
+        // 2. Flow control:
+        //    - Cancel any running timers (answerTimer, autoStopRecording)
+        //    - Set state to .processing
+        //    - Clear errors
+        //    - Call networkService.submitTextInput() with the answer
+        //    - Call handleQuizResponse() with the result
+        //    - Handle errors (set error state)
+        //
+        // 3. Should this bypass the confirmation modal? (Plan says yes)
+        //
+        // Hint: Look at resubmitAnswer() below for a similar pattern.
+        // The key difference: MCQ skips the confirmation sheet entirely.
+        fatalError("submitMCQAnswer — implement me!")
     }
 
     /// Resubmit an edited text answer
@@ -1252,6 +1314,12 @@ final class QuizViewModel: ObservableObject {
             questionsAnswered = participant.answeredCount
         }
 
+        // Update quiz stats (streak tracking)
+        if evaluation.result != .skipped {
+            quizStats.recordAnswer(isCorrect: evaluation.isCorrect)
+            persistenceStore.saveStats(quizStats)
+        }
+
         // Store NEXT question separately (don't update currentQuestion yet!)
         // This prevents the next question from flashing before showing results
         nextQuestion = response.currentQuestion
@@ -1296,6 +1364,21 @@ final class QuizViewModel: ObservableObject {
                     feedbackDuration = await playFeedbackAudio(from: feedbackUrl)
                 }
             }
+
+            // TTS for explanation (hands-free learning)
+            // TODO: Implement explanation TTS trigger (~5 lines)
+            //
+            // Decide: when should the explanation be read aloud?
+            //   - Always (for educational value)?
+            //   - Only on incorrect/partially correct (to help the user learn)?
+            //   - Only on non-skipped (skipped users may not care)?
+            //
+            // Use: await audioService.speakText(explanation)
+            // The explanation is in: evaluation.explanation ?? question.explanation
+            //
+            // Consider: this runs after feedback audio — if the explanation is long,
+            // the auto-advance timer starts AFTER it finishes speaking.
+            // You may want to only speak the first sentence for brevity.
 
             // Start auto-advance countdown after audio completes (or immediately if no audio)
             await startAutoAdvanceCountdown(duration: settings.autoAdvanceDelay, audioDuration: feedbackDuration)
@@ -1390,7 +1473,9 @@ final class QuizViewModel: ObservableObject {
 
         // Determine next state based on session status
         if let session = currentSession, session.isFinished {
-            // Quiz is complete
+            // Quiz is complete — record stats
+            quizStats.recordQuizCompleted()
+            persistenceStore.saveStats(quizStats)
             quizState = .finished
             persistenceStore.clearSession()
 
@@ -1670,6 +1755,23 @@ final class QuizViewModel: ObservableObject {
         case .home:
             if quizState == .finished {
                 resetToHome()
+            }
+
+        case .optionA, .optionB, .optionC, .optionD:
+            if quizState == .askingQuestion,
+               let question = currentQuestion,
+               question.isMultipleChoice {
+                let key: String
+                switch command {
+                case .optionA: key = "a"
+                case .optionB: key = "b"
+                case .optionC: key = "c"
+                case .optionD: key = "d"
+                default: return
+                }
+                if let value = question.possibleAnswers?[key] {
+                    await submitMCQAnswer(key: key, value: value)
+                }
             }
         }
 

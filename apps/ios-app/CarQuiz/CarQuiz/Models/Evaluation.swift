@@ -14,6 +14,7 @@ struct Evaluation: Codable, Equatable, Sendable {
     let points: Double
     let correctAnswer: String
     let questionId: String?
+    let explanation: String?
 
     enum CodingKeys: String, CodingKey {
         case userAnswer = "user_answer"
@@ -21,6 +22,7 @@ struct Evaluation: Codable, Equatable, Sendable {
         case points
         case correctAnswer = "correct_answer"
         case questionId = "question_id"
+        case explanation
     }
 }
 
@@ -90,7 +92,8 @@ extension Evaluation {
         result: .correct,
         points: 1.0,
         correctAnswer: "Paris",
-        questionId: "q_preview_1"
+        questionId: "q_preview_1",
+        explanation: "Paris has been the capital of France since the 10th century."
     )
 
     static let previewIncorrect = Evaluation(
@@ -98,7 +101,8 @@ extension Evaluation {
         result: .incorrect,
         points: 0.0,
         correctAnswer: "Paris",
-        questionId: "q_preview_1"
+        questionId: "q_preview_1",
+        explanation: "Paris has been the capital of France since the 10th century."
     )
 
     static let previewPartial = Evaluation(
@@ -106,7 +110,8 @@ extension Evaluation {
         result: .partiallyCorrect,
         points: 0.5,
         correctAnswer: "Paris",
-        questionId: "q_preview_1"
+        questionId: "q_preview_1",
+        explanation: nil
     )
 }
 #endif

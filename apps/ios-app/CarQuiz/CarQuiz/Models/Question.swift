@@ -12,7 +12,7 @@ struct Question: Codable, Identifiable, Equatable, Sendable {
     let id: String
     let question: String
     let type: QuestionType
-    let possibleAnswers: [String]?
+    let possibleAnswers: [String: String]?
     let difficulty: String
     let topic: String
     let category: String
@@ -20,10 +20,22 @@ struct Question: Codable, Identifiable, Equatable, Sendable {
     let sourceExcerpt: String?
     let mediaUrl: String?
     let imageSubtype: String?
+    let explanation: String?
 
     /// Whether this question has an associated image
     var hasImage: Bool {
         type == .image && mediaUrl != nil
+    }
+
+    /// Whether this is a multiple-choice question with options
+    var isMultipleChoice: Bool {
+        type == .textMultichoice && possibleAnswers != nil && !(possibleAnswers!.isEmpty)
+    }
+
+    /// Sorted answer options for consistent A/B/C/D display order
+    var sortedAnswerOptions: [(key: String, value: String)] {
+        guard let answers = possibleAnswers else { return [] }
+        return answers.sorted { $0.key < $1.key }
     }
 
     enum CodingKeys: String, CodingKey {
@@ -38,6 +50,7 @@ struct Question: Codable, Identifiable, Equatable, Sendable {
         case sourceExcerpt = "source_excerpt"
         case mediaUrl = "media_url"
         case imageSubtype = "image_subtype"
+        case explanation
     }
 }
 
@@ -84,7 +97,8 @@ extension Question {
         sourceUrl: "https://en.wikipedia.org/wiki/Paris",
         sourceExcerpt: "Paris is the capital and largest city of France, situated on the Seine River.",
         mediaUrl: nil,
-        imageSubtype: nil
+        imageSubtype: nil,
+        explanation: "Paris has been the capital of France since the 10th century."
     )
 
     static let previewHard = Question(
@@ -98,7 +112,8 @@ extension Question {
         sourceUrl: nil,
         sourceExcerpt: nil,
         mediaUrl: nil,
-        imageSubtype: nil
+        imageSubtype: nil,
+        explanation: nil
     )
 
     static let previewImage = Question(
@@ -112,7 +127,23 @@ extension Question {
         sourceUrl: nil,
         sourceExcerpt: nil,
         mediaUrl: "https://example.com/silhouettes/italy.png",
-        imageSubtype: "silhouette"
+        imageSubtype: "silhouette",
+        explanation: nil
+    )
+
+    static let previewMCQ = Question(
+        id: "q_preview_mcq_001",
+        question: "What is the largest planet in our solar system?",
+        type: .textMultichoice,
+        possibleAnswers: ["a": "Mars", "b": "Jupiter", "c": "Saturn", "d": "Neptune"],
+        difficulty: "easy",
+        topic: "Science",
+        category: "adults",
+        sourceUrl: nil,
+        sourceExcerpt: nil,
+        mediaUrl: nil,
+        imageSubtype: nil,
+        explanation: "Jupiter is by far the largest planet, with a mass more than twice that of all other planets combined."
     )
 }
 #endif

@@ -111,6 +111,13 @@ struct ResultView: View {
                         }
                         .padding(.horizontal)
 
+                        // Explanation card (educational context)
+                        if showEvaluation,
+                           let explanation = evaluation.explanation ?? viewModel.resultQuestion?.explanation {
+                            ExplanationCard(explanation: explanation)
+                                .padding(.horizontal)
+                        }
+
                         // Source attribution section
                         if let sourceExcerpt = viewModel.resultQuestion?.sourceExcerpt,
                            viewModel.resultQuestion?.sourceUrl != nil,
@@ -351,6 +358,35 @@ private struct SourceCard: View {
         .cornerRadius(Theme.Radius.md)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Source information")
+    }
+}
+
+// MARK: - Explanation Card
+
+private struct ExplanationCard: View {
+    let explanation: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
+            HStack(spacing: Theme.Spacing.xs) {
+                Image(systemName: "lightbulb.fill")
+                    .foregroundColor(Theme.Colors.warning)
+                Text("Did You Know?")
+                    .font(.displayMD)
+                    .foregroundColor(Theme.Colors.textPrimary)
+            }
+
+            Text(explanation)
+                .font(.textSM)
+                .foregroundColor(Theme.Colors.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(Theme.Spacing.md)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.Colors.warningBg)
+        .cornerRadius(Theme.Radius.md)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Did you know? \(explanation)")
     }
 }
 

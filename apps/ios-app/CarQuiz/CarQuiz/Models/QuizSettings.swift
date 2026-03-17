@@ -47,6 +47,10 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// Only active on external audio routes (Bluetooth/CarPlay) to avoid echo issues
     var bargeInEnabled: Bool
 
+    /// Whether to auto-confirm transcribed answers after a 2s countdown
+    /// When enabled, skips the confirmation modal — say "re-record" to cancel
+    var autoConfirmEnabled: Bool
+
     // MARK: - Memberwise Init
 
     init(
@@ -60,7 +64,8 @@ struct QuizSettings: Codable, Equatable, Sendable {
         preferredInputDeviceId: String?,
         voiceCommandsEnabled: Bool = true,
         autoRecordEnabled: Bool = true,
-        bargeInEnabled: Bool = true
+        bargeInEnabled: Bool = true,
+        autoConfirmEnabled: Bool = true
     ) {
         self.language = language
         self.audioMode = audioMode
@@ -73,6 +78,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
         self.voiceCommandsEnabled = voiceCommandsEnabled
         self.autoRecordEnabled = autoRecordEnabled
         self.bargeInEnabled = bargeInEnabled
+        self.autoConfirmEnabled = autoConfirmEnabled
     }
 
     // MARK: - Default Configuration
@@ -89,7 +95,8 @@ struct QuizSettings: Codable, Equatable, Sendable {
         preferredInputDeviceId: nil,
         voiceCommandsEnabled: true,
         autoRecordEnabled: true,
-        bargeInEnabled: true
+        bargeInEnabled: true,
+        autoConfirmEnabled: true
     )
 
     // MARK: - Backward-Compatible Decoding
@@ -108,6 +115,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
         voiceCommandsEnabled = try container.decodeIfPresent(Bool.self, forKey: .voiceCommandsEnabled) ?? true
         autoRecordEnabled = try container.decodeIfPresent(Bool.self, forKey: .autoRecordEnabled) ?? true
         bargeInEnabled = try container.decodeIfPresent(Bool.self, forKey: .bargeInEnabled) ?? true
+        autoConfirmEnabled = try container.decodeIfPresent(Bool.self, forKey: .autoConfirmEnabled) ?? true
     }
 
     // MARK: - Validation Helpers

@@ -72,6 +72,14 @@ protocol PersistenceStoreProtocol: Sendable {
     /// Get list of question IDs for exclusion (alias for askedQuestionIds)
     /// - Returns: Array of question IDs to exclude
     func getExclusionList() -> [String]
+
+    // MARK: - Quiz Stats
+
+    /// Load saved quiz statistics
+    func loadStats() -> QuizStats
+
+    /// Save quiz statistics
+    func saveStats(_ stats: QuizStats)
 }
 
 /// Unified UserDefaults-based persistence storage
@@ -86,6 +94,7 @@ final class PersistenceStore: PersistenceStoreProtocol {
     private let settingsKey = "quiz_settings"
     private let historyKey = "asked_question_history"
     private let maxCapacity = 500
+    private let statsKey = "quiz_stats"
 
     init(userDefaults: UserDefaults = .standard) {
         self.userDefaults = userDefaults
@@ -241,6 +250,33 @@ final class PersistenceStore: PersistenceStoreProtocol {
         }
         return history
     }
+
+    // MARK: - Quiz Stats
+
+    func loadStats() -> QuizStats {
+        guard let data = userDefaults.data(forKey: statsKey) else {
+            return QuizStats.empty
+        }
+        do {
+            return try JSONDecoder().decode(QuizStats.self, from: data)
+        } catch {
+            if Config.verboseLogging {
+                print("❌ PersistenceStore: Failed to decode stats: \(error), using empty")
+            }
+            return QuizStats.empty
+        }
+    }
+
+    func saveStats(_ stats: QuizStats) {
+        do {
+            let data = try JSONEncoder().encode(stats)
+            userDefaults.set(data, forKey: statsKey)
+        } catch {
+            if Config.verboseLogging {
+                print("❌ PersistenceStore: Failed to encode stats: \(error)")
+            }
+        }
+    }
 }
 
 // MARK: - Mock for Testing and Previews
@@ -318,6 +354,18 @@ final class MockPersistenceStore: PersistenceStoreProtocol {
 
     func getExclusionList() -> [String] {
         return askedQuestionIds
+    }
+
+    // MARK: - Quiz Stats
+
+    nonisolated(unsafe) var stats = QuizStats.empty
+
+    func loadStats() -> QuizStats {
+        stats
+    }
+
+    func saveStats(_ stats: QuizStats) {
+        self.stats = stats
     }
 }
 #endif

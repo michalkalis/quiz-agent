@@ -98,6 +98,31 @@ struct CompletionView: View {
                 }
                 .padding(.horizontal)
 
+                // MARK: - Streak Badge
+                if viewModel.quizStats.bestStreak > 0 {
+                    HStack(spacing: Theme.Spacing.md) {
+                        StatsCard(
+                            icon: "flame.fill",
+                            value: "\(viewModel.quizStats.currentStreak)",
+                            label: "Streak",
+                            iconColor: Theme.Colors.warning
+                        )
+                        StatsCard(
+                            icon: "trophy.fill",
+                            value: "\(viewModel.quizStats.bestStreak)",
+                            label: "Best",
+                            iconColor: Theme.Colors.accentPrimary
+                        )
+                        StatsCard(
+                            icon: "chart.bar.fill",
+                            value: "\(viewModel.quizStats.totalQuizzes)",
+                            label: "Quizzes",
+                            iconColor: Theme.Colors.textSecondary
+                        )
+                    }
+                    .padding(.horizontal)
+                }
+
                 Spacer(minLength: Theme.Spacing.xl)
 
                 // MARK: - Action Buttons

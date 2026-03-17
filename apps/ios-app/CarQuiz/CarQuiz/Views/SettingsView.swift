@@ -124,6 +124,28 @@ struct SettingsView: View {
                         }
                     }
 
+                    // Auto-Confirm Answer
+                    VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
+                        SettingsInputField(
+                            label: "Auto-Confirm Answer",
+                            icon: "checkmark.circle",
+                            value: viewModel.settings.autoConfirmEnabled ? "On" : "Off"
+                        ) {
+                            Toggle(
+                                "",
+                                isOn: $viewModel.settings.autoConfirmEnabled
+                            )
+                            .labelsHidden()
+                            .tint(Theme.Colors.accentPrimary)
+                            .accessibilityIdentifier("settings.autoConfirm")
+                        }
+
+                        Text("Automatically confirm your answer after 2 seconds. Say \"re-record\" to cancel.")
+                            .font(.textXS)
+                            .foregroundColor(Theme.Colors.textTertiary)
+                            .padding(.horizontal, 4)
+                    }
+
                     // Audio Mode
                     SettingsInputField(
                         label: "Audio Mode",
@@ -292,17 +314,22 @@ struct SettingsView: View {
 
 private struct SettingsSection<Content: View>: View {
     let title: String
+    @State private var isExpanded = true
     @ViewBuilder let content: () -> Content
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
+        DisclosureGroup(isExpanded: $isExpanded) {
+            VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
+                content()
+            }
+            .padding(.top, Theme.Spacing.xs)
+        } label: {
             Text(title)
                 .font(.displayMD)
                 .foregroundColor(Theme.Colors.textPrimary)
                 .padding(.horizontal, 4)
-
-            content()
         }
+        .tint(Theme.Colors.textSecondary)
     }
 }
 

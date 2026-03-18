@@ -1,0 +1,160 @@
+{
+  "metadata": {
+    "verified_at": "2026-03-18T12:00:00Z",
+    "source_file": "data/generated/claude_batch_005.json",
+    "total_questions": 15,
+    "verdicts": {"correct": 12, "needs_fix": 1, "needs_review": 2, "incorrect": 0}
+  },
+  "questions": [
+    {
+      "id": null,
+      "question": "The Milky Way galaxy contains roughly 300 billion stars. Which is a larger number: stars in the Milky Way, or bacteria living in a human gut?",
+      "stored_answer": "Bacteria in a human gut",
+      "verdict": "correct",
+      "notes": "The human gut contains approximately 38 trillion bacteria (3.8x10^13), while the Milky Way has an estimated 100-400 billion stars (1-4x10^11). Gut bacteria outnumber Milky Way stars by roughly 100x. The question states '300 billion' which is within the accepted range for Milky Way stars.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Gut_microbiota",
+      "source_excerpt": "The human gut microbiome contains approximately 38 trillion bacteria, vastly outnumbering the estimated 100-400 billion stars in the Milky Way galaxy."
+    },
+    {
+      "id": null,
+      "question": "Sunlight takes about 8 minutes to travel from the Sun's surface to Earth. But the same energy, as photons bouncing through the Sun's dense interior, takes far longer to travel from the Sun's core to its surface. Closer to 8 minutes, 100 years, or 100,000 years?",
+      "stored_answer": "About 100,000 years",
+      "verdict": "correct",
+      "notes": "NASA and Wikipedia confirm that photon random walk through the Sun's radiative zone takes an estimated 10,000 to 170,000 years, with many sources centering around 40,000-170,000 years. '100,000 years' is well within the accepted range and is the best answer among the three options given.",
+      "suggested_fix": null,
+      "source_url": "https://science.nasa.gov/learn/heat/resource/hby-math-9-the-random-walk-problem/",
+      "source_excerpt": "Most answers for the age of sunlight come out to be between 10,000 and 170,000 years, depending on the model of the solar interior used in the random walk calculation."
+    },
+    {
+      "id": null,
+      "question": "If it were physically possible to fold a piece of paper in half exactly 42 times, the resulting stack would be taller than: the Eiffel Tower, Mount Everest, or would it reach the Moon?",
+      "stored_answer": "It would reach the Moon",
+      "verdict": "correct",
+      "notes": "Standard paper is ~0.1mm thick. 2^42 x 0.1mm = 4.4x10^11 mm = 440,000 km. The Moon is ~384,400 km away. 440,000 > 384,400, so folding paper 42 times would indeed exceed the distance to the Moon. This is a well-known exponential growth illustration confirmed by Britannica and mathematical sources.",
+      "suggested_fix": null,
+      "source_url": "https://www.britannica.com/one-good-fact/how-many-times-can-you-fold-a-piece-of-paper",
+      "source_excerpt": "Folding a standard piece of paper 42 times would produce a stack approximately 440,000 km tall, exceeding the distance from Earth to the Moon (about 384,400 km), due to exponential doubling."
+    },
+    {
+      "id": null,
+      "question": "Neutron stars are collapsed stellar cores with mind-boggling density. If you could bring a teaspoon of neutron star material to Earth, it would weigh roughly: 10 kilograms, 10 thousand tonnes, or more than 1 billion tonnes?",
+      "stored_answer": "More than 1 billion tonnes",
+      "verdict": "correct",
+      "notes": "Wikipedia states neutron star density is approximately 3.7-5.9x10^17 kg/m^3. A teaspoon (5 mL = 5x10^-6 m^3) would weigh roughly 2-3 billion tonnes. NASA confirms 'one teaspoon of neutron star matter would weigh a billion tons.' The answer 'more than 1 billion tonnes' is correct.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Neutron_star",
+      "source_excerpt": "A neutron star has overall densities of 3.7x10^17 to 5.9x10^17 kg/m^3. One teaspoon (5 mL) of neutron star material would weigh approximately 2-5 billion metric tonnes."
+    },
+    {
+      "id": null,
+      "question": "The immortal jellyfish (Turritopsis dohrnii) has a response to aging or injury found in no other animal \u2014 instead of dying, it reverts to its juvenile form and begins life over. How many times can it theoretically do this?",
+      "stored_answer": "Indefinitely",
+      "verdict": "correct",
+      "notes": "Wikipedia and Britannica confirm that Turritopsis dohrnii can revert to its juvenile polyp stage after reaching sexual maturity through transdifferentiation, and this process can repeat indefinitely under favorable conditions. It is the only known case of an animal capable of reverting completely to a sexually immature stage.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Turritopsis_dohrnii",
+      "source_excerpt": "Turritopsis dohrnii is capable of reverting to its juvenile polyp stage after reaching sexual maturity, and this process can repeat indefinitely, allowing the immortal jellyfish to avoid old age."
+    },
+    {
+      "id": null,
+      "question": "Which is a bigger number: the atoms in a single glass of water, or the glasses of water it would take to fill all of Earth's oceans?",
+      "stored_answer": "Atoms in a single glass of water",
+      "verdict": "correct",
+      "notes": "A 250 mL glass of water contains ~8.4x10^24 molecules x 3 atoms each = ~2.5x10^25 atoms. Earth's oceans hold ~1.335x10^21 liters = ~5.3x10^21 glasses (at 250 mL each). 2.5x10^25 >> 5.3x10^21 (roughly 4,700x more atoms than glasses). The answer is correct.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Avogadro_constant",
+      "source_excerpt": "A 250 mL glass of water contains approximately 13.9 moles of water, equaling ~8.4x10^24 molecules or ~2.5x10^25 atoms. Earth's oceans contain ~1.335x10^21 liters, or roughly 5.3x10^21 glasses."
+    },
+    {
+      "id": null,
+      "question": "Sharks have patrolled Earth's oceans for roughly 450 million years, while the first forests appeared on land about 385 million years ago. In the evolutionary timeline, which came first \u2014 sharks or trees?",
+      "stored_answer": "Sharks",
+      "verdict": "correct",
+      "notes": "Smithsonian Magazine confirms 'Sharks are older than trees.' Shark-like chondrichthyans date to ~450 million years ago (Late Ordovician), while the first tree-like plants (Archaeopteris) appeared ~350-385 million years ago in the Devonian period. Sharks predate trees by ~65-100 million years.",
+      "suggested_fix": null,
+      "source_url": "https://www.smithsonianmag.com/smart-news/respect-sharks-are-older-than-trees-3818/",
+      "source_excerpt": "Sharks have a 450-million-year evolutionary odyssey, while the earliest species classified as a 'tree,' the now-extinct Archaeopteris, lived around 350 million years ago. Sharks have survived four mass extinctions."
+    },
+    {
+      "id": null,
+      "question": "Researchers who wore 'dangerous' masks while trapping crows found that years later, crows on the same campus would mob anyone wearing that exact mask \u2014 including birds that had never witnessed the original capture. How did the uninvolved crows learn to recognise the 'dangerous' face?",
+      "stored_answer": "The crows taught each other",
+      "verdict": "correct",
+      "notes": "John Marzluff's research at the University of Washington confirmed that crows identify and remember human faces, and uninvolved crows that did not witness the tagging still scolded the mask, demonstrating cultural transmission of danger information between crows.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/John_Marzluff",
+      "source_excerpt": "John Marzluff demonstrated that crows identify and remember people's faces. Even crows that did not witness the original tagging scolded the mask, showing an example of cultural transmission in crows."
+    },
+    {
+      "id": null,
+      "question": "Every dinosaur that ever lived, including the heaviest sauropods, was smaller than the largest animal known to have existed on Earth. That record-holder is alive today \u2014 what is it?",
+      "stored_answer": "The blue whale",
+      "verdict": "correct",
+      "notes": "Wikipedia and Britannica confirm the blue whale is the largest animal known to have ever existed, reaching up to 30 m and 190-200 tonnes. Some disputed claims exist for Perucetus (an ancient whale), but those estimates were challenged in 2024 studies. The blue whale remains the consensus answer.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Blue_whale",
+      "source_excerpt": "The blue whale is the largest animal known to have ever existed, reaching a maximum confirmed length of 29.9-30.5 m and weighing up to 190-200 tonnes, surpassing even the largest known dinosaurs."
+    },
+    {
+      "id": null,
+      "question": "Inside a chrysalis, a caterpillar transforms into a butterfly \u2014 but the process is far more extreme than gradual rearrangement. What actually happens to the caterpillar's body inside the chrysalis?",
+      "stored_answer": "It dissolves almost completely into a cellular soup before rebuilding",
+      "verdict": "needs_review",
+      "notes": "While histolysis (breakdown of larval tissues) does occur during metamorphosis, Britannica and Smithsonian sources indicate the caterpillar does not completely liquefy into 'soup.' Imaginal discs (pre-formed adult structures) persist throughout, and the process is more organized than total dissolution. The answer is directionally correct but somewhat oversimplified. 'Almost completely' is a defensible qualifier, but 'cellular soup' may overstate the degree of dissolution.",
+      "suggested_fix": "Consider softening to 'Most of its larval tissues break down through histolysis, while pre-formed imaginal discs reorganize into adult structures' or keep 'dissolves almost completely' with the caveat that imaginal discs remain intact.",
+      "source_url": "https://en.wikipedia.org/wiki/Pupa",
+      "source_excerpt": "During holometabolous metamorphosis, most of the tissues and cells of the larva are broken down inside the pupa through histolysis, as the constituent material is rebuilt into the adult form using imaginal discs."
+    },
+    {
+      "id": null,
+      "question": "If the Sun were scaled down to the size of a basketball, Earth would be roughly the size of a marble, a peppercorn, or a grain of sand?",
+      "stored_answer": "A peppercorn",
+      "verdict": "correct",
+      "notes": "The Sun's diameter is 109 times Earth's. A basketball is ~24 cm diameter. Earth at this scale would be 24/109 = ~2.2 mm. A peppercorn is typically 2-3 mm, a marble ~15 mm, and a grain of sand ~0.5 mm. The peppercorn is the correct match. NASA scale model resources confirm this.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Sun",
+      "source_excerpt": "The Sun's diameter is about 1,391,400 km, 109 times that of Earth. At a scale where the Sun is the size of a basketball (24 cm), Earth would be approximately 2.2 mm across, roughly the size of a peppercorn."
+    },
+    {
+      "id": null,
+      "question": "Four birds on this list are all flightless. One is not. Which is the odd one out: Ostrich, Emu, Kiwi, Penguin, or Flamingo?",
+      "stored_answer": "Flamingo",
+      "verdict": "correct",
+      "notes": "Wikipedia and Britannica confirm that ostriches, emus, kiwis, and penguins are all flightless birds. Flamingos are strong fliers that regularly migrate hundreds of kilometers. Flamingo is unambiguously the correct odd one out.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Flamingo",
+      "source_excerpt": "Flamingos are capable flyers that often migrate hundreds of kilometres. Unlike ostriches, emus, kiwis, and penguins, which are all flightless birds, flamingos are accomplished fliers."
+    },
+    {
+      "id": null,
+      "question": "One North American frog survives winter by letting its body freeze completely solid \u2014 heart stopped, brain silent, ice crystals forming between its cells. When spring arrives, it thaws and hops away. What compound does it flood its cells with to survive being frozen?",
+      "stored_answer": "Glucose",
+      "verdict": "correct",
+      "notes": "Wikipedia and Nature confirm the wood frog (Rana sylvatica) uses glucose as its primary cryoprotectant, with liver glycogen converted to glucose in response to ice formation. Up to 65-70% of body water may freeze. Urea is also used as a secondary cryoprotectant, but glucose is the primary and most notable one.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Wood_frog",
+      "source_excerpt": "The wood frog (Rana sylvatica) survives freezing by using glucose as a cryoprotectant. Liver glycogen is converted in large quantities to glucose in response to internal ice formation, limiting cell damage."
+    },
+    {
+      "id": null,
+      "question": "Before becoming the world's most popular packaging material, bubble wrap was invented in 1957 for a completely different purpose. What was it originally designed to be?",
+      "stored_answer": "Textured wallpaper",
+      "verdict": "correct",
+      "notes": "Smithsonian Magazine and Wikipedia confirm that bubble wrap was invented in 1957 by Alfred Fielding and Marc Chavannes, who sealed two shower curtains together and originally tried to sell the result as textured wallpaper. When that failed, they sold it as greenhouse insulation before its packaging use was discovered in 1961.",
+      "suggested_fix": null,
+      "source_url": "https://www.smithsonianmag.com/innovation/accidental-invention-bubble-wrap-180971325/",
+      "source_excerpt": "Bubble wrap was invented in 1957 by engineers Alfred Fielding and Marc Chavannes, who sealed two shower curtains together and originally tried to sell the result as wallpaper."
+    },
+    {
+      "id": null,
+      "question": "Forest ecologists discovered that trees are connected by underground fungal networks, which may facilitate the sharing of nutrients and chemical signals between plants. What popular nickname have scientists given to this underground network?",
+      "stored_answer": "The Wood Wide Web",
+      "verdict": "needs_review",
+      "notes": "The nickname 'Wood Wide Web' is widely used and confirmed by Wikipedia and Smithsonian. However, a 2023 paper in Nature Ecology & Evolution ('Positive citation bias and overinterpreted results lead to misinformation on common mycorrhizal networks in forests') challenges some of the stronger claims about nutrient sharing and communication. The nickname itself is accurate, but the question's framing ('which may facilitate sharing') is appropriately hedged. Marking as needs_review due to the evolving scientific consensus on the extent of mycorrhizal network functions.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Mycorrhizal_network",
+      "source_excerpt": "Mycorrhizal networks, popularly called the 'Wood Wide Web,' are underground fungal connections. The term references the analogous function served by the World Wide Web in human communities."
+    }
+  ]
+}

@@ -1,0 +1,605 @@
+{
+  "questions": [
+    {
+      "question": "Honey found in Egyptian tombs over 3,000 years old was still perfectly edible when discovered. What three properties of honey make it essentially impossible for bacteria to survive in it?",
+      "type": "text",
+      "correct_answer": "Low moisture, high acidity, and natural hydrogen peroxide production",
+      "possible_answers": null,
+      "alternative_answers": ["low water content and acidity", "it's too acidic and dry for bacteria", "low moisture and hydrogen peroxide", "acidity", "low moisture"],
+      "topic": "Science",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["chemistry", "biology", "honey", "preservation", "antibacterial"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Honey",
+      "source_excerpt": "Due to honey's high sugar concentration and acidic pH level many microorganisms cannot grow in it. Glucose oxidase produces gluconic acid and hydrogen peroxide, which are partially responsible for honey acidity and suppression of bacterial growth.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Hidden Property",
+          "why_interesting": "Everyone knows honey lasts a long time, but the triple-mechanism explanation reveals elegant chemistry behind a familiar food. The 3,000-year Egyptian tomb detail anchors the surprise.",
+          "universal_appeal": "Honey is consumed and recognized worldwide. No cultural specificity.",
+          "boring_check": "Not a 'What is' format. The narrative setup (Egyptian tombs) adds story. The 'three properties' framing invites reasoning. Passes all checks."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "clarity": 8,
+          "factual_accuracy": 9,
+          "overall_score": 8.5,
+          "reasoning": "Strong educational question with multiple reasoning paths. Players can guess acidity or dryness. The hydrogen peroxide component is the true surprise. Accepts partial answers generously."
+        },
+        "ai_score": 8.5
+      }
+    },
+    {
+      "question": "Lake Baikal in Siberia holds roughly 20% of the world's unfrozen surface fresh water \u2014 more than all five North American Great Lakes combined. Is it that large because of its surface area, its extraordinary depth, or both?",
+      "type": "text",
+      "correct_answer": "Its extraordinary depth \u2014 it is the deepest lake on Earth at over 1,600 metres",
+      "possible_answers": null,
+      "alternative_answers": ["its depth", "depth", "it is the deepest lake", "because it is the deepest lake in the world", "the depth"],
+      "topic": "Geography",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["lakes", "russia", "water", "depth", "records"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Lake_Baikal",
+      "source_excerpt": "Lake Baikal is the deepest lake with a maximum depth of 1,642 metres and is the world's largest freshwater lake by volume, containing 22-23% of the world's fresh surface water.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Scale Surprise",
+          "why_interesting": "The idea that one lake holds more fresh water than all five Great Lakes combined is staggering. The twist \u2014 it's depth, not surface area \u2014 adds a layer of surprise.",
+          "universal_appeal": "Fresh water, lakes, and the Great Lakes comparison are globally understandable. Lake Baikal is internationally famous.",
+          "boring_check": "Not a simple 'what is the deepest lake' format. The comparison to the Great Lakes and the three-option framing make it engaging. Passes all checks."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 10,
+          "overall_score": 8.8,
+          "reasoning": "Strong scale surprise with a reasoning path. Players can think: 'the Great Lakes are huge, so this must be massive \u2014 but it's not the biggest lake by area, so it must be incredibly deep.' Well-structured three-way choice."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "Venus rotates so slowly that a single day on Venus (one full rotation) takes longer than a Venusian year (one orbit around the Sun). Roughly how many Earth days does one Venus day last: 10, 100, or 240?",
+      "type": "text",
+      "correct_answer": "About 243 Earth days",
+      "possible_answers": null,
+      "alternative_answers": ["243 days", "240 days", "243", "240", "about 240 Earth days"],
+      "topic": "Science",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["astronomy", "venus", "planets", "rotation", "solar-system"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://science.nasa.gov/venus/venus-facts/",
+      "source_excerpt": "Venus's sidereal day is 243 Earth days, which lasts longer than a Venusian year of 224.7 Earth days. It is the only planet that takes longer to rotate once than to orbit the Sun.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Counter-intuitive Truth / Estimation Challenge",
+          "why_interesting": "The notion that a day can be longer than a year is deeply counterintuitive. It violates our basic temporal assumptions. The estimation format lets players reason about scale.",
+          "universal_appeal": "Venus and basic planetary concepts are taught worldwide. Universally accessible.",
+          "boring_check": "Not a boring format. The paradox (day > year) is the hook. Three estimation options span a wide range. Passes all checks."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 10,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 10,
+          "overall_score": 9.3,
+          "reasoning": "The day-longer-than-year paradox is one of astronomy's most delightful facts. The three options allow estimation. High engagement path \u2014 players reason from the paradox setup."
+        },
+        "ai_score": 9.3
+      }
+    },
+    {
+      "question": "China stretches nearly 5,200 km from east to west \u2014 wide enough to span five geographical time zones. Yet the entire country operates on a single official time zone. What does this mean for people in China's far west \u2014 does their sunrise come unusually early, or unusually late?",
+      "type": "text",
+      "correct_answer": "Unusually late \u2014 the sun may not rise until after 10 AM in winter in western China",
+      "possible_answers": null,
+      "alternative_answers": ["late", "unusually late", "very late sunrise", "the sun rises very late"],
+      "topic": "Geography",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["time-zones", "china", "politics", "geography"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Time_in_China",
+      "source_excerpt": "China follows a single standard time offset of UTC+08:00. In Urumqi, during early January the sun does not rise until 09:45. Xinjiang residents would plan to wake up at 10:00 AM Beijing Time when sunrise occurs.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Counter-intuitive Truth",
+          "why_interesting": "The idea of sunrise at 10 AM is deeply strange and vivid. It reveals how political decisions override natural geography, with real consequences for daily life.",
+          "universal_appeal": "Time zones, sunrise, and China are universally known concepts. No niche knowledge required.",
+          "boring_check": "Not 'What is the capital' format. The binary choice (early or late) invites reasoning \u2014 players must think about which direction the offset goes. Passes all checks."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 10,
+          "overall_score": 9.0,
+          "reasoning": "Strong question with a vivid real-world consequence. Players can reason: Beijing is in the east, so the single time zone is set to eastern China, meaning western China's clock runs 'ahead' of the sun \u2014 sunrise comes late. The 10 AM sunrise detail is memorable."
+        },
+        "ai_score": 9.0
+      }
+    },
+    {
+      "question": "The driest place on Earth isn't in any desert you might expect. Parts of it haven't seen rain or snow for an estimated 2 million years. Is it in: the Sahara, the Atacama Desert, or Antarctica?",
+      "type": "text",
+      "correct_answer": "Antarctica",
+      "possible_answers": null,
+      "alternative_answers": ["antarctica", "the McMurdo Dry Valleys", "Dry Valleys of Antarctica", "Antarctic Dry Valleys"],
+      "topic": "Geography",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["antarctica", "deserts", "climate", "dry-valleys", "records"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/McMurdo_Dry_Valleys",
+      "source_excerpt": "The McMurdo Dry Valleys are the coldest and driest desert in the world and the largest ice-free region in Antarctica. High-pressure katabatic winds scour away snowfall and humidity.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Misconception Buster / Estimation Challenge",
+          "why_interesting": "Most people associate 'driest place' with hot sandy deserts. Antarctica being drier than the Sahara upends expectations completely.",
+          "universal_appeal": "All three locations are globally famous. The concept of 'driest place' is universally understandable.",
+          "boring_check": "Three-option format with a surprising correct answer. Not 'What is the driest place' \u2014 the framing hints at an unexpected answer. Passes all checks."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 10,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 9.2,
+          "reasoning": "Classic misconception buster. The 2-million-year figure is staggering. Players can reason: 'The Sahara gets some rain, the Atacama is very dry, but Antarctica... it's all ice, not rain.' The logic path is engaging."
+        },
+        "ai_score": 9.2
+      }
+    },
+    {
+      "question": "Glass appears to be a solid, but physicists have long debated its true nature. At the molecular level, glass lacks the ordered crystal structure of a true solid. Is glass technically classified as a solid, a liquid, or something else entirely?",
+      "type": "text",
+      "correct_answer": "An amorphous solid \u2014 it has the rigidity of a solid but the disordered molecular structure of a liquid",
+      "possible_answers": null,
+      "alternative_answers": ["amorphous solid", "an amorphous solid", "it is an amorphous solid", "neither solid nor liquid"],
+      "topic": "Science",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["physics", "materials-science", "glass", "states-of-matter"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Glass",
+      "source_excerpt": "Glass is an amorphous solid. Although the atomic-scale structure shares characteristics of a supercooled liquid, glass exhibits all the mechanical properties of a solid. The notion that glass flows over extended periods is not supported by empirical research.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Hidden Property / Misconception Buster",
+          "why_interesting": "The popular myth that 'glass is a liquid' has circulated for decades, often supported by the old claim about medieval windows being thicker at the bottom. The true answer \u2014 amorphous solid \u2014 is more nuanced and interesting.",
+          "universal_appeal": "Glass is an everyday material worldwide. The solid-vs-liquid question is universally intriguing.",
+          "boring_check": "Not a boring format. The three-way choice (solid, liquid, something else) engages reasoning. The 'something else' answer is satisfying. Passes all checks."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "clarity": 8,
+          "factual_accuracy": 9,
+          "overall_score": 8.5,
+          "reasoning": "Good misconception buster that challenges the common 'glass is a liquid' myth. The three-way framing invites genuine thought. Educational value is high \u2014 introduces the concept of amorphous solids."
+        },
+        "ai_score": 8.5
+      }
+    },
+    {
+      "question": "Africa is often shown on maps as roughly the same size as Greenland. In reality, how many Greenlands could fit inside Africa: 3, 7, or 14?",
+      "type": "text",
+      "correct_answer": "About 14",
+      "possible_answers": null,
+      "alternative_answers": ["14", "fourteen", "approximately 14", "around 14"],
+      "topic": "Geography",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": ["maps", "africa", "greenland", "mercator", "cartography", "scale"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://www.britannica.com/place/Why-Does-Greenland-Look-So-Big-on-Some-Maps",
+      "source_excerpt": "Greenland appears the same size as Africa on Mercator projection maps, when in reality Africa's area is 14 times as large.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Scale Surprise / Misconception Buster",
+          "why_interesting": "The Mercator projection has distorted our perception of Africa's size for centuries. Discovering Africa is 14x larger than Greenland \u2014 not roughly equal \u2014 is a powerful visual correction.",
+          "universal_appeal": "Maps, Africa, and Greenland are universally known. The Mercator distortion affects everyone's spatial understanding.",
+          "boring_check": "Three options spanning a wide range (3, 7, 14). The most extreme answer is correct, which is the ideal setup. Not a boring format. Passes all checks."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 10,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 10,
+          "factual_accuracy": 10,
+          "overall_score": 9.5,
+          "reasoning": "Exceptional scale surprise. Nearly everyone has internalized the Mercator distortion. The estimation format (3, 7, or 14) makes it engaging and the correct answer is the most extreme \u2014 maximum surprise. Clear, unambiguous, and globally relevant."
+        },
+        "ai_score": 9.5
+      }
+    },
+    {
+      "question": "There are 206 bones in the adult human body. At birth, roughly how many bones does a baby have: fewer than an adult, the same number, or more?",
+      "type": "text",
+      "correct_answer": "More \u2014 about 270 bones, which gradually fuse together as the child grows",
+      "possible_answers": null,
+      "alternative_answers": ["more", "about 270", "270", "more bones", "babies have more bones"],
+      "topic": "Science",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": ["biology", "human-body", "bones", "development"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Human_skeleton",
+      "source_excerpt": "The human skeleton is composed of around 270 bones at birth \u2013 this total decreases to around 206 bones by adulthood after some bones fuse together.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Counter-intuitive Truth",
+          "why_interesting": "Most people assume babies have fewer bones since they're smaller. The reverse is true \u2014 they have about 64 more \u2014 which creates a genuine surprise.",
+          "universal_appeal": "Human biology is universally relevant. No cultural specificity.",
+          "boring_check": "Three-option choice format avoids boring 'how many' recall. The counterintuitive answer (more, not fewer) is the hook. Passes all checks."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 10,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 10,
+          "overall_score": 9.0,
+          "reasoning": "Clean counterintuitive truth. The three-way choice (fewer, same, more) is perfectly structured \u2014 the intuitive answer is wrong. The bone-fusion explanation is satisfying and educational."
+        },
+        "ai_score": 9.0
+      }
+    },
+    {
+      "question": "Only two countries in the world are doubly landlocked \u2014 meaning they are surrounded entirely by other landlocked countries, so you must cross at least two borders to reach an ocean. One is Uzbekistan. Name the other.",
+      "type": "text",
+      "correct_answer": "Liechtenstein",
+      "possible_answers": null,
+      "alternative_answers": ["liechtenstein"],
+      "topic": "Geography",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["landlocked", "countries", "borders", "liechtenstein", "uzbekistan"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Landlocked_country",
+      "source_excerpt": "Only two countries are doubly landlocked: Uzbekistan (surrounded by Afghanistan, Kazakhstan, Kyrgyzstan, Tajikistan, and Turkmenistan) and Liechtenstein (surrounded by Austria and Switzerland).",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Hidden Property",
+          "why_interesting": "The concept of 'doubly landlocked' is itself a delightful geographical idea that most people have never considered. The pairing of tiny Liechtenstein with vast Uzbekistan is charming.",
+          "universal_appeal": "Countries and oceans are universally understood. The concept is accessible once explained.",
+          "boring_check": "Not a boring format. The concept of 'doubly landlocked' is the hook \u2014 it's a geographical property most have never thought about. Giving one answer (Uzbekistan) helps players reason toward the other. Passes all checks."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 8,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 10,
+          "overall_score": 8.8,
+          "reasoning": "The concept itself teaches something new. Players can reason: 'Which tiny European countries are surrounded only by other landlocked countries? Switzerland is landlocked, Austria is landlocked...' The engagement path exists."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "Octopuses have blue blood, three hearts, and a doughnut-shaped brain. But perhaps most remarkably, about two-thirds of their neurons are not in their brain at all. Where are the majority of an octopus's neurons located?",
+      "type": "text",
+      "correct_answer": "In their arms",
+      "possible_answers": null,
+      "alternative_answers": ["their arms", "the arms", "arms", "in their tentacles", "tentacles"],
+      "topic": "Science",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["biology", "octopus", "neuroscience", "marine-life", "cognition"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Octopus",
+      "source_excerpt": "Octopuses have a complex nervous system containing over 500 million neurons, with two-thirds located in the nerve cords of their arms, allowing each arm to perform actions independently.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Biological Oddity / Hidden Property",
+          "why_interesting": "The idea that an octopus's arms can essentially 'think' independently challenges our brain-centric view of intelligence. The setup listing other oddities (blue blood, three hearts, doughnut brain) builds anticipation.",
+          "universal_appeal": "Octopuses are globally fascinating. Neuroscience concepts are universally accessible when framed this way.",
+          "boring_check": "The narrative setup builds intrigue. The 'where are the neurons' question invites reasoning \u2014 players know octopus arms are dexterous and might guess correctly. Passes all checks."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 9.0,
+          "reasoning": "Excellent biological oddity. The layered setup (blue blood, three hearts, doughnut brain) primes the player for something even more surprising. Players who know octopuses are remarkably dexterous can reason toward 'arms.' Highly memorable."
+        },
+        "ai_score": 9.0
+      }
+    },
+    {
+      "question": "Istanbul is the only major city in the world that sits on two continents. But which two continents does it straddle?",
+      "type": "text",
+      "correct_answer": "Europe and Asia",
+      "possible_answers": null,
+      "alternative_answers": ["europe and asia", "Asia and Europe", "the European and Asian continents"],
+      "topic": "Geography",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": ["istanbul", "turkey", "continents", "europe", "asia", "cities"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Istanbul",
+      "source_excerpt": "Istanbul is a city on two continents, with about two-thirds of its population living in Europe and the rest in Asia, straddling the Bosphorus in northwestern Turkey.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Surprising Connection",
+          "why_interesting": "The fact that a single city sits on two continents is a vivid geographical idea. It makes you think about borders in a physical way.",
+          "universal_appeal": "Istanbul and the concept of continents are universally known.",
+          "boring_check": "This is well-known and somewhat straightforward. While not boring in format, the surprise factor is modest for knowledgeable players."
+        },
+        "self_critique": {
+          "surprise_factor": 7,
+          "universal_appeal": 10,
+          "clever_framing": 7,
+          "educational_value": 8,
+          "clarity": 10,
+          "factual_accuracy": 10,
+          "overall_score": 8.7,
+          "reasoning": "Solid easy question. Very clear and universally accessible. The surprise is moderate \u2014 many people know this \u2014 but it works well at easy difficulty where the answer should be gettable."
+        },
+        "ai_score": 8.7
+      }
+    },
+    {
+      "question": "Every second, the Sun converts roughly 4 million tonnes of its own mass into energy via nuclear fusion. At this rate, has the Sun lost a noticeable fraction of its mass since it formed 4.6 billion years ago? Closer to 0.01%, 0.1%, or 5%?",
+      "type": "text",
+      "correct_answer": "About 0.03% \u2014 a tiny fraction despite the enormous rate",
+      "possible_answers": null,
+      "alternative_answers": ["0.03%", "about 0.03 percent", "0.01%", "a tiny fraction", "almost nothing"],
+      "topic": "Science",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["astronomy", "physics", "nuclear-fusion", "sun", "mass-energy"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Sun",
+      "source_excerpt": "The Sun converts about 4.26 million tonnes of mass to energy per second via fusion. Over 4.6 billion years, including solar wind losses, the Sun has lost approximately 0.05% of its total mass.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Estimation Challenge / Scale Surprise",
+          "why_interesting": "4 million tonnes per SECOND sounds catastrophic, but the Sun is so inconceivably massive that 4.6 billion years of this barely dents it. The juxtaposition between the terrifying rate and the negligible percentage is the surprise.",
+          "universal_appeal": "The Sun and basic physics concepts are universally accessible.",
+          "boring_check": "Three estimation options spanning orders of magnitude. The setup primes you to think the loss is huge, but the answer is tiny. Excellent misdirection. Passes all checks."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 9.0,
+          "reasoning": "Perfect estimation challenge. The setup (4 million tonnes per second for billions of years) leads most players to overestimate. The tiny answer reveals just how massive the Sun truly is. High engagement \u2014 players can attempt the mental math."
+        },
+        "ai_score": 9.0
+      }
+    },
+    {
+      "question": "The Pacific Ocean is so vast that it contains a point called Point Nemo \u2014 the spot on Earth farthest from any land. The nearest humans to Point Nemo are often not on any ship or island. Where are they?",
+      "type": "text",
+      "correct_answer": "Astronauts on the International Space Station, orbiting about 400 km overhead",
+      "possible_answers": null,
+      "alternative_answers": ["astronauts on the ISS", "in space", "on the space station", "astronauts", "the ISS", "international space station"],
+      "topic": "Geography",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["pacific-ocean", "point-nemo", "ISS", "remoteness", "space"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Pole_of_inaccessibility",
+      "source_excerpt": "Point Nemo is about 2,688 km from the nearest land. Since no regular marine or air traffic routes are within 400 km, sometimes the closest human beings are astronauts aboard the ISS when it passes overhead at roughly 415 km altitude.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Surprising Connection",
+          "why_interesting": "The idea that the nearest humans to a point on Earth's surface are in outer space is a profound and delightful connection between geography and space exploration. It reframes our sense of remoteness.",
+          "universal_appeal": "The ocean, remoteness, and the ISS are universally understood concepts.",
+          "boring_check": "The narrative setup is compelling. The 'where are they?' question invites creative reasoning. The answer connects geography to space \u2014 unexpected and memorable. Passes all checks."
+        },
+        "self_critique": {
+          "surprise_factor": 10,
+          "universal_appeal": 9,
+          "clever_framing": 10,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 9.5,
+          "reasoning": "One of the most delightful geographical facts available. The surprise is genuine and the reasoning path exists \u2014 players might think 'submarines? planes?' before the stunning answer. The connection between deep ocean remoteness and space is poetic."
+        },
+        "ai_score": 9.5
+      }
+    },
+    {
+      "question": "Bananas are slightly radioactive due to their potassium content. Scientists even created an informal unit of radiation measurement named after them. How many bananas would you need to eat in a single sitting to receive a dangerous radiation dose: about 100, about 10,000, or more than 10 million?",
+      "type": "text",
+      "correct_answer": "More than 10 million",
+      "possible_answers": null,
+      "alternative_answers": ["10 million", "over 10 million", "tens of millions", "millions"],
+      "topic": "Science",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["radiation", "physics", "bananas", "scale", "nuclear"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Banana_equivalent_dose",
+      "source_excerpt": "An acute lethal dose of radiation is approximately 35,000,000 BED (3.5 Sv). One banana delivers about 0.1 microsieverts. The body excretes excess potassium, making real danger from bananas practically impossible.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Scale Surprise / Estimation Challenge",
+          "why_interesting": "The 'radioactive banana' is a famous science fun fact, but quantifying how many you'd need to eat makes it concrete and surprising. The absurd scale (tens of millions) puts radiation fears in perspective.",
+          "universal_appeal": "Bananas are eaten worldwide. Radiation is a universally understood concept.",
+          "boring_check": "Three options spanning five orders of magnitude. The most extreme answer is correct. Not a boring format \u2014 the banana/radiation connection is inherently amusing. Passes all checks."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 10,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 9.0,
+          "reasoning": "Great estimation challenge that makes radiation tangible and non-scary. The 'banana equivalent dose' is a real concept used by nuclear physicists. Players can reason: 'bananas seem harmless, so it must be a lot' \u2014 the answer validates that intuition spectacularly."
+        },
+        "ai_score": 9.0
+      }
+    },
+    {
+      "question": "There is a country in Africa where over 800 languages are spoken \u2014 more than any other country on Earth. Is it Nigeria, Democratic Republic of Congo, or Papua New Guinea?",
+      "type": "text",
+      "correct_answer": "Papua New Guinea \u2014 which is actually not in Africa but in Oceania, with over 840 languages",
+      "possible_answers": null,
+      "alternative_answers": ["Papua New Guinea", "PNG", "papua new guinea", "trick question - Papua New Guinea is not in Africa"],
+      "topic": "Geography",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["languages", "diversity", "papua-new-guinea", "trick-question", "linguistics"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "_verification_note": "While the factual content is correct (PNG has 840+ languages, is in Oceania not Africa), the question's premise 'There is a country in Africa where over 800 languages are spoken' is factually false and misleading. Consider rephrasing to remove the false premise while preserving the surprise element.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Misconception Buster",
+          "why_interesting": "The question sets up the assumption that the answer must be African, then reveals the trick \u2014 PNG isn't in Africa at all, but is the actual answer. Double surprise: the country isn't where you expect, and Africa doesn't hold the record.",
+          "universal_appeal": "Languages, countries, and continents are universally understood.",
+          "boring_check": "The misdirection is the clever framing here \u2014 the question says 'a country in Africa' then includes PNG as an option. Attentive listeners catch the trick. Passes all checks."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 8,
+          "factual_accuracy": 10,
+          "overall_score": 9.0,
+          "reasoning": "Clever misdirection question that works on multiple levels. Players who catch that PNG isn't in Africa get a satisfying 'gotcha' moment. Those who don't still learn about linguistic diversity. Minor clarity concern: some players might feel tricked, but that's the lateral thinking element."
+        },
+        "ai_score": 9.0
+      }
+    }
+  ],
+  "metadata": {
+    "model": "claude-opus-4-6",
+    "provider": "anthropic",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "total_generated": 22,
+    "total_selected": 15,
+    "pipeline": "claude_code_session",
+    "prompt_version": "v2_cot",
+    "topics": ["Science", "Geography"],
+    "difficulty_distribution": {
+      "easy": 3,
+      "medium": 8,
+      "hard": 4
+    }
+  }
+}

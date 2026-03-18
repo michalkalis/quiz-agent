@@ -1,0 +1,160 @@
+{
+  "metadata": {
+    "verified_at": "2026-03-18T12:00:00Z",
+    "source_file": "data/generated/claude_batch_007.json",
+    "total_questions": 15,
+    "verdicts": {"correct": 10, "needs_fix": 1, "needs_review": 4, "incorrect": 0}
+  },
+  "questions": [
+    {
+      "id": null,
+      "question": "A sport played in the 2024 Olympics has been practised in essentially the same form for over 3,000 years, making it one of the oldest continuously played sports. Which one?",
+      "stored_answer": "Wrestling",
+      "verdict": "correct",
+      "notes": "Wikipedia and Britannica confirm wrestling is one of the oldest known sports, with representations dating back 15,000-20,000 years. It was introduced to the ancient Olympic Games in 708 BCE. Wrestling was in the 2024 Paris Olympics. The '3,000 years' claim aligns with the ancient Olympic athletic festivals dating back ~3,000 years.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Wrestling",
+      "source_excerpt": "No sport is older or more widely distributed than wrestling. The oldest representations date back 15,000-20,000 years. Wrestling first appeared in the ancient Olympic Games in 708 BCE and remains in the modern Olympics."
+    },
+    {
+      "id": null,
+      "question": "Golf balls were originally smooth \u2014 but players noticed that old, dented balls flew farther than new ones. What is the technical term for the dimples now deliberately engineered into every golf ball?",
+      "stored_answer": "Dimples",
+      "verdict": "correct",
+      "notes": "Wikipedia and Smithsonian confirm that golfers discovered scuffed balls traveled farther, leading to deliberate engineering of dimples. The word 'dimples' is both the colloquial and technical term used universally. William Taylor patented the dimpled cover in 1905. The question is slightly misleading in asking for a 'technical term' when 'dimples' is also the common term, but it is correct.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Golf_ball",
+      "source_excerpt": "Golfers discovered that scuffed golf balls traveled farther than new ones. Dimples were deliberately added after physicists confirmed that air flows more freely over these balls, minimizing drag and increasing lift."
+    },
+    {
+      "id": null,
+      "question": "The marathon distance of 26.2 miles was standardised in 1908 at the London Olympics for a surprisingly mundane reason. What determined the exact distance?",
+      "stored_answer": "The distance from Windsor Castle to the Olympic stadium finish line (so the Royal Family could watch from the nursery window)",
+      "verdict": "correct",
+      "notes": "Wikipedia and Britannica confirm the 1908 London Olympics marathon started at Windsor Castle so the Royal Family could watch, and finished at the Olympic stadium. Princess Mary requested the start be beneath the windows of the Royal Nursery. The distance of 26 miles 385 yards became the standard in 1921.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Athletics_at_the_1908_Summer_Olympics_%E2%80%93_Men's_marathon",
+      "source_excerpt": "The 1908 marathon started at Windsor Castle, with the distance changed so the start would be beneath the windows of the Royal Nursery at Princess Mary's request. The 26 miles 385 yards distance became the standard in 1921."
+    },
+    {
+      "id": null,
+      "question": "Chess has been played for around 1,500 years. In all those centuries, roughly how many unique games are theoretically possible \u2014 more than the number of atoms in the observable universe, about the same, or far fewer?",
+      "stored_answer": "More than the number of atoms in the observable universe",
+      "verdict": "correct",
+      "notes": "Wikipedia confirms the Shannon number estimates the game-tree complexity of chess at ~10^120, vastly exceeding the estimated ~10^80 atoms in the observable universe. The comparison (10^120 vs 10^80) is a difference of 40 orders of magnitude.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Shannon_number",
+      "source_excerpt": "The Shannon number is a conservative lower bound of the game-tree complexity of chess of 10^120. This vastly exceeds the estimated number of atoms in the observable universe (~10^80)."
+    },
+    {
+      "id": null,
+      "question": "Cricket was the first team sport to be played professionally, predating professional football, baseball, and basketball. In which century did paid professional cricket begin?",
+      "stored_answer": "The 18th century (1700s)",
+      "verdict": "needs_review",
+      "notes": "Wikipedia confirms professional cricketers were being paid match fees in the 1720s, with wealthy patrons employing players. However, the claim that cricket was 'the first team sport to be played professionally' is harder to verify definitively. Some forms of professional sport (e.g., chariot racing, gladiatorial combat in teams) existed in antiquity. The 18th century date for professional cricket is correct, but the premise of the question (first professional team sport) could be debated.",
+      "suggested_fix": "Consider qualifying as 'one of the first modern team sports to be played professionally' rather than 'the first team sport.'",
+      "source_url": "https://en.wikipedia.org/wiki/History_of_cricket_to_1725",
+      "source_excerpt": "A Sussex team of the 1720s included professionals like Thomas Waymark who were paid match fees. Professionals were employed by wealthy patrons as grooms or gamekeepers."
+    },
+    {
+      "id": null,
+      "question": "Before the invention of recorded music, how did a composer ensure their new symphony would be heard by people across Europe \u2014 given that musicians in each city would need to play it from scratch?",
+      "stored_answer": "By publishing and selling printed sheet music",
+      "verdict": "correct",
+      "notes": "Wikipedia confirms that before audio recording, music spread geographically through the publication and sale of printed sheet music. Breitkopf & Hartel, founded 1719, was the world's oldest music publisher and distributed compositions across Europe. Sheet music sales surpassed disc sales until 1925.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/History_of_music_publishing",
+      "source_excerpt": "Before audio recording, music spread geographically through the publication and sale of printed sheet music. Breitkopf & Hartel, founded 1719 in Leipzig, distributed compositions of Beethoven, Haydn, Mozart, and others across Europe."
+    },
+    {
+      "id": null,
+      "question": "Beethoven composed some of his most celebrated works, including his Ninth Symphony, after becoming completely deaf. What method did he use to 'hear' the notes while composing?",
+      "stored_answer": "He felt vibrations through the piano by sawing off the legs and pressing his jaw or a stick against it",
+      "verdict": "needs_review",
+      "notes": "Wikipedia confirms Beethoven used bone conduction, specifically a wooden stick between his teeth pressed against the piano to feel vibrations. However, the specific claim about 'sawing off the legs' of his piano is debated. Wikipedia mentions he was 'rumored to use bone conduction' with a rod. Some sources note that 'tales seem to be imaginary' regarding some specific methods. The core answer (bone conduction/vibrations) is correct, but the specific details about sawing off piano legs may be apocryphal.",
+      "suggested_fix": "Consider simplifying to 'He felt vibrations through the piano by pressing his jaw or a wooden stick against it' and removing the disputed 'sawing off the legs' detail, or marking it as 'reportedly.'",
+      "source_url": "https://en.wikipedia.org/wiki/Bone_conduction",
+      "source_excerpt": "Beethoven was rumored to use bone conduction after losing most of his hearing by placing one end of a rod in his mouth and resting the other end on the rim of his piano to feel vibrations."
+    },
+    {
+      "id": null,
+      "question": "The electric guitar was invented in the 1930s to solve a specific problem that acoustic guitarists faced. What was the problem?",
+      "stored_answer": "They couldn't be heard over brass instruments in big bands",
+      "verdict": "correct",
+      "notes": "Wikipedia, Britannica, and Smithsonian confirm the electric guitar was developed in the early 1930s primarily because acoustic guitars were inaudible alongside the loud brass and woodwind sections of big bands. Jazz guitarists sought amplification to be heard in ensemble settings.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Electric_guitar",
+      "source_excerpt": "The demand for amplified guitars began during the big band era; as orchestras increased in size, guitar players realized the necessity of amplification. Electronic amplification made it possible for the guitar to be heard among big band instruments."
+    },
+    {
+      "id": null,
+      "question": "In competitive swimming, lane lines (the floating dividers between swimmers) serve a purpose beyond just separating lanes. What is their secondary, physics-based function?",
+      "stored_answer": "They absorb wave energy to reduce turbulence from other swimmers",
+      "verdict": "correct",
+      "notes": "Wikipedia and Britannica confirm modern competitive swimming lane lines are designed with features that trap and dissipate wave energy, reducing turbulence that would affect competitors. Lane design innovations from the 1970s have significantly reduced turbulence in competitive pools.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Swimming_(sport)",
+      "source_excerpt": "Modern pool designs include energy absorbing racing lane lines designed to reduce turbulence, along with wave-killing gutters. Lane design created in the early 1970s has cut down turbulence in water."
+    },
+    {
+      "id": null,
+      "question": "Musical notes A, B, C, D, E, F, G are used across most of the world. Yet in Germany, the Netherlands, and several Nordic countries, one note is named something completely different. Which note, and what is it called there?",
+      "stored_answer": "B is called H in German-speaking countries",
+      "verdict": "correct",
+      "notes": "Wikipedia confirms that in Germany, Czech Republic, Slovakia, Poland, Hungary, Norway, Denmark, Serbia, Croatia, Slovenia, Finland, and Iceland, the note B natural is called H, while B flat is called B. This stems from a medieval scribal convention and enabled the famous BACH motif (B-flat, A, C, B-natural).",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/B_(musical_note)",
+      "source_excerpt": "In German music notation, H is used instead of B natural, and B instead of B flat. This stems from a medieval scribal convention and enabled Bach to sign compositions using the notes B-A-C-H."
+    },
+    {
+      "id": null,
+      "question": "The Tour de France is one of sport's most gruelling endurance events. In total distance ridden over three weeks, is it roughly equal to the width of the English Channel, the length of France from north to south, or the distance from Paris to New York?",
+      "stored_answer": "The distance from Paris to New York",
+      "verdict": "needs_fix",
+      "notes": "The Tour de France covers approximately 3,400 km (varies yearly from ~3,300-3,600 km). The straight-line distance from Paris to New York is approximately 5,840 km. The Tour is only about 58% of the Paris-to-New York distance, not 'roughly equal.' The length of France from north to south is ~950 km. The English Channel is ~34 km wide. While 'Paris to New York' is the closest of the three options in order of magnitude, saying the Tour is 'roughly equal' to Paris-New York is misleading when it is nearly 2,400 km short. The question's source_excerpt acknowledges this discrepancy ('roughly equivalent in distance to cycling 60% of the way across the Atlantic').",
+      "suggested_fix": "The correct answer should be reconsidered. The Tour (~3,400 km) is closer to ~3.6x the length of France (~950 km) than to Paris-New York (~5,840 km). However, none of the three options is a great match. Consider rephrasing the question or changing the comparison options. One fix: replace 'Paris to New York' with 'Paris to Moscow' (~2,500 km straight line) or 'London to Cairo' (~3,500 km), or explicitly state 'closest to' rather than 'roughly equal.'",
+      "source_url": "https://en.wikipedia.org/wiki/Tour_de_France",
+      "source_excerpt": "A typical Tour de France covers approximately 3,400 km over 21 stages. The straight-line distance from Paris to New York is about 5,840 km, making the Tour roughly 58% of that distance."
+    },
+    {
+      "id": null,
+      "question": "Stradivarius violins made in 17th-century Italy are still considered the finest instruments ever made, selling for millions of pounds each. Scientists have proposed several theories for their exceptional sound. Which factor has been most supported by recent research?",
+      "stored_answer": "The density and structure of the wood, which grew during an unusually cold period (the Little Ice Age)",
+      "verdict": "needs_review",
+      "notes": "The Little Ice Age wood density theory has some support (Nature 2006 paper), but is not the clear consensus 'most supported' answer. Experts like Stewart Pollens (Met Museum) dispute it, noting varied wood densities in Stradivari instruments. Other competing theories (chemical treatments, varnish composition) also have strong research support. The question overstates scientific certainty. Multiple factors likely contribute, and the field is still debated.",
+      "suggested_fix": "Rephrase to 'Which is one of the leading theories?' or 'Which popular theory connects climate history to the instruments?' to avoid implying a settled consensus. The answer is a real hypothesis with some research support, just not clearly the 'most supported.'",
+      "source_url": "https://en.wikipedia.org/wiki/Stradivarius",
+      "source_excerpt": "Scientists hypothesized that cooler climate of the Little Ice Age may have produced denser wood. However, experts dispute this, with some finding no significant density differences between modern and classical violins. Chemical treatments and other factors also play a role."
+    },
+    {
+      "id": null,
+      "question": "The Olympic motto is 'Citius, Altius, Fortius' \u2014 Latin for 'Faster, Higher, Stronger.' In 2021, a fourth word was officially added to the motto. What was it?",
+      "stored_answer": "Communiter (Together)",
+      "verdict": "correct",
+      "notes": "Wikipedia confirms the IOC approved adding 'Communiter' (Together) to the Olympic motto in 2021. The full motto is now 'Citius, Altius, Fortius - Communiter.'",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Olympic_symbols",
+      "source_excerpt": "The Olympic motto now reads 'Citius, Altius, Fortius - Communiter', Latin for 'Faster, Higher, Stronger - Together'. The IOC approved the addition in 2021."
+    },
+    {
+      "id": null,
+      "question": "Rock and pop artists frequently cite an unexpected classical composer as a major influence on modern chord progressions, vocal harmonies, and song structure. Which classical composer is most often cited as the hidden architect of popular music?",
+      "stored_answer": "Johann Sebastian Bach",
+      "verdict": "needs_review",
+      "notes": "While Bach's influence on popular music through harmony and counterpoint is well-documented (the Beatles, baroque rock), calling him the 'most often cited' is a subjective claim that is hard to verify definitively. Wikipedia shows Bach's influence through baroque pop and McCartney's interest, but other composers (Beethoven, Mozart) are also frequently cited. The claim is plausible but not verifiable as a factual 'most.'",
+      "suggested_fix": "Consider softening from 'most often cited' to 'frequently cited' or 'widely regarded as one of the most influential classical composers on popular music.'",
+      "source_url": "https://en.wikipedia.org/wiki/Baroque_pop",
+      "source_excerpt": "Paul McCartney's interest in Bach was a significant influence on the Beatles' musical development. Various groups incorporated baroque and classical instrumentation inspired by Bach's harmonic techniques."
+    },
+    {
+      "id": null,
+      "question": "At the 1904 St. Louis Olympics, marathon runner Fred Lorz was initially declared the winner \u2014 then disqualified. What had he done?",
+      "stored_answer": "He had ridden in a car for 11 miles of the course",
+      "verdict": "correct",
+      "notes": "Wikipedia and Smithsonian confirm Frederick Lorz dropped out after nine miles, hitched a ride in a car for 11 miles, then re-entered the race when the car broke down. He was photographed with Alice Roosevelt before being exposed and disqualified. He was banned for life (commuted to six months) and later won the 1905 Boston Marathon.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Frederick_Lorz",
+      "source_excerpt": "Frederick Lorz dropped out of the 1904 Olympic marathon after nine miles, hitched a ride in a car for 11 miles, then re-entered the race on foot. He was initially declared the winner before being disqualified."
+    }
+  ]
+}

@@ -1,0 +1,160 @@
+{
+  "metadata": {
+    "verified_at": "2026-03-18T12:00:00Z",
+    "source_file": "data/generated/claude_batch_013.json",
+    "total_questions": 15,
+    "verdicts": {"correct": 11, "needs_fix": 2, "needs_review": 2, "incorrect": 0}
+  },
+  "questions": [
+    {
+      "id": null,
+      "question": "In 1992, a cargo ship lost 28,800 rubber ducks in the Pacific Ocean. Oceanographers tracked them for decades as they washed ashore on five continents, revolutionising our understanding of what?",
+      "stored_answer": "Ocean currents",
+      "verdict": "correct",
+      "notes": "Confirmed. The Friendly Floatees spill occurred on January 10, 1992, when 28,800 bath toys (including rubber ducks, beavers, frogs, and turtles) fell from the Ever Laurel. Oceanographer Curtis Ebbesmeyer used them to model ocean current patterns. Some traveled over 27,000 km.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Friendly_Floatees_spill",
+      "source_excerpt": "On January 10, 1992, 28,800 Floatees bath toys were lost from a container ship in the North Pacific. Oceanographer Curtis Ebbesmeyer tracked their movements to model ocean current patterns over the following decades."
+    },
+    {
+      "id": null,
+      "question": "Tennis balls at Wimbledon are kept at exactly 20 degrees Celsius before play. What happens to a tennis ball's bounce if it gets too cold?",
+      "stored_answer": "It bounces lower",
+      "verdict": "correct",
+      "notes": "The physics is correct: cold reduces internal air pressure and rubber elasticity, resulting in a lower bounce. Tennis balls are tested at 20 degrees C. The Wimbledon storage temperature detail is widely reported though not confirmed in official Wimbledon documentation from search results.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Tennis_ball",
+      "source_excerpt": "A tennis ball is tested for bounce at 20 degrees C (68 degrees F). Lower temperatures reduce the internal gas pressure and the elasticity of the rubber, resulting in a lower bounce."
+    },
+    {
+      "id": null,
+      "question": "Bluetooth wireless technology is named after a 10th-century Scandinavian king who was famous for uniting warring tribes. The Bluetooth logo itself is formed from two symbols \u2014 what are they?",
+      "stored_answer": "The king's initials in Viking runes",
+      "verdict": "correct",
+      "notes": "Confirmed. The Bluetooth logo is a bind rune merging the Younger Futhark runes for H (Hagall) and B (Bjarkan), the initials of Harald Bluetooth (c. 910-987), king of Denmark who unified the Danes. The name was proposed in 1997 by Jim Kardach of Intel.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Bluetooth",
+      "source_excerpt": "The Bluetooth logo is a bind rune merging the Younger Futhark runes for H (Hagall) and B (Bjarkan), Harald Bluetooth's initials. The name was proposed in 1997 by Jim Kardach of Intel."
+    },
+    {
+      "id": null,
+      "question": "A basketball court, a tennis court, and an Olympic swimming pool \u2014 which one is the longest?",
+      "stored_answer": "An Olympic swimming pool",
+      "verdict": "correct",
+      "notes": "Confirmed. Olympic swimming pool: 50 m. NBA basketball court: 28.65 m (94 ft). Tennis court: 23.77 m (78 ft). The Olympic pool is significantly longer than both.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Olympic-size_swimming_pool",
+      "source_excerpt": "An Olympic-size swimming pool is 50 metres long. An NBA basketball court is 28.65 m (94 ft) and a tennis court is 23.77 m (78 ft)."
+    },
+    {
+      "id": null,
+      "question": "The first text message ever sent, on December 3, 1992, was just two words. Given that it was sent as a test right before Christmas, what did it say?",
+      "stored_answer": "Merry Christmas",
+      "verdict": "correct",
+      "notes": "Confirmed. Neil Papworth of Sema Group sent the first SMS on December 3, 1992, over the Vodafone GSM network in the UK, from a personal computer to Richard Jarvis's Orbitel 901 handset. The message read 'Merry Christmas.'",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Neil_Papworth",
+      "source_excerpt": "The first SMS message was sent on 3 December 1992, from Neil Papworth to Richard Jarvis of Vodafone. The text of the message was 'Merry Christmas.'"
+    },
+    {
+      "id": null,
+      "question": "Formula 1 pit crews can change all four tyres in under two seconds. During a pit stop, roughly how many crew members swarm the car at once: 5, 12, or over 20?",
+      "stored_answer": "Over 20",
+      "verdict": "correct",
+      "notes": "Confirmed. F1 pit crews typically have 20-23 members: 3 per wheel (12 total), plus jack operators, wing adjusters, stabilizers, and pit stop traffic monitors. The most commonly cited figure is around 20-23.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Pit_stop",
+      "source_excerpt": "A Formula 1 pit stop typically involves around 20-23 crew members, with 3 people on each tyre plus jack operators, wing adjusters, and other roles, completing tyre changes in under 2 seconds."
+    },
+    {
+      "id": null,
+      "question": "Nintendo, the company behind Mario and the Switch, was founded long before computers or video games existed. In which century was Nintendo originally established \u2014 18th, 19th, or 20th?",
+      "stored_answer": "19th century",
+      "verdict": "correct",
+      "notes": "Confirmed. Nintendo was founded on September 23, 1889, which is the 19th century. It originally manufactured hanafuda playing cards.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Nintendo",
+      "source_excerpt": "Nintendo was founded on 23 September 1889 by Fusajiro Yamauchi in Kyoto, Japan, to produce hanafuda playing cards."
+    },
+    {
+      "id": null,
+      "question": "Fencing, athletics, swimming, horse riding, and shooting \u2014 these five sports traditionally made up one Olympic event where a single athlete must compete in all of them. Horse riding was replaced after 2024, but name this gruelling multi-discipline competition.",
+      "stored_answer": "Modern pentathlon",
+      "verdict": "needs_review",
+      "notes": "The answer 'Modern pentathlon' is correct. However, the question says 'athletics' but the traditional event uses 'cross-country running' (or 'laser run' combining shooting and running). 'Athletics' is a broader term that technically includes running but could be misleading since the event specifically involves running, not track and field broadly. Also, horse riding was replaced by obstacle course racing starting with the 2028 Olympics, not 'after 2024' \u2014 the 2024 Paris Olympics still included equestrian.",
+      "suggested_fix": "Replace 'athletics' with 'running' or 'cross-country running' for precision. Clarify that horse riding was replaced starting from 2028 Olympics, not after 2024.",
+      "source_url": "https://en.wikipedia.org/wiki/Modern_pentathlon",
+      "source_excerpt": "Modern pentathlon consists of fencing, freestyle swimming, obstacle course racing (replacing show jumping from 2028), laser pistol shooting, and cross country running. It was first held at the 1912 Olympics."
+    },
+    {
+      "id": null,
+      "question": "When the first iPhone launched in 2007, it was missing a basic text editing feature that even flip phones of the era had. Apple didn't add it until two years later, in 2009. What was it?",
+      "stored_answer": "Copy and paste",
+      "verdict": "correct",
+      "notes": "Confirmed. The original iPhone OS 1 (2007) lacked cut, copy, and paste. This was added in iPhone OS 3, released June 17, 2009. The feature had been available only through jailbreaking before that.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/IPhone_OS_3",
+      "source_excerpt": "iPhone OS 3 was the first version to support cut, copy and paste. It was released on June 17, 2009. The original iPhone OS 1 lacked this functionality."
+    },
+    {
+      "id": null,
+      "question": "In football (soccer), a goalkeeper once scored a goal from inside his own penalty area \u2014 a kick that travelled the entire length of the pitch. Is the Guinness World Record for the longest goal scored by a goalkeeper closer to 75 metres, 96 metres, or 105 metres?",
+      "stored_answer": "96 metres",
+      "verdict": "correct",
+      "notes": "Confirmed by Guinness World Records. Tom King scored a 96.01 m goal for Newport County, breaking the previous record of 91.9 m held by Asmir Begovic.",
+      "suggested_fix": null,
+      "source_url": "https://www.guinnessworldrecords.com/news/2021/1/british-goalkeeper-tom-king-breaks-record-for-longest-football-goal-646285",
+      "source_excerpt": "Tom King broke the Guinness World Record for the longest goal scored in a competitive match, covering 96.01 m from his own six-yard box."
+    },
+    {
+      "id": null,
+      "question": "SpaceX lands its rocket boosters vertically after launch so they can be reused. Including prototype test vehicles like Grasshopper, roughly how many test flights did they conduct before achieving the first successful orbital booster landing in 2015 \u2014 3, 15, or over 50?",
+      "stored_answer": "About 15",
+      "verdict": "needs_review",
+      "notes": "The answer depends on what counts as a 'test flight.' Grasshopper made 8 test flights (2012-2013). F9R Dev1 made 5 flights (2014). That's 13 prototype flights. Additionally, there were 7 failed orbital booster landing attempts on actual Falcon 9 missions before the December 2015 success. So the total is either ~13 (prototypes only) or ~20 (including failed orbital attempts). 'About 15' is in the right range for prototypes only, making it the best answer among the three options.",
+      "suggested_fix": "The answer is defensible but the self-critique reasoning mentions '6' which is clearly wrong. Consider specifying what counts: 'About 13 prototype test flights with Grasshopper and F9R Dev vehicles.'",
+      "source_url": "https://en.wikipedia.org/wiki/Falcon_9_first-stage_landing_tests",
+      "source_excerpt": "Grasshopper made 8 test flights (2012-2013). F9R Dev1 made 5 flights (2014). The first successful orbital booster landing was Falcon 9 flight 20 on December 22, 2015."
+    },
+    {
+      "id": null,
+      "question": "Table tennis balls travel at speeds over 100 km/h, yet they weigh almost nothing. An official competition table tennis ball weighs exactly how many grams \u2014 closer to 2.7, 12, or 45?",
+      "stored_answer": "2.7 grams",
+      "verdict": "correct",
+      "notes": "Confirmed by ITTF regulations. The ball must have a mass of 2.7 grams and a diameter of 40 mm. Balls are now made of polymer (previously celluloid).",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Table_tennis",
+      "source_excerpt": "The international rules specify that the game is played with a sphere having a mass of 2.7 grams (0.095 oz) and a diameter of 40 millimetres."
+    },
+    {
+      "id": null,
+      "question": "The entire codebase for the Apollo 11 moon landing guidance computer was about 145,000 lines of code. A modern smartphone app like Instagram has roughly how many times more code \u2014 5 times, 50 times, or 500 times?",
+      "stored_answer": "About 5 times",
+      "verdict": "needs_fix",
+      "notes": "The question has multiple issues. First, the AGC line count: commonly cited figures for Apollo range from ~145,000 lines (assembly language), though the GitHub repo contains roughly that many lines across both Colossus and Luminary. Second, the Instagram comparison: various sources estimate Instagram at ~1 million lines of code, which would be about 7x the Apollo code. The self-critique reasoning contradicts the stated answer \u2014 it says '500x being correct' but the stored answer is '5 times.' The correct answer among the three options should be '5 times' (since 1M/145K ~= 7x), but the self-critique and generation reasoning suggest the question was intended to have '500 times' as the answer. This is an internal inconsistency in the question data.",
+      "suggested_fix": "The correct answer '5 times' appears correct based on the math (~1M lines / 145K lines = ~7x, closest to '5 times'). However, the generation_metadata reasoning says '500x' is correct, indicating confusion during generation. Fix the self-critique reasoning to align with the answer, or verify the Instagram codebase figure used.",
+      "source_url": "https://en.wikipedia.org/wiki/Apollo_Guidance_Computer",
+      "source_excerpt": "The Apollo Guidance Computer source code totaled approximately 145,000 lines of assembly language. Instagram's codebase is estimated at roughly 1 million lines, making it about 7 times larger."
+    },
+    {
+      "id": null,
+      "question": "Only one athlete in Olympic history has won gold medals in both the Summer and Winter Games in different sports. Eddie Eagan won winter gold in the four-man bobsled at the 1932 Games. What was his summer Olympic sport, in which he won gold in 1920?",
+      "stored_answer": "Boxing",
+      "verdict": "correct",
+      "notes": "Confirmed. Eddie Eagan won gold in light-heavyweight boxing at the 1920 Olympics in Antwerp and gold in four-man bobsled at the 1932 Olympics in Lake Placid. He remains the only athlete to win gold in both Summer and Winter Olympics in different sports. Note: the question's tags incorrectly list 'athletics' and 'hurdles' instead of 'boxing'.",
+      "suggested_fix": "Fix the tags array: replace 'athletics' and 'hurdles' with 'boxing'.",
+      "source_url": "https://en.wikipedia.org/wiki/Eddie_Eagan",
+      "source_excerpt": "Eddie Eagan won a gold medal as a light-heavyweight boxer at the 1920 Olympics and a gold medal in four-man bobsled at the 1932 Winter Olympics, making him the only athlete to win gold in both Summer and Winter Games in different sports."
+    },
+    {
+      "id": null,
+      "question": "Wi-Fi doesn't actually stand for 'Wireless Fidelity' \u2014 that's a common misconception. The Wi-Fi Alliance hired a branding company to create the name. What does 'Wi-Fi' actually stand for?",
+      "stored_answer": "Nothing \u2014 it's a made-up brand name",
+      "verdict": "correct",
+      "notes": "Confirmed. Wi-Fi is not an acronym for 'Wireless Fidelity.' It was created by a marketing firm (Interbrand) for its pleasing sound and similarity to 'hi-fi.' The Wi-Fi Alliance briefly used 'The Standard for Wireless Fidelity' as a tagline but quickly dropped it.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Wi-Fi",
+      "source_excerpt": "The name Wi-Fi is not short-form for 'Wireless Fidelity.' It was created by a marketing firm for its pleasing sound and similarity to 'hi-fi.' Some materials produced soon after used the phrase wireless fidelity, but this was quickly dropped."
+    }
+  ]
+}

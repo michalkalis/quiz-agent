@@ -1,0 +1,774 @@
+{
+  "questions": [
+    {
+      "question": "In 1992, a cargo ship lost 28,800 rubber ducks in the Pacific Ocean. Oceanographers tracked them for decades as they washed ashore on five continents, revolutionising our understanding of what?",
+      "type": "text",
+      "correct_answer": "Ocean currents",
+      "possible_answers": null,
+      "alternative_answers": [
+        "ocean currents",
+        "sea currents",
+        "ocean circulation",
+        "global ocean currents",
+        "water currents",
+        "ocean current patterns"
+      ],
+      "topic": "Technology",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": [
+        "oceanography",
+        "rubber-ducks",
+        "science",
+        "ocean-currents"
+      ],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Friendly_Floatees_spill",
+      "source_excerpt": "On January 10, 1992, 28,800 Floatees bath toys were lost from a container ship in the North Pacific. Oceanographer Curtis Ebbesmeyer tracked their movements to model ocean current patterns over the following decades.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Surprising Connection",
+          "why_interesting": "A toy duck disaster accidentally becoming one of the most important experiments in oceanography is a delightful narrative irony",
+          "universal_appeal": "Rubber ducks and oceans are universally understood. The story is inherently funny and memorable.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 9.0,
+          "reasoning": "Strong narrative setup with a delightful origin story. The answer is gettable through reasoning \u2014 what would tracking floating objects teach us? The rubber duck angle makes it memorable."
+        },
+        "ai_score": 9.0
+      }
+    },
+    {
+      "question": "Tennis balls at Wimbledon are kept at exactly 20 degrees Celsius before play. What happens to a tennis ball's bounce if it gets too cold?",
+      "type": "text",
+      "correct_answer": "It bounces lower",
+      "possible_answers": null,
+      "alternative_answers": [
+        "it bounces less",
+        "the bounce is lower",
+        "it doesn't bounce as high",
+        "reduced bounce",
+        "lower bounce",
+        "less bounce"
+      ],
+      "topic": "Sports",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": [
+        "tennis",
+        "wimbledon",
+        "physics",
+        "temperature"
+      ],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Tennis_ball",
+      "source_excerpt": "A tennis ball is tested for bounce at 20 degrees C (68 degrees F). Lower temperatures reduce the internal gas pressure and the elasticity of the rubber, resulting in a lower bounce.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Hidden Property",
+          "why_interesting": "Reveals the obsessive precision behind elite sport \u2014 temperature-controlled balls is a detail most fans never consider, and the physics is intuitive once explained",
+          "universal_appeal": "Tennis and Wimbledon are globally known. Temperature affecting bounce is relatable physics.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.5,
+          "reasoning": "The temperature-control detail is surprising, and players can reason toward the answer using basic physics intuition (cold = less elastic = lower bounce). Good engagement path."
+        },
+        "ai_score": 8.5
+      }
+    },
+    {
+      "question": "Bluetooth wireless technology is named after a 10th-century Scandinavian king who was famous for uniting warring tribes. The Bluetooth logo itself is formed from two symbols \u2014 what are they?",
+      "type": "text",
+      "correct_answer": "The king's initials in Viking runes",
+      "possible_answers": null,
+      "alternative_answers": [
+        "his initials in runes",
+        "runic initials",
+        "Viking runes",
+        "Norse runes of his initials",
+        "Harald Bluetooth's runic initials",
+        "the runes for H and B"
+      ],
+      "topic": "Technology",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": [
+        "bluetooth",
+        "viking",
+        "technology-history",
+        "logos"
+      ],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Bluetooth",
+      "source_excerpt": "The Bluetooth logo is a bind rune merging the Younger Futhark runes for H (Hagall) and B (Bjarkan), Harald Bluetooth's initials. The name was proposed in 1997 by Jim Kardach of Intel.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Origin Story / Reverse Engineer",
+          "why_interesting": "A modern wireless technology named after a Viking king, with the logo secretly being runic initials, is an astonishing hidden-in-plain-sight connection between ancient and modern",
+          "universal_appeal": "Bluetooth is used globally by billions of people. Vikings are universally known cultural icons.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 10,
+          "overall_score": 9.0,
+          "reasoning": "Players can reason: if it's named after a king, the logo might relate to him \u2014 maybe his initials or crest? The runic connection creates a wonderful 'hidden in plain sight' revelation that everyone with a phone can appreciate."
+        },
+        "ai_score": 9.0
+      }
+    },
+    {
+      "question": "A basketball court, a tennis court, and an Olympic swimming pool \u2014 which one is the longest?",
+      "type": "text",
+      "correct_answer": "An Olympic swimming pool",
+      "possible_answers": null,
+      "alternative_answers": [
+        "Olympic swimming pool",
+        "swimming pool",
+        "the swimming pool",
+        "the Olympic pool",
+        "pool"
+      ],
+      "topic": "Sports",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": [
+        "basketball",
+        "tennis",
+        "swimming",
+        "dimensions",
+        "comparison"
+      ],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Olympic-size_swimming_pool",
+      "source_excerpt": "An Olympic-size swimming pool is 50 metres long. An NBA basketball court is 28.65 m (94 ft) and a tennis court is 23.77 m (78 ft).",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Comparison Bet",
+          "why_interesting": "Most people visualise these spaces regularly but have never compared their actual dimensions. A basketball court (28m) vs tennis court (23.8m) vs Olympic pool (50m) \u2014 the pool wins by a surprising margin",
+          "universal_appeal": "All three are globally known sporting venues. No cultural specificity.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "clarity": 10,
+          "factual_accuracy": 10,
+          "overall_score": 8.8,
+          "reasoning": "Clean three-way comparison that forces spatial reasoning. Many people assume a basketball court is longer than a pool because they think of pools as 25m (standard) not 50m (Olympic). The clarity is excellent \u2014 no ambiguity."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "The first text message ever sent, on December 3, 1992, was just two words. Given that it was sent as a test right before Christmas, what did it say?",
+      "type": "text",
+      "correct_answer": "Merry Christmas",
+      "possible_answers": null,
+      "alternative_answers": [
+        "merry christmas",
+        "Merry Xmas",
+        "merry xmas"
+      ],
+      "topic": "Technology",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": [
+        "sms",
+        "mobile-phones",
+        "communication-history",
+        "first"
+      ],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Neil_Papworth",
+      "source_excerpt": "The first SMS message was sent on 3 December 1992, from Neil Papworth of Sema Group to Richard Jarvis of Vodafone. The text of the message was 'Merry Christmas.'",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Historical Quirk / Origin Story",
+          "why_interesting": "The first-ever text message being something so mundane and seasonal \u2014 rather than a grand proclamation like 'What hath God wrought' \u2014 is charming and humanising",
+          "universal_appeal": "Text messaging is universal. Christmas is widely known even in non-Christian cultures.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 8,
+          "clever_framing": 9,
+          "educational_value": 8,
+          "clarity": 9,
+          "factual_accuracy": 10,
+          "overall_score": 8.7,
+          "reasoning": "The 'right before Christmas' clue creates a strong reasoning path \u2014 players can deduce the answer if they think about what someone might text as a test in December. The contrast between the historic moment and the casual message is delightful."
+        },
+        "ai_score": 8.7
+      }
+    },
+    {
+      "question": "Formula 1 pit crews can change all four tyres in under two seconds. During a pit stop, roughly how many crew members swarm the car at once: 5, 12, or over 20?",
+      "type": "text",
+      "correct_answer": "Over 20",
+      "possible_answers": null,
+      "alternative_answers": [
+        "more than 20",
+        "about 20",
+        "20",
+        "around 20",
+        "over twenty",
+        "20 or more"
+      ],
+      "topic": "Sports",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": [
+        "formula-1",
+        "motorsport",
+        "pit-stop",
+        "teamwork"
+      ],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Pit_stop",
+      "source_excerpt": "A Formula 1 pit stop typically involves around 20-23 crew members, with 3 people on each tyre plus jack operators, wing adjusters, and other roles.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Estimation Challenge / Scale Surprise",
+          "why_interesting": "The sheer number of people needed for a sub-2-second tyre change is astonishing. Each wheel gets 3 people, plus jack operators, stabilisers, and lollipop person \u2014 it's a choreographed swarm",
+          "universal_appeal": "F1 is one of the most-watched sports globally. Pit stops are iconic moments.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 8,
+          "clever_framing": 9,
+          "educational_value": 8,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.5,
+          "reasoning": "Good estimation challenge. Players can reason: 4 wheels, each needs someone to remove and attach \u2014 that's already 8, plus jacks... so maybe 12? The answer (over 20) is the extreme option and genuinely surprising."
+        },
+        "ai_score": 8.5
+      }
+    },
+    {
+      "question": "Nintendo, the company behind Mario and the Switch, was founded long before computers or video games existed. In which century was Nintendo originally established \u2014 18th, 19th, or 20th?",
+      "type": "text",
+      "correct_answer": "19th century",
+      "possible_answers": null,
+      "alternative_answers": [
+        "the 19th century",
+        "1800s",
+        "the 1800s",
+        "19th",
+        "1889"
+      ],
+      "topic": "Technology",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": [
+        "nintendo",
+        "gaming-history",
+        "japan",
+        "playing-cards"
+      ],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Nintendo",
+      "source_excerpt": "Nintendo was founded on 23 September 1889 by Fusajiro Yamauchi in Kyoto, Japan, to produce hanafuda playing cards.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Historical Quirk / Estimation Challenge",
+          "why_interesting": "Nintendo being founded in 1889 \u2014 originally as a playing card company \u2014 is a startling disconnect between the modern gaming giant and its 19th-century origins",
+          "universal_appeal": "Nintendo is one of the most recognised brands worldwide. Video gaming transcends cultures.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "clarity": 10,
+          "factual_accuracy": 10,
+          "overall_score": 9.2,
+          "reasoning": "The three-century options make it a clean estimation challenge. The 19th century answer is genuinely surprising \u2014 most people assume it was founded in the 1960s or 70s. The playing card origin story adds depth."
+        },
+        "ai_score": 9.2
+      }
+    },
+    {
+      "question": "Fencing, athletics, swimming, horse riding, and shooting \u2014 these five sports traditionally made up one Olympic event where a single athlete must compete in all of them. Horse riding was replaced after 2024, but name this gruelling multi-discipline competition.",
+      "type": "text",
+      "correct_answer": "Modern pentathlon",
+      "possible_answers": null,
+      "alternative_answers": [
+        "pentathlon",
+        "the modern pentathlon",
+        "the pentathlon"
+      ],
+      "topic": "Sports",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": [
+        "olympics",
+        "pentathlon",
+        "multi-sport",
+        "ancient-origins"
+      ],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Modern_pentathlon",
+      "source_excerpt": "Modern pentathlon consists of fencing, freestyle swimming, obstacle course racing (replacing show jumping from 2028), laser pistol shooting, and cross country running. It was first held at the 1912 Olympics.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Reverse Engineer",
+          "why_interesting": "Listing five wildly different sports and asking what connects them is an engaging puzzle. The pentathlon is often overlooked but has fascinating military origins \u2014 it simulates a soldier's mission behind enemy lines",
+          "universal_appeal": "Olympics are universally known. The five sports listed are individually well-known globally.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "clarity": 9,
+          "factual_accuracy": 10,
+          "overall_score": 8.7,
+          "reasoning": "The clue structure is strong \u2014 listing the five sports gives players a reasoning path. 'Penta' means five, so anyone who spots that connection can work toward the answer. The diversity of the five sports makes the combination surprising."
+        },
+        "ai_score": 8.7
+      }
+    },
+    {
+      "question": "When the first iPhone launched in 2007, it was missing a basic text editing feature that even flip phones of the era had. Apple didn't add it until two years later, in 2009. What was it?",
+      "type": "text",
+      "correct_answer": "Copy and paste",
+      "possible_answers": null,
+      "alternative_answers": [
+        "copy paste",
+        "copy & paste",
+        "copying and pasting",
+        "cut and paste"
+      ],
+      "topic": "Technology",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": [
+        "iphone",
+        "apple",
+        "smartphone-history",
+        "missing-features"
+      ],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/IPhone_OS_3",
+      "source_excerpt": "iPhone OS 3 was the first version to support cut, copy and paste. It was released on June 17, 2009. The original iPhone OS 1 lacked this functionality.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Counter-intuitive Truth / Historical Quirk",
+          "why_interesting": "The most revolutionary phone in history launching without something as basic as copy-paste is a humbling reminder that even Apple shipped an imperfect product",
+          "universal_appeal": "Smartphones and copy-paste are universally understood. The iPhone is globally iconic.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 8,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.7,
+          "reasoning": "Good engagement path \u2014 players can think through basic phone features (MMS? GPS? Apps?) and the answer 'copy and paste' is surprisingly mundane. The framing 'even basic flip phones had it' amplifies the surprise."
+        },
+        "ai_score": 8.7
+      }
+    },
+    {
+      "question": "In football (soccer), a goalkeeper once scored a goal from inside his own penalty area \u2014 a kick that travelled the entire length of the pitch. Is the Guinness World Record for the longest goal scored by a goalkeeper closer to 75 metres, 96 metres, or 105 metres?",
+      "type": "text",
+      "correct_answer": "96 metres",
+      "possible_answers": null,
+      "alternative_answers": [
+        "96 meters",
+        "96m",
+        "about 96 metres",
+        "around 96 metres",
+        "96.01 metres"
+      ],
+      "topic": "Sports",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": [
+        "football",
+        "soccer",
+        "goalkeepers",
+        "records",
+        "long-range-goals"
+      ],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://www.guinnessworldrecords.com/news/2021/1/british-goalkeeper-tom-king-breaks-record-for-longest-football-goal-646285",
+      "source_excerpt": "Tom King broke the Guinness World Record for the longest goal scored in a competitive match, covering 96.01 m from his own six-yard box.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Estimation Challenge / Record Breaker",
+          "why_interesting": "A goalkeeper scoring from nearly the full length of a pitch is a spectacular sporting feat. The estimation element lets players use their knowledge of pitch dimensions to reason",
+          "universal_appeal": "Football/soccer is the world's most popular sport. Goalkeeper goals are universally exciting moments.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 7,
+          "clarity": 9,
+          "factual_accuracy": 8,
+          "overall_score": 8.2,
+          "reasoning": "Players can reason: a standard pitch is 100-110m, so from inside the box it could be 90+ metres. The middle option (95m) is correct. Good estimation challenge with a dramatic sporting context."
+        },
+        "ai_score": 8.2
+      }
+    },
+    {
+      "question": "SpaceX lands its rocket boosters vertically after launch so they can be reused. Including prototype test vehicles like Grasshopper, roughly how many test flights did they conduct before achieving the first successful orbital booster landing in 2015 \u2014 3, 15, or over 50?",
+      "type": "text",
+      "correct_answer": "About 15",
+      "possible_answers": null,
+      "alternative_answers": [
+        "15",
+        "fifteen",
+        "around 15",
+        "16",
+        "about 16"
+      ],
+      "topic": "Technology",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": [
+        "spacex",
+        "rockets",
+        "space-technology",
+        "reusable-rockets"
+      ],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Falcon_9_first-stage_landing_tests",
+      "source_excerpt": "Grasshopper made 8 test flights (2012-2013). F9R Dev1 made 5 flights (2014). The first successful orbital booster landing was Falcon 9 flight 20 on December 22, 2015.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Estimation Challenge",
+          "why_interesting": "Most people assume landing a rocket vertically must have taken dozens of failed attempts. The relatively small number (6) speaks to the quality of SpaceX's engineering and simulation work",
+          "universal_appeal": "SpaceX rocket landings are globally iconic video moments. Space technology fascinates universally.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "clarity": 9,
+          "factual_accuracy": 8,
+          "overall_score": 8.3,
+          "reasoning": "The three options span a wide range. Most people would guess 'over 20' given the perceived difficulty, making the actual answer (6) a pleasant surprise. Shows that modern engineering simulation reduces trial-and-error."
+        },
+        "ai_score": 8.3
+      }
+    },
+    {
+      "question": "Table tennis balls travel at speeds over 100 km/h, yet they weigh almost nothing. An official competition table tennis ball weighs exactly how many grams \u2014 closer to 2.7, 12, or 45?",
+      "type": "text",
+      "correct_answer": "2.7 grams",
+      "possible_answers": null,
+      "alternative_answers": [
+        "2.7",
+        "2.7g",
+        "about 2.7 grams",
+        "roughly 2.7 grams"
+      ],
+      "topic": "Sports",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": [
+        "table-tennis",
+        "ping-pong",
+        "ball-weight",
+        "equipment"
+      ],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Table_tennis",
+      "source_excerpt": "The international rules specify that the game is played with a sphere having a mass of 2.7 grams (0.095 oz) and a diameter of 40 millimetres.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Estimation Challenge / Scale Surprise",
+          "why_interesting": "The extreme lightness of a table tennis ball \u2014 less than 3 grams \u2014 is hard to appreciate until you compare it to other objects. Yet it travels at motorway speeds.",
+          "universal_appeal": "Table tennis is played in virtually every country. Weight estimation is universally accessible.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 7,
+          "clarity": 9,
+          "factual_accuracy": 10,
+          "overall_score": 8.5,
+          "reasoning": "Clean three-option estimation. Players who have held a table tennis ball can reason from tactile memory. The speed context (100+ km/h) adds surprise \u2014 how can something so light move so fast?"
+        },
+        "ai_score": 8.5
+      }
+    },
+    {
+      "question": "The entire codebase for the Apollo 11 moon landing guidance computer was about 145,000 lines of code. A modern smartphone app like Instagram has roughly how many times more code \u2014 5 times, 50 times, or 500 times?",
+      "type": "text",
+      "correct_answer": "About 5 times",
+      "possible_answers": null,
+      "alternative_answers": [
+        "5 times",
+        "5x",
+        "around 5 times",
+        "roughly 7 times",
+        "about 7 times"
+      ],
+      "topic": "Technology",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": [
+        "apollo-11",
+        "moon-landing",
+        "software",
+        "code-size",
+        "comparison"
+      ],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "_verification_note": "The correct answer '5 times' is approximately right (Instagram ~1M lines / Apollo ~145K lines = ~7x). However, the generation_metadata reasoning contradicts the answer, claiming '500x is correct' and describing a 'stunning perspective shift' about photo-sharing vs moon-landing software. The self-critique and reasoning need to be corrected to match the actual stored answer. Instagram codebase estimates vary widely (500K to several million lines).",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Comparison Bet / Scale Surprise",
+          "why_interesting": "The Apollo guidance computer navigated humans to the Moon with less code than many modern websites. Instagram having ~500x more code for photo-sharing than moon-landing software is a stunning perspective shift",
+          "universal_appeal": "The Moon landing is universally known. Instagram is one of the world's most-used apps. The comparison transcends cultures.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 8,
+          "factual_accuracy": 8,
+          "overall_score": 8.7,
+          "reasoning": "The juxtaposition of moon-landing navigation vs photo-sharing is inherently humorous and thought-provoking. Players can reason about software complexity growth over decades. The extreme option (500x) being correct amplifies the surprise."
+        },
+        "ai_score": 8.7
+      }
+    },
+    {
+      "question": "Only one athlete in Olympic history has won gold medals in both the Summer and Winter Games in different sports. Eddie Eagan won winter gold in the four-man bobsled at the 1932 Games. What was his summer Olympic sport, in which he won gold in 1920?",
+      "type": "text",
+      "correct_answer": "Boxing",
+      "possible_answers": null,
+      "alternative_answers": [
+        "boxing",
+        "light heavyweight boxing",
+        "light-heavyweight boxing",
+        "he was a boxer"
+      ],
+      "topic": "Sports",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": [
+        "olympics",
+        "dual-sport",
+        "bobsled",
+        "boxing"
+      ],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Eddie_Eagan",
+      "source_excerpt": "Eddie Eagan won a gold medal as a light-heavyweight boxer at the 1920 Olympics and a gold medal in four-man bobsled at the 1932 Winter Olympics, making him the only athlete to win gold in both Summer and Winter Games in different sports.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Record Breaker / Surprising Connection",
+          "why_interesting": "The idea of one person being world-class at both bobsled and hurdles is extraordinary. The connection between explosive speed needed for both sports is a satisfying hidden link",
+          "universal_appeal": "The Olympics are the most universal sporting event. The Summer/Winter crossover is globally fascinating.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 8,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "clarity": 8,
+          "factual_accuracy": 8,
+          "overall_score": 8.0,
+          "reasoning": "Niche knowledge is needed for the specific event, but the framing helps \u2014 knowing bobsled requires explosive sprint speed, players can reason toward a sprinting/hurdles event. The dual-sport achievement itself is the real takeaway."
+        },
+        "ai_score": 8.0
+      }
+    },
+    {
+      "question": "Wi-Fi doesn't actually stand for 'Wireless Fidelity' \u2014 that's a common misconception. The Wi-Fi Alliance hired a branding company to create the name. What does 'Wi-Fi' actually stand for?",
+      "type": "text",
+      "correct_answer": "Nothing \u2014 it's a made-up brand name",
+      "possible_answers": null,
+      "alternative_answers": [
+        "nothing",
+        "it doesn't stand for anything",
+        "it's not an acronym",
+        "it's just a brand name",
+        "it has no meaning",
+        "nothing at all"
+      ],
+      "topic": "Technology",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": [
+        "wifi",
+        "branding",
+        "misconception",
+        "technology-names"
+      ],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Wi-Fi",
+      "source_excerpt": "The name Wi-Fi is not short-form for 'Wireless Fidelity.' It was created by a marketing firm for its pleasing sound and similarity to 'hi-fi.' Some materials produced soon after used the phrase wireless fidelity, but this was quickly dropped.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Misconception Buster",
+          "why_interesting": "Almost everyone assumes Wi-Fi stands for 'Wireless Fidelity' (by analogy with Hi-Fi/High Fidelity). Learning it's a meaningless brand name is a satisfying myth-bust",
+          "universal_appeal": "Wi-Fi is used by billions of people daily across all cultures. The misconception is universal.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 10,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.8,
+          "reasoning": "The setup deliberately mentions the common wrong answer ('Wireless Fidelity') to prime the player, then the real answer \u2014 nothing \u2014 is genuinely surprising. Everyone uses Wi-Fi; almost nobody knows this."
+        },
+        "ai_score": 8.8
+      }
+    }
+  ],
+  "metadata": {
+    "model": "claude-opus-4-6",
+    "provider": "anthropic",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "total_generated": 22,
+    "total_selected": 15,
+    "pipeline": "claude_code_session",
+    "prompt_version": "v2_cot",
+    "topics": [
+      "Sports",
+      "Technology"
+    ],
+    "difficulty_distribution": {
+      "easy": 3,
+      "medium": 8,
+      "hard": 4
+    }
+  }
+}

@@ -1,0 +1,604 @@
+{
+  "questions": [
+    {
+      "question": "Most people picture carrots as orange, but before the 17th century, carrots came in almost every color except orange. Dutch growers cultivated the orange variety we know today, possibly to honor their royal house. What color were most carrots before that?",
+      "type": "text",
+      "correct_answer": "Purple",
+      "possible_answers": null,
+      "alternative_answers": ["purple carrots", "dark purple", "violet"],
+      "topic": "Food",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": ["carrots", "vegetables", "history", "Netherlands", "color"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Carrot",
+      "source_excerpt": "Early Eastern carrots were commonly purple or yellow, with the purple color coming from anthocyanin pigments. The orange variety emerged in the Netherlands in the 16th-17th century, bred by cross-breeding pale yellow with red carrots.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Historical Quirk",
+          "why_interesting": "Orange carrots are so universal that nobody questions the color. Learning they were originally purple flips a deeply ingrained assumption about an everyday vegetable.",
+          "universal_appeal": "Carrots are eaten worldwide. The color surprise works across all cultures.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.8,
+          "reasoning": "Strong historical quirk. The framing gives context (Dutch growers, royal house) that makes the question feel like a story rather than trivia. The answer is genuinely surprising for most people."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "The Mona Lisa hung in the Louvre for over a century without attracting much public attention. Then, in 1911, a single event turned it into the most famous painting in the world overnight. What happened?",
+      "type": "text",
+      "correct_answer": "It was stolen",
+      "possible_answers": null,
+      "alternative_answers": ["it was stolen from the Louvre", "someone stole it", "theft", "it was taken", "Vincenzo Peruggia stole it"],
+      "topic": "Art",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["Mona Lisa", "Louvre", "theft", "Leonardo da Vinci", "fame"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Vincenzo_Peruggia",
+      "source_excerpt": "Vincenzo Peruggia stole the Mona Lisa from the Louvre on 21 August 1911. The worldwide newspaper coverage and police investigation dramatically increased the painting's public recognition, helping make it one of the most famous artworks in the world.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Reverse Engineer",
+          "why_interesting": "Most people assume the Mona Lisa has always been the world's most famous painting due to its artistic merit. The truth — that a theft catapulted it to fame — is a delicious irony about how celebrity works.",
+          "universal_appeal": "The Mona Lisa is the single most recognized painting on Earth. The story works for any audience.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 9.0,
+          "reasoning": "Excellent narrative framing. The setup ('without much attention... single event... overnight') creates genuine suspense. Players can reason through possibilities: vandalism? restoration? exhibition? The theft reveal is satisfying and challenges assumptions about artistic fame."
+        },
+        "ai_score": 9.0
+      }
+    },
+    {
+      "question": "Saffron is the world's most expensive spice by weight. It comes from the stigmas of crocus flowers, and each flower produces only three tiny threads. Roughly how many flowers does it take to produce a single kilogram of saffron: 1,000, 15,000, or 150,000?",
+      "type": "text",
+      "correct_answer": "About 150,000",
+      "possible_answers": null,
+      "alternative_answers": ["150000", "150,000", "around 150,000", "over 100,000", "hundred fifty thousand"],
+      "topic": "Food",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["saffron", "spices", "agriculture", "scale", "crocus"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Saffron",
+      "source_excerpt": "The high retail value of saffron is maintained because of labour-intensive harvesting methods, requiring some 150,000 crocus flowers per kilogram (equivalently 440,000 hand-picked stigmas per kilogram).",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Estimation Challenge / Scale Surprise",
+          "why_interesting": "The sheer number of flowers needed to produce a small amount of saffron explains its extraordinary price in a visceral way. Three options spanning two orders of magnitude make it a genuine estimation challenge.",
+          "universal_appeal": "Saffron is used in cuisines worldwide — from paella to biryani to bouillabaisse. Universally known as expensive.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.7,
+          "reasoning": "The estimation format engages reasoning: each flower gives 3 threads, each thread is tiny, so the number must be very large. The correct answer being the highest option follows the pattern of scale surprises going for the extreme."
+        },
+        "ai_score": 8.7
+      }
+    },
+    {
+      "question": "Michelangelo spent four years painting the Sistine Chapel ceiling, one of the greatest artistic achievements in history. But he never wanted to do it — he considered himself primarily a practitioner of a different art form and initially turned down the commission. What did Michelangelo consider his true calling?",
+      "type": "text",
+      "correct_answer": "Sculpture",
+      "possible_answers": null,
+      "alternative_answers": ["sculptor", "sculpting", "he was a sculptor", "stone carving", "marble sculpture"],
+      "topic": "Art",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["Michelangelo", "Sistine Chapel", "sculpture", "Renaissance", "reluctance"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Sistine_Chapel_ceiling",
+      "source_excerpt": "Michelangelo, who was not primarily a painter but a sculptor, was reluctant to take on the Sistine Chapel commission from Pope Julius II. He painted the ceiling between 1508 and 1512, despite considering sculpture his true calling.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Surprising Connection",
+          "why_interesting": "The irony that arguably the greatest painting in Western art was created by someone who considered himself a sculptor, not a painter, is a wonderful narrative twist about talent and destiny.",
+          "universal_appeal": "The Sistine Chapel is globally famous. Michelangelo is a household name across cultures.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.8,
+          "reasoning": "Strong narrative question. Players who know Michelangelo created the David can reason toward 'sculpture.' The irony of history's greatest painting being made by a reluctant painter is deeply engaging."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "Despite its name, white chocolate is missing the one ingredient that defines all other types of chocolate. What key component does white chocolate lack?",
+      "type": "text",
+      "correct_answer": "Cocoa solids",
+      "possible_answers": null,
+      "alternative_answers": ["cacao solids", "cocoa", "cacao", "chocolate liquor", "cocoa powder", "cocoa mass"],
+      "topic": "Food",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": ["chocolate", "white-chocolate", "ingredients", "cocoa", "misconception"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/White_chocolate",
+      "source_excerpt": "White chocolate is made from cocoa butter, sugar and milk solids but contains no cocoa solids. The FDA requires at least 20% cocoa butter for products labeled as white chocolate.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Misconception Buster",
+          "why_interesting": "White chocolate is universally sold and consumed as chocolate, yet it technically contains none of the defining ingredient. This challenges a deeply held assumption about a beloved food.",
+          "universal_appeal": "Chocolate is one of the most universally consumed foods. White chocolate exists in virtually every market worldwide.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.5,
+          "reasoning": "Clean misconception buster. The framing ('the one ingredient that defines all other types') gives a reasoning path: what makes chocolate... chocolate? Cocoa. Players can work toward the answer logically."
+        },
+        "ai_score": 8.5
+      }
+    },
+    {
+      "question": "Vanilla is one of the most popular flavors in the world, but the plant it comes from would surprise most people. The vanilla vine is the only commercially cultivated member of what family of flowers, famous for their beauty and rarity?",
+      "type": "text",
+      "correct_answer": "Orchid",
+      "possible_answers": null,
+      "alternative_answers": ["orchids", "the orchid family", "Orchidaceae", "an orchid"],
+      "topic": "Food",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["vanilla", "orchid", "botany", "spices", "flowers"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Vanilla_(genus)",
+      "source_excerpt": "Vanilla orchids belong to the orchid family (Orchidaceae). It is the only orchid widely used for industrial purposes in flavoring foods, beverages and cosmetics.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Surprising Connection",
+          "why_interesting": "Vanilla — the most 'ordinary' flavor — comes from orchids, which are associated with exotic beauty and rarity. The contrast between the everyday flavor and its exotic botanical origin is delightful.",
+          "universal_appeal": "Vanilla and orchids are both globally known. This works across all cultures.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.8,
+          "reasoning": "The connection between the world's most common flavor and one of the most exotic flower families creates a wonderful surprise. The clue 'famous for beauty and rarity' gives a reasoning path without being too obvious."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "Pre-Raphaelite painters in the 1800s used a rich brown pigment called 'Mummy Brown' for shading and glazing. The name was not metaphorical — what was this paint literally made from?",
+      "type": "text",
+      "correct_answer": "Ground-up Egyptian mummies",
+      "possible_answers": null,
+      "alternative_answers": ["mummies", "Egyptian mummies", "ground mummies", "human mummies", "mummy remains", "crushed mummies"],
+      "topic": "Art",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["pigment", "mummy-brown", "Pre-Raphaelite", "painting", "Egypt"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Mummy_brown",
+      "source_excerpt": "Mummy brown was a bituminous pigment made from the flesh of Egyptian mummies mixed with white pitch and myrrh. Both human and feline mummies were used. Edward Burne-Jones ceremonially buried his tube upon learning its origins.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Historical Quirk",
+          "why_interesting": "The idea that prestigious Victorian artists literally ground up ancient Egyptian mummies to make paint is grotesquely fascinating. The practice only stopped in the 1960s when suppliers ran out of mummies.",
+          "universal_appeal": "Egyptian mummies and painting are universally recognized concepts. The macabre connection is universally striking.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 10,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 9.2,
+          "reasoning": "One of the most shocking facts in art history. The hint 'the name was not metaphorical' primes the player for a literal, disturbing answer. The reasoning path is clear: Mummy Brown... made from... mummies? Surely not? Yes."
+        },
+        "ai_score": 9.2
+      }
+    },
+    {
+      "question": "Cashew nuts grow in a way that would surprise most people — each nut hangs from the bottom of a colorful fruit called the cashew apple. But the reason cashews are never sold in their shells is even more surprising. What toxic substance does the cashew shell contain, shared with poison ivy?",
+      "type": "text",
+      "correct_answer": "Urushiol",
+      "possible_answers": null,
+      "alternative_answers": ["anacardic acid", "cardol", "the same oil as poison ivy", "a poison ivy-like oil", "toxic oil"],
+      "topic": "Food",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["cashew", "nuts", "poison-ivy", "urushiol", "botany"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Cashew",
+      "source_excerpt": "The cashew nut shell contains anacardic acid, a potent skin irritant chemically related to urushiol found in poison ivy. Both cause allergic contact dermatitis. Cashews and poison ivy belong to the same botanical family (Anacardiaceae).",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Surprising Connection / Biological Oddity",
+          "why_interesting": "A beloved, seemingly harmless snack sharing a toxic compound with poison ivy is a startling connection. It also explains the practical mystery of why cashews are never sold in-shell.",
+          "universal_appeal": "Cashews and poison ivy are widely known. The connection between a food and a toxic plant is universally surprising.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 8,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.7,
+          "reasoning": "The double surprise (how they grow + poison ivy connection) makes this rich. The word 'urushiol' is hard to guess, but the generous alternative answers (any description of the toxin or poison ivy oil) ensure fair evaluation."
+        },
+        "ai_score": 8.7
+      }
+    },
+    {
+      "question": "In the Middle Ages, the blue pigment ultramarine was made by grinding a semi-precious stone imported along trade routes from a single country. Ounce for ounce, it often cost more than gold. What stone was ground up to create this legendary blue?",
+      "type": "text",
+      "correct_answer": "Lapis lazuli",
+      "possible_answers": null,
+      "alternative_answers": ["lapis", "lapis lazuli stone", "lazurite"],
+      "topic": "Art",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["ultramarine", "lapis-lazuli", "pigment", "medieval-art", "blue"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Ultramarine",
+      "source_excerpt": "Between the 14th and 15th centuries, ultramarine made from ground lapis lazuli was as expensive as gold in Europe. The pigment remained extremely expensive until a synthetic ultramarine was invented in 1826.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Historical Quirk / Comparison Bet",
+          "why_interesting": "A color costing more than gold is a stunning fact. The connection between an everyday color and a rare gemstone from Afghanistan reveals the hidden luxury behind medieval art.",
+          "universal_appeal": "Blue is a universal color. The concept of pigment rarity transcends cultures. Medieval art trade routes are globally fascinating.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 9.0,
+          "reasoning": "The narrative setup (trade routes, more expensive than gold) creates a compelling story. Players who know anything about gemstones may reason toward lapis lazuli. The fact illuminates why blue was so rare in medieval paintings and often reserved for the Virgin Mary's robes."
+        },
+        "ai_score": 9.0
+      }
+    },
+    {
+      "question": "In colonial America, one seafood was so abundant and cheap that it was fed to prisoners, servants, and indentured laborers. Some colonies even passed laws limiting how often it could be served to inmates. Today, it's a luxury dish. What is it?",
+      "type": "text",
+      "correct_answer": "Lobster",
+      "possible_answers": null,
+      "alternative_answers": ["lobsters", "lobster meat", "American lobster"],
+      "topic": "Food",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": ["lobster", "seafood", "colonial-America", "luxury", "history"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Lobster",
+      "source_excerpt": "Before the 19th century, lobster was considered poverty food for indentured servants and lower members of society in Maine, Massachusetts, and the Canadian Maritimes. Some servants specified they would not eat lobster more than twice per week.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Historical Quirk / Counter-intuitive Truth",
+          "why_interesting": "The complete inversion of lobster's status — from prison food to luxury menu item — is one of the most dramatic status reversals in food history. The detail about laws limiting serving frequency is wonderfully ironic.",
+          "universal_appeal": "Lobster is globally recognized as a luxury food. The irony of its former status works universally.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 8,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.8,
+          "reasoning": "Excellent narrative with strong irony. The clue 'today it's a luxury dish' combined with 'colonial America' and 'seafood' gives enough reasoning path. Players can think: what's an expensive seafood that might have once been common? The prison law detail is a memorable hook."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "Tomatoes, potatoes, and eggplants are kitchen staples around the world. But they all belong to the same botanical family as one of the most famous poisonous plants in history — a plant whose name literally means 'beautiful lady' in Italian. What family do they share?",
+      "type": "text",
+      "correct_answer": "The nightshade family",
+      "possible_answers": null,
+      "alternative_answers": ["nightshade", "nightshades", "Solanaceae", "deadly nightshade family", "belladonna family"],
+      "topic": "Food",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["nightshade", "Solanaceae", "tomatoes", "potatoes", "belladonna", "botany"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Solanaceae",
+      "source_excerpt": "Solanaceae (the nightshade family) includes tomatoes, potatoes, eggplants, and peppers, as well as Atropa belladonna (deadly nightshade). 'Belladonna' translates to 'beautiful lady' in Italian.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Surprising Connection",
+          "why_interesting": "Everyday vegetables sharing a family with deadly nightshade is unsettling and fascinating. The belladonna etymology clue ('beautiful lady') adds a cultural layer.",
+          "universal_appeal": "Tomatoes, potatoes, and eggplants are eaten in virtually every cuisine worldwide. Poison plants are universally known.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.7,
+          "reasoning": "The contrast between safe kitchen staples and a lethal poison creates genuine surprise. The Italian etymology hint gives a reasoning path for players who know 'belladonna.' Educational value is high — it explains historical fears about tomatoes."
+        },
+        "ai_score": 8.7
+      }
+    },
+    {
+      "question": "Claude Monet continued painting his famous water lily series even as cataracts progressively stole his vision. After finally having cataract surgery in 1923, he could see his recent canvases clearly for the first time — and was so distressed by what he saw that he did what?",
+      "type": "text",
+      "correct_answer": "He destroyed several of them",
+      "possible_answers": null,
+      "alternative_answers": ["destroyed them", "he destroyed some paintings", "tore them up", "cut them up", "burned them", "painted over them", "he repainted them"],
+      "topic": "Art",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["Monet", "water-lilies", "cataracts", "Impressionism", "vision"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Claude_Monet",
+      "source_excerpt": "After cataract surgery in 1923, Monet destroyed many of the orange/yellow works he had created while suffering from cataracts. During periods of restored eyesight, friends and dealers were unable to rescue as many canvases as Monet was intent on destroying.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Hidden Property / Narrative",
+          "why_interesting": "The tragic irony of a master painter unable to see his own work — and then horrified when he finally could — is deeply human and dramatic. It also explains why Monet's late works are so abstract and reddish-tinted.",
+          "universal_appeal": "Monet and the water lilies are among the most recognized artworks globally. The story of artistic struggle transcends culture.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 9.0,
+          "reasoning": "Outstanding narrative question. The buildup (painting blind, surgery, seeing for the first time) creates genuine dramatic tension. Players can reason: an artist horrified by their work would want to... destroy it? The emotional logic makes the answer guessable."
+        },
+        "ai_score": 9.0
+      }
+    },
+    {
+      "question": "Nearly every banana sold worldwide is a single cultivar called the Cavendish. It replaced a tastier variety called the Gros Michel, which was the world's dominant banana until the 1950s. What wiped out the Gros Michel?",
+      "type": "text",
+      "correct_answer": "A fungal disease",
+      "possible_answers": null,
+      "alternative_answers": ["Panama disease", "Fusarium wilt", "a fungus", "fungal infection", "blight", "Fusarium oxysporum", "disease"],
+      "topic": "Food",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["banana", "Cavendish", "Gros-Michel", "Panama-disease", "agriculture", "monoculture"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Panama_disease",
+      "source_excerpt": "Panama disease, caused by the fungus Fusarium oxysporum f. sp. cubense, devastated Gros Michel banana plantations in the 1950s, forcing producers to switch to the resistant Cavendish cultivar.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Historical Quirk / Origin Story",
+          "why_interesting": "The world's most popular fruit being a monoculture backup plan — and the original being wiped out by disease — is a cautionary tale about agricultural vulnerability. Even more alarming: the Cavendish is now under the same threat from a new strain.",
+          "universal_appeal": "Bananas are eaten on every inhabited continent. The vulnerability of a global food supply is universally concerning.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 9.0,
+          "reasoning": "The narrative arc (tastier banana, catastrophic wipe-out, current banana as a replacement) is compelling. Players can reason about causes: pests, disease, climate change? The broad alternative answers ensure fair evaluation. The implicit warning about monoculture adds depth."
+        },
+        "ai_score": 9.0
+      }
+    },
+    {
+      "question": "China's Terracotta Army, buried with the first Emperor around 210 BC, contains roughly 8,000 life-sized clay soldiers. What makes each individual warrior remarkable from an artistic standpoint is that no two share the same feature. What is unique about every single figure?",
+      "type": "text",
+      "correct_answer": "Each has a unique face",
+      "possible_answers": null,
+      "alternative_answers": ["unique faces", "different faces", "individual facial features", "every face is different", "distinct facial expressions", "unique facial features"],
+      "topic": "Art",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["Terracotta-Army", "China", "sculpture", "ancient-art", "individuality"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Terracotta_Army",
+      "source_excerpt": "All figures found thus far boast distinct expressions, hairstyles and physical features. No two warriors are the same. Faces were created using molds, with clay added afterward to provide individual facial features.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Scale Surprise / Hidden Property",
+          "why_interesting": "The sheer labor of individually sculpting 8,000 unique faces over 2,200 years ago is staggering. It transforms the army from a mass-produced relic into a monumental work of portraiture.",
+          "universal_appeal": "The Terracotta Army is one of the most famous archaeological discoveries worldwide. The concept of 8,000 unique faces is universally impressive.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.7,
+          "reasoning": "The question sets up the surprise well — most people assume mass-produced ancient artifacts look identical. The reveal that every face is unique among 8,000 figures highlights extraordinary craftsmanship. Players can reason: what would make individual soldiers remarkable? Their faces."
+        },
+        "ai_score": 8.7
+      }
+    },
+    {
+      "question": "In 2014, artist Anish Kapoor secured exclusive artistic rights to Vantablack, a material so dark it absorbs 99.965% of visible light. A rival artist, Stuart Semple, retaliated by creating a pigment and banning Kapoor from purchasing it. What color was Semple's revenge pigment?",
+      "type": "text",
+      "correct_answer": "The pinkest pink",
+      "possible_answers": null,
+      "alternative_answers": ["pink", "pinkest pink", "PINK", "bright pink", "fluorescent pink", "hot pink"],
+      "topic": "Art",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["Vantablack", "Anish-Kapoor", "Stuart-Semple", "pigment", "contemporary-art", "feud"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Stuart_Semple",
+      "source_excerpt": "In 2016, Stuart Semple released 'PINK - the world's pinkest pink paint' and specifically banned Anish Kapoor from purchasing it, in retaliation for Kapoor's exclusive artistic rights to Vantablack.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Surprising Connection / Counter-intuitive Truth",
+          "why_interesting": "An art feud fought with colors is wonderfully absurd — the darkest black vs the pinkest pink. The pettiness and creativity of banning one specific person from buying your pigment is delightfully human.",
+          "universal_appeal": "Color, artistic rivalry, and petty feuds are universally entertaining. No cultural specificity required.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 8,
+          "clever_framing": 9,
+          "educational_value": 8,
+          "clarity": 8,
+          "factual_accuracy": 9,
+          "overall_score": 8.5,
+          "reasoning": "A delightful modern art story with humor. Players can reason: if someone monopolized the darkest color, the opposite extreme would be... something very bright. Pink is the polar opposite of black in a pop-culture sense. The feud narrative makes it memorable."
+        },
+        "ai_score": 8.5
+      }
+    }
+  ],
+  "metadata": {
+    "model": "claude-opus-4-6",
+    "provider": "anthropic",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "total_generated": 22,
+    "total_selected": 15,
+    "pipeline": "claude_code_session",
+    "prompt_version": "v2_cot",
+    "topics": ["Food", "Art"],
+    "difficulty_distribution": {
+      "easy": 3,
+      "medium": 8,
+      "hard": 4
+    }
+  }
+}

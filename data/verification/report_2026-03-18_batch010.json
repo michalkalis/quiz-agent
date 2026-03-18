@@ -1,0 +1,160 @@
+{
+  "metadata": {
+    "verified_at": "2026-03-18T12:00:00Z",
+    "source_file": "data/generated/claude_batch_010.json",
+    "total_questions": 15,
+    "verdicts": {"correct": 14, "needs_fix": 0, "needs_review": 1, "incorrect": 0}
+  },
+  "questions": [
+    {
+      "id": null,
+      "question": "What comes next in this sequence: 1, 8, 27, 64, 125, ___?",
+      "stored_answer": "216",
+      "verdict": "correct",
+      "notes": "Verified mathematically. These are perfect cubes: 1^3=1, 2^3=8, 3^3=27, 4^3=64, 5^3=125, 6^3=216. The answer is correct.",
+      "suggested_fix": null,
+      "source_url": null,
+      "source_excerpt": "Mathematical verification: 6^3 = 6 x 6 x 6 = 216. The sequence is n^3 for n = 1, 2, 3, 4, 5, 6."
+    },
+    {
+      "id": null,
+      "question": "What comes next: 2, 3, 5, 8, 13, 21, ___?",
+      "stored_answer": "34",
+      "verdict": "correct",
+      "notes": "Verified mathematically. This follows the Fibonacci rule (each term = sum of two preceding terms): 2+3=5, 3+5=8, 5+8=13, 8+13=21, 13+21=34. Note: this is a Fibonacci-like sequence starting at 2,3 rather than the standard 0,1,1,2... but the rule and answer are correct.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Fibonacci_sequence",
+      "source_excerpt": "The Fibonacci sequence follows the rule where each number is the sum of the two preceding ones. 13+21=34."
+    },
+    {
+      "id": null,
+      "question": "What comes next in this pattern: 1, 2, 6, 24, 120, ___?",
+      "stored_answer": "720",
+      "verdict": "correct",
+      "notes": "Verified mathematically. These are factorials: 1!=1, 2!=2, 3!=6, 4!=24, 5!=120, 6!=720. Equivalently, each term is multiplied by the next integer: x2, x3, x4, x5, x6. 120 x 6 = 720.",
+      "suggested_fix": null,
+      "source_url": null,
+      "source_excerpt": "Mathematical verification: 6! = 720. The sequence is n! for n = 1, 2, 3, 4, 5, 6."
+    },
+    {
+      "id": null,
+      "question": "What comes next: 0, 1, 4, 9, 16, 25, ___?",
+      "stored_answer": "36",
+      "verdict": "correct",
+      "notes": "Verified mathematically. These are perfect squares: 0^2=0, 1^2=1, 2^2=4, 3^2=9, 4^2=16, 5^2=25, 6^2=36.",
+      "suggested_fix": null,
+      "source_url": null,
+      "source_excerpt": "Mathematical verification: 6^2 = 36. The sequence is n^2 for n = 0, 1, 2, 3, 4, 5, 6."
+    },
+    {
+      "id": null,
+      "question": "What comes next in this harder sequence: 2, 5, 10, 17, 26, 37, ___?",
+      "stored_answer": "50",
+      "verdict": "correct",
+      "notes": "Verified mathematically. Each term is n^2+1 for n=1,2,3,...: 1+1=2, 4+1=5, 9+1=10, 16+1=17, 25+1=26, 36+1=37, 49+1=50. Alternatively, first differences are 3,5,7,9,11,13 (odd numbers), so next difference is 13 and 37+13=50.",
+      "suggested_fix": null,
+      "source_url": null,
+      "source_excerpt": "Mathematical verification: n^2+1 for n=7: 49+1=50. Or via differences: 37+13=50."
+    },
+    {
+      "id": null,
+      "question": "Which doesn't belong: Mercury, Venus, Earth, Mars, Moon?",
+      "stored_answer": "Moon",
+      "verdict": "correct",
+      "notes": "Verified. Mercury, Venus, Earth, and Mars are all planets (specifically the four inner/terrestrial planets of the solar system). The Moon is a natural satellite of Earth, not a planet.",
+      "suggested_fix": null,
+      "source_url": null,
+      "source_excerpt": "Mercury, Venus, Earth, and Mars are the four terrestrial planets. The Moon is Earth's natural satellite, not a planet."
+    },
+    {
+      "id": null,
+      "question": "Which is the odd one out: Diamond, Graphite, Charcoal, Coal, Fullerene?",
+      "stored_answer": "Coal",
+      "verdict": "needs_review",
+      "notes": "The intended answer is defensible but has nuance. Coal is indeed a mixture of carbon compounds and impurities, not a pure carbon allotrope. Diamond, graphite, and fullerene are well-established carbon allotropes. However, charcoal's classification is debatable: Wikipedia notes that 'coal and soot or carbon black are informally called amorphous carbon, but they are products of pyrolysis.' Charcoal is classified as amorphous carbon, which is technically 'not a true allotrope' according to some sources. The distinction between charcoal (nearly pure carbon) and coal (mixture with impurities) is valid but the question's explanation calling charcoal a 'pure allotrope' is somewhat oversimplified.",
+      "suggested_fix": "Consider acknowledging in the explanation that charcoal is 'nearly pure carbon' rather than a strict allotrope, to maintain scientific accuracy. The answer (Coal) remains the best answer of the five options.",
+      "source_url": "https://en.wikipedia.org/wiki/Allotropes_of_carbon",
+      "source_excerpt": "Diamond, graphite, and fullerene are well-established carbon allotropes. Charcoal and coal are informally called amorphous carbon. Coal is a sedimentary rock and mixture of carbon compounds. Charcoal is 'nearly pure carbon' but not a true crystalline allotrope."
+    },
+    {
+      "id": null,
+      "question": "A woman buys a painting for \u20ac100, sells it for \u20ac110, buys it back for \u20ac120, then sells it again for \u20ac130. How much profit has she made overall?",
+      "stored_answer": "\u20ac20 profit",
+      "verdict": "correct",
+      "notes": "Verified mathematically. Total spent: 100+120=220. Total received: 110+130=240. Profit: 240-220=20 euros.",
+      "suggested_fix": null,
+      "source_url": null,
+      "source_excerpt": "Mathematical verification: Spent 100+120=220. Received 110+130=240. Net profit = 240-220 = 20 euros."
+    },
+    {
+      "id": null,
+      "question": "Every person at a party shakes hands with every other person exactly once. If there are 5 people at the party, how many handshakes happen in total?",
+      "stored_answer": "10",
+      "verdict": "correct",
+      "notes": "Verified mathematically. Using the combination formula C(5,2) = 5!/(2!*3!) = 10. Or by counting: 4+3+2+1=10 handshakes.",
+      "suggested_fix": null,
+      "source_url": null,
+      "source_excerpt": "Mathematical verification: C(5,2) = 5*4/2 = 10 handshakes."
+    },
+    {
+      "id": null,
+      "question": "You have two ropes that each burn for exactly 1 hour — but they burn unevenly. Using only these two ropes and a lighter, how can you measure exactly 45 minutes?",
+      "stored_answer": "Light rope 1 at both ends and rope 2 at one end simultaneously. When rope 1 finishes (30 min), light the other end of rope 2. It will burn out in 15 more minutes — total 45.",
+      "verdict": "correct",
+      "notes": "Verified logically. Rope 1 lit at both ends: burns in 30 minutes (half the time). At that moment, rope 2 (lit at one end for 30 min) has exactly 30 minutes of burn time remaining. Lighting its second end halves the remaining time to 15 minutes. Total: 30+15=45 minutes. Classic and well-known puzzle solution.",
+      "suggested_fix": null,
+      "source_url": null,
+      "source_excerpt": "Logical verification: Rope 1 (both ends) = 30 min. Rope 2 remaining = 30 min, lit at second end = 15 min more. Total = 45 min."
+    },
+    {
+      "id": null,
+      "question": "If you have a 3-litre jug and a 5-litre jug, with no markings, and unlimited water — how can you measure exactly 4 litres?",
+      "stored_answer": "Fill the 5-litre jug, pour into the 3-litre jug until full (leaves 2L in 5L jug). Empty the 3L jug. Pour the 2L into the 3L jug. Fill the 5L jug again. Pour from 5L into 3L until full (needs 1L more). This leaves 4L in the 5L jug.",
+      "verdict": "correct",
+      "notes": "Verified step by step: (1) Fill 5L: [5L=5, 3L=0]. (2) Pour into 3L: [5L=2, 3L=3]. (3) Empty 3L: [5L=2, 3L=0]. (4) Pour 2L into 3L: [5L=0, 3L=2]. (5) Fill 5L: [5L=5, 3L=2]. (6) Pour from 5L into 3L (needs 1L): [5L=4, 3L=3]. Result: 4 litres in the 5L jug. Classic water jug puzzle.",
+      "suggested_fix": null,
+      "source_url": null,
+      "source_excerpt": "Step-by-step verification: Fill 5L -> pour to 3L (leaves 2) -> empty 3L -> pour 2L to 3L -> fill 5L -> pour 1L to 3L -> 4L remains in 5L jug."
+    },
+    {
+      "id": null,
+      "question": "Complete the analogy: Conductor is to orchestra as _________ is to a bee colony?",
+      "stored_answer": "Queen (bee)",
+      "verdict": "correct",
+      "notes": "Verified. The conductor leads/coordinates an orchestra; the queen bee is the central figure of a bee colony. While biologically the queen's role is primarily reproductive rather than directive, in common understanding and analogy the queen is the leader of a bee colony. The analogy works for the quiz context.",
+      "suggested_fix": null,
+      "source_url": null,
+      "source_excerpt": "The conductor leads an orchestra; the queen bee is the central figure of a bee colony. The analogy maps leader-to-group relationships."
+    },
+    {
+      "id": null,
+      "question": "In Morse code, the most common English letter is given the shortest signal: a single dot. Which letter is it?",
+      "stored_answer": "E",
+      "verdict": "correct",
+      "notes": "Confirmed. 'E' is encoded as a single dot (.) in Morse code, the shortest possible signal. This is because E is the most common letter in English. Morse code was designed with frequency-based encoding — common letters get shorter codes.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Morse_code",
+      "source_excerpt": "In Morse code, E (the most common letter in English) is a single dot — the shortest encoding. The design deliberately assigned shorter sequences to more frequently used letters."
+    },
+    {
+      "id": null,
+      "question": "What comes next in this sequence: 1, 3, 6, 10, 15, 21, ___?",
+      "stored_answer": "28",
+      "verdict": "correct",
+      "notes": "Verified mathematically. These are triangular numbers: T(n) = n(n+1)/2. T(1)=1, T(2)=3, T(3)=6, T(4)=10, T(5)=15, T(6)=21, T(7)=7*8/2=28. Alternatively, differences are 2,3,4,5,6,7 so next term is 21+7=28.",
+      "suggested_fix": null,
+      "source_url": null,
+      "source_excerpt": "Mathematical verification: T(7) = 7*8/2 = 28. Or: 21+7 = 28 (differences increase by 1)."
+    },
+    {
+      "id": null,
+      "question": "Here is an art-themed odd one out. Which doesn't belong, and why: Picasso, Monet, Rembrandt, Banksy, Van Gogh?",
+      "stored_answer": "Banksy",
+      "verdict": "correct",
+      "notes": "Confirmed. Banksy is a pseudonymous, anonymous, living contemporary street artist. Picasso (d.1973), Monet (d.1926), Rembrandt (d.1669), and Van Gogh (d.1890) are all deceased artists with known identities. Multiple valid criteria distinguish Banksy: anonymous identity, still living, street art medium, contemporary era.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Banksy",
+      "source_excerpt": "Banksy is a pseudonymous England-based street artist whose true identity has never been confirmed. Unlike Picasso, Monet, Rembrandt, and Van Gogh, Banksy is living, anonymous, and works in street art."
+    }
+  ]
+}

@@ -1,0 +1,115 @@
+{
+  "metadata": {
+    "verified_at": "2026-03-18T12:00:00Z",
+    "source_file": "data/generated/claude_batch_001.json",
+    "total_questions": 10,
+    "verdicts": {
+      "correct": 8,
+      "needs_fix": 1,
+      "needs_review": 1,
+      "incorrect": 0
+    }
+  },
+  "questions": [
+    {
+      "id": null,
+      "question": "Which creature has survived all five mass extinction events, has blue blood because it uses copper instead of iron, and its blood is essential for testing the safety of every vaccine used today?",
+      "stored_answer": "Horseshoe crab",
+      "verdict": "correct",
+      "notes": "Verified. Horseshoe crabs have copper-based hemocyanin (blue blood). LAL from their blood is used for endotoxin testing of pharmaceuticals. They are ancient species predating dinosaurs. The 'every vaccine' claim is slightly broad (LAL tests injectables generally, not exclusively vaccines), but acceptable for a quiz context.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Horseshoe_crab",
+      "source_excerpt": "Horseshoe crabs use hemocyanin to carry oxygen through their blood. Because of the copper present in hemocyanin, their blood is blue. Their blood contains amebocytes used in Limulus amebocyte lysate (LAL) for testing parenteral pharmaceuticals and medical devices."
+    },
+    {
+      "id": null,
+      "question": "Which planet in our solar system rotates so slowly that a single day on it is actually longer than its entire year?",
+      "stored_answer": "Venus",
+      "verdict": "correct",
+      "notes": "Verified. Venus's sidereal rotation period is 243 Earth days while its orbital period is 224.7 Earth days. A sidereal day on Venus is indeed longer than its year.",
+      "suggested_fix": null,
+      "source_url": "https://science.nasa.gov/venus/venus-facts/",
+      "source_excerpt": "Venus rotates very slowly on its axis — one day on Venus lasts 243 Earth days. The planet orbits the Sun faster than it rotates, making a day longer than its year."
+    },
+    {
+      "id": null,
+      "question": "Which classic board game was originally created by a woman in 1903 specifically to demonstrate the dangers of monopolies — the exact opposite of how most people play it today?",
+      "stored_answer": "Monopoly",
+      "verdict": "correct",
+      "notes": "Verified. Elizabeth Magie (Lizzie Magie) designed The Landlord's Game between 1902-1903 (patented 1904) to illustrate Georgist economic principles about the dangers of monopolies. It was later commercialized as Monopoly by Charles Darrow.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/The_Landlord%27s_Game",
+      "source_excerpt": "The Landlord's Game is a board game patented in 1904 by Elizabeth Magie. It was designed to be a practical demonstration of land grabbing with all its usual outcomes and consequences, based on the economic principles of Georgism."
+    },
+    {
+      "id": null,
+      "question": "Which mammal has fingerprints so similar to human ones that even forensic experts have difficulty telling them apart under a microscope?",
+      "stored_answer": "Koala",
+      "verdict": "correct",
+      "notes": "Verified. Koala fingerprints are remarkably similar to human fingerprints due to convergent evolution. Even with an electron microscope, they can be difficult to distinguish. Documented in Henneberg et al. (1997).",
+      "suggested_fix": null,
+      "source_url": "https://www.britannica.com/one-good-fact/what-non-primate-has-fingerprints-like-humans",
+      "source_excerpt": "Koalas have fingerprints that are virtually indistinguishable from human ones, even under an electron microscope — a remarkable example of convergent evolution."
+    },
+    {
+      "id": null,
+      "question": "Which country once declared war on emus in 1932, deployed soldiers with machine guns — and lost?",
+      "stored_answer": "Australia",
+      "verdict": "correct",
+      "notes": "Verified. The Emu War (1932) was a wildlife management operation in Western Australia's Campion district. The Royal Australian Artillery deployed soldiers with Lewis guns against ~20,000 emus. The military withdrew after failing to meet objectives, though 'lost' is a simplified characterization.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Emu_War",
+      "source_excerpt": "The Emu War was a nuisance wildlife management military operation undertaken in Australia in late 1932 to address public concern over the number of emus said to have been destroying crops in the Campion district of Western Australia."
+    },
+    {
+      "id": null,
+      "question": "Which popular condiment was sold as a patented medicine in the 1830s, marketed as a cure for diarrhea, jaundice, and indigestion?",
+      "stored_answer": "Ketchup",
+      "verdict": "correct",
+      "notes": "Verified. Dr. John Cook Bennett began promoting concentrated tomato extract as medicine in 1834, selling it in pill form. While technically tomato extract pills rather than 'ketchup' in its modern form, the connection between tomato-based condiments and patent medicine is well-documented and accurate for a quiz.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Ketchup",
+      "source_excerpt": "In 1834, Dr. John Cook Bennett declared tomatoes could be used to treat diarrhea, attacks of the liver, and indigestion. He sold tomato extract in pill form as a patent medicine."
+    },
+    {
+      "id": null,
+      "question": "Which everyday breakfast beverage was banned five times in Sweden, with King Gustav III even ordering an experiment on condemned prisoners to prove it was lethal?",
+      "stored_answer": "Coffee",
+      "verdict": "correct",
+      "notes": "Verified. Coffee was banned in Sweden five separate times between the 1750s and 1820s (1756-61, 1766-69, 1794-96, 1799-1802, 1817-1823). Gustav III's twin prisoner experiment is a documented historical anecdote, though its full authenticity has been questioned by some historians. The five bans are confirmed by Wikipedia's Coffee in Sweden article.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Coffee_in_Sweden",
+      "source_excerpt": "Coffee was banned by royal decree across three different reigns, in five separate periods between the 1750s and the 1820s: 1756-61, 1766-69, 1794-6, 1799-1802 and 1817-1823."
+    },
+    {
+      "id": null,
+      "question": "Which common metal has such a low melting point that it will literally melt if you hold it in your hand?",
+      "stored_answer": "Gallium",
+      "verdict": "needs_fix",
+      "notes": "Answer is factually correct — gallium melts at 29.76°C (85.6°F), below body temperature (37°C). However, gallium is NOT a 'common metal'. It's relatively rare, not encountered in everyday life, and most people have never seen it. The question's premise ('common metal') is misleading.",
+      "suggested_fix": "Change 'common metal' to just 'metal' or 'element'. Suggested rewrite: 'Which metal has such a low melting point that it will literally melt if you hold it in your hand?'",
+      "source_url": "https://en.wikipedia.org/wiki/Gallium",
+      "source_excerpt": "Gallium has a melting point of 29.7646°C (85.5763°F), just above room temperature. Elemental gallium will melt in a person's hands at normal human body temperature of 37°C (99°F)."
+    },
+    {
+      "id": null,
+      "question": "Which natural structure on Earth is so massive it can be seen from space, yet each of its individual builders is typically smaller than a fingernail?",
+      "stored_answer": "The Great Barrier Reef",
+      "verdict": "correct",
+      "notes": "Verified. The Great Barrier Reef stretches over 2,300 km and is visible from low Earth orbit. Individual coral polyps range from 0.1 to 3.1 cm in diameter, consistent with 'smaller than a fingernail'. The 'visible from space' claim is commonly stated and confirmed by astronaut observations.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Great_Barrier_Reef",
+      "source_excerpt": "The Great Barrier Reef is the world's largest coral reef system, composed of over 2,900 individual reefs stretching over 2,300 kilometres. Individual coral polyps are typically only a few millimeters in diameter."
+    },
+    {
+      "id": null,
+      "question": "Which common substance that you use every day can exist in at least 18 different crystalline forms, most of which only appear under extreme pressure?",
+      "stored_answer": "Ice",
+      "verdict": "needs_review",
+      "notes": "Answer is correct — water ice has at least 20 confirmed crystalline phases as of 2024. However, 'Ice' as an answer is slightly ambiguous. The question says 'common substance you use every day' which describes water, but the answer 'ice' is a specific phase. Both 'water' and 'ice' are listed as alternative answers, which handles this. The count of '18' is now outdated (20+ confirmed), but this is fine since the question says 'at least 18'.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Phases_of_ice",
+      "source_excerpt": "As of 2024, twenty forms of ice have been experimentally confirmed. The types are differentiated by their crystalline structure, proton ordering, and density."
+    }
+  ]
+}

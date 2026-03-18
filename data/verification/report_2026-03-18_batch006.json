@@ -1,0 +1,160 @@
+{
+  "metadata": {
+    "verified_at": "2026-03-18T12:00:00Z",
+    "source_file": "data/generated/claude_batch_006.json",
+    "total_questions": 15,
+    "verdicts": {"correct": 13, "needs_fix": 1, "needs_review": 1, "incorrect": 0}
+  },
+  "questions": [
+    {
+      "id": null,
+      "question": "Was Cleopatra born closer in time to the construction of the Great Pyramid or to the first Moon landing?",
+      "stored_answer": "The Moon landing",
+      "verdict": "correct",
+      "notes": "Cleopatra VII was born ~69 BCE. Great Pyramid built ~2560 BCE. Moon landing 1969 CE. Gap to Pyramid: ~2,490 years. Gap to Moon landing: ~2,039 years. Cleopatra is closer to the Moon landing by ~450 years. Confirmed by Wikipedia and Britannica.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Cleopatra",
+      "source_excerpt": "Cleopatra VII ruled Egypt from 51 to 30 BCE, approximately 2,490 years after the Great Pyramid was built (~2560 BCE) but only about 2,039 years before the Apollo 11 Moon landing in 1969."
+    },
+    {
+      "id": null,
+      "question": "The Wright brothers made their first powered flight in 1903. Apollo 11 landed on the Moon in 1969. Did these two events occur within a single human lifetime \u2014 or more than one lifetime apart?",
+      "stored_answer": "Within a single human lifetime",
+      "verdict": "correct",
+      "notes": "Wright brothers: December 17, 1903. Apollo 11: July 20, 1969. The gap is 65 years and 7 months, well within a single human lifetime (average ~75-80 years). NASA confirms 'not quite 66 years' between the two events. Neil Armstrong even carried a piece of the Wright Flyer on the mission.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Apollo_11",
+      "source_excerpt": "Apollo 11 landed on the Moon on July 20, 1969, not quite 66 years after the Wright brothers' first powered flight on December 17, 1903. Armstrong's LM PPK contained a piece of wood from the 1903 Wright Flyer."
+    },
+    {
+      "id": null,
+      "question": "For roughly how long did the Great Pyramid of Giza hold the record as the world's tallest man-made structure \u2014 about 200 years, 2,000 years, or nearly 4,000 years?",
+      "stored_answer": "Nearly 4,000 years",
+      "verdict": "correct",
+      "notes": "Wikipedia confirms the Great Pyramid (built ~2560 BCE, height 146.5 m) was the tallest man-made structure for over 3,800 years, until Lincoln Cathedral surpassed it in 1311 CE. 'Nearly 4,000 years' is accurate.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Great_Pyramid_of_Giza",
+      "source_excerpt": "The Great Pyramid of Giza, at an original height of 146.5 m, was the tallest structure in the world for over 3,800 years, until the construction of Lincoln Cathedral in 1311."
+    },
+    {
+      "id": null,
+      "question": "Oxford University has been teaching students since around 1096 CE. The Aztec Empire was founded in Mesoamerica at some point later. Which came first \u2014 Oxford University or the Aztec Empire?",
+      "stored_answer": "Oxford University",
+      "verdict": "correct",
+      "notes": "Wikipedia and Britannica confirm Oxford has evidence of teaching as early as 1096 CE, making it the oldest university in the English-speaking world. The Aztec Empire (Triple Alliance) was formally founded around 1428 CE. Oxford predates the Aztec Empire by approximately 332 years.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Oxford_university",
+      "source_excerpt": "The University of Oxford has evidence of teaching as early as 1096 CE. The Aztec Empire was formally founded around 1428 CE, making Oxford more than 300 years older."
+    },
+    {
+      "id": null,
+      "question": "The Anglo-Zanzibar War of 1896 holds the record as the shortest war in recorded history. Was it closer to 45 minutes, 45 hours, or 45 days in duration?",
+      "stored_answer": "45 minutes",
+      "verdict": "correct",
+      "notes": "Wikipedia and Britannica confirm the Anglo-Zanzibar War lasted between 38 and 45 minutes on August 27, 1896. The exact duration depends on whether timing starts from the order to fire (09:00) or actual firing (09:02), and ends at 09:40-09:45. '45 minutes' is within the accepted range.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Anglo-Zanzibar_War",
+      "source_excerpt": "The Anglo-Zanzibar War lasted between 38 and 45 minutes on August 27, 1896, making it the shortest recorded war in history."
+    },
+    {
+      "id": null,
+      "question": "New Zealand was one of the last major landmasses on Earth to be settled by humans. Roughly when did the first people arrive there \u2014 around 10,000 BCE, 3,000 BCE, or around 1250 CE?",
+      "stored_answer": "Around 1250 CE",
+      "verdict": "correct",
+      "notes": "Wikipedia confirms Polynesians first settled New Zealand between 1250 and 1300 CE, with the main settlement period possibly 1320-1350 CE. New Zealand was the last large habitable land to be settled by humans. '1250 CE' is at the earlier end of the accepted range but is the standard answer.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/M%C4%81ori_people",
+      "source_excerpt": "Mitochondrial DNA variability suggests Polynesians first settled New Zealand between 1250 and 1300 CE. New Zealand was the last large habitable land to be settled by humans."
+    },
+    {
+      "id": null,
+      "question": "The Great Fire of London in 1666 destroyed approximately 13,200 houses and 87 churches. Officially, how many people died in the fire \u2014 6, 6,000, or 60,000?",
+      "stored_answer": "6",
+      "verdict": "correct",
+      "notes": "Wikipedia describes 6 as the 'traditional figure' for official deaths, though some historians give slightly different numbers (Porter gives 8, Tinniswood says 'single figures'). The question asks for the official count, and 6 is the most commonly cited traditional figure. Historians note the true toll was likely higher but probably not in the hundreds.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Great_Fire_of_London",
+      "source_excerpt": "Deaths are traditionally believed to have been few. The traditional figure is six, though some historians give slightly higher numbers. The actual number likely did not run into the hundreds."
+    },
+    {
+      "id": null,
+      "question": "When the United Nations was founded in 1945 at the end of World War II, roughly how many independent nations existed in the world \u2014 about 50, about 120, or about 195?",
+      "stored_answer": "About 50",
+      "verdict": "correct",
+      "notes": "The UN was founded with 51 original member states in 1945. Wikipedia confirms 50 nations signed the Charter at San Francisco, with Poland signing later as the 51st. Today the UN has 193 members. The question conflates UN members with independent nations (there were a few non-members in 1945), but 'about 50' is the best answer among the options.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Member_states_of_the_United_Nations",
+      "source_excerpt": "51 original members joined the UN in 1945. 50 signed the Charter at the San Francisco conference, while Poland signed on 15 October 1945 as the 51st original member."
+    },
+    {
+      "id": null,
+      "question": "Canada has the world's longest coastline. How much longer is it than Russia's (the world's second longest) \u2014 roughly the same length, twice as long, or more than five times longer?",
+      "stored_answer": "More than five times longer",
+      "verdict": "correct",
+      "notes": "Wikipedia lists Canada's coastline at 243,042 km (the question cites 202,080 km which appears to be an older figure). Russia's coastline is listed at approximately 37,653 km. Even with the older Canadian figure, 202,080/37,653 = ~5.4x, confirming 'more than five times longer.' With the updated figure it is ~6.5x.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/List_of_countries_and_dependencies_by_length_of_coastline",
+      "source_excerpt": "Canada has the world's longest coastline at 243,042 km. Russia's coastline is approximately 37,653 km, making Canada's coastline more than five times longer than Russia's."
+    },
+    {
+      "id": null,
+      "question": "Around 6,000 years ago, the Sahara Desert \u2014 today the world's largest hot desert \u2014 looked completely different. What was it?",
+      "stored_answer": "A lush, green landscape with rivers, lakes, and large human populations",
+      "verdict": "correct",
+      "notes": "Wikipedia confirms the African Humid Period (~11,000-5,000 years ago) transformed the Sahara into a 'Green Sahara' with savanna-like landscapes, permanent lakes, extensive river systems, and dense human populations. The answer is accurate.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/African_humid_period",
+      "source_excerpt": "Between 11,000 and 5,000 years ago, the Sahara region was characterized by expansive grasslands, permanent lakes, and extensive river systems. The African Humid Period peaked between 9,000 and 6,000 years ago."
+    },
+    {
+      "id": null,
+      "question": "Ancient Romans used a substance to whiten their teeth that is still found in cleaning products today. What was it?",
+      "stored_answer": "Urine",
+      "verdict": "correct",
+      "notes": "Smithsonian Magazine and Wikipedia confirm Romans used fermented urine as a tooth whitener. The ammonia produced by urea decomposition is an effective cleaning agent still used in modern cleaning products. Emperor Vespasian taxed urine collection from public urinals.",
+      "suggested_fix": null,
+      "source_url": "https://www.smithsonianmag.com/science-nature/from-gunpowder-to-teeth-whitener-the-science-behind-historic-uses-of-urine-442390/",
+      "source_excerpt": "Ancient Romans whitened their teeth using toothpaste made from human urine. The ammonia produced by urea decomposition is an effective cleaning agent. Emperor Vespasian taxed the collection of urine from public urinals."
+    },
+    {
+      "id": null,
+      "question": "Viking navigators could locate the Sun through thick cloud cover using a mineral crystal they called a 'sunstone.' What optical principle does this crystal exploit to reveal the Sun's hidden position?",
+      "stored_answer": "Polarisation of light",
+      "verdict": "correct",
+      "notes": "Wikipedia and Nature confirm the Viking sunstone is believed to be Iceland spar (calcite), which exploits light polarisation. Sunlight scattered by the atmosphere is polarised in a pattern centred on the Sun, and the crystal can reveal this pattern even through cloud cover.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Sunstone_(medieval)",
+      "source_excerpt": "The Viking sunstone is believed to be Iceland spar (calcite), which works as a polarising crystal. Sunlight scattered by the atmosphere is polarised in a pattern centred on the Sun, revealing its position through cloud cover."
+    },
+    {
+      "id": null,
+      "question": "The fax machine transmits documents over telephone lines \u2014 yet it was invented decades before the telephone itself. How many years before?",
+      "stored_answer": "About 33 years",
+      "verdict": "correct",
+      "notes": "Wikipedia confirms Alexander Bain received a patent for the 'Electric Printing Telegraph' (first fax machine) on May 27, 1843. Alexander Graham Bell patented the telephone in 1876. 1876-1843 = 33 years. Note: early fax devices used telegraph lines, not telephone lines, which is an important nuance.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Fax",
+      "source_excerpt": "Alexander Bain received British patent 9745 on May 27, 1843, for his 'Electric Printing Telegraph.' Alexander Graham Bell patented the telephone in 1876, 33 years later."
+    },
+    {
+      "id": null,
+      "question": "Russia is the world's largest country by land area. Is Russia larger or smaller than the continent of Antarctica?",
+      "stored_answer": "Russia is larger",
+      "verdict": "correct",
+      "notes": "Wikipedia confirms Russia covers approximately 17.1 million km^2 and Antarctica covers approximately 14.2 million km^2. Russia is roughly 20% larger than Antarctica. Russia is noted as being larger than the continents of Australia, Antarctica, and Europe.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Russia",
+      "source_excerpt": "Russia covers approximately 17,125,191 km^2. Antarctica covers approximately 14.2 million km^2, making Russia roughly 20% larger than the Antarctic continent."
+    },
+    {
+      "id": null,
+      "question": "The Amazon River discharges so much fresh water into the Atlantic Ocean that sailors in the early Age of Exploration used it to top up their fresh water supplies far out to sea. Roughly how far from the river's mouth is the ocean still detectably fresh \u2014 about 1 km, 16 km, or over 160 km?",
+      "stored_answer": "Over 160 km",
+      "verdict": "needs_fix",
+      "notes": "Wikipedia states the Amazon's freshwater plume is 'about 400 km long and between 100 and 200 km wide.' The plume actually extends much farther than 160 km, potentially covering 2,500,000 km^2 of ocean surface. However, the question says 'over 160 km' which is technically correct as a lower bound. The issue is that the question's source_excerpt claims the plume extends 'roughly 160 km' when in fact it extends ~400 km. The answer 'over 160 km' is still the best of the three choices and is factually correct, but the source_excerpt understates the actual extent.",
+      "suggested_fix": "Update source_excerpt to reflect the actual plume extent: 'The Amazon's freshwater plume is about 400 km long and 100-200 km wide, covering an area up to 2,500,000 km^2. It significantly reduces salinity far from the river mouth.'",
+      "source_url": "https://en.wikipedia.org/wiki/Amazon_River",
+      "source_excerpt": "The Amazon's freshwater plume is about 400 km (250 mi) long and between 100 and 200 km wide, diluting salinity over an area up to 2,500,000 km^2."
+    }
+  ]
+}

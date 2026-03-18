@@ -1,0 +1,160 @@
+{
+  "metadata": {
+    "verified_at": "2026-03-18T12:00:00Z",
+    "source_file": "data/generated/claude_batch_012.json",
+    "total_questions": 15,
+    "verdicts": {"correct": 13, "needs_fix": 1, "needs_review": 1, "incorrect": 0}
+  },
+  "questions": [
+    {
+      "id": null,
+      "question": "Honey found in Egyptian tombs over 3,000 years old was still perfectly edible when discovered. What three properties of honey make it essentially impossible for bacteria to survive in it?",
+      "stored_answer": "Low moisture, high acidity, and natural hydrogen peroxide production",
+      "verdict": "correct",
+      "notes": "Confirmed by Wikipedia. Honey's antibacterial properties stem from: low moisture content (~17%), acidic pH (~3.9 from gluconic acid), and enzymatic production of hydrogen peroxide via glucose oxidase. These three factors create an environment hostile to bacteria.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Honey",
+      "source_excerpt": "Due to honey's high sugar concentration and acidic pH level many microorganisms cannot grow in it. Glucose oxidase produces gluconic acid and hydrogen peroxide, which are partially responsible for honey acidity and suppression of bacterial growth."
+    },
+    {
+      "id": null,
+      "question": "Lake Baikal in Siberia holds roughly 20% of the world's unfrozen surface fresh water \u2014 more than all five North American Great Lakes combined. Is it that large because of its surface area, its extraordinary depth, or both?",
+      "stored_answer": "Its extraordinary depth \u2014 it is the deepest lake on Earth at over 1,600 metres",
+      "verdict": "correct",
+      "notes": "Confirmed. Lake Baikal is the world's deepest lake at 1,642 metres and contains 22-23% of the world's fresh surface water. It is only the 7th largest by surface area, so its extraordinary volume comes from depth, not surface area.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Lake_Baikal",
+      "source_excerpt": "Lake Baikal is the deepest lake with a maximum depth of 1,642 metres and is the world's largest freshwater lake by volume, containing 22-23% of the world's fresh surface water."
+    },
+    {
+      "id": null,
+      "question": "Venus rotates so slowly that a single day on Venus (one full rotation) takes longer than a Venusian year (one orbit around the Sun). Roughly how many Earth days does one Venus day last: 10, 100, or 240?",
+      "stored_answer": "About 243 Earth days",
+      "verdict": "correct",
+      "notes": "Confirmed by NASA. Venus's sidereal rotation period is 243 Earth days, while its orbital period is about 224.7 Earth days. Venus also rotates retrograde (clockwise), so the Sun rises in the west.",
+      "suggested_fix": null,
+      "source_url": "https://science.nasa.gov/venus/venus-facts/",
+      "source_excerpt": "Venus's sidereal day is 243 Earth days, which lasts longer than a Venusian year of 224.7 Earth days. It is the only planet in the solar system that takes longer to rotate once about its axis than to travel once around the Sun."
+    },
+    {
+      "id": null,
+      "question": "China stretches nearly 5,200 km from east to west \u2014 wide enough to span five geographical time zones. Yet the entire country operates on a single official time zone. What does this mean for people in China's far west \u2014 does their sunrise come unusually early, or unusually late?",
+      "stored_answer": "Unusually late \u2014 the sun may not rise until after 10 AM in winter in western China",
+      "verdict": "correct",
+      "notes": "Confirmed. China uses a single time zone (UTC+8, Beijing time). In western Xinjiang, sunrise can occur as late as 9:45-10:15 AM in winter. Many locals in Xinjiang unofficially observe UTC+6.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Time_in_China",
+      "source_excerpt": "China follows a single standard time offset of UTC+08:00. In Urumqi, during early January the sun does not rise until 09:45. Xinjiang residents would wake at 10:00 AM Beijing Time when the sunrise occurs."
+    },
+    {
+      "id": null,
+      "question": "The driest place on Earth isn't in any desert you might expect. Parts of it haven't seen rain or snow for an estimated 2 million years. Is it in: the Sahara, the Atacama Desert, or Antarctica?",
+      "stored_answer": "Antarctica",
+      "verdict": "correct",
+      "notes": "The McMurdo Dry Valleys in Antarctica are confirmed as among the driest places on Earth, with katabatic winds scouring away moisture. The '2 million years' claim is commonly cited but difficult to verify precisely. The core answer (Antarctica) is correct.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/McMurdo_Dry_Valleys",
+      "source_excerpt": "The McMurdo Dry Valleys are the coldest and driest desert in the world and the largest ice-free region in Antarctica. High-pressure katabatic winds scour away snowfall and humidity across the region."
+    },
+    {
+      "id": null,
+      "question": "Glass appears to be a solid, but physicists have long debated its true nature. At the molecular level, glass lacks the ordered crystal structure of a true solid. Is glass technically classified as a solid, a liquid, or something else entirely?",
+      "stored_answer": "An amorphous solid \u2014 it has the rigidity of a solid but the disordered molecular structure of a liquid",
+      "verdict": "correct",
+      "notes": "Confirmed by Wikipedia. Glass is classified as an amorphous solid. It is definitively NOT a supercooled liquid (a common myth). It exhibits mechanical properties of a solid but lacks long-range crystal structure.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Glass",
+      "source_excerpt": "Glass is an amorphous solid. Although the atomic-scale structure shares characteristics of a supercooled liquid, glass exhibits all the mechanical properties of a solid. The notion that glass flows over extended periods is not supported by empirical research."
+    },
+    {
+      "id": null,
+      "question": "Africa is often shown on maps as roughly the same size as Greenland. In reality, how many Greenlands could fit inside Africa: 3, 7, or 14?",
+      "stored_answer": "About 14",
+      "verdict": "correct",
+      "notes": "Confirmed. Africa's area is approximately 30.37 million km2 and Greenland is about 2.17 million km2. Africa is roughly 14 times larger. The Mercator projection distortion is well documented.",
+      "suggested_fix": null,
+      "source_url": "https://www.britannica.com/place/Why-Does-Greenland-Look-So-Big-on-Some-Maps",
+      "source_excerpt": "Greenland appears the same size as Africa on Mercator projection maps, when in reality Africa's area is 14 times as large. Africa comprises almost 12 million square miles, while Greenland has 836,330 square miles."
+    },
+    {
+      "id": null,
+      "question": "There are 206 bones in the adult human body. At birth, roughly how many bones does a baby have: fewer than an adult, the same number, or more?",
+      "stored_answer": "More \u2014 about 270 bones, which gradually fuse together as the child grows",
+      "verdict": "correct",
+      "notes": "Confirmed by Wikipedia. A newborn has approximately 270 bones. During development, many bones fuse together, resulting in 206 bones in a typical adult skeleton.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Human_skeleton",
+      "source_excerpt": "The human skeleton is composed of around 270 bones at birth \u2013 this total decreases to around 206 bones by adulthood after some bones fuse together."
+    },
+    {
+      "id": null,
+      "question": "Only two countries in the world are doubly landlocked \u2014 meaning they are surrounded entirely by other landlocked countries, so you must cross at least two borders to reach an ocean. One is Uzbekistan. Name the other.",
+      "stored_answer": "Liechtenstein",
+      "verdict": "correct",
+      "notes": "Confirmed by Wikipedia and Britannica. Liechtenstein (bordered by Austria and Switzerland, both landlocked) and Uzbekistan are the only two doubly landlocked countries. Note: Uzbekistan's status depends on whether the Caspian Sea is considered a sea or a lake.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Landlocked_country",
+      "source_excerpt": "There are two doubly landlocked countries: Liechtenstein in Western Europe, surrounded by Austria and Switzerland, and Uzbekistan in Central Asia."
+    },
+    {
+      "id": null,
+      "question": "Octopuses have blue blood, three hearts, and a doughnut-shaped brain. But perhaps most remarkably, about two-thirds of their neurons are not in their brain at all. Where are the majority of an octopus's neurons located?",
+      "stored_answer": "In their arms",
+      "verdict": "correct",
+      "notes": "Confirmed by Wikipedia and Smithsonian. Octopuses have over 500 million neurons, with two-thirds located in the nerve cords of their arms, allowing each arm to perform actions with a degree of independence.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Octopus",
+      "source_excerpt": "Octopuses have a complex nervous system containing over 500 million neurons, with two-thirds of these neurons located in the nerve cords of their arms."
+    },
+    {
+      "id": null,
+      "question": "Istanbul is the only major city in the world that sits on two continents. But which two continents does it straddle?",
+      "stored_answer": "Europe and Asia",
+      "verdict": "correct",
+      "notes": "Confirmed. Istanbul straddles the Bosphorus strait, with its western portion in Europe and eastern portion in Asia. About two-thirds of its population lives in the European side.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Istanbul",
+      "source_excerpt": "Istanbul is a city on two continents, with about two-thirds of its population living in Europe and the rest in Asia. It straddles the Bosphorus in northwestern Turkey."
+    },
+    {
+      "id": null,
+      "question": "Every second, the Sun converts roughly 4 million tonnes of its own mass into energy via nuclear fusion. At this rate, has the Sun lost a noticeable fraction of its mass since it formed 4.6 billion years ago? Closer to 0.01%, 0.1%, or 5%?",
+      "stored_answer": "About 0.03% \u2014 a tiny fraction despite the enormous rate",
+      "verdict": "needs_review",
+      "notes": "The answer of 0.03% accounts only for fusion mass loss. When solar wind is included, total mass loss is closer to 0.05%. The question specifically mentions fusion conversion, so 0.03% from fusion alone is reasonable. Among the three options (0.01%, 0.1%, 5%), the answer of 0.03% is closest to 0.01% but falls between the first two options. The question's framing could be clearer about which option maps to the correct answer.",
+      "suggested_fix": "Consider changing the correct answer to 'About 0.05%' to account for total mass loss (fusion + solar wind), or adjust options to make the mapping clearer. The current answer of 0.03% falls between the 0.01% and 0.1% options, making it ambiguous which one is 'correct' in a quiz setting.",
+      "source_url": "https://en.wikipedia.org/wiki/Sun",
+      "source_excerpt": "The Sun converts about 4.26 million tonnes of mass to energy per second via fusion. Over 4.6 billion years, including solar wind losses, the Sun has lost approximately 0.05% of its total mass."
+    },
+    {
+      "id": null,
+      "question": "The Pacific Ocean is so vast that it contains a point called Point Nemo \u2014 the spot on Earth farthest from any land. The nearest humans to Point Nemo are often not on any ship or island. Where are they?",
+      "stored_answer": "Astronauts on the International Space Station, orbiting about 400 km overhead",
+      "verdict": "correct",
+      "notes": "Confirmed by Wikipedia and Britannica. Point Nemo is approximately 2,688 km from the nearest land. The ISS orbits at roughly 408-415 km altitude, so when it passes overhead, astronauts are the closest humans to this point. The area also serves as a spacecraft cemetery.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Pole_of_inaccessibility",
+      "source_excerpt": "Point Nemo is about 2,688 km from the nearest land. Since no regular marine or air traffic routes are within 400 km, sometimes the closest human beings are astronauts aboard the ISS when it passes overhead at roughly 415 km altitude."
+    },
+    {
+      "id": null,
+      "question": "Bananas are slightly radioactive due to their potassium content. Scientists even created an informal unit of radiation measurement named after them. How many bananas would you need to eat in a single sitting to receive a dangerous radiation dose: about 100, about 10,000, or more than 10 million?",
+      "stored_answer": "More than 10 million",
+      "verdict": "correct",
+      "notes": "Confirmed by Wikipedia. An acute lethal dose is approximately 35 million BED (banana equivalent doses). One BED equals about 0.1 microsieverts. A lethal acute dose is approximately 3.5 Sv. In practice, the body excretes excess potassium so cumulative dose from bananas is effectively zero.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Banana_equivalent_dose",
+      "source_excerpt": "An acute lethal dose of radiation is approximately 35,000,000 BED (3.5 Sv). One banana delivers about 0.1 microsieverts. The body excretes excess potassium, making real danger practically impossible."
+    },
+    {
+      "id": null,
+      "question": "There is a country in Africa where over 800 languages are spoken \u2014 more than any other country on Earth. Is it Nigeria, Democratic Republic of Congo, or Papua New Guinea?",
+      "stored_answer": "Papua New Guinea \u2014 which is actually not in Africa but in Oceania, with over 840 languages",
+      "verdict": "needs_fix",
+      "notes": "While the factual content is correct (PNG has 840+ languages and is in Oceania, not Africa), the question is misleading in a problematic way. It states 'There is a country in Africa where over 800 languages are spoken' as a premise, which is factually false \u2014 no African country has 800+ languages. Nigeria has ~520. The question then contradicts its own premise. This is a trick question that relies on a false statement, which could frustrate players and undermine trust.",
+      "suggested_fix": "Rephrase to avoid the false premise. E.g.: 'One country on Earth has over 840 languages spoken within its borders \u2014 more than any other. Is it Nigeria, the Democratic Republic of Congo, or Papua New Guinea?' This preserves the surprise without making a factually incorrect statement.",
+      "source_url": "https://en.wikipedia.org/wiki/Languages_of_Papua_New_Guinea",
+      "source_excerpt": "Papua New Guinea has over 840 living languages, making it the most linguistically diverse country in the world. It is located in Oceania, not Africa. Nigeria ranks second with over 520 languages."
+    }
+  ]
+}

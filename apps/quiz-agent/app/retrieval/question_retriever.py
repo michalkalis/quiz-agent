@@ -7,12 +7,15 @@ Proper RAG Implementation:
 - Metadata filters are constraints, not primary selection criteria
 """
 
+import logging
 from typing import List, Optional, Tuple
 import random
 
 import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../../..", "packages/shared"))
+
+logger = logging.getLogger(__name__)
 
 from quiz_shared.models.question import Question
 from quiz_shared.models.session import QuizSession
@@ -55,7 +58,7 @@ class QuestionRetriever:
         """
         # Step 1: Build rich semantic query from session context
         semantic_query = self._build_semantic_query(session)
-        print(f"DEBUG: Semantic query: '{semantic_query}'")
+        logger.debug("Semantic query: '%s'", semantic_query)
 
         # Step 2: Determine difficulty (handle "random")
         question_difficulty = self._determine_difficulty(session)
@@ -68,9 +71,8 @@ class QuestionRetriever:
         client_excluded = client_excluded_ids or []
         all_excluded_ids = list(set(session_excluded + client_excluded))
 
-        print(f"DEBUG: Excluding {len(all_excluded_ids)} questions total")
-        print(f"  - Session: {len(session_excluded)}")
-        print(f"  - Client history: {len(client_excluded)}")
+        logger.debug("Excluding %d questions total (session: %d, client: %d)",
+                     len(all_excluded_ids), len(session_excluded), len(client_excluded))
 
         # Step 5: Retrieve candidates using semantic search (PRIMARY mechanism)
         candidates = self._retrieve_candidates_semantic(
@@ -84,7 +86,7 @@ class QuestionRetriever:
         candidates = [c for c in candidates if not c.is_expired()]
 
         if not candidates:
-            print(f"DEBUG: No candidates from semantic search, trying fallback strategies")
+            logger.debug("No candidates from semantic search, trying fallback strategies")
             candidates = self._fallback_retrieval(
                 session,
                 question_difficulty,
@@ -161,7 +163,7 @@ class QuestionRetriever:
         question_difficulty = session.current_difficulty
         if question_difficulty == "random":
             question_difficulty = random.choice(["easy", "medium", "hard"])
-            print(f"DEBUG: Selected random difficulty: {question_difficulty}")
+            logger.debug("Selected random difficulty: %s", question_difficulty)
         return question_difficulty
 
     def _build_metadata_filters(
@@ -221,7 +223,7 @@ class QuestionRetriever:
             excluded_ids=excluded_ids
         )
 
-        print(f"DEBUG: Retrieved {len(candidates)} candidates via semantic search")
+        logger.debug("Retrieved %d candidates via semantic search", len(candidates))
         return candidates
 
     def _fallback_retrieval(
@@ -249,7 +251,7 @@ class QuestionRetriever:
             lang_filter["language_dependent"] = False
 
         # Fallback 1: Simpler semantic query (just "question")
-        print(f"DEBUG: Fallback 1 - Simpler semantic query")
+        logger.debug("Fallback 1 - Simpler semantic query")
         simple_query = "quiz question"
         candidates = self.chroma.search_questions(
             query_text=simple_query,
@@ -261,7 +263,7 @@ class QuestionRetriever:
             return candidates
 
         # Fallback 2: Try other difficulty levels with semantic search
-        print(f"DEBUG: Fallback 2 - Other difficulties with semantic search")
+        logger.debug("Fallback 2 - Other difficulties with semantic search")
         difficulty_fallback = ["easy", "medium", "hard"]
         if question_difficulty in difficulty_fallback:
             difficulty_fallback.remove(question_difficulty)
@@ -274,11 +276,11 @@ class QuestionRetriever:
                 excluded_ids=excluded_ids
             )
             if candidates:
-                print(f"DEBUG: Found {len(candidates)} candidates with difficulty {fallback_difficulty}")
+                logger.debug("Found %d candidates with difficulty %s", len(candidates), fallback_difficulty)
                 return candidates
 
         # Fallback 3: Minimal constraints (still require approved)
-        print(f"DEBUG: Fallback 3 - Minimal constraints")
+        logger.debug("Fallback 3 - Minimal constraints")
         candidates = self.chroma.search_questions(
             query_text="question",
             filters={"type": {"$in": ["text", "image"]}, "review_status": "approved", **lang_filter},
@@ -304,11 +306,10 @@ class QuestionRetriever:
         """
         total_count = self.chroma.count_questions()
         if total_count == 0:
-            print(f"ERROR: Database is empty. No questions found.")
+            logger.error("Database is empty. No questions found.")
         else:
-            print(f"ERROR: No questions available. Database has {total_count} questions.")
-            print(f"  - Asked: {len(session.asked_question_ids)} questions")
-            print(f"  - Difficulty: {question_difficulty}")
+            logger.error("No questions available. Database has %d questions (asked: %d, difficulty: %s)",
+                         total_count, len(session.asked_question_ids), question_difficulty)
         return None
 
     def _apply_image_cap(
@@ -386,7 +387,7 @@ class QuestionRetriever:
         top_diverse = scored_candidates[:5]
         selected, score = random.choice(top_diverse)
 
-        print(f"DEBUG: Selected question with diversity score {score:.3f}")
+        logger.debug("Selected question with diversity score %.3f", score)
         return selected
 
     def _get_recent_questions(

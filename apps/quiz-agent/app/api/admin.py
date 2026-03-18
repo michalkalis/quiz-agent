@@ -4,7 +4,8 @@ Secured endpoints for importing and managing questions.
 Requires ADMIN_API_KEY for authentication.
 """
 
-from fastapi import APIRouter, HTTPException, Header, status
+import logging
+from fastapi import APIRouter, HTTPException, Header, Request, status
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 from datetime import datetime
@@ -13,8 +14,11 @@ import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../../..", "packages/shared"))
 
+logger = logging.getLogger(__name__)
+
 from quiz_shared.models.question import Question
 from quiz_shared.database.chroma_client import ChromaDBClient
+from ..rate_limit import limiter
 
 
 router = APIRouter(prefix="/api/v1/admin", tags=["Admin"])
@@ -103,7 +107,9 @@ class QuestionStats(BaseModel):
 
 
 @router.post("/questions/import", response_model=ImportQuestionsResponse)
+@limiter.limit("5/minute")
 async def import_questions(
+    http_request: Request,
     request: ImportQuestionsRequest,
     _: None = Header(None, dependencies=[verify_admin_key])
 ):
@@ -193,7 +199,7 @@ async def import_questions(
                     # Question text is very similar to existing question
                     skipped += 1
                     skipped_ids.append(q_data.id)
-                    print(f"Skipped {q_data.id}: Similar to {duplicates[0][0].id}")
+                    logger.info("Skipped %s: Similar to %s", q_data.id, duplicates[0][0].id)
                     continue
 
             # Add to database
@@ -206,7 +212,7 @@ async def import_questions(
                 failed_ids.append(q_data.id)
 
         except Exception as e:
-            print(f"Error importing question {q_data.id}: {e}")
+            logger.error("Error importing question %s: %s", q_data.id, e)
             failed += 1
             failed_ids.append(q_data.id)
 
@@ -222,7 +228,9 @@ async def import_questions(
 
 
 @router.get("/questions")
+@limiter.limit("5/minute")
 async def list_questions(
+    request: Request,
     _: None = Header(None, dependencies=[verify_admin_key]),
     search: Optional[str] = None,
     topic: Optional[str] = None,
@@ -253,7 +261,9 @@ async def list_questions(
 
 
 @router.get("/questions/stats", response_model=QuestionStats)
+@limiter.limit("5/minute")
 async def get_question_stats(
+    request: Request,
     _: None = Header(None, dependencies=[verify_admin_key])
 ):
     """Get statistics about questions in the database.
@@ -296,7 +306,9 @@ async def get_question_stats(
 
 
 @router.delete("/questions/{question_id}")
+@limiter.limit("5/minute")
 async def delete_question(
+    request: Request,
     question_id: str,
     _: None = Header(None, dependencies=[verify_admin_key])
 ):

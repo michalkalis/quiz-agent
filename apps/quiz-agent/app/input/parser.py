@@ -4,10 +4,13 @@ Ported from graph.py:75-356 with enhancements for rating and multiplayer.
 """
 
 import json
+import logging
 from typing import Dict, List, Optional, Any
 from difflib import SequenceMatcher
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
+
+logger = logging.getLogger(__name__)
 
 
 class ParsedIntent(Dict[str, Any]):
@@ -131,7 +134,7 @@ class InputParser:
                 }]
 
         except (json.JSONDecodeError, KeyError) as e:
-            print(f"JSON parse error: {e}")
+            logger.warning("JSON parse error: %s", e)
             # Fallback: treat as simple answer
             intents = [{
                 "intent_type": "answer",
@@ -146,8 +149,7 @@ class InputParser:
 
                 # Check if answer suspiciously long (likely captured question)
                 if len(answer) > 100:
-                    print(f"⚠️ Suspiciously long answer detected ({len(answer)} chars): {answer[:50]}...")
-                    print("   Converting to skip to prevent question text contamination")
+                    logger.warning("Suspiciously long answer detected (%d chars): %s...", len(answer), answer[:50])
                     intent["intent_type"] = "skip"
                     intent["extracted_data"] = {}
                     intent["confirmation_message"] = "Answer too long, treating as skip"
@@ -157,10 +159,7 @@ class InputParser:
                 if current_question and len(current_question) > 10:
                     similarity = SequenceMatcher(None, answer.lower(), current_question.lower()).ratio()
                     if similarity > 0.7:  # 70% similar to question
-                        print(f"⚠️ Answer too similar to question (similarity: {similarity:.2f})")
-                        print(f"   Question: {current_question[:50]}...")
-                        print(f"   Answer: {answer[:50]}...")
-                        print("   Converting to skip to prevent contamination")
+                        logger.warning("Answer too similar to question (similarity: %.2f)", similarity)
                         intent["intent_type"] = "skip"
                         intent["extracted_data"] = {}
                         intent["confirmation_message"] = "Invalid answer detected, treating as skip"

@@ -7,12 +7,15 @@ Implements 3-tier caching:
 """
 
 import hashlib
+import logging
 import time
 import os
 from pathlib import Path
 from typing import Optional, Dict, Tuple
 from dataclasses import dataclass
 import json
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -87,7 +90,7 @@ class TTSCache:
                             voice=entry_dict["voice"]
                         )
             except Exception as e:
-                print(f"Warning: Failed to load cache metadata: {e}")
+                logger.warning("Failed to load cache metadata: %s", e)
                 self.lru = {}
 
     def _save_metadata(self):
@@ -105,7 +108,7 @@ class TTSCache:
             with open(self.metadata_path, 'w') as f:
                 json.dump(data, f, indent=2)
         except Exception as e:
-            print(f"Warning: Failed to save cache metadata: {e}")
+            logger.warning("Failed to save cache metadata: %s", e)
 
     def _hash(self, text: str, voice: str) -> str:
         """Generate cache key from text and voice.
@@ -149,7 +152,7 @@ class TTSCache:
             try:
                 return entry.path.read_bytes()
             except Exception as e:
-                print(f"Warning: Failed to read cached audio: {e}")
+                logger.warning("Failed to read cached audio: %s", e)
                 del self.lru[cache_key]
                 self._save_metadata()
                 return None
@@ -171,7 +174,7 @@ class TTSCache:
         try:
             path.write_bytes(audio_data)
         except Exception as e:
-            print(f"Warning: Failed to write audio to cache: {e}")
+            logger.warning("Failed to write audio to cache: %s", e)
             return
 
         # Update LRU metadata
@@ -211,7 +214,7 @@ class TTSCache:
                 if entry.path.exists():
                     entry.path.unlink()
             except Exception as e:
-                print(f"Warning: Failed to delete cached file: {e}")
+                logger.warning("Failed to delete cached file: %s", e)
 
             # Remove from LRU
             del self.lru[key]
@@ -234,7 +237,7 @@ class TTSCache:
             try:
                 return path.read_bytes()
             except Exception as e:
-                print(f"Warning: Failed to read static feedback: {e}")
+                logger.warning("Failed to read static feedback: %s", e)
                 return None
 
         return None
@@ -253,7 +256,7 @@ class TTSCache:
         try:
             path.write_bytes(audio_data)
         except Exception as e:
-            print(f"Warning: Failed to write static feedback: {e}")
+            logger.warning("Failed to write static feedback: %s", e)
 
     def get_cache_stats(self) -> Dict[str, any]:
         """Get cache statistics.

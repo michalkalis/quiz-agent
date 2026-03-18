@@ -203,7 +203,7 @@ class TTSService:
         - feedback_incorrect_0.opus ("Not quite.")
         - etc.
         """
-        print("Pre-generating static feedback audio...")
+        logger.info("Pre-generating static feedback audio...")
 
         total_generated = 0
         total_skipped = 0
@@ -228,12 +228,12 @@ class TTSService:
                     self.cache.set_static_feedback(result, i, audio_data)
                     total_generated += 1
 
-                    print(f"  ✓ Generated: {result} variant {i} - \"{phrase}\"")
+                    logger.debug("Generated: %s variant %d - \"%s\"", result, i, phrase)
 
                 except Exception as e:
-                    print(f"  ✗ Failed to generate {result} variant {i}: {e}")
+                    logger.error("Failed to generate %s variant %d: %s", result, i, e)
 
-        print(f"\nStatic feedback ready: {total_generated} generated, {total_skipped} already cached")
+        logger.info("Static feedback ready: %d generated, %d already cached", total_generated, total_skipped)
 
     def get_cache_stats(self) -> dict:
         """Get cache statistics.

@@ -3,10 +3,13 @@
 Converts audio files to text for voice-based quiz interaction.
 """
 
+import logging
 from typing import Optional, BinaryIO
 from dataclasses import dataclass
 from openai import AsyncOpenAI
 import os
+
+logger = logging.getLogger(__name__)
 
 
 # Known Whisper hallucination patterns (common outputs on silence/noise)
@@ -225,14 +228,11 @@ class VoiceTranscriber:
                 no_speech_prob = total_no_speech / len(segments)
                 avg_logprob = total_logprob / len(segments)
 
-                print(f"DEBUG [transcribe]: segments={len(segments)}, "
-                      f"no_speech_prob={no_speech_prob:.3f}, "
-                      f"avg_logprob={avg_logprob:.3f}, "
-                      f"duration={duration:.2f}s")
+                logger.debug("Transcribe: segments=%d, no_speech_prob=%.3f, avg_logprob=%.3f, duration=%.2fs",
+                             len(segments), no_speech_prob, avg_logprob, duration)
             else:
                 # Fallback: no segment data available (shouldn't happen with verbose_json)
-                print(f"⚠️ WARNING [transcribe]: No segment data in Whisper response, "
-                      f"falling back to permissive defaults")
+                logger.warning("No segment data in Whisper response, falling back to permissive defaults")
 
             return TranscriptionResult(
                 text=text,

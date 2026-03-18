@@ -748,7 +748,9 @@ final class QuizViewModel: ObservableObject {
             }
 
             // Return first result, cancel the other
-            let result = try await group.next()!
+            guard let result = try await group.next() else {
+                throw TimeoutError()
+            }
             group.cancelAll()
             return result
         }
@@ -756,6 +758,7 @@ final class QuizViewModel: ObservableObject {
 
     /// Confirm the transcribed answer and proceed to show result
     func confirmAnswer() async {
+        cancelAutoConfirm()
         showAnswerConfirmation = false
 
         // If we have a pending Whisper response, use it directly
@@ -895,29 +898,29 @@ final class QuizViewModel: ObservableObject {
     /// The backend MCQ fast-path matches both keys and values, so this works
     /// regardless of whether the evaluator checks by key or value.
     func submitMCQAnswer(key: String, value: String) async {
-        // TODO: Implement MCQ submission flow (~20 lines)
-        //
-        // This method is called when the user taps an MCQ option (or uses voice "A"/"B"/"C"/"D").
-        //
-        // Decisions to make:
-        // 1. What to submit: the key ("a") or value ("Paris")?
-        //    - Submitting value works with existing text evaluator
-        //    - Submitting key is more precise for MCQ fast-path
-        //    - Consider: what if the value contains special characters?
-        //
-        // 2. Flow control:
-        //    - Cancel any running timers (answerTimer, autoStopRecording)
-        //    - Set state to .processing
-        //    - Clear errors
-        //    - Call networkService.submitTextInput() with the answer
-        //    - Call handleQuizResponse() with the result
-        //    - Handle errors (set error state)
-        //
-        // 3. Should this bypass the confirmation modal? (Plan says yes)
-        //
-        // Hint: Look at resubmitAnswer() below for a similar pattern.
-        // The key difference: MCQ skips the confirmation sheet entirely.
-        fatalError("submitMCQAnswer — implement me!")
+        guard let sessionId = currentSession?.id else {
+            errorMessage = "No active session"
+            return
+        }
+
+        cancelAnswerTimer()
+        cancelAutoStopRecordingTimer()
+        quizState = .processing
+        errorMessage = nil
+
+        do {
+            let response = try await networkService.submitTextInput(
+                sessionId: sessionId,
+                input: value,
+                audio: settings.audioMode != "off"
+            )
+            await handleQuizResponse(response)
+        } catch {
+            setError(
+                message: "Failed to submit answer: \(error.localizedDescription)",
+                context: .submission
+            )
+        }
     }
 
     /// Resubmit an edited text answer
@@ -1179,6 +1182,7 @@ final class QuizViewModel: ObservableObject {
     /// Choose between auto-record (Phase 2) or answer timer (Phase 1) based on settings
     private func startRecordingOrTimer() async {
         guard quizState == .askingQuestion else { return }
+        guard currentQuestion?.isMultipleChoice != true else { return }
 
         if settings.autoRecordEnabled && voiceCommandService != nil && !isRerecording {
             // Auto-record path: 500ms pause → auto-start recording
@@ -1530,6 +1534,8 @@ final class QuizViewModel: ObservableObject {
 
         // After TTS finishes (or was interrupted by barge-in), choose next path
         guard quizState == .askingQuestion else { return }
+        // MCQ questions use tap/voice selection, not recording
+        guard currentQuestion?.isMultipleChoice != true else { return }
 
         if settings.autoRecordEnabled && voiceCommandService != nil && !isRerecording {
             // Auto-record path: 500ms pause → auto-start recording

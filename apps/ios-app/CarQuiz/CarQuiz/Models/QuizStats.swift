@@ -26,20 +26,16 @@ struct QuizStats: Codable, Equatable, Sendable {
     /// Record the result of an answer and update streak
     /// - Parameter isCorrect: Whether the answer was correct (1.0 points)
     mutating func recordAnswer(isCorrect: Bool) {
-        // TODO: Implement streak counting logic (~10 lines)
-        //
-        // 1. Increment totalAnswered
-        // 2. If correct:
-        //    - Increment totalCorrect
-        //    - Increment currentStreak
-        //    - Update bestStreak if currentStreak exceeds it
-        // 3. If incorrect:
-        //    - Reset currentStreak to 0
-        //
-        // Design choice: Should partial credit (0.5 points) count as "correct"
-        // for streak purposes? The caller passes Bool, so this is decided
-        // upstream. Consider what makes the streak feel rewarding.
-        fatalError("recordAnswer — implement me!")
+        totalAnswered += 1
+        if isCorrect {
+            totalCorrect += 1
+            currentStreak += 1
+            if currentStreak > bestStreak {
+                bestStreak = currentStreak
+            }
+        } else {
+            currentStreak = 0
+        }
     }
 
     /// Record a completed quiz

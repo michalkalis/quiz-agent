@@ -980,3 +980,187 @@ struct QuizViewModelSettingsPersistenceTests {
         #expect(mockStore.saveSettingsCallCount == 2)
     }
 }
+
+// MARK: - QuizStats Tests
+
+@Suite("QuizStats Tests")
+struct QuizStatsTests {
+
+    @Test("recordAnswer correct increments totalCorrect, totalAnswered, and currentStreak")
+    func recordAnswerCorrect() {
+        var stats = QuizStats.empty
+        stats.recordAnswer(isCorrect: true)
+
+        #expect(stats.totalAnswered == 1)
+        #expect(stats.totalCorrect == 1)
+        #expect(stats.currentStreak == 1)
+        #expect(stats.bestStreak == 1)
+    }
+
+    @Test("recordAnswer incorrect resets currentStreak and increments totalAnswered")
+    func recordAnswerIncorrect() {
+        var stats = QuizStats.empty
+        stats.recordAnswer(isCorrect: true)
+        stats.recordAnswer(isCorrect: false)
+
+        #expect(stats.totalAnswered == 2)
+        #expect(stats.totalCorrect == 1)
+        #expect(stats.currentStreak == 0)
+        #expect(stats.bestStreak == 1)
+    }
+
+    @Test("streak tracking: correct, correct, incorrect → streak goes 1, 2, 0")
+    func streakTracking() {
+        var stats = QuizStats.empty
+        stats.recordAnswer(isCorrect: true)
+        #expect(stats.currentStreak == 1)
+
+        stats.recordAnswer(isCorrect: true)
+        #expect(stats.currentStreak == 2)
+
+        stats.recordAnswer(isCorrect: false)
+        #expect(stats.currentStreak == 0)
+        #expect(stats.bestStreak == 2)
+    }
+
+    @Test("bestStreak preserved after reset")
+    func bestStreakPreserved() {
+        var stats = QuizStats.empty
+        stats.recordAnswer(isCorrect: true)
+        stats.recordAnswer(isCorrect: true)
+        stats.recordAnswer(isCorrect: true)
+        #expect(stats.bestStreak == 3)
+
+        stats.recordAnswer(isCorrect: false)
+        stats.recordAnswer(isCorrect: true)
+        #expect(stats.currentStreak == 1)
+        #expect(stats.bestStreak == 3)
+    }
+
+    @Test("recordQuizCompleted increments totalQuizzes")
+    func recordQuizCompleted() {
+        var stats = QuizStats.empty
+        stats.recordQuizCompleted()
+        stats.recordQuizCompleted()
+
+        #expect(stats.totalQuizzes == 2)
+    }
+
+    @Test("accuracy is 0 when no answers recorded")
+    func accuracyZeroWhenEmpty() {
+        let stats = QuizStats.empty
+        #expect(stats.accuracyPercentage == 0)
+    }
+
+    @Test("accuracy calculation with mixed answers")
+    func accuracyCalculation() {
+        var stats = QuizStats.empty
+        stats.recordAnswer(isCorrect: true)
+        stats.recordAnswer(isCorrect: true)
+        stats.recordAnswer(isCorrect: false)
+        stats.recordAnswer(isCorrect: true)
+
+        #expect(stats.accuracyPercentage == 75.0)
+    }
+}
+
+// MARK: - MCQ Submission Tests
+
+@Suite("QuizViewModel MCQ Submission Tests")
+struct QuizViewModelMCQSubmissionTests {
+
+    @MainActor
+    private func makeViewModel(shouldFail: Bool = false) -> (QuizViewModel, MockNetworkService) {
+        let mockNetwork = MockNetworkService()
+        mockNetwork.shouldFail = shouldFail
+        mockNetwork.mockSession = QuizSession(
+            id: "test_session_123",
+            mode: "single", phase: "asking", maxQuestions: 10,
+            currentDifficulty: "medium", category: nil, language: "en",
+            participants: [
+                Participant(
+                    id: "p1", userId: nil, displayName: "Player",
+                    score: 1, answeredCount: 1, correctCount: 1,
+                    lastAnswer: "Paris", lastResult: "correct",
+                    isHost: true, isReady: true, joinedAt: Date()
+                )
+            ],
+            expiresAt: Date().addingTimeInterval(30 * 60),
+            createdAt: Date()
+        )
+        mockNetwork.mockResponse = makeQuizResponse(
+            evaluationFor: "q_mcq_001",
+            userAnswer: "Paris",
+            isCorrect: true,
+            nextQuestion: makeQuestion(id: "q_002", source: "Next")
+        )
+
+        let viewModel = QuizViewModel(
+            networkService: mockNetwork,
+            audioService: MockAudioService(),
+            persistenceStore: MockPersistenceStore()
+        )
+        viewModel.currentSession = mockNetwork.mockSession
+        viewModel.currentQuestion = Question(
+            id: "q_mcq_001",
+            question: "What is the capital of France?",
+            type: .textMultichoice,
+            possibleAnswers: ["a": "Paris", "b": "London", "c": "Berlin", "d": "Madrid"],
+            difficulty: "easy",
+            topic: "Geography",
+            category: "adults",
+            sourceUrl: nil,
+            sourceExcerpt: nil,
+            mediaUrl: nil,
+            imageSubtype: nil,
+            explanation: nil
+        )
+        viewModel.quizState = .askingQuestion
+        return (viewModel, mockNetwork)
+    }
+
+    @Test("MCQ submission transitions to showingResult on success")
+    @MainActor
+    func mcqSubmissionSuccess() async throws {
+        let (viewModel, _) = makeViewModel()
+
+        await viewModel.submitMCQAnswer(key: "a", value: "Paris")
+
+        #expect(viewModel.quizState.isShowingResult)
+    }
+
+    @Test("MCQ submission transitions to processing state")
+    @MainActor
+    func mcqSubmissionTransitionsToProcessing() async throws {
+        // We can't observe the intermediate .processing state easily since
+        // the async call completes, but we verify it doesn't stay in .askingQuestion
+        let (viewModel, _) = makeViewModel()
+
+        await viewModel.submitMCQAnswer(key: "a", value: "Paris")
+
+        // After completion, should be in showingResult (went through processing)
+        #expect(viewModel.quizState.isShowingResult)
+        #expect(viewModel.errorMessage == nil)
+    }
+
+    @Test("MCQ submission with network error shows error state")
+    @MainActor
+    func mcqSubmissionNetworkError() async throws {
+        let (viewModel, _) = makeViewModel(shouldFail: true)
+
+        await viewModel.submitMCQAnswer(key: "a", value: "Paris")
+
+        #expect(viewModel.quizState.isError)
+    }
+
+    @Test("MCQ submission without active session shows error message")
+    @MainActor
+    func mcqSubmissionNoSession() async throws {
+        let (viewModel, _) = makeViewModel()
+        viewModel.currentSession = nil
+
+        await viewModel.submitMCQAnswer(key: "a", value: "Paris")
+
+        #expect(viewModel.errorMessage == "No active session")
+    }
+}

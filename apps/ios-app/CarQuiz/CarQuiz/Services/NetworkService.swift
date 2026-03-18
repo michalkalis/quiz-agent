@@ -30,7 +30,10 @@ actor NetworkService: NetworkServiceProtocol {
     private var activeTasks: [UUID: URLSessionDataTask] = [:]
 
     init(baseURL: String = Config.apiBaseURL) {
-        self.baseURL = URL(string: baseURL)!
+        guard let url = URL(string: baseURL) else {
+            fatalError("NetworkService: invalid baseURL '\(baseURL)' — check Config.apiBaseURL")
+        }
+        self.baseURL = url
 
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest = 30
@@ -111,7 +114,9 @@ actor NetworkService: NetworkServiceProtocol {
     }
 
     func startQuiz(sessionId: String, excludedQuestionIds: [String] = []) async throws -> QuizResponse {
-        var components = URLComponents(url: baseURL.appendingPathComponent("/api/v1/sessions/\(sessionId)/start"), resolvingAgainstBaseURL: false)!
+        guard var components = URLComponents(url: baseURL.appendingPathComponent("/api/v1/sessions/\(sessionId)/start"), resolvingAgainstBaseURL: false) else {
+            throw NetworkError.invalidURL
+        }
         components.queryItems = [URLQueryItem(name: "audio", value: "true")]
 
         guard let url = components.url else {
@@ -279,7 +284,9 @@ actor NetworkService: NetworkServiceProtocol {
     }
 
     func submitTextInput(sessionId: String, input: String, audio: Bool = true) async throws -> QuizResponse {
-        var components = URLComponents(url: baseURL.appendingPathComponent("/api/v1/sessions/\(sessionId)/input"), resolvingAgainstBaseURL: false)!
+        guard var components = URLComponents(url: baseURL.appendingPathComponent("/api/v1/sessions/\(sessionId)/input"), resolvingAgainstBaseURL: false) else {
+            throw NetworkError.invalidURL
+        }
         components.queryItems = [URLQueryItem(name: "audio", value: audio ? "true" : "false")]
 
         guard let url = components.url else {

@@ -15,8 +15,8 @@ All P0 and P1 items have been implemented and committed. See commits on develop 
 |----------|:-----:|--------|
 | **P0** | 5/5 | Done — VoiceOver, Reduce Motion, Dynamic Type, Onboarding, Mic Permission |
 | **P1** | 6/6 | Done — Contrast fixes, Haptics, Text input, Audio errors, Rating, Session extend |
-| **P2** | 2/6 | Done — Completion stats, Dark-mode gradients. Remaining: voice quiz restart, MCQ UI, accessibilityIdentifier, explanations |
-| **P3** | 0/5 | Not started — Streak tracking, CarPlay, auto-confirm, collapsible settings, multiplayer |
+| **P2** | 6/6 | Done — Completion stats, Dark-mode gradients, Voice quiz restart, MCQ UI, accessibilityIdentifier, Explanations |
+| **P3** | 3/5 | Done — Streak tracking, Auto-confirm, Collapsible settings. Remaining: CarPlay, Multiplayer (post-launch) |
 
 ---
 

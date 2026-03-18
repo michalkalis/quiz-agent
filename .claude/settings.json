@@ -44,10 +44,24 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'FILE=$(cat | jq -r \".tool_input.file_path // empty\" 2>/dev/null); if [[ -n \"$FILE\" && \"$FILE\" == */apps/quiz-agent/app/* ]]; then cd \"$CLAUDE_PROJECT_DIR/apps/quiz-agent\" && python -m pytest tests/ -x -q --tb=line 2>&1 | tail -5; fi; exit 0'",
+            "timeout": 30
+          }
+        ]
       }
     ]
   },
   "enabledPlugins": {
-    "ui-ux-pro-max@ui-ux-pro-max-skill": true
+    "ui-ux-pro-max@ui-ux-pro-max-skill": true,
+    "claude-md-management@claude-plugins-official": true,
+    "figma@claude-plugins-official": true,
+    "claude-code-setup@claude-plugins-official": true,
+    "firecrawl@claude-plugins-official": true
   }
 }

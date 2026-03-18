@@ -47,6 +47,7 @@ echo -e "${CYAN}│${RESET}    ${GREEN}/test-backend${RESET}   - Run pytest suit
 echo -e "${CYAN}│${RESET}    ${GREEN}/build-ios${RESET}      - Build iOS app                      ${CYAN}│${RESET}"
 echo -e "${CYAN}│${RESET}    ${GREEN}/gen-questions${RESET}  - Generate quiz questions             ${CYAN}│${RESET}"
 echo -e "${CYAN}│${RESET}    ${GREEN}/verify-qs${RESET}     - Verify question accuracy           ${CYAN}│${RESET}"
+echo -e "${CYAN}│${RESET}    ${GREEN}/deploy${RESET}         - Deploy backend to Fly.io          ${CYAN}│${RESET}"
 echo -e "${CYAN}│${RESET}    ${GREEN}/best-practices${RESET} - Check Claude Code setup (weekly)   ${CYAN}│${RESET}"
 echo -e "${CYAN}├─────────────────────────────────────────────────────────┤${RESET}"
 echo -e "${CYAN}│${RESET}  ${YELLOW}PM & DESIGN${RESET} ${DIM}(invoke with /name)${RESET}                        ${CYAN}│${RESET}"
@@ -60,10 +61,12 @@ echo -e "${CYAN}│${RESET}  ${YELLOW}AGENTS${RESET} ${DIM}(delegate with \"use 
 echo -e "${CYAN}│${RESET}    ${GREEN}ios-tester${RESET}      - Run iOS tests, report failures     ${CYAN}│${RESET}"
 echo -e "${CYAN}│${RESET}    ${GREEN}backend-tester${RESET}  - Run pytest, report failures        ${CYAN}│${RESET}"
 echo -e "${CYAN}│${RESET}    ${GREEN}code-reviewer${RESET}   - Review recent changes              ${CYAN}│${RESET}"
+echo -e "${CYAN}│${RESET}    ${GREEN}security-reviewer${RESET} - OWASP & secret leak scan        ${CYAN}│${RESET}"
 echo -e "${CYAN}├─────────────────────────────────────────────────────────┤${RESET}"
 echo -e "${CYAN}│${RESET}  ${YELLOW}HOOKS${RESET} ${DIM}(automatic)${RESET}                                      ${CYAN}│${RESET}"
 echo -e "${CYAN}│${RESET}    Branch protection (blocks main/master edits)         ${CYAN}│${RESET}"
 echo -e "${CYAN}│${RESET}    Swift auto-format (swiftformat on .swift edits)      ${CYAN}│${RESET}"
+echo -e "${CYAN}│${RESET}    Python auto-test (pytest on backend app edits)      ${CYAN}│${RESET}"
 
 # Show tip if available
 if [ -n "$TIP" ]; then

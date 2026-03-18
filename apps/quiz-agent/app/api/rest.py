@@ -5,8 +5,9 @@ All responses are structured JSON with consistent format.
 """
 
 import asyncio
+import logging
 from typing import Optional, List, Dict, Any
-from fastapi import APIRouter, HTTPException, status, UploadFile, File
+from fastapi import APIRouter, HTTPException, Request, status, UploadFile, File
 from pydantic import BaseModel, Field
 from datetime import datetime
 
@@ -25,6 +26,9 @@ from ..evaluation.evaluator import AnswerEvaluator
 from ..rating.feedback import FeedbackService
 from ..voice.transcriber import VoiceTranscriber, TranscriptionResult
 from ..tts.service import TTSService
+from ..rate_limit import limiter
+
+logger = logging.getLogger(__name__)
 
 
 # Request/Response Models
@@ -203,7 +207,7 @@ async def question_to_dict_translated(question: Question, language: str) -> Dict
             )
             question_dict["question"] = translated_text
         except Exception as e:
-            print(f"WARNING: Failed to translate question text to {language}: {e}")
+            logger.warning("Failed to translate question text to %s: %s", language, e)
             # Keep original English text on translation failure
 
     return question_dict
@@ -219,25 +223,22 @@ async def translate_correct_answer(answer: str, language: str) -> str:
     Returns:
         Translated answer text, or original English on failure
     """
-    print(f"DEBUG [translate_correct_answer]: answer='{answer}', language='{language}', translation_service={'available' if translation_service else 'None'}")
+    logger.debug("translate_correct_answer: answer='%s', language='%s'", answer, language)
 
     # No translation needed for English
     if language == "en" or not translation_service:
-        print(f"DEBUG [translate_correct_answer]: Skipping translation (language={language}, service={bool(translation_service)})")
+        logger.debug("Skipping translation (language=%s)", language)
         return answer
 
     try:
-        print(f"DEBUG [translate_correct_answer]: Calling translation_service.translate_feedback...")
         translated_answer = await translation_service.translate_feedback(
             feedback=answer,
             target_language=language
         )
-        print(f"DEBUG [translate_correct_answer]: Translation result: '{answer}' -> '{translated_answer}'")
+        logger.debug("Translation result: '%s' -> '%s'", answer, translated_answer)
         return translated_answer
     except Exception as e:
-        print(f"⚠️ Failed to translate correct answer to {language}: {e}")
-        import traceback
-        traceback.print_exc()
+        logger.warning("Failed to translate correct answer to %s: %s", language, e, exc_info=True)
         # Gracefully fall back to English
         return answer
 
@@ -245,7 +246,8 @@ async def translate_correct_answer(answer: str, language: str) -> str:
 # Session Management Endpoints
 
 @router.post("/sessions", response_model=SessionResponse, status_code=status.HTTP_201_CREATED)
-async def create_session(request: CreateSessionRequest):
+@limiter.limit("10/minute")
+async def create_session(http_request: Request, request: CreateSessionRequest):
     """Create a new quiz session.
 
     Returns:
@@ -335,7 +337,8 @@ async def extend_session(session_id: str, minutes: int = 30):
 # Game Flow Endpoints
 
 @router.post("/sessions/{session_id}/start", response_model=InputResponse)
-async def start_quiz(session_id: str, request: StartQuizRequest, audio: bool = False):
+@limiter.limit("10/minute")
+async def start_quiz(http_request: Request, session_id: str, request: StartQuizRequest, audio: bool = False):
     """Start the quiz and get first question.
 
     Args:
@@ -362,27 +365,25 @@ async def start_quiz(session_id: str, request: StartQuizRequest, audio: bool = F
         # Extract client-side excluded question IDs
         client_excluded_ids = request.excluded_question_ids or []
 
-        print(f"DEBUG: Client excluded {len(client_excluded_ids)} questions")
+        logger.debug("Client excluded %d questions", len(client_excluded_ids))
 
         # Update phase
         session.phase = "asking"
         session.asked_question_ids = []
 
         # Get first question with client exclusions
-        print(f"DEBUG: Getting next question for session {session_id}, difficulty: {session.current_difficulty}")
+        logger.debug("Getting next question for session %s, difficulty: %s", session_id, session.current_difficulty)
         try:
             question = question_retriever.get_next_question(
                 session,
                 client_excluded_ids=client_excluded_ids
             )
         except Exception as e:
-            print(f"ERROR: Exception in get_next_question: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.error("Exception in get_next_question: %s", e, exc_info=True)
             raise HTTPException(status_code=500, detail=f"Failed to retrieve question: {str(e)}")
         
         if not question:
-            print(f"ERROR: get_next_question returned None for session {session_id}")
+            logger.error("get_next_question returned None for session %s", session_id)
             # Check database status using the shared chroma_client
             if chroma_client:
                 total_count = chroma_client.count_questions(filters={"review_status": "approved"})
@@ -458,14 +459,13 @@ async def start_quiz(session_id: str, request: StartQuizRequest, audio: bool = F
     except HTTPException:
         raise
     except Exception as e:
-        print(f"ERROR: Unexpected exception in start_quiz: {e}")
-        import traceback
-        traceback.print_exc()
+        logger.error("Unexpected exception in start_quiz: %s", e, exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to start quiz: {str(e)}")
 
 
 @router.post("/sessions/{session_id}/input", response_model=InputResponse)
-async def submit_input(session_id: str, request: SubmitInputRequest, audio: bool = False):
+@limiter.limit("30/minute")
+async def submit_input(http_request: Request, session_id: str, request: SubmitInputRequest, audio: bool = False):
     """Submit user input (AI-powered natural language parsing).
 
     The AI agent parses complex inputs like:
@@ -569,7 +569,7 @@ async def submit_input(session_id: str, request: SubmitInputRequest, audio: bool
 
                 except Exception as e:
                     # Log error but don't fail the request
-                    print(f"⚠️ Failed to generate enhanced feedback: {e}")
+                    logger.warning("Failed to generate enhanced feedback: %s", e)
                     enhanced_feedback_audio = None
 
             # Update participant score
@@ -856,7 +856,9 @@ async def remove_participant(session_id: str, participant_id: str):
 # Voice Endpoints
 
 @router.post("/voice/transcribe")
+@limiter.limit("30/minute")
 async def transcribe_audio(
+    request: Request,
     audio: UploadFile = File(..., description="Audio file (mp3, wav, m4a, etc.)")
 ):
     """Transcribe audio file to text.
@@ -912,7 +914,9 @@ async def transcribe_audio(
 
 
 @router.post("/voice/submit/{session_id}", response_model=InputResponse)
+@limiter.limit("30/minute")
 async def transcribe_and_submit(
+    request: Request,
     session_id: str,
     audio: UploadFile = File(..., description="Audio file with quiz answer"),
     participant_id: Optional[str] = None,
@@ -980,19 +984,17 @@ async def transcribe_and_submit(
         # Validate transcription quality using confidence metrics
         if not transcription_result.is_valid():
             rejection_reason = transcription_result.get_rejection_reason()
-            print(f"⚠️ Transcription rejected for session {session_id}: {rejection_reason}")
-            print(f"   text='{transcription_result.text}', "
-                  f"no_speech_prob={transcription_result.no_speech_prob:.3f}, "
-                  f"avg_logprob={transcription_result.avg_logprob:.3f}")
+            logger.warning("Transcription rejected for session %s: %s (text='%s', no_speech=%.3f, logprob=%.3f)",
+                          session_id, rejection_reason, transcription_result.text,
+                          transcription_result.no_speech_prob, transcription_result.avg_logprob)
             raise HTTPException(
                 status_code=400,
                 detail="No clear speech detected. Please speak clearly and try again."
             )
 
         transcribed_text = transcription_result.text
-        print(f"✅ Transcribed: '{transcribed_text}' "
-              f"(no_speech={transcription_result.no_speech_prob:.2f}, "
-              f"logprob={transcription_result.avg_logprob:.2f})")
+        logger.info("Transcribed: '%s' (no_speech=%.2f, logprob=%.2f)",
+                    transcribed_text, transcription_result.no_speech_prob, transcription_result.avg_logprob)
 
         # Start fetching next question in parallel with evaluation (saves ~0.2-0.5s)
         # Only if quiz isn't finished yet
@@ -1004,17 +1006,16 @@ async def transcribe_and_submit(
 
         # Diagnostic logging for audio contamination detection
         from difflib import SequenceMatcher
-        print(f"DEBUG [voice/submit]: Transcription length: {len(transcribed_text)} chars")
-        print(f"DEBUG [voice/submit]: Current question: '{current_question.question[:50]}...'")
+        logger.debug("voice/submit: transcription=%d chars, question='%s...'",
+                     len(transcribed_text), current_question.question[:50])
 
         # Check for potential contamination
         if len(transcribed_text) > 100:
-            print(f"⚠️ WARNING: Transcription unusually long ({len(transcribed_text)} chars) - possible TTS leakage")
+            logger.warning("Transcription unusually long (%d chars) - possible TTS leakage", len(transcribed_text))
 
         similarity = SequenceMatcher(None, transcribed_text.lower(), current_question.question.lower()).ratio()
         if similarity > 0.5:
-            print(f"⚠️ WARNING: Transcription {similarity*100:.0f}% similar to question - possible TTS leakage")
-            print(f"   This may indicate microphone captured TTS playback")
+            logger.warning("Transcription %.0f%% similar to question - possible TTS leakage", similarity * 100)
 
         # Now submit the transcribed text as regular input
         # Parse input with AI agent
@@ -1077,7 +1078,7 @@ async def transcribe_and_submit(
 
                     except Exception as e:
                         # Log error but don't fail the request
-                        print(f"⚠️ Failed to generate enhanced feedback: {e}")
+                        logger.warning("Failed to generate enhanced feedback: %s", e)
                         enhanced_feedback_audio = None
 
                 # Update participant score
@@ -1132,7 +1133,7 @@ async def transcribe_and_submit(
 
         # Validate that an answer was detected (for voice submissions, we expect an answer)
         if evaluation_result is None:
-            print(f"⚠️ No answer intent detected in transcription: '{transcribed_text}'")
+            logger.warning("No answer intent detected in transcription: '%s'", transcribed_text)
             raise HTTPException(
                 status_code=400,
                 detail="Could not understand your answer. Please speak clearly and try again."
@@ -1236,7 +1237,8 @@ async def transcribe_and_submit(
 # Text-to-Speech (TTS) Endpoints
 
 @router.post("/tts/synthesize")
-async def synthesize_tts(request: SynthesizeTTSRequest):
+@limiter.limit("60/minute")
+async def synthesize_tts(http_request: Request, request: SynthesizeTTSRequest):
     """Generate speech audio from text (generic TTS).
 
     Args:
@@ -1277,7 +1279,8 @@ async def synthesize_tts(request: SynthesizeTTSRequest):
 
 
 @router.get("/sessions/{session_id}/question/audio")
-async def get_question_audio(session_id: str):
+@limiter.limit("60/minute")
+async def get_question_audio(request: Request, session_id: str):
     """Get audio for current question in session (cached).
 
     Args:
@@ -1307,7 +1310,7 @@ async def get_question_audio(session_id: str):
         # This ensures the audio matches exactly what the user sees on screen
         if session.current_question_text:
             question_text = session.current_question_text
-            print(f"DEBUG: Using cached translated text from session")
+            logger.debug("Using cached translated text from session")
         else:
             # Fallback: fetch and translate (should rarely happen)
             current_question = chroma_client.get_question(session.current_question_id)
@@ -1322,9 +1325,9 @@ async def get_question_audio(session_id: str):
             session.current_question_text = question_text
             session_manager.update_session(session)
 
-            print(f"DEBUG: Translated and cached text for session")
+            logger.debug("Translated and cached text for session")
 
-        print(f"DEBUG: Generating TTS for text: {question_text[:50]}...")
+        logger.debug("Generating TTS for text: %s...", question_text[:50])
 
         # Generate/retrieve cached audio
         audio_data = await tts_service.synthesize_question(

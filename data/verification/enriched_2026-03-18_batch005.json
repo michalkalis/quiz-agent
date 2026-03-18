@@ -1,0 +1,589 @@
+{
+  "questions": [
+    {
+      "question": "The Milky Way galaxy contains roughly 300 billion stars. Which is a larger number: stars in the Milky Way, or bacteria living in a human gut?",
+      "type": "text",
+      "correct_answer": "Bacteria in a human gut",
+      "possible_answers": null,
+      "alternative_answers": ["gut bacteria", "bacteria", "the bacteria in a human gut", "human gut bacteria"],
+      "topic": "Science",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["biology", "astronomy", "scale", "microbiome"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Gut_microbiota",
+      "source_excerpt": "The human gut microbiome contains approximately 38 trillion bacteria, vastly outnumbering the estimated 100-400 billion stars in the Milky Way galaxy.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Scale Surprise",
+          "why_interesting": "Inverts the expected scale intuition — the cosmic vs the microscopic, and the microscopic wins",
+          "universal_appeal": "Bacteria and the Milky Way are universally known concepts, requires no cultural knowledge",
+          "boring_check": "Not a 'What is' format; forces a comparison that surprises. Passes all red-flag checks."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 10,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "answerability": 9,
+          "overall_score": 9.2,
+          "reasoning": "Exceptional scale surprise — player can reason from both sides (bacteria are tiny but trillions, Milky Way has billions of stars) and the answer is genuinely shocking."
+        },
+        "ai_score": 9.2
+      }
+    },
+    {
+      "question": "Sunlight takes about 8 minutes to travel from the Sun's surface to Earth. But the same energy, as photons bouncing through the Sun's dense interior, takes far longer to travel from the Sun's core to its surface. Closer to 8 minutes, 100 years, or 100,000 years?",
+      "type": "text",
+      "correct_answer": "About 100,000 years",
+      "possible_answers": null,
+      "alternative_answers": ["100000 years", "a hundred thousand years", "tens of thousands of years", "thousands of years", "100,000 years"],
+      "topic": "Science",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["physics", "astronomy", "solar", "light", "random-walk"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://science.nasa.gov/learn/heat/resource/hby-math-9-the-random-walk-problem/",
+      "source_excerpt": "Most answers for the age of sunlight come out to be between 10,000 and 170,000 years, depending on the model of the solar interior used in the random walk calculation.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Estimation Challenge",
+          "why_interesting": "Sunlight is perceived as immediate and fresh, but the energy powering it is ancient — a dramatic hidden property of an everyday phenomenon",
+          "universal_appeal": "The Sun is universally known. No cultural context required.",
+          "boring_check": "Three options spanning many orders of magnitude make it a genuine estimation challenge. Not 'What is the Sun?' format."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 10,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "answerability": 8,
+          "overall_score": 9.0,
+          "reasoning": "The dramatic contrast between '8 minutes' and '100,000 years' makes this a memorable lesson about the Sun's interior. Players can reason: dense plasma means photons bounce around a lot, so much longer than 8 minutes."
+        },
+        "ai_score": 9.0
+      }
+    },
+    {
+      "question": "If it were physically possible to fold a piece of paper in half exactly 42 times, the resulting stack would be taller than: the Eiffel Tower, Mount Everest, or would it reach the Moon?",
+      "type": "text",
+      "correct_answer": "It would reach the Moon",
+      "possible_answers": null,
+      "alternative_answers": ["the moon", "reach the moon", "moon", "past the moon"],
+      "topic": "Science",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["mathematics", "exponential-growth", "scale", "paper-folding"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://www.britannica.com/one-good-fact/how-many-times-can-you-fold-a-piece-of-paper",
+      "source_excerpt": "Folding a standard piece of paper 42 times would produce a stack approximately 440,000 km tall, exceeding the distance from Earth to the Moon (about 384,400 km), due to exponential doubling.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Estimation Challenge",
+          "why_interesting": "Exponential growth is deeply counterintuitive. A humble sheet of paper reaching the Moon in 42 steps is a perfect illustration.",
+          "universal_appeal": "Paper, the Eiffel Tower, Everest, and the Moon are universally known reference points.",
+          "boring_check": "Three wildly different options (tall building, tallest mountain, Moon) spanning many orders of magnitude. Passes all checks."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 10,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "answerability": 9,
+          "overall_score": 9.0,
+          "reasoning": "Classic exponential growth illustration. Player can reason: each fold doubles the thickness, 42 doublings of a thin sheet creates an astronomical number. Very satisfying to compute."
+        },
+        "ai_score": 9.0
+      }
+    },
+    {
+      "question": "Neutron stars are collapsed stellar cores with mind-boggling density. If you could bring a teaspoon of neutron star material to Earth, it would weigh roughly: 10 kilograms, 10 thousand tonnes, or more than 1 billion tonnes?",
+      "type": "text",
+      "correct_answer": "More than 1 billion tonnes",
+      "possible_answers": null,
+      "alternative_answers": ["1 billion tonnes", "billions of tonnes", "about 2 billion tonnes", "a billion tons", "billions of tons"],
+      "topic": "Science",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["physics", "astronomy", "neutron-stars", "density", "scale"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Neutron_star",
+      "source_excerpt": "A neutron star has overall densities of 3.7x10^17 to 5.9x10^17 kg/m^3. One teaspoon (5 mL) of neutron star material would weigh approximately 2-5 billion metric tonnes.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Estimation Challenge",
+          "why_interesting": "The density of a neutron star defies everyday intuition completely. A teaspoon outweighing mountains is a stunning physical fact.",
+          "universal_appeal": "Physics and astronomy are universal. No cultural knowledge required.",
+          "boring_check": "Three options spanning 14 orders of magnitude. The correct answer (1+ billion tonnes) is the most extreme, which is the right approach for scale surprises."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 10,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "answerability": 8,
+          "overall_score": 9.0,
+          "reasoning": "Exceptional scale surprise. Players can reason: neutron stars are famously dense, so the answer must be extreme. The 'billion tonnes' option is satisfyingly shocking."
+        },
+        "ai_score": 9.0
+      }
+    },
+    {
+      "question": "The immortal jellyfish (Turritopsis dohrnii) has a response to aging or injury found in no other animal — instead of dying, it reverts to its juvenile form and begins life over. How many times can it theoretically do this?",
+      "type": "text",
+      "correct_answer": "Indefinitely",
+      "possible_answers": null,
+      "alternative_answers": ["unlimited times", "infinite times", "there is no known limit", "limitless", "as many times as it wants"],
+      "topic": "Nature",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["biology", "jellyfish", "immortality", "aging", "marine-life"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Turritopsis_dohrnii",
+      "source_excerpt": "Turritopsis dohrnii is capable of reverting to its juvenile polyp stage after reaching sexual maturity, and this process can repeat indefinitely, allowing the immortal jellyfish to avoid old age.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Hidden Property",
+          "why_interesting": "Biological immortality — genuinely reversing aging rather than just living a long time — is a concept that captures the imagination universally.",
+          "universal_appeal": "Jellyfish and the concept of immortality are universal. No cultural knowledge required.",
+          "boring_check": "The question asks 'how many times' which naturally invites the shocking answer 'indefinitely' rather than a finite number. Not a 'what is' format."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "answerability": 9,
+          "overall_score": 9.0,
+          "reasoning": "The 'how many times' framing forces players to reason through the options, and 'indefinitely' lands as a stunning revelation. Educational value is high — transdifferentiation is a real biological process."
+        },
+        "ai_score": 9.0
+      }
+    },
+    {
+      "question": "Which is a bigger number: the atoms in a single glass of water, or the glasses of water it would take to fill all of Earth's oceans?",
+      "type": "text",
+      "correct_answer": "Atoms in a single glass of water",
+      "possible_answers": null,
+      "alternative_answers": ["atoms in the glass", "the atoms in one glass of water", "the glass of water", "atoms in a glass"],
+      "topic": "Science",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["chemistry", "physics", "scale", "atoms", "water"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Avogadro_constant",
+      "source_excerpt": "A 250 mL glass of water contains approximately 13.9 moles of water, equaling ~8.4x10^24 molecules or ~2.5x10^25 atoms. Earth's oceans contain ~1.335x10^21 liters, or roughly 5.3x10^21 glasses.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Scale Surprise / Comparison Bet",
+          "why_interesting": "Atoms are so incomprehensibly small that one glass of water has more of them than there are glasses in the entire ocean — a profound demonstration of atomic scale.",
+          "universal_appeal": "Water, glasses, and oceans are universally understood. No cultural specificity.",
+          "boring_check": "Binary comparison bet format. The counterintuitive answer ('the glass wins') is the key surprise. Passes all red-flag checks."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 10,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "answerability": 8,
+          "overall_score": 8.8,
+          "reasoning": "Elegant comparison that forces players to think about atomic scale. The answer reveals that a glass of water beats all the world's oceans by ~4,700 times — a stunning number."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "Sharks have patrolled Earth's oceans for roughly 450 million years, while the first forests appeared on land about 385 million years ago. In the evolutionary timeline, which came first — sharks or trees?",
+      "type": "text",
+      "correct_answer": "Sharks",
+      "possible_answers": null,
+      "alternative_answers": ["sharks came first", "sharks predate trees"],
+      "topic": "Nature",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": ["evolution", "sharks", "biology", "natural-history", "paleontology"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://www.smithsonianmag.com/smart-news/respect-sharks-are-older-than-trees-3818/",
+      "source_excerpt": "Sharks have a 450-million-year evolutionary odyssey, while the earliest species classified as a 'tree,' the now-extinct Archaeopteris, lived around 350 million years ago. Sharks have survived four mass extinctions.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Comparison Bet",
+          "why_interesting": "Everyone knows sharks are ancient, but that they predate trees reverses the expected intuition about evolutionary history.",
+          "universal_appeal": "Sharks and trees are universally known. No cultural context required.",
+          "boring_check": "Binary comparison format. The surprising answer (sharks beat trees by 65 million years) is the payoff. Not a boring 'what year' format."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "answerability": 9,
+          "overall_score": 8.8,
+          "reasoning": "Strong comparison bet. Players can reason: sharks are famously ancient, trees are also old — but which? The reveal (sharks by 65 million years) reframes evolutionary history beautifully."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "Researchers who wore 'dangerous' masks while trapping crows found that years later, crows on the same campus would mob anyone wearing that exact mask — including birds that had never witnessed the original capture. How did the uninvolved crows learn to recognise the 'dangerous' face?",
+      "type": "text",
+      "correct_answer": "The crows taught each other",
+      "possible_answers": null,
+      "alternative_answers": ["social learning", "cultural transmission", "other crows taught them", "they communicated with each other", "they passed on the information"],
+      "topic": "Nature",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["crows", "cognition", "social-learning", "animal-behaviour", "birds"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/John_Marzluff",
+      "source_excerpt": "John Marzluff demonstrated that crows identify and remember people's faces. Even crows that did not witness the original tagging scolded the mask, showing an example of cultural transmission in crows.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Surprising Connection / Narrative",
+          "why_interesting": "The idea of birds holding grudges and teaching others about dangerous humans challenges assumptions about animal intelligence and culture.",
+          "universal_appeal": "Crows are widespread globally. The concept of face recognition and social learning is universally relatable.",
+          "boring_check": "The narrative (mask-wearing researchers, years later, uninvolved birds) is compelling. The 'how?' framing drives reasoning. Not a 'Who wrote' or 'What year' question."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "answerability": 8,
+          "overall_score": 8.8,
+          "reasoning": "Excellent narrative-driven question. Players can reason: crows are social, intelligent birds — they must have communicated the danger. The reveal of inter-generational cultural transmission is genuinely surprising."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "Every dinosaur that ever lived, including the heaviest sauropods, was smaller than the largest animal known to have existed on Earth. That record-holder is alive today — what is it?",
+      "type": "text",
+      "correct_answer": "The blue whale",
+      "possible_answers": null,
+      "alternative_answers": ["blue whale", "blue whales", "a blue whale"],
+      "topic": "Nature",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": ["blue-whale", "dinosaurs", "evolution", "biology", "marine-life"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Blue_whale",
+      "source_excerpt": "The blue whale is the largest animal known to have ever existed, reaching a maximum confirmed length of 29.9-30.5 m and weighing up to 190-200 tonnes, surpassing even the largest known dinosaurs.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Surprising Connection",
+          "why_interesting": "Pop culture assumes dinosaurs were the biggest creatures ever. The reveal that a living animal surpasses all dinosaurs is a satisfying inversion.",
+          "universal_appeal": "Blue whales and dinosaurs are universally known. No cultural context required.",
+          "boring_check": "The setup creates misdirection toward dinosaurs. 'That record-holder is alive today' is the twist that makes it engaging. Not a boring format."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "answerability": 8,
+          "overall_score": 8.8,
+          "reasoning": "Strong misdirection — players think 'must be some dinosaur' then realise it's a modern animal. The blue whale is gettable once the trick is clear. Educational and satisfying."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "Inside a chrysalis, a caterpillar transforms into a butterfly — but the process is far more extreme than gradual rearrangement. What actually happens to the caterpillar's body inside the chrysalis?",
+      "type": "text",
+      "correct_answer": "It dissolves almost completely into a cellular soup before rebuilding",
+      "possible_answers": null,
+      "alternative_answers": ["dissolves", "it liquefies", "turns into liquid", "breaks down completely", "histolysis", "melts into a soup"],
+      "topic": "Nature",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["biology", "metamorphosis", "butterflies", "insects", "histolysis"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Pupa",
+      "source_excerpt": "During holometabolous metamorphosis, most of the tissues and cells of the larva are broken down inside the pupa through histolysis, as the constituent material is rebuilt into the adult form using imaginal discs.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Hidden Property / Biological Oddity",
+          "why_interesting": "Most people imagine metamorphosis as gradual reshaping. The reality — complete dissolution followed by rebuilding — is far more radical and surprising.",
+          "universal_appeal": "Butterflies and caterpillars are universally known. Metamorphosis is a concept taught worldwide.",
+          "boring_check": "The question sets up a contrast ('more extreme than gradual rearrangement') that primes the player for a surprising answer. Not a boring 'What is' format."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "answerability": 8,
+          "overall_score": 8.6,
+          "reasoning": "The revelation that a butterfly basically dies and rebuilds from a soup of cells is genuinely shocking. Players can reason toward 'more extreme than rearrangement' and the answer lands powerfully."
+        },
+        "ai_score": 8.6
+      }
+    },
+    {
+      "question": "If the Sun were scaled down to the size of a basketball, Earth would be roughly the size of a marble, a peppercorn, or a grain of sand?",
+      "type": "text",
+      "correct_answer": "A peppercorn",
+      "possible_answers": null,
+      "alternative_answers": ["peppercorn", "a small peppercorn", "about a peppercorn"],
+      "topic": "Science",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["astronomy", "solar-system", "scale", "earth", "sun"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Sun",
+      "source_excerpt": "The Sun's diameter is about 1,391,400 km, 109 times that of Earth. At a scale where the Sun is the size of a basketball (24 cm), Earth would be approximately 2.2 mm across, roughly the size of a peppercorn.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Scale Surprise / Estimation Challenge",
+          "why_interesting": "Translating the Sun-Earth relationship to everyday objects makes the scale viscerally understandable. Most people imagine Earth as much larger relative to the Sun.",
+          "universal_appeal": "Basketballs, peppercorns, and grains of sand are universally known objects. Solar system knowledge is global.",
+          "boring_check": "Three physically distinct options (marble ~15mm, peppercorn ~2mm, grain of sand ~0.5mm) spanning an order of magnitude. Forces genuine estimation. Not a 'what is' format."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 10,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "answerability": 9,
+          "overall_score": 8.6,
+          "reasoning": "Effective use of everyday objects to make cosmic scale tangible. Players can reason: Earth is much smaller than the Sun (diameter ratio ~109:1), so it must be something very small. The peppercorn answer is satisfying and memorable."
+        },
+        "ai_score": 8.6
+      }
+    },
+    {
+      "question": "Four birds on this list are all flightless. One is not. Which is the odd one out: Ostrich, Emu, Kiwi, Penguin, or Flamingo?",
+      "type": "text",
+      "correct_answer": "Flamingo",
+      "possible_answers": null,
+      "alternative_answers": ["flamingos", "the flamingo"],
+      "topic": "Nature",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": ["birds", "flamingo", "biology", "odd-one-out", "flightless-birds"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Flamingo",
+      "source_excerpt": "Flamingos are capable flyers that often migrate hundreds of kilometres. Unlike ostriches, emus, kiwis, and penguins, which are all flightless birds, flamingos are accomplished fliers.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Odd One Out (Pattern 9)",
+          "why_interesting": "The flamingo is unexpected as a flier — its iconic standing-on-one-leg appearance makes it seem sedentary, while ostriches and penguins are famously flightless.",
+          "universal_appeal": "All five birds are globally recognised. The concept of flightless birds is universal.",
+          "boring_check": "Exactly one clear correct answer. The criterion (can fly) is non-obvious because all five birds 'look' like they might not fly well. Player can work through each one to arrive at flamingo."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "answerability": 9,
+          "overall_score": 8.4,
+          "reasoning": "Clean odd-one-out with an unambiguous answer. The player can reason through each bird systematically. The flamingo answer is satisfying because the bird doesn't seem like a strong flier."
+        },
+        "ai_score": 8.4
+      }
+    },
+    {
+      "question": "One North American frog survives winter by letting its body freeze completely solid — heart stopped, brain silent, ice crystals forming between its cells. When spring arrives, it thaws and hops away. What compound does it flood its cells with to survive being frozen?",
+      "type": "text",
+      "correct_answer": "Glucose",
+      "possible_answers": null,
+      "alternative_answers": ["glucose", "sugar", "natural antifreeze", "cryoprotectant", "antifreeze"],
+      "topic": "Nature",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["biology", "frogs", "cryoprotection", "winter", "wood-frog"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Wood_frog",
+      "source_excerpt": "The wood frog (Rana sylvatica) survives freezing by using glucose as a cryoprotectant. Liver glycogen is converted in large quantities to glucose in response to internal ice formation, limiting cell damage.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Biological Oddity",
+          "why_interesting": "A vertebrate freezing solid and surviving is extraordinary. The mechanism (flooding cells with glucose as antifreeze) is an elegant biological solution that invites a reasoning path.",
+          "universal_appeal": "Frogs are universally known. Winter freezing is a universal concept.",
+          "boring_check": "The narrative setup (heart stopped, brain silent, ice forming) makes it compelling. The 'what compound' framing is harder but gettable by reasoning: 'something that lowers the freezing point — like sugar or salt'."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 8,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "answerability": 7,
+          "overall_score": 8.4,
+          "reasoning": "Genuinely surprising biological fact with a reasoning path ('it must use some kind of antifreeze → sugar is a natural antifreeze → glucose'). The multiple alternative answers are important here as 'sugar' or 'antifreeze' should be accepted."
+        },
+        "ai_score": 8.4
+      }
+    },
+    {
+      "question": "Before becoming the world's most popular packaging material, bubble wrap was invented in 1957 for a completely different purpose. What was it originally designed to be?",
+      "type": "text",
+      "correct_answer": "Textured wallpaper",
+      "possible_answers": null,
+      "alternative_answers": ["wallpaper", "decorative wallpaper", "patterned wallpaper", "wall covering"],
+      "topic": "Science",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["inventions", "bubble-wrap", "history-of-technology", "reverse-engineer"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://www.smithsonianmag.com/innovation/accidental-invention-bubble-wrap-180971325/",
+      "source_excerpt": "Bubble wrap was invented in 1957 by engineers Alfred Fielding and Marc Chavannes, who sealed two shower curtains together and originally tried to sell the result as wallpaper.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Reverse Engineer (Pattern 13)",
+          "why_interesting": "Bubble wrap is globally recognised and universally satisfying to pop. Learning it was meant to be wallpaper is a delightful historical quirk.",
+          "universal_appeal": "Bubble wrap is known and beloved worldwide. No cultural specificity.",
+          "boring_check": "The 'originally designed to be' framing is classic Reverse Engineer. The player can reason: 'Something textured and decorative perhaps — maybe a mat, a toy, or wallpaper?' The answer is satisfyingly weird."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "answerability": 7,
+          "overall_score": 8.2,
+          "reasoning": "Fun reverse-engineer question with a memorable answer. 'Wallpaper' is hard to guess but not arbitrary — it makes sense once revealed (the texture was the design intent). Classic pub quiz material."
+        },
+        "ai_score": 8.2
+      }
+    },
+    {
+      "question": "Forest ecologists discovered that trees are connected by underground fungal networks, which may facilitate the sharing of nutrients and chemical signals between plants. What popular nickname have scientists given to this underground network?",
+      "type": "text",
+      "correct_answer": "The Wood Wide Web",
+      "possible_answers": null,
+      "alternative_answers": ["wood wide web", "the mycorrhizal network", "mycorrhizal network", "fungal network"],
+      "topic": "Nature",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["ecology", "forests", "fungi", "trees", "communication"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Mycorrhizal_network",
+      "source_excerpt": "Mycorrhizal networks, popularly called the 'Wood Wide Web,' are underground fungal connections. The term references the analogous function served by the World Wide Web in human communities.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Surprising Connection",
+          "why_interesting": "Trees secretly cooperating through underground networks — even helping competitors — challenges the 'nature is red in tooth and claw' assumption. The nickname is satisfying and memorable.",
+          "universal_appeal": "Forests and trees are universally known and valued. The concept is accessible without specialist knowledge.",
+          "boring_check": "The question sets up the surprising biological fact before asking for the nickname, making the question itself interesting regardless of whether the player knows the answer."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "answerability": 7,
+          "overall_score": 8.2,
+          "reasoning": "Good narrative question. The 'Wood Wide Web' pun is satisfying and memorable. The alternative answer 'mycorrhizal network' should also be accepted. Slightly lower on answerability since the exact nickname requires recall."
+        },
+        "ai_score": 8.2
+      }
+    }
+  ],
+  "metadata": {
+    "model": "claude-opus-4-6",
+    "provider": "anthropic",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "total_generated": 22,
+    "total_selected": 15,
+    "pipeline": "claude_code_session",
+    "prompt_version": "v2_cot",
+    "topics": ["Nature", "Science"],
+    "difficulty_distribution": {
+      "easy": 3,
+      "medium": 8,
+      "hard": 4
+    }
+  }
+}

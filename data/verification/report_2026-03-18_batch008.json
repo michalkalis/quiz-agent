@@ -1,0 +1,160 @@
+{
+  "metadata": {
+    "verified_at": "2026-03-18T12:00:00Z",
+    "source_file": "data/generated/claude_batch_008.json",
+    "total_questions": 15,
+    "verdicts": {"correct": 10, "needs_fix": 3, "needs_review": 2, "incorrect": 0}
+  },
+  "questions": [
+    {
+      "id": null,
+      "question": "The sound of the T-Rex roar in the original Jurassic Park (1993) was made from recordings of real animals. Which unlikely combination created it?",
+      "stored_answer": "A baby elephant squeal, an alligator hiss, and a tiger growl combined",
+      "verdict": "needs_review",
+      "notes": "The core three animals (baby elephant, alligator, tiger) are confirmed by Gary Rydstrom interviews, but additional animals were also used including a dog, lion, whale blowhole, and crocodile. The question implies only three animals, and some sources list the combination differently (e.g., dog + penguin + tiger + alligator + baby elephant). The stored answer is a commonly cited simplification but not the full picture.",
+      "suggested_fix": "Consider rephrasing to 'Which animals contributed to it?' and updating the answer to note the primary three while acknowledging additional sources were used.",
+      "source_url": "https://en.wikipedia.org/wiki/Gary_Rydstrom",
+      "source_excerpt": "Gary Rydstrom created the T-Rex sounds by combining recordings including a baby elephant's squeal, an alligator's gurgle, a tiger's snarl, a dog, and other animals. The baby elephant's unique high-pitched scream was only recorded once."
+    },
+    {
+      "id": null,
+      "question": "The first film to be shot primarily using digital cameras rather than physical film was released in the 1990s. By what year had most major Hollywood studios completely phased out traditional 35mm film?",
+      "stored_answer": "Around 2013",
+      "verdict": "correct",
+      "notes": "Confirmed. In 2013, major movies shot digitally overtook those shot on film. Paramount became the first major studio to distribute entirely digitally in late 2013. By 2013, 92% of US theaters had converted to digital projection.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Digital_cinematography",
+      "source_excerpt": "Major movies shot on digital video overtook those shot on film in 2013. Paramount became the first major studio to distribute movies entirely in digital format in late 2013."
+    },
+    {
+      "id": null,
+      "question": "In the 1939 film The Wizard of Oz, Dorothy's ruby slippers were silver in the original book. They were changed to ruby red for the film for a specific technical reason. What was it?",
+      "stored_answer": "To show off the new Technicolor process — red looked spectacular on the new colour film",
+      "verdict": "correct",
+      "notes": "Confirmed. The silver shoes from L. Frank Baum's novel were changed to ruby red to take advantage of the three-strip Technicolor process. Screenwriter Noel Langley is credited with the idea. Red showed dramatically against the yellow brick road.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Ruby_slippers",
+      "source_excerpt": "The color was changed from silver to ruby red to take advantage of the three-strip Technicolor film process. Screenwriter Noel Langley is credited with the idea; ruby red would stand out against the yellow brick road."
+    },
+    {
+      "id": null,
+      "question": "The internet was originally developed as a military communication network designed to survive nuclear war. What was the name of this predecessor to the internet?",
+      "stored_answer": "ARPANET",
+      "verdict": "needs_fix",
+      "notes": "The answer 'ARPANET' is correct as the predecessor to the internet, but the question's premise is factually misleading. ARPANET was NOT designed to survive nuclear war. ARPA director Charles Herzfeld stated it was not started for that purpose. The nuclear-survivable network concept came from Paul Baran's separate RAND Corporation work. ARPANET was created to enable resource sharing between remote computers.",
+      "suggested_fix": "Rephrase the question to remove the nuclear war claim. E.g.: 'The internet traces its origins to a US Department of Defense research project from the late 1960s that linked university and research computers. What was the name of this predecessor to the internet?'",
+      "source_url": "https://en.wikipedia.org/wiki/ARPANET",
+      "source_excerpt": "ARPANET was not started to create a Command and Control System that would survive a nuclear attack. Bob Taylor initiated the project in 1966 to enable resource sharing between remote computers. The nuclear-survivable network concept came from Paul Baran's separate RAND Corporation work."
+    },
+    {
+      "id": null,
+      "question": "Pixar's 1995 film Toy Story was the first feature-length computer-animated film. How many feature films had Pixar's RenderMan software — used to create it — been used in before Toy Story demonstrated it could make an entire movie?",
+      "stored_answer": "Zero — Toy Story was the proof of concept",
+      "verdict": "needs_fix",
+      "notes": "This is factually incorrect. RenderMan was used for visual effects in multiple feature films before Toy Story, including Terminator 2: Judgment Day (1991), Jurassic Park (1993), The Abyss (1989), and Disney animated features like Beauty and the Beast and The Lion King. What Toy Story was the first to do was create an ENTIRE feature film using computer animation — but RenderMan had been widely used for VFX in live-action and traditional animated films prior.",
+      "suggested_fix": "Correct the answer to acknowledge RenderMan was used in many films for visual effects before Toy Story. The question's framing is misleading and should be revised or replaced.",
+      "source_url": "https://en.wikipedia.org/wiki/Pixar_RenderMan",
+      "source_excerpt": "RenderMan has been used to create digital visual effects for Hollywood blockbuster movies such as Beauty and the Beast, Aladdin, The Lion King, Terminator 2: Judgment Day, Jurassic Park — all before Toy Story (1995), which was the first entirely computer-animated feature film."
+    },
+    {
+      "id": null,
+      "question": "The QR code was invented in 1994 by an engineer at a Japanese car parts manufacturer who needed a better way to track components on the assembly line. What does 'QR' stand for?",
+      "stored_answer": "Quick Response",
+      "verdict": "correct",
+      "notes": "Confirmed. QR stands for 'quick-response code', invented in 1994 by Masahiro Hara of Denso Wave (a Toyota subsidiary) for labelling automobile parts.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/QR_code",
+      "source_excerpt": "A QR code, short for quick-response code, is a type of two-dimensional matrix barcode invented in 1994 by Masahiro Hara of the Japanese company Denso Wave for labelling automobile parts."
+    },
+    {
+      "id": null,
+      "question": "The microwave oven was invented when an engineer accidentally melted a chocolate bar in his pocket while standing near a radar device. What was the engineer's name, and which company employed him?",
+      "stored_answer": "Percy Spencer at Raytheon",
+      "verdict": "correct",
+      "notes": "Confirmed. Percy Spencer, an engineer at Raytheon, discovered the heating effect of microwaves in 1945 when a candy bar in his pocket melted while he was standing near an active radar magnetron. He patented the first microwave oven in 1945.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Percy_Spencer",
+      "source_excerpt": "In 1945, the heating effect of a high-power microwave beam was accidentally discovered by Percy Spencer, an American self-taught engineer at Raytheon, when a candy bar in his pocket melted while standing near an active radar set."
+    },
+    {
+      "id": null,
+      "question": "The household microwave oven was discovered by accident in 1945 when an engineer noticed something unexpected while working with radar technology. What happened that led to the invention?",
+      "stored_answer": "A chocolate bar in his pocket melted while he stood near an active radar magnetron",
+      "verdict": "correct",
+      "notes": "Confirmed. Same event as previous question — Percy Spencer's candy/chocolate bar melted near an active radar magnetron at Raytheon in 1945.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Microwave_oven",
+      "source_excerpt": "Percy Spencer, working at Raytheon in 1945, discovered microwave cooking when a candy bar in his pocket melted while he was standing near an active radar magnetron."
+    },
+    {
+      "id": null,
+      "question": "In classic horror films, the shower scene in Alfred Hitchcock's 'Psycho' (1960) is famous for implying violence without ever showing it explicitly. What was the fake blood actually made from, chosen because it photographed more realistically in black and white?",
+      "stored_answer": "Chocolate syrup",
+      "verdict": "correct",
+      "notes": "Confirmed. Chocolate syrup (Bosco brand according to makeup artist Jack Barron) was used as blood in the Psycho shower scene because it photographed more realistically in black and white than theatrical blood.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Psycho_shower_scene",
+      "source_excerpt": "The shower scene was shot in black-and-white with chocolate syrup used in place of theatrical blood. Chocolate syrup photographs as blood in black and white, with more realistic density than stage blood."
+    },
+    {
+      "id": null,
+      "question": "GPS satellite navigation was initially so accurate that the US military deliberately degraded its precision for civilian use — adding artificial errors to the signal. What was this limitation called, and when was it switched off?",
+      "stored_answer": "Selective Availability — switched off in May 2000 by President Clinton",
+      "verdict": "correct",
+      "notes": "Confirmed. GPS Selective Availability (SA) was discontinued on May 2, 2000, following President Clinton's 1996 executive order. SA added intentional errors of up to 100 meters to civilian GPS signals.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Error_analysis_for_the_Global_Positioning_System",
+      "source_excerpt": "On May 2, 2000, Selective Availability was discontinued as a result of a 1996 executive order by President Bill Clinton. Before it was turned off, typical SA errors were about 50m horizontally and about 100m vertically."
+    },
+    {
+      "id": null,
+      "question": "The Wilhelm Scream is a famous sound effect used in hundreds of films since 1951. What makes it so easy to notice once you know it?",
+      "stored_answer": "It is always the same single recorded scream — reused across hundreds of films, including Star Wars and Indiana Jones",
+      "verdict": "correct",
+      "notes": "Confirmed. The Wilhelm scream is a stock sound effect originating in the 1951 film Distant Drums, reused in over 400 films including Star Wars and Indiana Jones. Ben Burtt popularized its modern use starting with Star Wars (1977).",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Wilhelm_scream",
+      "source_excerpt": "The Wilhelm scream is a stock sound effect originating in the 1951 film Distant Drums. It has been used in more than 400 films, including Star Wars and Indiana Jones. Sound designer Ben Burtt popularized its modern use."
+    },
+    {
+      "id": null,
+      "question": "Velcro was invented by a Swiss engineer who noticed something after a walk in the countryside with his dog. What natural phenomenon inspired the design?",
+      "stored_answer": "Burr seeds (burdock) sticking to his dog's fur — tiny hooks latching onto loops",
+      "verdict": "correct",
+      "notes": "Confirmed. George de Mestral, a Swiss electrical engineer, invented Velcro after examining burdock burrs that clung to his dog's fur during a walk in the Jura mountains in 1941. He examined them under a microscope and discovered the hook mechanism.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/George_de_Mestral",
+      "source_excerpt": "George de Mestral went for a walk in the Jura mountains in 1941, and wondered why burdock seeds clung to his woolen socks and coat, and also his dog Milka. He examined the burrs under a microscope and discovered their hook structure."
+    },
+    {
+      "id": null,
+      "question": "In the film industry, the 'black film' (film noir) era of the 1940s-50s got its French name from a publisher's observation. What did the French publisher notice that earned American crime thrillers the label 'noir' (black)?",
+      "stored_answer": "The books they were adapted from had distinctive black covers in the French market (the Série Noire imprint)",
+      "verdict": "needs_review",
+      "notes": "Partially correct but oversimplified. The term 'film noir' was first used by French critic Nino Frank in 1946 (not a publisher). The connection to Série Noire (founded by Marcel Duhamel in 1945, published by Gallimard) with its black covers is real, but the question attributes the coinage to 'a publisher's observation' which conflates two different people. Frank was a film critic who may have been inspired by the Série Noire book series, but the question's framing is misleading about who coined the term and why.",
+      "suggested_fix": "Rephrase to: 'The French term film noir may have been inspired by a famous book series. What was its connection?' or clarify that a film critic (not publisher) coined the term, possibly inspired by the Série Noire imprint's black covers.",
+      "source_url": "https://en.wikipedia.org/wiki/Film_noir",
+      "source_excerpt": "Nino Frank, a French film critic, first used the term 'film noir' in 1946. The term may have been inspired by Gallimard's Série Noire crime fiction imprint, founded in 1945 by Marcel Duhamel, which featured distinctive black covers."
+    },
+    {
+      "id": null,
+      "question": "Early computers in the 1940s and 1950s were so prone to errors that engineers spent more time debugging — finding and fixing faults — than programming. The term 'bug' in computing famously comes from an actual incident. What was found in the machine?",
+      "stored_answer": "A real moth caught in a relay of the Harvard Mark II computer in 1947",
+      "verdict": "correct",
+      "notes": "Confirmed. On September 9, 1947, a moth was found trapped in a relay of the Harvard Mark II computer. Grace Hopper's team taped it into the logbook with the note 'first actual case of [a] bug being found.' Note: the term 'bug' predated this incident (used since 1800s), but this event popularized it in computing.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Harvard_Mark_II",
+      "source_excerpt": "On September 9, 1947, a moth was extracted from the Mark II computer's electronics and taped to the log book, with the note 'first actual case of bug being found.' The remains are preserved at the Smithsonian Institution."
+    },
+    {
+      "id": null,
+      "question": "Stanley Kubrick directed 2001: A Space Odyssey (1968) — and was so ahead of his time that NASA later asked to use some of his film techniques. But Kubrick also became convinced by a strange rumour: that he himself had filmed a famous historical event in a TV studio. What event?",
+      "stored_answer": "The Apollo 11 Moon landing (the conspiracy theory claims Kubrick faked the Moon landing footage)",
+      "verdict": "needs_fix",
+      "notes": "The answer (Moon landing conspiracy) is correct, but the question's framing is factually wrong. There is NO evidence that Kubrick 'became convinced' of the conspiracy theory about himself. The conspiracy theory is that OTHERS believe Kubrick filmed the Moon landing — Kubrick himself never expressed such a belief. The question incorrectly states Kubrick believed the rumour about himself.",
+      "suggested_fix": "Reframe the question: 'A persistent conspiracy theory claims that a famous filmmaker was recruited by NASA to fake a famous historical event in a TV studio, based on his work on 2001: A Space Odyssey. Who was the filmmaker, and what event?' Remove the false claim that Kubrick believed the rumour.",
+      "source_url": "https://en.wikipedia.org/wiki/Moon_landing_conspiracy_theories",
+      "source_excerpt": "Filmmaker Stanley Kubrick is accused of having produced much of the footage for Apollos 11 and 12, presumably because he had just directed 2001: A Space Odyssey. There is no evidence Kubrick himself believed or endorsed this conspiracy theory."
+    }
+  ]
+}

@@ -1,0 +1,604 @@
+{
+  "questions": [
+    {
+      "question": "What comes next in this sequence: 1, 8, 27, 64, 125, ___?",
+      "type": "text",
+      "correct_answer": "216",
+      "possible_answers": null,
+      "alternative_answers": ["216"],
+      "explanation": "Each number is the cube of its position: 1³=1, 2³=8, 3³=27, 4³=64, 5³=125, 6³=216.",
+      "topic": "Logic",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": ["number-sequence", "cubes", "mathematics", "pattern"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": "Mathematical verification: 6^3 = 6 x 6 x 6 = 216. The sequence is n^3 for n = 1, 2, 3, 4, 5, 6.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Number Sequence (Pattern 7)",
+          "why_interesting": "Cube numbers have an elegant geometric interpretation (filling 3D space) and the pattern is discoverable from the differences",
+          "universal_appeal": "Mathematics is universal and language-independent",
+          "boring_check": "Differences between terms are 7, 19, 37, 61, 91 — increasing by 12, 18, 24, 30 (increasing by 6). Multiple reasoning paths exist: direct cube recognition or difference-of-difference analysis."
+        },
+        "self_critique": {
+          "surprise_factor": 7,
+          "universal_appeal": 10,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "answerability": 9,
+          "overall_score": 8.4,
+          "reasoning": "Clean cubic sequence. Player can spot the cubes directly (1, 8, 27, 64, 125 = 1³, 2³, 3³, 4³, 5³) and confidently arrive at 216. Satisfying 'aha!' when the cube pattern clicks."
+        },
+        "ai_score": 8.4
+      }
+    },
+    {
+      "question": "What comes next: 2, 3, 5, 8, 13, 21, ___?",
+      "type": "text",
+      "correct_answer": "34",
+      "possible_answers": null,
+      "alternative_answers": ["34"],
+      "explanation": "This is the Fibonacci sequence: each number is the sum of the two preceding numbers (13+21=34).",
+      "topic": "Logic",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": ["fibonacci", "number-sequence", "mathematics", "pattern"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Fibonacci_sequence",
+      "source_excerpt": "The Fibonacci sequence follows the rule where each number is the sum of the two preceding ones. 13+21=34.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Number Sequence (Pattern 7)",
+          "why_interesting": "The Fibonacci sequence appears throughout nature and is one of mathematics' most beautiful and universal patterns",
+          "universal_appeal": "Pure mathematics — completely language and culture independent",
+          "boring_check": "The sequence is long enough (7 terms shown) to make the pattern discoverable without being trivial. Multiple reasoning paths: spot the Fibonacci rule directly, or check if each term equals the sum of two previous."
+        },
+        "self_critique": {
+          "surprise_factor": 7,
+          "universal_appeal": 10,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "answerability": 9,
+          "overall_score": 8.6,
+          "reasoning": "Classic but still effective. The Fibonacci sequence is recognisable to many but the connection to 34 as the next step tests whether they truly understand the rule. The nature connection adds educational value."
+        },
+        "ai_score": 8.6
+      }
+    },
+    {
+      "question": "What comes next in this pattern: 1, 2, 6, 24, 120, ___?",
+      "type": "text",
+      "correct_answer": "720",
+      "possible_answers": null,
+      "alternative_answers": ["720"],
+      "explanation": "Each number is a factorial: 1!=1, 2!=2, 3!=6, 4!=24, 5!=120, 6!=720. Each term is multiplied by the next integer.",
+      "topic": "Logic",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["factorials", "number-sequence", "mathematics", "pattern"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": "Mathematical verification: 6! = 720. The sequence is n! for n = 1, 2, 3, 4, 5, 6.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Number Sequence (Pattern 7)",
+          "why_interesting": "Factorials grow faster than exponential growth — the sequence explodes in value quickly, teaching a key mathematical concept",
+          "universal_appeal": "Pure mathematics — fully universal",
+          "boring_check": "Ratios between terms: ×2, ×3, ×4, ×5 — an elegant compound pattern. Not trivially simple (not just doubling), but discoverable by examining the ratio between consecutive terms."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 10,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "answerability": 8,
+          "overall_score": 8.6,
+          "reasoning": "Player spots: each term is multiplied by the next integer (×2, ×3, ×4, ×5, so ×6 next: 120×6=720). The 'aha!' comes from recognising factorial growth. Clean and satisfying."
+        },
+        "ai_score": 8.6
+      }
+    },
+    {
+      "question": "What comes next: 0, 1, 4, 9, 16, 25, ___?",
+      "type": "text",
+      "correct_answer": "36",
+      "possible_answers": null,
+      "alternative_answers": ["36"],
+      "explanation": "Each number is a perfect square: 0²=0, 1²=1, 2²=4, 3²=9, 4²=16, 5²=25, 6²=36.",
+      "topic": "Logic",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": ["square-numbers", "number-sequence", "mathematics", "pattern"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": "Mathematical verification: 6^2 = 36. The sequence is n^2 for n = 0, 1, 2, 3, 4, 5, 6.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Number Sequence (Pattern 7)",
+          "why_interesting": "Square numbers have immediate visual meaning — the sequence represents areas of squares with sides 0, 1, 2, 3...",
+          "universal_appeal": "Pure mathematics",
+          "boring_check": "Differences are 1, 3, 5, 7, 9... (odd numbers increasing by 2). Multiple paths to the answer: direct square recognition, or odd-difference pattern."
+        },
+        "self_critique": {
+          "surprise_factor": 6,
+          "universal_appeal": 10,
+          "clever_framing": 7,
+          "educational_value": 8,
+          "answerability": 9,
+          "overall_score": 8.0,
+          "reasoning": "A reliable easy sequence. The square pattern is classic and accessible. Including 0 at the start makes it slightly less immediately obvious than starting at 1."
+        },
+        "ai_score": 8.0
+      }
+    },
+    {
+      "question": "What comes next in this harder sequence: 2, 5, 10, 17, 26, 37, ___?",
+      "type": "text",
+      "correct_answer": "50",
+      "possible_answers": null,
+      "alternative_answers": ["50"],
+      "explanation": "Each term is n²+1 where n=1,2,3...: 1+1=2, 4+1=5, 9+1=10, 16+1=17, 25+1=26, 36+1=37, 49+1=50. Alternatively: differences are 3, 5, 7, 9, 11, 13 — odd numbers increasing by 2.",
+      "topic": "Logic",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["number-sequence", "quadratic", "mathematics", "pattern"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": "Mathematical verification: n^2+1 for n=7: 49+1=50. Or via differences: 37+13=50.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Number Sequence (Pattern 7)",
+          "why_interesting": "The offset-square pattern (n²+1) is elegant — the sequence looks irregular until the underlying quadratic structure is spotted",
+          "universal_appeal": "Pure mathematics",
+          "boring_check": "First differences: 3,5,7,9,11,13 — these are odd numbers, revealing the structure. Second differences are all 2, confirming quadratic pattern. Discoverable through careful analysis."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 10,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "answerability": 8,
+          "overall_score": 8.6,
+          "reasoning": "Appropriately hard: requires spotting that differences form the sequence 3,5,7,9,11,13 (odd numbers +2 each time), so next difference is 13, giving 37+13=50. Or recognise n²+1 directly."
+        },
+        "ai_score": 8.6
+      }
+    },
+    {
+      "question": "Which doesn't belong: Mercury, Venus, Earth, Mars, Moon?",
+      "type": "text",
+      "correct_answer": "Moon",
+      "possible_answers": null,
+      "alternative_answers": ["the moon"],
+      "explanation": "Mercury, Venus, Earth, and Mars are all planets of the inner solar system. The Moon is a natural satellite (it orbits Earth, not the Sun directly).",
+      "topic": "Logic",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": ["odd-one-out", "astronomy", "planets", "solar-system"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": "Mercury, Venus, Earth, and Mars are the four terrestrial planets. The Moon is Earth's natural satellite, not a planet.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Odd One Out (Pattern 9)",
+          "why_interesting": "The Moon is included among planets, which may seem natural in casual conversation — but it's classified completely differently in astronomy",
+          "universal_appeal": "Planets and the Moon are globally known. The distinction between planet and satellite is universally taught.",
+          "boring_check": "Exactly one unambiguous odd-one-out (Moon = satellite, not a planet). The others are all inner solar system planets."
+        },
+        "self_critique": {
+          "surprise_factor": 7,
+          "universal_appeal": 10,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "answerability": 9,
+          "overall_score": 8.4,
+          "reasoning": "Player can work through each: Mercury ✓ planet, Venus ✓ planet, Earth ✓ planet, Mars ✓ planet, Moon — not a planet! The criterion (satellite vs planet) is clear and educational."
+        },
+        "ai_score": 8.4
+      }
+    },
+    {
+      "question": "Which is the odd one out: Diamond, Graphite, Charcoal, Coal, Fullerene?",
+      "type": "text",
+      "correct_answer": "Coal",
+      "possible_answers": null,
+      "alternative_answers": ["coal"],
+      "explanation": "Diamond, graphite, charcoal, and fullerene are all pure allotropes of carbon (different structural forms of the same element). Coal is a mixture of carbon compounds and impurities — not a pure carbon allotrope.",
+      "topic": "Logic",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["odd-one-out", "chemistry", "carbon", "allotropes"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Allotropes_of_carbon",
+      "source_excerpt": "Diamond, graphite, and fullerene are well-established carbon allotropes. Charcoal and coal are informally called amorphous carbon. Coal is a sedimentary rock and mixture of carbon compounds. Charcoal is 'nearly pure carbon' but not a true crystalline allotrope.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Odd One Out (Pattern 9)",
+          "why_interesting": "Diamond and coal in the same list suggests the common answer might be 'diamond' (most different looking) — but the real odd-one-out is coal for a more subtle scientific reason",
+          "universal_appeal": "These materials are all globally known. Carbon chemistry is universally taught.",
+          "boring_check": "The answer (coal) requires knowing that coal is a mixture while the others are pure carbon allotropes. The misdirection (diamond looks most different) is the clever trap."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 8,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "answerability": 7,
+          "overall_score": 8.4,
+          "reasoning": "The misdirection (diamond seems most different) makes this hard but satisfying. Player who reasons carefully: 'diamond, graphite, charcoal, fullerene — all pure carbon forms. Coal is a compound rock.' The answer requires knowing what 'allotrope' means."
+        },
+        "ai_score": 8.4
+      }
+    },
+    {
+      "question": "A woman buys a painting for \u20ac100, sells it for \u20ac110, buys it back for \u20ac120, then sells it again for \u20ac130. How much profit has she made overall?",
+      "type": "text",
+      "correct_answer": "\u20ac20 profit",
+      "possible_answers": null,
+      "alternative_answers": ["20", "\u20ac20", "20 euros", "20 profit"],
+      "explanation": "She spent \u20ac100+\u20ac120=\u20ac220 total. She received \u20ac110+\u20ac130=\u20ac240 total. Profit = \u20ac240-\u20ac220 = \u20ac20.",
+      "topic": "Logic",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["lateral-thinking", "arithmetic", "logic", "money", "puzzle"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": "Mathematical verification: Spent 100+120=220. Received 110+130=240. Net profit = 240-220 = 20 euros.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Lateral Thinking (Pattern 10)",
+          "why_interesting": "The apparent complexity (four transactions!) leads many people to say \u20ac10 or \u20ac20, but few can explain why. Reasoning clearly through it is satisfying.",
+          "universal_appeal": "Simple arithmetic is universally accessible. Buying and selling needs no cultural context.",
+          "boring_check": "The confusion lies in the multiple transactions creating mental load. The answer (\u20ac20) requires careful tracking of cash flows. The 'wrong' answer (\u20ac10) is intuitive but incorrect."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 10,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "answerability": 8,
+          "overall_score": 8.4,
+          "reasoning": "Classic arithmetic puzzle where the answer (\u20ac20) surprises those who intuitively said \u20ac10. Player who works it through: spent \u20ac220, received \u20ac240, net \u20ac20. The puzzle tests clear systematic thinking."
+        },
+        "ai_score": 8.4
+      }
+    },
+    {
+      "question": "Every person at a party shakes hands with every other person exactly once. If there are 5 people at the party, how many handshakes happen in total?",
+      "type": "text",
+      "correct_answer": "10",
+      "possible_answers": null,
+      "alternative_answers": ["10", "ten"],
+      "explanation": "With 5 people: person 1 shakes 4 hands, person 2 shakes 3 new hands, person 3 shakes 2 new, person 4 shakes 1. Total: 4+3+2+1=10. Formula: n(n-1)/2 = 5\u00d74/2 = 10.",
+      "topic": "Logic",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["combinatorics", "logic", "mathematics", "puzzle"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": "Mathematical verification: C(5,2) = 5*4/2 = 10 handshakes.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Lateral Thinking / Number Sequence",
+          "why_interesting": "Simple social scenario that leads to combinatorics — the decreasing series (4+3+2+1) is elegant and the formula generalises to important problems",
+          "universal_appeal": "Handshakes and parties are universal. The combinatorics concept is globally taught.",
+          "boring_check": "The naive answer (5\u00d74=20) is a common mistake. The correct reasoning (avoiding counting each handshake twice) is the 'aha!' moment."
+        },
+        "self_critique": {
+          "surprise_factor": 7,
+          "universal_appeal": 10,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "answerability": 8,
+          "overall_score": 8.4,
+          "reasoning": "Player can work through: person 1 shakes 4 hands, person 2 then shakes 3 new hands, etc. The answer 10 is satisfying and the pattern is elegant."
+        },
+        "ai_score": 8.4
+      }
+    },
+    {
+      "question": "You have two ropes that each burn for exactly 1 hour — but they burn unevenly. Using only these two ropes and a lighter, how can you measure exactly 45 minutes?",
+      "type": "text",
+      "correct_answer": "Light rope 1 at both ends and rope 2 at one end simultaneously. When rope 1 finishes (30 min), light the other end of rope 2. It will burn out in 15 more minutes — total 45.",
+      "possible_answers": null,
+      "alternative_answers": ["light one rope at both ends, other at one end. when first burns out light second end of second rope", "burn rope 1 from both ends, rope 2 from one end. when rope 1 is done, light other end of rope 2"],
+      "explanation": "Rope 1 lit at both ends burns in 30 min. At that moment, rope 2 (lit at one end) has 30 min of burn left. Lighting its second end halves that time to 15 min. 30+15=45 minutes.",
+      "topic": "Logic",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["lateral-thinking", "logic", "puzzle", "classic-puzzle"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": "Logical verification: Rope 1 (both ends) = 30 min. Rope 2 remaining = 30 min, lit at second end = 15 min more. Total = 45 min.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Lateral Thinking (Pattern 10)",
+          "why_interesting": "The key insight (lighting a rope at both ends halves its burn time) is non-obvious but perfectly logical. The satisfaction of solving it is exceptional.",
+          "universal_appeal": "Ropes and time are universally understood. No cultural knowledge needed.",
+          "boring_check": "The answer requires creative insight (lighting both ends), not just calculation. Works excellently as a voice quiz puzzle."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 10,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "answerability": 8,
+          "overall_score": 9.0,
+          "reasoning": "Classic lateral thinking puzzle. The 'aha!' when you realise lighting both ends halves the time is one of the most satisfying moments in recreational mathematics. Works beautifully as a voice quiz question."
+        },
+        "ai_score": 9.0
+      }
+    },
+    {
+      "question": "If you have a 3-litre jug and a 5-litre jug, with no markings, and unlimited water — how can you measure exactly 4 litres?",
+      "type": "text",
+      "correct_answer": "Fill the 5-litre jug, pour into the 3-litre jug until full (leaves 2L in 5L jug). Empty the 3L jug. Pour the 2L into the 3L jug. Fill the 5L jug again. Pour from 5L into 3L until full (needs 1L more). This leaves 4L in the 5L jug.",
+      "possible_answers": null,
+      "alternative_answers": ["fill 5L, pour 3L out, empty 3L, pour remaining 2L into 3L, refill 5L, pour 1L into 3L, leaving 4L in 5L jug"],
+      "explanation": "Step 1: Fill 5L jug. Step 2: Pour into 3L jug until full (leaves 2L in 5L). Step 3: Empty 3L jug. Step 4: Pour 2L into 3L jug. Step 5: Fill 5L jug. Step 6: Pour from 5L into 3L (only 1L fits). Now 5L jug has exactly 4L.",
+      "topic": "Logic",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["lateral-thinking", "logic", "puzzle", "water-jug"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": "Step-by-step verification: Fill 5L -> pour to 3L (leaves 2) -> empty 3L -> pour 2L to 3L -> fill 5L -> pour 1L to 3L -> 4L remains in 5L jug.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Lateral Thinking (Pattern 10)",
+          "why_interesting": "Classic puzzle that requires working backwards from the goal. The solution (6 steps) is elegant and teaches constraint-based thinking.",
+          "universal_appeal": "Jugs and water are universally understood. No cultural context needed.",
+          "boring_check": "The puzzle requires creative problem-solving rather than recall. Works as a voice quiz puzzle where the player thinks through steps aloud."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 10,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "answerability": 7,
+          "overall_score": 8.6,
+          "reasoning": "Classic water jug puzzle. The solution requires creative constraint reasoning. The insight (using the 3L jug to remove exactly 3L from the 5L jug twice) creates a satisfying 'aha!' moment."
+        },
+        "ai_score": 8.6
+      }
+    },
+    {
+      "question": "Complete the analogy: Conductor is to orchestra as _________ is to a bee colony?",
+      "type": "text",
+      "correct_answer": "Queen (bee)",
+      "possible_answers": null,
+      "alternative_answers": ["queen", "the queen", "queen bee", "a queen bee"],
+      "explanation": "A conductor leads and coordinates an orchestra. The queen bee is the reproductive and nominal centre of a bee colony, directing its activity and growth — though in practice worker bees coordinate most activities through chemical signals.",
+      "topic": "Logic",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": ["analogy", "logic", "bees", "leadership"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": "The conductor leads an orchestra; the queen bee is the central figure of a bee colony. The analogy maps leader-to-group relationships.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Verbal Analogy (Pattern 8)",
+          "why_interesting": "Leader-to-group relationships are elegant and universally understood. The bee colony analogy tests whether the player can identify the structural role.",
+          "universal_appeal": "Orchestras and bee colonies are globally known. The analogy relationship is universal.",
+          "boring_check": "Framed as 'complete the analogy' rather than dry 'A:B::C:D' format. The relationship (leader of group) is clear but the bee colony context adds interest."
+        },
+        "self_critique": {
+          "surprise_factor": 7,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 7,
+          "answerability": 9,
+          "overall_score": 8.0,
+          "reasoning": "Clean analogy. Player maps: conductor leads orchestra → ? leads bee colony → queen bee. Accessible and satisfying, if not highly surprising."
+        },
+        "ai_score": 8.0
+      }
+    },
+    {
+      "question": "In Morse code, the most common English letter is given the shortest signal: a single dot. Which letter is it?",
+      "type": "text",
+      "correct_answer": "E",
+      "possible_answers": null,
+      "alternative_answers": ["e", "the letter e"],
+      "explanation": "In Morse code, 'E' is represented by a single dot (·) because it is the most frequently used letter in English. Morse code was designed to be efficient — common letters received shorter codes.",
+      "topic": "Logic",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["morse-code", "logic", "encoding", "language", "communication"],
+      "language_dependent": true,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Morse_code",
+      "source_excerpt": "In Morse code, E (the most common letter in English) is a single dot — the shortest encoding. The design deliberately assigned shorter sequences to more frequently used letters.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Lateral Thinking / Surprising Connection",
+          "why_interesting": "The logic of Morse code encoding (frequency → code length) reveals an elegant design principle that applies to many modern compression systems",
+          "universal_appeal": "Morse code and letter frequency are globally known concepts. Note: language_dependent=true as it's specific to English letter frequency.",
+          "boring_check": "The question asks about design logic (shortest code → most common letter) rather than direct recall of Morse code."
+        },
+        "self_critique": {
+          "surprise_factor": 7,
+          "universal_appeal": 7,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "answerability": 8,
+          "overall_score": 7.6,
+          "reasoning": "Player can reason: most common letter in English → 'E' is famously most common. The connection to Morse code is the educational payoff. Flagged as language_dependent since it depends on English frequency."
+        },
+        "ai_score": 7.6
+      }
+    },
+    {
+      "question": "What comes next in this sequence: 1, 3, 6, 10, 15, 21, ___?",
+      "type": "text",
+      "correct_answer": "28",
+      "possible_answers": null,
+      "alternative_answers": ["28"],
+      "explanation": "These are triangular numbers: each term is the sum of all integers up to its position. 1, 1+2=3, 1+2+3=6, ..., 1+2+3+4+5+6+7=28. Differences are 2, 3, 4, 5, 6, 7.",
+      "topic": "Logic",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["triangular-numbers", "number-sequence", "mathematics", "pattern"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": "Mathematical verification: T(7) = 7*8/2 = 28. Or: 21+7 = 28 (differences increase by 1).",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Number Sequence (Pattern 7)",
+          "why_interesting": "Triangular numbers appear in many counting problems (handshakes, pairings) and have a beautiful geometric interpretation as triangular dot arrangements",
+          "universal_appeal": "Pure mathematics — fully universal",
+          "boring_check": "Differences: 2, 3, 4, 5, 6, 7 — increasing by 1 each time. Clear discoverable pattern, not trivially simple."
+        },
+        "self_critique": {
+          "surprise_factor": 7,
+          "universal_appeal": 10,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "answerability": 9,
+          "overall_score": 8.4,
+          "reasoning": "Player spots the differences (2,3,4,5,6,7) and adds 7 to get 28. Or recognises triangular numbers directly. Clean and satisfying."
+        },
+        "ai_score": 8.4
+      }
+    },
+    {
+      "question": "Here is an art-themed odd one out. Which doesn't belong, and why: Picasso, Monet, Rembrandt, Banksy, Van Gogh?",
+      "type": "text",
+      "correct_answer": "Banksy",
+      "possible_answers": null,
+      "alternative_answers": ["banksy"],
+      "explanation": "Picasso, Monet, Rembrandt, and Van Gogh are all deceased classical or modern masters whose identities are fully known. Banksy is a living, contemporary street artist whose true identity remains anonymous.",
+      "topic": "Art",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": ["art", "artists", "odd-one-out", "banksy", "contemporary-art"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Banksy",
+      "source_excerpt": "Banksy is a pseudonymous England-based street artist whose true identity has never been confirmed. Unlike Picasso, Monet, Rembrandt, and Van Gogh, Banksy is living, anonymous, and works in street art.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Odd One Out (Pattern 9)",
+          "why_interesting": "The obvious odd-one-out might be 'modern Banksy vs old masters' — but the real criterion (known identity vs anonymous) is a subtler and more surprising distinction",
+          "universal_appeal": "All five artists are globally recognised. The anonymity of Banksy is universally known.",
+          "boring_check": "Exactly one unambiguous answer. The criterion (anonymous identity) is non-obvious but defensible. The list includes one obvious potential trap (Banksy as modern = expected odd-one-out) but the real reason is deeper."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 7,
+          "answerability": 8,
+          "overall_score": 8.0,
+          "reasoning": "Player might pick Banksy because 'the others are classical masters' — but the 'why?' is the interesting part. The anonymous identity criterion is the more interesting and defensible answer."
+        },
+        "ai_score": 8.0
+      }
+    }
+  ],
+  "metadata": {
+    "model": "claude-opus-4-6",
+    "provider": "anthropic",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "total_generated": 20,
+    "total_selected": 15,
+    "pipeline": "claude_code_session",
+    "prompt_version": "v2_cot",
+    "topics": ["Art", "Logic"],
+    "difficulty_distribution": {
+      "easy": 4,
+      "medium": 6,
+      "hard": 5
+    }
+  }
+}

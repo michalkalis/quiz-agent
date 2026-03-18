@@ -3,12 +3,15 @@
 Integrates ChromaDB and SQL storage for ratings.
 """
 
+import logging
 from typing import Optional, List, Tuple
 from datetime import datetime
 
 import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../../..", "packages/shared"))
+
+logger = logging.getLogger(__name__)
 
 from quiz_shared.database.chroma_client import ChromaDBClient
 from quiz_shared.database.sql_client import SQLClient
@@ -97,7 +100,7 @@ class FeedbackService:
 
             if not sql_success:
                 # ChromaDB updated but SQL failed - log warning
-                print(f"Warning: SQL rating storage failed for {question_id}")
+                logger.warning("SQL rating storage failed for %s", question_id)
 
             return True, "Rating submitted successfully"
 
@@ -158,8 +161,8 @@ class FeedbackService:
         low_rated = self.get_low_rated_questions()
 
         if low_rated:
-            print(f"Found {len(low_rated)} low-rated questions (< {self.low_rating_threshold}):")
+            logger.info("Found %d low-rated questions (< %.1f)", len(low_rated), self.low_rating_threshold)
             for qid, rating in low_rated:
-                print(f"  - {qid}: {rating:.2f} avg rating")
+                logger.info("  %s: %.2f avg rating", qid, rating)
 
         return [qid for qid, _ in low_rated]

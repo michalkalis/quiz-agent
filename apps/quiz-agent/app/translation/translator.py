@@ -3,9 +3,12 @@
 Translates questions and feedback to user's preferred language using OpenAI.
 """
 
+import logging
 import os
 from typing import Optional
 from openai import AsyncOpenAI
+
+logger = logging.getLogger(__name__)
 
 
 # Language code to full name mapping
@@ -89,7 +92,7 @@ class TranslationService:
             return translated
 
         except Exception as e:
-            print(f"⚠️ Translation failed, using original: {e}")
+            logger.warning("Translation failed, using original: %s", e)
             return question  # Fallback to original on error
 
     async def translate_feedback(
@@ -140,5 +143,5 @@ class TranslationService:
             return translated
 
         except Exception as e:
-            print(f"⚠️ Translation failed, using original: {e}")
+            logger.warning("Translation failed, using original: %s", e)
             return feedback

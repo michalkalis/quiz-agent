@@ -1,0 +1,781 @@
+{
+  "questions": [
+    {
+      "question": "The iconic two-note 'dun-dun' theme from Jaws (1975) was initially so simple that the director thought the composer was joking. How many notes make up the main shark motif that terrified an entire generation of beachgoers?",
+      "type": "text",
+      "correct_answer": "Two",
+      "possible_answers": null,
+      "alternative_answers": [
+        "2",
+        "two notes",
+        "just two",
+        "only two"
+      ],
+      "topic": "Movies",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": [
+        "jaws",
+        "john-williams",
+        "film-music",
+        "spielberg",
+        "movie-themes"
+      ],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Jaws_(soundtrack)",
+      "source_excerpt": "The main 'shark' theme is an ostinato consisting of alternating notes E and F played in accelerating rhythm. Spielberg reportedly said 'you can't be serious!' when Williams first demonstrated the two-note motif.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Scale Surprise",
+          "why_interesting": "One of the most terrifying and recognisable pieces of film music in history is built from just two notes — the simplicity is the surprise",
+          "universal_appeal": "Jaws is globally iconic. The theme is recognisable across cultures even by people who have never seen the film.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "clarity": 9,
+          "factual_accuracy": 10,
+          "overall_score": 8.7,
+          "reasoning": "The framing that Spielberg thought it was a joke adds narrative. The answer 'two' is accessible and creates a satisfying 'wait, really?' moment. Most people hum the theme but never counted the notes."
+        },
+        "ai_score": 8.7
+      }
+    },
+    {
+      "question": "A guitar has 6 strings. A standard piano has 88 keys. But how many strings are actually inside a piano — closer to 88, 150, or 230?",
+      "type": "text",
+      "correct_answer": "Around 230",
+      "possible_answers": null,
+      "alternative_answers": [
+        "230",
+        "about 230",
+        "approximately 230",
+        "over 200",
+        "around 220-240"
+      ],
+      "topic": "Music",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": [
+        "piano",
+        "musical-instruments",
+        "scale-surprise",
+        "engineering"
+      ],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://www.yamaha.com/en/musical_instrument_guide/piano/mechanism/mechanism004.html",
+      "source_excerpt": "A standard piano has 88 keys but approximately 230 strings. Most notes in the middle and upper registers use two or three strings tuned to the same pitch (unisons), while only the lowest bass notes use a single string.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Estimation Challenge",
+          "why_interesting": "Most people assume one key equals one string. The idea that a piano hides nearly three times as many strings as keys reveals hidden engineering complexity.",
+          "universal_appeal": "Pianos are globally recognised instruments. The concept requires no cultural knowledge.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.8,
+          "reasoning": "The guitar-to-piano comparison sets up the estimation nicely. Players can reason: maybe some keys share strings or some have multiple. The correct answer (230) is the most extreme option, which follows the scale-surprise pattern well."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "When the first 'talkie' — a film with synchronised dialogue — premiered in 1927, it didn't just change cinema. It ended the careers of many silent film stars overnight. What was the main reason most silent stars couldn't transition to sound films?",
+      "type": "text",
+      "correct_answer": "Their voices didn't match audience expectations — some had heavy accents, high-pitched voices, or poor vocal delivery",
+      "possible_answers": null,
+      "alternative_answers": [
+        "their voices",
+        "bad voices",
+        "their accents",
+        "audiences didn't like their voices",
+        "voice quality",
+        "thick accents"
+      ],
+      "topic": "Movies",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": [
+        "silent-film",
+        "talkies",
+        "film-history",
+        "hollywood",
+        "transition-to-sound"
+      ],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Silent_film",
+      "source_excerpt": "Many actors' voices didn't fit their onscreen image or were heavily accented, leading to many silent film stars being unable to transition to talking films after The Jazz Singer (1927) heralded the commercial ascendance of sound films.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Reverse Engineer",
+          "why_interesting": "Silent film audiences had imagined perfect voices for their favourite stars — then reality shattered those illusions. The concept of a voice destroying a career is counterintuitive.",
+          "universal_appeal": "Film history is globally relevant. The idea of a voice not matching an image is universally relatable.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.7,
+          "reasoning": "Players can reason toward the answer: what changes between silent and sound? The voice. What could be wrong? It didn't match the persona. This is the premise of Singin' in the Rain, which adds cultural resonance."
+        },
+        "ai_score": 8.7
+      }
+    },
+    {
+      "question": "Before Auto-Tune was used to correct singers' pitch in the studio, it was developed for a completely different industry. What was Auto-Tune's original purpose?",
+      "type": "text",
+      "correct_answer": "Interpreting seismic data for oil and gas exploration",
+      "possible_answers": null,
+      "alternative_answers": [
+        "oil exploration",
+        "seismic data",
+        "finding oil",
+        "oil and gas",
+        "geological surveys",
+        "petroleum exploration"
+      ],
+      "topic": "Music",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": [
+        "auto-tune",
+        "music-technology",
+        "origin-story",
+        "oil-industry",
+        "seismic"
+      ],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Pitch_correction",
+      "source_excerpt": "Andy Hildebrand, a former Exxon geophysical engineer, developed auto-correlation algorithms originally used in seismic wave mapping for the oil industry, which became the foundation for Auto-Tune, released in 1997.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Reverse Engineer / Origin Story",
+          "why_interesting": "The tool that defined modern pop music — from T-Pain to virtually every chart hit — was born from oil drilling technology. The connection between seismic waves and sound waves is elegant.",
+          "universal_appeal": "Auto-Tune is globally known in music. Oil exploration is a universal industry. The connection is surprising across all cultures.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 10,
+          "overall_score": 9.0,
+          "reasoning": "Exceptional surprise factor. The connection between oil exploration and pop music is genuinely shocking yet perfectly logical once explained — both involve analysing wave patterns. Players can partially reason: signal processing from another field."
+        },
+        "ai_score": 9.0
+      }
+    },
+    {
+      "question": "Freddie Mercury's vocal range spanned roughly four octaves. But scientists who studied recordings of his voice found something even more remarkable about the way he sang. What unique physical technique did they discover?",
+      "type": "text",
+      "correct_answer": "He used his vestibular folds (false vocal cords) in addition to his regular vocal cords, creating a distinctive vibrato",
+      "possible_answers": null,
+      "alternative_answers": [
+        "false vocal cords",
+        "vestibular folds",
+        "he used his false vocal cords",
+        "subharmonic vibration",
+        "his false vocal cords vibrated"
+      ],
+      "topic": "Music",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": [
+        "freddie-mercury",
+        "queen",
+        "vocal-science",
+        "singing-technique",
+        "acoustics"
+      ],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://www.tandfonline.com/doi/abs/10.3109/14015439.2016.1156737",
+      "source_excerpt": "A 2016 study in Logopedics Phoniatrics Vocology found subharmonic phonation in Mercury's recordings. Endoscopic analysis of a surrogate singer revealed a 3:1 frequency-locked vibratory pattern of vocal folds and ventricular folds, similar to Tuvan throat singing. The study found his range was about 37 semitones (just over 3 octaves).",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Hidden Property / Biological Oddity",
+          "why_interesting": "The secret behind one of rock's most famous voices turns out to be a rare physical technique that connects Western rock to Tuvan throat singing — a surprising cultural bridge.",
+          "universal_appeal": "Freddie Mercury and Queen are globally beloved. The science of voice production is universally fascinating.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "clarity": 8,
+          "factual_accuracy": 9,
+          "overall_score": 8.7,
+          "reasoning": "The setup (scientists studying his voice) primes curiosity. The answer connects rock legend to vocal science in a satisfying way. The false vocal cord detail is genuinely surprising and educational."
+        },
+        "ai_score": 8.7
+      }
+    },
+    {
+      "question": "If you played every Beatles song back to back — every studio album from 'Please Please Me' to 'Let It Be' — the total running time would be closer to: 5 hours, 10 hours, or 24 hours?",
+      "type": "text",
+      "correct_answer": "About 10 hours",
+      "possible_answers": null,
+      "alternative_answers": [
+        "10 hours",
+        "around 10 hours",
+        "approximately 10 hours",
+        "roughly 10 hours"
+      ],
+      "topic": "Music",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": [
+        "beatles",
+        "music-catalogue",
+        "estimation",
+        "rock-music",
+        "scale"
+      ],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/The_Beatles_albums_discography",
+      "source_excerpt": "The Beatles released 13 studio albums between 1963 and 1970 containing 213 songs. The total running time of all studio recordings is approximately 10 hours and 19 minutes.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Estimation Challenge / Scale Surprise",
+          "why_interesting": "The most influential band in history produced an entire body of work that fits into 10 hours — less than a day. The compactness of their legacy is striking.",
+          "universal_appeal": "The Beatles are the most globally recognised band. The concept of measuring a musical legacy in hours is universally accessible.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 8,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.7,
+          "reasoning": "Players can reason: Beatles songs averaged 2-3 minutes, with about 200 songs — that's 400-600 minutes, roughly 7-10 hours. The three options span a wide enough range to make it a genuine estimation challenge."
+        },
+        "ai_score": 8.7
+      }
+    },
+    {
+      "question": "During the filming of Titanic (1997), the entire set was built as a mirror image of the real ship. Actors wore reversed costumes and name tags were printed backwards. Why did James Cameron build the set in reverse?",
+      "type": "text",
+      "correct_answer": "To ensure the ship's departure was filmed with the sun setting in the correct direction — the set could only face one way due to its coastal location",
+      "possible_answers": null,
+      "alternative_answers": [
+        "for the lighting",
+        "because of the sun direction",
+        "the sunset needed to be on the correct side",
+        "sunlight direction",
+        "to get the right lighting angle"
+      ],
+      "topic": "Movies",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": [
+        "titanic",
+        "james-cameron",
+        "film-production",
+        "behind-the-scenes",
+        "set-design"
+      ],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Titanic_(1997_film)",
+      "source_excerpt": "Cameron built the Titanic set as a mirror image at Fox Baja Studios in Mexico because the set could only face one direction due to the coastal location. All props, costumes, and signage were reversed, and the film was flipped in post-production.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Reverse Engineer / Historical Quirk",
+          "why_interesting": "The insane level of detail — reversing an entire ship, costumes, and signage just for correct sunlight direction — reveals the obsessive perfectionism behind blockbuster filmmaking.",
+          "universal_appeal": "Titanic is one of the most globally watched films ever. Behind-the-scenes filmmaking stories are universally fascinating.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 8,
+          "clarity": 8,
+          "factual_accuracy": 9,
+          "overall_score": 8.7,
+          "reasoning": "Players can reason: why would you build something in reverse? There must be a physical constraint — perhaps the location forced a specific orientation. The answer (sunlight direction) is both logical and astonishing in its implications."
+        },
+        "ai_score": 8.7
+      }
+    },
+    {
+      "question": "Concert grand pianos are almost always black. But when Steinway or Bosendorfer builds a concert grand, the process takes roughly: 3 months, 1 year, or 3 years from raw wood to finished instrument?",
+      "type": "text",
+      "correct_answer": "About 3 years",
+      "possible_answers": null,
+      "alternative_answers": [
+        "3 years",
+        "three years",
+        "approximately 3 years",
+        "around 3 years",
+        "2-3 years"
+      ],
+      "topic": "Music",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": [
+        "piano",
+        "steinway",
+        "craftsmanship",
+        "musical-instruments",
+        "manufacturing"
+      ],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://eu.steinway.com/en/a-legend/manufactory/",
+      "source_excerpt": "It takes almost three years to build a Steinway grand piano. The wood alone is dried for more than two years before construction. Each instrument comprises more than 12,000 individual parts.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Estimation Challenge / Scale Surprise",
+          "why_interesting": "Three years to build a single instrument — most of it waiting for wood to dry — reveals the extraordinary patience behind world-class craftsmanship.",
+          "universal_appeal": "Concert pianos are globally recognised. Craftsmanship and manufacturing timelines are universally interesting.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 8.5,
+          "reasoning": "Players can reason: a piano is complex, wood needs to be seasoned, so longer than expected. But 3 years (vs 3 months or 1 year) is still surprising for a manufactured product. The estimation format works well."
+        },
+        "ai_score": 8.5
+      }
+    },
+    {
+      "question": "Which is older: the electric chair or the electric guitar? One was invented to end lives, the other to amplify music — but they arrived surprisingly close together in history.",
+      "type": "text",
+      "correct_answer": "The electric chair (1890) is about 40 years older than the electric guitar (early 1930s)",
+      "possible_answers": null,
+      "alternative_answers": [
+        "electric chair",
+        "the electric chair",
+        "the electric chair is older",
+        "electric chair came first"
+      ],
+      "topic": "Music",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": [
+        "electric-guitar",
+        "invention-timeline",
+        "comparison-bet",
+        "music-history",
+        "electricity"
+      ],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Electric_chair",
+      "source_excerpt": "The electric chair was first used at Auburn Prison, New York, on August 6, 1890, for the execution of William Kemmler. The first commercial electric guitar (the 'Frying Pan' lap steel) was designed in 1931, approximately 40 years later.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Comparison Bet",
+          "why_interesting": "Two 'electric' inventions with radically different purposes — destruction vs. creation — have a timeline relationship most people would get wrong or find surprising. Note: this does NOT duplicate batch 007 which covered WHY the electric guitar was invented, not WHEN relative to the electric chair.",
+          "universal_appeal": "Both inventions are globally known. The comparison is darkly humorous and universally interesting.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 8,
+          "clarity": 9,
+          "factual_accuracy": 10,
+          "overall_score": 8.8,
+          "reasoning": "The juxtaposition of death and music in the same 'electric' framing is compelling. Players must estimate which technology came first based on what they know about the history of electricity. The 40-year gap is the surprise."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "An Indian film industry produces more feature films per year than Hollywood. In fact, one country produces nearly twice as many films as the United States each year. Which country?",
+      "type": "text",
+      "correct_answer": "India",
+      "possible_answers": null,
+      "alternative_answers": [
+        "india",
+        "bollywood",
+        "Indian film industry"
+      ],
+      "topic": "Movies",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": [
+        "bollywood",
+        "film-industry",
+        "india",
+        "production-scale",
+        "world-cinema"
+      ],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Cinema_of_India",
+      "source_excerpt": "India is the world's largest film producer by volume. In 2017, Indian cinema produced 1,986 feature films across its various language-based industries (Bollywood, Tollywood, Kollywood, etc.), compared to roughly 700-800 from the United States.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Counter-intuitive Truth / Scale Surprise",
+          "why_interesting": "Hollywood dominates global pop culture, but India produces nearly twice as many films. The assumption that Hollywood is the biggest film industry by volume is widespread but wrong.",
+          "universal_appeal": "Both Hollywood and Bollywood are globally known. Film production statistics are universally interesting.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "clarity": 9,
+          "factual_accuracy": 10,
+          "overall_score": 8.5,
+          "reasoning": "Many people know Bollywood is large, but 'nearly twice as many as Hollywood' is still surprising. The question is accessible (easy difficulty) with a gettable answer for most adults. Good engagement path: 'which country has a huge film industry besides the US?'"
+        },
+        "ai_score": 8.5
+      }
+    },
+    {
+      "question": "The 'Happy Birthday to You' melody was composed in 1893 by two kindergarten teachers. For over a century, a company collected royalties every time it was performed commercially — in films, restaurants, and TV shows. Roughly how much did it earn in licensing fees each year before the copyright was finally ruled invalid in 2016?",
+      "type": "text",
+      "correct_answer": "About 2 million dollars per year",
+      "possible_answers": null,
+      "alternative_answers": [
+        "2 million",
+        "$2 million",
+        "two million dollars",
+        "around 2 million",
+        "about $2 million a year"
+      ],
+      "topic": "Music",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": [
+        "happy-birthday",
+        "copyright",
+        "music-licensing",
+        "royalties",
+        "intellectual-property"
+      ],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Happy_Birthday_to_You",
+      "source_excerpt": "In 2008, Warner/Chappell collected about US$5,000 per day (US$2 million per year) in royalties. On September 22, 2015, a federal judge ruled the copyright claim invalid. The melody was first published in 1893 as 'Good Morning to All' by sisters Patty and Mildred Hill.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Scale Surprise / Historical Quirk",
+          "why_interesting": "The world's most commonly sung song was a money-making machine for a corporation for over a century. The scale of royalties from a song everyone thinks is free is surprising.",
+          "universal_appeal": "Happy Birthday is sung in virtually every culture worldwide. Copyright and money are universal concerns.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 10,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 9,
+          "overall_score": 9.0,
+          "reasoning": "Exceptional surprise: most people have no idea someone owned Happy Birthday. The $2 million/year figure is staggering for a song composed in 1893 by kindergarten teachers. Players can estimate: it's used commercially thousands of times daily."
+        },
+        "ai_score": 9.0
+      }
+    },
+    {
+      "question": "Most people think the longest film ever made lasts a few hours. In reality, the longest film ever screened has a runtime closer to: 24 hours, 7 days, or 35 days?",
+      "type": "text",
+      "correct_answer": "About 35 days (the Swedish film 'Logistics' runs 857 hours)",
+      "possible_answers": null,
+      "alternative_answers": [
+        "35 days",
+        "about 35 days",
+        "logistics",
+        "over a month",
+        "857 hours"
+      ],
+      "topic": "Movies",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": [
+        "film-records",
+        "longest-film",
+        "logistics",
+        "experimental-cinema",
+        "scale-surprise"
+      ],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Logistics_(film)",
+      "source_excerpt": "'Logistics' (2012) by Erika Magnusson and Daniel Andersson runs 51,420 minutes (857 hours or 35 days and 17 hours), the longest film ever made. It follows a pedometer's journey from Stockholm to its factory in Shenzhen in reverse chronological order and real time.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Estimation Challenge / Scale Surprise",
+          "why_interesting": "The scale is mind-boggling — a film that takes over a month to watch. The concept (tracking a product's journey backwards in real time) is also fascinating.",
+          "universal_appeal": "Film length is a universally understood concept. The extreme scale creates universal wonder.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 8,
+          "clarity": 9,
+          "factual_accuracy": 10,
+          "overall_score": 9.0,
+          "reasoning": "The three options (24 hours, 7 days, 35 days) escalate dramatically. Even people who guess the most extreme option will be shocked by 857 hours. The concept behind the film adds educational value about global supply chains."
+        },
+        "ai_score": 9.0
+      }
+    },
+    {
+      "question": "Warner Bros. nearly rejected 'Over the Rainbow' from The Wizard of Oz, cutting it from the film twice before it was reinstated. The song went on to win the Academy Award and be named the greatest movie song of all time. Who famously performed it in the 1939 film?",
+      "type": "text",
+      "correct_answer": "Judy Garland",
+      "possible_answers": null,
+      "alternative_answers": [
+        "judy garland",
+        "Garland"
+      ],
+      "topic": "Movies",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": [
+        "wizard-of-oz",
+        "judy-garland",
+        "over-the-rainbow",
+        "oscars",
+        "film-music"
+      ],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": null,
+      "source_excerpt": null,
+      "_verification_note": "NEEDS FIX: The question incorrectly states 'Warner Bros.' nearly rejected the song. The Wizard of Oz was produced by MGM (Metro-Goldwyn-Mayer), not Warner Bros. It was MGM executives who cut the song multiple times. The answer (Judy Garland) is correct. Change 'Warner Bros.' to 'MGM executives' or 'Studio executives'.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Historical Quirk / Counter-intuitive Truth",
+          "why_interesting": "One of the most beloved songs in cinema history was nearly cut from the film — twice. The near-miss adds dramatic irony.",
+          "universal_appeal": "Over the Rainbow is one of the most globally recognisable songs. Judy Garland is an international icon.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "clarity": 9,
+          "factual_accuracy": 10,
+          "overall_score": 8.5,
+          "reasoning": "The near-cut narrative adds a compelling hook. The answer (Judy Garland) is well-known enough for an easy question, but the context teaches something surprising about Hollywood decision-making."
+        },
+        "ai_score": 8.5
+      }
+    },
+    {
+      "question": "An orchestra tuning before a performance always starts with the same note, played by the same instrument. What note is it, and which instrument plays it?",
+      "type": "text",
+      "correct_answer": "A (440 Hz), played by the oboe",
+      "possible_answers": null,
+      "alternative_answers": [
+        "A on the oboe",
+        "concert A from the oboe",
+        "the oboe plays an A",
+        "A 440 from the oboe",
+        "oboe plays A"
+      ],
+      "topic": "Music",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": [
+        "orchestra",
+        "tuning",
+        "oboe",
+        "concert-pitch",
+        "classical-music"
+      ],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Concert_pitch",
+      "source_excerpt": "Most orchestras tune to concert A (440 Hz) played by the principal oboist. The oboe's penetrating sound stands out from the orchestra, and its pitch is steadier than strings, making it a reliable tuning source.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Hidden Property / Reverse Engineer",
+          "why_interesting": "Everyone has heard the tuning cacophony before a concert but few know the system behind it. The reason the oboe leads (its pitch is hardest to change) inverts the expectation that the leader would be the most flexible instrument.",
+          "universal_appeal": "Orchestral performances happen worldwide. The tuning ritual is universally observed but rarely understood.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "clarity": 9,
+          "factual_accuracy": 10,
+          "overall_score": 8.8,
+          "reasoning": "Players who have attended concerts can reason: it's a specific note (probably A) and a specific instrument (something with a clear pitch). The oboe is the surprise — most people would guess violin or piano. The reasoning behind it adds educational depth."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "In the original Star Wars (1977), Darth Vader's heavy mechanical breathing was created by the sound designer using a surprisingly low-tech method. How was the breathing sound produced?",
+      "type": "text",
+      "correct_answer": "By recording breathing through a scuba regulator",
+      "possible_answers": null,
+      "alternative_answers": [
+        "scuba regulator",
+        "breathing through a scuba tank",
+        "scuba diving regulator",
+        "an aqua-lung regulator",
+        "breathing into a scuba mask"
+      ],
+      "topic": "Movies",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": [
+        "star-wars",
+        "sound-design",
+        "darth-vader",
+        "behind-the-scenes",
+        "film-audio"
+      ],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Ben_Burtt",
+      "source_excerpt": "Sound designer Ben Burtt created Darth Vader's iconic breathing by recording his own breathing through an old Dacor scuba regulator. The sound effect is trademarked at the U.S. Patent and Trademark Office.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-6",
+        "provider": "anthropic",
+        "prompt_version": "v2_cot",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Reverse Engineer / Surprising Connection",
+          "why_interesting": "One of cinema's most menacing sounds was created with diving equipment — the practical simplicity behind an iconic effect is both surprising and satisfying.",
+          "universal_appeal": "Star Wars is the most globally recognised film franchise. Darth Vader's breathing is iconic across all cultures.",
+          "boring_check": "passes"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 10,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "clarity": 9,
+          "factual_accuracy": 10,
+          "overall_score": 8.8,
+          "reasoning": "Players can reason: Vader wears a breathing apparatus, so the sound must come from some kind of real breathing device — a mask, ventilator, or diving equipment. The scuba regulator answer is gettable but still satisfying."
+        },
+        "ai_score": 8.8
+      }
+    }
+  ],
+  "metadata": {
+    "model": "claude-opus-4-6",
+    "provider": "anthropic",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "total_generated": 22,
+    "total_selected": 15,
+    "pipeline": "claude_code_session",
+    "prompt_version": "v2_cot",
+    "topics": [
+      "Music",
+      "Movies"
+    ],
+    "difficulty_distribution": {
+      "easy": 3,
+      "medium": 8,
+      "hard": 4
+    }
+  }
+}

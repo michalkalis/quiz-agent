@@ -1,6 +1,7 @@
 """In-memory session manager with TTL and automatic cleanup."""
 
 import copy
+import logging
 import uuid
 import asyncio
 from datetime import datetime, timedelta, timezone
@@ -10,6 +11,8 @@ from threading import Lock
 import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../../..", "packages/shared"))
+
+logger = logging.getLogger(__name__)
 
 from quiz_shared.models.session import QuizSession
 from quiz_shared.models.participant import Participant
@@ -61,7 +64,7 @@ class SessionManager:
             except asyncio.CancelledError:
                 break
             except Exception as e:
-                print(f"Cleanup error: {e}")
+                logger.error("Cleanup error: %s", e)
 
     def _cleanup_expired(self):
         """Remove expired sessions."""
@@ -74,7 +77,7 @@ class SessionManager:
             for sid in expired:
                 del self._sessions[sid]
             if expired:
-                print(f"Cleaned up {len(expired)} expired sessions")
+                logger.info("Cleaned up %d expired sessions", len(expired))
 
     def create_session(
         self,

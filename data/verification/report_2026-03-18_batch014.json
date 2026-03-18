@@ -1,0 +1,160 @@
+{
+  "metadata": {
+    "verified_at": "2026-03-18T12:00:00Z",
+    "source_file": "data/generated/claude_batch_014.json",
+    "total_questions": 15,
+    "verdicts": {"correct": 12, "needs_fix": 1, "needs_review": 2, "incorrect": 0}
+  },
+  "questions": [
+    {
+      "id": null,
+      "question": "The iconic two-note 'dun-dun' theme from Jaws (1975) was initially so simple that the director thought the composer was joking. How many notes make up the main shark motif that terrified an entire generation of beachgoers?",
+      "stored_answer": "Two",
+      "verdict": "correct",
+      "notes": "Confirmed. The Jaws theme by John Williams is an alternating two-note motif (E and F). Spielberg reportedly laughed when Williams first played it, thinking it was a joke.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Jaws_(soundtrack)",
+      "source_excerpt": "The main 'shark' theme is an ostinato in the lower register, consisting of alternating notes E and F played in accelerating rhythm. Spielberg reportedly said 'you can't be serious!' when Williams first demonstrated it."
+    },
+    {
+      "id": null,
+      "question": "A guitar has 6 strings. A standard piano has 88 keys. But how many strings are actually inside a piano — closer to 88, 150, or 230?",
+      "stored_answer": "Around 230",
+      "verdict": "correct",
+      "notes": "Confirmed. A standard piano has approximately 230 strings because most notes in the middle and upper registers use two or three strings tuned to the same pitch (unisons), while only the lowest bass notes use a single string.",
+      "suggested_fix": null,
+      "source_url": "https://www.yamaha.com/en/musical_instrument_guide/piano/mechanism/mechanism004.html",
+      "source_excerpt": "A standard piano has 88 keys but approximately 230 strings. Most notes use two or three strings tuned to the same pitch (unisons) to produce a richer, louder sound."
+    },
+    {
+      "id": null,
+      "question": "When the first 'talkie' — a film with synchronised dialogue — premiered in 1927, it didn't just change cinema. It ended the careers of many silent film stars overnight. What was the main reason most silent stars couldn't transition to sound films?",
+      "stored_answer": "Their voices didn't match audience expectations — some had heavy accents, high-pitched voices, or poor vocal delivery",
+      "verdict": "correct",
+      "notes": "Confirmed. The transition from silent to sound films devastated many careers because actors' voices didn't fit their onscreen image or were heavily accented. Stars like John Gilbert and others found their voices unsuitable for the new medium.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Silent_film",
+      "source_excerpt": "Many actors' voices didn't fit their onscreen image or were heavily accented, leading to many silent film stars being unable to transition to talking films."
+    },
+    {
+      "id": null,
+      "question": "Before Auto-Tune was used to correct singers' pitch in the studio, it was developed for a completely different industry. What was Auto-Tune's original purpose?",
+      "stored_answer": "Interpreting seismic data for oil and gas exploration",
+      "verdict": "correct",
+      "notes": "Confirmed. Andy Hildebrand, a former Exxon geophysical engineer, developed algorithms to interpret seismic wave data for oil exploration. He adapted these auto-correlation algorithms for musical pitch correction, releasing Auto-Tune in 1997.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Pitch_correction",
+      "source_excerpt": "Andy Hildebrand, a geophysical engineer, developed software leveraging auto-correlation algorithms originally used in seismic wave mapping for the oil industry, which became the foundation for Auto-Tune."
+    },
+    {
+      "id": null,
+      "question": "Freddie Mercury's vocal range spanned roughly four octaves. But scientists who studied recordings of his voice found something even more remarkable about the way he sang. What unique physical technique did they discover?",
+      "stored_answer": "He used his vestibular folds (false vocal cords) in addition to his regular vocal cords, creating a distinctive vibrato",
+      "verdict": "needs_review",
+      "notes": "Mostly correct but nuanced. The 2016 study in Logopedics Phoniatrics Vocology found subharmonic phonation patterns suggesting ventricular fold vibration, but this was demonstrated through imitation by a rock singer, not directly observed in Mercury (since he was deceased). The study analyzed his recordings acoustically and used a surrogate singer for endoscopic verification. Also, the study found his range was about 37 semitones (just over 3 octaves), not four. The answer's core claim about vestibular folds is supported but the framing 'roughly four octaves' in the question is slightly overstated.",
+      "suggested_fix": "Consider changing 'roughly four octaves' to 'about three octaves' or 'nearly four octaves' to match the 2016 study finding of 37 semitones. Also clarify that the vestibular fold finding was inferred from acoustic analysis and surrogate singer endoscopy, not direct observation of Mercury.",
+      "source_url": "https://www.tandfonline.com/doi/abs/10.3109/14015439.2016.1156737",
+      "source_excerpt": "A 2016 study found subharmonic phonation in Mercury's recordings. Imitation by a professional rock singer, documented by endoscopic high-speed video, revealed a 3:1 frequency-locked vibratory pattern of vocal folds and ventricular folds, similar to Tuvan throat singing."
+    },
+    {
+      "id": null,
+      "question": "If you played every Beatles song back to back — every studio album from 'Please Please Me' to 'Let It Be' — the total running time would be closer to: 5 hours, 10 hours, or 24 hours?",
+      "stored_answer": "About 10 hours",
+      "verdict": "correct",
+      "notes": "Confirmed. The Beatles' core studio album catalogue runs approximately 10 hours and 19 minutes, spanning 213 officially released songs. The answer of 'about 10 hours' is accurate.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/The_Beatles_albums_discography",
+      "source_excerpt": "The Beatles' core catalogue of 13 studio albums spans 213 songs with a total running time of approximately 10 hours and 19 minutes."
+    },
+    {
+      "id": null,
+      "question": "During the filming of Titanic (1997), the entire set was built as a mirror image of the real ship. Actors wore reversed costumes and name tags were printed backwards. Why did James Cameron build the set in reverse?",
+      "stored_answer": "To ensure the ship's departure was filmed with the sun setting in the correct direction — the set could only face one way due to its coastal location",
+      "verdict": "correct",
+      "notes": "Confirmed. Cameron built the Titanic set on the starboard side at Fox Baja Studios in Mexico as a mirror image because the set could only face one direction due to the coastal location and prevailing wind/sunlight direction. All props, costumes, and written directions were reversed, and the film was flipped in post-production.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Titanic_(1997_film)",
+      "source_excerpt": "Cameron built his Titanic set as a mirror image at Fox Baja Studios in Mexico because the set could only face one direction. All set dressing, costumes, and signage were reversed and the film was flipped in post-production."
+    },
+    {
+      "id": null,
+      "question": "Concert grand pianos are almost always black. But when Steinway or Bosendorfer builds a concert grand, the process takes roughly: 3 months, 1 year, or 3 years from raw wood to finished instrument?",
+      "stored_answer": "About 3 years",
+      "verdict": "correct",
+      "notes": "Confirmed. Steinway states it takes almost three years to build a grand piano from start to finish, with much time spent on wood drying (over two years). The instrument contains over 12,000 individual parts.",
+      "suggested_fix": null,
+      "source_url": "https://eu.steinway.com/en/a-legend/manufactory/",
+      "source_excerpt": "It takes almost three years to build a Steinway grand piano. The wood alone is dried for more than two years before construction begins. Each piano comprises more than 12,000 individual parts."
+    },
+    {
+      "id": null,
+      "question": "Which is older: the electric chair or the electric guitar? One was invented to end lives, the other to amplify music — but they arrived surprisingly close together in history.",
+      "stored_answer": "The electric chair (1890) is about 40 years older than the electric guitar (early 1930s)",
+      "verdict": "correct",
+      "notes": "Confirmed. The electric chair was first used on August 6, 1890 at Auburn Prison, New York. The first commercially produced electric guitar (the 'Frying Pan' lap steel) was designed in 1931. The approximately 40-year gap is accurate.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Electric_chair",
+      "source_excerpt": "The electric chair was first used at Auburn Prison, New York, on August 6, 1890, for the execution of William Kemmler. The first commercial electric guitar appeared in the early 1930s."
+    },
+    {
+      "id": null,
+      "question": "An Indian film industry produces more feature films per year than Hollywood. In fact, one country produces nearly twice as many films as the United States each year. Which country?",
+      "stored_answer": "India",
+      "verdict": "correct",
+      "notes": "Confirmed. India has been the world's largest film producer by volume for decades. In 2017, Indian cinema produced 1,986 feature films compared to roughly 700-800 from the United States. India's film industries span Bollywood, Tollywood, Kollywood, and many more regional industries.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Cinema_of_India",
+      "source_excerpt": "India is the world's largest film producer by volume. In 2017, Indian cinema produced 1,986 feature films across its various language-based film industries."
+    },
+    {
+      "id": null,
+      "question": "The 'Happy Birthday to You' melody was composed in 1893 by two kindergarten teachers. For over a century, a company collected royalties every time it was performed commercially — in films, restaurants, and TV shows. Roughly how much did it earn in licensing fees each year before the copyright was finally ruled invalid in 2016?",
+      "stored_answer": "About 2 million dollars per year",
+      "verdict": "needs_review",
+      "notes": "The $2 million/year figure is confirmed (Warner/Chappell collected about $5,000 per day / $2 million per year as of 2008). However, the question has minor inaccuracies in framing: (1) The melody was published in 1893 as 'Good Morning to All' — the 'Happy Birthday' lyrics appeared later around 1912. (2) The copyright ruling was in September 2015, not 2016 (the settlement was finalized in 2016). (3) The question says the melody was 'composed in 1893' which is slightly misleading since the birthday lyrics came later. These are in the question framing, not the answer itself.",
+      "suggested_fix": "Consider: (1) Change 'melody was composed in 1893' to 'melody was first published in 1893 as Good Morning to All' (2) Change 'ruled invalid in 2016' to 'ruled invalid in 2015' — the 2016 date refers to the settlement, not the ruling.",
+      "source_url": "https://en.wikipedia.org/wiki/Happy_Birthday_to_You",
+      "source_excerpt": "In 2008, Warner/Chappell collected about US$5,000 per day (US$2 million per year) in royalties. On September 22, 2015, a federal judge ruled the copyright claim invalid. The melody was published in 1893 as 'Good Morning to All' by sisters Patty and Mildred Hill."
+    },
+    {
+      "id": null,
+      "question": "Most people think the longest film ever made lasts a few hours. In reality, the longest film ever screened has a runtime closer to: 24 hours, 7 days, or 35 days?",
+      "stored_answer": "About 35 days (the Swedish film 'Logistics' runs 857 hours)",
+      "verdict": "correct",
+      "notes": "Confirmed. 'Logistics' (2012) by Erika Magnusson and Daniel Andersson runs 51,420 minutes (857 hours / 35 days 17 hours), making it the longest film ever made. It follows a pedometer's journey from Stockholm back to its factory in Shenzhen, China, in reverse chronological order and real time.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Logistics_(film)",
+      "source_excerpt": "Logistics is a 2012 Swedish experimental film at 51,420 minutes (857 hours or 35 days and 17 hours), the longest film ever made. It follows the production cycle of a pedometer in reverse chronological order from Stockholm to Shenzhen."
+    },
+    {
+      "id": null,
+      "question": "Warner Bros. nearly rejected 'Over the Rainbow' from The Wizard of Oz, cutting it from the film twice before it was reinstated. The song went on to win the Academy Award and be named the greatest movie song of all time. Who famously performed it in the 1939 film?",
+      "stored_answer": "Judy Garland",
+      "verdict": "needs_fix",
+      "notes": "The answer (Judy Garland) is correct, but the question contains a factual error: The Wizard of Oz was produced by MGM (Metro-Goldwyn-Mayer), not Warner Bros. It was MGM executives who wanted to cut the song, not Warner Bros. Producer Arthur Freed (or Mervyn LeRoy, depending on the account) fought to keep it. The song was cut multiple times during editing by MGM executives who felt it slowed the pace.",
+      "suggested_fix": "Change 'Warner Bros.' to 'MGM executives' or 'Studio executives'. The Wizard of Oz was an MGM production.",
+      "source_url": "https://en.wikipedia.org/wiki/Over_the_Rainbow",
+      "source_excerpt": "The Wizard of Oz was produced by MGM. Studio executives cut the song multiple times during editing, believing it slowed the pace. Producer Arthur Freed fought to keep it. The song won the Academy Award for Best Original Song."
+    },
+    {
+      "id": null,
+      "question": "An orchestra tuning before a performance always starts with the same note, played by the same instrument. What note is it, and which instrument plays it?",
+      "stored_answer": "A (440 Hz), played by the oboe",
+      "verdict": "correct",
+      "notes": "Confirmed. Orchestras traditionally tune to concert A (440 Hz) played by the principal oboist. The oboe is chosen because its pitch is stable and penetrating, and its pitch is difficult to adjust, so other instruments tune to match it.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Concert_pitch",
+      "source_excerpt": "Most orchestras tune to a note given out by the oboe. The current international pitch standard is A = 440 Hz. The oboe's penetrating sound stands out, and its pitch is steadier than strings, making it a reliable tuning source."
+    },
+    {
+      "id": null,
+      "question": "In the original Star Wars (1977), Darth Vader's heavy mechanical breathing was created by the sound designer using a surprisingly low-tech method. How was the breathing sound produced?",
+      "stored_answer": "By recording breathing through a scuba regulator",
+      "verdict": "correct",
+      "notes": "Confirmed. Sound designer Ben Burtt created Darth Vader's iconic breathing by recording his own breathing through a Dacor scuba regulator. The sound effect is even trademarked at the U.S. Patent and Trademark Office.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Ben_Burtt",
+      "source_excerpt": "The heavy breathing of Darth Vader was created by Ben Burtt breathing through an old Dacor scuba regulator. The sound effect is trademarked at the U.S. Patent and Trademark Office."
+    }
+  ]
+}

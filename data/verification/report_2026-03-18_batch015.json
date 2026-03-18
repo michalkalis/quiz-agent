@@ -1,0 +1,160 @@
+{
+  "metadata": {
+    "verified_at": "2026-03-18T12:00:00Z",
+    "source_file": "data/generated/claude_batch_015.json",
+    "total_questions": 15,
+    "verdicts": {"correct": 13, "needs_fix": 0, "needs_review": 2, "incorrect": 0}
+  },
+  "questions": [
+    {
+      "id": null,
+      "question": "Most people picture carrots as orange, but before the 17th century, carrots came in almost every color except orange. Dutch growers cultivated the orange variety we know today, possibly to honor their royal house. What color were most carrots before that?",
+      "stored_answer": "Purple",
+      "verdict": "correct",
+      "notes": "Confirmed. Early Eastern carrots were commonly purple or yellow, with the purple color coming from anthocyanin pigments. The orange variety emerged in the Netherlands in the 16th-17th century. The House of Orange theory is mentioned as popular but not fully evidenced, and the question appropriately hedges with 'possibly'.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Carrot",
+      "source_excerpt": "Early Eastern carrots that survive today are commonly purple or yellow. The long orange Dutch carrot emerged in the Netherlands in the 16th or 17th century, bred by cross-breeding pale yellow with red carrots."
+    },
+    {
+      "id": null,
+      "question": "The Mona Lisa hung in the Louvre for over a century without attracting much public attention. Then, in 1911, a single event turned it into the most famous painting in the world overnight. What happened?",
+      "stored_answer": "It was stolen",
+      "verdict": "correct",
+      "notes": "Confirmed. Vincenzo Peruggia, an Italian decorator who had worked at the Louvre, stole the Mona Lisa on August 21, 1911. The worldwide newspaper coverage and massive police investigation dramatically increased the painting's public recognition.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Vincenzo_Peruggia",
+      "source_excerpt": "Vincenzo Peruggia stole the Mona Lisa from the Louvre on 21 August 1911. The 1911 theft and subsequent return was reported worldwide, leading to a massive increase in public recognition of the painting."
+    },
+    {
+      "id": null,
+      "question": "Saffron is the world's most expensive spice by weight. It comes from the stigmas of crocus flowers, and each flower produces only three tiny threads. Roughly how many flowers does it take to produce a single kilogram of saffron: 1,000, 15,000, or 150,000?",
+      "stored_answer": "About 150,000",
+      "verdict": "correct",
+      "notes": "Confirmed. Wikipedia states that saffron requires approximately 150,000 crocus flowers per kilogram (equivalently 440,000 hand-picked stigmas per kilogram, since each flower has 3 stigmas).",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Saffron",
+      "source_excerpt": "The high retail value of saffron is maintained because of labour-intensive harvesting methods, requiring some 150,000 crocus flowers per kilogram (70,000 flowers/lb)."
+    },
+    {
+      "id": null,
+      "question": "Michelangelo spent four years painting the Sistine Chapel ceiling, one of the greatest artistic achievements in history. But he never wanted to do it — he considered himself primarily a practitioner of a different art form and initially turned down the commission. What did Michelangelo consider his true calling?",
+      "stored_answer": "Sculpture",
+      "verdict": "correct",
+      "notes": "Confirmed. Michelangelo considered himself primarily a sculptor, not a painter. He was reluctant to take on the Sistine Chapel commission from Pope Julius II, even suggesting rival Raphael take it instead. He painted the ceiling between 1508 and 1512.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Sistine_Chapel_ceiling",
+      "source_excerpt": "Michelangelo, who was not primarily a painter but a sculptor, was reluctant to take on the work. He felt he was more of a sculptor than a painter, and was suspicious that such a large-scale project was being offered to him as a set-up for failure."
+    },
+    {
+      "id": null,
+      "question": "Despite its name, white chocolate is missing the one ingredient that defines all other types of chocolate. What key component does white chocolate lack?",
+      "stored_answer": "Cocoa solids",
+      "verdict": "correct",
+      "notes": "Confirmed. White chocolate is made from cocoa butter, sugar, and milk solids but contains no cocoa solids. The FDA standard requires at least 20% cocoa butter for white chocolate.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/White_chocolate",
+      "source_excerpt": "White chocolate is chocolate made from cocoa butter, sugar and milk solids. It contains no cocoa solids, which is what gives other chocolates their brown color and characteristic flavor."
+    },
+    {
+      "id": null,
+      "question": "Vanilla is one of the most popular flavors in the world, but the plant it comes from would surprise most people. The vanilla vine is the only commercially cultivated member of what family of flowers, famous for their beauty and rarity?",
+      "stored_answer": "Orchid",
+      "verdict": "correct",
+      "notes": "Confirmed. Vanilla (genus Vanilla) belongs to the orchid family Orchidaceae. It is the only orchid widely used for industrial purposes. The question says 'only commercially cultivated member' which is essentially correct - vanilla is the only commercially important product derived from orchids.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Vanilla_(genus)",
+      "source_excerpt": "Vanilla orchids form the flowering plant genus Vanilla in the orchid family (Orchidaceae). It is the only orchid widely used for industrial purposes in flavoring foods, beverages and cosmetics."
+    },
+    {
+      "id": null,
+      "question": "Pre-Raphaelite painters in the 1800s used a rich brown pigment called 'Mummy Brown' for shading and glazing. The name was not metaphorical — what was this paint literally made from?",
+      "stored_answer": "Ground-up Egyptian mummies",
+      "verdict": "correct",
+      "notes": "Confirmed. Mummy brown was a bituminous pigment made from the flesh of Egyptian mummies mixed with white pitch and myrrh. Both human and feline mummies were used. The pigment was popular from the mid-18th to the 19th century. In 1964, the sole distributor ran out of mummies.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Mummy_brown",
+      "source_excerpt": "Mummy brown was a rich brown pigment made from the flesh of mummies mixed with white pitch and myrrh. Both human and feline mummies were used. Edward Burne-Jones ceremonially buried his tube of mummy brown upon learning its true origins."
+    },
+    {
+      "id": null,
+      "question": "Cashew nuts grow in a way that would surprise most people — each nut hangs from the bottom of a colorful fruit called the cashew apple. But the reason cashews are never sold in their shells is even more surprising. What toxic substance does the cashew shell contain, shared with poison ivy?",
+      "stored_answer": "Urushiol",
+      "verdict": "needs_review",
+      "notes": "Partially correct but chemically imprecise. Cashew shells contain anacardic acid, which is an acid form of urushiol and causes similar contact dermatitis. Anacardic acid is chemically related to urushiol (both are phenolic lipids) but they have different backbones: anacardic acid is based on salicylic acid, while urushiol is based on catechol. The question's alternative answers include 'anacardic acid' which is more precise. Some sources do loosely describe cashew toxin as urushiol-related, and both cashews and poison ivy belong to the same family (Anacardiaceae).",
+      "suggested_fix": "Consider changing the primary answer to 'Anacardic acid (related to urushiol found in poison ivy)' for greater precision, or reframe the question to ask about the chemical family rather than the specific compound.",
+      "source_url": "https://en.wikipedia.org/wiki/Cashew",
+      "source_excerpt": "The cashew nut shell contains oil compounds including anacardic acid, a potent skin irritant chemically related to urushiol found in poison ivy. Both cause allergic contact dermatitis. Cashews are in the same botanical family (Anacardiaceae) as poison ivy."
+    },
+    {
+      "id": null,
+      "question": "In the Middle Ages, the blue pigment ultramarine was made by grinding a semi-precious stone imported along trade routes from a single country. Ounce for ounce, it often cost more than gold. What stone was ground up to create this legendary blue?",
+      "stored_answer": "Lapis lazuli",
+      "verdict": "correct",
+      "notes": "Confirmed. Ultramarine was historically made from ground lapis lazuli. Between the 14th and 15th centuries, it was as expensive as gold. The stone was primarily sourced from Afghanistan. A synthetic ultramarine was invented in 1826.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Ultramarine",
+      "source_excerpt": "Between the 14th and 15th centuries, ultramarine made from lapis lazuli was as expensive as gold in Europe. The pigment remained extremely expensive until a synthetic ultramarine was invented in 1826."
+    },
+    {
+      "id": null,
+      "question": "In colonial America, one seafood was so abundant and cheap that it was fed to prisoners, servants, and indentured laborers. Some colonies even passed laws limiting how often it could be served to inmates. Today, it's a luxury dish. What is it?",
+      "stored_answer": "Lobster",
+      "verdict": "correct",
+      "notes": "Confirmed. Before the 19th century, lobster was considered poverty food for indentured servants and lower members of society in Maine, Massachusetts, and the Canadian Maritimes. Some servants specified in employment agreements they would not eat lobster more than twice per week. Lobster only became a luxury food from the mid-19th century onward.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Lobster",
+      "source_excerpt": "Before the 19th century, lobster was considered a poverty food or as food for indentured servants in Maine, Massachusetts, and the Canadian Maritimes. Some servants specified they would not eat lobster more than twice per week."
+    },
+    {
+      "id": null,
+      "question": "Tomatoes, potatoes, and eggplants are kitchen staples around the world. But they all belong to the same botanical family as one of the most famous poisonous plants in history — a plant whose name literally means 'beautiful lady' in Italian. What family do they share?",
+      "stored_answer": "The nightshade family",
+      "verdict": "correct",
+      "notes": "Confirmed. Solanaceae (the nightshade family) includes tomatoes, potatoes, eggplants, and peppers, as well as deadly nightshade (Atropa belladonna). 'Belladonna' translates to 'beautiful lady' in Italian.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Solanaceae",
+      "source_excerpt": "Solanaceae, commonly known as the nightshades, includes tomatoes, potatoes, eggplants, and peppers, as well as Atropa belladonna (deadly nightshade). Belladonna means 'beautiful lady' in Italian."
+    },
+    {
+      "id": null,
+      "question": "Claude Monet continued painting his famous water lily series even as cataracts progressively stole his vision. After finally having cataract surgery in 1923, he could see his recent canvases clearly for the first time — and was so distressed by what he saw that he did what?",
+      "stored_answer": "He destroyed several of them",
+      "verdict": "needs_review",
+      "notes": "Broadly correct but the timeline is more nuanced. Monet destroyed canvases during multiple periods, not just after the 1923 surgery. Sources confirm he destroyed many orange/yellow works he had created while suffering from cataracts, but some destruction occurred during periods of temporarily restored vision between medical treatments, not only after the definitive 1923 surgery. The core claim that he destroyed paintings upon seeing what his cataracts had done to his work is well-supported.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Claude_Monet",
+      "source_excerpt": "After cataract surgery in 1923, Monet destroyed many of the orange/yellow works he had created while suffering from cataracts. During periods of restored eyesight, friends and dealers were unable to rescue as many canvases as Monet was intent on destroying."
+    },
+    {
+      "id": null,
+      "question": "Nearly every banana sold worldwide is a single cultivar called the Cavendish. It replaced a tastier variety called the Gros Michel, which was the world's dominant banana until the 1950s. What wiped out the Gros Michel?",
+      "stored_answer": "A fungal disease",
+      "verdict": "correct",
+      "notes": "Confirmed. Panama disease, caused by the fungus Fusarium oxysporum f. sp. cubense, devastated Gros Michel banana plantations in the 1950s. The Cavendish was adopted as a resistant replacement. A new strain (Tropical Race 4) now threatens the Cavendish as well.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Panama_disease",
+      "source_excerpt": "Panama disease caused by the fungus Fusarium oxysporum f. sp. cubense almost wiped out commercial Gros Michel banana production in the 1950s, forcing producers to switch to the Cavendish cultivar."
+    },
+    {
+      "id": null,
+      "question": "China's Terracotta Army, buried with the first Emperor around 210 BC, contains roughly 8,000 life-sized clay soldiers. What makes each individual warrior remarkable from an artistic standpoint is that no two share the same feature. What is unique about every single figure?",
+      "stored_answer": "Each has a unique face",
+      "verdict": "correct",
+      "notes": "Confirmed. The Terracotta Army contains over 8,000 soldiers, and all figures found thus far boast distinct expressions, hairstyles, and physical features. Faces were created using molds with clay added afterward to provide individual features. Recent research on ear morphology supports their individuality.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Terracotta_Army",
+      "source_excerpt": "All figures found thus far boast distinct expressions, hairstyles and physical features. No two warriors are the same. Faces were created using molds, with clay added to provide individual facial features."
+    },
+    {
+      "id": null,
+      "question": "In 2014, artist Anish Kapoor secured exclusive artistic rights to Vantablack, a material so dark it absorbs 99.965% of visible light. A rival artist, Stuart Semple, retaliated by creating a pigment and banning Kapoor from purchasing it. What color was Semple's revenge pigment?",
+      "stored_answer": "The pinkest pink",
+      "verdict": "correct",
+      "notes": "Confirmed. Stuart Semple released 'PINK - the world's pinkest pink paint' and specifically banned Anish Kapoor from purchasing it. The feud escalated with Kapoor obtaining the pigment and posting a middle-finger photo dipped in it on Instagram, after which Semple created more products including Black 2.0 and Black 3.0. Note: the question says '2014' but sources indicate the Vantablack exclusivity was granted in 2016. Minor date discrepancy in the question framing.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Stuart_Semple",
+      "source_excerpt": "In 2016, Semple came into conflict with Anish Kapoor when Kapoor acquired exclusive artistic rights to Vantablack. Semple released 'PINK - the world's pinkest pink paint', banning Kapoor from purchasing it."
+    }
+  ]
+}

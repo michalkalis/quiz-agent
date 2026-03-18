@@ -15,9 +15,13 @@ Features:
 Run with: uvicorn app.main:app --reload --port 8002
 """
 
+import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 import sys
 import os
@@ -35,6 +39,11 @@ try:
 except ImportError:
     # python-dotenv not available, skip .env loading
     pass
+
+# Setup logging before anything else
+from .logging_config import setup_logging
+setup_logging()
+logger = logging.getLogger(__name__)
 
 from quiz_shared.database.chroma_client import ChromaDBClient
 from quiz_shared.database.sql_client import SQLClient
@@ -54,6 +63,7 @@ try:
 except ImportError:
     QuestionMonitor = None
 
+from .rate_limit import limiter
 
 # Global service instances
 session_manager: SessionManager = None
@@ -74,8 +84,7 @@ async def lifespan(app: FastAPI):
     """
     global session_manager, chroma_client, sql_client, tts_service, translation_service
 
-    print("Starting Quiz Agent API...")
-    sys.stdout.flush()  # Ensure output is visible
+    logger.info("Starting Quiz Agent API...")
 
     # Check for required environment variables
     openai_api_key = os.getenv("OPENAI_API_KEY")
@@ -94,19 +103,16 @@ async def lifespan(app: FastAPI):
             f"Current directory: {os.getcwd()}\n"
             "Please run: cd apps/quiz-agent && python -m app.main"
         )
-    print(f"✓ Working directory: {os.getcwd()}")
-    sys.stdout.flush()
+    logger.info("Working directory: %s", os.getcwd())
 
     # Ensure data directory exists
     data_dir = "./data"
     os.makedirs(data_dir, exist_ok=True)
-    print("✓ Data directory ready")
-    sys.stdout.flush()
+    logger.info("Data directory ready")
 
     # Initialize database clients
     try:
-        print("Initializing ChromaDB client...")
-        sys.stdout.flush()
+        logger.info("Initializing ChromaDB client...")
 
         # Use CHROMA_PATH env var if set (for production), otherwise use project root (for local dev)
         chroma_path = os.getenv("CHROMA_PATH")
@@ -122,32 +128,24 @@ async def lifespan(app: FastAPI):
             collection_name="quiz_questions",
             persist_directory=chroma_path
         )
-        print(f"✓ ChromaDB client initialized (using {chroma_path})")
-        sys.stdout.flush()
+        logger.info("ChromaDB client initialized (using %s)", chroma_path)
     except Exception as e:
-        print(f"ERROR: Failed to initialize ChromaDB: {e}")
-        import traceback
-        traceback.print_exc()
+        logger.error("Failed to initialize ChromaDB: %s", e, exc_info=True)
         raise
 
     try:
-        print("Initializing SQL client...")
-        sys.stdout.flush()
+        logger.info("Initializing SQL client...")
         sql_client = SQLClient(
             database_url=os.getenv("DATABASE_URL", "sqlite:///./data/ratings.db")
         )
-        print("✓ SQL client initialized")
-        sys.stdout.flush()
+        logger.info("SQL client initialized")
     except Exception as e:
-        print(f"ERROR: Failed to initialize SQL client: {e}")
-        import traceback
-        traceback.print_exc()
+        logger.error("Failed to initialize SQL client: %s", e, exc_info=True)
         raise
 
     # Initialize services
     try:
-        print("Initializing services...")
-        sys.stdout.flush()
+        logger.info("Initializing services...")
         session_manager = SessionManager(cleanup_interval=300)  # 5 min
         input_parser = InputParser()
         question_retriever = QuestionRetriever(chroma_client=chroma_client)
@@ -160,12 +158,9 @@ async def lifespan(app: FastAPI):
         voice_transcriber = VoiceTranscriber()
         tts_service = TTSService()
         translation_service = TranslationService()
-        print("✓ Services initialized")
-        sys.stdout.flush()
+        logger.info("Services initialized")
     except Exception as e:
-        print(f"ERROR: Failed to initialize services: {e}")
-        import traceback
-        traceback.print_exc()
+        logger.error("Failed to initialize services: %s", e, exc_info=True)
         raise
 
     # Question health check on startup
@@ -174,30 +169,23 @@ async def lifespan(app: FastAPI):
             monitor = QuestionMonitor(chroma_client=chroma_client.client)
             health = monitor.check_health()
             if health.alerts:
-                print(f"\n{'='*60}")
-                print("QUESTION DATABASE HEALTH CHECK")
-                for alert in health.alerts:
-                    print(f"  {alert}")
-                print(f"{'='*60}\n")
+                logger.warning("Question database health alerts: %s", health.alerts)
             app.state.question_monitor = monitor
         else:
-            print("WARNING: QuestionMonitor not available (import failed)")
+            logger.warning("QuestionMonitor not available (import failed)")
             app.state.question_monitor = None
     except Exception as e:
-        print(f"Question health monitor initialization failed: {e}")
+        logger.warning("Question health monitor initialization failed: %s", e)
         app.state.question_monitor = None
 
     # Pre-generate static feedback audio
     try:
-        print("Pre-generating static feedback audio...")
-        sys.stdout.flush()
+        logger.info("Pre-generating static feedback audio...")
         await tts_service.pregenerate_static_feedback()
-        print("✓ Static feedback audio ready")
-        sys.stdout.flush()
+        logger.info("Static feedback audio ready")
     except Exception as e:
-        print(f"WARNING: Failed to pre-generate feedback audio: {e}")
-        print("Feedback will be generated on-demand")
-        sys.stdout.flush()
+        logger.warning("Failed to pre-generate feedback audio: %s", e)
+        logger.info("Feedback will be generated on-demand")
 
     # Inject dependencies into REST API
     rest.init_dependencies(
@@ -213,24 +201,20 @@ async def lifespan(app: FastAPI):
     )
     # Inject dependencies into Admin API
     admin.init_dependencies(cc=chroma_client)
-    print("✓ API dependencies configured")
+    logger.info("API dependencies configured")
 
     # Start background tasks
     await session_manager.start_cleanup()
-    print("✓ Background cleanup started")
+    logger.info("Background cleanup started")
 
-    print("\n" + "="*50)
-    print("Quiz Agent API is ready!")
-    print("API Documentation: http://localhost:8002/docs")
-    print("Health Check: http://localhost:8002/api/v1/health")
-    print("="*50 + "\n")
+    logger.info("Quiz Agent API is ready! Docs: /docs | Health: /api/v1/health")
 
     yield
 
     # Shutdown
-    print("\nShutting down Quiz Agent API...")
+    logger.info("Shutting down Quiz Agent API...")
     await session_manager.stop_cleanup()
-    print("✓ Cleanup stopped")
+    logger.info("Cleanup stopped")
 
 
 # Create FastAPI app
@@ -244,13 +228,18 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS middleware for web clients
+# Register rate limiter
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# CORS middleware for web clients (iOS native client doesn't use CORS)
+cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
+    allow_origins=[o.strip() for o in cors_origins.split(",") if o.strip()],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "X-Admin-Key", "Authorization"],
 )
 
 # Include API routes
@@ -264,8 +253,8 @@ async def get_question_health():
     monitor = getattr(app.state, "question_monitor", None)
     if not monitor:
         return {"error": "Health monitor not initialized"}
-    status = monitor.check_health()
-    return status.to_dict()
+    health_status = monitor.check_health()
+    return health_status.to_dict()
 
 
 # Root endpoint

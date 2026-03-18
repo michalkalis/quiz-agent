@@ -1,0 +1,110 @@
+{
+  "metadata": {
+    "verified_at": "2026-03-18T12:00:00Z",
+    "source_file": "data/generated/claude_batch_004.json",
+    "total_questions": 10,
+    "verdicts": {"correct": 7, "needs_fix": 1, "needs_review": 2, "incorrect": 0}
+  },
+  "questions": [
+    {
+      "id": null,
+      "question": "The world's first webcam wasn't created for security or communication. It was set up at the University of Cambridge so researchers could check the status of what everyday object without leaving their desks?",
+      "stored_answer": "A coffee pot",
+      "verdict": "correct",
+      "notes": "Confirmed. The Trojan Room coffee pot at the University of Cambridge Computer Laboratory was the subject of the world's first webcam, created by Quentin Stafford-Fraser and Paul Jardetzky in 1991. It was set up so researchers could check if coffee was available without walking to the room.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Trojan_Room_coffee_pot",
+      "source_excerpt": "The Trojan Room coffee pot was a coffee machine at the Computer Laboratory of the University of Cambridge, and was the subject of the world's first webcam, created in 1991 to save people the disappointment of finding the coffee machine empty."
+    },
+    {
+      "id": null,
+      "question": "Before Wi-Fi had its catchy name, the technology was known by its technical standard 'IEEE 802.11b Direct Sequence.' A branding agency was hired to make it catchier. Despite what most people believe, what does 'Wi-Fi' actually stand for?",
+      "stored_answer": "Nothing \u2014 it's a made-up brand name",
+      "verdict": "correct",
+      "notes": "Confirmed. Wi-Fi is not an acronym for 'Wireless Fidelity'. Phil Belanger, a founding member of the Wi-Fi Alliance, confirmed the name was chosen from a list proposed by branding agency Interbrand, partly because it sounded similar to 'Hi-Fi'. The Wi-Fi Alliance did briefly use 'The Standard for Wireless Fidelity' as a marketing slogan, which caused the widespread misconception.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Wi-Fi",
+      "source_excerpt": "Wi-Fi is not short-form for 'Wireless Fidelity'. Phil Belanger, a founding member of the Wi-Fi Alliance, confirmed the term was chosen from a list of names proposed by Interbrand, partly because it sounded similar to Hi-Fi."
+    },
+    {
+      "id": null,
+      "question": "What children's toy, made of interlocking plastic bricks, is manufactured with a precision tolerance of just 2 micrometres \u2014 more precise than most surgical instruments?",
+      "stored_answer": "LEGO",
+      "verdict": "needs_fix",
+      "notes": "The answer (LEGO) is correct, but the precision tolerance figure in the question is inaccurate. Wikipedia states LEGO manufacturing machines have tolerances as small as 10 micrometres, and moulds are permitted a tolerance of up to 20 micrometres. The question claims 2 micrometres, which is 5-10x more precise than the documented figures. The 'more precise than most surgical instruments' comparison is also unverified.",
+      "suggested_fix": "Change '2 micrometres' to '10 micrometres' to match the documented tolerance. Consider changing 'more precise than most surgical instruments' to a verified comparison, or removing the comparison.",
+      "source_url": "https://en.wikipedia.org/wiki/Lego",
+      "source_excerpt": "The machines that manufacture LEGO bricks have tolerances as small as 10 micrometres. Moulds are permitted a tolerance of up to twenty micrometres to ensure the bricks remain connected."
+    },
+    {
+      "id": null,
+      "question": "In computing, a 'byte' is made up of 8 bits. What is the humorous but official name for a unit of just 4 bits \u2014 half a byte?",
+      "stored_answer": "A nibble",
+      "verdict": "correct",
+      "notes": "Confirmed. A nibble (also spelled nybble) is a unit of 4 bits, half a byte. The name is a pun on byte/bite \u2014 a nibble being smaller than a bite. The term is widely used in computing and is well-documented.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Nibble",
+      "source_excerpt": "In computing, a nibble is a unit of information that consists of four bits. A nibble is half of a byte. The term originates from its representing half a byte, with byte a homophone of the English word bite."
+    },
+    {
+      "id": null,
+      "question": "The first computer 'bug' was a real insect found trapped inside a computer relay in 1947, which was then taped into the logbook with the note 'First actual case of bug being found.' What type of insect was it?",
+      "stored_answer": "A moth",
+      "verdict": "correct",
+      "notes": "Confirmed. A moth was found trapped in a relay of the Harvard Mark II computer on September 9, 1947. It was taped into the logbook with the annotation 'First actual case of bug being found.' The logbook page is preserved at the Smithsonian Institution's National Museum of American History.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Harvard_Mark_II",
+      "source_excerpt": "While working on a Mark II Computer at Harvard in 1947, associates discovered a moth stuck in a relay, impeding the operation. The insect was taped to the log book with the note 'first actual case of bug being found.'"
+    },
+    {
+      "id": null,
+      "question": "I have cities, but no houses. I have mountains, but no trees. I have water, but no fish. What am I?",
+      "stored_answer": "A map",
+      "verdict": "correct",
+      "notes": "Classic riddle with a well-established answer. A map has representations of cities, mountains, and water, but none of the physical things that come with them. No factual verification needed as this is a logic puzzle.",
+      "suggested_fix": null,
+      "source_url": null,
+      "source_excerpt": null
+    },
+    {
+      "id": null,
+      "question": "What was Google's original name when its founders first built the search engine as a research project at Stanford University in 1996?",
+      "stored_answer": "BackRub",
+      "verdict": "correct",
+      "notes": "Confirmed. Google originated as 'BackRub', a research project started in 1996 by Larry Page and Sergey Brin at Stanford University. The name referred to the system's analysis of backlinks. They later changed it to Google, a misspelling of 'googol' (10^100). Google was formally incorporated in 1998.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/History_of_Google",
+      "source_excerpt": "Google has its origins in 'BackRub', a research project started in 1996 by Larry Page and Sergey Brin when they were both PhD students at Stanford University. They called it BackRub because the system checked backlinks."
+    },
+    {
+      "id": null,
+      "question": "The microwave oven was invented entirely by accident in 1945 when an engineer walked past a piece of radar equipment and noticed something in his pocket had melted. What had melted?",
+      "stored_answer": "A candy bar",
+      "verdict": "correct",
+      "notes": "Confirmed (with caveat). The widely reported story is that Percy Spencer, an engineer at Raytheon, noticed a candy bar (sometimes described as a chocolate peanut cluster bar) in his pocket had melted while he was working near a magnetron. He then experimented with popcorn and an egg. Note: Some sources mention there are no primary sources verifying the candy bar story, but it is the standard accepted account and appears in Wikipedia, Britannica, and Smithsonian.",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Percy_Spencer",
+      "source_excerpt": "In 1945 Percy Spencer, an engineer working on radar at Raytheon, noticed that microwave radiation from a magnetron oscillator melted a candy bar in his pocket."
+    },
+    {
+      "id": null,
+      "question": "What percentage of all the world's money exists only as digital data \u2014 with no physical coins or banknotes to represent it? Is it roughly 30%, 60%, or over 90%?",
+      "stored_answer": "Over 90%",
+      "verdict": "needs_review",
+      "notes": "The answer 'over 90%' is broadly correct and arguably understated. In the UK in 2010, physical cash was only 2.1% of M4 money supply, meaning ~97-98% was digital. However, the exact figure varies by country and depends on how 'money' is defined (M1, M2, M4 money supply). The general claim that over 90% of money is digital is well-supported but the specific percentage is hard to pin to a single authoritative source. Different sources cite different figures (92%, 97%, etc.).",
+      "suggested_fix": null,
+      "source_url": "https://en.wikipedia.org/wiki/Money_supply",
+      "source_excerpt": "In the UK in 2010, the total money supply (M4) was \u00a32.2 trillion while actual notes and coins totalled only \u00a347 billion, about 2.1% of the total money supply."
+    },
+    {
+      "id": null,
+      "question": "Your smartphone has more computing power than the computers that guided Apollo 11 to the Moon in 1969. Roughly how many times more powerful is a modern smartphone than the Apollo guidance computer \u2014 1,000 times, 100,000 times, or 100 million times?",
+      "stored_answer": "About 100 million times",
+      "verdict": "needs_review",
+      "notes": "The comparison is directionally correct but the specific '100 million times' figure depends heavily on which metric is used (clock speed, memory, FLOPS, instructions per second). The Apollo Guidance Computer ran at 1.024 MHz with 72KB memory. A modern smartphone runs at ~3 GHz with 6-12GB RAM. In raw clock speed, a smartphone is ~3,000x faster. In memory, ~100,000x more. In FLOPS (floating point operations), a modern smartphone chip does ~150 GFLOPS vs. the AGC's ~14 KFLOPS, which is roughly 10 million times. The '100 million times' figure is plausible for some metrics but is not consistently supported. Most credible comparisons cite 'millions of times' more powerful without specifying 100 million.",
+      "suggested_fix": "Consider changing 'about 100 million times' to 'millions of times' to be more defensible across multiple metrics. The specific 100 million figure is hard to source authoritatively.",
+      "source_url": "https://en.wikipedia.org/wiki/Apollo_Guidance_Computer",
+      "source_excerpt": "The AGC had a 2.048 MHz crystal clock (1.024 MHz effective), 36,864 words of read-only memory and 2,048 words of RAM. A modern smartphone has millions of times more computing power by most metrics."
+    }
+  ]
+}

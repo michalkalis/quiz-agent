@@ -116,19 +116,32 @@ class AnswerEvaluator:
         Returns:
             Tuple of (result, score_delta)
         """
-        # TODO: Implement MCQ matching logic (~12 lines)
-        #
-        # 1. Normalize user_answer
-        # 2. Try matching against keys ("a", "b", "c", "d") — case-insensitive
-        # 3. Try matching against values ("Paris", "London") — normalized
-        # 4. If a match is found:
-        #    - Check if the matched key is the correct_answer
-        #    - Return ("correct", 1.0) or ("incorrect", 0.0)
-        # 5. If no match found, return ("incorrect", 0.0) — don't fall through to LLM
-        #
-        # Consider: correct_answer could be the key ("a") or the value ("Paris")
-        # You need to handle both cases.
-        raise NotImplementedError("MCQ matching logic — implement me!")
+        normalized = normalize_text(user_answer)
+        options = question.possible_answers  # {"a": "Paris", "b": "London", ...}
+
+        # Resolve which key the user selected
+        selected_key = None
+        for key, value in options.items():
+            if normalized == normalize_text(key) or normalized == normalize_text(value):
+                selected_key = key
+                break
+
+        if selected_key is None:
+            return "incorrect", 0.0
+
+        # Resolve correct_answer to a key (it might be stored as "a" or "Paris")
+        correct = question.correct_answer
+        if isinstance(correct, list):
+            correct = correct[0]
+        correct_key = correct
+        if correct_key not in options:
+            # correct_answer is a value — find its key
+            for key, value in options.items():
+                if normalize_text(str(correct)) == normalize_text(value):
+                    correct_key = key
+                    break
+
+        return ("correct", 1.0) if selected_key == correct_key else ("incorrect", 0.0)
 
     async def _llm_evaluate(
         self,

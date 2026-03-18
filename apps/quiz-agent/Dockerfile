@@ -30,7 +30,9 @@ RUN pip install --no-cache-dir \
     python-multipart>=0.0.6 \
     requests>=2.31.0 \
     rich>=13.0.0 \
-    pydub>=0.25.0
+    pydub>=0.25.0 \
+    httpx>=0.27.0 \
+    slowapi>=0.1.9
 
 # Production stage
 FROM python:3.11-slim

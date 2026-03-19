@@ -76,6 +76,19 @@ struct ContentView: View {
             }
         }
         .animation(reduceMotion ? nil : .spring(response: 0.4, dampingFraction: 0.8), value: viewModel.isMinimized)
+        .sheet(isPresented: $viewModel.showPaywall) {
+            PaywallView(
+                storeManager: appState.storeManager,
+                limitError: viewModel.dailyLimitError,
+                onDismiss: { viewModel.showPaywall = false }
+            )
+        }
+        .onChange(of: appState.storeManager.isPurchased) { _, isPurchased in
+            if isPurchased {
+                viewModel.showPaywall = false
+                Task { await viewModel.notifyPremiumPurchased() }
+            }
+        }
     }
 }
 

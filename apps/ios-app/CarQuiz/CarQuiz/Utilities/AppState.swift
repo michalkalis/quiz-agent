@@ -16,12 +16,14 @@ final class AppState: ObservableObject {
     let persistenceStore: PersistenceStoreProtocol
     let voiceCommandService: VoiceCommandServiceProtocol?
     let sttService: ElevenLabsSTTServiceProtocol?
+    let storeManager: StoreManager
 
     init() {
         // Production dependencies
         self.networkService = NetworkService(baseURL: Config.apiBaseURL)
         self.audioService = AudioService()
         self.persistenceStore = PersistenceStore()
+        self.storeManager = StoreManager()
 
         // Voice commands require iOS 26+ SpeechAnalyzer
         if #available(iOS 26, *) {
@@ -54,13 +56,15 @@ final class AppState: ObservableObject {
         audioService: AudioServiceProtocol,
         persistenceStore: PersistenceStoreProtocol,
         voiceCommandService: VoiceCommandServiceProtocol? = nil,
-        sttService: ElevenLabsSTTServiceProtocol? = nil
+        sttService: ElevenLabsSTTServiceProtocol? = nil,
+        storeManager: StoreManager? = nil
     ) {
         self.networkService = networkService
         self.audioService = audioService
         self.persistenceStore = persistenceStore
         self.voiceCommandService = voiceCommandService
         self.sttService = sttService
+        self.storeManager = storeManager ?? StoreManager()
     }
 
     /// Create a new QuizViewModel with injected dependencies

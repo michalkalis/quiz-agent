@@ -23,21 +23,28 @@ STATIC_FEEDBACK: Dict[str, List[str]] = {
         "Well done!",
         "Exactly right!",
         "Perfect!",
+        "Nailed it!",
+        "Spot on!",
+        "You got it!",
     ],
     "incorrect": [
         "Not quite.",
-        "Try again.",
-        "Close, but not quite.",
+        "Close, but no.",
         "Incorrect.",
+        "Almost!",
+        "Not this time.",
     ],
     "partially_correct": [
         "Partially correct.",
         "You're on the right track.",
         "Almost there!",
+        "Close enough!",
+        "Halfway there.",
     ],
     "skipped": [
         "Skipped.",
         "Moving on.",
+        "Next question.",
     ],
 }
 

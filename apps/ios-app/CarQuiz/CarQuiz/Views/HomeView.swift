@@ -97,6 +97,24 @@ struct HomeView: View {
                 }
                 .padding(.horizontal, Theme.Spacing.md)
 
+                // MARK: - Usage Badge
+
+                if let usage = viewModel.usageInfo, !usage.isPremium {
+                    HStack(spacing: Theme.Spacing.xs) {
+                        Image(systemName: usage.isLimitReached ? "exclamationmark.triangle" : "sparkle")
+                            .foregroundColor(usage.isLimitReached ? Theme.Colors.warning : Theme.Colors.accentPrimary)
+                            .accessibilityHidden(true)
+                        Text(usageText(usage))
+                            .font(.textSM)
+                            .foregroundColor(Theme.Colors.textSecondary)
+                    }
+                    .padding(.horizontal, Theme.Spacing.md)
+                    .padding(.vertical, Theme.Spacing.sm)
+                    .background(Theme.Colors.bgCard)
+                    .cornerRadius(Theme.Radius.xl)
+                    .accessibilityLabel(usageAccessibilityLabel(usage))
+                }
+
                 Spacer(minLength: Theme.Spacing.lg)
 
                 // MARK: - Action Buttons
@@ -135,6 +153,7 @@ struct HomeView: View {
         .background(Theme.Colors.bgPrimary)
         .onAppear {
             viewModel.refreshAudioDevices()
+            Task { await viewModel.refreshUsage() }
         }
         .sheet(isPresented: $viewModel.showingMicrophonePicker) {
             AudioDevicePickerView(viewModel: viewModel)
@@ -142,6 +161,26 @@ struct HomeView: View {
     }
 
     // MARK: - Helper Views
+
+    private func usageText(_ usage: UsageInfo) -> String {
+        if usage.isLimitReached {
+            return "No free questions left today"
+        }
+        if let remaining = usage.remaining {
+            return "\(remaining) free questions remaining today"
+        }
+        return ""
+    }
+
+    private func usageAccessibilityLabel(_ usage: UsageInfo) -> String {
+        if usage.isLimitReached {
+            return "No free questions remaining today. Upgrade for unlimited access."
+        }
+        if let remaining = usage.remaining, let limit = usage.questionsLimit {
+            return "\(remaining) of \(limit) free questions remaining today"
+        }
+        return ""
+    }
 
     private func settingsMenuLabel(value: String) -> some View {
         HStack(spacing: Theme.Spacing.xs) {

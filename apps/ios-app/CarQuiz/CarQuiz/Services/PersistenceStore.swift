@@ -21,6 +21,11 @@ enum QuestionHistoryError: Error {
 
 /// Protocol for unified persistence (session + settings + question history)
 protocol PersistenceStoreProtocol: Sendable {
+    // MARK: - Device Identity
+
+    /// Stable device identifier for usage tracking (persists across sessions)
+    var deviceId: String { get }
+
     // MARK: - Onboarding
 
     /// Whether the user has completed the onboarding flow
@@ -89,6 +94,7 @@ final class PersistenceStore: PersistenceStoreProtocol {
     nonisolated(unsafe) private let userDefaults: UserDefaults
 
     // Keys
+    private let deviceIdKey = "device_id"
     private let onboardingKey = "has_completed_onboarding"
     private let sessionIdKey = "current_session_id"
     private let settingsKey = "quiz_settings"
@@ -98,6 +104,17 @@ final class PersistenceStore: PersistenceStoreProtocol {
 
     init(userDefaults: UserDefaults = .standard) {
         self.userDefaults = userDefaults
+    }
+
+    // MARK: - Device Identity
+
+    var deviceId: String {
+        if let existing = userDefaults.string(forKey: deviceIdKey) {
+            return existing
+        }
+        let newId = "dev_\(UUID().uuidString.lowercased().replacingOccurrences(of: "-", with: "").prefix(16))"
+        userDefaults.set(newId, forKey: deviceIdKey)
+        return newId
     }
 
     // MARK: - Onboarding
@@ -283,6 +300,9 @@ final class PersistenceStore: PersistenceStoreProtocol {
 
 #if DEBUG
 final class MockPersistenceStore: PersistenceStoreProtocol {
+    // Device identity
+    nonisolated(unsafe) var deviceId: String = "dev_mock_test_1234"
+
     // Onboarding state
     nonisolated(unsafe) var hasCompletedOnboarding: Bool = true
 

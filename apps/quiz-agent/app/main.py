@@ -56,6 +56,7 @@ from .rating.feedback import FeedbackService
 from .voice.transcriber import VoiceTranscriber
 from .tts.service import TTSService
 from .translation import TranslationService
+from .usage.tracker import UsageTracker
 from .api import rest, admin
 
 try:
@@ -158,7 +159,8 @@ async def lifespan(app: FastAPI):
         voice_transcriber = VoiceTranscriber()
         tts_service = TTSService()
         translation_service = TranslationService()
-        logger.info("Services initialized")
+        usage_tracker = UsageTracker()
+        logger.info("Services initialized (free limit: %d questions/day)", usage_tracker.daily_limit)
     except Exception as e:
         logger.error("Failed to initialize services: %s", e, exc_info=True)
         raise
@@ -197,7 +199,8 @@ async def lifespan(app: FastAPI):
         vt=voice_transcriber,
         tts=tts_service,
         ts=translation_service,
-        cc=chroma_client
+        cc=chroma_client,
+        ut=usage_tracker,
     )
     # Inject dependencies into Admin API
     admin.init_dependencies(cc=chroma_client)

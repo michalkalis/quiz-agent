@@ -16,6 +16,7 @@ import AVFoundation
 import AVKit
 import Combine
 import Foundation
+import UIKit
 
 /// Callback for streaming PCM audio chunks (raw 16kHz 16-bit mono PCM data)
 typealias PCMChunkHandler = @Sendable (Data) -> Void
@@ -842,18 +843,32 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
     /// Speak text using built-in iOS TTS (no network required).
     /// Used for status messages like score announcements and help text.
+    /// When VoiceOver is active, routes through accessibility announcements
+    /// to prevent VoiceOver and AVSpeechSynthesizer fighting over the audio channel.
     func speakText(_ text: String) async {
         // Stop any current audio first
         await stopPlayback()
         speechSynthesizer.stopSpeaking(at: .immediate)
 
-        let utterance = AVSpeechUtterance(string: text)
-        utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
-        utterance.rate = AVSpeechUtteranceDefaultSpeechRate
-
         if Config.verboseLogging {
             print("🗣️ Speaking: \(text)")
         }
+
+        // When VoiceOver is active, use accessibility announcement instead
+        if UIAccessibility.isVoiceOverRunning {
+            UIAccessibility.post(notification: .announcement, argument: text)
+            // Brief delay so the announcement has time to be spoken
+            try? await Task.sleep(for: .milliseconds(500))
+
+            if Config.verboseLogging {
+                print("🗣️ Routed through VoiceOver announcement")
+            }
+            return
+        }
+
+        let utterance = AVSpeechUtterance(string: text)
+        utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
+        utterance.rate = AVSpeechUtteranceDefaultSpeechRate
 
         await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
             speechCompletion = continuation

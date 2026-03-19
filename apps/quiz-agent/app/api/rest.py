@@ -26,6 +26,7 @@ from ..evaluation.evaluator import AnswerEvaluator
 from ..rating.feedback import FeedbackService
 from ..voice.transcriber import VoiceTranscriber, TranscriptionResult
 from ..tts.service import TTSService
+from ..usage.tracker import UsageTracker
 from ..rate_limit import limiter
 
 logger = logging.getLogger(__name__)
@@ -119,6 +120,7 @@ voice_transcriber: Optional[VoiceTranscriber] = None
 tts_service: Optional[TTSService] = None
 translation_service: Optional[Any] = None  # TranslationService
 chroma_client: Optional[Any] = None  # ChromaDBClient
+usage_tracker: Optional[UsageTracker] = None
 
 
 def init_dependencies(
@@ -130,10 +132,11 @@ def init_dependencies(
     vt: VoiceTranscriber,
     tts: TTSService,
     ts: Any,  # TranslationService
-    cc: Optional[Any] = None  # ChromaDBClient
+    cc: Optional[Any] = None,  # ChromaDBClient
+    ut: Optional[UsageTracker] = None,
 ):
     """Initialize service dependencies."""
-    global session_manager, input_parser, question_retriever, answer_evaluator, feedback_service, voice_transcriber, tts_service, translation_service, chroma_client
+    global session_manager, input_parser, question_retriever, answer_evaluator, feedback_service, voice_transcriber, tts_service, translation_service, chroma_client, usage_tracker
     session_manager = sm
     input_parser = ip
     question_retriever = qr
@@ -143,6 +146,7 @@ def init_dependencies(
     tts_service = tts
     translation_service = ts
     chroma_client = cc
+    usage_tracker = ut
 
 
 # Helper functions
@@ -362,6 +366,22 @@ async def start_quiz(http_request: Request, session_id: str, request: StartQuizR
         if session.phase != "idle":
             raise HTTPException(status_code=400, detail="Quiz already started")
 
+        # Check usage limit (freemium)
+        if usage_tracker and session.user_id:
+            allowed, remaining, resets_at = usage_tracker.check_limit(session.user_id)
+            if not allowed:
+                usage = usage_tracker.get_usage(session.user_id)
+                raise HTTPException(
+                    status_code=429,
+                    detail={
+                        "error": "daily_limit_reached",
+                        "questions_used": usage["questions_used"],
+                        "questions_limit": usage["questions_limit"],
+                        "resets_at": usage["resets_at"],
+                        "upgrade_available": True,
+                    },
+                )
+
         # Extract client-side excluded question IDs
         client_excluded_ids = request.excluded_question_ids or []
 
@@ -434,6 +454,10 @@ async def start_quiz(http_request: Request, session_id: str, request: StartQuizR
 
         session.current_question_id = question.id
         session.asked_question_ids.append(question.id)
+
+        # Record usage for freemium tracking
+        if usage_tracker and session.user_id:
+            usage_tracker.record_question(session.user_id)
 
         # Cache translated question text for TTS audio consistency
         translated_question_dict = await question_to_dict_translated(question, session.language)
@@ -663,6 +687,25 @@ async def submit_input(http_request: Request, session_id: str, request: SubmitIn
             audio=audio_info
         )
 
+    # Check usage limit before serving next question
+    if usage_tracker and session.user_id:
+        allowed, remaining, resets_at = usage_tracker.check_limit(session.user_id)
+        if not allowed:
+            session.phase = "finished"
+            session_manager.update_session(session)
+            usage = usage_tracker.get_usage(session.user_id)
+            raise HTTPException(
+                status_code=429,
+                detail={
+                    "error": "daily_limit_reached",
+                    "questions_used": usage["questions_used"],
+                    "questions_limit": usage["questions_limit"],
+                    "resets_at": usage["resets_at"],
+                    "upgrade_available": True,
+                    "evaluation": evaluation_result,
+                },
+            )
+
     # Get next question
     next_question = question_retriever.get_next_question(session)
     if not next_question:
@@ -683,6 +726,10 @@ async def submit_input(http_request: Request, session_id: str, request: SubmitIn
     session.current_question_id = next_question.id
     session.asked_question_ids.append(next_question.id)
     session.phase = "asking"
+
+    # Record usage for freemium tracking
+    if usage_tracker and session.user_id:
+        usage_tracker.record_question(session.user_id)
 
     # Cache translated question text for TTS audio consistency
     translated_question_dict = await question_to_dict_translated(next_question, session.language)
@@ -1500,6 +1547,39 @@ async def get_elevenlabs_token():
             status_code=502,
             detail=f"Failed to get ElevenLabs token: {str(e)}"
         )
+
+
+# Usage / Freemium Endpoints
+
+@router.get("/usage/{user_id}")
+async def get_usage(user_id: str):
+    """Get usage stats for a user (questions used today, limit, reset time).
+
+    iOS polls this on app launch to display remaining questions.
+    """
+    if not usage_tracker:
+        raise HTTPException(status_code=500, detail="Usage tracker not initialized")
+
+    return usage_tracker.get_usage(user_id)
+
+
+@router.post("/usage/{user_id}/premium")
+@limiter.limit("5/minute")
+async def set_premium(request: Request, user_id: str, is_premium: bool = True):
+    """Set premium status for a user. Requires admin key.
+
+    For MVP: called after StoreKit purchase verification.
+    """
+    if not usage_tracker:
+        raise HTTPException(status_code=500, detail="Usage tracker not initialized")
+
+    admin_key = request.headers.get("X-Admin-Key")
+    expected_key = os.getenv("ADMIN_API_KEY")
+    if not expected_key or admin_key != expected_key:
+        raise HTTPException(status_code=401, detail="Invalid admin key")
+
+    usage_tracker.set_premium(user_id, is_premium)
+    return {"user_id": user_id, "is_premium": is_premium}
 
 
 # Health Check

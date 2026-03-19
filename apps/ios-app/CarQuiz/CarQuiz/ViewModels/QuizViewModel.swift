@@ -71,6 +71,11 @@ final class QuizViewModel: ObservableObject {
     @Published var questionsAnswered: Int = 0
     @Published var errorMessage: String?  // Inline errors shown in QuestionView (e.g., recording failures)
 
+    // Paywall state
+    @Published var showPaywall: Bool = false
+    @Published var dailyLimitError: DailyLimitError?
+    @Published var usageInfo: UsageInfo?
+
     // Answer confirmation modal state
     @Published var showAnswerConfirmation = false
     @Published var transcribedAnswer = ""
@@ -227,6 +232,9 @@ final class QuizViewModel: ObservableObject {
     // Whether the current recording is a re-record (bypasses all timers)
     private var isRerecording: Bool = false
 
+    // Consecutive transcription failures for 3-tier error escalation
+    private var consecutiveTranscriptionFailures: Int = 0
+
     // Next question data (from response, displayed after showing results)
     private var nextQuestionAudioUrl: String?
     private var nextQuestion: Question?
@@ -273,6 +281,7 @@ final class QuizViewModel: ObservableObject {
         errorMessage = nil
         autoAdvanceEnabled = true  // Reset auto-advance for new quiz
         isRerecording = false
+        consecutiveTranscriptionFailures = 0
 
         // Use provided parameters or fall back to settings
         let quizMaxQuestions = maxQuestions ?? settings.numberOfQuestions
@@ -314,12 +323,13 @@ final class QuizViewModel: ObservableObject {
                 }
             }
 
-            // Create session
+            // Create session with device ID for usage tracking
             let session = try await networkService.createSession(
                 maxQuestions: quizMaxQuestions,
                 difficulty: quizDifficulty,
                 language: quizLanguage,
-                category: settings.category
+                category: settings.category,
+                userId: persistenceStore.deviceId
             )
 
             currentSession = session
@@ -363,6 +373,21 @@ final class QuizViewModel: ObservableObject {
                 await startRecordingOrTimer()
             }
 
+        } catch let error as NetworkError {
+            if case .dailyLimitReached(let limitError) = error {
+                dailyLimitError = limitError
+                showPaywall = true
+                quizState = .idle
+            } else {
+                setError(
+                    message: "Failed to start quiz: \(error.localizedDescription)",
+                    context: .initialization
+                )
+            }
+
+            if Config.verboseLogging {
+                print("❌ Error starting quiz: \(error)")
+            }
         } catch {
             setError(
                 message: "Failed to start quiz: \(error.localizedDescription)",
@@ -650,14 +675,15 @@ final class QuizViewModel: ObservableObject {
                     if Config.verboseLogging {
                         print("⚠️ No evaluation in response - speech may not have been recognized")
                     }
-                    // Return to error state so user can re-record
                     await MainActor.run {
-                        self.setError(
-                            message: "Could not understand your answer. Please speak clearly and try again.",
-                            context: .submission
-                        )
+                        self.handleTranscriptionFailure()
                     }
                     return
+                }
+
+                // Reset failure counter on success
+                await MainActor.run {
+                    self.consecutiveTranscriptionFailures = 0
                 }
 
                 // Store response and show confirmation modal
@@ -687,15 +713,24 @@ final class QuizViewModel: ObservableObject {
                     print("⏱️ Voice submission timed out after 30 seconds")
                 }
             } catch let error as NetworkError {
-                // Handle "speech not understood" errors gracefully - let user re-record
-                if case .serverError(let statusCode, let message) = error, statusCode == 400 {
+                // Handle daily limit reached — show paywall
+                if case .dailyLimitReached(let limitError) = error {
                     await MainActor.run {
-                        self.errorMessage = message
-                        self.quizState = .askingQuestion  // Return to ready state for re-recording
+                        self.dailyLimitError = limitError
+                        self.showPaywall = true
+                        self.quizState = .idle
+                    }
+                    return
+                }
+
+                // Handle "speech not understood" errors gracefully - let user re-record
+                if case .serverError(let statusCode, _) = error, statusCode == 400 {
+                    await MainActor.run {
+                        self.handleTranscriptionFailure()
                     }
 
                     if Config.verboseLogging {
-                        print("⚠️ Speech not understood, returning to question: \(message)")
+                        print("⚠️ Speech not understood, tier \(self.consecutiveTranscriptionFailures) escalation")
                     }
                     return
                 }
@@ -862,6 +897,70 @@ final class QuizViewModel: ObservableObject {
         announceError(message)
     }
 
+    /// 3-tier error escalation for transcription failures.
+    /// Tier 1: Gentle re-record prompt
+    /// Tier 2: Hint to speak closer
+    /// Tier 3: Auto-skip after 2+ failures
+    private func handleTranscriptionFailure() {
+        consecutiveTranscriptionFailures += 1
+
+        switch consecutiveTranscriptionFailures {
+        case 1:
+            // Tier 1: gentle retry
+            errorMessage = "Sorry, I didn't catch that. Please try again."
+            quizState = .askingQuestion
+            announceError("Sorry, I didn't catch that. Please try again.")
+
+        case 2:
+            // Tier 2: hint + retry
+            errorMessage = "Having trouble hearing you. Try speaking closer to the mic."
+            quizState = .askingQuestion
+            announceError("Having trouble hearing you. Try speaking closer to the mic.")
+
+        default:
+            // Tier 3: auto-skip
+            consecutiveTranscriptionFailures = 0
+            announceError("Skipping this one.")
+            Task { await skipQuestion() }
+        }
+    }
+
+    /// Handle an error, detecting 429 daily limit and showing paywall instead of error state
+    private func handleError(_ error: Error, context: ErrorContext, fallbackMessage: String) {
+        if let networkError = error as? NetworkError,
+           case .dailyLimitReached(let limitError) = networkError {
+            dailyLimitError = limitError
+            showPaywall = true
+            quizState = .idle
+        } else {
+            setError(message: "\(fallbackMessage): \(error.localizedDescription)", context: context)
+        }
+    }
+
+    /// Fetch current usage info from backend (for displaying remaining questions)
+    func refreshUsage() async {
+        let userId = persistenceStore.deviceId
+        do {
+            usageInfo = try await networkService.getUsage(userId: userId)
+        } catch {
+            if Config.verboseLogging {
+                print("⚠️ Failed to fetch usage info: \(error)")
+            }
+        }
+    }
+
+    /// Notify backend that this device purchased premium
+    func notifyPremiumPurchased() async {
+        do {
+            try await networkService.setPremium(userId: persistenceStore.deviceId)
+            await refreshUsage()
+        } catch {
+            if Config.verboseLogging {
+                print("⚠️ Failed to notify backend of premium purchase: \(error)")
+            }
+        }
+    }
+
     /// Whether to retry with a new session (for initialization errors)
     var shouldRetryWithNewSession: Bool {
         if case .error(_, let context) = quizState {
@@ -916,10 +1015,7 @@ final class QuizViewModel: ObservableObject {
             )
             await handleQuizResponse(response)
         } catch {
-            setError(
-                message: "Failed to submit answer: \(error.localizedDescription)",
-                context: .submission
-            )
+            handleError(error, context: .submission, fallbackMessage: "Failed to submit answer")
         }
     }
 
@@ -947,10 +1043,7 @@ final class QuizViewModel: ObservableObject {
             await handleQuizResponse(response)
 
         } catch {
-            setError(
-                message: "Failed to resubmit answer: \(error.localizedDescription)",
-                context: .submission
-            )
+            handleError(error, context: .submission, fallbackMessage: "Failed to resubmit answer")
 
             if Config.verboseLogging {
                 print("❌ Error resubmitting answer: \(error)")
@@ -983,10 +1076,7 @@ final class QuizViewModel: ObservableObject {
 
             await handleQuizResponse(response)
         } catch {
-            setError(
-                message: "Failed to skip question: \(error.localizedDescription)",
-                context: .submission
-            )
+            handleError(error, context: .submission, fallbackMessage: "Failed to skip question")
 
             if Config.verboseLogging {
                 print("❌ Error skipping question: \(error)")
@@ -1277,6 +1367,9 @@ final class QuizViewModel: ObservableObject {
         }
         isProcessingResponse = true
         defer { isProcessingResponse = false }
+
+        // Reset transcription failure counter on successful response
+        consecutiveTranscriptionFailures = 0
 
         // Cancel any previous auto-advance task
         autoAdvanceTask?.cancel()

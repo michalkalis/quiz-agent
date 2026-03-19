@@ -111,6 +111,14 @@ enum Config {
     /// VAD silence threshold — ElevenLabs commits transcript after this many seconds of silence
     static let elevenLabsVadSilenceThresholdSecs: Double = 1.5
 
+    // MARK: - Freemium
+
+    /// StoreKit product identifier for unlimited access
+    static let unlimitedProductId = "com.carquiz.unlimited"
+
+    /// Free tier daily question limit (display only — enforced by backend)
+    static let freeDailyQuestionLimit = 20
+
     // MARK: - Debug Settings
 
     /// Enable verbose logging in debug builds

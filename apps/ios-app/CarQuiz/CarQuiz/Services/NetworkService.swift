@@ -10,7 +10,7 @@
 
 /// Protocol for network operations
 protocol NetworkServiceProtocol: Sendable {
-    func createSession(maxQuestions: Int, difficulty: String, language: String, category: String?) async throws -> QuizSession
+    func createSession(maxQuestions: Int, difficulty: String, language: String, category: String?, userId: String?) async throws -> QuizSession
     func startQuiz(sessionId: String, excludedQuestionIds: [String]) async throws -> QuizResponse
     func submitVoiceAnswer(sessionId: String, audioData: Data, fileName: String) async throws -> QuizResponse
     func submitTextInput(sessionId: String, input: String, audio: Bool) async throws -> QuizResponse
@@ -19,6 +19,8 @@ protocol NetworkServiceProtocol: Sendable {
     func extendSession(sessionId: String, minutes: Int) async throws
     func rateQuestion(sessionId: String, rating: Int) async throws
     func fetchElevenLabsToken() async throws -> String
+    func getUsage(userId: String) async throws -> UsageInfo
+    func setPremium(userId: String) async throws
 }
 
 /// Thread-safe network service using Swift 6 actor
@@ -62,7 +64,7 @@ actor NetworkService: NetworkServiceProtocol {
 
     // MARK: - Session Management
 
-    func createSession(maxQuestions: Int = 10, difficulty: String = "medium", language: String = "en", category: String? = nil) async throws -> QuizSession {
+    func createSession(maxQuestions: Int = 10, difficulty: String = "medium", language: String = "en", category: String? = nil, userId: String? = nil) async throws -> QuizSession {
         let endpoint = baseURL.appendingPathComponent("/api/v1/sessions")
 
         if Config.verboseLogging {
@@ -84,6 +86,11 @@ actor NetworkService: NetworkServiceProtocol {
         // Add category if specified
         if let category = category {
             body["category"] = category
+        }
+
+        // Add user_id for usage tracking (freemium)
+        if let userId = userId {
+            body["user_id"] = userId
         }
 
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
@@ -146,12 +153,21 @@ actor NetworkService: NetworkServiceProtocol {
             }
         }
 
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw NetworkError.invalidResponse
+        }
+
+        // Handle 429 daily limit reached
+        if httpResponse.statusCode == 429 {
+            if let limitError = try? JSONDecoder().decode(DailyLimitErrorWrapper.self, from: data) {
+                throw NetworkError.dailyLimitReached(limitError.detail)
+            }
+            throw NetworkError.serverError(statusCode: 429, message: "Rate limited")
+        }
+
+        guard (200...299).contains(httpResponse.statusCode) else {
             if Config.verboseLogging {
-                if let httpResponse = response as? HTTPURLResponse {
-                    print("❌ HTTP error: \(httpResponse.statusCode)")
-                }
+                print("❌ HTTP error: \(httpResponse.statusCode)")
                 if let responseString = String(data: data, encoding: .utf8) {
                     print("📄 Response body: \(responseString)")
                 }
@@ -261,9 +277,20 @@ actor NetworkService: NetworkServiceProtocol {
             }
         }
 
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
-            let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw NetworkError.invalidResponse
+        }
+
+        // Handle 429 daily limit reached
+        if httpResponse.statusCode == 429 {
+            if let limitError = try? JSONDecoder().decode(DailyLimitErrorWrapper.self, from: data) {
+                throw NetworkError.dailyLimitReached(limitError.detail)
+            }
+            throw NetworkError.serverError(statusCode: 429, message: "Rate limited")
+        }
+
+        guard (200...299).contains(httpResponse.statusCode) else {
+            let statusCode = httpResponse.statusCode
 
             if Config.verboseLogging {
                 print("❌ HTTP error: \(statusCode)")
@@ -310,8 +337,19 @@ actor NetworkService: NetworkServiceProtocol {
 
         let (data, response) = try await session.data(for: request)
 
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw NetworkError.invalidResponse
+        }
+
+        // Handle 429 daily limit reached
+        if httpResponse.statusCode == 429 {
+            if let limitError = try? JSONDecoder().decode(DailyLimitErrorWrapper.self, from: data) {
+                throw NetworkError.dailyLimitReached(limitError.detail)
+            }
+            throw NetworkError.serverError(statusCode: 429, message: "Rate limited")
+        }
+
+        guard (200...299).contains(httpResponse.statusCode) else {
             throw NetworkError.invalidResponse
         }
 
@@ -438,6 +476,49 @@ actor NetworkService: NetworkServiceProtocol {
         return tokenResponse.token
     }
 
+    // MARK: - Usage / Freemium
+
+    func getUsage(userId: String) async throws -> UsageInfo {
+        let endpoint = baseURL.appendingPathComponent("/api/v1/usage/\(userId)")
+
+        var request = URLRequest(url: endpoint)
+        request.httpMethod = "GET"
+        request.timeoutInterval = 10
+
+        if Config.verboseLogging {
+            print("🌐 GET \(endpoint)")
+        }
+
+        let (data, response) = try await session.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw NetworkError.invalidResponse
+        }
+
+        let decoder = JSONDecoder()
+        return try decoder.decode(UsageInfo.self, from: data)
+    }
+
+    func setPremium(userId: String) async throws {
+        let endpoint = baseURL.appendingPathComponent("/api/v1/usage/\(userId)/premium")
+
+        var request = URLRequest(url: endpoint)
+        request.httpMethod = "POST"
+        request.timeoutInterval = 10
+
+        if Config.verboseLogging {
+            print("🌐 POST \(endpoint) (set premium)")
+        }
+
+        let (_, response) = try await session.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw NetworkError.invalidResponse
+        }
+    }
+
     // MARK: - Helper Methods
 
     private func decodeQuizResponse(from data: Data) async throws -> QuizResponse {
@@ -485,11 +566,17 @@ private struct ErrorResponse: Decodable {
     let detail: String
 }
 
+/// Backend 429 response wraps DailyLimitError in "detail" field
+private struct DailyLimitErrorWrapper: Decodable {
+    let detail: DailyLimitError
+}
+
 enum NetworkError: LocalizedError {
     case invalidResponse
     case invalidURL
     case decodingError(Error)
     case serverError(statusCode: Int, message: String)
+    case dailyLimitReached(DailyLimitError)
 
     var errorDescription: String? {
         switch self {
@@ -501,6 +588,8 @@ enum NetworkError: LocalizedError {
             return "Failed to decode response: \(error.localizedDescription)"
         case .serverError(_, let message):
             return message
+        case .dailyLimitReached:
+            return "Daily question limit reached"
         }
     }
 }
@@ -515,7 +604,7 @@ final class MockNetworkService: NetworkServiceProtocol {
     nonisolated(unsafe) var mockAudioData: Data?
     nonisolated(unsafe) var shouldFail = false
 
-    func createSession(maxQuestions: Int, difficulty: String, language: String, category: String?) async throws -> QuizSession {
+    func createSession(maxQuestions: Int, difficulty: String, language: String, category: String?, userId: String?) async throws -> QuizSession {
         if shouldFail {
             throw NetworkError.invalidResponse
         }
@@ -585,6 +674,26 @@ final class MockNetworkService: NetworkServiceProtocol {
             throw NetworkError.invalidResponse
         }
         return "mock-elevenlabs-token"
+    }
+
+    func getUsage(userId: String) async throws -> UsageInfo {
+        if shouldFail {
+            throw NetworkError.invalidResponse
+        }
+        return UsageInfo(
+            userId: userId,
+            isPremium: false,
+            questionsUsed: 5,
+            questionsLimit: 20,
+            remaining: 15,
+            resetsAt: ISO8601DateFormatter().string(from: Date().addingTimeInterval(86400))
+        )
+    }
+
+    func setPremium(userId: String) async throws {
+        if shouldFail {
+            throw NetworkError.invalidResponse
+        }
     }
 }
 #endif

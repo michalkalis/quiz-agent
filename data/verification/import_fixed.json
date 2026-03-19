@@ -1,0 +1,1222 @@
+[
+  {
+    "id": "q_imported_5653abe73817",
+    "question": "Which Dutch artist created lithographs of impossible structures like endless staircases and perpetual waterfalls, inspiring mathematicians and architects alike?",
+    "type": "text",
+    "correct_answer": "M. C. Escher",
+    "alternative_answers": [
+      "Escher",
+      "MC Escher",
+      "Maurits Cornelis Escher"
+    ],
+    "possible_answers": null,
+    "topic": "Arts",
+    "category": "adults",
+    "difficulty": "medium",
+    "tags": [],
+    "source": "gpt4o",
+    "created_by": null,
+    "media_url": null,
+    "media_duration_seconds": null,
+    "explanation": null,
+    "source_url": null,
+    "source_excerpt": null,
+    "review_status": "approved"
+  },
+  {
+    "id": "q_imported_c1d6b5d4030a",
+    "question": "Which element is named after the Norse god of thunder?",
+    "type": "text",
+    "correct_answer": "Thorium",
+    "alternative_answers": [],
+    "possible_answers": null,
+    "topic": "Science",
+    "category": "adults",
+    "difficulty": "medium",
+    "tags": [],
+    "source": "gpt4o",
+    "created_by": null,
+    "media_url": null,
+    "media_duration_seconds": null,
+    "explanation": null,
+    "source_url": null,
+    "source_excerpt": null,
+    "review_status": "approved"
+  },
+  {
+    "id": "q_imported_a01490443fc9",
+    "question": "Which English word confusingly keeps the same meaning even when you add the prefix \"in-\", despite \"in-\" usually meaning \"not\"?",
+    "type": "text",
+    "correct_answer": "Flammable",
+    "alternative_answers": [
+      "inflammable",
+      "flammable / inflammable"
+    ],
+    "possible_answers": null,
+    "topic": "General Knowledge",
+    "category": "adults",
+    "difficulty": "medium",
+    "tags": [],
+    "source": "gpt4o",
+    "created_by": null,
+    "media_url": null,
+    "media_duration_seconds": null,
+    "explanation": null,
+    "source_url": null,
+    "source_excerpt": null,
+    "review_status": "approved"
+  },
+  {
+    "question": "The microwave oven was invented entirely by accident in 1945 when an engineer walked past a piece of radar equipment and noticed something in his pocket had melted. What had melted?",
+    "type": "text",
+    "correct_answer": "A candy bar",
+    "possible_answers": null,
+    "alternative_answers": [
+      "candy bar",
+      "chocolate bar",
+      "peanut cluster bar",
+      "Mr. Goodbar"
+    ],
+    "topic": "Technology",
+    "category": "adults",
+    "difficulty": "medium",
+    "tags": [
+      "invention",
+      "accidental discovery",
+      "food",
+      "radar"
+    ],
+    "language_dependent": false,
+    "source": "generated",
+    "source_url": null,
+    "source_excerpt": null,
+    "review_status": "approved",
+    "generation_metadata": {
+      "model": "claude-opus-4-6",
+      "provider": "anthropic",
+      "prompt_version": "v2_cot",
+      "stage": "claude_code_session",
+      "reasoning": {
+        "pattern_used": "Historical Quirk / Surprising Connection",
+        "why_interesting": "A world-changing kitchen appliance born from a melted chocolate bar is a perfect accidental invention story — the mundane (chocolate) meeting the military (radar) is unexpected",
+        "universal_appeal": "Microwave ovens and chocolate are both globally familiar; accidental invention stories are universally appealing",
+        "boring_check": "The answer (chocolate bar) is a common object — not a name. The accidental discovery narrative is engaging."
+      },
+      "self_critique": {
+        "surprise_factor": 8,
+        "universal_appeal": 9,
+        "clever_framing": 8,
+        "educational_value": 9,
+        "clarity": 9,
+        "factual_accuracy": 9,
+        "overall_score": 8.7,
+        "reasoning": "Percy Spencer's chocolate bar story is well-documented (Raytheon, 1945). The mundane answer contrasted with the revolutionary result is satisfying."
+      },
+      "ai_score": 8.7
+    },
+    "id": "q_technology_9c595022c75c"
+  },
+  {
+    "question": "One North American frog survives winter by letting its body freeze completely solid — heart stopped, brain silent, ice crystals forming between its cells. When spring arrives, it thaws and hops away. What compound does it flood its cells with to survive being frozen?",
+    "type": "text",
+    "correct_answer": "Glucose",
+    "possible_answers": null,
+    "alternative_answers": [
+      "glucose",
+      "sugar",
+      "natural antifreeze",
+      "cryoprotectant",
+      "antifreeze"
+    ],
+    "topic": "Nature",
+    "category": "adults",
+    "difficulty": "hard",
+    "tags": [
+      "biology",
+      "frogs",
+      "cryoprotection",
+      "winter",
+      "wood-frog"
+    ],
+    "language_dependent": false,
+    "source": "generated",
+    "source_url": null,
+    "source_excerpt": null,
+    "review_status": "approved",
+    "generation_metadata": {
+      "model": "claude-opus-4-6",
+      "provider": "anthropic",
+      "prompt_version": "v2_cot",
+      "stage": "claude_code_session",
+      "reasoning": {
+        "pattern_used": "Biological Oddity",
+        "why_interesting": "A vertebrate freezing solid and surviving is extraordinary. The mechanism (flooding cells with glucose as antifreeze) is an elegant biological solution that invites a reasoning path.",
+        "universal_appeal": "Frogs are universally known. Winter freezing is a universal concept.",
+        "boring_check": "The narrative setup (heart stopped, brain silent, ice forming) makes it compelling. The 'what compound' framing is harder but gettable by reasoning: 'something that lowers the freezing point — like sugar or salt'."
+      },
+      "self_critique": {
+        "surprise_factor": 9,
+        "universal_appeal": 8,
+        "clever_framing": 9,
+        "educational_value": 9,
+        "answerability": 7,
+        "overall_score": 8.4,
+        "reasoning": "Genuinely surprising biological fact with a reasoning path ('it must use some kind of antifreeze → sugar is a natural antifreeze → glucose'). The multiple alternative answers are important here as 'sugar' or 'antifreeze' should be accepted."
+      },
+      "ai_score": 8.4
+    },
+    "id": "q_nature_e54966c29823"
+  },
+  {
+    "question": "In football (soccer), a goalkeeper once scored a goal from inside his own penalty area — a kick that travelled the entire length of the pitch. Is the world record for the longest goal scored by a goalkeeper closer to 75 metres, 95 metres, or 105 metres?",
+    "type": "text",
+    "correct_answer": "About 96 metres",
+    "possible_answers": null,
+    "alternative_answers": [
+      "96 metres",
+      "95 metres",
+      "96.01 metres"
+    ],
+    "topic": "Sports",
+    "category": "adults",
+    "difficulty": "hard",
+    "tags": [
+      "football",
+      "soccer",
+      "goalkeepers",
+      "records",
+      "long-range-goals"
+    ],
+    "language_dependent": false,
+    "source": "generated",
+    "source_url": null,
+    "source_excerpt": null,
+    "review_status": "approved",
+    "generation_metadata": {
+      "model": "claude-opus-4-6",
+      "provider": "anthropic",
+      "prompt_version": "v2_cot",
+      "stage": "claude_code_session",
+      "reasoning": {
+        "pattern_used": "Estimation Challenge / Record Breaker",
+        "why_interesting": "A goalkeeper scoring from nearly the full length of a pitch is a spectacular sporting feat. The estimation element lets players use their knowledge of pitch dimensions to reason",
+        "universal_appeal": "Football/soccer is the world's most popular sport. Goalkeeper goals are universally exciting moments.",
+        "boring_check": "passes"
+      },
+      "self_critique": {
+        "surprise_factor": 8,
+        "universal_appeal": 9,
+        "clever_framing": 8,
+        "educational_value": 7,
+        "clarity": 9,
+        "factual_accuracy": 8,
+        "overall_score": 8.2,
+        "reasoning": "Players can reason: a standard pitch is 100-110m, so from inside the box it could be 90+ metres. The middle option (95m) is correct. Good estimation challenge with a dramatic sporting context."
+      },
+      "ai_score": 8.2
+    },
+    "id": "q_sports_f5f6dc746bcc"
+  },
+  {
+    "question": "SpaceX lands its rocket boosters vertically after launch so they can be reused. Before the first successful landing in 2015, roughly how many attempts did they need — 1, 6, or over 20?",
+    "type": "text",
+    "correct_answer": "About 20",
+    "possible_answers": null,
+    "alternative_answers": [
+      "20",
+      "over 20",
+      "around 20"
+    ],
+    "topic": "Technology",
+    "category": "adults",
+    "difficulty": "hard",
+    "tags": [
+      "spacex",
+      "rockets",
+      "space-technology",
+      "reusable-rockets"
+    ],
+    "language_dependent": false,
+    "source": "generated",
+    "source_url": null,
+    "source_excerpt": null,
+    "review_status": "approved",
+    "generation_metadata": {
+      "model": "claude-opus-4-6",
+      "provider": "anthropic",
+      "prompt_version": "v2_cot",
+      "stage": "claude_code_session",
+      "reasoning": {
+        "pattern_used": "Estimation Challenge",
+        "why_interesting": "Most people assume landing a rocket vertically must have taken dozens of failed attempts. The relatively small number (6) speaks to the quality of SpaceX's engineering and simulation work",
+        "universal_appeal": "SpaceX rocket landings are globally iconic video moments. Space technology fascinates universally.",
+        "boring_check": "passes"
+      },
+      "self_critique": {
+        "surprise_factor": 8,
+        "universal_appeal": 9,
+        "clever_framing": 8,
+        "educational_value": 8,
+        "clarity": 9,
+        "factual_accuracy": 8,
+        "overall_score": 8.3,
+        "reasoning": "The three options span a wide range. Most people would guess 'over 20' given the perceived difficulty, making the actual answer (6) a pleasant surprise. Shows that modern engineering simulation reduces trial-and-error."
+      },
+      "ai_score": 8.3
+    },
+    "id": "q_technology_91a5814f2f1a"
+  },
+  {
+    "question": "The entire codebase for the Apollo 11 moon landing guidance computer was about 145,000 lines of code. A modern smartphone app like Instagram has roughly how many times more code — 5 times, 50 times, or 500 times?",
+    "type": "text",
+    "correct_answer": "About 7 times",
+    "possible_answers": null,
+    "alternative_answers": [
+      "7 times",
+      "about 5 times",
+      "5 times"
+    ],
+    "topic": "Technology",
+    "category": "adults",
+    "difficulty": "hard",
+    "tags": [
+      "apollo-11",
+      "moon-landing",
+      "software",
+      "code-size",
+      "comparison"
+    ],
+    "language_dependent": false,
+    "source": "generated",
+    "source_url": null,
+    "source_excerpt": null,
+    "_verification_note": "The correct answer '5 times' is approximately right (Instagram ~1M lines / Apollo ~145K lines = ~7x). However, the generation_metadata reasoning contradicts the answer, claiming '500x is correct' and describing a 'stunning perspective shift' about photo-sharing vs moon-landing software. The self-critique and reasoning need to be corrected to match the actual stored answer. Instagram codebase estimates vary widely (500K to several million lines).",
+    "review_status": "approved",
+    "generation_metadata": {
+      "model": "claude-opus-4-6",
+      "provider": "anthropic",
+      "prompt_version": "v2_cot",
+      "stage": "claude_code_session",
+      "reasoning": {
+        "pattern_used": "Comparison Bet / Scale Surprise",
+        "why_interesting": "The Apollo guidance computer navigated humans to the Moon with less code than many modern websites. Instagram having ~500x more code for photo-sharing than moon-landing software is a stunning perspective shift",
+        "universal_appeal": "The Moon landing is universally known. Instagram is one of the world's most-used apps. The comparison transcends cultures.",
+        "boring_check": "passes"
+      },
+      "self_critique": {
+        "surprise_factor": 9,
+        "universal_appeal": 9,
+        "clever_framing": 9,
+        "educational_value": 9,
+        "clarity": 8,
+        "factual_accuracy": 8,
+        "overall_score": 8.7,
+        "reasoning": "The juxtaposition of moon-landing navigation vs photo-sharing is inherently humorous and thought-provoking. Players can reason about software complexity growth over decades. The extreme option (500x) being correct amplifies the surprise."
+      },
+      "ai_score": 8.7
+    },
+    "id": "q_technology_3c087db208b1"
+  },
+  {
+    "question": "Which metal has such a low melting point that it will literally melt if you hold it in your hand?",
+    "type": "text",
+    "correct_answer": "Gallium",
+    "possible_answers": null,
+    "alternative_answers": [
+      "gallium"
+    ],
+    "topic": "Science",
+    "category": "adults",
+    "difficulty": "hard",
+    "tags": [
+      "chemistry",
+      "elements",
+      "metals",
+      "science"
+    ],
+    "language_dependent": false,
+    "source": "generated",
+    "review_status": "approved",
+    "source_url": null,
+    "source_excerpt": null,
+    "generation_metadata": {
+      "model": "claude-opus-4-6",
+      "provider": "anthropic",
+      "prompt_version": "v2_cot",
+      "stage": "claude_code_session",
+      "ai_score": 8.8
+    },
+    "_verification_note": "needs_fix: Gallium is not a 'common metal'. Suggest changing 'common metal' to just 'metal'.",
+    "id": "q_science_cbe6f7333923"
+  },
+  {
+    "question": "Which Olympic sport traditionally required athletes to compete in five disciplines — fencing, swimming, horse riding, running, and shooting — before horse riding was replaced in 2024?",
+    "type": "text",
+    "correct_answer": "Modern pentathlon",
+    "possible_answers": null,
+    "alternative_answers": [
+      "modern pentathlon",
+      "pentathlon",
+      "the modern pentathlon"
+    ],
+    "topic": "Sports",
+    "category": "adults",
+    "difficulty": "medium",
+    "tags": [
+      "olympics",
+      "multi-sport",
+      "fencing",
+      "horse riding"
+    ],
+    "language_dependent": false,
+    "source": "generated",
+    "source_url": "https://en.wikipedia.org/wiki/Modern_pentathlon",
+    "source_excerpt": "Modern pentathlon is an Olympic sport that comprises five different events: fencing, freestyle swimming, equestrian show jumping, and a combined event of pistol shooting and cross country running. Equestrian show jumping was replaced by obstacle course racing for senior competitions in 2025.",
+    "review_status": "approved",
+    "generation_metadata": {
+      "model": "claude-opus-4-6",
+      "provider": "anthropic",
+      "prompt_version": "v2_cot",
+      "stage": "claude_code_session",
+      "reasoning": {
+        "pattern_used": "Surprising Connection",
+        "why_interesting": "The sheer absurdity of combining 5 wildly different skills creates wonder — fencing AND swimming AND horse riding? The combination itself is the surprise",
+        "universal_appeal": "The Olympics are globally known; the bizarre combination transcends cultures",
+        "boring_check": "Not name-recall — the answer is a sport most people haven't heard of, and the 5-discipline combination is genuinely surprising"
+      },
+      "self_critique": {
+        "surprise_factor": 9,
+        "universal_appeal": 8,
+        "clever_framing": 8,
+        "educational_value": 9,
+        "clarity": 9,
+        "factual_accuracy": 9,
+        "overall_score": 8.7,
+        "reasoning": "The combination of 5 unrelated disciplines in one event is inherently fascinating. Most people are surprised to learn this sport exists at the Olympics."
+      },
+      "ai_score": 8.7
+    },
+    "id": "q_sports_9bad50789cac"
+  },
+  {
+    "question": "Which of these words does NOT come from a a work of fiction: utopian, quixotic, machiavellian, lilliputian?",
+    "type": "text",
+    "correct_answer": "Machiavellian",
+    "possible_answers": null,
+    "alternative_answers": [
+      "machiavellian"
+    ],
+    "explanation": "Utopian comes from Thomas More's fictional island 'Utopia', quixotic from Don Quixote, and lilliputian from the tiny people of Lilliput in Gulliver's Travels. Machiavellian comes from Niccolò Machiavelli — a real historical person, not a fictional character.",
+    "topic": "Literature",
+    "category": "adults",
+    "difficulty": "medium",
+    "tags": [
+      "odd-one-out",
+      "etymology",
+      "vocabulary",
+      "literature"
+    ],
+    "language_dependent": true,
+    "source": "generated",
+    "source_url": "https://en.wikipedia.org/wiki/Utopia_(book)",
+    "source_excerpt": "Utopia is a work of fiction and socio-political satire by Thomas More, published in 1516 in Latin. The word 'utopia' coined by More has since come to mean an imagined place or state of things in which everything is perfect.",
+    "review_status": "approved",
+    "generation_metadata": {
+      "model": "claude-opus-4-6",
+      "provider": "anthropic",
+      "prompt_version": "v2_cot",
+      "stage": "claude_code_session",
+      "reasoning": {
+        "pattern_used": "Odd One Out",
+        "why_interesting": "All four words feel like they come from literature, but one comes from a real person — the distinction is clean and the reasoning is satisfying",
+        "universal_appeal": "These words are used internationally in many languages; the literary origins are globally interesting",
+        "boring_check": "Logic question with a clean, unambiguous criterion. Teaches etymology in an engaging way."
+      },
+      "self_critique": {
+        "surprise_factor": 8,
+        "universal_appeal": 8,
+        "clever_framing": 9,
+        "educational_value": 9,
+        "clarity": 9,
+        "factual_accuracy": 9,
+        "overall_score": 8.7,
+        "reasoning": "Clean odd-one-out with a single defensible answer. The 'fiction vs. real person' criterion is elegant and educational."
+      },
+      "ai_score": 8.7
+    },
+    "id": "q_literature_610afdb186a1"
+  },
+  {
+    "question": "Which common English word — now used to describe someone intensely studious or obsessive about a subject — first appeared as a made-up creature in a Dr. Seuss children's book in 1950?",
+    "type": "text",
+    "correct_answer": "Nerd",
+    "possible_answers": null,
+    "alternative_answers": [
+      "nerd",
+      "a nerd"
+    ],
+    "topic": "Literature",
+    "category": "adults",
+    "difficulty": "medium",
+    "tags": [
+      "words",
+      "etymology",
+      "dr seuss",
+      "pop culture"
+    ],
+    "language_dependent": true,
+    "source": "generated",
+    "source_url": "https://en.wikipedia.org/wiki/If_I_Ran_the_Zoo",
+    "source_excerpt": "If I Ran the Zoo is a 1950 children's picture book by Dr. Seuss. The book is often credited with the first documented appearance of the word 'nerd', appearing in the lines: 'And then, just to show them, I'll sail to Ka-Troo / And Bring Back an It-Kutch, a Preep, and a Proo, / A Nerkle, a Nerd, and a Seersucker too!'",
+    "review_status": "approved",
+    "generation_metadata": {
+      "model": "claude-opus-4-6",
+      "provider": "anthropic",
+      "prompt_version": "v2_cot",
+      "stage": "claude_code_session",
+      "reasoning": {
+        "pattern_used": "Surprising Connection",
+        "why_interesting": "The word 'nerd' is used globally but nobody expects it to originate from a Dr. Seuss creature — the collision of children's literature and modern slang is delightful",
+        "universal_appeal": "The word 'nerd' has been adopted into many languages; Dr. Seuss is internationally known. Marked language_dependent because it's about an English word.",
+        "boring_check": "The answer (nerd) is a word, not a person's name. The Dr. Seuss origin is genuinely surprising."
+      },
+      "self_critique": {
+        "surprise_factor": 9,
+        "universal_appeal": 8,
+        "clever_framing": 8,
+        "educational_value": 9,
+        "clarity": 9,
+        "factual_accuracy": 8,
+        "overall_score": 8.5,
+        "reasoning": "Surprising origin for a universally known word. Slightly lower accuracy because while the first print appearance is in Dr. Seuss's 'If I Ran the Zoo,' the exact path from creature to slang is debated."
+      },
+      "ai_score": 8.5
+    },
+    "id": "q_literature_4cbb4ac84f60"
+  },
+  {
+    "question": "The sound designers of the original Star Wars created the iconic blaster sound effect by hitting an everyday object with a hammer. What was that object?",
+    "type": "text",
+    "correct_answer": "A guy-wire",
+    "possible_answers": null,
+    "alternative_answers": [
+      "a guy-wire",
+      "guy wire",
+      "a tensioned cable",
+      "a steel cable",
+      "antenna guy wire",
+      "radio tower cable",
+      "a guy-wire on a radio tower"
+    ],
+    "topic": "Movies",
+    "category": "adults",
+    "difficulty": "hard",
+    "tags": [
+      "sound design",
+      "star wars",
+      "filmmaking",
+      "special effects"
+    ],
+    "language_dependent": false,
+    "source": "generated",
+    "source_url": "https://nerdist.com/article/star-wars-blasters-sound-effect-origin-ben-burtt/",
+    "source_excerpt": "The blaster sound effect started with sound designer Ben Burtt hitting a guy-wire on a radio tower with a wrench until he found the right tone.",
+    "review_status": "approved",
+    "generation_metadata": {
+      "model": "claude-opus-4-6",
+      "provider": "anthropic",
+      "prompt_version": "v2_cot",
+      "stage": "claude_code_session",
+      "reasoning": {
+        "pattern_used": "Surprising Connection",
+        "why_interesting": "The most iconic sci-fi sound in cinema came from hitting a mundane steel cable — the contrast between the futuristic result and the low-tech origin is delightful",
+        "universal_appeal": "Star Wars blaster sounds are globally recognized; the 'how they made it' angle fascinates across cultures",
+        "boring_check": "The answer (guy-wire) is a specific object — not a name. The 'wrench hitting a cable' origin is the surprising fact."
+      },
+      "self_critique": {
+        "surprise_factor": 9,
+        "universal_appeal": 8,
+        "clever_framing": 9,
+        "educational_value": 9,
+        "clarity": 8,
+        "factual_accuracy": 9,
+        "overall_score": 8.7,
+        "reasoning": "Ben Burtt's sound design story is well-documented. The contrast between the futuristic sound and its mundane origin is the 'aha!' moment."
+      },
+      "ai_score": 8.7
+    },
+    "id": "q_movies_c3d86b4e6a90"
+  },
+  {
+    "question": "The 'Wilhelm Scream' — a specific recording of a man screaming — has been deliberately reused as an inside joke in hundreds of films and TV shows since 1951. What was happening to the character in the original recording?",
+    "type": "text",
+    "correct_answer": "He was being bitten or dragged by an alligator",
+    "possible_answers": null,
+    "alternative_answers": [
+      "bitten by an alligator",
+      "attacked by an alligator",
+      "dragged by an alligator",
+      "alligator attack",
+      "alligator bite",
+      "an alligator"
+    ],
+    "topic": "Movies",
+    "category": "adults",
+    "difficulty": "hard",
+    "tags": [
+      "sound effects",
+      "film history",
+      "cinema Easter eggs"
+    ],
+    "language_dependent": false,
+    "source": "generated",
+    "source_url": "https://en.wikipedia.org/wiki/Wilhelm_scream",
+    "source_excerpt": "The Wilhelm scream originates from a series of sound effects recorded for the 1951 film Distant Drums. In a scene, soldiers are wading through a swamp and one is bitten and dragged underwater by an alligator.",
+    "review_status": "approved",
+    "generation_metadata": {
+      "model": "claude-opus-4-6",
+      "provider": "anthropic",
+      "prompt_version": "v2_cot",
+      "stage": "claude_code_session",
+      "reasoning": {
+        "pattern_used": "Historical Quirk / Surprising Connection",
+        "why_interesting": "The idea of a single scream being reused for 75+ years as a filmmaker's inside joke is delightful — and the mundane origin (alligator scene in a B-movie) adds to the absurdity",
+        "universal_appeal": "Film buffs worldwide know the Wilhelm Scream; the origin story works across cultures",
+        "boring_check": "The answer is a specific scenario (alligator attack), not a name. The 400+ films statistic and inside-joke angle add narrative."
+      },
+      "self_critique": {
+        "surprise_factor": 8,
+        "universal_appeal": 8,
+        "clever_framing": 8,
+        "educational_value": 8,
+        "clarity": 9,
+        "factual_accuracy": 9,
+        "overall_score": 8.3,
+        "reasoning": "Fun cinema trivia that rewards film enthusiasts while being accessible to general audiences. The 'alligator' answer is memorable and slightly absurd."
+      },
+      "ai_score": 8.3
+    },
+    "id": "q_movies_c37ab6a9af99"
+  },
+  {
+    "question": "What children's toy, made of interlocking plastic bricks, is manufactured with a precision tolerance of just 10 micrometres — more precise than most surgical instruments?",
+    "type": "text",
+    "correct_answer": "LEGO",
+    "possible_answers": null,
+    "alternative_answers": [
+      "lego",
+      "lego bricks",
+      "legos"
+    ],
+    "topic": "Technology",
+    "category": "adults",
+    "difficulty": "easy",
+    "tags": [
+      "manufacturing",
+      "precision",
+      "toys",
+      "engineering"
+    ],
+    "language_dependent": false,
+    "source": "generated",
+    "source_url": "https://en.wikipedia.org/wiki/Lego",
+    "source_excerpt": "The moulds are permitted a tolerance of up to 0.002 millimetres (0.0008 in), to ensure precision fit. Out of every million elements produced, approximately 18 may fail to meet the standard required.",
+    "review_status": "approved",
+    "generation_metadata": {
+      "model": "claude-opus-4-6",
+      "provider": "anthropic",
+      "prompt_version": "v2_cot",
+      "stage": "claude_code_session",
+      "reasoning": {
+        "pattern_used": "Scale Surprise / Hidden Property",
+        "why_interesting": "The contrast between a children's toy and surgical-grade precision is staggering — it explains why LEGO bricks from 1958 still fit perfectly with bricks made today",
+        "universal_appeal": "LEGO is globally beloved; manufacturing precision is universally impressive",
+        "boring_check": "While LEGO is a brand name, the surprise is the precision stat (2 micrometres), not the name itself. The answer is easily guessable, hence easy difficulty."
+      },
+      "self_critique": {
+        "surprise_factor": 9,
+        "universal_appeal": 9,
+        "clever_framing": 8,
+        "educational_value": 9,
+        "clarity": 9,
+        "factual_accuracy": 9,
+        "overall_score": 8.8,
+        "reasoning": "The surgical-instrument comparison elevates a familiar toy into an engineering marvel. Easy because LEGO is guessable from 'interlocking plastic bricks,' but the precision fact is the real takeaway."
+      },
+      "ai_score": 8.8
+    },
+    "id": "q_technology_04a8d4768c60"
+  },
+  {
+    "question": "The Amazon River discharges so much fresh water into the Atlantic Ocean that sailors in the early Age of Exploration used it to top up their fresh water supplies far out to sea. Roughly how far from the river's mouth is the ocean still detectably fresh — about 1 km, 16 km, or over 160 km?",
+    "type": "text",
+    "correct_answer": "Over 160 km",
+    "possible_answers": null,
+    "alternative_answers": [
+      "160 km",
+      "over 100 miles",
+      "more than 160 km",
+      "more than 100 miles",
+      "about 160 kilometres"
+    ],
+    "topic": "Geography",
+    "category": "adults",
+    "difficulty": "hard",
+    "tags": [
+      "amazon",
+      "rivers",
+      "geography",
+      "ocean",
+      "freshwater"
+    ],
+    "language_dependent": false,
+    "source": "generated",
+    "source_url": null,
+    "source_excerpt": "The Amazon's freshwater plume extends about 400 km from the river mouth and is 100-200 km wide, significantly reducing ocean salinity far from shore.",
+    "_verification_note": "Wikipedia states the Amazon's freshwater plume is 'about 400 km long and between 100 and 200 km wide.' The plume actually extends much farther than 160 km, potentially covering 2,500,000 km^2 of ocean surface. However, the question says 'over 160 km' which is technically correct as a lower bound. The issue is that the question's source_excerpt claims the plume extends 'roughly 160 km' when in fact it extends ~400 km. The answer 'over 160 km' is still the best of the three choices and is factually correct, but the source_excerpt understates the actual extent. SUGGESTED FIX: Update source_excerpt to reflect the actual plume extent: 'The Amazon's freshwater plume is about 400 km long and 100-200 km wide, covering an area up to 2,500,000 km^2. It significantly reduces salinity far from the river mouth.'",
+    "review_status": "approved",
+    "generation_metadata": {
+      "model": "claude-opus-4-6",
+      "provider": "anthropic",
+      "prompt_version": "v2_cot",
+      "stage": "claude_code_session",
+      "reasoning": {
+        "pattern_used": "Scale Surprise / Estimation Challenge",
+        "why_interesting": "The idea of fresh drinking water in the middle of the ocean — far from land — captures the scale of the Amazon's discharge",
+        "universal_appeal": "The Amazon is one of the world's most famous rivers. Ocean salinity is a universal concept.",
+        "boring_check": "Three options spanning 160x range. The correct answer (160 km+) is maximally surprising — sailors could find fresh water far out of sight of land."
+      },
+      "self_critique": {
+        "surprise_factor": 8,
+        "universal_appeal": 8,
+        "clever_framing": 8,
+        "educational_value": 8,
+        "answerability": 8,
+        "overall_score": 8.0,
+        "reasoning": "Player can reason: Amazon is enormous; 20% of global river discharge → the plume must be vast. The '160 km' answer demonstrates that the Amazon essentially creates a freshwater zone in the open ocean."
+      },
+      "ai_score": 8.0
+    },
+    "id": "q_geography_3f6cfa4e7296"
+  },
+  {
+    "question": "The Tour de France is one of sport's most gruelling endurance events. Riders cover roughly 3,400 km over three weeks. That's closest to the straight-line distance from Paris to which city: Rome, Moscow, or Cairo?",
+    "type": "text",
+    "correct_answer": "Cairo",
+    "possible_answers": null,
+    "alternative_answers": [
+      "cairo",
+      "Paris to Cairo"
+    ],
+    "topic": "Sports",
+    "category": "adults",
+    "difficulty": "medium",
+    "tags": [
+      "cycling",
+      "tour-de-france",
+      "endurance",
+      "scale",
+      "sports"
+    ],
+    "language_dependent": false,
+    "source": "generated",
+    "source_url": null,
+    "source_excerpt": null,
+    "_verification_note": "The Tour de France covers approximately 3,400 km (varies yearly from ~3,300-3,600 km). The straight-line distance from Paris to New York is approximately 5,840 km. The Tour is only about 58% of the Paris-to-New York distance, not 'roughly equal.' The length of France from north to south is ~950 km. The English Channel is ~34 km wide. While 'Paris to New York' is the closest of the three options in order of magnitude, saying the Tour is 'roughly equal' to Paris-New York is misleading when it is nearly 2,400 km short. The question's source_excerpt acknowledges this discrepancy ('roughly equivalent in distance to cycling 60% of the way across the Atlantic'). SUGGESTED FIX: The correct answer should be reconsidered. The Tour (~3,400 km) is closer to ~3.6x the length of France (~950 km) than to Paris-New York (~5,840 km). However, none of the three options is a great match. Consider rephrasing the question or changing the comparison options. One fix: replace 'Paris to New York' with 'Paris to Moscow' (~2,500 km straight line) or 'London to Cairo' (~3,500 km), or explicitly state 'closest to' rather than 'roughly equal.'",
+    "review_status": "approved",
+    "generation_metadata": {
+      "model": "claude-opus-4-6",
+      "provider": "anthropic",
+      "prompt_version": "v2_cot",
+      "stage": "claude_code_session",
+      "reasoning": {
+        "pattern_used": "Scale Surprise / Estimation Challenge",
+        "why_interesting": "Comparing the Tour de France's distance to Paris-New York makes the athletic achievement viscerally understandable",
+        "universal_appeal": "The Tour de France and the Paris-New York transatlantic journey are universally known reference points.",
+        "boring_check": "Three wildly different options (English Channel ~50km, France length ~900km, Paris-NY ~5,840km). Actually, ~3,400 km sits between France's length and Paris-NY. Let me reconsider: Tour = 3,400 km, France length = 900 km, Paris-NY = 5,840 km. So the Tour is closer to France length × 4... actually closest to Paris-NY in spirit if not exactly. The player would pick Paris-NY as the most dramatic comparison. This is the intended answer, but the exact comparison is 'roughly equivalent to riding from Paris to New York'."
+      },
+      "self_critique": {
+        "surprise_factor": 8,
+        "universal_appeal": 9,
+        "clever_framing": 8,
+        "educational_value": 8,
+        "answerability": 8,
+        "overall_score": 8.2,
+        "reasoning": "Player can reason: English Channel = tiny, France length = several hundred km, Paris-NY = transatlantic. The Tour must be very long → closest to Paris-NY. The comparison is memorable and makes the athletes' achievement feel truly epic."
+      },
+      "ai_score": 8.2
+    },
+    "id": "q_sports_b686e3383bc6"
+  },
+  {
+    "question": "The internet traces its origins to a US Department of Defense research project from the late 1960s that linked university and research computers. What was the name of this predecessor to the internet?",
+    "type": "text",
+    "correct_answer": "ARPANET",
+    "possible_answers": null,
+    "alternative_answers": [
+      "arpanet",
+      "the arpanet",
+      "ARPA net"
+    ],
+    "topic": "Technology",
+    "category": "adults",
+    "difficulty": "easy",
+    "tags": [
+      "internet",
+      "arpanet",
+      "cold-war",
+      "technology-history",
+      "networking"
+    ],
+    "language_dependent": false,
+    "source": "generated",
+    "source_url": null,
+    "source_excerpt": null,
+    "_verification_note": "NEEDS FIX: The answer 'ARPANET' is correct, but the question's premise is factually misleading. ARPANET was NOT designed to survive nuclear war — that was Paul Baran's separate RAND work. ARPANET was created to enable resource sharing between remote computers. Rephrase the question to remove the nuclear war claim.",
+    "review_status": "approved",
+    "generation_metadata": {
+      "model": "claude-opus-4-6",
+      "provider": "anthropic",
+      "prompt_version": "v2_cot",
+      "stage": "claude_code_session",
+      "reasoning": {
+        "pattern_used": "Historical Quirk",
+        "why_interesting": "The internet — used daily for cat videos and social media — was designed to survive nuclear war",
+        "universal_appeal": "The internet is the most universally used technology. ARPANET's military origin is globally known.",
+        "boring_check": "The nuclear war context makes this more than just 'what was the internet called before' — it reframes the internet's origin story."
+      },
+      "self_critique": {
+        "surprise_factor": 7,
+        "universal_appeal": 10,
+        "clever_framing": 7,
+        "educational_value": 8,
+        "answerability": 7,
+        "overall_score": 7.8,
+        "reasoning": "ARPANET is fairly well-known among tech-literate audiences. Better framed as a surprise about the internet's military origins than as a recall question."
+      },
+      "ai_score": 7.8
+    },
+    "id": "q_technology_0ed9cdbf004f"
+  },
+  {
+    "question": "Pixar's 1995 film Toy Story was the first feature-length computer-animated film. The rendering software Pixar developed was also used for visual effects in earlier live-action films. What is this software called?",
+    "type": "text",
+    "correct_answer": "RenderMan",
+    "possible_answers": null,
+    "alternative_answers": [
+      "Pixar RenderMan",
+      "PhotoRealistic RenderMan",
+      "PRMan"
+    ],
+    "topic": "Movies",
+    "category": "adults",
+    "difficulty": "hard",
+    "tags": [
+      "pixar",
+      "toy-story",
+      "animation",
+      "computer-graphics",
+      "film-history"
+    ],
+    "language_dependent": false,
+    "source": "generated",
+    "source_url": null,
+    "source_excerpt": null,
+    "_verification_note": "NEEDS FIX: The answer 'Zero' is factually incorrect. RenderMan was used for visual effects in many feature films before Toy Story, including Terminator 2 (1991), Jurassic Park (1993), Beauty and the Beast, and The Lion King. What was new about Toy Story was making an ENTIRE feature film with computer animation. The question/answer conflates 'used in feature films' with 'used to make an entire feature film.'",
+    "review_status": "approved",
+    "generation_metadata": {
+      "model": "claude-opus-4-6",
+      "provider": "anthropic",
+      "prompt_version": "v2_cot",
+      "stage": "claude_code_session",
+      "reasoning": {
+        "pattern_used": "Scale Surprise / Historical Quirk",
+        "why_interesting": "The film that created the modern animation industry was a complete leap into the unknown — there was no proven template",
+        "universal_appeal": "Toy Story is one of the most beloved films globally. CGI animation is universally understood.",
+        "boring_check": "The 'how many films before?' framing makes the player estimate then discover the answer is zero."
+      },
+      "self_critique": {
+        "surprise_factor": 7,
+        "universal_appeal": 9,
+        "clever_framing": 7,
+        "educational_value": 7,
+        "answerability": 7,
+        "overall_score": 7.4,
+        "reasoning": "Interesting but the answer (zero) is guessable from context. Not the strongest question. Replacing with better candidates."
+      },
+      "ai_score": 7.4
+    },
+    "id": "q_movies_9a0b60367c44"
+  },
+  {
+    "question": "A persistent conspiracy theory claims that the director of 2001: A Space Odyssey was recruited by NASA to fake a famous historical event in a TV studio. Who was the filmmaker, and what event do conspiracy theorists claim he faked?",
+    "type": "text",
+    "correct_answer": "Stanley Kubrick — the Apollo 11 Moon landing",
+    "possible_answers": null,
+    "alternative_answers": [
+      "Kubrick",
+      "Stanley Kubrick",
+      "the Moon landing",
+      "Apollo 11"
+    ],
+    "topic": "Movies",
+    "category": "adults",
+    "difficulty": "medium",
+    "tags": [
+      "kubrick",
+      "moon-landing",
+      "conspiracy",
+      "2001-space-odyssey",
+      "film-history"
+    ],
+    "language_dependent": false,
+    "source": "generated",
+    "source_url": null,
+    "source_excerpt": null,
+    "_verification_note": "NEEDS FIX: The answer (Moon landing conspiracy) is correct, but the question falsely states Kubrick 'became convinced' of the conspiracy about himself. There is NO evidence Kubrick believed this. The conspiracy theory is that OTHERS believe Kubrick filmed the Moon landing. Reframe to: 'A persistent conspiracy theory claims Kubrick was recruited by NASA to fake a famous event based on his 2001 work. What event?'",
+    "review_status": "approved",
+    "generation_metadata": {
+      "model": "claude-opus-4-6",
+      "provider": "anthropic",
+      "prompt_version": "v2_cot",
+      "stage": "claude_code_session",
+      "reasoning": {
+        "pattern_used": "Surprising Connection / Historical Quirk",
+        "why_interesting": "The intersection of one of cinema's greatest directors with one of history's most famous conspiracy theories makes for an engaging question",
+        "universal_appeal": "Kubrick, the Moon landing, and conspiracy theories are globally known. The connection between them is universally surprising.",
+        "boring_check": "The framing builds intrigue ('convinced by a strange rumour') before asking what it was. Not a straightforward 'what film did Kubrick direct?' question."
+      },
+      "self_critique": {
+        "surprise_factor": 8,
+        "universal_appeal": 9,
+        "clever_framing": 8,
+        "educational_value": 7,
+        "answerability": 8,
+        "overall_score": 8.0,
+        "reasoning": "The Kubrick-Moon landing conspiracy theory connection is both well-known enough to be gettable and surprising enough to generate discussion. The question acknowledges it's a conspiracy theory (false)."
+      },
+      "ai_score": 8.0
+    },
+    "id": "q_movies_a5e8822b90c5"
+  },
+  {
+    "question": "A popular theory says the title of George Orwell's dystopian novel '1984' was created by a simple transformation of 1948, the year he finished writing. What transformation does the theory suggest?",
+    "type": "text",
+    "correct_answer": "He reversed the last two digits: 1948 became 1984",
+    "possible_answers": null,
+    "alternative_answers": [
+      "he reversed 48 to get 84",
+      "swapped the last two digits",
+      "flipped the digits of 48",
+      "reversed 48 to 84"
+    ],
+    "topic": "Literature",
+    "category": "adults",
+    "difficulty": "medium",
+    "tags": [
+      "george-orwell",
+      "1984",
+      "literature",
+      "dystopia",
+      "title"
+    ],
+    "language_dependent": false,
+    "source": "generated",
+    "source_url": null,
+    "source_excerpt": null,
+    "_verification_note": "NEEDS FIX: The digit-reversal theory (1948 -> 1984) is widely repeated but NOT confirmed by Orwell. Scholar Dorian Lynskey has doubted this origin. Orwell never confirmed this explanation. The question presents an unconfirmed theory as established fact. Rephrase to acknowledge the uncertainty.",
+    "review_status": "approved",
+    "generation_metadata": {
+      "model": "claude-opus-4-6",
+      "provider": "anthropic",
+      "prompt_version": "v2_cot",
+      "stage": "claude_code_session",
+      "reasoning": {
+        "pattern_used": "Reverse Engineer / Hidden Property",
+        "why_interesting": "One of the most famous titles in all of literature was likely created by a simple two-digit reversal — connecting the author's present (1948) to his dark future vision (1984)",
+        "universal_appeal": "1984 is among the most widely read novels globally. The simple digit-swap is universally satisfying.",
+        "boring_check": "The 'simple transformation' hint makes this solvable — player can try different operations on 1948 and discover the reversal."
+      },
+      "self_critique": {
+        "surprise_factor": 9,
+        "universal_appeal": 10,
+        "clever_framing": 9,
+        "educational_value": 8,
+        "answerability": 9,
+        "overall_score": 8.8,
+        "reasoning": "The question gives enough of a clue ('simple transformation') that the player can puzzle it out: rearrange digits of 1948 → 1984. The reveal feels like solving a puzzle rather than remembering a fact."
+      },
+      "ai_score": 8.8
+    },
+    "id": "q_literature_f1fdebdb496b"
+  },
+  {
+    "question": "A widely cited 2003 genetic study suggested that roughly 1 in every 200 men alive today could be a direct descendant of one historical conqueror. Who is this conqueror?",
+    "type": "text",
+    "correct_answer": "Genghis Khan",
+    "possible_answers": null,
+    "alternative_answers": [
+      "genghis khan",
+      "Chinggis Khan",
+      "Temujin",
+      "Genghis"
+    ],
+    "topic": "History",
+    "category": "adults",
+    "difficulty": "medium",
+    "tags": [
+      "genetics",
+      "mongol-empire",
+      "genghis-khan",
+      "dna",
+      "population"
+    ],
+    "language_dependent": false,
+    "source": "generated",
+    "source_url": null,
+    "source_excerpt": null,
+    "_verification_note": "The 2003 Zerjal et al. study identified the Y-chromosomal lineage but a 2017 study cast doubt on the specific Genghis Khan attribution. The question presents disputed research as established fact. The '1 in 200' figure refers to men in Central Asia, not globally. Consider adding qualifiers or removing.",
+    "review_status": "approved",
+    "generation_metadata": {
+      "model": "claude-opus-4-6",
+      "provider": "anthropic",
+      "prompt_version": "v2_cot",
+      "stage": "claude_code_session",
+      "reasoning": {
+        "pattern_used": "Scale Surprise / Historical Quirk",
+        "why_interesting": "The intersection of modern genetics and medieval conquest creates a powerful narrative. One man's empire-building left a genetic legacy that persists 800 years later in 16 million living descendants.",
+        "universal_appeal": "Genghis Khan is one of the most universally recognised historical figures. DNA and ancestry are globally interesting topics.",
+        "boring_check": "passes"
+      },
+      "self_critique": {
+        "surprise_factor": 9,
+        "universal_appeal": 9,
+        "clever_framing": 9,
+        "educational_value": 9,
+        "clarity": 9,
+        "factual_accuracy": 8,
+        "overall_score": 8.8,
+        "reasoning": "Players can reason: 13th century, vast male-line descendants, huge empire — Genghis Khan is the logical guess. The 2003 genetic study by Zerjal et al. is widely cited though somewhat debated in exact numbers. The core finding is well-established."
+      },
+      "ai_score": 8.8
+    },
+    "id": "q_history_840c0b14f9c4"
+  },
+  {
+    "question": "One country on Earth has over 840 languages spoken within its borders — more than any other nation. Is it Nigeria, the Democratic Republic of Congo, or Papua New Guinea?",
+    "type": "text",
+    "correct_answer": "Papua New Guinea — which is actually not in Africa but in Oceania, with over 840 languages",
+    "possible_answers": null,
+    "alternative_answers": [
+      "Papua New Guinea",
+      "PNG",
+      "papua new guinea",
+      "trick question - Papua New Guinea is not in Africa"
+    ],
+    "topic": "Geography",
+    "category": "adults",
+    "difficulty": "hard",
+    "tags": [
+      "languages",
+      "diversity",
+      "papua-new-guinea",
+      "trick-question",
+      "linguistics"
+    ],
+    "language_dependent": false,
+    "source": "generated",
+    "source_url": null,
+    "source_excerpt": null,
+    "_verification_note": "While the factual content is correct (PNG has 840+ languages, is in Oceania not Africa), the question's premise 'There is a country in Africa where over 800 languages are spoken' is factually false and misleading. Consider rephrasing to remove the false premise while preserving the surprise element.",
+    "review_status": "approved",
+    "generation_metadata": {
+      "model": "claude-opus-4-6",
+      "provider": "anthropic",
+      "prompt_version": "v2_cot",
+      "stage": "claude_code_session",
+      "reasoning": {
+        "pattern_used": "Misconception Buster",
+        "why_interesting": "The question sets up the assumption that the answer must be African, then reveals the trick — PNG isn't in Africa at all, but is the actual answer. Double surprise: the country isn't where you expect, and Africa doesn't hold the record.",
+        "universal_appeal": "Languages, countries, and continents are universally understood.",
+        "boring_check": "The misdirection is the clever framing here — the question says 'a country in Africa' then includes PNG as an option. Attentive listeners catch the trick. Passes all checks."
+      },
+      "self_critique": {
+        "surprise_factor": 9,
+        "universal_appeal": 9,
+        "clever_framing": 9,
+        "educational_value": 9,
+        "clarity": 8,
+        "factual_accuracy": 10,
+        "overall_score": 9.0,
+        "reasoning": "Clever misdirection question that works on multiple levels. Players who catch that PNG isn't in Africa get a satisfying 'gotcha' moment. Those who don't still learn about linguistic diversity. Minor clarity concern: some players might feel tricked, but that's the lateral thinking element."
+      },
+      "ai_score": 9.0
+    },
+    "id": "q_geography_9a76ce3bec06"
+  },
+  {
+    "question": "MGM executives nearly rejected 'Over the Rainbow' from The Wizard of Oz, cutting it from the film twice before it was reinstated. The song went on to win the Academy Award and be named the greatest movie song of all time. Who famously performed it in the 1939 film?",
+    "type": "text",
+    "correct_answer": "Judy Garland",
+    "possible_answers": null,
+    "alternative_answers": [
+      "judy garland",
+      "Garland"
+    ],
+    "topic": "Movies",
+    "category": "adults",
+    "difficulty": "easy",
+    "tags": [
+      "wizard-of-oz",
+      "judy-garland",
+      "over-the-rainbow",
+      "oscars",
+      "film-music"
+    ],
+    "language_dependent": false,
+    "source": "generated",
+    "source_url": null,
+    "source_excerpt": null,
+    "_verification_note": "NEEDS FIX: The question incorrectly states 'Warner Bros.' nearly rejected the song. The Wizard of Oz was produced by MGM (Metro-Goldwyn-Mayer), not Warner Bros. It was MGM executives who cut the song multiple times. The answer (Judy Garland) is correct. Change 'Warner Bros.' to 'MGM executives' or 'Studio executives'.",
+    "review_status": "approved",
+    "generation_metadata": {
+      "model": "claude-opus-4-6",
+      "provider": "anthropic",
+      "prompt_version": "v2_cot",
+      "stage": "claude_code_session",
+      "reasoning": {
+        "pattern_used": "Historical Quirk / Counter-intuitive Truth",
+        "why_interesting": "One of the most beloved songs in cinema history was nearly cut from the film — twice. The near-miss adds dramatic irony.",
+        "universal_appeal": "Over the Rainbow is one of the most globally recognisable songs. Judy Garland is an international icon.",
+        "boring_check": "passes"
+      },
+      "self_critique": {
+        "surprise_factor": 8,
+        "universal_appeal": 9,
+        "clever_framing": 8,
+        "educational_value": 8,
+        "clarity": 9,
+        "factual_accuracy": 10,
+        "overall_score": 8.5,
+        "reasoning": "The near-cut narrative adds a compelling hook. The answer (Judy Garland) is well-known enough for an easy question, but the context teaches something surprising about Hollywood decision-making."
+      },
+      "ai_score": 8.5
+    },
+    "id": "q_movies_335eb6d8ae56"
+  },
+  {
+    "id": "q_imported_488300b2f044",
+    "question": "Which famous scientist’s surname is also an SI unit of force in physics?",
+    "type": "text",
+    "correct_answer": "Newton (Isaac Newton)",
+    "alternative_answers": [],
+    "possible_answers": null,
+    "topic": "General Knowledge",
+    "category": "adults",
+    "difficulty": "easy",
+    "tags": [],
+    "source": "gpt4o",
+    "created_by": null,
+    "media_url": null,
+    "media_duration_seconds": null,
+    "explanation": null,
+    "source_url": null,
+    "source_excerpt": null,
+    "review_status": "approved"
+  },
+  {
+    "question": "In the ancient Greek Olympics, athletes competed completely naked. What substance did they rub all over their bodies before competing?",
+    "type": "text",
+    "correct_answer": "Olive oil",
+    "possible_answers": null,
+    "alternative_answers": [
+      "olive oil",
+      "oil"
+    ],
+    "topic": "Sports",
+    "category": "adults",
+    "difficulty": "medium",
+    "tags": [
+      "ancient olympics",
+      "ancient greece",
+      "sports history"
+    ],
+    "language_dependent": false,
+    "source": "generated",
+    "source_url": null,
+    "source_excerpt": null,
+    "review_status": "approved",
+    "generation_metadata": {
+      "model": "claude-opus-4-6",
+      "provider": "anthropic",
+      "prompt_version": "v2_cot",
+      "stage": "claude_code_session",
+      "reasoning": {
+        "pattern_used": "Historical Quirk",
+        "why_interesting": "The image of oiled-up naked athletes at the Olympics is vivid and memorable — it's a far cry from modern sporting events and the answer (olive oil) is both surprising and logical",
+        "universal_appeal": "The Olympics are globally known; ancient customs fascinate across cultures",
+        "boring_check": "The answer (olive oil) is a common kitchen item used in an unexpected context — not a name-recall question"
+      },
+      "self_critique": {
+        "surprise_factor": 8,
+        "universal_appeal": 9,
+        "clever_framing": 8,
+        "educational_value": 9,
+        "clarity": 9,
+        "factual_accuracy": 9,
+        "overall_score": 8.7,
+        "reasoning": "The naked-plus-olive-oil detail is vividly memorable. Easy to verify historically and the answer creates a great visual/conversational moment."
+      },
+      "ai_score": 8.7
+    },
+    "id": "q_sports_8938f6d262f4"
+  },
+  {
+    "question": "Your smartphone has more computing power than the computers that guided Apollo 11 to the Moon in 1969. Roughly how many times more powerful is a modern smartphone than the Apollo guidance computer — 1,000 times, 100,000 times, or 100 million times?",
+    "type": "text",
+    "correct_answer": "About 100 million times",
+    "possible_answers": null,
+    "alternative_answers": [
+      "100 million times",
+      "a hundred million times"
+    ],
+    "topic": "Technology",
+    "category": "adults",
+    "difficulty": "medium",
+    "tags": [
+      "computing power",
+      "space exploration",
+      "apollo",
+      "smartphones"
+    ],
+    "language_dependent": false,
+    "source": "generated",
+    "source_url": null,
+    "source_excerpt": null,
+    "review_status": "approved",
+    "generation_metadata": {
+      "model": "claude-opus-4-6",
+      "provider": "anthropic",
+      "prompt_version": "v2_cot",
+      "stage": "claude_code_session",
+      "reasoning": {
+        "pattern_used": "Scale Surprise",
+        "why_interesting": "The contrast between the most ambitious human achievement (Moon landing) and the device in everyone's pocket creates a powerful sense of technological progress",
+        "universal_appeal": "Smartphones and the Moon landing are both globally understood reference points",
+        "boring_check": "The answer is a surprising scale comparison, not a name. The multiple-choice format helps calibrate the surprise."
+      },
+      "self_critique": {
+        "surprise_factor": 8,
+        "universal_appeal": 9,
+        "clever_framing": 8,
+        "educational_value": 9,
+        "clarity": 9,
+        "factual_accuracy": 8,
+        "overall_score": 8.5,
+        "reasoning": "Well-known comparison but still effective — the specific magnitude (100,000x) is the educational takeaway. Slightly lower scores because the general concept is increasingly well-known."
+      },
+      "ai_score": 8.5
+    },
+    "id": "q_technology_478f9b20a241"
+  }
+]

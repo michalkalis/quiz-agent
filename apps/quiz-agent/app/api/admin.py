@@ -109,8 +109,8 @@ class QuestionStats(BaseModel):
 @router.post("/questions/import", response_model=ImportQuestionsResponse)
 @limiter.limit("5/minute")
 async def import_questions(
-    http_request: Request,
-    request: ImportQuestionsRequest,
+    request: Request,
+    import_request: ImportQuestionsRequest,
     _: None = Header(None, dependencies=[verify_admin_key])
 ):
     """Import questions into the database.
@@ -156,10 +156,10 @@ async def import_questions(
     skipped_ids = []
     failed_ids = []
 
-    for q_data in request.questions:
+    for q_data in import_request.questions:
         try:
             # Check if question already exists (by ID)
-            if request.skip_duplicates:
+            if import_request.skip_duplicates:
                 existing = chroma_client.get_question(q_data.id)
                 if existing:
                     skipped += 1
@@ -193,7 +193,7 @@ async def import_questions(
             )
 
             # Check for semantic duplicates unless forced
-            if not request.force:
+            if not import_request.force:
                 duplicates = chroma_client.find_duplicates(question.question, threshold=0.85)
                 if duplicates:
                     # Question text is very similar to existing question

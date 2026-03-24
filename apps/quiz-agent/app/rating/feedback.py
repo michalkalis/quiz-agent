@@ -7,10 +7,6 @@ import logging
 from typing import Optional, List, Tuple
 from datetime import datetime
 
-import sys
-import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../../..", "packages/shared"))
-
 logger = logging.getLogger(__name__)
 
 from quiz_shared.database.chroma_client import ChromaDBClient

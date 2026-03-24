@@ -9,10 +9,6 @@ from typing import List, Optional
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage
 
-import sys
-import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../../..", "packages/shared"))
-
 from quiz_shared.models.question import Question
 from .prompt_builder import PromptBuilder
 
@@ -140,10 +136,10 @@ class QuestionGenerator:
             # Convert each question to Question object
             for q_data in questions_data:
                 try:
-                    question = self._dict_to_question(
+                    question = Question.from_dict(
                         q_data,
                         default_difficulty=default_difficulty,
-                        default_category=default_category
+                        default_category=default_category,
                     )
                     questions.append(question)
                 except Exception as e:
@@ -157,53 +153,6 @@ class QuestionGenerator:
             print(f"Error parsing response: {e}")
 
         return questions
-
-    def _dict_to_question(
-        self,
-        data: dict,
-        default_difficulty: str = "medium",
-        default_category: str = "general"
-    ) -> Question:
-        """Convert dict from LLM to Question object.
-
-        Args:
-            data: Question data from LLM
-            default_difficulty: Default difficulty
-            default_category: Default category
-
-        Returns:
-            Question object
-        """
-        # Generate unique ID
-        question_id = f"temp_{uuid.uuid4().hex[:8]}"
-
-        # Extract fields with defaults
-        question_text = data.get("question", "")
-        question_type = data.get("type", "text")
-        correct_answer = data.get("correct_answer", "")
-        possible_answers = data.get("possible_answers")
-        alternative_answers = data.get("alternative_answers", [])
-        topic = data.get("topic", "General")
-        category = data.get("category", default_category)
-        difficulty = data.get("difficulty", default_difficulty)
-        tags = data.get("tags", [])
-
-        return Question(
-            id=question_id,
-            question=question_text,
-            type=question_type,
-            possible_answers=possible_answers,
-            correct_answer=correct_answer,
-            alternative_answers=alternative_answers,
-            topic=topic,
-            category=category,
-            difficulty=difficulty,
-            tags=tags,
-            language_dependent=data.get("language_dependent", False),
-            media_url=data.get("media_url"),
-            image_subtype=data.get("image_subtype"),
-            source="generated"
-        )
 
     def export_for_chatgpt(
         self,

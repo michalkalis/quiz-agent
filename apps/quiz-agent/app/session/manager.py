@@ -8,10 +8,6 @@ from datetime import datetime, timedelta, timezone
 from typing import Dict, Optional
 from threading import Lock
 
-import sys
-import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../../..", "packages/shared"))
-
 logger = logging.getLogger(__name__)
 
 from quiz_shared.models.session import QuizSession
@@ -23,22 +19,73 @@ class SessionManager:
 
     Features:
     - In-memory storage (fast, simple)
+    - Write-through SQLite persistence (survives restarts)
     - TTL-based expiration (30 min default)
     - Automatic cleanup of expired sessions
     - Thread-safe operations
     - Multiplayer-ready (supports participants)
     """
 
-    def __init__(self, cleanup_interval: int = 300):
+    def __init__(self, cleanup_interval: int = 300, sql_client=None):
         """Initialize session manager.
 
         Args:
             cleanup_interval: Seconds between cleanup runs (default: 5 min)
+            sql_client: Optional SQLClient for write-through persistence
         """
         self._sessions: Dict[str, QuizSession] = {}
         self._lock = Lock()
         self._cleanup_interval = cleanup_interval
         self._cleanup_task: Optional[asyncio.Task] = None
+        self._sql_client = sql_client
+
+    def _persist(self, session: QuizSession) -> None:
+        """Write session to SQLite (best-effort, non-blocking)."""
+        if self._sql_client:
+            try:
+                self._sql_client.save_session(
+                    session.session_id, session.model_dump_json()
+                )
+            except Exception as e:
+                logger.warning("Failed to persist session %s: %s", session.session_id, e)
+
+    def _deactivate(self, session_id: str) -> None:
+        """Mark session inactive in SQLite (best-effort)."""
+        if self._sql_client:
+            try:
+                self._sql_client.deactivate_session(session_id)
+            except Exception as e:
+                logger.warning("Failed to deactivate session %s: %s", session_id, e)
+
+    def reload_active_sessions(self) -> int:
+        """Reload active sessions from SQLite on startup.
+
+        Discards sessions that have already expired.
+
+        Returns:
+            Number of sessions reloaded
+        """
+        if not self._sql_client:
+            return 0
+
+        now = datetime.now(timezone.utc)
+        rows = self._sql_client.load_active_sessions()
+        reloaded = 0
+        for session_id, data_json in rows:
+            try:
+                session = QuizSession.model_validate_json(data_json)
+                if session.expires_at >= now:
+                    with self._lock:
+                        self._sessions[session_id] = session
+                    reloaded += 1
+                else:
+                    self._sql_client.deactivate_session(session_id)
+            except Exception as e:
+                logger.warning("Failed to reload session %s: %s", session_id, e)
+
+        if reloaded:
+            logger.info("Reloaded %d active sessions from database", reloaded)
+        return reloaded
 
     async def start_cleanup(self):
         """Start background cleanup task."""
@@ -78,6 +125,8 @@ class SessionManager:
                 del self._sessions[sid]
             if expired:
                 logger.info("Cleaned up %d expired sessions", len(expired))
+        for sid in expired:
+            self._deactivate(sid)
 
     def create_session(
         self,
@@ -128,6 +177,7 @@ class SessionManager:
         with self._lock:
             self._sessions[session_id] = session
 
+        self._persist(session)
         return session
 
     def get_session(self, session_id: str) -> Optional[QuizSession]:
@@ -170,6 +220,7 @@ class SessionManager:
         with self._lock:
             self._sessions[session.session_id] = session
 
+        self._persist(session)
         return True
 
     def delete_session(self, session_id: str) -> bool:
@@ -184,6 +235,7 @@ class SessionManager:
         with self._lock:
             if session_id in self._sessions:
                 del self._sessions[session_id]
+                self._deactivate(session_id)
                 return True
             return False
 

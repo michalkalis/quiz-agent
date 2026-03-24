@@ -7,8 +7,7 @@ import json
 import logging
 from typing import Dict, List, Optional, Any
 from difflib import SequenceMatcher
-from langchain_openai import ChatOpenAI
-from langchain_core.messages import HumanMessage, SystemMessage
+from openai import AsyncOpenAI
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +40,9 @@ class InputParser:
             model: OpenAI model for intent classification
             temperature: Lower temperature for more deterministic parsing
         """
-        self.llm = ChatOpenAI(model=model, temperature=temperature)
+        self.client = AsyncOpenAI()
+        self.model = model
+        self.temperature = temperature
 
     async def parse(
         self,
@@ -111,14 +112,18 @@ class InputParser:
         # Use LLM for complex input
         prompt = self._create_classifier_prompt(user_input, current_question)
 
-        response = await self.llm.ainvoke([
-            SystemMessage(content="You classify quiz user inputs into intents. Always respond with valid JSON."),
-            HumanMessage(content=prompt)
-        ])
+        response = await self.client.chat.completions.create(
+            model=self.model,
+            temperature=self.temperature,
+            messages=[
+                {"role": "system", "content": "You classify quiz user inputs into intents. Always respond with valid JSON."},
+                {"role": "user", "content": prompt},
+            ],
+        )
 
         # Parse JSON response
         try:
-            content = response.content
+            content = response.choices[0].message.content
             start = content.find('{')
             end = content.rfind('}') + 1
 

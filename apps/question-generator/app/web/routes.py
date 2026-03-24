@@ -8,9 +8,6 @@ from fastapi.templating import Jinja2Templates
 import os
 from datetime import datetime
 
-import sys
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../../..", "packages/shared"))
-
 from quiz_shared.models.question import Question
 from ..generation.storage import QuestionStorage
 
@@ -103,7 +100,7 @@ async def import_questions(
         # Convert to Question objects
         questions = []
         for q_data in questions_data:
-            question = _dict_to_question(q_data, source=source)
+            question = Question.from_dict(q_data, source=source)
             questions.append(question)
 
         # Import questions
@@ -272,50 +269,3 @@ async def stats_page(request: Request):
     })
 
 
-# Helper functions
-
-def _dict_to_question(data: dict, source: str = "imported") -> Question:
-    """Convert dict to Question object."""
-    import uuid
-
-    # Extract reasoning and self_critique if present (from V2 CoT prompt)
-    reasoning = data.get("reasoning", {})
-    self_critique = data.get("self_critique", {})
-
-    # Build generation metadata if available
-    generation_metadata = {}
-    if reasoning:
-        generation_metadata["reasoning"] = reasoning
-    if self_critique:
-        generation_metadata["self_critique"] = self_critique
-        generation_metadata["ai_score"] = self_critique.get("overall_score", 0)
-
-    # Build quality ratings from self_critique if available
-    quality_ratings = None
-    if self_critique:
-        quality_ratings = {
-            "surprise_factor": self_critique.get("surprise_factor", 0),
-            "universal_appeal": self_critique.get("universal_appeal", 0),
-            "clever_framing": self_critique.get("clever_framing", 0),
-            "educational_value": self_critique.get("educational_value", 0),
-        }
-
-    return Question(
-        id=f"temp_{uuid.uuid4().hex[:8]}",
-        question=data.get("question", ""),
-        type=data.get("type", "text"),
-        correct_answer=data.get("correct_answer", ""),
-        possible_answers=data.get("possible_answers"),
-        alternative_answers=data.get("alternative_answers", []),
-        topic=data.get("topic", "General"),
-        category=data.get("category", "general"),
-        difficulty=data.get("difficulty", "medium"),
-        tags=data.get("tags", []),
-        language_dependent=data.get("language_dependent", False),
-        media_url=data.get("media_url"),
-        image_subtype=data.get("image_subtype"),
-        source=source,
-        review_status="pending_review",
-        quality_ratings=quality_ratings,
-        generation_metadata=generation_metadata if generation_metadata else None
-    )

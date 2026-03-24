@@ -1,5 +1,6 @@
 """Question model with support for multiple question types."""
 
+import uuid
 from datetime import datetime
 from typing import Dict, List, Optional, Union, Any
 from pydantic import BaseModel, Field
@@ -169,6 +170,95 @@ class Question(BaseModel):
         if self.generation_metadata and "ai_score" in self.generation_metadata:
             return self.generation_metadata["ai_score"]
         return None
+
+    @classmethod
+    def from_dict(
+        cls,
+        data: Dict[str, Any],
+        source: str = "generated",
+        default_difficulty: str = "medium",
+        default_category: str = "general",
+    ) -> "Question":
+        """Create a Question from a dict (e.g. LLM output or JSON import).
+
+        Handles:
+        - Basic fields with sensible defaults
+        - V2 CoT metadata (reasoning, self_critique, quality_ratings)
+        - Flattened self_critique (GPT-4o sometimes puts dimensions at top level)
+
+        Args:
+            data: Question data dict
+            source: Source identifier (generated, imported, manual)
+            default_difficulty: Fallback difficulty
+            default_category: Fallback category
+        """
+        question_id = data.get("id", f"temp_{uuid.uuid4().hex[:8]}")
+
+        # Extract V2 CoT fields
+        reasoning = data.get("reasoning", {})
+        self_critique = data.get("self_critique", {})
+
+        # Handle flattened self_critique (GPT-4o edge case)
+        if not self_critique and "surprise_factor" in data:
+            self_critique = {
+                k: data[k]
+                for k in (
+                    "surprise_factor", "universal_appeal", "clever_framing",
+                    "educational_value", "answerability", "overall_score",
+                )
+                if k in data
+            }
+            if "self_critique_reasoning" in data:
+                self_critique["reasoning"] = data["self_critique_reasoning"]
+
+        # Build generation metadata
+        generation_metadata: Optional[Dict[str, Any]] = None
+        quality_ratings: Optional[Dict[str, int]] = None
+
+        if reasoning or self_critique:
+            generation_metadata = {}
+            if reasoning:
+                generation_metadata["reasoning"] = reasoning
+            if self_critique:
+                generation_metadata["self_critique"] = self_critique
+                generation_metadata["ai_score"] = self_critique.get("overall_score", 0)
+                generation_metadata["ai_reasoning"] = self_critique.get("reasoning", "")
+                quality_ratings = {
+                    "surprise_factor": self_critique.get("surprise_factor", 0),
+                    "universal_appeal": self_critique.get("universal_appeal", 0),
+                    "clever_framing": self_critique.get("clever_framing", 0),
+                    "educational_value": self_critique.get("educational_value", 0),
+                    "answerability": self_critique.get("answerability", 0),
+                }
+
+        # Use explicitly provided generation_metadata/quality_ratings if present
+        if "generation_metadata" in data and data["generation_metadata"]:
+            generation_metadata = data["generation_metadata"]
+        if "quality_ratings" in data and data["quality_ratings"]:
+            quality_ratings = data["quality_ratings"]
+
+        return cls(
+            id=question_id,
+            question=data.get("question", ""),
+            type=data.get("type", "text"),
+            possible_answers=data.get("possible_answers"),
+            correct_answer=data.get("correct_answer", ""),
+            alternative_answers=data.get("alternative_answers", []),
+            topic=data.get("topic", "General"),
+            category=data.get("category", default_category),
+            difficulty=data.get("difficulty", default_difficulty),
+            tags=data.get("tags", []),
+            language_dependent=data.get("language_dependent", False),
+            media_url=data.get("media_url"),
+            image_subtype=data.get("image_subtype"),
+            explanation=data.get("explanation"),
+            source=data.get("source", source),
+            source_url=data.get("source_url"),
+            source_excerpt=data.get("source_excerpt"),
+            review_status=data.get("review_status", "pending_review"),
+            quality_ratings=quality_ratings,
+            generation_metadata=generation_metadata,
+        )
 
     class Config:
         json_schema_extra = {

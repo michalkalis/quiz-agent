@@ -23,9 +23,8 @@ from fastapi.responses import JSONResponse
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
-import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../..", "packages/shared"))
+import sentry_sdk
 
 # Load environment variables from .env files
 try:
@@ -45,6 +44,16 @@ from .logging_config import setup_logging
 setup_logging()
 logger = logging.getLogger(__name__)
 
+# Initialize Sentry (no-op if SENTRY_DSN is not set)
+sentry_dsn = os.environ.get("SENTRY_DSN")
+if sentry_dsn:
+    sentry_sdk.init(
+        dsn=sentry_dsn,
+        traces_sample_rate=0.1,
+        environment=os.environ.get("ENVIRONMENT", "development"),
+    )
+    logger.info("Sentry initialized (env=%s)", os.environ.get("ENVIRONMENT", "development"))
+
 from quiz_shared.database.chroma_client import ChromaDBClient
 from quiz_shared.database.sql_client import SQLClient
 
@@ -58,6 +67,7 @@ from .tts.service import TTSService
 from .translation import TranslationService
 from .usage.tracker import UsageTracker
 from .api import rest, admin
+from .quiz.flow import QuizFlowService
 
 try:
     from .monitoring.question_monitor import QuestionMonitor
@@ -147,7 +157,7 @@ async def lifespan(app: FastAPI):
     # Initialize services
     try:
         logger.info("Initializing services...")
-        session_manager = SessionManager(cleanup_interval=300)  # 5 min
+        session_manager = SessionManager(cleanup_interval=300, sql_client=sql_client)
         input_parser = InputParser()
         question_retriever = QuestionRetriever(chroma_client=chroma_client)
         answer_evaluator = AnswerEvaluator()
@@ -164,6 +174,14 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error("Failed to initialize services: %s", e, exc_info=True)
         raise
+
+    # Reload persisted sessions (survives fly deploy restarts)
+    try:
+        reloaded = session_manager.reload_active_sessions()
+        if reloaded:
+            logger.info("Restored %d sessions from previous run", reloaded)
+    except Exception as e:
+        logger.warning("Failed to reload sessions: %s", e)
 
     # Question health check on startup
     try:
@@ -189,21 +207,25 @@ async def lifespan(app: FastAPI):
         logger.warning("Failed to pre-generate feedback audio: %s", e)
         logger.info("Feedback will be generated on-demand")
 
-    # Inject dependencies into REST API
-    rest.init_dependencies(
-        sm=session_manager,
-        ip=input_parser,
-        qr=question_retriever,
-        ae=answer_evaluator,
-        fs=feedback_service,
-        vt=voice_transcriber,
-        tts=tts_service,
-        ts=translation_service,
-        cc=chroma_client,
-        ut=usage_tracker,
+    # Store services on app.state for FastAPI Depends() injection
+    app.state.session_manager = session_manager
+    app.state.question_retriever = question_retriever
+    app.state.feedback_service = feedback_service
+    app.state.voice_transcriber = voice_transcriber
+    app.state.tts_service = tts_service
+    app.state.translation_service = translation_service
+    app.state.chroma_client = chroma_client
+    app.state.usage_tracker = usage_tracker
+    app.state.quiz_flow = QuizFlowService(
+        session_manager=session_manager,
+        input_parser=input_parser,
+        question_retriever=question_retriever,
+        answer_evaluator=answer_evaluator,
+        tts_service=tts_service,
+        usage_tracker=usage_tracker,
+        chroma_client=chroma_client,
+        translation_service=translation_service,
     )
-    # Inject dependencies into Admin API
-    admin.init_dependencies(cc=chroma_client)
     logger.info("API dependencies configured")
 
     # Start background tasks

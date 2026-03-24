@@ -78,6 +78,7 @@ chroma_data/
 **/chroma_data/
 apps/quiz-agent/data/
 apps/question-generator/data/
+data/backups/
 
 # Logs
 *.log

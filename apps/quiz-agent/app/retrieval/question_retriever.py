@@ -11,10 +11,6 @@ import logging
 from typing import List, Optional, Tuple
 import random
 
-import sys
-import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../../..", "packages/shared"))
-
 logger = logging.getLogger(__name__)
 
 from quiz_shared.models.question import Question

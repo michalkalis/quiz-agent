@@ -5,14 +5,11 @@ Requires ADMIN_API_KEY for authentication.
 """
 
 import logging
-from fastapi import APIRouter, HTTPException, Header, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Header, Request, status
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 import os
-
-import sys
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../../..", "packages/shared"))
 
 logger = logging.getLogger(__name__)
 
@@ -21,16 +18,9 @@ from quiz_shared.database.chroma_client import ChromaDBClient
 from ..rate_limit import limiter
 
 
+from .deps import get_chroma_client
+
 router = APIRouter(prefix="/api/v1/admin", tags=["Admin"])
-
-# Global dependency (injected from main.py)
-chroma_client: ChromaDBClient = None
-
-
-def init_dependencies(cc: ChromaDBClient):
-    """Inject dependencies into admin router."""
-    global chroma_client
-    chroma_client = cc
 
 
 def verify_admin_key(x_admin_key: str = Header(..., description="Admin API key for authentication")):
@@ -111,44 +101,9 @@ class QuestionStats(BaseModel):
 async def import_questions(
     request: Request,
     import_request: ImportQuestionsRequest,
-    _: None = Header(None, dependencies=[verify_admin_key])
+    chroma_client: ChromaDBClient = Depends(get_chroma_client),
+    _: str = Depends(verify_admin_key),
 ):
-    """Import questions into the database.
-
-    Requires X-Admin-Key header for authentication.
-
-    Args:
-        request: Import request with questions and options
-
-    Returns:
-        Import results with counts and any errors
-
-    Example:
-        ```bash
-        curl -X POST https://quiz-agent-api.fly.dev/api/v1/admin/questions/import \\
-          -H "Content-Type: application/json" \\
-          -H "X-Admin-Key: your-secret-key" \\
-          -d '{
-            "questions": [
-              {
-                "id": "q_001",
-                "question": "What is 2+2?",
-                "correct_answer": "4",
-                "difficulty": "easy",
-                "topic": "Math",
-                "category": "general"
-              }
-            ],
-            "skip_duplicates": true,
-            "force": false
-          }'
-        ```
-    """
-    if not chroma_client:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database not initialized"
-        )
 
     imported = 0
     skipped = 0
@@ -231,14 +186,12 @@ async def import_questions(
 @limiter.limit("5/minute")
 async def list_questions(
     request: Request,
-    _: None = Header(None, dependencies=[verify_admin_key]),
+    chroma_client: ChromaDBClient = Depends(get_chroma_client),
+    _: str = Depends(verify_admin_key),
     search: Optional[str] = None,
     topic: Optional[str] = None,
-    limit: int = 1000
+    limit: int = 1000,
 ):
-    """List all questions, optionally filtered by text search or topic."""
-    if not chroma_client:
-        raise HTTPException(status_code=500, detail="Database not initialized")
 
     all_questions = chroma_client.get_all_questions(limit=limit)
 
@@ -264,20 +217,9 @@ async def list_questions(
 @limiter.limit("5/minute")
 async def get_question_stats(
     request: Request,
-    _: None = Header(None, dependencies=[verify_admin_key])
+    chroma_client: ChromaDBClient = Depends(get_chroma_client),
+    _: str = Depends(verify_admin_key),
 ):
-    """Get statistics about questions in the database.
-
-    Requires X-Admin-Key header for authentication.
-
-    Returns:
-        Question statistics including counts by difficulty, topic, and category
-    """
-    if not chroma_client:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database not initialized"
-        )
 
     # Get all questions
     all_questions = chroma_client.get_all_questions(limit=10000)
@@ -310,23 +252,9 @@ async def get_question_stats(
 async def delete_question(
     request: Request,
     question_id: str,
-    _: None = Header(None, dependencies=[verify_admin_key])
+    chroma_client: ChromaDBClient = Depends(get_chroma_client),
+    _: str = Depends(verify_admin_key),
 ):
-    """Delete a question by ID.
-
-    Requires X-Admin-Key header for authentication.
-
-    Args:
-        question_id: Question ID to delete
-
-    Returns:
-        Success message
-    """
-    if not chroma_client:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database not initialized"
-        )
 
     # Check if question exists
     question = chroma_client.get_question(question_id)

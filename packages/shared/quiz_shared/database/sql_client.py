@@ -1,5 +1,6 @@
 """SQL client for ratings and session persistence."""
 
+import logging
 from sqlalchemy import create_engine, Column, String, Integer, Float, Boolean, DateTime, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
@@ -8,7 +9,20 @@ from typing import List, Optional
 
 from ..models.rating import QuestionRating
 
+logger = logging.getLogger(__name__)
+
 Base = declarative_base()
+
+
+class QuizSessionDB(Base):
+    """SQLAlchemy model for persisted quiz sessions."""
+    __tablename__ = "quiz_sessions"
+
+    session_id = Column(String, primary_key=True)
+    data_json = Column(Text, nullable=False)
+    is_active = Column(Boolean, default=True, index=True)
+    created_at = Column(DateTime, nullable=False, index=True)
+    updated_at = Column(DateTime, nullable=False)
 
 
 class RatingDB(Base):
@@ -81,7 +95,7 @@ class SQLClient:
             return True
 
         except Exception as e:
-            print(f"Error adding rating: {e}")
+            logger.error("Error adding rating: %s", e)
             if session:
                 session.rollback()
                 session.close()
@@ -108,7 +122,7 @@ class SQLClient:
             return result
 
         except Exception as e:
-            print(f"Error getting ratings: {e}")
+            logger.error("Error getting ratings: %s", e)
             if session:
                 session.close()
             return []
@@ -134,7 +148,7 @@ class SQLClient:
             return result
 
         except Exception as e:
-            print(f"Error getting ratings: {e}")
+            logger.error("Error getting ratings: %s", e)
             if session:
                 session.close()
             return []
@@ -162,7 +176,7 @@ class SQLClient:
             return sum(r[0] for r in ratings) / len(ratings)
 
         except Exception as e:
-            print(f"Error getting avg rating: {e}")
+            logger.error("Error getting avg rating: %s", e)
             if session:
                 session.close()
             return None
@@ -203,9 +217,84 @@ class SQLClient:
             return [(r.question_id, r.avg_rating) for r in results]
 
         except Exception as e:
-            print(f"Error getting low rated questions: {e}")
+            logger.error("Error getting low rated questions: %s", e)
             if session:
                 session.close()
+            return []
+
+    # ── Session persistence ────────────────────────────────────────────────
+
+    def save_session(self, session_id: str, data_json: str) -> bool:
+        """Upsert a quiz session (insert or update).
+
+        Args:
+            session_id: Session ID
+            data_json: JSON-serialized QuizSession
+
+        Returns:
+            True if successful
+        """
+        try:
+            db_session = self._get_session()
+            existing = db_session.query(QuizSessionDB).get(session_id)
+            now = datetime.now()
+            if existing:
+                existing.data_json = data_json
+                existing.updated_at = now
+                existing.is_active = True
+            else:
+                db_session.add(QuizSessionDB(
+                    session_id=session_id,
+                    data_json=data_json,
+                    is_active=True,
+                    created_at=now,
+                    updated_at=now,
+                ))
+            db_session.commit()
+            db_session.close()
+            return True
+        except Exception as e:
+            logger.error("Error saving session %s: %s", session_id, e)
+            return False
+
+    def deactivate_session(self, session_id: str) -> bool:
+        """Mark a session as inactive (finished/expired).
+
+        Args:
+            session_id: Session ID
+
+        Returns:
+            True if successful
+        """
+        try:
+            db_session = self._get_session()
+            existing = db_session.query(QuizSessionDB).get(session_id)
+            if existing:
+                existing.is_active = False
+                existing.updated_at = datetime.now()
+                db_session.commit()
+            db_session.close()
+            return True
+        except Exception as e:
+            logger.error("Error deactivating session %s: %s", session_id, e)
+            return False
+
+    def load_active_sessions(self) -> List[tuple[str, str]]:
+        """Load all active sessions from the database.
+
+        Returns:
+            List of (session_id, data_json) tuples
+        """
+        try:
+            db_session = self._get_session()
+            rows = db_session.query(QuizSessionDB).filter(
+                QuizSessionDB.is_active == True  # noqa: E712
+            ).all()
+            result = [(r.session_id, r.data_json) for r in rows]
+            db_session.close()
+            return result
+        except Exception as e:
+            logger.error("Error loading active sessions: %s", e)
             return []
 
     def _db_to_rating(self, db_rating: RatingDB) -> QuestionRating:

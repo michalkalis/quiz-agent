@@ -1,12 +1,15 @@
 """ChromaDB client for question storage with RAG capabilities."""
 
 import chromadb
+import logging
 from typing import List, Dict, Optional, Any
 from datetime import datetime
 import json
 
 from ..models.question import Question
 from ..utils.embeddings import generate_embedding, calculate_similarity
+
+logger = logging.getLogger(__name__)
 
 
 class ChromaDBClient:
@@ -124,7 +127,7 @@ class ChromaDBClient:
             return True
 
         except Exception as e:
-            print(f"Error adding question: {e}")
+            logger.error("Error adding question: %s", e)
             return False
 
     def get_question(self, question_id: str) -> Optional[Question]:
@@ -161,9 +164,7 @@ class ChromaDBClient:
             )
 
         except Exception as e:
-            print(f"Error getting question: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.error("Error getting question: %s", e, exc_info=True)
             return None
 
     def count_questions(self, filters: Optional[Dict[str, Any]] = None) -> int:
@@ -206,7 +207,7 @@ class ChromaDBClient:
             ids = results.get('ids', [])
             return len(ids) if ids else 0
         except Exception as e:
-            print(f"Error counting questions: {e}")
+            logger.error("Error counting questions: %s", e)
             return 0
 
     def update_question(self, question_id: str, updates: Dict[str, Any]) -> bool:
@@ -234,7 +235,7 @@ class ChromaDBClient:
             return self.add_question(question)
 
         except Exception as e:
-            print(f"Error updating question: {e}")
+            logger.error("Error updating question: %s", e)
             return False
 
     def update_rating(
@@ -269,7 +270,7 @@ class ChromaDBClient:
             })
 
         except Exception as e:
-            print(f"Error updating rating: {e}")
+            logger.error("Error updating rating: %s", e)
             return False
 
     def search_questions(
@@ -333,9 +334,8 @@ class ChromaDBClient:
                 # No filters or only operators
                 where_clause = operators if operators else None
 
-            # Debug: print where clause for troubleshooting
             if where_clause:
-                print(f"DEBUG: ChromaDB where clause: {where_clause}")
+                logger.debug("ChromaDB where clause: %s", where_clause)
 
             # Calculate how many results to fetch from ChromaDB
             # If we have excluded_ids, fetch more to account for filtering
@@ -362,10 +362,7 @@ class ChromaDBClient:
                         include=["embeddings", "documents", "metadatas"]
                     )
             except Exception as query_error:
-                print(f"ERROR: ChromaDB query failed with where_clause: {where_clause}")
-                print(f"ERROR: Query error: {query_error}")
-                import traceback
-                traceback.print_exc()
+                logger.error("ChromaDB query failed with where_clause: %s", where_clause, exc_info=True)
                 raise
 
             # Convert to Question objects
@@ -409,7 +406,7 @@ class ChromaDBClient:
             return questions
 
         except Exception as e:
-            print(f"Error searching questions: {e}")
+            logger.error("Error searching questions: %s", e)
             return []
 
     def find_duplicates(
@@ -458,7 +455,7 @@ class ChromaDBClient:
             return duplicates
 
         except Exception as e:
-            print(f"Error finding duplicates: {e}")
+            logger.error("Error finding duplicates: %s", e)
             return []
 
     def delete_question(self, question_id: str) -> bool:
@@ -474,7 +471,7 @@ class ChromaDBClient:
             self.collection.delete(ids=[question_id])
             return True
         except Exception as e:
-            print(f"Error deleting question: {e}")
+            logger.error("Error deleting question: %s", e)
             return False
 
     def update_question_obj(self, question: Question) -> bool:
@@ -554,9 +551,7 @@ class ChromaDBClient:
 
             return True
         except Exception as e:
-            print(f"Error updating question object: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.error("Error updating question object: %s", e, exc_info=True)
             return False
 
     def get_all_questions(self, limit: int = 1000) -> List[Question]:
@@ -588,7 +583,7 @@ class ChromaDBClient:
             return questions
 
         except Exception as e:
-            print(f"Error getting all questions: {e}")
+            logger.error("Error getting all questions: %s", e)
             return []
 
     def _metadata_to_question(

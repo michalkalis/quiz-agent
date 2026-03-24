@@ -3,9 +3,7 @@
 from typing import List, Optional, Tuple
 import uuid
 
-import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../../..", "packages/shared"))
 
 from quiz_shared.models.question import Question
 from quiz_shared.database.chroma_client import ChromaDBClient

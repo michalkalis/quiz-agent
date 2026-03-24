@@ -1,8 +1,6 @@
 """Tests for MCQ fast-path evaluator.
 
-Tests the MCQ matching logic with an inline copy of normalize_text,
-avoiding heavy transitive deps (langchain, numpy) not installed
-in the lightweight test environment.
+Tests the MCQ matching logic with an inline copy of normalize_text.
 """
 
 import re

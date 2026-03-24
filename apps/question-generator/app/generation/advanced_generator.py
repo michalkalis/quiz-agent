@@ -13,9 +13,7 @@ from typing import List, Optional, Dict, Any
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage
 
-import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../../..", "packages/shared"))
 
 from quiz_shared.models.question import Question
 from .prompt_builder import PromptBuilder
@@ -504,10 +502,10 @@ class AdvancedQuestionGenerator:
                     if self.verbose:
                         has_fields = {k: k in q_data for k in ("reasoning", "self_critique", "surprise_factor")}
                         print(f"  [verbose] Question fields: {has_fields}")
-                    question = self._dict_to_question(
+                    question = Question.from_dict(
                         q_data,
                         default_difficulty=default_difficulty,
-                        default_category=default_category
+                        default_category=default_category,
                     )
                     questions.append(question)
                 except Exception as e:
@@ -522,91 +520,3 @@ class AdvancedQuestionGenerator:
 
         return questions
 
-    def _dict_to_question(
-        self,
-        data: dict,
-        default_difficulty: str = "medium",
-        default_category: str = "general"
-    ) -> Question:
-        """Convert dict from LLM to Question object.
-
-        Handles V2 format with reasoning and self_critique fields.
-
-        Args:
-            data: Question data from LLM
-            default_difficulty: Default difficulty
-            default_category: Default category
-
-        Returns:
-            Question object
-        """
-        # Generate unique ID
-        question_id = f"temp_{uuid.uuid4().hex[:8]}"
-
-        # Extract standard fields
-        question_text = data.get("question", "")
-        question_type = data.get("type", "text")
-        correct_answer = data.get("correct_answer", "")
-        possible_answers = data.get("possible_answers")
-        alternative_answers = data.get("alternative_answers", [])
-        topic = data.get("topic", "General")
-        category = data.get("category", default_category)
-        difficulty = data.get("difficulty", default_difficulty)
-        tags = data.get("tags", [])
-
-        # Extract V2-specific fields
-        reasoning = data.get("reasoning", {})
-        self_critique = data.get("self_critique", {})
-
-        # Handle flattened self_critique: GPT-4o sometimes puts dimensions at top level
-        if not self_critique and "surprise_factor" in data:
-            self_critique = {
-                k: data[k]
-                for k in ("surprise_factor", "universal_appeal", "clever_framing",
-                          "educational_value", "answerability", "overall_score", "reasoning")
-                if k in data and k != "reasoning"  # avoid clobbering CoT reasoning
-            }
-            # Also grab "reasoning" under a different key to avoid conflict
-            if "self_critique_reasoning" in data:
-                self_critique["reasoning"] = data["self_critique_reasoning"]
-
-        # Build generation metadata
-        generation_metadata = {}
-
-        if reasoning:
-            generation_metadata["reasoning"] = reasoning
-
-        if self_critique:
-            # Extract self-critique scores for quality_ratings
-            quality_ratings = {
-                "surprise_factor": self_critique.get("surprise_factor", 0),
-                "universal_appeal": self_critique.get("universal_appeal", 0),
-                "clever_framing": self_critique.get("clever_framing", 0),
-                "educational_value": self_critique.get("educational_value", 0),
-                "answerability": self_critique.get("answerability", 0),
-            }
-            generation_metadata["self_critique"] = self_critique
-            generation_metadata["ai_score"] = self_critique.get("overall_score", 0)
-            generation_metadata["ai_reasoning"] = self_critique.get("reasoning", "")
-        else:
-            quality_ratings = None
-
-        return Question(
-            id=question_id,
-            question=question_text,
-            type=question_type,
-            possible_answers=possible_answers,
-            correct_answer=correct_answer,
-            alternative_answers=alternative_answers,
-            topic=topic,
-            category=category,
-            difficulty=difficulty,
-            tags=tags,
-            language_dependent=data.get("language_dependent", False),
-            media_url=data.get("media_url"),
-            image_subtype=data.get("image_subtype"),
-            source="generated",
-            review_status="pending_review",
-            quality_ratings=quality_ratings,
-            generation_metadata=generation_metadata,
-        )

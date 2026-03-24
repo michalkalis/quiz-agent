@@ -4,12 +4,7 @@ Ported from graph.py:445-518
 """
 
 from typing import Tuple
-from langchain_openai import ChatOpenAI
-from langchain_core.messages import HumanMessage, SystemMessage
-
-import sys
-import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../../..", "packages/shared"))
+from openai import AsyncOpenAI
 
 from quiz_shared.models.question import Question
 from quiz_shared.utils.text_normalization import normalize_text
@@ -30,7 +25,9 @@ class AnswerEvaluator:
             model: OpenAI model for evaluation
             temperature: Lower temperature for deterministic evaluation
         """
-        self.llm = ChatOpenAI(model=model, temperature=temperature)
+        self.client = AsyncOpenAI()
+        self.model = model
+        self.temperature = temperature
 
     async def evaluate(
         self,
@@ -180,12 +177,16 @@ If they're in the right ballpark but not quite there, mark it partially_correct.
 
 Respond with EXACTLY one of these words: correct, partially_correct, partially_incorrect, incorrect"""
 
-        response = await self.llm.ainvoke([
-            SystemMessage(content="You are a fair quiz evaluator. Accept answers that demonstrate the user knows the correct information."),
-            HumanMessage(content=eval_prompt)
-        ])
+        response = await self.client.chat.completions.create(
+            model=self.model,
+            temperature=self.temperature,
+            messages=[
+                {"role": "system", "content": "You are a fair quiz evaluator. Accept answers that demonstrate the user knows the correct information."},
+                {"role": "user", "content": eval_prompt},
+            ],
+        )
 
-        result_text = response.content.lower().strip()
+        result_text = response.choices[0].message.content.lower().strip()
 
         # Parse result with exact matches first
         if result_text == "correct":

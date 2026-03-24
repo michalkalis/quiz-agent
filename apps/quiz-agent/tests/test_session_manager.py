@@ -1,4 +1,4 @@
-"""Tests for SessionManager deep-copy isolation and evaluation flow."""
+"""Tests for SessionManager deep-copy isolation, evaluation flow, and persistence."""
 
 import sys
 import os
@@ -7,6 +7,29 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../../..", "packages/shared"))
 
 from app.session.manager import SessionManager
+
+
+class StubSQLClient:
+    """Minimal in-memory stub for SQLClient session persistence methods.
+
+    Avoids importing the real SQLClient which pulls in chromadb.
+    """
+
+    def __init__(self):
+        self._store: dict[str, tuple[str, bool]] = {}  # session_id -> (data_json, is_active)
+
+    def save_session(self, session_id: str, data_json: str) -> bool:
+        self._store[session_id] = (data_json, True)
+        return True
+
+    def deactivate_session(self, session_id: str) -> bool:
+        if session_id in self._store:
+            data_json, _ = self._store[session_id]
+            self._store[session_id] = (data_json, False)
+        return True
+
+    def load_active_sessions(self) -> list[tuple[str, str]]:
+        return [(sid, data) for sid, (data, active) in self._store.items() if active]
 
 
 class TestSessionManagerDeepCopy:
@@ -123,3 +146,65 @@ class TestEvaluationQuestionId:
         }
 
         assert evaluation_result["question_id"] == "q_def456"
+
+
+class TestSessionPersistence:
+    """Verify sessions survive a simulated restart via SQLite persistence."""
+
+    def test_session_survives_restart(self):
+        """Create session in manager A, reload in manager B — session survives."""
+        sql = StubSQLClient()
+        manager_a = SessionManager(sql_client=sql)
+        session = manager_a.create_session(max_questions=5, difficulty="hard")
+        sid = session.session_id
+
+        # Simulate restart: new manager, same SQL client
+        manager_b = SessionManager(sql_client=sql)
+        reloaded = manager_b.reload_active_sessions()
+        assert reloaded == 1
+
+        restored = manager_b.get_session(sid)
+        assert restored is not None
+        assert restored.max_questions == 5
+        assert restored.current_difficulty == "hard"
+
+    def test_updated_session_persists(self):
+        """Updates to session state are reflected after reload."""
+        sql = StubSQLClient()
+        manager_a = SessionManager(sql_client=sql)
+        session = manager_a.create_session(max_questions=10)
+        sid = session.session_id
+
+        # Advance quiz state
+        copy = manager_a.get_session(sid)
+        copy.phase = "asking"
+        copy.score = 3.5
+        copy.question_number = 4
+        manager_a.update_session(copy)
+
+        # Reload
+        manager_b = SessionManager(sql_client=sql)
+        manager_b.reload_active_sessions()
+        restored = manager_b.get_session(sid)
+        assert restored.phase == "asking"
+        assert restored.score == 3.5
+        assert restored.question_number == 4
+
+    def test_deleted_session_not_reloaded(self):
+        """Deleted sessions should not be reloaded."""
+        sql = StubSQLClient()
+        manager_a = SessionManager(sql_client=sql)
+        session = manager_a.create_session()
+        sid = session.session_id
+        manager_a.delete_session(sid)
+
+        manager_b = SessionManager(sql_client=sql)
+        reloaded = manager_b.reload_active_sessions()
+        assert reloaded == 0
+        assert manager_b.get_session(sid) is None
+
+    def test_no_sql_client_works_fine(self):
+        """SessionManager without sql_client should work as before (in-memory only)."""
+        manager = SessionManager()
+        session = manager.create_session(max_questions=5)
+        assert manager.get_session(session.session_id) is not None

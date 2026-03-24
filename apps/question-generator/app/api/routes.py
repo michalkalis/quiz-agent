@@ -4,10 +4,6 @@ import time
 from typing import Dict, Any
 from fastapi import APIRouter, HTTPException
 
-import sys
-import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../../..", "packages/shared"))
-
 from quiz_shared.models.question import Question
 
 from .schemas import (
@@ -150,7 +146,7 @@ async def import_questions(request: ImportRequest):
         questions = []
         for q_dict in request.questions:
             # Convert dict to Question object
-            question = _dict_to_question(q_dict, source=request.source)
+            question = Question.from_dict(q_dict, source=request.source)
             questions.append(question)
 
         # Store as pending (temp IDs)
@@ -504,26 +500,4 @@ def _question_to_advanced_response(question: Question) -> AdvancedQuestionRespon
         review_status=question.review_status,
         quality_ratings=question.quality_ratings,
         generation_metadata=question.generation_metadata
-    )
-
-
-def _dict_to_question(data: Dict[str, Any], source: str = "imported") -> Question:
-    """Convert dict to Question object."""
-    import uuid
-
-    return Question(
-        id=f"temp_{uuid.uuid4().hex[:8]}",
-        question=data.get("question", ""),
-        type=data.get("type", "text"),
-        correct_answer=data.get("correct_answer", ""),
-        possible_answers=data.get("possible_answers"),
-        alternative_answers=data.get("alternative_answers", []),
-        topic=data.get("topic", "General"),
-        category=data.get("category", "general"),
-        difficulty=data.get("difficulty", "medium"),
-        tags=data.get("tags", []),
-        language_dependent=data.get("language_dependent", False),
-        media_url=data.get("media_url"),
-        image_subtype=data.get("image_subtype"),
-        source=source
     )

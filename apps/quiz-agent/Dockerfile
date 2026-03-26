@@ -14,7 +14,7 @@ RUN pip install --no-cache-dir --upgrade pip
 
 # Copy shared package and install it
 COPY packages/shared /build/packages/shared
-RUN pip install --no-cache-dir -e /build/packages/shared
+RUN pip install --no-cache-dir /build/packages/shared
 
 # Copy quiz-agent app code
 COPY apps/quiz-agent /build/app
@@ -47,8 +47,6 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy application code
 COPY --from=builder /build/app /app
-COPY --from=builder /build/packages/shared /packages/shared
-
 # Copy migration scripts (for running via fly ssh console)
 COPY scripts /scripts
 

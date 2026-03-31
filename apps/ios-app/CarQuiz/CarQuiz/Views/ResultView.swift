@@ -44,9 +44,9 @@ struct ResultView: View {
                         showQuitConfirmation = true
                     } label: {
                         Image(systemName: "xmark")
-                            .font(.displayMD)
+                            .font(.system(size: 16, weight: .semibold))
                             .foregroundColor(Theme.Colors.textSecondary)
-                            .padding(Theme.Spacing.sm)
+                            .frame(width: 44, height: 44)
                             .background(Theme.Colors.bgCard)
                             .clipShape(Circle())
                     }
@@ -183,6 +183,8 @@ struct ResultView: View {
                     .accessibilityIdentifier("result.stayHere")
                     .font(.textMDMedium)
                     .foregroundColor(Theme.Colors.textSecondary)
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
                     .disabled(viewModel.currentQuestionPaused)
 
                     // View Source button
@@ -279,7 +281,7 @@ private struct AnswerCard: View {
         VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
             Text(label)
                 .font(.labelSM)
-                .foregroundColor(Theme.Colors.textSecondary)
+                .foregroundColor(Theme.Colors.textTertiary)
                 .textCase(.uppercase)
 
             Text(answer)
@@ -402,15 +404,17 @@ private struct QuestionRatingRow: View {
                 .font(.textXS)
                 .foregroundColor(Theme.Colors.textSecondary)
 
-            HStack(spacing: 4) {
+            HStack(spacing: 0) {
                 ForEach(1...5, id: \.self) { star in
                     Button {
                         rating = star
                         onRate(star)
                     } label: {
                         Image(systemName: star <= rating ? "star.fill" : "star")
-                            .font(.textSM)
+                            .font(.textMD)
                             .foregroundColor(star <= rating ? Theme.Colors.warning : Theme.Colors.textMuted)
+                            .frame(minWidth: 44, minHeight: 44)
+                            .contentShape(Rectangle())
                     }
                     .accessibilityLabel("\(star) star\(star == 1 ? "" : "s")")
                     .accessibilityIdentifier("result.ratingStar.\(star)")

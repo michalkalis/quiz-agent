@@ -10,12 +10,11 @@ import SwiftUI
 struct AnswerConfirmationView: View {
     let isProcessing: Bool
     let transcribedAnswer: String
+    let autoConfirmCountdown: Int
+    let autoConfirmEnabled: Bool
     let onConfirm: () -> Void
     let onReRecord: () -> Void
     var onCancel: (() -> Void)? = nil
-
-    @State private var rerecordCountdown: Int = Config.rerecordWindowDuration
-    @State private var countdownTask: Task<Void, Never>?
 
     var body: some View {
         VStack(spacing: Theme.Spacing.lg) {
@@ -66,43 +65,39 @@ struct AnswerConfirmationView: View {
 
                 // Action buttons
                 HStack(spacing: Theme.Spacing.md) {
-                    // Re-record button with countdown
+                    // Re-record button
                     Button(action: onReRecord) {
                         HStack(spacing: Theme.Spacing.xs) {
                             Image(systemName: "mic.circle.fill")
                                 .accessibilityHidden(true)
-                            if rerecordCountdown > 0 {
-                                Text("Re-record (\(rerecordCountdown)s)")
-                            } else {
-                                Text("Re-record")
-                            }
+                            Text("Re-record")
                         }
                     }
-                    .accessibilityLabel(rerecordCountdown > 0 ? "Re-record, \(rerecordCountdown) seconds remaining" : "Re-record")
+                    .accessibilityLabel("Re-record")
                     .accessibilityHint("Record your answer again")
                     .accessibilityIdentifier("confirmation.reRecord")
                     .buttonStyle(.secondary)
-                    .disabled(rerecordCountdown == 0)
-                    .opacity(rerecordCountdown == 0 ? 0.4 : 1.0)
+                    .disabled(autoConfirmEnabled && autoConfirmCountdown == 0)
+                    .opacity(autoConfirmEnabled && autoConfirmCountdown == 0 ? 0.4 : 1.0)
 
-                    // Confirm button
+                    // Confirm button with auto-confirm countdown
                     Button(action: onConfirm) {
                         HStack(spacing: Theme.Spacing.xs) {
                             Image(systemName: "checkmark.circle.fill")
                                 .accessibilityHidden(true)
-                            Text("Confirm")
+                            if autoConfirmEnabled && autoConfirmCountdown > 0 {
+                                Text("Confirm (\(autoConfirmCountdown)s)")
+                            } else {
+                                Text("Confirm")
+                            }
                         }
                     }
-                    .accessibilityLabel("Confirm answer")
+                    .accessibilityLabel(autoConfirmEnabled && autoConfirmCountdown > 0
+                        ? "Confirm answer, auto-confirming in \(autoConfirmCountdown) seconds"
+                        : "Confirm answer")
                     .accessibilityHint("Submit your transcribed answer")
                     .accessibilityIdentifier("confirmation.confirm")
                     .buttonStyle(.primary)
-                }
-                .onAppear {
-                    startRerecordCountdown()
-                }
-                .onDisappear {
-                    countdownTask?.cancel()
                 }
             }
         }
@@ -112,23 +107,14 @@ struct AnswerConfirmationView: View {
         .presentationDragIndicator(.hidden)
         .interactiveDismissDisabled(true)
     }
-
-    private func startRerecordCountdown() {
-        rerecordCountdown = Config.rerecordWindowDuration
-        countdownTask = Task {
-            for remaining in (0..<Config.rerecordWindowDuration).reversed() {
-                try? await Task.sleep(nanoseconds: 1_000_000_000)
-                if Task.isCancelled { return }
-                rerecordCountdown = remaining
-            }
-        }
-    }
 }
 
 #Preview("Transcription Result") {
     AnswerConfirmationView(
         isProcessing: false,
         transcribedAnswer: "The capital of France is Paris.",
+        autoConfirmCountdown: 3,
+        autoConfirmEnabled: true,
         onConfirm: {},
         onReRecord: {}
     )
@@ -138,6 +124,8 @@ struct AnswerConfirmationView: View {
     AnswerConfirmationView(
         isProcessing: true,
         transcribedAnswer: "",
+        autoConfirmCountdown: 0,
+        autoConfirmEnabled: true,
         onConfirm: {},
         onReRecord: {},
         onCancel: {}

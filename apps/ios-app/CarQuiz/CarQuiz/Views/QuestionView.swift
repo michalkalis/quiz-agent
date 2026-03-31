@@ -241,6 +241,8 @@ struct QuestionView: View {
                 // Fixed: processing = in .processing state AND no transcription yet
                 isProcessing: viewModel.quizState == .processing && viewModel.transcribedAnswer.isEmpty,
                 transcribedAnswer: viewModel.transcribedAnswer,
+                autoConfirmCountdown: viewModel.autoConfirmCountdown,
+                autoConfirmEnabled: viewModel.settings.autoConfirmEnabled,
                 onConfirm: {
                     Task {
                         await viewModel.confirmAnswer()

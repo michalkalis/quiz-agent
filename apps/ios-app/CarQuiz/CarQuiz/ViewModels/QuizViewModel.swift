@@ -79,6 +79,7 @@ final class QuizViewModel: ObservableObject {
     // Answer confirmation modal state
     @Published var showAnswerConfirmation = false
     @Published var transcribedAnswer = ""
+    @Published var autoConfirmCountdown: Int = 0
     private var pendingResponse: QuizResponse? = nil
 
     // Auto-advance countdown for ResultView binding (single source of truth)
@@ -808,13 +809,22 @@ final class QuizViewModel: ObservableObject {
         await resubmitAnswer(transcribedAnswer)
     }
 
-    /// Start a 2-second auto-confirm countdown if enabled.
+    /// Start a ticking auto-confirm countdown if enabled.
     /// Cancelled by rerecordAnswer() or cancelProcessing().
     private func startAutoConfirmIfEnabled() {
-        guard settings.autoConfirmEnabled else { return }
+        guard settings.autoConfirmEnabled else {
+            autoConfirmCountdown = 0
+            return
+        }
+        let duration = Config.autoConfirmDelaySecs
+        autoConfirmCountdown = duration
         autoConfirmTask?.cancel()
         autoConfirmTask = Task { [weak self] in
-            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            for remaining in (0 ..< duration).reversed() {
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                guard let self, !Task.isCancelled else { return }
+                self.autoConfirmCountdown = remaining
+            }
             guard let self, !Task.isCancelled else { return }
             guard self.showAnswerConfirmation else { return }
             await self.confirmAnswer()
@@ -825,6 +835,7 @@ final class QuizViewModel: ObservableObject {
     private func cancelAutoConfirm() {
         autoConfirmTask?.cancel()
         autoConfirmTask = nil
+        autoConfirmCountdown = 0
     }
 
     /// Defense-in-depth cleanup if the answer confirmation sheet is dismissed

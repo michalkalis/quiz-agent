@@ -140,7 +140,7 @@ struct SettingsView: View {
                             .accessibilityIdentifier("settings.autoConfirm")
                         }
 
-                        Text("Automatically confirm your answer after 2 seconds. Say \"re-record\" to cancel.")
+                        Text("Automatically confirm your answer after \(Config.autoConfirmDelaySecs) seconds. Say \"re-record\" to cancel.")
                             .font(.textXS)
                             .foregroundColor(Theme.Colors.textTertiary)
                             .padding(.horizontal, 4)

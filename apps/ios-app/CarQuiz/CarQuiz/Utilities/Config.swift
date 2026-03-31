@@ -91,8 +91,8 @@ enum Config {
     /// Delay after TTS finishes before auto-starting recording (milliseconds)
     static let autoRecordDelayMs: UInt64 = 500
 
-    /// Window for re-record button before it disables (seconds)
-    static let rerecordWindowDuration: Int = 5
+    /// Countdown duration for auto-confirm (also controls re-record window) in seconds
+    static let autoConfirmDelaySecs: Int = 5
 
     // MARK: - ElevenLabs Streaming STT
 

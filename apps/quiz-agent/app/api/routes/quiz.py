@@ -23,9 +23,9 @@ router = APIRouter()
 @router.post("/sessions/{session_id}/start", response_model=InputResponse)
 @limiter.limit("10/minute")
 async def start_quiz(
-    http_request: Request,
+    request: Request,
     session_id: str,
-    request: StartQuizRequest,
+    body: StartQuizRequest,
     session_manager: SessionManager = Depends(get_session_manager),
     question_retriever: QuestionRetriever = Depends(get_question_retriever),
     chroma_client=Depends(get_chroma_client),
@@ -58,7 +58,7 @@ async def start_quiz(
                     },
                 )
 
-        client_excluded_ids = request.excluded_question_ids or []
+        client_excluded_ids = body.excluded_question_ids or []
         logger.debug("Client excluded %d questions", len(client_excluded_ids))
 
         session.phase = "asking"
@@ -147,9 +147,9 @@ async def start_quiz(
 @router.post("/sessions/{session_id}/input", response_model=InputResponse)
 @limiter.limit("30/minute")
 async def submit_input(
-    http_request: Request,
+    request: Request,
     session_id: str,
-    request: SubmitInputRequest,
+    body: SubmitInputRequest,
     session_manager: SessionManager = Depends(get_session_manager),
     quiz_flow: QuizFlowService = Depends(get_quiz_flow),
     audio: bool = False,
@@ -164,8 +164,8 @@ async def submit_input(
 
     flow_result = await quiz_flow.process_answer(
         session=session,
-        answer_text=request.input,
-        participant_id=request.participant_id,
+        answer_text=body.input,
+        participant_id=body.participant_id,
         include_audio=audio,
     )
 

@@ -21,19 +21,19 @@ router = APIRouter()
 @router.post("/tts/synthesize")
 @limiter.limit("60/minute")
 async def synthesize_tts(
-    http_request: Request,
-    request: SynthesizeTTSRequest,
+    request: Request,
+    body: SynthesizeTTSRequest,
     tts_service: TTSService = Depends(get_tts_service),
 ):
     """Generate speech audio from text (generic TTS)."""
     try:
         audio_data = await tts_service.synthesize(
-            text=request.text, voice=request.voice, use_cache=True
+            text=body.text, voice=body.voice, use_cache=True
         )
         return Response(
             content=audio_data,
-            media_type=f"audio/{request.format}",
-            headers={"Content-Disposition": f'attachment; filename="speech.{request.format}"'},
+            media_type=f"audio/{body.format}",
+            headers={"Content-Disposition": f'attachment; filename="speech.{body.format}"'},
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

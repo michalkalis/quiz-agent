@@ -20,22 +20,22 @@ router = APIRouter()
 @router.post("/sessions", response_model=SessionResponse, status_code=status.HTTP_201_CREATED)
 @limiter.limit("10/minute")
 async def create_session(
-    http_request: Request,
-    request: CreateSessionRequest,
+    request: Request,
+    body: CreateSessionRequest,
     session_manager: SessionManager = Depends(get_session_manager),
 ):
     """Create a new quiz session."""
     try:
         session = session_manager.create_session(
-            max_questions=request.max_questions,
-            difficulty=request.difficulty,
-            user_id=request.user_id,
-            mode=request.mode,
-            ttl_minutes=request.ttl_minutes,
+            max_questions=body.max_questions,
+            difficulty=body.difficulty,
+            user_id=body.user_id,
+            mode=body.mode,
+            ttl_minutes=body.ttl_minutes,
         )
-        session.language = request.language
-        if request.category:
-            session.category = request.category
+        session.language = body.language
+        if body.category:
+            session.category = body.category
         session_manager.update_session(session)
         return session_to_response(session)
     except Exception as e:

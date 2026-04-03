@@ -77,48 +77,82 @@ struct QuestionView: View {
             }
             .padding(.horizontal)
 
-            // Question content (scrollable for long text)
+            // Error banner (above question for visibility)
+            if let error = viewModel.errorMessage {
+                HStack(spacing: Theme.Spacing.xs) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.textSM)
+                        .accessibilityHidden(true)
+                    Text(error)
+                        .font(.textSM)
+                        .lineLimit(2)
+                }
+                .foregroundColor(Theme.Colors.errorText)
+                .padding(.horizontal, Theme.Spacing.md)
+                .padding(.vertical, Theme.Spacing.sm)
+                .frame(maxWidth: .infinity)
+                .background(Theme.Colors.errorBg)
+                .cornerRadius(Theme.Radius.lg)
+                .padding(.horizontal)
+                .accessibilityLabel("Error: \(error)")
+                .accessibilityIdentifier("question.error")
+                .accessibilityAddTraits(.isStaticText)
+            }
+
+            // Question content with scroll support
             if let question = viewModel.currentQuestion {
-                ScrollView(.vertical, showsIndicators: false) {
-                    VStack(spacing: Theme.Spacing.md) {
-                        // Question timer countdown
-                        if viewModel.answerTimerCountdown > 0 && viewModel.quizState == .askingQuestion {
-                            AnswerTimerBadge(seconds: viewModel.answerTimerCountdown)
-                        }
-
-                        // Inline badges: progress + category
-                        HStack(spacing: Theme.Spacing.sm) {
-                            if let session = viewModel.currentSession,
-                               viewModel.questionsAnswered < session.maxQuestions {
-                                ProgressBadge(
-                                    current: viewModel.questionsAnswered + 1,
-                                    total: session.maxQuestions
-                                )
+                ZStack(alignment: .bottom) {
+                    ScrollView {
+                        VStack(spacing: Theme.Spacing.md) {
+                            // Inline badges: progress + category
+                            HStack(spacing: Theme.Spacing.sm) {
+                                if let session = viewModel.currentSession,
+                                   viewModel.questionsAnswered < session.maxQuestions {
+                                    ProgressBadge(
+                                        current: viewModel.questionsAnswered + 1,
+                                        total: session.maxQuestions
+                                    )
+                                }
+                                CategoryBadge(category: question.topic)
                             }
-                            CategoryBadge(category: question.topic)
-                        }
 
-                        // Image or text question card
-                        if question.hasImage {
-                            ImageQuestionView(question: question)
-                        } else {
-                            Text(question.question)
-                                .font(.displayXL)
-                                .foregroundColor(Theme.Colors.textPrimary)
-                                .multilineTextAlignment(.center)
-                                .padding(Theme.Spacing.lg)
-                                .frame(maxWidth: .infinity)
-                                .background(Theme.Colors.bgCard)
-                                .cornerRadius(Theme.Radius.xl)
-                                .padding(.horizontal, Theme.Spacing.md)
-                                .accessibilityIdentifier("question.text")
+                            // Image or text question card
+                            if question.hasImage {
+                                ImageQuestionView(question: question)
+                            } else {
+                                Text(question.question)
+                                    .font(.displayXL)
+                                    .foregroundColor(Theme.Colors.textPrimary)
+                                    .multilineTextAlignment(.center)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .padding(Theme.Spacing.lg)
+                                    .frame(maxWidth: .infinity)
+                                    .background(Theme.Colors.bgCard)
+                                    .cornerRadius(Theme.Radius.xl)
+                                    .padding(.horizontal, Theme.Spacing.md)
+                                    .accessibilityIdentifier("question.text")
+                            }
                         }
+                        .padding(.bottom, Theme.Spacing.lg)
                     }
+                    .scrollIndicators(.hidden)
+
+                    // Gradient fade hint at bottom of scroll area
+                    LinearGradient(
+                        colors: [Theme.Colors.bgPrimary.opacity(0), Theme.Colors.bgPrimary],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .frame(height: 24)
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
                 }
             } else {
                 ProgressView()
                     .scaleEffect(1.5)
                     .tint(Theme.Colors.accentPrimary)
+
+                Spacer()
             }
 
             // Branch: MCQ options vs voice recording
@@ -245,19 +279,6 @@ struct QuestionView: View {
                     }
                     .padding(.horizontal, Theme.Spacing.md)
                 }
-            }
-
-            // Error message
-            if let error = viewModel.errorMessage {
-                Text(error)
-                    .font(.textXS)
-                    .foregroundColor(Theme.Colors.error)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-                    .padding(.top, Theme.Spacing.xs)
-                    .accessibilityLabel("Error: \(error)")
-                    .accessibilityIdentifier("question.error")
-                    .accessibilityAddTraits(.isStaticText)
             }
 
             Spacer(minLength: Theme.Spacing.xs)

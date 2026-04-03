@@ -30,7 +30,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// Auto-advance delay in seconds for result screen
     var autoAdvanceDelay: Int
 
-    /// Answer time limit in seconds (0 = Off, no auto-recording)
+    /// Answer time limit in seconds (0 = Off). MCQ: auto-skips on expiry. Voice: auto-starts recording.
     var answerTimeLimit: Int
 
     /// Preferred input device UID (nil = automatic selection)
@@ -51,6 +51,10 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// When enabled, skips the confirmation modal — say "re-record" to cancel
     var autoConfirmEnabled: Bool
 
+    /// Whether to show the answer confirmation sheet before submitting
+    /// When disabled, answers are submitted immediately after transcription
+    var showConfirmSheet: Bool
+
     // MARK: - Memberwise Init
 
     init(
@@ -65,7 +69,8 @@ struct QuizSettings: Codable, Equatable, Sendable {
         voiceCommandsEnabled: Bool = true,
         autoRecordEnabled: Bool = true,
         bargeInEnabled: Bool = true,
-        autoConfirmEnabled: Bool = true
+        autoConfirmEnabled: Bool = true,
+        showConfirmSheet: Bool = true
     ) {
         self.language = language
         self.audioMode = audioMode
@@ -79,6 +84,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
         self.autoRecordEnabled = autoRecordEnabled
         self.bargeInEnabled = bargeInEnabled
         self.autoConfirmEnabled = autoConfirmEnabled
+        self.showConfirmSheet = showConfirmSheet
     }
 
     // MARK: - Default Configuration
@@ -96,7 +102,8 @@ struct QuizSettings: Codable, Equatable, Sendable {
         voiceCommandsEnabled: true,
         autoRecordEnabled: true,
         bargeInEnabled: true,
-        autoConfirmEnabled: true
+        autoConfirmEnabled: true,
+        showConfirmSheet: true
     )
 
     // MARK: - Backward-Compatible Decoding
@@ -116,6 +123,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
         autoRecordEnabled = try container.decodeIfPresent(Bool.self, forKey: .autoRecordEnabled) ?? true
         bargeInEnabled = try container.decodeIfPresent(Bool.self, forKey: .bargeInEnabled) ?? true
         autoConfirmEnabled = try container.decodeIfPresent(Bool.self, forKey: .autoConfirmEnabled) ?? true
+        showConfirmSheet = try container.decodeIfPresent(Bool.self, forKey: .showConfirmSheet) ?? true
     }
 
     // MARK: - Validation Helpers

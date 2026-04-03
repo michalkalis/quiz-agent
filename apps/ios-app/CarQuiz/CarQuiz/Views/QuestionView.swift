@@ -50,36 +50,42 @@ struct QuestionView: View {
             }
             .padding(.horizontal)
 
-            // Question content
+            // Question content (scrollable for long text)
             if let question = viewModel.currentQuestion {
-                VStack(spacing: Theme.Spacing.md) {
-                    // Inline badges: progress + category
-                    HStack(spacing: Theme.Spacing.sm) {
-                        if let session = viewModel.currentSession,
-                           viewModel.questionsAnswered < session.maxQuestions {
-                            ProgressBadge(
-                                current: viewModel.questionsAnswered + 1,
-                                total: session.maxQuestions
-                            )
+                ScrollView(.vertical, showsIndicators: false) {
+                    VStack(spacing: Theme.Spacing.md) {
+                        // Question timer countdown
+                        if viewModel.answerTimerCountdown > 0 && viewModel.quizState == .askingQuestion {
+                            AnswerTimerBadge(seconds: viewModel.answerTimerCountdown)
                         }
-                        CategoryBadge(category: question.topic)
-                    }
 
-                    // Image or text question card
-                    if question.hasImage {
-                        ImageQuestionView(question: question)
-                    } else {
-                        Text(question.question)
-                            .font(.displayXL)
-                            .foregroundColor(Theme.Colors.textPrimary)
-                            .multilineTextAlignment(.center)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .padding(Theme.Spacing.lg)
-                            .frame(maxWidth: .infinity)
-                            .background(Theme.Colors.bgCard)
-                            .cornerRadius(Theme.Radius.xl)
-                            .padding(.horizontal, Theme.Spacing.md)
-                            .accessibilityIdentifier("question.text")
+                        // Inline badges: progress + category
+                        HStack(spacing: Theme.Spacing.sm) {
+                            if let session = viewModel.currentSession,
+                               viewModel.questionsAnswered < session.maxQuestions {
+                                ProgressBadge(
+                                    current: viewModel.questionsAnswered + 1,
+                                    total: session.maxQuestions
+                                )
+                            }
+                            CategoryBadge(category: question.topic)
+                        }
+
+                        // Image or text question card
+                        if question.hasImage {
+                            ImageQuestionView(question: question)
+                        } else {
+                            Text(question.question)
+                                .font(.displayXL)
+                                .foregroundColor(Theme.Colors.textPrimary)
+                                .multilineTextAlignment(.center)
+                                .padding(Theme.Spacing.lg)
+                                .frame(maxWidth: .infinity)
+                                .background(Theme.Colors.bgCard)
+                                .cornerRadius(Theme.Radius.xl)
+                                .padding(.horizontal, Theme.Spacing.md)
+                                .accessibilityIdentifier("question.text")
+                        }
                     }
                 }
             } else {
@@ -87,8 +93,6 @@ struct QuestionView: View {
                     .scaleEffect(1.5)
                     .tint(Theme.Colors.accentPrimary)
             }
-
-            Spacer()
 
             // Branch: MCQ options vs voice recording
             if let question = viewModel.currentQuestion, question.isMultipleChoice {
@@ -114,26 +118,20 @@ struct QuestionView: View {
             } else {
                 // Non-MCQ path: voice recording UI
 
-                // Answer timer badge
-                if viewModel.answerTimerCountdown > 0 && viewModel.quizState == .askingQuestion {
-                    AnswerTimerBadge(seconds: viewModel.answerTimerCountdown)
-                }
-
                 // Live transcript from streaming STT
-                if viewModel.isStreamingSTT && !viewModel.liveTranscript.isEmpty {
-                    Text(viewModel.liveTranscript)
-                        .font(.textMDBodyMedium)
-                        .foregroundColor(Theme.Colors.textPrimary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, Theme.Spacing.lg)
-                        .padding(.vertical, Theme.Spacing.sm)
-                        .frame(maxWidth: .infinity)
-                        .background(Theme.Colors.bgCard.opacity(0.8))
-                        .cornerRadius(Theme.Radius.lg)
-                        .padding(.horizontal, Theme.Spacing.md)
-                        .transition(.opacity)
-                        .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: viewModel.liveTranscript)
-                        .accessibilityLabel("Transcription: \(viewModel.liveTranscript)")
+                if !viewModel.liveTranscript.isEmpty {
+                    LiveTranscriptView(
+                        text: viewModel.liveTranscript,
+                        isCommitted: !viewModel.isStreamingSTT
+                    )
+                    .padding(.horizontal, Theme.Spacing.lg)
+                    .padding(.vertical, Theme.Spacing.sm)
+                    .frame(maxWidth: .infinity)
+                    .background(Theme.Colors.bgCard.opacity(0.8))
+                    .cornerRadius(Theme.Radius.lg)
+                    .padding(.horizontal, Theme.Spacing.md)
+                    .transition(.opacity)
+                    .accessibilityLabel("Transcription: \(viewModel.liveTranscript)")
                 }
 
                 // Recording status hint
@@ -288,8 +286,6 @@ struct QuestionView: View {
             return "Recording..."
         case .processing:
             return "Processing your answer..."
-        case .askingQuestion where viewModel.answerTimerCountdown > 0:
-            return "Recording starts automatically..."
         default:
             return "Tap to answer"
         }

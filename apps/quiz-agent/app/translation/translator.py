@@ -42,6 +42,29 @@ class TranslationService:
         self.client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         self.model = model
 
+    def _validate_translation(self, original: str, translated: str, target_language: str) -> str | None:
+        """Validate translation quality. Returns translated text if valid, None if rejected."""
+        if not translated or not translated.strip():
+            logger.warning("Translation empty for '%s' → %s", original[:50], target_language)
+            return None
+
+        translated = translated.strip()
+
+        # Minimum length check — no valid quiz question is under 15 chars
+        if len(translated) < 15:
+            logger.warning("Translation too short (%d chars) for '%s' → %s: '%s'",
+                           len(translated), original[:50], target_language, translated)
+            return None
+
+        # Length ratio check — translation shouldn't be less than 30% of original
+        ratio = len(translated) / len(original) if len(original) > 0 else 0
+        if ratio < 0.3:
+            logger.warning("Translation ratio too low (%.2f) for '%s' → %s: '%s'",
+                           ratio, original[:50], target_language, translated)
+            return None
+
+        return translated
+
     async def translate_question(
         self,
         question: str,
@@ -70,7 +93,7 @@ class TranslationService:
                 messages=[
                     {
                         "role": "system",
-                        "content": f"You are a professional translator. Translate quiz questions to {target_lang_name}. Preserve the meaning and difficulty. Return ONLY the translated question, nothing else."
+                        "content": f"You are a professional translator. Translate quiz questions to {target_lang_name}. Preserve the meaning and difficulty. Return ONLY the translated question, nothing else. The output must be a complete question sentence. Do NOT answer the question, only translate it."
                     },
                     {
                         "role": "user",
@@ -78,7 +101,7 @@ class TranslationService:
                     }
                 ],
                 temperature=0.3,  # Low temperature for consistent translations
-                max_tokens=200
+                max_tokens=300
             )
 
             translated = response.choices[0].message.content.strip()
@@ -89,7 +112,11 @@ class TranslationService:
             if translated.startswith("'") and translated.endswith("'"):
                 translated = translated[1:-1]
 
-            return translated
+            validated = self._validate_translation(question, translated, target_language)
+            if validated is None:
+                logger.warning("Translation validation failed, falling back to original: '%s'", question[:50])
+                return question  # Fallback to original English
+            return validated
 
         except Exception as e:
             logger.warning("Translation failed, using original: %s", e)

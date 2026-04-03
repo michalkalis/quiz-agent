@@ -1653,9 +1653,32 @@ final class QuizViewModel: ObservableObject {
         }
     }
 
+    /// Repeat the current question audio (public for UI button)
+    func repeatQuestion() async {
+        if quizState == .askingQuestion, let audioUrl = currentQuestionAudioUrl {
+            cancelAnswerTimer()
+            cancelThinkingTime()
+            await stopAnyPlayingAudio()
+            await playQuestionAudio(from: audioUrl)
+        }
+    }
+
     private func playQuestionAudio(from urlString: String) async {
         // Store URL for "repeat" command
         currentQuestionAudioUrl = urlString
+
+        // Mute guard: skip TTS but still start timer and recording flow
+        guard !settings.isMuted else {
+            guard quizState == .askingQuestion else { return }
+            guard currentQuestion?.isMultipleChoice != true else { return }
+
+            if settings.autoRecordEnabled && voiceCommandService != nil && !isRerecording {
+                await startThinkingTimeCountdown()
+            } else {
+                startAnswerTimer()
+            }
+            return
+        }
 
         // Set echo cancellation text and TTS active flag before playback
         voiceCommandService?.setPlaybackText(currentQuestion?.question)
@@ -1869,12 +1892,7 @@ final class QuizViewModel: ObservableObject {
             }
 
         case .repeat:
-            if quizState == .askingQuestion, let audioUrl = currentQuestionAudioUrl {
-                cancelAnswerTimer()
-                cancelThinkingTime()
-                await stopAnyPlayingAudio()
-                await playQuestionAudio(from: audioUrl)
-            }
+            await repeatQuestion()
 
         case .score:
             if quizState == .askingQuestion || quizState.isShowingResult {

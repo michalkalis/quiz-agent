@@ -25,7 +25,7 @@ struct QuestionView: View {
                 .padding(.top, Theme.Spacing.sm)
                 .accessibilityHidden(true)
 
-            // Top bar: voice indicator + close button
+            // Top bar: voice indicator + repeat/mute + close button
             HStack {
                 // Voice command indicator (left)
                 if viewModel.voiceCommandsAvailable {
@@ -33,6 +33,33 @@ struct QuestionView: View {
                 }
 
                 Spacer()
+
+                // Repeat question button
+                Button {
+                    Task { await viewModel.repeatQuestion() }
+                } label: {
+                    Image(systemName: "speaker.wave.2.circle")
+                        .font(.system(size: Theme.Components.iconMD))
+                        .foregroundColor(Theme.Colors.textSecondary)
+                        .frame(width: 44, height: 44)
+                }
+                .accessibilityLabel("Repeat question")
+                .accessibilityHint("Play the question audio again")
+                .accessibilityIdentifier("question.repeat")
+                .disabled(!canInteract)
+
+                // Mute toggle button
+                Button {
+                    viewModel.settings.isMuted.toggle()
+                } label: {
+                    Image(systemName: viewModel.settings.isMuted ? "speaker.slash" : "speaker.wave.2")
+                        .font(.system(size: Theme.Components.iconSM))
+                        .foregroundColor(viewModel.settings.isMuted ? Theme.Colors.error : Theme.Colors.textSecondary)
+                        .frame(width: 44, height: 44)
+                }
+                .accessibilityLabel(viewModel.settings.isMuted ? "Unmute" : "Mute")
+                .accessibilityHint("Toggle question audio playback")
+                .accessibilityIdentifier("question.mute")
 
                 Button {
                     showEndQuizConfirmation = true

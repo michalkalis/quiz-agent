@@ -58,6 +58,9 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// When disabled, answers are submitted immediately after transcription
     var showConfirmSheet: Bool
 
+    /// Whether TTS audio playback is muted (questions still display visually)
+    var isMuted: Bool
+
     // MARK: - Memberwise Init
 
     init(
@@ -74,7 +77,8 @@ struct QuizSettings: Codable, Equatable, Sendable {
         autoRecordEnabled: Bool = true,
         bargeInEnabled: Bool = true,
         autoConfirmEnabled: Bool = true,
-        showConfirmSheet: Bool = true
+        showConfirmSheet: Bool = true,
+        isMuted: Bool = false
     ) {
         self.language = language
         self.audioMode = audioMode
@@ -90,6 +94,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
         self.bargeInEnabled = bargeInEnabled
         self.autoConfirmEnabled = autoConfirmEnabled
         self.showConfirmSheet = showConfirmSheet
+        self.isMuted = isMuted
     }
 
     // MARK: - Default Configuration
@@ -109,7 +114,8 @@ struct QuizSettings: Codable, Equatable, Sendable {
         autoRecordEnabled: true,
         bargeInEnabled: true,
         autoConfirmEnabled: true,
-        showConfirmSheet: true
+        showConfirmSheet: true,
+        isMuted: false
     )
 
     // MARK: - Backward-Compatible Decoding
@@ -131,6 +137,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
         bargeInEnabled = try container.decodeIfPresent(Bool.self, forKey: .bargeInEnabled) ?? true
         autoConfirmEnabled = try container.decodeIfPresent(Bool.self, forKey: .autoConfirmEnabled) ?? true
         showConfirmSheet = try container.decodeIfPresent(Bool.self, forKey: .showConfirmSheet) ?? true
+        isMuted = try container.decodeIfPresent(Bool.self, forKey: .isMuted) ?? false
     }
 
     // MARK: - Validation Helpers

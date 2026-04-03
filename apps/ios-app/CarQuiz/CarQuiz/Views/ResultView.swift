@@ -144,72 +144,21 @@ struct ResultView: View {
                     .padding(.horizontal)
                 }
 
-                // MARK: - Auto-advance indicator
-                if viewModel.autoAdvanceEnabled && !viewModel.currentQuestionPaused {
-                    if viewModel.autoAdvanceCountdown > 0 {
-                        CountdownTimer(seconds: viewModel.autoAdvanceCountdown)
-                    } else {
-                        HStack(spacing: Theme.Spacing.xs) {
-                            ProgressView()
-                                .scaleEffect(0.8)
-                                .tint(Theme.Colors.accentPrimary)
-                                .accessibilityHidden(true)
-                            Text("Loading next question...")
-                                .font(.textXS)
-                                .foregroundColor(Theme.Colors.textSecondary)
-                        }
-                        .accessibilityElement(children: .combine)
-                        .accessibilityLabel("Loading next question")
-                    }
-                } else if viewModel.currentQuestionPaused {
-                    Text("Staying on this question")
-                        .font(.textXS)
-                        .foregroundColor(Theme.Colors.textSecondary)
-                        .accessibilityLabel("Paused, staying on this question")
-                }
-
-                // MARK: - Action Buttons
-                VStack(spacing: Theme.Spacing.sm) {
-                    PrimaryButton(title: "Continue", icon: "arrow.right") {
-                        viewModel.continueToNext()
-                    }
-                    .accessibilityIdentifier("result.continue")
-
-                    Button("Stay Here") {
-                        viewModel.pauseQuiz()
-                    }
-                    .accessibilityLabel("Stay Here")
-                    .accessibilityHint("Pause auto-advance and stay on this result")
-                    .accessibilityIdentifier("result.stayHere")
-                    .font(.textMDMedium)
-                    .foregroundColor(Theme.Colors.textSecondary)
-                    .frame(minHeight: 44)
-                    .contentShape(Rectangle())
-                    .disabled(viewModel.currentQuestionPaused)
-
-                    // View Source button
-                    if viewModel.resultQuestion?.sourceUrl != nil {
-                        Button {
-                            showSourceWebView = true
-                        } label: {
-                            HStack(spacing: 4) {
-                                Image(systemName: "link")
-                                    .font(.textXS)
-                                    .accessibilityHidden(true)
-                                Text("View Source")
-                            }
-                            .foregroundColor(Theme.Colors.accentPrimary)
-                        }
-                        .accessibilityLabel("View Source")
-                        .accessibilityHint("Opens the source article")
-                        .accessibilityIdentifier("result.viewSource")
-                    }
-                }
-                .padding(.horizontal)
-                .padding(.bottom, Theme.Spacing.lg)
+                // Bottom spacer so content doesn't hide behind sticky bar
+                Spacer()
+                    .frame(height: Theme.Spacing.xxl + Theme.Spacing.xl)
             }
         }
         .background(Theme.Colors.bgPrimary)
+        .safeAreaInset(edge: .bottom) {
+            // MARK: - Sticky Bottom Bar
+            StickyBottomBar(
+                viewModel: viewModel,
+                autoAdvanceCountdown: viewModel.autoAdvanceCountdown,
+                autoAdvanceEnabled: viewModel.autoAdvanceEnabled,
+                isPaused: viewModel.currentQuestionPaused
+            )
+        }
         .interactiveMinimize(
             isMinimized: $viewModel.isMinimized,
             canMinimize: viewModel.canMinimize
@@ -262,6 +211,76 @@ struct ResultView: View {
         case .skipped:
             return .skipped
         }
+    }
+}
+
+// MARK: - Sticky Bottom Bar
+
+private struct StickyBottomBar: View {
+    @ObservedObject var viewModel: QuizViewModel
+    let autoAdvanceCountdown: Int
+    let autoAdvanceEnabled: Bool
+    let isPaused: Bool
+
+    var body: some View {
+        VStack(spacing: Theme.Spacing.sm) {
+            // Auto-advance indicator above buttons
+            if autoAdvanceEnabled && !isPaused {
+                if autoAdvanceCountdown > 0 {
+                    CountdownTimer(seconds: autoAdvanceCountdown)
+                } else {
+                    HStack(spacing: Theme.Spacing.xs) {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                            .tint(Theme.Colors.accentPrimary)
+                            .accessibilityHidden(true)
+                        Text("Loading next question...")
+                            .font(.textXS)
+                            .foregroundColor(Theme.Colors.textSecondary)
+                    }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Loading next question")
+                }
+            } else if isPaused {
+                Text("Staying on this question")
+                    .font(.textXS)
+                    .foregroundColor(Theme.Colors.textSecondary)
+                    .accessibilityLabel("Paused, staying on this question")
+            }
+
+            // Primary continue button
+            PrimaryButton(title: continueTitle, icon: "arrow.right") {
+                viewModel.continueToNext()
+            }
+            .accessibilityIdentifier("result.continue")
+
+            // Stay Here secondary text button
+            Button("Stay Here") {
+                viewModel.pauseQuiz()
+            }
+            .accessibilityLabel("Stay Here")
+            .accessibilityHint("Pause auto-advance and stay on this result")
+            .accessibilityIdentifier("result.stayHere")
+            .font(.textMDMedium)
+            .foregroundColor(Theme.Colors.textSecondary)
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
+            .disabled(isPaused)
+        }
+        .padding(.horizontal)
+        .padding(.top, Theme.Spacing.sm)
+        .padding(.bottom, Theme.Spacing.xs)
+        .background(
+            Theme.Colors.bgPrimary
+                .shadow(color: Theme.Shadows.elevationColor, radius: Theme.Shadows.elevationRadius, y: -Theme.Shadows.elevationY)
+        )
+    }
+
+    private var continueTitle: String {
+        if autoAdvanceEnabled && !isPaused && autoAdvanceCountdown > 0 {
+            return "Continue (\(autoAdvanceCountdown)s)"
+        }
+        return "Continue"
     }
 }
 

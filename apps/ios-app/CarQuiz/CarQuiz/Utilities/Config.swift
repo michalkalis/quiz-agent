@@ -84,6 +84,9 @@ enum Config {
     /// Available answer time limit options (in seconds, 0 = Off)
     static let answerTimeLimitOptions = [0, 15, 20, 30, 45, 60]
 
+    /// Available thinking time options (in seconds, 0 = immediate recording)
+    static let thinkingTimeOptions: [Int] = [0, 15, 30, 45, 60, 90, 120]
+
     /// Duration for auto-stop recording — hard safety limit (seconds)
     /// Increased from 4s to 15s for Phase 2 silence detection (users may speak longer answers)
     static let autoRecordingDuration: TimeInterval = 15.0

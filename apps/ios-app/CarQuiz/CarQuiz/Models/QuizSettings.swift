@@ -33,6 +33,9 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// Answer time limit in seconds (0 = Off). MCQ: auto-skips on expiry. Voice: auto-starts recording.
     var answerTimeLimit: Int
 
+    /// Thinking time in seconds before auto-recording starts (0 = immediate 500ms delay)
+    var thinkingTime: Int
+
     /// Preferred input device UID (nil = automatic selection)
     var preferredInputDeviceId: String?
 
@@ -65,6 +68,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
         difficulty: String,
         autoAdvanceDelay: Int,
         answerTimeLimit: Int,
+        thinkingTime: Int = 60,
         preferredInputDeviceId: String?,
         voiceCommandsEnabled: Bool = true,
         autoRecordEnabled: Bool = true,
@@ -79,6 +83,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
         self.difficulty = difficulty
         self.autoAdvanceDelay = autoAdvanceDelay
         self.answerTimeLimit = answerTimeLimit
+        self.thinkingTime = thinkingTime
         self.preferredInputDeviceId = preferredInputDeviceId
         self.voiceCommandsEnabled = voiceCommandsEnabled
         self.autoRecordEnabled = autoRecordEnabled
@@ -98,6 +103,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
         difficulty: "medium",
         autoAdvanceDelay: 8,
         answerTimeLimit: 30,
+        thinkingTime: 60,
         preferredInputDeviceId: nil,
         voiceCommandsEnabled: true,
         autoRecordEnabled: true,
@@ -118,6 +124,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
         difficulty = try container.decode(String.self, forKey: .difficulty)
         autoAdvanceDelay = try container.decode(Int.self, forKey: .autoAdvanceDelay)
         answerTimeLimit = try container.decode(Int.self, forKey: .answerTimeLimit)
+        thinkingTime = try container.decodeIfPresent(Int.self, forKey: .thinkingTime) ?? 60
         preferredInputDeviceId = try container.decodeIfPresent(String.self, forKey: .preferredInputDeviceId)
         voiceCommandsEnabled = try container.decodeIfPresent(Bool.self, forKey: .voiceCommandsEnabled) ?? true
         autoRecordEnabled = try container.decodeIfPresent(Bool.self, forKey: .autoRecordEnabled) ?? true
@@ -139,6 +146,9 @@ struct QuizSettings: Codable, Equatable, Sendable {
 
     /// Valid answer time limit options (seconds, 0 = Off)
     static let answerTimeLimitOptions = [0, 15, 20, 30, 45, 60]
+
+    /// Valid thinking time options (seconds, 0 = immediate recording)
+    static let thinkingTimeOptions = [0, 15, 30, 45, 60, 90, 120]
 
     /// Valid category options (nil means "All Categories")
     static let categoryOptions: [String?] = [nil, "adults", "general"]

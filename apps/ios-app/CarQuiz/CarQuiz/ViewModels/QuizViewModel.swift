@@ -88,6 +88,9 @@ final class QuizViewModel: ObservableObject {
     // Answer timer countdown (visible on QuestionView)
     @Published var answerTimerCountdown: Int = 0
 
+    // Thinking time countdown (visible on QuestionView before auto-recording)
+    @Published var thinkingTimeCountdown: Int = 0
+
     // Auto-advance enabled state (global setting toggle)
     @Published var autoAdvanceEnabled: Bool = true
 
@@ -223,6 +226,9 @@ final class QuizViewModel: ObservableObject {
 
     // Auto-confirm countdown task (2s before auto-confirming transcribed answer)
     private var autoConfirmTask: Task<Void, Never>?
+
+    // Thinking time countdown task (delay before auto-recording)
+    private var thinkingTimeTask: Task<Void, Never>?
 
     // Streaming STT event listener task
     private var sttEventTask: Task<Void, Never>?
@@ -408,6 +414,7 @@ final class QuizViewModel: ObservableObject {
         switch quizState {
         case .askingQuestion:
             cancelAnswerTimer()
+            cancelThinkingTime()
             await startRecording()
         case .recording:
             cancelAutoStopRecordingTimer()
@@ -1067,6 +1074,7 @@ final class QuizViewModel: ObservableObject {
         guard let sessionId = currentSession?.id else { return }
 
         cancelAnswerTimer()
+        cancelThinkingTime()
 
         // Stop any playing question audio immediately
         await stopAnyPlayingAudio()
@@ -1286,14 +1294,45 @@ final class QuizViewModel: ObservableObject {
         guard currentQuestion?.isMultipleChoice != true else { return }
 
         if settings.autoRecordEnabled && voiceCommandService != nil && !isRerecording {
-            // Auto-record path: 500ms pause → auto-start recording
+            // Auto-record path: thinking time countdown → auto-start recording
+            await startThinkingTimeCountdown()
+        } else {
+            startAnswerTimer()
+        }
+    }
+
+    // MARK: - Thinking Time Countdown
+
+    /// Countdown before auto-recording starts, giving user time to think
+    private func startThinkingTimeCountdown() async {
+        let thinkingSeconds = settings.thinkingTime
+        guard thinkingSeconds > 0 else {
+            // No thinking time — start recording immediately (500ms delay like before)
             try? await Task.sleep(nanoseconds: Config.autoRecordDelayMs * 1_000_000)
             guard quizState == .askingQuestion else { return }
             isAutoRecording = true
             await startRecording()
-        } else {
-            startAnswerTimer()
+            return
         }
+
+        thinkingTimeCountdown = thinkingSeconds
+        for i in stride(from: thinkingSeconds, through: 1, by: -1) {
+            guard quizState == .askingQuestion else { return }
+            thinkingTimeCountdown = i
+            try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
+        }
+        thinkingTimeCountdown = 0
+
+        guard quizState == .askingQuestion else { return }
+        isAutoRecording = true
+        await startRecording()
+    }
+
+    /// Cancel the thinking time countdown
+    private func cancelThinkingTime() {
+        thinkingTimeTask?.cancel()
+        thinkingTimeTask = nil
+        thinkingTimeCountdown = 0
     }
 
     // MARK: - Answer Timer
@@ -1642,11 +1681,8 @@ final class QuizViewModel: ObservableObject {
         guard currentQuestion?.isMultipleChoice != true else { return }
 
         if settings.autoRecordEnabled && voiceCommandService != nil && !isRerecording {
-            // Auto-record path: 500ms pause → auto-start recording
-            try? await Task.sleep(nanoseconds: Config.autoRecordDelayMs * 1_000_000)
-            guard quizState == .askingQuestion else { return }
-            isAutoRecording = true
-            await startRecording()
+            // Auto-record path: thinking time countdown → auto-start recording
+            await startThinkingTimeCountdown()
         } else {
             // Legacy path: countdown timer → fixed duration recording
             startAnswerTimer()
@@ -1686,6 +1722,8 @@ final class QuizViewModel: ObservableObject {
         voiceSubmissionTask = nil
         answerTimerTask?.cancel()
         answerTimerTask = nil
+        thinkingTimeTask?.cancel()
+        thinkingTimeTask = nil
         autoStopRecordingTask?.cancel()
         autoStopRecordingTask = nil
         silenceDetectionTask?.cancel()
@@ -1721,6 +1759,7 @@ final class QuizViewModel: ObservableObject {
         currentQuestionAudioUrl = nil
         autoAdvanceCountdown = 0
         answerTimerCountdown = 0
+        thinkingTimeCountdown = 0
         currentQuestionPaused = false
         autoAdvanceEnabled = true
         isRerecording = false
@@ -1812,6 +1851,7 @@ final class QuizViewModel: ObservableObject {
         case .start:
             if quizState == .askingQuestion {
                 cancelAnswerTimer()
+                cancelThinkingTime()
                 await startRecording()
             } else if showAnswerConfirmation {
                 rerecordAnswer()
@@ -1831,6 +1871,7 @@ final class QuizViewModel: ObservableObject {
         case .repeat:
             if quizState == .askingQuestion, let audioUrl = currentQuestionAudioUrl {
                 cancelAnswerTimer()
+                cancelThinkingTime()
                 await stopAnyPlayingAudio()
                 await playQuestionAudio(from: audioUrl)
             }

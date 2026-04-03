@@ -118,6 +118,16 @@ struct QuestionView: View {
             } else {
                 // Non-MCQ path: voice recording UI
 
+                // Thinking time countdown badge
+                if viewModel.thinkingTimeCountdown > 0 && viewModel.quizState == .askingQuestion {
+                    ThinkingTimeBadge(seconds: viewModel.thinkingTimeCountdown)
+                }
+
+                // Answer timer badge
+                if viewModel.answerTimerCountdown > 0 && viewModel.quizState == .askingQuestion {
+                    AnswerTimerBadge(seconds: viewModel.answerTimerCountdown)
+                }
+
                 // Live transcript from streaming STT
                 if !viewModel.liveTranscript.isEmpty {
                     LiveTranscriptView(
@@ -286,6 +296,10 @@ struct QuestionView: View {
             return "Recording..."
         case .processing:
             return "Processing your answer..."
+        case .askingQuestion where viewModel.thinkingTimeCountdown > 0:
+            return "Think... recording starts soon"
+        case .askingQuestion where viewModel.answerTimerCountdown > 0:
+            return "Recording starts automatically..."
         default:
             return "Tap to answer"
         }
@@ -332,6 +346,32 @@ struct QuestionView: View {
 
     private func handleMicrophoneTap() {
         Task { await viewModel.toggleRecording() }
+    }
+}
+
+// MARK: - Thinking Time Badge
+
+private struct ThinkingTimeBadge: View {
+    let seconds: Int
+
+    var body: some View {
+        HStack(spacing: Theme.Spacing.xs) {
+            Image(systemName: "brain.head.profile")
+                .font(.textSM)
+                .accessibilityHidden(true)
+            Text("\(seconds)s")
+                .font(.displayMD)
+                .monospacedDigit()
+        }
+        .foregroundColor(seconds <= 5 ? Theme.Colors.warning : Theme.Colors.textSecondary)
+        .padding(.horizontal, Theme.Spacing.md)
+        .padding(.vertical, Theme.Spacing.xs)
+        .background(
+            (seconds <= 5 ? Theme.Colors.warning.opacity(0.15) : Theme.Colors.bgCard)
+        )
+        .cornerRadius(Theme.Radius.lg)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(seconds) seconds to think")
     }
 }
 

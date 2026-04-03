@@ -214,6 +214,36 @@ struct SettingsView: View {
                             )
                         }
                     }
+
+                    // Thinking Time
+                    VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
+                        SettingsInputField(
+                            label: "Thinking Time",
+                            icon: "brain.head.profile",
+                            value: viewModel.settings.thinkingTime == 0
+                                ? "Off"
+                                : "\(viewModel.settings.thinkingTime)s"
+                        ) {
+                            Menu {
+                                ForEach(Config.thinkingTimeOptions, id: \.self) { seconds in
+                                    Button(seconds == 0 ? "Off" : "\(seconds) seconds") {
+                                        viewModel.settings.thinkingTime = seconds
+                                    }
+                                }
+                            } label: {
+                                menuLabel(
+                                    value: viewModel.settings.thinkingTime == 0
+                                        ? "Off"
+                                        : "\(viewModel.settings.thinkingTime)s"
+                                )
+                            }
+                        }
+
+                        Text("Delay before auto-recording starts after the question is read. Tap mic to skip.")
+                            .font(.textXS)
+                            .foregroundColor(Theme.Colors.textTertiary)
+                            .padding(.horizontal, 4)
+                    }
                 }
 
                 // MARK: - Question History Section

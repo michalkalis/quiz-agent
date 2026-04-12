@@ -22,33 +22,46 @@ from .voices import (
     TTS_SPEED
 )
 
-# Volume boost setting (in decibels)
-# +6dB ≈ double perceived loudness, compensates for quiet OpenAI TTS output
-VOLUME_BOOST_DB = 6.0
+# Target peak level after volume boost (in dBFS)
+# 0 dBFS = maximum digital level. We target -0.5 to leave tiny headroom.
+TARGET_PEAK_DBFS = -0.5
+
+# Additional boost after normalization (in dB)
+# Applied on top of normalization — causes soft clipping on peaks
+# but increases perceived loudness significantly for speech.
+# +3dB on top of normalization ≈ 2x louder than old +6dB flat boost
+POST_NORMALIZE_BOOST_DB = 3.0
 
 
-def boost_volume(audio_data: bytes, gain_db: float = VOLUME_BOOST_DB) -> bytes:
-    """Boost audio volume using pydub.
+def boost_volume(audio_data: bytes, target_peak: float = TARGET_PEAK_DBFS,
+                 extra_boost: float = POST_NORMALIZE_BOOST_DB) -> bytes:
+    """Maximize audio volume: normalize to peak, then apply extra boost.
+
+    Strategy: First normalize so the loudest peak hits target_peak dBFS,
+    then apply a small extra boost for perceived loudness (speech tolerates
+    mild peak clipping well). Net effect is significantly louder than the
+    previous flat +6dB boost.
 
     Args:
         audio_data: Raw audio bytes (MP3 format)
-        gain_db: Gain in decibels (+6dB ≈ double perceived loudness)
+        target_peak: Normalize peak to this level in dBFS (-0.5 default)
+        extra_boost: Additional gain in dB after normalization (+3 default)
 
     Returns:
         Volume-boosted audio bytes in MP3 format
-
-    Note:
-        Requires ffmpeg installed on the system for pydub to work.
-        Uses MP3 format for universal iOS AVPlayer compatibility.
     """
     try:
         from pydub import AudioSegment
 
-        # Load MP3 audio from bytes
         audio = AudioSegment.from_file(io.BytesIO(audio_data), format="mp3")
 
-        # Apply gain boost
-        louder_audio = audio + gain_db
+        # Step 1: Normalize — bring peak to target level
+        peak_db = audio.max_dBFS
+        normalization_gain = target_peak - peak_db
+        normalized = audio + normalization_gain
+
+        # Step 2: Extra boost for perceived loudness (mild clipping is OK for speech)
+        louder_audio = normalized + extra_boost
 
         # Export back to MP3 (64k bitrate is good quality for speech)
         buffer = io.BytesIO()
@@ -56,7 +69,6 @@ def boost_volume(audio_data: bytes, gain_db: float = VOLUME_BOOST_DB) -> bytes:
         return buffer.getvalue()
 
     except Exception as e:
-        # If volume boost fails, return original audio (graceful fallback)
         logger.warning(f"Volume boost failed (returning original): {e}")
         return audio_data
 
@@ -147,7 +159,7 @@ class TTSService:
                 # Read audio bytes
                 audio_data = response.content
 
-                # Apply volume boost (+6dB ≈ double perceived loudness)
+                # Apply volume boost (normalize + extra boost for max loudness)
                 audio_data = boost_volume(audio_data)
 
                 # Cache result (cache the boosted version)

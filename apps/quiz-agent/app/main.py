@@ -29,12 +29,11 @@ import sentry_sdk
 # Load environment variables from .env files
 try:
     from dotenv import load_dotenv
-    # Try multiple locations: current dir, parent dirs, and project root
+    # Repo root is 3 levels up from app/main.py: app/ → quiz-agent/ → apps/ → repo root
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    project_root = os.path.join(base_dir, "../..")
-    load_dotenv(os.path.join(project_root, ".env"))  # Project root .env
-    load_dotenv(os.path.join(base_dir, "../../.env"))  # Also check parent
-    load_dotenv()  # Current directory .env (overrides others)
+    repo_root = os.path.join(base_dir, "../../..")
+    load_dotenv(os.path.join(repo_root, ".env"))  # Repo root .env
+    load_dotenv()  # CWD .env (overrides if present)
 except ImportError:
     # python-dotenv not available, skip .env loading
     pass

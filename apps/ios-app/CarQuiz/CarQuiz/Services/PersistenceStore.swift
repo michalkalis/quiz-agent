@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import os
 
 /// Error types for question history operations
 enum QuestionHistoryError: Error {
@@ -136,17 +137,13 @@ final class PersistenceStore: PersistenceStoreProtocol {
     func saveSession(id: String) {
         userDefaults.set(id, forKey: sessionIdKey)
 
-        if Config.verboseLogging {
-            print("📦 PersistenceStore: Saved session ID: \(id)")
-        }
+        Logger.persistence.debug("📦 PersistenceStore: Saved session ID: \(id, privacy: .public)")
     }
 
     func clearSession() {
         userDefaults.removeObject(forKey: sessionIdKey)
 
-        if Config.verboseLogging {
-            print("📦 PersistenceStore: Cleared session ID")
-        }
+        Logger.persistence.debug("📦 PersistenceStore: Cleared session ID")
     }
 
     // MARK: - Settings
@@ -157,22 +154,16 @@ final class PersistenceStore: PersistenceStoreProtocol {
             let data = try encoder.encode(settings)
             userDefaults.set(data, forKey: settingsKey)
 
-            if Config.verboseLogging {
-                print("📦 PersistenceStore: Saved settings: \(settings)")
-            }
+            Logger.persistence.debug("📦 PersistenceStore: Saved settings: \(String(describing: settings), privacy: .public)")
         } catch {
-            if Config.verboseLogging {
-                print("❌ PersistenceStore: Failed to encode settings: \(error)")
-            }
+            Logger.persistence.error("❌ PersistenceStore: Failed to encode settings: \(error, privacy: .public)")
         }
     }
 
     func loadSettings() -> QuizSettings {
         // Try to load saved settings
         guard let data = userDefaults.data(forKey: settingsKey) else {
-            if Config.verboseLogging {
-                print("📦 PersistenceStore: No saved settings found, using default")
-            }
+            Logger.persistence.debug("📦 PersistenceStore: No saved settings found, using default")
             return QuizSettings.default
         }
 
@@ -180,15 +171,11 @@ final class PersistenceStore: PersistenceStoreProtocol {
             let decoder = JSONDecoder()
             let settings = try decoder.decode(QuizSettings.self, from: data)
 
-            if Config.verboseLogging {
-                print("📦 PersistenceStore: Loaded settings: \(settings)")
-            }
+            Logger.persistence.debug("📦 PersistenceStore: Loaded settings: \(String(describing: settings), privacy: .public)")
 
             return settings
         } catch {
-            if Config.verboseLogging {
-                print("❌ PersistenceStore: Failed to decode settings: \(error), using default")
-            }
+            Logger.persistence.error("❌ PersistenceStore: Failed to decode settings: \(error, privacy: .public), using default")
             return QuizSettings.default
         }
     }
@@ -208,26 +195,20 @@ final class PersistenceStore: PersistenceStoreProtocol {
 
         // Skip if already in history (deduplication)
         guard !history.contains(id) else {
-            if Config.verboseLogging {
-                print("📦 PersistenceStore: Question \(id) already in history, skipping")
-            }
+            Logger.persistence.debug("📦 PersistenceStore: Question \(id, privacy: .public) already in history, skipping")
             return
         }
 
         // Check capacity before adding
         if history.count >= maxCapacity {
-            if Config.verboseLogging {
-                print("❌ PersistenceStore: Capacity reached (\(maxCapacity) questions)")
-            }
+            Logger.persistence.warning("❌ PersistenceStore: Capacity reached (\(self.maxCapacity, privacy: .public) questions)")
             throw QuestionHistoryError.capacityReached
         }
 
         history.append(id)
         userDefaults.set(history, forKey: historyKey)
 
-        if Config.verboseLogging {
-            print("📦 PersistenceStore: Saved question \(id) (total: \(history.count)/\(maxCapacity))")
-        }
+        Logger.persistence.debug("📦 PersistenceStore: Saved question \(id, privacy: .public) (total: \(history.count, privacy: .public)/\(self.maxCapacity, privacy: .public))")
     }
 
     func addQuestionIds(_ ids: [String]) throws {
@@ -238,33 +219,25 @@ final class PersistenceStore: PersistenceStoreProtocol {
 
         // Check capacity before adding
         if history.count + newIds.count > maxCapacity {
-            if Config.verboseLogging {
-                print("❌ PersistenceStore: Adding \(newIds.count) questions would exceed capacity")
-            }
+            Logger.persistence.warning("❌ PersistenceStore: Adding \(newIds.count, privacy: .public) questions would exceed capacity")
             throw QuestionHistoryError.capacityReached
         }
 
         history.append(contentsOf: newIds)
         userDefaults.set(history, forKey: historyKey)
 
-        if Config.verboseLogging {
-            print("📦 PersistenceStore: Saved \(newIds.count) questions (total: \(history.count)/\(maxCapacity))")
-        }
+        Logger.persistence.debug("📦 PersistenceStore: Saved \(newIds.count, privacy: .public) questions (total: \(history.count, privacy: .public)/\(self.maxCapacity, privacy: .public))")
     }
 
     func clearHistory() {
         userDefaults.removeObject(forKey: historyKey)
 
-        if Config.verboseLogging {
-            print("📦 PersistenceStore: Cleared all history")
-        }
+        Logger.persistence.info("📦 PersistenceStore: Cleared all history")
     }
 
     func getExclusionList() -> [String] {
         let history = askedQuestionIds
-        if Config.verboseLogging {
-            print("📦 PersistenceStore: Retrieved \(history.count) excluded question IDs")
-        }
+        Logger.persistence.debug("📦 PersistenceStore: Retrieved \(history.count, privacy: .public) excluded question IDs")
         return history
     }
 
@@ -277,9 +250,7 @@ final class PersistenceStore: PersistenceStoreProtocol {
         do {
             return try JSONDecoder().decode(QuizStats.self, from: data)
         } catch {
-            if Config.verboseLogging {
-                print("❌ PersistenceStore: Failed to decode stats: \(error), using empty")
-            }
+            Logger.persistence.error("❌ PersistenceStore: Failed to decode stats: \(error, privacy: .public), using empty")
             return QuizStats.empty
         }
     }
@@ -289,9 +260,7 @@ final class PersistenceStore: PersistenceStoreProtocol {
             let data = try JSONEncoder().encode(stats)
             userDefaults.set(data, forKey: statsKey)
         } catch {
-            if Config.verboseLogging {
-                print("❌ PersistenceStore: Failed to encode stats: \(error)")
-            }
+            Logger.persistence.error("❌ PersistenceStore: Failed to encode stats: \(error, privacy: .public)")
         }
     }
 }

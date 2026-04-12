@@ -1164,3 +1164,200 @@ struct QuizViewModelMCQSubmissionTests {
         #expect(viewModel.errorMessage == "No active session")
     }
 }
+
+// MARK: - State Transition Tests
+
+@Suite("QuizViewModel State Transition Tests")
+struct QuizViewModelStateTransitionTests {
+
+    @MainActor
+    private func makeViewModel() -> QuizViewModel {
+        QuizViewModel(
+            networkService: MockNetworkService(),
+            audioService: MockAudioService(),
+            persistenceStore: MockPersistenceStore()
+        )
+    }
+
+    @Test("valid transition from idle to startingQuiz")
+    @MainActor
+    func testValidTransitionFromIdleToStartingQuiz() async throws {
+        let viewModel = makeViewModel()
+        #expect(viewModel.quizState == .idle)
+
+        viewModel.transition(to: .startingQuiz)
+
+        #expect(viewModel.quizState == .startingQuiz)
+    }
+
+    @Test("valid transition from askingQuestion to recording")
+    @MainActor
+    func testValidTransitionFromAskingQuestionToRecording() async throws {
+        let viewModel = makeViewModel()
+        viewModel.quizState = .askingQuestion
+
+        viewModel.transition(to: .recording)
+
+        #expect(viewModel.quizState == .recording)
+    }
+
+    @Test("transition to error from askingQuestion, recording, and processing")
+    @MainActor
+    func testTransitionToErrorFromAnyState() async throws {
+        let viewModel = makeViewModel()
+
+        // From askingQuestion
+        viewModel.quizState = .askingQuestion
+        viewModel.transition(to: .error(message: "fail", context: .submission))
+        #expect(viewModel.quizState.isError)
+
+        // From recording
+        viewModel.quizState = .recording
+        viewModel.transition(to: .error(message: "fail", context: .recording))
+        #expect(viewModel.quizState.isError)
+
+        // From processing
+        viewModel.quizState = .processing
+        viewModel.transition(to: .error(message: "fail", context: .submission))
+        #expect(viewModel.quizState.isError)
+    }
+
+    @Test("transition from error to idle")
+    @MainActor
+    func testTransitionFromErrorToIdle() async throws {
+        let viewModel = makeViewModel()
+        viewModel.quizState = .error(message: "Something broke", context: .submission)
+
+        viewModel.transition(to: .idle)
+
+        #expect(viewModel.quizState == .idle)
+    }
+
+    @Test("transition from error to askingQuestion (retry)")
+    @MainActor
+    func testTransitionFromErrorToAskingQuestion() async throws {
+        let viewModel = makeViewModel()
+        viewModel.quizState = .error(message: "Recording error", context: .recording)
+
+        viewModel.transition(to: .askingQuestion)
+
+        #expect(viewModel.quizState == .askingQuestion)
+    }
+
+    @Test("state labels match expected strings")
+    @MainActor
+    func testStateLabel() async throws {
+        #expect(QuizState.idle.label == "idle")
+        #expect(QuizState.startingQuiz.label == "startingQuiz")
+        #expect(QuizState.askingQuestion.label == "askingQuestion")
+        #expect(QuizState.recording.label == "recording")
+        #expect(QuizState.processing.label == "processing")
+        #expect(QuizState.finished.label == "finished")
+
+        let question = makeQuestion(id: "q_001", source: "Test")
+        let evaluation = Evaluation(
+            userAnswer: "A", result: .correct, points: 1.0,
+            correctAnswer: "A", questionId: "q_001", explanation: nil
+        )
+        #expect(QuizState.showingResult(question: question, evaluation: evaluation).label == "showingResult")
+        #expect(QuizState.error(message: "err", context: .submission).label == "error")
+    }
+
+    @Test("validTransitions sets contain expected successor states")
+    @MainActor
+    func testValidTransitionsSet() async throws {
+        #expect(QuizState.idle.validTransitions.contains("startingQuiz"))
+
+        #expect(QuizState.startingQuiz.validTransitions.contains("askingQuestion"))
+        #expect(QuizState.startingQuiz.validTransitions.contains("error"))
+
+        #expect(QuizState.askingQuestion.validTransitions.contains("recording"))
+        #expect(QuizState.askingQuestion.validTransitions.contains("processing"))
+        #expect(QuizState.askingQuestion.validTransitions.contains("error"))
+
+        #expect(QuizState.recording.validTransitions.contains("processing"))
+        #expect(QuizState.recording.validTransitions.contains("askingQuestion"))
+        #expect(QuizState.recording.validTransitions.contains("error"))
+
+        #expect(QuizState.processing.validTransitions.contains("showingResult"))
+        #expect(QuizState.processing.validTransitions.contains("error"))
+
+        let question = makeQuestion(id: "q_001", source: "Test")
+        let evaluation = Evaluation(
+            userAnswer: "A", result: .correct, points: 1.0,
+            correctAnswer: "A", questionId: "q_001", explanation: nil
+        )
+        let showingResult = QuizState.showingResult(question: question, evaluation: evaluation)
+        #expect(showingResult.validTransitions.contains("askingQuestion"))
+        #expect(showingResult.validTransitions.contains("finished"))
+        #expect(showingResult.validTransitions.contains("idle"))
+
+        #expect(QuizState.finished.validTransitions.contains("idle"))
+
+        #expect(QuizState.error(message: "err", context: .submission).validTransitions.contains("idle"))
+        #expect(QuizState.error(message: "err", context: .submission).validTransitions.contains("askingQuestion"))
+    }
+}
+
+// MARK: - Double-Stop Guard Tests
+
+@Suite("QuizViewModel Double-Stop Guard Tests")
+struct QuizViewModelDoubleStopTests {
+
+    @MainActor
+    private func makeViewModel() -> QuizViewModel {
+        let mockNetwork = MockNetworkService()
+        mockNetwork.mockSession = QuizSession(
+            id: "test_session_123",
+            mode: "single", phase: "asking", maxQuestions: 10,
+            currentDifficulty: "medium", category: nil, language: "en",
+            participants: [
+                Participant(
+                    id: "p1", userId: nil, displayName: "Player",
+                    score: 0, answeredCount: 0, correctCount: 0,
+                    lastAnswer: nil, lastResult: nil,
+                    isHost: true, isReady: true, joinedAt: Date()
+                )
+            ],
+            expiresAt: Date().addingTimeInterval(30 * 60),
+            createdAt: Date()
+        )
+        mockNetwork.mockResponse = makeQuizResponse(
+            evaluationFor: "q_001",
+            userAnswer: "Test",
+            isCorrect: true,
+            nextQuestion: makeQuestion(id: "q_002", source: "Next")
+        )
+
+        let viewModel = QuizViewModel(
+            networkService: mockNetwork,
+            audioService: MockAudioService(),
+            persistenceStore: MockPersistenceStore()
+        )
+        return viewModel
+    }
+
+    @Test("isStoppingRecording prevents double stopRecordingAndSubmit call")
+    @MainActor
+    func testIsStoppingRecordingPreventsDoubleCall() async throws {
+        let viewModel = makeViewModel()
+        viewModel.currentSession = QuizSession(
+            id: "test_session_123",
+            mode: "single", phase: "asking", maxQuestions: 10,
+            currentDifficulty: "medium", category: nil, language: "en",
+            participants: [], expiresAt: Date().addingTimeInterval(1800),
+            createdAt: Date()
+        )
+        viewModel.currentQuestion = makeQuestion(id: "q_001", source: "Test")
+        viewModel.quizState = .recording
+
+        // Simulate the guard being set (as if a stop is already in progress)
+        viewModel.isStoppingRecording = true
+
+        // Call stopRecordingAndSubmit — should return early without changing state
+        await viewModel.stopRecordingAndSubmit()
+
+        // State should remain .recording because the guard prevented the call
+        #expect(viewModel.quizState == .recording)
+    }
+}

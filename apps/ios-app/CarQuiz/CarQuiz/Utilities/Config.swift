@@ -95,12 +95,14 @@ enum Config {
     static let autoRecordDelayMs: UInt64 = 500
 
     /// Countdown duration for auto-confirm (also controls re-record window) in seconds
-    static let autoConfirmDelaySecs: Int = 5
+    static let autoConfirmDelaySecs: Int = 10
 
     // MARK: - ElevenLabs Streaming STT
 
-    /// Feature flag: use ElevenLabs Scribe v2 Realtime for quiz answers instead of Whisper
-    static let useElevenLabsSTT: Bool = true
+    /// Feature flag: use ElevenLabs Scribe v2 Realtime for quiz answers instead of Whisper.
+    /// Disabled: Whisper provides more consistent multilingual transcription quality.
+    /// Re-enable when ElevenLabs Scribe v2 improves non-English support.
+    static let useElevenLabsSTT: Bool = false
 
     /// ElevenLabs Scribe v2 Realtime model ID
     static let elevenLabsModel: String = "scribe_v2_realtime"
@@ -121,6 +123,19 @@ enum Config {
 
     /// Free tier daily question limit (display only — enforced by backend)
     static let freeDailyQuestionLimit = 20
+
+    // MARK: - Sentry
+
+    /// Sentry DSN for crash reporting
+    ///
+    /// Read from Info.plist which gets populated from xcconfig files based on build configuration.
+    /// Empty string disables Sentry (e.g., for local development if not needed).
+    static var sentryDSN: String {
+        guard let dsn = Bundle.main.object(forInfoDictionaryKey: "SENTRY_DSN") as? String, !dsn.isEmpty else {
+            return "" // Sentry disabled when DSN not configured
+        }
+        return dsn
+    }
 
     // MARK: - Debug Settings
 

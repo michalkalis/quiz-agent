@@ -29,7 +29,7 @@ struct Question: Codable, Identifiable, Equatable, Sendable {
 
     /// Whether this is a multiple-choice question with options
     var isMultipleChoice: Bool {
-        type == .textMultichoice && possibleAnswers != nil && !(possibleAnswers!.isEmpty)
+        type == .textMultichoice && possibleAnswers?.isEmpty == false
     }
 
     /// Sorted answer options for consistent A/B/C/D display order

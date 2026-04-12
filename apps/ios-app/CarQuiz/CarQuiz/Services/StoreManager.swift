@@ -6,6 +6,7 @@
 //  Non-consumable "CarQuiz Unlimited" purchase
 //
 
+import os
 import StoreKit
 
 /// Product identifiers
@@ -40,9 +41,7 @@ final class StoreManager: ObservableObject {
             let products = try await Product.products(for: [StoreProduct.unlimited])
             product = products.first
         } catch {
-            if Config.verboseLogging {
-                print("❌ StoreManager: Failed to load products: \(error)")
-            }
+            Logger.quiz.error("❌ StoreManager: Failed to load products: \(error, privacy: .public)")
         }
     }
 
@@ -66,28 +65,20 @@ final class StoreManager: ObservableObject {
                 isPurchased = true
                 await transaction.finish()
 
-                if Config.verboseLogging {
-                    print("✅ StoreManager: Purchase successful")
-                }
+                Logger.quiz.info("✅ StoreManager: Purchase successful")
 
             case .userCancelled:
-                if Config.verboseLogging {
-                    print("🚫 StoreManager: User cancelled purchase")
-                }
+                Logger.quiz.info("🚫 StoreManager: User cancelled purchase")
 
             case .pending:
-                if Config.verboseLogging {
-                    print("⏳ StoreManager: Purchase pending (Ask to Buy?)")
-                }
+                Logger.quiz.info("⏳ StoreManager: Purchase pending (Ask to Buy?)")
 
             @unknown default:
                 break
             }
         } catch {
             purchaseError = error.localizedDescription
-            if Config.verboseLogging {
-                print("❌ StoreManager: Purchase failed: \(error)")
-            }
+            Logger.quiz.error("❌ StoreManager: Purchase failed: \(error, privacy: .public)")
         }
 
         isLoading = false

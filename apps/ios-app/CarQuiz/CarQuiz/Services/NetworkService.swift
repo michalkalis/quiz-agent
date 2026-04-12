@@ -7,6 +7,7 @@
 //
 
 @preconcurrency import Foundation
+import os
 
 /// Protocol for network operations
 protocol NetworkServiceProtocol: Sendable {
@@ -57,9 +58,7 @@ actor NetworkService: NetworkServiceProtocol {
         activeTasks[id]?.cancel()
         activeTasks.removeValue(forKey: id)
 
-        if Config.verboseLogging {
-            print("🌐 Cancelled task: \(id)")
-        }
+        Logger.network.debug("🌐 Cancelled task: \(id, privacy: .public)")
     }
 
     // MARK: - Session Management
@@ -67,10 +66,9 @@ actor NetworkService: NetworkServiceProtocol {
     func createSession(maxQuestions: Int = 10, difficulty: String = "medium", language: String = "en", category: String? = nil, userId: String? = nil) async throws -> QuizSession {
         let endpoint = baseURL.appendingPathComponent("/api/v1/sessions")
 
-        if Config.verboseLogging {
-            print("🌐 Base URL: \(baseURL)")
-            print("🌐 Full endpoint: \(endpoint)")
-        }
+        let base = baseURL
+        Logger.network.debug("🌐 Base URL: \(base, privacy: .public)")
+        Logger.network.debug("🌐 Full endpoint: \(endpoint, privacy: .public)")
 
         var request = URLRequest(url: endpoint)
         request.httpMethod = "POST"
@@ -95,17 +93,13 @@ actor NetworkService: NetworkServiceProtocol {
 
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
-        if Config.verboseLogging {
-            print("🌐 POST \(endpoint)")
-        }
+        Logger.network.debug("🌐 POST \(endpoint, privacy: .public)")
 
         let (data, response) = try await session.data(for: request)
 
-        if Config.verboseLogging {
-            print("📥 Response received: \(data.count) bytes")
-            if let httpResponse = response as? HTTPURLResponse {
-                print("📊 Status code: \(httpResponse.statusCode)")
-            }
+        Logger.network.debug("📥 Response received: \(data.count, privacy: .public) bytes")
+        if let httpResponse = response as? HTTPURLResponse {
+            Logger.network.debug("📊 Status code: \(httpResponse.statusCode, privacy: .public)")
         }
 
         guard let httpResponse = response as? HTTPURLResponse,
@@ -140,17 +134,13 @@ actor NetworkService: NetworkServiceProtocol {
         ]
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
-        if Config.verboseLogging {
-            print("🌐 POST \(url) with \(excludedQuestionIds.count) excluded IDs")
-        }
+        Logger.network.debug("🌐 POST \(url, privacy: .public) with \(excludedQuestionIds.count, privacy: .public) excluded IDs")
 
         let (data, response) = try await session.data(for: request)
 
-        if Config.verboseLogging {
-            print("📥 Response received: \(data.count) bytes")
-            if let httpResponse = response as? HTTPURLResponse {
-                print("📊 Status code: \(httpResponse.statusCode)")
-            }
+        Logger.network.debug("📥 Response received: \(data.count, privacy: .public) bytes")
+        if let httpResponse = response as? HTTPURLResponse {
+            Logger.network.debug("📊 Status code: \(httpResponse.statusCode, privacy: .public)")
         }
 
         guard let httpResponse = response as? HTTPURLResponse else {
@@ -166,11 +156,9 @@ actor NetworkService: NetworkServiceProtocol {
         }
 
         guard (200...299).contains(httpResponse.statusCode) else {
-            if Config.verboseLogging {
-                print("❌ HTTP error: \(httpResponse.statusCode)")
-                if let responseString = String(data: data, encoding: .utf8) {
-                    print("📄 Response body: \(responseString)")
-                }
+            Logger.network.error("❌ HTTP error: \(httpResponse.statusCode, privacy: .public)")
+            if let responseString = String(data: data, encoding: .utf8) {
+                Logger.network.error("📄 Response body: \(responseString, privacy: .public)")
             }
             throw NetworkError.invalidResponse
         }
@@ -184,15 +172,32 @@ actor NetworkService: NetworkServiceProtocol {
         var request = URLRequest(url: endpoint)
         request.httpMethod = "DELETE"
 
-        if Config.verboseLogging {
-            print("🌐 DELETE \(endpoint)")
+        Logger.network.debug("🌐 DELETE \(endpoint, privacy: .public)")
+
+        let (data, response) = try await session.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw NetworkError.invalidResponse
         }
 
-        let (_, response) = try await session.data(for: request)
+        guard (200...299).contains(httpResponse.statusCode) else {
+            let statusCode = httpResponse.statusCode
 
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
-            throw NetworkError.invalidResponse
+            Logger.network.error("❌ HTTP error: \(statusCode, privacy: .public)")
+            if let responseString = String(data: data, encoding: .utf8) {
+                Logger.network.error("📄 Response body: \(responseString, privacy: .public)")
+            }
+
+            if statusCode == 404 {
+                throw NetworkError.sessionNotFound
+            }
+
+            // Try to extract error message from backend response
+            if let errorResponse = try? JSONDecoder().decode(ErrorResponse.self, from: data) {
+                throw NetworkError.serverError(statusCode: statusCode, message: errorResponse.detail)
+            }
+
+            throw NetworkError.serverError(statusCode: statusCode, message: "Failed to end session (HTTP \(statusCode))")
         }
     }
 
@@ -206,9 +211,7 @@ actor NetworkService: NetworkServiceProtocol {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONEncoder().encode(["minutes": minutes])
 
-        if Config.verboseLogging {
-            print("🌐 POST \(endpoint) (extend \(minutes)min)")
-        }
+        Logger.network.debug("🌐 POST \(endpoint, privacy: .public) (extend \(minutes, privacy: .public)min)")
 
         let (_, response) = try await session.data(for: request)
 
@@ -228,9 +231,7 @@ actor NetworkService: NetworkServiceProtocol {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONEncoder().encode(["rating": rating])
 
-        if Config.verboseLogging {
-            print("🌐 POST \(endpoint) (rating: \(rating))")
-        }
+        Logger.network.debug("🌐 POST \(endpoint, privacy: .public) (rating: \(rating, privacy: .public))")
 
         let (_, response) = try await session.data(for: request)
 
@@ -256,25 +257,21 @@ actor NetworkService: NetworkServiceProtocol {
 
         // Build multipart form data
         var body = Data()
-        body.append("--\(boundary)\r\n".data(using: .utf8)!)
-        body.append("Content-Disposition: form-data; name=\"audio\"; filename=\"\(fileName)\"\r\n".data(using: .utf8)!)
-        body.append("Content-Type: audio/m4a\r\n\r\n".data(using: .utf8)!)
+        body.append(Data("--\(boundary)\r\n".utf8))
+        body.append(Data("Content-Disposition: form-data; name=\"audio\"; filename=\"\(fileName)\"\r\n".utf8))
+        body.append(Data("Content-Type: audio/m4a\r\n\r\n".utf8))
         body.append(audioData)
-        body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
+        body.append(Data("\r\n--\(boundary)--\r\n".utf8))
 
         request.httpBody = body
 
-        if Config.verboseLogging {
-            print("🌐 POST \(endpoint) (audio: \(audioData.count) bytes)")
-        }
+        Logger.network.debug("🌐 POST \(endpoint, privacy: .public) (audio: \(audioData.count, privacy: .public) bytes)")
 
         let (data, response) = try await session.data(for: request)
 
-        if Config.verboseLogging {
-            print("📥 Voice response received: \(data.count) bytes")
-            if let httpResponse = response as? HTTPURLResponse {
-                print("📊 Status code: \(httpResponse.statusCode)")
-            }
+        Logger.network.debug("📥 Voice response received: \(data.count, privacy: .public) bytes")
+        if let httpResponse = response as? HTTPURLResponse {
+            Logger.network.debug("📊 Status code: \(httpResponse.statusCode, privacy: .public)")
         }
 
         guard let httpResponse = response as? HTTPURLResponse else {
@@ -292,11 +289,9 @@ actor NetworkService: NetworkServiceProtocol {
         guard (200...299).contains(httpResponse.statusCode) else {
             let statusCode = httpResponse.statusCode
 
-            if Config.verboseLogging {
-                print("❌ HTTP error: \(statusCode)")
-                if let responseString = String(data: data, encoding: .utf8) {
-                    print("📄 Response body: \(responseString)")
-                }
+            Logger.network.error("❌ HTTP error: \(statusCode, privacy: .public)")
+            if let responseString = String(data: data, encoding: .utf8) {
+                Logger.network.error("📄 Response body: \(responseString, privacy: .public)")
             }
 
             // Try to extract error message from backend response
@@ -331,9 +326,7 @@ actor NetworkService: NetworkServiceProtocol {
         let body = ["input": input]
         request.httpBody = try JSONEncoder().encode(body)
 
-        if Config.verboseLogging {
-            print("🌐 POST \(url) (text: \(input.prefix(50))...)")
-        }
+        Logger.network.debug("🌐 POST \(url, privacy: .public) (text: \(input.prefix(50), privacy: .public)...)")
 
         let (data, response) = try await session.data(for: request)
 
@@ -372,14 +365,13 @@ actor NetworkService: NetworkServiceProtocol {
             url = baseURL.appendingPathComponent(urlString)
         }
 
-        if Config.verboseLogging {
-            print("🌐 GET \(url)")
-        }
+        Logger.network.debug("🌐 GET \(url, privacy: .public)")
 
         // IMPORTANT: Disable caching for audio downloads
         // Backend returns same URL for different questions, so we must bypass cache
         var request = URLRequest(url: url)
         request.cachePolicy = .reloadIgnoringLocalCacheData
+        request.timeoutInterval = 10  // Audio downloads should not block the quiz flow
 
         // Use withTaskCancellationHandler for proper cleanup
         return try await withTaskCancellationHandler {
@@ -413,16 +405,12 @@ actor NetworkService: NetworkServiceProtocol {
                             let actualBytes = Int64(data.count)
 
                             if actualBytes != expectedBytes {
-                                if Config.verboseLogging {
-                                    print("⚠️ Download size mismatch: expected \(expectedBytes) bytes, got \(actualBytes) bytes")
-                                }
+                                Logger.network.warning("⚠️ Download size mismatch: expected \(expectedBytes, privacy: .public) bytes, got \(actualBytes, privacy: .public) bytes")
                                 continuation.resume(throwing: NetworkError.invalidResponse)
                                 return
                             }
 
-                            if Config.verboseLogging {
-                                print("✓ Download integrity verified: \(actualBytes) bytes")
-                            }
+                            Logger.network.debug("✓ Download integrity verified: \(actualBytes, privacy: .public) bytes")
                         }
 
                         continuation.resume(returning: data)
@@ -448,18 +436,14 @@ actor NetworkService: NetworkServiceProtocol {
         request.httpMethod = "POST"
         request.timeoutInterval = 10
 
-        if Config.verboseLogging {
-            print("🌐 POST \(endpoint) (ElevenLabs token)")
-        }
+        Logger.network.debug("🌐 POST \(endpoint, privacy: .public) (ElevenLabs token)")
 
         let (data, response) = try await session.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse,
               (200...299).contains(httpResponse.statusCode) else {
             let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
-            if Config.verboseLogging {
-                print("❌ ElevenLabs token request failed: HTTP \(statusCode)")
-            }
+            Logger.network.error("❌ ElevenLabs token request failed: HTTP \(statusCode, privacy: .public)")
             throw NetworkError.serverError(statusCode: statusCode, message: "Failed to get ElevenLabs token")
         }
 
@@ -469,9 +453,7 @@ actor NetworkService: NetworkServiceProtocol {
 
         let tokenResponse = try JSONDecoder().decode(TokenResponse.self, from: data)
 
-        if Config.verboseLogging {
-            print("✅ ElevenLabs token received")
-        }
+        Logger.network.info("✅ ElevenLabs token received")
 
         return tokenResponse.token
     }
@@ -485,9 +467,7 @@ actor NetworkService: NetworkServiceProtocol {
         request.httpMethod = "GET"
         request.timeoutInterval = 10
 
-        if Config.verboseLogging {
-            print("🌐 GET \(endpoint)")
-        }
+        Logger.network.debug("🌐 GET \(endpoint, privacy: .public)")
 
         let (data, response) = try await session.data(for: request)
 
@@ -507,9 +487,7 @@ actor NetworkService: NetworkServiceProtocol {
         request.httpMethod = "POST"
         request.timeoutInterval = 10
 
-        if Config.verboseLogging {
-            print("🌐 POST \(endpoint) (set premium)")
-        }
+        Logger.network.debug("🌐 POST \(endpoint, privacy: .public) (set premium)")
 
         let (_, response) = try await session.data(for: request)
 
@@ -530,27 +508,25 @@ actor NetworkService: NetworkServiceProtocol {
             do {
                 return try decoder.decode(QuizResponse.self, from: data)
             } catch {
-                if Config.verboseLogging {
-                    print("❌ Decoding error: \(error)")
-                    if let jsonString = String(data: data, encoding: .utf8) {
-                        print("📄 Response JSON: \(jsonString)")
-                    }
-                    // Print detailed decoding error
-                    if let decodingError = error as? DecodingError {
-                        switch decodingError {
-                        case .keyNotFound(let key, let context):
-                            print("🔍 Missing key: \(key.stringValue) at path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "))")
-                        case .typeMismatch(let type, let context):
-                            print("🔍 Type mismatch for \(type) at path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "))")
-                            print("   Expected: \(type), context: \(context.debugDescription)")
-                        case .valueNotFound(let type, let context):
-                            print("🔍 Value not found for \(type) at path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "))")
-                        case .dataCorrupted(let context):
-                            print("🔍 Data corrupted at path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "))")
-                            print("   Debug: \(context.debugDescription)")
-                        @unknown default:
-                            print("🔍 Unknown decoding error")
-                        }
+                Logger.network.error("❌ Decoding error: \(error, privacy: .public)")
+                if let jsonString = String(data: data, encoding: .utf8) {
+                    Logger.network.error("📄 Response JSON: \(jsonString, privacy: .public)")
+                }
+                // Log detailed decoding error
+                if let decodingError = error as? DecodingError {
+                    switch decodingError {
+                    case .keyNotFound(let key, let context):
+                        Logger.network.error("🔍 Missing key: \(key.stringValue, privacy: .public) at path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "), privacy: .public)")
+                    case .typeMismatch(let type, let context):
+                        Logger.network.error("🔍 Type mismatch for \(String(describing: type), privacy: .public) at path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "), privacy: .public)")
+                        Logger.network.error("   Expected: \(String(describing: type), privacy: .public), context: \(context.debugDescription, privacy: .public)")
+                    case .valueNotFound(let type, let context):
+                        Logger.network.error("🔍 Value not found for \(String(describing: type), privacy: .public) at path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "), privacy: .public)")
+                    case .dataCorrupted(let context):
+                        Logger.network.error("🔍 Data corrupted at path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "), privacy: .public)")
+                        Logger.network.error("   Debug: \(context.debugDescription, privacy: .public)")
+                    @unknown default:
+                        Logger.network.error("🔍 Unknown decoding error")
                     }
                 }
                 throw NetworkError.decodingError(error)
@@ -577,6 +553,7 @@ enum NetworkError: LocalizedError {
     case decodingError(Error)
     case serverError(statusCode: Int, message: String)
     case dailyLimitReached(DailyLimitError)
+    case sessionNotFound
 
     var errorDescription: String? {
         switch self {
@@ -590,6 +567,8 @@ enum NetworkError: LocalizedError {
             return message
         case .dailyLimitReached:
             return "Daily question limit reached"
+        case .sessionNotFound:
+            return "Session not found or already ended"
         }
     }
 }

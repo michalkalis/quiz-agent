@@ -7,6 +7,7 @@
 //
 
 @preconcurrency import Foundation
+import os
 
 /// Events emitted by the STT service
 enum STTEvent: Sendable {
@@ -53,7 +54,9 @@ actor ElevenLabsSTTService: ElevenLabsSTTServiceProtocol {
 
     func connect(token: String, languageCode: String) async throws {
         // Build WebSocket URL with query parameters
-        var components = URLComponents(string: "wss://api.elevenlabs.io/v1/speech-to-text/realtime")!
+        guard var components = URLComponents(string: "wss://api.elevenlabs.io/v1/speech-to-text/realtime") else {
+            throw ElevenLabsSTTError.invalidURL
+        }
         components.queryItems = [
             URLQueryItem(name: "token", value: token),
             URLQueryItem(name: "model_id", value: Config.elevenLabsModel),
@@ -67,9 +70,7 @@ actor ElevenLabsSTTService: ElevenLabsSTTServiceProtocol {
             throw ElevenLabsSTTError.invalidURL
         }
 
-        if Config.verboseLogging {
-            print("🎙️ ElevenLabs STT: connecting to \(url.host ?? "unknown")")
-        }
+        Logger.stt.debug("🎙️ ElevenLabs STT: connecting to \(url.host ?? "unknown", privacy: .public)")
 
         let session = URLSession(configuration: .default)
         let task = session.webSocketTask(with: url)
@@ -84,9 +85,7 @@ actor ElevenLabsSTTService: ElevenLabsSTTServiceProtocol {
 
         eventContinuation?.yield(.connected)
 
-        if Config.verboseLogging {
-            print("🎙️ ElevenLabs STT: connected")
-        }
+        Logger.stt.info("🎙️ ElevenLabs STT: connected")
     }
 
     // MARK: - Sending Audio
@@ -106,7 +105,10 @@ actor ElevenLabsSTTService: ElevenLabsSTTServiceProtocol {
         ]
 
         let jsonData = try JSONSerialization.data(withJSONObject: message)
-        try await task.send(.string(String(data: jsonData, encoding: .utf8)!))
+        guard let jsonString = String(data: jsonData, encoding: .utf8) else {
+            throw ElevenLabsSTTError.serverError("Failed to encode audio chunk")
+        }
+        try await task.send(.string(jsonString))
     }
 
     func commitAndClose() async throws {
@@ -121,11 +123,12 @@ actor ElevenLabsSTTService: ElevenLabsSTTServiceProtocol {
         ]
 
         let jsonData = try JSONSerialization.data(withJSONObject: message)
-        try await task.send(.string(String(data: jsonData, encoding: .utf8)!))
-
-        if Config.verboseLogging {
-            print("🎙️ ElevenLabs STT: sent commit, waiting for final transcript")
+        guard let jsonString = String(data: jsonData, encoding: .utf8) else {
+            throw ElevenLabsSTTError.serverError("Failed to encode commit message")
         }
+        try await task.send(.string(jsonString))
+
+        Logger.stt.debug("🎙️ ElevenLabs STT: sent commit, waiting for final transcript")
     }
 
     func disconnect() async {
@@ -134,9 +137,7 @@ actor ElevenLabsSTTService: ElevenLabsSTTServiceProtocol {
         webSocketTask?.cancel(with: .normalClosure, reason: nil)
         webSocketTask = nil
 
-        if Config.verboseLogging {
-            print("🎙️ ElevenLabs STT: disconnected")
-        }
+        Logger.stt.info("🎙️ ElevenLabs STT: disconnected")
     }
 
     // MARK: - Receive Loop
@@ -160,9 +161,7 @@ actor ElevenLabsSTTService: ElevenLabsSTTServiceProtocol {
                 }
             } catch {
                 if !Task.isCancelled {
-                    if Config.verboseLogging {
-                        print("🎙️ ElevenLabs STT: receive error: \(error.localizedDescription)")
-                    }
+                    Logger.stt.error("🎙️ ElevenLabs STT: receive error: \(error.localizedDescription, privacy: .public)")
                     eventContinuation?.yield(.disconnected(error))
                 }
                 return
@@ -182,36 +181,26 @@ actor ElevenLabsSTTService: ElevenLabsSTTServiceProtocol {
             if let text = json["text"] as? String, !text.isEmpty {
                 eventContinuation?.yield(.partialTranscript(text))
 
-                if Config.verboseLogging {
-                    print("🎙️ ElevenLabs STT partial: \(text)")
-                }
+                Logger.stt.debug("🎙️ ElevenLabs STT partial: \(text, privacy: .public)")
             }
 
         case "committed_transcript":
             if let text = json["text"] as? String, !text.isEmpty {
                 eventContinuation?.yield(.committedTranscript(text))
 
-                if Config.verboseLogging {
-                    print("🎙️ ElevenLabs STT committed: \(text)")
-                }
+                Logger.stt.info("🎙️ ElevenLabs STT committed: \(text, privacy: .public)")
             }
 
         case "session_started":
-            if Config.verboseLogging {
-                print("🎙️ ElevenLabs STT: session started")
-            }
+            Logger.stt.info("🎙️ ElevenLabs STT: session started")
 
         case "error":
             let errorMsg = json["message"] as? String ?? "Unknown error"
-            if Config.verboseLogging {
-                print("🎙️ ElevenLabs STT error: \(errorMsg)")
-            }
+            Logger.stt.error("🎙️ ElevenLabs STT error: \(errorMsg, privacy: .public)")
             eventContinuation?.yield(.disconnected(ElevenLabsSTTError.serverError(errorMsg)))
 
         default:
-            if Config.verboseLogging {
-                print("🎙️ ElevenLabs STT: unknown message type: \(messageType)")
-            }
+            Logger.stt.debug("🎙️ ElevenLabs STT: unknown message type: \(messageType, privacy: .public)")
         }
     }
 }

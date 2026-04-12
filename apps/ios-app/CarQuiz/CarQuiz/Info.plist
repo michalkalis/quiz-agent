@@ -63,5 +63,7 @@
 	<string>$(API_VERSION)</string>
 	<key>ENVIRONMENT_NAME</key>
 	<string>$(ENVIRONMENT_NAME)</string>
+	<key>SENTRY_DSN</key>
+	<string>$(SENTRY_DSN)</string>
 </dict>
 </plist>

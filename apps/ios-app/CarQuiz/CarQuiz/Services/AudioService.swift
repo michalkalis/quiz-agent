@@ -16,6 +16,7 @@ import AVFoundation
 import AVKit
 import Combine
 import Foundation
+import os
 import UIKit
 
 /// Callback for streaming PCM audio chunks (raw 16kHz 16-bit mono PCM data)
@@ -96,6 +97,17 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
     private var playbackState: PlaybackState = .idle
 
+    // Tracked continuation for active playback — allows stopPlayback/cleanupPlayback
+    // to properly resume the continuation instead of leaking it.
+    // Mark as nonisolated(unsafe) because withCheckedThrowingContinuation's closure is @Sendable.
+    // All access is on main queue, so cross-isolation is safe.
+    nonisolated(unsafe) private var playbackContinuation: CheckedContinuation<TimeInterval, Error>?
+
+    // Tracked notification observers for active playback — removed on stop
+    nonisolated(unsafe) private var playbackSuccessObserver: NSObjectProtocol?
+    nonisolated(unsafe) private var playbackFailureObserver: NSObjectProtocol?
+    nonisolated(unsafe) private var playbackStalledTimer: Timer?
+
     private var audioRecorder: AVAudioRecorder?
     private var audioPlayer: AVPlayer?
     private var speechSynthesizer = AVSpeechSynthesizer()
@@ -134,26 +146,20 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
             // No HFP = No "phone call" UI in car display
             options = [.defaultToSpeaker, .allowBluetoothA2DP, .mixWithOthers]
 
-            if Config.verboseLogging {
-                print("🎤 Audio session: Media Mode (A2DP only)")
-            }
+            Logger.audio.info("🎤 Audio session: Media Mode (A2DP only)")
 
         case "call":
             // Call Mode: HFP + A2DP (Bluetooth mic enabled)
             // May show as "phone call" in car display
             options = [.defaultToSpeaker, .allowBluetoothHFP, .allowBluetoothA2DP, .mixWithOthers]
 
-            if Config.verboseLogging {
-                print("🎤 Audio session: Call Mode (HFP + A2DP)")
-            }
+            Logger.audio.info("🎤 Audio session: Call Mode (HFP + A2DP)")
 
         default:
             // Fallback to call mode (current behavior)
             options = [.defaultToSpeaker, .allowBluetoothHFP, .allowBluetoothA2DP, .mixWithOthers]
 
-            if Config.verboseLogging {
-                print("⚠️ Unknown audio mode '\(mode.id)', defaulting to Call Mode")
-            }
+            Logger.audio.warning("⚠️ Unknown audio mode '\(mode.id, privacy: .public)', defaulting to Call Mode")
         }
 
         // Configure for background playback and recording
@@ -188,18 +194,14 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
             self?.handleInterruption(notification)
         }
 
-        if Config.verboseLogging {
-            print("🎤 Audio session configured for background playback and recording")
-        }
+        Logger.audio.info("🎤 Audio session configured for background playback and recording")
     }
 
     /// Switch audio mode dynamically (e.g., during quiz)
     /// - Parameter mode: New audio mode to activate
     func switchAudioMode(_ mode: AudioMode) async throws {
         guard mode.id != currentAudioMode.id else {
-            if Config.verboseLogging {
-                print("🔄 Audio mode already set to \(mode.name), skipping switch")
-            }
+            Logger.audio.debug("🔄 Audio mode already set to \(mode.name, privacy: .public), skipping switch")
             return
         }
 
@@ -217,9 +219,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         // Reconfigure with new mode
         try setupAudioSession(mode: mode)
 
-        if Config.verboseLogging {
-            print("🔄 Audio mode switched to: \(mode.name)")
-        }
+        Logger.audio.info("🔄 Audio mode switched to: \(mode.name, privacy: .public)")
     }
 
     nonisolated private func handleRouteChange(_ notification: Notification) {
@@ -232,18 +232,14 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         switch reason {
         case .newDeviceAvailable:
             // Bluetooth connected
-            if Config.verboseLogging {
-                print("🎧 Bluetooth device connected")
-            }
+            Logger.audio.info("🎧 Bluetooth device connected")
             // Refresh available devices on main actor
             Task { @MainActor in
                 self.refreshAvailableDevices()
             }
         case .oldDeviceUnavailable:
             // Bluetooth disconnected - gracefully fall back to built-in mic
-            if Config.verboseLogging {
-                print("🎧 Bluetooth device disconnected, using built-in microphone")
-            }
+            Logger.audio.info("🎧 Bluetooth device disconnected, using built-in microphone")
             // Refresh available devices on main actor
             Task { @MainActor in
                 self.refreshAvailableDevices()
@@ -272,14 +268,10 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
                 if self.isPlaying {
                     await self.stopPlayback()
                 }
-                if Config.verboseLogging {
-                    print("⚠️ Audio session interrupted")
-                }
+                Logger.audio.warning("⚠️ Audio session interrupted")
             case .ended:
                 // Interruption ended - log but don't auto-resume (let user restart)
-                if Config.verboseLogging {
-                    print("✅ Audio session interruption ended")
-                }
+                Logger.audio.info("✅ Audio session interruption ended")
             @unknown default:
                 break
             }
@@ -294,17 +286,13 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
         guard let inputs = session.availableInputs else {
             availableInputDevices = []
-            if Config.verboseLogging {
-                print("🎤 No input devices available")
-            }
+            Logger.audio.debug("🎤 No input devices available")
             return
         }
 
         availableInputDevices = inputs.map { AudioDevice.from(port: $0) }
 
-        if Config.verboseLogging {
-            print("🎤 Available input devices: \(availableInputDevices.map { $0.name })")
-        }
+        Logger.audio.debug("🎤 Available input devices: \(self.availableInputDevices.map { $0.name }, privacy: .public)")
 
         // Update current device state
         updateCurrentInputDevice()
@@ -321,10 +309,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
             currentInputDevice = nil
         }
 
-        if Config.verboseLogging {
-            let deviceName = currentInputDevice?.name ?? "Automatic"
-            print("🎤 Current input device: \(deviceName)")
-        }
+        Logger.audio.debug("🎤 Current input device: \(self.currentInputDevice?.name ?? "Automatic", privacy: .public)")
     }
 
     /// Set preferred input device
@@ -342,17 +327,13 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
             try session.setPreferredInput(port)
             currentInputDevice = device
 
-            if Config.verboseLogging {
-                print("🎤 Set preferred input: \(device.name)")
-            }
+            Logger.audio.info("🎤 Set preferred input: \(device.name, privacy: .public)")
         } else {
             // Clear preference - let iOS choose automatically
             try session.setPreferredInput(nil)
             currentInputDevice = nil
 
-            if Config.verboseLogging {
-                print("🎤 Cleared preferred input (automatic selection)")
-            }
+            Logger.audio.info("🎤 Cleared preferred input (automatic selection)")
         }
     }
 
@@ -361,9 +342,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
     func requestMicrophonePermission() async -> Bool {
         await withCheckedContinuation { continuation in
             AVAudioApplication.requestRecordPermission { granted in
-                if Config.verboseLogging {
-                    print("🎤 Microphone permission: \(granted ? "granted" : "denied")")
-                }
+                Logger.audio.info("🎤 Microphone permission: \(granted ? "granted" : "denied", privacy: .public)")
                 continuation.resume(returning: granted)
             }
         }
@@ -384,9 +363,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         // before hardware is ready, resulting in empty/corrupt recordings (28 bytes)
         try? await Task.sleep(nanoseconds: 200_000_000)  // 200ms
 
-        if Config.verboseLogging {
-            print("🎤 Audio system ready for recording")
-        }
+        Logger.audio.debug("🎤 Audio system ready for recording")
     }
 
     func startRecording() throws {
@@ -420,9 +397,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
             }
 
             // Log retry attempt
-            if Config.verboseLogging {
-                print("⚠️ Recording attempt \(attempt) failed, retrying...")
-            }
+            Logger.audio.warning("⚠️ Recording attempt \(attempt, privacy: .public) failed, retrying...")
 
             // Exponential backoff: 100ms, 200ms, 400ms
             let delayNs = UInt64(100_000_000 * (1 << (attempt - 1)))
@@ -435,22 +410,18 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
         guard started else {
             audioRecorder = nil
-            if Config.verboseLogging {
-                print("❌ Recording failed to start after 3 attempts")
-                // Log audio session state for diagnostics
-                let session = AVAudioSession.sharedInstance()
-                print("   Session category: \(session.category.rawValue)")
-                print("   Session mode: \(session.mode.rawValue)")
-                print("   Input available: \(session.isInputAvailable)")
-            }
+            Logger.audio.error("❌ Recording failed to start after 3 attempts")
+            // Log audio session state for diagnostics
+            let session = AVAudioSession.sharedInstance()
+            Logger.audio.error("   Session category: \(session.category.rawValue, privacy: .public)")
+            Logger.audio.error("   Session mode: \(session.mode.rawValue, privacy: .public)")
+            Logger.audio.error("   Input available: \(session.isInputAvailable, privacy: .public)")
             throw AudioError.recordingFailed
         }
 
         isRecording = true
 
-        if Config.verboseLogging {
-            print("🎤 Started recording to: \(fileName)")
-        }
+        Logger.audio.info("🎤 Started recording to: \(fileName, privacy: .public)")
     }
 
     func stopRecording() async throws -> Data {
@@ -463,9 +434,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
         let url = recorder.url
 
-        if Config.verboseLogging {
-            print("🎤 Stopped recording")
-        }
+        Logger.audio.info("🎤 Stopped recording")
 
         // Read the recorded audio data
         let data = try Data(contentsOf: url)
@@ -475,9 +444,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         // Use 500 bytes as threshold to catch empty/corrupt recordings
         let minimumValidSize = 500
         guard data.count >= minimumValidSize else {
-            if Config.verboseLogging {
-                print("❌ Recording too short: \(data.count) bytes (minimum: \(minimumValidSize))")
-            }
+            Logger.audio.error("❌ Recording too short: \(data.count, privacy: .public) bytes (minimum: \(minimumValidSize, privacy: .public))")
             try? FileManager.default.removeItem(at: url)
             audioRecorder = nil
             throw AudioError.recordingTooShort
@@ -488,9 +455,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
         audioRecorder = nil
 
-        if Config.verboseLogging {
-            print("🎤 Recording data: \(data.count) bytes")
-        }
+        Logger.audio.debug("🎤 Recording data: \(data.count, privacy: .public) bytes")
 
         return data
     }
@@ -507,20 +472,26 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         let inputNode = engine.inputNode
 
         // Target format: 16kHz, 16-bit, mono (matching ElevenLabs pcm_16000)
-        let targetFormat = AVAudioFormat(
+        guard let targetFormat = AVAudioFormat(
             commonFormat: .pcmFormatInt16,
             sampleRate: 16000.0,
             channels: 1,
             interleaved: true
-        )!
+        ) else {
+            throw AudioError.recordingFailed
+        }
 
         // Get the hardware input format
         let hardwareFormat = inputNode.outputFormat(forBus: 0)
 
-        if Config.verboseLogging {
-            print("🎤 Streaming: hardware format: \(hardwareFormat.sampleRate)Hz, \(hardwareFormat.channelCount)ch")
-            print("🎤 Streaming: target format: \(targetFormat.sampleRate)Hz, \(targetFormat.channelCount)ch")
+        // Validate hardware format — can be 0 Hz on device after audio route changes
+        guard hardwareFormat.sampleRate > 0, hardwareFormat.channelCount > 0 else {
+            Logger.audio.error("🎤 Streaming: invalid hardware format: \(hardwareFormat.sampleRate, privacy: .public)Hz, \(hardwareFormat.channelCount, privacy: .public)ch")
+            throw AudioError.recordingFailed
         }
+
+        Logger.audio.debug("🎤 Streaming: hardware format: \(hardwareFormat.sampleRate, privacy: .public)Hz, \(hardwareFormat.channelCount, privacy: .public)ch")
+        Logger.audio.debug("🎤 Streaming: target format: \(targetFormat.sampleRate, privacy: .public)Hz, \(targetFormat.channelCount, privacy: .public)ch")
 
         // Create a converter from hardware format to target format
         guard let converter = AVAudioConverter(from: hardwareFormat, to: targetFormat) else {
@@ -539,6 +510,8 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         // Install a tap on the input node
         let bufferSize = AVAudioFrameCount(hardwareFormat.sampleRate * Double(chunkInterval) / 1000.0)
         inputNode.installTap(onBus: 0, bufferSize: bufferSize, format: hardwareFormat) { buffer, _ in
+            // Belt-and-suspenders guard against division by zero
+            guard hardwareFormat.sampleRate > 0 else { return }
             // Convert hardware buffer to 16kHz 16-bit mono
             let frameCapacity = AVAudioFrameCount(
                 Double(buffer.frameLength) * targetFormat.sampleRate / hardwareFormat.sampleRate
@@ -578,9 +551,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         self.audioEngine = engine
         isRecording = true
 
-        if Config.verboseLogging {
-            print("🎤 Streaming PCM recording started (16kHz, 16-bit, mono)")
-        }
+        Logger.audio.info("🎤 Streaming PCM recording started (16kHz, 16-bit, mono)")
     }
 
     /// Stop streaming PCM recording
@@ -592,9 +563,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         self.audioEngine = nil
         isRecording = false
 
-        if Config.verboseLogging {
-            print("🎤 Streaming PCM recording stopped")
-        }
+        Logger.audio.info("🎤 Streaming PCM recording stopped")
     }
 
     // MARK: - Playback
@@ -629,9 +598,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
             try? fileHandle.close()
         }
 
-        if Config.verboseLogging {
-            print("🔊 Playing audio: \(data.count) bytes from \(tempURL.lastPathComponent)")
-        }
+        Logger.audio.info("🔊 Playing audio: \(data.count, privacy: .public) bytes from \(tempURL.lastPathComponent, privacy: .public)")
 
         // Clean up temp file on exit (state cleanup handled by observers/onCancel)
         defer {
@@ -656,38 +623,40 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         let duration = try await asset.load(.duration)
         let durationSeconds = CMTimeGetSeconds(duration)
 
-        if Config.verboseLogging {
-            print("🔊 Audio duration: \(String(format: "%.1f", durationSeconds))s")
-        }
+        Logger.audio.debug("🔊 Audio duration: \(String(format: "%.1f", durationSeconds), privacy: .public)s")
 
         isPlaying = true
 
         // Use withTaskCancellationHandler for proper cleanup
         return try await withTaskCancellationHandler {
             try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<TimeInterval, Error>) in
-                // Mark as nonisolated(unsafe) because NSObjectProtocol is not Sendable in Swift 6
-                // These are only accessed on main queue, so cross-isolation is safe
-                nonisolated(unsafe) var successObserver: NSObjectProtocol?
-                nonisolated(unsafe) var failureObserver: NSObjectProtocol?
                 nonisolated(unsafe) var statusObserver: NSKeyValueObservation?
-                nonisolated(unsafe) var stalledTimer: Timer?
                 var didResume = false
                 var hasStartedPlaying = false
+
+                // Store continuation so stopPlayback/cleanupPlayback can resume it
+                self.playbackContinuation = continuation
 
                 // Helper to ensure continuation resumes only once
                 func resumeOnce(with result: Result<TimeInterval, Error>) {
                     guard !didResume else { return }
                     didResume = true
 
+                    // Clear tracked state
+                    self.playbackContinuation = nil
+
                     // Clean up observers and timer
-                    if let observer = successObserver {
+                    if let observer = self.playbackSuccessObserver {
                         NotificationCenter.default.removeObserver(observer)
+                        self.playbackSuccessObserver = nil
                     }
-                    if let observer = failureObserver {
+                    if let observer = self.playbackFailureObserver {
                         NotificationCenter.default.removeObserver(observer)
+                        self.playbackFailureObserver = nil
                     }
                     statusObserver?.invalidate()
-                    stalledTimer?.invalidate()
+                    self.playbackStalledTimer?.invalidate()
+                    self.playbackStalledTimer = nil
 
                     switch result {
                     case .success(let value):
@@ -703,21 +672,17 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
                         switch player.timeControlStatus {
                         case .waitingToPlayAtSpecifiedRate:
                             let reason = player.reasonForWaitingToPlay?.rawValue ?? "unknown"
-                            if Config.verboseLogging {
-                                print("⚠️ Audio playback stalling, reason: \(reason)")
-                            }
+                            Logger.audio.warning("⚠️ Audio playback stalling, reason: \(reason, privacy: .public)")
                             // Check for format errors (critical for diagnosing codec issues)
                             if let error = player.currentItem?.error {
-                                print("❌ Player item error: \(error.localizedDescription)")
+                                Logger.audio.error("❌ Player item error: \(error.localizedDescription, privacy: .public)")
                             }
                         case .playing:
                             hasStartedPlaying = true
                             // Cancel stall timer once playback starts
-                            stalledTimer?.invalidate()
-                            stalledTimer = nil
-                            if Config.verboseLogging {
-                                print("▶️ Audio playback resumed")
-                            }
+                            self.playbackStalledTimer?.invalidate()
+                            self.playbackStalledTimer = nil
+                            Logger.audio.debug("▶️ Audio playback resumed")
                         case .paused:
                             break
                         @unknown default:
@@ -728,13 +693,11 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
                 // Playback timeout - fail if playback doesn't start within 5 seconds
                 // This prevents infinite stalling on problematic files
-                stalledTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: false) { [weak self] _ in
+                self.playbackStalledTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: false) { [weak self] _ in
                     Task { @MainActor [weak self] in
                         guard !hasStartedPlaying else { return }
 
-                        if Config.verboseLogging {
-                            print("⚠️ Playback timeout - audio failed to start within 5 seconds")
-                        }
+                        Logger.audio.warning("⚠️ Playback timeout - audio failed to start within 5 seconds")
 
                         self?.isPlaying = false
                         self?.playbackState = .idle
@@ -744,7 +707,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
                 }
 
                 // Observe when playback finishes successfully
-                successObserver = NotificationCenter.default.addObserver(
+                self.playbackSuccessObserver = NotificationCenter.default.addObserver(
                     forName: .AVPlayerItemDidPlayToEndTime,
                     object: playerItem,
                     queue: .main
@@ -753,16 +716,14 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
                         self?.isPlaying = false
                         self?.playbackState = .idle
 
-                        if Config.verboseLogging {
-                            print("🔊 Playback completed")
-                        }
+                        Logger.audio.info("🔊 Playback completed")
 
                         resumeOnce(with: .success(durationSeconds))
                     }
                 }
 
                 // Observe playback failures
-                failureObserver = NotificationCenter.default.addObserver(
+                self.playbackFailureObserver = NotificationCenter.default.addObserver(
                     forName: .AVPlayerItemFailedToPlayToEndTime,
                     object: playerItem,
                     queue: .main
@@ -774,9 +735,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
                         self?.isPlaying = false
                         self?.playbackState = .idle
 
-                        if Config.verboseLogging {
-                            print("❌ Playback failed")
-                        }
+                        Logger.audio.error("❌ Playback failed")
 
                         resumeOnce(with: .failure(error ?? AudioError.playbackFailed))
                     }
@@ -785,9 +744,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
                 // Start playback
                 audioPlayer?.play()
 
-                if Config.verboseLogging {
-                    print("🔊 Started AVPlayer playback")
-                }
+                Logger.audio.debug("🔊 Started AVPlayer playback")
             }
         } onCancel: {
             Task { @MainActor [weak self] in
@@ -801,14 +758,15 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         // Only cleanup if this is the active operation (prevents TOCTOU race)
         guard case .playing(let activeId) = playbackState, activeId == operationId else { return }
 
+        // Resume leaked continuation before destroying player
+        resumePlaybackContinuation()
+
         audioPlayer?.pause()
         audioPlayer = nil
         isPlaying = false
         playbackState = .idle
 
-        if Config.verboseLogging {
-            print("🔊 Cleaned up playback (id: \(operationId))")
-        }
+        Logger.audio.debug("🔊 Cleaned up playback (id: \(operationId, privacy: .public))")
     }
 
     func playOpusAudioFromBase64(_ base64: String) async throws -> TimeInterval {
@@ -822,11 +780,14 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
     func stopPlayback() async {
         // Early exit if not playing
         guard case .playing = playbackState else {
-            if Config.verboseLogging {
-                print("🔊 stopPlayback called but not playing")
-            }
+            Logger.audio.debug("🔊 stopPlayback called but not playing")
             return
         }
+
+        // Resume leaked continuation before destroying player —
+        // without this, the CheckedContinuation from playOpusAudio is never resumed
+        // and Swift runtime crashes with "SWIFT TASK CONTINUATION MISUSE: leaked"
+        resumePlaybackContinuation()
 
         // Pause and cleanup
         audioPlayer?.pause()
@@ -834,8 +795,30 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         isPlaying = false
         playbackState = .idle
 
-        if Config.verboseLogging {
-            print("🔊 Stopped playback")
+        Logger.audio.info("🔊 Stopped playback")
+    }
+
+    /// Resume and clean up the active playback continuation with CancellationError.
+    /// Safe to call multiple times — only the first call resumes.
+    private func resumePlaybackContinuation() {
+        // Clean up observers first — they could otherwise fire and double-resume
+        if let observer = playbackSuccessObserver {
+            NotificationCenter.default.removeObserver(observer)
+            playbackSuccessObserver = nil
+        }
+        if let observer = playbackFailureObserver {
+            NotificationCenter.default.removeObserver(observer)
+            playbackFailureObserver = nil
+        }
+        playbackStalledTimer?.invalidate()
+        playbackStalledTimer = nil
+
+        // Resume the continuation so the awaiting code can proceed
+        if let cont = playbackContinuation {
+            playbackContinuation = nil
+            cont.resume(throwing: CancellationError())
+        } else {
+            Logger.audio.debug("🔊 resumePlaybackContinuation: no active continuation (already resumed or never started)")
         }
     }
 
@@ -850,9 +833,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         await stopPlayback()
         speechSynthesizer.stopSpeaking(at: .immediate)
 
-        if Config.verboseLogging {
-            print("🗣️ Speaking: \(text)")
-        }
+        Logger.audio.info("🗣️ Speaking: \(text, privacy: .public)")
 
         // When VoiceOver is active, use accessibility announcement instead
         if UIAccessibility.isVoiceOverRunning {
@@ -860,9 +841,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
             // Brief delay so the announcement has time to be spoken
             try? await Task.sleep(for: .milliseconds(500))
 
-            if Config.verboseLogging {
-                print("🗣️ Routed through VoiceOver announcement")
-            }
+            Logger.audio.debug("🗣️ Routed through VoiceOver announcement")
             return
         }
 
@@ -871,14 +850,18 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         utterance.rate = AVSpeechUtteranceDefaultSpeechRate
 
         await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            // Resume any pending speech continuation to prevent leak
+            // (can happen if speakText() is called while previous utterance is active)
+            if let pending = speechCompletion {
+                Logger.audio.warning("🗣️ Resuming leaked speechCompletion before starting new utterance")
+                pending.resume()
+            }
             speechCompletion = continuation
             speechSynthesizer.delegate = self
             speechSynthesizer.speak(utterance)
         }
 
-        if Config.verboseLogging {
-            print("🗣️ Speech completed")
-        }
+        Logger.audio.debug("🗣️ Speech completed")
     }
 }
 
@@ -912,9 +895,7 @@ extension AudioService: AVAudioRecorderDelegate {
     nonisolated func audioRecorderEncodeErrorDidOccur(_ recorder: AVAudioRecorder, error: Error?) {
         Task { @MainActor in
             isRecording = false
-            if Config.verboseLogging {
-                print("❌ Recording error: \(error?.localizedDescription ?? "unknown")")
-            }
+            Logger.audio.error("❌ Recording error: \(error?.localizedDescription ?? "unknown", privacy: .public)")
         }
     }
 }

@@ -71,7 +71,6 @@ struct ImageQuestionView: View {
                 .font(.displayLG)
                 .foregroundColor(Theme.Colors.textPrimary)
                 .multilineTextAlignment(.center)
-                .fixedSize(horizontal: false, vertical: true)
                 .padding(Theme.Spacing.md)
                 .frame(maxWidth: .infinity)
                 .background(Theme.Colors.bgCard)

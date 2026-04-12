@@ -13,6 +13,7 @@
 
 import AVFoundation
 import Foundation
+import os
 import Speech
 
 // MARK: - Protocol
@@ -70,6 +71,8 @@ final class VoiceCommandService: VoiceCommandServiceProtocol {
     private var audioEngine: AVAudioEngine?
     private var listeningTask: Task<Void, Never>?
     private var silenceDetectionTask: Task<Void, Never>?
+    private var analyzerTask: Task<Void, Never>?
+    private var inputContinuation: AsyncStream<AnalyzerInput>.Continuation?
 
     /// Current TTS text for echo cancellation (lowercased words)
     private var playbackWords: [String] = []
@@ -145,9 +148,7 @@ final class VoiceCommandService: VoiceCommandServiceProtocol {
         guard let analyzerFormat = await SpeechAnalyzer.bestAvailableAudioFormat(
             compatibleWith: [transcriber, detector]
         ) else {
-            if Config.verboseLogging {
-                print("🎙️ VoiceCommandService: No compatible audio format available")
-            }
+            Logger.voice.error("🎙️ VoiceCommandService: No compatible audio format available")
             listeningState = .disabled
             return
         }
@@ -157,7 +158,26 @@ final class VoiceCommandService: VoiceCommandServiceProtocol {
         self.audioEngine = engine
 
         let inputNode = engine.inputNode
-        let inputFormat = inputNode.outputFormat(forBus: 0)
+        var inputFormat = inputNode.outputFormat(forBus: 0)
+
+        // Validate format — on real devices (especially Bluetooth), after AVPlayer playback
+        // the audio hardware may not have settled yet, returning 0 Hz / 0 channels.
+        // Retry with short delays to let the hardware transition complete.
+        if inputFormat.sampleRate <= 0 || inputFormat.channelCount <= 0 {
+            for attempt in 1...3 {
+                try? await Task.sleep(for: .milliseconds(200))
+                try? AVAudioSession.sharedInstance().setActive(true)
+                inputFormat = inputNode.outputFormat(forBus: 0)
+                if inputFormat.sampleRate > 0 && inputFormat.channelCount > 0 { break }
+                Logger.voice.warning("🎙️ VoiceCommandService: format retry \(attempt, privacy: .public) — still \(inputFormat.sampleRate, privacy: .public)Hz, \(inputFormat.channelCount, privacy: .public)ch")
+            }
+            guard inputFormat.sampleRate > 0, inputFormat.channelCount > 0 else {
+                Logger.voice.error("🎙️ VoiceCommandService: invalid input format after retries, disabling")
+                audioEngine = nil
+                listeningState = .disabled
+                return
+            }
+        }
 
         // Create format converter if needed
         let converter: AVAudioConverter?
@@ -168,11 +188,15 @@ final class VoiceCommandService: VoiceCommandServiceProtocol {
         }
 
         // Create input sequence for analyzer
-        let (inputSequence, inputContinuation) = AsyncStream<AnalyzerInput>.makeStream()
+        let (inputSequence, continuation) = AsyncStream<AnalyzerInput>.makeStream()
+        self.inputContinuation = continuation
 
         // Install tap to capture mic audio and feed to analyzer
+        // (engine not started yet — no audio flows until engine.start() below)
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: inputFormat) { buffer, _ in
             if let converter {
+                // Belt-and-suspenders guard against division by zero
+                guard inputFormat.sampleRate > 0 else { return }
                 let frameCount = AVAudioFrameCount(
                     Double(buffer.frameLength) * analyzerFormat.sampleRate / inputFormat.sampleRate
                 )
@@ -188,101 +212,113 @@ final class VoiceCommandService: VoiceCommandServiceProtocol {
                 }
 
                 if error == nil {
-                    inputContinuation.yield(AnalyzerInput(buffer: convertedBuffer))
+                    continuation.yield(AnalyzerInput(buffer: convertedBuffer))
                 }
             } else {
-                inputContinuation.yield(AnalyzerInput(buffer: buffer))
+                continuation.yield(AnalyzerInput(buffer: buffer))
             }
         }
+
+        // Launch analyzer BEFORE starting engine so RealtimeMessenger is ready
+        // to consume audio when buffers start flowing. Inherits @MainActor context
+        // so the start() call enters SpeechAnalyzer from a known execution context,
+        // avoiding _dispatch_assert_queue_fail on mServiceQueue.
+        analyzerTask = Task {
+            try? await speechAnalyzer.start(inputSequence: inputSequence)
+        }
+
+        // Start silence detection task (processes SpeechDetector results in parallel)
+        // NOTE: The `for try await` loop resumes on the producer's thread (SpeechDetector's queue),
+        // so all @MainActor property access must be dispatched back via MainActor.run.
+        silenceDetectionTask = Task { [weak self] in
+            do {
+                for try await result in detector.results {
+                    guard let self, !Task.isCancelled else { break }
+                    let speechDetected = result.speechDetected
+                    await MainActor.run { [weak self] in
+                        guard let self else { return }
+
+                        if speechDetected {
+                            // Barge-in: if TTS is playing and output is external, interrupt
+                            if self.isTTSPlaybackActive && self.isExternalAudioRoute() {
+                                self.bargeInContinuation.yield(())
+                                Logger.voice.info("🗣️ Barge-in: speech detected during TTS on external route")
+                                // Don't update silence state — barge-in handler will reset things
+                                return
+                            }
+
+                            // Speech is detected
+                            switch self.silenceState {
+                            case .idle:
+                                // First speech detected
+                                self.silenceState = .speechActive
+                                self.silenceContinuation.yield(.speechStarted)
+                                Logger.voice.debug("🔇 Silence detection: speech started")
+                            case .silenceAccumulating:
+                                // Speech resumed after brief pause — reset to active
+                                self.silenceState = .speechActive
+                                Logger.voice.debug("🔇 Silence detection: speech resumed")
+                            case .speechActive:
+                                break // Already tracking speech
+                            }
+                        } else {
+                            // No speech detected
+                            switch self.silenceState {
+                            case .speechActive:
+                                // Speech just stopped — start accumulating silence
+                                self.silenceState = .silenceAccumulating(since: Date())
+                                Logger.voice.debug("🔇 Silence detection: silence started after speech")
+                            case .silenceAccumulating(let since):
+                                // Check if silence threshold reached
+                                let elapsed = Date().timeIntervalSince(since)
+                                if elapsed >= Self.silenceThreshold {
+                                    self.silenceContinuation.yield(.silenceAfterSpeech(duration: elapsed))
+                                    // Reset to idle after emitting
+                                    self.silenceState = .idle
+                                    Logger.voice.debug("🔇 Silence detection: threshold reached (\(String(format: "%.1f", elapsed), privacy: .public)s)")
+                                }
+                            case .idle:
+                                break // No speech yet, ignore silence
+                            }
+                        }
+                    }
+                }
+            } catch {
+                Logger.voice.error("🔇 Silence detection error: \(error, privacy: .public)")
+            }
+        }
+
+        // Give the analyzer task time to initialize its internal queue
+        // before the engine starts sending audio buffers.
+        // Task.yield() only yields the current time slice — not enough for
+        // SpeechAnalyzer's mServiceQueue setup. A short sleep is more reliable.
+        try? await Task.sleep(for: .milliseconds(50))
 
         do {
             try engine.start()
         } catch {
-            if Config.verboseLogging {
-                print("🎙️ VoiceCommandService: Failed to start audio engine: \(error)")
-            }
+            // Clean up tasks launched before engine.start
+            analyzerTask?.cancel()
+            analyzerTask = nil
+            silenceDetectionTask?.cancel()
+            silenceDetectionTask = nil
+            inputContinuation?.finish()
+            inputContinuation = nil
+            audioEngine?.inputNode.removeTap(onBus: 0)
+            audioEngine = nil
+
+            Logger.voice.error("🎙️ VoiceCommandService: Failed to start audio engine: \(error, privacy: .public)")
             listeningState = .disabled
             return
         }
 
-        if Config.verboseLogging {
-            print("🎙️ VoiceCommandService: Listening started")
-        }
+        Logger.voice.info("🎙️ VoiceCommandService: Listening started")
 
-        // Start silence detection task (processes SpeechDetector results in parallel)
-        silenceDetectionTask = Task { [weak self] in
-            do {
-            for try await result in detector.results {
-                guard let self, !Task.isCancelled else { break }
-
-                if result.speechDetected {
-                    // Barge-in: if TTS is playing and output is external, interrupt
-                    if self.isTTSPlaybackActive && self.isExternalAudioRoute() {
-                        self.bargeInContinuation.yield(())
-                        if Config.verboseLogging {
-                            print("🗣️ Barge-in: speech detected during TTS on external route")
-                        }
-                        // Don't update silence state — barge-in handler will reset things
-                        continue
-                    }
-
-                    // Speech is detected
-                    switch self.silenceState {
-                    case .idle:
-                        // First speech detected
-                        self.silenceState = .speechActive
-                        self.silenceContinuation.yield(.speechStarted)
-                        if Config.verboseLogging {
-                            print("🔇 Silence detection: speech started")
-                        }
-                    case .silenceAccumulating:
-                        // Speech resumed after brief pause — reset to active
-                        self.silenceState = .speechActive
-                        if Config.verboseLogging {
-                            print("🔇 Silence detection: speech resumed")
-                        }
-                    case .speechActive:
-                        break // Already tracking speech
-                    }
-                } else {
-                    // No speech detected
-                    switch self.silenceState {
-                    case .speechActive:
-                        // Speech just stopped — start accumulating silence
-                        self.silenceState = .silenceAccumulating(since: Date())
-                        if Config.verboseLogging {
-                            print("🔇 Silence detection: silence started after speech")
-                        }
-                    case .silenceAccumulating(let since):
-                        // Check if silence threshold reached
-                        let elapsed = Date().timeIntervalSince(since)
-                        if elapsed >= Self.silenceThreshold {
-                            self.silenceContinuation.yield(.silenceAfterSpeech(duration: elapsed))
-                            // Reset to idle after emitting
-                            self.silenceState = .idle
-                            if Config.verboseLogging {
-                                print("🔇 Silence detection: threshold reached (\(String(format: "%.1f", elapsed))s)")
-                            }
-                        }
-                    case .idle:
-                        break // No speech yet, ignore silence
-                    }
-                }
-            }
-            } catch {
-                if Config.verboseLogging {
-                    print("🔇 Silence detection error: \(error)")
-                }
-            }
-        }
-
-        // Start analyzer and result processing
+        // Start result processing
+        // NOTE: The `for try await` loop resumes on the producer's thread (SpeechAnalyzer's queue),
+        // so all @MainActor property access must be dispatched back via MainActor.run.
         listeningTask = Task { [weak self] in
             do {
-                // Start the analyzer with the input sequence (runs in background)
-                Task {
-                    try? await speechAnalyzer.start(inputSequence: inputSequence)
-                }
 
                 // Read transcription results
                 for try await result in transcriber.results {
@@ -291,45 +327,49 @@ final class VoiceCommandService: VoiceCommandServiceProtocol {
                     let text = String(result.text.characters)
                     let isFinal = result.isFinal
 
-                    // During TTS playback, only check finalized results (reduces echo false triggers)
-                    if !self.playbackWords.isEmpty && !isFinal {
-                        continue
-                    }
+                    // Filter and process on MainActor (reads @MainActor properties)
+                    let matched: Bool = await MainActor.run { [weak self] in
+                        guard let self else { return false }
 
-                    // Echo cancellation: discard if >60% word overlap with TTS text
-                    if self.shouldRejectAsEcho(text) {
-                        if Config.verboseLogging {
-                            print("🎙️ Echo rejected: \(text)")
+                        // During TTS playback, only check finalized results (reduces echo false triggers)
+                        if !self.playbackWords.isEmpty && !isFinal {
+                            return false
                         }
-                        continue
+
+                        // Echo cancellation: discard if >60% word overlap with TTS text
+                        if self.shouldRejectAsEcho(text) {
+                            Logger.voice.debug("🎙️ Echo rejected: \(text, privacy: .public)")
+                            return false
+                        }
+
+                        // Match command
+                        guard let command = VoiceCommand.match(from: text) else { return false }
+
+                        // During recording, only "stop" is allowed
+                        if self.isRecordingActive && command != .stop {
+                            return false
+                        }
+
+                        Logger.voice.info("🎙️ Voice command detected: \(command.rawValue, privacy: .public) (from: \"\(text, privacy: .public)\")")
+
+                        // Flash detected state briefly for UI feedback
+                        self.listeningState = .commandDetected(command)
+                        self.commandContinuation.yield(command)
+                        return true
                     }
 
-                    // Match command
-                    guard let command = VoiceCommand.match(from: text) else { continue }
-
-                    // During recording, only "stop" is allowed
-                    if self.isRecordingActive && command != .stop {
-                        continue
-                    }
-
-                    if Config.verboseLogging {
-                        print("🎙️ Voice command detected: \(command.rawValue) (from: \"\(text)\")")
-                    }
-
-                    // Flash detected state briefly for UI feedback
-                    self.listeningState = .commandDetected(command)
-                    self.commandContinuation.yield(command)
+                    guard matched else { continue }
 
                     // Reset to listening after brief delay
                     try? await Task.sleep(for: .milliseconds(500))
                     if !Task.isCancelled {
-                        self.listeningState = .listening
+                        await MainActor.run { [weak self] in
+                            self?.listeningState = .listening
+                        }
                     }
                 }
             } catch {
-                if Config.verboseLogging {
-                    print("🎙️ VoiceCommandService: Transcription error: \(error)")
-                }
+                Logger.voice.error("🎙️ VoiceCommandService: Transcription error: \(error, privacy: .public)")
             }
 
             // Cleanup after task ends
@@ -347,6 +387,13 @@ final class VoiceCommandService: VoiceCommandServiceProtocol {
         silenceDetectionTask = nil
         silenceState = .idle
 
+        analyzerTask?.cancel()
+        analyzerTask = nil
+
+        // Finish input stream BEFORE removing tap — signals SpeechAnalyzer to stop
+        inputContinuation?.finish()
+        inputContinuation = nil
+
         audioEngine?.inputNode.removeTap(onBus: 0)
         audioEngine?.stop()
         audioEngine = nil
@@ -355,9 +402,7 @@ final class VoiceCommandService: VoiceCommandServiceProtocol {
 
         listeningState = .disabled
 
-        if Config.verboseLogging {
-            print("🎙️ VoiceCommandService: Listening stopped")
-        }
+        Logger.voice.info("🎙️ VoiceCommandService: Listening stopped")
     }
 
     // MARK: - Echo Cancellation
@@ -389,9 +434,7 @@ final class VoiceCommandService: VoiceCommandServiceProtocol {
     func setRecordingActive(_ active: Bool) {
         isRecordingActive = active
 
-        if Config.verboseLogging {
-            print("🎙️ Recording active: \(active) — \(active ? "only 'stop' allowed" : "all commands enabled")")
-        }
+        Logger.voice.debug("🎙️ Recording active: \(active, privacy: .public) — \(active ? "only 'stop' allowed" : "all commands enabled", privacy: .public)")
     }
 
     // MARK: - Barge-In Detection
@@ -399,9 +442,7 @@ final class VoiceCommandService: VoiceCommandServiceProtocol {
     func setTTSPlaybackActive(_ active: Bool) {
         isTTSPlaybackActive = active
 
-        if Config.verboseLogging {
-            print("🎙️ TTS playback active: \(active)")
-        }
+        Logger.voice.debug("🎙️ TTS playback active: \(active, privacy: .public)")
     }
 
     /// Check if audio output is going to an external device (Bluetooth, CarPlay, AirPlay)

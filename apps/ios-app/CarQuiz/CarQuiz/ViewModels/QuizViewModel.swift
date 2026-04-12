@@ -7,6 +7,7 @@
 
 import Foundation
 import Combine
+import os
 
 /// Error context for distinguishing error types
 enum ErrorContext: Sendable {
@@ -57,6 +58,34 @@ extension QuizState {
         if case .error = self { return true }
         return false
     }
+
+    /// Short label for logging (no associated values)
+    var label: String {
+        switch self {
+        case .idle: return "idle"
+        case .startingQuiz: return "startingQuiz"
+        case .askingQuestion: return "askingQuestion"
+        case .recording: return "recording"
+        case .processing: return "processing"
+        case .showingResult: return "showingResult"
+        case .finished: return "finished"
+        case .error: return "error"
+        }
+    }
+
+    /// Valid successor states for state machine validation
+    var validTransitions: Set<String> {
+        switch self {
+        case .idle: return ["startingQuiz"]
+        case .startingQuiz: return ["askingQuestion", "error", "idle"]
+        case .askingQuestion: return ["recording", "processing", "error", "idle"]
+        case .recording: return ["processing", "askingQuestion", "error"]
+        case .processing: return ["showingResult", "askingQuestion", "error", "idle"]
+        case .showingResult: return ["askingQuestion", "finished", "idle"]
+        case .finished: return ["idle"]
+        case .error: return ["idle", "askingQuestion"]
+        }
+    }
 }
 
 /// Main quiz view model coordinating all services
@@ -80,7 +109,7 @@ final class QuizViewModel: ObservableObject {
     @Published var showAnswerConfirmation = false
     @Published var transcribedAnswer = ""
     @Published var autoConfirmCountdown: Int = 0
-    private var pendingResponse: QuizResponse? = nil
+    var pendingResponse: QuizResponse? = nil  // internal for QuizViewModel+Recording
 
     // Auto-advance countdown for ResultView binding (single source of truth)
     @Published var autoAdvanceCountdown: Int = 0
@@ -171,17 +200,38 @@ final class QuizViewModel: ObservableObject {
         return nil
     }
 
-    // MARK: - Re-entrancy Guard
+    // MARK: - State Machine
+
+    /// Validated state transition with logging.
+    /// Logs all transitions; warns on invalid ones but still applies them
+    /// to avoid getting stuck (crash-safe over crash-correct).
+    func transition(to newState: QuizState, caller: String = #function) {  // internal for extensions
+        let from = quizState.label
+        let to = newState.label
+
+        if quizState.validTransitions.contains(to) {
+            Logger.quiz.info("State: \(from) → \(to) [\(caller, privacy: .public)]")
+        } else {
+            Logger.quiz.error("⚠️ Invalid transition: \(from) → \(to) [\(caller, privacy: .public)] — applying anyway to avoid stuck state")
+        }
+
+        quizState = newState
+    }
+
+    // MARK: - Re-entrancy Guards
 
     /// Simple Bool flag to prevent concurrent handleQuizResponse calls.
     /// Safe because this class is @MainActor — all access is serialized on the main thread.
-    private var isProcessingResponse = false
+    var isProcessingResponse = false  // internal for QuizViewModel+VoiceCommands
+
+    /// Prevents concurrent stopRecordingAndSubmit calls (silence detection + user tap can race)
+    var isStoppingRecording = false  // internal for QuizViewModel+Recording
 
     // MARK: - Voice Command State
 
     @Published var voiceCommandState: VoiceCommandListeningState = .disabled
-    private var voiceCommandTask: Task<Void, Never>?
-    private var bargeInTask: Task<Void, Never>?
+    var voiceCommandTask: Task<Void, Never>?  // internal for QuizViewModel+VoiceCommands
+    var bargeInTask: Task<Void, Never>?  // internal for QuizViewModel+VoiceCommands
 
     // MARK: - Auto-Record State
 
@@ -201,53 +251,53 @@ final class QuizViewModel: ObservableObject {
 
     // MARK: - Dependencies
 
-    private let networkService: NetworkServiceProtocol
-    private let audioService: AudioServiceProtocol
-    private let persistenceStore: PersistenceStoreProtocol
-    private let voiceCommandService: VoiceCommandServiceProtocol?
-    private let sttService: ElevenLabsSTTServiceProtocol?
+    let networkService: NetworkServiceProtocol
+    let audioService: AudioServiceProtocol
+    let persistenceStore: PersistenceStoreProtocol
+    let voiceCommandService: VoiceCommandServiceProtocol?
+    let sttService: ElevenLabsSTTServiceProtocol?
 
     private var cancellables = Set<AnyCancellable>()
 
-    // Auto-advance task for result screen
-    private var autoAdvanceTask: Task<Void, Never>?
+    // Auto-advance task for result screen (internal for QuizViewModel+Timers)
+    var autoAdvanceTask: Task<Void, Never>?
 
     // Voice submission task for cancellation support
-    private var voiceSubmissionTask: Task<Void, Never>?
+    var voiceSubmissionTask: Task<Void, Never>?  // internal for QuizViewModel+Recording
 
-    // Answer timer task (countdown before auto-recording)
-    private var answerTimerTask: Task<Void, Never>?
+    // Answer timer task (countdown before auto-recording) (internal for QuizViewModel+Timers)
+    var answerTimerTask: Task<Void, Never>?
 
-    // Auto-stop recording task (stops recording after Config.autoRecordingDuration)
-    private var autoStopRecordingTask: Task<Void, Never>?
+    // Auto-stop recording task (stops recording after Config.autoRecordingDuration) (internal for QuizViewModel+Timers)
+    var autoStopRecordingTask: Task<Void, Never>?
 
     // Silence detection task (monitors speech activity during auto-record)
-    private var silenceDetectionTask: Task<Void, Never>?
+    var silenceDetectionTask: Task<Void, Never>?  // internal for QuizViewModel+Recording
 
-    // Auto-confirm countdown task (2s before auto-confirming transcribed answer)
-    private var autoConfirmTask: Task<Void, Never>?
+    // Auto-confirm countdown task (2s before auto-confirming transcribed answer) (internal for QuizViewModel+Timers)
+    var autoConfirmTask: Task<Void, Never>?
 
-    // Thinking time countdown task (delay before auto-recording)
-    private var thinkingTimeTask: Task<Void, Never>?
+    // Thinking time countdown task (delay before auto-recording) (internal for QuizViewModel+Timers)
+    var thinkingTimeTask: Task<Void, Never>?
 
     // Streaming STT event listener task
-    private var sttEventTask: Task<Void, Never>?
+    var sttEventTask: Task<Void, Never>?  // internal for QuizViewModel+Recording
 
     // Streaming audio chunk sender task
-    private var sttChunkTask: Task<Void, Never>?
+    var sttChunkTask: Task<Void, Never>?  // internal for QuizViewModel+Recording
 
-    // Whether the current recording is a re-record (bypasses all timers)
-    private var isRerecording: Bool = false
+    // Whether the current recording is a re-record (bypasses all timers) (internal for QuizViewModel+Timers)
+    var isRerecording: Bool = false
 
     // Consecutive transcription failures for 3-tier error escalation
-    private var consecutiveTranscriptionFailures: Int = 0
+    var consecutiveTranscriptionFailures: Int = 0  // internal for QuizViewModel+Recording
 
     // Next question data (from response, displayed after showing results)
     private var nextQuestionAudioUrl: String?
     private var nextQuestion: Question?
 
     // Current question audio URL for "repeat" command
-    private var currentQuestionAudioUrl: String?
+    var currentQuestionAudioUrl: String?  // internal for QuizViewModel+Audio
 
     // MARK: - Initialization
 
@@ -284,7 +334,7 @@ final class QuizViewModel: ObservableObject {
         difficulty: String? = nil,
         language: String? = nil
     ) async {
-        quizState = .startingQuiz
+        transition(to: .startingQuiz)
         errorMessage = nil
         autoAdvanceEnabled = true  // Reset auto-advance for new quiz
         isRerecording = false
@@ -305,29 +355,21 @@ final class QuizViewModel: ObservableObject {
         }
 
         do {
-            if Config.verboseLogging {
-                print("🎮 Starting new quiz: \(quizMaxQuestions) questions, difficulty: \(quizDifficulty), language: \(quizLanguage)")
-            }
+            Logger.quiz.info("🎮 Starting new quiz: \(quizMaxQuestions, privacy: .public) questions, difficulty: \(quizDifficulty, privacy: .public), language: \(quizLanguage, privacy: .public)")
 
             // Get excluded question IDs from history
             let excludedIds = persistenceStore.getExclusionList()
 
-            if Config.verboseLogging {
-                print("🎮 Excluding \(excludedIds.count) previously seen questions")
-            }
+            Logger.quiz.debug("🎮 Excluding \(excludedIds.count, privacy: .public) previously seen questions")
 
             // Configure audio session with user's preferred mode
             do {
                 try audioService.setupAudioSession(mode: selectedAudioMode)
 
-                if Config.verboseLogging {
-                    print("🎤 Audio session configured with \(selectedAudioMode.name)")
-                }
+                Logger.audio.info("🎤 Audio session configured with \(self.selectedAudioMode.name, privacy: .public)")
             } catch {
                 // Log error but continue - audio might still work
-                if Config.verboseLogging {
-                    print("⚠️ Warning: Failed to configure audio session: \(error)")
-                }
+                Logger.audio.warning("⚠️ Failed to configure audio session: \(error, privacy: .public)")
             }
 
             // Create session with device ID for usage tracking
@@ -350,7 +392,7 @@ final class QuizViewModel: ObservableObject {
 
             currentSession = response.session
             currentQuestion = response.currentQuestion
-            quizState = .askingQuestion
+            transition(to: .askingQuestion)
 
             // Save question ID to history
             if let questionId = response.currentQuestion?.id {
@@ -358,25 +400,21 @@ final class QuizViewModel: ObservableObject {
                     try persistenceStore.addQuestionId(questionId)
                 } catch QuestionHistoryError.capacityReached {
                     // Should not happen (checked before quiz start)
-                    if Config.verboseLogging {
-                        print("⚠️ WARNING: Question history reached capacity mid-quiz")
-                    }
+                    Logger.quiz.warning("⚠️ Question history reached capacity mid-quiz")
                 } catch {
-                    if Config.verboseLogging {
-                        print("⚠️ WARNING: Failed to save question to history: \(error)")
-                    }
+                    Logger.quiz.warning("⚠️ Failed to save question to history: \(error, privacy: .public)")
                 }
             }
 
-            // Start voice command listening
-            startVoiceCommands()
-
             // Play question audio if available
+            // (voice commands start inside playQuestionAudio, after TTS finishes,
+            //  to avoid AVAudioEngine + AVPlayer conflict that crashes SpeechAnalyzer)
             if let audioInfo = response.audio,
                let questionUrl = audioInfo.questionUrl {
                 await playQuestionAudio(from: questionUrl)
             } else {
-                // No audio — auto-record or timer based on settings
+                // No audio — start voice commands then recording/timer
+                await startVoiceCommands()
                 await startRecordingOrTimer()
             }
 
@@ -384,7 +422,7 @@ final class QuizViewModel: ObservableObject {
             if case .dailyLimitReached(let limitError) = error {
                 dailyLimitError = limitError
                 showPaywall = true
-                quizState = .idle
+                transition(to: .idle)
             } else {
                 setError(
                     message: "Failed to start quiz: \(error.localizedDescription)",
@@ -392,555 +430,22 @@ final class QuizViewModel: ObservableObject {
                 )
             }
 
-            if Config.verboseLogging {
-                print("❌ Error starting quiz: \(error)")
-            }
+            Logger.quiz.error("❌ Error starting quiz: \(error, privacy: .public)")
         } catch {
             setError(
                 message: "Failed to start quiz: \(error.localizedDescription)",
                 context: .initialization
             )
 
-            if Config.verboseLogging {
-                print("❌ Error starting quiz: \(error)")
-            }
+            Logger.quiz.error("❌ Error starting quiz: \(error, privacy: .public)")
         }
     }
 
-    // MARK: - Recording Lifecycle
-
-    /// Toggle recording: start if asking a question, stop and submit if recording
-    func toggleRecording() async {
-        switch quizState {
-        case .askingQuestion:
-            cancelAnswerTimer()
-            cancelThinkingTime()
-            await startRecording()
-        case .recording:
-            cancelAutoStopRecordingTimer()
-            await stopRecordingAndSubmit()
-        default:
-            break
-        }
-    }
-
-    /// Start recording the user's voice answer
-    /// Handles audio preparation, state transitions, and error rollback
-    /// Routes to streaming STT (ElevenLabs) or batch M4A (Whisper) based on feature flag
-    private func startRecording() async {
-        cancelAnswerTimer()
-        errorMessage = nil
-        quizState = .recording
-        voiceCommandService?.setRecordingActive(true)
-
-        // Choose streaming STT or batch M4A based on feature flag
-        if Config.useElevenLabsSTT && sttService != nil {
-            await startStreamingRecording()
-        } else {
-            await startBatchRecording()
-        }
-    }
-
-    /// Start batch M4A recording (original Whisper path)
-    private func startBatchRecording() async {
-        do {
-            await audioService.prepareForRecording()
-            try audioService.startRecording()
-
-            if isAutoRecording, let service = voiceCommandService {
-                speechDetectedDuringAutoRecord = false
-                startSilenceDetection(service: service)
-            }
-
-            startAutoStopRecordingTimer()
-        } catch {
-            isAutoRecording = false
-            speechDetectedDuringAutoRecord = false
-            quizState = .askingQuestion
-            errorMessage = "Recording failed: \(error.localizedDescription)"
-
-            if Config.verboseLogging {
-                print("❌ Recording failed to start: \(error)")
-            }
-        }
-    }
-
-    /// Start streaming recording with ElevenLabs Scribe v2 Realtime STT
-    private func startStreamingRecording() async {
-        guard let sttService else {
-            // Fallback to batch if STT service unavailable
-            await startBatchRecording()
-            return
-        }
-
-        do {
-            // 1. Get single-use token from backend
-            let token = try await networkService.fetchElevenLabsToken()
-
-            // 2. Connect to ElevenLabs WebSocket
-            let languageCode = currentSession?.language ?? settings.language
-            try await sttService.connect(token: token, languageCode: languageCode)
-
-            // 3. Start listening for STT events
-            liveTranscript = ""
-            isStreamingSTT = true
-            startSTTEventListener(sttService: sttService)
-
-            // 4. Start PCM recording and stream chunks to WebSocket
-            await audioService.prepareForRecording()
-            let sttRef = sttService
-            try audioService.startStreamingRecording { pcmData in
-                Task {
-                    try? await sttRef.sendAudioChunk(pcmData)
-                }
-            }
-
-            // 5. Start hard safety limit timer
-            startAutoStopRecordingTimer()
-
-            if Config.verboseLogging {
-                print("🎙️ Streaming STT recording started")
-            }
-
-        } catch {
-            // Fallback to batch recording on any setup failure
-            isStreamingSTT = false
-            liveTranscript = ""
-            await sttService.disconnect()
-
-            if Config.verboseLogging {
-                print("⚠️ Streaming STT setup failed, falling back to batch: \(error)")
-            }
-
-            await startBatchRecording()
-        }
-    }
-
-    /// Listen for STT events and update live transcript / handle committed text
-    private func startSTTEventListener(sttService: ElevenLabsSTTServiceProtocol) {
-        sttEventTask?.cancel()
-        sttEventTask = Task { [weak self] in
-            for await event in sttService.events {
-                guard let self, !Task.isCancelled else { break }
-
-                switch event {
-                case .partialTranscript(let text):
-                    self.liveTranscript = text
-
-                case .committedTranscript(let text):
-                    self.liveTranscript = text
-                    // Auto-stop recording and submit the committed text
-                    await self.handleCommittedTranscript(text)
-                    return
-
-                case .connected:
-                    break // Already handled in startStreamingRecording
-
-                case .disconnected(let error):
-                    if self.isStreamingSTT {
-                        if Config.verboseLogging {
-                            print("⚠️ STT disconnected unexpectedly: \(error?.localizedDescription ?? "unknown")")
-                        }
-                        // If we were mid-recording, fall back gracefully
-                        self.isStreamingSTT = false
-                        self.liveTranscript = ""
-                    }
-                    return
-                }
-            }
-        }
-    }
-
-    /// Handle committed transcript from ElevenLabs VAD
-    private func handleCommittedTranscript(_ text: String) async {
-        guard quizState == .recording else { return }
-
-        // Stop streaming recording
-        cancelAutoStopRecordingTimer()
-        cancelSilenceDetection()
-        voiceCommandService?.setRecordingActive(false)
-        audioService.stopStreamingRecording()
-        isAutoRecording = false
-        speechDetectedDuringAutoRecord = false
-
-        // Disconnect STT WebSocket
-        sttEventTask?.cancel()
-        sttEventTask = nil
-        await sttService?.disconnect()
-        isStreamingSTT = false
-
-        if Config.verboseLogging {
-            print("🎙️ Committed transcript: \(text)")
-        }
-
-        // Show confirmation modal with the transcribed text
-        transcribedAnswer = text
-        showAnswerConfirmation = true
-        startAutoConfirmIfEnabled()
-        // Stay in .recording → switch to a neutral state for the modal
-        quizState = .processing
-    }
-
-    /// Subscribe to silence events and auto-stop recording when silence threshold reached
-    private func startSilenceDetection(service: VoiceCommandServiceProtocol) {
-        cancelSilenceDetection()
-
-        silenceDetectionTask = Task { [weak self] in
-            for await event in service.silenceEvents {
-                guard let self, !Task.isCancelled else { break }
-                guard self.quizState == .recording else { continue }
-
-                switch event {
-                case .speechStarted:
-                    self.speechDetectedDuringAutoRecord = true
-                case .silenceAfterSpeech(let duration):
-                    if Config.verboseLogging {
-                        print("🔇 Auto-record: silence threshold reached (\(String(format: "%.1f", duration))s), auto-stopping")
-                    }
-                    await self.stopRecordingAndSubmit()
-                    return
-                }
-            }
-        }
-    }
-
-    /// Cancel silence detection subscription
-    private func cancelSilenceDetection() {
-        silenceDetectionTask?.cancel()
-        silenceDetectionTask = nil
-    }
-
-    /// Stop recording and submit the audio for evaluation
-    private func stopRecordingAndSubmit() async {
-        cancelAutoStopRecordingTimer()
-        cancelSilenceDetection()
-        voiceCommandService?.setRecordingActive(false)
-        isAutoRecording = false
-        speechDetectedDuringAutoRecord = false
-
-        if isStreamingSTT {
-            // Streaming path: commit and let the event listener handle the response
-            do {
-                try await sttService?.commitAndClose()
-                // The STT event listener will call handleCommittedTranscript
-            } catch {
-                // Cleanup and fallback
-                isStreamingSTT = false
-                audioService.stopStreamingRecording()
-                await sttService?.disconnect()
-                errorMessage = "Transcription failed: \(error.localizedDescription)"
-                quizState = .askingQuestion
-            }
-        } else {
-            // Batch path: stop M4A recording and upload
-            do {
-                let data = try await audioService.stopRecording()
-                await submitVoiceAnswer(audioData: data)
-            } catch {
-                errorMessage = "Recording failed: \(error.localizedDescription)"
-                quizState = .askingQuestion
-
-                if Config.verboseLogging {
-                    print("❌ Recording stop failed: \(error)")
-                }
-            }
-        }
-    }
-
-    /// Submit a voice answer with timeout and cancellation support
-    func submitVoiceAnswer(audioData: Data) async {
-        guard let sessionId = currentSession?.id else {
-            setError(message: "No active session", context: .general)
-            return
-        }
-
-        quizState = .processing
-        errorMessage = nil
-
-        // Create a task that can be cancelled via cancelProcessing()
-        voiceSubmissionTask = Task { [weak self] in
-            guard let self else { return }
-
-            do {
-                if Config.verboseLogging {
-                    print("🎤 Submitting voice answer: \(audioData.count) bytes")
-                }
-
-                // Race the network call against a 30-second timeout
-                let response = try await withUserFacingTimeout(seconds: 30) {
-                    try await self.networkService.submitVoiceAnswer(
-                        sessionId: sessionId,
-                        audioData: audioData,
-                        fileName: "answer.m4a"
-                    )
-                }
-
-                // Check for cancellation before updating UI
-                try Task.checkCancellation()
-
-                // Check if response has a valid evaluation before showing confirmation
-                guard let evaluation = response.evaluation else {
-                    if Config.verboseLogging {
-                        print("⚠️ No evaluation in response - speech may not have been recognized")
-                    }
-                    await MainActor.run {
-                        self.handleTranscriptionFailure()
-                    }
-                    return
-                }
-
-                // Reset failure counter on success
-                await MainActor.run {
-                    self.consecutiveTranscriptionFailures = 0
-                }
-
-                // Store response and show confirmation modal
-                await MainActor.run {
-                    self.pendingResponse = response
-                    self.transcribedAnswer = evaluation.userAnswer
-                    self.showAnswerConfirmation = true
-                    self.startAutoConfirmIfEnabled()
-                }
-
-                // Don't call handleQuizResponse yet - wait for user confirmation
-
-            } catch is CancellationError {
-                // User cancelled - state already cleaned up by cancelProcessing()
-                if Config.verboseLogging {
-                    print("🚫 Voice submission task was cancelled")
-                }
-            } catch is TimeoutError {
-                await MainActor.run {
-                    self.setError(
-                        message: "Request timed out. Please try again.",
-                        context: .submission
-                    )
-                }
-
-                if Config.verboseLogging {
-                    print("⏱️ Voice submission timed out after 30 seconds")
-                }
-            } catch let error as NetworkError {
-                // Handle daily limit reached — show paywall
-                if case .dailyLimitReached(let limitError) = error {
-                    await MainActor.run {
-                        self.dailyLimitError = limitError
-                        self.showPaywall = true
-                        self.quizState = .idle
-                    }
-                    return
-                }
-
-                // Handle "speech not understood" errors gracefully - let user re-record
-                if case .serverError(let statusCode, _) = error, statusCode == 400 {
-                    await MainActor.run {
-                        self.handleTranscriptionFailure()
-                    }
-
-                    if Config.verboseLogging {
-                        print("⚠️ Speech not understood, tier \(self.consecutiveTranscriptionFailures) escalation")
-                    }
-                    return
-                }
-
-                // Other network errors go to error screen
-                await MainActor.run {
-                    self.setError(
-                        message: "Failed to submit answer: \(error.localizedDescription)",
-                        context: .submission
-                    )
-                }
-
-                if Config.verboseLogging {
-                    print("❌ Error submitting answer: \(error)")
-                }
-            } catch {
-                await MainActor.run {
-                    self.setError(
-                        message: "Failed to submit answer: \(error.localizedDescription)",
-                        context: .submission
-                    )
-                }
-
-                if Config.verboseLogging {
-                    print("❌ Error submitting answer: \(error)")
-                }
-            }
-        }
-
-        // Wait for the task to complete
-        await voiceSubmissionTask?.value
-    }
-
-    /// User-facing timeout error
-    private struct TimeoutError: Error {}
-
-    /// Runs an async operation with a timeout, throwing TimeoutError if exceeded
-    private func withUserFacingTimeout<T: Sendable>(
-        seconds: Int,
-        operation: @escaping @Sendable () async throws -> T
-    ) async throws -> T {
-        try await withThrowingTaskGroup(of: T.self) { group in
-            group.addTask {
-                try await operation()
-            }
-
-            group.addTask {
-                try await Task.sleep(nanoseconds: UInt64(seconds) * 1_000_000_000)
-                throw TimeoutError()
-            }
-
-            // Return first result, cancel the other
-            guard let result = try await group.next() else {
-                throw TimeoutError()
-            }
-            group.cancelAll()
-            return result
-        }
-    }
-
-    /// Confirm the transcribed answer and proceed to show result
-    func confirmAnswer() async {
-        cancelAutoConfirm()
-        showAnswerConfirmation = false
-
-        // If we have a pending Whisper response, use it directly
-        if let response = pendingResponse {
-            pendingResponse = nil
-            await handleQuizResponse(response)
-            return
-        }
-
-        // Streaming STT path: submit the transcribed text via /sessions/{id}/input
-        guard !transcribedAnswer.isEmpty else { return }
-        await resubmitAnswer(transcribedAnswer)
-    }
-
-    /// Start a ticking auto-confirm countdown if enabled.
-    /// Cancelled by rerecordAnswer() or cancelProcessing().
-    private func startAutoConfirmIfEnabled() {
-        guard settings.autoConfirmEnabled else {
-            autoConfirmCountdown = 0
-            return
-        }
-        let duration = Config.autoConfirmDelaySecs
-        autoConfirmCountdown = duration
-        autoConfirmTask?.cancel()
-        autoConfirmTask = Task { [weak self] in
-            for remaining in (0 ..< duration).reversed() {
-                try? await Task.sleep(nanoseconds: 1_000_000_000)
-                guard let self, !Task.isCancelled else { return }
-                self.autoConfirmCountdown = remaining
-            }
-            guard let self, !Task.isCancelled else { return }
-            guard self.showAnswerConfirmation else { return }
-            await self.confirmAnswer()
-        }
-    }
-
-    /// Cancel any pending auto-confirm timer
-    private func cancelAutoConfirm() {
-        autoConfirmTask?.cancel()
-        autoConfirmTask = nil
-        autoConfirmCountdown = 0
-    }
-
-    /// Defense-in-depth cleanup if the answer confirmation sheet is dismissed
-    /// without Confirm or Re-record (e.g., programmatic dismiss, future changes).
-    /// No-op when pendingResponse was already consumed by confirmAnswer/rerecordAnswer.
-    func handleAnswerConfirmationDismissed() {
-        guard pendingResponse != nil else { return }
-        pendingResponse = nil
-        quizState = .askingQuestion
-        errorMessage = nil
-    }
-
-    /// Reject the transcribed answer and return to ready-to-record state
-    func rerecordAnswer() {
-        cancelAutoConfirm()
-        showAnswerConfirmation = false
-        pendingResponse = nil
-        isRerecording = true
-        quizState = .askingQuestion  // Return to ready state, not recording
-        errorMessage = nil
-    }
-
-    /// Cancel the processing operation and return to question state
-    func cancelProcessing() {
-        cancelAutoConfirm()
-        voiceSubmissionTask?.cancel()
-        voiceSubmissionTask = nil
-        cancelAnswerTimer()
-        cancelAutoStopRecordingTimer()
-        cancelSilenceDetection()
-        cleanupStreamingSTT()
-        isAutoRecording = false
-        speechDetectedDuringAutoRecord = false
-        showAnswerConfirmation = false
-        pendingResponse = nil
-        transcribedAnswer = ""
-        liveTranscript = ""
-        quizState = .askingQuestion
-        errorMessage = nil
-
-        if Config.verboseLogging {
-            print("🚫 Voice submission cancelled by user")
-        }
-    }
-
-    /// Clean up streaming STT resources
-    private func cleanupStreamingSTT() {
-        sttEventTask?.cancel()
-        sttEventTask = nil
-        sttChunkTask?.cancel()
-        sttChunkTask = nil
-        if isStreamingSTT {
-            audioService.stopStreamingRecording()
-            Task { await sttService?.disconnect() }
-            isStreamingSTT = false
-            liveTranscript = ""
-        }
-    }
-
-    /// Announce an error message via local TTS for hands-free awareness
-    private func announceError(_ message: String) {
-        Task {
-            await audioService.speakText(message)
-        }
-    }
 
     /// Set error state and announce it audibly
-    private func setError(message: String, context: ErrorContext) {
-        quizState = .error(message: message, context: context)
+    func setError(message: String, context: ErrorContext) {  // internal for QuizViewModel+Recording
+        transition(to: .error(message: message, context: context))
         announceError(message)
-    }
-
-    /// 3-tier error escalation for transcription failures.
-    /// Tier 1: Gentle re-record prompt
-    /// Tier 2: Hint to speak closer
-    /// Tier 3: Auto-skip after 2+ failures
-    private func handleTranscriptionFailure() {
-        consecutiveTranscriptionFailures += 1
-
-        switch consecutiveTranscriptionFailures {
-        case 1:
-            // Tier 1: gentle retry
-            errorMessage = "Sorry, I didn't catch that. Please try again."
-            quizState = .askingQuestion
-            announceError("Sorry, I didn't catch that. Please try again.")
-
-        case 2:
-            // Tier 2: hint + retry
-            errorMessage = "Having trouble hearing you. Try speaking closer to the mic."
-            quizState = .askingQuestion
-            announceError("Having trouble hearing you. Try speaking closer to the mic.")
-
-        default:
-            // Tier 3: auto-skip
-            consecutiveTranscriptionFailures = 0
-            announceError("Skipping this one.")
-            Task { await skipQuestion() }
-        }
     }
 
     /// Handle an error, detecting 429 daily limit and showing paywall instead of error state
@@ -949,7 +454,7 @@ final class QuizViewModel: ObservableObject {
            case .dailyLimitReached(let limitError) = networkError {
             dailyLimitError = limitError
             showPaywall = true
-            quizState = .idle
+            transition(to: .idle)
         } else {
             setError(message: "\(fallbackMessage): \(error.localizedDescription)", context: context)
         }
@@ -961,9 +466,7 @@ final class QuizViewModel: ObservableObject {
         do {
             usageInfo = try await networkService.getUsage(userId: userId)
         } catch {
-            if Config.verboseLogging {
-                print("⚠️ Failed to fetch usage info: \(error)")
-            }
+            Logger.network.warning("⚠️ Failed to fetch usage info: \(error, privacy: .public)")
         }
     }
 
@@ -973,9 +476,7 @@ final class QuizViewModel: ObservableObject {
             try await networkService.setPremium(userId: persistenceStore.deviceId)
             await refreshUsage()
         } catch {
-            if Config.verboseLogging {
-                print("⚠️ Failed to notify backend of premium purchase: \(error)")
-            }
+            Logger.network.warning("⚠️ Failed to notify backend of premium purchase: \(error, privacy: .public)")
         }
     }
 
@@ -993,7 +494,7 @@ final class QuizViewModel: ObservableObject {
         switch context {
         case .submission, .recording:
             // Return to question for re-recording or re-submission
-            quizState = .askingQuestion
+            transition(to: .askingQuestion)
             errorMessage = nil
         default:
             // Fallback to starting new quiz
@@ -1022,7 +523,7 @@ final class QuizViewModel: ObservableObject {
 
         cancelAnswerTimer()
         cancelAutoStopRecordingTimer()
-        quizState = .processing
+        transition(to: .processing)
         errorMessage = nil
 
         do {
@@ -1044,13 +545,11 @@ final class QuizViewModel: ObservableObject {
             return
         }
 
-        quizState = .processing
+        transition(to: .processing)
         errorMessage = nil
 
         do {
-            if Config.verboseLogging {
-                print("✏️ Resubmitting edited answer: \(newAnswer)")
-            }
+            Logger.network.info("✏️ Resubmitting edited answer: \(newAnswer, privacy: .public)")
 
             let response = try await networkService.submitTextInput(
                 sessionId: sessionId,
@@ -1063,9 +562,7 @@ final class QuizViewModel: ObservableObject {
         } catch {
             handleError(error, context: .submission, fallbackMessage: "Failed to resubmit answer")
 
-            if Config.verboseLogging {
-                print("❌ Error resubmitting answer: \(error)")
-            }
+            Logger.network.error("❌ Error resubmitting answer: \(error, privacy: .public)")
         }
     }
 
@@ -1079,13 +576,11 @@ final class QuizViewModel: ObservableObject {
         // Stop any playing question audio immediately
         await stopAnyPlayingAudio()
 
-        quizState = .processing
+        transition(to: .processing)
         errorMessage = nil
 
         do {
-            if Config.verboseLogging {
-                print("⏭️ Skipping current question")
-            }
+            Logger.quiz.info("⏭️ Skipping current question")
 
             let response = try await networkService.submitTextInput(
                 sessionId: sessionId,
@@ -1097,9 +592,7 @@ final class QuizViewModel: ObservableObject {
         } catch {
             handleError(error, context: .submission, fallbackMessage: "Failed to skip question")
 
-            if Config.verboseLogging {
-                print("❌ Error skipping question: \(error)")
-            }
+            Logger.quiz.error("❌ Error skipping question: \(error, privacy: .public)")
         }
     }
 
@@ -1115,15 +608,11 @@ final class QuizViewModel: ObservableObject {
             persistenceStore.clearSession()
             resetState()
 
-            if Config.verboseLogging {
-                print("🎮 Quiz ended")
-            }
+            Logger.quiz.info("🎮 Quiz ended")
         } catch {
             errorMessage = "Failed to end quiz: \(error.localizedDescription)"
 
-            if Config.verboseLogging {
-                print("❌ Error ending quiz: \(error)")
-            }
+            Logger.quiz.error("❌ Error ending quiz: \(error, privacy: .public)")
         }
     }
 
@@ -1144,9 +633,7 @@ final class QuizViewModel: ObservableObject {
         persistenceStore.clearSession()
         resetState()
 
-        if Config.verboseLogging {
-            print("🏠 Reset to home")
-        }
+        Logger.quiz.info("🏠 Reset to home")
     }
 
     /// Pause auto-advance for current question only (not permanent)
@@ -1155,9 +642,7 @@ final class QuizViewModel: ObservableObject {
         autoAdvanceTask = nil
         currentQuestionPaused = true
 
-        if Config.verboseLogging {
-            print("⏸️ Current question paused - auto-advance will resume on next question")
-        }
+        Logger.quiz.info("⏸️ Current question paused - auto-advance will resume on next question")
     }
 
     /// Continue to next question after user paused current one
@@ -1169,9 +654,7 @@ final class QuizViewModel: ObservableObject {
             await proceedToNextQuestion()
         }
 
-        if Config.verboseLogging {
-            print("▶️ Continuing to next question - auto-advance re-enabled")
-        }
+        Logger.quiz.info("▶️ Continuing to next question - auto-advance re-enabled")
     }
 
     /// Resume the quiz (proceeds to next question immediately, no auto-advance)
@@ -1180,84 +663,7 @@ final class QuizViewModel: ObservableObject {
             await proceedToNextQuestion()
         }
 
-        if Config.verboseLogging {
-            print("▶️ Quiz resumed - proceeding to next question")
-        }
-    }
-
-    /// Toggle audio mode between Call Mode and Media Mode
-    func toggleAudioMode() {
-        Task {
-            let newMode = selectedAudioMode.id == "call"
-                ? AudioMode.forId("media")!
-                : AudioMode.forId("call")!
-
-            do {
-                try await audioService.switchAudioMode(newMode)
-                settings.audioMode = newMode.id
-
-                if Config.verboseLogging {
-                    print("🔄 Switched to \(newMode.name)")
-                }
-            } catch {
-                errorMessage = "Failed to switch audio mode: \(error.localizedDescription)"
-
-                if Config.verboseLogging {
-                    print("❌ Error switching audio mode: \(error)")
-                }
-            }
-        }
-    }
-
-    // MARK: - Audio Device Management
-
-    /// Refresh available audio input devices
-    func refreshAudioDevices() {
-        audioService.refreshAvailableDevices()
-
-        // Try to restore saved preferred device
-        if let savedId = settings.preferredInputDeviceId {
-            // Check if saved device is still available
-            if let device = availableInputDevices.first(where: { $0.id == savedId }) {
-                do {
-                    try audioService.setPreferredInputDevice(device)
-                    if Config.verboseLogging {
-                        print("🎤 Restored preferred input device: \(device.name)")
-                    }
-                } catch {
-                    if Config.verboseLogging {
-                        print("⚠️ Failed to restore preferred input device: \(error)")
-                    }
-                }
-            } else {
-                // Saved device not available, keep preference for reconnection
-                if Config.verboseLogging {
-                    print("🎤 Saved input device not available, using automatic")
-                }
-            }
-        }
-    }
-
-    /// Set preferred input device
-    /// - Parameter device: Device to use, or nil for automatic selection
-    func setPreferredInputDevice(_ device: AudioDevice?) {
-        do {
-            try audioService.setPreferredInputDevice(device)
-
-            // Persist preference (auto-persisted via $settings sink)
-            settings.preferredInputDeviceId = device?.id
-
-            if Config.verboseLogging {
-                let deviceName = device?.name ?? "Automatic"
-                print("🎤 Set preferred input device: \(deviceName)")
-            }
-        } catch {
-            errorMessage = "Failed to set audio device: \(error.localizedDescription)"
-
-            if Config.verboseLogging {
-                print("❌ Error setting preferred input device: \(error)")
-            }
-        }
+        Logger.quiz.info("▶️ Quiz resumed - proceeding to next question")
     }
 
     /// Show the language picker sheet
@@ -1272,17 +678,6 @@ final class QuizViewModel: ObservableObject {
         // If using language picker, it should update settings.language directly
         Task {
             await startNewQuiz()
-        }
-    }
-
-    // MARK: - Private Helpers
-
-    /// Stop any currently playing audio (cleanup during state transitions)
-    private func stopAnyPlayingAudio() async {
-        await audioService.stopPlayback()
-
-        if Config.verboseLogging {
-            print("🔇 Stopped any playing audio for state transition")
         }
     }
 
@@ -1301,118 +696,10 @@ final class QuizViewModel: ObservableObject {
         }
     }
 
-    // MARK: - Thinking Time Countdown
-
-    /// Countdown before auto-recording starts, giving user time to think
-    private func startThinkingTimeCountdown() async {
-        let thinkingSeconds = settings.thinkingTime
-        guard thinkingSeconds > 0 else {
-            // No thinking time — start recording immediately (500ms delay like before)
-            try? await Task.sleep(nanoseconds: Config.autoRecordDelayMs * 1_000_000)
-            guard quizState == .askingQuestion else { return }
-            isAutoRecording = true
-            await startRecording()
-            return
-        }
-
-        thinkingTimeCountdown = thinkingSeconds
-        for i in stride(from: thinkingSeconds, through: 1, by: -1) {
-            guard quizState == .askingQuestion else { return }
-            thinkingTimeCountdown = i
-            try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
-        }
-        thinkingTimeCountdown = 0
-
-        guard quizState == .askingQuestion else { return }
-        isAutoRecording = true
-        await startRecording()
-    }
-
-    /// Cancel the thinking time countdown
-    private func cancelThinkingTime() {
-        thinkingTimeTask?.cancel()
-        thinkingTimeTask = nil
-        thinkingTimeCountdown = 0
-    }
-
-    // MARK: - Answer Timer
-
-    /// Start countdown timer that auto-starts recording when it expires
-    private func startAnswerTimer() {
-        let limit = settings.answerTimeLimit
-        guard limit > 0, !isRerecording else { return }
-
-        cancelAnswerTimer()
-        answerTimerCountdown = limit
-
-        answerTimerTask = Task { [weak self] in
-            guard let self else { return }
-
-            for remaining in (0...limit).reversed() {
-                if Task.isCancelled { return }
-
-                await MainActor.run {
-                    self.answerTimerCountdown = remaining
-                }
-
-                if remaining > 0 {
-                    try? await Task.sleep(nanoseconds: 1_000_000_000)
-                }
-            }
-
-            if Task.isCancelled { return }
-
-            // Auto-start recording when timer expires
-            await MainActor.run {
-                guard self.quizState == .askingQuestion else { return }
-                Task {
-                    await self.startRecording()
-                }
-            }
-        }
-    }
-
-    /// Cancel the answer countdown timer
-    private func cancelAnswerTimer() {
-        answerTimerTask?.cancel()
-        answerTimerTask = nil
-        answerTimerCountdown = 0
-    }
-
-    /// Start a timer that auto-stops recording after Config.autoRecordingDuration
-    private func startAutoStopRecordingTimer() {
-        guard !isRerecording else { return }
-
-        cancelAutoStopRecordingTimer()
-
-        autoStopRecordingTask = Task { [weak self] in
-            guard let self else { return }
-
-            try? await Task.sleep(nanoseconds: UInt64(Config.autoRecordingDuration * 1_000_000_000))
-
-            if Task.isCancelled { return }
-
-            await MainActor.run {
-                guard self.quizState == .recording else { return }
-                Task {
-                    await self.stopRecordingAndSubmit()
-                }
-            }
-        }
-    }
-
-    /// Cancel the auto-stop recording timer
-    private func cancelAutoStopRecordingTimer() {
-        autoStopRecordingTask?.cancel()
-        autoStopRecordingTask = nil
-    }
-
-    private func handleQuizResponse(_ response: QuizResponse) async {
+    func handleQuizResponse(_ response: QuizResponse) async {  // internal for QuizViewModel+Recording
         // Guard against concurrent calls (safe: @MainActor serializes access)
         guard !isProcessingResponse else {
-            if Config.verboseLogging {
-                print("⚠️ handleQuizResponse already in progress, ignoring duplicate call")
-            }
+            Logger.quiz.warning("⚠️ handleQuizResponse already in progress, ignoring duplicate call")
             return
         }
         isProcessingResponse = true
@@ -1430,9 +717,7 @@ final class QuizViewModel: ObservableObject {
 
         // CRITICAL: Validate evaluation exists before showing result
         guard let evaluation = response.evaluation else {
-            if Config.verboseLogging {
-                print("❌ ERROR: No evaluation in response, cannot show result")
-            }
+            Logger.quiz.error("❌ No evaluation in response, cannot show result")
             setError(
                 message: "Could not evaluate your answer. Please try again.",
                 context: .submission
@@ -1444,7 +729,7 @@ final class QuizViewModel: ObservableObject {
         if let evalQuestionId = evaluation.questionId,
            let currentQId = currentQuestion?.id,
            evalQuestionId != currentQId {
-            print("⚠️ MISMATCH: evaluation.questionId=\(evalQuestionId) != currentQuestion.id=\(currentQId)")
+            Logger.quiz.warning("⚠️ MISMATCH: evaluation.questionId=\(evalQuestionId, privacy: .public) != currentQuestion.id=\(currentQId, privacy: .public)")
         }
 
         // CRITICAL: Capture the current question for the result state
@@ -1478,19 +763,15 @@ final class QuizViewModel: ObservableObject {
                 try persistenceStore.addQuestionId(questionId)
             } catch QuestionHistoryError.capacityReached {
                 // Should not happen (checked before quiz start)
-                if Config.verboseLogging {
-                    print("⚠️ WARNING: Question history reached capacity mid-quiz")
-                }
+                Logger.quiz.warning("⚠️ Question history reached capacity mid-quiz")
             } catch {
-                if Config.verboseLogging {
-                    print("⚠️ WARNING: Failed to save question to history: \(error)")
-                }
+                Logger.quiz.warning("⚠️ Failed to save question to history: \(error, privacy: .public)")
             }
         }
 
         // IMPORTANT: Show result screen BEFORE playing audio
         // This ensures ResultView is visible when audio starts playing
-        quizState = .showingResult(question: question, evaluation: evaluation)
+        transition(to: .showingResult(question: question, evaluation: evaluation))
 
         // Auto-extend session TTL to prevent timeout on long drives
         if let sessionId = currentSession?.id {
@@ -1532,66 +813,6 @@ final class QuizViewModel: ObservableObject {
         }
     }
 
-    /// Starts the auto-advance countdown loop with real-time UI updates
-    private func startAutoAdvanceCountdown(duration: Int, audioDuration: TimeInterval) async {
-        // Skip auto-advance if disabled globally OR if current question is paused
-        guard autoAdvanceEnabled && !currentQuestionPaused else {
-            if Config.verboseLogging {
-                let reason = !autoAdvanceEnabled ? "disabled globally" : "paused for current question"
-                print("⏱️ Auto-advance skipped (\(reason))")
-            }
-            autoAdvanceCountdown = 0
-            return
-        }
-
-        if Config.verboseLogging {
-            print("⏱️ Auto-advancing in \(duration)s (audio: \(String(format: "%.1f", audioDuration))s, reading time + buffer)")
-        }
-
-        autoAdvanceCountdown = duration
-
-        autoAdvanceTask = Task { [weak self] in
-            guard let self else { return }
-
-            // Countdown loop
-            for remaining in (0...duration).reversed() {
-                // Check for cancellation
-                if Task.isCancelled {
-                    if Config.verboseLogging {
-                        await MainActor.run {
-                            print("⏱️ Auto-advance countdown cancelled")
-                        }
-                    }
-                    return
-                }
-
-                await MainActor.run {
-                    self.autoAdvanceCountdown = remaining
-                }
-
-                if remaining > 0 {
-                    try? await Task.sleep(nanoseconds: 1_000_000_000)  // 1 second
-                }
-            }
-
-            // Auto-advance after countdown completes
-            if Task.isCancelled { return }
-
-            await MainActor.run {
-                guard self.quizState.isShowingResult else {
-                    if Config.verboseLogging {
-                        print("⏱️ Auto-advance aborted - not in showingResult state")
-                    }
-                    return
-                }
-
-                Task {
-                    await self.proceedToNextQuestion()
-                }
-            }
-        }
-    }
-
     /// Proceed to next question or finish quiz
     /// Can be called manually via button or automatically via timer
     func proceedToNextQuestion() async {
@@ -1601,9 +822,7 @@ final class QuizViewModel: ObservableObject {
 
         // Only proceed if currently showing results
         guard quizState.isShowingResult else {
-            if Config.verboseLogging {
-                print("⚠️ Ignoring proceedToNextQuestion - not in showingResult state")
-            }
+            Logger.quiz.warning("⚠️ Ignoring proceedToNextQuestion - not in showingResult state")
             return
         }
 
@@ -1623,12 +842,10 @@ final class QuizViewModel: ObservableObject {
             // Quiz is complete — record stats
             quizStats.recordQuizCompleted()
             persistenceStore.saveStats(quizStats)
-            quizState = .finished
+            transition(to: .finished)
             persistenceStore.clearSession()
 
-            if Config.verboseLogging {
-                print("🎮 Quiz finished! Final score: \(score)")
-            }
+            Logger.quiz.info("🎮 Quiz finished! Final score: \(self.score, privacy: .public)")
         } else {
             // More questions remain - NOW update currentQuestion with stored next question
             // This ensures the next question only appears AFTER showing results
@@ -1636,7 +853,7 @@ final class QuizViewModel: ObservableObject {
             nextQuestion = nil  // Clear after use
 
             // Transition to asking question state
-            quizState = .askingQuestion
+            transition(to: .askingQuestion)
 
             // Play next question audio if available
             if let questionUrl = nextQuestionAudioUrl {
@@ -1647,9 +864,7 @@ final class QuizViewModel: ObservableObject {
                 await startRecordingOrTimer()
             }
 
-            if Config.verboseLogging {
-                print("❓ Showing next question: \(currentQuestion?.question ?? "unknown")")
-            }
+            Logger.quiz.info("❓ Showing next question: \(self.currentQuestion?.question ?? "unknown", privacy: .public)")
         }
     }
 
@@ -1660,80 +875,6 @@ final class QuizViewModel: ObservableObject {
             cancelThinkingTime()
             await stopAnyPlayingAudio()
             await playQuestionAudio(from: audioUrl)
-        }
-    }
-
-    private func playQuestionAudio(from urlString: String) async {
-        // Store URL for "repeat" command
-        currentQuestionAudioUrl = urlString
-
-        // Mute guard: skip TTS but still start timer and recording flow
-        guard !settings.isMuted else {
-            guard quizState == .askingQuestion else { return }
-            guard currentQuestion?.isMultipleChoice != true else { return }
-
-            if settings.autoRecordEnabled && voiceCommandService != nil && !isRerecording {
-                await startThinkingTimeCountdown()
-            } else {
-                startAnswerTimer()
-            }
-            return
-        }
-
-        // Set echo cancellation text and TTS active flag before playback
-        voiceCommandService?.setPlaybackText(currentQuestion?.question)
-        voiceCommandService?.setTTSPlaybackActive(true)
-
-        do {
-            let audioData = try await networkService.downloadAudio(from: urlString)
-            _ = try await audioService.playOpusAudio(audioData)
-        } catch {
-            if Config.verboseLogging {
-                print("⚠️ Failed to play question audio: \(error)")
-            }
-            // Don't fail the quiz if audio doesn't play
-        }
-
-        // Clear echo cancellation and TTS active flag after playback
-        voiceCommandService?.setPlaybackText(nil)
-        voiceCommandService?.setTTSPlaybackActive(false)
-
-        // After TTS finishes (or was interrupted by barge-in), choose next path
-        guard quizState == .askingQuestion else { return }
-        // MCQ questions use tap/voice selection, not recording
-        guard currentQuestion?.isMultipleChoice != true else { return }
-
-        if settings.autoRecordEnabled && voiceCommandService != nil && !isRerecording {
-            // Auto-record path: thinking time countdown → auto-start recording
-            await startThinkingTimeCountdown()
-        } else {
-            // Legacy path: countdown timer → fixed duration recording
-            startAnswerTimer()
-        }
-    }
-
-    private func playFeedbackAudio(from urlString: String) async -> TimeInterval {
-        do {
-            let audioData = try await networkService.downloadAudio(from: urlString)
-            let duration = try await audioService.playOpusAudio(audioData)
-            return duration
-        } catch {
-            if Config.verboseLogging {
-                print("⚠️ Failed to play feedback audio: \(error)")
-            }
-            return 3.0  // Default fallback duration
-        }
-    }
-
-    private func playFeedbackAudioBase64(_ base64: String) async -> TimeInterval {
-        do {
-            let duration = try await audioService.playOpusAudioFromBase64(base64)
-            return duration
-        } catch {
-            if Config.verboseLogging {
-                print("⚠️ Failed to play base64 feedback audio: \(error)")
-            }
-            return 3.0  // Default fallback duration
         }
     }
 
@@ -1771,7 +912,7 @@ final class QuizViewModel: ObservableObject {
 
         // Reset all state
         isProcessingResponse = false
-        quizState = .idle
+        transition(to: .idle)
         currentQuestion = nil
         currentSession = nil
         score = 0.0
@@ -1795,162 +936,6 @@ final class QuizViewModel: ObservableObject {
         showAnswerConfirmation = false
     }
 
-    // MARK: - Voice Commands
-
-    /// Start listening for voice commands and subscribe to the command stream
-    private func startVoiceCommands() {
-        guard let service = voiceCommandService, settings.voiceCommandsEnabled else {
-            voiceCommandState = .disabled
-            return
-        }
-
-        voiceCommandTask = Task { [weak self] in
-            await service.startListening()
-
-            for await command in service.commands {
-                guard let self, !Task.isCancelled else { break }
-                await self.handleVoiceCommand(command)
-            }
-        }
-
-        // Subscribe to barge-in events (speech during TTS on external audio)
-        if settings.bargeInEnabled {
-            bargeInTask = Task { [weak self] in
-                for await _ in service.bargeInEvents {
-                    guard let self, !Task.isCancelled else { break }
-                    await self.handleBargeIn()
-                }
-            }
-        }
-
-        // Sync UI state
-        voiceCommandState = .listening
-    }
-
-    /// Stop voice command listening
-    private func stopVoiceCommands() {
-        voiceCommandTask?.cancel()
-        voiceCommandTask = nil
-        bargeInTask?.cancel()
-        bargeInTask = nil
-        voiceCommandService?.stopListening()
-        voiceCommandState = .disabled
-    }
-
-    /// Handle barge-in: user spoke during TTS playback on external audio route
-    private func handleBargeIn() async {
-        // Only barge-in during question playback
-        guard quizState == .askingQuestion else { return }
-
-        if Config.verboseLogging {
-            print("🗣️ Barge-in triggered — stopping TTS and starting recording")
-        }
-
-        // 1. Stop TTS immediately
-        await stopAnyPlayingAudio()
-
-        // 2. Clear echo cancellation state
-        voiceCommandService?.setPlaybackText(nil)
-        voiceCommandService?.setTTSPlaybackActive(false)
-
-        // 3. Wait for audio hardware to settle
-        try? await Task.sleep(nanoseconds: 500_000_000) // 500ms
-
-        // 4. Guard again — state may have changed during sleep
-        guard quizState == .askingQuestion else { return }
-
-        // 5. Auto-start recording (same as post-TTS flow)
-        cancelAnswerTimer()
-        isAutoRecording = true
-        await startRecording()
-    }
-
-    /// Dispatch a voice command to the appropriate action based on current state
-    private func handleVoiceCommand(_ command: VoiceCommand) async {
-        // Update UI state briefly
-        voiceCommandState = .commandDetected(command)
-
-        switch command {
-        case .start:
-            if quizState == .askingQuestion {
-                cancelAnswerTimer()
-                cancelThinkingTime()
-                await startRecording()
-            } else if showAnswerConfirmation {
-                rerecordAnswer()
-            }
-
-        case .stop:
-            if quizState == .recording {
-                cancelAutoStopRecordingTimer()
-                await stopRecordingAndSubmit()
-            }
-
-        case .skip:
-            if quizState == .askingQuestion {
-                await skipQuestion()
-            }
-
-        case .repeat:
-            await repeatQuestion()
-
-        case .score:
-            if quizState == .askingQuestion || quizState.isShowingResult {
-                let total = currentSession?.maxQuestions ?? 0
-                let current = questionsAnswered + (quizState == .askingQuestion ? 1 : 0)
-                let text = "Your score is \(Int(score)) out of \(questionsAnswered). Question \(current) of \(total)."
-                await audioService.speakText(text)
-            }
-
-        case .help:
-            if quizState == .askingQuestion {
-                let text = "Say skip to skip, start to record, stop to submit, or ok to confirm."
-                await audioService.speakText(text)
-            } else if quizState == .finished {
-                let text = "Say again to play again, or home to go back."
-                await audioService.speakText(text)
-            }
-
-        case .ok:
-            if showAnswerConfirmation && !isProcessingResponse {
-                await confirmAnswer()
-            }
-
-        case .again:
-            if quizState == .finished {
-                await startNewQuiz()
-            }
-
-        case .home:
-            if quizState == .finished {
-                resetToHome()
-            }
-
-        case .optionA, .optionB, .optionC, .optionD:
-            if quizState == .askingQuestion,
-               let question = currentQuestion,
-               question.isMultipleChoice {
-                let key: String
-                switch command {
-                case .optionA: key = "a"
-                case .optionB: key = "b"
-                case .optionC: key = "c"
-                case .optionD: key = "d"
-                default: return
-                }
-                if let value = question.possibleAnswers?[key] {
-                    await submitMCQAnswer(key: key, value: value)
-                }
-            }
-        }
-
-        // Reset to listening after brief delay
-        try? await Task.sleep(nanoseconds: 300_000_000)
-        if voiceCommandTask != nil {
-            voiceCommandState = .listening
-        }
-    }
-
     // MARK: - Question History Management
 
     /// Number of questions in history
@@ -1962,9 +947,7 @@ final class QuizViewModel: ObservableObject {
     func resetQuestionHistory() {
         persistenceStore.clearHistory()
 
-        if Config.verboseLogging {
-            print("🗑️ Question history reset by user")
-        }
+        Logger.persistence.info("🗑️ Question history reset by user")
     }
 
     /// Whether voice commands are available (service exists and setting enabled)

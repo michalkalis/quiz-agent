@@ -7,6 +7,7 @@
 
 import Combine
 import Foundation
+import os
 
 /// App-wide state and dependency container
 @MainActor
@@ -42,12 +43,12 @@ final class AppState: ObservableObject {
         // Setup audio session with default mode
         try? audioService.setupAudioSession(mode: AudioMode.default)
 
-        if Config.verboseLogging {
-            print("🚀 AppState initialized")
-            print("📍 API Base URL: \(Config.apiBaseURL)")
-            print("🎙️ Voice commands: \(voiceCommandService != nil ? "available" : "unavailable (requires iOS 26+)")")
-            print("🎙️ Streaming STT: \(sttService != nil ? "enabled (ElevenLabs)" : "disabled (using Whisper)")")
-        }
+        Logger.quiz.info("🚀 AppState initialized")
+        Logger.quiz.info("📍 API Base URL: \(Config.apiBaseURL, privacy: .public)")
+        let voiceAvailable = self.voiceCommandService != nil ? "available" : "unavailable (requires iOS 26+)"
+        Logger.quiz.info("🎙️ Voice commands: \(voiceAvailable)")
+        let sttEnabled = self.sttService != nil ? "enabled (ElevenLabs)" : "disabled (using Whisper)"
+        Logger.quiz.info("🎙️ Streaming STT: \(sttEnabled)")
     }
 
     // For testing

@@ -97,25 +97,25 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
     private var playbackState: PlaybackState = .idle
 
-    // Tracked continuation for active playback — allows stopPlayback/cleanupPlayback
-    // to properly resume the continuation instead of leaking it.
-    // Mark as nonisolated(unsafe) because withCheckedThrowingContinuation's closure is @Sendable.
-    // All access is on main queue, so cross-isolation is safe.
-    nonisolated(unsafe) private var playbackContinuation: CheckedContinuation<TimeInterval, Error>?
+    // Stream continuation for active playback.
+    // AsyncThrowingStream.Continuation.finish() is safe to call multiple times (subsequent calls are no-ops),
+    // eliminating the double-resume crashes that CheckedContinuation caused.
+    private var playbackStreamContinuation: AsyncThrowingStream<TimeInterval, Error>.Continuation?
 
-    // Tracked notification observers for active playback — removed on stop
-    nonisolated(unsafe) private var playbackSuccessObserver: NSObjectProtocol?
-    nonisolated(unsafe) private var playbackFailureObserver: NSObjectProtocol?
-    nonisolated(unsafe) private var playbackStalledTimer: Timer?
+    // Stream continuation for TTS speech completion.
+    // AsyncStream.Continuation.finish() is idempotent — safe when delegate fires after stopSpeaking().
+    private var speechStreamContinuation: AsyncStream<Void>.Continuation?
 
     private var audioRecorder: AVAudioRecorder?
     private var audioPlayer: AVPlayer?
     private var speechSynthesizer = AVSpeechSynthesizer()
-    private var speechCompletion: CheckedContinuation<Void, Never>?
     private var currentAudioMode: AudioMode = AudioMode.default
 
-    // Mark as nonisolated(unsafe) because NSObjectProtocol is not Sendable in Swift 6
-    // Only accessed on main queue, so cross-isolation is safe
+    // Session-level NotificationCenter observer tokens.
+    // nonisolated(unsafe): NSObjectProtocol is not Sendable in Swift 6, but these tokens
+    // are set once on @MainActor (setupAudioSession) and released in deinit.
+    // AudioService is @MainActor so deinit runs on the main thread in practice.
+    // These are NOT crash sources — only playback continuations were.
     nonisolated(unsafe) private var routeChangeObserver: NSObjectProtocol?
     nonisolated(unsafe) private var interruptionObserver: NSObjectProtocol?
 
@@ -498,14 +498,13 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
             throw AudioError.recordingFailed
         }
 
-        // Buffer for accumulating PCM data before sending
+        // Buffer for accumulating PCM data before sending.
+        // OSAllocatedUnfairLock<Data> is Sendable and eliminates nonisolated(unsafe).
+        // The tap callback IS serial (AVAudioEngine guarantee), so the lock is always
+        // uncontended — overhead is negligible (a single atomic compare-and-swap).
         let chunkInterval = Config.sttStreamingChunkIntervalMs
         let samplesPerChunk = Int(16000.0 * Double(chunkInterval) / 1000.0) // e.g., 4000 samples for 250ms
-
-        // Use nonisolated(unsafe) for the mutable buffer accessed in the tap closure.
-        // Safe because the tap callback is serial (one buffer at a time) and we only
-        // read/reset the accumulated buffer within the same closure.
-        nonisolated(unsafe) var accumulatedData = Data()
+        let accumulator = OSAllocatedUnfairLock(initialState: Data())
 
         // Install a tap on the input node
         let bufferSize = AVAudioFrameCount(hardwareFormat.sampleRate * Double(chunkInterval) / 1000.0)
@@ -529,19 +528,19 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
             guard status != .error, error == nil else { return }
 
-            // Extract raw PCM bytes
-            if let channelData = convertedBuffer.int16ChannelData {
-                let byteCount = Int(convertedBuffer.frameLength) * MemoryLayout<Int16>.size
-                let data = Data(bytes: channelData[0], count: byteCount)
-                accumulatedData.append(data)
-            }
+            // Extract raw PCM bytes and accumulate
+            guard let channelData = convertedBuffer.int16ChannelData else { return }
+            let byteCount = Int(convertedBuffer.frameLength) * MemoryLayout<Int16>.size
+            let newData = Data(bytes: channelData[0], count: byteCount)
 
-            // Send chunk when we've accumulated enough samples
             let targetBytes = samplesPerChunk * MemoryLayout<Int16>.size
-            if accumulatedData.count >= targetBytes {
-                let chunk = accumulatedData.prefix(targetBytes)
-                accumulatedData = accumulatedData.dropFirst(targetBytes).asData
-                onChunk(Data(chunk))
+            accumulator.withLock { data in
+                data.append(newData)
+                if data.count >= targetBytes {
+                    let chunk = Data(data.prefix(targetBytes))
+                    data = data.dropFirst(targetBytes).asData
+                    onChunk(chunk)
+                }
             }
         }
 
@@ -581,7 +580,12 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         return try await performPlayback(data: data, operationId: operationId)
     }
 
-    /// Performs the actual audio playback with proper cancellation support
+    /// Performs the actual audio playback with proper cancellation support.
+    ///
+    /// Uses AsyncThrowingStream instead of CheckedContinuation. Key safety property:
+    /// stream.continuation.finish() is idempotent — calling it from multiple sources
+    /// (completion notification, failure notification, stall timer, stopPlayback) is safe.
+    /// CheckedContinuation.resume() called twice would crash; this cannot.
     private func performPlayback(data: Data, operationId: UUID) async throws -> TimeInterval {
         // playbackState already set to .playing(id: operationId) by caller
 
@@ -600,7 +604,6 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
         Logger.audio.info("🔊 Playing audio: \(data.count, privacy: .public) bytes from \(tempURL.lastPathComponent, privacy: .public)")
 
-        // Clean up temp file on exit (state cleanup handled by observers/onCancel)
         defer {
             try? FileManager.default.removeItem(at: tempURL)
         }
@@ -627,125 +630,91 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
         isPlaying = true
 
-        // Use withTaskCancellationHandler for proper cleanup
-        return try await withTaskCancellationHandler {
-            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<TimeInterval, Error>) in
-                nonisolated(unsafe) var statusObserver: NSKeyValueObservation?
-                var didResume = false
-                var hasStartedPlaying = false
+        let (stream, continuation) = AsyncThrowingStream<TimeInterval, Error>.makeStream()
+        playbackStreamContinuation = continuation
 
-                // Store continuation so stopPlayback/cleanupPlayback can resume it
-                self.playbackContinuation = continuation
-
-                // Helper to ensure continuation resumes only once
-                func resumeOnce(with result: Result<TimeInterval, Error>) {
-                    guard !didResume else { return }
-                    didResume = true
-
-                    // Clear tracked state
-                    self.playbackContinuation = nil
-
-                    // Clean up observers and timer
-                    if let observer = self.playbackSuccessObserver {
-                        NotificationCenter.default.removeObserver(observer)
-                        self.playbackSuccessObserver = nil
+        // KVO: monitor playback status for stalling diagnostics (logging only)
+        let statusObserver = audioPlayer?.observe(\.timeControlStatus, options: [.new]) { player, _ in
+            let status = player.timeControlStatus
+            let stallReason = player.reasonForWaitingToPlay?.rawValue
+            let itemError = player.currentItem?.error
+            Task { @MainActor in
+                switch status {
+                case .waitingToPlayAtSpecifiedRate:
+                    Logger.audio.warning("⚠️ Audio playback stalling: \(stallReason ?? "unknown", privacy: .public)")
+                    if let itemError {
+                        Logger.audio.error("❌ Player item error: \(itemError.localizedDescription, privacy: .public)")
                     }
-                    if let observer = self.playbackFailureObserver {
-                        NotificationCenter.default.removeObserver(observer)
-                        self.playbackFailureObserver = nil
-                    }
-                    statusObserver?.invalidate()
-                    self.playbackStalledTimer?.invalidate()
-                    self.playbackStalledTimer = nil
-
-                    switch result {
-                    case .success(let value):
-                        continuation.resume(returning: value)
-                    case .failure(let error):
-                        continuation.resume(throwing: error)
-                    }
+                case .playing:
+                    Logger.audio.debug("▶️ Audio playback started")
+                default:
+                    break
                 }
-
-                // Monitor playback status for stalling with detailed diagnostics
-                statusObserver = audioPlayer?.observe(\.timeControlStatus, options: [.new]) { player, _ in
-                    Task { @MainActor in
-                        switch player.timeControlStatus {
-                        case .waitingToPlayAtSpecifiedRate:
-                            let reason = player.reasonForWaitingToPlay?.rawValue ?? "unknown"
-                            Logger.audio.warning("⚠️ Audio playback stalling, reason: \(reason, privacy: .public)")
-                            // Check for format errors (critical for diagnosing codec issues)
-                            if let error = player.currentItem?.error {
-                                Logger.audio.error("❌ Player item error: \(error.localizedDescription, privacy: .public)")
-                            }
-                        case .playing:
-                            hasStartedPlaying = true
-                            // Cancel stall timer once playback starts
-                            self.playbackStalledTimer?.invalidate()
-                            self.playbackStalledTimer = nil
-                            Logger.audio.debug("▶️ Audio playback resumed")
-                        case .paused:
-                            break
-                        @unknown default:
-                            break
-                        }
-                    }
-                }
-
-                // Playback timeout - fail if playback doesn't start within 5 seconds
-                // This prevents infinite stalling on problematic files
-                self.playbackStalledTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: false) { [weak self] _ in
-                    Task { @MainActor [weak self] in
-                        guard !hasStartedPlaying else { return }
-
-                        Logger.audio.warning("⚠️ Playback timeout - audio failed to start within 5 seconds")
-
-                        self?.isPlaying = false
-                        self?.playbackState = .idle
-
-                        resumeOnce(with: .failure(AudioError.playbackFailed))
-                    }
-                }
-
-                // Observe when playback finishes successfully
-                self.playbackSuccessObserver = NotificationCenter.default.addObserver(
-                    forName: .AVPlayerItemDidPlayToEndTime,
-                    object: playerItem,
-                    queue: .main
-                ) { [weak self] _ in
-                    Task { @MainActor [weak self] in
-                        self?.isPlaying = false
-                        self?.playbackState = .idle
-
-                        Logger.audio.info("🔊 Playback completed")
-
-                        resumeOnce(with: .success(durationSeconds))
-                    }
-                }
-
-                // Observe playback failures
-                self.playbackFailureObserver = NotificationCenter.default.addObserver(
-                    forName: .AVPlayerItemFailedToPlayToEndTime,
-                    object: playerItem,
-                    queue: .main
-                ) { [weak self] notification in
-                    // Extract error outside Task to avoid concurrency issues
-                    let error = notification.userInfo?[AVPlayerItemFailedToPlayToEndTimeErrorKey] as? Error
-
-                    Task { @MainActor [weak self] in
-                        self?.isPlaying = false
-                        self?.playbackState = .idle
-
-                        Logger.audio.error("❌ Playback failed")
-
-                        resumeOnce(with: .failure(error ?? AudioError.playbackFailed))
-                    }
-                }
-
-                // Start playback
-                audioPlayer?.play()
-
-                Logger.audio.debug("🔊 Started AVPlayer playback")
             }
+        }
+
+        // Stall timeout: fail if playback doesn't produce an event within 5 seconds.
+        // If playback already completed, continuation.finish(throwing:) is a no-op — safe.
+        let stalledTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: false) { _ in
+            Task { @MainActor in
+                Logger.audio.warning("⚠️ Playback timeout - audio failed to start within 5 seconds")
+                continuation.finish(throwing: AudioError.playbackFailed)
+            }
+        }
+
+        // Completion notification: yield duration and close stream
+        let successObserver = NotificationCenter.default.addObserver(
+            forName: .AVPlayerItemDidPlayToEndTime,
+            object: playerItem,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.isPlaying = false
+                self?.playbackState = .idle
+                Logger.audio.info("🔊 Playback completed")
+                continuation.yield(durationSeconds)
+                continuation.finish()
+            }
+        }
+
+        // Failure notification: close stream with error
+        let failureObserver = NotificationCenter.default.addObserver(
+            forName: .AVPlayerItemFailedToPlayToEndTime,
+            object: playerItem,
+            queue: .main
+        ) { [weak self] notification in
+            let error = notification.userInfo?[AVPlayerItemFailedToPlayToEndTimeErrorKey] as? Error
+            Task { @MainActor [weak self] in
+                self?.isPlaying = false
+                self?.playbackState = .idle
+                Logger.audio.error("❌ Playback failed")
+                continuation.finish(throwing: error ?? AudioError.playbackFailed)
+            }
+        }
+
+        // Clean up all local observers/timer when this scope exits — whether via return,
+        // throw, or Task cancellation. The continuation is already cleared by stopPlayback()
+        // or cleanupPlayback() before this defer runs.
+        defer {
+            NotificationCenter.default.removeObserver(successObserver)
+            NotificationCenter.default.removeObserver(failureObserver)
+            statusObserver?.invalidate()
+            stalledTimer.invalidate()
+            playbackStreamContinuation = nil
+        }
+
+        audioPlayer?.play()
+        Logger.audio.debug("🔊 Started AVPlayer playback")
+
+        return try await withTaskCancellationHandler {
+            // Await first event from the stream:
+            // - .yield(duration) + .finish() → return duration (success)
+            // - .finish(throwing: error) → throw error (failure or cancellation)
+            // - stream finished without yield → throw CancellationError (stopped)
+            for try await playedDuration in stream {
+                return playedDuration
+            }
+            throw CancellationError()
         } onCancel: {
             Task { @MainActor [weak self] in
                 await self?.cleanupPlayback(operationId: operationId)
@@ -753,13 +722,13 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         }
     }
 
-    /// Cleans up playback resources for a specific operation
+    /// Cleans up playback resources for a specific operation (called from Task cancellation handler).
+    /// Finishing the stream causes the awaiting `for try await` to exit; subsequent finish() calls are no-ops.
     private func cleanupPlayback(operationId: UUID) async {
-        // Only cleanup if this is the active operation (prevents TOCTOU race)
         guard case .playing(let activeId) = playbackState, activeId == operationId else { return }
 
-        // Resume leaked continuation before destroying player
-        resumePlaybackContinuation()
+        playbackStreamContinuation?.finish(throwing: CancellationError())
+        playbackStreamContinuation = nil
 
         audioPlayer?.pause()
         audioPlayer = nil
@@ -776,50 +745,25 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         return try await playOpusAudio(data)
     }
 
-    /// Stops playback and ensures cleanup completes before returning (blocking)
+    /// Stops playback and signals the stream to exit.
+    /// stream.continuation.finish(throwing:) is idempotent — no crash if called multiple times.
     func stopPlayback() async {
-        // Early exit if not playing
         guard case .playing = playbackState else {
             Logger.audio.debug("🔊 stopPlayback called but not playing")
             return
         }
 
-        // Resume leaked continuation before destroying player —
-        // without this, the CheckedContinuation from playOpusAudio is never resumed
-        // and Swift runtime crashes with "SWIFT TASK CONTINUATION MISUSE: leaked"
-        resumePlaybackContinuation()
+        // Signal the stream: causes `for try await` in performPlayback to throw CancellationError.
+        // The defer in performPlayback will then remove observers and clean up local state.
+        playbackStreamContinuation?.finish(throwing: CancellationError())
+        playbackStreamContinuation = nil
 
-        // Pause and cleanup
         audioPlayer?.pause()
         audioPlayer = nil
         isPlaying = false
         playbackState = .idle
 
         Logger.audio.info("🔊 Stopped playback")
-    }
-
-    /// Resume and clean up the active playback continuation with CancellationError.
-    /// Safe to call multiple times — only the first call resumes.
-    private func resumePlaybackContinuation() {
-        // Clean up observers first — they could otherwise fire and double-resume
-        if let observer = playbackSuccessObserver {
-            NotificationCenter.default.removeObserver(observer)
-            playbackSuccessObserver = nil
-        }
-        if let observer = playbackFailureObserver {
-            NotificationCenter.default.removeObserver(observer)
-            playbackFailureObserver = nil
-        }
-        playbackStalledTimer?.invalidate()
-        playbackStalledTimer = nil
-
-        // Resume the continuation so the awaiting code can proceed
-        if let cont = playbackContinuation {
-            playbackContinuation = nil
-            cont.resume(throwing: CancellationError())
-        } else {
-            Logger.audio.debug("🔊 resumePlaybackContinuation: no active continuation (already resumed or never started)")
-        }
     }
 
     // MARK: - Local TTS (AVSpeechSynthesizer)
@@ -849,17 +793,17 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
         utterance.rate = AVSpeechUtteranceDefaultSpeechRate
 
-        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-            // Resume any pending speech continuation to prevent leak
-            // (can happen if speakText() is called while previous utterance is active)
-            if let pending = speechCompletion {
-                Logger.audio.warning("🗣️ Resuming leaked speechCompletion before starting new utterance")
-                pending.resume()
-            }
-            speechCompletion = continuation
-            speechSynthesizer.delegate = self
-            speechSynthesizer.speak(utterance)
-        }
+        let (stream, continuation) = AsyncStream<Void>.makeStream()
+        // Finish any pending stream first (handles re-entry when speakText is called
+        // while a previous utterance is still playing). finish() is a no-op if already finished.
+        speechStreamContinuation?.finish()
+        speechStreamContinuation = continuation
+
+        speechSynthesizer.delegate = self
+        speechSynthesizer.speak(utterance)
+
+        // Await delegate callback (didFinish or didCancel)
+        for await _ in stream {}
 
         Logger.audio.debug("🗣️ Speech completed")
     }
@@ -870,15 +814,15 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 extension AudioService: AVSpeechSynthesizerDelegate {
     nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
         Task { @MainActor in
-            speechCompletion?.resume()
-            speechCompletion = nil
+            speechStreamContinuation?.finish()
+            speechStreamContinuation = nil
         }
     }
 
     nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
         Task { @MainActor in
-            speechCompletion?.resume()
-            speechCompletion = nil
+            speechStreamContinuation?.finish()
+            speechStreamContinuation = nil
         }
     }
 }

@@ -20,7 +20,9 @@ enum QuestionHistoryError: Error {
     }
 }
 
-/// Protocol for unified persistence (session + settings + question history)
+/// Protocol for unified persistence (session + settings + question history).
+/// @MainActor because all callers (QuizViewModel, AppState) are @MainActor.
+@MainActor
 protocol PersistenceStoreProtocol: Sendable {
     // MARK: - Device Identity
 
@@ -88,11 +90,13 @@ protocol PersistenceStoreProtocol: Sendable {
     func saveStats(_ stats: QuizStats)
 }
 
-/// Unified UserDefaults-based persistence storage
+/// Unified UserDefaults-based persistence storage.
+/// @MainActor ensures all UserDefaults access is on the main thread,
+/// eliminating the need for nonisolated(unsafe) on the userDefaults property.
+/// All callers (QuizViewModel, AppState) are @MainActor, so no async hop is needed.
+@MainActor
 final class PersistenceStore: PersistenceStoreProtocol {
-    // UserDefaults is not Sendable in Swift 6, but it's thread-safe
-    // We use nonisolated(unsafe) to acknowledge this
-    nonisolated(unsafe) private let userDefaults: UserDefaults
+    private let userDefaults: UserDefaults
 
     // Keys
     private let deviceIdKey = "device_id"
@@ -268,26 +272,28 @@ final class PersistenceStore: PersistenceStoreProtocol {
 // MARK: - Mock for Testing and Previews
 
 #if DEBUG
+// @MainActor inherited from PersistenceStoreProtocol — all properties are safely main-thread-only
+@MainActor
 final class MockPersistenceStore: PersistenceStoreProtocol {
     // Device identity
-    nonisolated(unsafe) var deviceId: String = "dev_mock_test_1234"
+    var deviceId: String = "dev_mock_test_1234"
 
     // Onboarding state
-    nonisolated(unsafe) var hasCompletedOnboarding: Bool = true
+    var hasCompletedOnboarding: Bool = true
 
     func completeOnboarding() {
         hasCompletedOnboarding = true
     }
 
     // Session state
-    nonisolated(unsafe) var currentSessionId: String?
+    var currentSessionId: String?
 
     // Settings state
-    nonisolated(unsafe) var savedSettings: QuizSettings?
-    nonisolated(unsafe) var saveSettingsCallCount: Int = 0
+    var savedSettings: QuizSettings?
+    var saveSettingsCallCount: Int = 0
 
     // Question history state
-    nonisolated(unsafe) var askedQuestionIds: [String] = []
+    var askedQuestionIds: [String] = []
     private let maxCapacity = 500
 
     // MARK: - Session

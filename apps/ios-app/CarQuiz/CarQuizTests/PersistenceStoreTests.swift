@@ -12,6 +12,7 @@ import Testing
 // MARK: - Session Tests
 
 @Suite("PersistenceStore Session Tests")
+@MainActor
 struct PersistenceStoreSessionTests {
 
     /// Creates a PersistenceStore backed by a unique UserDefaults suite.
@@ -117,6 +118,7 @@ struct PersistenceStoreSessionTests {
 // MARK: - Question History Tests
 
 @Suite("PersistenceStore Question History Tests")
+@MainActor
 struct PersistenceStoreQuestionHistoryTests {
 
     /// Creates a PersistenceStore backed by a unique UserDefaults suite.

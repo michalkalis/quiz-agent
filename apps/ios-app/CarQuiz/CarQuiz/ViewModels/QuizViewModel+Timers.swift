@@ -61,10 +61,8 @@ extension QuizViewModel {
 
             for remaining in (0...limit).reversed() {
                 if Task.isCancelled { return }
-
-                await MainActor.run {
-                    self.answerTimerCountdown = remaining
-                }
+                // Direct assignment is safe: Task inherits @MainActor isolation from QuizViewModel
+                self.answerTimerCountdown = remaining
 
                 if remaining > 0 {
                     try? await Task.sleep(nanoseconds: 1_000_000_000)
@@ -74,7 +72,7 @@ extension QuizViewModel {
             if Task.isCancelled { return }
 
             // Auto-start recording when timer expires
-            guard await self.quizState == .askingQuestion else { return }
+            guard self.quizState == .askingQuestion else { return }
             await self.startRecording()
         }
     }
@@ -101,7 +99,7 @@ extension QuizViewModel {
 
             if Task.isCancelled { return }
 
-            guard await self.quizState == .recording else { return }
+            guard self.quizState == .recording else { return }
             await self.stopRecordingAndSubmit()
         }
     }
@@ -126,6 +124,10 @@ extension QuizViewModel {
 
         Logger.quiz.debug("⏱️ Auto-advancing in \(duration, privacy: .public)s (audio: \(String(format: "%.1f", audioDuration), privacy: .public)s, reading time + buffer)")
 
+        // Cancel any previous auto-advance task before starting a new one.
+        // Without this, calling startAutoAdvanceCountdown twice would leave the first
+        // task running without a reference to cancel it.
+        autoAdvanceTask?.cancel()
         autoAdvanceCountdown = duration
 
         autoAdvanceTask = Task { [weak self] in
@@ -138,10 +140,8 @@ extension QuizViewModel {
                     Logger.quiz.debug("⏱️ Auto-advance countdown cancelled")
                     return
                 }
-
-                await MainActor.run {
-                    self.autoAdvanceCountdown = remaining
-                }
+                // Direct assignment is safe: Task inherits @MainActor isolation from QuizViewModel
+                self.autoAdvanceCountdown = remaining
 
                 if remaining > 0 {
                     try? await Task.sleep(nanoseconds: 1_000_000_000)  // 1 second
@@ -151,7 +151,7 @@ extension QuizViewModel {
             // Auto-advance after countdown completes
             if Task.isCancelled { return }
 
-            guard await self.quizState.isShowingResult else {
+            guard self.quizState.isShowingResult else {
                 Logger.quiz.debug("⏱️ Auto-advance aborted - not in showingResult state")
                 return
             }

@@ -73,15 +73,17 @@ extension QuizState {
         }
     }
 
-    /// Valid successor states for state machine validation
+    /// Valid successor states for state machine validation.
+    /// Every state includes "idle" as a valid transition to support resetState()/resetToHome()
+    /// being called from any phase. "processing" is added to showingResult for resubmitAnswer().
     var validTransitions: Set<String> {
         switch self {
         case .idle: return ["startingQuiz"]
         case .startingQuiz: return ["askingQuestion", "error", "idle"]
         case .askingQuestion: return ["recording", "processing", "error", "idle"]
-        case .recording: return ["processing", "askingQuestion", "error"]
+        case .recording: return ["processing", "askingQuestion", "error", "idle"]
         case .processing: return ["showingResult", "askingQuestion", "error", "idle"]
-        case .showingResult: return ["askingQuestion", "finished", "idle"]
+        case .showingResult: return ["askingQuestion", "processing", "finished", "idle"]
         case .finished: return ["idle"]
         case .error: return ["idle", "askingQuestion"]
         }
@@ -203,19 +205,22 @@ final class QuizViewModel: ObservableObject {
     // MARK: - State Machine
 
     /// Validated state transition with logging.
-    /// Logs all transitions; warns on invalid ones but still applies them
-    /// to avoid getting stuck (crash-safe over crash-correct).
-    func transition(to newState: QuizState, caller: String = #function) {  // internal for extensions
+    /// Rejects invalid transitions and keeps current state — "crash-correct over crash-safe".
+    /// A rejected transition is logged as an error and is a signal of a bug in the call site.
+    /// Returns false if the transition was rejected; true if applied.
+    @discardableResult
+    func transition(to newState: QuizState, caller: String = #function) -> Bool {  // internal for extensions
         let from = quizState.label
         let to = newState.label
 
-        if quizState.validTransitions.contains(to) {
-            Logger.quiz.info("State: \(from) → \(to) [\(caller, privacy: .public)]")
-        } else {
-            Logger.quiz.error("⚠️ Invalid transition: \(from) → \(to) [\(caller, privacy: .public)] — applying anyway to avoid stuck state")
+        guard quizState.validTransitions.contains(to) else {
+            Logger.quiz.error("❌ REJECTED transition: \(from) → \(to) [\(caller, privacy: .public)]")
+            return false
         }
 
+        Logger.quiz.info("State: \(from) → \(to) [\(caller, privacy: .public)]")
         quizState = newState
+        return true
     }
 
     // MARK: - Re-entrancy Guards
@@ -606,6 +611,7 @@ final class QuizViewModel: ObservableObject {
         do {
             try await networkService.endSession(sessionId: sessionId)
             persistenceStore.clearSession()
+            await stopAnyPlayingAudio()  // Await properly (we're async here)
             resetState()
 
             Logger.quiz.info("🎮 Quiz ended")
@@ -632,6 +638,11 @@ final class QuizViewModel: ObservableObject {
     func resetToHome() {
         persistenceStore.clearSession()
         resetState()
+        // Fire-and-forget is acceptable here: UI transition is immediate,
+        // brief audio overlap is non-critical. Task is tracked via audioService state.
+        Task {
+            await audioService.stopPlayback()
+        }
 
         Logger.quiz.info("🏠 Reset to home")
     }
@@ -905,12 +916,9 @@ final class QuizViewModel: ObservableObject {
         // Stop voice commands
         stopVoiceCommands()
 
-        // Stop any playing audio
-        Task {
-            await stopAnyPlayingAudio()
-        }
-
         // Reset all state
+        // Note: audio stop must be awaited by async callers (endQuiz) before resetState().
+        // resetToHome() fires an untracked Task separately — brief audio overlap is acceptable.
         isProcessingResponse = false
         transition(to: .idle)
         currentQuestion = nil

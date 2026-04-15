@@ -19,6 +19,7 @@ protocol NetworkServiceProtocol: Sendable {
     func endSession(sessionId: String) async throws
     func extendSession(sessionId: String, minutes: Int) async throws
     func rateQuestion(sessionId: String, rating: Int) async throws
+    func flagQuestion(sessionId: String, reason: String?) async throws
     func fetchElevenLabsToken() async throws -> String
     func getUsage(userId: String) async throws -> UsageInfo
     func setPremium(userId: String) async throws
@@ -237,6 +238,28 @@ actor NetworkService: NetworkServiceProtocol {
 
         guard let httpResponse = response as? HTTPURLResponse,
               (200...299).contains(httpResponse.statusCode) else {
+            throw NetworkError.invalidResponse
+        }
+    }
+
+    func flagQuestion(sessionId: String, reason: String?) async throws {
+        let endpoint = baseURL.appendingPathComponent("/api/v1/sessions/\(sessionId)/flag")
+
+        var request = URLRequest(url: endpoint)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        var body: [String: String] = [:]
+        if let reason { body["reason"] = reason }
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        Logger.network.debug("🌐 POST \(endpoint, privacy: .public) (flag)")
+
+        let (_, response) = try await session.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200 ... 299).contains(httpResponse.statusCode)
+        else {
             throw NetworkError.invalidResponse
         }
     }
@@ -643,6 +666,12 @@ final class MockNetworkService: NetworkServiceProtocol {
     }
 
     func rateQuestion(sessionId: String, rating: Int) async throws {
+        if shouldFail {
+            throw NetworkError.invalidResponse
+        }
+    }
+
+    func flagQuestion(sessionId: String, reason: String?) async throws {
         if shouldFail {
             throw NetworkError.invalidResponse
         }

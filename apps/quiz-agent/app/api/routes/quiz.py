@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 
 from ..deps import (
     StartQuizRequest, SubmitInputRequest, InputResponse, RateQuestionRequest,
+    FlagQuestionRequest,
     get_session_manager, get_question_retriever, get_chroma_client,
     get_usage_tracker, get_feedback_service, get_quiz_flow, get_translation_service,
     session_to_response, question_to_dict, question_to_dict_translated, flow_to_response,
@@ -241,6 +242,44 @@ async def rate_question(
         user_id=user_id,
         rating=request.rating,
         feedback_text=request.feedback_text,
+    )
+
+    if not success:
+        raise HTTPException(status_code=500, detail=message)
+
+    return {"success": True, "message": message}
+
+
+@router.post("/sessions/{session_id}/flag")
+@limiter.limit("10/minute")
+async def flag_question(
+    request: Request,
+    session_id: str,
+    body: FlagQuestionRequest,
+    session_manager: SessionManager = Depends(get_session_manager),
+    feedback_service: FeedbackService = Depends(get_feedback_service),
+):
+    """Flag the current question as potentially incorrect."""
+    session = session_manager.get_session(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found or expired")
+
+    if not session.current_question_id:
+        raise HTTPException(status_code=400, detail="No question to flag")
+
+    user_id = session.user_id
+    if body.participant_id:
+        for p in session.participants:
+            if p.participant_id == body.participant_id:
+                user_id = p.user_id or p.participant_id
+                break
+
+    user_id = user_id or "anonymous"
+
+    success, message = await feedback_service.flag_question(
+        question_id=session.current_question_id,
+        user_id=user_id,
+        reason=body.reason,
     )
 
     if not success:

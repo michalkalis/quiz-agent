@@ -15,6 +15,7 @@ struct ResultView: View {
     @State private var showQuitConfirmation = false
     @State private var showSourceWebView = false
     @State private var questionRating: Int = 0
+    @State private var questionFlagged = false
 
     var body: some View {
         ScrollView {
@@ -138,8 +139,16 @@ struct ResultView: View {
 
                 // MARK: - Question Rating
                 if showEvaluation {
-                    QuestionRatingRow(rating: $questionRating) { rating in
-                        viewModel.rateQuestion(rating)
+                    HStack {
+                        QuestionRatingRow(rating: $questionRating) { rating in
+                            viewModel.rateQuestion(rating)
+                        }
+
+                        Spacer()
+
+                        FlagQuestionButton(isFlagged: $questionFlagged) {
+                            viewModel.flagQuestion(reason: "User reported incorrect answer")
+                        }
                     }
                     .padding(.horizontal)
 
@@ -231,23 +240,19 @@ private struct StickyBottomBar: View {
 
     var body: some View {
         VStack(spacing: Theme.Spacing.sm) {
-            // Auto-advance indicator above buttons
-            if autoAdvanceEnabled && !isPaused {
-                if autoAdvanceCountdown > 0 {
-                    CountdownTimer(seconds: autoAdvanceCountdown)
-                } else {
-                    HStack(spacing: Theme.Spacing.xs) {
-                        ProgressView()
-                            .scaleEffect(0.8)
-                            .tint(Theme.Colors.accentPrimary)
-                            .accessibilityHidden(true)
-                        Text("Loading next question...")
-                            .font(.textXS)
-                            .foregroundColor(Theme.Colors.textSecondary)
-                    }
-                    .accessibilityElement(children: .combine)
-                    .accessibilityLabel("Loading next question")
+            // Status indicator above buttons
+            if autoAdvanceEnabled && !isPaused && autoAdvanceCountdown == 0 {
+                HStack(spacing: Theme.Spacing.xs) {
+                    ProgressView()
+                        .scaleEffect(0.8)
+                        .tint(Theme.Colors.accentPrimary)
+                        .accessibilityHidden(true)
+                    Text("Loading next question...")
+                        .font(.textXS)
+                        .foregroundColor(Theme.Colors.textSecondary)
                 }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("Loading next question")
             } else if isPaused {
                 Text("Staying on this question")
                     .font(.textXS)
@@ -449,6 +454,29 @@ private struct QuestionRatingRow: View {
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Rate this question, \(rating > 0 ? "\(rating) of 5 stars" : "not rated")")
+    }
+}
+
+// MARK: - Flag Question Button
+
+private struct FlagQuestionButton: View {
+    @Binding var isFlagged: Bool
+    let onFlag: () -> Void
+
+    var body: some View {
+        Button {
+            isFlagged = true
+            onFlag()
+        } label: {
+            Image(systemName: isFlagged ? "flag.fill" : "flag")
+                .font(.textMD)
+                .foregroundColor(isFlagged ? Theme.Colors.error : Theme.Colors.textMuted)
+                .frame(minWidth: 44, minHeight: 44)
+                .contentShape(Rectangle())
+        }
+        .disabled(isFlagged)
+        .accessibilityLabel(isFlagged ? "Question reported" : "Report incorrect answer")
+        .accessibilityIdentifier("result.flagQuestion")
     }
 }
 

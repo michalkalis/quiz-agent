@@ -148,6 +148,29 @@ class FeedbackService:
         threshold = threshold or self.low_rating_threshold
         return self.sql.get_low_rated_questions(threshold)
 
+    async def flag_question(
+        self,
+        question_id: str,
+        user_id: str,
+        reason: Optional[str] = None,
+    ) -> Tuple[bool, str]:
+        """Flag a question as potentially incorrect.
+
+        Sets review_status to 'needs_revision' and stores the flag reason.
+        """
+        try:
+            success = self.chroma.update_question(question_id, {
+                "review_status": "needs_revision",
+                "review_notes": f"Flagged by {user_id}: {reason or 'No reason given'}",
+            })
+            if not success:
+                return False, "Question not found in database"
+
+            logger.info("Question %s flagged by %s: %s", question_id, user_id, reason)
+            return True, "Question flagged for review"
+        except Exception as e:
+            return False, f"Failed to flag question: {str(e)}"
+
     def flag_poor_quality_questions(self) -> List[str]:
         """Flag questions that consistently receive low ratings.
 

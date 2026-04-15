@@ -43,6 +43,13 @@ For each question, think through:
 
 Write the question using the pattern and reasoning from Step 1.
 
+### Step 2.5: CONSISTENCY CHECK
+
+If you generated an `explanation` field, verify it matches `correct_answer`:
+- Re-read the explanation. Does it logically conclude with the `correct_answer`?
+- If the explanation mentions a specific number, name, or value, does it EXACTLY match `correct_answer`?
+- If there is ANY discrepancy, fix the explanation OR fix the correct_answer — they MUST agree.
+
 ### Step 3: SELF-CRITIQUE
 
 Rate your own question 1-10 on:

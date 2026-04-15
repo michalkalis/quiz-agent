@@ -399,6 +399,7 @@ class AdvancedQuestionGenerator:
         critique_prompt = self.critique_template.format(
             question=question.question,
             correct_answer=question.correct_answer,
+            explanation=question.explanation or "(none provided)",
             question_type=question.type,
             difficulty=question.difficulty,
             topic=question.topic,
@@ -507,6 +508,7 @@ class AdvancedQuestionGenerator:
                         default_difficulty=default_difficulty,
                         default_category=default_category,
                     )
+                    self._check_answer_explanation_consistency(question)
                     questions.append(question)
                 except Exception as e:
                     print(f"Error parsing question: {e}")
@@ -519,4 +521,15 @@ class AdvancedQuestionGenerator:
             print(f"Error parsing response: {e}")
 
         return questions
+
+    def _check_answer_explanation_consistency(self, question: Question) -> None:
+        """Log a warning if explanation text doesn't mention the correct answer."""
+        if not question.explanation:
+            return
+        answer_str = str(question.correct_answer).lower().strip()
+        if len(answer_str) <= 50 and answer_str not in question.explanation.lower():
+            print(
+                f"  ⚠ Answer/explanation mismatch: answer '{question.correct_answer}' "
+                f"not found in explanation for: {question.question[:80]}..."
+            )
 

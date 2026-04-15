@@ -178,6 +178,11 @@ Check for these common problems:
 - Multiple plausible correct answers exist
 - Question wording allows different valid interpretations
 
+**Answer-Explanation Mismatch** (AUTOMATIC REJECT — verdict: "poor")
+- The explanation calculates, derives, or names a DIFFERENT answer than the correct_answer field
+- Example: correct_answer says "64" but explanation calculates "€20" — this is NEVER acceptable
+- If the explanation is present but contradicts the correct_answer, set factual_accuracy to 1 and add "answer_explanation_mismatch" to red_flags
+
 **Unnecessarily Long** (-1 point from Clever Framing)
 - Question or answer is verbose when it could be punchy
 - Multi-sentence answers where one word would suffice
@@ -216,6 +221,7 @@ When the question's topic is "Logic" (number sequences, analogies, odd-one-out, 
 
 **Question:** {question}
 **Correct Answer:** {correct_answer}
+**Explanation:** {explanation}
 **Type:** {question_type}
 **Difficulty:** {difficulty}
 **Topic:** {topic}

@@ -81,6 +81,12 @@ class RateQuestionRequest(BaseModel):
     participant_id: Optional[str] = Field(default=None, description="For multiplayer")
 
 
+class FlagQuestionRequest(BaseModel):
+    """Request to flag a question as potentially incorrect."""
+    reason: Optional[str] = Field(default=None, max_length=500, description="Why the user thinks the answer is wrong")
+    participant_id: Optional[str] = Field(default=None, description="For multiplayer")
+
+
 class AddParticipantRequest(BaseModel):
     """Request to add participant to multiplayer session."""
     display_name: str = Field(..., min_length=1, max_length=50)

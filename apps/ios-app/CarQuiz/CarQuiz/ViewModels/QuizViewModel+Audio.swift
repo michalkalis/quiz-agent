@@ -24,7 +24,7 @@ extension QuizViewModel {
             guard currentQuestion?.isMultipleChoice != true else { return }
 
             if settings.autoRecordEnabled && voiceCommandService != nil && !isRerecording {
-                await startThinkingTimeCountdown()
+                startThinkingTimeCountdown()
             } else {
                 startAnswerTimer()
             }
@@ -53,7 +53,7 @@ extension QuizViewModel {
 
         if settings.autoRecordEnabled && voiceCommandService != nil && !isRerecording {
             // Auto-record path: thinking time countdown → auto-start recording
-            await startThinkingTimeCountdown()
+            startThinkingTimeCountdown()
         } else {
             // Legacy path: countdown timer → fixed duration recording
             startAnswerTimer()

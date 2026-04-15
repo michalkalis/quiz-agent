@@ -420,7 +420,7 @@ final class QuizViewModel: ObservableObject {
             } else {
                 // No audio — start voice commands then recording/timer
                 await startVoiceCommands()
-                await startRecordingOrTimer()
+                startRecordingOrTimer()
             }
 
         } catch let error as NetworkError {
@@ -512,6 +512,14 @@ final class QuizViewModel: ObservableObject {
         guard let sessionId = currentSession?.id else { return }
         Task {
             try? await networkService.rateQuestion(sessionId: sessionId, rating: rating)
+        }
+    }
+
+    /// Flag the current question as potentially incorrect
+    func flagQuestion(reason: String? = nil) {
+        guard let sessionId = currentSession?.id else { return }
+        Task {
+            try? await networkService.flagQuestion(sessionId: sessionId, reason: reason)
         }
     }
 
@@ -695,13 +703,13 @@ final class QuizViewModel: ObservableObject {
     // MARK: - Auto-Record or Timer
 
     /// Choose between auto-record (Phase 2) or answer timer (Phase 1) based on settings
-    private func startRecordingOrTimer() async {
+    private func startRecordingOrTimer() {
         guard quizState == .askingQuestion else { return }
         guard currentQuestion?.isMultipleChoice != true else { return }
 
         if settings.autoRecordEnabled && voiceCommandService != nil && !isRerecording {
             // Auto-record path: thinking time countdown → auto-start recording
-            await startThinkingTimeCountdown()
+            startThinkingTimeCountdown()
         } else {
             startAnswerTimer()
         }
@@ -872,7 +880,7 @@ final class QuizViewModel: ObservableObject {
                 nextQuestionAudioUrl = nil  // Clear after use
             } else {
                 // No audio — auto-record or timer based on settings
-                await startRecordingOrTimer()
+                startRecordingOrTimer()
             }
 
             Logger.quiz.info("❓ Showing next question: \(self.currentQuestion?.question ?? "unknown", privacy: .public)")

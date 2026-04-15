@@ -14,29 +14,50 @@ extension QuizViewModel {
 
     // MARK: - Thinking Time Countdown
 
-    /// Countdown before auto-recording starts, giving user time to think
-    func startThinkingTimeCountdown() async {
+    /// Countdown before auto-recording starts, giving user time to think.
+    /// Creates a fire-and-forget Task stored in `thinkingTimeTask` for cancellation support.
+    func startThinkingTimeCountdown() {
         let thinkingSeconds = settings.thinkingTime
-        guard thinkingSeconds > 0 else {
-            // No thinking time — start recording immediately (500ms delay like before)
-            try? await Task.sleep(nanoseconds: Config.autoRecordDelayMs * 1_000_000)
-            guard quizState == .askingQuestion else { return }
-            isAutoRecording = true
-            await startRecording()
-            return
-        }
 
-        thinkingTimeCountdown = thinkingSeconds
-        for i in stride(from: thinkingSeconds, through: 1, by: -1) {
-            guard quizState == .askingQuestion else { return }
-            thinkingTimeCountdown = i
-            try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
-        }
-        thinkingTimeCountdown = 0
+        cancelThinkingTime()
 
-        guard quizState == .askingQuestion else { return }
-        isAutoRecording = true
-        await startRecording()
+        thinkingTimeTask = Task { [weak self] in
+            guard let self else { return }
+
+            guard thinkingSeconds > 0 else {
+                // No thinking time — start recording immediately (500ms delay like before)
+                try? await Task.sleep(nanoseconds: Config.autoRecordDelayMs * 1_000_000)
+                if Task.isCancelled { return }
+                guard self.quizState == .askingQuestion else { return }
+                self.isAutoRecording = true
+                await self.startRecording()
+                return
+            }
+
+            self.thinkingTimeCountdown = thinkingSeconds
+            for i in stride(from: thinkingSeconds, through: 1, by: -1) {
+                if Task.isCancelled {
+                    self.thinkingTimeCountdown = 0
+                    return
+                }
+                guard self.quizState == .askingQuestion else {
+                    self.thinkingTimeCountdown = 0
+                    return
+                }
+                self.thinkingTimeCountdown = i
+                try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
+            }
+
+            if Task.isCancelled {
+                self.thinkingTimeCountdown = 0
+                return
+            }
+            self.thinkingTimeCountdown = 0
+
+            guard self.quizState == .askingQuestion else { return }
+            self.isAutoRecording = true
+            await self.startRecording()
+        }
     }
 
     /// Cancel the thinking time countdown

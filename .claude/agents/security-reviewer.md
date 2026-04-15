@@ -14,9 +14,11 @@ Scan recent code changes and the broader codebase for security vulnerabilities.
 
 1. **Get recent changes:**
    ```bash
-   git diff $(git merge-base HEAD main)...HEAD --stat
-   git diff $(git merge-base HEAD main)...HEAD
+   git log --oneline -10
+   git diff HEAD~3..HEAD --stat
+   git diff HEAD~3..HEAD
    ```
+   Adjust the range if the user specifies a commit or number of commits to review.
 
 2. **Scan changed files for:**
 

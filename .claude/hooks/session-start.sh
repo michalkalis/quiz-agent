@@ -9,15 +9,6 @@ DIM='\033[2m'
 RESET='\033[0m'
 BOLD='\033[1m'
 
-# Get a random tip from the tips file
-TIPS_FILE="$CLAUDE_PROJECT_DIR/.claude/data/efficiency-tips.txt"
-TIP=""
-if [ -f "$TIPS_FILE" ]; then
-    # Read non-comment, non-empty lines and pick one randomly
-    TIP=$(grep -v '^#' "$TIPS_FILE" | grep -v '^$' | shuf -n 1 2>/dev/null || \
-          grep -v '^#' "$TIPS_FILE" | grep -v '^$' | awk 'BEGIN{srand()} {lines[NR]=$0} END{print lines[int(rand()*NR)+1]}')
-fi
-
 # Check if best practices check is overdue
 LAST_CHECK_FILE="$CLAUDE_PROJECT_DIR/.claude/.last-check"
 CHECK_REMINDER=""
@@ -47,6 +38,7 @@ echo -e "${CYAN}│${RESET}    ${GREEN}/test-backend${RESET}   - Run pytest suit
 echo -e "${CYAN}│${RESET}    ${GREEN}/build-ios${RESET}      - Build iOS app                      ${CYAN}│${RESET}"
 echo -e "${CYAN}│${RESET}    ${GREEN}/gen-questions${RESET}  - Generate quiz questions             ${CYAN}│${RESET}"
 echo -e "${CYAN}│${RESET}    ${GREEN}/verify-qs${RESET}     - Verify question accuracy           ${CYAN}│${RESET}"
+echo -e "${CYAN}│${RESET}    ${GREEN}/score-qs${RESET}      - Score questions (5 dimensions)    ${CYAN}│${RESET}"
 echo -e "${CYAN}│${RESET}    ${GREEN}/deploy${RESET}         - Deploy backend to Fly.io          ${CYAN}│${RESET}"
 echo -e "${CYAN}│${RESET}    ${GREEN}/best-practices${RESET} - Check Claude Code setup (weekly)   ${CYAN}│${RESET}"
 echo -e "${CYAN}├─────────────────────────────────────────────────────────┤${RESET}"
@@ -64,19 +56,8 @@ echo -e "${CYAN}│${RESET}    ${GREEN}code-reviewer${RESET}   - Review recent c
 echo -e "${CYAN}│${RESET}    ${GREEN}security-reviewer${RESET} - OWASP & secret leak scan        ${CYAN}│${RESET}"
 echo -e "${CYAN}├─────────────────────────────────────────────────────────┤${RESET}"
 echo -e "${CYAN}│${RESET}  ${YELLOW}HOOKS${RESET} ${DIM}(automatic)${RESET}                                      ${CYAN}│${RESET}"
-echo -e "${CYAN}│${RESET}    Branch protection (blocks main/master edits)         ${CYAN}│${RESET}"
 echo -e "${CYAN}│${RESET}    Swift auto-format (swiftformat on .swift edits)      ${CYAN}│${RESET}"
 echo -e "${CYAN}│${RESET}    Python auto-test (pytest on backend app edits)      ${CYAN}│${RESET}"
-
-# Show tip if available
-if [ -n "$TIP" ]; then
-    echo -e "${CYAN}├─────────────────────────────────────────────────────────┤${RESET}"
-    echo -e "${CYAN}│${RESET}  ${YELLOW}TIP${RESET}: ${TIP:0:50}${RESET}"
-    # If tip is longer than 50 chars, show continuation
-    if [ ${#TIP} -gt 50 ]; then
-        echo -e "${CYAN}│${RESET}       ${TIP:50:47}${RESET}"
-    fi
-fi
 
 # Show check reminder if overdue
 if [ -n "$CHECK_REMINDER" ]; then

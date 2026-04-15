@@ -41,6 +41,18 @@ class RatingDB(Base):
     created_at = Column(DateTime, default=datetime.now, index=True)
 
 
+class ModelScoreDB(Base):
+    """SQLAlchemy model for multi-model quality scores (A/B testing)."""
+    __tablename__ = "model_scores"
+
+    id = Column(String, primary_key=True)
+    question_id = Column(String, nullable=False, index=True)
+    scored_by = Column(String, nullable=False, index=True)  # e.g. "claude-sonnet-4.6"
+    scores_json = Column(Text, nullable=False)  # JSON: {"conversation_spark": 8, "fun": 9, ...}
+    overall_score = Column(Float, nullable=False)
+    created_at = Column(DateTime, default=datetime.now, index=True)
+
+
 class SQLClient:
     """Client for SQL database operations (ratings, sessions).
 
@@ -295,6 +307,94 @@ class SQLClient:
             return result
         except Exception as e:
             logger.error("Error loading active sessions: %s", e)
+            return []
+
+    # ── Model score tracking (A/B testing) ──────────────────────────────
+
+    def add_model_score(
+        self,
+        question_id: str,
+        scored_by: str,
+        scores: dict,
+        overall_score: float,
+    ) -> bool:
+        """Add a model quality score for a question.
+
+        Args:
+            question_id: Question ID
+            scored_by: Model identifier (e.g. "claude-sonnet-4.6")
+            scores: Dict of dimension scores
+            overall_score: Overall score (0-10)
+        """
+        import json
+        import uuid
+        try:
+            db_session = self._get_session()
+            db_session.add(ModelScoreDB(
+                id=str(uuid.uuid4()),
+                question_id=question_id,
+                scored_by=scored_by,
+                scores_json=json.dumps(scores),
+                overall_score=overall_score,
+                created_at=datetime.now(),
+            ))
+            db_session.commit()
+            db_session.close()
+            return True
+        except Exception as e:
+            logger.error("Error adding model score: %s", e)
+            return False
+
+    def get_model_scores(self, question_id: str) -> list[dict]:
+        """Get all model scores for a question.
+
+        Returns list of {scored_by, scores, overall_score, created_at}.
+        """
+        import json
+        try:
+            db_session = self._get_session()
+            rows = db_session.query(ModelScoreDB).filter(
+                ModelScoreDB.question_id == question_id
+            ).all()
+            result = [
+                {
+                    "scored_by": r.scored_by,
+                    "scores": json.loads(r.scores_json),
+                    "overall_score": r.overall_score,
+                    "created_at": r.created_at.isoformat() if r.created_at else None,
+                }
+                for r in rows
+            ]
+            db_session.close()
+            return result
+        except Exception as e:
+            logger.error("Error getting model scores: %s", e)
+            return []
+
+    def get_model_performance_summary(self) -> list[dict]:
+        """Get avg scores per model across all questions.
+
+        Returns list of {scored_by, avg_score, question_count}.
+        """
+        try:
+            from sqlalchemy import func
+            db_session = self._get_session()
+            results = db_session.query(
+                ModelScoreDB.scored_by,
+                func.avg(ModelScoreDB.overall_score).label("avg_score"),
+                func.count(ModelScoreDB.id).label("count"),
+            ).group_by(ModelScoreDB.scored_by).all()
+            db_session.close()
+            return [
+                {
+                    "scored_by": r.scored_by,
+                    "avg_score": round(r.avg_score, 2),
+                    "question_count": r.count,
+                }
+                for r in results
+            ]
+        except Exception as e:
+            logger.error("Error getting model performance: %s", e)
             return []
 
     def _db_to_rating(self, db_rating: RatingDB) -> QuestionRating:

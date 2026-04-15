@@ -21,6 +21,7 @@ struct Question: Codable, Identifiable, Equatable, Sendable {
     let mediaUrl: String?
     let imageSubtype: String?
     let explanation: String?
+    let generatedBy: String?
 
     /// Whether this question has an associated image
     var hasImage: Bool {
@@ -51,6 +52,7 @@ struct Question: Codable, Identifiable, Equatable, Sendable {
         case mediaUrl = "media_url"
         case imageSubtype = "image_subtype"
         case explanation
+        case generatedBy = "generated_by"
     }
 }
 
@@ -98,7 +100,8 @@ extension Question {
         sourceExcerpt: "Paris is the capital and largest city of France, situated on the Seine River.",
         mediaUrl: nil,
         imageSubtype: nil,
-        explanation: "Paris has been the capital of France since the 10th century."
+        explanation: "Paris has been the capital of France since the 10th century.",
+        generatedBy: "claude-opus-4.6"
     )
 
     static let previewHard = Question(
@@ -113,7 +116,8 @@ extension Question {
         sourceExcerpt: nil,
         mediaUrl: nil,
         imageSubtype: nil,
-        explanation: nil
+        explanation: nil,
+        generatedBy: nil
     )
 
     static let previewImage = Question(
@@ -128,7 +132,8 @@ extension Question {
         sourceExcerpt: nil,
         mediaUrl: "https://example.com/silhouettes/italy.png",
         imageSubtype: "silhouette",
-        explanation: nil
+        explanation: nil,
+        generatedBy: nil
     )
 
     static let previewMCQ = Question(
@@ -143,7 +148,8 @@ extension Question {
         sourceExcerpt: nil,
         mediaUrl: nil,
         imageSubtype: nil,
-        explanation: "Jupiter is by far the largest planet, with a mass more than twice that of all other planets combined."
+        explanation: "Jupiter is by far the largest planet, with a mass more than twice that of all other planets combined.",
+        generatedBy: "gpt-4.1"
     )
 }
 #endif

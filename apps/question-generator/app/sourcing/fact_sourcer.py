@@ -18,7 +18,7 @@ class FactSourcer:
         self,
         enable_wikipedia: bool = True,
         enable_opentdb: bool = True,
-        enable_web_search: bool = False,  # disabled by default (needs API key)
+        enable_web_search: bool = True,  # Tavily API key configured in .env
         enable_news: bool = True,
         enable_czech_slovak: bool = True,
         wikipedia_languages: Optional[list[str]] = None,

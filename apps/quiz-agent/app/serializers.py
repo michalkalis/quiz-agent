@@ -27,4 +27,7 @@ def question_to_dict(question: Question) -> Dict[str, Any]:
         result["image_subtype"] = question.image_subtype
     if question.explanation:
         result["explanation"] = question.explanation
+    # Extract model name from generation metadata for A/B testing
+    if question.generation_metadata and "model" in question.generation_metadata:
+        result["generated_by"] = question.generation_metadata["model"]
     return result

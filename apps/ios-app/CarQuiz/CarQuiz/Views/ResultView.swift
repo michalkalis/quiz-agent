@@ -142,6 +142,13 @@ struct ResultView: View {
                         viewModel.rateQuestion(rating)
                     }
                     .padding(.horizontal)
+
+                    if let model = viewModel.currentQuestion?.generatedBy {
+                        Text(model)
+                            .font(.caption2)
+                            .foregroundStyle(Theme.Colors.textTertiary)
+                            .padding(.top, 2)
+                    }
                 }
 
                 // Bottom spacer so content doesn't hide behind sticky bar

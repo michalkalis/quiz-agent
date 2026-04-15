@@ -145,3 +145,53 @@ class ReviewStats(BaseModel):
     rejected: int
     needs_revision: int
     avg_quality_score: Optional[float] = None
+
+
+# Verification Schemas
+
+class VerifyRequest(BaseModel):
+    """Request to verify a single question."""
+    question: str = Field(..., description="Question text")
+    correct_answer: str = Field(..., description="Claimed correct answer")
+    topic: str = Field("", description="Question topic")
+
+
+class VerifyBatchRequest(BaseModel):
+    """Request to verify a batch of questions."""
+    questions: List[Dict[str, Any]] = Field(
+        ...,
+        description="List of {question, correct_answer, id, topic}"
+    )
+
+
+class SourceInfo(BaseModel):
+    """Source found during verification."""
+    url: str
+    excerpt: str
+    agrees_with_answer: bool
+    relevance_score: float = 0.0
+
+
+class VerifyResponse(BaseModel):
+    """Response from verification endpoint."""
+    verdict: str = Field(..., description="verified | likely_correct | uncertain | likely_wrong | wrong")
+    confidence: float = Field(..., ge=0.0, le=1.0)
+    sources: List[SourceInfo] = []
+    alternative_answers: List[str] = []
+    notes: str = ""
+
+
+class VerifyBatchItem(BaseModel):
+    """Single item in batch verification response."""
+    id: str
+    question: str
+    claimed_answer: str
+    verification: VerifyResponse
+
+
+class VerifyBatchResponse(BaseModel):
+    """Response from batch verification endpoint."""
+    results: List[VerifyBatchItem]
+    verified_count: int
+    wrong_count: int
+    uncertain_count: int

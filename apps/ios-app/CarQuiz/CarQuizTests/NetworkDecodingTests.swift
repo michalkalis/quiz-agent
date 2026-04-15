@@ -106,7 +106,7 @@ struct NetworkDecodingTests {
             topic: "Test", category: "test",
             sourceUrl: nil, sourceExcerpt: nil,
             mediaUrl: nil, imageSubtype: nil,
-            explanation: nil
+            explanation: nil, generatedBy: nil
         )
 
         #expect(question.isMultipleChoice == false)
@@ -120,7 +120,7 @@ struct NetworkDecodingTests {
             topic: "Test", category: "test",
             sourceUrl: nil, sourceExcerpt: nil,
             mediaUrl: nil, imageSubtype: nil,
-            explanation: nil
+            explanation: nil, generatedBy: nil
         )
 
         #expect(question.isMultipleChoice == false)
@@ -135,7 +135,7 @@ struct NetworkDecodingTests {
             topic: "Science", category: "adults",
             sourceUrl: nil, sourceExcerpt: nil,
             mediaUrl: nil, imageSubtype: nil,
-            explanation: nil
+            explanation: nil, generatedBy: nil
         )
 
         #expect(question.isMultipleChoice == true)

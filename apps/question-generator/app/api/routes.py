@@ -12,11 +12,14 @@ from .schemas import (
     ApproveRequest, ApproveResponse,
     SearchResponse, DuplicatesResponse, DuplicateInfo,
     AdvancedGenerateRequest, AdvancedGenerateResponse, AdvancedQuestionResponse,
-    ReviewRequest, ReviewResponse, PendingReviewResponse, ReviewStats
+    ReviewRequest, ReviewResponse, PendingReviewResponse, ReviewStats,
+    VerifyRequest, VerifyBatchRequest, VerifyResponse, VerifyBatchResponse,
+    VerifyBatchItem, SourceInfo,
 )
 from ..generation.generator import QuestionGenerator
 from ..generation.advanced_generator import AdvancedQuestionGenerator
 from ..generation.storage import QuestionStorage
+from ..verification.fact_verifier import FactVerifier
 
 
 # Initialize services
@@ -28,6 +31,7 @@ advanced_generator = AdvancedQuestionGenerator(
     critique_temperature=0.3
 )
 storage = QuestionStorage()
+fact_verifier = FactVerifier()
 
 # Create router
 router = APIRouter(prefix="/api/v1", tags=["questions"])
@@ -462,6 +466,94 @@ async def get_review_stats():
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get stats: {str(e)}")
+
+
+# Verification Endpoints
+
+@router.post("/verify", response_model=VerifyResponse)
+async def verify_question(request: VerifyRequest):
+    """Verify a single question-answer pair using Tavily + Gemini Flash.
+
+    Returns verdict (verified/likely_correct/uncertain/likely_wrong/wrong)
+    with confidence score and source URLs.
+    """
+    try:
+        result = await fact_verifier.verify(
+            question=request.question,
+            claimed_answer=request.correct_answer,
+            topic=request.topic,
+        )
+        return VerifyResponse(
+            verdict=result.verdict,
+            confidence=result.confidence,
+            sources=[
+                SourceInfo(
+                    url=s.get("url", ""),
+                    excerpt=s.get("excerpt", ""),
+                    agrees_with_answer=s.get("agrees_with_answer", False),
+                    relevance_score=s.get("relevance_score", 0.0),
+                )
+                for s in result.sources
+            ],
+            alternative_answers=result.alternative_answers,
+            notes=result.notes,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Verification failed: {str(e)}")
+
+
+@router.post("/verify/batch", response_model=VerifyBatchResponse)
+async def verify_batch(request: VerifyBatchRequest):
+    """Verify a batch of question-answer pairs.
+
+    Each item needs: question, correct_answer, id (optional), topic (optional).
+    """
+    try:
+        raw_results = await fact_verifier.verify_batch(request.questions)
+
+        items = []
+        verified = wrong = uncertain = 0
+
+        for r in raw_results:
+            v = r["verification"]
+            if v.verdict in ("verified", "likely_correct"):
+                verified += 1
+            elif v.verdict in ("wrong", "likely_wrong"):
+                wrong += 1
+            else:
+                uncertain += 1
+
+            items.append(
+                VerifyBatchItem(
+                    id=r["id"],
+                    question=r["question"],
+                    claimed_answer=r["claimed_answer"],
+                    verification=VerifyResponse(
+                        verdict=v.verdict,
+                        confidence=v.confidence,
+                        sources=[
+                            SourceInfo(
+                                url=s.get("url", ""),
+                                excerpt=s.get("excerpt", ""),
+                                agrees_with_answer=s.get("agrees_with_answer", False),
+                                relevance_score=s.get("relevance_score", 0.0),
+                            )
+                            for s in v.sources
+                        ],
+                        alternative_answers=v.alternative_answers,
+                        notes=v.notes,
+                    ),
+                )
+            )
+
+        return VerifyBatchResponse(
+            results=items,
+            verified_count=verified,
+            wrong_count=wrong,
+            uncertain_count=uncertain,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Batch verification failed: {str(e)}")
 
 
 # Helper functions

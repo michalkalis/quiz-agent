@@ -76,7 +76,8 @@ private func makeQuestion(id: String, source: String) -> Question {
         sourceExcerpt: source,
         mediaUrl: nil,
         imageSubtype: nil,
-        explanation: nil
+        explanation: nil,
+        generatedBy: nil
     )
 }
 
@@ -1113,7 +1114,8 @@ struct QuizViewModelMCQSubmissionTests {
             sourceExcerpt: nil,
             mediaUrl: nil,
             imageSubtype: nil,
-            explanation: nil
+            explanation: nil,
+            generatedBy: nil
         )
         viewModel.quizState = .askingQuestion
         return (viewModel, mockNetwork)

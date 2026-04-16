@@ -6,6 +6,12 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		12809A90D9684CE9A3A60E9E /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 244A1B53144D4362B6C47909 /* Sentry */; };
+		503020B22F8E706400A567CA /* (null) in Frameworks */ = {isa = PBXBuildFile; };
+		503020B32F8E706400A567CA /* (null) in Frameworks */ = {isa = PBXBuildFile; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		5004B4A82EF874820068C8D1 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -76,7 +82,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				12809A90D9684CE9A3A60E9E /* Sentry in Frameworks */,
+				503020B22F8E706400A567CA /* (null) in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -84,7 +90,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				12809A90D9684CE9A3A60E9E /* Sentry in Frameworks */,
+				503020B32F8E706400A567CA /* (null) in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -142,12 +148,12 @@
 				5004B49C2EF874800068C8D1 /* CarQuiz */,
 			);
 			name = CarQuiz;
-			productName = CarQuiz;
-			productReference = 5004B49A2EF874800068C8D1 /* CarQuiz.app */;
-			productType = "com.apple.product-type.application";
 			packageProductDependencies = (
 				244A1B53144D4362B6C47909 /* Sentry */,
 			);
+			productName = CarQuiz;
+			productReference = 5004B49A2EF874800068C8D1 /* CarQuiz.app */;
+			productType = "com.apple.product-type.application";
 		};
 		5004B4A62EF874820068C8D1 /* CarQuizTests */ = {
 			isa = PBXNativeTarget;
@@ -223,6 +229,9 @@
 			);
 			mainGroup = 5004B4912EF874800068C8D1;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				D836EF69338645ED82615379 /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 5004B49B2EF874800068C8D1 /* Products */;
 			projectDirPath = "";
@@ -231,9 +240,6 @@
 				5004B4992EF874800068C8D1 /* CarQuiz */,
 				5004B4A62EF874820068C8D1 /* CarQuizTests */,
 				5004B4B02EF874820068C8D1 /* CarQuizUITests */,
-			);
-			packageReferences = (
-				D836EF69338645ED82615379 /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
 			);
 		};
 /* End PBXProject section */
@@ -261,6 +267,24 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		1CD75A3248DE471983916F2D /* Upload Debug Symbols to Sentry */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${TARGET_NAME}",
+			);
+			name = "Upload Debug Symbols to Sentry";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# This script is responsible for uploading debug symbols and source context for Sentry.\nif which sentry-cli >/dev/null; then\n  export SENTRY_ORG=missinghue\n  export SENTRY_PROJECT=carquiz\n  ERROR=$(sentry-cli debug-files upload --include-sources \"$DWARF_DSYM_FOLDER_PATH\" 2>&1 >/dev/null)\n  if [ ! $? -eq 0 ]; then\n    echo \"warning: sentry-cli - $ERROR\"\n  fi\nelse\n  echo \"warning: sentry-cli not installed, download from https://github.com/getsentry/sentry-cli/releases\"\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		5004B4962EF874800068C8D1 /* Sources */ = {
@@ -426,8 +450,10 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = J47232U5B5;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = CarQuiz/Info.plist;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "We need microphone access to record your quiz answers hands-free.";
@@ -450,8 +476,6 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				ENABLE_USER_SCRIPT_SANDBOXING = "NO";
 			};
 			name = Debug;
 		};
@@ -462,8 +486,10 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = J47232U5B5;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = CarQuiz/Info.plist;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "We need microphone access to record your quiz answers hands-free.";
@@ -486,8 +512,6 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				ENABLE_USER_SCRIPT_SANDBOXING = "NO";
 			};
 			name = Release;
 		};
@@ -575,44 +599,44 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = D86E1E0498FBCF4EF3A9CF7D /* Local.xcconfig */;
 			buildSettings = {
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = J47232U5B5;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = com.missinghue.CarQuiz;
 				PRODUCT_NAME = CarQuiz;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				ENABLE_USER_SCRIPT_SANDBOXING = "NO";
 			};
 			name = "Debug-Local";
 		};
 		5090EC5E2EFB1A4F004DB170 /* Release-Local */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = J47232U5B5;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = com.missinghue.CarQuiz;
 				PRODUCT_NAME = CarQuiz;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				ENABLE_USER_SCRIPT_SANDBOXING = "NO";
 			};
 			name = "Release-Local";
 		};
 		5090EC5F2EFB1A4F004DB170 /* Debug-Prod */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = J47232U5B5;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = com.missinghue.CarQuiz;
 				PRODUCT_NAME = CarQuiz;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				ENABLE_USER_SCRIPT_SANDBOXING = "NO";
 			};
 			name = "Debug-Prod";
 		};
 		5090EC602EFB1A4F004DB170 /* Release-Prod */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = J47232U5B5;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = com.missinghue.CarQuiz;
 				PRODUCT_NAME = CarQuiz;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				ENABLE_USER_SCRIPT_SANDBOXING = "NO";
 			};
 			name = "Release-Prod";
 		};
@@ -1024,39 +1048,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		1CD75A3248DE471983916F2D /* Upload Debug Symbols to Sentry */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${TARGET_NAME}",
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# This script is responsible for uploading debug symbols and source context for Sentry.
-if which sentry-cli >/dev/null; then
-  export SENTRY_ORG=missinghue
-  export SENTRY_PROJECT=carquiz
-  ERROR=$(sentry-cli debug-files upload --include-sources \"$DWARF_DSYM_FOLDER_PATH\" 2>&1 >/dev/null)
-  if [ ! $? -eq 0 ]; then
-    echo \"warning: sentry-cli - $ERROR\"
-  fi
-else
-  echo \"warning: sentry-cli not installed, download from https://github.com/getsentry/sentry-cli/releases\"
-fi
-";
-			name = "Upload Debug Symbols to Sentry";
-		};
-/* End PBXShellScriptBuildPhase section */
-
-/* Begin PBXBuildFile section */
-		12809A90D9684CE9A3A60E9E /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 244A1B53144D4362B6C47909 /* Sentry */; };
-/* End PBXBuildFile section */
 
 /* Begin XCRemoteSwiftPackageReference section */
 		D836EF69338645ED82615379 /* XCRemoteSwiftPackageReference "sentry-cocoa" */ = {

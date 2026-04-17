@@ -1,0 +1,140 @@
+name: iOS Release (TestFlight)
+
+# Manual-only trigger. Run from GitHub UI → Actions → "iOS Release (TestFlight)" → Run workflow,
+# or from CLI: `gh workflow run ios-release.yml`.
+on:
+  workflow_dispatch:
+    inputs:
+      notes:
+        description: "Release notes / tester message (optional)"
+        required: false
+        default: ""
+
+concurrency:
+  # Prevent parallel release runs stepping on each other (match cert locks, build number races).
+  group: ios-release
+  cancel-in-progress: false
+
+jobs:
+  testflight:
+    name: Build and upload to TestFlight
+    runs-on: macos-26
+    timeout-minutes: 45
+    permissions:
+      contents: read
+
+    env:
+      # Consumed by Fastfile / Matchfile.
+      ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+      ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
+      ASC_API_KEY_CONTENT: ${{ secrets.ASC_API_KEY_CONTENT }}
+      MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+      MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+      MATCH_READONLY: "true"
+      MATCH_KEYCHAIN_NAME: "carquiz-build.keychain"
+      MATCH_KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+      FASTLANE_HIDE_CHANGELOG: "true"
+      FASTLANE_SKIP_UPDATE_CHECK: "true"
+      FASTLANE_DISABLE_COLORS: "1"
+      LC_ALL: "en_US.UTF-8"
+      LANG: "en_US.UTF-8"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Guard — required secrets present
+        # Fail fast with a friendly message if any secret is missing, instead of leaking
+        # cryptic fastlane errors later.
+        run: |
+          missing=()
+          for v in ASC_API_KEY_ID ASC_API_ISSUER_ID ASC_API_KEY_CONTENT MATCH_GIT_URL MATCH_PASSWORD KEYCHAIN_PASSWORD; do
+            if [ -z "${!v:-}" ]; then missing+=("$v"); fi
+          done
+          if [ ${#missing[@]} -ne 0 ]; then
+            echo "::error::Missing required secrets: ${missing[*]}"
+            exit 1
+          fi
+        env:
+          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+          ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
+          ASC_API_KEY_CONTENT: ${{ secrets.ASC_API_KEY_CONTENT }}
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+
+      - name: Select Xcode 26.3
+        # macos-26 runner ships with 26.0 / 26.1 / 26.2 / 26.3. Fall back to default if missing.
+        run: |
+          if [ -d "/Applications/Xcode_26.3.app" ]; then
+            sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
+          else
+            sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+          fi
+          xcodebuild -version
+
+      - name: Configure SSH for match repo
+        # webfactory/ssh-agent loads the deploy key into an ephemeral ssh-agent.
+        # The key lives only in memory for the duration of the job.
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.MATCH_DEPLOY_KEY }}
+
+      - name: Trust github.com host key
+        # Avoid "Host key verification failed" when match clones over SSH.
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -t ed25519,rsa github.com >> ~/.ssh/known_hosts
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+          working-directory: apps/ios-app/CarQuiz
+
+      - name: Create isolated keychain
+        # We run match against a dedicated keychain that gets wiped in cleanup.
+        # Never touches the runner's login keychain.
+        run: |
+          KC="$RUNNER_TEMP/${MATCH_KEYCHAIN_NAME}"
+          security create-keychain -p "$MATCH_KEYCHAIN_PASSWORD" "$KC"
+          security set-keychain-settings -lut 3600 "$KC"
+          security unlock-keychain -p "$MATCH_KEYCHAIN_PASSWORD" "$KC"
+          # Prepend to search list so codesign finds certs.
+          security list-keychains -d user -s "$KC" $(security list-keychains -d user | tr -d '"')
+          echo "KEYCHAIN_PATH=$KC" >> "$GITHUB_ENV"
+
+      - name: Run fastlane beta (build + TestFlight upload)
+        working-directory: apps/ios-app/CarQuiz
+        env:
+          # Override Matchfile to point at the isolated keychain on disk.
+          MATCH_KEYCHAIN_NAME: ${{ env.KEYCHAIN_PATH }}
+        run: bundle exec fastlane ios beta
+
+      - name: Upload build artifacts
+        # IPA + dSYM only — the dSYM is needed for Sentry symbolication.
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: carquiz-release
+          path: |
+            apps/ios-app/CarQuiz/build/*.ipa
+            apps/ios-app/CarQuiz/build/*.app.dSYM.zip
+          retention-days: 14
+          if-no-files-found: warn
+
+      - name: Cleanup — delete keychain
+        if: always()
+        run: |
+          if [ -n "${KEYCHAIN_PATH:-}" ] && [ -f "$KEYCHAIN_PATH" ]; then
+            security delete-keychain "$KEYCHAIN_PATH" || true
+          fi
+
+      - name: Cleanup — scrub working directory
+        if: always()
+        run: |
+          # Defense-in-depth: remove any stray credential material that could be
+          # picked up by an unexpected later step or cached by mistake.
+          find "$RUNNER_TEMP" -type f \( -name "*.p8" -o -name "*.p12" -o -name "*.mobileprovision" -o -name "AuthKey_*.p8" \) -delete 2>/dev/null || true
+          rm -rf ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision 2>/dev/null || true

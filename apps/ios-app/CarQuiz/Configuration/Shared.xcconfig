@@ -11,7 +11,7 @@ APP_DISPLAY_NAME = CarQuiz
 
 // MARK: - Bundle Identifier Base
 // Environment-specific configs will append a suffix to this
-BUNDLE_ID_BASE = com.missinghue.CarQuiz
+BUNDLE_ID_BASE = com.missinghue.hangs
 
 // MARK: - Info.plist Configuration
 INFOPLIST_FILE = CarQuiz/Info.plist

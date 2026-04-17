@@ -40,6 +40,26 @@ DerivedData/
 *.dSYM.zip
 *.dSYM
 
+# iOS signing — these must NEVER be committed. Certs live in a separate private repo.
+*.p12
+*.p8
+*.mobileprovision
+*.cer
+*.certSigningRequest
+
+# fastlane
+apps/ios-app/CarQuiz/fastlane/report.xml
+apps/ios-app/CarQuiz/fastlane/Preview.html
+apps/ios-app/CarQuiz/fastlane/screenshots
+apps/ios-app/CarQuiz/fastlane/test_output
+apps/ios-app/CarQuiz/fastlane/README.md
+apps/ios-app/CarQuiz/fastlane/README.md.bak
+apps/ios-app/CarQuiz/fastlane/.env
+apps/ios-app/CarQuiz/fastlane/.env.*
+!apps/ios-app/CarQuiz/fastlane/.env.example
+apps/ios-app/CarQuiz/build/
+apps/ios-app/CarQuiz/vendor/
+
 # Claude Code local settings
 .claude/*.local.json
 .claude/.last-check

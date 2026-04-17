@@ -27,3 +27,10 @@ ENABLE_TESTABILITY = NO
 GCC_OPTIMIZATION_LEVEL = s
 SWIFT_OPTIMIZATION_LEVEL = -O
 SWIFT_COMPILATION_MODE = wholemodule
+
+// MARK: - Code Signing (Manual — driven by fastlane match)
+// Override Shared.xcconfig's Automatic style. Match installs a provisioning
+// profile named "match AppStore <bundle-id>" into the build keychain.
+CODE_SIGN_STYLE = Manual
+CODE_SIGN_IDENTITY = Apple Distribution
+PROVISIONING_PROFILE_SPECIFIER = match AppStore $(PRODUCT_BUNDLE_IDENTIFIER)

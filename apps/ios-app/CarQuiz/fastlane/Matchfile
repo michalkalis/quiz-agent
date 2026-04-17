@@ -1,0 +1,20 @@
+# Match config — values overridden per-lane via ENV for security.
+# See Fastfile :beta lane for the actual invocation.
+
+git_url(ENV["MATCH_GIT_URL"])
+storage_mode("git")
+type("appstore")
+
+app_identifier(["com.missinghue.hangs"])
+team_id("J47232U5B5")
+
+# CI runs readonly; developers running match locally can set MATCH_READONLY=false
+# to rotate/create certs. Default readonly prevents accidental cert regeneration.
+readonly(ENV["MATCH_READONLY"] != "false")
+
+# Use a dedicated temporary keychain on CI — never pollute the default login keychain.
+keychain_name(ENV["MATCH_KEYCHAIN_NAME"] || "login.keychain")
+keychain_password(ENV["MATCH_KEYCHAIN_PASSWORD"]) if ENV["MATCH_KEYCHAIN_PASSWORD"]
+
+# SSH deploy key is configured on CI via ssh-agent; locally uses your normal git auth.
+git_branch("main")

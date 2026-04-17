@@ -1,0 +1,12 @@
+scheme("CarQuiz-Prod")
+configuration("Release-Prod")
+workspace(nil)
+project("CarQuiz.xcodeproj")
+
+export_method("app-store")
+output_directory("./build")
+output_name("CarQuiz")
+
+clean(true)
+include_symbols(true)
+include_bitcode(false)

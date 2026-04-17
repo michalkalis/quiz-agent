@@ -1,5 +1,5 @@
 app_identifier("com.missinghue.hangs")
-team_id("J47232U5B5")
+team_id("KAGWHPZZFQ")
 
 # Apple ID is NOT used — auth goes through App Store Connect API key (see Fastfile).
 # Leaving these unset prevents accidental interactive login attempts.

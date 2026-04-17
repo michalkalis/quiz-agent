@@ -64,18 +64,6 @@ platform :ios do
     FileUtils.mkdir_p(legacy_dir)
     Dir.glob(File.join(new_dir, "*.mobileprovision")).each { |f| FileUtils.cp(f, legacy_dir) }
 
-    # Diagnostic: list every installed profile with its embedded Name + TeamIdentifier
-    # so we can see exactly what xcodebuild's manual-signing lookup is searching against.
-    UI.message("=== Installed provisioning profiles ===")
-    Dir.glob(File.join(new_dir, "*.mobileprovision")).each do |f|
-      plist = `security cms -D -i "#{f}" 2>/dev/null`
-      name = plist[/<key>Name<\/key>\s*<string>([^<]+)<\/string>/, 1]
-      team = plist[/<key>TeamIdentifier<\/key>\s*<array>\s*<string>([^<]+)<\/string>/, 1]
-      uuid = plist[/<key>UUID<\/key>\s*<string>([^<]+)<\/string>/, 1]
-      UI.message("  #{File.basename(f)}: Name=#{name.inspect}, Team=#{team.inspect}, UUID=#{uuid}")
-    end
-    UI.message("=======================================")
-
     # Auto-bump build number relative to what's already in TestFlight, so we never
     # collide with an existing build.
     next_build = latest_testflight_build_number(
@@ -96,7 +84,7 @@ platform :ios do
           "com.missinghue.hangs" => "match AppStore com.missinghue.hangs"
         },
         signingStyle: "manual",
-        teamID: "J47232U5B5"
+        teamID: "KAGWHPZZFQ"
       },
       xcargs: "-allowProvisioningUpdates"
     )

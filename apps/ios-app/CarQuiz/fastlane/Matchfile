@@ -6,7 +6,7 @@ storage_mode("git")
 type("appstore")
 
 app_identifier(["com.missinghue.hangs"])
-team_id("J47232U5B5")
+team_id("KAGWHPZZFQ")
 
 # CI runs readonly; developers running match locally can set MATCH_READONLY=false
 # to rotate/create certs. Default readonly prevents accidental cert regeneration.

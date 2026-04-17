@@ -466,6 +466,8 @@ struct PulsingAnimation: ViewModifier {
     }
 }
 
+#if DEBUG
 #Preview {
     QuestionView(viewModel: QuizViewModel.preview)
 }
+#endif

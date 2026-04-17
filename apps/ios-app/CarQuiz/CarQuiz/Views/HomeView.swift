@@ -231,8 +231,10 @@ private struct QuickSettingRow<Content: View>: View {
     }
 }
 
+#if DEBUG
 #Preview {
     NavigationStack {
         HomeView(viewModel: QuizViewModel.preview)
     }
 }
+#endif

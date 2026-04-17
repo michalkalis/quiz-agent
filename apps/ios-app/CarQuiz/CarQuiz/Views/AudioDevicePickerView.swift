@@ -116,6 +116,8 @@ struct AudioDevicePickerView: View {
     }
 }
 
+#if DEBUG
 #Preview {
     AudioDevicePickerView(viewModel: QuizViewModel.preview)
 }
+#endif

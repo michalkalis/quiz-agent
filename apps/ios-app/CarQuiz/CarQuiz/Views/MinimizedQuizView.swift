@@ -132,6 +132,7 @@ struct MinimizedQuizView: View {
     }
 }
 
+#if DEBUG
 #Preview {
     VStack {
         Spacer()
@@ -140,3 +141,4 @@ struct MinimizedQuizView: View {
     }
     .background(Theme.Colors.bgSecondary)
 }
+#endif

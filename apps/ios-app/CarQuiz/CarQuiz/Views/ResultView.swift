@@ -480,6 +480,8 @@ private struct FlagQuestionButton: View {
     }
 }
 
+#if DEBUG
 #Preview {
     ResultView(viewModel: QuizViewModel.previewWithEvaluation)
 }
+#endif

@@ -55,6 +55,15 @@ platform :ios do
       readonly: true
     )
 
+    # Xcode 16+ installs provisioning profiles under ~/Library/Developer/Xcode/UserData.
+    # xcodebuild's manual-signing lookup on CI still consults the legacy path, so
+    # mirror the freshly installed profiles to avoid "No profile matching ..." errors.
+    require "fileutils"
+    legacy_dir = File.expand_path("~/Library/MobileDevice/Provisioning Profiles")
+    new_dir = File.expand_path("~/Library/Developer/Xcode/UserData/Provisioning Profiles")
+    FileUtils.mkdir_p(legacy_dir)
+    Dir.glob(File.join(new_dir, "*.mobileprovision")).each { |f| FileUtils.cp(f, legacy_dir) }
+
     # Auto-bump build number relative to what's already in TestFlight, so we never
     # collide with an existing build.
     next_build = latest_testflight_build_number(

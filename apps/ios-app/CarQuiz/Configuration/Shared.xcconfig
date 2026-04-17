@@ -31,3 +31,9 @@ SWIFT_STRICT_CONCURRENCY = complete
 // MARK: - Other Settings
 TARGETED_DEVICE_FAMILY = 1
 IPHONEOS_DEPLOYMENT_TARGET = 18.0
+
+// MARK: - Asset Catalog
+// App Store validation requires CFBundleIconName, which xcodebuild only injects
+// when ASSETCATALOG_COMPILER_APPICON_NAME points at a real asset set.
+ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon
+ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor

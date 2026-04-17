@@ -632,6 +632,7 @@
 		};
 		5090EC602EFB1A4F004DB170 /* Release-Prod */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 62FB9AFFE2F29A05D528EFF0 /* Prod.xcconfig */;
 			buildSettings = {
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = J47232U5B5;
@@ -875,6 +876,7 @@
 		};
 		BB84328D4A4EFA295816EC63 /* Release-Prod */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 62FB9AFFE2F29A05D528EFF0 /* Prod.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;

@@ -90,10 +90,13 @@ extension QuizViewModel {
         Logger.audio.debug("🔇 Stopped any playing audio for state transition")
     }
 
-    /// Announce an error message via local TTS for hands-free awareness
+    /// Announce an error message via local TTS for hands-free awareness.
+    /// Cancels any in-flight announcement so rapid consecutive errors don't queue up.
     func announceError(_ message: String) {
-        Task {
-            await audioService.speakText(message)
+        errorAnnouncementTask?.cancel()
+        errorAnnouncementTask = Task { [weak self] in
+            guard let self else { return }
+            await self.audioService.speakText(message)
         }
     }
 

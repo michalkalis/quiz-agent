@@ -353,7 +353,7 @@ final class MockPersistenceStore: PersistenceStoreProtocol {
 
     // MARK: - Quiz Stats
 
-    nonisolated(unsafe) var stats = QuizStats.empty
+    var stats = QuizStats.empty
 
     func loadStats() -> QuizStats {
         stats

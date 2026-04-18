@@ -207,10 +207,10 @@ struct QuestionView: View {
     // MARK: - Voice body
 
     private func voiceBody(question: Question) -> some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 14) {
             questionCard(question: question)
                 .frame(maxHeight: .infinity)
-                .layoutPriority(-1)
+                .layoutPriority(1)
 
             // Thinking / answer timer chips (preserve existing logic)
             if viewModel.thinkingTimeCountdown > 0 && viewModel.quizState == .askingQuestion {
@@ -234,7 +234,6 @@ struct QuestionView: View {
             waveformStrip
 
             micBlock
-                .layoutPriority(1)
 
             if showTextInput { textInputRow }
         }
@@ -258,7 +257,7 @@ struct QuestionView: View {
             .padding(.vertical, 10)
             .background(Theme.Hangs.Colors.infoAccent)
 
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 12) {
                 Text("[ QUERY ]")
                     .font(.hangsMonoLabel)
                     .foregroundColor(Theme.Hangs.Colors.infoAccent)
@@ -275,6 +274,7 @@ struct QuestionView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .accessibilityIdentifier("question.text")
                     }
+                    .frame(minHeight: 160, maxHeight: .infinity)
                 }
 
                 HStack(spacing: 8) {
@@ -287,8 +287,8 @@ struct QuestionView: View {
                         .tracking(2)
                 }
             }
-            .padding(24)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(20)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
         .background(Theme.Hangs.Colors.bgCard)
         .overlay(Rectangle().stroke(Theme.Hangs.Colors.infoAccent, lineWidth: 1))
@@ -321,12 +321,12 @@ struct QuestionView: View {
                 ZStack {
                     Rectangle()
                         .fill(Theme.Hangs.Colors.bgCard)
-                        .frame(width: 160, height: 160)
+                        .frame(width: 136, height: 136)
                         .overlay(Rectangle().stroke(Theme.Hangs.Colors.accent, lineWidth: micBorderWidth))
 
                     Rectangle()
                         .fill(Theme.Hangs.Colors.accent)
-                        .frame(width: 132, height: 132)
+                        .frame(width: 112, height: 112)
                         .modifier(ConditionalPulse(isActive: viewModel.quizState == .recording && !reduceMotion))
 
                     Image(systemName: "mic.fill")
@@ -350,7 +350,7 @@ struct QuestionView: View {
     }
 
     private var micIconSize: CGFloat {
-        viewModel.quizState == .recording ? 72 : 56
+        viewModel.quizState == .recording ? 60 : 46
     }
 
     private var micLabel: String {
@@ -379,17 +379,16 @@ struct QuestionView: View {
     // MARK: - MCQ body
 
     private func mcqBody(question: Question) -> some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 12) {
             questionCard(question: question)
                 .frame(maxHeight: .infinity)
-                .layoutPriority(-1)
+                .layoutPriority(1)
             MCQOptionPicker(
                 options: question.sortedAnswerOptions,
                 onSelect: { key, value in
                     Task { await viewModel.submitMCQAnswer(key: key, value: value) }
                 }
             )
-            .layoutPriority(1)
         }
         .frame(maxHeight: .infinity)
         .padding(.horizontal, 24)

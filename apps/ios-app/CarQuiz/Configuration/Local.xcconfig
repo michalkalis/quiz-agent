@@ -13,8 +13,11 @@ ENVIRONMENT_NAME = Local
 // MARK: - API Configuration
 API_BASE_URL = http:/$()/localhost:8002
 
-// MARK: - Sentry (empty = disabled for local dev)
-SENTRY_DSN =
+// MARK: - Sentry
+// Same DSN as Prod — events tagged with environment:local for filtering in Sentry UI.
+// Enables crash/log capture from debug builds so /check-crashes can analyze dev issues.
+// `$()` escape breaks the `//` token so xcconfig doesn't treat the rest of the line as a comment.
+SENTRY_DSN = https:/$()/c5440340d41535b4862af9385d9bc38c@o4511195958738944.ingest.de.sentry.io/4511196118188112
 
 // MARK: - Bundle Identifier
 // No suffix for local development

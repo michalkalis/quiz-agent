@@ -63,6 +63,7 @@ apps/ios-app/CarQuiz/vendor/
 # Claude Code local settings
 .claude/*.local.json
 .claude/.last-check
+.claude/scheduled_tasks.lock
 
 # Pencil design tool — scratch/untitled files
 untitled.pen

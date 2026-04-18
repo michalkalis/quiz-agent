@@ -14,7 +14,8 @@ ENVIRONMENT_NAME = Production
 API_BASE_URL = https:/$()/quiz-agent-api.fly.dev
 
 // MARK: - Sentry
-SENTRY_DSN = https://c5440340d41535b4862af9385d9bc38c@o4511195958738944.ingest.de.sentry.io/4511196118188112
+// `$()` escape breaks the `//` token so xcconfig doesn't treat the rest of the line as a comment.
+SENTRY_DSN = https:/$()/c5440340d41535b4862af9385d9bc38c@o4511195958738944.ingest.de.sentry.io/4511196118188112
 
 // MARK: - Bundle Identifier
 PRODUCT_BUNDLE_IDENTIFIER = $(BUNDLE_ID_BASE)

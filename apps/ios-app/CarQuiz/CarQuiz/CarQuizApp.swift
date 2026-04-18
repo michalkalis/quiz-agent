@@ -13,6 +13,10 @@ struct CarQuizApp: App {
     @StateObject private var appState = AppState()
 
     init() {
+        // Skip Sentry on simulator — only real-device debug + release builds report.
+        // Simulator runs are noisy (hot reloads, repeated launches) and would burn through quota.
+        guard !Config.isSimulator, !Config.sentryDSN.isEmpty else { return }
+
         SentrySDK.start { options in
             options.dsn = Config.sentryDSN
             options.environment = Config.environmentName.lowercased()

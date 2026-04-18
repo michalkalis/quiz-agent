@@ -77,9 +77,14 @@ platform :ios do
     next_build = [tf_latest, floor].max + 1
     UI.message("📦 Build number: tf_latest=#{tf_latest}, floor=#{floor}, next=#{next_build}")
 
-    increment_build_number(
-      xcodeproj: "CarQuiz.xcodeproj",
-      build_number: next_build
+    # Edit Info.plist directly via PlistBuddy. Using increment_build_number
+    # with xcodeproj: would route through agvtool, which silently no-ops when
+    # VERSIONING_SYSTEM isn't set to "apple-generic" and CURRENT_PROJECT_VERSION
+    # is inherited from xcconfig rather than being a target-level setting.
+    set_info_plist_value(
+      path: "CarQuiz/Info.plist",
+      key: "CFBundleVersion",
+      value: next_build.to_s
     )
 
     build_app(

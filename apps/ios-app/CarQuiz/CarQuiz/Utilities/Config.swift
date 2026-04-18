@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum Config {
+nonisolated enum Config {
     /// Base URL for the Quiz Agent API
     ///
     /// Read from Info.plist which gets populated from xcconfig files based on build configuration

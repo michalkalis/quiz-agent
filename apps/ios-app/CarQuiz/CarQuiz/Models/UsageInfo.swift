@@ -8,7 +8,7 @@
 import Foundation
 
 /// Usage information returned by GET /api/v1/usage/{user_id}
-struct UsageInfo: Codable, Sendable, Equatable {
+nonisolated struct UsageInfo: Codable, Sendable, Equatable {
     let userId: String
     let isPremium: Bool
     let questionsUsed: Int
@@ -41,7 +41,7 @@ struct UsageInfo: Codable, Sendable, Equatable {
 }
 
 /// Error detail returned by 429 response
-struct DailyLimitError: Codable, Sendable {
+nonisolated struct DailyLimitError: Codable, Sendable {
     let error: String
     let questionsUsed: Int
     let questionsLimit: Int

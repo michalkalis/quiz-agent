@@ -14,25 +14,27 @@ import os
 import Sentry
 
 extension Logger {
-    private static let subsystem = Bundle.main.bundleIdentifier ?? "com.carquiz"
+    // Hardcoded subsystem (Bundle.main is MainActor in Swift 6 strict concurrency).
+    // Logger is a Sendable value type so these static immutables are safe across threads.
+    nonisolated private static let subsystem = "com.missinghue.hangs"
 
     /// Quiz flow: state transitions, question lifecycle, scoring
-    static let quiz = Logger(subsystem: subsystem, category: "quiz")
+    nonisolated static let quiz = Logger(subsystem: subsystem, category: "quiz")
 
     /// Audio: playback, recording, audio session management
-    static let audio = Logger(subsystem: subsystem, category: "audio")
+    nonisolated static let audio = Logger(subsystem: subsystem, category: "audio")
 
     /// Network: API calls, responses, errors
-    static let network = Logger(subsystem: subsystem, category: "network")
+    nonisolated static let network = Logger(subsystem: subsystem, category: "network")
 
     /// Voice commands: SpeechAnalyzer, command recognition
-    static let voice = Logger(subsystem: subsystem, category: "voice")
+    nonisolated static let voice = Logger(subsystem: subsystem, category: "voice")
 
     /// Speech-to-text: ElevenLabs streaming STT
-    static let stt = Logger(subsystem: subsystem, category: "stt")
+    nonisolated static let stt = Logger(subsystem: subsystem, category: "stt")
 
     /// Persistence: UserDefaults, question history
-    static let persistence = Logger(subsystem: subsystem, category: "persistence")
+    nonisolated static let persistence = Logger(subsystem: subsystem, category: "persistence")
 }
 
 /// Sentry Structured Log category — matches `Logger` categories above.
@@ -45,15 +47,15 @@ enum LogCategory: String {
 /// Use alongside `Logger.<category>.info/warn/error` at critical points only — not every debug print.
 /// Default defensive: never pass raw user speech/transcripts as attribute values; use metadata (length, confidence).
 enum SentryLog {
-    static func info(_ message: String, category: LogCategory, attributes: [String: Any] = [:]) {
+    nonisolated static func info(_ message: String, category: LogCategory, attributes: [String: Any] = [:]) {
         SentrySDK.logger.info(message, attributes: attributes.merging(["category": category.rawValue]) { current, _ in current })
     }
 
-    static func warn(_ message: String, category: LogCategory, attributes: [String: Any] = [:]) {
+    nonisolated static func warn(_ message: String, category: LogCategory, attributes: [String: Any] = [:]) {
         SentrySDK.logger.warn(message, attributes: attributes.merging(["category": category.rawValue]) { current, _ in current })
     }
 
-    static func error(_ message: String, category: LogCategory, attributes: [String: Any] = [:]) {
+    nonisolated static func error(_ message: String, category: LogCategory, attributes: [String: Any] = [:]) {
         SentrySDK.logger.error(message, attributes: attributes.merging(["category": category.rawValue]) { current, _ in current })
     }
 }

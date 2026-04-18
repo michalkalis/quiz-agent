@@ -2,7 +2,7 @@
 //  ResultView.swift
 //  CarQuiz
 //
-//  Answer evaluation and feedback display matching Pencil design
+//  Hangs redesign result screen — green/red verdict cards, answer comparison, source/explanation.
 //
 
 import SwiftUI
@@ -18,182 +18,75 @@ struct ResultView: View {
     @State private var questionFlagged = false
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: Theme.Spacing.lg) {
-                // MARK: - Header Section
-                // Drag indicator pill
-                Capsule()
-                    .fill(Theme.Colors.textSecondary.opacity(0.4))
-                    .frame(width: 36, height: 5)
-                    .padding(.top, Theme.Spacing.sm)
-                    .accessibilityHidden(true)
-
-                // Inline header: Q X/10 • Y pts | Close button
-                HStack {
-                    // Progress and score inline
-                    if let session = viewModel.currentSession {
-                        Text("Q \(viewModel.questionsAnswered)/\(session.maxQuestions)  •  \(Int(viewModel.score)) pts")
-                            .font(.textMDMedium)
-                            .foregroundColor(Theme.Colors.textSecondary)
-                            .accessibilityLabel("Question \(viewModel.questionsAnswered) of \(session.maxQuestions), \(Int(viewModel.score)) points")
-                    }
-
-                    Spacer()
-
-                    // Close button
-                    Button {
-                        showQuitConfirmation = true
-                    } label: {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(Theme.Colors.textSecondary)
-                            .frame(width: 44, height: 44)
-                            .background(Theme.Colors.bgCard)
-                            .clipShape(Circle())
-                    }
-                    .accessibilityLabel("End quiz")
-                    .accessibilityIdentifier("result.endQuiz")
-                }
-                .padding(.horizontal)
-
-                // MARK: - Result Badge
-                if let evaluation = viewModel.resultEvaluation {
-                    VStack(spacing: Theme.Spacing.lg) {
-                        if showEvaluation {
-                            ResultBadge(
-                                type: resultBadgeType(for: evaluation.result),
-                                points: evaluation.points,
-                                isMinimal: evaluation.result == .skipped || evaluation.result == .incorrect
-                            )
-                            .transition(.scale.combined(with: .opacity))
-                        } else {
-                            Text("Let's see...")
-                                .font(.displayLG)
-                                .foregroundColor(Theme.Colors.textSecondary)
-                                .padding(.vertical, Theme.Spacing.xl)
-                        }
-
-                        // Image reveal (for image questions)
-                        if let question = viewModel.resultQuestion,
-                           question.hasImage,
-                           let mediaUrl = question.mediaUrl,
-                           let url = URL(string: mediaUrl),
-                           showEvaluation {
-                            AsyncImage(url: url) { phase in
-                                if case .success(let image) = phase {
-                                    image
-                                        .resizable()
-                                        .aspectRatio(contentMode: .fit)
-                                        .frame(maxHeight: 200)
-                                        .cornerRadius(Theme.Radius.lg)
-                                }
-                            }
-                            .accessibilityLabel("Question image")
-                            .padding(.horizontal)
-                        }
-
-                        // Answer comparison
-                        VStack(spacing: Theme.Spacing.md) {
-                            // User's answer
-                            AnswerCard(
-                                label: "Your Answer:",
-                                answer: evaluation.userAnswer,
-                                style: .neutral
-                            )
-
-                            // Correct answer (shown after evaluation)
-                            if showEvaluation {
-                                AnswerCard(
-                                    label: "Correct Answer:",
-                                    answer: evaluation.correctAnswer,
-                                    style: .correct
-                                )
-                            }
-                        }
-                        .padding(.horizontal)
-
-                        // Explanation card (educational context)
-                        if showEvaluation,
-                           let explanation = evaluation.explanation ?? viewModel.resultQuestion?.explanation {
-                            ExplanationCard(explanation: explanation)
-                                .padding(.horizontal)
-                        }
-
-                        // Source attribution section
-                        if let sourceExcerpt = viewModel.resultQuestion?.sourceExcerpt,
-                           viewModel.resultQuestion?.sourceUrl != nil,
-                           showEvaluation {
-                            SourceCard(
-                                excerpt: sourceExcerpt,
-                                onReadMore: { showSourceWebView = true }
-                            )
-                            .padding(.horizontal)
-                        }
-                    }
-                } else {
-                    ProgressView()
-                        .scaleEffect(1.5)
-                        .tint(Theme.Colors.accentPrimary)
-                        .padding(.vertical, Theme.Spacing.xxl)
-                }
-
-                // MARK: - Question Rating
-                if showEvaluation {
-                    HStack {
-                        QuestionRatingRow(rating: $questionRating) { rating in
-                            viewModel.rateQuestion(rating)
-                        }
-
-                        Spacer()
-
-                        FlagQuestionButton(isFlagged: $questionFlagged) {
-                            viewModel.flagQuestion(reason: "User reported incorrect answer")
-                        }
-                    }
-                    .padding(.horizontal)
-
-                    if let model = viewModel.currentQuestion?.generatedBy {
-                        Text(model)
-                            .font(.caption2)
-                            .foregroundStyle(Theme.Colors.textTertiary)
-                            .padding(.top, 2)
-                    }
-                }
-
-                // Bottom spacer so content doesn't hide behind sticky bar
-                Spacer()
-                    .frame(height: Theme.Spacing.xxl + Theme.Spacing.xl)
-            }
-        }
-        .background(Theme.Colors.bgPrimary)
-        .safeAreaInset(edge: .bottom) {
-            // MARK: - Sticky Bottom Bar
-            StickyBottomBar(
-                viewModel: viewModel,
-                autoAdvanceCountdown: viewModel.autoAdvanceCountdown,
-                autoAdvanceEnabled: viewModel.autoAdvanceEnabled,
-                isPaused: viewModel.currentQuestionPaused
+        VStack(spacing: 0) {
+            HangsStatusBar(
+                leading: "// RESULT.EVAL",
+                trailing: "STATUS: \(resultStatusText)",
+                leadingColor: Theme.Hangs.Colors.accent,
+                trailingDotColor: resultDotColor
             )
+            HangsDivider()
+
+            headerTiles
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    if let evaluation = viewModel.resultEvaluation, showEvaluation {
+                        verdictCard(evaluation: evaluation)
+                        answerComparison(evaluation: evaluation)
+
+                        if let explanation = evaluation.explanation ?? viewModel.resultQuestion?.explanation {
+                            explanationBlock(text: explanation)
+                        }
+
+                        if viewModel.resultQuestion?.sourceExcerpt != nil,
+                           viewModel.resultQuestion?.sourceUrl != nil {
+                            viewSourceButton
+                        }
+
+                        if let model = viewModel.currentQuestion?.generatedBy {
+                            Text(model)
+                                .font(.system(size: 9, weight: .regular, design: .monospaced))
+                                .foregroundColor(Theme.Hangs.Colors.textTertiary)
+                                .frame(maxWidth: .infinity, alignment: .center)
+                        }
+
+                        HStack {
+                            ratingRow
+                            Spacer()
+                            flagButton
+                        }
+                    } else {
+                        ProgressView()
+                            .tint(Theme.Hangs.Colors.accent)
+                            .frame(maxWidth: .infinity)
+                            .padding(.top, 40)
+                    }
+                }
+                .padding(.horizontal, 24)
+                .padding(.bottom, 16)
+            }
+
+            if showEvaluation {
+                nextCountdown
+            }
+
+            bottomBar
+
+            HangsFooterBar(leading: "◢ REG.MARK.04", trailing: footerStatus)
         }
-        .interactiveMinimize(
-            isMinimized: $viewModel.isMinimized,
-            canMinimize: viewModel.canMinimize
-        )
-        .animation(reduceMotion ? nil : .spring(response: 0.5, dampingFraction: 0.7), value: showEvaluation)
+        .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
+        .preferredColorScheme(.dark)
+        .interactiveMinimize(isMinimized: $viewModel.isMinimized, canMinimize: viewModel.canMinimize)
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.3), value: showEvaluation)
         .sensoryFeedback(resultHaptic, trigger: showEvaluation)
-        .onAppear {
-            showEvaluation = true
-        }
+        .onAppear { showEvaluation = true }
         .confirmationDialog(
             "End Quiz?",
             isPresented: $showQuitConfirmation,
             titleVisibility: .visible
         ) {
-            Button("End Quiz", role: .destructive) {
-                Task {
-                    await viewModel.endQuiz()
-                }
-            }
+            Button("End Quiz", role: .destructive) { Task { await viewModel.endQuiz() } }
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("Are you sure you want to quit? Your progress will be saved, but the current session will end.")
@@ -205,7 +98,322 @@ struct ResultView: View {
         }
     }
 
-    // MARK: - Helper Functions
+    // MARK: - Header tiles
+
+    private var headerTiles: some View {
+        HStack(spacing: 8) {
+            ResultView.tile(label: "QUESTION", value: progressText)
+            ResultView.tile(label: "SCORE", value: String(format: "%.1f", viewModel.score), valueColor: Theme.Hangs.Colors.infoAccent)
+            streakPill
+            Spacer()
+            closeButton
+        }
+        .padding(.horizontal, 24)
+        .padding(.top, 16)
+        .padding(.bottom, 12)
+    }
+
+    private static func tile(label: String, value: String, valueColor: Color = Theme.Hangs.Colors.textPrimary) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(label)
+                .font(.system(size: 9, weight: .regular, design: .monospaced))
+                .foregroundColor(Theme.Hangs.Colors.textTertiary)
+                .tracking(1.5)
+            Text(value)
+                .font(.system(size: 14, weight: .bold, design: .monospaced))
+                .foregroundColor(valueColor)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(Theme.Hangs.Colors.bgCard)
+        .overlay(Rectangle().stroke(Theme.Hangs.Colors.divider, lineWidth: 1))
+    }
+
+    private var streakPill: some View {
+        HStack(spacing: 5) {
+            Image(systemName: "flame.fill")
+                .font(.system(size: 10, weight: .bold))
+            Text("\(viewModel.quizStats.currentStreak) STREAK")
+                .font(.system(size: 10, weight: .bold, design: .monospaced))
+                .tracking(1.5)
+        }
+        .foregroundColor(Theme.Hangs.Colors.bg)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(Theme.Hangs.Colors.infoAccent)
+    }
+
+    private var closeButton: some View {
+        Button { showQuitConfirmation = true } label: {
+            Image(systemName: "xmark")
+                .font(.system(size: 14, weight: .bold))
+                .foregroundColor(Theme.Hangs.Colors.textSecondary)
+                .frame(width: 36, height: 36)
+                .overlay(Rectangle().stroke(Theme.Hangs.Colors.divider, lineWidth: 1))
+        }
+        .accessibilityLabel("End quiz")
+        .accessibilityIdentifier("result.endQuiz")
+    }
+
+    private var progressText: String {
+        let total = viewModel.currentSession?.maxQuestions ?? 10
+        return String(format: "%02d / %02d", viewModel.questionsAnswered, total)
+    }
+
+    // MARK: - Verdict card
+
+    @ViewBuilder
+    private func verdictCard(evaluation: Evaluation) -> some View {
+        if evaluation.isCorrect {
+            verdictCardCorrect(evaluation: evaluation)
+        } else {
+            verdictCardIncorrect(evaluation: evaluation)
+        }
+    }
+
+    private func verdictCardCorrect(evaluation: Evaluation) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                Text("◢ CORRECT")
+                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    .tracking(2)
+                Rectangle().fill(Color(white: 0.1).opacity(0.3)).frame(height: 1)
+                Text("EVAL.PASS")
+                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+            }
+            .foregroundColor(Color(white: 0.1))
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .background(Theme.Hangs.Colors.success)
+
+            HStack(alignment: .top, spacing: 16) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("[ VERDICT ]")
+                        .font(.hangsMonoLabel)
+                        .foregroundColor(Theme.Hangs.Colors.success)
+                        .tracking(2)
+                    Text("CORRECT")
+                        .font(.system(size: 38, weight: .black))
+                        .tracking(-0.5)
+                        .foregroundColor(Theme.Hangs.Colors.textPrimary)
+                }
+                Spacer()
+                VStack(alignment: .trailing, spacing: 4) {
+                    Text("POINTS")
+                        .font(.hangsMonoLabel)
+                        .foregroundColor(Theme.Hangs.Colors.success)
+                        .tracking(1.5)
+                    Text(String(format: "+%.1f", evaluation.points))
+                        .font(.system(size: 38, weight: .heavy, design: .monospaced))
+                        .foregroundColor(Theme.Hangs.Colors.success)
+                }
+            }
+            .padding(20)
+        }
+        .background(Color(hex: "#0F2A1A"))
+        .overlay(Rectangle().stroke(Theme.Hangs.Colors.success, lineWidth: 1.5))
+    }
+
+    private func verdictCardIncorrect(evaluation: Evaluation) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Circle().fill(Theme.Hangs.Colors.error).frame(width: 6, height: 6)
+                Text("// RESULT_ANALYSIS")
+                    .font(.system(size: 11, weight: .regular, design: .monospaced))
+                    .foregroundColor(Theme.Hangs.Colors.error)
+            }
+            VStack(alignment: .leading, spacing: 4) {
+                Text("ANSWER")
+                    .font(.system(size: 50, weight: .black))
+                    .tracking(-0.5)
+                    .foregroundColor(Theme.Hangs.Colors.textPrimary)
+                Text("INCORRECT!")
+                    .font(.system(size: 50, weight: .black))
+                    .tracking(-0.5)
+                    .foregroundColor(Theme.Hangs.Colors.textPrimary)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 2)
+                    .background(Theme.Hangs.Colors.error)
+            }
+        }
+    }
+
+    // MARK: - Answer comparison
+
+    private func answerComparison(evaluation: Evaluation) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            comparisonRow(label: "YOUR_ANSWER", value: evaluation.userAnswer, labelColor: Theme.Hangs.Colors.textTertiary, valueColor: Theme.Hangs.Colors.textPrimary)
+            Rectangle().fill(Theme.Hangs.Colors.divider).frame(height: 1)
+            comparisonRow(label: "CORRECT_ANSWER", value: evaluation.correctAnswer, labelColor: Theme.Hangs.Colors.success, valueColor: Theme.Hangs.Colors.success)
+        }
+        .background(Theme.Hangs.Colors.bgCard)
+        .overlay(Rectangle().stroke(evaluation.isCorrect ? Theme.Hangs.Colors.divider : Theme.Hangs.Colors.error, lineWidth: 1))
+    }
+
+    private func comparisonRow(label: String, value: String, labelColor: Color, valueColor: Color) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(label)
+                .font(.hangsMonoLabel)
+                .foregroundColor(labelColor)
+                .tracking(1.8)
+            Text(value)
+                .font(.system(size: 16, weight: .bold, design: .monospaced))
+                .foregroundColor(valueColor)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+    }
+
+    // MARK: - Explanation
+
+    private func explanationBlock(text: String) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 6) {
+                Text("◢")
+                    .font(.hangsMonoLabel)
+                    .foregroundColor(Theme.Hangs.Colors.accent)
+                Text("[ EXPLANATION ]")
+                    .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                    .foregroundColor(Theme.Hangs.Colors.accent)
+                    .tracking(2)
+                Rectangle().fill(Theme.Hangs.Colors.divider).frame(height: 1)
+            }
+            Text(text)
+                .font(.system(size: 14))
+                .foregroundColor(Theme.Hangs.Colors.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    // MARK: - View source
+
+    private var viewSourceButton: some View {
+        Button { showSourceWebView = true } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "arrow.up.forward.square")
+                    .font(.system(size: 12, weight: .semibold))
+                Text("VIEW SOURCE")
+                    .font(.system(size: 12, weight: .semibold, design: .monospaced))
+                    .tracking(2)
+            }
+            .foregroundColor(Theme.Hangs.Colors.textSecondary)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .overlay(Rectangle().stroke(Theme.Hangs.Colors.divider, lineWidth: 1))
+        }
+        .accessibilityLabel("View source")
+    }
+
+    // MARK: - Rating + flag
+
+    private var ratingRow: some View {
+        HStack(spacing: 0) {
+            ForEach(1...5, id: \.self) { star in
+                Button {
+                    questionRating = star
+                    viewModel.rateQuestion(star)
+                } label: {
+                    Image(systemName: star <= questionRating ? "star.fill" : "star")
+                        .font(.system(size: 14))
+                        .foregroundColor(star <= questionRating ? Theme.Hangs.Colors.warning : Theme.Hangs.Colors.textTertiary)
+                        .frame(minWidth: 36, minHeight: 36)
+                }
+                .accessibilityLabel("\(star) star\(star == 1 ? "" : "s")")
+                .accessibilityIdentifier("result.ratingStar.\(star)")
+            }
+        }
+    }
+
+    private var flagButton: some View {
+        Button {
+            questionFlagged = true
+            viewModel.flagQuestion(reason: "User reported incorrect answer")
+        } label: {
+            Image(systemName: questionFlagged ? "flag.fill" : "flag")
+                .font(.system(size: 14))
+                .foregroundColor(questionFlagged ? Theme.Hangs.Colors.error : Theme.Hangs.Colors.textTertiary)
+                .frame(minWidth: 36, minHeight: 36)
+        }
+        .disabled(questionFlagged)
+        .accessibilityLabel(questionFlagged ? "Reported" : "Report question")
+        .accessibilityIdentifier("result.flagQuestion")
+    }
+
+    // MARK: - Next countdown
+
+    @ViewBuilder
+    private var nextCountdown: some View {
+        if viewModel.autoAdvanceEnabled && !viewModel.currentQuestionPaused && viewModel.autoAdvanceCountdown > 0 {
+            VStack(spacing: 6) {
+                HStack(spacing: 10) {
+                    Text("◢ NEXT IN")
+                        .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                        .foregroundColor(Theme.Hangs.Colors.accent)
+                        .tracking(2)
+                    Rectangle().fill(Theme.Hangs.Colors.divider).frame(height: 1)
+                    Text(String(format: "%02ds", viewModel.autoAdvanceCountdown))
+                        .font(.system(size: 16, weight: .bold, design: .monospaced))
+                        .foregroundColor(Theme.Hangs.Colors.textPrimary)
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                .overlay(Rectangle().stroke(Theme.Hangs.Colors.infoAccent, lineWidth: 1))
+
+                // Thin progress bar
+                GeometryReader { geo in
+                    let total = max(1, viewModel.settings.autoAdvanceDelay)
+                    let fraction = CGFloat(viewModel.autoAdvanceCountdown) / CGFloat(total)
+                    Rectangle()
+                        .fill(Theme.Hangs.Colors.infoAccent)
+                        .frame(width: geo.size.width * fraction, height: 3)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Theme.Hangs.Colors.bgCard)
+                }
+                .frame(height: 3)
+            }
+            .padding(.horizontal, 24)
+            .padding(.bottom, 8)
+        }
+    }
+
+    // MARK: - Bottom bar
+
+    private var bottomBar: some View {
+        VStack(spacing: 10) {
+            HangsPrimaryButton(
+                title: continueTitle,
+                icon: "arrow.right"
+            ) {
+                viewModel.continueToNext()
+            }
+            .accessibilityIdentifier("result.continue")
+
+            if viewModel.autoAdvanceEnabled && !viewModel.currentQuestionPaused {
+                Button("Stay Here") { viewModel.pauseQuiz() }
+                    .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                    .foregroundColor(Theme.Hangs.Colors.textSecondary)
+                    .accessibilityIdentifier("result.stayHere")
+            } else if viewModel.currentQuestionPaused {
+                Text("PAUSED")
+                    .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                    .foregroundColor(Theme.Hangs.Colors.textSecondary)
+                    .tracking(2)
+            }
+        }
+        .padding(.horizontal, 24)
+        .padding(.bottom, 12)
+    }
+
+    private var continueTitle: String {
+        if viewModel.autoAdvanceEnabled && !viewModel.currentQuestionPaused && viewModel.autoAdvanceCountdown > 0 {
+            return "CONTINUE (\(viewModel.autoAdvanceCountdown)s)"
+        }
+        return "CONTINUE"
+    }
+
+    // MARK: - Derived
 
     private var resultHaptic: SensoryFeedback {
         guard let evaluation = viewModel.resultEvaluation else { return .impact }
@@ -216,267 +424,20 @@ struct ResultView: View {
         }
     }
 
-    private func resultBadgeType(for result: Evaluation.EvaluationResult) -> ResultBadge.ResultType {
-        switch result {
-        case .correct:
-            return .correct
-        case .incorrect:
-            return .incorrect
-        case .partiallyCorrect, .partiallyIncorrect:
-            return .partiallyCorrect
-        case .skipped:
-            return .skipped
-        }
-    }
-}
-
-// MARK: - Sticky Bottom Bar
-
-private struct StickyBottomBar: View {
-    @ObservedObject var viewModel: QuizViewModel
-    let autoAdvanceCountdown: Int
-    let autoAdvanceEnabled: Bool
-    let isPaused: Bool
-
-    var body: some View {
-        VStack(spacing: Theme.Spacing.sm) {
-            // Status indicator above buttons
-            if autoAdvanceEnabled && !isPaused && autoAdvanceCountdown == 0 {
-                HStack(spacing: Theme.Spacing.xs) {
-                    ProgressView()
-                        .scaleEffect(0.8)
-                        .tint(Theme.Colors.accentPrimary)
-                        .accessibilityHidden(true)
-                    Text("Loading next question...")
-                        .font(.textXS)
-                        .foregroundColor(Theme.Colors.textSecondary)
-                }
-                .accessibilityElement(children: .combine)
-                .accessibilityLabel("Loading next question")
-            } else if isPaused {
-                Text("Staying on this question")
-                    .font(.textXS)
-                    .foregroundColor(Theme.Colors.textSecondary)
-                    .accessibilityLabel("Paused, staying on this question")
-            }
-
-            // Primary continue button
-            PrimaryButton(title: continueTitle, icon: "arrow.right") {
-                viewModel.continueToNext()
-            }
-            .accessibilityIdentifier("result.continue")
-
-            // Stay Here secondary text button
-            Button("Stay Here") {
-                viewModel.pauseQuiz()
-            }
-            .accessibilityLabel("Stay Here")
-            .accessibilityHint("Pause auto-advance and stay on this result")
-            .accessibilityIdentifier("result.stayHere")
-            .font(.textMDMedium)
-            .foregroundColor(Theme.Colors.textSecondary)
-            .frame(minHeight: 44)
-            .contentShape(Rectangle())
-            .disabled(isPaused)
-        }
-        .padding(.horizontal)
-        .padding(.top, Theme.Spacing.sm)
-        .padding(.bottom, Theme.Spacing.xs)
-        .background(
-            Theme.Colors.bgPrimary
-                .shadow(color: Theme.Shadows.elevationColor, radius: Theme.Shadows.elevationRadius, y: -Theme.Shadows.elevationY)
-        )
+    private var resultStatusText: String {
+        guard let eval = viewModel.resultEvaluation else { return "PENDING" }
+        return eval.isCorrect ? "OK" : "FAIL"
     }
 
-    private var continueTitle: String {
-        if autoAdvanceEnabled && !isPaused && autoAdvanceCountdown > 0 {
-            return "Continue (\(autoAdvanceCountdown)s)"
-        }
-        return "Continue"
-    }
-}
-
-// MARK: - Answer Card Component
-
-private struct AnswerCard: View {
-    enum Style {
-        case neutral
-        case correct
+    private var resultDotColor: Color {
+        guard let eval = viewModel.resultEvaluation else { return Theme.Hangs.Colors.textSecondary }
+        return eval.isCorrect ? Theme.Hangs.Colors.success : Theme.Hangs.Colors.error
     }
 
-    let label: String
-    let answer: String
-    let style: Style
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
-            Text(label)
-                .font(.labelSM)
-                .foregroundColor(Theme.Colors.textTertiary)
-                .textCase(.uppercase)
-
-            Text(answer)
-                .font(.textMD)
-                .foregroundColor(Theme.Colors.textPrimary)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(Theme.Spacing.md)
-        .background(backgroundColor)
-        .cornerRadius(Theme.Radius.md)
-        .overlay(
-            RoundedRectangle(cornerRadius: Theme.Radius.md)
-                .stroke(borderColor, lineWidth: 1.5)
-        )
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(label) \(answer)")
-    }
-
-    private var backgroundColor: Color {
-        switch style {
-        case .neutral:
-            return Theme.Colors.bgCard
-        case .correct:
-            return Theme.Colors.successBg
-        }
-    }
-
-    private var borderColor: Color {
-        switch style {
-        case .neutral:
-            return Theme.Colors.border
-        case .correct:
-            return Theme.Colors.success.opacity(0.3)
-        }
-    }
-}
-
-// MARK: - Source Card Component
-
-private struct SourceCard: View {
-    let excerpt: String
-    let onReadMore: () -> Void
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
-            HStack(spacing: Theme.Spacing.xs) {
-                Image(systemName: "link.circle.fill")
-                    .foregroundColor(Theme.Colors.accentPrimary)
-                Text("Source")
-                    .font(.displayMD)
-                    .foregroundColor(Theme.Colors.textPrimary)
-            }
-
-            Text(excerpt)
-                .font(.textSM)
-                .foregroundColor(Theme.Colors.textSecondary)
-                .padding(Theme.Spacing.md)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Theme.Colors.accentPrimarySoft)
-                .cornerRadius(Theme.Radius.sm)
-
-            Button(action: onReadMore) {
-                HStack(spacing: Theme.Spacing.xs) {
-                    Text("Read Full Article")
-                    Image(systemName: "arrow.up.forward.circle")
-                        .accessibilityHidden(true)
-                }
-                .font(.textSM)
-                .foregroundColor(Theme.Colors.accentPrimary)
-            }
-            .accessibilityLabel("Read Full Article")
-            .accessibilityHint("Opens the source article in a browser")
-        }
-        .padding(Theme.Spacing.md)
-        .background(Theme.Colors.bgCard)
-        .cornerRadius(Theme.Radius.md)
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel("Source information")
-    }
-}
-
-// MARK: - Explanation Card
-
-private struct ExplanationCard: View {
-    let explanation: String
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
-            HStack(spacing: Theme.Spacing.xs) {
-                Image(systemName: "lightbulb.fill")
-                    .foregroundColor(Theme.Colors.warning)
-                Text("Did You Know?")
-                    .font(.displayMD)
-                    .foregroundColor(Theme.Colors.textPrimary)
-            }
-
-            Text(explanation)
-                .font(.textSM)
-                .foregroundColor(Theme.Colors.textSecondary)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .padding(Theme.Spacing.md)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.Colors.warningBg)
-        .cornerRadius(Theme.Radius.md)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("Did you know? \(explanation)")
-    }
-}
-
-// MARK: - Question Rating Row
-
-private struct QuestionRatingRow: View {
-    @Binding var rating: Int
-    let onRate: (Int) -> Void
-
-    var body: some View {
-        HStack(spacing: Theme.Spacing.sm) {
-            Text("Rate this question:")
-                .font(.textXS)
-                .foregroundColor(Theme.Colors.textSecondary)
-
-            HStack(spacing: 0) {
-                ForEach(1...5, id: \.self) { star in
-                    Button {
-                        rating = star
-                        onRate(star)
-                    } label: {
-                        Image(systemName: star <= rating ? "star.fill" : "star")
-                            .font(.textMD)
-                            .foregroundColor(star <= rating ? Theme.Colors.warning : Theme.Colors.textMuted)
-                            .frame(minWidth: 44, minHeight: 44)
-                            .contentShape(Rectangle())
-                    }
-                    .accessibilityLabel("\(star) star\(star == 1 ? "" : "s")")
-                    .accessibilityIdentifier("result.ratingStar.\(star)")
-                }
-            }
-        }
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel("Rate this question, \(rating > 0 ? "\(rating) of 5 stars" : "not rated")")
-    }
-}
-
-// MARK: - Flag Question Button
-
-private struct FlagQuestionButton: View {
-    @Binding var isFlagged: Bool
-    let onFlag: () -> Void
-
-    var body: some View {
-        Button {
-            isFlagged = true
-            onFlag()
-        } label: {
-            Image(systemName: isFlagged ? "flag.fill" : "flag")
-                .font(.textMD)
-                .foregroundColor(isFlagged ? Theme.Colors.error : Theme.Colors.textMuted)
-                .frame(minWidth: 44, minHeight: 44)
-                .contentShape(Rectangle())
-        }
-        .disabled(isFlagged)
-        .accessibilityLabel(isFlagged ? "Question reported" : "Report incorrect answer")
-        .accessibilityIdentifier("result.flagQuestion")
+    private var footerStatus: String {
+        guard let eval = viewModel.resultEvaluation else { return "Q.\(viewModel.questionsAnswered)" }
+        let sign = eval.points >= 0 ? "+" : ""
+        return String(format: "Q.%03d  ●  %@%.1f PTS", viewModel.questionsAnswered, sign, eval.points)
     }
 }
 

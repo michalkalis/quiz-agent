@@ -7,7 +7,7 @@
 
 // MARK: - App Information
 APP_NAME = CarQuiz
-APP_DISPLAY_NAME = CarQuiz
+APP_DISPLAY_NAME = Hangs
 
 // MARK: - Bundle Identifier Base
 // Environment-specific configs will append a suffix to this

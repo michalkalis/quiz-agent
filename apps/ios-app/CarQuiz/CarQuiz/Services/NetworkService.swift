@@ -615,12 +615,12 @@ actor NetworkService: NetworkServiceProtocol {
 // MARK: - Error Types
 
 /// Backend error response structure
-private struct ErrorResponse: Decodable {
+nonisolated private struct ErrorResponse: Decodable, Sendable {
     let detail: String
 }
 
 /// Backend 429 response wraps DailyLimitError in "detail" field
-private struct DailyLimitErrorWrapper: Decodable {
+nonisolated private struct DailyLimitErrorWrapper: Decodable, Sendable {
     let detail: DailyLimitError
 }
 

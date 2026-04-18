@@ -2,7 +2,8 @@
 //  HomeView.swift
 //  CarQuiz
 //
-//  Welcome screen and quiz start matching Pencil design
+//  Hangs redesign home screen — terminal/cyberpunk aesthetic, dark-only.
+//  See docs/issues/issue-14-hangs-redesign.md
 //
 
 import SwiftUI
@@ -11,146 +12,24 @@ struct HomeView: View {
     @ObservedObject var viewModel: QuizViewModel
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: Theme.Spacing.lg) {
-                // MARK: - Header Section
+        VStack(spacing: 0) {
+            HangsStatusBar(leading: "// HANGS.SYS", trailing: "v2.1.0 • READY")
+            HangsDivider()
 
-                VStack(spacing: Theme.Spacing.sm) {
-                    AppLogo(size: 80)
-                        .accessibilityHidden(true)
-
-                    Text("CarQuiz")
-                        .font(.displayXXL)
-                        .foregroundColor(Theme.Colors.textPrimary)
-
-                    Text("Hands-Free Trivia While You Drive")
-                        .font(.textSM)
-                        .foregroundColor(Theme.Colors.textSecondary)
-                        .multilineTextAlignment(.center)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    heroSection
+                    statsSection
+                    quickConfigSection
+                    actionButtons
                 }
-                .accessibilityElement(children: .combine)
-                .padding(.top, Theme.Spacing.lg)
-
-                // MARK: - Quick Settings Section
-
-                VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
-                    Text("Quick Settings")
-                        .font(.displayMD)
-                        .foregroundColor(Theme.Colors.textPrimary)
-                        .padding(.horizontal, 4)
-
-                    VStack(spacing: Theme.Spacing.xs) {
-                        // Language
-                        QuickSettingRow(
-                            icon: "globe",
-                            title: "Language",
-                            value: Language.forCode(viewModel.settings.language)?.nativeName ?? "Unknown"
-                        ) {
-                            Menu {
-                                ForEach(Language.supportedLanguages) { language in
-                                    Button(language.nativeName) {
-                                        viewModel.settings.language = language.id
-                                    }
-                                }
-                            } label: {
-                                settingsMenuLabel(value: Language.forCode(viewModel.settings.language)?.nativeName ?? "Select")
-                            }
-                            .accessibilityIdentifier("home.languagePicker")
-                        }
-
-                        // Difficulty
-                        QuickSettingRow(
-                            icon: "chart.bar",
-                            title: "Difficulty",
-                            value: viewModel.settings.difficultyDisplayName()
-                        ) {
-                            Menu {
-                                ForEach(Config.difficultyOptions, id: \.0) { id, display in
-                                    Button(display) {
-                                        viewModel.settings.difficulty = id
-                                    }
-                                }
-                            } label: {
-                                settingsMenuLabel(value: viewModel.settings.difficultyDisplayName())
-                            }
-                            .accessibilityIdentifier("home.difficultyPicker")
-                        }
-
-                        // Category
-                        QuickSettingRow(
-                            icon: "tag",
-                            title: "Categories",
-                            value: viewModel.settings.categoryDisplayName()
-                        ) {
-                            Menu {
-                                ForEach(Config.categoryOptions, id: \.id) { option in
-                                    Button(option.display) {
-                                        viewModel.settings.category = option.id
-                                    }
-                                }
-                            } label: {
-                                settingsMenuLabel(value: viewModel.settings.categoryDisplayName())
-                            }
-                            .accessibilityIdentifier("home.categoryPicker")
-                        }
-                    }
-                }
-                .padding(.horizontal, Theme.Spacing.md)
-
-                // MARK: - Usage Badge
-
-                if let usage = viewModel.usageInfo, !usage.isPremium {
-                    HStack(spacing: Theme.Spacing.xs) {
-                        Image(systemName: usage.isLimitReached ? "exclamationmark.triangle" : "sparkle")
-                            .foregroundColor(usage.isLimitReached ? Theme.Colors.warning : Theme.Colors.accentPrimary)
-                            .accessibilityHidden(true)
-                        Text(usageText(usage))
-                            .font(.textSM)
-                            .foregroundColor(Theme.Colors.textSecondary)
-                    }
-                    .padding(.horizontal, Theme.Spacing.md)
-                    .padding(.vertical, Theme.Spacing.sm)
-                    .background(Theme.Colors.bgCard)
-                    .cornerRadius(Theme.Radius.xl)
-                    .accessibilityLabel(usageAccessibilityLabel(usage))
-                }
-
-                Spacer(minLength: Theme.Spacing.lg)
-
-                // MARK: - Action Buttons
-
-                VStack(spacing: Theme.Spacing.sm) {
-                    PrimaryButton(
-                        title: "Start Quiz",
-                        icon: "play.fill",
-                        isLoading: viewModel.quizState == .startingQuiz
-                    ) {
-                        Task {
-                            await viewModel.startNewQuiz()
-                        }
-                    }
-                    .accessibilityIdentifier("home.startQuiz")
-
-                    NavigationLink {
-                        SettingsView(viewModel: viewModel)
-                    } label: {
-                        HStack(spacing: 8) {
-                            Image(systemName: "gearshape")
-                                .font(.system(size: Theme.Components.iconSM))
-                                .accessibilityHidden(true)
-                            Text("More Settings")
-                        }
-                    }
-                    .accessibilityLabel("More Settings")
-                    .accessibilityHint("Opens full settings screen")
-                    .accessibilityIdentifier("home.moreSettings")
-                    .buttonStyle(.secondary)
-                }
-                .padding(.horizontal, Theme.Spacing.lg)
-                .padding(.bottom, Theme.Spacing.lg)
+                .padding(.vertical, 18)
             }
+
+            HangsFooterBar(leading: "◢ REG.MARK.01", trailing: "PWR ON • V2.1")
         }
-        .background(Theme.Colors.bgPrimary)
+        .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
+        .preferredColorScheme(.dark)
         .onAppear {
             viewModel.refreshAudioDevices()
             Task { await viewModel.refreshUsage() }
@@ -160,74 +39,181 @@ struct HomeView: View {
         }
     }
 
-    // MARK: - Helper Views
+    // MARK: - Hero
 
-    private func usageText(_ usage: UsageInfo) -> String {
-        if usage.isLimitReached {
-            return "No free questions left today"
+    private var heroSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HangsTerminalLabel(text: "[ 001 ]   MODE: DRIVE", color: Theme.Hangs.Colors.textSecondary)
+
+            HangsHeroBlock(text: "HANGS", alignment: .leading)
+
+            Text("Hands-free trivia while you drive — voice-first AI companion.")
+                .font(.hangsBody)
+                .foregroundColor(Theme.Hangs.Colors.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
-        if let remaining = usage.remaining {
-            return "\(remaining) free questions remaining today"
-        }
-        return ""
+        .padding(.horizontal, 24)
     }
 
-    private func usageAccessibilityLabel(_ usage: UsageInfo) -> String {
-        if usage.isLimitReached {
-            return "No free questions remaining today. Upgrade for unlimited access."
+    // MARK: - Stats
+
+    private var statsSection: some View {
+        HStack(spacing: 10) {
+            metricTile(
+                label: "DAY STREAK",
+                value: "\(viewModel.quizStats.currentStreak)",
+                valueColor: Theme.Hangs.Colors.textPrimary,
+                borderColor: Theme.Hangs.Colors.divider,
+                subtext: viewModel.quizStats.currentStreak > 0 ? "→ ACTIVE" : nil
+            )
+            metricTile(
+                label: "BEST SCORE",
+                value: "\(viewModel.quizStats.bestStreak)",
+                valueColor: Theme.Hangs.Colors.infoAccent,
+                borderColor: Theme.Hangs.Colors.infoAccent,
+                subtext: "◢ PERSONAL BEST"
+            )
         }
-        if let remaining = usage.remaining, let limit = usage.questionsLimit {
-            return "\(remaining) of \(limit) free questions remaining today"
-        }
-        return ""
+        .padding(.horizontal, 24)
     }
 
-    private func settingsMenuLabel(value: String) -> some View {
-        HStack(spacing: Theme.Spacing.xs) {
+    private func metricTile(label: String, value: String, valueColor: Color, borderColor: Color, subtext: String?) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(label)
+                .font(.hangsMonoLabel)
+                .foregroundColor(Theme.Hangs.Colors.textTertiary)
+                .tracking(1.5)
             Text(value)
-                .foregroundColor(Theme.Colors.textPrimary)
-            Image(systemName: "chevron.down")
-                .font(.caption)
-                .foregroundColor(Theme.Colors.textSecondary)
-                .accessibilityHidden(true)
+                .font(.system(size: 32, weight: .bold, design: .monospaced))
+                .foregroundColor(valueColor)
+            if let subtext = subtext {
+                Text(subtext)
+                    .font(.system(size: 9, weight: .regular, design: .monospaced))
+                    .foregroundColor(Theme.Hangs.Colors.accent)
+                    .tracking(1)
+            }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(14)
+        .background(Theme.Hangs.Colors.bgCard)
+        .overlay(Rectangle().stroke(borderColor, lineWidth: 1))
     }
-}
 
-// MARK: - Quick Setting Row
+    // MARK: - Quick Config
 
-private struct QuickSettingRow<Content: View>: View {
-    let icon: String
-    let title: String
-    let value: String
-    @ViewBuilder let content: () -> Content
-
-    var body: some View {
-        HStack(spacing: Theme.Spacing.sm) {
-            Image(systemName: icon)
-                .font(.system(size: Theme.Components.iconMD))
-                .foregroundColor(Theme.Colors.accentPrimary)
-                .frame(width: Theme.Components.iconMD)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.labelSM)
-                    .foregroundColor(Theme.Colors.textSecondary)
-
-                Text(value)
-                    .font(.textSM)
-                    .foregroundColor(Theme.Colors.textPrimary)
+    private var quickConfigSection: some View {
+        VStack(spacing: 10) {
+            HStack(spacing: 8) {
+                Text("// QUICK_CONFIG")
+                    .font(.hangsMonoLabel)
+                    .foregroundColor(Theme.Hangs.Colors.textPrimary)
+                    .tracking(2)
+                Rectangle().fill(Theme.Hangs.Colors.divider).frame(height: 1)
+                Text("03")
+                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    .foregroundColor(Theme.Hangs.Colors.infoAccent)
             }
 
-            Spacer()
+            configRow(
+                key: "LANG",
+                value: Language.forCode(viewModel.settings.language)?.nativeName ?? "Unknown",
+                menuContent: {
+                    ForEach(Language.supportedLanguages) { language in
+                        Button(language.nativeName) {
+                            viewModel.settings.language = language.id
+                        }
+                    }
+                }
+            )
 
-            content()
+            configRow(
+                key: "DIFF",
+                value: viewModel.settings.difficultyDisplayName(),
+                menuContent: {
+                    ForEach(Config.difficultyOptions, id: \.0) { id, display in
+                        Button(display) {
+                            viewModel.settings.difficulty = id
+                        }
+                    }
+                }
+            )
+
+            configRow(
+                key: "CATS",
+                value: viewModel.settings.categoryDisplayName(),
+                menuContent: {
+                    ForEach(Config.categoryOptions, id: \.id) { option in
+                        Button(option.display) {
+                            viewModel.settings.category = option.id
+                        }
+                    }
+                }
+            )
         }
-        .padding(Theme.Spacing.md)
-        .background(Theme.Colors.bgCard)
-        .cornerRadius(Theme.Radius.xl)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(title): \(value)")
+        .padding(.horizontal, 24)
+    }
+
+    private func configRow<Content: View>(
+        key: String,
+        value: String,
+        @ViewBuilder menuContent: () -> Content
+    ) -> some View {
+        Menu {
+            menuContent()
+        } label: {
+            HStack(spacing: 12) {
+                Text(key)
+                    .font(.hangsMonoLabel)
+                    .foregroundColor(Theme.Hangs.Colors.textTertiary)
+                    .tracking(1.5)
+                Rectangle().fill(Theme.Hangs.Colors.borderDim).frame(height: 1)
+                Text(value)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(Theme.Hangs.Colors.textPrimary)
+                Text("›")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(Theme.Hangs.Colors.accent)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .background(Theme.Hangs.Colors.bgCard)
+            .overlay(Rectangle().stroke(Theme.Hangs.Colors.divider, lineWidth: 1))
+        }
+    }
+
+    // MARK: - Actions
+
+    private var actionButtons: some View {
+        VStack(spacing: 10) {
+            HangsPrimaryButton(
+                title: "START QUIZ",
+                icon: "play.fill",
+                trailingIcon: "arrow.up.right",
+                isLoading: viewModel.quizState == .startingQuiz
+            ) {
+                Task { await viewModel.startNewQuiz() }
+            }
+            .accessibilityIdentifier("home.startQuiz")
+
+            NavigationLink {
+                SettingsView(viewModel: viewModel)
+            } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: "gearshape.fill")
+                        .font(.system(size: 13, weight: .bold))
+                    Text("SETTINGS")
+                        .font(.hangsButton)
+                        .tracking(2.5)
+                }
+                .foregroundColor(Theme.Hangs.Colors.infoAccent)
+                .frame(maxWidth: .infinity)
+                .frame(height: 48)
+                .overlay(Rectangle().stroke(Theme.Hangs.Colors.infoAccent, lineWidth: 1.5))
+            }
+            .accessibilityIdentifier("home.moreSettings")
+        }
+        .padding(.horizontal, 24)
+        .padding(.top, 4)
     }
 }
 

@@ -209,6 +209,8 @@ struct QuestionView: View {
     private func voiceBody(question: Question) -> some View {
         VStack(spacing: 20) {
             questionCard(question: question)
+                .frame(maxHeight: .infinity)
+                .layoutPriority(-1)
 
             // Thinking / answer timer chips (preserve existing logic)
             if viewModel.thinkingTimeCountdown > 0 && viewModel.quizState == .askingQuestion {
@@ -232,6 +234,7 @@ struct QuestionView: View {
             waveformStrip
 
             micBlock
+                .layoutPriority(1)
 
             if showTextInput { textInputRow }
         }
@@ -264,13 +267,14 @@ struct QuestionView: View {
                 if question.hasImage {
                     ImageQuestionView(question: question)
                 } else {
-                    Text(question.question)
-                        .font(.system(size: 28, weight: .black))
-                        .tracking(-0.5)
-                        .foregroundColor(Theme.Hangs.Colors.textPrimary)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .accessibilityIdentifier("question.text")
+                    ScrollView(.vertical, showsIndicators: true) {
+                        Text(question.question)
+                            .font(.system(size: 28, weight: .black))
+                            .tracking(-0.5)
+                            .foregroundColor(Theme.Hangs.Colors.textPrimary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .accessibilityIdentifier("question.text")
+                    }
                 }
 
                 HStack(spacing: 8) {
@@ -377,12 +381,15 @@ struct QuestionView: View {
     private func mcqBody(question: Question) -> some View {
         VStack(spacing: 16) {
             questionCard(question: question)
+                .frame(maxHeight: .infinity)
+                .layoutPriority(-1)
             MCQOptionPicker(
                 options: question.sortedAnswerOptions,
                 onSelect: { key, value in
                     Task { await viewModel.submitMCQAnswer(key: key, value: value) }
                 }
             )
+            .layoutPriority(1)
         }
         .frame(maxHeight: .infinity)
         .padding(.horizontal, 24)

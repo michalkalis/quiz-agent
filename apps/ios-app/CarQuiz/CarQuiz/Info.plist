@@ -57,6 +57,8 @@
 	<string>We need microphone access to record your quiz answers hands-free while driving.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>Voice commands let you control the quiz hands-free. Recognition happens on your device.</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>API_BASE_URL</key>
 	<string>$(API_BASE_URL)</string>
 	<key>API_VERSION</key>

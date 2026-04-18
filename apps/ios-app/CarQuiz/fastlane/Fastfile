@@ -99,6 +99,37 @@ platform :ios do
     UI.success("Uploaded build #{next_build} to TestFlight.")
   end
 
+  desc "Set export compliance (uses_non_exempt_encryption = false) for the latest TestFlight build."
+  lane :set_compliance do
+    ensure_env_vars(env_vars: %w[ASC_API_KEY_ID ASC_API_ISSUER_ID ASC_API_KEY_CONTENT])
+
+    Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.create(
+      key_id: ENV["ASC_API_KEY_ID"],
+      issuer_id: ENV["ASC_API_ISSUER_ID"],
+      key: ENV["ASC_API_KEY_CONTENT"]
+    )
+
+    app = Spaceship::ConnectAPI::App.find("com.missinghue.hangs")
+    UI.user_error!("App com.missinghue.hangs not found in App Store Connect.") if app.nil?
+
+    # Primary prevention is the ITSAppUsesNonExemptEncryption=false key in
+    # Info.plist — that makes every uploaded build ship with compliance already
+    # declared. This lane is a fallback in case that key is ever missing from a
+    # build (e.g. mis-edited Info.plist) and a build is sitting in TestFlight
+    # as "Missing Compliance".
+    builds = app.get_builds(sort: "-uploadedDate", limit: 5)
+    target = builds.find { |b| b.uses_non_exempt_encryption.nil? }
+
+    if target.nil?
+      UI.success("No builds need compliance — all recent builds already declared.")
+      next
+    end
+
+    UI.message("Setting usesNonExemptEncryption=false on build #{target.version} (#{target.id}, state=#{target.processing_state})...")
+    target.update(attributes: { usesNonExemptEncryption: false })
+    UI.success("Build #{target.version} compliance set. TestFlight should flip to 'Ready to Submit' within seconds — refresh the page.")
+  end
+
   desc "Dry-run: verify fastlane config + match access without uploading."
   lane :verify_setup do
     ensure_env_vars(

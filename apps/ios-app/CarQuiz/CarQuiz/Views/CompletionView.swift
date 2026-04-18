@@ -183,11 +183,13 @@ struct CompletionView: View {
 
 #if DEBUG
 #Preview {
-    let viewModel = QuizViewModel.previewWithEvaluation
-    viewModel.score = 8.5
-    viewModel.questionsAnswered = 10
-    viewModel.quizState = .finished
-
+    let viewModel: QuizViewModel = {
+        let vm = QuizViewModel.previewWithEvaluation
+        vm.score = 8.5
+        vm.questionsAnswered = 10
+        vm.quizState = .finished
+        return vm
+    }()
     CompletionView(viewModel: viewModel)
 }
 #endif

@@ -8,6 +8,7 @@
 
 @preconcurrency import Foundation
 import os
+import Sentry
 
 /// Events emitted by the STT service
 enum STTEvent: Sendable {
@@ -86,6 +87,12 @@ actor ElevenLabsSTTService: ElevenLabsSTTServiceProtocol {
         eventContinuation?.yield(.connected)
 
         Logger.stt.info("🎙️ ElevenLabs STT: connected")
+
+        // Sentry: mark start of STT session (language code is metadata, not PII)
+        let startCrumb = Breadcrumb(level: .info, category: "stt.start")
+        startCrumb.message = "ElevenLabs STT connected"
+        startCrumb.data = ["language": languageCode, "model": Config.elevenLabsModel]
+        SentrySDK.addBreadcrumb(startCrumb)
     }
 
     // MARK: - Sending Audio
@@ -189,6 +196,13 @@ actor ElevenLabsSTTService: ElevenLabsSTTServiceProtocol {
                 eventContinuation?.yield(.committedTranscript(text))
 
                 Logger.stt.info("🎙️ ElevenLabs STT committed: \(text, privacy: .public)")
+
+                // Sentry: metadata ONLY — never the transcript text itself.
+                let confidence = (json["confidence"] as? Double) ?? 0
+                let crumb = Breadcrumb(level: .info, category: "stt.result")
+                crumb.message = "committed_transcript"
+                crumb.data = ["length": text.count, "confidence": confidence]
+                SentrySDK.addBreadcrumb(crumb)
             }
 
         case "session_started":
@@ -197,6 +211,11 @@ actor ElevenLabsSTTService: ElevenLabsSTTServiceProtocol {
         case "error":
             let errorMsg = json["message"] as? String ?? "Unknown error"
             Logger.stt.error("🎙️ ElevenLabs STT error: \(errorMsg, privacy: .public)")
+            // Sentry: server-side STT error — treat as a "fallback" signal (caller may retry with Whisper).
+            SentryLog.warn("STT fallback", category: .stt, attributes: [
+                "reason": "server_error",
+                "message": errorMsg
+            ])
             eventContinuation?.yield(.disconnected(ElevenLabsSTTError.serverError(errorMsg)))
 
         default:
@@ -231,8 +250,8 @@ actor MockElevenLabsSTTService: ElevenLabsSTTServiceProtocol {
     private var eventContinuation: AsyncStream<STTEvent>.Continuation?
     nonisolated let events: AsyncStream<STTEvent>
 
-    nonisolated(unsafe) var mockCommittedText = "Paris"
-    nonisolated(unsafe) var shouldFail = false
+    var mockCommittedText = "Paris"
+    var shouldFail = false
 
     init() {
         var continuation: AsyncStream<STTEvent>.Continuation!

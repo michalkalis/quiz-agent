@@ -8,6 +8,7 @@
 
 @preconcurrency import Foundation
 import os
+import Sentry
 
 /// Protocol for network operations
 protocol NetworkServiceProtocol: Sendable {
@@ -62,6 +63,31 @@ actor NetworkService: NetworkServiceProtocol {
         Logger.network.debug("🌐 Cancelled task: \(id, privacy: .public)")
     }
 
+    // MARK: - Sentry Breadcrumb Helpers (metadata only — no request/response bodies)
+
+    nonisolated private func breadcrumbRequest(method: String, endpoint: String) {
+        let crumb = Breadcrumb(level: .info, category: "network.request")
+        crumb.message = "\(method) \(endpoint)"
+        crumb.data = ["method": method, "endpoint": endpoint]
+        SentrySDK.addBreadcrumb(crumb)
+    }
+
+    nonisolated private func breadcrumbResponse(endpoint: String, status: Int, bytes: Int) {
+        let level: SentryLevel = (200...299).contains(status) ? .info : .warning
+        let crumb = Breadcrumb(level: level, category: "network.response")
+        crumb.message = "HTTP \(status) \(endpoint) (\(bytes)B)"
+        crumb.data = ["status": status, "bytes": bytes, "endpoint": endpoint]
+        SentrySDK.addBreadcrumb(crumb)
+    }
+
+    nonisolated private func logHTTPError(endpoint: String, status: Int) {
+        // Response body is NOT included — may contain user-generated data.
+        SentryLog.error("HTTP error", category: .network, attributes: [
+            "status": status,
+            "endpoint": endpoint
+        ])
+    }
+
     // MARK: - Session Management
 
     func createSession(maxQuestions: Int = 10, difficulty: String = "medium", language: String = "en", category: String? = nil, userId: String? = nil) async throws -> QuizSession {
@@ -94,17 +120,23 @@ actor NetworkService: NetworkServiceProtocol {
 
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
+        let endpointPath = "/api/v1/sessions"
         Logger.network.debug("🌐 POST \(endpoint, privacy: .public)")
+        breadcrumbRequest(method: "POST", endpoint: endpointPath)
 
         let (data, response) = try await session.data(for: request)
 
         Logger.network.debug("📥 Response received: \(data.count, privacy: .public) bytes")
         if let httpResponse = response as? HTTPURLResponse {
             Logger.network.debug("📊 Status code: \(httpResponse.statusCode, privacy: .public)")
+            breadcrumbResponse(endpoint: endpointPath, status: httpResponse.statusCode, bytes: data.count)
         }
 
         guard let httpResponse = response as? HTTPURLResponse,
               (200...299).contains(httpResponse.statusCode) else {
+            if let httpResponse = response as? HTTPURLResponse {
+                logHTTPError(endpoint: endpointPath, status: httpResponse.statusCode)
+            }
             throw NetworkError.invalidResponse
         }
 
@@ -135,13 +167,16 @@ actor NetworkService: NetworkServiceProtocol {
         ]
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
+        let endpointPath = "/api/v1/sessions/{id}/start"
         Logger.network.debug("🌐 POST \(url, privacy: .public) with \(excludedQuestionIds.count, privacy: .public) excluded IDs")
+        breadcrumbRequest(method: "POST", endpoint: endpointPath)
 
         let (data, response) = try await session.data(for: request)
 
         Logger.network.debug("📥 Response received: \(data.count, privacy: .public) bytes")
         if let httpResponse = response as? HTTPURLResponse {
             Logger.network.debug("📊 Status code: \(httpResponse.statusCode, privacy: .public)")
+            breadcrumbResponse(endpoint: endpointPath, status: httpResponse.statusCode, bytes: data.count)
         }
 
         guard let httpResponse = response as? HTTPURLResponse else {
@@ -150,6 +185,7 @@ actor NetworkService: NetworkServiceProtocol {
 
         // Handle 429 daily limit reached
         if httpResponse.statusCode == 429 {
+            logHTTPError(endpoint: endpointPath, status: 429)
             if let limitError = try? JSONDecoder().decode(DailyLimitErrorWrapper.self, from: data) {
                 throw NetworkError.dailyLimitReached(limitError.detail)
             }
@@ -161,6 +197,7 @@ actor NetworkService: NetworkServiceProtocol {
             if let responseString = String(data: data, encoding: .utf8) {
                 Logger.network.error("📄 Response body: \(responseString, privacy: .public)")
             }
+            logHTTPError(endpoint: endpointPath, status: httpResponse.statusCode)
             throw NetworkError.invalidResponse
         }
 
@@ -173,13 +210,17 @@ actor NetworkService: NetworkServiceProtocol {
         var request = URLRequest(url: endpoint)
         request.httpMethod = "DELETE"
 
+        let endpointPath = "/api/v1/sessions/{id}"
         Logger.network.debug("🌐 DELETE \(endpoint, privacy: .public)")
+        breadcrumbRequest(method: "DELETE", endpoint: endpointPath)
 
         let (data, response) = try await session.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw NetworkError.invalidResponse
         }
+
+        breadcrumbResponse(endpoint: endpointPath, status: httpResponse.statusCode, bytes: data.count)
 
         guard (200...299).contains(httpResponse.statusCode) else {
             let statusCode = httpResponse.statusCode
@@ -188,6 +229,7 @@ actor NetworkService: NetworkServiceProtocol {
             if let responseString = String(data: data, encoding: .utf8) {
                 Logger.network.error("📄 Response body: \(responseString, privacy: .public)")
             }
+            logHTTPError(endpoint: endpointPath, status: statusCode)
 
             if statusCode == 404 {
                 throw NetworkError.sessionNotFound
@@ -288,13 +330,16 @@ actor NetworkService: NetworkServiceProtocol {
 
         request.httpBody = body
 
+        let endpointPath = "/api/v1/voice/submit/{id}"
         Logger.network.debug("🌐 POST \(endpoint, privacy: .public) (audio: \(audioData.count, privacy: .public) bytes)")
+        breadcrumbRequest(method: "POST", endpoint: endpointPath)
 
         let (data, response) = try await session.data(for: request)
 
         Logger.network.debug("📥 Voice response received: \(data.count, privacy: .public) bytes")
         if let httpResponse = response as? HTTPURLResponse {
             Logger.network.debug("📊 Status code: \(httpResponse.statusCode, privacy: .public)")
+            breadcrumbResponse(endpoint: endpointPath, status: httpResponse.statusCode, bytes: data.count)
         }
 
         guard let httpResponse = response as? HTTPURLResponse else {
@@ -303,6 +348,7 @@ actor NetworkService: NetworkServiceProtocol {
 
         // Handle 429 daily limit reached
         if httpResponse.statusCode == 429 {
+            logHTTPError(endpoint: endpointPath, status: 429)
             if let limitError = try? JSONDecoder().decode(DailyLimitErrorWrapper.self, from: data) {
                 throw NetworkError.dailyLimitReached(limitError.detail)
             }
@@ -316,6 +362,7 @@ actor NetworkService: NetworkServiceProtocol {
             if let responseString = String(data: data, encoding: .utf8) {
                 Logger.network.error("📄 Response body: \(responseString, privacy: .public)")
             }
+            logHTTPError(endpoint: endpointPath, status: statusCode)
 
             // Try to extract error message from backend response
             if let errorResponse = try? JSONDecoder().decode(ErrorResponse.self, from: data) {
@@ -349,7 +396,10 @@ actor NetworkService: NetworkServiceProtocol {
         let body = ["input": input]
         request.httpBody = try JSONEncoder().encode(body)
 
+        let endpointPath = "/api/v1/sessions/{id}/input"
         Logger.network.debug("🌐 POST \(url, privacy: .public) (text: \(input.prefix(50), privacy: .public)...)")
+        // Breadcrumb: metadata only — do NOT include the text input (may be user answer).
+        breadcrumbRequest(method: "POST", endpoint: endpointPath)
 
         let (data, response) = try await session.data(for: request)
 
@@ -357,8 +407,11 @@ actor NetworkService: NetworkServiceProtocol {
             throw NetworkError.invalidResponse
         }
 
+        breadcrumbResponse(endpoint: endpointPath, status: httpResponse.statusCode, bytes: data.count)
+
         // Handle 429 daily limit reached
         if httpResponse.statusCode == 429 {
+            logHTTPError(endpoint: endpointPath, status: 429)
             if let limitError = try? JSONDecoder().decode(DailyLimitErrorWrapper.self, from: data) {
                 throw NetworkError.dailyLimitReached(limitError.detail)
             }
@@ -366,6 +419,7 @@ actor NetworkService: NetworkServiceProtocol {
         }
 
         guard (200...299).contains(httpResponse.statusCode) else {
+            logHTTPError(endpoint: endpointPath, status: httpResponse.statusCode)
             throw NetworkError.invalidResponse
         }
 
@@ -599,12 +653,12 @@ enum NetworkError: LocalizedError {
 // MARK: - Mock for Testing
 
 #if DEBUG
+@MainActor
 final class MockNetworkService: NetworkServiceProtocol {
-    // Mock properties for testing - marked as unsafe since they're mutable
-    nonisolated(unsafe) var mockSession: QuizSession?
-    nonisolated(unsafe) var mockResponse: QuizResponse?
-    nonisolated(unsafe) var mockAudioData: Data?
-    nonisolated(unsafe) var shouldFail = false
+    var mockSession: QuizSession?
+    var mockResponse: QuizResponse?
+    var mockAudioData: Data?
+    var shouldFail = false
 
     func createSession(maxQuestions: Int, difficulty: String, language: String, category: String?, userId: String?) async throws -> QuizSession {
         if shouldFail {

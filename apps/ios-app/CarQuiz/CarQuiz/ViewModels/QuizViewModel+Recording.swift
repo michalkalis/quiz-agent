@@ -7,6 +7,7 @@
 
 import Foundation
 import os
+import Sentry
 
 // MARK: - Recording Lifecycle
 
@@ -108,6 +109,12 @@ extension QuizViewModel {
             await sttService.disconnect()
 
             Logger.stt.warning("⚠️ Streaming STT setup failed, falling back to batch: \(error, privacy: .public)")
+
+            // Sentry: fallback metadata only — error type name, not the full description (may contain URLs/tokens).
+            SentryLog.warn("STT fallback", category: .stt, attributes: [
+                "reason": "streaming_setup_failed",
+                "error_type": String(describing: type(of: error))
+            ])
 
             await startBatchRecording()
         }

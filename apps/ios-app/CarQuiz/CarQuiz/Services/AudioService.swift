@@ -17,6 +17,7 @@ import AVKit
 import Combine
 import Foundation
 import os
+import Sentry
 import UIKit
 
 /// Callback for streaming PCM audio chunks (raw 16kHz 16-bit mono PCM data)
@@ -110,6 +111,10 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
     private var audioPlayer: AVPlayer?
     private var speechSynthesizer = AVSpeechSynthesizer()
     private var currentAudioMode: AudioMode = AudioMode.default
+
+    // Timestamps for Sentry breadcrumb durations (metadata only — no audio bytes).
+    private var recordingStartedAt: Date?
+    private var playbackStartedAt: Date?
 
     // Session-level NotificationCenter observer tokens.
     // nonisolated(unsafe): NSObjectProtocol is not Sendable in Swift 6, but these tokens
@@ -420,8 +425,14 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         }
 
         isRecording = true
+        recordingStartedAt = Date()
 
         Logger.audio.info("🎤 Started recording to: \(fileName, privacy: .public)")
+
+        let crumb = Breadcrumb(level: .info, category: "audio.record_start")
+        crumb.message = "Batch M4A recording started"
+        crumb.data = ["format": "m4a", "sample_rate": 16000]
+        SentrySDK.addBreadcrumb(crumb)
     }
 
     func stopRecording() async throws -> Data {
@@ -456,6 +467,16 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         audioRecorder = nil
 
         Logger.audio.debug("🎤 Recording data: \(data.count, privacy: .public) bytes")
+
+        let duration = recordingStartedAt.map { Date().timeIntervalSince($0) } ?? 0
+        recordingStartedAt = nil
+        let crumb = Breadcrumb(level: .info, category: "audio.record_stop")
+        crumb.message = "Batch M4A recording stopped"
+        crumb.data = [
+            "duration_ms": Int(duration * 1000),
+            "bytes": data.count
+        ]
+        SentrySDK.addBreadcrumb(crumb)
 
         return data
     }
@@ -549,8 +570,14 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
         self.audioEngine = engine
         isRecording = true
+        recordingStartedAt = Date()
 
         Logger.audio.info("🎤 Streaming PCM recording started (16kHz, 16-bit, mono)")
+
+        let crumb = Breadcrumb(level: .info, category: "audio.record_start")
+        crumb.message = "Streaming PCM recording started"
+        crumb.data = ["format": "pcm_s16le", "sample_rate": 16000]
+        SentrySDK.addBreadcrumb(crumb)
     }
 
     /// Stop streaming PCM recording
@@ -563,6 +590,13 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         isRecording = false
 
         Logger.audio.info("🎤 Streaming PCM recording stopped")
+
+        let duration = recordingStartedAt.map { Date().timeIntervalSince($0) } ?? 0
+        recordingStartedAt = nil
+        let crumb = Breadcrumb(level: .info, category: "audio.record_stop")
+        crumb.message = "Streaming PCM recording stopped"
+        crumb.data = ["duration_ms": Int(duration * 1000)]
+        SentrySDK.addBreadcrumb(crumb)
     }
 
     // MARK: - Playback
@@ -672,6 +706,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
                 self?.isPlaying = false
                 self?.playbackState = .idle
                 Logger.audio.info("🔊 Playback completed")
+                self?.emitPlaybackEndBreadcrumb(reason: "completed")
                 continuation.yield(durationSeconds)
                 continuation.finish()
             }
@@ -704,7 +739,16 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         }
 
         audioPlayer?.play()
+        playbackStartedAt = Date()
         Logger.audio.debug("🔊 Started AVPlayer playback")
+
+        let startCrumb = Breadcrumb(level: .info, category: "audio.playback_start")
+        startCrumb.message = "AVPlayer playback started"
+        startCrumb.data = [
+            "bytes": data.count,
+            "duration_s": Int(durationSeconds)
+        ]
+        SentrySDK.addBreadcrumb(startCrumb)
 
         return try await withTaskCancellationHandler {
             // Await first event from the stream:
@@ -764,6 +808,22 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         playbackState = .idle
 
         Logger.audio.info("🔊 Stopped playback")
+        emitPlaybackEndBreadcrumb(reason: "stopped")
+    }
+
+    /// Emit a playback_end breadcrumb with duration since playbackStartedAt.
+    /// No-op if no start timestamp (e.g. stopPlayback called after natural end).
+    private func emitPlaybackEndBreadcrumb(reason: String) {
+        guard let start = playbackStartedAt else { return }
+        let duration = Date().timeIntervalSince(start)
+        playbackStartedAt = nil
+        let crumb = Breadcrumb(level: .info, category: "audio.playback_end")
+        crumb.message = "AVPlayer playback \(reason)"
+        crumb.data = [
+            "duration_ms": Int(duration * 1000),
+            "reason": reason
+        ]
+        SentrySDK.addBreadcrumb(crumb)
     }
 
     // MARK: - Local TTS (AVSpeechSynthesizer)

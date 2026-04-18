@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import os
+import Sentry
 
 /// Error context for distinguishing error types
 enum ErrorContext: Sendable {
@@ -220,6 +221,26 @@ final class QuizViewModel: ObservableObject {
 
         Logger.quiz.info("State: \(from) → \(to) [\(caller, privacy: .public)]")
         quizState = newState
+
+        // Sentry: tag + context + breadcrumb (metadata only — no transcripts/PII)
+        let questionId = currentQuestion?.id
+        let questionCategory = currentQuestion?.category
+        let answered = questionsAnswered
+        SentrySDK.configureScope { scope in
+            scope.setTag(value: to, key: "quiz.state")
+            if let qid = questionId {
+                var ctx: [String: Any] = [
+                    "questionId": qid,
+                    "index": answered
+                ]
+                if let cat = questionCategory { ctx["category"] = cat }
+                scope.setContext(value: ctx, key: "quiz.current")
+            }
+        }
+        let crumb = Breadcrumb(level: .info, category: "quiz.transition")
+        crumb.message = "\(from) → \(to) (caller: \(caller))"
+        SentrySDK.addBreadcrumb(crumb)
+
         return true
     }
 
@@ -290,6 +311,10 @@ final class QuizViewModel: ObservableObject {
 
     // Streaming audio chunk sender task
     var sttChunkTask: Task<Void, Never>?  // internal for QuizViewModel+Recording
+
+    // Error announcement (TTS) task — tracked so rapid consecutive errors or
+    // state transitions can cancel a pending announcement instead of queueing them.
+    var errorAnnouncementTask: Task<Void, Never>?  // internal for QuizViewModel+Audio
 
     // Whether the current recording is a re-record (bypasses all timers) (internal for QuizViewModel+Timers)
     var isRerecording: Bool = false
@@ -917,6 +942,8 @@ final class QuizViewModel: ObservableObject {
         sttChunkTask = nil
         bargeInTask?.cancel()
         bargeInTask = nil
+        errorAnnouncementTask?.cancel()
+        errorAnnouncementTask = nil
 
         // Clean up streaming STT
         cleanupStreamingSTT()

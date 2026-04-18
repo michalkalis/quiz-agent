@@ -9,6 +9,10 @@ on:
         description: "Release notes / tester message (optional)"
         required: false
         default: ""
+      build_number_floor:
+        description: "Minimum build number (use to nudge past a stuck number reserved by Apple)"
+        required: false
+        default: "0"
 
 concurrency:
   # Prevent parallel release runs stepping on each other (match cert locks, build number races).
@@ -110,6 +114,7 @@ jobs:
         env:
           # Override Matchfile to point at the isolated keychain on disk.
           MATCH_KEYCHAIN_NAME: ${{ env.KEYCHAIN_PATH }}
+          BUILD_NUMBER_FLOOR: ${{ inputs.build_number_floor }}
         run: bundle exec fastlane ios beta
 
       - name: Upload build artifacts

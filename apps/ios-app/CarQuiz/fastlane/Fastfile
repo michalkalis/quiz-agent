@@ -65,12 +65,17 @@ platform :ios do
     Dir.glob(File.join(new_dir, "*.mobileprovision")).each { |f| FileUtils.cp(f, legacy_dir) }
 
     # Auto-bump build number relative to what's already in TestFlight, so we never
-    # collide with an existing build.
-    next_build = latest_testflight_build_number(
+    # collide with an existing build. Apple's API sometimes reports a lower number
+    # than what's actually reserved (invalidated uploads still hold the number),
+    # so BUILD_NUMBER_FLOOR lets us nudge past a stuck number when retrying.
+    tf_latest = latest_testflight_build_number(
       api_key: api_key,
       app_identifier: "com.missinghue.hangs",
       initial_build_number: 0
-    ) + 1
+    )
+    floor = (ENV["BUILD_NUMBER_FLOOR"] || "0").to_i
+    next_build = [tf_latest, floor].max + 1
+    UI.message("📦 Build number: tf_latest=#{tf_latest}, floor=#{floor}, next=#{next_build}")
 
     increment_build_number(
       xcodeproj: "CarQuiz.xcodeproj",

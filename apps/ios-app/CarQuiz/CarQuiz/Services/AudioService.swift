@@ -12,7 +12,13 @@
 //  - See: https://developer.apple.com/documentation/avfoundation/avasset
 //
 
-import AVFoundation
+// @preconcurrency: AVAudioNodeTapBlock / AVAudioConverterInputBlock are not
+// `@Sendable`-annotated in AVFoundation. Without this, Swift 6 strict concurrency
+// infers @MainActor isolation for closures passed to `installTap`/`converter.convert`
+// in a @MainActor class, and the runtime isolation check fires
+// `dispatch_assert_queue(main)` when AVAudio invokes the tap on an audio thread →
+// crash. See Sentry CARQUIZ-1 + Swift migration guide "Handle Unmarked Sendable Closures".
+@preconcurrency import AVFoundation
 import AVKit
 import Combine
 import Foundation
@@ -527,9 +533,12 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         let samplesPerChunk = Int(16000.0 * Double(chunkInterval) / 1000.0) // e.g., 4000 samples for 250ms
         let accumulator = OSAllocatedUnfairLock(initialState: Data())
 
-        // Install a tap on the input node
+        // Install a tap on the input node.
+        // `@Sendable` marks the closure non-isolated — critical, otherwise Swift 6
+        // infers @MainActor from the enclosing class and the runtime isolation check
+        // crashes when AVAudio invokes the tap on its audio thread (Sentry CARQUIZ-1).
         let bufferSize = AVAudioFrameCount(hardwareFormat.sampleRate * Double(chunkInterval) / 1000.0)
-        inputNode.installTap(onBus: 0, bufferSize: bufferSize, format: hardwareFormat) { buffer, _ in
+        inputNode.installTap(onBus: 0, bufferSize: bufferSize, format: hardwareFormat) { @Sendable buffer, _ in
             // Belt-and-suspenders guard against division by zero
             guard hardwareFormat.sampleRate > 0 else { return }
             // Convert hardware buffer to 16kHz 16-bit mono

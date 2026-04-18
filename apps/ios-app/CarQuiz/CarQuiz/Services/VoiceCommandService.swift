@@ -11,7 +11,13 @@
 //  - Engine runs continuously; command matching is paused during answer recording
 //
 
-import AVFoundation
+// @preconcurrency: AVAudioNodeTapBlock / AVAudioConverterInputBlock are not
+// `@Sendable`-annotated in AVFoundation. Without this, Swift 6 strict concurrency
+// infers @MainActor isolation for closures passed to `installTap`/`converter.convert`
+// in a @MainActor class, and the runtime isolation check fires
+// `dispatch_assert_queue(main)` when AVAudio invokes the tap on an audio thread →
+// crash. See Sentry CARQUIZ-1 + Swift migration guide "Handle Unmarked Sendable Closures".
+@preconcurrency import AVFoundation
 import Foundation
 import os
 import Speech
@@ -191,22 +197,31 @@ final class VoiceCommandService: VoiceCommandServiceProtocol {
         let (inputSequence, continuation) = AsyncStream<AnalyzerInput>.makeStream()
         self.inputContinuation = continuation
 
-        // Install tap to capture mic audio and feed to analyzer
+        // Snapshot `var inputFormat` to a `let` so the @Sendable tap closure
+        // captures an immutable value (not a box into the enclosing var).
+        let tapFormat = inputFormat
+        let tapAnalyzerFormat = analyzerFormat
+        let tapConverter = converter
+
+        // Install tap to capture mic audio and feed to analyzer.
+        // `@Sendable` marks the closure non-isolated — critical, otherwise Swift 6
+        // infers @MainActor from the enclosing class and the runtime isolation check
+        // crashes when AVAudio invokes the tap on its audio thread (Sentry CARQUIZ-1).
         // (engine not started yet — no audio flows until engine.start() below)
-        inputNode.installTap(onBus: 0, bufferSize: 1024, format: inputFormat) { buffer, _ in
-            if let converter {
+        inputNode.installTap(onBus: 0, bufferSize: 1024, format: inputFormat) { @Sendable buffer, _ in
+            if let tapConverter {
                 // Belt-and-suspenders guard against division by zero
-                guard inputFormat.sampleRate > 0 else { return }
+                guard tapFormat.sampleRate > 0 else { return }
                 let frameCount = AVAudioFrameCount(
-                    Double(buffer.frameLength) * analyzerFormat.sampleRate / inputFormat.sampleRate
+                    Double(buffer.frameLength) * tapAnalyzerFormat.sampleRate / tapFormat.sampleRate
                 )
                 guard let convertedBuffer = AVAudioPCMBuffer(
-                    pcmFormat: analyzerFormat,
+                    pcmFormat: tapAnalyzerFormat,
                     frameCapacity: frameCount
                 ) else { return }
 
                 var error: NSError?
-                converter.convert(to: convertedBuffer, error: &error) { _, outStatus in
+                tapConverter.convert(to: convertedBuffer, error: &error) { _, outStatus in
                     outStatus.pointee = .haveData
                     return buffer
                 }
@@ -219,10 +234,8 @@ final class VoiceCommandService: VoiceCommandServiceProtocol {
             }
         }
 
-        // Launch analyzer BEFORE starting engine so RealtimeMessenger is ready
-        // to consume audio when buffers start flowing. Inherits @MainActor context
-        // so the start() call enters SpeechAnalyzer from a known execution context,
-        // avoiding _dispatch_assert_queue_fail on mServiceQueue.
+        // Launch analyzer BEFORE starting engine so it is ready to consume
+        // audio buffers the moment they start flowing from the tap.
         analyzerTask = Task {
             try? await speechAnalyzer.start(inputSequence: inputSequence)
         }

@@ -1,0 +1,23 @@
+//
+// Debug.xcconfig
+// Settings for any Debug (Run/Test/Profile/Analyze) build, regardless of environment.
+//
+
+// MARK: - Build behavior
+ONLY_ACTIVE_ARCH = YES
+DEBUG_INFORMATION_FORMAT = dwarf
+ENABLE_TESTABILITY = YES
+
+// MARK: - Optimization
+GCC_OPTIMIZATION_LEVEL = 0
+SWIFT_OPTIMIZATION_LEVEL = -Onone
+
+// MARK: - Compilation conditions
+GCC_PREPROCESSOR_DEFINITIONS = DEBUG=1 $(inherited)
+SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG $(inherited)
+
+// MARK: - Assertions
+ENABLE_NS_ASSERTIONS = YES
+
+// MARK: - Metal
+MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE

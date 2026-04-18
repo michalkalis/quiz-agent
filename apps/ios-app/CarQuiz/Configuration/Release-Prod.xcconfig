@@ -1,0 +1,16 @@
+//
+// Release-Prod.xcconfig
+// Composition for the Release-Prod build configuration (TestFlight / App Store).
+//
+
+#include "Release.xcconfig"
+#include "Prod.xcconfig"
+
+// MARK: - Signing — driven by fastlane match
+// Match installs a provisioning profile named "match AppStore <bundle-id>" into the
+// build keychain. This profile is ONLY valid for App Store upload — it cannot be
+// used to install on a device via Xcode Run (that's Debug-Prod's job).
+CODE_SIGN_STYLE = Manual
+DEVELOPMENT_TEAM = KAGWHPZZFQ
+CODE_SIGN_IDENTITY = Apple Distribution
+PROVISIONING_PROFILE_SPECIFIER = match AppStore $(PRODUCT_BUNDLE_IDENTIFIER)

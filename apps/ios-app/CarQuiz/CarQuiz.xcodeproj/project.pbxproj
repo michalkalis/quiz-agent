@@ -33,9 +33,15 @@
 		5004B49A2EF874800068C8D1 /* CarQuiz.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CarQuiz.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5004B4A72EF874820068C8D1 /* CarQuizTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CarQuizTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		5004B4B12EF874820068C8D1 /* CarQuizUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CarQuizUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		54C27E2EE7BDAB9DCD450988 /* Debug-Local.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Debug-Local.xcconfig"; path = "Configuration/Debug-Local.xcconfig"; sourceTree = "<group>"; };
 		62FB9AFFE2F29A05D528EFF0 /* Prod.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Prod.xcconfig; path = Configuration/Prod.xcconfig; sourceTree = "<group>"; };
 		961941338301A9636C461FF2 /* Shared.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Shared.xcconfig; path = Configuration/Shared.xcconfig; sourceTree = "<group>"; };
+		99F10802595E52306DAB3E3B /* Release-Local.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Release-Local.xcconfig"; path = "Configuration/Release-Local.xcconfig"; sourceTree = "<group>"; };
+		BAF2281C5C2F3DD7FFBC7D79 /* Debug-Prod.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Debug-Prod.xcconfig"; path = "Configuration/Debug-Prod.xcconfig"; sourceTree = "<group>"; };
+		D7DFEF43B679028CE5922C00 /* Release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = Configuration/Release.xcconfig; sourceTree = "<group>"; };
 		D86E1E0498FBCF4EF3A9CF7D /* Local.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Local.xcconfig; path = Configuration/Local.xcconfig; sourceTree = "<group>"; };
+		D90E51253B87EF7A09FAB916 /* Release-Prod.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Release-Prod.xcconfig"; path = "Configuration/Release-Prod.xcconfig"; sourceTree = "<group>"; };
+		F6DEB98440799D43D19E4E03 /* Debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Configuration/Debug.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -124,9 +130,15 @@
 				961941338301A9636C461FF2 /* Shared.xcconfig */,
 				62FB9AFFE2F29A05D528EFF0 /* Prod.xcconfig */,
 				D86E1E0498FBCF4EF3A9CF7D /* Local.xcconfig */,
+				F6DEB98440799D43D19E4E03 /* Debug.xcconfig */,
+				D7DFEF43B679028CE5922C00 /* Release.xcconfig */,
+				54C27E2EE7BDAB9DCD450988 /* Debug-Local.xcconfig */,
+				99F10802595E52306DAB3E3B /* Release-Local.xcconfig */,
+				BAF2281C5C2F3DD7FFBC7D79 /* Debug-Prod.xcconfig */,
+				D90E51253B87EF7A09FAB916 /* Release-Prod.xcconfig */,
 			);
 			name = Configuration;
-			sourceTree = SOURCE_ROOT;
+			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
@@ -325,325 +337,37 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		5004B4B92EF874820068C8D1 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
-				CLANG_ENABLE_OBJC_WEAK = YES;
-				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
-				CLANG_WARN_BOOL_CONVERSION = YES;
-				CLANG_WARN_COMMA = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
-				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_INT_CONVERSION = YES;
-				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
-				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
-				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
-				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
-				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
-				CLANG_WARN_STRICT_PROTOTYPES = YES;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
-				CLANG_WARN_UNREACHABLE_CODE = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				COPY_PHASE_STRIP = NO;
-				DEBUG_INFORMATION_FORMAT = dwarf;
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu17;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
-					"$(inherited)",
-				);
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
-				GCC_WARN_UNDECLARED_SELECTOR = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
-				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
-				MTL_FAST_MATH = YES;
-				ONLY_ACTIVE_ARCH = YES;
-				SDKROOT = iphoneos;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-			};
-			name = Debug;
-		};
-		5004B4BA2EF874820068C8D1 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
-				CLANG_ENABLE_OBJC_WEAK = YES;
-				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
-				CLANG_WARN_BOOL_CONVERSION = YES;
-				CLANG_WARN_COMMA = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
-				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_INT_CONVERSION = YES;
-				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
-				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
-				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
-				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
-				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
-				CLANG_WARN_STRICT_PROTOTYPES = YES;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
-				CLANG_WARN_UNREACHABLE_CODE = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				COPY_PHASE_STRIP = NO;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				ENABLE_NS_ASSERTIONS = NO;
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu17;
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
-				GCC_WARN_UNDECLARED_SELECTOR = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
-				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MTL_ENABLE_DEBUG_INFO = NO;
-				MTL_FAST_MATH = YES;
-				SDKROOT = iphoneos;
-				SWIFT_COMPILATION_MODE = wholemodule;
-				VALIDATE_PRODUCT = YES;
-			};
-			name = Release;
-		};
-		5004B4BC2EF874820068C8D1 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = KAGWHPZZFQ;
-				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = NO;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = CarQuiz/Info.plist;
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "We need microphone access to record your quiz answers hands-free.";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.missinghue.hangs;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
-		5004B4BD2EF874820068C8D1 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = KAGWHPZZFQ;
-				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = NO;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = CarQuiz/Info.plist;
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "We need microphone access to record your quiz answers hands-free.";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.missinghue.hangs;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
-		};
-		5004B4BF2EF874820068C8D1 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.missinghue.hangsTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CarQuiz.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CarQuiz";
-			};
-			name = Debug;
-		};
-		5004B4C02EF874820068C8D1 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.missinghue.hangsTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CarQuiz.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CarQuiz";
-			};
-			name = Release;
-		};
-		5004B4C22EF874820068C8D1 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.missinghue.hangsUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = CarQuiz;
-			};
-			name = Debug;
-		};
-		5004B4C32EF874820068C8D1 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.missinghue.hangsUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = CarQuiz;
-			};
-			name = Release;
-		};
 		5090EC5D2EFB1A4F004DB170 /* Debug-Local */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = D86E1E0498FBCF4EF3A9CF7D /* Local.xcconfig */;
+			baseConfigurationReference = 54C27E2EE7BDAB9DCD450988 /* Debug-Local.xcconfig */;
 			buildSettings = {
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = KAGWHPZZFQ;
-				ENABLE_USER_SCRIPT_SANDBOXING = NO;
-				PRODUCT_BUNDLE_IDENTIFIER = com.missinghue.hangs;
-				PRODUCT_NAME = CarQuiz;
 			};
 			name = "Debug-Local";
 		};
 		5090EC5E2EFB1A4F004DB170 /* Release-Local */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 99F10802595E52306DAB3E3B /* Release-Local.xcconfig */;
 			buildSettings = {
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = KAGWHPZZFQ;
-				ENABLE_USER_SCRIPT_SANDBOXING = NO;
-				PRODUCT_BUNDLE_IDENTIFIER = com.missinghue.hangs;
-				PRODUCT_NAME = CarQuiz;
 			};
 			name = "Release-Local";
 		};
 		5090EC5F2EFB1A4F004DB170 /* Debug-Prod */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = BAF2281C5C2F3DD7FFBC7D79 /* Debug-Prod.xcconfig */;
 			buildSettings = {
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = KAGWHPZZFQ;
-				ENABLE_USER_SCRIPT_SANDBOXING = NO;
-				PRODUCT_BUNDLE_IDENTIFIER = com.missinghue.hangs;
-				PRODUCT_NAME = CarQuiz;
 			};
 			name = "Debug-Prod";
 		};
 		5090EC602EFB1A4F004DB170 /* Release-Prod */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 62FB9AFFE2F29A05D528EFF0 /* Prod.xcconfig */;
+			baseConfigurationReference = D90E51253B87EF7A09FAB916 /* Release-Prod.xcconfig */;
 			buildSettings = {
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = KAGWHPZZFQ;
-				ENABLE_USER_SCRIPT_SANDBOXING = NO;
-				PRODUCT_BUNDLE_IDENTIFIER = com.missinghue.hangs;
-				PRODUCT_NAME = CarQuiz;
 			};
 			name = "Release-Prod";
 		};
 		5090EC612EFB1A4F004DB170 /* Debug-Local */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = F6DEB98440799D43D19E4E03 /* Debug.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
@@ -665,6 +389,7 @@
 		};
 		5090EC622EFB1A4F004DB170 /* Release-Local */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = D7DFEF43B679028CE5922C00 /* Release.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
@@ -686,6 +411,7 @@
 		};
 		5090EC632EFB1A4F004DB170 /* Debug-Prod */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = F6DEB98440799D43D19E4E03 /* Debug.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
@@ -707,6 +433,7 @@
 		};
 		5090EC642EFB1A4F004DB170 /* Release-Prod */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = D7DFEF43B679028CE5922C00 /* Release.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
@@ -728,6 +455,7 @@
 		};
 		5090EC652EFB1A4F004DB170 /* Debug-Local */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = F6DEB98440799D43D19E4E03 /* Debug.xcconfig */;
 			buildSettings = {
 				PRODUCT_NAME = CarQuizUITests;
 			};
@@ -735,6 +463,7 @@
 		};
 		5090EC662EFB1A4F004DB170 /* Release-Local */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = D7DFEF43B679028CE5922C00 /* Release.xcconfig */;
 			buildSettings = {
 				PRODUCT_NAME = CarQuizUITests;
 			};
@@ -742,6 +471,7 @@
 		};
 		5090EC672EFB1A4F004DB170 /* Debug-Prod */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = F6DEB98440799D43D19E4E03 /* Debug.xcconfig */;
 			buildSettings = {
 				PRODUCT_NAME = CarQuizUITests;
 			};
@@ -749,6 +479,7 @@
 		};
 		5090EC682EFB1A4F004DB170 /* Release-Prod */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = D7DFEF43B679028CE5922C00 /* Release.xcconfig */;
 			buildSettings = {
 				PRODUCT_NAME = CarQuizUITests;
 			};
@@ -756,10 +487,9 @@
 		};
 		7EE95A75788CA2F05E56FE7E /* Debug-Local */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = D86E1E0498FBCF4EF3A9CF7D /* Local.xcconfig */;
+			baseConfigurationReference = 54C27E2EE7BDAB9DCD450988 /* Debug-Local.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
@@ -789,10 +519,9 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = KAGWHPZZFQ;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -807,8 +536,6 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
-				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -820,9 +547,9 @@
 		};
 		8EA7A76EC49845FDF05B949A /* Release-Local */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 99F10802595E52306DAB3E3B /* Release-Local.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
@@ -852,10 +579,9 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = KAGWHPZZFQ;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -864,8 +590,6 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
-				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
@@ -876,10 +600,9 @@
 		};
 		BB84328D4A4EFA295816EC63 /* Release-Prod */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 62FB9AFFE2F29A05D528EFF0 /* Prod.xcconfig */;
+			baseConfigurationReference = D90E51253B87EF7A09FAB916 /* Release-Prod.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
@@ -909,10 +632,9 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = KAGWHPZZFQ;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -921,8 +643,6 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
-				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
@@ -933,10 +653,9 @@
 		};
 		BC7A57B5976906E0851FA298 /* Debug-Prod */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 62FB9AFFE2F29A05D528EFF0 /* Prod.xcconfig */;
+			baseConfigurationReference = BAF2281C5C2F3DD7FFBC7D79 /* Debug-Prod.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
@@ -966,10 +685,9 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = KAGWHPZZFQ;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -984,8 +702,6 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
-				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -1001,54 +717,46 @@
 		5004B4952EF874800068C8D1 /* Build configuration list for PBXProject "CarQuiz" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				5004B4B92EF874820068C8D1 /* Debug */,
-				5004B4BA2EF874820068C8D1 /* Release */,
 				7EE95A75788CA2F05E56FE7E /* Debug-Local */,
 				8EA7A76EC49845FDF05B949A /* Release-Local */,
 				BC7A57B5976906E0851FA298 /* Debug-Prod */,
 				BB84328D4A4EFA295816EC63 /* Release-Prod */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = "Release-Prod";
 		};
 		5004B4BB2EF874820068C8D1 /* Build configuration list for PBXNativeTarget "CarQuiz" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				5004B4BC2EF874820068C8D1 /* Debug */,
-				5004B4BD2EF874820068C8D1 /* Release */,
 				5090EC5D2EFB1A4F004DB170 /* Debug-Local */,
 				5090EC5E2EFB1A4F004DB170 /* Release-Local */,
 				5090EC5F2EFB1A4F004DB170 /* Debug-Prod */,
 				5090EC602EFB1A4F004DB170 /* Release-Prod */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = "Release-Prod";
 		};
 		5004B4BE2EF874820068C8D1 /* Build configuration list for PBXNativeTarget "CarQuizTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				5004B4BF2EF874820068C8D1 /* Debug */,
-				5004B4C02EF874820068C8D1 /* Release */,
 				5090EC612EFB1A4F004DB170 /* Debug-Local */,
 				5090EC622EFB1A4F004DB170 /* Release-Local */,
 				5090EC632EFB1A4F004DB170 /* Debug-Prod */,
 				5090EC642EFB1A4F004DB170 /* Release-Prod */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = "Release-Prod";
 		};
 		5004B4C12EF874820068C8D1 /* Build configuration list for PBXNativeTarget "CarQuizUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				5004B4C22EF874820068C8D1 /* Debug */,
-				5004B4C32EF874820068C8D1 /* Release */,
 				5090EC652EFB1A4F004DB170 /* Debug-Local */,
 				5090EC662EFB1A4F004DB170 /* Release-Local */,
 				5090EC672EFB1A4F004DB170 /* Debug-Prod */,
 				5090EC682EFB1A4F004DB170 /* Release-Prod */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = "Release-Prod";
 		};
 /* End XCConfigurationList section */
 

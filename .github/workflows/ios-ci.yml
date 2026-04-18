@@ -44,7 +44,6 @@ jobs:
           xcodebuild test \
             -scheme CarQuiz-Local \
             -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest' \
-            -configuration Debug \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \

@@ -1,0 +1,22 @@
+//
+// Release.xcconfig
+// Settings for any Release (Archive/distribution) build, regardless of environment.
+//
+
+// MARK: - Build behavior
+DEBUG_INFORMATION_FORMAT = dwarf-with-dsym
+ENABLE_TESTABILITY = NO
+
+// MARK: - Optimization
+GCC_OPTIMIZATION_LEVEL = s
+SWIFT_OPTIMIZATION_LEVEL = -O
+SWIFT_COMPILATION_MODE = wholemodule
+
+// MARK: - Assertions
+ENABLE_NS_ASSERTIONS = NO
+
+// MARK: - Product validation
+VALIDATE_PRODUCT = YES
+
+// MARK: - Metal
+MTL_ENABLE_DEBUG_INFO = NO

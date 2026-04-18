@@ -1,8 +1,7 @@
 //
 // Prod.xcconfig
-// CarQuiz
-//
-// Configuration for production environment
+// Environment-only settings for the production build (API → Fly.io, TestFlight/App Store).
+// Include Shared here so any xcconfig that wants just Prod can pull the base too.
 //
 
 #include "Shared.xcconfig"
@@ -10,28 +9,20 @@
 // MARK: - Environment
 ENVIRONMENT_NAME = Production
 
-// MARK: - API Configuration
+// MARK: - API
+// `$()` escape breaks the `//` token so xcconfig doesn't treat the rest as a comment.
 API_BASE_URL = https:/$()/quiz-agent-api.fly.dev
 
 // MARK: - Sentry
-// `$()` escape breaks the `//` token so xcconfig doesn't treat the rest of the line as a comment.
 SENTRY_DSN = https:/$()/c5440340d41535b4862af9385d9bc38c@o4511195958738944.ingest.de.sentry.io/4511196118188112
 
-// MARK: - Bundle Identifier
+// MARK: - Identity
 PRODUCT_BUNDLE_IDENTIFIER = $(BUNDLE_ID_BASE)
+BUNDLE_DISPLAY_NAME = $(APP_DISPLAY_NAME)
 
-// MARK: - App Display Name
-PRODUCT_NAME = $(APP_DISPLAY_NAME)
+// MARK: - Capabilities
+CODE_SIGN_ENTITLEMENTS = CarQuiz/CarQuiz-Prod.entitlements
 
-// MARK: - Release Settings
-ENABLE_TESTABILITY = NO
-GCC_OPTIMIZATION_LEVEL = s
-SWIFT_OPTIMIZATION_LEVEL = -O
-SWIFT_COMPILATION_MODE = wholemodule
-
-// MARK: - Code Signing (Manual — driven by fastlane match)
-// Override Shared.xcconfig's Automatic style. Match installs a provisioning
-// profile named "match AppStore <bundle-id>" into the build keychain.
-CODE_SIGN_STYLE = Manual
-CODE_SIGN_IDENTITY = Apple Distribution
-PROVISIONING_PROFILE_SPECIFIER = match AppStore $(PRODUCT_BUNDLE_IDENTIFIER)
+// Signing lives in the build-type × env composition files (Debug-Prod / Release-Prod),
+// because Debug needs a Development profile (installable on device) while Release-Prod
+// needs the AppStore distribution profile used by fastlane match.

@@ -1,0 +1,14 @@
+//
+// Release-Local.xcconfig
+// Composition for the Release-Local build configuration.
+// Archiving a Local-env build uses release optimizations + local API/bundle identity.
+//
+
+#include "Release.xcconfig"
+#include "Local.xcconfig"
+
+// MARK: - Signing (local archive; not TestFlight)
+CODE_SIGN_STYLE = Automatic
+DEVELOPMENT_TEAM = KAGWHPZZFQ
+CODE_SIGN_IDENTITY = Apple Development
+PROVISIONING_PROFILE_SPECIFIER =

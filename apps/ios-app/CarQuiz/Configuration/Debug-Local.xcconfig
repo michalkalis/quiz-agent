@@ -1,0 +1,16 @@
+//
+// Debug-Local.xcconfig
+// Composition for the Debug-Local build configuration.
+// Include order: build-type first, env second — env values win on conflicts.
+//
+
+#include "Debug.xcconfig"
+#include "Local.xcconfig"
+
+// MARK: - Signing (on-device Run/Debug)
+// Automatic signing with the PixelApps team (KAGWHPZZFQ). On first run against a
+// new device, Xcode auto-generates a Development cert + provisioning profile.
+CODE_SIGN_STYLE = Automatic
+DEVELOPMENT_TEAM = KAGWHPZZFQ
+CODE_SIGN_IDENTITY = Apple Development
+PROVISIONING_PROFILE_SPECIFIER =

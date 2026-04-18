@@ -1,39 +1,60 @@
 //
 // Shared.xcconfig
-// CarQuiz
-//
-// Shared build settings for all environments
+// Settings common to ALL configs (every environment, every build type).
 //
 
 // MARK: - App Information
+// APP_NAME is the *technical* name used for the binary, app bundle, and TEST_HOST paths.
+// Keep stable to avoid rippling renames through tests/fastlane/CI.
+// User-visible name lives in BUNDLE_DISPLAY_NAME (set per env) and is surfaced via
+// CFBundleDisplayName in Info.plist.
 APP_NAME = CarQuiz
 APP_DISPLAY_NAME = Hangs
+PRODUCT_NAME = $(APP_NAME)
 
 // MARK: - Bundle Identifier Base
-// Environment-specific configs will append a suffix to this
 BUNDLE_ID_BASE = com.missinghue.hangs
 
-// MARK: - Info.plist Configuration
+// MARK: - Info.plist
 INFOPLIST_FILE = CarQuiz/Info.plist
-GENERATE_INFOPLIST_FILE = NO
+GENERATE_INFOPLIST_FILE = YES
+INFOPLIST_KEY_NSMicrophoneUsageDescription = We need microphone access to record your quiz answers hands-free.
+INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES
+INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES
+INFOPLIST_KEY_UILaunchScreen_Generation = YES
+INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
+INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
 
-// MARK: - API Configuration
+// MARK: - API
 API_VERSION = /api/v1
 
-// MARK: - Code Signing (override in environment-specific configs if needed)
-CODE_SIGN_STYLE = Automatic
-DEVELOPMENT_TEAM = $(inherited)
-
-// MARK: - Swift Settings
+// MARK: - Swift
 SWIFT_VERSION = 6.0
 SWIFT_STRICT_CONCURRENCY = complete
+SWIFT_APPROACHABLE_CONCURRENCY = YES
+SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor
+SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES
+SWIFT_EMIT_LOC_STRINGS = YES
+STRING_CATALOG_GENERATE_SYMBOLS = YES
 
-// MARK: - Other Settings
-TARGETED_DEVICE_FAMILY = 1
+// MARK: - Deployment
+TARGETED_DEVICE_FAMILY = 1,2
 IPHONEOS_DEPLOYMENT_TARGET = 18.0
+SDKROOT = iphoneos
+LD_RUNPATH_SEARCH_PATHS = $(inherited) @executable_path/Frameworks
 
-// MARK: - Asset Catalog
+// MARK: - Versioning
+CURRENT_PROJECT_VERSION = 1
+MARKETING_VERSION = 1.0
+
+// MARK: - Assets
 // App Store validation requires CFBundleIconName, which xcodebuild only injects
 // when ASSETCATALOG_COMPILER_APPICON_NAME points at a real asset set.
 ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon
 ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor
+ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES
+
+// MARK: - Misc
+ENABLE_PREVIEWS = YES
+ENABLE_USER_SCRIPT_SANDBOXING = NO
+LOCALIZATION_PREFERS_STRING_CATALOGS = YES

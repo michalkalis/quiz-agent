@@ -1,0 +1,17 @@
+//
+// Debug-Prod.xcconfig
+// Composition for the Debug-Prod build configuration (debugging against the prod API).
+//
+
+#include "Debug.xcconfig"
+#include "Prod.xcconfig"
+
+// MARK: - Signing (on-device Run/Debug against prod API)
+// Automatic signing with the PixelApps team (KAGWHPZZFQ). Intentionally NOT the
+// AppStore distribution profile used by Release-Prod — a distribution profile
+// cannot be installed on a device via Xcode Run (install fails with CoreDevice
+// error 3002 / 1005).
+CODE_SIGN_STYLE = Automatic
+DEVELOPMENT_TEAM = KAGWHPZZFQ
+CODE_SIGN_IDENTITY = Apple Development
+PROVISIONING_PROFILE_SPECIFIER =

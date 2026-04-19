@@ -86,13 +86,14 @@ struct QuestionView: View {
     // MARK: - Top chrome
 
     private var topChrome: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 8) {
             HangsQuizNav(
                 onClose: { showEndQuizConfirmation = true },
                 counterText: counterString,
                 counterAccent: isRecording ? Theme.Hangs.Colors.pink : Theme.Hangs.Colors.muted
             )
             HangsProgressBar(progress: progressValue)
+            supportRow
         }
     }
 
@@ -138,20 +139,23 @@ struct QuestionView: View {
     // MARK: - Voice body
 
     private func voiceBody(question: Question) -> some View {
-        VStack(spacing: 14) {
-            questionBlock(question: question)
+        VStack(spacing: 0) {
+            fixedQuestionHeader(question: question, includeHint: !question.isMultipleChoice)
 
-            if isRecording && !viewModel.liveTranscript.isEmpty {
-                transcriptCard
+            // Question scrolls full-height; mic floats over the bottom so the
+            // question text can extend underneath the translucent halos.
+            ZStack(alignment: .bottom) {
+                scrollableQuestionContent(question: question)
+
+                VStack(spacing: 6) {
+                    if isRecording && !viewModel.liveTranscript.isEmpty {
+                        transcriptCard
+                    }
+                    floatingMicRow
+                }
+                .padding(.bottom, 4)
             }
-
-            supportRow
-
-            Spacer(minLength: 0)
-
-            micArea
-
-            Spacer(minLength: 0)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             if showTextInput { textInputRow }
 
@@ -162,38 +166,48 @@ struct QuestionView: View {
         .frame(maxHeight: .infinity)
     }
 
-    // MARK: - Question block
+    // MARK: - Fixed question header (category label + hint)
 
-    private func questionBlock(question: Question) -> some View {
-        VStack(alignment: .leading, spacing: 14) {
+    private func fixedQuestionHeader(question: Question, includeHint: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
             HangsSectionLabel(
                 text: question.category.uppercased(),
                 color: isRecording ? Theme.Hangs.Colors.blue : Theme.Hangs.Colors.pink
             )
 
-            if question.hasImage {
-                ImageQuestionView(question: question)
-                    .frame(maxHeight: isRecording ? 160 : 260)
-            } else {
-                HangsQuestionPrompt(
-                    text: question.question,
-                    barColor: isRecording ? Theme.Hangs.Colors.pink : Theme.Hangs.Colors.blue,
-                    textFont: isRecording ? .hangsQuestion : .hangsDisplaySM,
-                    height: isRecording ? 200 : 300
-                )
-                .accessibilityIdentifier("question.text")
-            }
-
-            if viewModel.quizState == .askingQuestion && !question.isMultipleChoice {
+            if includeHint && viewModel.quizState == .askingQuestion {
                 Text("Answer out loud when the mic glows.")
                     .font(.hangsBody(14))
                     .foregroundColor(Theme.Hangs.Colors.muted)
             }
         }
-        .padding(.horizontal, 28)
-        .padding(.top, isRecording ? 16 : 12)
-        .padding(.bottom, isRecording ? 8 : 12)
         .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 28)
+        .padding(.top, 12)
+        .padding(.bottom, 6)
+    }
+
+    // MARK: - Scrollable question body (text or image)
+
+    private func scrollableQuestionContent(question: Question) -> some View {
+        ScrollView(.vertical, showsIndicators: true) {
+            VStack(alignment: .leading, spacing: 0) {
+                if question.hasImage {
+                    ImageQuestionView(question: question)
+                } else {
+                    HangsQuestionPrompt(
+                        text: question.question,
+                        barColor: isRecording ? Theme.Hangs.Colors.pink : Theme.Hangs.Colors.blue,
+                        textFont: .hangsQuestion
+                    )
+                    .accessibilityIdentifier("question.text")
+                }
+            }
+            .padding(.horizontal, 28)
+            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     // MARK: - Transcript card
@@ -267,30 +281,14 @@ struct QuestionView: View {
         return heights[i % heights.count]
     }
 
-    // MARK: - Mic area
+    // MARK: - Floating mic (centered over the question content)
 
-    private var micArea: some View {
-        VStack(spacing: 14) {
-            HangsMicBlock(mode: isRecording ? .listening : .tap) {
-                Task { await viewModel.toggleRecording() }
-            }
-            .accessibilityIdentifier("question.micButton")
-
-            Text(isRecording ? "Listening…" : "Tap to speak")
-                .font(.hangsSubHero)
-                .foregroundColor(Theme.Hangs.Colors.ink)
-
-            Text(micHint)
-                .font(.hangsBody(13))
-                .foregroundColor(Theme.Hangs.Colors.muted)
-                .multilineTextAlignment(.center)
-
-            if viewModel.voiceCommandsAvailable {
-                VoiceCommandIndicator(state: viewModel.voiceCommandState)
-            }
+    private var floatingMicRow: some View {
+        HangsMicBlock(mode: isRecording ? .listening : .tap, compact: true) {
+            Task { await viewModel.toggleRecording() }
         }
-        .padding(.horizontal, 24)
-        .frame(maxWidth: .infinity)
+        .accessibilityIdentifier("question.micButton")
+        .frame(maxWidth: .infinity, alignment: .center)
     }
 
     private var micHint: String {
@@ -308,7 +306,7 @@ struct QuestionView: View {
         }
     }
 
-    // MARK: - Chip action row (repeat / keyboard / mute)
+    // MARK: - Chip action row (repeat / keyboard / mute + voice hint)
 
     private var chipActionRow: some View {
         HStack(spacing: 10) {
@@ -335,7 +333,13 @@ struct QuestionView: View {
                 viewModel.settings.isMuted.toggle()
             }
 
-            Spacer()
+            Spacer(minLength: 8)
+
+            Text(micHint)
+                .font(.hangsBody(12))
+                .foregroundColor(Theme.Hangs.Colors.muted)
+                .multilineTextAlignment(.trailing)
+                .lineLimit(2)
         }
         .padding(.horizontal, 24)
         .padding(.top, 8)
@@ -398,8 +402,10 @@ struct QuestionView: View {
     // MARK: - MCQ body
 
     private func mcqBody(question: Question) -> some View {
-        VStack(spacing: 12) {
-            questionBlock(question: question)
+        VStack(spacing: 0) {
+            fixedQuestionHeader(question: question, includeHint: false)
+
+            scrollableQuestionContent(question: question)
 
             MCQOptionPicker(
                 options: question.sortedAnswerOptions,
@@ -407,8 +413,7 @@ struct QuestionView: View {
                     Task { await viewModel.submitMCQAnswer(key: key, value: value) }
                 }
             )
-
-            Spacer(minLength: 0)
+            .padding(.top, 8)
 
             chipActionRow
 

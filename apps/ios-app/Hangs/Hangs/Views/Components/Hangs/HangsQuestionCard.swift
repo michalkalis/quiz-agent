@@ -3,43 +3,37 @@
 //  Hangs
 //
 //  Prompt block used on the question + result screens. A thin colored bar
-//  on the left hugs the condensed question text, which scrolls vertically
-//  when the question is too long to fit the available height.
+//  on the left hugs the question text. The parent view is responsible for
+//  wrapping this in a ScrollView when the text may overflow.
 //
 
 import SwiftUI
 
-/// Scrollable question prompt. The left vertical rule auto-matches the height
-/// of the visible text block.
+/// Question prompt with a left vertical rule. Sizes to content; use inside
+/// a parent `ScrollView` when the text can overflow the available height.
 struct HangsQuestionPrompt: View {
     let text: String
     var barColor: Color = Theme.Hangs.Colors.blue
     var textFont: Font = .hangsDisplaySM
     var textColor: Color = Theme.Hangs.Colors.ink
-    /// Reserved height for the prompt area. Ensures long questions always
-    /// show ~6 lines; the inner ScrollView handles overflow. A fixed height
-    /// is used (not `maxHeight`) because SwiftUI's ScrollView has ambiguous
-    /// ideal size and collapses to zero when siblings include Spacers.
-    var height: CGFloat = 300
+    var minimumScaleFactor: CGFloat = 0.55
 
     var body: some View {
-        ScrollView(.vertical, showsIndicators: false) {
-            HStack(alignment: .top, spacing: 8) {
-                RoundedRectangle(cornerRadius: 2, style: .continuous)
-                    .fill(barColor)
-                    .frame(width: 3)
-                    .frame(maxHeight: .infinity, alignment: .top)
-                Text(text)
-                    .font(textFont)
-                    .tracking(-1)
-                    .foregroundColor(textColor)
-                    .lineSpacing(-2)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .multilineTextAlignment(.leading)
-            }
+        HStack(alignment: .top, spacing: 8) {
+            RoundedRectangle(cornerRadius: 2, style: .continuous)
+                .fill(barColor)
+                .frame(width: 3)
+                .frame(maxHeight: .infinity, alignment: .top)
+            Text(text)
+                .font(textFont)
+                .tracking(-1)
+                .foregroundColor(textColor)
+                .lineSpacing(-2)
+                .minimumScaleFactor(minimumScaleFactor)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .multilineTextAlignment(.leading)
         }
-        .frame(height: height, alignment: .top)
     }
 }
 

@@ -30,21 +30,25 @@ struct ResultView: View {
                 )
                 HangsProgressBar(progress: progressFraction)
 
-                heroBlock
+                ScrollView {
+                    VStack(spacing: 0) {
+                        heroBlock
 
-                if showEvaluation, viewModel.resultEvaluation != nil {
-                    answerCard
-                        .padding(.horizontal, 24)
-                        .padding(.top, 8)
+                        if showEvaluation, viewModel.resultEvaluation != nil {
+                            answerCard
+                                .padding(.horizontal, 24)
+                                .padding(.top, 8)
 
-                    statsRow
-                        .padding(.horizontal, 24)
-                        .padding(.top, 12)
+                            statsRow
+                                .padding(.horizontal, 24)
+                                .padding(.top, 12)
 
-                    extrasScroll
+                            extrasContent
+                        }
+                    }
+                    .padding(.bottom, 8)
                 }
-
-                Spacer(minLength: 8)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
 
                 countdownBar
                 footerBar
@@ -64,12 +68,12 @@ struct ResultView: View {
     // MARK: - Hero
 
     private var heroBlock: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 8) {
             HangsResultBanner(kind: isCorrect ? .correct : .incorrect)
             Text(isCorrect ? "NAILED\nIT." : "CLOSE—\nBUT NO.")
-                .font(isCorrect ? .hangsDisplayLG : .hangsDisplay(58))
+                .font(.hangsDisplay(isCorrect ? 52 : 44))
                 .tracking(-2)
-                .lineSpacing(-8)
+                .lineSpacing(-6)
                 .foregroundColor(Theme.Hangs.Colors.ink)
                 .fixedSize(horizontal: false, vertical: true)
             Text(subHeadline)
@@ -78,7 +82,7 @@ struct ResultView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 28)
-        .padding(.top, 20)
+        .padding(.top, 12)
         .padding(.bottom, 4)
     }
 
@@ -161,42 +165,38 @@ struct ResultView: View {
 
     // MARK: - Extras (explanation / source / rating / flag)
 
-    private var extrasScroll: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 14) {
-                if let explanation = viewModel.resultEvaluation?.explanation
-                    ?? viewModel.resultQuestion?.explanation,
-                   !explanation.isEmpty {
-                    Text(explanation)
-                        .font(.hangsBody(14))
-                        .foregroundColor(Theme.Hangs.Colors.muted)
-                        .lineSpacing(2)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-
-                if viewModel.resultQuestion?.sourceUrl != nil {
-                    HangsGhostButton(
-                        title: "View source",
-                        icon: "book.closed",
-                        color: Theme.Hangs.Colors.blue
-                    ) {
-                        showSourceWebView = true
-                    }
+    private var extrasContent: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            if let explanation = viewModel.resultEvaluation?.explanation
+                ?? viewModel.resultQuestion?.explanation,
+               !explanation.isEmpty {
+                Text(explanation)
+                    .font(.hangsQuestion)
+                    .foregroundColor(Theme.Hangs.Colors.muted)
+                    .minimumScaleFactor(0.55)
+                    .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                }
-
-                HStack {
-                    ratingRow
-                    Spacer()
-                    flagButton
-                }
             }
-            .padding(.horizontal, 24)
-            .padding(.top, 16)
-            .padding(.bottom, 8)
+
+            if viewModel.resultQuestion?.sourceUrl != nil {
+                HangsGhostButton(
+                    title: "View source",
+                    icon: "book.closed",
+                    color: Theme.Hangs.Colors.blue
+                ) {
+                    showSourceWebView = true
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
+            HStack {
+                ratingRow
+                Spacer()
+                flagButton
+            }
         }
-        .frame(maxHeight: 180)
+        .padding(.horizontal, 24)
+        .padding(.top, 16)
     }
 
     private var ratingRow: some View {

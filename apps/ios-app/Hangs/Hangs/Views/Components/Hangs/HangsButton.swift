@@ -2,45 +2,46 @@
 //  HangsButton.swift
 //  Hangs
 //
-//  Block-style primary (pink filled) and secondary (blue outlined) buttons.
-//  Sharp corners, thick borders — blocky terminal aesthetic.
+//  Primary / secondary / ghost buttons matching the Pencil redesign.
+//  Primary = pink pill with soft shadow; Secondary = white w/ subtle border;
+//  Ghost = inline text link.
 //
 
 import SwiftUI
 
-/// Primary CTA — pink filled block with black text. Sharp corners, thin shadow.
+/// Primary CTA — pink filled pill. Label + optional leading / trailing SF symbol.
 struct HangsPrimaryButton: View {
     let title: String
     var icon: String? = nil
     var trailingIcon: String? = nil
     var isLoading: Bool = false
+    var height: CGFloat = 64
+    var isDestructive: Bool = false
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: 10) {
                 if isLoading {
-                    ProgressView()
-                        .tint(Theme.Hangs.Colors.textOnAccent)
-                } else if let icon = icon {
+                    ProgressView().tint(.white)
+                } else if let icon {
                     Image(systemName: icon)
-                        .font(.system(size: 14, weight: .bold))
+                        .font(.system(size: 17, weight: .semibold))
                 }
                 Text(title)
                     .font(.hangsButton)
-                    .tracking(1.5)
-                if let trailingIcon = trailingIcon {
+                if let trailingIcon {
                     Image(systemName: trailingIcon)
-                        .font(.system(size: 13, weight: .bold))
+                        .font(.system(size: 15, weight: .semibold))
                 }
             }
-            .foregroundColor(Theme.Hangs.Colors.textOnAccent)
+            .foregroundColor(.white)
             .frame(maxWidth: .infinity)
-            .frame(height: 56)
-            .background(Theme.Hangs.Colors.accent)
-            .overlay(
-                Rectangle().stroke(Theme.Hangs.Colors.accent, lineWidth: 1)
+            .frame(height: height)
+            .background(
+                Capsule().fill(Theme.Hangs.Colors.pink)
             )
+            .hangsShadow(isDestructive ? Theme.Hangs.Shadow.ctaStrong : Theme.Hangs.Shadow.cta)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(isLoading ? "Loading" : title)
@@ -48,29 +49,31 @@ struct HangsPrimaryButton: View {
     }
 }
 
-/// Secondary CTA — blue outlined block with blue text on transparent bg.
+/// Secondary CTA — white pill with hairline border and black text + optional icon.
 struct HangsSecondaryButton: View {
     let title: String
     var icon: String? = nil
+    var height: CGFloat = 52
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: 10) {
-                if let icon = icon {
+                if let icon {
                     Image(systemName: icon)
-                        .font(.system(size: 13, weight: .bold))
+                        .font(.system(size: 16, weight: .semibold))
                 }
                 Text(title)
-                    .font(.hangsButton)
-                    .tracking(1.5)
+                    .font(.hangsBody(16, weight: .semibold))
             }
-            .foregroundColor(Theme.Hangs.Colors.infoAccent)
+            .foregroundColor(Theme.Hangs.Colors.ink)
             .frame(maxWidth: .infinity)
-            .frame(height: 48)
-            .background(Color.clear)
+            .frame(height: height)
+            .background(
+                Capsule().fill(Color.white)
+            )
             .overlay(
-                Rectangle().stroke(Theme.Hangs.Colors.infoAccent, lineWidth: 1)
+                Capsule().stroke(Theme.Hangs.Colors.subtleBorder, lineWidth: 1)
             )
         }
         .buttonStyle(.plain)
@@ -78,30 +81,26 @@ struct HangsSecondaryButton: View {
     }
 }
 
-/// Tertiary/ghost CTA — thin border, neutral color.
+/// Ghost CTA — inline blue text link with optional leading icon. No bg, no border.
 struct HangsGhostButton: View {
     let title: String
     var icon: String? = nil
-    var color: Color = Theme.Hangs.Colors.textSecondary
+    var color: Color = Theme.Hangs.Colors.blue
+    var font: Font = .hangsBody(14, weight: .medium)
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 8) {
-                if let icon = icon {
+            HStack(spacing: 6) {
+                if let icon {
                     Image(systemName: icon)
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(.system(size: 13, weight: .semibold))
                 }
-                Text(title)
-                    .font(.system(size: 13, weight: .semibold))
-                    .tracking(1.2)
+                Text(title).font(font)
             }
             .foregroundColor(color)
             .frame(maxWidth: .infinity)
-            .frame(height: 40)
-            .overlay(
-                Rectangle().stroke(Theme.Hangs.Colors.divider, lineWidth: 1)
-            )
+            .frame(minHeight: 32)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(title)
@@ -111,13 +110,13 @@ struct HangsGhostButton: View {
 #if DEBUG
 #Preview {
     VStack(spacing: 12) {
-        HangsPrimaryButton(title: "START QUIZ", icon: "play.fill", trailingIcon: "arrow.up.right") {}
-        HangsSecondaryButton(title: "SETTINGS", icon: "gearshape.fill") {}
-        HangsGhostButton(title: "SKIP", icon: "forward.fill") {}
+        HangsPrimaryButton(title: "Start Quiz", icon: "play.fill") {}
+        HangsPrimaryButton(title: "Next question", trailingIcon: "arrow.right") {}
+        HangsSecondaryButton(title: "Home", icon: "house.fill") {}
+        HangsGhostButton(title: "Why is this correct?", icon: "book.closed") {}
     }
-    .padding()
+    .padding(20)
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(Theme.Hangs.Colors.bg)
-    .preferredColorScheme(.dark)
 }
 #endif

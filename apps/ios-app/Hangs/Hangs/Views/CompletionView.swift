@@ -2,7 +2,9 @@
 //  CompletionView.swift
 //  Hangs
 //
-//  Hangs redesign quiz completion — "QUIZ MASTER!" hero, final score card, metric tiles.
+//  Hangs redesign quiz completion (Pencil NEW_Screen/Quiz-Complete):
+//  cream bg, editorial "COMPLETE" hero, final-score card, breakdown card,
+//  and primary/secondary CTA stack.
 //
 
 import SwiftUI
@@ -12,187 +14,151 @@ struct CompletionView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HangsStatusBar(
-                leading: "// FINAL_RESULTS",
-                trailing: "● SESSION_END",
-                leadingColor: Theme.Hangs.Colors.infoAccent,
-                trailingDotColor: Theme.Hangs.Colors.accent
-            )
-            HangsDivider()
-
-            HStack {
-                Spacer()
-                Button { viewModel.resetToHome() } label: {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(Theme.Hangs.Colors.textPrimary)
-                        .frame(width: 36, height: 36)
-                        .background(Theme.Hangs.Colors.bgCard)
-                        .overlay(Rectangle().stroke(Theme.Hangs.Colors.divider, lineWidth: 1))
-                }
-                .accessibilityLabel("Close")
-                .accessibilityIdentifier("completion.close")
+            HangsBrandRow {
+                HangsNavChip(icon: "xmark") { viewModel.resetToHome() }
+                    .accessibilityIdentifier("completion.close")
             }
-            .padding(.horizontal, 20)
-            .padding(.top, 12)
 
             ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    heroBlock
-                    scoreCard
-                    statTiles
+                VStack(spacing: 0) {
+                    HangsHeroBlock(
+                        title: "COMPLETE",
+                        subtitle: "nice work — here's your run",
+                        titleFont: .hangsDisplayMD
+                    )
+                    .padding(.horizontal, 20)
+
+                    finalScoreCard
+                        .padding(.horizontal, 20)
+                        .padding(.top, 12)
+
+                    breakdownCard
+                        .padding(.horizontal, 20)
+                        .padding(.top, 14)
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 16)
-                .padding(.bottom, 20)
+                .padding(.bottom, 12)
             }
 
-            actionButtons
-            HangsFooterBar(leading: "◢ REG.MARK.05", trailing: "SESSION.END ● OK")
+            Spacer(minLength: 0)
+
+            ctaStack
         }
         .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
-        .preferredColorScheme(.dark)
     }
 
-    // MARK: - Hero
+    // MARK: - Final score card
 
-    private var heroBlock: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(title)
-                .font(.system(size: 60, weight: .black))
-                .tracking(-1)
-                .foregroundColor(Theme.Hangs.Colors.textPrimary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.5)
-            Text(accentTitle)
-                .font(.system(size: 60, weight: .black))
-                .tracking(-1)
-                .foregroundColor(Theme.Hangs.Colors.bg)
-                .lineLimit(1)
-                .minimumScaleFactor(0.5)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 2)
-                .background(Theme.Hangs.Colors.accent)
-        }
-    }
-
-    private var title: String {
-        if scorePercentage >= 80 { return "QUIZ" }
-        if scorePercentage >= 60 { return "WELL" }
-        return "NICE"
-    }
-
-    private var accentTitle: String {
-        if scorePercentage >= 80 { return "MASTER!" }
-        if scorePercentage >= 60 { return "DONE!" }
-        return "EFFORT!"
-    }
-
-    // MARK: - Score card
-
-    private var scoreCard: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack(alignment: .firstTextBaseline) {
-                Text("FINAL_SCORE")
-                    .font(.hangsMonoLabel)
-                    .foregroundColor(Theme.Hangs.Colors.textSecondary)
-                    .tracking(2)
-                Spacer()
-                HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(String(format: "%.1f", viewModel.score))
-                        .font(.system(size: 48, weight: .bold, design: .monospaced))
-                        .foregroundColor(Theme.Hangs.Colors.textPrimary)
-                    Text("/\(maxQuestions)")
-                        .font(.system(size: 22, design: .monospaced))
-                        .foregroundColor(Theme.Hangs.Colors.textSecondary)
-                }
+    private var finalScoreCard: some View {
+        HangsCard(padding: EdgeInsets(top: 16, leading: 20, bottom: 16, trailing: 20)) {
+            VStack(spacing: 6) {
+                HangsSectionLabel(text: "final score", color: Theme.Hangs.Colors.pink)
+                Text("\(Int(viewModel.score))")
+                    .font(.hangsNumberLG)
+                    .tracking(-3)
+                    .foregroundColor(Theme.Hangs.Colors.ink)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                Text("out of \(totalQuestions)")
+                    .font(.hangsBody(13, weight: .medium))
+                    .foregroundColor(Theme.Hangs.Colors.muted)
             }
-            Rectangle().fill(Theme.Hangs.Colors.divider).frame(height: 1)
-            HStack {
-                Text("ACCURACY")
-                    .font(.hangsMonoLabel)
-                    .foregroundColor(Theme.Hangs.Colors.textSecondary)
-                    .tracking(2)
-                Spacer()
-                Text(String(format: "%d%%", Int(scorePercentage)))
-                    .font(.system(size: 20, weight: .bold, design: .monospaced))
-                    .foregroundColor(Theme.Hangs.Colors.textPrimary)
-            }
+            .frame(maxWidth: .infinity)
         }
-        .padding(20)
-        .frame(maxWidth: .infinity)
-        .background(Theme.Hangs.Colors.bgCard)
-        .overlay(Rectangle().stroke(Theme.Hangs.Colors.infoAccent, lineWidth: 1))
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Final score: \(Int(viewModel.score)) of \(maxQuestions), \(Int(scorePercentage)) percent accuracy")
+        .accessibilityLabel("Final score: \(Int(viewModel.score)) out of \(totalQuestions)")
         .accessibilityIdentifier("completion.score")
     }
 
-    // MARK: - Stat tiles
+    // MARK: - Breakdown card
 
-    private var statTiles: some View {
-        HStack(spacing: 12) {
-            statTile(value: "\(Int(viewModel.score))/\(maxQuestions)", label: "CORRECT")
-            statTile(value: "\(viewModel.quizStats.bestStreak)", label: "STREAK")
+    private var breakdownCard: some View {
+        HangsCard {
+            VStack(spacing: 0) {
+                breakdownRow(
+                    label: "Correct",
+                    value: "\(correctCount)",
+                    valueColor: Theme.Hangs.Colors.blue
+                )
+                Rectangle()
+                    .fill(Theme.Hangs.Colors.hairline)
+                    .frame(height: 1)
+                breakdownRow(
+                    label: "Incorrect",
+                    value: "\(incorrectCount)",
+                    valueColor: Theme.Hangs.Colors.pink
+                )
+                Rectangle()
+                    .fill(Theme.Hangs.Colors.hairline)
+                    .frame(height: 1)
+                breakdownRow(
+                    label: "Avg points",
+                    value: avgPointsText,
+                    valueColor: Theme.Hangs.Colors.blue
+                )
+            }
         }
+        .accessibilityIdentifier("completion.breakdown")
     }
 
-    private func statTile(value: String, label: String) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(value)
-                .font(.system(size: 28, weight: .bold, design: .monospaced))
-                .foregroundColor(Theme.Hangs.Colors.textPrimary)
+    private func breakdownRow(label: String, value: String, valueColor: Color) -> some View {
+        HStack {
             Text(label)
-                .font(.hangsMonoLabel)
-                .foregroundColor(Theme.Hangs.Colors.infoAccent)
-                .tracking(2)
+                .font(.hangsBody(16, weight: .semibold))
+                .foregroundColor(Theme.Hangs.Colors.ink)
+            Spacer()
+            Text(value)
+                .font(.hangsDisplay(28))
+                .tracking(-1)
+                .foregroundColor(valueColor)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 14)
-        .padding(.vertical, 16)
-        .background(Theme.Hangs.Colors.bgCard)
-        .overlay(Rectangle().stroke(Theme.Hangs.Colors.divider, lineWidth: 1))
+        .padding(.horizontal, 18)
+        .padding(.vertical, 14)
     }
 
-    // MARK: - Actions
+    // MARK: - CTA stack
 
-    private var actionButtons: some View {
-        VStack(spacing: 12) {
-            HangsPrimaryButton(title: "PLAY AGAIN", icon: "arrow.clockwise") {
+    private var ctaStack: some View {
+        VStack(spacing: 8) {
+            HangsPrimaryButton(
+                title: "Play Again",
+                icon: "arrow.counterclockwise",
+                height: 58
+            ) {
                 Task { await viewModel.startNewQuiz() }
             }
             .accessibilityIdentifier("completion.playAgain")
 
-            Button {
+            HangsSecondaryButton(
+                title: "Home",
+                icon: "house.fill",
+                height: 52
+            ) {
                 viewModel.resetToHome()
-            } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "arrow.left")
-                        .font(.system(size: 13, weight: .bold))
-                    Text("BACK TO HOME")
-                        .font(.system(size: 14, weight: .semibold))
-                        .tracking(2)
-                }
-                .foregroundColor(Theme.Hangs.Colors.infoAccent)
-                .frame(maxWidth: .infinity)
-                .frame(height: 52)
-                .overlay(Rectangle().stroke(Theme.Hangs.Colors.infoAccent, lineWidth: 1.5))
             }
-            .accessibilityIdentifier("completion.backToHome")
+            .accessibilityIdentifier("completion.home")
         }
         .padding(.horizontal, 20)
-        .padding(.bottom, 16)
+        .padding(.bottom, 14)
     }
 
     // MARK: - Derived
 
-    private var maxQuestions: Int {
-        viewModel.currentSession?.maxQuestions ?? max(viewModel.questionsAnswered, 1)
+    private var totalQuestions: Int {
+        viewModel.currentSession?.maxQuestions
+            ?? max(viewModel.questionsAnswered, viewModel.settings.numberOfQuestions)
     }
 
-    private var scorePercentage: Double {
-        guard maxQuestions > 0 else { return 0 }
-        return (viewModel.score / Double(maxQuestions)) * 100
+    private var correctCount: Int {
+        Int(viewModel.score)
+    }
+
+    private var incorrectCount: Int {
+        max(viewModel.questionsAnswered - correctCount, 0)
+    }
+
+    private var avgPointsText: String {
+        let denom = max(Double(viewModel.questionsAnswered), 1)
+        return String(format: "%.1f", viewModel.score / denom)
     }
 }
 
@@ -205,6 +171,6 @@ struct CompletionView: View {
         vm.quizState = .finished
         return vm
     }()
-    CompletionView(viewModel: viewModel)
+    return CompletionView(viewModel: viewModel)
 }
 #endif

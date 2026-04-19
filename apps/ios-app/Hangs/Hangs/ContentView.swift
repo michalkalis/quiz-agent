@@ -92,23 +92,36 @@ struct ContentView: View {
     }
 }
 
-/// Error state view — Hangs redesign: big "CONNECTION LOST" block, red icon, retry CTA.
+/// Error state view — Hangs redesign: centered "OOPS" hero, pink alert icon,
+/// retry + home CTAs. Matches Pencil NEW_Screen/Error.
 struct ErrorView: View {
     @ObservedObject var viewModel: QuizViewModel
     let errorMessage: String
 
     var body: some View {
         VStack(spacing: 0) {
-            Spacer()
+            HangsBrandRow()
+
+            Spacer(minLength: 40)
 
             VStack(spacing: 24) {
-                iconBlock
-                codeLabel
-                titleBlock
-                Text(errorMessage.isEmpty ? "Unable to reach the quiz server.\nCheck your connection and try again." : errorMessage)
-                    .font(.system(size: 15))
-                    .foregroundColor(Theme.Hangs.Colors.textSecondary)
+                iconCircle
+
+                HangsHeroBlock(
+                    title: "OOPS",
+                    subtitle: "Something went wrong",
+                    titleFont: .hangsDisplayLG,
+                    alignment: .center
+                )
+                .padding(.horizontal, 20)
+
+                Text(errorMessage.isEmpty
+                     ? "Unable to reach the quiz server. Check your connection and try again."
+                     : errorMessage)
+                    .font(.hangsBody(14))
+                    .foregroundColor(Theme.Hangs.Colors.muted)
                     .multilineTextAlignment(.center)
+                    .lineSpacing(4)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.horizontal, 28)
                     .accessibilityLabel("Error: \(errorMessage)")
@@ -116,8 +129,8 @@ struct ErrorView: View {
 
             Spacer()
 
-            VStack(spacing: 12) {
-                HangsPrimaryButton(title: "RETRY CONNECTION", icon: "arrow.clockwise") {
+            VStack(spacing: 10) {
+                HangsPrimaryButton(title: "Try Again", icon: "arrow.counterclockwise") {
                     Task {
                         if viewModel.shouldRetryWithNewSession {
                             await viewModel.startNewQuiz()
@@ -128,69 +141,28 @@ struct ErrorView: View {
                 }
                 .accessibilityIdentifier("error.retry")
 
-                Button {
+                HangsSecondaryButton(title: "Go Home", icon: "house.fill", height: 56) {
                     viewModel.resetToHome()
-                } label: {
-                    HStack(spacing: 10) {
-                        Image(systemName: "arrow.left")
-                            .font(.system(size: 13, weight: .bold))
-                        Text("BACK TO HOME")
-                            .font(.system(size: 15))
-                            .tracking(1)
-                    }
-                    .foregroundColor(Theme.Hangs.Colors.infoAccent)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 52)
-                    .overlay(Rectangle().stroke(Theme.Hangs.Colors.infoAccent, lineWidth: 1.5))
                 }
                 .accessibilityIdentifier("error.home")
             }
             .padding(.horizontal, 20)
-            .padding(.bottom, 44)
+            .padding(.bottom, 20)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
-        .preferredColorScheme(.dark)
     }
 
-    private var iconBlock: some View {
+    private var iconCircle: some View {
         ZStack {
-            Rectangle()
-                .fill(Color(hex: "#2A1111"))
-                .frame(width: 88, height: 88)
-                .overlay(Rectangle().stroke(Theme.Hangs.Colors.error, lineWidth: 1))
-            Image(systemName: "wifi.slash")
-                .font(.system(size: 36, weight: .bold))
-                .foregroundColor(Theme.Hangs.Colors.error)
+            Circle()
+                .fill(Theme.Hangs.Colors.pinkSoft)
+                .frame(width: 128, height: 128)
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 56, weight: .bold))
+                .foregroundColor(Theme.Hangs.Colors.pink)
         }
         .accessibilityHidden(true)
-    }
-
-    private var codeLabel: some View {
-        HStack(spacing: 6) {
-            Rectangle().fill(Theme.Hangs.Colors.error).frame(width: 6, height: 6)
-            Text("// ERROR_STATE")
-                .font(.system(size: 11, design: .monospaced))
-                .foregroundColor(Theme.Hangs.Colors.error)
-        }
-    }
-
-    private var titleBlock: some View {
-        VStack(spacing: 4) {
-            Text("CONNECTION")
-                .font(.system(size: 52, weight: .black))
-                .tracking(-1)
-                .foregroundColor(Theme.Hangs.Colors.textPrimary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.5)
-            Text("LOST")
-                .font(.system(size: 52, weight: .black))
-                .tracking(-1)
-                .foregroundColor(Theme.Hangs.Colors.bg)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 2)
-                .background(Theme.Hangs.Colors.error)
-        }
     }
 }
 

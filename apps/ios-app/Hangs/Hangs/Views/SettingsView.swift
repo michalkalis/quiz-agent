@@ -2,7 +2,8 @@
 //  SettingsView.swift
 //  Hangs
 //
-//  Hangs redesign settings — grouped rows with monospace keys + pink values.
+//  Hangs redesign settings — cream background, grouped white cards,
+//  pink/blue mono section labels. Matches Pencil NEW_Screen/Settings.
 //
 
 import SwiftUI
@@ -13,30 +14,35 @@ struct SettingsView: View {
     @State private var showResetConfirmation = false
 
     var body: some View {
-        VStack(spacing: 0) {
-            header
-
-            ScrollView {
-                VStack(spacing: 20) {
-                    quizSettingsGroup
-                    audioSettingsGroup
-                    historyGroup
-
-                    if viewModel.questionHistoryCount > 0 {
-                        Text("\(viewModel.questionHistoryCount) / 500 questions seen")
-                            .font(.system(size: 11, weight: .regular, design: .monospaced))
-                            .foregroundColor(questionCountColor)
-                            .padding(.top, 4)
-                    }
+        ScrollView {
+            VStack(spacing: 0) {
+                HangsBrandRow {
+                    HangsNavChip(icon: "arrow.left") { dismiss() }
                 }
+
+                HangsHeroBlock(
+                    title: "SETTINGS",
+                    subtitle: "tune your experience",
+                    titleFont: .hangsDisplayMD
+                )
                 .padding(.horizontal, 20)
                 .padding(.top, 16)
+                .padding(.bottom, 24)
+
+                VStack(spacing: 20) {
+                    voiceGroup
+                    languageGroup
+                    audioFeedbackGroup
+                    moreGroup
+                    aboutGroup
+                }
+                .padding(.horizontal, 20)
                 .padding(.bottom, 40)
             }
         }
         .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
-        .preferredColorScheme(.dark)
         .navigationBarBackButtonHidden(true)
+        .navigationBarHidden(true)
         .alert("Reset Question History?", isPresented: $showResetConfirmation) {
             Button("Cancel", role: .cancel) {}
             Button("Reset", role: .destructive) { viewModel.resetQuestionHistory() }
@@ -48,265 +54,226 @@ struct SettingsView: View {
         }
     }
 
-    // MARK: - Header
+    // MARK: - Groups
 
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Button {
-                dismiss()
-            } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 14, weight: .semibold))
-                    Text("BACK")
-                        .font(.system(size: 12, weight: .regular, design: .monospaced))
-                        .tracking(1.5)
-                }
-                .foregroundColor(Theme.Hangs.Colors.accent)
-                .frame(height: 40)
-            }
-            .accessibilityIdentifier("settings.back")
+    private var voiceGroup: some View {
+        groupSection(label: "voice", color: Theme.Hangs.Colors.pink) {
+            HangsToggleRow(
+                label: "Voice commands",
+                isOn: $viewModel.settings.autoRecordEnabled
+            )
+            .accessibilityIdentifier("settings.autoRecord")
 
-            Text("// CONFIGURATION")
-                .font(.system(size: 11, weight: .regular, design: .monospaced))
-                .foregroundColor(Theme.Hangs.Colors.infoAccent)
-                .tracking(1.5)
+            hairline
 
-            Text("SETTINGS")
-                .font(.system(size: 52, weight: .black))
-                .tracking(-1)
-                .foregroundColor(Theme.Hangs.Colors.textPrimary)
+            HangsConfigRow(
+                label: "Wake word",
+                value: "hey hangs",
+                valueColor: Theme.Hangs.Colors.blue,
+                action: {}
+            )
 
-            Rectangle()
-                .fill(Theme.Hangs.Colors.accent.opacity(0.4))
-                .frame(height: 1)
-                .padding(.top, 8)
+            hairline
+
+            HangsToggleRow(
+                label: "Auto-confirm answers",
+                isOn: $viewModel.settings.autoConfirmEnabled
+            )
+            .accessibilityIdentifier("settings.autoConfirm")
         }
-        .padding(.horizontal, 20)
-        .padding(.top, 8)
-        .padding(.bottom, 16)
     }
 
-    // MARK: - Quiz settings group
-
-    private var quizSettingsGroup: some View {
-        settingsGroup(title: "QUIZ_SETTINGS") {
-            settingsRow(
-                icon: "globe",
-                label: "Language",
-                value: Language.forCode(viewModel.settings.language)?.nativeName ?? "Unknown"
-            ) {
-                Menu {
-                    ForEach(Language.supportedLanguages) { language in
-                        Button(language.nativeName) { viewModel.settings.language = language.id }
-                    }
-                } label: { EmptyView() }
+    private var languageGroup: some View {
+        groupSection(label: "language", color: Theme.Hangs.Colors.blue) {
+            Menu {
+                ForEach(Language.supportedLanguages) { language in
+                    Button(language.nativeName) { viewModel.settings.language = language.id }
+                }
+            } label: {
+                HangsConfigRow(
+                    label: "Current language",
+                    value: Language.forCode(viewModel.settings.language)?.nativeName ?? "English",
+                    valueColor: Theme.Hangs.Colors.pink,
+                    action: {}
+                )
+                .allowsHitTesting(false)
             }
+        }
+    }
 
-            settingsRow(
-                icon: "number",
-                label: "Question Count",
-                value: "\(viewModel.settings.numberOfQuestions) QUESTIONS"
-            ) {
-                Menu {
-                    ForEach(Config.questionCountOptions, id: \.self) { count in
-                        Button("\(count) Questions") { viewModel.settings.numberOfQuestions = count }
-                    }
-                } label: { EmptyView() }
+    private var audioFeedbackGroup: some View {
+        groupSection(label: "audio feedback", color: Theme.Hangs.Colors.pink) {
+            HangsToggleRow(
+                label: "Speak scores aloud",
+                isOn: Binding(
+                    get: { !viewModel.settings.isMuted },
+                    set: { viewModel.settings.isMuted = !$0 }
+                )
+            )
+        }
+    }
+
+    private var moreGroup: some View {
+        groupSection(label: "more", color: Theme.Hangs.Colors.blue) {
+            questionCountRow
+            hairline
+            difficultyRow
+            hairline
+            microphoneRow
+            hairline
+            autoAdvanceRow
+            hairline
+            answerTimeLimitRow
+            hairline
+            thinkingTimeRow
+            hairline
+            clearHistoryRow
+        }
+    }
+
+    private var aboutGroup: some View {
+        groupSection(label: "about", color: Theme.Hangs.Colors.pink) {
+            HangsValueRow(label: "Version", value: appVersion)
+        }
+    }
+
+    // MARK: - Rows (extra settings kept from the previous screen)
+
+    private var questionCountRow: some View {
+        Menu {
+            ForEach(Config.questionCountOptions, id: \.self) { count in
+                Button("\(count) Questions") { viewModel.settings.numberOfQuestions = count }
             }
+        } label: {
+            HangsConfigRow(
+                label: "Question count",
+                value: "\(viewModel.settings.numberOfQuestions)",
+                valueColor: Theme.Hangs.Colors.pink,
+                action: {}
+            )
+            .allowsHitTesting(false)
+        }
+    }
 
-            settingsRow(
-                icon: "bolt",
+    private var difficultyRow: some View {
+        Menu {
+            ForEach(Config.difficultyOptions, id: \.0) { id, display in
+                Button(display) { viewModel.settings.difficulty = id }
+            }
+        } label: {
+            HangsConfigRow(
                 label: "Difficulty",
-                value: viewModel.settings.difficultyDisplayName().uppercased()
-            ) {
-                Menu {
-                    ForEach(Config.difficultyOptions, id: \.0) { id, display in
-                        Button(display) { viewModel.settings.difficulty = id }
-                    }
-                } label: { EmptyView() }
-            }
+                value: viewModel.settings.difficultyDisplayName(),
+                valueColor: Theme.Hangs.Colors.pink,
+                action: {}
+            )
+            .allowsHitTesting(false)
         }
     }
 
-    // MARK: - Audio settings group
+    private var microphoneRow: some View {
+        HangsConfigRow(
+            label: "Microphone",
+            value: viewModel.currentInputDeviceName,
+            valueColor: Theme.Hangs.Colors.blue
+        ) {
+            viewModel.showingMicrophonePicker = true
+        }
+    }
 
-    private var audioSettingsGroup: some View {
-        settingsGroup(title: "AUDIO_SETTINGS") {
-            settingsRow(
-                icon: "mic",
-                label: "Voice Mode",
-                value: viewModel.settings.autoRecordEnabled ? "AUTO" : "MANUAL",
-                tappable: viewModel.voiceCommandsAvailable
-            ) {
-                if viewModel.voiceCommandsAvailable {
-                    Toggle("", isOn: $viewModel.settings.autoRecordEnabled)
-                        .labelsHidden()
-                        .tint(Theme.Hangs.Colors.accent)
-                        .accessibilityIdentifier("settings.autoRecord")
-                } else {
-                    EmptyView()
-                }
+    private var autoAdvanceRow: some View {
+        Menu {
+            ForEach(Config.autoAdvanceDelayOptions, id: \.self) { seconds in
+                Button("\(seconds) seconds") { viewModel.settings.autoAdvanceDelay = seconds }
             }
-
-            settingsRow(
-                icon: "headphones",
-                label: "Microphone",
-                value: viewModel.currentInputDeviceName.uppercased()
-            ) {
-                Button { viewModel.showingMicrophonePicker = true } label: { EmptyView() }
-            }
-
-            settingsRow(
-                icon: "checkmark.circle",
-                label: "Auto-Confirm",
-                value: viewModel.settings.autoConfirmEnabled ? "ON" : "OFF",
-                tappable: false
-            ) {
-                Toggle("", isOn: $viewModel.settings.autoConfirmEnabled)
-                    .labelsHidden()
-                    .tint(Theme.Hangs.Colors.accent)
-                    .accessibilityIdentifier("settings.autoConfirm")
-            }
-
-            settingsRow(
-                icon: "timer",
+        } label: {
+            HangsConfigRow(
                 label: "Auto-advance",
-                value: "\(viewModel.settings.autoAdvanceDelay)s"
-            ) {
-                Menu {
-                    ForEach(Config.autoAdvanceDelayOptions, id: \.self) { seconds in
-                        Button("\(seconds) seconds") { viewModel.settings.autoAdvanceDelay = seconds }
-                    }
-                } label: { EmptyView() }
-            }
-
-            settingsRow(
-                icon: "hourglass",
-                label: "Answer Time Limit",
-                value: viewModel.settings.answerTimeLimit == 0 ? "OFF" : "\(viewModel.settings.answerTimeLimit)s"
-            ) {
-                Menu {
-                    ForEach(Config.answerTimeLimitOptions, id: \.self) { seconds in
-                        Button(seconds == 0 ? "Off" : "\(seconds) seconds") {
-                            viewModel.settings.answerTimeLimit = seconds
-                        }
-                    }
-                } label: { EmptyView() }
-            }
-
-            settingsRow(
-                icon: "brain.head.profile",
-                label: "Thinking Time",
-                value: viewModel.settings.thinkingTime == 0 ? "OFF" : "\(viewModel.settings.thinkingTime)s"
-            ) {
-                Menu {
-                    ForEach(Config.thinkingTimeOptions, id: \.self) { seconds in
-                        Button(seconds == 0 ? "Off" : "\(seconds) seconds") {
-                            viewModel.settings.thinkingTime = seconds
-                        }
-                    }
-                } label: { EmptyView() }
-            }
+                value: "\(viewModel.settings.autoAdvanceDelay)s",
+                valueColor: Theme.Hangs.Colors.pink,
+                action: {}
+            )
+            .allowsHitTesting(false)
         }
     }
 
-    // MARK: - History group
-
-    private var historyGroup: some View {
-        settingsGroup(title: "HISTORY") {
-            settingsRow(
-                icon: "chart.line.uptrend.xyaxis",
-                label: "Questions Seen",
-                value: "\(viewModel.questionHistoryCount) / 500",
-                tappable: false
-            ) {
-                EmptyView()
-            }
-
-            Button {
-                showResetConfirmation = true
-            } label: {
-                HStack(spacing: 12) {
-                    Image(systemName: "trash")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(Theme.Hangs.Colors.error)
-                        .frame(width: 16)
-                    Text("Clear History")
-                        .font(.system(size: 15))
-                        .foregroundColor(Theme.Hangs.Colors.error)
-                    Spacer()
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundColor(Theme.Hangs.Colors.textTertiary)
+    private var answerTimeLimitRow: some View {
+        Menu {
+            ForEach(Config.answerTimeLimitOptions, id: \.self) { seconds in
+                Button(seconds == 0 ? "Off" : "\(seconds) seconds") {
+                    viewModel.settings.answerTimeLimit = seconds
                 }
-                .padding(.horizontal, 16)
-                .frame(height: 56)
             }
-            .disabled(viewModel.questionHistoryCount == 0)
-            .accessibilityIdentifier("settings.resetHistory")
+        } label: {
+            HangsConfigRow(
+                label: "Answer time limit",
+                value: viewModel.settings.answerTimeLimit == 0 ? "Off" : "\(viewModel.settings.answerTimeLimit)s",
+                valueColor: Theme.Hangs.Colors.pink,
+                action: {}
+            )
+            .allowsHitTesting(false)
         }
+    }
+
+    private var thinkingTimeRow: some View {
+        Menu {
+            ForEach(Config.thinkingTimeOptions, id: \.self) { seconds in
+                Button(seconds == 0 ? "Off" : "\(seconds) seconds") {
+                    viewModel.settings.thinkingTime = seconds
+                }
+            }
+        } label: {
+            HangsConfigRow(
+                label: "Thinking time",
+                value: viewModel.settings.thinkingTime == 0 ? "Off" : "\(viewModel.settings.thinkingTime)s",
+                valueColor: Theme.Hangs.Colors.pink,
+                action: {}
+            )
+            .allowsHitTesting(false)
+        }
+    }
+
+    private var clearHistoryRow: some View {
+        HangsConfigRow(
+            label: "Clear question history",
+            value: "\(viewModel.questionHistoryCount) / 500",
+            valueColor: Theme.Hangs.Colors.pink
+        ) {
+            if viewModel.questionHistoryCount > 0 {
+                showResetConfirmation = true
+            }
+        }
+        .accessibilityIdentifier("settings.resetHistory")
     }
 
     // MARK: - Building blocks
 
-    private func settingsGroup<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
-        VStack(spacing: 12) {
-            HStack(spacing: 12) {
-                Text(title)
-                    .font(.system(size: 10, weight: .regular, design: .monospaced))
-                    .foregroundColor(Theme.Hangs.Colors.infoAccent)
-                    .tracking(2)
-                Rectangle().fill(Theme.Hangs.Colors.divider).frame(height: 1)
-            }
-
-            VStack(spacing: 0) {
-                content()
-            }
-            .background(Theme.Hangs.Colors.bgCard)
-            .overlay(Rectangle().stroke(Theme.Hangs.Colors.divider, lineWidth: 1))
-        }
-    }
-
-    private func settingsRow<Trailing: View>(
-        icon: String,
+    private func groupSection<Content: View>(
         label: String,
-        value: String,
-        tappable: Bool = true,
-        @ViewBuilder trailing: () -> Trailing
+        color: Color,
+        @ViewBuilder content: () -> Content
     ) -> some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 12) {
-                Image(systemName: icon)
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(Theme.Hangs.Colors.textSecondary)
-                    .frame(width: 16)
-                Text(label)
-                    .font(.system(size: 15))
-                    .foregroundColor(Theme.Hangs.Colors.textPrimary)
-                Spacer()
-                Text(value)
-                    .font(.system(size: 12, weight: .regular, design: .monospaced))
-                    .foregroundColor(Theme.Hangs.Colors.accent)
-                trailing()
-                if tappable {
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundColor(Theme.Hangs.Colors.textTertiary)
+        let inner = content()
+        return VStack(alignment: .leading, spacing: 10) {
+            HangsSectionLabel(text: label, color: color)
+                .padding(.leading, 4)
+            HangsCard {
+                VStack(spacing: 0) {
+                    inner
                 }
             }
-            .padding(.horizontal, 16)
-            .frame(height: 56)
-
-            Rectangle().fill(Theme.Hangs.Colors.divider).frame(height: 1)
         }
     }
 
-    private var questionCountColor: Color {
-        let count = viewModel.questionHistoryCount
-        if count >= 450 { return Theme.Hangs.Colors.error }
-        if count > 400 { return Theme.Hangs.Colors.warning }
-        return Theme.Hangs.Colors.textSecondary
+    private var hairline: some View {
+        Rectangle()
+            .fill(Theme.Hangs.Colors.hairline)
+            .frame(height: 1)
+            .padding(.leading, 18)
+    }
+
+    private var appVersion: String {
+        (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String) ?? "1.0.0"
     }
 }
 

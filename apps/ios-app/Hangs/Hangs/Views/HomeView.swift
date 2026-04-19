@@ -2,8 +2,8 @@
 //  HomeView.swift
 //  Hangs
 //
-//  Hangs redesign home screen — terminal/cyberpunk aesthetic, dark-only.
-//  See docs/issues/issue-14-hangs-redesign.md
+//  Hangs redesign home screen — cream editorial aesthetic.
+//  See docs/design/hangs-redesign-spec.md section "1. Home".
 //
 
 import SwiftUI
@@ -13,23 +13,51 @@ struct HomeView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HangsStatusBar(leading: "// HANGS.SYS", trailing: "v2.1.0 • READY")
-            HangsDivider()
+            HangsBrandRow {
+                NavigationLink {
+                    SettingsView(viewModel: viewModel)
+                } label: {
+                    navChipVisual(icon: "gearshape")
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Settings")
+                .accessibilityIdentifier("home.moreSettings")
+            }
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    heroSection
-                    statsSection
-                    quickConfigSection
-                    actionButtons
+                    HangsHeroBlock(
+                        title: "HANGS",
+                        subtitle: "voice-based trivia for the road"
+                    )
+                    .padding(.horizontal, 20)
+                    .padding(.top, 4)
+
+                    statsRow
+
+                    HangsSectionLabel(text: "session", color: Theme.Hangs.Colors.pink)
+                        .padding(.horizontal, 20)
+                        .padding(.top, 8)
+
+                    configCard
+                        .padding(.horizontal, 20)
                 }
-                .padding(.vertical, 18)
+                .padding(.top, 8)
+                .padding(.bottom, 24)
             }
 
-            HangsFooterBar(leading: "◢ REG.MARK.01", trailing: "PWR ON • V2.1")
+            HangsPrimaryButton(
+                title: "Start Quiz",
+                icon: "play.fill",
+                isLoading: viewModel.quizState == .startingQuiz
+            ) {
+                Task { await viewModel.startNewQuiz() }
+            }
+            .accessibilityIdentifier("home.startQuiz")
+            .padding(.horizontal, 20)
+            .padding(.bottom, 20)
         }
         .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
-        .preferredColorScheme(.dark)
         .onAppear {
             viewModel.refreshAudioDevices()
             Task { await viewModel.refreshUsage() }
@@ -39,181 +67,122 @@ struct HomeView: View {
         }
     }
 
-    // MARK: - Hero
-
-    private var heroSection: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HangsTerminalLabel(text: "[ 001 ]   MODE: DRIVE", color: Theme.Hangs.Colors.textSecondary)
-
-            HangsHeroBlock(text: "HANGS", alignment: .leading)
-
-            Text("Hands-free trivia while you drive — voice-first AI companion.")
-                .font(.hangsBody)
-                .foregroundColor(Theme.Hangs.Colors.textSecondary)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .padding(.horizontal, 24)
-    }
-
     // MARK: - Stats
 
-    private var statsSection: some View {
-        HStack(spacing: 10) {
-            metricTile(
-                label: "DAY STREAK",
+    private var statsRow: some View {
+        HStack(spacing: 12) {
+            HangsStatBox(
+                label: "streak",
                 value: "\(viewModel.quizStats.currentStreak)",
-                valueColor: Theme.Hangs.Colors.textPrimary,
-                borderColor: Theme.Hangs.Colors.divider,
-                subtext: viewModel.quizStats.currentStreak > 0 ? "→ ACTIVE" : nil
+                labelColor: Theme.Hangs.Colors.pink,
+                valueColor: Theme.Hangs.Colors.blue
             )
-            metricTile(
-                label: "BEST SCORE",
+            HangsStatBox(
+                label: "best",
                 value: "\(viewModel.quizStats.bestStreak)",
-                valueColor: Theme.Hangs.Colors.infoAccent,
-                borderColor: Theme.Hangs.Colors.infoAccent,
-                subtext: "◢ PERSONAL BEST"
+                labelColor: Theme.Hangs.Colors.blue,
+                valueColor: Theme.Hangs.Colors.pink
             )
         }
-        .padding(.horizontal, 24)
+        .padding(.horizontal, 20)
     }
 
-    private func metricTile(label: String, value: String, valueColor: Color, borderColor: Color, subtext: String?) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(label)
-                .font(.hangsMonoLabel)
-                .foregroundColor(Theme.Hangs.Colors.textTertiary)
-                .tracking(1.5)
-            Text(value)
-                .font(.system(size: 32, weight: .bold, design: .monospaced))
-                .foregroundColor(valueColor)
-            if let subtext = subtext {
-                Text(subtext)
-                    .font(.system(size: 9, weight: .regular, design: .monospaced))
-                    .foregroundColor(Theme.Hangs.Colors.accent)
-                    .tracking(1)
+    // MARK: - Config card
+
+    private var configCard: some View {
+        HangsCard {
+            VStack(spacing: 0) {
+                languageRow
+                HangsDivider()
+                difficultyRow
+                HangsDivider()
+                categoriesRow
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(14)
-        .background(Theme.Hangs.Colors.bgCard)
-        .overlay(Rectangle().stroke(borderColor, lineWidth: 1))
     }
 
-    // MARK: - Quick Config
-
-    private var quickConfigSection: some View {
-        VStack(spacing: 10) {
-            HStack(spacing: 8) {
-                Text("// QUICK_CONFIG")
-                    .font(.hangsMonoLabel)
-                    .foregroundColor(Theme.Hangs.Colors.textPrimary)
-                    .tracking(2)
-                Rectangle().fill(Theme.Hangs.Colors.divider).frame(height: 1)
-                Text("03")
-                    .font(.system(size: 11, weight: .bold, design: .monospaced))
-                    .foregroundColor(Theme.Hangs.Colors.infoAccent)
-            }
-
-            configRow(
-                key: "LANG",
-                value: Language.forCode(viewModel.settings.language)?.nativeName ?? "Unknown",
-                menuContent: {
-                    ForEach(Language.supportedLanguages) { language in
-                        Button(language.nativeName) {
-                            viewModel.settings.language = language.id
-                        }
-                    }
-                }
-            )
-
-            configRow(
-                key: "DIFF",
-                value: viewModel.settings.difficultyDisplayName(),
-                menuContent: {
-                    ForEach(Config.difficultyOptions, id: \.0) { id, display in
-                        Button(display) {
-                            viewModel.settings.difficulty = id
-                        }
-                    }
-                }
-            )
-
-            configRow(
-                key: "CATS",
-                value: viewModel.settings.categoryDisplayName(),
-                menuContent: {
-                    ForEach(Config.categoryOptions, id: \.id) { option in
-                        Button(option.display) {
-                            viewModel.settings.category = option.id
-                        }
-                    }
-                }
-            )
-        }
-        .padding(.horizontal, 24)
-    }
-
-    private func configRow<Content: View>(
-        key: String,
-        value: String,
-        @ViewBuilder menuContent: () -> Content
-    ) -> some View {
+    private var languageRow: some View {
         Menu {
-            menuContent()
-        } label: {
-            HStack(spacing: 12) {
-                Text(key)
-                    .font(.hangsMonoLabel)
-                    .foregroundColor(Theme.Hangs.Colors.textTertiary)
-                    .tracking(1.5)
-                Rectangle().fill(Theme.Hangs.Colors.borderDim).frame(height: 1)
-                Text(value)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(Theme.Hangs.Colors.textPrimary)
-                Text("›")
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundColor(Theme.Hangs.Colors.accent)
+            ForEach(Language.supportedLanguages) { language in
+                Button(language.nativeName) {
+                    viewModel.settings.language = language.id
+                }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
-            .background(Theme.Hangs.Colors.bgCard)
-            .overlay(Rectangle().stroke(Theme.Hangs.Colors.divider, lineWidth: 1))
+        } label: {
+            configRowVisual(
+                label: "Language",
+                value: Language.forCode(viewModel.settings.language)?.nativeName ?? "Unknown",
+                valueColor: Theme.Hangs.Colors.blue
+            )
         }
     }
 
-    // MARK: - Actions
-
-    private var actionButtons: some View {
-        VStack(spacing: 10) {
-            HangsPrimaryButton(
-                title: "START QUIZ",
-                icon: "play.fill",
-                trailingIcon: "arrow.up.right",
-                isLoading: viewModel.quizState == .startingQuiz
-            ) {
-                Task { await viewModel.startNewQuiz() }
-            }
-            .accessibilityIdentifier("home.startQuiz")
-
-            NavigationLink {
-                SettingsView(viewModel: viewModel)
-            } label: {
-                HStack(spacing: 10) {
-                    Image(systemName: "gearshape.fill")
-                        .font(.system(size: 13, weight: .bold))
-                    Text("SETTINGS")
-                        .font(.hangsButton)
-                        .tracking(2.5)
+    private var difficultyRow: some View {
+        Menu {
+            ForEach(Config.difficultyOptions, id: \.0) { id, display in
+                Button(display) {
+                    viewModel.settings.difficulty = id
                 }
-                .foregroundColor(Theme.Hangs.Colors.infoAccent)
-                .frame(maxWidth: .infinity)
-                .frame(height: 48)
-                .overlay(Rectangle().stroke(Theme.Hangs.Colors.infoAccent, lineWidth: 1.5))
             }
-            .accessibilityIdentifier("home.moreSettings")
+        } label: {
+            configRowVisual(
+                label: "Difficulty",
+                value: viewModel.settings.difficultyDisplayName(),
+                valueColor: Theme.Hangs.Colors.pink
+            )
         }
-        .padding(.horizontal, 24)
-        .padding(.top, 4)
+    }
+
+    private var categoriesRow: some View {
+        Menu {
+            ForEach(Config.categoryOptions, id: \.id) { option in
+                Button(option.display) {
+                    viewModel.settings.category = option.id
+                }
+            }
+        } label: {
+            configRowVisual(
+                label: "Categories",
+                value: viewModel.settings.categoryDisplayName(),
+                valueColor: Theme.Hangs.Colors.blue
+            )
+        }
+    }
+
+    // MARK: - Row visual (replicates HangsConfigRow body w/o inner Button)
+
+    private func configRowVisual(label: String, value: String, valueColor: Color) -> some View {
+        HStack {
+            Text(label)
+                .font(.hangsBody(17, weight: .semibold))
+                .foregroundColor(Theme.Hangs.Colors.ink)
+            Spacer()
+            HStack(spacing: 6) {
+                Text(value)
+                    .font(.hangsBody(17, weight: .semibold))
+                    .foregroundColor(valueColor)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(valueColor)
+            }
+        }
+        .padding(.horizontal, 18)
+        .padding(.vertical, 16)
+        .contentShape(Rectangle())
+    }
+
+    // MARK: - Nav chip visual (used inside NavigationLink label)
+
+    private func navChipVisual(icon: String) -> some View {
+        Image(systemName: icon)
+            .font(.system(size: 16, weight: .semibold))
+            .foregroundColor(Theme.Hangs.Colors.ink)
+            .frame(width: 36, height: 36)
+            .background(
+                RoundedRectangle(cornerRadius: Theme.Hangs.Radius.navSquare)
+                    .fill(Color.white)
+            )
+            .hangsShadow(Theme.Hangs.Shadow.navChip)
     }
 }
 

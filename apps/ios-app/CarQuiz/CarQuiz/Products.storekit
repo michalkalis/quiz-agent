@@ -11,12 +11,12 @@
       "localizations" : [
         {
           "description" : "Unlimited questions every day. No daily limits.",
-          "displayName" : "CarQuiz Unlimited",
+          "displayName" : "Hangs Unlimited",
           "locale" : "en_US"
         }
       ],
       "productID" : "com.carquiz.unlimited",
-      "referenceName" : "CarQuiz Unlimited",
+      "referenceName" : "Hangs Unlimited",
       "type" : "NonConsumable"
     }
   ],

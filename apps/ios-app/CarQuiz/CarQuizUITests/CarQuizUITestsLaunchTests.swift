@@ -1,6 +1,6 @@
 //
-//  CarQuizUITestsLaunchTests.swift
-//  CarQuizUITests
+//  HangsUITestsLaunchTests.swift
+//  HangsUITests
 //
 //  Created by Michal Kališ on 21.12.2025.
 //

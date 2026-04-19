@@ -1,6 +1,6 @@
 //
 //  ProgressBarView.swift
-//  CarQuiz
+//  Hangs
 //
 //  Progress bar with track and gradient fill
 //

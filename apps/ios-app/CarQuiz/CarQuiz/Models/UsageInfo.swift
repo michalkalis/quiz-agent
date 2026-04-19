@@ -1,6 +1,6 @@
 //
 //  UsageInfo.swift
-//  CarQuiz
+//  Hangs
 //
 //  Usage stats from backend for freemium limit tracking
 //

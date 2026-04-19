@@ -1,6 +1,6 @@
 //
 //  QuizSettings.swift
-//  CarQuiz
+//  Hangs
 //
 //  Centralized quiz configuration model
 //

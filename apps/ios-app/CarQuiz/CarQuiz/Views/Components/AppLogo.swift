@@ -1,6 +1,6 @@
 //
 //  AppLogo.swift
-//  CarQuiz
+//  Hangs
 //
 //  App logo with car icon in gradient rounded square
 //

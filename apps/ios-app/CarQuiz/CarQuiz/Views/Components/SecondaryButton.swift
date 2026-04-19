@@ -1,6 +1,6 @@
 //
 //  SecondaryButton.swift
-//  CarQuiz
+//  Hangs
 //
 //  Bordered button with elevated background matching Pencil design
 //

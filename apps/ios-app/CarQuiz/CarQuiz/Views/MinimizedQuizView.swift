@@ -1,6 +1,6 @@
 //
 //  MinimizedQuizView.swift
-//  CarQuiz
+//  Hangs
 //
 //  Compact floating widget matching Pencil design
 //

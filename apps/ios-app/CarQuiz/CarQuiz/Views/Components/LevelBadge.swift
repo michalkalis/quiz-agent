@@ -1,6 +1,6 @@
 //
 //  LevelBadge.swift
-//  CarQuiz
+//  Hangs
 //
 //  Purple gradient pill badge showing current level
 //

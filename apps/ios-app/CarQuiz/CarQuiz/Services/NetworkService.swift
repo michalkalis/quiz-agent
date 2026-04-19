@@ -1,6 +1,6 @@
 //
 //  NetworkService.swift
-//  CarQuiz
+//  Hangs
 //
 //  REST API client for Quiz Agent backend
 //  Actor-based for thread-safe networking

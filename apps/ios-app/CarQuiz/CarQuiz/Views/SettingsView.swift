@@ -1,6 +1,6 @@
 //
 //  SettingsView.swift
-//  CarQuiz
+//  Hangs
 //
 //  Hangs redesign settings — grouped rows with monospace keys + pink values.
 //

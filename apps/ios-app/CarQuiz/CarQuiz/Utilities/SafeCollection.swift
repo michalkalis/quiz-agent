@@ -1,6 +1,6 @@
 //
 //  SafeCollection.swift
-//  CarQuiz
+//  Hangs
 //
 //  Safe subscript that returns nil instead of crashing on out-of-bounds access.
 //

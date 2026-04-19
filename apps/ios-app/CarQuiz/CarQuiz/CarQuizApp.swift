@@ -1,6 +1,6 @@
 //
-//  CarQuizApp.swift
-//  CarQuiz
+//  HangsApp.swift
+//  Hangs
 //
 //  Voice-first trivia quiz app for hands-free use while driving
 //
@@ -56,7 +56,7 @@ struct CarQuizApp: App {
 
     /// Release identifier in `<bundle-id>@<version>+<build>` form, matching `sentry-cli releases` dSYM upload format.
     private static var releaseIdentifier: String {
-        let bundleId = Bundle.main.bundleIdentifier ?? "com.carquiz"
+        let bundleId = Bundle.main.bundleIdentifier ?? "com.missinghue.hangs"
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.0.0"
         let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "0"
         return "\(bundleId)@\(version)+\(build)"

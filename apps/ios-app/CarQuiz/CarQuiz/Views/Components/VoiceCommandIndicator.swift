@@ -1,6 +1,6 @@
 //
 //  VoiceCommandIndicator.swift
-//  CarQuiz
+//  Hangs
 //
 //  Small badge showing voice command listening status
 //

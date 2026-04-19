@@ -1,6 +1,6 @@
 //
 //  CategoryBadge.swift
-//  CarQuiz
+//  Hangs
 //
 //  Purple-tinted category badge matching Pencil design
 //

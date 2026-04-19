@@ -1,6 +1,6 @@
 //
 //  QuizViewModel.swift
-//  CarQuiz
+//  Hangs
 //
 //  Core quiz flow and state management
 //

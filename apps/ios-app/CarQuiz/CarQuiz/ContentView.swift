@@ -1,6 +1,6 @@
 //
 //  ContentView.swift
-//  CarQuiz
+//  Hangs
 //
 //  Main navigation and state management
 //

@@ -1,6 +1,6 @@
 //
 //  ButtonStyles.swift
-//  CarQuiz
+//  Hangs
 //
 //  Custom button styles matching the Pencil design system
 //

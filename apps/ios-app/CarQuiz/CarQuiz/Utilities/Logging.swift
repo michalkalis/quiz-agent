@@ -1,9 +1,9 @@
 //
 //  Logging.swift
-//  CarQuiz
+//  Hangs
 //
 //  Structured logging with os.Logger — categorized, persistent, zero-overhead when not observed.
-//  Filter in Console.app by subsystem "com.carquiz" and category.
+//  Filter in Console.app by subsystem "com.missinghue.hangs" and category.
 //
 //  `SentryLog.*` mirrors the same categories to Sentry Structured Logs so they are queryable
 //  after TestFlight incidents without needing the device in hand.

@@ -1,6 +1,6 @@
 //
 //  Theme.swift
-//  CarQuiz
+//  Hangs
 //
 //  Centralized design system tokens extracted from Pencil design
 //

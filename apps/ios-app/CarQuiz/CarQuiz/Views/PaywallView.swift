@@ -1,6 +1,6 @@
 //
 //  PaywallView.swift
-//  CarQuiz
+//  Hangs
 //
 //  Shown when daily free question limit is reached.
 //  Offers upgrade to unlimited or dismiss until tomorrow.

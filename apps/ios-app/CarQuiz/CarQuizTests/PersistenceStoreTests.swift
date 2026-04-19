@@ -1,6 +1,6 @@
 //
 //  PersistenceStoreTests.swift
-//  CarQuizTests
+//  HangsTests
 //
 //  Unit tests for PersistenceStore using isolated UserDefaults.
 //

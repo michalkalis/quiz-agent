@@ -1,6 +1,6 @@
 //
 //  AudioFixtureTests.swift
-//  CarQuizTests
+//  HangsTests
 //
 //  Tests for validating audio test fixtures used in the test suite.
 //  These tests verify that bundled audio files are valid and meet

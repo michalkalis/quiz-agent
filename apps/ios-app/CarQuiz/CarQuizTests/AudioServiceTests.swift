@@ -1,6 +1,6 @@
 //
 //  AudioServiceTests.swift
-//  CarQuizTests
+//  HangsTests
 //
 //  Tests for AudioService recording validation and synchronization fixes.
 //  These tests help prevent regression of the 28-byte recording bug.

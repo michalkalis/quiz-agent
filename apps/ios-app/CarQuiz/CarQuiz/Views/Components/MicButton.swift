@@ -1,6 +1,6 @@
 //
 //  MicButton.swift
-//  CarQuiz
+//  Hangs
 //
 //  Large microphone button with gradient fill and glow effects matching Pencil design
 //

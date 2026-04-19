@@ -1,6 +1,6 @@
 //
 //  AnswerConfirmationView.swift
-//  CarQuiz
+//  Hangs
 //
 //  Modal view for confirming or re-recording voice answers
 //

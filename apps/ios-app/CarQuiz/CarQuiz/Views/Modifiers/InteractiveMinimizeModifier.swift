@@ -1,6 +1,6 @@
 //
 //  InteractiveMinimizeModifier.swift
-//  CarQuiz
+//  Hangs
 //
 //  Reusable view modifier for interactive pull-down-to-minimize gesture
 //

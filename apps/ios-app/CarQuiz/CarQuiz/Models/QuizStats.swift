@@ -1,6 +1,6 @@
 //
 //  QuizStats.swift
-//  CarQuiz
+//  Hangs
 //
 //  Persistent quiz statistics for streak and progress tracking
 //

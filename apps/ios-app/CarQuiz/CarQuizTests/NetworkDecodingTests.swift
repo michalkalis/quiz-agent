@@ -1,6 +1,6 @@
 //
 //  NetworkDecodingTests.swift
-//  CarQuizTests
+//  HangsTests
 //
 //  Tests for Codable model decoding edge cases and safe collection access.
 //

@@ -1,6 +1,6 @@
 //
 //  TrophyIcon.swift
-//  CarQuiz
+//  Hangs
 //
 //  Gold gradient trophy icon with glow effect
 //

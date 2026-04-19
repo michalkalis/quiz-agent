@@ -1,6 +1,6 @@
 //
 //  AppState.swift
-//  CarQuiz
+//  Hangs
 //
 //  Dependency injection container for app-wide services
 //

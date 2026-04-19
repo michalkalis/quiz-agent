@@ -1,6 +1,6 @@
 //
 //  ElevenLabsSTTService.swift
-//  CarQuiz
+//  Hangs
 //
 //  Streaming speech-to-text via ElevenLabs Scribe v2 Realtime WebSocket.
 //  Receives PCM audio chunks and returns partial/final transcripts.

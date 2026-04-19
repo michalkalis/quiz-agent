@@ -1,6 +1,6 @@
 //
 //  AudioMode.swift
-//  CarQuiz
+//  Hangs
 //
 //  Audio mode configuration for Bluetooth devices
 //

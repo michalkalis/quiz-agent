@@ -1,6 +1,6 @@
 //
 //  HangsButton.swift
-//  CarQuiz
+//  Hangs
 //
 //  Block-style primary (pink filled) and secondary (blue outlined) buttons.
 //  Sharp corners, thick borders — blocky terminal aesthetic.

@@ -1,6 +1,6 @@
 //
 //  SourceWebView.swift
-//  CarQuiz
+//  Hangs
 //
 //  WebView modal for displaying question source articles
 //

@@ -1,6 +1,6 @@
 //
 //  Theme+Hangs.swift
-//  CarQuiz
+//  Hangs
 //
 //  Design tokens for the Hangs redesign (terminal/cyberpunk aesthetic, dark-only).
 //  Additive to Theme.swift — legacy screens keep using Theme.Colors.*.

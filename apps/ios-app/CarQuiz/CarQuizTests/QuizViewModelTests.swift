@@ -1,6 +1,6 @@
 //
 //  QuizViewModelTests.swift
-//  CarQuizTests
+//  HangsTests
 //
 //  Tests for QuizViewModel state machine and quiz flow.
 //

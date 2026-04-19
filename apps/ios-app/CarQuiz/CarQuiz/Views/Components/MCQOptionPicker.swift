@@ -1,6 +1,6 @@
 //
 //  MCQOptionPicker.swift
-//  CarQuiz
+//  Hangs
 //
 //  Multiple choice option picker with driving-safe tap targets
 //

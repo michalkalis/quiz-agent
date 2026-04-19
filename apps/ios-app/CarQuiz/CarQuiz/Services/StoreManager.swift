@@ -1,9 +1,9 @@
 //
 //  StoreManager.swift
-//  CarQuiz
+//  Hangs
 //
 //  StoreKit 2 integration for freemium paywall
-//  Non-consumable "CarQuiz Unlimited" purchase
+//  Non-consumable "Hangs Unlimited" purchase
 //
 
 import Combine

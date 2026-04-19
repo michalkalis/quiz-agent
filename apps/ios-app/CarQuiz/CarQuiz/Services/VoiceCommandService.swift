@@ -1,6 +1,6 @@
 //
 //  VoiceCommandService.swift
-//  CarQuiz
+//  Hangs
 //
 //  Continuous on-device speech recognition for hands-free voice commands.
 //  Uses iOS 26 SpeechAnalyzer API — runs entirely on-device, no network or cost.

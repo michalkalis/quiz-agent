@@ -1,6 +1,6 @@
 //
 //  ResultView.swift
-//  CarQuiz
+//  Hangs
 //
 //  Hangs redesign result screen — green/red verdict cards, answer comparison, source/explanation.
 //

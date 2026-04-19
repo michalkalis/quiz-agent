@@ -1,6 +1,6 @@
 //
 //  PersistenceStore.swift
-//  CarQuiz
+//  Hangs
 //
 //  Unified UserDefaults persistence for session management and question history.
 //

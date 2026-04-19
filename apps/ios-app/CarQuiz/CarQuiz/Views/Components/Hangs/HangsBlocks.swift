@@ -1,6 +1,6 @@
 //
 //  HangsBlocks.swift
-//  CarQuiz
+//  Hangs
 //
 //  Big display blocks — pink hero ("HANGS", "MASTER!"), verdict badges, etc.
 //

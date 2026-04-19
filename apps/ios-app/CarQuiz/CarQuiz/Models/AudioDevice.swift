@@ -1,6 +1,6 @@
 //
 //  AudioDevice.swift
-//  CarQuiz
+//  Hangs
 //
 //  Model representing audio input/output devices
 //

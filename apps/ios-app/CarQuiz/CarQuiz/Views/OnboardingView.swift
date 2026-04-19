@@ -1,6 +1,6 @@
 //
 //  OnboardingView.swift
-//  CarQuiz
+//  Hangs
 //
 //  First-launch onboarding explaining voice features and requesting mic permission
 //
@@ -95,7 +95,7 @@ struct OnboardingView: View {
                     .font(.displayXXL)
                     .foregroundColor(Theme.Colors.textPrimary)
 
-                Text("CarQuiz reads questions aloud and listens for your answers. No tapping needed during a quiz.")
+                Text("Hangs reads questions aloud and listens for your answers. No tapping needed during a quiz.")
                     .font(.textMD)
                     .foregroundColor(Theme.Colors.textSecondary)
                     .multilineTextAlignment(.center)
@@ -177,8 +177,8 @@ struct OnboardingView: View {
                     .foregroundColor(Theme.Colors.textPrimary)
 
                 Text(micPermissionGranted
-                     ? "CarQuiz can hear your answers. Tap \"Get Started\" to play!"
-                     : "CarQuiz needs microphone access to hear your voice answers. You can also type answers as a fallback.")
+                     ? "Hangs can hear your answers. Tap \"Get Started\" to play!"
+                     : "Hangs needs microphone access to hear your voice answers. You can also type answers as a fallback.")
                     .font(.textMD)
                     .foregroundColor(Theme.Colors.textSecondary)
                     .multilineTextAlignment(.center)

@@ -1,6 +1,6 @@
 //
 //  HangsChrome.swift
-//  CarQuiz
+//  Hangs
 //
 //  Terminal-style top/bottom chrome elements for Hangs redesign screens.
 //

@@ -1,6 +1,6 @@
 //
 //  Color+Theme.swift
-//  CarQuiz
+//  Hangs
 //
 //  Color extensions for hex string initialization and adaptive colors
 //

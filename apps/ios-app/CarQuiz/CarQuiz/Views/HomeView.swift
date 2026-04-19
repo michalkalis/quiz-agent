@@ -1,6 +1,6 @@
 //
 //  HomeView.swift
-//  CarQuiz
+//  Hangs
 //
 //  Hangs redesign home screen — terminal/cyberpunk aesthetic, dark-only.
 //  See docs/issues/issue-14-hangs-redesign.md

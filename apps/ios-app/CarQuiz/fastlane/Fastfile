@@ -1,7 +1,7 @@
 default_platform(:ios)
 
 # -----------------------------------------------------------------------------
-# CarQuiz — fastlane
+# Hangs — fastlane
 #
 # Auth model:
 #   All Apple interactions go through the App Store Connect API key (JWT).

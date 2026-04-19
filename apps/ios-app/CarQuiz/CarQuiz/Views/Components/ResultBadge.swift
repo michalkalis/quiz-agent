@@ -1,6 +1,6 @@
 //
 //  ResultBadge.swift
-//  CarQuiz
+//  Hangs
 //
 //  Gradient result badge with icon circle matching Pencil design
 //

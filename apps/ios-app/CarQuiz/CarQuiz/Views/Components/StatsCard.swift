@@ -1,6 +1,6 @@
 //
 //  StatsCard.swift
-//  CarQuiz
+//  Hangs
 //
 //  Stats display card with icon, value, and label
 //

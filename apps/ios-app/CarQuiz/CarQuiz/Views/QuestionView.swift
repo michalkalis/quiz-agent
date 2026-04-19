@@ -1,6 +1,6 @@
 //
 //  QuestionView.swift
-//  CarQuiz
+//  Hangs
 //
 //  Hangs redesign question screen — terminal card + pink mic block.
 //  Preserves MCQ, text input, thinking/answer timers, STT transcript.

@@ -1,6 +1,6 @@
 //
 //  Config.swift
-//  CarQuiz
+//  Hangs
 //
 //  Application configuration and environment settings
 //

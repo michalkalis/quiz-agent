@@ -1,6 +1,6 @@
 //
 //  SettingRow.swift
-//  CarQuiz
+//  Hangs
 //
 //  Settings row with icon, label, value, and chevron matching Pencil design
 //

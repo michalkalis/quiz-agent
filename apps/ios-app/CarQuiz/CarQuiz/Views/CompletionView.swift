@@ -1,6 +1,6 @@
 //
 //  CompletionView.swift
-//  CarQuiz
+//  Hangs
 //
 //  Hangs redesign quiz completion — "QUIZ MASTER!" hero, final score card, metric tiles.
 //

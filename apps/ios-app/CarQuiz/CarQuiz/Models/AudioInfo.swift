@@ -1,6 +1,6 @@
 //
 //  AudioInfo.swift
-//  CarQuiz
+//  Hangs
 //
 //  Audio URL metadata model matching backend API
 //

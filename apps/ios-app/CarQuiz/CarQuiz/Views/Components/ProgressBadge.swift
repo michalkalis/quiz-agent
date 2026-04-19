@@ -1,6 +1,6 @@
 //
 //  ProgressBadge.swift
-//  CarQuiz
+//  Hangs
 //
 //  Pill badge showing quiz progress matching Pencil design
 //

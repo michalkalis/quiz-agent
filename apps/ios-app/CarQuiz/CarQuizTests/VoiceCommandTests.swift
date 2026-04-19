@@ -1,6 +1,6 @@
 //
 //  VoiceCommandTests.swift
-//  CarQuizTests
+//  HangsTests
 //
 //  Tests for voice command matching, state validity, and echo rejection
 //

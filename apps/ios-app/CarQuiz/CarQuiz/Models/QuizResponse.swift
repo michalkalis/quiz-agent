@@ -1,6 +1,6 @@
 //
 //  QuizResponse.swift
-//  CarQuiz
+//  Hangs
 //
 //  API response wrapper matching backend API
 //

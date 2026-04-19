@@ -1,6 +1,6 @@
 //
 //  PrimaryButton.swift
-//  CarQuiz
+//  Hangs
 //
 //  Purple filled CTA button matching Pencil design
 //

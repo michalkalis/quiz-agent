@@ -17,7 +17,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-OUTPUT_DIR = Path("apps/ios-app/CarQuiz/CarQuizTests/Resources")
+OUTPUT_DIR = Path("apps/ios-app/Hangs/HangsTests/Resources")
 
 
 def generate_tts_sample():
@@ -188,8 +188,8 @@ def main():
         print("All fixtures generated successfully!")
         print(f"\nNext steps:")
         print(f"1. Add {OUTPUT_DIR} to Xcode project")
-        print(f"2. Set target membership to CarQuizTests")
-        print(f"3. Run tests with: xcodebuild test -scheme CarQuiz-Local")
+        print(f"2. Set target membership to HangsTests")
+        print(f"3. Run tests with: xcodebuild test -scheme Hangs-Local")
     else:
         print("Some fixtures failed. Check errors above.")
         sys.exit(1)

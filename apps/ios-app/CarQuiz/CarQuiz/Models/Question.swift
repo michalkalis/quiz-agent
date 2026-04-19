@@ -1,6 +1,6 @@
 //
 //  Question.swift
-//  CarQuiz
+//  Hangs
 //
 //  Quiz question model matching backend API
 //

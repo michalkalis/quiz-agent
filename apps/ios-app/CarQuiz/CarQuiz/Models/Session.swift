@@ -1,6 +1,6 @@
 //
 //  Session.swift
-//  CarQuiz
+//  Hangs
 //
 //  Quiz session model matching backend API
 //

@@ -1,6 +1,6 @@
 //
 //  ImageQuestionView.swift
-//  CarQuiz
+//  Hangs
 //
 //  Displays an image-based question with AsyncImage above question text
 //

@@ -1,6 +1,6 @@
 //
 //  LanguagePickerView.swift
-//  CarQuiz
+//  Hangs
 //
 //  Language selection sheet for quiz configuration
 //

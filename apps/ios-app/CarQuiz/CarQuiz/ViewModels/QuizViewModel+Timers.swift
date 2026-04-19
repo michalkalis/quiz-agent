@@ -1,6 +1,6 @@
 //
 //  QuizViewModel+Timers.swift
-//  CarQuiz
+//  Hangs
 //
 //  Timer management: thinking time, answer timer, auto-stop, auto-advance, auto-confirm
 //

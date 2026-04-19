@@ -1,6 +1,6 @@
 //
 //  Font+Theme.swift
-//  CarQuiz
+//  Hangs
 //
 //  Typography extensions using Dynamic Type text styles (SF Pro variants)
 //

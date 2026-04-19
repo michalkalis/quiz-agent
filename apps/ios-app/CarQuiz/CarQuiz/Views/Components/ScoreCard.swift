@@ -1,6 +1,6 @@
 //
 //  ScoreCard.swift
-//  CarQuiz
+//  Hangs
 //
 //  Card with gradient border displaying score matching Pencil design
 //

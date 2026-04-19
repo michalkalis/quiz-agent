@@ -1,6 +1,6 @@
 //
 //  Language.swift
-//  CarQuiz
+//  Hangs
 //
 //  Language model for quiz localization
 //

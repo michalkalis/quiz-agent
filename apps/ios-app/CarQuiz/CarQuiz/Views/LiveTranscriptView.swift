@@ -1,6 +1,6 @@
 //
 //  LiveTranscriptView.swift
-//  CarQuiz
+//  Hangs
 //
 //  Animated word-by-word transcript display for streaming STT
 //

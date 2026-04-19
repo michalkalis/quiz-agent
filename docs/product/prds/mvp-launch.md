@@ -1,10 +1,10 @@
-# PRD: CarQuiz MVP Launch
+# PRD: Hangs MVP Launch
 
 **Author:** Michal + Claude | **Date:** 2026-03-18 | **Status:** Draft
 
 ## Problem Statement
 
-Trivia apps are abundant, but none are designed for hands-free use. When you're on a road trip, cooking, or walking, existing apps require constant tapping, reading, and screen attention. CarQuiz solves this by making trivia fully voice-first: questions are read aloud, answers are spoken, and the entire quiz flow can be completed without touching the phone.
+Trivia apps are abundant, but none are designed for hands-free use. When you're on a road trip, cooking, or walking, existing apps require constant tapping, reading, and screen attention. Hangs solves this by making trivia fully voice-first: questions are read aloud, answers are spoken, and the entire quiz flow can be completed without touching the phone.
 
 The MVP targets the founder and close circle (friends, family on road trips) with a path toward families with kids who want fun, shared entertainment during drives.
 

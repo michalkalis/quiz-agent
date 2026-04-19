@@ -1,4 +1,4 @@
-# CarQuiz Competitive Analysis
+# Hangs Competitive Analysis
 
 *Last updated: 2026-03-18*
 
@@ -112,7 +112,7 @@
 - Glu Mobile neglected the product for 5 years post-acquisition
 - Demonstrated that engagement alone does not equal revenue
 
-**Relevance to CarQuiz:** QuizUp proved massive demand for trivia but also proved that "free trivia with MCQ" is a commodity. Differentiation matters. Their failure to monetize is a cautionary tale -- CarQuiz's AI evaluation is a potential value-add worth paying for.
+**Relevance to Hangs:** QuizUp proved massive demand for trivia but also proved that "free trivia with MCQ" is a commodity. Differentiation matters. Their failure to monetize is a cautionary tale -- Hangs's AI evaluation is a potential value-add worth paying for.
 
 ---
 
@@ -148,7 +148,7 @@
 - Internal dysfunction (co-founder death, exec clashes)
 - Users who lost early had nothing to do -- no engagement loop
 
-**Relevance to CarQuiz:** HQ proved trivia can be a cultural moment but appointment-based models are fragile. CarQuiz's on-demand, play-anytime model avoids this trap entirely.
+**Relevance to Hangs:** HQ proved trivia can be a cultural moment but appointment-based models are fragile. Hangs's on-demand, play-anytime model avoids this trap entirely.
 
 ---
 
@@ -220,7 +220,7 @@
 - Large-scale multiplayer requires large concurrent player base
 - Proved again: viral trivia downloads =/= revenue
 
-**Relevance to CarQuiz:** Trivia Royale is a second data point (after QuizUp) that MCQ trivia with multiplayer and virality alone cannot sustain a business. The market is littered with trivia apps that got downloads but not revenue.
+**Relevance to Hangs:** Trivia Royale is a second data point (after QuizUp) that MCQ trivia with multiplayer and virality alone cannot sustain a business. The market is littered with trivia apps that got downloads but not revenue.
 
 ---
 
@@ -257,7 +257,7 @@
 
 ## 2. Feature Matrix
 
-| Feature | CarQuiz | Trivia Crack | Kahoot! | QuizUp | HQ Trivia | Jeopardy! WT | Trivia Royale | Drivetime |
+| Feature | Hangs | Trivia Crack | Kahoot! | QuizUp | HQ Trivia | Jeopardy! WT | Trivia Royale | Drivetime |
 |---|---|---|---|---|---|---|---|---|
 | **Voice-first** | Yes | No | No | No | No | No | No | Yes |
 | **Hands-free** | Yes | No | No | No | No | No | No | Yes |
@@ -280,11 +280,11 @@
 
 ## 3. Positioning Statement
 
-**CarQuiz is the only trivia app where you speak your answers in your own words and an AI evaluates whether you are right.**
+**Hangs is the only trivia app where you speak your answers in your own words and an AI evaluates whether you are right.**
 
-Every other trivia app is multiple-choice: you pick A, B, C, or D. CarQuiz lets you actually *know* the answer, not just recognize it from a list. This is fundamentally harder, more satisfying, and more educational.
+Every other trivia app is multiple-choice: you pick A, B, C, or D. Hangs lets you actually *know* the answer, not just recognize it from a list. This is fundamentally harder, more satisfying, and more educational.
 
-Combined with hands-free voice control, CarQuiz is built for moments when your eyes and hands are busy -- driving, cooking, exercising -- but your brain is free. It turns dead time into a trivia challenge without requiring you to look at or touch your phone.
+Combined with hands-free voice control, Hangs is built for moments when your eyes and hands are busy -- driving, cooking, exercising -- but your brain is free. It turns dead time into a trivia challenge without requiring you to look at or touch your phone.
 
 **One-liner:** "Trivia you actually have to know, not just guess. Completely hands-free."
 
@@ -292,19 +292,19 @@ Combined with hands-free voice control, CarQuiz is built for moments when your e
 
 ## 4. Market Gap Analysis
 
-### Gaps CarQuiz fills that no competitor addresses:
+### Gaps Hangs fills that no competitor addresses:
 
 **Gap 1: AI-evaluated free-form answers**
-Every major trivia app uses multiple choice. Kahoot! has text-entry open-ended questions but only for hosted classroom settings, not solo play, and uses exact string matching rather than AI evaluation. CarQuiz's GPT-powered evaluation accepts natural language answers, handles partial correctness, and provides explanations. This is a genuine technical moat -- it requires AI infrastructure that casual game studios do not have.
+Every major trivia app uses multiple choice. Kahoot! has text-entry open-ended questions but only for hosted classroom settings, not solo play, and uses exact string matching rather than AI evaluation. Hangs's GPT-powered evaluation accepts natural language answers, handles partial correctness, and provides explanations. This is a genuine technical moat -- it requires AI infrastructure that casual game studios do not have.
 
 **Gap 2: Voice-first with visual richness**
-Drivetime is voice-first but audio-only (no images, no visual questions). Kahoot and Trivia Crack have images but no voice interaction. CarQuiz bridges both: image questions (silhouettes, blind maps, hint images) with voice answers. When you can look at the screen (passenger, at home), you get richer content. When you cannot (driving), it works purely by voice.
+Drivetime is voice-first but audio-only (no images, no visual questions). Kahoot and Trivia Crack have images but no voice interaction. Hangs bridges both: image questions (silhouettes, blind maps, hint images) with voice answers. When you can look at the screen (passenger, at home), you get richer content. When you cannot (driving), it works purely by voice.
 
 **Gap 3: AI-generated, infinitely scalable question pool**
-Most competitors rely on human-curated question databases (expensive to maintain, finite). CarQuiz's question generation pipeline (GPT-4 + self-critique) can produce unlimited questions on any topic, with quality scoring built in. Trivia Crack relies on user submissions. Kahoot's AI generation is for hosts creating quizzes, not for the app's own content.
+Most competitors rely on human-curated question databases (expensive to maintain, finite). Hangs's question generation pipeline (GPT-4 + self-critique) can produce unlimited questions on any topic, with quality scoring built in. Trivia Crack relies on user submissions. Kahoot's AI generation is for hosts creating quizzes, not for the app's own content.
 
 **Gap 4: Multi-language with AI evaluation**
-Trivia Crack supports many languages but only for MCQ (translations of fixed answers). CarQuiz's AI evaluation works across languages -- a Czech speaker can answer in Czech, and GPT evaluates correctness in that language. This is not a feature any competitor offers.
+Trivia Crack supports many languages but only for MCQ (translations of fixed answers). Hangs's AI evaluation works across languages -- a Czech speaker can answer in Czech, and GPT evaluates correctness in that language. This is not a feature any competitor offers.
 
 **Gap 5: No CarPlay trivia app exists**
 Despite millions of daily commuters, there is no trivia app on CarPlay. Drivetime works as a regular app while driving but has no CarPlay integration. This is an unclaimed distribution channel.
@@ -325,13 +325,13 @@ Kahoot already has open-ended questions and AI generation. If they pivot from cl
 Siri and Google Assistant could theoretically run trivia with voice interaction. Apple has added more interactive Siri features. If Apple shipped "Hey Siri, quiz me" with AI evaluation, it would be hard to compete with a built-in feature. However, platform companies historically do not build deep vertical experiences like this.
 
 **Threat 4: Drivetime adds AI evaluation (High risk)**
-Drivetime is the most direct competitor. They already have voice-first driving trivia. If they add GPT-powered free-form evaluation, they would match CarQuiz's core differentiator. Mitigating factor: Drivetime is a content/media company (pre-recorded episodes, Jeopardy! license), not an AI company. Adding real-time AI evaluation would change their entire architecture and cost structure.
+Drivetime is the most direct competitor. They already have voice-first driving trivia. If they add GPT-powered free-form evaluation, they would match Hangs's core differentiator. Mitigating factor: Drivetime is a content/media company (pre-recorded episodes, Jeopardy! license), not an AI company. Adding real-time AI evaluation would change their entire architecture and cost structure.
 
 **Threat 5: A new entrant from the AI space (Medium risk)**
 An AI-native startup (or even OpenAI themselves via ChatGPT voice mode) could build voice trivia as a feature. ChatGPT voice mode already handles conversational Q&A. The gap is the gamification layer (scoring, streaks, progression, questions database). This is the most realistic long-term threat.
 
 **Threat 6: Monetization challenge (Internal threat)**
-The graveyard of trivia apps (QuizUp, HQ Trivia, Trivia Royale) all failed at monetization despite massive user bases. CarQuiz's AI evaluation has real per-query costs (OpenAI API). Unlike MCQ apps where evaluation is free (string comparison), every CarQuiz answer costs money to evaluate. This means CarQuiz must find paying users earlier than competitors did, or the AI costs will eat the business.
+The graveyard of trivia apps (QuizUp, HQ Trivia, Trivia Royale) all failed at monetization despite massive user bases. Hangs's AI evaluation has real per-query costs (OpenAI API). Unlike MCQ apps where evaluation is free (string comparison), every Hangs answer costs money to evaluate. This means Hangs must find paying users earlier than competitors did, or the AI costs will eat the business.
 
 ---
 
@@ -339,7 +339,7 @@ The graveyard of trivia apps (QuizUp, HQ Trivia, Trivia Royale) all failed at mo
 
 1. **Lead with the differentiator.** "Answer in your own words" is the hook. Every screenshot, App Store listing, and demo should show a free-form voice answer being evaluated by AI -- this is what no one else does.
 
-2. **Do not compete on question volume.** Trivia Crack has millions of questions. CarQuiz does not need to match that at launch. 200-500 high-quality questions across key categories is sufficient for an MVP. Quality of the *interaction* (voice + AI evaluation + explanation) matters more than quantity.
+2. **Do not compete on question volume.** Trivia Crack has millions of questions. Hangs does not need to match that at launch. 200-500 high-quality questions across key categories is sufficient for an MVP. Quality of the *interaction* (voice + AI evaluation + explanation) matters more than quantity.
 
 3. **Target the driving use case first.** "Trivia for your commute" is a concrete, underserved niche. Drivetime validated the market but has not innovated since 2020. CarPlay integration would be a strong moat.
 

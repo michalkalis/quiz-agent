@@ -2,7 +2,7 @@
 paths: apps/ios-app/**
 ---
 
-# iOS Development Rules (CarQuiz)
+# iOS Development Rules (Hangs)
 
 - **Swift:** 6.0 (strict concurrency), **iOS:** 18.0+
 - **Architecture:** MVVM with Service Layer

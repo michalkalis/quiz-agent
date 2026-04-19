@@ -1,6 +1,6 @@
-# Google Stitch Design Guide — CarQuiz
+# Google Stitch Design Guide — Hangs
 
-Use [Google Stitch](https://stitch.withgoogle.com) to explore and elevate CarQuiz's visual design. Stitch generates high-fidelity mobile UI from text prompts and exports to Figma and HTML/CSS.
+Use [Google Stitch](https://stitch.withgoogle.com) to explore and elevate Hangs's visual design. Stitch generates high-fidelity mobile UI from text prompts and exports to Figma and HTML/CSS.
 
 **Key constraint:** Stitch does NOT export SwiftUI code. It's a **visual design exploration** tool — use it for inspiration, then implement in SwiftUI manually or with Claude Code using the designs as reference.
 
@@ -19,7 +19,7 @@ Use [Google Stitch](https://stitch.withgoogle.com) to explore and elevate CarQui
 
 ---
 
-## CarQuiz Design System Context
+## Hangs Design System Context
 
 These tokens are used in prompts to keep Stitch output consistent with the app:
 
@@ -42,11 +42,11 @@ Generate **one screen at a time** — multi-screen prompts degrade quality.
 ### Screen 1: Home / Lobby
 
 ```
-Design a native iOS 26 app home screen for a trivia quiz app called "CarQuiz". Follow Apple Human Interface Guidelines strictly. Use the iOS 26 Liquid Glass design language.
+Design a native iOS 26 app home screen for a trivia quiz app called "Hangs". Follow Apple Human Interface Guidelines strictly. Use the iOS 26 Liquid Glass design language.
 
 Platform: iPhone, portrait, iOS 26. Use SF Pro font, SF Symbols icons, native iOS components only.
 
-Navigation: Large title navigation bar with "CarQuiz" title using iOS Liquid Glass translucent material.
+Navigation: Large title navigation bar with "Hangs" title using iOS Liquid Glass translucent material.
 
 Content (scrollable, grouped inset list style):
 - Hero section at top: A large rounded rectangle with a subtle purple-to-indigo gradient background. Inside: a brain/lightbulb SF Symbol icon (large, white), app tagline "Hands-free trivia" in SF Pro Rounded bold, and a prominent "Start Quiz" button using iOS filled button style with purple tint.
@@ -218,7 +218,7 @@ Section "VOICE & AUDIO":
 - Row: Speaker.wave.2 icon in gray circle + "Audio Output" + "iPhone Speaker" + chevron
 
 Section "GENERAL":
-- Row: Star icon in yellow circle + "Rate CarQuiz"
+- Row: Star icon in yellow circle + "Rate Hangs"
 - Row: Lock.shield icon in blue circle + "Privacy Policy" + chevron
 - Row: Info.circle icon in gray circle + "Version" + "1.0.0" (detail text, no chevron)
 
@@ -230,7 +230,7 @@ Each icon should be in a small colored rounded square (like iOS Settings). Use i
 ### Screen 7: Onboarding (Page 1 of 3)
 
 ```
-Design the first page of a native iOS 26 onboarding flow for a trivia app called "CarQuiz". Apple Human Interface Guidelines.
+Design the first page of a native iOS 26 onboarding flow for a trivia app called "Hangs". Apple Human Interface Guidelines.
 
 Platform: iPhone, portrait, iOS 26. SF Pro Rounded for headings, SF Pro for body.
 
@@ -240,7 +240,7 @@ Layout (vertically centered):
 - Top 40% of screen: Large SF Symbol illustration — car.fill inside a rounded rectangle with a purple-to-indigo gradient background. The icon should be 80pt, white. The container should be about 200x200pt with 32pt corner radius.
 
 - Center text block:
-  Title: "Welcome to CarQuiz" in largeTitle bold (SF Pro Rounded)
+  Title: "Welcome to Hangs" in largeTitle bold (SF Pro Rounded)
   Subtitle: "The hands-free trivia game you can play anywhere" in body, secondary text color. Max 2 lines, center-aligned.
 
 - Bottom section (pinned above safe area):
@@ -349,6 +349,6 @@ Prerequisites: run `npx @_davideast/stitch-mcp init` to configure your API key.
 
 Then you can ask Claude Code directly:
 ```
-"Use Stitch to design the quiz question screen for CarQuiz"
+"Use Stitch to design the quiz question screen for Hangs"
 ```
 Claude Code generates via MCP → fetches screenshot → can implement SwiftUI to match.

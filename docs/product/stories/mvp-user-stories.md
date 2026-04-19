@@ -1,4 +1,4 @@
-# CarQuiz MVP User Stories
+# Hangs MVP User Stories
 
 **Derived from:** [MVP Launch PRD](../prds/mvp-launch.md)
 **Date:** 2026-03-18 | **Status:** Draft

@@ -1,13 +1,13 @@
 # Voice-First UX Research
 
-**Date:** 2026-03-18 | **Purpose:** Inform CarQuiz voice interaction design
+**Date:** 2026-03-18 | **Purpose:** Inform Hangs voice interaction design
 
 ## Executive Summary
 
-1. **Error recovery is the make-or-break of voice UX.** Nearly 55% of users abandon voice apps after repeated errors. CarQuiz needs graceful fallbacks at every step: reprompt with variation, escalate to simpler interaction, and never dead-end the user.
+1. **Error recovery is the make-or-break of voice UX.** Nearly 55% of users abandon voice apps after repeated errors. Hangs needs graceful fallbacks at every step: reprompt with variation, escalate to simpler interaction, and never dead-end the user.
 2. **Ears hate repetition; eyes tolerate it.** Voice-first games demand far more content variety than visual ones. Randomize TTS phrasing for question intros, result announcements, and transitions -- even small variation (4+ alternatives) dramatically reduces fatigue.
-3. **Keep interactions under 10 seconds.** Automotive and hands-free UX research converges on one rule: brief interactions only. CarQuiz's question-answer loop naturally fits this, but explanations and multi-choice options need careful pacing.
-4. **VoiceOver and app TTS will fight each other.** On iOS, using `UIAccessibility.post(notification: .announcement)` instead of `AVSpeechSynthesizer` when VoiceOver is active prevents audio collisions. CarQuiz must detect VoiceOver state and route speech accordingly.
+3. **Keep interactions under 10 seconds.** Automotive and hands-free UX research converges on one rule: brief interactions only. Hangs's question-answer loop naturally fits this, but explanations and multi-choice options need careful pacing.
+4. **VoiceOver and app TTS will fight each other.** On iOS, using `UIAccessibility.post(notification: .announcement)` instead of `AVSpeechSynthesizer` when VoiceOver is active prevents audio collisions. Hangs must detect VoiceOver state and route speech accordingly.
 
 ---
 
@@ -27,9 +27,9 @@
 - [Conversation Design and Voice UI (Zypsy)](https://llms.zypsy.com/conversation-design-voice-ui) -- Latency management and prototyping
 - [Google: Speaking the Same Language (VUI Principles)](https://design.google/library/speaking-the-same-language-vui) -- Error recovery and persona design
 
-### CarQuiz Application
+### Hangs Application
 
-CarQuiz already has a state machine (`idle -> startingQuiz -> askingQuestion -> recording -> processing -> showingResult -> finished`) which maps well to conversation design. The gap is in the Repair and Ambiguity paths -- currently, if speech recognition fails, the experience likely dead-ends or requires manual intervention. Adding a 3-tier escalation (reprompt -> simplify -> skip) to the `recording` and `processing` states would cover the most critical failure modes. The implicit confirmation pattern ("Paris! Let me check...") fits naturally with the existing auto-record flow.
+Hangs already has a state machine (`idle -> startingQuiz -> askingQuestion -> recording -> processing -> showingResult -> finished`) which maps well to conversation design. The gap is in the Repair and Ambiguity paths -- currently, if speech recognition fails, the experience likely dead-ends or requires manual intervention. Adding a 3-tier escalation (reprompt -> simplify -> skip) to the `recording` and `processing` states would cover the most critical failure modes. The implicit confirmation pattern ("Paris! Let me check...") fits naturally with the existing auto-record flow.
 
 ---
 
@@ -37,7 +37,7 @@ CarQuiz already has a state machine (`idle -> startingQuiz -> askingQuestion -> 
 
 ### Key Principles
 
-- **Brief interactions only -- target under 10 seconds per turn.** Apple's CarPlay HIG states: "The best apps support brief interactions and never command the driver's attention." Even though CarQuiz isn't a CarPlay app, it targets the same context (driving). Each question-answer cycle should be completable in one short voice exchange.
+- **Brief interactions only -- target under 10 seconds per turn.** Apple's CarPlay HIG states: "The best apps support brief interactions and never command the driver's attention." Even though Hangs isn't a CarPlay app, it targets the same context (driving). Each question-answer cycle should be completable in one short voice exchange.
 - **Minimize decision-making per interaction.** Limit choices to 3-4 options maximum. For MCQ questions, read options clearly with pauses between them. Never require the user to remember more than what's currently being spoken.
 - **Use audio-only state cues, not visual ones.** Drivers can't glance at the screen, so state transitions (listening, processing, correct/incorrect) must be communicated through distinct audio cues: a short tone when recording starts, a different tone for correct vs. incorrect answers.
 
@@ -48,9 +48,9 @@ CarQuiz already has a state machine (`idle -> startingQuiz -> askingQuestion -> 
 - [Smart Car App Design (Usability Geek)](https://usabilitygeek.com/smart-car-app-design/) -- Input hierarchy for driving contexts
 - [CarPlay Developer Guide (Apple, 2026)](https://developer.apple.com/download/files/CarPlay-Developer-Guide.pdf) -- Official developer reference
 
-### CarQuiz Application
+### Hangs Application
 
-CarQuiz's question-answer loop is already well-suited for hands-free use. The main risk areas are: (1) reading MCQ options -- 4 options spoken sequentially can exceed 10 seconds; consider shorter option text or letting users respond mid-read ("barge-in" is already implemented); (2) explanations after answers -- these can be long; add a "skip explanation" voice command or auto-truncate to 2 sentences when driving mode is active; (3) state feedback -- the existing `VoiceCommandIndicator` is visual; add distinct earcons for "listening," "correct," and "incorrect" states. A single short ascending tone for correct and descending for incorrect would be instantly learnable.
+Hangs's question-answer loop is already well-suited for hands-free use. The main risk areas are: (1) reading MCQ options -- 4 options spoken sequentially can exceed 10 seconds; consider shorter option text or letting users respond mid-read ("barge-in" is already implemented); (2) explanations after answers -- these can be long; add a "skip explanation" voice command or auto-truncate to 2 sentences when driving mode is active; (3) state feedback -- the existing `VoiceCommandIndicator` is visual; add distinct earcons for "listening," "correct," and "incorrect" states. A single short ascending tone for correct and descending for incorrect would be instantly learnable.
 
 ---
 
@@ -59,8 +59,8 @@ CarQuiz's question-answer loop is already well-suited for hands-free use. The ma
 ### Key Principles
 
 - **VoiceOver and custom TTS will collide -- route speech through the right channel.** When VoiceOver is active, `AVSpeechSynthesizer` competes for the audio channel. Apple recommends using `UIAccessibility.post(notification: .announcement, argument: text)` to delegate speech to VoiceOver's queue instead. This prevents two voices talking simultaneously.
-- **Voice Control and VoiceOver can coexist but need careful coordination.** iOS supports using Voice Control and VoiceOver together, but they weren't designed as a pair. If CarQuiz uses its own speech recognition, it must pause when VoiceOver is speaking to avoid capturing VoiceOver output as user input.
-- **Audio session configuration matters.** Use `.duckOthers` audio session option so CarQuiz's TTS lowers (rather than pauses) any background audio. Set `AVSpeechSynthesizer.usesApplicationAudioSession = true` to maintain control over ducking behavior.
+- **Voice Control and VoiceOver can coexist but need careful coordination.** iOS supports using Voice Control and VoiceOver together, but they weren't designed as a pair. If Hangs uses its own speech recognition, it must pause when VoiceOver is speaking to avoid capturing VoiceOver output as user input.
+- **Audio session configuration matters.** Use `.duckOthers` audio session option so Hangs's TTS lowers (rather than pauses) any background audio. Set `AVSpeechSynthesizer.usesApplicationAudioSession = true` to maintain control over ducking behavior.
 
 ### Relevant Sources
 
@@ -69,9 +69,9 @@ CarQuiz's question-answer loop is already well-suited for hands-free use. The ma
 - [Using VoiceOver and Voice Control Together (AppleVis)](https://www.applevis.com/forum/ios-ipados/using-voiceover-voice-control-together-ios) -- Community discussion on real-world conflicts
 - [AVSpeechSynthesizer (Apple Docs)](https://developer.apple.com/documentation/avfaudio/avspeechsynthesizer) -- TTS API reference and audio session behavior
 
-### CarQuiz Application
+### Hangs Application
 
-CarQuiz currently has zero accessibility labels (noted in project memory). This is a significant gap. For MVP, the minimum viable accessibility work is: (1) detect VoiceOver state with `UIAccessibility.isVoiceOverRunning` and route TTS through accessibility announcements when active; (2) add `.accessibilityLabel` to all interactive elements (start button, answer buttons, settings toggles); (3) pause speech recognition while VoiceOver is speaking to prevent feedback loops. The existing `AudioService` with `Config.verboseLogging` suggests audio session management is already in place -- extend it to handle the VoiceOver detection case.
+Hangs currently has zero accessibility labels (noted in project memory). This is a significant gap. For MVP, the minimum viable accessibility work is: (1) detect VoiceOver state with `UIAccessibility.isVoiceOverRunning` and route TTS through accessibility announcements when active; (2) add `.accessibilityLabel` to all interactive elements (start button, answer buttons, settings toggles); (3) pause speech recognition while VoiceOver is speaking to prevent feedback loops. The existing `AudioService` with `Config.verboseLogging` suggests audio session management is already in place -- extend it to handle the VoiceOver detection case.
 
 ---
 
@@ -80,8 +80,8 @@ CarQuiz currently has zero accessibility labels (noted in project memory). This 
 ### Key Principles
 
 - **Content variety is non-negotiable for audio games.** "Our ears hate hearing the same thing twice over and over" (Amazon game design guidance). Even 4 variations of the same audio cue feel repetitive eventually. For a trivia game, this means: randomize question intro phrases, vary correct/incorrect response text, and never use the same transition phrase twice in a row.
-- **Pacing drives engagement more than content quality.** Successful Alexa trivia games use tight pacing: Trivia Hero gives 60 seconds for maximum questions; Daily Quiz gives 3 minutes for 3 questions. The sweet spot for CarQuiz is likely 5-10 seconds of silence allowed per question, with a gentle "time's up" prompt. Dead air is the #1 killer of voice game engagement.
-- **Local multiplayer is a natural fit for voice-in-car.** Amazon's game design guide notes that Alexa devices are used where multiple people are present (home, car). CarQuiz could support turn-taking ("Player 1, your turn...") with minimal backend changes since multiplayer state stays local.
+- **Pacing drives engagement more than content quality.** Successful Alexa trivia games use tight pacing: Trivia Hero gives 60 seconds for maximum questions; Daily Quiz gives 3 minutes for 3 questions. The sweet spot for Hangs is likely 5-10 seconds of silence allowed per question, with a gentle "time's up" prompt. Dead air is the #1 killer of voice game engagement.
+- **Local multiplayer is a natural fit for voice-in-car.** Amazon's game design guide notes that Alexa devices are used where multiple people are present (home, car). Hangs could support turn-taking ("Player 1, your turn...") with minimal backend changes since multiplayer state stays local.
 
 ### Relevant Sources
 
@@ -91,9 +91,9 @@ CarQuiz currently has zero accessibility labels (noted in project memory). This 
 - [Design Patterns for Voice Interaction in Games (ACM)](https://dl.acm.org/doi/10.1145/3242671.3242712) -- Academic research on voice game design
 - [Alexa Games: Best Trivia Skills (2025)](https://alexagames.com/best-trivia-games-on-alexa-quiz-tutorial/) -- Analysis of top-performing voice trivia games
 
-### CarQuiz Application
+### Hangs Application
 
-CarQuiz's current question flow (ask -> record -> evaluate -> result) maps directly to proven Alexa trivia patterns. Three specific improvements based on voice gaming research: (1) **Phrase variation pool** -- create 5+ TTS variants for each interaction type ("Here's your next question" / "Question 3" / "Let's see..." / "Try this one" / "Next up..."). This can be a simple array with random selection, no AI needed. (2) **Pacing timer** -- the existing 15-second hard limit for recording is good, but add a softer 8-second "Need more time?" prompt before the hard cutoff. (3) **Streak audio** -- the app already tracks streaks; add escalating audio excitement for streaks (subtle tone at 3, enthusiastic at 5, celebratory at 10).
+Hangs's current question flow (ask -> record -> evaluate -> result) maps directly to proven Alexa trivia patterns. Three specific improvements based on voice gaming research: (1) **Phrase variation pool** -- create 5+ TTS variants for each interaction type ("Here's your next question" / "Question 3" / "Let's see..." / "Try this one" / "Next up..."). This can be a simple array with random selection, no AI needed. (2) **Pacing timer** -- the existing 15-second hard limit for recording is good, but add a softer 8-second "Need more time?" prompt before the hard cutoff. (3) **Streak audio** -- the app already tracks streaks; add escalating audio excitement for streaks (subtle tone at 3, enthusiastic at 5, celebratory at 10).
 
 ---
 
@@ -101,7 +101,7 @@ CarQuiz's current question flow (ask -> record -> evaluate -> result) maps direc
 
 ### Key Principles
 
-- **SpeechAnalyzer (iOS 26) replaces SFSpeechRecognizer with three specialized modules.** `SpeechTranscriber` for clean command-style speech (ideal for quiz answers), `DictationTranscriber` for natural speech with punctuation, and `SpeechDetector` for voice activity detection (VAD) without transcription. CarQuiz already uses SpeechAnalyzer -- the key optimization is using `SpeechDetector` for silence detection separately from `SpeechTranscriber` for answer recognition.
+- **SpeechAnalyzer (iOS 26) replaces SFSpeechRecognizer with three specialized modules.** `SpeechTranscriber` for clean command-style speech (ideal for quiz answers), `DictationTranscriber` for natural speech with punctuation, and `SpeechDetector` for voice activity detection (VAD) without transcription. Hangs already uses SpeechAnalyzer -- the key optimization is using `SpeechDetector` for silence detection separately from `SpeechTranscriber` for answer recognition.
 - **Implement inactivity-based auto-stop, not just silence detection.** Best practice is a timer that resets when any text is recognized, then fires after ~3 seconds of no new text. This is more reliable than raw audio-level silence detection because it accounts for background noise that isn't speech.
 - **Provide haptic feedback for state transitions.** When recording stops (answer captured), fire `UIImpactFeedbackGenerator` -- this gives the user physical confirmation that their input was received, crucial when they're not looking at the screen.
 
@@ -114,13 +114,13 @@ CarQuiz's current question flow (ask -> record -> evaluate -> result) maps direc
 - [Implementing SpeechAnalyzer in SwiftUI (Create with Swift)](https://www.createwithswift.com/implementing-advanced-speech-to-text-in-your-swiftui-app/) -- Step-by-step SwiftUI integration
 - [Recognizing Speech in Live Audio (Apple Docs)](https://developer.apple.com/documentation/Speech/recognizing-speech-in-live-audio) -- Foundation speech recognition patterns
 
-### CarQuiz Application
+### Hangs Application
 
-CarQuiz already uses `SpeechAnalyzer`, `SpeechTranscriber`, and `SpeechDetector` (per the `VoiceCommandService` requiring iOS 26+). The research suggests two optimizations: (1) **Separate VAD from transcription** -- use `SpeechDetector` purely for "is the user talking?" to trigger/extend the recording window, and `SpeechTranscriber` only when speech is actually detected. This saves battery by not running full transcription on silence. (2) **Haptic feedback on capture** -- add `UIImpactFeedbackGenerator.impactOccurred()` when the answer is captured (transition from `recording` to `processing` state). The user feels a tap confirming their answer was heard, even with eyes on the road.
+Hangs already uses `SpeechAnalyzer`, `SpeechTranscriber`, and `SpeechDetector` (per the `VoiceCommandService` requiring iOS 26+). The research suggests two optimizations: (1) **Separate VAD from transcription** -- use `SpeechDetector` purely for "is the user talking?" to trigger/extend the recording window, and `SpeechTranscriber` only when speech is actually detected. This saves battery by not running full transcription on silence. (2) **Haptic feedback on capture** -- add `UIImpactFeedbackGenerator.impactOccurred()` when the answer is captured (transition from `recording` to `processing` state). The user feels a tap confirming their answer was heard, even with eyes on the road.
 
 ---
 
-## Recommendations for CarQuiz
+## Recommendations for Hangs
 
 Prioritized for a solo dev shipping MVP, ordered by impact-to-effort ratio:
 

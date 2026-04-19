@@ -1,4 +1,4 @@
-# CarQuiz iOS App — Product & Design Review
+# Hangs iOS App — Product & Design Review
 
 **Date:** 2026-03-15 (reviewed), 2026-03-16 (implemented)
 **App Version:** Pre-launch MVP (develop branch)
@@ -22,7 +22,7 @@ All P0 and P1 items have been implemented and committed. See commits on develop 
 
 ## Executive Summary
 
-CarQuiz is a **voice-first, hands-free trivia app** with a solid core feature set. The voice interaction loop (auto-record, barge-in, voice commands) is genuinely differentiated — no competitor offers this. ~~However, the app has **critical accessibility gaps** that could block App Store approval and **several high-value backend features** that the iOS app doesn't expose.~~ **Update:** All critical accessibility and feature gaps have been addressed (see Implementation Status above).
+Hangs is a **voice-first, hands-free trivia app** with a solid core feature set. The voice interaction loop (auto-record, barge-in, voice commands) is genuinely differentiated — no competitor offers this. ~~However, the app has **critical accessibility gaps** that could block App Store approval and **several high-value backend features** that the iOS app doesn't expose.~~ **Update:** All critical accessibility and feature gaps have been addressed (see Implementation Status above).
 
 **~~Top 5 priorities before launch~~ (all implemented):**
 1. ~~Add VoiceOver accessibility labels across all screens~~ Done
@@ -103,7 +103,7 @@ CarQuiz is a **voice-first, hands-free trivia app** with a solid core feature se
 | # | Friction Point | Severity | Current State | Recommendation |
 |---|----------------|----------|---------------|----------------|
 | 1 | **First launch — no onboarding** | High | User lands on HomeView with settings they may not understand. Voice features (barge-in, auto-record) are unknown. | Add 3-screen onboarding: (1) "Answer by voice", (2) "Hands-free features", (3) microphone permission request |
-| 2 | **Mic permission on app launch** | High | `CarQuizApp.swift:19` requests permission in `.onAppear` — before user understands why | Move to in-context: request when user first taps "Start Quiz" or during onboarding |
+| 2 | **Mic permission on app launch** | High | `HangsApp.swift:19` requests permission in `.onAppear` — before user understands why | Move to in-context: request when user first taps "Start Quiz" or during onboarding |
 | 3 | **Voice failure — no text fallback** | High | If speech recognition fails repeatedly, user is stuck. No way to type an answer | Add text input field as fallback (backend `POST /sessions/{id}/input` already supports this) |
 | 4 | **Quiz end requires tap** | Medium | CompletionView "Play Again" and "Back to Home" are tap-only. Breaks hands-free flow | Add voice command support: "play again", "home", "quit" |
 | 5 | **Answer confirmation modal** | Medium | 5s re-record window in AnswerConfirmationView. Requires reading + tapping while driving | Consider auto-confirm after 3s with voice override ("re-record") instead of modal |
@@ -113,7 +113,7 @@ CarQuiz is a **voice-first, hands-free trivia app** with a solid core feature se
 
 ### 1.5 Competitive Positioning
 
-| Feature | CarQuiz | Trivia Crack | Kahoot! | QuizUp |
+| Feature | Hangs | Trivia Crack | Kahoot! | QuizUp |
 |---------|:-------:|:------------:|:-------:|:------:|
 | Voice-first | **Yes** | No | No | No |
 | Hands-free complete flow | **Yes** | No | No | No |
@@ -128,7 +128,7 @@ CarQuiz is a **voice-first, hands-free trivia app** with a solid core feature se
 | Offline | No | Partial | No | No |
 | CarPlay | No | No | No | No |
 
-**Unique differentiator:** CarQuiz is the only trivia app designed for hands-free, voice-first interaction. This is a genuinely unserved niche.
+**Unique differentiator:** Hangs is the only trivia app designed for hands-free, voice-first interaction. This is a genuinely unserved niche.
 
 ### 1.6 RICE Prioritization (Feature Gaps)
 
@@ -313,7 +313,7 @@ CarQuiz is a **voice-first, hands-free trivia app** with a solid core feature se
 | 1 | **Incomplete VoiceOver labels** | **Critical** | Accessibility | Only 8 accessibility labels across entire app. Missing: form fields, badges, cards, image descriptions, state changes. VoiceOver users cannot use the app. |
 | 2 | **No Dynamic Type support** | **Critical** | Typography | All font sizes are hard-coded (`Theme.Typography.sizeXX`). App uses `.system(size:)` which bypasses Dynamic Type. Users who need larger text get no scaling. |
 | 3 | **No Reduce Motion support** | **High** | Motion | 13+ animation instances don't check `@Environment(\.accessibilityReduceMotion)`. Pulsing animations repeat forever. Spring animations on drag gestures. |
-| 4 | **Mic permission on app launch** | **High** | Privacy | `CarQuizApp.swift:19` requests microphone in `.onAppear`. HIG says: "Request permission only when the feature that requires it is first used." |
+| 4 | **Mic permission on app launch** | **High** | Privacy | `HangsApp.swift:19` requests microphone in `.onAppear`. HIG says: "Request permission only when the feature that requires it is first used." |
 | 5 | **No haptic feedback** | **Medium** | Feedback | Zero haptic usage. HIG recommends haptics for confirmations, state changes, and errors. Especially important for a hands-free app. |
 | 6 | **Contrast ratio failures** | **Medium** | Color | 7 color pairs fail WCAG AA (4.5:1). Affects: accentPrimary text, tertiary text, semantic colors on tinted backgrounds. See Section 2.1 contrast table. |
 | 7 | **No error audio feedback** | **Medium** | Feedback | Errors displayed as visual text only. In a voice-first app, errors should be announced via TTS. |
@@ -383,7 +383,7 @@ CarQuiz is a **voice-first, hands-free trivia app** with a solid core feature se
 | Check | Status | Notes |
 |-------|:------:|-------|
 | Microphone purpose string | PASS | Info.plist has `NSMicrophoneUsageDescription` |
-| In-context permission request | **FAIL** | Requested on app launch (`CarQuizApp.swift:19`), not when feature is first used |
+| In-context permission request | **FAIL** | Requested on app launch (`HangsApp.swift:19`), not when feature is first used |
 
 #### Hands-Free / Driving Safety (Best Practices)
 
@@ -422,8 +422,8 @@ iOS 26 introduces Liquid Glass — translucent, refractive UI materials applied 
 | 1 | **Add VoiceOver accessibility labels** to all interactive elements, badges, cards, and state indicators | Large (2-3 days) | All View files + Components/ |
 | 2 | **Support Reduce Motion** — wrap all 13+ animations in `if !reduceMotion` checks | Small (2-4 hours) | ContentView, QuestionView, ResultView, MinimizedQuizView, InteractiveMinimizeModifier, ButtonStyles, VoiceCommandIndicator, MicButton |
 | 3 | **Support Dynamic Type** — replace `.system(size:)` with semantic text styles or `@ScaledMetric` | Medium (1-2 days) | Theme.swift (add scaled variants), all View files |
-| 4 | **Add onboarding flow** — 3 screens explaining voice features + mic permission request | Medium (1-2 days) | New OnboardingView.swift, modify CarQuizApp.swift |
-| 5 | **Move mic permission to in-context** — request during onboarding or first "Start Quiz" | Small (1 hour) | CarQuizApp.swift, HomeView.swift or OnboardingView |
+| 4 | **Add onboarding flow** — 3 screens explaining voice features + mic permission request | Medium (1-2 days) | New OnboardingView.swift, modify HangsApp.swift |
+| 5 | **Move mic permission to in-context** — request during onboarding or first "Start Quiz" | Small (1 hour) | HangsApp.swift, HomeView.swift or OnboardingView |
 
 ### P1 — Should fix before launch
 

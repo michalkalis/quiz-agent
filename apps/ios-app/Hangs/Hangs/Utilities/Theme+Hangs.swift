@@ -103,7 +103,7 @@ extension Font {
         .system(size: size, weight: weight, design: .monospaced)
     }
 
-    /// Body / button copy ("Start Quiz", "Answer out loud…").
+    /// Body / button copy ("Start Quiz").
     static func hangsBody(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
         .system(size: size, weight: weight)
     }

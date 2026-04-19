@@ -140,7 +140,7 @@ struct QuestionView: View {
 
     private func voiceBody(question: Question) -> some View {
         VStack(spacing: 0) {
-            fixedQuestionHeader(question: question, includeHint: !question.isMultipleChoice)
+            fixedQuestionHeader(question: question)
 
             // Question scrolls full-height; mic floats over the bottom so the
             // question text can extend underneath the translucent halos.
@@ -168,19 +168,11 @@ struct QuestionView: View {
 
     // MARK: - Fixed question header (category label + hint)
 
-    private func fixedQuestionHeader(question: Question, includeHint: Bool) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HangsSectionLabel(
-                text: question.category.uppercased(),
-                color: isRecording ? Theme.Hangs.Colors.blue : Theme.Hangs.Colors.pink
-            )
-
-            if includeHint && viewModel.quizState == .askingQuestion {
-                Text("Answer out loud when the mic glows.")
-                    .font(.hangsBody(14))
-                    .foregroundColor(Theme.Hangs.Colors.muted)
-            }
-        }
+    private func fixedQuestionHeader(question: Question) -> some View {
+        HangsSectionLabel(
+            text: question.category.uppercased(),
+            color: isRecording ? Theme.Hangs.Colors.blue : Theme.Hangs.Colors.pink
+        )
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 28)
         .padding(.top, 12)
@@ -403,7 +395,7 @@ struct QuestionView: View {
 
     private func mcqBody(question: Question) -> some View {
         VStack(spacing: 0) {
-            fixedQuestionHeader(question: question, includeHint: false)
+            fixedQuestionHeader(question: question)
 
             scrollableQuestionContent(question: question)
 

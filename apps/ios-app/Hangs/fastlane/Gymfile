@@ -1,0 +1,12 @@
+scheme("Hangs-Prod")
+configuration("Release-Prod")
+workspace(nil)
+project("Hangs.xcodeproj")
+
+export_method("app-store")
+output_directory("./build")
+output_name("Hangs")
+
+clean(true)
+include_symbols(true)
+include_bitcode(false)

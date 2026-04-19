@@ -48,17 +48,17 @@ DerivedData/
 *.certSigningRequest
 
 # fastlane
-apps/ios-app/CarQuiz/fastlane/report.xml
-apps/ios-app/CarQuiz/fastlane/Preview.html
-apps/ios-app/CarQuiz/fastlane/screenshots
-apps/ios-app/CarQuiz/fastlane/test_output
-apps/ios-app/CarQuiz/fastlane/README.md
-apps/ios-app/CarQuiz/fastlane/README.md.bak
-apps/ios-app/CarQuiz/fastlane/.env
-apps/ios-app/CarQuiz/fastlane/.env.*
-!apps/ios-app/CarQuiz/fastlane/.env.example
-apps/ios-app/CarQuiz/build/
-apps/ios-app/CarQuiz/vendor/
+apps/ios-app/Hangs/fastlane/report.xml
+apps/ios-app/Hangs/fastlane/Preview.html
+apps/ios-app/Hangs/fastlane/screenshots
+apps/ios-app/Hangs/fastlane/test_output
+apps/ios-app/Hangs/fastlane/README.md
+apps/ios-app/Hangs/fastlane/README.md.bak
+apps/ios-app/Hangs/fastlane/.env
+apps/ios-app/Hangs/fastlane/.env.*
+!apps/ios-app/Hangs/fastlane/.env.example
+apps/ios-app/Hangs/build/
+apps/ios-app/Hangs/vendor/
 
 # Claude Code local settings
 .claude/*.local.json

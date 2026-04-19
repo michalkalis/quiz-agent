@@ -7,7 +7,7 @@ argument-hint: "[recent|issue-ID|--summary|--logs [query]|--feedback]"
 
 # Check Crashes / Logs / Feedback from Sentry
 
-One-stop Sentry query command. Covers crashes, structured logs (experimental), and user-feedback submissions (shake-to-report) from CarQuiz iOS.
+One-stop Sentry query command. Covers crashes, structured logs (experimental), and user-feedback submissions (shake-to-report) from Hangs iOS.
 
 ## Prerequisites
 
@@ -15,7 +15,7 @@ One-stop Sentry query command. Covers crashes, structured logs (experimental), a
 
 ## PII Note
 
-iOS `beforeSend` scrubber in `CarQuizApp.swift` redacts raw user speech/transcripts before events leave the device. Seeing `[REDACTED]` in event data is expected, not a bug.
+iOS `beforeSend` scrubber in `HangsApp.swift` redacts raw user speech/transcripts before events leave the device. Seeing `[REDACTED]` in event data is expected, not a bug.
 
 ## Based on $ARGUMENTS:
 

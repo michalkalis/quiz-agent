@@ -33,17 +33,17 @@ quiz-agent/
 | Start backend | `cd apps/quiz-agent && uvicorn app.main:app --reload --port 8002` |
 | Start question-gen | `cd apps/question-generator && uvicorn app.main:app --reload --port 8003` |
 | Backend tests | `cd apps/quiz-agent && pytest tests/ -v` |
-| Open iOS project | `open apps/ios-app/CarQuiz/CarQuiz.xcodeproj` |
-| Build iOS (Local) | `cd apps/ios-app/CarQuiz && xcodebuild -scheme CarQuiz-Local -destination 'platform=iOS Simulator,name=iPhone 17 Pro'` |
-| iOS tests | `cd apps/ios-app/CarQuiz && xcodebuild test -scheme CarQuiz-Local -destination 'platform=iOS Simulator,name=iPhone 17 Pro'` |
+| Open iOS project | `open apps/ios-app/Hangs/Hangs.xcodeproj` |
+| Build iOS (Local) | `cd apps/ios-app/Hangs && xcodebuild -scheme Hangs-Local -destination 'platform=iOS Simulator,name=iPhone 17 Pro'` |
+| iOS tests | `cd apps/ios-app/Hangs && xcodebuild test -scheme Hangs-Local -destination 'platform=iOS Simulator,name=iPhone 17 Pro'` |
 | Install deps | `uv pip install -e apps/quiz-agent && uv pip install -e packages/shared` |
 
 ## iOS Schemes
 
 | Scheme | API URL |
 |--------|---------|
-| CarQuiz-Local | `http://localhost:8002` |
-| CarQuiz-Prod | `https://quiz-agent-api.fly.dev` |
+| Hangs-Local | `http://localhost:8002` |
+| Hangs-Prod | `https://quiz-agent-api.fly.dev` |
 
 Models must be Codable and match backend Pydantic models. See `.claude/rules/ios.md` for full iOS guidelines.
 

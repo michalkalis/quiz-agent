@@ -19,7 +19,7 @@ Triggers the `ios-release.yml` GitHub Actions workflow which:
 
 ## Prerequisites (one-time, already done)
 
-Full setup runbook is in `apps/ios-app/CarQuiz/TESTFLIGHT_SETUP.md`. Seven GitHub secrets must exist: `ASC_API_KEY_ID`, `ASC_API_ISSUER_ID`, `ASC_API_KEY_CONTENT`, `MATCH_GIT_URL`, `MATCH_PASSWORD`, `MATCH_DEPLOY_KEY`, `KEYCHAIN_PASSWORD`. If the workflow fails with a `Missing required secrets` error, see the runbook.
+Full setup runbook is in `apps/ios-app/Hangs/TESTFLIGHT_SETUP.md`. Seven GitHub secrets must exist: `ASC_API_KEY_ID`, `ASC_API_ISSUER_ID`, `ASC_API_KEY_CONTENT`, `MATCH_GIT_URL`, `MATCH_PASSWORD`, `MATCH_DEPLOY_KEY`, `KEYCHAIN_PASSWORD`. If the workflow fails with a `Missing required secrets` error, see the runbook.
 
 ## Usage
 
@@ -84,7 +84,7 @@ Info.plist has `ITSAppUsesNonExemptEncryption = false` baked in — the app decl
 If a build ever shows **"Missing Compliance"** (e.g. the Info.plist key got lost):
 
 ```bash
-cd apps/ios-app/CarQuiz
+cd apps/ios-app/Hangs
 PATH="/opt/homebrew/opt/ruby@3.3/bin:$PATH" bundle exec fastlane ios set_compliance
 ```
 

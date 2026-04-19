@@ -27,7 +27,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/Library/Caches/org.swift.swiftpm
-          key: spm-${{ hashFiles('apps/ios-app/CarQuiz/CarQuiz.xcodeproj/project.pbxproj') }}
+          key: spm-${{ hashFiles('apps/ios-app/Hangs/Hangs.xcodeproj/project.pbxproj') }}
           restore-keys: spm-
 
       - name: Select Xcode version
@@ -40,9 +40,9 @@ jobs:
 
       - name: Build and test
         run: |
-          cd apps/ios-app/CarQuiz
+          cd apps/ios-app/Hangs
           xcodebuild test \
-            -scheme CarQuiz-Local \
+            -scheme Hangs-Local \
             -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest' \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
@@ -56,7 +56,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ios-test-results
-          path: apps/ios-app/CarQuiz/TestResults.xcresult
+          path: apps/ios-app/Hangs/TestResults.xcresult
           retention-days: 7
 
   verify-api-models:

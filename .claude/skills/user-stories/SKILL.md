@@ -20,7 +20,7 @@ Generate structured user stories with Given/When/Then acceptance criteria.
    - Check `docs/product/prds/` for a related PRD — if one exists, use it as input
    - Scan existing stories in `docs/product/stories/` to avoid duplicates
 
-2. **Identify personas** relevant to this feature from the CarQuiz context:
+2. **Identify personas** relevant to this feature from the Hangs context:
    - **Driver** — Primary user, hands-free interaction
    - **Passenger** — Secondary user, can use touch
    - **Admin** — Question management, analytics

@@ -16,7 +16,7 @@ swift-concurrency/, ios-mvvm/, ios-networking/, ios-audio/, ios-debugging/
 ## Project Structure
 
 ```
-apps/ios-app/CarQuiz/CarQuiz/
+apps/ios-app/Hangs/Hangs/
 ├── Services/
 │   ├── NetworkService.swift      # Actor - backend API
 │   ├── AudioService.swift        # @MainActor - recording/playback

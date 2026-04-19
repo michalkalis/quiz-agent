@@ -7,7 +7,7 @@ model: opus
 
 # Review UI — iOS Design Analysis
 
-Analyze a screenshot of the CarQuiz app against Apple's Human Interface Guidelines and provide actionable SwiftUI code suggestions.
+Analyze a screenshot of the Hangs app against Apple's Human Interface Guidelines and provide actionable SwiftUI code suggestions.
 
 ## Arguments
 
@@ -18,7 +18,7 @@ Analyze a screenshot of the CarQuiz app against Apple's Human Interface Guidelin
 1. **Read the screenshot** at the provided path using Read tool (it supports images).
 
 2. **Read current SwiftUI code** for the screen being reviewed:
-   - Scan `apps/ios-app/CarQuiz/CarQuiz/Views/` to identify which view matches the screenshot
+   - Scan `apps/ios-app/Hangs/Hangs/Views/` to identify which view matches the screenshot
    - Read the matching view file(s)
 
 3. **Analyze against iOS HIG criteria**, scoring each 1-5:

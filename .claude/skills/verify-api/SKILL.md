@@ -16,7 +16,7 @@ Verify that iOS Codable structs match backend Pydantic models.
    - `packages/shared/quiz_shared/models/`
 
 2. **Check iOS Models**: Read Swift Codable structs in:
-   - `apps/ios-app/CarQuiz/CarQuiz/Models/`
+   - `apps/ios-app/Hangs/Hangs/Models/`
 
 3. **Compare**: For each model pair, verify:
    - Field names match (accounting for snake_case vs camelCase)

@@ -35,7 +35,7 @@ jobs:
       MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
       MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
       MATCH_READONLY: "true"
-      MATCH_KEYCHAIN_NAME: "carquiz-build.keychain"
+      MATCH_KEYCHAIN_NAME: "hangs-build.keychain"
       MATCH_KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
       FASTLANE_HIDE_CHANGELOG: "true"
       FASTLANE_SKIP_UPDATE_CHECK: "true"
@@ -95,7 +95,7 @@ jobs:
         with:
           ruby-version: "3.3"
           bundler-cache: true
-          working-directory: apps/ios-app/CarQuiz
+          working-directory: apps/ios-app/Hangs
 
       - name: Create isolated keychain
         # We run match against a dedicated keychain that gets wiped in cleanup.
@@ -110,7 +110,7 @@ jobs:
           echo "KEYCHAIN_PATH=$KC" >> "$GITHUB_ENV"
 
       - name: Run fastlane beta (build + TestFlight upload)
-        working-directory: apps/ios-app/CarQuiz
+        working-directory: apps/ios-app/Hangs
         env:
           # Override Matchfile to point at the isolated keychain on disk.
           MATCH_KEYCHAIN_NAME: ${{ env.KEYCHAIN_PATH }}
@@ -122,10 +122,10 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: carquiz-release
+          name: hangs-release
           path: |
-            apps/ios-app/CarQuiz/build/*.ipa
-            apps/ios-app/CarQuiz/build/*.app.dSYM.zip
+            apps/ios-app/Hangs/build/*.ipa
+            apps/ios-app/Hangs/build/*.app.dSYM.zip
           retention-days: 14
           if-no-files-found: warn
 

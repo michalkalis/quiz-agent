@@ -8,7 +8,7 @@
 Product → Clean Build Folder (Cmd+Shift+K)
 
 # Command line
-xcodebuild clean -scheme CarQuiz-Local
+xcodebuild clean -scheme Hangs-Local
 ```
 
 ### Delete DerivedData
@@ -16,7 +16,7 @@ xcodebuild clean -scheme CarQuiz-Local
 rm -rf ~/Library/Developer/Xcode/DerivedData/
 
 # Or specific project
-rm -rf ~/Library/Developer/Xcode/DerivedData/CarQuiz-*
+rm -rf ~/Library/Developer/Xcode/DerivedData/Hangs-*
 ```
 
 ### Reset Package Cache

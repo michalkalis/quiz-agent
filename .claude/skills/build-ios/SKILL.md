@@ -9,15 +9,15 @@ argument-hint: "[local|prod|clean]"
 
 # Build iOS App
 
-Build the CarQuiz iOS app.
+Build the Hangs iOS app.
 
 ## Based on $ARGUMENTS:
 
 ### "local" or no argument
 Build with Local environment (localhost):
 ```bash
-cd apps/ios-app/CarQuiz && xcodebuild \
-  -scheme CarQuiz-Local \
+cd apps/ios-app/Hangs && xcodebuild \
+  -scheme Hangs-Local \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
   -configuration Debug \
   build \
@@ -27,8 +27,8 @@ cd apps/ios-app/CarQuiz && xcodebuild \
 ### "prod"
 Build with Production environment:
 ```bash
-cd apps/ios-app/CarQuiz && xcodebuild \
-  -scheme CarQuiz-Prod \
+cd apps/ios-app/Hangs && xcodebuild \
+  -scheme Hangs-Prod \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
   -configuration Release \
   build \
@@ -38,8 +38,8 @@ cd apps/ios-app/CarQuiz && xcodebuild \
 ### "clean"
 Clean and rebuild:
 ```bash
-cd apps/ios-app/CarQuiz && xcodebuild clean && xcodebuild \
-  -scheme CarQuiz-Local \
+cd apps/ios-app/Hangs && xcodebuild clean && xcodebuild \
+  -scheme Hangs-Local \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
   build \
   2>&1 | xcpretty --color || cat

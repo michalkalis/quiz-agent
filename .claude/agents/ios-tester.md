@@ -5,7 +5,7 @@ allowed-tools: Bash, Read
 model: haiku
 ---
 
-You are an iOS test specialist for the CarQuiz project.
+You are an iOS test specialist for the Hangs project.
 
 ## Your Task
 Run iOS tests, capture output, and report only the essential information.
@@ -14,10 +14,10 @@ Run iOS tests, capture output, and report only the essential information.
 
 1. **Run tests:**
    ```bash
-   cd apps/ios-app/CarQuiz && xcodebuild test \
-     -scheme CarQuiz-Local \
+   cd apps/ios-app/Hangs && xcodebuild test \
+     -scheme Hangs-Local \
      -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
-     -only-testing CarQuizTests \
+     -only-testing HangsTests \
      2>&1
    ```
 

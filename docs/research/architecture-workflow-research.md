@@ -49,7 +49,7 @@
 2. **Add a `.claude/commands/build-and-test.md` command.** A custom slash command that builds the iOS app, runs tests, and reports results:
 
    ```markdown
-   Build CarQuiz-Local scheme, run all tests on iPhone 17 Pro simulator.
+   Build Hangs-Local scheme, run all tests on iPhone 17 Pro simulator.
    Report: build success/failure, test pass/fail counts, any errors.
    ```
 

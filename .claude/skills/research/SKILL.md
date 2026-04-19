@@ -37,7 +37,7 @@ Conduct deep research on a topic and produce a structured report with sources.
 ### [Finding 2 Title]
 ...
 
-## Implications for CarQuiz
+## Implications for Hangs
 [How these findings relate to the quiz-agent project specifically]
 
 ## Recommendations

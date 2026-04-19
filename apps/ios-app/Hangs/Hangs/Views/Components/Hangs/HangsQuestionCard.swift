@@ -16,8 +16,11 @@ struct HangsQuestionPrompt: View {
     var barColor: Color = Theme.Hangs.Colors.blue
     var textFont: Font = .hangsDisplaySM
     var textColor: Color = Theme.Hangs.Colors.ink
-    /// Cap the prompt to this max height; content scrolls when larger.
-    var maxHeight: CGFloat = 260
+    /// Reserved height for the prompt area. Ensures long questions always
+    /// show ~6 lines; the inner ScrollView handles overflow. A fixed height
+    /// is used (not `maxHeight`) because SwiftUI's ScrollView has ambiguous
+    /// ideal size and collapses to zero when siblings include Spacers.
+    var height: CGFloat = 300
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
@@ -36,7 +39,7 @@ struct HangsQuestionPrompt: View {
                     .multilineTextAlignment(.leading)
             }
         }
-        .frame(maxHeight: maxHeight)
+        .frame(height: height, alignment: .top)
     }
 }
 

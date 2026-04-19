@@ -179,7 +179,7 @@ struct QuestionView: View {
                     text: question.question,
                     barColor: isRecording ? Theme.Hangs.Colors.pink : Theme.Hangs.Colors.blue,
                     textFont: isRecording ? .hangsQuestion : .hangsDisplaySM,
-                    maxHeight: isRecording ? 160 : 260
+                    height: isRecording ? 200 : 300
                 )
                 .accessibilityIdentifier("question.text")
             }

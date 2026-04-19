@@ -1,6 +1,16 @@
 # Issue #15: Full rename CarQuiz → Hangs
 
-## Status: PLANNED (awaiting user green-light, 2026-04-18)
+## Status: DONE (executed 2026-04-19)
+
+Landed in commits:
+- Phase A `310245d` — comments + user-facing strings
+- Phase B `7863159` — IAP display name
+- Phase C `2334140` — active docs + Claude rule header
+- Phase D `a5d2916` — atomic structural rename (136 files)
+
+Pre-rename tag `pre-hangs-rename` = `23341405bac` for emergency rollback.
+
+## Original plan (2026-04-18)
 
 User wants to eliminate every remaining `CarQuiz` reference from the repo and
 rename it to `Hangs`. This supersedes Phase 0 of `issue-14-hangs-redesign.md`

@@ -69,10 +69,16 @@ extension QuizViewModel {
 
     // MARK: - Answer Timer
 
-    /// Start countdown timer that auto-starts recording when it expires
-    func startAnswerTimer() {
-        let limit = settings.answerTimeLimit
-        guard limit > 0, !isRerecording else { return }
+    /// Start countdown timer that auto-starts recording when it expires.
+    ///
+    /// - Parameters:
+    ///   - extraSeconds: Bonus time added on top of `settings.answerTimeLimit`
+    ///     (used by re-record to give the user a fair retry window).
+    ///   - bypassRerecord: Allow the timer to run even when `isRerecording` is
+    ///     true. Re-record explicitly wants the countdown to keep ticking.
+    func startAnswerTimer(extraSeconds: Int = 0, bypassRerecord: Bool = false) {
+        let limit = settings.answerTimeLimit + extraSeconds
+        guard limit > 0, bypassRerecord || !isRerecording else { return }
 
         cancelAnswerTimer()
         answerTimerCountdown = limit
@@ -94,6 +100,8 @@ extension QuizViewModel {
 
             // Auto-start recording when timer expires
             guard self.quizState == .askingQuestion else { return }
+            // Clear re-record flag so the auto-stop timer fires normally for this attempt
+            self.isRerecording = false
             await self.startRecording()
         }
     }

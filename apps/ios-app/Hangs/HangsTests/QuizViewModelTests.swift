@@ -899,17 +899,19 @@ struct QuizViewModelAnswerTimerTests {
         #expect(viewModel.answerTimerCountdown == 0)
     }
 
-    @Test("rerecordAnswer sets isRerecording flag preventing auto timers")
+    @Test("rerecordAnswer restarts answer timer with +10s bonus")
     @MainActor
-    func rerecordSetsFlag() async throws {
+    func rerecordRestartsTimerWithBonus() async throws {
         let viewModel = makeViewModel()
 
         // Simulate re-record action
         viewModel.rerecordAnswer()
 
         #expect(viewModel.quizState == .askingQuestion)
-        // answerTimerCountdown should remain 0 (no timer started for re-records)
-        #expect(viewModel.answerTimerCountdown == 0)
+        // Timer must keep ticking after re-record (the previous attempt may have
+        // failed because the app misheard the user, not because of timeout).
+        // Expected: settings.answerTimeLimit (30) + 10s bonus = 40.
+        #expect(viewModel.answerTimerCountdown == viewModel.settings.answerTimeLimit + 10)
     }
 }
 

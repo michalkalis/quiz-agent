@@ -421,7 +421,10 @@ extension QuizViewModel {
         errorMessage = nil
     }
 
-    /// Reject the transcribed answer and return to ready-to-record state
+    /// Reject the transcribed answer and return to ready-to-record state.
+    /// Restarts the answer countdown with a 10-second bonus so the user gets
+    /// a fair retry window — the previous attempt may have failed because the
+    /// app misheard them, not because they ran out of time.
     func rerecordAnswer() {
         cancelAutoConfirm()
         showAnswerConfirmation = false
@@ -429,6 +432,7 @@ extension QuizViewModel {
         isRerecording = true
         transition(to: .askingQuestion)  // Return to ready state, not recording
         errorMessage = nil
+        startAnswerTimer(extraSeconds: 10, bypassRerecord: true)
     }
 
     /// Cancel the processing operation and return to question state

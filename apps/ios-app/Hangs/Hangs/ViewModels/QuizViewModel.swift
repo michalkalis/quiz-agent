@@ -583,6 +583,24 @@ final class QuizViewModel: ObservableObject {
             return
         }
 
+        // Stop any in-flight voice machinery so the typed answer wins the race
+        // against a silent auto-stop submission. Answer/thinking timers are left
+        // running on purpose — they no-op once state ≠ .askingQuestion.
+        voiceSubmissionTask?.cancel()
+        voiceSubmissionTask = nil
+        cancelAutoStopRecordingTimer()
+        cancelSilenceDetection()
+        if quizState == .recording {
+            voiceCommandService?.setRecordingActive(false)
+            isAutoRecording = false
+            speechDetectedDuringAutoRecord = false
+            if isStreamingSTT {
+                cleanupStreamingSTT()
+            } else {
+                _ = try? await audioService.stopRecording()
+            }
+        }
+
         transition(to: .processing)
         errorMessage = nil
 

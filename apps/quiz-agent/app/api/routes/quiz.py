@@ -8,13 +8,15 @@ from ..deps import (
     FlagQuestionRequest,
     get_session_manager, get_question_retriever, get_chroma_client,
     get_usage_tracker, get_feedback_service, get_quiz_flow, get_translation_service,
+    get_tts_service,
     session_to_response, question_to_dict, question_to_dict_translated, flow_to_response,
 )
 from ...session.manager import SessionManager
 from ...retrieval.question_retriever import QuestionRetriever
 from ...rating.feedback import FeedbackService
 from ...usage.tracker import UsageTracker
-from ...quiz.flow import QuizFlowService
+from ...tts.service import TTSService
+from ...quiz.flow import QuizFlowService, prefetch_question_audio
 from ...rate_limit import limiter
 
 logger = logging.getLogger(__name__)
@@ -32,6 +34,7 @@ async def start_quiz(
     chroma_client=Depends(get_chroma_client),
     usage_tracker: UsageTracker = Depends(get_usage_tracker),
     translation_service=Depends(get_translation_service),
+    tts_service: TTSService = Depends(get_tts_service),
     audio: bool = False,
 ):
     """Start the quiz and get first question."""
@@ -129,6 +132,10 @@ async def start_quiz(
                 "question_url": f"/api/v1/sessions/{session_id}/question/audio",
                 "format": "opus",
             }
+            # Warm TTS cache while iOS is still rendering the question UI.
+            # Best-effort: if iOS requests audio before this finishes, both calls
+            # run in parallel and the second wins (cache write is idempotent).
+            prefetch_question_audio(tts_service, translated_question_dict["question"])
 
         return InputResponse(
             success=True,

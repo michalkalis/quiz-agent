@@ -696,10 +696,15 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
             }
         }
 
-        // Stall timeout: fail if playback doesn't produce an event within 5 seconds.
-        // If playback already completed, continuation.finish(throwing:) is a no-op — safe.
-        let stalledTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: false) { _ in
-            Task { @MainActor in
+        // Stall timeout: fail only if playback never reached .playing within 5 seconds.
+        // Without the status check this timer fires unconditionally and aborts any
+        // TTS longer than 5s — which caused the thinking-timer to start mid-read
+        // while audio kept playing in the background.
+        // If playback already completed or was stopped, continuation.finish(throwing:)
+        // is a no-op — safe.
+        let stalledTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: false) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard self?.audioPlayer?.timeControlStatus != .playing else { return }
                 Logger.audio.warning("⚠️ Playback timeout - audio failed to start within 5 seconds")
                 continuation.finish(throwing: AudioError.playbackFailed)
             }

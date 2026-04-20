@@ -64,6 +64,7 @@ struct QuestionView: View {
                 transcribedAnswer: viewModel.transcribedAnswer,
                 autoConfirmCountdown: viewModel.autoConfirmCountdown,
                 autoConfirmEnabled: viewModel.settings.autoConfirmEnabled,
+                autoConfirmTotal: Config.autoConfirmDelaySecs,
                 onConfirm: { Task { await viewModel.confirmAnswer() } },
                 onReRecord: { viewModel.rerecordAnswer() },
                 onCancel: { viewModel.cancelProcessing() }

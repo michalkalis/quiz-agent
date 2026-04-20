@@ -55,6 +55,12 @@ struct ResultView: View {
             }
         }
         .interactiveMinimize(isMinimized: $viewModel.isMinimized, canMinimize: viewModel.canMinimize)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 4).onChanged { _ in pauseAutoAdvanceIfActive() }
+        )
+        .simultaneousGesture(
+            TapGesture().onEnded { pauseAutoAdvanceIfActive() }
+        )
         .animation(reduceMotion ? nil : .easeOut(duration: 0.3), value: showEvaluation)
         .sensoryFeedback(resultHaptic, trigger: showEvaluation)
         .onAppear { showEvaluation = true }
@@ -132,7 +138,8 @@ struct ResultView: View {
                     labelColor: Theme.Hangs.Colors.blue,
                     valueColor: Theme.Hangs.Colors.blue,
                     suffix: "+1",
-                    inlineSuffix: true
+                    inlineSuffix: true,
+                    compact: true
                 )
                 HangsStatBox(
                     label: "points",
@@ -140,7 +147,8 @@ struct ResultView: View {
                     labelColor: Theme.Hangs.Colors.pink,
                     valueColor: Theme.Hangs.Colors.pink,
                     suffix: pointsDeltaSuffix,
-                    inlineSuffix: true
+                    inlineSuffix: true,
+                    compact: true
                 )
             } else {
                 HangsStatBox(
@@ -149,7 +157,8 @@ struct ResultView: View {
                     labelColor: Theme.Hangs.Colors.blue,
                     valueColor: Theme.Hangs.Colors.blue,
                     suffix: "was \(previousStreakForIncorrect)",
-                    inlineSuffix: true
+                    inlineSuffix: true,
+                    compact: true
                 )
                 HangsStatBox(
                     label: "points",
@@ -157,7 +166,8 @@ struct ResultView: View {
                     labelColor: Theme.Hangs.Colors.pink,
                     valueColor: Theme.Hangs.Colors.pink,
                     suffix: "+0",
-                    inlineSuffix: true
+                    inlineSuffix: true,
+                    compact: true
                 )
             }
         }
@@ -170,12 +180,14 @@ struct ResultView: View {
             if let explanation = viewModel.resultEvaluation?.explanation
                 ?? viewModel.resultQuestion?.explanation,
                !explanation.isEmpty {
-                Text(explanation)
-                    .font(.hangsQuestion)
-                    .foregroundColor(Theme.Hangs.Colors.muted)
-                    .minimumScaleFactor(0.55)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                VStack(alignment: .leading, spacing: 8) {
+                    HangsSectionLabel(text: "EXPLANATION", color: Theme.Hangs.Colors.blue)
+                    Text(explanation)
+                        .font(.hangsBody(16))
+                        .foregroundColor(Theme.Hangs.Colors.ink)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
             }
 
             if viewModel.resultQuestion?.sourceUrl != nil {
@@ -311,6 +323,13 @@ struct ResultView: View {
     }
 
     // MARK: - Derived
+
+    private func pauseAutoAdvanceIfActive() {
+        guard viewModel.autoAdvanceEnabled,
+              !viewModel.currentQuestionPaused,
+              viewModel.autoAdvanceCountdown > 0 else { return }
+        viewModel.pauseQuiz()
+    }
 
     private var isCorrect: Bool {
         viewModel.resultEvaluation?.isCorrect ?? false

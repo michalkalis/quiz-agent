@@ -76,6 +76,7 @@ struct HangsAnswerComparisonCard: View {
                 Text(secondaryValue)
                     .font(secondaryValueFont)
                     .foregroundColor(secondaryBadge == nil ? Theme.Hangs.Colors.ink : Theme.Hangs.Colors.ink)
+                    .minimumScaleFactor(0.7)
                     .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }

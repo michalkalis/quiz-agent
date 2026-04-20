@@ -86,15 +86,27 @@ struct HangsStatBox: View {
     var suffix: String? = nil
     /// When true, renders the number + suffix baseline-aligned on one row.
     var inlineSuffix: Bool = false
+    /// Compact layout for dense screens (e.g. result view): smaller padding and value font.
+    var compact: Bool = false
 
     var body: some View {
-        HangsCard(padding: EdgeInsets(top: 18, leading: 20, bottom: 18, trailing: 20)) {
+        let padding = compact
+            ? EdgeInsets(top: 10, leading: 14, bottom: 10, trailing: 14)
+            : EdgeInsets(top: 18, leading: 20, bottom: 18, trailing: 20)
+        let inlineValueFont: Font = compact
+            ? .hangsDisplay(26, weight: .black)
+            : .hangsDisplay(36, weight: .black)
+        let stackedValueFont: Font = compact
+            ? .hangsDisplay(28, weight: .black)
+            : .hangsNumber
+
+        HangsCard(padding: padding) {
             VStack(alignment: .leading, spacing: 4) {
                 HangsSectionLabel(text: label, color: labelColor)
                 if inlineSuffix, let suffix {
                     HStack(alignment: .lastTextBaseline, spacing: 6) {
                         Text(value)
-                            .font(.hangsDisplay(36, weight: .black))
+                            .font(inlineValueFont)
                             .tracking(-1)
                             .foregroundColor(valueColor)
                         Text(suffix)
@@ -103,7 +115,7 @@ struct HangsStatBox: View {
                     }
                 } else {
                     Text(value)
-                        .font(.hangsNumber)
+                        .font(stackedValueFont)
                         .tracking(-1)
                         .foregroundColor(valueColor)
                     if let suffix {

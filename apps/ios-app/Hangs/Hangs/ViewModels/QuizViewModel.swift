@@ -103,6 +103,13 @@ final class QuizViewModel: ObservableObject {
     @Published var questionsAnswered: Int = 0
     @Published var errorMessage: String?  // Inline errors shown in QuestionView (e.g., recording failures)
 
+    #if DEBUG
+    /// Rich debug dump of the most recent error — type, localizedDescription, `String(reflecting:)`,
+    /// and underlying NSError chain. Consumed by `DebugErrorDetailsView`. Populated alongside
+    /// `setError(message:context:)` at catch sites that surface a caught `Error`.
+    @Published var lastErrorDebugInfo: String?
+    #endif
+
     // Paywall state
     @Published var showPaywall: Bool = false
     @Published var dailyLimitError: DailyLimitError?
@@ -113,6 +120,7 @@ final class QuizViewModel: ObservableObject {
     @Published var transcribedAnswer = ""
     @Published var autoConfirmCountdown: Int = 0
     var pendingResponse: QuizResponse? = nil  // internal for QuizViewModel+Recording
+    var transcriptWasEdited = false  // internal — suppress TTS on edited confirmations
 
     // Auto-advance countdown for ResultView binding (single source of truth)
     @Published var autoAdvanceCountdown: Int = 0
@@ -226,20 +234,22 @@ final class QuizViewModel: ObservableObject {
         let questionId = currentQuestion?.id
         let questionCategory = currentQuestion?.category
         let answered = questionsAnswered
-        SentrySDK.configureScope { scope in
-            scope.setTag(value: to, key: "quiz.state")
-            if let qid = questionId {
-                var ctx: [String: Any] = [
-                    "questionId": qid,
-                    "index": answered
-                ]
-                if let cat = questionCategory { ctx["category"] = cat }
-                scope.setContext(value: ctx, key: "quiz.current")
+        if SentrySDK.isEnabled {
+            SentrySDK.configureScope { scope in
+                scope.setTag(value: to, key: "quiz.state")
+                if let qid = questionId {
+                    var ctx: [String: Any] = [
+                        "questionId": qid,
+                        "index": answered
+                    ]
+                    if let cat = questionCategory { ctx["category"] = cat }
+                    scope.setContext(value: ctx, key: "quiz.current")
+                }
             }
         }
         let crumb = Breadcrumb(level: .info, category: "quiz.transition")
         crumb.message = "\(from) → \(to) (caller: \(caller))"
-        SentrySDK.addBreadcrumb(crumb)
+        SentryBreadcrumb.add(crumb)
 
         return true
     }
@@ -248,16 +258,15 @@ final class QuizViewModel: ObservableObject {
 
     /// Simple Bool flag to prevent concurrent handleQuizResponse calls.
     /// Safe because this class is @MainActor — all access is serialized on the main thread.
-    var isProcessingResponse = false  // internal for QuizViewModel+VoiceCommands
+    var isProcessingResponse = false
 
     /// Prevents concurrent stopRecordingAndSubmit calls (silence detection + user tap can race)
     var isStoppingRecording = false  // internal for QuizViewModel+Recording
 
-    // MARK: - Voice Command State
+    // MARK: - Barge-In State
 
-    @Published var voiceCommandState: VoiceCommandListeningState = .disabled
-    var voiceCommandTask: Task<Void, Never>?  // internal for QuizViewModel+VoiceCommands
-    var bargeInTask: Task<Void, Never>?  // internal for QuizViewModel+VoiceCommands
+    /// Task listening for barge-in events during TTS playback on external routes.
+    var bargeInTask: Task<Void, Never>?  // internal for QuizViewModel+Audio
 
     // MARK: - Auto-Record State
 
@@ -280,7 +289,7 @@ final class QuizViewModel: ObservableObject {
     let networkService: NetworkServiceProtocol
     let audioService: AudioServiceProtocol
     let persistenceStore: PersistenceStoreProtocol
-    let voiceCommandService: VoiceCommandServiceProtocol?
+    let silenceDetectionService: SilenceDetectionServiceProtocol?
     let sttService: ElevenLabsSTTServiceProtocol?
 
     private var cancellables = Set<AnyCancellable>()
@@ -312,10 +321,6 @@ final class QuizViewModel: ObservableObject {
     // Streaming audio chunk sender task
     var sttChunkTask: Task<Void, Never>?  // internal for QuizViewModel+Recording
 
-    // Error announcement (TTS) task — tracked so rapid consecutive errors or
-    // state transitions can cancel a pending announcement instead of queueing them.
-    var errorAnnouncementTask: Task<Void, Never>?  // internal for QuizViewModel+Audio
-
     // Whether the current recording is a re-record (bypasses all timers) (internal for QuizViewModel+Timers)
     var isRerecording: Bool = false
 
@@ -335,13 +340,13 @@ final class QuizViewModel: ObservableObject {
         networkService: NetworkServiceProtocol,
         audioService: AudioServiceProtocol,
         persistenceStore: PersistenceStoreProtocol,
-        voiceCommandService: VoiceCommandServiceProtocol? = nil,
+        silenceDetectionService: SilenceDetectionServiceProtocol? = nil,
         sttService: ElevenLabsSTTServiceProtocol? = nil
     ) {
         self.networkService = networkService
         self.audioService = audioService
         self.persistenceStore = persistenceStore
-        self.voiceCommandService = voiceCommandService
+        self.silenceDetectionService = silenceDetectionService
         self.sttService = sttService
 
         // Load saved settings and stats
@@ -366,6 +371,9 @@ final class QuizViewModel: ObservableObject {
     ) async {
         transition(to: .startingQuiz)
         errorMessage = nil
+        #if DEBUG
+        lastErrorDebugInfo = nil
+        #endif
         autoAdvanceEnabled = true  // Reset auto-advance for new quiz
         isRerecording = false
         consecutiveTranscriptionFailures = 0
@@ -437,14 +445,14 @@ final class QuizViewModel: ObservableObject {
             }
 
             // Play question audio if available
-            // (voice commands start inside playQuestionAudio, after TTS finishes,
+            // (silence detection starts inside playQuestionAudio, after TTS finishes,
             //  to avoid AVAudioEngine + AVPlayer conflict that crashes SpeechAnalyzer)
             if let audioInfo = response.audio,
                let questionUrl = audioInfo.questionUrl {
                 await playQuestionAudio(from: questionUrl)
             } else {
-                // No audio — start voice commands then recording/timer
-                await startVoiceCommands()
+                // No audio — start silence detection then recording/timer
+                await startSilenceDetectionListening()
                 startRecordingOrTimer()
             }
 
@@ -456,7 +464,8 @@ final class QuizViewModel: ObservableObject {
             } else {
                 setError(
                     message: "Failed to start quiz: \(error.localizedDescription)",
-                    context: .initialization
+                    context: .initialization,
+                    error: error
                 )
             }
 
@@ -464,7 +473,8 @@ final class QuizViewModel: ObservableObject {
         } catch {
             setError(
                 message: "Failed to start quiz: \(error.localizedDescription)",
-                context: .initialization
+                context: .initialization,
+                error: error
             )
 
             Logger.quiz.error("❌ Error starting quiz: \(error, privacy: .public)")
@@ -472,10 +482,15 @@ final class QuizViewModel: ObservableObject {
     }
 
 
-    /// Set error state and announce it audibly
-    func setError(message: String, context: ErrorContext) {  // internal for QuizViewModel+Recording
+    /// Set error state. Errors are surfaced visually via `errorMessage`
+    /// and the `.error` state — we deliberately do not speak them aloud.
+    /// `error` is optional; when present it is formatted into `lastErrorDebugInfo` (DEBUG only)
+    /// so `DebugErrorDetailsView` can show the full chain without parsing log files.
+    func setError(message: String, context: ErrorContext, error: Error? = nil) {  // internal for QuizViewModel+Recording
+        #if DEBUG
+        lastErrorDebugInfo = error.map { Self.formatDebugError($0, displayMessage: message) }
+        #endif
         transition(to: .error(message: message, context: context))
-        announceError(message)
     }
 
     /// Handle an error, detecting 429 daily limit and showing paywall instead of error state
@@ -486,9 +501,38 @@ final class QuizViewModel: ObservableObject {
             showPaywall = true
             transition(to: .idle)
         } else {
-            setError(message: "\(fallbackMessage): \(error.localizedDescription)", context: context)
+            setError(message: "\(fallbackMessage): \(error.localizedDescription)", context: context, error: error)
         }
     }
+
+    #if DEBUG
+    /// Render an Error into a multi-line block: display message, type, localized description,
+    /// `String(reflecting:)` (exposes enum associated values like `NetworkError.serverError(statusCode:message:)`),
+    /// and NSError domain/code/userInfo walk. Safe to call off the main actor.
+    nonisolated static func formatDebugError(_ error: Error, displayMessage: String) -> String {
+        var lines: [String] = []
+        lines.append("Display: \(displayMessage)")
+        lines.append("")
+        lines.append("Type: \(type(of: error))")
+        lines.append("Localized: \(error.localizedDescription)")
+        lines.append("Reflecting: \(String(reflecting: error))")
+
+        var current: NSError? = error as NSError
+        var depth = 0
+        while let ns = current, depth < 5 {
+            lines.append("")
+            lines.append("NSError[\(depth)] domain=\(ns.domain) code=\(ns.code)")
+            if !ns.userInfo.isEmpty {
+                for (k, v) in ns.userInfo {
+                    lines.append("  \(k): \(String(describing: v))")
+                }
+            }
+            current = ns.userInfo[NSUnderlyingErrorKey] as? NSError
+            depth += 1
+        }
+        return lines.joined(separator: "\n")
+    }
+    #endif
 
     /// Fetch current usage info from backend (for displaying remaining questions)
     func refreshUsage() async {
@@ -577,7 +621,7 @@ final class QuizViewModel: ObservableObject {
     }
 
     /// Resubmit an edited text answer
-    func resubmitAnswer(_ newAnswer: String) async {
+    func resubmitAnswer(_ newAnswer: String, suppressAudio: Bool = false) async {
         guard let sessionId = currentSession?.id else {
             errorMessage = "No active session"
             return
@@ -591,7 +635,6 @@ final class QuizViewModel: ObservableObject {
         cancelAutoStopRecordingTimer()
         cancelSilenceDetection()
         if quizState == .recording {
-            voiceCommandService?.setRecordingActive(false)
             isAutoRecording = false
             speechDetectedDuringAutoRecord = false
             if isStreamingSTT {
@@ -610,7 +653,7 @@ final class QuizViewModel: ObservableObject {
             let response = try await networkService.submitTextInput(
                 sessionId: sessionId,
                 input: newAnswer,
-                audio: settings.audioMode != "off"
+                audio: !suppressAudio && settings.audioMode != "off"
             )
 
             await handleQuizResponse(response)
@@ -750,7 +793,7 @@ final class QuizViewModel: ObservableObject {
         guard quizState == .askingQuestion else { return }
         guard currentQuestion?.isMultipleChoice != true else { return }
 
-        if settings.autoRecordEnabled && voiceCommandService != nil && !isRerecording {
+        if settings.autoRecordEnabled && silenceDetectionService != nil && !isRerecording {
             // Auto-record path: thinking time countdown → auto-start recording
             startThinkingTimeCountdown()
         } else {
@@ -855,21 +898,6 @@ final class QuizViewModel: ObservableObject {
                 }
             }
 
-            // TTS for explanation (hands-free learning)
-            // TODO: Implement explanation TTS trigger (~5 lines)
-            //
-            // Decide: when should the explanation be read aloud?
-            //   - Always (for educational value)?
-            //   - Only on incorrect/partially correct (to help the user learn)?
-            //   - Only on non-skipped (skipped users may not care)?
-            //
-            // Use: await audioService.speakText(explanation)
-            // The explanation is in: evaluation.explanation ?? question.explanation
-            //
-            // Consider: this runs after feedback audio — if the explanation is long,
-            // the auto-advance timer starts AFTER it finishes speaking.
-            // You may want to only speak the first sentence for brevity.
-
             // Start auto-advance countdown after audio completes (or immediately if no audio)
             await startAutoAdvanceCountdown(duration: settings.autoAdvanceDelay, audioDuration: feedbackDuration)
         }
@@ -960,14 +988,12 @@ final class QuizViewModel: ObservableObject {
         sttChunkTask = nil
         bargeInTask?.cancel()
         bargeInTask = nil
-        errorAnnouncementTask?.cancel()
-        errorAnnouncementTask = nil
 
         // Clean up streaming STT
         cleanupStreamingSTT()
 
-        // Stop voice commands
-        stopVoiceCommands()
+        // Stop silence detection / barge-in listening
+        stopSilenceDetectionListening()
 
         // Reset all state
         // Note: audio stop must be awaited by async callers (endQuiz) before resetState().
@@ -1011,9 +1037,9 @@ final class QuizViewModel: ObservableObject {
         Logger.persistence.info("🗑️ Question history reset by user")
     }
 
-    /// Whether voice commands are available (service exists and setting enabled)
-    var voiceCommandsAvailable: Bool {
-        voiceCommandService != nil
+    /// Whether on-device silence detection / auto-record is available (iOS 26+).
+    var silenceDetectionAvailable: Bool {
+        silenceDetectionService != nil
     }
 }
 

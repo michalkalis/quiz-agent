@@ -2,28 +2,78 @@
 //  QuizViewModel+Audio.swift
 //  Hangs
 //
-//  Audio playback, feedback, error announcements, and device management
+//  Audio playback, silence-detection listening, barge-in, device management.
 //
 
 import Foundation
 import os
 
-// MARK: - Audio Playback & Feedback
+// MARK: - Audio Playback & Silence Detection
 
 extension QuizViewModel {
 
-    /// Play question TTS audio, then start voice commands and recording/timer
+    /// Start listening for silence events and barge-in during question playback.
+    /// Safe to call multiple times (the service itself no-ops if already listening).
+    func startSilenceDetectionListening() async {
+        guard let service = silenceDetectionService else { return }
+
+        await service.startListening()
+
+        // Barge-in: if the user starts speaking during TTS on an external audio
+        // route, stop playback and kick off recording immediately.
+        bargeInTask?.cancel()
+        bargeInTask = Task { [weak self] in
+            for await _ in service.bargeInEvents {
+                guard let self, !Task.isCancelled else { break }
+                await self.handleBargeIn()
+            }
+        }
+    }
+
+    /// Stop silence-detection listening and tear down the barge-in subscription.
+    func stopSilenceDetectionListening() {
+        bargeInTask?.cancel()
+        bargeInTask = nil
+        silenceDetectionService?.stopListening()
+    }
+
+    /// Handle barge-in: user spoke during TTS playback on external audio route.
+    private func handleBargeIn() async {
+        guard quizState == .askingQuestion else { return }
+
+        Logger.voice.info("🗣️ Barge-in triggered — stopping TTS and starting recording")
+
+        // 1. Stop TTS immediately
+        await stopAnyPlayingAudio()
+
+        // 2. Clear barge-in activation so a re-fire isn't triggered by the
+        //    teardown tail of TTS audio.
+        silenceDetectionService?.setTTSPlaybackActive(false)
+
+        // 3. Wait for audio hardware to settle
+        try? await Task.sleep(nanoseconds: 500_000_000)
+
+        // 4. Guard again — state may have changed during sleep
+        guard quizState == .askingQuestion else { return }
+
+        // 5. Auto-start recording (same as post-TTS flow)
+        cancelAnswerTimer()
+        isAutoRecording = true
+        await startRecording()
+    }
+
+    /// Play question TTS audio, then resume silence-detection listening and start recording/timer.
     func playQuestionAudio(from urlString: String) async {
-        // Store URL for "repeat" command
+        // Store URL for re-playing on demand
         currentQuestionAudioUrl = urlString
 
-        // Mute guard: skip TTS but still start voice commands and timer/recording
+        // Mute guard: skip TTS but still start silence detection + timer/recording
         guard !settings.isMuted else {
-            await startVoiceCommands()
+            await startSilenceDetectionListening()
             guard quizState == .askingQuestion else { return }
             guard currentQuestion?.isMultipleChoice != true else { return }
 
-            if settings.autoRecordEnabled && voiceCommandService != nil && !isRerecording {
+            if settings.autoRecordEnabled && silenceDetectionService != nil && !isRerecording {
                 startThinkingTimeCountdown()
             } else {
                 startAnswerTimer()
@@ -31,9 +81,9 @@ extension QuizViewModel {
             return
         }
 
-        // Stop voice commands before TTS to avoid AVAudioEngine + AVPlayer conflict
-        // (SpeechAnalyzer's RealtimeMessenger crashes when both run simultaneously)
-        stopVoiceCommands()
+        // Stop silence detection before TTS to avoid AVAudioEngine + AVPlayer conflict
+        // (SpeechAnalyzer's RealtimeMessenger crashes when both run simultaneously).
+        stopSilenceDetectionListening()
 
         do {
             let audioData = try await networkService.downloadAudio(from: urlString)
@@ -43,15 +93,15 @@ extension QuizViewModel {
             // Don't fail the quiz if audio doesn't play
         }
 
-        // Restart voice commands after TTS finishes
-        await startVoiceCommands()
+        // Restart silence detection after TTS finishes
+        await startSilenceDetectionListening()
 
         // After TTS finishes (or was interrupted by barge-in), choose next path
         guard quizState == .askingQuestion else { return }
-        // MCQ questions use tap/voice selection, not recording
+        // MCQ questions use tap selection, not recording
         guard currentQuestion?.isMultipleChoice != true else { return }
 
-        if settings.autoRecordEnabled && voiceCommandService != nil && !isRerecording {
+        if settings.autoRecordEnabled && silenceDetectionService != nil && !isRerecording {
             // Auto-record path: thinking time countdown → auto-start recording
             startThinkingTimeCountdown()
         } else {
@@ -88,16 +138,6 @@ extension QuizViewModel {
         await audioService.stopPlayback()
 
         Logger.audio.debug("🔇 Stopped any playing audio for state transition")
-    }
-
-    /// Announce an error message via local TTS for hands-free awareness.
-    /// Cancels any in-flight announcement so rapid consecutive errors don't queue up.
-    func announceError(_ message: String) {
-        errorAnnouncementTask?.cancel()
-        errorAnnouncementTask = Task { [weak self] in
-            guard let self else { return }
-            await self.audioService.speakText(message)
-        }
     }
 
     // MARK: - Audio Device Management

@@ -35,7 +35,6 @@ extension QuizViewModel {
         cancelAnswerTimer()
         errorMessage = nil
         transition(to: .recording)
-        voiceCommandService?.setRecordingActive(true)
 
         // Choose streaming STT or batch M4A based on feature flag
         if Config.useElevenLabsSTT && sttService != nil {
@@ -51,7 +50,7 @@ extension QuizViewModel {
             await audioService.prepareForRecording()
             try audioService.startRecording()
 
-            if isAutoRecording, let service = voiceCommandService {
+            if isAutoRecording, let service = silenceDetectionService {
                 speechDetectedDuringAutoRecord = false
                 startSilenceDetection(service: service)
             }
@@ -162,7 +161,6 @@ extension QuizViewModel {
         // Stop streaming recording
         cancelAutoStopRecordingTimer()
         cancelSilenceDetection()
-        voiceCommandService?.setRecordingActive(false)
         audioService.stopStreamingRecording()
         isAutoRecording = false
         speechDetectedDuringAutoRecord = false
@@ -186,7 +184,7 @@ extension QuizViewModel {
     // MARK: - Silence Detection
 
     /// Subscribe to silence events and auto-stop recording when silence threshold reached
-    private func startSilenceDetection(service: VoiceCommandServiceProtocol) {
+    private func startSilenceDetection(service: SilenceDetectionServiceProtocol) {
         cancelSilenceDetection()
 
         silenceDetectionTask = Task { [weak self] in
@@ -223,7 +221,6 @@ extension QuizViewModel {
 
         cancelAutoStopRecordingTimer()
         cancelSilenceDetection()
-        voiceCommandService?.setRecordingActive(false)
         isAutoRecording = false
         speechDetectedDuringAutoRecord = false
 
@@ -344,7 +341,8 @@ extension QuizViewModel {
                 await MainActor.run {
                     self.setError(
                         message: "Failed to submit answer: \(error.localizedDescription)",
-                        context: .submission
+                        context: .submission,
+                        error: error
                     )
                 }
 
@@ -353,7 +351,8 @@ extension QuizViewModel {
                 await MainActor.run {
                     self.setError(
                         message: "Failed to submit answer: \(error.localizedDescription)",
-                        context: .submission
+                        context: .submission,
+                        error: error
                     )
                 }
 
@@ -399,6 +398,9 @@ extension QuizViewModel {
         cancelAutoConfirm()
         showAnswerConfirmation = false
 
+        let silent = transcriptWasEdited
+        transcriptWasEdited = false
+
         // If we have a pending Whisper response, use it directly
         if let response = pendingResponse {
             pendingResponse = nil
@@ -408,7 +410,18 @@ extension QuizViewModel {
 
         // Streaming STT path: submit the transcribed text via /sessions/{id}/input
         guard !transcribedAnswer.isEmpty else { return }
-        await resubmitAnswer(transcribedAnswer)
+        await resubmitAnswer(transcribedAnswer, suppressAudio: silent)
+    }
+
+    /// User tapped the pencil to edit the transcribed answer. Cancels the
+    /// auto-confirm countdown and invalidates any cached Whisper evaluation so
+    /// `confirmAnswer()` re-evaluates the edited text via the streaming path
+    /// with TTS suppressed (edits are silent — we assume the user is typing
+    /// rather than driving at that moment).
+    func beginEditingTranscript() {
+        cancelAutoConfirm()
+        pendingResponse = nil
+        transcriptWasEdited = true
     }
 
     /// Defense-in-depth cleanup if the answer confirmation sheet is dismissed
@@ -417,6 +430,7 @@ extension QuizViewModel {
     func handleAnswerConfirmationDismissed() {
         guard pendingResponse != nil else { return }
         pendingResponse = nil
+        transcriptWasEdited = false
         transition(to: .askingQuestion)
         errorMessage = nil
     }
@@ -429,6 +443,7 @@ extension QuizViewModel {
         cancelAutoConfirm()
         showAnswerConfirmation = false
         pendingResponse = nil
+        transcriptWasEdited = false
         isRerecording = true
         transition(to: .askingQuestion)  // Return to ready state, not recording
         errorMessage = nil
@@ -448,6 +463,7 @@ extension QuizViewModel {
         speechDetectedDuringAutoRecord = false
         showAnswerConfirmation = false
         pendingResponse = nil
+        transcriptWasEdited = false
         transcribedAnswer = ""
         liveTranscript = ""
         transition(to: .askingQuestion)
@@ -472,30 +488,24 @@ extension QuizViewModel {
 
     // MARK: - Transcription Failure Escalation
 
-    /// 3-tier error escalation for transcription failures.
-    /// Tier 1: Gentle re-record prompt
-    /// Tier 2: Hint to speak closer
+    /// 3-tier error escalation for transcription failures. Messages are shown
+    /// visually via `errorMessage`; we intentionally don't announce them via TTS.
+    /// Tier 1–2: Show retry prompt
     /// Tier 3: Auto-skip after 2+ failures
     private func handleTranscriptionFailure() {
         consecutiveTranscriptionFailures += 1
 
         switch consecutiveTranscriptionFailures {
         case 1:
-            // Tier 1: gentle retry
             errorMessage = "Sorry, I didn't catch that. Please try again."
             transition(to: .askingQuestion)
-            announceError("Sorry, I didn't catch that. Please try again.")
 
         case 2:
-            // Tier 2: hint + retry
             errorMessage = "Having trouble hearing you. Try speaking closer to the mic."
             transition(to: .askingQuestion)
-            announceError("Having trouble hearing you. Try speaking closer to the mic.")
 
         default:
-            // Tier 3: auto-skip
             consecutiveTranscriptionFailures = 0
-            announceError("Skipping this one.")
             Task { await skipQuestion() }
         }
     }

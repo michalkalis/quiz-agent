@@ -15,7 +15,7 @@ final class AppState: ObservableObject {
     let networkService: NetworkServiceProtocol
     let audioService: AudioServiceProtocol
     let persistenceStore: PersistenceStoreProtocol
-    let voiceCommandService: VoiceCommandServiceProtocol?
+    let silenceDetectionService: SilenceDetectionServiceProtocol?
     let sttService: ElevenLabsSTTServiceProtocol?
     let storeManager: StoreManager
 
@@ -26,11 +26,11 @@ final class AppState: ObservableObject {
         self.persistenceStore = PersistenceStore()
         self.storeManager = StoreManager()
 
-        // Voice commands require iOS 26+ SpeechAnalyzer
+        // Silence detection / barge-in require iOS 26+ SpeechDetector
         if #available(iOS 26, *) {
-            self.voiceCommandService = VoiceCommandService()
+            self.silenceDetectionService = SilenceDetectionService()
         } else {
-            self.voiceCommandService = nil
+            self.silenceDetectionService = nil
         }
 
         // ElevenLabs streaming STT (controlled by feature flag)
@@ -45,8 +45,8 @@ final class AppState: ObservableObject {
 
         Logger.quiz.info("🚀 AppState initialized")
         Logger.quiz.info("📍 API Base URL: \(Config.apiBaseURL, privacy: .public)")
-        let voiceAvailable = self.voiceCommandService != nil ? "available" : "unavailable (requires iOS 26+)"
-        Logger.quiz.info("🎙️ Voice commands: \(voiceAvailable)")
+        let silenceAvailable = self.silenceDetectionService != nil ? "available" : "unavailable (requires iOS 26+)"
+        Logger.quiz.info("🔇 Silence detection: \(silenceAvailable)")
         let sttEnabled = self.sttService != nil ? "enabled (ElevenLabs)" : "disabled (using Whisper)"
         Logger.quiz.info("🎙️ Streaming STT: \(sttEnabled)")
     }
@@ -56,14 +56,14 @@ final class AppState: ObservableObject {
         networkService: NetworkServiceProtocol,
         audioService: AudioServiceProtocol,
         persistenceStore: PersistenceStoreProtocol,
-        voiceCommandService: VoiceCommandServiceProtocol? = nil,
+        silenceDetectionService: SilenceDetectionServiceProtocol? = nil,
         sttService: ElevenLabsSTTServiceProtocol? = nil,
         storeManager: StoreManager? = nil
     ) {
         self.networkService = networkService
         self.audioService = audioService
         self.persistenceStore = persistenceStore
-        self.voiceCommandService = voiceCommandService
+        self.silenceDetectionService = silenceDetectionService
         self.sttService = sttService
         self.storeManager = storeManager ?? StoreManager()
     }
@@ -74,7 +74,7 @@ final class AppState: ObservableObject {
             networkService: networkService,
             audioService: audioService,
             persistenceStore: persistenceStore,
-            voiceCommandService: voiceCommandService,
+            silenceDetectionService: silenceDetectionService,
             sttService: sttService
         )
     }

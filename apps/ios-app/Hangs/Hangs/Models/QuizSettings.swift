@@ -39,16 +39,9 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// Preferred input device UID (nil = automatic selection)
     var preferredInputDeviceId: String?
 
-    /// Whether voice commands are enabled (requires iOS 26+)
-    var voiceCommandsEnabled: Bool
-
     /// Whether auto-record is enabled (auto-start recording after TTS + silence detection to auto-stop)
     /// Requires iOS 26+ for SpeechDetector VAD
     var autoRecordEnabled: Bool
-
-    /// Whether barge-in is enabled (interrupt TTS by speaking to answer immediately)
-    /// Only active on external audio routes (Bluetooth/CarPlay) to avoid echo issues
-    var bargeInEnabled: Bool
 
     /// Whether to auto-confirm transcribed answers after a 2s countdown
     /// When enabled, skips the confirmation modal — say "re-record" to cancel
@@ -73,9 +66,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
         answerTimeLimit: Int,
         thinkingTime: Int = 60,
         preferredInputDeviceId: String?,
-        voiceCommandsEnabled: Bool = true,
         autoRecordEnabled: Bool = true,
-        bargeInEnabled: Bool = true,
         autoConfirmEnabled: Bool = true,
         showConfirmSheet: Bool = true,
         isMuted: Bool = false
@@ -89,9 +80,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
         self.answerTimeLimit = answerTimeLimit
         self.thinkingTime = thinkingTime
         self.preferredInputDeviceId = preferredInputDeviceId
-        self.voiceCommandsEnabled = voiceCommandsEnabled
         self.autoRecordEnabled = autoRecordEnabled
-        self.bargeInEnabled = bargeInEnabled
         self.autoConfirmEnabled = autoConfirmEnabled
         self.showConfirmSheet = showConfirmSheet
         self.isMuted = isMuted
@@ -110,9 +99,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
         answerTimeLimit: 30,
         thinkingTime: 60,
         preferredInputDeviceId: nil,
-        voiceCommandsEnabled: true,
         autoRecordEnabled: true,
-        bargeInEnabled: true,
         autoConfirmEnabled: true,
         showConfirmSheet: true,
         isMuted: false
@@ -120,7 +107,10 @@ struct QuizSettings: Codable, Equatable, Sendable {
 
     // MARK: - Backward-Compatible Decoding
 
-    /// Custom decoder handles missing voiceCommandsEnabled in persisted data
+    /// Custom decoder tolerates missing keys so new fields can be added without
+    /// breaking previously-persisted settings. Also silently ignores removed
+    /// keys like `voiceCommandsEnabled` / `bargeInEnabled` from older builds —
+    /// Codable drops unrecognized keys automatically, no guard needed.
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         language = try container.decode(String.self, forKey: .language)
@@ -132,9 +122,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
         answerTimeLimit = try container.decode(Int.self, forKey: .answerTimeLimit)
         thinkingTime = try container.decodeIfPresent(Int.self, forKey: .thinkingTime) ?? 60
         preferredInputDeviceId = try container.decodeIfPresent(String.self, forKey: .preferredInputDeviceId)
-        voiceCommandsEnabled = try container.decodeIfPresent(Bool.self, forKey: .voiceCommandsEnabled) ?? true
         autoRecordEnabled = try container.decodeIfPresent(Bool.self, forKey: .autoRecordEnabled) ?? true
-        bargeInEnabled = try container.decodeIfPresent(Bool.self, forKey: .bargeInEnabled) ?? true
         autoConfirmEnabled = try container.decodeIfPresent(Bool.self, forKey: .autoConfirmEnabled) ?? true
         showConfirmSheet = try container.decodeIfPresent(Bool.self, forKey: .showConfirmSheet) ?? true
         isMuted = try container.decodeIfPresent(Bool.self, forKey: .isMuted) ?? false
@@ -192,8 +180,7 @@ extension QuizSettings {
         difficulty: "hard",
         autoAdvanceDelay: 5,
         answerTimeLimit: 45,
-        preferredInputDeviceId: nil,
-        voiceCommandsEnabled: true
+        preferredInputDeviceId: nil
     )
 }
 #endif

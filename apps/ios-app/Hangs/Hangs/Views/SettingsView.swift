@@ -35,6 +35,9 @@ struct SettingsView: View {
                     audioFeedbackGroup
                     moreGroup
                     aboutGroup
+                    #if DEBUG
+                    developerGroup
+                    #endif
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 40)
@@ -59,19 +62,10 @@ struct SettingsView: View {
     private var voiceGroup: some View {
         groupSection(label: "voice", color: Theme.Hangs.Colors.pink) {
             HangsToggleRow(
-                label: "Voice commands",
+                label: "Auto-record answers",
                 isOn: $viewModel.settings.autoRecordEnabled
             )
             .accessibilityIdentifier("settings.autoRecord")
-
-            hairline
-
-            HangsConfigRow(
-                label: "Wake word",
-                value: "hey hangs",
-                valueColor: Theme.Hangs.Colors.blue,
-                action: {}
-            )
 
             hairline
 
@@ -136,6 +130,24 @@ struct SettingsView: View {
             HangsValueRow(label: "Version", value: appVersion)
         }
     }
+
+    #if DEBUG
+    private var developerGroup: some View {
+        groupSection(label: "developer", color: Theme.Hangs.Colors.blue) {
+            NavigationLink {
+                DebugLogView()
+            } label: {
+                HangsConfigRow(
+                    label: "View Logs",
+                    value: "OSLogStore",
+                    valueColor: Theme.Hangs.Colors.muted,
+                    action: {}
+                )
+                .allowsHitTesting(false)
+            }
+        }
+    }
+    #endif
 
     // MARK: - Rows (extra settings kept from the previous screen)
 

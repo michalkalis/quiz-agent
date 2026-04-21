@@ -49,7 +49,6 @@ protocol AudioServiceProtocol: Sendable {
     func playOpusAudio(_ data: Data) async throws -> TimeInterval
     func playOpusAudioFromBase64(_ base64: String) async throws -> TimeInterval
     func stopPlayback() async  // Now async for proper cleanup
-    func speakText(_ text: String) async  // Local TTS via AVSpeechSynthesizer
 
     // Streaming PCM recording (for ElevenLabs STT)
     func startStreamingRecording(onChunk: @escaping PCMChunkHandler) throws
@@ -109,13 +108,8 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
     // eliminating the double-resume crashes that CheckedContinuation caused.
     private var playbackStreamContinuation: AsyncThrowingStream<TimeInterval, Error>.Continuation?
 
-    // Stream continuation for TTS speech completion.
-    // AsyncStream.Continuation.finish() is idempotent — safe when delegate fires after stopSpeaking().
-    private var speechStreamContinuation: AsyncStream<Void>.Continuation?
-
     private var audioRecorder: AVAudioRecorder?
     private var audioPlayer: AVPlayer?
-    private var speechSynthesizer = AVSpeechSynthesizer()
     private var currentAudioMode: AudioMode = AudioMode.default
 
     // Timestamps for Sentry breadcrumb durations (metadata only — no audio bytes).
@@ -438,7 +432,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         let crumb = Breadcrumb(level: .info, category: "audio.record_start")
         crumb.message = "Batch M4A recording started"
         crumb.data = ["format": "m4a", "sample_rate": 16000]
-        SentrySDK.addBreadcrumb(crumb)
+        SentryBreadcrumb.add(crumb)
     }
 
     func stopRecording() async throws -> Data {
@@ -482,7 +476,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
             "duration_ms": Int(duration * 1000),
             "bytes": data.count
         ]
-        SentrySDK.addBreadcrumb(crumb)
+        SentryBreadcrumb.add(crumb)
 
         return data
     }
@@ -586,7 +580,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         let crumb = Breadcrumb(level: .info, category: "audio.record_start")
         crumb.message = "Streaming PCM recording started"
         crumb.data = ["format": "pcm_s16le", "sample_rate": 16000]
-        SentrySDK.addBreadcrumb(crumb)
+        SentryBreadcrumb.add(crumb)
     }
 
     /// Stop streaming PCM recording
@@ -605,7 +599,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         let crumb = Breadcrumb(level: .info, category: "audio.record_stop")
         crumb.message = "Streaming PCM recording stopped"
         crumb.data = ["duration_ms": Int(duration * 1000)]
-        SentrySDK.addBreadcrumb(crumb)
+        SentryBreadcrumb.add(crumb)
     }
 
     // MARK: - Playback
@@ -762,7 +756,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
             "bytes": data.count,
             "duration_s": Int(durationSeconds)
         ]
-        SentrySDK.addBreadcrumb(startCrumb)
+        SentryBreadcrumb.add(startCrumb)
 
         return try await withTaskCancellationHandler {
             // Await first event from the stream:
@@ -837,68 +831,9 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
             "duration_ms": Int(duration * 1000),
             "reason": reason
         ]
-        SentrySDK.addBreadcrumb(crumb)
+        SentryBreadcrumb.add(crumb)
     }
 
-    // MARK: - Local TTS (AVSpeechSynthesizer)
-
-    /// Speak text using built-in iOS TTS (no network required).
-    /// Used for status messages like score announcements and help text.
-    /// When VoiceOver is active, routes through accessibility announcements
-    /// to prevent VoiceOver and AVSpeechSynthesizer fighting over the audio channel.
-    func speakText(_ text: String) async {
-        // Stop any current audio first
-        await stopPlayback()
-        speechSynthesizer.stopSpeaking(at: .immediate)
-
-        Logger.audio.info("🗣️ Speaking: \(text, privacy: .public)")
-
-        // When VoiceOver is active, use accessibility announcement instead
-        if UIAccessibility.isVoiceOverRunning {
-            UIAccessibility.post(notification: .announcement, argument: text)
-            // Brief delay so the announcement has time to be spoken
-            try? await Task.sleep(for: .milliseconds(500))
-
-            Logger.audio.debug("🗣️ Routed through VoiceOver announcement")
-            return
-        }
-
-        let utterance = AVSpeechUtterance(string: text)
-        utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
-        utterance.rate = AVSpeechUtteranceDefaultSpeechRate
-
-        let (stream, continuation) = AsyncStream<Void>.makeStream()
-        // Finish any pending stream first (handles re-entry when speakText is called
-        // while a previous utterance is still playing). finish() is a no-op if already finished.
-        speechStreamContinuation?.finish()
-        speechStreamContinuation = continuation
-
-        speechSynthesizer.delegate = self
-        speechSynthesizer.speak(utterance)
-
-        // Await delegate callback (didFinish or didCancel)
-        for await _ in stream {}
-
-        Logger.audio.debug("🗣️ Speech completed")
-    }
-}
-
-// MARK: - AVSpeechSynthesizerDelegate
-
-extension AudioService: AVSpeechSynthesizerDelegate {
-    nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
-        Task { @MainActor in
-            speechStreamContinuation?.finish()
-            speechStreamContinuation = nil
-        }
-    }
-
-    nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
-        Task { @MainActor in
-            speechStreamContinuation?.finish()
-            speechStreamContinuation = nil
-        }
-    }
 }
 
 // MARK: - AVAudioRecorderDelegate
@@ -1022,10 +957,6 @@ final class MockAudioService: ObservableObject, AudioServiceProtocol {
 
     func stopPlayback() async {
         isPlaying = false
-    }
-
-    func speakText(_ text: String) async {
-        // Mock: no-op, just record that it was called
     }
 
     func startStreamingRecording(onChunk: @escaping PCMChunkHandler) throws {

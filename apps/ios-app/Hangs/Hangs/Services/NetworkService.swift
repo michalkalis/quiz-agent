@@ -69,7 +69,7 @@ actor NetworkService: NetworkServiceProtocol {
         let crumb = Breadcrumb(level: .info, category: "network.request")
         crumb.message = "\(method) \(endpoint)"
         crumb.data = ["method": method, "endpoint": endpoint]
-        SentrySDK.addBreadcrumb(crumb)
+        SentryBreadcrumb.add(crumb)
     }
 
     nonisolated private func breadcrumbResponse(endpoint: String, status: Int, bytes: Int) {
@@ -77,7 +77,7 @@ actor NetworkService: NetworkServiceProtocol {
         let crumb = Breadcrumb(level: level, category: "network.response")
         crumb.message = "HTTP \(status) \(endpoint) (\(bytes)B)"
         crumb.data = ["status": status, "bytes": bytes, "endpoint": endpoint]
-        SentrySDK.addBreadcrumb(crumb)
+        SentryBreadcrumb.add(crumb)
     }
 
     nonisolated private func logHTTPError(endpoint: String, status: Int) {
@@ -193,11 +193,18 @@ actor NetworkService: NetworkServiceProtocol {
         }
 
         guard (200...299).contains(httpResponse.statusCode) else {
-            Logger.network.error("❌ HTTP error: \(httpResponse.statusCode, privacy: .public)")
+            let statusCode = httpResponse.statusCode
+            Logger.network.error("❌ HTTP error: \(statusCode, privacy: .public)")
             if let responseString = String(data: data, encoding: .utf8) {
                 Logger.network.error("📄 Response body: \(responseString, privacy: .public)")
             }
-            logHTTPError(endpoint: endpointPath, status: httpResponse.statusCode)
+            logHTTPError(endpoint: endpointPath, status: statusCode)
+
+            // Surface the backend's error detail (e.g. "question database is empty") instead of a generic message.
+            if let errorResponse = try? JSONDecoder().decode(ErrorResponse.self, from: data) {
+                throw NetworkError.serverError(statusCode: statusCode, message: errorResponse.detail)
+            }
+
             throw NetworkError.invalidResponse
         }
 

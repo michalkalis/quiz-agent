@@ -5,8 +5,9 @@
 //  Structured logging with os.Logger — categorized, persistent, zero-overhead when not observed.
 //  Filter in Console.app by subsystem "com.missinghue.hangs" and category.
 //
-//  `SentryLog.*` mirrors the same categories to Sentry Structured Logs so they are queryable
-//  after TestFlight incidents without needing the device in hand.
+//  `SentryLog.*` always writes to `Logger.<category>` (console) and additionally forwards to
+//  Sentry Structured Logs when the SDK is running. On simulator Sentry is intentionally disabled
+//  (see HangsApp.init), so routing through console keeps logs visible during local development.
 //
 
 import Foundation
@@ -40,22 +41,63 @@ extension Logger {
 /// Sentry Structured Log category — matches `Logger` categories above.
 enum LogCategory: String {
     case quiz, audio, network, voice, stt, persistence
+
+    nonisolated var logger: Logger {
+        switch self {
+        case .quiz: return .quiz
+        case .audio: return .audio
+        case .network: return .network
+        case .voice: return .voice
+        case .stt: return .stt
+        case .persistence: return .persistence
+        }
+    }
+}
+
+/// Adds a Sentry breadcrumb when the SDK is running; no-op otherwise.
+/// Keeps scattered call sites free of `SentrySDK.isEnabled` checks so simulator builds
+/// (where Sentry is intentionally off) don't emit "SDK is disabled" warnings.
+enum SentryBreadcrumb {
+    nonisolated static func add(_ crumb: Breadcrumb) {
+        guard SentrySDK.isEnabled else { return }
+        SentrySDK.addBreadcrumb(crumb)
+    }
 }
 
 /// Mirrors meaningful log points to Sentry so they are queryable from `/check-crashes` after TestFlight incidents.
 ///
-/// Use alongside `Logger.<category>.info/warn/error` at critical points only — not every debug print.
+/// Always emits to the OS console via `Logger.<category>` so messages remain visible locally
+/// (simulator disables Sentry to preserve quota). Use alongside `Logger.<category>.debug` for verbose
+/// traces — `SentryLog` is reserved for warn/error/critical points.
 /// Default defensive: never pass raw user speech/transcripts as attribute values; use metadata (length, confidence).
 enum SentryLog {
     nonisolated static func info(_ message: String, category: LogCategory, attributes: [String: Any] = [:]) {
+        let summary = attributesSummary(attributes)
+        category.logger.info("\(message, privacy: .public)\(summary, privacy: .public)")
+        guard SentrySDK.isEnabled else { return }
         SentrySDK.logger.info(message, attributes: attributes.merging(["category": category.rawValue]) { current, _ in current })
     }
 
     nonisolated static func warn(_ message: String, category: LogCategory, attributes: [String: Any] = [:]) {
+        let summary = attributesSummary(attributes)
+        category.logger.warning("\(message, privacy: .public)\(summary, privacy: .public)")
+        guard SentrySDK.isEnabled else { return }
         SentrySDK.logger.warn(message, attributes: attributes.merging(["category": category.rawValue]) { current, _ in current })
     }
 
     nonisolated static func error(_ message: String, category: LogCategory, attributes: [String: Any] = [:]) {
+        let summary = attributesSummary(attributes)
+        category.logger.error("\(message, privacy: .public)\(summary, privacy: .public)")
+        guard SentrySDK.isEnabled else { return }
         SentrySDK.logger.error(message, attributes: attributes.merging(["category": category.rawValue]) { current, _ in current })
+    }
+
+    nonisolated private static func attributesSummary(_ attributes: [String: Any]) -> String {
+        guard !attributes.isEmpty else { return "" }
+        let joined = attributes
+            .map { "\($0.key)=\($0.value)" }
+            .sorted()
+            .joined(separator: " ")
+        return " [\(joined)]"
     }
 }

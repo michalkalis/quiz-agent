@@ -92,7 +92,7 @@ actor ElevenLabsSTTService: ElevenLabsSTTServiceProtocol {
         let startCrumb = Breadcrumb(level: .info, category: "stt.start")
         startCrumb.message = "ElevenLabs STT connected"
         startCrumb.data = ["language": languageCode, "model": Config.elevenLabsModel]
-        SentrySDK.addBreadcrumb(startCrumb)
+        SentryBreadcrumb.add(startCrumb)
     }
 
     // MARK: - Sending Audio
@@ -202,7 +202,7 @@ actor ElevenLabsSTTService: ElevenLabsSTTServiceProtocol {
                 let crumb = Breadcrumb(level: .info, category: "stt.result")
                 crumb.message = "committed_transcript"
                 crumb.data = ["length": text.count, "confidence": confidence]
-                SentrySDK.addBreadcrumb(crumb)
+                SentryBreadcrumb.add(crumb)
             }
 
         case "session_started":

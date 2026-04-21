@@ -125,6 +125,13 @@ struct ErrorView: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.horizontal, 28)
                     .accessibilityLabel("Error: \(errorMessage)")
+
+                #if DEBUG
+                if let detail = viewModel.lastErrorDebugInfo {
+                    DebugErrorDetailsView(detail: detail)
+                        .padding(.horizontal, 20)
+                }
+                #endif
             }
 
             Spacer()

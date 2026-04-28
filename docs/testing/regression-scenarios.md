@@ -10,15 +10,19 @@ Preconditions are set up by launching the app with `--ui-test` (see
 `UITestSupport.swift`). The app boots with mock services pre-populated by
 `QuizResponse.previewStartQuiz`, no real backend, no real audio.
 
-Steps drive UI via XcodeBuildMCP accessibility-tree taps and `simctl
-openurl` for STT events:
+Steps drive UI via XcodeBuildMCP accessibility-tree taps and a tiny
+DEBUG-only HTTP listener on `127.0.0.1:9999` (see
+`UITestSupport.startTestListener()`) for STT events. The legacy
+`hangs-test://` URL scheme handler is still wired and may work on real
+devices, but iOS 26.3 simulator drops it (LaunchServices bug), so the
+HTTP path is canonical.
 
-| URL | Effect |
+| Curl | Effect |
 |---|---|
-| `hangs-test://stt/connected`           | injects `STTEvent.connected` |
-| `hangs-test://stt/partial?text=foo`    | injects `STTEvent.partialTranscript("foo")` |
-| `hangs-test://stt/committed?text=foo`  | injects `STTEvent.committedTranscript("foo")` |
-| `hangs-test://stt/disconnect?msg=...`  | injects `STTEvent.disconnected(error)` |
+| `curl -s "http://127.0.0.1:9999/stt/connected"`           | injects `STTEvent.connected` |
+| `curl -s "http://127.0.0.1:9999/stt/partial?text=foo"`    | injects `STTEvent.partialTranscript("foo")` |
+| `curl -s "http://127.0.0.1:9999/stt/committed?text=foo"`  | injects `STTEvent.committedTranscript("foo")` |
+| `curl -s "http://127.0.0.1:9999/stt/disconnect?msg=..."`  | injects `STTEvent.disconnected(error)` |
 
 State assertions read the label of the hidden static text element
 `question.state` (values: `idle`, `startingQuiz`, `askingQuestion`,
@@ -49,7 +53,7 @@ crash.
 2. Wait for `question.state` label to become `askingQuestion`
 3. Tap `question.micButton`
 4. Wait for `question.state` label to become `recording`
-5. `simctl openurl "hangs-test://stt/committed?text=Paris"`
+5. `curl -s "http://127.0.0.1:9999/stt/committed?text=Paris" >/dev/null`
 6. Wait up to 3s
 
 **Asserts**
@@ -92,12 +96,12 @@ recording must clear it.
 **Preconditions**
 - Launch with `--ui-test`
 - Pre-existing error on screen: trigger via
-  `hangs-test://stt/disconnect?msg=fake-error` mid-recording
+  `curl -s "http://127.0.0.1:9999/stt/disconnect?msg=fake-error"` mid-recording
 
 **Steps**
 1. Tap `home.startQuiz`
 2. Tap `question.micButton`; wait for `recording`
-3. `simctl openurl "hangs-test://stt/disconnect?msg=upstream-down"`
+3. `curl -s "http://127.0.0.1:9999/stt/disconnect?msg=upstream-down" >/dev/null`
 4. Wait until `question.errorBanner` is visible
 5. Tap `question.micButton` again to start a fresh recording
 6. Wait for `question.state` label `recording`
@@ -138,7 +142,7 @@ to `askingQuestion` so the user can re-record. No orphaned
 **Steps**
 1. Tap `home.startQuiz`
 2. Tap `question.micButton`; wait for `recording`
-3. `simctl openurl "hangs-test://stt/committed?text=Paris"`
+3. `curl -s "http://127.0.0.1:9999/stt/committed?text=Paris" >/dev/null`
 4. Wait for confirmation sheet (`confirmation.state.transcript` or `.processing`)
 5. If sheet is in processing branch, wait until it switches to transcript branch (or timeout 3s)
 6. Tap `confirmation.cancel` if present, otherwise dismiss with `confirmation.reRecord`

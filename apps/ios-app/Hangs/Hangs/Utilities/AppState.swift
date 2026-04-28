@@ -29,6 +29,7 @@ final class AppState: ObservableObject {
             self.silenceDetectionService = mocks.silence
             self.sttService = mocks.stt
             self.storeManager = StoreManager()
+            UITestSupport.startTestListener()
             Logger.quiz.info("🧪 AppState initialized in UI-test mode")
             return
         }

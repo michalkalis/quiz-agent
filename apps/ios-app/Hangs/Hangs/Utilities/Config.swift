@@ -100,9 +100,9 @@ nonisolated enum Config {
     // MARK: - ElevenLabs Streaming STT
 
     /// Feature flag: use ElevenLabs Scribe v2 Realtime for quiz answers instead of Whisper.
-    /// Disabled: Whisper provides more consistent multilingual transcription quality.
-    /// Re-enable when ElevenLabs Scribe v2 improves non-English support.
-    static let useElevenLabsSTT: Bool = false
+    /// Provides live word-by-word transcript display while the user speaks.
+    /// On any setup/connection failure, recording falls back to Whisper batch.
+    static let useElevenLabsSTT: Bool = true
 
     /// ElevenLabs Scribe v2 Realtime model ID
     static let elevenLabsModel: String = "scribe_v2_realtime"

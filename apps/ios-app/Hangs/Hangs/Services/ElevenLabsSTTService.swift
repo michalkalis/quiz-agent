@@ -276,5 +276,13 @@ actor MockElevenLabsSTTService: ElevenLabsSTTServiceProtocol {
     }
 
     func disconnect() async {}
+
+    /// Drive an arbitrary STTEvent into the stream from outside (UI test seam).
+    /// The default mock paths emit fixed events on `sendAudioChunk` and `commitAndClose`;
+    /// this lets a UI test runner pump events deterministically without an audio chunk arriving.
+    func injectEvent(_ event: STTEvent) {
+        eventContinuation?.yield(event)
+        Logger.stt.info("🎙️ MockSTT injected event")
+    }
 }
 #endif

@@ -51,6 +51,13 @@ struct HangsApp: App {
         WindowGroup {
             ContentView(appState: appState)
                 .environmentObject(appState)
+                #if DEBUG
+                .onOpenURL { url in
+                    Task { @MainActor in
+                        await UITestSupport.handleTestURL(url)
+                    }
+                }
+                #endif
         }
     }
 

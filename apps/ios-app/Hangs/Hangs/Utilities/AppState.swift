@@ -20,6 +20,20 @@ final class AppState: ObservableObject {
     let storeManager: StoreManager
 
     init() {
+        #if DEBUG
+        if UITestSupport.isUITesting {
+            let mocks = UITestSupport.makeMockServices()
+            self.networkService = mocks.network
+            self.audioService = mocks.audio
+            self.persistenceStore = mocks.persistence
+            self.silenceDetectionService = mocks.silence
+            self.sttService = mocks.stt
+            self.storeManager = StoreManager()
+            Logger.quiz.info("🧪 AppState initialized in UI-test mode")
+            return
+        }
+        #endif
+
         // Production dependencies
         self.networkService = NetworkService(baseURL: Config.apiBaseURL)
         self.audioService = AudioService()

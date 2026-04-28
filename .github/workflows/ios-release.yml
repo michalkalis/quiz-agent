@@ -37,6 +37,9 @@ jobs:
       MATCH_READONLY: "true"
       MATCH_KEYCHAIN_NAME: "hangs-build.keychain"
       MATCH_KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+      # Consumed by the Xcode "Upload Debug Symbols to Sentry" build phase.
+      # Personal token with project:write + project:releases (see apps/ios-app/Hangs/.sentryclirc for local).
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
       FASTLANE_HIDE_CHANGELOG: "true"
       FASTLANE_SKIP_UPDATE_CHECK: "true"
       FASTLANE_DISABLE_COLORS: "1"
@@ -96,6 +99,14 @@ jobs:
           ruby-version: "3.3"
           bundler-cache: true
           working-directory: apps/ios-app/Hangs
+
+      - name: Install sentry-cli
+        # The Xcode "Upload Debug Symbols to Sentry" build phase calls sentry-cli during
+        # archive. Pin the install rather than relying on whatever happens to be on the
+        # runner, so dSYM upload can't silently disappear.
+        run: |
+          curl -sL https://sentry.io/get-cli/ | bash
+          sentry-cli --version
 
       - name: Create isolated keychain
         # We run match against a dedicated keychain that gets wiped in cleanup.

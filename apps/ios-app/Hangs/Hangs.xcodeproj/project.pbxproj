@@ -295,7 +295,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# This script is responsible for uploading debug symbols and source context for Sentry.\nif which sentry-cli >/dev/null; then\n  export SENTRY_ORG=missinghue\n  export SENTRY_PROJECT=carquiz\n  ERROR=$(sentry-cli debug-files upload --include-sources \"$DWARF_DSYM_FOLDER_PATH\" 2>&1 >/dev/null)\n  if [ ! $? -eq 0 ]; then\n    echo \"warning: sentry-cli - $ERROR\"\n  fi\nelse\n  echo \"warning: sentry-cli not installed, download from https://github.com/getsentry/sentry-cli/releases\"\nfi\n";
+			shellScript = "# Upload Debug Symbols to Sentry. Fails the build phase on upload errors so symbol\n# breakage surfaces immediately instead of weeks later when crashes arrive unsymbolicated.\nif ! command -v sentry-cli >/dev/null 2>&1; then\n  echo \"warning: sentry-cli not installed, skipping dSYM upload (https://github.com/getsentry/sentry-cli)\"\n  exit 0\nfi\ncase \"$CONFIGURATION\" in\n  Debug*) echo \"info: skipping Sentry dSYM upload for $CONFIGURATION\"; exit 0 ;;\nesac\nexport SENTRY_ORG=missinghue\nexport SENTRY_PROJECT=carquiz\nsentry-cli debug-files upload --include-sources \"$DWARF_DSYM_FOLDER_PATH\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

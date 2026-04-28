@@ -99,11 +99,20 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
             reportResults: true
         )
 
-        let analyzer = SpeechAnalyzer(modules: [detector])
+        // iOS 26.3 requires SpeechDetector to be paired with a SpeechTranscriber
+        // (cannot create a SpeechDetector-only worker). We only use detector.results.
+        let transcriber = SpeechTranscriber(
+            locale: Locale.current,
+            transcriptionOptions: [],
+            reportingOptions: [],
+            attributeOptions: []
+        )
+
+        let analyzer = SpeechAnalyzer(modules: [transcriber, detector])
         self.analyzer = analyzer
 
         guard let analyzerFormat = await SpeechAnalyzer.bestAvailableAudioFormat(
-            compatibleWith: [detector]
+            compatibleWith: [transcriber, detector]
         ) else {
             Logger.voice.error("🔇 SilenceDetection: no compatible audio format")
             return

@@ -20,10 +20,11 @@ openurl` for STT events:
 | `hangs-test://stt/committed?text=foo`  | injects `STTEvent.committedTranscript("foo")` |
 | `hangs-test://stt/disconnect?msg=...`  | injects `STTEvent.disconnected(error)` |
 
-State assertions read `accessibilityValue` on `question.statusPill`
-(values: `idle`, `startingQuiz`, `askingQuestion`, `recording`,
-`processing`, `showingResult`, `finished`, `error`) and the presence of
-`confirmation.state.{processing,transcript}` identifiers on the sheet.
+State assertions read the label of the hidden static text element
+`question.state` (values: `idle`, `startingQuiz`, `askingQuestion`,
+`recording`, `processing`, `showingResult`, `finished`, `error`) and
+the presence of `confirmation.state.{processing,transcript}`
+identifiers on the sheet.
 
 Crash detection: stream simulator log via XcodeBuildMCP, fail scenario
 on any `EXC_*` signal or app-process exit.
@@ -45,14 +46,14 @@ crash.
 
 **Steps**
 1. Tap `home.startQuiz`
-2. Wait for `question.statusPill` value to become `askingQuestion`
+2. Wait for `question.state` label to become `askingQuestion`
 3. Tap `question.micButton`
-4. Wait for `question.statusPill` value to become `recording`
+4. Wait for `question.state` label to become `recording`
 5. `simctl openurl "hangs-test://stt/committed?text=Paris"`
 6. Wait up to 3s
 
 **Asserts**
-- `question.statusPill` value is `processing` OR confirmation sheet is visible
+- `question.state` label is `processing` OR confirmation sheet is visible
 - `confirmation.state.transcript` exists (not `confirmation.state.processing` after sheet stabilizes)
 - `confirmation.answer` text contains `Paris`
 - App process is alive; no `EXC_*` in log
@@ -72,12 +73,12 @@ a recoverable state.
 **Steps**
 1. Tap `home.startQuiz`
 2. Tap `question.micButton`
-3. Wait for `question.statusPill` value `recording`
+3. Wait for `question.state` label `recording`
 4. **Do not** inject any STT events
 5. Wait 18s
 
 **Asserts**
-- `question.statusPill` value is **not** `recording` (one of: `processing`, `askingQuestion`, `error`)
+- `question.state` label is **not** `recording` (one of: `processing`, `askingQuestion`, `error`)
 - App process is alive; no `EXC_*` in log
 - If `error`, `question.errorBanner` text is human-readable (not empty, not "Optional(...)")
 
@@ -99,7 +100,7 @@ recording must clear it.
 3. `simctl openurl "hangs-test://stt/disconnect?msg=upstream-down"`
 4. Wait until `question.errorBanner` is visible
 5. Tap `question.micButton` again to start a fresh recording
-6. Wait for `question.statusPill` value `recording`
+6. Wait for `question.state` label `recording`
 
 **Asserts**
 - `question.errorBanner` is **not** present after step 6
@@ -120,7 +121,7 @@ crash. The double-stop guard (`isStoppingRecording`) should hold.
 2. Tap `question.micButton` twice within 200ms
 
 **Asserts**
-- `question.statusPill` value is one of `askingQuestion`, `recording`, `processing` after settle (≤2s)
+- `question.state` label is one of `askingQuestion`, `recording`, `processing` after settle (≤2s)
 - App process is alive; no `EXC_*` in log
 
 ---
@@ -143,7 +144,7 @@ to `askingQuestion` so the user can re-record. No orphaned
 6. Tap `confirmation.cancel` if present, otherwise dismiss with `confirmation.reRecord`
 
 **Asserts**
-- After dismissal, `question.statusPill` value is `askingQuestion`
+- After dismissal, `question.state` label is `askingQuestion`
 - No confirmation sheet visible
 - App process is alive
 

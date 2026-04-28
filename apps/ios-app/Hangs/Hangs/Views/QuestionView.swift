@@ -46,6 +46,16 @@ struct QuestionView: View {
                 errorBanner(error)
                     .padding(.top, 80)
             }
+
+            #if DEBUG
+            // Invisible state probe for UI tests. Reading
+            // app.staticTexts["question.state"].label returns the current
+            // QuizState case name (idle, recording, processing, ...).
+            Text(quizStateName)
+                .frame(width: 0, height: 0)
+                .opacity(0)
+                .accessibilityIdentifier("question.state")
+            #endif
         }
         .sensoryFeedback(.start, trigger: viewModel.quizState == .recording)
         .onReceive(clockTimer) { _ in now = Date() }
@@ -135,6 +145,25 @@ struct QuestionView: View {
         )
         .padding(.horizontal, 24)
         .accessibilityLabel("Error: \(error)")
+        .accessibilityIdentifier("question.errorBanner")
+    }
+
+    // MARK: - UI test state probe
+
+    /// Stable string for the current QuizState — exposed via the hidden
+    /// `question.state` text element so UI tests can assert state without
+    /// screen-scraping copy that may change.
+    private var quizStateName: String {
+        switch viewModel.quizState {
+        case .idle: return "idle"
+        case .startingQuiz: return "startingQuiz"
+        case .askingQuestion: return "askingQuestion"
+        case .recording: return "recording"
+        case .processing: return "processing"
+        case .showingResult: return "showingResult"
+        case .finished: return "finished"
+        case .error: return "error"
+        }
     }
 
     // MARK: - Voice body
@@ -218,6 +247,7 @@ struct QuestionView: View {
         }
         .padding(.horizontal, 28)
         .padding(.top, 4)
+        .accessibilityIdentifier("question.liveTranscript")
     }
 
     // MARK: - Support row (timers + waveform + voice command hint)

@@ -5,6 +5,7 @@
 //  Voice-first trivia quiz app for hands-free use while driving
 //
 
+import os
 import Sentry
 import SwiftUI
 
@@ -51,13 +52,14 @@ struct HangsApp: App {
         WindowGroup {
             ContentView(appState: appState)
                 .environmentObject(appState)
-                #if DEBUG
                 .onOpenURL { url in
+                    Logger.quiz.info("📱 onOpenURL: \(url.absoluteString, privacy: .public)")
+                    #if DEBUG
                     Task { @MainActor in
                         await UITestSupport.handleTestURL(url)
                     }
+                    #endif
                 }
-                #endif
         }
     }
 

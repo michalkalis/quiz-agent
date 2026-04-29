@@ -46,16 +46,6 @@ struct QuestionView: View {
                 errorBanner(error)
                     .padding(.top, 80)
             }
-
-            #if DEBUG
-            // Invisible state probe for UI tests. Reading
-            // app.staticTexts["question.state"].label returns the current
-            // QuizState case name (idle, recording, processing, ...).
-            Text(quizStateName)
-                .frame(width: 0, height: 0)
-                .opacity(0)
-                .accessibilityIdentifier("question.state")
-            #endif
         }
         .sensoryFeedback(.start, trigger: viewModel.quizState == .recording)
         .onReceive(clockTimer) { _ in now = Date() }
@@ -71,12 +61,13 @@ struct QuestionView: View {
         }) {
             AnswerConfirmationView(
                 isProcessing: viewModel.quizState == .processing && viewModel.transcribedAnswer.isEmpty,
-                transcribedAnswer: viewModel.transcribedAnswer,
+                transcribedAnswer: $viewModel.transcribedAnswer,
                 autoConfirmCountdown: viewModel.autoConfirmCountdown,
                 autoConfirmEnabled: viewModel.settings.autoConfirmEnabled,
                 autoConfirmTotal: Config.autoConfirmDelaySecs,
                 onConfirm: { Task { await viewModel.confirmAnswer() } },
                 onReRecord: { viewModel.rerecordAnswer() },
+                onEditingBegan: { viewModel.beginEditingTranscript() },
                 onCancel: { viewModel.cancelProcessing() }
             )
         }
@@ -148,24 +139,6 @@ struct QuestionView: View {
         .accessibilityIdentifier("question.errorBanner")
     }
 
-    // MARK: - UI test state probe
-
-    /// Stable string for the current QuizState — exposed via the hidden
-    /// `question.state` text element so UI tests can assert state without
-    /// screen-scraping copy that may change.
-    private var quizStateName: String {
-        switch viewModel.quizState {
-        case .idle: return "idle"
-        case .startingQuiz: return "startingQuiz"
-        case .askingQuestion: return "askingQuestion"
-        case .recording: return "recording"
-        case .processing: return "processing"
-        case .showingResult: return "showingResult"
-        case .finished: return "finished"
-        case .error: return "error"
-        }
-    }
-
     // MARK: - Voice body
 
     private func voiceBody(question: Question) -> some View {
@@ -177,11 +150,12 @@ struct QuestionView: View {
             ZStack(alignment: .bottom) {
                 scrollableQuestionContent(question: question)
 
-                VStack(spacing: 6) {
+                VStack(spacing: 10) {
                     if isRecording && !viewModel.liveTranscript.isEmpty {
                         transcriptCard
                     }
                     floatingMicRow
+                    statusPill
                 }
                 .padding(.bottom, 4)
             }
@@ -314,18 +288,112 @@ struct QuestionView: View {
         .frame(maxWidth: .infinity, alignment: .center)
     }
 
-    private var micHint: String {
+    // MARK: - Status pill (single source of state feedback under the mic)
+
+    @ViewBuilder
+    private var statusPill: some View {
+        let status = currentStatus
+        HStack(spacing: 8) {
+            status.leading
+            Text(status.text)
+                .font(.hangsMono(12, weight: .semibold))
+                .tracking(0.5)
+                .foregroundColor(status.color)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+        .background(Capsule().fill(status.color.opacity(0.12)))
+        .overlay(Capsule().stroke(status.color.opacity(0.35), lineWidth: 1))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(status.text)
+        .accessibilityValue(quizStateName)
+        .accessibilityIdentifier("question.statusPill")
+
+        #if DEBUG
+        // Copy-independent state probe for UI tests. Reading
+        // app.staticTexts["question.state"].label returns the current
+        // QuizState case name. Sibling of the pill so the test seam
+        // survives copy/layout changes to the visible status pill.
+        Text(quizStateName)
+            .frame(width: 0, height: 0)
+            .hidden()
+            .accessibilityIdentifier("question.state")
+        #endif
+    }
+
+    /// Stable string for the current QuizState — exposed via accessibilityValue so
+    /// UI tests can assert state without needing screenshots or string-matching the pill copy.
+    private var quizStateName: String {
+        switch viewModel.quizState {
+        case .idle: return "idle"
+        case .startingQuiz: return "startingQuiz"
+        case .askingQuestion: return "askingQuestion"
+        case .recording: return "recording"
+        case .processing: return "processing"
+        case .showingResult: return "showingResult"
+        case .finished: return "finished"
+        case .error: return "error"
+        }
+    }
+
+    private struct QuizStatus {
+        let text: String
+        let color: Color
+        let leading: AnyView
+    }
+
+    private var currentStatus: QuizStatus {
         switch viewModel.quizState {
         case .recording:
-            return #"say "stop" when finished"#
+            return QuizStatus(
+                text: #"RECORDING · SAY "STOP" TO FINISH"#,
+                color: Theme.Hangs.Colors.pink,
+                leading: AnyView(
+                    Circle()
+                        .fill(Theme.Hangs.Colors.pink)
+                        .frame(width: 8, height: 8)
+                )
+            )
         case .processing:
-            return "processing…"
+            return QuizStatus(
+                text: "PROCESSING ANSWER…",
+                color: Theme.Hangs.Colors.blue,
+                leading: AnyView(
+                    ProgressView()
+                        .controlSize(.mini)
+                        .tint(Theme.Hangs.Colors.blue)
+                )
+            )
         case .askingQuestion where viewModel.thinkingTimeCountdown > 0:
-            return "think… recording starts soon"
+            return QuizStatus(
+                text: "THINKING TIME…",
+                color: Theme.Hangs.Colors.blue,
+                leading: AnyView(
+                    Image(systemName: "hourglass")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(Theme.Hangs.Colors.blue)
+                )
+            )
         case .askingQuestion where viewModel.answerTimerCountdown > 0:
-            return "recording starts automatically…"
+            return QuizStatus(
+                text: "RECORDING STARTS AUTOMATICALLY…",
+                color: Theme.Hangs.Colors.pink,
+                leading: AnyView(
+                    Image(systemName: "mic")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(Theme.Hangs.Colors.pink)
+                )
+            )
         default:
-            return #"or say "start" to begin"#
+            return QuizStatus(
+                text: #"READY · TAP MIC OR SAY "START""#,
+                color: Theme.Hangs.Colors.muted,
+                leading: AnyView(
+                    Image(systemName: "mic")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(Theme.Hangs.Colors.muted)
+                )
+            )
         }
     }
 
@@ -356,13 +424,7 @@ struct QuestionView: View {
                 viewModel.settings.isMuted.toggle()
             }
 
-            Spacer(minLength: 8)
-
-            Text(micHint)
-                .font(.hangsBody(12))
-                .foregroundColor(Theme.Hangs.Colors.muted)
-                .multilineTextAlignment(.trailing)
-                .lineLimit(2)
+            Spacer(minLength: 0)
         }
         .padding(.horizontal, 24)
         .padding(.top, 8)
@@ -393,30 +455,14 @@ struct QuestionView: View {
 
     @ViewBuilder
     private var footerCTA: some View {
-        Group {
-            switch viewModel.quizState {
-            case .recording:
-                HangsPrimaryButton(title: "Stop recording",
-                                   icon: "stop.fill",
-                                   height: 60,
-                                   isDestructive: true) {
-                    Task { await viewModel.toggleRecording() }
-                }
-                .accessibilityIdentifier("question.stopRecording")
-            case .processing:
-                HangsPrimaryButton(title: "Processing…",
-                                   icon: nil,
-                                   isLoading: true,
-                                   height: 60) {}
-            default:
-                HangsSecondaryButton(title: "Skip question",
-                                     icon: "forward.fill",
-                                     height: 54) {
-                    Task { await viewModel.skipQuestion() }
-                }
-                .accessibilityIdentifier("question.skip")
-            }
+        HangsSecondaryButton(title: "Skip question",
+                             icon: "forward.fill",
+                             height: 54) {
+            Task { await viewModel.skipQuestion() }
         }
+        .accessibilityIdentifier("question.skip")
+        .disabled(isRecording || isProcessing)
+        .opacity((isRecording || isProcessing) ? 0.45 : 1)
         .padding(.horizontal, 24)
         .padding(.top, 12)
         .padding(.bottom, 28)
@@ -495,6 +541,8 @@ struct QuestionView: View {
     // MARK: - Derived
 
     private var isRecording: Bool { viewModel.quizState == .recording }
+
+    private var isProcessing: Bool { viewModel.quizState == .processing }
 
     private var canInteract: Bool {
         viewModel.quizState == .askingQuestion

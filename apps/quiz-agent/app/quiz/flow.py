@@ -19,7 +19,7 @@ from ..usage.tracker import UsageTracker
 from quiz_shared.models.question import Question
 from quiz_shared.models.session import QuizSession
 
-from ..serializers import question_to_dict
+from ..serializers import question_to_dict, question_to_dict_translated
 
 logger = logging.getLogger(__name__)
 
@@ -259,7 +259,9 @@ class QuizFlowService:
             self.usage_tracker.record_question(session.user_id)
 
         # Cache translated question text
-        translated_q_dict = await self._question_to_dict_translated(next_question, session.language)
+        translated_q_dict = await question_to_dict_translated(
+            next_question, session.language, self.translation_service
+        )
         session.current_question_text = translated_q_dict["question"]
         self.session_manager.update_session(session)
 
@@ -337,17 +339,3 @@ class QuizFlowService:
             logger.warning("Failed to translate correct answer to %s: %s", language, e)
             return answer
 
-    async def _question_to_dict_translated(
-        self, question: Question, language: str
-    ) -> Dict[str, Any]:
-        """Convert Question to dict with translated question text."""
-        question_dict = question_to_dict(question)
-        if self.translation_service and language != "en":
-            try:
-                translated_text = await self.translation_service.translate_question(
-                    question=question.question, target_language=language
-                )
-                question_dict["question"] = translated_text
-            except Exception as e:
-                logger.warning("Failed to translate question text to %s: %s", language, e)
-        return question_dict

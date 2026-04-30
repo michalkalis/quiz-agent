@@ -1,13 +1,11 @@
 """Shared dependencies, models, and helpers for REST API routes."""
 
-import logging
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field
 from datetime import datetime
 from fastapi import Request
 
 from quiz_shared.models.session import QuizSession
-from quiz_shared.models.question import Question
 from quiz_shared.models.participant import Participant
 
 from ..session.manager import SessionManager
@@ -17,9 +15,7 @@ from ..voice.transcriber import VoiceTranscriber
 from ..tts.service import TTSService
 from ..usage.tracker import UsageTracker
 from ..quiz.flow import QuizFlowService, FlowResult
-from ..serializers import question_to_dict
-
-logger = logging.getLogger(__name__)
+from ..serializers import question_to_dict, question_to_dict_translated
 
 
 # ── Request/Response Models ──────────────────────────────────────────────────
@@ -161,20 +157,6 @@ def session_to_response(session: QuizSession) -> SessionResponse:
         expires_at=session.expires_at,
         created_at=session.created_at,
     )
-
-
-async def question_to_dict_translated(question: Question, language: str, translation_service=None) -> Dict[str, Any]:
-    """Convert Question to dict with translated question text."""
-    question_dict = question_to_dict(question)
-    if translation_service and language != "en":
-        try:
-            translated_text = await translation_service.translate_question(
-                question=question.question, target_language=language
-            )
-            question_dict["question"] = translated_text
-        except Exception as e:
-            logger.warning("Failed to translate question text to %s: %s", language, e)
-    return question_dict
 
 
 def flow_to_response(flow_result: FlowResult, session: Any) -> InputResponse:

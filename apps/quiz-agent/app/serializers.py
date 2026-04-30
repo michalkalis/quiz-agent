@@ -3,9 +3,12 @@
 Used by both api/deps.py and quiz/flow.py to avoid circular imports.
 """
 
+import logging
 from typing import Any, Dict
 
 from quiz_shared.models.question import Question
+
+logger = logging.getLogger(__name__)
 
 
 def question_to_dict(question: Question) -> Dict[str, Any]:
@@ -31,3 +34,23 @@ def question_to_dict(question: Question) -> Dict[str, Any]:
     if question.generation_metadata and "model" in question.generation_metadata:
         result["generated_by"] = question.generation_metadata["model"]
     return result
+
+
+async def question_to_dict_translated(
+    question: Question, language: str, translation_service=None
+) -> Dict[str, Any]:
+    """Convert Question to dict with translated question text.
+
+    Falls back silently to the original text on translation failure or when
+    translation_service is None / language is "en".
+    """
+    question_dict = question_to_dict(question)
+    if translation_service and language != "en":
+        try:
+            translated_text = await translation_service.translate_question(
+                question=question.question, target_language=language
+            )
+            question_dict["question"] = translated_text
+        except Exception as e:
+            logger.warning("Failed to translate question text to %s: %s", language, e)
+    return question_dict

@@ -40,14 +40,22 @@ enum UITestSupport {
         let network = MockNetworkService()
         network.mockSession = QuizResponse.previewStartQuiz.session
         network.mockResponse = QuizResponse.previewStartQuiz
+        network.mockTextInputResponse = QuizResponse.previewAnswerCorrect
 
         let audio = MockAudioService()
         let persistence = MockPersistenceStore()
 
+        // Disable the 10s auto-confirm timer under UI test. Edit-flow scenarios
+        // (RS-06/07/08) drive the confirmation sheet through accessibility-tree
+        // taps and field typing; the timer fires before they can land.
+        var seededSettings = QuizSettings.default
+        seededSettings.autoConfirmEnabled = false
+        persistence.savedSettings = seededSettings
+
         let stt = MockElevenLabsSTTService()
         mockSTT = stt
 
-        Logger.quiz.info("🧪 UITestSupport: mock services wired")
+        Logger.quiz.info("🧪 UITestSupport: mock services wired (autoConfirmEnabled=false)")
         return (network, audio, persistence, nil, stt)
     }
 

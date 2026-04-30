@@ -664,6 +664,10 @@ enum NetworkError: LocalizedError {
 final class MockNetworkService: NetworkServiceProtocol {
     var mockSession: QuizSession?
     var mockResponse: QuizResponse?
+    /// Optional override for `submitTextInput` so UI tests can return a
+    /// response that includes an `Evaluation` without overwriting the
+    /// start-quiz fixture used by `startQuiz`. Falls back to `mockResponse`.
+    var mockTextInputResponse: QuizResponse?
     var mockAudioData: Data?
     var shouldFail = false
 
@@ -701,7 +705,7 @@ final class MockNetworkService: NetworkServiceProtocol {
         if shouldFail {
             throw NetworkError.invalidResponse
         }
-        guard let response = mockResponse else {
+        guard let response = mockTextInputResponse ?? mockResponse else {
             throw NetworkError.invalidResponse
         }
         return response

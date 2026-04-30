@@ -400,6 +400,7 @@ extension QuizViewModel {
 
         let silent = transcriptWasEdited
         transcriptWasEdited = false
+        preEditTranscript = nil
 
         // If we have a pending Whisper response, use it directly
         if let response = pendingResponse {
@@ -418,10 +419,26 @@ extension QuizViewModel {
     /// `confirmAnswer()` re-evaluates the edited text via the streaming path
     /// with TTS suppressed (edits are silent — we assume the user is typing
     /// rather than driving at that moment).
+    ///
+    /// Snapshots `transcribedAnswer` so `cancelEditingTranscript()` can
+    /// restore it if the user backs out of the edit.
     func beginEditingTranscript() {
         cancelAutoConfirm()
         pendingResponse = nil
         transcriptWasEdited = true
+        preEditTranscript = transcribedAnswer
+    }
+
+    /// User tapped Cancel inside the edit branch of the confirmation sheet.
+    /// Restore the pre-edit transcript so the read-only view shows the
+    /// original recognized text, clear the edit flag, and leave the sheet
+    /// up — no state-machine transition. The view layer dismisses the
+    /// keyboard and flips back to the read-only branch on its own.
+    func cancelEditingTranscript() {
+        guard let snapshot = preEditTranscript else { return }
+        transcribedAnswer = snapshot
+        preEditTranscript = nil
+        transcriptWasEdited = false
     }
 
     /// Defense-in-depth cleanup if the answer confirmation sheet is dismissed
@@ -431,6 +448,7 @@ extension QuizViewModel {
         guard pendingResponse != nil else { return }
         pendingResponse = nil
         transcriptWasEdited = false
+        preEditTranscript = nil
         transition(to: .askingQuestion)
         errorMessage = nil
     }
@@ -444,6 +462,7 @@ extension QuizViewModel {
         showAnswerConfirmation = false
         pendingResponse = nil
         transcriptWasEdited = false
+        preEditTranscript = nil
         isRerecording = true
         transition(to: .askingQuestion)  // Return to ready state, not recording
         errorMessage = nil
@@ -464,6 +483,7 @@ extension QuizViewModel {
         showAnswerConfirmation = false
         pendingResponse = nil
         transcriptWasEdited = false
+        preEditTranscript = nil
         transcribedAnswer = ""
         liveTranscript = ""
         transition(to: .askingQuestion)

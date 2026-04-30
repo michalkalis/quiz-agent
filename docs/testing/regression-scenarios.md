@@ -154,6 +154,102 @@ to `askingQuestion` so the user can re-record. No orphaned
 
 ---
 
+## RS-06: Edit transcribed answer and confirm
+
+**Hypothesis:** Tapping the pencil edit affordance, typing a replacement
+answer, and tapping Confirm must transition the state machine into
+`showingResult` without surfacing an error banner.
+
+**Preconditions**
+- Launch with `--ui-test`
+- bug-A from issue-19 must be fixed (`MockNetworkService.submitTextInput`
+  returns a response with an evaluation) — otherwise this scenario fails
+  at step 7 with "Could not evaluate your answer". Author the scenario now;
+  expect FAIL until bug-A lands. See `docs/issues/issue-19-auto-confirm-resubmit-bug.md`.
+
+**Steps**
+1. Tap `home.startQuiz`; wait for `question.state` label `askingQuestion`
+2. Tap `question.micButton`; wait for `recording`
+3. `curl -s "http://127.0.0.1:9999/stt/committed?text=Paris" >/dev/null`
+4. Wait for `confirmation.state.transcript` to be visible
+5. Tap `confirmation.edit` (pencil button)
+6. Type `Lyon` into `confirmation.answerField` (replaces transcript)
+7. Tap `confirmation.confirm`
+8. Wait up to 5s for state change
+
+**Asserts**
+- `question.state` label is `showingResult`
+- `question.errorBanner` is **not** present
+- App process is alive; no `EXC_*` in log
+- Log shows `transcriptWasEdited = true` path was taken (TTS suppressed)
+
+---
+
+## RS-07: Edit then re-record dismisses the sheet without submitting
+
+**Hypothesis:** Entering edit mode and then tapping Re-record must discard
+the in-progress edit, return state to `askingQuestion`, and never call
+`resubmitAnswer` (no network submission, no evaluation error). The
+auto-confirm timer must stay cancelled (it was cancelled by `beginEditingTranscript`
+on edit-tap and must not restart).
+
+**Preconditions**
+- Launch with `--ui-test`
+- Independent of bug-A (no `submitTextInput` call on this path)
+
+**Steps**
+1. Tap `home.startQuiz`; wait for `askingQuestion`
+2. Tap `question.micButton`; wait for `recording`
+3. `curl -s "http://127.0.0.1:9999/stt/committed?text=Paris" >/dev/null`
+4. Wait for `confirmation.state.transcript`
+5. Tap `confirmation.edit`
+6. Type `Berlin` into `confirmation.answerField`
+7. Tap `confirmation.reRecord`
+8. Wait up to 3s
+
+**Asserts**
+- `question.state` label is `askingQuestion`
+- No confirmation sheet visible (`confirmation.state.transcript` and
+  `confirmation.state.processing` both absent)
+- `question.errorBanner` is **not** present
+- Log does **not** contain `✏️ Resubmitting edited answer`
+- App process is alive; no `EXC_*` in log
+
+---
+
+## RS-08: Cancel from edit field returns to read-only transcript
+
+**Hypothesis:** Tapping a cancel control while editing must (a) exit edit
+mode, (b) restore `confirmation.answer` to the original committed transcript
+(discarding the in-progress edit), and (c) leave the sheet up — *not*
+dismiss to `askingQuestion`. Cancel-from-edit is a localized "undo this
+edit", not a global "abandon this answer".
+
+**Preconditions**
+- Launch with `--ui-test`
+- `confirmation.editCancel` button is present in the edit branch and is
+  wired to `cancelEditingTranscript()` which restores `transcribedAnswer`
+  from a snapshot taken at edit-begin
+
+**Steps**
+1. Tap `home.startQuiz`; wait for `askingQuestion`
+2. Tap `question.micButton`; wait for `recording`
+3. `curl -s "http://127.0.0.1:9999/stt/committed?text=Paris" >/dev/null`
+4. Wait for `confirmation.state.transcript`
+5. Tap `confirmation.edit`; type `Berlin` into `confirmation.answerField`
+6. Tap `confirmation.editCancel`
+7. Wait up to 2s
+
+**Asserts**
+- `confirmation.state.transcript` is still visible (sheet did **not** dismiss)
+- `confirmation.answer` text contains `Paris` (original) and **not** `Berlin`
+- `confirmation.answerField` is **not** present
+- `question.state` label is **not** `askingQuestion` (still `processing`)
+- `question.errorBanner` is **not** present
+- App process is alive
+
+---
+
 ## Adding a scenario
 
 1. Pick the next free `RS-NN`.

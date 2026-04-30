@@ -68,6 +68,7 @@ struct QuestionView: View {
                 onConfirm: { Task { await viewModel.confirmAnswer() } },
                 onReRecord: { viewModel.rerecordAnswer() },
                 onEditingBegan: { viewModel.beginEditingTranscript() },
+                onCancelEditing: { viewModel.cancelEditingTranscript() },
                 onCancel: { viewModel.cancelProcessing() }
             )
         }

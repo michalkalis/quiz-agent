@@ -121,6 +121,7 @@ final class QuizViewModel: ObservableObject {
     @Published var autoConfirmCountdown: Int = 0
     var pendingResponse: QuizResponse? = nil  // internal for QuizViewModel+Recording
     var transcriptWasEdited = false  // internal — suppress TTS on edited confirmations
+    var preEditTranscript: String? = nil  // internal — snapshot for cancelEditingTranscript()
 
     // Auto-advance countdown for ResultView binding (single source of truth)
     @Published var autoAdvanceCountdown: Int = 0
@@ -644,7 +645,12 @@ final class QuizViewModel: ObservableObject {
             }
         }
 
-        transition(to: .processing)
+        // The confirmation modal already moved us to .processing in
+        // handleCommittedTranscript; only transition when called from a
+        // pre-modal state (e.g., still .recording on the batch path).
+        if quizState != .processing {
+            transition(to: .processing)
+        }
         errorMessage = nil
 
         do {

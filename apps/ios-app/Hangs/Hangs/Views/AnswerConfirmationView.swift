@@ -12,13 +12,18 @@ import SwiftUI
 
 struct AnswerConfirmationView: View {
     let isProcessing: Bool
-    let transcribedAnswer: String
+    @Binding var transcribedAnswer: String
     let autoConfirmCountdown: Int
     let autoConfirmEnabled: Bool
     let autoConfirmTotal: Int
     let onConfirm: () -> Void
     let onReRecord: () -> Void
+    var onEditingBegan: (() -> Void)? = nil
+    var onCancelEditing: (() -> Void)? = nil
     var onCancel: (() -> Void)? = nil
+
+    @State private var isEditing = false
+    @FocusState private var editFocused: Bool
 
     var body: some View {
         ZStack {
@@ -46,43 +51,81 @@ struct AnswerConfirmationView: View {
 
     private var transcriptBody: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HangsSectionLabel(text: "YOU SAID", color: Theme.Hangs.Colors.pink)
-                .padding(.bottom, 14)
+            HStack(alignment: .center, spacing: 10) {
+                HangsSectionLabel(text: "YOU SAID", color: Theme.Hangs.Colors.pink)
+                Spacer()
+                if isEditing {
+                    Button {
+                        cancelEditing()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(Theme.Hangs.Colors.pink)
+                            .padding(8)
+                            .background(
+                                Circle().fill(Theme.Hangs.Colors.pinkSoft)
+                            )
+                    }
+                    .accessibilityLabel("Cancel editing")
+                    .accessibilityIdentifier("confirmation.editCancel")
+                } else {
+                    Button {
+                        beginEditing()
+                    } label: {
+                        Image(systemName: "pencil")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(Theme.Hangs.Colors.pink)
+                            .padding(8)
+                            .background(
+                                Circle().fill(Theme.Hangs.Colors.pinkSoft)
+                            )
+                    }
+                    .accessibilityLabel("Edit answer")
+                    .accessibilityIdentifier("confirmation.edit")
+                }
+            }
+            .padding(.bottom, 14)
 
             ScrollView(.vertical, showsIndicators: false) {
-                HangsQuestionPrompt(
-                    text: transcribedAnswer,
-                    barColor: Theme.Hangs.Colors.pink,
-                    textFont: .hangsDisplay(32, weight: .black),
-                    textColor: Theme.Hangs.Colors.ink,
-                    minimumScaleFactor: 0.6
-                )
-                .accessibilityLabel("Your transcribed answer: \(transcribedAnswer)")
-                .accessibilityIdentifier("confirmation.answer")
+                if isEditing {
+                    editableTranscript
+                } else {
+                    HangsQuestionPrompt(
+                        text: transcribedAnswer,
+                        barColor: Theme.Hangs.Colors.pink,
+                        textFont: .hangsDisplay(32, weight: .black),
+                        textColor: Theme.Hangs.Colors.ink,
+                        minimumScaleFactor: 0.6
+                    )
+                    .accessibilityLabel("Your transcribed answer: \(transcribedAnswer)")
+                    .accessibilityIdentifier("confirmation.answer")
+                }
             }
             .frame(maxHeight: .infinity)
 
-            if autoConfirmEnabled && autoConfirmCountdown > 0 {
+            if autoConfirmEnabled && autoConfirmCountdown > 0 && !isEditing {
                 countdownBar
                     .padding(.top, 12)
             }
 
             HStack(spacing: 10) {
                 HangsSecondaryButton(title: "Re-record", icon: "mic.fill", height: 54) {
+                    editFocused = false
                     onReRecord()
                 }
                 .accessibilityIdentifier("confirmation.reRecord")
-                .disabled(autoConfirmEnabled && autoConfirmCountdown == 0)
-                .opacity(autoConfirmEnabled && autoConfirmCountdown == 0 ? 0.45 : 1)
+                .disabled(autoConfirmEnabled && autoConfirmCountdown == 0 && !isEditing)
+                .opacity(autoConfirmEnabled && autoConfirmCountdown == 0 && !isEditing ? 0.45 : 1)
 
                 HangsPrimaryButton(
                     title: "Confirm",
                     icon: "checkmark",
                     height: 54
                 ) {
+                    editFocused = false
                     onConfirm()
                 }
-                .accessibilityLabel(autoConfirmEnabled && autoConfirmCountdown > 0
+                .accessibilityLabel(autoConfirmEnabled && autoConfirmCountdown > 0 && !isEditing
                     ? "Confirm answer, auto-confirming in \(autoConfirmCountdown) seconds"
                     : "Confirm answer")
                 .accessibilityIdentifier("confirmation.confirm")
@@ -90,6 +133,50 @@ struct AnswerConfirmationView: View {
             .padding(.top, 14)
         }
         .accessibilityIdentifier("confirmation.state.transcript")
+    }
+
+    private var editableTranscript: some View {
+        HStack(alignment: .top, spacing: 8) {
+            RoundedRectangle(cornerRadius: 2, style: .continuous)
+                .fill(Theme.Hangs.Colors.pink)
+                .frame(width: 3)
+                .frame(maxHeight: .infinity, alignment: .top)
+            TextField("", text: $transcribedAnswer, axis: .vertical)
+                .font(.hangsDisplay(32, weight: .black))
+                .tracking(-1)
+                .foregroundColor(Theme.Hangs.Colors.ink)
+                .lineSpacing(-2)
+                .tint(Theme.Hangs.Colors.pink)
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .focused($editFocused)
+                .submitLabel(.done)
+                .onSubmit { editFocused = false }
+                .toolbar {
+                    ToolbarItemGroup(placement: .keyboard) {
+                        Spacer()
+                        Button("Done") { editFocused = false }
+                            .font(.hangsBody(15, weight: .semibold))
+                            .foregroundColor(Theme.Hangs.Colors.pink)
+                    }
+                }
+                .accessibilityIdentifier("confirmation.answerField")
+        }
+        .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private func beginEditing() {
+        onEditingBegan?()
+        isEditing = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            editFocused = true
+        }
+    }
+
+    private func cancelEditing() {
+        editFocused = false
+        isEditing = false
+        onCancelEditing?()
     }
 
     private var countdownBar: some View {
@@ -158,7 +245,7 @@ struct AnswerConfirmationView: View {
 #Preview("Transcript") {
     AnswerConfirmationView(
         isProcessing: false,
-        transcribedAnswer: "Z mumíí.",
+        transcribedAnswer: .constant("Z mumíí."),
         autoConfirmCountdown: 7,
         autoConfirmEnabled: true,
         autoConfirmTotal: 10,
@@ -170,7 +257,7 @@ struct AnswerConfirmationView: View {
 #Preview("Transcript long") {
     AnswerConfirmationView(
         isProcessing: false,
-        transcribedAnswer: "The capital of France is Paris and it has been so since the 10th century.",
+        transcribedAnswer: .constant("The capital of France is Paris and it has been so since the 10th century."),
         autoConfirmCountdown: 3,
         autoConfirmEnabled: true,
         autoConfirmTotal: 10,
@@ -182,7 +269,7 @@ struct AnswerConfirmationView: View {
 #Preview("Processing") {
     AnswerConfirmationView(
         isProcessing: true,
-        transcribedAnswer: "",
+        transcribedAnswer: .constant(""),
         autoConfirmCountdown: 0,
         autoConfirmEnabled: true,
         autoConfirmTotal: 10,

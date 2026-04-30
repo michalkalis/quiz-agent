@@ -14,11 +14,11 @@ import os
 logger = logging.getLogger(__name__)
 
 from quiz_shared.models.question import Question
-from quiz_shared.database.chroma_client import ChromaDBClient
+from quiz_shared.database.question_store import QuestionStore
 from ..rate_limit import limiter
 
 
-from .deps import get_chroma_client
+from .deps import get_question_store
 
 router = APIRouter(prefix="/api/v1/admin", tags=["Admin"])
 
@@ -88,6 +88,27 @@ class ImportQuestionsResponse(BaseModel):
     message: str
 
 
+class SourceBackfillItem(BaseModel):
+    """Single source attribution update for a question."""
+    id: str
+    source_url: Optional[str] = None
+    source_excerpt: Optional[str] = None
+
+
+class BackfillSourcesRequest(BaseModel):
+    """Request to backfill source_url / source_excerpt on existing questions."""
+    items: List[SourceBackfillItem]
+
+
+class BackfillSourcesResponse(BaseModel):
+    """Response from source backfill."""
+    success: bool
+    updated_count: int
+    not_found_count: int
+    skipped_count: int
+    not_found_ids: List[str] = []
+
+
 class QuestionStats(BaseModel):
     """Statistics about questions in database."""
     total_questions: int
@@ -101,7 +122,7 @@ class QuestionStats(BaseModel):
 async def import_questions(
     request: Request,
     import_request: ImportQuestionsRequest,
-    chroma_client: ChromaDBClient = Depends(get_chroma_client),
+    store: QuestionStore = Depends(get_question_store),
     _: str = Depends(verify_admin_key),
 ):
 
@@ -115,7 +136,7 @@ async def import_questions(
         try:
             # Check if question already exists (by ID)
             if import_request.skip_duplicates:
-                existing = chroma_client.get_question(q_data.id)
+                existing = store.get(q_data.id)
                 if existing:
                     skipped += 1
                     skipped_ids.append(q_data.id)
@@ -149,7 +170,7 @@ async def import_questions(
 
             # Check for semantic duplicates unless forced
             if not import_request.force:
-                duplicates = chroma_client.find_duplicates(question.question, threshold=0.85)
+                duplicates = store.find_duplicates(question.question, threshold=0.85)
                 if duplicates:
                     # Question text is very similar to existing question
                     skipped += 1
@@ -158,7 +179,7 @@ async def import_questions(
                     continue
 
             # Add to database
-            success = chroma_client.add_question(question)
+            success = store.add(question)
 
             if success:
                 imported += 1
@@ -182,18 +203,69 @@ async def import_questions(
     )
 
 
+@router.post("/questions/backfill-sources", response_model=BackfillSourcesResponse)
+@limiter.limit("5/minute")
+async def backfill_sources(
+    request: Request,
+    payload: BackfillSourcesRequest,
+    store: QuestionStore = Depends(get_question_store),
+    _: str = Depends(verify_admin_key),
+):
+    """Backfill source_url / source_excerpt on existing questions.
+
+    Goes through `store.get` + `store.upsert` so metadata serialization stays
+    in one place. The existing embedding on the fetched Question is reused by
+    the store, so we don't pay for re-embedding when only attribution changes.
+    """
+    updated = 0
+    skipped = 0
+    not_found_ids: List[str] = []
+
+    for item in payload.items:
+        if item.source_url is None and item.source_excerpt is None:
+            skipped += 1
+            continue
+        question = store.get(item.id)
+        if question is None:
+            not_found_ids.append(item.id)
+            continue
+        changed = False
+        if item.source_url is not None and question.source_url != item.source_url:
+            question.source_url = item.source_url
+            changed = True
+        if item.source_excerpt is not None and question.source_excerpt != item.source_excerpt:
+            question.source_excerpt = item.source_excerpt
+            changed = True
+        if not changed:
+            skipped += 1
+            continue
+
+        if store.upsert(question):
+            updated += 1
+        else:
+            not_found_ids.append(item.id)
+
+    return BackfillSourcesResponse(
+        success=True,
+        updated_count=updated,
+        not_found_count=len(not_found_ids),
+        skipped_count=skipped,
+        not_found_ids=not_found_ids,
+    )
+
+
 @router.get("/questions")
 @limiter.limit("5/minute")
 async def list_questions(
     request: Request,
-    chroma_client: ChromaDBClient = Depends(get_chroma_client),
+    store: QuestionStore = Depends(get_question_store),
     _: str = Depends(verify_admin_key),
     search: Optional[str] = None,
     topic: Optional[str] = None,
     limit: int = 1000,
 ):
 
-    all_questions = chroma_client.get_all_questions(limit=limit)
+    all_questions = store.get_all(limit=limit)
 
     results = []
     for q in all_questions:
@@ -217,12 +289,12 @@ async def list_questions(
 @limiter.limit("5/minute")
 async def get_question_stats(
     request: Request,
-    chroma_client: ChromaDBClient = Depends(get_chroma_client),
+    store: QuestionStore = Depends(get_question_store),
     _: str = Depends(verify_admin_key),
 ):
 
     # Get all questions
-    all_questions = chroma_client.get_all_questions(limit=10000)
+    all_questions = store.get_all(limit=10000)
 
     # Calculate statistics
     by_difficulty = {}
@@ -252,12 +324,12 @@ async def get_question_stats(
 async def delete_question(
     request: Request,
     question_id: str,
-    chroma_client: ChromaDBClient = Depends(get_chroma_client),
+    store: QuestionStore = Depends(get_question_store),
     _: str = Depends(verify_admin_key),
 ):
 
     # Check if question exists
-    question = chroma_client.get_question(question_id)
+    question = store.get(question_id)
     if not question:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -265,7 +337,7 @@ async def delete_question(
         )
 
     # Delete question
-    success = chroma_client.delete_question(question_id)
+    success = store.delete(question_id)
 
     if not success:
         raise HTTPException(

@@ -1,9 +1,30 @@
 # Issue 22: ChromaDBClient — split query/write into a deeper QuestionStore seam
 
-**Triage:** enhancement · ready-for-agent
-**Status:** Surfaced by `/improve-codebase-architecture` 2026-04-30 — not started
+**Triage:** enhancement · done
+**Status:** Done 2026-04-30
 **Created:** 2026-04-30
 **Surfaced by:** architecture review, candidate #1
+
+## Resolution (2026-04-30)
+
+- Added `packages/shared/quiz_shared/database/question_store.py` with the
+  `QuestionStore` Protocol and `ChromaDBQuestionStore` adapter. Single
+  `_question_to_metadata` / `_metadata_to_question` helpers — no more
+  duplicated 80-line blocks.
+- `packages/shared/quiz_shared/database/chroma_client.py` is now a thin
+  facade over `ChromaDBQuestionStore` so legacy callers (scripts,
+  question-generator app) keep working through the consolidated path.
+  `ChromaDBClient.update_question` now goes through `upsert` and no longer
+  silently no-ops (`project_chroma_update_bug` memory now stale).
+- Removed the leaky `chroma_client.collection.upsert(...)` bypass at
+  `apps/quiz-agent/app/api/admin.py` — backfill goes through `store.get` +
+  `store.upsert` and reuses cached embeddings.
+- Migrated app callers: `api/deps.py` exposes `get_question_store`;
+  `api/admin.py`, `api/routes/{quiz,tts,voice}.py`, `quiz/flow.py`,
+  `retrieval/question_retriever.py`, `rating/feedback.py` all depend on
+  `QuestionStore` instead of `ChromaDBClient`.
+- 39 backend tests still pass; both quiz-agent and question-generator
+  apps import cleanly.
 
 ## TL;DR for next session
 

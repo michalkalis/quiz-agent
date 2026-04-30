@@ -7,6 +7,7 @@ from fastapi import Request
 
 from quiz_shared.models.session import QuizSession
 from quiz_shared.models.participant import Participant
+from quiz_shared.database.question_store import QuestionStore
 
 from ..session.manager import SessionManager
 from ..retrieval.question_retriever import QuestionRetriever
@@ -133,7 +134,12 @@ def get_quiz_flow(request: Request) -> QuizFlowService:
     return request.app.state.quiz_flow
 
 
+def get_question_store(request: Request) -> QuestionStore:
+    return request.app.state.question_store
+
+
 def get_chroma_client(request: Request):
+    """Deprecated — prefer `get_question_store`. Kept for the question health monitor."""
     return request.app.state.chroma_client
 
 

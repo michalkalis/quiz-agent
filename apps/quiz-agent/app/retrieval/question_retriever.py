@@ -16,19 +16,20 @@ logger = logging.getLogger(__name__)
 from quiz_shared.models.question import Question
 from quiz_shared.models.session import QuizSession
 from quiz_shared.database.chroma_client import ChromaDBClient
+from quiz_shared.database.question_store import QuestionStore
 from quiz_shared.utils.embeddings import generate_embedding, calculate_similarity
 
 
 class QuestionRetriever:
     """Retrieves questions using proper RAG with semantic search."""
 
-    def __init__(self, chroma_client: Optional[ChromaDBClient] = None):
+    def __init__(self, question_store: Optional[QuestionStore] = None):
         """Initialize question retriever.
 
         Args:
-            chroma_client: ChromaDB client (or create default)
+            question_store: QuestionStore for read access (or create default)
         """
-        self.chroma = chroma_client or ChromaDBClient()
+        self.store = question_store or ChromaDBClient().store
 
     def get_next_question(
         self,
@@ -212,7 +213,7 @@ class QuestionRetriever:
             List of candidate questions
         """
         # ALWAYS use semantic search (RAG-first approach)
-        candidates = self.chroma.search_questions(
+        candidates = self.store.search(
             query_text=semantic_query,  # Always provide semantic query
             filters=filters,
             n_results=n_candidates,
@@ -249,7 +250,7 @@ class QuestionRetriever:
         # Fallback 1: Simpler semantic query (just "question")
         logger.debug("Fallback 1 - Simpler semantic query")
         simple_query = "quiz question"
-        candidates = self.chroma.search_questions(
+        candidates = self.store.search(
             query_text=simple_query,
             filters={"difficulty": question_difficulty, "type": {"$in": ["text", "image"]}, "review_status": "approved", **lang_filter},
             n_results=n_candidates,
@@ -265,7 +266,7 @@ class QuestionRetriever:
             difficulty_fallback.remove(question_difficulty)
 
         for fallback_difficulty in difficulty_fallback:
-            candidates = self.chroma.search_questions(
+            candidates = self.store.search(
                 query_text=simple_query,
                 filters={"difficulty": fallback_difficulty, "type": {"$in": ["text", "image"]}, "review_status": "approved", **lang_filter},
                 n_results=n_candidates,
@@ -277,7 +278,7 @@ class QuestionRetriever:
 
         # Fallback 3: Minimal constraints (still require approved)
         logger.debug("Fallback 3 - Minimal constraints")
-        candidates = self.chroma.search_questions(
+        candidates = self.store.search(
             query_text="question",
             filters={"type": {"$in": ["text", "image"]}, "review_status": "approved", **lang_filter},
             n_results=n_candidates,
@@ -300,7 +301,7 @@ class QuestionRetriever:
         Returns:
             None
         """
-        total_count = self.chroma.count_questions()
+        total_count = self.store.count()
         if total_count == 0:
             logger.error("Database is empty. No questions found.")
         else:
@@ -409,7 +410,7 @@ class QuestionRetriever:
         # Retrieve question objects
         recent_questions = []
         for qid in recent_ids:
-            question = self.chroma.get_question(qid)
+            question = self.store.get(qid)
             if question:
                 recent_questions.append(question)
 
@@ -520,7 +521,7 @@ class QuestionRetriever:
         if not query:
             query = "quiz question"
 
-        return self.chroma.search_questions(
+        return self.store.search(
             query_text=query,
             filters=filters,
             n_results=limit

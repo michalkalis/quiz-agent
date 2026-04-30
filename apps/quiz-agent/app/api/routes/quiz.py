@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from ..deps import (
     StartQuizRequest, SubmitInputRequest, InputResponse, RateQuestionRequest,
     FlagQuestionRequest,
-    get_session_manager, get_question_retriever, get_chroma_client,
+    get_session_manager, get_question_retriever, get_question_store,
     get_usage_tracker, get_feedback_service, get_quiz_flow, get_translation_service,
     get_tts_service,
     session_to_response, question_to_dict, question_to_dict_translated, flow_to_response,
@@ -31,7 +31,7 @@ async def start_quiz(
     body: StartQuizRequest,
     session_manager: SessionManager = Depends(get_session_manager),
     question_retriever: QuestionRetriever = Depends(get_question_retriever),
-    chroma_client=Depends(get_chroma_client),
+    store=Depends(get_question_store),
     usage_tracker: UsageTracker = Depends(get_usage_tracker),
     translation_service=Depends(get_translation_service),
     tts_service: TTSService = Depends(get_tts_service),
@@ -80,7 +80,7 @@ async def start_quiz(
 
         if not question:
             logger.error("get_next_question returned None for session %s", session_id)
-            total_count = chroma_client.count_questions(filters={"review_status": "approved"}) if chroma_client else 0
+            total_count = store.count(filters={"review_status": "approved"}) if store else 0
             client_seen_count = len(client_excluded_ids)
 
             if total_count > 0 and client_seen_count >= total_count * 0.8:
@@ -187,7 +187,7 @@ async def submit_input(
 async def get_current_question(
     session_id: str,
     session_manager: SessionManager = Depends(get_session_manager),
-    chroma_client=Depends(get_chroma_client),
+    store=Depends(get_question_store),
     translation_service=Depends(get_translation_service),
 ):
     """Get current question without submitting input."""
@@ -199,14 +199,14 @@ async def get_current_question(
         raise HTTPException(status_code=400, detail="No active question")
 
     if session.current_question_text:
-        question = chroma_client.get_question(session.current_question_id)
+        question = store.get(session.current_question_id)
         if not question:
             raise HTTPException(status_code=500, detail="Question not found")
         question_dict = question_to_dict(question)
         question_dict["question"] = session.current_question_text
         translated_question = question_dict
     else:
-        question = chroma_client.get_question(session.current_question_id)
+        question = store.get(session.current_question_id)
         if not question:
             raise HTTPException(status_code=500, detail="Question not found")
         translated_question = await question_to_dict_translated(question, session.language, translation_service)

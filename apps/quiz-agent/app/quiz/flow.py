@@ -77,7 +77,7 @@ class QuizFlowService:
         answer_evaluator: AnswerEvaluator,
         tts_service: Optional[TTSService],
         usage_tracker: Optional[UsageTracker],
-        chroma_client: Any,
+        question_store: Any,
         translation_service: Any,
     ):
         self.session_manager = session_manager
@@ -86,7 +86,7 @@ class QuizFlowService:
         self.answer_evaluator = answer_evaluator
         self.tts_service = tts_service
         self.usage_tracker = usage_tracker
-        self.chroma_client = chroma_client
+        self.question_store = question_store
         self.translation_service = translation_service
 
     async def process_answer(
@@ -113,7 +113,7 @@ class QuizFlowService:
         evaluated_question_id = session.current_question_id
 
         # Get current question
-        current_question = self.chroma_client.get_question(evaluated_question_id)
+        current_question = self.question_store.get(evaluated_question_id)
         if not current_question:
             raise ValueError("Current question not found")
 

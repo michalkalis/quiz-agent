@@ -138,7 +138,8 @@ async def lifespan(app: FastAPI):
             collection_name="quiz_questions",
             persist_directory=chroma_path
         )
-        logger.info("ChromaDB client initialized (using %s)", chroma_path)
+        question_store = chroma_client.store
+        logger.info("ChromaDB client + QuestionStore initialized (using %s)", chroma_path)
     except Exception as e:
         logger.error("Failed to initialize ChromaDB: %s", e, exc_info=True)
         raise
@@ -158,10 +159,10 @@ async def lifespan(app: FastAPI):
         logger.info("Initializing services...")
         session_manager = SessionManager(cleanup_interval=300, sql_client=sql_client)
         input_parser = InputParser()
-        question_retriever = QuestionRetriever(chroma_client=chroma_client)
+        question_retriever = QuestionRetriever(question_store=question_store)
         answer_evaluator = AnswerEvaluator()
         feedback_service = FeedbackService(
-            chroma_client=chroma_client,
+            question_store=question_store,
             sql_client=sql_client,
             low_rating_threshold=2.5
         )
@@ -214,6 +215,7 @@ async def lifespan(app: FastAPI):
     app.state.tts_service = tts_service
     app.state.translation_service = translation_service
     app.state.chroma_client = chroma_client
+    app.state.question_store = question_store
     app.state.usage_tracker = usage_tracker
     app.state.quiz_flow = QuizFlowService(
         session_manager=session_manager,
@@ -222,7 +224,7 @@ async def lifespan(app: FastAPI):
         answer_evaluator=answer_evaluator,
         tts_service=tts_service,
         usage_tracker=usage_tracker,
-        chroma_client=chroma_client,
+        question_store=question_store,
         translation_service=translation_service,
     )
     logger.info("API dependencies configured")

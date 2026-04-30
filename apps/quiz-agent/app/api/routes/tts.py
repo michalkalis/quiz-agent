@@ -7,7 +7,7 @@ from fastapi.responses import Response
 
 from ..deps import (
     SynthesizeTTSRequest,
-    get_session_manager, get_tts_service, get_chroma_client, get_translation_service,
+    get_session_manager, get_tts_service, get_question_store, get_translation_service,
     question_to_dict_translated,
 )
 from ...session.manager import SessionManager
@@ -48,7 +48,7 @@ async def get_question_audio(
     session_id: str,
     session_manager: SessionManager = Depends(get_session_manager),
     tts_service: TTSService = Depends(get_tts_service),
-    chroma_client=Depends(get_chroma_client),
+    store=Depends(get_question_store),
     translation_service=Depends(get_translation_service),
 ):
     """Get audio for current question in session (cached)."""
@@ -63,7 +63,7 @@ async def get_question_audio(
         if session.current_question_text:
             question_text = session.current_question_text
         else:
-            current_question = chroma_client.get_question(session.current_question_id)
+            current_question = store.get(session.current_question_id)
             if not current_question:
                 raise HTTPException(status_code=404, detail="Current question not found")
 

@@ -52,6 +52,29 @@ Models must be Codable and match backend Pydantic models. See `.claude/rules/ios
 - **URL:** https://quiz-agent-api.fly.dev (Fly.io, 3GB persistent volume)
 - **Deploy:** `fly deploy` from `apps/quiz-agent/`
 
+## Task Tracking
+
+Local todo list at `docs/todo/TODO.md`. States: `[ ]` todo · `[~]` wip · `[x]` done. Numbers continue the `docs/issues/issue-NN-*.md` series.
+
+- `/todo` — manage the list (list/add/mark wip/done/edit/remove) via natural language
+- `/summarize` — print a copy-pasteable handoff block when ending a session mid-task
+
+Sizable tasks get a plan file at `docs/issues/issue-NN-{slug}.md` linked from the TODO line. At session start, check `docs/todo/TODO.md` for any `[~]` items before deciding what to work on.
+
+## Product & Issue Indices
+
+- `CONTEXT.md` (repo root) — domain glossary. Read before writing PRDs, issue files, or architecture suggestions. Use the canonical terms verbatim.
+- `docs/product/INDEX.md` — every PRD with status (Draft / Approved / Shipped / Deferred).
+- `docs/issues/INDEX.md` — every issue with `**Triage:**` state (`<category> · <state>`). Issue files carry the line in their header.
+
+## Workflow Skills
+
+- `/to-prd` — synthesize current conversation into a PRD at `docs/product/prds/<slug>.md`. No interview.
+- `/triage` — move issues through the state machine (`needs-triage` / `needs-info` / `ready-for-agent` / `ready-for-human` / `done` / `wontfix`). Updates `docs/issues/INDEX.md`.
+- `/diagnose` — disciplined repro → hypothesise → instrument → fix → regression-test loop for hard bugs.
+- `/zoom-out` — get a higher-level map of an unfamiliar area in CONTEXT.md vocabulary.
+- `/improve-codebase-architecture` — find deepening opportunities; introduces the **module / interface / seam / adapter / depth / leverage / locality** vocabulary in `.claude/skills/improve-codebase-architecture/LANGUAGE.md`.
+
 ## Rules
 
 Detailed development workflow, API contracts, testing, and deployment standards are in:

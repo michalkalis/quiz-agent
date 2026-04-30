@@ -19,6 +19,11 @@ Dashboard of all `issue-NN-*.md` files. Updated by `/triage` whenever a `**Triag
 | 19 | [Auto-confirm of unedited transcript routes through `resubmitAnswer`](issue-19-auto-confirm-resubmit-bug.md) | bug · needs-info | `[ ]` #19 | Fix path not yet chosen — user needs to pick approach |
 | 20 | Timer bug from crash-elimination Wave 3 | enhancement · needs-triage | `[ ]` #20 | Open since 2026-04-15; no issue file yet — create via `/triage` |
 | 21 | Generate question Groups B-E | enhancement · ready-for-agent | `[ ]` #21 | Pipeline operational for Group A; B-E queued |
+| 22 | [ChromaDBClient — split into QuestionStore seam](issue-22-chroma-client-split.md) | enhancement · ready-for-agent | `[ ]` #22 | Architecture review 2026-04-30; ideal predecessor for #23 |
+| 23 | [QuestionRetriever — extend seam to all reads](issue-23-question-retriever-seam.md) | enhancement · ready-for-agent | `[ ]` #23 | Architecture review 2026-04-30; pairs with #22 |
+| 25 | [Backend session phase — transition guard](issue-25-session-phase-transition-guard.md) | enhancement · ready-for-agent | `[ ]` #25 | Mirror iOS `validTransitions` table on the backend |
+| 26 | [TaskBag — concentrate QuizViewModel task lifecycle](issue-26-task-bag-lifecycle.md) | enhancement · ready-for-agent | `[ ]` #26 | Shrinks 1085-line ViewModel; helps Wave 3 timer bug |
+| 27 | [PendingStore — question pipeline pending state](issue-27-pending-store-question-pipeline.md) | enhancement · ready-for-agent | `[ ]` #27 | Unblocks autonomous Groups B-E pipeline |
 | – | [Question Pipeline — Remaining Tasks](question-pipeline-remaining.md) | enhancement · needs-triage | | Mixed — some shipped (`c7b0743`), some queued; needs split |
 
 ## Done
@@ -37,6 +42,7 @@ Dashboard of all `issue-NN-*.md` files. Updated by `/triage` whenever a `**Triag
 | 15 | [Full rename CarQuiz → Hangs](issue-15-full-rename-carquiz-to-hangs.md) | Executed 2026-04-19 |
 | 16 | [Autonomous UI Testing](issue-16-autonomous-ui-testing.md) | Umbrella; work moved into 17 + 18 |
 | 17 | [UI-test trigger fallback — HTTP listener](issue-17-ui-test-http-fallback.md) | Landed in `becd1b2` |
+| 24 | [Consolidate `question_to_dict_translated`](issue-24-translated-serializer-locality.md) | Done 2026-04-30 |
 
 ## Conventions
 

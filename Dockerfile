@@ -9,9 +9,9 @@ WORKDIR /build
 # Install pip packages
 RUN pip install --no-cache-dir --upgrade pip
 
-# Copy shared package first and install it
+# Copy shared package first and install it (non-editable so prod stage just needs site-packages)
 COPY packages/shared /build/packages/shared
-RUN pip install --no-cache-dir -e /build/packages/shared
+RUN pip install --no-cache-dir /build/packages/shared
 
 # Copy quiz-agent files
 COPY apps/quiz-agent /build/app
@@ -26,7 +26,11 @@ RUN pip install --no-cache-dir \
     openai>=1.0.0 \
     python-multipart>=0.0.6 \
     requests>=2.31.0 \
-    rich>=13.0.0
+    rich>=13.0.0 \
+    pydub>=0.25.0 \
+    httpx>=0.27.0 \
+    slowapi>=0.1.9 \
+    'sentry-sdk[fastapi]>=2.0.0'
 
 # Production stage
 FROM python:3.11-slim

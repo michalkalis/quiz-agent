@@ -2,7 +2,7 @@
 name: review-ui
 description: Analyze a UI screenshot against iOS HIG and output SwiftUI improvement suggestions
 allowed-tools: Read, Write, Glob, Grep, WebSearch
-model: opus
+model: sonnet
 ---
 
 # Review UI — iOS Design Analysis
@@ -80,4 +80,4 @@ Analyze a screenshot of the Hangs app against Apple's Human Interface Guidelines
 - Focus on the driving use case — large text, high contrast, minimal distraction
 - Consider both light and dark mode
 - For voice-first app: emphasize visual feedback for audio states (recording, playing, processing)
-- Use `model: opus` because visual analysis benefits from stronger reasoning
+- Uses `model: sonnet` — Sonnet 4.6 handles HIG screenshot analysis well at ~5× lower cost than Opus

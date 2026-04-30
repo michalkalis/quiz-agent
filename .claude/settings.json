@@ -51,5 +51,13 @@
     "figma@claude-plugins-official": true,
     "claude-code-setup@claude-plugins-official": true,
     "firecrawl@claude-plugins-official": true
+  },
+  "permissions": {
+    "allow": [
+      "Bash(fly status *)",
+      "Bash(fly logs *)",
+      "mcp__pencil__batch_get",
+      "mcp__figma__get_design_context"
+    ]
   }
 }

@@ -3,6 +3,7 @@ name: check-crashes
 description: Query Sentry for iOS crashes, structured logs, and user feedback to autonomously debug TestFlight issues
 allowed-tools: Bash, Read, Grep, Glob, WebFetch
 argument-hint: "[recent|issue-ID|--summary|--logs [query]|--feedback]"
+model: sonnet
 ---
 
 # Check Crashes / Logs / Feedback from Sentry

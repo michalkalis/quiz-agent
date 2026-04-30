@@ -1,0 +1,290 @@
+{
+  "questions": [
+    {
+      "id": "q_img_silhouette_001",
+      "question": "Which country is famously known for its silhouette resembling a boot, with the toe aimed at a triangular island in the Mediterranean?",
+      "correct_answer": "Italy",
+      "alternative_answers": [
+        "Italian Republic"
+      ],
+      "topic": "Geography",
+      "category": "adults",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q_img_silhouette_002",
+      "question": "Which country has a silhouette resembling a seahorse dancing in the Pacific Ocean, with an elegant curve comprising a series of islands extending from north to south?",
+      "correct_answer": "Japan",
+      "alternative_answers": [
+        "Nippon",
+        "Japanese Archipelago"
+      ],
+      "topic": "Geography",
+      "category": "adults",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q_img_silhouette_003",
+      "question": "Imagine a vast triangular kite soaring through the skies, its tail curving elegantly over the azure waves. This large peninsula extends south into the Indian Ocean, flanked by the Arabian Sea on one side and the Bay of Bengal on the other. What country could this be?",
+      "correct_answer": "India",
+      "alternative_answers": [
+        "Republic of India",
+        "Bharat"
+      ],
+      "topic": "Geography",
+      "category": "adults",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q_img_silhouette_004",
+      "question": "Which country has a shape often likened to a giant island with a broad, flaring brim that swoops down like a sunhat over the Indian Ocean? Famous for its vast outback and unique wildlife hopping across its landmass.",
+      "correct_answer": "Australia",
+      "alternative_answers": [
+        "Commonwealth of Australia"
+      ],
+      "topic": "Geography",
+      "category": "adults",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q_img_silhouette_005",
+      "question": "Which country has a silhouette resembling a partially open umbrella, standing tall and proud with a handle that seems to point upwards towards the northern seas? This land is known for its rich history, castles, and tea customs.",
+      "correct_answer": "United Kingdom",
+      "alternative_answers": [
+        "UK",
+        "Great Britain",
+        "Britain",
+        "England",
+        "Scotland",
+        "Wales",
+        "Northern Ireland"
+      ],
+      "topic": "Geography",
+      "category": "adults",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q_img_silhouette_006",
+      "question": "Which country has a unique silhouette that looks like a slender ribbon unfurling down the western coast of South America, tightly hugging the Pacific Ocean, while also snuggling up against the towering Andes Mountains?",
+      "correct_answer": "Chile",
+      "alternative_answers": [
+        "Republic of Chile"
+      ],
+      "topic": "Geography",
+      "category": "adults",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q_img_silhouette_007",
+      "question": "Which country features a quirky silhouette resembling two long islands dancing in the Pacific Ocean, with one looking like a weathered canoe and the other like a narrow clock hand pointing southwest?",
+      "correct_answer": "New Zealand",
+      "alternative_answers": [
+        "Aotearoa"
+      ],
+      "topic": "Geography",
+      "category": "adults",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q_img_silhouette_008",
+      "question": "Which country has a jagged profile resembling a hand with fingers splayed out, dipping into the aquamarine waters of the Aegean Sea, surrounded by a sea of islands and nestled in southeastern Europe?",
+      "correct_answer": "Greece",
+      "alternative_answers": [
+        "Hellenic Republic"
+      ],
+      "topic": "Geography",
+      "category": "adults",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q_img_silhouette_009",
+      "question": "Which country has a long, slender silhouette that swoops down like a dragon's tail, hugging the western side of the Scandinavian Peninsula, known for its stunning fjords plunging into the North Sea?",
+      "correct_answer": "Norway",
+      "alternative_answers": [
+        "Kingdom of Norway"
+      ],
+      "topic": "Geography",
+      "category": "adults",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q_img_silhouette_010",
+      "question": "Imagine a long, slender form that resembles a crooked, semi-bent ribbon or elongated alligator lounging in the warm Caribbean waters. Which country has this iconic silhouette famous for its rhythmic culture and shimmering coastlines directly south of the United States and east of Mexico's Yucatán Peninsula?",
+      "correct_answer": "Cuba",
+      "alternative_answers": [
+        "Republic of Cuba"
+      ],
+      "topic": "Geography",
+      "category": "adults",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q_img_blind_map_001",
+      "question": "Which city is known for its iconic clock tower and sits on the River Thames in a country where tea is a beloved cultural tradition?",
+      "correct_answer": "London",
+      "alternative_answers": [
+        "London City",
+        "City of London"
+      ],
+      "topic": "Geography",
+      "category": "adults",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q_img_blind_map_002",
+      "question": "Which city is located in a country known as the land of the rising sun, boasting iconic views of Mount Fuji, and hosts the world's busiest pedestrian crossing?",
+      "correct_answer": "Tokyo",
+      "alternative_answers": [
+        "Tokyo Metropolis"
+      ],
+      "topic": "Geography",
+      "category": "adults",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q_img_blind_map_003",
+      "question": "Which city is located near the iconic Giza Pyramids and is bisected by one of the longest rivers in the world, flowing through a land known for its ancient pharaohs?",
+      "correct_answer": "Cairo",
+      "alternative_answers": [
+        "El-Qahira"
+      ],
+      "topic": "Geography",
+      "category": "adults",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q_img_blind_map_004",
+      "question": "Which city is home to an iconic iron tower, lies on the banks of the River Seine, and is known as the 'City of Lights'?",
+      "correct_answer": "Paris",
+      "alternative_answers": [
+        "Paris"
+      ],
+      "topic": "Geography",
+      "category": "adults",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q_img_blind_map_005",
+      "question": "Which city is marked at the location known for its iconic statue representing freedom and its status as a major global financial center?",
+      "correct_answer": "New York",
+      "alternative_answers": [
+        "New York",
+        "New York City",
+        "NYC"
+      ],
+      "topic": "Geography",
+      "category": "adults",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q_img_blind_map_006",
+      "question": "Which city is known for its iconic Opera House with a sail-like design and is situated along the southeastern coast of a sunburnt country known for its unique wildlife?",
+      "correct_answer": "Sydney",
+      "alternative_answers": [
+        "Sydney City"
+      ],
+      "topic": "Geography",
+      "category": "adults",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q_img_blind_map_007",
+      "question": "Which city is famous for its iconic statue of Christ the Redeemer and its vibrant Carnival, located on the southeastern coast of a large South American country?",
+      "correct_answer": "Rio de Janeiro",
+      "alternative_answers": [
+        "Rio de Janeiro City"
+      ],
+      "topic": "Geography",
+      "category": "adults",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q_img_blind_map_008",
+      "question": "Which city is marked, known for its ancient empire and iconic amphitheater, often associated with gladiators, located at the heart of a boot-shaped peninsula with the Tiber River running through?",
+      "correct_answer": "Rome",
+      "alternative_answers": [
+        "Rome City"
+      ],
+      "topic": "Geography",
+      "category": "adults",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q_img_blind_map_009",
+      "question": "Which major city lies at the heart of the largest country in the world, on the banks of the Moskva River, and is home to the famous Kremlin?",
+      "correct_answer": "Moscow",
+      "alternative_answers": [
+        "Moscow City"
+      ],
+      "topic": "Geography",
+      "category": "adults",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q_img_blind_map_010",
+      "question": "Which city is located on the west coast of India, known for its iconic Gateway of India and as a major financial hub?",
+      "correct_answer": "Mumbai",
+      "alternative_answers": [
+        "Bombay"
+      ],
+      "topic": "Geography",
+      "category": "adults",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q_img_hint_image_001",
+      "question": "This atmospheric painting hints at a classic American novel. What is it?",
+      "correct_answer": "The Great Gatsby",
+      "alternative_answers": [
+        "Gatsby"
+      ],
+      "topic": "Literature",
+      "category": "adults",
+      "difficulty": "medium"
+    },
+    {
+      "id": "q_img_hint_image_002",
+      "question": "This atmospheric painting hints at the building blocks of life. What is it?",
+      "correct_answer": "DNA",
+      "alternative_answers": [
+        "deoxyribonucleic acid"
+      ],
+      "topic": "Science",
+      "category": "adults",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q_img_hint_image_003",
+      "question": "This atmospheric painting hints at a monumental event in space exploration history. What is it?",
+      "correct_answer": "The Moon Landing",
+      "alternative_answers": [
+        "Apollo 11"
+      ],
+      "topic": "History",
+      "category": "adults",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q_img_hint_image_004",
+      "question": "This atmospheric painting hints at a famous composer from the classical era. What is it?",
+      "correct_answer": "Beethoven",
+      "alternative_answers": [
+        "Ludwig van Beethoven"
+      ],
+      "topic": "Music",
+      "category": "adults",
+      "difficulty": "medium"
+    },
+    {
+      "id": "q_img_hint_image_005",
+      "question": "This atmospheric painting hints at a famous lady's enigmatic smile. What is it?",
+      "correct_answer": "The Mona Lisa",
+      "alternative_answers": [
+        "La Gioconda"
+      ],
+      "topic": "Art",
+      "category": "adults",
+      "difficulty": "easy"
+    }
+  ]
+}

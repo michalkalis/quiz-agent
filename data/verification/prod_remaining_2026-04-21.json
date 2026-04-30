@@ -1,0 +1,1924 @@
+{
+  "questions": [
+    {
+      "id": "q_imported_22cb9ec69230",
+      "question": "Which fast food chain once accepted payment in seashells on a remote island for a promotional campaign?",
+      "correct_answer": "Burger King",
+      "topic": "Entertainment",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_imported_5653abe73817",
+      "question": "Which Dutch artist drew a lithograph of an endless staircase, later inspiring physicists to build a real water loop that appeared to flow uphill?",
+      "correct_answer": "M. C. Escher – “Ascending and Descending”",
+      "topic": "Arts",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_imported_c1d6b5d4030a",
+      "question": "Which element is named after a mischievous Norse god?",
+      "correct_answer": "Thorium",
+      "topic": "Science",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_imported_ac34fc211f34",
+      "question": "Which mathematician’s name, when reversed, is almost “I’m a robot”?",
+      "correct_answer": "Turing (→ “gniruT”)",
+      "topic": "General Knowledge",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_imported_a01490443fc9",
+      "question": "What common English word becomes its own antonym when prefixed with “in”?",
+      "correct_answer": "Flammable / Inflammable",
+      "topic": "General Knowledge",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_imported_6c7d5e060ca3",
+      "question": "Which city is home to a library where books are shelved by color rather than subject?",
+      "correct_answer": "Stockholm",
+      "topic": "General Knowledge",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_imported_488300b2f044",
+      "question": "Which athlete’s name is also a unit of measurement in physics?",
+      "correct_answer": "Newton (Isaac Newton)",
+      "topic": "General Knowledge",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_imported_dde768e83d24",
+      "question": "Which historical figure is buried in three countries simultaneously due to shifting borders?",
+      "correct_answer": "Nicolaus Copernicus",
+      "topic": "History",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_imported_f56d77ce7d82",
+      "question": "What common item did NASA spend millions to develop, while Soviets just used pencils?",
+      "correct_answer": "Space pen",
+      "topic": "General Knowledge",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_arts_d7daf61bbafe",
+      "question": "The Great Wall of China is famous for its length, but what surprising material makes up much of the mortar holding its stones together — a material you'd more commonly find at breakfast?",
+      "correct_answer": "Sticky rice",
+      "topic": "Arts",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_logic_ec5ae88aa573",
+      "question": "What comes next in this sequence: 1, 11, 21, 1211, 111221, ...?",
+      "correct_answer": "312211",
+      "topic": "Logic",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_arts_d0ec870625e2",
+      "question": "Before synthetic dyes were invented in 1856, producing the colour purple required harvesting roughly 12,000 of a certain sea creature for just 1.5 grams of dye. What creature was it?",
+      "correct_answer": "Sea snails",
+      "topic": "Arts",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_sports_7d799d414599",
+      "question": "Which Olympic sport requires athletes to compete in five completely different disciplines — fencing, swimming, horse riding, running, and shooting — all in a single competition?",
+      "correct_answer": "Modern pentathlon",
+      "topic": "Sports",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_arts_c62eb19c58ae",
+      "question": "When the Statue of Liberty was first unveiled in 1886, it wasn't the green colour we know today. What colour was it originally?",
+      "correct_answer": "Shiny copper brown",
+      "topic": "Arts",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_logic_8675c8ca2dd9",
+      "question": "A woman reads five books every single week and finishes each one, yet she has never read a single page. How is this possible?",
+      "correct_answer": "She listens to audiobooks",
+      "topic": "Logic",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_literature_086f3076541e",
+      "question": "The word 'robot' didn't exist before 1920 — it first appeared in a Czech play and comes from the Czech word 'robota.' What does robota mean?",
+      "correct_answer": "Forced labour",
+      "topic": "Literature",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_sports_120064547dcc",
+      "question": "Two boxers are in a championship boxing match scheduled for 12 rounds. One of them gets knocked out after 6 rounds, yet no man threw a punch. How is this possible?",
+      "correct_answer": "The boxers are women",
+      "topic": "Sports",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_arts_7d708475645f",
+      "question": "The vivid blue pigment used in many Renaissance paintings was more expensive per gram than gold. What semi-precious stone was ground into powder to produce it?",
+      "correct_answer": "Lapis lazuli",
+      "topic": "Arts",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_literature_c4e5e2fb60e6",
+      "question": "Which of these words does NOT come from a fictional literary character: utopian, quixotic, machiavellian, lilliputian?",
+      "correct_answer": "Machiavellian",
+      "topic": "Literature",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_literature_4cbb4ac84f60",
+      "question": "Which common English word — now used to describe someone intensely studious or obsessive about a subject — first appeared as a made-up creature in a Dr. Seuss children's book in 1950?",
+      "correct_answer": "Nerd",
+      "topic": "Literature",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_music_6441cd04aa44",
+      "question": "A musician plays the exact same note at the exact same pitch on a piano and on a violin. Yet anyone listening can instantly tell which instrument is playing. What property of sound makes this possible?",
+      "correct_answer": "Timbre",
+      "topic": "Music",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_movies_8b900bf22328",
+      "question": "The sound designers of the original Star Wars created the iconic blaster sound effect by hitting an everyday object with a wrench. What was that object?",
+      "correct_answer": "A guy-wire",
+      "topic": "Movies",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_music_f129b0af04e0",
+      "question": "The 'Happy Birthday' song earned its copyright owners roughly two million dollars per year in licensing fees. In what year was it finally ruled to be in the public domain — 1975, 1995, or 2015?",
+      "correct_answer": "2015",
+      "topic": "Music",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_music_09b49e6b99c4",
+      "question": "Which of these instruments doesn't belong: guitar, piano, harp, violin? And why?",
+      "correct_answer": "Piano",
+      "topic": "Music",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_music_4dac489f1770",
+      "question": "When a piece of music gives you chills or goosebumps, your brain releases the same chemical it releases when you eat chocolate or fall in love. What is that chemical?",
+      "correct_answer": "Dopamine",
+      "topic": "Music",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_movies_c6dc201fbe7b",
+      "question": "The iconic theme from Jaws — often called the scariest movie music ever written — consists of just how many different notes being alternated?",
+      "correct_answer": "Two",
+      "topic": "Movies",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_movies_bd36e63edb67",
+      "question": "The famous opening crawl of Star Wars — yellow text scrolling into the distance — was created in 1977 without any computers. How was it actually filmed?",
+      "correct_answer": "The text was printed on a physical surface and filmed with a camera slowly moving over it",
+      "topic": "Movies",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_movies_835bb8ca5e05",
+      "question": "Film projectors have traditionally run at 24 frames per second. This specific number wasn't chosen for visual quality — it was the minimum speed needed for what other technical requirement to work properly?",
+      "correct_answer": "For the optical soundtrack (audio) to sound acceptable",
+      "topic": "Movies",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_movies_1e1be574c9bd",
+      "question": "The 'Wilhelm Scream' — a specific recording of a man screaming — has been deliberately reused as an inside joke in over 400 films and TV shows since 1951. What was happening to the character in the original recording?",
+      "correct_answer": "He was being bitten or dragged by an alligator",
+      "topic": "Movies",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_technology_75901511e3d0",
+      "question": "The world's first webcam wasn't created for security or communication. It was set up at the University of Cambridge so researchers could check the status of what everyday object without leaving their desks?",
+      "correct_answer": "A coffee pot",
+      "topic": "Technology",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_technology_c246bcf3b8a3",
+      "question": "Before Wi-Fi had its catchy name, the technology was known by its technical standard 'IEEE 802.11b Direct Sequence.' A branding agency was hired to make it catchier. Despite what most people believe, what does 'Wi-Fi' actually stand for?",
+      "correct_answer": "Nothing — it's a made-up brand name",
+      "topic": "Technology",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_technology_1d4e08387d92",
+      "question": "What children's toy, made of interlocking plastic bricks, is manufactured with a precision tolerance of just 2 micrometres — more precise than most surgical instruments?",
+      "correct_answer": "LEGO",
+      "topic": "Technology",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_technology_916b7f65ccc6",
+      "question": "In computing, a 'byte' is made up of 8 bits. What is the humorous but official name for a unit of just 4 bits — half a byte?",
+      "correct_answer": "A nibble",
+      "topic": "Technology",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_technology_3c6346153078",
+      "question": "The first computer 'bug' was a real insect found trapped inside a computer relay in 1947, which was then taped into the logbook with the note 'First actual case of bug being found.' What type of insect was it?",
+      "correct_answer": "A moth",
+      "topic": "Technology",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_logic_0b8daf523640",
+      "question": "I have cities, but no houses. I have mountains, but no trees. I have water, but no fish. What am I?",
+      "correct_answer": "A map",
+      "topic": "Logic",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_technology_738148051bd1",
+      "question": "What was Google's original name when its founders first built the search engine as a research project at Stanford University in 1996?",
+      "correct_answer": "BackRub",
+      "topic": "Technology",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_technology_2847963db9dc",
+      "question": "What percentage of all the world's money exists only as digital data — with no physical coins or banknotes to represent it? Is it roughly 30%, 60%, or over 90%?",
+      "correct_answer": "Over 90%",
+      "topic": "Technology",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_science_c866b541e06e",
+      "question": "The Milky Way galaxy contains roughly 300 billion stars. Which is a larger number: stars in the Milky Way, or bacteria living in a human gut?",
+      "correct_answer": "Bacteria in a human gut",
+      "topic": "Science",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_science_ca9f42486398",
+      "question": "Sunlight takes about 8 minutes to travel from the Sun's surface to Earth. But the same energy, as photons bouncing through the Sun's dense interior, takes far longer to travel from the Sun's core to its surface. Closer to 8 minutes, 100 years, or 100,000 years?",
+      "correct_answer": "About 100,000 years",
+      "topic": "Science",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_science_c0ff43365a19",
+      "question": "If it were physically possible to fold a piece of paper in half exactly 42 times, the resulting stack would be taller than: the Eiffel Tower, Mount Everest, or would it reach the Moon?",
+      "correct_answer": "It would reach the Moon",
+      "topic": "Science",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_science_34ca70399fc6",
+      "question": "Neutron stars are collapsed stellar cores with mind-boggling density. If you could bring a teaspoon of neutron star material to Earth, it would weigh roughly: 10 kilograms, 10 thousand tonnes, or more than 1 billion tonnes?",
+      "correct_answer": "More than 1 billion tonnes",
+      "topic": "Science",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_nature_063b322c581d",
+      "question": "The immortal jellyfish (Turritopsis dohrnii) has a response to aging or injury found in no other animal — instead of dying, it reverts to its juvenile form and begins life over. How many times can it theoretically do this?",
+      "correct_answer": "Indefinitely",
+      "topic": "Nature",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_science_f82e479819da",
+      "question": "Which is a bigger number: the atoms in a single glass of water, or the glasses of water it would take to fill all of Earth's oceans?",
+      "correct_answer": "Atoms in a single glass of water",
+      "topic": "Science",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_nature_779c254dea7f",
+      "question": "Sharks have patrolled Earth's oceans for roughly 450 million years, while the first forests appeared on land about 385 million years ago. In the evolutionary timeline, which came first — sharks or trees?",
+      "correct_answer": "Sharks",
+      "topic": "Nature",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_nature_d04738c6899a",
+      "question": "Researchers who wore 'dangerous' masks while trapping crows found that years later, crows on the same campus would mob anyone wearing that exact mask — including birds that had never witnessed the original capture. How did the uninvolved crows learn to recognise the 'dangerous' face?",
+      "correct_answer": "The crows taught each other",
+      "topic": "Nature",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_nature_e3ee224dd8e5",
+      "question": "Every dinosaur that ever lived, including the heaviest sauropods, was smaller than the largest animal known to have existed on Earth. That record-holder is alive today — what is it?",
+      "correct_answer": "The blue whale",
+      "topic": "Nature",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_nature_305391c209bb",
+      "question": "Inside a chrysalis, a caterpillar transforms into a butterfly — but the process is far more extreme than gradual rearrangement. What actually happens to the caterpillar's body inside the chrysalis?",
+      "correct_answer": "It dissolves almost completely into a cellular soup before rebuilding",
+      "topic": "Nature",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_science_b70b9f566f7c",
+      "question": "If the Sun were scaled down to the size of a basketball, Earth would be roughly the size of a marble, a peppercorn, or a grain of sand?",
+      "correct_answer": "A peppercorn",
+      "topic": "Science",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_nature_571f66a70222",
+      "question": "Four birds on this list are all flightless. One is not. Which is the odd one out: Ostrich, Emu, Kiwi, Penguin, or Flamingo?",
+      "correct_answer": "Flamingo",
+      "topic": "Nature",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_science_60686f0d4a35",
+      "question": "Before becoming the world's most popular packaging material, bubble wrap was invented in 1957 for a completely different purpose. What was it originally designed to be?",
+      "correct_answer": "Textured wallpaper",
+      "topic": "Science",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_nature_5e6502ef1fa1",
+      "question": "Forest ecologists discovered that trees share nutrients and chemical warning signals with each other through underground fungal networks — even sending extra resources to struggling seedlings of competing species. What popular nickname have scientists given to this underground communication system?",
+      "correct_answer": "The Wood Wide Web",
+      "topic": "Nature",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_technology_cc759d821083",
+      "question": "In 1992, a cargo ship lost 28,800 rubber ducks in the Pacific Ocean. Oceanographers tracked them for decades as they washed ashore on five continents, revolutionising our understanding of what?",
+      "correct_answer": "Ocean currents",
+      "topic": "Technology",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_sports_4331c11e437c",
+      "question": "Tennis balls at Wimbledon are kept at exactly 20 degrees Celsius before play. What happens to a tennis ball's bounce if it gets too cold?",
+      "correct_answer": "It bounces lower",
+      "topic": "Sports",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_technology_cdb62d09b6d5",
+      "question": "Bluetooth wireless technology is named after a 10th-century Scandinavian king who was famous for uniting warring tribes. The Bluetooth logo itself is formed from two symbols — what are they?",
+      "correct_answer": "The king's initials in Viking runes",
+      "topic": "Technology",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_sports_3c93ef46321f",
+      "question": "A basketball court, a tennis court, and an Olympic swimming pool — which one is the longest?",
+      "correct_answer": "An Olympic swimming pool",
+      "topic": "Sports",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_technology_177e63e7ac3d",
+      "question": "The first text message ever sent, on December 3, 1992, was just two words. Given that it was sent as a test right before Christmas, what did it say?",
+      "correct_answer": "Merry Christmas",
+      "topic": "Technology",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_sports_be9804e111cb",
+      "question": "Formula 1 pit crews can change all four tyres in under two seconds. During a pit stop, roughly how many crew members swarm the car at once: 5, 12, or over 20?",
+      "correct_answer": "Over 20",
+      "topic": "Sports",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_technology_a95f8803723e",
+      "question": "Nintendo, the company behind Mario and the Switch, was founded long before computers or video games existed. In which century was Nintendo originally established — 18th, 19th, or 20th?",
+      "correct_answer": "19th century",
+      "topic": "Technology",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_sports_6140374f6bf5",
+      "question": "Fencing, athletics, swimming, horse riding, and shooting — these five sports make up one Olympic event where a single athlete must compete in all of them. Name this gruelling multi-discipline competition.",
+      "correct_answer": "Modern pentathlon",
+      "topic": "Sports",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_technology_4da21ab285e0",
+      "question": "When the first iPhone launched in 2007, it was missing a feature that even basic flip phones of the era had. Apple didn't add it until over a year later. What was it?",
+      "correct_answer": "Copy and paste",
+      "topic": "Technology",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_sports_ff2abfe9003a",
+      "question": "Table tennis balls travel at speeds over 100 km/h, yet they weigh almost nothing. An official competition table tennis ball weighs exactly how many grams — closer to 2.7, 12, or 45?",
+      "correct_answer": "2.7 grams",
+      "topic": "Sports",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_technology_f427b1c98aad",
+      "question": "Wi-Fi doesn't actually stand for 'Wireless Fidelity' — that's a common misconception. The Wi-Fi Alliance hired a branding company to create the name. What does 'Wi-Fi' actually stand for?",
+      "correct_answer": "Nothing — it's a made-up brand name",
+      "topic": "Technology",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_literature_5ce7b740582c",
+      "question": "Most people would guess the best-selling novel of all time is a modern blockbuster. In fact, it's a Victorian-era tale of London and Paris during the French Revolution, with over 200 million copies sold. What is it?",
+      "correct_answer": "A Tale of Two Cities",
+      "topic": "Literature",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_logic_06787896e165",
+      "question": "Here is a strange number sequence: 1, 11, 21, 1211, 111221. Each term describes the previous one out loud. What comes next?",
+      "correct_answer": "312211",
+      "topic": "Logic",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_literature_546f6ae6e1ed",
+      "question": "Arthur Conan Doyle grew so tired of Sherlock Holmes that he killed the detective off in a story, sending him plunging over Reichenbach Falls. The public backlash was enormous — 20,000 magazine subscribers cancelled in protest. What did Conan Doyle eventually have to do?",
+      "correct_answer": "Bring Sherlock Holmes back to life",
+      "topic": "Literature",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_logic_81793fede571",
+      "question": "Two fathers and two sons sit down for breakfast. They eat exactly three eggs, and each person has exactly one egg. No eggs are shared or left over. How is this possible?",
+      "correct_answer": "They are three people: a grandfather, his son, and his grandson",
+      "topic": "Logic",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_literature_323f06e60451",
+      "question": "Agatha Christie is the best-selling fiction writer in history. Her detective novels have been translated into more languages than any other individual author's works — closer to 50 languages, 100 languages, or over 100 languages?",
+      "correct_answer": "Over 100 languages",
+      "topic": "Literature",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_logic_c7c66976ec4b",
+      "question": "Four of these numbers share a hidden mathematical property. One is the impostor. Which doesn't belong: 49, 64, 81, 95, 121?",
+      "correct_answer": "95",
+      "topic": "Logic",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_logic_15d606017442",
+      "question": "You have 8 coins that look identical, but one is slightly heavier than the others. Using a traditional balance scale, what is the minimum number of weighings guaranteed to find the heavy coin?",
+      "correct_answer": "2",
+      "topic": "Logic",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_literature_720f08108885",
+      "question": "Ian Fleming chose the name for his fictional super-spy specifically because he wanted the dullest, most ordinary name imaginable. He borrowed it from a real person — a man whose actual profession could not be further from espionage. What did the real James Bond do for a living?",
+      "correct_answer": "He was an ornithologist",
+      "topic": "Literature",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_logic_40afc44d78af",
+      "question": "What comes next in this sequence: 2, 6, 12, 20, 30, 42, ...?",
+      "correct_answer": "56",
+      "topic": "Logic",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_logic_277dbcc636b8",
+      "question": "In a room of just 23 people, what is the probability that at least two of them share a birthday — closer to 10%, 50%, or 90%?",
+      "correct_answer": "About 50%",
+      "topic": "Logic",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_literature_818f4b990529",
+      "question": "Dr. Seuss wrote Green Eggs and Ham to settle a bet with his editor. The challenge: write an entire children's book using no more than a certain number of different words. How many was the limit — 50, 100, or 200?",
+      "correct_answer": "50",
+      "topic": "Literature",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_logic_ac5ba59adfb8",
+      "question": "You're in a foot race. Just before the finish line, you overtake the person in second place. What position do you finish in?",
+      "correct_answer": "Second place",
+      "topic": "Logic",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_logic_371dcf7eec28",
+      "question": "You have three boxes: one contains two gold coins, one contains two silver coins, and one contains one gold and one silver. All boxes are mislabelled. You pick one coin from the box labelled 'Gold and Silver' and it's gold. What does that box actually contain?",
+      "correct_answer": "Two gold coins",
+      "topic": "Logic",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_literature_0d337b345b45",
+      "question": "Victor Hugo once sent his publisher what may be the shortest letter in literary history — it contained just a single character: '?' His publisher responded with an equally terse: '!' What was Hugo asking about?",
+      "correct_answer": "How his novel Les Miserables was selling",
+      "topic": "Literature",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_literature_6b59e892a798",
+      "question": "In 1939, an American author published a 50,000-word novel with one extraordinary constraint: he physically tied down one key on his typewriter to make sure he never used it. The banned letter was the most common letter in the English language. Which letter?",
+      "correct_answer": "E",
+      "topic": "Literature",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_nature_f1a10d797733",
+      "question": "Which creature has survived all five mass extinction events, has blue blood because it uses copper instead of iron, and its blood is essential for testing the safety of every vaccine used today?",
+      "correct_answer": "Horseshoe crab",
+      "topic": "Nature",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_science_1f6969cdd241",
+      "question": "Which planet in our solar system rotates so slowly that a single day on it is actually longer than its entire year?",
+      "correct_answer": "Venus",
+      "topic": "Science",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_history_e10ccd48cde3",
+      "question": "Which classic board game was originally created by a woman in 1903 specifically to demonstrate the dangers of monopolies — the exact opposite of how most people play it today?",
+      "correct_answer": "Monopoly",
+      "topic": "History",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_nature_f8db8e2c143f",
+      "question": "Which mammal has fingerprints so similar to human ones that even forensic experts have difficulty telling them apart under a microscope?",
+      "correct_answer": "Koala",
+      "topic": "Nature",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_history_3051fa2ebcaf",
+      "question": "Which country once declared war on emus in 1932, deployed soldiers with machine guns — and lost?",
+      "correct_answer": "Australia",
+      "topic": "History",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_food_efbc73db951c",
+      "question": "Which popular condiment was sold as a patented medicine in the 1830s, marketed as a cure for diarrhea, jaundice, and indigestion?",
+      "correct_answer": "Ketchup",
+      "topic": "Food",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_history_ef4967b929ca",
+      "question": "Which everyday breakfast beverage was banned five times in Sweden, with King Gustav III even ordering an experiment on condemned prisoners to prove it was lethal?",
+      "correct_answer": "Coffee",
+      "topic": "History",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_nature_bce55ef5db8f",
+      "question": "Which natural structure on Earth is so massive it can be seen from space, yet each of its individual builders is typically smaller than a fingernail?",
+      "correct_answer": "The Great Barrier Reef",
+      "topic": "Nature",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_science_0d907bd5b964",
+      "question": "Which common substance that you use every day can exist in at least 18 different crystalline forms, most of which only appear under extreme pressure?",
+      "correct_answer": "Ice",
+      "topic": "Science",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_sports_8938f6d262f4",
+      "question": "In the ancient Greek Olympics, athletes competed completely naked. What substance did they rub all over their bodies before competing?",
+      "correct_answer": "Olive oil",
+      "topic": "Sports",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_music_bab5b4dc1358",
+      "question": "Vinyl records are enjoying a comeback today, but during the Cold War, what unexpected item was used in the Soviet Union to press bootleg music recordings — creating what became known as 'bone music'?",
+      "correct_answer": "Used X-ray films",
+      "topic": "Music",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_technology_9c595022c75c",
+      "question": "The microwave oven was invented entirely by accident in 1945 when an engineer walked past a piece of radar equipment and noticed something in his pocket had melted. What had melted?",
+      "correct_answer": "A candy bar",
+      "topic": "Technology",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_technology_478f9b20a241",
+      "question": "Your smartphone has more computing power than the computers that guided Apollo 11 to the Moon in 1969. Roughly how many times more powerful is a modern smartphone than the Apollo guidance computer — 1,000 times, 100,000 times, or 100 million times?",
+      "correct_answer": "About 100 million times",
+      "topic": "Technology",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_nature_e54966c29823",
+      "question": "One North American frog survives winter by letting its body freeze completely solid — heart stopped, brain silent, ice crystals forming between its cells. When spring arrives, it thaws and hops away. What compound does it flood its cells with to survive being frozen?",
+      "correct_answer": "Glucose",
+      "topic": "Nature",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_nature_6c62df7ca2b9",
+      "question": "Forest ecologists discovered that trees are connected by underground fungal networks, which may facilitate the sharing of nutrients and chemical signals between plants. What popular nickname have scientists given to this underground network?",
+      "correct_answer": "The Wood Wide Web",
+      "topic": "Nature",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_history_47bfce18225b",
+      "question": "Was Cleopatra born closer in time to the construction of the Great Pyramid or to the first Moon landing?",
+      "correct_answer": "The Moon landing",
+      "topic": "History",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_history_6f5d7eaa7bf6",
+      "question": "The Wright brothers made their first powered flight in 1903. Apollo 11 landed on the Moon in 1969. Did these two events occur within a single human lifetime — or more than one lifetime apart?",
+      "correct_answer": "Within a single human lifetime",
+      "topic": "History",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_history_94626baa491b",
+      "question": "For roughly how long did the Great Pyramid of Giza hold the record as the world's tallest man-made structure — about 200 years, 2,000 years, or nearly 4,000 years?",
+      "correct_answer": "Nearly 4,000 years",
+      "topic": "History",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_history_5ad912b12562",
+      "question": "Oxford University has been teaching students since around 1096 CE. The Aztec Empire was founded in Mesoamerica at some point later. Which came first — Oxford University or the Aztec Empire?",
+      "correct_answer": "Oxford University",
+      "topic": "History",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_history_ac16fbe227a4",
+      "question": "The Anglo-Zanzibar War of 1896 holds the record as the shortest war in recorded history. Was it closer to 45 minutes, 45 hours, or 45 days in duration?",
+      "correct_answer": "45 minutes",
+      "topic": "History",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_history_7228ad62e6e8",
+      "question": "New Zealand was one of the last major landmasses on Earth to be settled by humans. Roughly when did the first people arrive there — around 10,000 BCE, 3,000 BCE, or around 1250 CE?",
+      "correct_answer": "Around 1250 CE",
+      "topic": "History",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_history_890b387ed764",
+      "question": "The Great Fire of London in 1666 destroyed approximately 13,200 houses and 87 churches. Officially, how many people died in the fire — 6, 6,000, or 60,000?",
+      "correct_answer": "6",
+      "topic": "History",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_history_6952f0a268e1",
+      "question": "When the United Nations was founded in 1945 at the end of World War II, roughly how many independent nations existed in the world — about 50, about 120, or about 195?",
+      "correct_answer": "About 50",
+      "topic": "History",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_geography_c976339c63e9",
+      "question": "Canada has the world's longest coastline. How much longer is it than Russia's (the world's second longest) — roughly the same length, twice as long, or more than five times longer?",
+      "correct_answer": "More than five times longer",
+      "topic": "Geography",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_geography_cae6b9e29bf5",
+      "question": "Around 6,000 years ago, the Sahara Desert — today the world's largest hot desert — looked completely different. What was it?",
+      "correct_answer": "A lush, green landscape with rivers, lakes, and large human populations",
+      "topic": "Geography",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_history_1f8847eaf819",
+      "question": "Ancient Romans used a substance to whiten their teeth that is still found in cleaning products today. What was it?",
+      "correct_answer": "Urine",
+      "topic": "History",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_history_b57e5f0fbc34",
+      "question": "Viking navigators could locate the Sun through thick cloud cover using a mineral crystal they called a 'sunstone.' What optical principle does this crystal exploit to reveal the Sun's hidden position?",
+      "correct_answer": "Polarisation of light",
+      "topic": "History",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_history_8fa40afe50f1",
+      "question": "The fax machine transmits documents over telephone lines — yet it was invented decades before the telephone itself. How many years before?",
+      "correct_answer": "About 33 years",
+      "topic": "History",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_geography_619772863e24",
+      "question": "Russia is the world's largest country by land area. Is Russia larger or smaller than the continent of Antarctica?",
+      "correct_answer": "Russia is larger",
+      "topic": "Geography",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_sports_f01866a7dbac",
+      "question": "A sport played in the 2024 Olympics has been practised in essentially the same form for over 3,000 years, making it one of the oldest continuously played sports. Which one?",
+      "correct_answer": "Wrestling",
+      "topic": "Sports",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_sports_6b72d61b21f1",
+      "question": "Golf balls were originally smooth — but players noticed that old, dented balls flew farther than new ones. What is the technical term for the dimples now deliberately engineered into every golf ball?",
+      "correct_answer": "Dimples",
+      "topic": "Sports",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_sports_73ac5ab55917",
+      "question": "The marathon distance of 26.2 miles was standardised in 1908 at the London Olympics for a surprisingly mundane reason. What determined the exact distance?",
+      "correct_answer": "The distance from Windsor Castle to the Olympic stadium finish line (so the Royal Family could watch from the nursery window)",
+      "topic": "Sports",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_sports_380c3ca0944d",
+      "question": "Chess has been played for around 1,500 years. In all those centuries, roughly how many unique games are theoretically possible — more than the number of atoms in the observable universe, about the same, or far fewer?",
+      "correct_answer": "More than the number of atoms in the observable universe",
+      "topic": "Sports",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_sports_db5807ec36c6",
+      "question": "Cricket was the first team sport to be played professionally, predating professional football, baseball, and basketball. In which century did paid professional cricket begin?",
+      "correct_answer": "The 18th century (1700s)",
+      "topic": "Sports",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_music_23a7bcee6388",
+      "question": "Before the invention of recorded music, how did a composer ensure their new symphony would be heard by people across Europe — given that musicians in each city would need to play it from scratch?",
+      "correct_answer": "By publishing and selling printed sheet music",
+      "topic": "Music",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_music_02daf0cb2cfe",
+      "question": "Beethoven composed some of his most celebrated works, including his Ninth Symphony, after becoming completely deaf. What method did he use to 'hear' the notes while composing?",
+      "correct_answer": "He felt vibrations through the piano by sawing off the legs and pressing his jaw or a stick against it",
+      "topic": "Music",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_music_cbc508545a2c",
+      "question": "The electric guitar was invented in the 1930s to solve a specific problem that acoustic guitarists faced. What was the problem?",
+      "correct_answer": "They couldn't be heard over brass instruments in big bands",
+      "topic": "Music",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_sports_455c1cc5468a",
+      "question": "In competitive swimming, lane lines (the floating dividers between swimmers) serve a purpose beyond just separating lanes. What is their secondary, physics-based function?",
+      "correct_answer": "They absorb wave energy to reduce turbulence from other swimmers",
+      "topic": "Sports",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_music_2709911f0b38",
+      "question": "Musical notes A, B, C, D, E, F, G are used across most of the world. Yet in Germany, the Netherlands, and several Nordic countries, one note is named something completely different. Which note, and what is it called there?",
+      "correct_answer": "B is called H in German-speaking countries",
+      "topic": "Music",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_music_28c1bead01fe",
+      "question": "Stradivarius violins made in 17th-century Italy are still considered the finest instruments ever made, selling for millions of pounds each. Scientists have proposed several theories for their exceptional sound. Which factor has been most supported by recent research?",
+      "correct_answer": "The density and structure of the wood, which grew during an unusually cold period (the Little Ice Age)",
+      "topic": "Music",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_sports_802742dd2838",
+      "question": "The Olympic motto is 'Citius, Altius, Fortius' — Latin for 'Faster, Higher, Stronger.' In 2021, a fourth word was officially added to the motto. What was it?",
+      "correct_answer": "Communiter (Together)",
+      "topic": "Sports",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_music_597fd47e5195",
+      "question": "Rock and pop artists frequently cite an unexpected classical composer as a major influence on modern chord progressions, vocal harmonies, and song structure. Which classical composer is most often cited as the hidden architect of popular music?",
+      "correct_answer": "Johann Sebastian Bach",
+      "topic": "Music",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_sports_aff151162f8e",
+      "question": "At the 1904 St. Louis Olympics, marathon runner Fred Lorz was initially declared the winner — then disqualified. What had he done?",
+      "correct_answer": "He had ridden in a car for 11 miles of the course",
+      "topic": "Sports",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_movies_be2fd4342877",
+      "question": "The sound of the T-Rex roar in the original Jurassic Park (1993) was made from recordings of real animals. Which unlikely combination created it?",
+      "correct_answer": "A baby elephant squeal, an alligator hiss, and a tiger growl combined",
+      "topic": "Movies",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_movies_a136a5ecfe00",
+      "question": "The first film to be shot primarily using digital cameras rather than physical film was released in the 1990s. By what year had most major Hollywood studios completely phased out traditional 35mm film?",
+      "correct_answer": "Around 2013",
+      "topic": "Movies",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_movies_80dd7ac0bcf4",
+      "question": "In the 1939 film The Wizard of Oz, Dorothy's ruby slippers were silver in the original book. They were changed to ruby red for the film for a specific technical reason. What was it?",
+      "correct_answer": "To show off the new Technicolor process — red looked spectacular on the new colour film",
+      "topic": "Movies",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_technology_ec8de8da7c58",
+      "question": "The QR code was invented in 1994 by an engineer at a Japanese car parts manufacturer who needed a better way to track components on the assembly line. What does 'QR' stand for?",
+      "correct_answer": "Quick Response",
+      "topic": "Technology",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_technology_4c625b11d7a2",
+      "question": "The microwave oven was invented when an engineer accidentally melted a chocolate bar in his pocket while standing near a radar device. What was the engineer's name, and which company employed him?",
+      "correct_answer": "Percy Spencer at Raytheon",
+      "topic": "Technology",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_technology_617828326741",
+      "question": "The household microwave oven was discovered by accident in 1945 when an engineer noticed something unexpected while working with radar technology. What happened that led to the invention?",
+      "correct_answer": "A chocolate bar in his pocket melted while he stood near an active radar magnetron",
+      "topic": "Technology",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_movies_044833e2a217",
+      "question": "In classic horror films, the shower scene in Alfred Hitchcock's 'Psycho' (1960) is famous for implying violence without ever showing it explicitly. What was the fake blood actually made from, chosen because it photographed more realistically in black and white?",
+      "correct_answer": "Chocolate syrup",
+      "topic": "Movies",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_technology_180aee7b6903",
+      "question": "GPS satellite navigation was initially so accurate that the US military deliberately degraded its precision for civilian use — adding artificial errors to the signal. What was this limitation called, and when was it switched off?",
+      "correct_answer": "Selective Availability — switched off in May 2000 by President Clinton",
+      "topic": "Technology",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_movies_b6470b11d11e",
+      "question": "The Wilhelm Scream is a famous sound effect used in hundreds of films since 1951. What makes it so easy to notice once you know it?",
+      "correct_answer": "It is always the same single recorded scream — reused across hundreds of films, including Star Wars and Indiana Jones",
+      "topic": "Movies",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_technology_55f73bb311ba",
+      "question": "Velcro was invented by a Swiss engineer who noticed something after a walk in the countryside with his dog. What natural phenomenon inspired the design?",
+      "correct_answer": "Burr seeds (burdock) sticking to his dog's fur — tiny hooks latching onto loops",
+      "topic": "Technology",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_movies_f75345e89f32",
+      "question": "In the film industry, the 'black film' (film noir) era of the 1940s-50s got its French name from a publisher's observation. What did the French publisher notice that earned American crime thrillers the label 'noir' (black)?",
+      "correct_answer": "The books they were adapted from had distinctive black covers in the French market (the Série Noire imprint)",
+      "topic": "Movies",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_technology_5a8daa168d92",
+      "question": "Early computers in the 1940s and 1950s were so prone to errors that engineers spent more time debugging — finding and fixing faults — than programming. The term 'bug' in computing famously comes from an actual incident. What was found in the machine?",
+      "correct_answer": "A real moth caught in a relay of the Harvard Mark II computer in 1947",
+      "topic": "Technology",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_food_8fbd74027890",
+      "question": "Botanically speaking, which of the following is a true berry: a strawberry, a banana, or a raspberry?",
+      "correct_answer": "A banana",
+      "topic": "Food",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_food_d481c5918ca0",
+      "question": "How much of the human genome do we share with a banana — closer to 10%, 30%, or 60%?",
+      "correct_answer": "About 60%",
+      "topic": "Food",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_food_d9e292c01dfd",
+      "question": "Archaeologists opening sealed Egyptian tombs have found honey estimated to be over 3,000 years old — and it was still perfectly edible. Why doesn't honey spoil?",
+      "correct_answer": "Honey's extremely low water content, high acidity, and natural hydrogen peroxide from bee enzymes create an environment where bacteria cannot survive",
+      "topic": "Food",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_food_b5099dfe852a",
+      "question": "In the 1830s, before it became a table condiment, ketchup was prescribed by doctors to treat what ailments?",
+      "correct_answer": "Liver problems, indigestion, and diarrhea",
+      "topic": "Food",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_food_692ed23bf819",
+      "question": "If you add fresh pineapple to gelatin or jelly, the mixture refuses to set and stays liquid. What does pineapple contain that causes this?",
+      "correct_answer": "Bromelain — an enzyme that breaks down the protein molecules gelatin is made from",
+      "topic": "Food",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_food_f7dfc8fc0883",
+      "question": "Cacao beans were so valuable in ancient Mesoamerica that they were used as currency. For roughly how long did this system last — about 100 years, 500 years, or over 1,000 years?",
+      "correct_answer": "Over 1,000 years",
+      "topic": "Food",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_food_1a39e46b34bd",
+      "question": "When tomatoes were first introduced to Europe from the Americas in the 1500s, many people believed they were deadly poisonous and grew them only as ornamental plants for about 200 years. What gave people this impression?",
+      "correct_answer": "Tomatoes belong to the nightshade family, and their acidic juice leached toxic lead from the pewter plates wealthy diners used",
+      "topic": "Food",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_food_f45284f80b60",
+      "question": "According to global food theft statistics, one food item accounts for roughly 4% of its entire worldwide production being stolen every year — making it the world's most stolen food. What is it?",
+      "correct_answer": "Cheese",
+      "topic": "Food",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_literature_4469257af017",
+      "question": "The word 'robot' is now used in virtually every language on Earth — yet it was coined just over 100 years ago for a theatre play. Which language does the word 'robot' come from, and what does it mean?",
+      "correct_answer": "Czech — 'robota' means forced labour or drudgery",
+      "topic": "Literature",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_literature_2d8fc4249c2e",
+      "question": "Mary Shelley began writing Frankenstein in 1816 at just 18 years old. What unusual circumstances prompted her to write it?",
+      "correct_answer": "A ghost story competition with friends including Lord Byron and Percy Shelley, held indoors during the cold, sunless summer caused by the eruption of Mount Tambora",
+      "topic": "Literature",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_food_5982126f5112",
+      "question": "When you eat a chilli pepper and feel an intense burning sensation, no actual tissue damage is occurring in your mouth. Capsaicin tricks your body by doing what?",
+      "correct_answer": "It binds to the same nerve receptors (TRPV1) that detect actual heat above 43°C, creating a false sensation of burning",
+      "topic": "Food",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_literature_47234a4864ed",
+      "question": "The word 'serendipity' — meaning a happy accidental discovery — was invented in a letter written in 1754 by an English writer who borrowed from an unusual source. What inspired him to coin the word?",
+      "correct_answer": "A Persian fairy tale called 'The Three Princes of Serendip' (Serendip being the old name for Sri Lanka)",
+      "topic": "Literature",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_literature_3e7ad400dfe5",
+      "question": "The Voynich Manuscript is a 15th-century hand-written book filled with botanical illustrations, astronomical diagrams, and hundreds of pages of text. How many serious attempts to decode its unknown writing system have succeeded?",
+      "correct_answer": "None — it has never been decoded despite decades of cryptographic analysis",
+      "topic": "Literature",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_literature_9aa654ddb318",
+      "question": "J.R.R. Tolkien is known for creating The Lord of the Rings — but he didn't start with the story. What did he create first?",
+      "correct_answer": "The Elvish languages (he invented Quenya and Sindarin as linguistic experiments before building stories around them)",
+      "topic": "Literature",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_logic_8f03e33ac738",
+      "question": "What comes next in this sequence: 1, 8, 27, 64, 125, ___?",
+      "correct_answer": "216",
+      "topic": "Logic",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_logic_65ac3ce22037",
+      "question": "What comes next: 2, 3, 5, 8, 13, 21, ___?",
+      "correct_answer": "34",
+      "topic": "Logic",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_logic_38495eef6dee",
+      "question": "What comes next in this pattern: 1, 2, 6, 24, 120, ___?",
+      "correct_answer": "720",
+      "topic": "Logic",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_logic_c1ac0427e6a8",
+      "question": "What comes next: 0, 1, 4, 9, 16, 25, ___?",
+      "correct_answer": "36",
+      "topic": "Logic",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_logic_1a7768c27685",
+      "question": "What comes next in this harder sequence: 2, 5, 10, 17, 26, 37, ___?",
+      "correct_answer": "50",
+      "topic": "Logic",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_logic_01f0b55121b7",
+      "question": "Which doesn't belong: Mercury, Venus, Earth, Mars, Moon?",
+      "correct_answer": "Moon",
+      "topic": "Logic",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_logic_53abe35763c8",
+      "question": "Which is the odd one out: Diamond, Graphite, Charcoal, Coal, Fullerene?",
+      "correct_answer": "Coal",
+      "topic": "Logic",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_logic_902832d0a3ec",
+      "question": "A woman buys a painting for €100, sells it for €110, buys it back for €120, then sells it again for €130. How much profit has she made overall?",
+      "correct_answer": "€20 profit",
+      "topic": "Logic",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_logic_b846b746032f",
+      "question": "Every person at a party shakes hands with every other person exactly once. If there are 5 people at the party, how many handshakes happen in total?",
+      "correct_answer": "10",
+      "topic": "Logic",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_logic_8053208f683c",
+      "question": "You have two ropes that each burn for exactly 1 hour — but they burn unevenly. Using only these two ropes and a lighter, how can you measure exactly 45 minutes?",
+      "correct_answer": "Light rope 1 at both ends and rope 2 at one end simultaneously. When rope 1 finishes (30 min), light the other end of rope 2. It will burn out in 15 more minutes — total 45.",
+      "topic": "Logic",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_logic_87ae75d30df1",
+      "question": "If you have a 3-litre jug and a 5-litre jug, with no markings, and unlimited water — how can you measure exactly 4 litres?",
+      "correct_answer": "Fill the 5-litre jug, pour into the 3-litre jug until full (leaves 2L in 5L jug). Empty the 3L jug. Pour the 2L into the 3L jug. Fill the 5L jug again. Pour from 5L into 3L until full (needs 1L more). This leaves 4L in the 5L jug.",
+      "topic": "Logic",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_logic_16cbb3ec25f5",
+      "question": "Complete the analogy: Conductor is to orchestra as _________ is to a bee colony?",
+      "correct_answer": "Queen (bee)",
+      "topic": "Logic",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_logic_1fcff9cd6688",
+      "question": "In Morse code, the most common English letter is given the shortest signal: a single dot. Which letter is it?",
+      "correct_answer": "E",
+      "topic": "Logic",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_logic_0f67c809f42d",
+      "question": "What comes next in this sequence: 1, 3, 6, 10, 15, 21, ___?",
+      "correct_answer": "28",
+      "topic": "Logic",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_art_861a70b8bbb4",
+      "question": "Here is an art-themed odd one out. Which doesn't belong, and why: Picasso, Monet, Rembrandt, Banksy, Van Gogh?",
+      "correct_answer": "Banksy",
+      "topic": "Art",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_nature_b0f6ceb216ab",
+      "question": "In the animal kingdom, pregnancy is almost universally a female role. One group of fish breaks this rule completely — the males become pregnant, carry the developing young in a specialised pouch, and give birth. What are these fish?",
+      "correct_answer": "Seahorses",
+      "topic": "Nature",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_nature_4b29715ddc2b",
+      "question": "The platypus hunts underwater with its eyes, ears, and nostrils all closed. Instead, it detects prey using a sense that almost no other mammal possesses. What does it detect?",
+      "correct_answer": "Electric fields",
+      "topic": "Nature",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_nature_0488723c5376",
+      "question": "Scientists estimated in 2022 that the total number of ants alive on Earth at any given moment is approximately: 2 billion, 200 billion, or 20 quadrillion?",
+      "correct_answer": "20 quadrillion",
+      "topic": "Nature",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_nature_b95acfff9eb4",
+      "question": "The Amazon rainforest — the most biodiverse ecosystem on Earth — depends on a yearly nutrient delivery from an unlikely source thousands of kilometres away. Where does this vital fertiliser come from?",
+      "correct_answer": "The Sahara Desert",
+      "topic": "Nature",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_nature_6b13508f18ad",
+      "question": "An octopus has three hearts. Two pump blood to the gills, and one pumps it to the rest of the body. But when an octopus swims, something unusual happens — what stops working?",
+      "correct_answer": "The heart that pumps to the body stops beating",
+      "topic": "Nature",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_nature_decee128db50",
+      "question": "In 2016, scientists used radiocarbon dating on the eye lenses of Greenland sharks and discovered they are the longest-lived vertebrates known. Approximately how old was the oldest specimen — closer to 150 years, 300 years, or 500 years?",
+      "correct_answer": "About 500 years",
+      "topic": "Nature",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_nature_c75a6a2025e7",
+      "question": "If you placed Mount Everest at the bottom of the Mariana Trench — the deepest point in the ocean — would Everest's summit peek above the water surface, sit just below the surface, or still be more than a kilometre underwater?",
+      "correct_answer": "More than a kilometre underwater",
+      "topic": "Nature",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_history_61321d056e67",
+      "question": "Nintendo, the company behind Mario and the Switch, was founded in 1889 — decades before the invention of electronic computers. What product did Nintendo originally manufacture?",
+      "correct_answer": "Playing cards",
+      "topic": "History",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_history_febd6240fe9e",
+      "question": "France's last execution by guillotine took place on 10 September 1977. What blockbuster film — now considered a landmark in cinema history — had been released in theatres just three months earlier?",
+      "correct_answer": "Star Wars",
+      "topic": "History",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_history_cf3b30ed9f82",
+      "question": "The last samurai in Japan and the cowboys of the American Wild West existed during the same era. When Japan officially abolished the samurai class in 1876, a famous American frontier figure was still alive and would soon star in touring Wild West shows. Who was he?",
+      "correct_answer": "Buffalo Bill",
+      "topic": "History",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_history_b3b13c135e2a",
+      "question": "Harvard University was founded in 1636. Isaac Newton and Gottfried Leibniz independently developed calculus in the late 1680s. So which came first — America's oldest university or the branch of mathematics that every university now teaches in freshman year?",
+      "correct_answer": "Harvard University",
+      "topic": "History",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_history_e706ad3c5a83",
+      "question": "Alfred Nobel — the inventor of dynamite — was motivated to create the Nobel Prizes after a French newspaper accidentally published his obituary while he was still alive, calling him 'the merchant of death.' The first Nobel Prizes were awarded in what year — closer to 1850, 1901, or 1950?",
+      "correct_answer": "1901",
+      "topic": "History",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_history_9f41166e36fe",
+      "question": "The 1918 influenza pandemic killed an estimated 50 to 100 million people and is commonly called the 'Spanish Flu.' But it almost certainly did not originate in Spain. Why did Spain get the blame?",
+      "correct_answer": "Spain was neutral in WWI and its press freely reported the outbreak, while wartime censors in other countries suppressed the news",
+      "topic": "History",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_history_ff1f4465244c",
+      "question": "Were woolly mammoths still walking the Earth when the ancient Egyptians began building the Great Pyramid of Giza around 2560 BCE?",
+      "correct_answer": "Yes",
+      "topic": "History",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_science_d937d0a39376",
+      "question": "Honey found in Egyptian tombs over 3,000 years old was still perfectly edible when discovered. What three properties of honey make it essentially impossible for bacteria to survive in it?",
+      "correct_answer": "Low moisture, high acidity, and natural hydrogen peroxide production",
+      "topic": "Science",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_geography_0cf8c0fa5854",
+      "question": "Lake Baikal in Siberia holds roughly 20% of the world's unfrozen surface fresh water — more than all five North American Great Lakes combined. Is it that large because of its surface area, its extraordinary depth, or both?",
+      "correct_answer": "Its extraordinary depth — it is the deepest lake on Earth at over 1,600 metres",
+      "topic": "Geography",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_science_eaff707825e0",
+      "question": "Venus rotates so slowly that a single day on Venus (one full rotation) takes longer than a Venusian year (one orbit around the Sun). Roughly how many Earth days does one Venus day last: 10, 100, or 240?",
+      "correct_answer": "About 243 Earth days",
+      "topic": "Science",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_geography_a6b6782d5626",
+      "question": "China stretches nearly 5,200 km from east to west — wide enough to span five geographical time zones. Yet the entire country operates on a single official time zone. What does this mean for people in China's far west — does their sunrise come unusually early, or unusually late?",
+      "correct_answer": "Unusually late — the sun may not rise until after 10 AM in winter in western China",
+      "topic": "Geography",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_geography_5e541b993b17",
+      "question": "The driest place on Earth isn't in any desert you might expect. Parts of it haven't seen rain or snow for an estimated 2 million years. Is it in: the Sahara, the Atacama Desert, or Antarctica?",
+      "correct_answer": "Antarctica",
+      "topic": "Geography",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_science_56521674ca4d",
+      "question": "Glass appears to be a solid, but physicists have long debated its true nature. At the molecular level, glass lacks the ordered crystal structure of a true solid. Is glass technically classified as a solid, a liquid, or something else entirely?",
+      "correct_answer": "An amorphous solid — it has the rigidity of a solid but the disordered molecular structure of a liquid",
+      "topic": "Science",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_geography_3bb51a795c8a",
+      "question": "Africa is often shown on maps as roughly the same size as Greenland. In reality, how many Greenlands could fit inside Africa: 3, 7, or 14?",
+      "correct_answer": "About 14",
+      "topic": "Geography",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_science_d81f23f2c5ed",
+      "question": "There are 206 bones in the adult human body. At birth, roughly how many bones does a baby have: fewer than an adult, the same number, or more?",
+      "correct_answer": "More — about 270 bones, which gradually fuse together as the child grows",
+      "topic": "Science",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_geography_3c2d6fdef934",
+      "question": "Only two countries in the world are doubly landlocked — meaning they are surrounded entirely by other landlocked countries, so you must cross at least two borders to reach an ocean. One is Uzbekistan. Name the other.",
+      "correct_answer": "Liechtenstein",
+      "topic": "Geography",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_science_feff2f07f355",
+      "question": "Octopuses have blue blood, three hearts, and a doughnut-shaped brain. But perhaps most remarkably, about two-thirds of their neurons are not in their brain at all. Where are the majority of an octopus's neurons located?",
+      "correct_answer": "In their arms",
+      "topic": "Science",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_geography_61bf1c804b87",
+      "question": "Istanbul is the only major city in the world that sits on two continents. But which two continents does it straddle?",
+      "correct_answer": "Europe and Asia",
+      "topic": "Geography",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_science_28d36c126058",
+      "question": "Every second, the Sun converts roughly 4 million tonnes of its own mass into energy via nuclear fusion. At this rate, has the Sun lost a noticeable fraction of its mass since it formed 4.6 billion years ago? Closer to 0.01%, 0.1%, or 5%?",
+      "correct_answer": "About 0.03% — a tiny fraction despite the enormous rate",
+      "topic": "Science",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_geography_6762c67e100a",
+      "question": "The Pacific Ocean is so vast that it contains a point called Point Nemo — the spot on Earth farthest from any land. The nearest humans to Point Nemo are often not on any ship or island. Where are they?",
+      "correct_answer": "Astronauts on the International Space Station, orbiting about 400 km overhead",
+      "topic": "Geography",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_science_4ebbf53829be",
+      "question": "Bananas are slightly radioactive due to their potassium content. Scientists even created an informal unit of radiation measurement named after them. How many bananas would you need to eat in a single sitting to receive a dangerous radiation dose: about 100, about 10,000, or more than 10 million?",
+      "correct_answer": "More than 10 million",
+      "topic": "Science",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_technology_a1374e421797",
+      "question": "When the first iPhone launched in 2007, it was missing a basic text editing feature that even flip phones of the era had. Apple didn't add it until two years later, in 2009. What was it?",
+      "correct_answer": "Copy and paste",
+      "topic": "Technology",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_sports_1d6c8206baa2",
+      "question": "In football (soccer), a goalkeeper once scored a goal from inside his own penalty area — a kick that travelled the entire length of the pitch. Is the Guinness World Record for the longest goal scored by a goalkeeper closer to 75 metres, 96 metres, or 105 metres?",
+      "correct_answer": "96 metres",
+      "topic": "Sports",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_technology_0926afeae9cd",
+      "question": "SpaceX lands its rocket boosters vertically after launch so they can be reused. Including prototype test vehicles like Grasshopper, roughly how many test flights did they conduct before achieving the first successful orbital booster landing in 2015 — 3, 15, or over 50?",
+      "correct_answer": "About 15",
+      "topic": "Technology",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_sports_a76dee8fe574",
+      "question": "Only one athlete in Olympic history has won gold medals in both the Summer and Winter Games in different sports. Eddie Eagan won winter gold in the four-man bobsled at the 1932 Games. What was his summer Olympic sport, in which he won gold in 1920?",
+      "correct_answer": "Boxing",
+      "topic": "Sports",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_movies_b233885ad39d",
+      "question": "The iconic two-note 'dun-dun' theme from Jaws (1975) was initially so simple that the director thought the composer was joking. How many notes make up the main shark motif that terrified an entire generation of beachgoers?",
+      "correct_answer": "Two",
+      "topic": "Movies",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_music_c054a168b9af",
+      "question": "A guitar has 6 strings. A standard piano has 88 keys. But how many strings are actually inside a piano — closer to 88, 150, or 230?",
+      "correct_answer": "Around 230",
+      "topic": "Music",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_movies_0b47405e6178",
+      "question": "When the first 'talkie' — a film with synchronised dialogue — premiered in 1927, it didn't just change cinema. It ended the careers of many silent film stars overnight. What was the main reason most silent stars couldn't transition to sound films?",
+      "correct_answer": "Their voices didn't match audience expectations — some had heavy accents, high-pitched voices, or poor vocal delivery",
+      "topic": "Movies",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_music_f5df26a73c58",
+      "question": "Before Auto-Tune was used to correct singers' pitch in the studio, it was developed for a completely different industry. What was Auto-Tune's original purpose?",
+      "correct_answer": "Interpreting seismic data for oil and gas exploration",
+      "topic": "Music",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_music_0ef5c7c5889d",
+      "question": "Freddie Mercury's vocal range spanned roughly four octaves. But scientists who studied recordings of his voice found something even more remarkable about the way he sang. What unique physical technique did they discover?",
+      "correct_answer": "He used his vestibular folds (false vocal cords) in addition to his regular vocal cords, creating a distinctive vibrato",
+      "topic": "Music",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_music_b6ee303ea3eb",
+      "question": "If you played every Beatles song back to back — every studio album from 'Please Please Me' to 'Let It Be' — the total running time would be closer to: 5 hours, 10 hours, or 24 hours?",
+      "correct_answer": "About 10 hours",
+      "topic": "Music",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_movies_a7f99d274518",
+      "question": "During the filming of Titanic (1997), the entire set was built as a mirror image of the real ship. Actors wore reversed costumes and name tags were printed backwards. Why did James Cameron build the set in reverse?",
+      "correct_answer": "To ensure the ship's departure was filmed with the sun setting in the correct direction — the set could only face one way due to its coastal location",
+      "topic": "Movies",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_music_386e5ae2777d",
+      "question": "Concert grand pianos are almost always black. But when Steinway or Bosendorfer builds a concert grand, the process takes roughly: 3 months, 1 year, or 3 years from raw wood to finished instrument?",
+      "correct_answer": "About 3 years",
+      "topic": "Music",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_music_d4788b206d4d",
+      "question": "Which is older: the electric chair or the electric guitar? One was invented to end lives, the other to amplify music — but they arrived surprisingly close together in history.",
+      "correct_answer": "The electric chair (1890) is about 40 years older than the electric guitar (early 1930s)",
+      "topic": "Music",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_movies_6a7277cdee64",
+      "question": "An Indian film industry produces more feature films per year than Hollywood. In fact, one country produces nearly twice as many films as the United States each year. Which country?",
+      "correct_answer": "India",
+      "topic": "Movies",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_music_c60f7533c54c",
+      "question": "The 'Happy Birthday to You' melody was composed in 1893 by two kindergarten teachers. For over a century, a company collected royalties every time it was performed commercially — in films, restaurants, and TV shows. Roughly how much did it earn in licensing fees each year before the copyright was finally ruled invalid in 2016?",
+      "correct_answer": "About 2 million dollars per year",
+      "topic": "Music",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_movies_88d743e830b4",
+      "question": "Most people think the longest film ever made lasts a few hours. In reality, the longest film ever screened has a runtime closer to: 24 hours, 7 days, or 35 days?",
+      "correct_answer": "About 35 days (the Swedish film 'Logistics' runs 857 hours)",
+      "topic": "Movies",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_music_392435c97553",
+      "question": "An orchestra tuning before a performance always starts with the same note, played by the same instrument. What note is it, and which instrument plays it?",
+      "correct_answer": "A (440 Hz), played by the oboe",
+      "topic": "Music",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_movies_03d9ca93ad3a",
+      "question": "In the original Star Wars (1977), Darth Vader's heavy mechanical breathing was created by the sound designer using a surprisingly low-tech method. How was the breathing sound produced?",
+      "correct_answer": "By recording breathing through a scuba regulator",
+      "topic": "Movies",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_food_e32df05d9f48",
+      "question": "Most people picture carrots as orange, but before the 17th century, carrots came in almost every color except orange. Dutch growers cultivated the orange variety we know today, possibly to honor their royal house. What color were most carrots before that?",
+      "correct_answer": "Purple",
+      "topic": "Food",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_art_7f5330e0cc18",
+      "question": "The Mona Lisa hung in the Louvre for over a century without attracting much public attention. Then, in 1911, a single event turned it into the most famous painting in the world overnight. What happened?",
+      "correct_answer": "It was stolen",
+      "topic": "Art",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_food_046e33fb8107",
+      "question": "Saffron is the world's most expensive spice by weight. It comes from the stigmas of crocus flowers, and each flower produces only three tiny threads. Roughly how many flowers does it take to produce a single kilogram of saffron: 1,000, 15,000, or 150,000?",
+      "correct_answer": "About 150,000",
+      "topic": "Food",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_art_066f43a24fa2",
+      "question": "Michelangelo spent four years painting the Sistine Chapel ceiling, one of the greatest artistic achievements in history. But he never wanted to do it — he considered himself primarily a practitioner of a different art form and initially turned down the commission. What did Michelangelo consider his true calling?",
+      "correct_answer": "Sculpture",
+      "topic": "Art",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_food_44e2a333bbd9",
+      "question": "Despite its name, white chocolate is missing the one ingredient that defines all other types of chocolate. What key component does white chocolate lack?",
+      "correct_answer": "Cocoa solids",
+      "topic": "Food",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_food_7dc8b8f22591",
+      "question": "Vanilla is one of the most popular flavors in the world, but the plant it comes from would surprise most people. The vanilla vine is the only commercially cultivated member of what family of flowers, famous for their beauty and rarity?",
+      "correct_answer": "Orchid",
+      "topic": "Food",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_art_2b7badb5cf8e",
+      "question": "Pre-Raphaelite painters in the 1800s used a rich brown pigment called 'Mummy Brown' for shading and glazing. The name was not metaphorical — what was this paint literally made from?",
+      "correct_answer": "Ground-up Egyptian mummies",
+      "topic": "Art",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_food_08eba3f037e0",
+      "question": "Cashew nuts grow in a way that would surprise most people — each nut hangs from the bottom of a colorful fruit called the cashew apple. But the reason cashews are never sold in their shells is even more surprising. What toxic substance does the cashew shell contain, shared with poison ivy?",
+      "correct_answer": "Urushiol",
+      "topic": "Food",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_art_05b144ed20de",
+      "question": "In the Middle Ages, the blue pigment ultramarine was made by grinding a semi-precious stone imported along trade routes from a single country. Ounce for ounce, it often cost more than gold. What stone was ground up to create this legendary blue?",
+      "correct_answer": "Lapis lazuli",
+      "topic": "Art",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_food_c32909a4db97",
+      "question": "In colonial America, one seafood was so abundant and cheap that it was fed to prisoners, servants, and indentured laborers. Some colonies even passed laws limiting how often it could be served to inmates. Today, it's a luxury dish. What is it?",
+      "correct_answer": "Lobster",
+      "topic": "Food",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_food_d51f6daa74ef",
+      "question": "Tomatoes, potatoes, and eggplants are kitchen staples around the world. But they all belong to the same botanical family as one of the most famous poisonous plants in history — a plant whose name literally means 'beautiful lady' in Italian. What family do they share?",
+      "correct_answer": "The nightshade family",
+      "topic": "Food",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_art_b08a6bf6a0b4",
+      "question": "Claude Monet continued painting his famous water lily series even as cataracts progressively stole his vision. After finally having cataract surgery in 1923, he could see his recent canvases clearly for the first time — and was so distressed by what he saw that he did what?",
+      "correct_answer": "He destroyed several of them",
+      "topic": "Art",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_food_764af1a8bb6c",
+      "question": "Nearly every banana sold worldwide is a single cultivar called the Cavendish. It replaced a tastier variety called the Gros Michel, which was the world's dominant banana until the 1950s. What wiped out the Gros Michel?",
+      "correct_answer": "A fungal disease",
+      "topic": "Food",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_art_cf656dbffdd6",
+      "question": "China's Terracotta Army, buried with the first Emperor around 210 BC, contains roughly 8,000 life-sized clay soldiers. What makes each individual warrior remarkable from an artistic standpoint is that no two share the same feature. What is unique about every single figure?",
+      "correct_answer": "Each has a unique face",
+      "topic": "Art",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_art_a10e7e708a7d",
+      "question": "In 2014, artist Anish Kapoor secured exclusive artistic rights to Vantablack, a material so dark it absorbs 99.965% of visible light. A rival artist, Stuart Semple, retaliated by creating a pigment and banning Kapoor from purchasing it. What color was Semple's revenge pigment?",
+      "correct_answer": "The pinkest pink",
+      "topic": "Art",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_sports_f5f6dc746bcc",
+      "question": "In football (soccer), a goalkeeper once scored a goal from inside his own penalty area — a kick that travelled the entire length of the pitch. Is the world record for the longest goal scored by a goalkeeper closer to 75 metres, 95 metres, or 105 metres?",
+      "correct_answer": "About 96 metres",
+      "topic": "Sports",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_technology_91a5814f2f1a",
+      "question": "SpaceX lands its rocket boosters vertically after launch so they can be reused. Before the first successful landing in 2015, roughly how many attempts did they need — 1, 6, or over 20?",
+      "correct_answer": "About 20",
+      "topic": "Technology",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_technology_3c087db208b1",
+      "question": "The entire codebase for the Apollo 11 moon landing guidance computer was about 145,000 lines of code. A modern smartphone app like Instagram has roughly how many times more code — 5 times, 50 times, or 500 times?",
+      "correct_answer": "About 7 times",
+      "topic": "Technology",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_science_cbe6f7333923",
+      "question": "Which metal has such a low melting point that it will literally melt if you hold it in your hand?",
+      "correct_answer": "Gallium",
+      "topic": "Science",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_sports_9bad50789cac",
+      "question": "Which Olympic sport traditionally required athletes to compete in five disciplines — fencing, swimming, horse riding, running, and shooting — before horse riding was replaced in 2024?",
+      "correct_answer": "Modern pentathlon",
+      "topic": "Sports",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_literature_610afdb186a1",
+      "question": "Which of these words does NOT come from a a work of fiction: utopian, quixotic, machiavellian, lilliputian?",
+      "correct_answer": "Machiavellian",
+      "topic": "Literature",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_movies_c3d86b4e6a90",
+      "question": "The sound designers of the original Star Wars created the iconic blaster sound effect by hitting an everyday object with a hammer. What was that object?",
+      "correct_answer": "A guy-wire",
+      "topic": "Movies",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_movies_c37ab6a9af99",
+      "question": "The 'Wilhelm Scream' — a specific recording of a man screaming — has been deliberately reused as an inside joke in hundreds of films and TV shows since 1951. What was happening to the character in the original recording?",
+      "correct_answer": "He was being bitten or dragged by an alligator",
+      "topic": "Movies",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_technology_04a8d4768c60",
+      "question": "What children's toy, made of interlocking plastic bricks, is manufactured with a precision tolerance of just 10 micrometres — more precise than most surgical instruments?",
+      "correct_answer": "LEGO",
+      "topic": "Technology",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_geography_3f6cfa4e7296",
+      "question": "The Amazon River discharges so much fresh water into the Atlantic Ocean that sailors in the early Age of Exploration used it to top up their fresh water supplies far out to sea. Roughly how far from the river's mouth is the ocean still detectably fresh — about 1 km, 16 km, or over 160 km?",
+      "correct_answer": "Over 160 km",
+      "topic": "Geography",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_sports_b686e3383bc6",
+      "question": "The Tour de France is one of sport's most gruelling endurance events. Riders cover roughly 3,400 km over three weeks. That's closest to the straight-line distance from Paris to which city: Rome, Moscow, or Cairo?",
+      "correct_answer": "Cairo",
+      "topic": "Sports",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_technology_0ed9cdbf004f",
+      "question": "The internet traces its origins to a US Department of Defense research project from the late 1960s that linked university and research computers. What was the name of this predecessor to the internet?",
+      "correct_answer": "ARPANET",
+      "topic": "Technology",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "id": "q_movies_9a0b60367c44",
+      "question": "Pixar's 1995 film Toy Story was the first feature-length computer-animated film. The rendering software Pixar developed was also used for visual effects in earlier live-action films. What is this software called?",
+      "correct_answer": "RenderMan",
+      "topic": "Movies",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_movies_a5e8822b90c5",
+      "question": "A persistent conspiracy theory claims that the director of 2001: A Space Odyssey was recruited by NASA to fake a famous historical event in a TV studio. Who was the filmmaker, and what event do conspiracy theorists claim he faked?",
+      "correct_answer": "Stanley Kubrick — the Apollo 11 Moon landing",
+      "topic": "Movies",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_literature_f1fdebdb496b",
+      "question": "A popular theory says the title of George Orwell's dystopian novel '1984' was created by a simple transformation of 1948, the year he finished writing. What transformation does the theory suggest?",
+      "correct_answer": "He reversed the last two digits: 1948 became 1984",
+      "topic": "Literature",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_history_840c0b14f9c4",
+      "question": "A widely cited 2003 genetic study suggested that roughly 1 in every 200 men alive today could be a direct descendant of one historical conqueror. Who is this conqueror?",
+      "correct_answer": "Genghis Khan",
+      "topic": "History",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "id": "q_geography_9a76ce3bec06",
+      "question": "One country on Earth has over 840 languages spoken within its borders — more than any other nation. Is it Nigeria, the Democratic Republic of Congo, or Papua New Guinea?",
+      "correct_answer": "Papua New Guinea — which is actually not in Africa but in Oceania, with over 840 languages",
+      "topic": "Geography",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "id": "q_movies_335eb6d8ae56",
+      "question": "MGM executives nearly rejected 'Over the Rainbow' from The Wizard of Oz, cutting it from the film twice before it was reinstated. The song went on to win the Academy Award and be named the greatest movie song of all time. Who famously performed it in the 1939 film?",
+      "correct_answer": "Judy Garland",
+      "topic": "Movies",
+      "difficulty": "easy",
+      "type": "text"
+    }
+  ]
+}

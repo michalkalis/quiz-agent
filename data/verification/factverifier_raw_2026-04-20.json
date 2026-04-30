@@ -1,0 +1,1082 @@
+{
+  "results": [
+    {
+      "id": "q_img_silhouette_001",
+      "question": "Which country is famously known for its silhouette resembling a boot, with the toe aimed at a triangular island in the Mediterranean?",
+      "claimed_answer": "Italy",
+      "verification": {
+        "verdict": "verified",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "url": "https://www.tripsavvy.com/the-geography-of-italy-4020744",
+            "excerpt": "Photo:\n\nTripSavvy\n\nItaly is a Mediterranean country located in southern Europe. It is bordered by the Adriatic Sea on the east coast, the Tyrrhenian Sea on the west or Mediterranean coast, and the Ionian Sea to the south. In the north, Italy is bordered by the countries of France, Switzerland, Austr",
+            "agrees_with_answer": true,
+            "relevance_score": 0.7272211
+          },
+          {
+            "url": "https://www.reachtheworld.org/maxines-journey-italy/world-connections/uniqueness-boot-shaped-italian-peninsula",
+            "excerpt": "What makes this environment special or different?:  \n\n  The Italian environment is special because Italy is a peninsula, which means the country is mostly surrounded by water. In fact, the Italian peninsula is easy to spot on a map because it is shaped like a boot! Unlike many countries, Italy is bo",
+            "agrees_with_answer": true,
+            "relevance_score": 0.5818027
+          },
+          {
+            "url": "https://www.worldatlas.com/maps/italy",
+            "excerpt": "Map showing location of Italy in the world.   \n\nItaly is located in South-central Europe on the Apennine Peninsula.  It is positioned both in the Northern and Eastern hemispheres of the Earth. Italy shares its borders with Switzerland and Austria in the north, with Slovenia in the northeast and with",
+            "agrees_with_answer": true,
+            "relevance_score": 0.49963441
+          },
+          {
+            "url": "https://kids.nationalgeographic.com/geography/countries/article/italy",
+            "excerpt": "Personality Quizzes\n\nFunny Fill-In\n\nAmazing Animals\n\nWeird But True!\n\nParty Animals\n\nTry This!\n\nAnimals\n\nMammals\n\nBirds\n\nPrehistoric\n\nReptiles\n\nAmphibians\n\nInvertebrates\n\nFish\n\nMagazine\n\nhistory\n\nScience\n\nSpace\n\nU.S. States\n\nWeird But True!\n\nSubscribe\n\nBuilt from 70 to 80 A.D., the Roman Colosseum c",
+            "agrees_with_answer": true,
+            "relevance_score": 0.468621
+          },
+          {
+            "url": "https://www.britannica.com/place/Italy/Land",
+            "excerpt": "verifiedCite\n\nWhile every effort has been made to follow citation style rules, there may be some discrepancies. Please refer to the appropriate style manual or other sources if you have any questions.\n\nSelect Citation Style\n\nShare\n\nShare to social media\n\nFacebook X\n\nURL\n\nFeedback\n\nThank you for your",
+            "agrees_with_answer": true,
+            "relevance_score": 0.32665846
+          }
+        ],
+        "alternative_answers": [],
+        "notes": "5/5 sources confirm the answer"
+      }
+    },
+    {
+      "id": "q_img_silhouette_002",
+      "question": "Which country has a silhouette resembling a seahorse dancing in the Pacific Ocean, with an elegant curve comprising a series of islands extending from north to south?",
+      "claimed_answer": "Japan",
+      "verification": {
+        "verdict": "verified",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "url": "https://en.wikipedia.org/wiki/Japanese_archipelago",
+            "excerpt": "The Japanese archipelago (Japanese: 日本列島, Hepburn: Nippon/Nihon Rettō; Japanese pronunciation: (/wiki/Help:IPA/Japanese \"Help:IPA/Japanese\")) is an archipelago of 14,125 islands that constitute the sovereign state of Japan. It spans over 3,000 km (1,900 mi) from the Sea of Okhotsk in the northeast t",
+            "agrees_with_answer": true,
+            "relevance_score": 0.9829547
+          },
+          {
+            "url": "https://www.studentsofhistory.com/islands-and-culture-japan",
+            "excerpt": "Header Logo\n\n# The Islands and Culture of Japan\n\nJapan is an archipelago in the Pacific Ocean that is made up of four main islands: Honshu, Hokkaido, Kyushu, and Shikoku. There are also thousands of smaller islands including the Ryukyu Islands that stretch south towards Taiwan.\n\nJapan’s history goes",
+            "agrees_with_answer": true,
+            "relevance_score": 0.95565146
+          },
+          {
+            "url": "http://spice.fsi.stanford.edu/docs/geography_of_japan",
+            "excerpt": "## Japan in Spatial Terms\n\nJapan, located off the East coast of Asia, is an archipelago nation comprised of four main islands, from North to South: Hokkaido, Honshu (the largest and most populous), Kyushu, Shikoku, and over 3500 smaller islands. The southernmost reach is the Ryukyu Islands. Japan st",
+            "agrees_with_answer": true,
+            "relevance_score": 0.74316806
+          },
+          {
+            "url": "https://bluejapan.org/geography/islands-of-japan/",
+            "excerpt": "To the south, a narrow area stretches from the Sea of Japan on the north to the Pacific Ocean on the south, where the Pacific Belt Japan’s second-largest commercial-industrial complex, centred on Ōsaka and Kōbe, as well the two former imperial cities;a cultural centres of Nara and Kyōto.\n\nThe wester",
+            "agrees_with_answer": true,
+            "relevance_score": 0.7295198
+          },
+          {
+            "url": "https://afe.easia.columbia.edu/japan/japanworkbook/geography/japgeo.html",
+            "excerpt": "Composition, Position, and Relative Size\n\nJapan is a shimaguni (island country): The Japanese archipelago (island chain) consists of four main islands – Honshu, Shikoku, Kyushu and Hokkaido – and thousands of smaller surrounding ones (see map 1). It lies off the Pacific coast of the Asian mainland; ",
+            "agrees_with_answer": true,
+            "relevance_score": 0.047074176
+          }
+        ],
+        "alternative_answers": [],
+        "notes": "5/5 sources confirm the answer"
+      }
+    },
+    {
+      "id": "q_img_silhouette_003",
+      "question": "Imagine a vast triangular kite soaring through the skies, its tail curving elegantly over the azure waves. This large peninsula extends south into the Indian Ocean, flanked by the Arabian Sea on one side and the Bay of Bengal on the other. What country could this be?",
+      "claimed_answer": "India",
+      "verification": {
+        "verdict": "verified",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "url": "https://www.worldatlas.com/articles/which-water-bodies-surround-the-indian-peninsula.html",
+            "excerpt": "A peninsula can be defined as a landmass that extends from a larger body of land and is surrounded by water bodies on all other sides. The Indian Peninsula consists of a vast region in South Asia that is in the shape of an inverted triangle. The Indian Peninsula borders the Bay of Bengal to the east",
+            "agrees_with_answer": true,
+            "relevance_score": 0.9997918
+          },
+          {
+            "url": "https://www.mapsofindia.com/history/peninsular-region.html",
+            "excerpt": "1. The Himalayan Mountains\n2. The Northern Plains\n3. The Peninsular Plateau\n4. The Indian Desert\n5. The Coastal Plains\n6. The Islands\n\nA plateau is a region that is surrounded by water from three sides. India is also surrounded by water from three sides. It is surrounded by the Bay of Bengal in the ",
+            "agrees_with_answer": true,
+            "relevance_score": 0.99911004
+          },
+          {
+            "url": "https://www.britannica.com/place/Bay-of-Bengal",
+            "excerpt": "Bay of Bengal, large but relatively shallow embayment of the northeastern Indian Ocean, occupying an area of about 839,000 square miles (2,173,000 square km). It lies roughly between latitudes 5° and 22° N and longitudes 80° and 90° E. It is bordered by Sri Lanka and India to the west, Bangladesh to",
+            "agrees_with_answer": true,
+            "relevance_score": 0.99701905
+          },
+          {
+            "url": "https://www.nextias.com/blog/peninsular-plateau/",
+            "excerpt": "Location: It is a triangular-shaped plateau.\n  + Its base lies on the Vindhyan Hills in the north and is bounded by the Aravali Range in the west and Bundelkhand in the east.\n  + The plateau constitutes an extension of the Deccan Traps.\n Elevation: The general height of the plateau is 600 m in the s",
+            "agrees_with_answer": true,
+            "relevance_score": 0.94165415
+          },
+          {
+            "url": "https://en.wikipedia.org/wiki/Deccan_Plateau",
+            "excerpt": "| Plateaus | - Balochistan - Chota Nagpur - Deccan - Ladakh - Mysore - Malwa - Pothohar |\n| Deserts |  Cholistan  Kharan  Katpana  Nara  Thal  Thar |\n| Lowlands | |  |  |  --- | | Indo-Gangetic Plain |  Ganges Basin   + Ganges-Brahmaputra Delta   + Punjab Plain   + Sundarbans  Indus Basin   + Indus ",
+            "agrees_with_answer": true,
+            "relevance_score": 0.7401744
+          }
+        ],
+        "alternative_answers": [],
+        "notes": "5/5 sources confirm the answer"
+      }
+    },
+    {
+      "id": "q_img_silhouette_004",
+      "question": "Which country has a shape often likened to a giant island with a broad, flaring brim that swoops down like a sunhat over the Indian Ocean? Famous for its vast outback and unique wildlife hopping across its landmass.",
+      "claimed_answer": "Australia",
+      "verification": {
+        "verdict": "verified",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "url": "https://www.australia.com/en-us/things-to-do/nature-and-national-parks/guide-to-the-australian-outback.html",
+            "excerpt": "## Where is the outback?\n\nThe Terraces, Leonora Loop Trail, near Leonora, WA © Tourism Western Australia\nDaintree National Park, QLD © Tourism Tropical North Queensland\nLake Eyre, Lake Eyre National Park, SA © SATC\n\nAs the world’s largest island, it’s no secret that Australia spreads far and wide. A",
+            "agrees_with_answer": true,
+            "relevance_score": 0.46920466
+          },
+          {
+            "url": "https://www.natureaustralia.org.au/what-we-do/our-priorities/wildlife/wildlife-stories/10-weird-and-wonderful-wildlife-of-australia/",
+            "excerpt": "# 10 weird and wonderful wildlife of Australia\n\nSome 180 million years ago, the super continent of Gondwana split. One of the breakaway landmasses from that separation, contained what would become Australia and Antarctica. By 30 million years ago Australia had fully separated and journeyed north on ",
+            "agrees_with_answer": true,
+            "relevance_score": 0.43712714
+          },
+          {
+            "url": "https://www.goway.com/inspiration/lure-australian-outback",
+            "excerpt": "My Wishlist\n\n1.800.557.2841or Contact Your Travel Advisor\n\nAustralia\n\nHome/Inspiration/Nature & Wildlife/The Lure of the Australian Outback\n\nNature & Wildlife\n\n+1\n\n# The Lure of the Australian Outback\n\n10 min read\n\nPublished on Apr 05, 2016\n\nGlobetrotting\n\n## By Robert Glazier\n\nContributing Writer [",
+            "agrees_with_answer": true,
+            "relevance_score": 0.43338245
+          },
+          {
+            "url": "https://en.wikipedia.org/wiki/Outback",
+            "excerpt": "## Terminology\n\n[edit]\n\nThe term \"outback\" derives from the adverbial phrase referring to the backyard of a house, and came to be used meiotically \"Meiosis (figure of speech)\") in the late 1800s to describe the vast sparsely settled regions of Australia behind the cities and towns. The earliest know",
+            "agrees_with_answer": true,
+            "relevance_score": 0.39810276
+          },
+          {
+            "url": "https://www.dreamsabroad.com/oceania/guide-to-the-australian-outback/",
+            "excerpt": "Photo by Ash Jurberg - A Moody View of Uluru - Complete Guide to Australia's Outback\n\nPhoto by Ash Jurberg - A Self-portrait While Taking Additional Photos at Uluṟu-Kata Tjuṯa National Park - Complete Guide to Australia's Outback\n\nPhoto © Voyages Indigenous Tourism Australia - A Catered Picnic with ",
+            "agrees_with_answer": true,
+            "relevance_score": 0.36019695
+          }
+        ],
+        "alternative_answers": [],
+        "notes": "5/5 sources confirm the answer"
+      }
+    },
+    {
+      "id": "q_img_silhouette_005",
+      "question": "Which country has a silhouette resembling a partially open umbrella, standing tall and proud with a handle that seems to point upwards towards the northern seas? This land is known for its rich history, castles, and tea customs.",
+      "claimed_answer": "United Kingdom",
+      "verification": {
+        "verdict": "verified",
+        "confidence": 0.8099999999999999,
+        "sources": [
+          {
+            "url": "https://en.wikipedia.org/wiki/United_Kingdom",
+            "excerpt": "The United Kingdom of Great Britain and Northern Ireland, commonly known as the United Kingdom (UK) or Britain,( is a country in northwestern Europe, off the coast of the continental mainland. It comprises England, Scotland, Wales and Northern Ireland,( with a population of over 69 million in 2024. ",
+            "agrees_with_answer": true,
+            "relevance_score": 0.41869688
+          },
+          {
+            "url": "https://www.britannica.com/place/United-Kingdom",
+            "excerpt": "## Land\n\nWindermere, Cumbria, England [...] United Kingdom\nBig Ben, London\nBritish Isles terminology [...] islands off the northern coast and the Hebrides off the northwestern coast. Wales lies west of England and includes the island of Anglesey to the northwest.",
+            "agrees_with_answer": true,
+            "relevance_score": 0.10230471
+          },
+          {
+            "url": "https://www.mayflowercruisesandtours.com/tourist-interests/the-history-and-top-25-attractions-of-liechtenstein/",
+            "excerpt": "### Next Steps: Sync an Email Add-On\n\nΔ\n\nOops! We could not locate your form.\n\n### Guest #1 Information\n\n### Guest #2 Information\n\n### Guest #3 Information\n\n### \n\nΔ\n\nOops! We could not locate your form.\n\n### Next Steps: Sync an Email Add-On\n\nΔ\n\nOops! We could not locate your form.\n\n### Riverview Sui",
+            "agrees_with_answer": false,
+            "relevance_score": 0.04401865
+          },
+          {
+            "url": "https://www.ebsco.com/research-starters/geography-and-cartography/united-kingdom",
+            "excerpt": "Authored By:\n\n  Bruce, Erika;Healey, Christina;Badertscher, Eric;Means, Richard\n Published In:2024\n Related Topics:\n\n  England;Wales;Scotland;Northern Ireland;Commonwealth of Nations;London, England;United Nations Human Development Index;Celts;Viking;Anglo-Saxon.Anglo-Saxons;Picts;Church of England;",
+            "agrees_with_answer": true,
+            "relevance_score": 0.026556572
+          },
+          {
+            "url": "https://www.visitscotland.com/things-to-do/attractions/historic",
+            "excerpt": "### What is Scotland’s national animal?\n\nThe unicorn, yes you read that right! This mythical creature has been linked to Scotland for many centuries. First used in the 12th century on the Scottish royal coat of arms by William I, the unicorn symbolises purity and innocence, as well as masculinity an",
+            "agrees_with_answer": false,
+            "relevance_score": 0.023330769
+          }
+        ],
+        "alternative_answers": [],
+        "notes": "3/5 sources confirm the answer"
+      }
+    },
+    {
+      "id": "q_img_silhouette_006",
+      "question": "Which country has a unique silhouette that looks like a slender ribbon unfurling down the western coast of South America, tightly hugging the Pacific Ocean, while also snuggling up against the towering Andes Mountains?",
+      "claimed_answer": "Chile",
+      "verification": {
+        "verdict": "verified",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "url": "https://www.instagram.com/reel/DVtiuy2DQYe/?hl=en",
+            "excerpt": "... Country on Earth Stretching like a narrow ribbon along the western edge of South America, Chile is one of the world's most geographically",
+            "agrees_with_answer": true,
+            "relevance_score": 0.9997198
+          },
+          {
+            "url": "https://en.wikipedia.org/wiki/Chile",
+            "excerpt": "Chile,( officially the Republic of Chile,( is a country in western South America. It is the southernmost country in the world and the closest to Antarctica, extending along a narrow strip of land between the Andes Mountains and the Pacific Ocean. According to the 2024 census, Chile had an enumerated",
+            "agrees_with_answer": true,
+            "relevance_score": 0.9976769
+          },
+          {
+            "url": "https://www.ebsco.com/research-starters/geography-and-cartography/chile",
+            "excerpt": "Browse Subject Areas\n\n# Chile\n\nChile is a long, narrow country located along the western edge of South America, bordered by the Pacific Ocean to the west and the Andes Mountains to the east. Known for its diverse geography, Chile encompasses a range of environments, from deserts in the north, such a",
+            "agrees_with_answer": true,
+            "relevance_score": 0.9971551
+          },
+          {
+            "url": "https://peakvisor.com/range/andes-chile-argentina.html",
+            "excerpt": "South face in Summit of Aconcagua\n\nAs a result, it’s easiest to discuss the southern Andes by breaking up the range by country.\n\n## Chile\n\nEncompassing the entirety of South America’s western coastline to the south of Peru, Chile is a long, narrow country that’s dominated by the Andes Mountains. Thr",
+            "agrees_with_answer": true,
+            "relevance_score": 0.84695786
+          },
+          {
+            "url": "https://unchartedterritories.tomaspueyo.com/p/why-is-chile-so-long",
+            "excerpt": "In the eastern Pacific, it leaves Chile and the US – Mexico – Canada west coast. An elevation map shows how a country could have been viable here:\n\nWest of the mountain chain that runs through all of the American continent, you can see the green sliver that could have been a country.\n\nSo why don’t w",
+            "agrees_with_answer": true,
+            "relevance_score": 0.70578504
+          }
+        ],
+        "alternative_answers": [],
+        "notes": "5/5 sources confirm the answer"
+      }
+    },
+    {
+      "id": "q_img_silhouette_007",
+      "question": "Which country features a quirky silhouette resembling two long islands dancing in the Pacific Ocean, with one looking like a weathered canoe and the other like a narrow clock hand pointing southwest?",
+      "claimed_answer": "New Zealand",
+      "verification": {
+        "verdict": "verified",
+        "confidence": 0.8099999999999999,
+        "sources": [
+          {
+            "url": "https://geofactbook.com/countries/new-zealand",
+            "excerpt": "## Geography\n\nNew Zealand is an island nation located in the southwestern Pacific Ocean, approximately 2,000 kilometers southeast of Australia. The country consists of two main landmasses, the North Island and the South Island, along with numerous smaller islands. New Zealand's geographical position",
+            "agrees_with_answer": true,
+            "relevance_score": 0.47008035
+          },
+          {
+            "url": "https://www.instagram.com/reel/DWVvswMEjOR/",
+            "excerpt": "695 likes, 6 comments - humourhive35 on March 26, 2026: \"The Island Where Time Moves Differently by Design In the Pacific Ocean, the island",
+            "agrees_with_answer": false,
+            "relevance_score": 0.42835352
+          },
+          {
+            "url": "https://www.istockphoto.com/illustrations/pacific-islands",
+            "excerpt": "Map of Oceania for your own design. Three maps with editable stroke included in the bundle: - One black map on a white background. - One line map with only a thin black outline in a line art style (you can adjust the stroke weight as you want). - One map on a blank transparent background (for change",
+            "agrees_with_answer": false,
+            "relevance_score": 0.2452481
+          },
+          {
+            "url": "https://www.geomorph.org/11th-iag-international-conference-on-geomorphology-2-6-february-2026-christchurch-new-zealand/",
+            "excerpt": "Skip to content\n\nIAG – International Association of Geomorphologists\n\nGeomorphology is the Interdisciplinary and Systematic Study of Landforms, their Landscapes and the Earth Surface Processes that create and change them\n\n follow IAG on Facebook\n Follow IAG on Twitter\n\n# 11th IAG International Confe",
+            "agrees_with_answer": true,
+            "relevance_score": 0.16997032
+          },
+          {
+            "url": "https://www.nzgs.co.nz/2026-nzgs-iag-conference/",
+            "excerpt": "Mid-May - Call for abstracts opens;\n\nMid July - Call for abstracts closes;\n\nLate July - Abstract approval;\n\nLate May - Registration opens;\n\nLate August - Early bird registration closes & Draft programme online; and\n\nLate October - Registration closes.\n\n### New Zealand Geographical Society\n\nGeneral: ",
+            "agrees_with_answer": true,
+            "relevance_score": 0.1153716
+          }
+        ],
+        "alternative_answers": [],
+        "notes": "3/5 sources confirm the answer"
+      }
+    },
+    {
+      "id": "q_img_silhouette_008",
+      "question": "Which country has a jagged profile resembling a hand with fingers splayed out, dipping into the aquamarine waters of the Aegean Sea, surrounded by a sea of islands and nestled in southeastern Europe?",
+      "claimed_answer": "Greece",
+      "verification": {
+        "verdict": "verified",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "url": "https://en.wikipedia.org/wiki/Geography_of_Greece",
+            "excerpt": "Wikipedia\n\n# Geography of Greece\n\n|  |\n\n| This article includes a list of general references, but it lacks sufficient corresponding inline citations. Please help to improve this article by introducing more precise citations. (February 2023) (Learn how and when to remove this message) |\n\nGreece is a ",
+            "agrees_with_answer": true,
+            "relevance_score": 0.6396691
+          },
+          {
+            "url": "https://www.britannica.com/place/Greece",
+            "excerpt": "Greece is bordered to the east by the Aegean Sea, to the south by the Mediterranean Sea, and to the west by the Ionian Sea. Only to the north and northeast does it have land borders (totaling some 735 miles [1,180 km]), with, from west to east, Albania, the Republic of North Macedonia (see Researche",
+            "agrees_with_answer": true,
+            "relevance_score": 0.5852203
+          },
+          {
+            "url": "https://kids.nationalgeographic.com/geography/countries/article/greece",
+            "excerpt": "Greece has the longest coastline in Europe and is the southernmost country in Europe. The mainland has rugged mountains, forests, and lakes, but the country is well known for the thousands of islands dotting the blue Aegean Sea to the east, the Mediterranean Sea to the south, and the Ionian Sea to t",
+            "agrees_with_answer": true,
+            "relevance_score": 0.5637388
+          },
+          {
+            "url": "https://simcorner.com/blogs/countries/where-is-greece",
+            "excerpt": "| Attribute | Details |\n --- |\n| Capital of Greece | The capital of Greece is Athens |\n| Continent | Europe |\n| Sub-region | Southeastern Europe |\n| Population | Approximately 10.4 million |\n| Area | 131,957 square kilometers |\n| Currency | Euro |\n| Languages | Greek |\n| Time zone(s) | EET (UTC+2), ",
+            "agrees_with_answer": true,
+            "relevance_score": 0.5602773
+          },
+          {
+            "url": "https://www.britannica.com/place/Aegean-Sea",
+            "excerpt": "Aegean Sea, an arm of the Mediterranean Sea located between the Greek peninsula on the west and Asia Minor on the east. About 380 miles (612 km) long and 186 miles (299 km) wide, it has a total area of some 83,000 square miles (215,000 square km). The Aegean is connected through the straits of the D",
+            "agrees_with_answer": true,
+            "relevance_score": 0.5405607
+          }
+        ],
+        "alternative_answers": [],
+        "notes": "5/5 sources confirm the answer"
+      }
+    },
+    {
+      "id": "q_img_silhouette_009",
+      "question": "Which country has a long, slender silhouette that swoops down like a dragon's tail, hugging the western side of the Scandinavian Peninsula, known for its stunning fjords plunging into the North Sea?",
+      "claimed_answer": "Norway",
+      "verification": {
+        "verdict": "verified",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "url": "https://en.wikipedia.org/wiki/Norway",
+            "excerpt": "Norway, officially the Kingdom of Norway, is a Nordic country comprising the western and northernmost parts of the Scandinavian Peninsula in Northern Europe, the remote Arctic island Jan Mayen and the archipelago Svalbard. Bouvet Island, located in the Subantarctic, is a dependency, and not a part o",
+            "agrees_with_answer": true,
+            "relevance_score": 0.72042775
+          },
+          {
+            "url": "https://kids.nationalgeographic.com/geography/countries/article/norway",
+            "excerpt": "Personality Quizzes\n\nFunny Fill-In\n\nAmazing Animals\n\nWeird But True!\n\nParty Animals\n\nTry This!\n\nAnimals\n\nMammals\n\nBirds\n\nPrehistoric\n\nReptiles\n\nAmphibians\n\nInvertebrates\n\nFish\n\nMagazine\n\nhistory\n\nScience\n\nSpace\n\nU.S. States\n\nWeird But True!\n\nSubscribe\n\nNorway's coastline is famous for its fjords.\n\nN",
+            "agrees_with_answer": true,
+            "relevance_score": 0.6041426
+          },
+          {
+            "url": "https://www.britannica.com/place/Norway",
+            "excerpt": "Real Madrid dominates Man City in Champions League, PSG beats Chelsea, Arsenal salvages draw  • Mar. 11, 2026, 7:20 PM ET (AP)\n\nNorway, country of northern Europe that occupies the western half of the Scandinavian peninsula. Nearly half of the inhabitants of the country live in the far south, in the",
+            "agrees_with_answer": true,
+            "relevance_score": 0.48630774
+          },
+          {
+            "url": "https://www.norwaysbest.com/en/inspiration/everything-you-should-know-about-the-fjords-of-norway",
+            "excerpt": "Norway has over 1,700 named fjords dotted along the 57,000km-long Norwegian coast. Many of these fjords extend in from the west coast of Norway. This area is also home to two fjords featured on UNESCO’s World Heritage List: Nærøyfjord and Geirangerfjord.\n\nThese fjords are two of Norway's most popula",
+            "agrees_with_answer": true,
+            "relevance_score": 0.48572227
+          },
+          {
+            "url": "https://www.muchbetteradventures.com/magazine/norwegian-fjords-tips/",
+            "excerpt": "+ Botswana\n  + Egypt\n  + Ghana\n  + Kenya\n  + Madagascar\n  + Morocco\n  + Namibia\n  + Réunion\n  + Rwanda\n  + São Tomé and Príncipe\n  + South Africa\n  + Tanzania\n  + Tunisia\n  + Zimbabwe\n  + View All Africa\n + Armenia\n  + Bhutan\n  + Cambodia\n  + China\n  + Georgia\n  + India\n  + Indonesia\n  + Japan\n  + J",
+            "agrees_with_answer": true,
+            "relevance_score": 0.46774563
+          }
+        ],
+        "alternative_answers": [],
+        "notes": "5/5 sources confirm the answer"
+      }
+    },
+    {
+      "id": "q_img_silhouette_010",
+      "question": "Imagine a long, slender form that resembles a crooked, semi-bent ribbon or elongated alligator lounging in the warm Caribbean waters. Which country has this iconic silhouette famous for its rhythmic culture and shimmering coastlines directly south of the United States and east of Mexico's Yucatán Peninsula?",
+      "claimed_answer": "Cuba",
+      "verification": {
+        "verdict": "verified",
+        "confidence": 0.8799999999999999,
+        "sources": [
+          {
+            "url": "https://en.wikipedia.org/wiki/Cuba",
+            "excerpt": "Cuba, officially the Republic of Cuba, is an island country in the Caribbean. It comprises the eponymous main island as well as 4,195 islands, islets, and cays. Situated at the convergence of the Caribbean Sea, Gulf of Mexico, and Atlantic Ocean, Cuba is located east of the Yucatán Peninsula, south ",
+            "agrees_with_answer": true,
+            "relevance_score": 0.6882385
+          },
+          {
+            "url": "https://www.kids-world-travel-guide.com/cuba-facts.html",
+            "excerpt": "## Cuba Map & Location Where is Cuba?\n\nCuba is a country in the Northern Hemisphere and is part of the North American continent. Cuba is an island nation at the northwestern end of the Caribbean island chain and the largest in the Caribbean Sea.\n\nThe island nation lies about 150 km/ 90 miles south o",
+            "agrees_with_answer": true,
+            "relevance_score": 0.5920305
+          },
+          {
+            "url": "https://www.ebsco.com/research-starters/geography-and-cartography/cuba",
+            "excerpt": "Government type: Communist state\n\nSuffrage: 16 years of age; universal\n\nLegal system: civil law system based on Spanish civil code\n\nThe Republic of Cuba is an island nation in the Caribbean Sea. It is separated by water from the United States, Mexico, Haiti, Jamaica, and South America. The major bod",
+            "agrees_with_answer": true,
+            "relevance_score": 0.430507
+          },
+          {
+            "url": "https://www.britannica.com/place/Cuba",
+            "excerpt": "shohei ohtani, plants, andy wharhol art\n\nMobile\n\nThe country comprises an archipelago of about 1,600 islands, islets, and cays with a combined area three-fourths as large as the U.S. state of Florida. The islands form an important segment of the Antilles (West Indies) island chain, which continues e",
+            "agrees_with_answer": true,
+            "relevance_score": 0.31732097
+          },
+          {
+            "url": "https://www.goworldtravel.com/yucatan-peninsula/",
+            "excerpt": "best hotels in the yucatán peninsula\n\n## Read More:\n\n Diving Deep in the Yucatan\n Yucatan Adventures: Biking and Snorkeling in the Cenotes\n Top 10 Things to Do on a Trip to Cancun\n Top 10 Things to Do in Playa del Carmen\n Spain Builds a Super-Fort in Cartagena, Colombia [...] About\n Latest Posts\n\nGo",
+            "agrees_with_answer": false,
+            "relevance_score": 0.27404937
+          }
+        ],
+        "alternative_answers": [],
+        "notes": "4/5 sources confirm the answer"
+      }
+    },
+    {
+      "id": "q_img_blind_map_001",
+      "question": "Which city is known for its iconic clock tower and sits on the River Thames in a country where tea is a beloved cultural tradition?",
+      "claimed_answer": "London",
+      "verification": {
+        "verdict": "verified",
+        "confidence": 0.8099999999999999,
+        "sources": [
+          {
+            "url": "https://www.royalcaribbean.com/guides/big-ben-facts",
+            "excerpt": "From Buckingham Palace to Tower Bridge, London is overflowing with iconic landmarks. One that stands out among the rest is Elizabeth Tower — more commonly known as the one and only Big Ben. Sitting pretty next to the Houses of Parliament along the River Thames, discover some fun Big Ben facts and le",
+            "agrees_with_answer": true,
+            "relevance_score": 0.7161595
+          },
+          {
+            "url": "https://www.parliament.uk/about/living-heritage/building/palace/big-ben/building-clock-tower/",
+            "excerpt": "## In this section\n\nShowHide\n\n   Big Ben\n       History of the Elizabeth Tower and Big Ben\n           Designing a New Palace of Westminster\n           A brief history of Big Ben and Elizabeth Tower\n           Building Elizabeth Tower\n           Constructing the most accurate clock in the world\n     ",
+            "agrees_with_answer": false,
+            "relevance_score": 0.65173227
+          },
+          {
+            "url": "https://www.tootbus.com/en/london/inspiration/50-fascinating-facts-big-ben",
+            "excerpt": "Big Ben is easily accessible off our main routes. So, buy your Hop-on Hop-on London bus tour and hop off at stop 11 on the yellow route or stop 23 on the blue route to see first-hand the legendary clock tower! You can also admire Big Ben illuminated in the evening with a sightseeing London bus tour ",
+            "agrees_with_answer": true,
+            "relevance_score": 0.49787658
+          },
+          {
+            "url": "https://www.thamesclippers.com/blog/10-things-we-bet-you-didn-t-know-about-big-ben",
+            "excerpt": "### #1 – Big Ben is a nickname\n\nAlthough most people know this iconic landmark as Big Ben, this is actually the name of the bell in the tower – which weighs a whopping 13.7 tonnes! There are a lot of theories about where this name came from; one of them being that the bell was named after Sir Benjam",
+            "agrees_with_answer": true,
+            "relevance_score": 0.4864541
+          },
+          {
+            "url": "https://richard-tea.com/en/discover-the-world-of-tea/traditions-and-history-of-english-tea-drinking",
+            "excerpt": "logo\n\nru en kz\n\n Main\n Articles about tea\n English tea drinking: history and traditions\n\n# English tea drinking: history and traditions\n\nTraditions and history of English tea drinking\n\nThe English tea drinking is one of the most famous ceremonies, a symbol of Great Britain along with the Royal Famil",
+            "agrees_with_answer": false,
+            "relevance_score": 0.45871297
+          }
+        ],
+        "alternative_answers": [],
+        "notes": "3/5 sources confirm the answer"
+      }
+    },
+    {
+      "id": "q_img_blind_map_002",
+      "question": "Which city is located in a country known as the land of the rising sun, boasting iconic views of Mount Fuji, and hosts the world's busiest pedestrian crossing?",
+      "claimed_answer": "Tokyo",
+      "verification": {
+        "verdict": "verified",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "url": "https://en.wikipedia.org/wiki/Shibuya_Crossing",
+            "excerpt": "Shibuya Scramble Crossing (渋谷スクランブル交差点, Shibuya sukuranburu kōsaten), commonly known as Shibuya Crossing, is a scramble crossing in Shibuya \"Shibuya (district)\"), Tokyo, Japan. It is located near Shibuya Station in Shibuya, a major commercial and entertainment district in Tokyo. It has been describe",
+            "agrees_with_answer": true,
+            "relevance_score": 0.9992267
+          },
+          {
+            "url": "https://www.jrailpass.com/blog/shibuya-crossing",
+            "excerpt": "+34 93 547 88 66\n\n» Mon-Fri 8 am to 8 pm (GMT+1)\n\ninfo@jrailpass.com » 24/7\n\nJapan Rail Pass\n\nYour JR tickets Just a click away\n\nBook Now\n\nJRailPass.com » Japan Travel Blog »  Shibuya Crossing, the world’s busiest crossing\n\n# Shibuya Crossing, the world’s busiest crossing\n\nShibuya crossing by night\n",
+            "agrees_with_answer": true,
+            "relevance_score": 0.9941347
+          },
+          {
+            "url": "https://en.wikipedia.org/wiki/Tokyo",
+            "excerpt": "Main article: Transport in Greater Tokyo\n\nTokyo, which is the center of the Greater Tokyo Area, is Japan's largest domestic and international hub for rail and ground transportation. Public transportation within Tokyo is dominated by an extensive network of \"clean and efficient\"( trains and subways r",
+            "agrees_with_answer": true,
+            "relevance_score": 0.9876639
+          },
+          {
+            "url": "https://www.celebritycruises.com/blog/what-is-tokyo-known-for",
+            "excerpt": "More than just a miniature microcosm of this fast-moving megalopolis, the crossing is a cultural icon. Flanked by illuminated digital billboards and placed atop the city’s busiest station, it’s earned silver screen fame in numerous Hollywood blockbusters.\n\nAerial view of Shibuya Crossing\n\nShibuya Cr",
+            "agrees_with_answer": true,
+            "relevance_score": 0.98646784
+          },
+          {
+            "url": "https://www.japan.travel/en/spot/2177/",
+            "excerpt": "Shibuya Area Shibuya Area\n\nShibuya-ku, Tokyo-to\n\n View on Google Maps\n Get Transit Info\n\n KEYWORDS\n MAP\n\n## The busiest crossing in Tokyo\n\nShibuya Crossing is one of Tokyo's most recognizable sights, pictured in countless films, magazines and blogs. During its busiest times, an estimated 1,000 to 2,",
+            "agrees_with_answer": true,
+            "relevance_score": 0.9465967
+          }
+        ],
+        "alternative_answers": [],
+        "notes": "5/5 sources confirm the answer"
+      }
+    },
+    {
+      "id": "q_img_blind_map_003",
+      "question": "Which city is located near the iconic Giza Pyramids and is bisected by one of the longest rivers in the world, flowing through a land known for its ancient pharaohs?",
+      "claimed_answer": "Cairo",
+      "verification": {
+        "verdict": "verified",
+        "confidence": 0.8799999999999999,
+        "sources": [
+          {
+            "url": "https://egypttoursgroup.com/how-close-is-the-nile-river-to-the-pyramids/?srsltid=AfmBOoqm30hap6Hay6Fqrcd9iEmQI8vcLlOnmwrV45GuTkLn5rMhY86v",
+            "excerpt": "Contents\n\nToggle\n\n## Key Takeaways\n\n The Pyramids of Giza lie only about 8–10 km west of the Nile River — close enough to be visible from Cairo’s riverbanks.\n In ancient Egypt, a hidden “Ahramat” Nile branch once flowed beside the pyramid fields, letting boats deliver huge limestone blocks right to ",
+            "agrees_with_answer": true,
+            "relevance_score": 0.9465967
+          },
+          {
+            "url": "https://www.britannica.com/place/Cairo",
+            "excerpt": "The city juxtaposes ancient and new, East and West. The Pyramids of Giza, near Memphis, stand at the southwestern edge of the metropolis, and an obelisk in the northeast marks the site of Heliopolis, where Plato once studied; modern landmarks of Western-style high-rise hotels and apartment buildings",
+            "agrees_with_answer": true,
+            "relevance_score": 0.8568123
+          },
+          {
+            "url": "https://www.egypttoursportal.com/en-us/cairo-city/",
+            "excerpt": "## Best Attractions in Cairo\n\nGiza Pyramids - Cairo City - Egypt Tours Portal\n\nGiza Pyramids - Cairo City - Egypt Tours Portal\n\nGiza Pyramids - Cairo City - Egypt Tours Portal\n\nGiza Pyramids - Cairo City - Egypt Tours Portal\n\nThe city is most famous for containing the famous Giza Pyramids Complex th",
+            "agrees_with_answer": true,
+            "relevance_score": 0.5563996
+          },
+          {
+            "url": "https://www.britannica.com/place/Cairo/Development-of-the-city",
+            "excerpt": "Capital (NAC; Al-ʿĀṣimah al-Idāriyyah al-Jadīdah) some 30 miles (45 km) east of the city. [...] Janet L. Abu-Lughod Nezar AlSayyad The Editors of Encyclopaedia Britannica [...] Images & Videos\n\nCairo, Egypt   Giza, Egypt: Pyramids   Cairo: skyline   Cairo: Khān al-Khalīli bazaar   Cairo: City of the",
+            "agrees_with_answer": true,
+            "relevance_score": 0.33633104
+          },
+          {
+            "url": "https://www.history.com/articles/ancient-egypt-nile-river",
+            "excerpt": "### 7 biggest sex myths from history\n\nBas-Relief of Pharaoh Thutmose III smiting and killing Canaanite enemies at the Battle of Megiddo on the Seventh Pylon in Karnak Temple\n\n### 4 legendary battles from Ancient Egypt\n\n### Sign Up to our newsletter!\n\nReceive email updates from your favourite Sky HIS",
+            "agrees_with_answer": false,
+            "relevance_score": 0.008916127
+          }
+        ],
+        "alternative_answers": [],
+        "notes": "4/5 sources confirm the answer"
+      }
+    },
+    {
+      "id": "q_img_blind_map_004",
+      "question": "Which city is home to an iconic iron tower, lies on the banks of the River Seine, and is known as the 'City of Lights'?",
+      "claimed_answer": "Paris",
+      "verification": {
+        "verdict": "verified",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "url": "https://frenchmoments.eu/the-eiffel-tower-by-night/",
+            "excerpt": "#### The City of Lights\n\nParis, often called the “City of Lights” (La Ville Lumière), truly lives up to its name when the Eiffel Tower begins its nightly illumination. The cityscape takes on a whole new character as iconic landmarks such as the Louvre, Notre Dame Cathedral, and the Seine River banks",
+            "agrees_with_answer": true,
+            "relevance_score": 0.7752821
+          },
+          {
+            "url": "https://whc.unesco.org/en/list/600/",
+            "excerpt": "de Louvre, the Invalides, the Ecole Militaire and the Monnaie (the Mint). The conserved buildings of the Universal Exhibitions that took place in Paris in the 19th and 20th centuries are numerous on the banks of the River Seine. Heading the list is the Eiffel Tower, a universally recognized icon of ",
+            "agrees_with_answer": true,
+            "relevance_score": 0.77096564
+          },
+          {
+            "url": "https://www.parisperfect.com/plan-your-trip/things-to-see/monuments-landmarks/eiffel-tower.php",
+            "excerpt": "What symbolizes Paris better than the Eiffel Tower? Soaring 324 meters (1,063 feet) into the air, La Grande Dame en Fer - or Grand Iron Lady - defines the city’s skyline. The tower is situated in 7th arrondissement, one of the French capital’s chicest districts, and was originally built for the 1889",
+            "agrees_with_answer": true,
+            "relevance_score": 0.74697095
+          },
+          {
+            "url": "https://www.guggenheim-bilbao.eus/en/did-you-know/paris-city-of-light",
+            "excerpt": "Paris was named the City of Light (Ville lumière) at the beginning of the nineteenth century after becoming the first city in Europe to use gas lighting to illuminate its streets. Progress came along with technological advances, such as the cinema, electric light for outdoors and indoors, steel manu",
+            "agrees_with_answer": true,
+            "relevance_score": 0.7393665
+          },
+          {
+            "url": "https://www.france.fr/en/article/eiffel-tower/",
+            "excerpt": "## The Parisian Icon\n\nThe Universal Exhibition in Paris in 1889 saw her birth. Since then, the banks of the Seine have been her kingdom. The Eiffel Tower rests on the green carpet of the Champs de Mars gardens, facing the Trocadéro Gardens.\n\nGustave Eiffel’s Tower dares those who are brave enough to",
+            "agrees_with_answer": true,
+            "relevance_score": 0.7325349
+          }
+        ],
+        "alternative_answers": [],
+        "notes": "5/5 sources confirm the answer"
+      }
+    },
+    {
+      "id": "q_img_blind_map_005",
+      "question": "Which city is marked at the location known for its iconic statue representing freedom and its status as a major global financial center?",
+      "claimed_answer": "New York",
+      "verification": {
+        "verdict": "verified",
+        "confidence": 0.8799999999999999,
+        "sources": [
+          {
+            "url": "https://www.newyorkwelcome.net/explore/around-nyc-with-irene/wall-street-history-and-the-bull.htm",
+            "excerpt": "It was one of the coldest months on record. It was a very dark morning. December 15, 1989 at 1 a.m.: the date and time when the a huge 7,100 lb. (3,200 kg) bronze sculpture – created by Arturo Di Modica and his friends – was installed in front of the New York Stock Exchange. They were doing somethin",
+            "agrees_with_answer": true,
+            "relevance_score": 0.9954615
+          },
+          {
+            "url": "https://www.ascemetsection.org/committees/history-and-heritage/landmarks/statue-of-liberty",
+            "excerpt": "# Statue of Liberty\n\n|\n|  |\n| Liberty's torch rises 305 feet above New York Harbor and was once the tallest structure in New York City. |\n\nThe Statue of Liberty is probably the best known monument in the world and is a global symbol of freedom and democracy. Dedicated in New York City on October 28,",
+            "agrees_with_answer": true,
+            "relevance_score": 0.99036634
+          },
+          {
+            "url": "https://sesamorestaurant.com/news/the-statue-of-liberty-americas-iconic-symbol-of-freedom/",
+            "excerpt": "## Visiting the Statue of Liberty\n\nEach year, millions of visitors from around the world come to New York Harbor to experience the Statue of Liberty firsthand. The statue is located on Liberty Island, which is accessible only by ferry from Battery Park in Manhattan or Liberty State Park in New Jerse",
+            "agrees_with_answer": true,
+            "relevance_score": 0.9651191
+          },
+          {
+            "url": "https://en.wikipedia.org/wiki/New_York_Stock_Exchange_Building",
+            "excerpt": "The NYSE Building's prominence has also made it the location of artworks. In 1989, artist Arturo Di Modica installed his sculpture Charging Bull in front of the building, in an act of guerrilla art. The sculpture was removed within a day and ultimately reinstalled at Bowling Green, two blocks south.",
+            "agrees_with_answer": false,
+            "relevance_score": 0.6206216
+          },
+          {
+            "url": "https://www.nps.gov/stli/",
+            "excerpt": "#### Contact Us\n\n# Liberty Enlightening the World\n\nA gift of friendship from the people of France to the United States \"The Statue of Liberty Enlightening the World\" is recognized as a universal symbol of freedom and democracy. It was dedicated by President Grover Cleveland on October 28, 1886.  Des",
+            "agrees_with_answer": true,
+            "relevance_score": 0.36840567
+          }
+        ],
+        "alternative_answers": [],
+        "notes": "4/5 sources confirm the answer"
+      }
+    },
+    {
+      "id": "q_img_blind_map_006",
+      "question": "Which city is known for its iconic Opera House with a sail-like design and is situated along the southeastern coast of a sunburnt country known for its unique wildlife?",
+      "claimed_answer": "Sydney",
+      "verification": {
+        "verdict": "verified",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "url": "https://en.wikipedia.org/wiki/Sydney_Opera_House",
+            "excerpt": "The Sydney Opera House is a multi-venue performing arts centre in Sydney, New South Wales, Australia. Located on the foreshore of Sydney Harbour, it is widely regarded as one of the world's most famous and distinctive buildings, and a masterpiece of 20th-century architecture. [...] The building and ",
+            "agrees_with_answer": true,
+            "relevance_score": 0.9802808
+          },
+          {
+            "url": "https://www.australia.com/en-us/travel-inspiration/where-to-visit.html",
+            "excerpt": "Sydney Opera House, Sydney, New South Wales © Cultural Attractions of Australia\n\nAustralia’s largest city is one of the world’s prettiest. Much of its allure revolves around the harbour, a dramatic expanse that creates a sanctuary for some of the country’s best beaches. This is the Sydney you see on",
+            "agrees_with_answer": true,
+            "relevance_score": 0.9507779
+          },
+          {
+            "url": "https://opera.org.au/sydney/",
+            "excerpt": "Opera Australia Logo\nOpera Australia Logo Condensed\n\n### \n\n##### SIGN IN\n\nForgot password?\n\nOr create an account\n\n# Sydney\n\n## Escape ordinary under the sails of the Sydney Opera House\n\nOpera is the ultimate escape: to a world of heroes, lovers and villains. A world of glamour and heartbreak. A worl",
+            "agrees_with_answer": true,
+            "relevance_score": 0.43014732
+          },
+          {
+            "url": "https://segd.org/projects/sydney-opera-house-from-the-sails-light-years/",
+            "excerpt": "We transformed Sydney Opera House into an outdoor cinema and the Sydney Harbor into our theater. It was a transportive experience for all who participated.  \n     \n   Daniel Boud, Courtesy of Sydney Opera House\n\n##### Project Details\n\n##### Design Team\n\nArt Processors\n\n##### Photo Credits\n\nJames Hor",
+            "agrees_with_answer": true,
+            "relevance_score": 0.36840567
+          },
+          {
+            "url": "https://www.dcceew.gov.au/parks-heritage/heritage/places/national/sydney-opera-house",
+            "excerpt": "Skip to main navigation   Skip to page navigation   Skip to search\n\nHome\n\nMain menu)\n\nDepartment of Climate Change, Energy, Enviroment and Water\n\nSkip to page navigation  \n\n# Sydney Opera House\n\nLast updated:\n\n## Heritage list\n\nNational Heritage List, inscribed 12/07/2005\n\n## Location\n\n2 Circular Qu",
+            "agrees_with_answer": true,
+            "relevance_score": 0.36658975
+          }
+        ],
+        "alternative_answers": [],
+        "notes": "5/5 sources confirm the answer"
+      }
+    },
+    {
+      "id": "q_img_blind_map_007",
+      "question": "Which city is famous for its iconic statue of Christ the Redeemer and its vibrant Carnival, located on the southeastern coast of a large South American country?",
+      "claimed_answer": "Rio de Janeiro",
+      "verification": {
+        "verdict": "verified",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "url": "https://www.goaheadtours.com/travel-blog/articles/facts-about-christ-the-redeemer",
+            "excerpt": "by Go Ahead Tours team\n\nRio de Janeiro offers a kaleidoscopic array of raucous energy, colorful festivities, soaring landscapes, and welcoming hospitality. The dynamic city on Brazil’s southeastern coast is known for many things—its gorgeous beaches, legendary Carnival, and the iconic, towering stat",
+            "agrees_with_answer": true,
+            "relevance_score": 0.99979657
+          },
+          {
+            "url": "https://en.wikipedia.org/wiki/Christ_the_Redeemer_(statue)",
+            "excerpt": "Christ the Redeemer (Portuguese: Cristo Redentor, standard Brazilian Portuguese: (/wiki/Help:IPA/Portuguese \"Help:IPA/Portuguese\")) is an Art Deco statue of Jesus in Rio de Janeiro, Brazil, created by French-Polish sculptor Paul Landowski and built by Brazilian engineer Heitor da Silva Costa, in col",
+            "agrees_with_answer": true,
+            "relevance_score": 0.99916387
+          },
+          {
+            "url": "https://www.britannica.com/topic/Christ-the-Redeemer",
+            "excerpt": "Show more  Show less \n\nChrist the Redeemer, colossal statue of Jesus Christ at the summit of Mount Corcovado, Rio de Janeiro, southeastern Brazil. Celebrated in traditional and popular songs, Corcovado towers over Rio de Janeiro, Brazil’s principal port city. The statue of Christ the Redeemer was co",
+            "agrees_with_answer": true,
+            "relevance_score": 0.9954261
+          },
+          {
+            "url": "https://www.riocarnaval.org/tours-rio-de-janeiro/christ-the-redeemer",
+            "excerpt": "Christ The Redeemer | Tours in Rio de Janeiro | RioCarnaval.org\n\nRioCarnaval.Org Logo\n\n BOOKERS CLUB\n TICKET PACKAGE\n BALLS\n CARNIVAL IN RIO\n\n  + Rio Samba School\n  + Samba Parade\n  + Sambadrome\n  + Rio Neighborhoods\n TICKET PACKAGE TYPES \n\n  + Grandstands\n  + Front Box\n CARNIVAL BEYOND RIO\n\n  + Rec",
+            "agrees_with_answer": true,
+            "relevance_score": 0.99193794
+          },
+          {
+            "url": "https://edition.cnn.com/travel/christ-redeemer-rio-de-janeiro-brazil-history",
+            "excerpt": "“The atmosphere of Rio is formed by an intense energy of human warmth, relaxation, joy, lightness, sensuality, and receptivity,” he says. “Christ on top of Corcovado is the accomplice to all this carioca spirit. It complements all the beauty of the beaches, the Sugarloaf Mountain, the carnival, the ",
+            "agrees_with_answer": true,
+            "relevance_score": 0.9425068
+          }
+        ],
+        "alternative_answers": [],
+        "notes": "5/5 sources confirm the answer"
+      }
+    },
+    {
+      "id": "q_img_blind_map_008",
+      "question": "Which city is marked, known for its ancient empire and iconic amphitheater, often associated with gladiators, located at the heart of a boot-shaped peninsula with the Tiber River running through?",
+      "claimed_answer": "Rome",
+      "verification": {
+        "verdict": "verified",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "url": "https://italianamericanherald.com/acqua-della-vita-the-tiber-river-becomes-the-lifeblood-of-a-city-that-ruled-an-empire/",
+            "excerpt": "On the eastern bank are the Capitoline Museums and Teatro Marcello, the Pantheon, Piazza Navona, and the Trevi Fountain. The river also flows near the Via Dei Fori imperial leading to the heart of the city with the Roman Forum, Colosseum, Palatine Hill, and the Circus Maximus. [...] On the western b",
+            "agrees_with_answer": true,
+            "relevance_score": 0.9950177
+          },
+          {
+            "url": "https://www.britannica.com/place/Rome",
+            "excerpt": "Rome, historic city and capital of Roma provincia (province), of Lazio regione (region), and of the country of Italy. Rome is located in the central portion of the Italian peninsula, on the Tiber River about 15 miles (24 km) inland from the Tyrrhenian Sea. Once the capital of an ancient republic and",
+            "agrees_with_answer": true,
+            "relevance_score": 0.98201376
+          },
+          {
+            "url": "https://www.walksofitaly.com/blog/attractions/the-colosseum-symbol-of-rome",
+            "excerpt": "## Colosseum FAQ\n\n### What is the Colosseum?\n\nThe Colosseum, also known as the Flavian Amphitheater, is an ancient Roman amphitheater located in the heart of Rome. Built between 70 and 80 AD by Emperors Vespasian, Titus, and Domitian, it stands as a monumental symbol of Roman engineering and culture",
+            "agrees_with_answer": true,
+            "relevance_score": 0.979354
+          },
+          {
+            "url": "https://en.wikipedia.org/wiki/Colosseum",
+            "excerpt": "Originally, the building's Latin name was simply _amphitheatrum_, 'amphitheatre'.( Though the modern name Flavian Amphitheatre (Latin: _Amphitheatrum Flavium_) is often used, there is no evidence it was used in classical antiquity.( This name refers to the patronage of the Flavian dynasty, during wh",
+            "agrees_with_answer": true,
+            "relevance_score": 0.9585377
+          },
+          {
+            "url": "https://www.britannica.com/topic/Colosseum",
+            "excerpt": "The amphitheater seated some 50,000 spectators, who were shielded from the sun by a massive retractable velarium (awning). Supporting masts extended from corbels built into the Colosseum’s top, or attic, story, and hundreds of Roman sailors were required to manipulate the rigging that extended and r",
+            "agrees_with_answer": true,
+            "relevance_score": 0.950411
+          }
+        ],
+        "alternative_answers": [],
+        "notes": "5/5 sources confirm the answer"
+      }
+    },
+    {
+      "id": "q_img_blind_map_009",
+      "question": "Which major city lies at the heart of the largest country in the world, on the banks of the Moskva River, and is home to the famous Kremlin?",
+      "claimed_answer": "Moscow",
+      "verification": {
+        "verdict": "verified",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "url": "https://simcorner.com/blogs/travel-guides/capital-of-russia",
+            "excerpt": "Capital of Russia\n\nMoscow is the capital of Russia, a vibrant metropolis that blends centuries of Russian history with modern urban life. Stretching along the Moskva River, the city is home to the Kremlin, the president’s official residence, as well as major government institutions, making it the po",
+            "agrees_with_answer": true,
+            "relevance_score": 0.9983386
+          },
+          {
+            "url": "https://en.wikipedia.org/wiki/Kremlin",
+            "excerpt": "The Moscow Kremlin, commonly known simply as the Kremlin, is a fortified complex \"Kremlin (fortification)\") in Moscow, Russia. Located in the historic centre of the country's capital city, the Kremlin comprises five palaces, four cathedrals, and an enclosing wall along with numerous towers. Within t",
+            "agrees_with_answer": true,
+            "relevance_score": 0.997285
+          },
+          {
+            "url": "https://en.wikipedia.org/wiki/Moscow",
+            "excerpt": "Moscow is the capital and largest city of Russia, standing on the Moskva River \"Moskva (river)\") in Central Russia. It has a population estimated at over 13 million residents within the city limits, over 19.1 million residents in the urban area, and over 21.5 million residents in its metropolitan ar",
+            "agrees_with_answer": true,
+            "relevance_score": 0.9971771
+          },
+          {
+            "url": "https://www.worldatlas.com/articles/what-is-the-capital-of-russia.html",
+            "excerpt": "Moscow is the largest, most populous, and the capital city of Russia. It is located on the western part of the country and lies entirely on the European continent. Moscow is the world's 14th largest metro by area and 11th by population. It is considered an alpha city because of its dominance by size",
+            "agrees_with_answer": true,
+            "relevance_score": 0.9918121
+          },
+          {
+            "url": "https://www.ebsco.com/research-starters/geography-and-cartography/moscow-russia",
+            "excerpt": "Browse Subject Areas\n\n# Moscow, Russia\n\nMoscow, the capital of the Russian Federation, stands as the largest city in Russia and one of the largest urban centers in the world. With a history spanning nearly nine centuries, it has transformed from a modest village along the Moscow River into a signifi",
+            "agrees_with_answer": true,
+            "relevance_score": 0.99094474
+          }
+        ],
+        "alternative_answers": [],
+        "notes": "5/5 sources confirm the answer"
+      }
+    },
+    {
+      "id": "q_img_blind_map_010",
+      "question": "Which city is located on the west coast of India, known for its iconic Gateway of India and as a major financial hub?",
+      "claimed_answer": "Mumbai",
+      "verification": {
+        "verdict": "verified",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "url": "https://brainly.com/question/1277225",
+            "excerpt": "Here are some key details about Mumbai:\n\nLocation: Mumbai is situated in the state of Maharashtra and is positioned at the coordinates approximately 19.0760° N latitude and 72.8777° E longitude.\n\nEconomic Importance: Mumbai is considered the financial capital of India. It's home to the Bombay Stock ",
+            "agrees_with_answer": true,
+            "relevance_score": 0.8649622
+          },
+          {
+            "url": "https://aai-portal.maharashtratourism.gov.in/districts/mumbai-city/",
+            "excerpt": "Skip to content\n\nDepartment of Tourism Maharashtra\n\nDepartment of Tourism Maharashtra\n\nDepartment of Tourism Maharashtra\n\nDepartment of Tourism Maharashtra\n\n \n\n# Mumbai City\n\n# Mumbai\n\nMumbai is a densely populated city on India’s west coast. A financial center, it’s India’s largest city. On the Mum",
+            "agrees_with_answer": true,
+            "relevance_score": 0.8332299
+          },
+          {
+            "url": "https://m.economictimes.com/news/india/indias-6-biggest-cities-you-should-know-about/mumbai-the-financial-capital-of-india/slideshow/120790553.cms",
+            "excerpt": "## Mumbai – The Financial Capital of India\n\nMumbai, formerly known as Bombay, is India’s most populous city and its financial powerhouse. Located on the western coast, it’s home to over 20 million people and serves as the capital of Maharashtra. The city houses major financial institutions such as t",
+            "agrees_with_answer": true,
+            "relevance_score": 0.82728493
+          },
+          {
+            "url": "https://en.wikipedia.org/wiki/Gateway_of_India",
+            "excerpt": "The Gateway of India is an arch-monument, completed in 1924, on the waterfront of Mumbai, Maharashtra, India. It was erected to commemorate the landing of King George V of the United Kingdom for his coronation as the Emperor of India in December 1911 at Strand Road near Wellington Fountain. He was t",
+            "agrees_with_answer": true,
+            "relevance_score": 0.81595254
+          },
+          {
+            "url": "https://www.britannica.com/topic/Gateway-of-India",
+            "excerpt": "Select Citation Style\n\nShare\n\nShare to social media\n\nFacebook X\n\nURL\n\nFeedback\n\nThank you for your feedback\n\nOur editors will review what you’ve submitted and determine whether to revise the article.\n\nExternal Websites\n\n Cultural India - Gateway of India, Mumbai, India\n IndiaNetzone - Gateway of Ind",
+            "agrees_with_answer": true,
+            "relevance_score": 0.7487387
+          }
+        ],
+        "alternative_answers": [],
+        "notes": "5/5 sources confirm the answer"
+      }
+    },
+    {
+      "id": "q_img_hint_image_001",
+      "question": "This atmospheric painting hints at a classic American novel. What is it?",
+      "claimed_answer": "The Great Gatsby",
+      "verification": {
+        "verdict": "verified",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "url": "https://scholarcommons.sc.edu/cgi/viewcontent.cgi?article=1242&context=senior_theses",
+            "excerpt": "Delphin Enjolras on its cover (fig. 16). 45 \n\nFig. 16 Fitzgerald, F. Scott. The Great Gatsby. Penguin Books, 1994. \n\nEnjolras’ Evening on the Terrace (1924) features flappers with bobbed hair and loose, \n\nrhinesto ne -covered dresses. By choosing a contemporaneous painting, Penguin is able to convey",
+            "agrees_with_answer": true,
+            "relevance_score": 0.9972638
+          },
+          {
+            "url": "https://www.albert.io/blog/the-great-gatsby-the-great-american-novel/",
+            "excerpt": "Above all, The Great Gatsby is a classic American novel simply because its story remains relevant today, nearly 100 years after its publication. Americans and readers from across the globe can find themselves in the characters and find meaning and importance in the novel’s universal themes. [...] Th",
+            "agrees_with_answer": true,
+            "relevance_score": 0.99629277
+          },
+          {
+            "url": "https://americanwritersmuseum.org/stories-behind-classic-book-covers-the-great-gatsby/?srsltid=AfmBOoqMLhrwERX1yuyWnE20z7z2t7hZycJzRFE6oiUGsHGl6oXzxFA_",
+            "excerpt": "Blue cover of The Great Gatsby [...] As well as possibly providing imagery for the book, Cugat’s cover also mirrors Fitzgerald’s own themes, thereby acting almost as a kind of pictorial prologue. For example, Cugat includes the famous green light in his painting, but its positioning and shape are re",
+            "agrees_with_answer": true,
+            "relevance_score": 0.98087597
+          },
+          {
+            "url": "https://americanwritersmuseum.org/stories-behind-classic-book-covers-the-great-gatsby/?srsltid=AfmBOoorduzDYROKvfo7GHnbJD6P3cxpcWUFNDEt2bVpOgU70JRBIORj",
+            "excerpt": "Blue cover of The Great Gatsby [...] As well as possibly providing imagery for the book, Cugat’s cover also mirrors Fitzgerald’s own themes, thereby acting almost as a kind of pictorial prologue. For example, Cugat includes the famous green light in his painting, but its positioning and shape are re",
+            "agrees_with_answer": true,
+            "relevance_score": 0.98087597
+          },
+          {
+            "url": "https://news.artnet.com/art-world/decoding-the-iconic-cover-of-the-great-gatsby-2672761",
+            "excerpt": "Sign up for our daily newsletter.\n\n## The best of Artnet News in your inbox.\n\nThis image, titled Celestial Eyes, is one well-known to readers around the world. A gouache painted by Spanish artist Francis Cugat, it appeared on the cover dust jacket of the first edition of F. Scott Fitzgerald’s The Gr",
+            "agrees_with_answer": true,
+            "relevance_score": 0.9780517
+          }
+        ],
+        "alternative_answers": [],
+        "notes": "5/5 sources confirm the answer"
+      }
+    },
+    {
+      "id": "q_img_hint_image_002",
+      "question": "This atmospheric painting hints at the building blocks of life. What is it?",
+      "claimed_answer": "DNA",
+      "verification": {
+        "verdict": "verified",
+        "confidence": 0.8799999999999999,
+        "sources": [
+          {
+            "url": "https://www.healing-power-of-art.org/the-four-elements-in-art-and-what-they-express/",
+            "excerpt": "## The Building Blocks of Life\n\nThe Four Elements: Earth, Water, Air and Fire are fundamental building blocks of life that exist in the physical world. These substances that compose the physical universe are visible in the lakes, streams and oceans, mountains, rocks and soil, the wind and atmosphere",
+            "agrees_with_answer": false,
+            "relevance_score": 0.8198933
+          },
+          {
+            "url": "https://www.smithsonianmag.com/smart-news/lifes-genetic-code-requires-five-key-ingredients-the-asteroid-ryugu-has-all-of-them-a-new-study-suggests-180988367/",
+            "excerpt": "Smithsonian Magazine white logo\n\nSections\n\nMore from Smithsonian magazine\n\nOur Partners\n\nSubscribe to Smithsonian magazine and get a FREE tote.\n\n# Life’s Genetic Code Requires Five Key Ingredients. The Asteroid Ryugu Has All of Them, a New Study Suggests\n\n## The findings further hint that space rock",
+            "agrees_with_answer": true,
+            "relevance_score": 0.7233095
+          },
+          {
+            "url": "https://www.livescience.com/human-behavior/arts-entertainment/van-gogh-s-starry-night-contains-surprisingly-accurate-physics-suggesting-he-understood-the-hidden-dynamism-of-the-sky",
+            "excerpt": "A large black-and-white whale with a tall dorsal fin swims in the shimmering gray waters in front of a sunset city skyline. \nAn illustration of a damaged strand of DNA against a black background. The damage can be shown in red. \nA large, gray, wrinkled carcass sits between two trees on a brown, dust",
+            "agrees_with_answer": true,
+            "relevance_score": 0.5175709
+          },
+          {
+            "url": "https://www.nationalgeographic.com/science/article/asteroid-bennu-ryugu-life-origins-earth",
+            "excerpt": "RNA is central to a leading hypothesis for how life began on Earth. “The first life might have organized solely as RNA. Not DNA, not protein, just RNA,” says Yoshihiro Furukawa of Tohoku University, who led the sugar study.\n\nTogether, the findings show that the geochemistry that played out inside an",
+            "agrees_with_answer": true,
+            "relevance_score": 0.2925953
+          },
+          {
+            "url": "https://mdibl.org/rembrandt-in-the-laboratory/",
+            "excerpt": "but these competitive rivalries are also well-known in science, the race for DNA structure, for instance, or deciphering the genetic code. [...] Our conception of the atmospheric beauty of Vermeer’s paintings seems to be in sharp contrast with science and technology, but it was especially Vermeer’s ",
+            "agrees_with_answer": true,
+            "relevance_score": 0.032836955
+          }
+        ],
+        "alternative_answers": [],
+        "notes": "4/5 sources confirm the answer"
+      }
+    },
+    {
+      "id": "q_img_hint_image_003",
+      "question": "This atmospheric painting hints at a monumental event in space exploration history. What is it?",
+      "claimed_answer": "The Moon Landing",
+      "verification": {
+        "verdict": "uncertain",
+        "confidence": 0.3,
+        "sources": [
+          {
+            "url": "https://www.nationalgeographic.com/science/article/apollo-mission-anniversary-art-history-news",
+            "excerpt": "This illustration shows the Apollo 11 lunar module's ascent stage lifting off from the moon, leaving behind the descent stage, a laser reflector, a TV camera, the astronauts’ backpacks, and an American flag. “I still have [this] painting, and it’s one of my favorites,” Mion says.\n\nWatters is current",
+            "agrees_with_answer": false,
+            "relevance_score": 0.9950177
+          },
+          {
+            "url": "https://www.culturetype.com/2019/07/16/50-years-ago-alma-thomas-made-space-paintings-that-imagined-the-moon-and-mars/",
+            "excerpt": "After the initial lunar mission, NASA’s Apollo program continued until 1972. Over the life of the program (1968-1972), there were 11 space flights. Throughout the period, Thomas made Space paintings in her recognizable, expressive abstract style. Works such as “Apollo 12 Splash Down” (1970) displaye",
+            "agrees_with_answer": false,
+            "relevance_score": 0.98951083
+          },
+          {
+            "url": "https://www.rauschenbergfoundation.org/art/art-context/stoned-moon",
+            "excerpt": "In the summer of 1969, at the invitation of NASA, Rauschenberg witnessed the Apollo 11 space launch, the first manned mission to the moon. Stoned Moon Drawing contains Rauschenberg’s account of the event, “The bird’s nest bloomed with fire and clouds. Softly largely slowly silently Apollo 11 started",
+            "agrees_with_answer": false,
+            "relevance_score": 0.98228765
+          },
+          {
+            "url": "https://www.senate.gov/art-artifacts/fine-art/paintings/35_00001_000.htm",
+            "excerpt": "Object Description\n This oval mural commemorating America’s moon landing embellishes the Brumidi Corridors in the Senate wing of the Capitol. The mural’s three main elements are: the rocket that propelled the astronauts into orbit; astronauts Neil Armstrong and Buzz Aldrin planting the United States",
+            "agrees_with_answer": true,
+            "relevance_score": 0.9757624
+          },
+          {
+            "url": "https://airandspace.si.edu/explore/stories/apollo-11-moon-landing",
+            "excerpt": "00.67408° N latitude, 23.47297° E longitude\n\nFor the first lunar landing, the Sea of Tranquility (Mare Tranquilitatis) was the site chosen because it is a relatively smooth and level area. It does, however, have some craters and in the last minutes before landing, Neil Armstrong had to manually pilo",
+            "agrees_with_answer": false,
+            "relevance_score": 0.9161096
+          }
+        ],
+        "alternative_answers": [],
+        "notes": "Gemini unavailable; insufficient evidence for confident verdict"
+      }
+    },
+    {
+      "id": "q_img_hint_image_004",
+      "question": "This atmospheric painting hints at a famous composer from the classical era. What is it?",
+      "claimed_answer": "Beethoven",
+      "verification": {
+        "verdict": "verified",
+        "confidence": 0.8799999999999999,
+        "sources": [
+          {
+            "url": "https://www.popularbeethoven.com/the-most-famous-portrait-of-beethoven/",
+            "excerpt": "Stieler, true to his habit, beautified the subject’s appearance. The forever messy Beethoven can be seen here with his hair arranged, face shaved, wearing a clean and tidy dress. Around the neck the iconic red scarf.\n\nThe painting has been the most popular Beethoven portrait, ever since! It goes bey",
+            "agrees_with_answer": true,
+            "relevance_score": 0.56431514
+          },
+          {
+            "url": "https://apollo-magazine.com/beethoven-stieler-portrait/",
+            "excerpt": "Rob Weinberg\n\n4 February 2020\n\nBetween February and April 1820, Joseph Karl Stieler, court artist to the Bavarian kings, created what remains the most famous portrait of Ludwig van Beethoven. For two centuries, it has perpetuated the popular image of the composer – his brooding demeanour and his rep",
+            "agrees_with_answer": true,
+            "relevance_score": 0.45900398
+          },
+          {
+            "url": "https://artuk.org/discover/stories/sculptures-of-note-busts-of-composers-in-the-nations-collection",
+            "excerpt": "unknown artist\n\nRoyal Academy of Music\n\nFranz Schubert (1797–1828) completes our quartet of 'Classical' composers. Sometimes Beethoven and Schubert can be seen as a bridge between Classicism and the Romanticism that was to dominate the rest of the nineteenth century. Schubert would often employ more",
+            "agrees_with_answer": true,
+            "relevance_score": 0.36861077
+          },
+          {
+            "url": "https://interlude.hk/5-composers-who-were-also-accomplished-visual-artists/",
+            "excerpt": "George Gershwin, self-portrait, 1936\n\nAmong Gershwin’s best-known paintings is his portrait of his Hollywood tennis partner, fellow painter-composer Arnold Schoenberg (c. 1934–36). Today, that painting hangs in the U.S. Library of Congress.\n\nGeorge Gershwin painting Arnold SchoenbergGeorge Gershwin ",
+            "agrees_with_answer": false,
+            "relevance_score": 0.34886748
+          },
+          {
+            "url": "https://www.classicfm.com/composers/beethoven/real-face-hadi-karimi-3d-colourised-portraits/",
+            "excerpt": "In the images (you can scroll through on Instagram above), the German Romantic, sculpted in a programme called ZBrush with added colour texture through Substance Painter, appears in a surprisingly lifelike light.\n\nTo achieve LVB’s signature flyaway mane, Karimi used a tool called Xgen core on his ha",
+            "agrees_with_answer": true,
+            "relevance_score": 0.34244013
+          }
+        ],
+        "alternative_answers": [],
+        "notes": "4/5 sources confirm the answer"
+      }
+    },
+    {
+      "id": "q_img_hint_image_005",
+      "question": "This atmospheric painting hints at a famous lady's enigmatic smile. What is it?",
+      "claimed_answer": "The Mona Lisa",
+      "verification": {
+        "verdict": "verified",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "url": "https://www.artgallery.co.uk/blog/17537-monalisa-the-enigmatic-smile-that-echoes-through-centuries",
+            "excerpt": "#### Conclusion:\n\n#### The Monalisa, with her enigmatic smile and timeless allure, transcends the boundaries of art history. As an embodiment of Leonardo da Vinci's artistic brilliance, the painting continues to inspire awe, curiosity, and a sense of wonder. The Mona Lisa stands not only as a testam",
+            "agrees_with_answer": true,
+            "relevance_score": 0.9980276
+          },
+          {
+            "url": "https://en.wikipedia.org/wiki/Mona_Lisa",
+            "excerpt": "The painting was one of the first Italian portraits to depict the sitter in front of an imaginary landscape, although some scholars favour a realistic description, and Leonardo was one of the first painters to use aerial perspective. The enigmatic woman is portrayed seated in what appears to be an o",
+            "agrees_with_answer": true,
+            "relevance_score": 0.9887554
+          },
+          {
+            "url": "https://www.artandobject.com/news/mona-lisa-brief-history-da-vincis-famous-painting",
+            "excerpt": "Thought by most scholars to be a portrait of Italian noble Lisa del Giocondo, this beautiful, dark-haired woman with an enigmatic gaze has fascinated people for ages. Unlike most 16th-century portraits of nobility, which showed off their social status and wealth with flamboyant clothing, hairstyles ",
+            "agrees_with_answer": true,
+            "relevance_score": 0.9839708
+          },
+          {
+            "url": "https://pubmed.ncbi.nlm.nih.gov/1453176/",
+            "excerpt": "# Mona Lisa: the enigma of the smile\n\n### Author\n\n### Affiliation\n\n## Abstract\n\nThe Mona Lisa, painted by Leonardo Da Vinci, 1503, pictures a smile that has been long the subject of conjecture. It is believed, however, that the Mona Lisa does not smile; she wears an expression common to people who h",
+            "agrees_with_answer": true,
+            "relevance_score": 0.9755769
+          },
+          {
+            "url": "https://www.pbs.org/kenburns/leonardo-da-vinci/the-mona-lisa",
+            "excerpt": "##### By Isabella Feinstein\n\nFew works of art have captured the imagination as much as Leonardo da Vinci's Mona Lisa. The mystery and allure of her portrait reaches far beyond her modest 30-inch x 20-inch frame. She’s the subject of books, films, songs and even an art heist.\n\nShe is entirely familia",
+            "agrees_with_answer": true,
+            "relevance_score": 0.95292586
+          }
+        ],
+        "alternative_answers": [],
+        "notes": "5/5 sources confirm the answer"
+      }
+    }
+  ],
+  "verified_count": 24,
+  "wrong_count": 0,
+  "uncertain_count": 1
+}

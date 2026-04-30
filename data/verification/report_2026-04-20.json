@@ -1,0 +1,291 @@
+{
+  "metadata": {
+    "verified_at": "2026-04-20T19:07:04.327646Z",
+    "source_file": "data/verification/missing_sources_2026-04-20.json",
+    "verification_method": "fact_verifier_service",
+    "total_questions": 25,
+    "verdicts": {
+      "correct": 24,
+      "needs_review": 1,
+      "needs_fix": 0,
+      "incorrect": 0
+    }
+  },
+  "questions": [
+    {
+      "id": "q_img_silhouette_001",
+      "question": "Which country is famously known for its silhouette resembling a boot, with the toe aimed at a triangular island in the Mediterranean?",
+      "stored_answer": "Italy",
+      "verdict": "correct",
+      "fact_verifier_verdict": "verified",
+      "fact_verifier_confidence": 0.95,
+      "notes": "5/5 sources confirm the answer",
+      "source_url": "https://www.tripsavvy.com/the-geography-of-italy-4020744",
+      "source_excerpt": "Photo:\n\nTripSavvy\n\nItaly is a Mediterranean country located in southern Europe. It is bordered by the Adriatic Sea on the east coast, the Tyrrhenian Sea on the west or Mediterranean coast, and the Ionian Sea to the south."
+    },
+    {
+      "id": "q_img_silhouette_002",
+      "question": "Which country has a silhouette resembling a seahorse dancing in the Pacific Ocean, with an elegant curve comprising a series of islands extending from north to south?",
+      "stored_answer": "Japan",
+      "verdict": "correct",
+      "fact_verifier_verdict": "verified",
+      "fact_verifier_confidence": 0.95,
+      "notes": "5/5 sources confirm the answer",
+      "source_url": "https://en.wikipedia.org/wiki/Japanese_archipelago",
+      "source_excerpt": "The Japanese archipelago (Japanese: 日本列島, Hepburn: Nippon/Nihon Rettō; Japanese pronunciation: (/wiki/Help:IPA/Japanese \"Help:IPA/Japanese\")) is an archipelago of 14,125 islands that constitute the sovereign state of Japan. It spans over 3,000 km (1,900 mi) from the Sea of Okhotsk in the northeast t"
+    },
+    {
+      "id": "q_img_silhouette_003",
+      "question": "Imagine a vast triangular kite soaring through the skies, its tail curving elegantly over the azure waves. This large peninsula extends south into the Indian Ocean, flanked by the Arabian Sea on one side and the Bay of Bengal on the other. What country could this be?",
+      "stored_answer": "India",
+      "verdict": "correct",
+      "fact_verifier_verdict": "verified",
+      "fact_verifier_confidence": 0.95,
+      "notes": "5/5 sources confirm the answer",
+      "source_url": "https://www.worldatlas.com/articles/which-water-bodies-surround-the-indian-peninsula.html",
+      "source_excerpt": "A peninsula can be defined as a landmass that extends from a larger body of land and is surrounded by water bodies on all other sides. The Indian Peninsula consists of a vast region in South Asia that is in the shape of an inverted triangle."
+    },
+    {
+      "id": "q_img_silhouette_004",
+      "question": "Which country has a shape often likened to a giant island with a broad, flaring brim that swoops down like a sunhat over the Indian Ocean? Famous for its vast outback and unique wildlife hopping across its landmass.",
+      "stored_answer": "Australia",
+      "verdict": "correct",
+      "fact_verifier_verdict": "verified",
+      "fact_verifier_confidence": 0.95,
+      "notes": "5/5 sources confirm the answer",
+      "source_url": "https://www.australia.com/en-us/things-to-do/nature-and-national-parks/guide-to-the-australian-outback.html",
+      "source_excerpt": "## Where is the outback? The Terraces, Leonora Loop Trail, near Leonora, WA © Tourism Western Australia\nDaintree National Park, QLD © Tourism Tropical North Queensland\nLake Eyre, Lake Eyre National Park, SA © SATC\n\nAs the world’s largest island, it’s no secret that Australia spreads far and wide."
+    },
+    {
+      "id": "q_img_silhouette_005",
+      "question": "Which country has a silhouette resembling a partially open umbrella, standing tall and proud with a handle that seems to point upwards towards the northern seas? This land is known for its rich history, castles, and tea customs.",
+      "stored_answer": "United Kingdom",
+      "verdict": "correct",
+      "fact_verifier_verdict": "verified",
+      "fact_verifier_confidence": 0.8099999999999999,
+      "notes": "3/5 sources confirm the answer",
+      "source_url": "https://en.wikipedia.org/wiki/United_Kingdom",
+      "source_excerpt": "The United Kingdom of Great Britain and Northern Ireland, commonly known as the United Kingdom (UK) or Britain,( is a country in northwestern Europe, off the coast of the continental mainland. It comprises England, Scotland, Wales and Northern Ireland,( with a population of over 69 million in 2024."
+    },
+    {
+      "id": "q_img_silhouette_006",
+      "question": "Which country has a unique silhouette that looks like a slender ribbon unfurling down the western coast of South America, tightly hugging the Pacific Ocean, while also snuggling up against the towering Andes Mountains?",
+      "stored_answer": "Chile",
+      "verdict": "correct",
+      "fact_verifier_verdict": "verified",
+      "fact_verifier_confidence": 0.95,
+      "notes": "5/5 sources confirm the answer",
+      "source_url": "https://www.instagram.com/reel/DVtiuy2DQYe/?hl=en",
+      "source_excerpt": "... Country on Earth Stretching like a narrow ribbon along the western edge of South America, Chile is one of the world's most geographically"
+    },
+    {
+      "id": "q_img_silhouette_007",
+      "question": "Which country features a quirky silhouette resembling two long islands dancing in the Pacific Ocean, with one looking like a weathered canoe and the other like a narrow clock hand pointing southwest?",
+      "stored_answer": "New Zealand",
+      "verdict": "correct",
+      "fact_verifier_verdict": "verified",
+      "fact_verifier_confidence": 0.8099999999999999,
+      "notes": "3/5 sources confirm the answer",
+      "source_url": "https://geofactbook.com/countries/new-zealand",
+      "source_excerpt": "## Geography\n\nNew Zealand is an island nation located in the southwestern Pacific Ocean, approximately 2,000 kilometers southeast of Australia. The country consists of two main landmasses, the North Island and the South Island, along with numerous smaller islands."
+    },
+    {
+      "id": "q_img_silhouette_008",
+      "question": "Which country has a jagged profile resembling a hand with fingers splayed out, dipping into the aquamarine waters of the Aegean Sea, surrounded by a sea of islands and nestled in southeastern Europe?",
+      "stored_answer": "Greece",
+      "verdict": "correct",
+      "fact_verifier_verdict": "verified",
+      "fact_verifier_confidence": 0.95,
+      "notes": "5/5 sources confirm the answer",
+      "source_url": "https://en.wikipedia.org/wiki/Geography_of_Greece",
+      "source_excerpt": "Wikipedia\n\n# Geography of Greece\n\n|  |\n\n| This article includes a list of general references, but it lacks sufficient corresponding inline citations. Please help to improve this article by introducing more precise citations."
+    },
+    {
+      "id": "q_img_silhouette_009",
+      "question": "Which country has a long, slender silhouette that swoops down like a dragon's tail, hugging the western side of the Scandinavian Peninsula, known for its stunning fjords plunging into the North Sea?",
+      "stored_answer": "Norway",
+      "verdict": "correct",
+      "fact_verifier_verdict": "verified",
+      "fact_verifier_confidence": 0.95,
+      "notes": "5/5 sources confirm the answer",
+      "source_url": "https://en.wikipedia.org/wiki/Norway",
+      "source_excerpt": "Norway, officially the Kingdom of Norway, is a Nordic country comprising the western and northernmost parts of the Scandinavian Peninsula in Northern Europe, the remote Arctic island Jan Mayen and the archipelago Svalbard. Bouvet Island, located in the Subantarctic, is a dependency, and not a part o"
+    },
+    {
+      "id": "q_img_silhouette_010",
+      "question": "Imagine a long, slender form that resembles a crooked, semi-bent ribbon or elongated alligator lounging in the warm Caribbean waters. Which country has this iconic silhouette famous for its rhythmic culture and shimmering coastlines directly south of the United States and east of Mexico's Yucatán Peninsula?",
+      "stored_answer": "Cuba",
+      "verdict": "correct",
+      "fact_verifier_verdict": "verified",
+      "fact_verifier_confidence": 0.8799999999999999,
+      "notes": "4/5 sources confirm the answer",
+      "source_url": "https://en.wikipedia.org/wiki/Cuba",
+      "source_excerpt": "Cuba, officially the Republic of Cuba, is an island country in the Caribbean. It comprises the eponymous main island as well as 4,195 islands, islets, and cays."
+    },
+    {
+      "id": "q_img_blind_map_001",
+      "question": "Which city is known for its iconic clock tower and sits on the River Thames in a country where tea is a beloved cultural tradition?",
+      "stored_answer": "London",
+      "verdict": "correct",
+      "fact_verifier_verdict": "verified",
+      "fact_verifier_confidence": 0.8099999999999999,
+      "notes": "3/5 sources confirm the answer",
+      "source_url": "https://www.royalcaribbean.com/guides/big-ben-facts",
+      "source_excerpt": "From Buckingham Palace to Tower Bridge, London is overflowing with iconic landmarks. One that stands out among the rest is Elizabeth Tower — more commonly known as the one and only Big Ben."
+    },
+    {
+      "id": "q_img_blind_map_002",
+      "question": "Which city is located in a country known as the land of the rising sun, boasting iconic views of Mount Fuji, and hosts the world's busiest pedestrian crossing?",
+      "stored_answer": "Tokyo",
+      "verdict": "correct",
+      "fact_verifier_verdict": "verified",
+      "fact_verifier_confidence": 0.95,
+      "notes": "5/5 sources confirm the answer",
+      "source_url": "https://en.wikipedia.org/wiki/Shibuya_Crossing",
+      "source_excerpt": "Shibuya Scramble Crossing (渋谷スクランブル交差点, Shibuya sukuranburu kōsaten), commonly known as Shibuya Crossing, is a scramble crossing in Shibuya \"Shibuya (district)\"), Tokyo, Japan. It is located near Shibuya Station in Shibuya, a major commercial and entertainment district in Tokyo."
+    },
+    {
+      "id": "q_img_blind_map_003",
+      "question": "Which city is located near the iconic Giza Pyramids and is bisected by one of the longest rivers in the world, flowing through a land known for its ancient pharaohs?",
+      "stored_answer": "Cairo",
+      "verdict": "correct",
+      "fact_verifier_verdict": "verified",
+      "fact_verifier_confidence": 0.8799999999999999,
+      "notes": "4/5 sources confirm the answer",
+      "source_url": "https://egypttoursgroup.com/how-close-is-the-nile-river-to-the-pyramids/?srsltid=AfmBOoqm30hap6Hay6Fqrcd9iEmQI8vcLlOnmwrV45GuTkLn5rMhY86v",
+      "source_excerpt": "Contents\n\nToggle\n\n## Key Takeaways\n\n The Pyramids of Giza lie only about 8–10 km west of the Nile River — close enough to be visible from Cairo’s riverbanks. In ancient Egypt, a hidden “Ahramat” Nile branch once flowed beside the pyramid fields, letting boats deliver huge limestone blocks right to"
+    },
+    {
+      "id": "q_img_blind_map_004",
+      "question": "Which city is home to an iconic iron tower, lies on the banks of the River Seine, and is known as the 'City of Lights'?",
+      "stored_answer": "Paris",
+      "verdict": "correct",
+      "fact_verifier_verdict": "verified",
+      "fact_verifier_confidence": 0.95,
+      "notes": "5/5 sources confirm the answer",
+      "source_url": "https://frenchmoments.eu/the-eiffel-tower-by-night/",
+      "source_excerpt": "#### The City of Lights\n\nParis, often called the “City of Lights” (La Ville Lumière), truly lives up to its name when the Eiffel Tower begins its nightly illumination. The cityscape takes on a whole new character as iconic landmarks such as the Louvre, Notre Dame Cathedral, and the Seine River banks"
+    },
+    {
+      "id": "q_img_blind_map_005",
+      "question": "Which city is marked at the location known for its iconic statue representing freedom and its status as a major global financial center?",
+      "stored_answer": "New York",
+      "verdict": "correct",
+      "fact_verifier_verdict": "verified",
+      "fact_verifier_confidence": 0.8799999999999999,
+      "notes": "4/5 sources confirm the answer",
+      "source_url": "https://www.newyorkwelcome.net/explore/around-nyc-with-irene/wall-street-history-and-the-bull.htm",
+      "source_excerpt": "It was one of the coldest months on record. It was a very dark morning."
+    },
+    {
+      "id": "q_img_blind_map_006",
+      "question": "Which city is known for its iconic Opera House with a sail-like design and is situated along the southeastern coast of a sunburnt country known for its unique wildlife?",
+      "stored_answer": "Sydney",
+      "verdict": "correct",
+      "fact_verifier_verdict": "verified",
+      "fact_verifier_confidence": 0.95,
+      "notes": "5/5 sources confirm the answer",
+      "source_url": "https://en.wikipedia.org/wiki/Sydney_Opera_House",
+      "source_excerpt": "The Sydney Opera House is a multi-venue performing arts centre in Sydney, New South Wales, Australia. Located on the foreshore of Sydney Harbour, it is widely regarded as one of the world's most famous and distinctive buildings, and a masterpiece of 20th-century architecture."
+    },
+    {
+      "id": "q_img_blind_map_007",
+      "question": "Which city is famous for its iconic statue of Christ the Redeemer and its vibrant Carnival, located on the southeastern coast of a large South American country?",
+      "stored_answer": "Rio de Janeiro",
+      "verdict": "correct",
+      "fact_verifier_verdict": "verified",
+      "fact_verifier_confidence": 0.95,
+      "notes": "5/5 sources confirm the answer",
+      "source_url": "https://www.goaheadtours.com/travel-blog/articles/facts-about-christ-the-redeemer",
+      "source_excerpt": "by Go Ahead Tours team\n\nRio de Janeiro offers a kaleidoscopic array of raucous energy, colorful festivities, soaring landscapes, and welcoming hospitality. The dynamic city on Brazil’s southeastern coast is known for many things—its gorgeous beaches, legendary Carnival, and the iconic, towering stat"
+    },
+    {
+      "id": "q_img_blind_map_008",
+      "question": "Which city is marked, known for its ancient empire and iconic amphitheater, often associated with gladiators, located at the heart of a boot-shaped peninsula with the Tiber River running through?",
+      "stored_answer": "Rome",
+      "verdict": "correct",
+      "fact_verifier_verdict": "verified",
+      "fact_verifier_confidence": 0.95,
+      "notes": "5/5 sources confirm the answer",
+      "source_url": "https://italianamericanherald.com/acqua-della-vita-the-tiber-river-becomes-the-lifeblood-of-a-city-that-ruled-an-empire/",
+      "source_excerpt": "On the eastern bank are the Capitoline Museums and Teatro Marcello, the Pantheon, Piazza Navona, and the Trevi Fountain. The river also flows near the Via Dei Fori imperial leading to the heart of the city with the Roman Forum, Colosseum, Palatine Hill, and the Circus Maximus."
+    },
+    {
+      "id": "q_img_blind_map_009",
+      "question": "Which major city lies at the heart of the largest country in the world, on the banks of the Moskva River, and is home to the famous Kremlin?",
+      "stored_answer": "Moscow",
+      "verdict": "correct",
+      "fact_verifier_verdict": "verified",
+      "fact_verifier_confidence": 0.95,
+      "notes": "5/5 sources confirm the answer",
+      "source_url": "https://simcorner.com/blogs/travel-guides/capital-of-russia",
+      "source_excerpt": "Capital of Russia\n\nMoscow is the capital of Russia, a vibrant metropolis that blends centuries of Russian history with modern urban life. Stretching along the Moskva River, the city is home to the Kremlin, the president’s official residence, as well as major government institutions, making it the po"
+    },
+    {
+      "id": "q_img_blind_map_010",
+      "question": "Which city is located on the west coast of India, known for its iconic Gateway of India and as a major financial hub?",
+      "stored_answer": "Mumbai",
+      "verdict": "correct",
+      "fact_verifier_verdict": "verified",
+      "fact_verifier_confidence": 0.95,
+      "notes": "5/5 sources confirm the answer",
+      "source_url": "https://brainly.com/question/1277225",
+      "source_excerpt": "Here are some key details about Mumbai:\n\nLocation: Mumbai is situated in the state of Maharashtra and is positioned at the coordinates approximately 19.0760° N latitude and 72.8777° E longitude. Economic Importance: Mumbai is considered the financial capital of India."
+    },
+    {
+      "id": "q_img_hint_image_001",
+      "question": "This atmospheric painting hints at a classic American novel. What is it?",
+      "stored_answer": "The Great Gatsby",
+      "verdict": "correct",
+      "fact_verifier_verdict": "verified",
+      "fact_verifier_confidence": 0.95,
+      "notes": "5/5 sources confirm the answer",
+      "source_url": "https://scholarcommons.sc.edu/cgi/viewcontent.cgi?article=1242&context=senior_theses",
+      "source_excerpt": "Delphin Enjolras on its cover (fig. 16)."
+    },
+    {
+      "id": "q_img_hint_image_002",
+      "question": "This atmospheric painting hints at the building blocks of life. What is it?",
+      "stored_answer": "DNA",
+      "verdict": "correct",
+      "fact_verifier_verdict": "verified",
+      "fact_verifier_confidence": 0.8799999999999999,
+      "notes": "4/5 sources confirm the answer",
+      "source_url": "https://www.smithsonianmag.com/smart-news/lifes-genetic-code-requires-five-key-ingredients-the-asteroid-ryugu-has-all-of-them-a-new-study-suggests-180988367/",
+      "source_excerpt": "Smithsonian Magazine white logo\n\nSections\n\nMore from Smithsonian magazine\n\nOur Partners\n\nSubscribe to Smithsonian magazine and get a FREE tote. # Life’s Genetic Code Requires Five Key Ingredients."
+    },
+    {
+      "id": "q_img_hint_image_003",
+      "question": "This atmospheric painting hints at a monumental event in space exploration history. What is it?",
+      "stored_answer": "The Moon Landing",
+      "verdict": "needs_review",
+      "fact_verifier_verdict": "uncertain",
+      "fact_verifier_confidence": 0.3,
+      "notes": "Gemini unavailable; insufficient evidence for confident verdict",
+      "source_url": "https://www.senate.gov/art-artifacts/fine-art/paintings/35_00001_000.htm",
+      "source_excerpt": "Object Description\n This oval mural commemorating America’s moon landing embellishes the Brumidi Corridors in the Senate wing of the Capitol. The mural’s three main elements are: the rocket that propelled the astronauts into orbit; astronauts Neil Armstrong and Buzz Aldrin planting the United States"
+    },
+    {
+      "id": "q_img_hint_image_004",
+      "question": "This atmospheric painting hints at a famous composer from the classical era. What is it?",
+      "stored_answer": "Beethoven",
+      "verdict": "correct",
+      "fact_verifier_verdict": "verified",
+      "fact_verifier_confidence": 0.8799999999999999,
+      "notes": "4/5 sources confirm the answer",
+      "source_url": "https://www.popularbeethoven.com/the-most-famous-portrait-of-beethoven/",
+      "source_excerpt": "Stieler, true to his habit, beautified the subject’s appearance. The forever messy Beethoven can be seen here with his hair arranged, face shaved, wearing a clean and tidy dress."
+    },
+    {
+      "id": "q_img_hint_image_005",
+      "question": "This atmospheric painting hints at a famous lady's enigmatic smile. What is it?",
+      "stored_answer": "The Mona Lisa",
+      "verdict": "correct",
+      "fact_verifier_verdict": "verified",
+      "fact_verifier_confidence": 0.95,
+      "notes": "5/5 sources confirm the answer",
+      "source_url": "https://www.artgallery.co.uk/blog/17537-monalisa-the-enigmatic-smile-that-echoes-through-centuries",
+      "source_excerpt": "#### Conclusion:\n\n#### The Monalisa, with her enigmatic smile and timeless allure, transcends the boundaries of art history. As an embodiment of Leonardo da Vinci's artistic brilliance, the painting continues to inspire awe, curiosity, and a sense of wonder."
+    }
+  ]
+}

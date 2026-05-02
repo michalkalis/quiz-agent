@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 from quiz_shared.models.session import QuizSession
 from quiz_shared.models.participant import Participant
+from quiz_shared.models.phase import SessionPhase
 
 
 class SessionManager:
@@ -160,7 +161,7 @@ class SessionManager:
             mode=mode,
             max_questions=max_questions,
             current_difficulty=difficulty,
-            phase="idle",
+            phase=SessionPhase.IDLE,
             expires_at=datetime.now(timezone.utc) + timedelta(minutes=ttl_minutes)
         )
 

@@ -17,6 +17,7 @@ from ...voice.transcriber import VoiceTranscriber
 from ...retrieval.question_retriever import QuestionRetriever
 from ...quiz.flow import QuizFlowService
 from ...rate_limit import limiter
+from quiz_shared.models.phase import SessionPhase
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -76,7 +77,7 @@ async def transcribe_and_submit(
     if not session:
         raise HTTPException(status_code=404, detail="Session not found or expired")
 
-    if session.phase not in ["asking", "awaiting_answer"]:
+    if session.phase not in (SessionPhase.ASKING, SessionPhase.AWAITING_ANSWER):
         raise HTTPException(status_code=400, detail="Not waiting for input")
 
     try:

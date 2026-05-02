@@ -18,6 +18,7 @@ from ..usage.tracker import UsageTracker
 
 from quiz_shared.models.question import Question
 from quiz_shared.models.session import QuizSession
+from quiz_shared.models.phase import SessionPhase
 
 from ..serializers import question_to_dict, question_to_dict_translated
 
@@ -213,7 +214,7 @@ class QuizFlowService:
 
         # Check if quiz is finished
         if len(session.asked_question_ids) >= session.max_questions:
-            session.phase = "finished"
+            session.transition(to=SessionPhase.FINISHED, caller="flow.process_answer:max_questions")
             self.session_manager.update_session(session)
             result.quiz_finished = True
             result.message = "Quiz completed!"
@@ -223,7 +224,7 @@ class QuizFlowService:
         if self.usage_tracker and session.user_id:
             allowed, remaining, resets_at = self.usage_tracker.check_limit(session.user_id)
             if not allowed:
-                session.phase = "finished"
+                session.transition(to=SessionPhase.FINISHED, caller="flow.process_answer:usage_limit")
                 self.session_manager.update_session(session)
                 usage = self.usage_tracker.get_usage(session.user_id)
                 result.usage_limit_error = {
@@ -241,16 +242,17 @@ class QuizFlowService:
             next_question = self.question_retriever.get_next_question(session)
 
         if not next_question:
-            session.phase = "finished"
+            session.transition(to=SessionPhase.FINISHED, caller="flow.process_answer:no_more_questions")
             self.session_manager.update_session(session)
             result.quiz_finished = True
             result.message = "No more questions available"
             return result
 
-        # Advance session to next question
+        # Advance session to next question. Phase stays "asking" — there's no
+        # backend-side state for "answer received, next question loading", so
+        # advancing the question_id is the entire transition. (No self-loop.)
         session.current_question_id = next_question.id
         session.asked_question_ids.append(next_question.id)
-        session.phase = "asking"
 
         # Record usage
         if self.usage_tracker and session.user_id:

@@ -18,6 +18,7 @@ from ...usage.tracker import UsageTracker
 from ...tts.service import TTSService
 from ...quiz.flow import QuizFlowService, prefetch_question_audio
 from ...rate_limit import limiter
+from quiz_shared.models.phase import SessionPhase
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -42,7 +43,7 @@ async def start_quiz(
         if not session:
             raise HTTPException(status_code=404, detail="Session not found or expired")
 
-        if session.phase != "idle":
+        if session.phase != SessionPhase.IDLE:
             raise HTTPException(status_code=400, detail="Quiz already started")
 
         # Check usage limit (freemium)
@@ -64,7 +65,10 @@ async def start_quiz(
         client_excluded_ids = body.excluded_question_ids or []
         logger.debug("Client excluded %d questions", len(client_excluded_ids))
 
-        session.phase = "asking"
+        # Phase transition is deferred to just before update_session() — if
+        # question retrieval below fails, the stored session stays in IDLE
+        # so the user can retry /start. (Mutating here would be lost since
+        # get_session() returns a deep copy.)
         session.asked_question_ids = []
 
         # Get first question
@@ -123,6 +127,7 @@ async def start_quiz(
 
         translated_question_dict = await question_to_dict_translated(question, session.language, translation_service)
         session.current_question_text = translated_question_dict["question"]
+        session.transition(to=SessionPhase.ASKING, caller="routes.start_quiz")
         session_manager.update_session(session)
 
         audio_info = None
@@ -166,7 +171,7 @@ async def submit_input(
     if not session:
         raise HTTPException(status_code=404, detail="Session not found or expired")
 
-    if session.phase not in ["asking", "awaiting_answer"]:
+    if session.phase not in (SessionPhase.ASKING, SessionPhase.AWAITING_ANSWER):
         raise HTTPException(status_code=400, detail="Not waiting for input")
 
     flow_result = await quiz_flow.process_answer(

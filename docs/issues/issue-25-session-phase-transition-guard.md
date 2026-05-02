@@ -1,7 +1,7 @@
 # Issue 25: Backend `QuizSession.phase` — add a transition guard module
 
-**Triage:** enhancement · ready-for-agent
-**Status:** Surfaced by `/improve-codebase-architecture` 2026-04-30 — not started
+**Triage:** enhancement · done
+**Status:** Shipped 2026-05-02 — `SessionPhase` enum + `transition()` method on `QuizSession`, valid_transitions table in `packages/shared/quiz_shared/models/phase.py`, all 5 call sites migrated, deep-copy mutation in `routes/quiz.py` resolved by deferring transition until just before `update_session()`, redundant `asking → asking` self-loop at `flow.py:253` removed. 27 new transition-table unit tests + 64 backend tests passing.
 **Created:** 2026-04-30
 **Surfaced by:** architecture review, candidate #4
 

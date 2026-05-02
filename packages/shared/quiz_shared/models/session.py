@@ -1,10 +1,14 @@
 """Session model for quiz state management."""
 
+import logging
 from datetime import datetime, timedelta, timezone
-from typing import List, Optional
+from typing import List, Optional, Union
 from pydantic import BaseModel, Field
 
 from .participant import Participant
+from .phase import InvalidPhaseTransition, SessionPhase, is_valid_transition
+
+logger = logging.getLogger(__name__)
 
 
 class QuizSession(BaseModel):
@@ -61,9 +65,9 @@ class QuizSession(BaseModel):
     # Progress (single-player or aggregate)
     question_number: int = Field(0, description="Current question number (0-indexed)")
     score: float = Field(0.0, description="Running score (single-player only)")
-    phase: str = Field(
-        "idle",
-        description="Phase: idle | lobby | asking | awaiting_answer | finished"
+    phase: SessionPhase = Field(
+        SessionPhase.IDLE,
+        description="Phase: idle | asking | awaiting_answer | finished"
     )
 
     # Question history
@@ -105,6 +109,25 @@ class QuizSession(BaseModel):
     def is_multiplayer(self) -> bool:
         """Check if session is multiplayer."""
         return self.mode == "multiplayer" or len(self.participants) > 1
+
+    def transition(self, to: Union[SessionPhase, str], *, caller: Optional[str] = None) -> None:
+        """Move the session to a new phase, validating against the transition table.
+
+        Raises `InvalidPhaseTransition` if the table forbids `current -> to`.
+        Self-transitions are forbidden — if the caller is asking for the same
+        phase, that's a logic bug at the call site (Issue 19 family).
+        """
+        target = SessionPhase(to) if not isinstance(to, SessionPhase) else to
+        current = self.phase if isinstance(self.phase, SessionPhase) else SessionPhase(self.phase)
+
+        if not is_valid_transition(current, target):
+            logger.warning(
+                "Invalid phase transition rejected: %s -> %s (caller=%s, session=%s)",
+                current.value, target.value, caller or "?", self.session_id,
+            )
+            raise InvalidPhaseTransition(current, target)
+
+        self.phase = target
 
     class Config:
         json_schema_extra = {

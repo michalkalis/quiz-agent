@@ -1,7 +1,7 @@
 # Issue 26: Introduce `TaskBag` — concentrate `QuizViewModel`'s task lifecycle
 
-**Triage:** enhancement · ready-for-agent
-**Status:** Surfaced by `/improve-codebase-architecture` 2026-04-30 — not started
+**Triage:** enhancement · done
+**Status:** Shipped 2026-05-02 — `TaskBag` + `TaskKey` introduced; all 10 task handles migrated; 107 iOS tests pass.
 **Created:** 2026-04-30
 **Surfaced by:** architecture review, candidate #5
 

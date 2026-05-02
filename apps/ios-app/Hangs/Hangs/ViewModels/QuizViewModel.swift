@@ -264,11 +264,6 @@ final class QuizViewModel: ObservableObject {
     /// Prevents concurrent stopRecordingAndSubmit calls (silence detection + user tap can race)
     var isStoppingRecording = false  // internal for QuizViewModel+Recording
 
-    // MARK: - Barge-In State
-
-    /// Task listening for barge-in events during TTS playback on external routes.
-    var bargeInTask: Task<Void, Never>?  // internal for QuizViewModel+Audio
-
     // MARK: - Auto-Record State
 
     /// Whether auto-record is active for the current recording (for UI hints)
@@ -295,32 +290,10 @@ final class QuizViewModel: ObservableObject {
 
     private var cancellables = Set<AnyCancellable>()
 
-    // Auto-advance task for result screen (internal for QuizViewModel+Timers)
-    var autoAdvanceTask: Task<Void, Never>?
-
-    // Voice submission task for cancellation support
-    var voiceSubmissionTask: Task<Void, Never>?  // internal for QuizViewModel+Recording
-
-    // Answer timer task (countdown before auto-recording) (internal for QuizViewModel+Timers)
-    var answerTimerTask: Task<Void, Never>?
-
-    // Auto-stop recording task (stops recording after Config.autoRecordingDuration) (internal for QuizViewModel+Timers)
-    var autoStopRecordingTask: Task<Void, Never>?
-
-    // Silence detection task (monitors speech activity during auto-record)
-    var silenceDetectionTask: Task<Void, Never>?  // internal for QuizViewModel+Recording
-
-    // Auto-confirm countdown task (2s before auto-confirming transcribed answer) (internal for QuizViewModel+Timers)
-    var autoConfirmTask: Task<Void, Never>?
-
-    // Thinking time countdown task (delay before auto-recording) (internal for QuizViewModel+Timers)
-    var thinkingTimeTask: Task<Void, Never>?
-
-    // Streaming STT event listener task
-    var sttEventTask: Task<Void, Never>?  // internal for QuizViewModel+Recording
-
-    // Streaming audio chunk sender task
-    var sttChunkTask: Task<Void, Never>?  // internal for QuizViewModel+Recording
+    /// Single owner for every long-lived `Task` this view model spawns.
+    /// Each call site stores its task under a `TaskKey`; `resetState()` calls
+    /// `cancelAll()` instead of duplicating ten cancel-and-nil lines.
+    let taskBag = TaskBag()  // internal for QuizViewModel+Timers/+Recording/+Audio
 
     // Whether the current recording is a re-record (bypasses all timers) (internal for QuizViewModel+Timers)
     var isRerecording: Bool = false
@@ -631,8 +604,7 @@ final class QuizViewModel: ObservableObject {
         // Stop any in-flight voice machinery so the typed answer wins the race
         // against a silent auto-stop submission. Answer/thinking timers are left
         // running on purpose — they no-op once state ≠ .askingQuestion.
-        voiceSubmissionTask?.cancel()
-        voiceSubmissionTask = nil
+        taskBag.cancel(.voiceSubmission)
         cancelAutoStopRecordingTimer()
         cancelSilenceDetection()
         if quizState == .recording {
@@ -749,8 +721,7 @@ final class QuizViewModel: ObservableObject {
 
     /// Pause auto-advance for current question only (not permanent)
     func pauseQuiz() {
-        autoAdvanceTask?.cancel()
-        autoAdvanceTask = nil
+        taskBag.cancel(.autoAdvance)
         currentQuestionPaused = true
 
         Logger.quiz.info("⏸️ Current question paused - auto-advance will resume on next question")
@@ -820,8 +791,7 @@ final class QuizViewModel: ObservableObject {
         consecutiveTranscriptionFailures = 0
 
         // Cancel any previous auto-advance task
-        autoAdvanceTask?.cancel()
-        autoAdvanceTask = nil
+        taskBag.cancel(.autoAdvance)
 
         // Update session state
         currentSession = response.session
@@ -913,8 +883,7 @@ final class QuizViewModel: ObservableObject {
     /// Can be called manually via button or automatically via timer
     func proceedToNextQuestion() async {
         // Cancel any pending auto-advance
-        autoAdvanceTask?.cancel()
-        autoAdvanceTask = nil
+        taskBag.cancel(.autoAdvance)
 
         // Only proceed if currently showing results
         guard quizState.isShowingResult else {
@@ -975,25 +944,8 @@ final class QuizViewModel: ObservableObject {
     }
 
     private func resetState() {
-        // Cancel any pending tasks
-        autoAdvanceTask?.cancel()
-        autoAdvanceTask = nil
-        voiceSubmissionTask?.cancel()
-        voiceSubmissionTask = nil
-        answerTimerTask?.cancel()
-        answerTimerTask = nil
-        thinkingTimeTask?.cancel()
-        thinkingTimeTask = nil
-        autoStopRecordingTask?.cancel()
-        autoStopRecordingTask = nil
-        silenceDetectionTask?.cancel()
-        silenceDetectionTask = nil
-        sttEventTask?.cancel()
-        sttEventTask = nil
-        sttChunkTask?.cancel()
-        sttChunkTask = nil
-        bargeInTask?.cancel()
-        bargeInTask = nil
+        // Cancel every long-lived background task in one call.
+        taskBag.cancelAll()
 
         // Clean up streaming STT
         cleanupStreamingSTT()

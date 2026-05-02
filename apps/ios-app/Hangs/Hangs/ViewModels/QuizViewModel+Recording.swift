@@ -123,8 +123,7 @@ extension QuizViewModel {
 
     /// Listen for STT events and update live transcript / handle committed text
     private func startSTTEventListener(sttService: ElevenLabsSTTServiceProtocol) {
-        sttEventTask?.cancel()
-        sttEventTask = Task { [weak self] in
+        let task = Task { [weak self] in
             for await event in sttService.events {
                 guard let self, !Task.isCancelled else { break }
 
@@ -152,6 +151,7 @@ extension QuizViewModel {
                 }
             }
         }
+        taskBag.add(task, key: .sttEvent)
     }
 
     /// Handle committed transcript from ElevenLabs VAD
@@ -166,8 +166,7 @@ extension QuizViewModel {
         speechDetectedDuringAutoRecord = false
 
         // Disconnect STT WebSocket
-        sttEventTask?.cancel()
-        sttEventTask = nil
+        taskBag.cancel(.sttEvent)
         await sttService?.disconnect()
         isStreamingSTT = false
 
@@ -187,7 +186,7 @@ extension QuizViewModel {
     private func startSilenceDetection(service: SilenceDetectionServiceProtocol) {
         cancelSilenceDetection()
 
-        silenceDetectionTask = Task { [weak self] in
+        let task = Task { [weak self] in
             for await event in service.silenceEvents {
                 guard let self, !Task.isCancelled else { break }
                 guard self.quizState == .recording else { continue }
@@ -202,12 +201,12 @@ extension QuizViewModel {
                 }
             }
         }
+        taskBag.add(task, key: .silenceDetection)
     }
 
     /// Cancel silence detection subscription
     func cancelSilenceDetection() {
-        silenceDetectionTask?.cancel()
-        silenceDetectionTask = nil
+        taskBag.cancel(.silenceDetection)
     }
 
     // MARK: - Stop & Submit
@@ -262,7 +261,7 @@ extension QuizViewModel {
         errorMessage = nil
 
         // Create a task that can be cancelled via cancelProcessing()
-        voiceSubmissionTask = Task { [weak self] in
+        let task = Task { [weak self] in
             guard let self else { return }
 
             do {
@@ -359,9 +358,10 @@ extension QuizViewModel {
                 Logger.network.error("❌ Error submitting answer: \(error, privacy: .public)")
             }
         }
+        taskBag.add(task, key: .voiceSubmission)
 
         // Wait for the task to complete
-        await voiceSubmissionTask?.value
+        await task.value
     }
 
     /// User-facing timeout error
@@ -472,8 +472,7 @@ extension QuizViewModel {
     /// Cancel the processing operation and return to question state
     func cancelProcessing() {
         cancelAutoConfirm()
-        voiceSubmissionTask?.cancel()
-        voiceSubmissionTask = nil
+        taskBag.cancel(.voiceSubmission)
         cancelAnswerTimer()
         cancelAutoStopRecordingTimer()
         cancelSilenceDetection()
@@ -494,10 +493,8 @@ extension QuizViewModel {
 
     /// Clean up streaming STT resources
     func cleanupStreamingSTT() {
-        sttEventTask?.cancel()
-        sttEventTask = nil
-        sttChunkTask?.cancel()
-        sttChunkTask = nil
+        taskBag.cancel(.sttEvent)
+        taskBag.cancel(.sttChunk)
         if isStreamingSTT {
             audioService.stopStreamingRecording()
             Task { await sttService?.disconnect() }

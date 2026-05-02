@@ -15,13 +15,13 @@ extension QuizViewModel {
     // MARK: - Thinking Time Countdown
 
     /// Countdown before auto-recording starts, giving user time to think.
-    /// Creates a fire-and-forget Task stored in `thinkingTimeTask` for cancellation support.
+    /// Creates a fire-and-forget Task stored in `taskBag` under `.thinkingTime` for cancellation.
     func startThinkingTimeCountdown() {
         let thinkingSeconds = settings.thinkingTime
 
         cancelThinkingTime()
 
-        thinkingTimeTask = Task { [weak self] in
+        let task = Task { [weak self] in
             guard let self else { return }
 
             guard thinkingSeconds > 0 else {
@@ -58,12 +58,12 @@ extension QuizViewModel {
             self.isAutoRecording = true
             await self.startRecording()
         }
+        taskBag.add(task, key: .thinkingTime)
     }
 
     /// Cancel the thinking time countdown
     func cancelThinkingTime() {
-        thinkingTimeTask?.cancel()
-        thinkingTimeTask = nil
+        taskBag.cancel(.thinkingTime)
         thinkingTimeCountdown = 0
     }
 
@@ -83,7 +83,7 @@ extension QuizViewModel {
         cancelAnswerTimer()
         answerTimerCountdown = limit
 
-        answerTimerTask = Task { [weak self] in
+        let task = Task { [weak self] in
             guard let self else { return }
 
             for remaining in (0...limit).reversed() {
@@ -104,12 +104,12 @@ extension QuizViewModel {
             self.isRerecording = false
             await self.startRecording()
         }
+        taskBag.add(task, key: .answerTimer)
     }
 
     /// Cancel the answer countdown timer
     func cancelAnswerTimer() {
-        answerTimerTask?.cancel()
-        answerTimerTask = nil
+        taskBag.cancel(.answerTimer)
         answerTimerCountdown = 0
     }
 
@@ -121,7 +121,7 @@ extension QuizViewModel {
 
         cancelAutoStopRecordingTimer()
 
-        autoStopRecordingTask = Task { [weak self] in
+        let task = Task { [weak self] in
             guard let self else { return }
 
             try? await Task.sleep(nanoseconds: UInt64(Config.autoRecordingDuration * 1_000_000_000))
@@ -131,12 +131,12 @@ extension QuizViewModel {
             guard self.quizState == .recording else { return }
             await self.stopRecordingAndSubmit()
         }
+        taskBag.add(task, key: .autoStopRecording)
     }
 
     /// Cancel the auto-stop recording timer
     func cancelAutoStopRecordingTimer() {
-        autoStopRecordingTask?.cancel()
-        autoStopRecordingTask = nil
+        taskBag.cancel(.autoStopRecording)
     }
 
     // MARK: - Auto-Advance Countdown
@@ -153,13 +153,11 @@ extension QuizViewModel {
 
         Logger.quiz.debug("⏱️ Auto-advancing in \(duration, privacy: .public)s (audio: \(String(format: "%.1f", audioDuration), privacy: .public)s, reading time + buffer)")
 
-        // Cancel any previous auto-advance task before starting a new one.
-        // Without this, calling startAutoAdvanceCountdown twice would leave the first
-        // task running without a reference to cancel it.
-        autoAdvanceTask?.cancel()
+        // `taskBag.add` cancels any previous task under .autoAdvance before
+        // installing the new one, so double-fires can't leak a runner.
         autoAdvanceCountdown = duration
 
-        autoAdvanceTask = Task { [weak self] in
+        let task = Task { [weak self] in
             guard let self else { return }
 
             // Countdown loop
@@ -187,6 +185,7 @@ extension QuizViewModel {
 
             await self.proceedToNextQuestion()
         }
+        taskBag.add(task, key: .autoAdvance)
     }
 
     // MARK: - Auto-Confirm Timer
@@ -200,8 +199,7 @@ extension QuizViewModel {
         }
         let duration = Config.autoConfirmDelaySecs
         autoConfirmCountdown = duration
-        autoConfirmTask?.cancel()
-        autoConfirmTask = Task { [weak self] in
+        let task = Task { [weak self] in
             for remaining in (0 ..< duration).reversed() {
                 try? await Task.sleep(nanoseconds: 1_000_000_000)
                 guard let self, !Task.isCancelled else { return }
@@ -211,12 +209,12 @@ extension QuizViewModel {
             guard self.showAnswerConfirmation else { return }
             await self.confirmAnswer()
         }
+        taskBag.add(task, key: .autoConfirm)
     }
 
     /// Cancel any pending auto-confirm timer
     func cancelAutoConfirm() {
-        autoConfirmTask?.cancel()
-        autoConfirmTask = nil
+        taskBag.cancel(.autoConfirm)
         autoConfirmCountdown = 0
     }
 }

@@ -21,19 +21,18 @@ extension QuizViewModel {
 
         // Barge-in: if the user starts speaking during TTS on an external audio
         // route, stop playback and kick off recording immediately.
-        bargeInTask?.cancel()
-        bargeInTask = Task { [weak self] in
+        let task = Task { [weak self] in
             for await _ in service.bargeInEvents {
                 guard let self, !Task.isCancelled else { break }
                 await self.handleBargeIn()
             }
         }
+        taskBag.add(task, key: .bargeIn)
     }
 
     /// Stop silence-detection listening and tear down the barge-in subscription.
     func stopSilenceDetectionListening() {
-        bargeInTask?.cancel()
-        bargeInTask = nil
+        taskBag.cancel(.bargeIn)
         silenceDetectionService?.stopListening()
     }
 

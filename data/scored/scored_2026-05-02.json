@@ -1,0 +1,286 @@
+{
+  "metadata": {
+    "scored_at": "2026-05-02T00:00:00Z",
+    "source_file": "data/generated/claude_batch_017.json",
+    "scored_by": "claude-opus-4-7",
+    "total_questions": 15,
+    "recommendations": {
+      "approve": 10,
+      "revise": 5,
+      "reject": 0
+    },
+    "avg_overall_score": 8.3
+  },
+  "questions": [
+    {
+      "id": "q_scored_008",
+      "question": "True or false: a working analog computer was already in use during the lifetime of Julius Caesar.",
+      "correct_answer": "True",
+      "difficulty": "hard",
+      "topic": "History",
+      "category": "adults",
+      "scores": {
+        "conversation_spark": 9,
+        "surprise_delight": 10,
+        "tellability": 10,
+        "driving_friendliness": 9,
+        "clever_framing": 9
+      },
+      "overall_score": 9.4,
+      "recommendation": "approve",
+      "reasoning": "Computer + Caesar is an irresistible cognitive clash. T/F format makes it extremely driving-friendly. The Antikythera Mechanism reveal is a world-class trivia punchline — people immediately reach for their phones."
+    },
+    {
+      "id": "q_scored_002",
+      "question": "The shortest war in recorded history, fought between Britain and Zanzibar in 1896, lasted closer to 38 minutes, 38 hours, or 38 days?",
+      "correct_answer": "38 minutes",
+      "difficulty": "medium",
+      "topic": "History",
+      "category": "adults",
+      "scores": {
+        "conversation_spark": 9,
+        "surprise_delight": 10,
+        "tellability": 10,
+        "driving_friendliness": 8,
+        "clever_framing": 9
+      },
+      "overall_score": 9.2,
+      "recommendation": "approve",
+      "reasoning": "A war shorter than a sitcom generates instant reaction. Estimation buckets are fair and make the answer reasonably guessable. 'Shortest war in history' is the perfect hook — this lives rent-free in the brain."
+    },
+    {
+      "id": "q_scored_006",
+      "question": "Female kangaroos have an unusually plural reproductive anatomy: where humans have one, they have three of which organ?",
+      "correct_answer": "vagina",
+      "difficulty": "medium",
+      "topic": "Biology",
+      "category": "adults",
+      "scores": {
+        "conversation_spark": 9,
+        "surprise_delight": 10,
+        "tellability": 10,
+        "driving_friendliness": 8,
+        "clever_framing": 9
+      },
+      "overall_score": 9.2,
+      "recommendation": "approve",
+      "reasoning": "Guaranteed table eruption. The human-comparison framing ('where humans have one') is elegant and avoids bluntness. Exceptional tellability — this kangaroo fact gets repeated for years."
+    },
+    {
+      "id": "q_scored_003",
+      "question": "What is greater in number: trees on Earth, or stars in the Milky Way galaxy?",
+      "correct_answer": "trees on Earth",
+      "difficulty": "medium",
+      "topic": "Nature",
+      "category": "adults",
+      "scores": {
+        "conversation_spark": 9,
+        "surprise_delight": 10,
+        "tellability": 9,
+        "driving_friendliness": 9,
+        "clever_framing": 8
+      },
+      "overall_score": 9.0,
+      "recommendation": "approve",
+      "reasoning": "Binary question that's easy to process while driving. Counterintuitive answer creates genuine wow. 'What is greater' is slightly plain but the fact itself carries all the weight."
+    },
+    {
+      "id": "q_scored_013",
+      "question": "If you could bottle the smell of a comet's tail — full of hydrogen sulfide and ammonia — which everyday foul odor would it most resemble?",
+      "correct_answer": "rotten eggs",
+      "difficulty": "hard",
+      "topic": "Astronomy",
+      "category": "adults",
+      "scores": {
+        "conversation_spark": 8,
+        "surprise_delight": 10,
+        "tellability": 10,
+        "driving_friendliness": 7,
+        "clever_framing": 10
+      },
+      "overall_score": 9.0,
+      "recommendation": "approve",
+      "reasoning": "'Space smells like rotten eggs' energy — perfect punchline. The chemistry hints (H2S, ammonia) give a reasoning path for science-minded players. Slightly lower DrF because listing chemical names while driving needs a beat. Framing is exceptional — 'if you could bottle the smell' is poetic."
+    },
+    {
+      "id": "q_scored_007",
+      "question": "A dragonfly catches its prey on roughly 97% of attempts — astonishing for a predator. By comparison, a tiger's hunt success rate is closer to 10%, 30%, or 50%?",
+      "correct_answer": "10%",
+      "difficulty": "hard",
+      "topic": "Nature",
+      "category": "adults",
+      "scores": {
+        "conversation_spark": 9,
+        "surprise_delight": 9,
+        "tellability": 9,
+        "driving_friendliness": 7,
+        "clever_framing": 9
+      },
+      "overall_score": 8.6,
+      "recommendation": "approve",
+      "reasoning": "Dragonfly vs tiger is a brilliant contrast. Slightly long setup to process at speed (97% stat + three options), but payoff is worth it. The implied lesson — insects outperform apex predators — makes it instantly shareable."
+    },
+    {
+      "id": "q_scored_011",
+      "question": "Saltpeter — a key ingredient in gunpowder — has historically been harvested from the droppings of which flying mammal?",
+      "correct_answer": "bat",
+      "difficulty": "hard",
+      "topic": "Chemistry",
+      "category": "adults",
+      "scores": {
+        "conversation_spark": 8,
+        "surprise_delight": 9,
+        "tellability": 9,
+        "driving_friendliness": 8,
+        "clever_framing": 8
+      },
+      "overall_score": 8.4,
+      "recommendation": "approve",
+      "reasoning": "War + bat guano = a memorable gross-yet-fascinating combo. 'Flying mammal' is a neat hint. The em-dash pause in audio delivery could trip up a listener slightly but the question is self-contained and clear."
+    },
+    {
+      "id": "q_scored_015",
+      "question": "When chopping an onion, are you more likely to cry if your knife is sharp or dull?",
+      "correct_answer": "dull",
+      "difficulty": "easy",
+      "topic": "Cooking",
+      "category": "adults",
+      "scores": {
+        "conversation_spark": 8,
+        "surprise_delight": 8,
+        "tellability": 8,
+        "driving_friendliness": 10,
+        "clever_framing": 8
+      },
+      "overall_score": 8.4,
+      "recommendation": "approve",
+      "reasoning": "Perfect driving question — short, binary, domestic, zero setup. Counterintuitive enough to spark kitchen debate. People immediately want to test it. Won't set the table on fire but is a reliable crowd-pleaser."
+    },
+    {
+      "id": "q_scored_009",
+      "question": "An average cumulus cloud — the puffy white kind — drifts overhead weighing roughly: 50 kilograms, 5 tonnes, or 500 tonnes?",
+      "correct_answer": "500 tonnes",
+      "difficulty": "medium",
+      "topic": "Weather",
+      "category": "adults",
+      "scores": {
+        "conversation_spark": 8,
+        "surprise_delight": 9,
+        "tellability": 9,
+        "driving_friendliness": 7,
+        "clever_framing": 8
+      },
+      "overall_score": 8.2,
+      "recommendation": "approve",
+      "reasoning": "500 tonnes of fluff overhead is a fantastic wow moment. The kg/tonnes switch between options creates a slight extra cognitive load in audio form. 'The puffy white kind' is a warmly human touch. Very tellable — '157 hippos' in reveal is bonus material."
+    },
+    {
+      "id": "q_scored_010",
+      "question": "A blue whale's tongue alone weighs about as much as which familiar large land animal?",
+      "correct_answer": "elephant",
+      "difficulty": "easy",
+      "topic": "Nature",
+      "category": "adults",
+      "scores": {
+        "conversation_spark": 7,
+        "surprise_delight": 9,
+        "tellability": 8,
+        "driving_friendliness": 9,
+        "clever_framing": 7
+      },
+      "overall_score": 8.0,
+      "recommendation": "approve",
+      "reasoning": "Solid scale-shock question, very driver-friendly. Elephant is both the correct answer and the only reasonable candidate, so it's slightly telegraphed for trivia veterans. Good reliable question — not a showstopper but dependable."
+    },
+    {
+      "id": "q_scored_014",
+      "question": "On the hottest summer days, the Eiffel Tower is measurably taller than in winter. By what physical phenomenon?",
+      "correct_answer": "thermal expansion",
+      "difficulty": "medium",
+      "topic": "Physics",
+      "category": "adults",
+      "scores": {
+        "conversation_spark": 7,
+        "surprise_delight": 8,
+        "tellability": 8,
+        "driving_friendliness": 8,
+        "clever_framing": 8
+      },
+      "overall_score": 7.8,
+      "recommendation": "revise",
+      "reasoning": "Nice fact, elegant setup. 'By what physical phenomenon' is abstract — for general audiences many won't know 'thermal expansion' by name even if they understand the concept. Consider accepting 'heat' or rephrasing to a multiple-choice or binary. Improve: 'Does the Eiffel Tower get taller or shorter in summer?' is punchier."
+    },
+    {
+      "id": "q_scored_004",
+      "question": "From a high enough vantage point — an airplane or mountain — rainbows reveal their true geometric shape. They are not arches at all. What shape are they actually?",
+      "correct_answer": "circle",
+      "difficulty": "medium",
+      "topic": "Physics",
+      "category": "adults",
+      "scores": {
+        "conversation_spark": 8,
+        "surprise_delight": 9,
+        "tellability": 8,
+        "driving_friendliness": 6,
+        "clever_framing": 8
+      },
+      "overall_score": 7.8,
+      "recommendation": "revise",
+      "reasoning": "Great aha moment and universally relatable. Main weakness: two-sentence setup with sub-clauses ('an airplane or mountain') is lengthy for audio. Suggestion: 'Rainbows are actually circles — you only see an arch because the horizon cuts them off. True or false?' would halve cognitive load while keeping the wow."
+    },
+    {
+      "id": "q_scored_012",
+      "question": "Cool liquid helium just a few degrees above absolute zero and it does something gravity-defying — flowing up the inside of a cup and over the rim. What is this exotic state of matter called?",
+      "correct_answer": "superfluid",
+      "difficulty": "hard",
+      "topic": "Physics",
+      "category": "adults",
+      "scores": {
+        "conversation_spark": 8,
+        "surprise_delight": 9,
+        "tellability": 7,
+        "driving_friendliness": 5,
+        "clever_framing": 9
+      },
+      "overall_score": 7.6,
+      "recommendation": "revise",
+      "reasoning": "Stunning fact and vivid imagery. The hard problem: 'just a few degrees above absolute zero' is cognitively heavy to process while driving, and 'superfluid' is a technical term most players won't know. Suggestion: convert to T/F ('True or false: liquid helium can flow uphill') — preserves the wow, eliminates the term-recall problem."
+    },
+    {
+      "id": "q_scored_005",
+      "question": "All major planets in our solar system rotate counterclockwise as seen from above the north pole — except one, which spins the opposite way. Name it.",
+      "correct_answer": "Venus",
+      "difficulty": "medium",
+      "topic": "Astronomy",
+      "category": "adults",
+      "scores": {
+        "conversation_spark": 7,
+        "surprise_delight": 8,
+        "tellability": 7,
+        "driving_friendliness": 7,
+        "clever_framing": 8
+      },
+      "overall_score": 7.4,
+      "recommendation": "revise",
+      "reasoning": "'As seen from above the north pole' is a mental orientation clause that's hard while driving. Also note: Uranus rotates on a ~98° tilt (arguably both), which could prompt an argument. Suggestion: drop the reference frame qualifier and add Uranus to the answer pool, or add a hint ('hint: named after the goddess of love')."
+    },
+    {
+      "id": "q_scored_001",
+      "question": "Closer to 8 seconds, 8 minutes, or 8 hours: how long does sunlight take to travel from the Sun to Earth?",
+      "correct_answer": "8 minutes",
+      "difficulty": "easy",
+      "topic": "Astronomy",
+      "category": "adults",
+      "scores": {
+        "conversation_spark": 6,
+        "surprise_delight": 6,
+        "tellability": 6,
+        "driving_friendliness": 9,
+        "clever_framing": 8
+      },
+      "overall_score": 7.0,
+      "recommendation": "revise",
+      "reasoning": "Solid warm-up question, very driving-friendly, but the answer isn't surprising enough for adults — it's widely known school knowledge. Surprise and tellability drag the score. Suggestion: build on the 8-min fact with a twist, e.g. 'Light from the Sun takes 8 minutes to reach Earth. How long does it take the same light to escape from the Sun's core? Closer to 8 minutes, 8 years, or 10,000 years?' That variant scores a 9+."
+    }
+  ]
+}

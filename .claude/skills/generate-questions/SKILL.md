@@ -2,7 +2,7 @@
 name: generate-questions
 description: Generate high-quality quiz questions using Claude and save for review
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
-model: sonnet
+model: opus
 argument-hint: "[count] [difficulty] [topics] [--category kids|adults|...] [--theme \"Name\"] [--fact-first]"
 ---
 
@@ -118,7 +118,7 @@ Save the questions to `data/generated/claude_batch_NNN.json` where NNN is the ne
       "source_excerpt": "Brief 1-2 sentence excerpt confirming the answer.",
       "review_status": "pending_review",
       "generation_metadata": {
-        "model": "claude-opus-4-6",
+        "model": "claude-opus-4-7",
         "provider": "anthropic",
         "prompt_version": "<v2_cot | kids | themed>",
         "stage": "claude_code_session",
@@ -130,7 +130,7 @@ Save the questions to `data/generated/claude_batch_NNN.json` where NNN is the ne
     }
   ],
   "metadata": {
-    "model": "claude-opus-4-6",
+    "model": "claude-opus-4-7",
     "provider": "anthropic",
     "generated_at": "<ISO timestamp>",
     "total_generated": 13,
@@ -155,7 +155,7 @@ After saving, automatically verify all generated questions using the FactVerifie
 
 1. Check if the service is running:
    ```bash
-   curl -s -o /dev/null -w '%{http_code}' http://localhost:8003/api/v1/health
+   curl -s -o /dev/null -w '%{http_code}' http://localhost:8003/health
    ```
    If NOT running (non-200), skip verification and note: "FactVerifier not running. Run `/start-local questions` to enable auto-verification, or run `/verify-questions` later."
 

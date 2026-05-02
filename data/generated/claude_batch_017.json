@@ -1,0 +1,587 @@
+{
+  "questions": [
+    {
+      "question": "Closer to 8 seconds, 8 minutes, or 8 hours: how long does sunlight take to travel from the Sun to Earth?",
+      "type": "text",
+      "correct_answer": "8 minutes",
+      "possible_answers": null,
+      "alternative_answers": ["8 min", "eight minutes", "about 8 minutes", "8 minutes 19 seconds"],
+      "topic": "Astronomy",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": ["space", "physics", "estimation"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://blog.edclass.com/20-unbelievable-science-facts-that-will-shock-you/",
+      "source_excerpt": "It takes eight minutes for light to travel from the Sun to Earth: Light travels 300,000km per second. There is around 150 million kilometres between us and the Sun, so this equals around 8 minutes, 19 seconds.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "v3_fact_first",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Estimation Challenge",
+          "why_interesting": "Three orders of magnitude apart force the player to reason about the scale of the Earth-Sun distance versus the speed of light",
+          "universal_appeal": "Sun and Earth are universally familiar; no cultural references",
+          "boring_check": "Avoids 'How long does X take' format by offering three estimation buckets"
+        },
+        "self_critique": {
+          "surprise_factor": 7,
+          "universal_appeal": 10,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "answerability": 9,
+          "overall_score": 8.4,
+          "reasoning": "Solid estimation question with universal appeal; surprise factor moderate because answer is well-known"
+        },
+        "ai_score": 8.4
+      }
+    },
+    {
+      "question": "The shortest war in recorded history, fought between Britain and Zanzibar in 1896, lasted closer to 38 minutes, 38 hours, or 38 days?",
+      "type": "text",
+      "correct_answer": "38 minutes",
+      "possible_answers": null,
+      "alternative_answers": ["38 min", "thirty-eight minutes", "minutes", "about 38 minutes"],
+      "topic": "History",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["war", "history", "estimation", "britain"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://science.howstuffworks.com/weird-facts.htm",
+      "source_excerpt": "In 1896, the Anglo-Zanzibar War became the shortest conflict in history. The British bombarded the Sultan's palace, and within 38 minutes, the war was over.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "v3_fact_first",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Estimation Challenge",
+          "why_interesting": "A war shorter than a sitcom episode — the contrast between 'war' and '38 minutes' is the aha moment",
+          "universal_appeal": "International history; no language-dependent wordplay",
+          "boring_check": "Doesn't ask 'In what year' or 'Who fought' — uses estimation framing"
+        },
+        "self_critique": {
+          "surprise_factor": 10,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 10,
+          "answerability": 9,
+          "overall_score": 9.4,
+          "reasoning": "Strong surprise factor; the estimation buckets force reasoning about the scale of historical conflicts"
+        },
+        "ai_score": 9.4
+      }
+    },
+    {
+      "question": "What is greater in number: trees on Earth, or stars in the Milky Way galaxy?",
+      "type": "text",
+      "correct_answer": "trees on Earth",
+      "possible_answers": null,
+      "alternative_answers": ["trees", "the trees", "trees on earth"],
+      "topic": "Nature",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["astronomy", "nature", "comparison", "scale"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://blog.edclass.com/20-unbelievable-science-facts-that-will-shock-you/",
+      "source_excerpt": "There are more trees on the planet than stars in the solar system: According to experts from NASA, there are up to 400 billion stars in the milky way galaxy – but the number of trees on Earth is estimated to be more than 3 trillion.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "v3_fact_first",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Comparison Bet",
+          "why_interesting": "Counterintuitive — most people assume cosmic numbers dwarf earthly ones; ~3 trillion vs ~400 billion is a 7x ratio in favor of trees",
+          "universal_appeal": "Trees and stars are universal; no cultural specificity",
+          "boring_check": "Binary comparison forces a guess; not a recall question"
+        },
+        "self_critique": {
+          "surprise_factor": 10,
+          "universal_appeal": 10,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "answerability": 9,
+          "overall_score": 9.4,
+          "reasoning": "Excellent comparison bet that defies intuition; universal subjects"
+        },
+        "ai_score": 9.4
+      }
+    },
+    {
+      "question": "From a high enough vantage point — an airplane or mountain — rainbows reveal their true geometric shape. They are not arches at all. What shape are they actually?",
+      "type": "text",
+      "correct_answer": "circle",
+      "possible_answers": null,
+      "alternative_answers": ["circles", "a circle", "full circle", "a full circle"],
+      "topic": "Physics",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["optics", "weather", "physics", "geometry"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://www.livescience.com/science-facts",
+      "source_excerpt": "Rainbows are not really arches; they're circles. You can see the full circle from a high vantage point, such as an airplane or a mountaintop.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "v3_fact_first",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Hidden Property",
+          "why_interesting": "Everyone has seen a rainbow, but few realize the ground hides half of it. The reframing 'they are not arches at all' invites curiosity",
+          "universal_appeal": "Rainbows are universally familiar; geometry words translate easily",
+          "boring_check": "Avoids 'What shape is a rainbow' — adds the cinematic 'airplane or mountain' angle"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 10,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "answerability": 8,
+          "overall_score": 8.8,
+          "reasoning": "Strong aha moment; players can reason from the vantage-point hint that the answer is not the everyday arch"
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "All major planets in our solar system rotate counterclockwise as seen from above the north pole — except one, which spins the opposite way. Name it.",
+      "type": "text",
+      "correct_answer": "Venus",
+      "possible_answers": null,
+      "alternative_answers": ["venus"],
+      "topic": "Astronomy",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["space", "planets", "odd-one-out"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://blog.edclass.com/20-unbelievable-science-facts-that-will-shock-you/",
+      "source_excerpt": "Venus spins clockwise: Most planets [spin counterclockwise]. Venus is the exception — it rotates clockwise (retrograde rotation).",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "v3_fact_first",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Odd One Out",
+          "why_interesting": "Solar system uniformity is broken by one rebel planet — the player can narrow down by elimination",
+          "universal_appeal": "Planets are universal; rotation direction is language-independent",
+          "boring_check": "Not 'Which planet rotates clockwise' — emphasizes the anomaly"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 10,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "answerability": 8,
+          "overall_score": 8.8,
+          "reasoning": "Note: Uranus also has near-perpendicular axis but is usually cited alongside Venus as anomalous; Venus is the canonical clockwise spinner"
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "Female kangaroos have an unusually plural reproductive anatomy: where humans have one, they have three of which organ?",
+      "type": "text",
+      "correct_answer": "vagina",
+      "possible_answers": null,
+      "alternative_answers": ["vaginas", "three vaginas", "vagina (three of them)"],
+      "topic": "Biology",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["animals", "biology", "anatomy"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://www.livescience.com/science-facts",
+      "source_excerpt": "Kangaroos have three vaginas.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "v3_fact_first",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Hidden Property",
+          "why_interesting": "Everyone knows kangaroos hop and pouch; almost no one knows about their reproductive plumbing",
+          "universal_appeal": "Kangaroos are globally recognized animals",
+          "boring_check": "Avoids 'How many X do kangaroos have' phrasing — frames as anatomical contrast with humans"
+        },
+        "self_critique": {
+          "surprise_factor": 10,
+          "universal_appeal": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "answerability": 7,
+          "overall_score": 8.6,
+          "reasoning": "High surprise factor; player needs to know the fact, but the contrast framing makes the answer guessable from context"
+        },
+        "ai_score": 8.6
+      }
+    },
+    {
+      "question": "A dragonfly catches its prey on roughly 97% of attempts — astonishing for a predator. By comparison, a tiger's hunt success rate is closer to 10%, 30%, or 50%?",
+      "type": "text",
+      "correct_answer": "10%",
+      "possible_answers": null,
+      "alternative_answers": ["10 percent", "ten percent", "about 10%", "10"],
+      "topic": "Nature",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["animals", "predator", "comparison", "estimation"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://www.livescience.com/science-facts",
+      "source_excerpt": "Dragonflies are one of nature's most effective hunters, catching prey up to 97% of the time. By comparison, tigers have a success rate of only 10%.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "v3_fact_first",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Estimation Challenge",
+          "why_interesting": "Reverses our intuition that the apex predator outperforms the insect; the gap (97% vs 10%) is jaw-dropping",
+          "universal_appeal": "Tigers and dragonflies are recognized worldwide",
+          "boring_check": "Not pure recall — three options force reasoning about predator efficiency"
+        },
+        "self_critique": {
+          "surprise_factor": 10,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "answerability": 9,
+          "overall_score": 9.2,
+          "reasoning": "Powerful contrast hook; estimation buckets are wide enough to be guessable"
+        },
+        "ai_score": 9.2
+      }
+    },
+    {
+      "question": "True or false: a working analog computer was already in use during the lifetime of Julius Caesar.",
+      "type": "text",
+      "correct_answer": "True",
+      "possible_answers": null,
+      "alternative_answers": ["true", "yes", "T"],
+      "topic": "History",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["history", "technology", "ancient", "true-false"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://www.buzzfeed.com/isabeldaly/random-facts",
+      "source_excerpt": "Julius Caesar was born in 100 B.C.E. The oldest known mechanical analogue computer was built somewhere between 150-100 B.C.E. It's called the 'Antikythera Mechanism' and it was used to predict eclipses and other astronomical positions.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "v3_fact_first",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Lateral Thinking Puzzle",
+          "why_interesting": "'Computer' and 'Caesar' in the same sentence sounds wrong — the Antikythera Mechanism reveals an entire ancient field of mechanical computation",
+          "universal_appeal": "Caesar is globally famous; the Antikythera Mechanism is a universal artifact",
+          "boring_check": "Not a date question; the True/False forces a counterintuitive choice"
+        },
+        "self_critique": {
+          "surprise_factor": 10,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 10,
+          "answerability": 8,
+          "overall_score": 9.2,
+          "reasoning": "Strong aha moment; either you accept the surprise or you don't, but the framing teaches even on a wrong guess"
+        },
+        "ai_score": 9.2
+      }
+    },
+    {
+      "question": "An average cumulus cloud — the puffy white kind — drifts overhead weighing roughly: 50 kilograms, 5 tonnes, or 500 tonnes?",
+      "type": "text",
+      "correct_answer": "500 tonnes",
+      "possible_answers": null,
+      "alternative_answers": ["500 tons", "550 tonnes", "550 tons", "500", "about 500 tonnes"],
+      "topic": "Weather",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["weather", "physics", "estimation", "scale"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://www.buzzfeed.com/isabeldaly/random-facts",
+      "source_excerpt": "Although they look light and fluffy, a single cumulus cloud can weigh around 550 tons, or about 1.1 million pounds. Despite being heavier than 157 fully grown hippos, clouds are significantly less dense than air, allowing them to float.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "v3_fact_first",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Scale Surprise",
+          "why_interesting": "Clouds look weightless — telling someone a cumulus cloud weighs 157 hippos creates instant 'no way' energy",
+          "universal_appeal": "Clouds are universal; metric tonnes are international",
+          "boring_check": "Three orders of magnitude in options force reasoning, not memorization"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 10,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "answerability": 9,
+          "overall_score": 9.0,
+          "reasoning": "Spread of options is wide enough to be guessable; surprising answer creates discussion"
+        },
+        "ai_score": 9.0
+      }
+    },
+    {
+      "question": "A blue whale's tongue alone weighs about as much as which familiar large land animal?",
+      "type": "text",
+      "correct_answer": "elephant",
+      "possible_answers": null,
+      "alternative_answers": ["an elephant", "elephants", "African elephant"],
+      "topic": "Nature",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": ["animals", "scale", "comparison"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://science.howstuffworks.com/weird-facts.htm",
+      "source_excerpt": "Blue Whale Tongues Weigh As Much As Elephants. The blue whale's tongue alone can weigh as much as an adult elephant.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "v3_fact_first",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Comparison Bet",
+          "why_interesting": "Comparing a body part of one animal to an entire other animal is a classic scale-shock",
+          "universal_appeal": "Elephants and whales are universal; no cultural references",
+          "boring_check": "Not a 'how heavy is X' question — uses an animal-to-animal benchmark"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 10,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "answerability": 9,
+          "overall_score": 9.0,
+          "reasoning": "Memorable comparison; players can reason about the largest land animal as the obvious benchmark"
+        },
+        "ai_score": 9.0
+      }
+    },
+    {
+      "question": "Saltpeter — a key ingredient in gunpowder — has historically been harvested from the droppings of which flying mammal?",
+      "type": "text",
+      "correct_answer": "bat",
+      "possible_answers": null,
+      "alternative_answers": ["bats", "the bat", "bat guano", "bat droppings", "bats (guano)"],
+      "topic": "Chemistry",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["chemistry", "history", "animals", "warfare"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://www.runaway.games/blog/science-trivia-questions",
+      "source_excerpt": "From which animal droppings can Saltpeter, a key ingredient in gunpowder, be extracted? Answer: Bat.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "v3_fact_first",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Reverse Engineer",
+          "why_interesting": "Connects warfare with cave-dwelling mammals; reveals where one of history's most important materials actually came from",
+          "universal_appeal": "Gunpowder and bats are globally recognized; no cultural specificity",
+          "boring_check": "Specifies 'flying mammal' to give a fair narrowing hint"
+        },
+        "self_critique": {
+          "surprise_factor": 10,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 10,
+          "answerability": 8,
+          "overall_score": 9.2,
+          "reasoning": "Excellent reverse-engineering question; the 'flying mammal' clue uniquely points to bats"
+        },
+        "ai_score": 9.2
+      }
+    },
+    {
+      "question": "Cool liquid helium just a few degrees above absolute zero and it does something gravity-defying — flowing up the inside of a cup and over the rim. What is this exotic state of matter called?",
+      "type": "text",
+      "correct_answer": "superfluid",
+      "possible_answers": null,
+      "alternative_answers": ["super fluid", "superfluidity", "a superfluid", "superfluid state"],
+      "topic": "Physics",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["physics", "quantum", "matter"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://www.rd.com/list/science-facts-never-learned/",
+      "source_excerpt": "When liquid helium is cooled to extreme temperatures, just a few degrees away from its boiling point (-460 degrees Fahrenheit), it turns into a superfluid, meaning it can flow without friction. It can climb up and over the sides of a glass.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "v3_fact_first",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Hidden Property",
+          "why_interesting": "Liquid that climbs walls breaks every intuition about fluids; the term 'superfluid' is its own punchline",
+          "universal_appeal": "Helium and physics are universal; no cultural specificity",
+          "boring_check": "Concrete imagery (cup, rim) keeps it from being a textbook definition"
+        },
+        "self_critique": {
+          "surprise_factor": 10,
+          "universal_appeal": 9,
+          "clever_framing": 9,
+          "educational_value": 10,
+          "answerability": 7,
+          "overall_score": 9.0,
+          "reasoning": "Vivid imagery and surprising property; answer requires specific term but 'super' prefix is hint-friendly"
+        },
+        "ai_score": 9.0
+      }
+    },
+    {
+      "question": "If you could bottle the smell of a comet's tail — full of hydrogen sulfide and ammonia — which everyday foul odor would it most resemble?",
+      "type": "text",
+      "correct_answer": "rotten eggs",
+      "possible_answers": null,
+      "alternative_answers": ["eggs", "rotten egg", "rotting eggs", "bad eggs"],
+      "topic": "Astronomy",
+      "category": "adults",
+      "difficulty": "hard",
+      "tags": ["space", "chemistry", "smell"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://science.howstuffworks.com/weird-facts.htm",
+      "source_excerpt": "Comets might look beautiful, but they smell terrible. Thanks to hydrogen sulfide and ammonia, their scent resembles rotten eggs and urine.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "v3_fact_first",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Surprising Connection",
+          "why_interesting": "Romantic image of a comet shattered by 'smells like rotten eggs' — chemistry knowledge gives the answer",
+          "universal_appeal": "Comets and rotten eggs are universal references",
+          "boring_check": "Naming the chemicals (H2S, ammonia) gives a chemistry-savvy player a reasoning path"
+        },
+        "self_critique": {
+          "surprise_factor": 10,
+          "universal_appeal": 9,
+          "clever_framing": 10,
+          "educational_value": 9,
+          "answerability": 8,
+          "overall_score": 9.2,
+          "reasoning": "Hydrogen sulfide is the canonical rotten-egg gas, so the chemistry hint creates a fair reasoning path"
+        },
+        "ai_score": 9.2
+      }
+    },
+    {
+      "question": "On the hottest summer days, the Eiffel Tower is measurably taller than in winter. By what physical phenomenon?",
+      "type": "text",
+      "correct_answer": "thermal expansion",
+      "possible_answers": null,
+      "alternative_answers": ["heat expansion", "expansion of metal", "metal expanding in heat", "thermal expansion of metal", "expansion"],
+      "topic": "Physics",
+      "category": "adults",
+      "difficulty": "medium",
+      "tags": ["physics", "architecture", "heat"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://science.howstuffworks.com/weird-facts.htm",
+      "source_excerpt": "The Eiffel Tower Grows in the Summer. Metal expands in heat. As temperatures rise, the Eiffel Tower can grow a few millimeters.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "v3_fact_first",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Reverse Engineer",
+          "why_interesting": "Famous landmark presented as a giant thermometer — connects everyday physics to a universal icon",
+          "universal_appeal": "Eiffel Tower is globally recognized",
+          "boring_check": "Doesn't ask 'why does metal expand' — gives the surprising fact and asks for the mechanism"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "universal_appeal": 10,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "answerability": 9,
+          "overall_score": 9.2,
+          "reasoning": "Curious fact wrapped around a school-physics concept; both surprising and reasonable"
+        },
+        "ai_score": 9.2
+      }
+    },
+    {
+      "question": "When chopping an onion, are you more likely to cry if your knife is sharp or dull?",
+      "type": "text",
+      "correct_answer": "dull",
+      "possible_answers": null,
+      "alternative_answers": ["a dull knife", "blunt", "blunt knife", "the dull one", "dull knife"],
+      "topic": "Cooking",
+      "category": "adults",
+      "difficulty": "easy",
+      "tags": ["cooking", "chemistry", "everyday"],
+      "language_dependent": false,
+      "source": "generated",
+      "source_url": "https://www.livescience.com/science-facts",
+      "source_excerpt": "You're more likely to cry when chopping an onion with a dull knife than with a sharp one.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "v3_fact_first",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Comparison Bet",
+          "why_interesting": "Counterintuitive — most people assume sharper means more juice; a dull knife actually crushes more cells, releasing more sulfur compounds",
+          "universal_appeal": "Onions and knives are kitchen universals",
+          "boring_check": "Binary comparison forces a guess; encourages the player to reason about cell damage"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "universal_appeal": 10,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "answerability": 9,
+          "overall_score": 8.8,
+          "reasoning": "Practical, memorable, defies kitchen intuition"
+        },
+        "ai_score": 8.8
+      }
+    }
+  ],
+  "metadata": {
+    "model": "claude-opus-4-7",
+    "provider": "anthropic",
+    "generated_at": "2026-05-02T00:00:00Z",
+    "total_generated": 17,
+    "total_selected": 15,
+    "pipeline": "fact_first",
+    "prompt_version": "v3_fact_first",
+    "category": "adults",
+    "theme": null,
+    "fact_sources_used": ["opentdb", "web_search", "news"],
+    "fact_count_sourced": 24
+  }
+}

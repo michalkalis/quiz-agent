@@ -29,7 +29,20 @@ class QuestionRetriever:
         Args:
             question_store: QuestionStore for read access (or create default)
         """
-        self.store = question_store or ChromaDBClient().store
+        self._store = question_store or ChromaDBClient().store
+
+    def get(self, question_id: str) -> Optional[Question]:
+        """Look up a single question by ID.
+
+        Application-layer callers must go through the retriever rather than
+        reaching into the underlying store, so this seam stays the single
+        place to add caching, telemetry, or fallbacks later.
+        """
+        return self._store.get(question_id)
+
+    def count(self, filters: Optional[dict] = None) -> int:
+        """Count questions, optionally filtered by metadata."""
+        return self._store.count(filters=filters)
 
     def get_next_question(
         self,
@@ -213,7 +226,7 @@ class QuestionRetriever:
             List of candidate questions
         """
         # ALWAYS use semantic search (RAG-first approach)
-        candidates = self.store.search(
+        candidates = self._store.search(
             query_text=semantic_query,  # Always provide semantic query
             filters=filters,
             n_results=n_candidates,
@@ -250,7 +263,7 @@ class QuestionRetriever:
         # Fallback 1: Simpler semantic query (just "question")
         logger.debug("Fallback 1 - Simpler semantic query")
         simple_query = "quiz question"
-        candidates = self.store.search(
+        candidates = self._store.search(
             query_text=simple_query,
             filters={"difficulty": question_difficulty, "type": {"$in": ["text", "image"]}, "review_status": "approved", **lang_filter},
             n_results=n_candidates,
@@ -266,7 +279,7 @@ class QuestionRetriever:
             difficulty_fallback.remove(question_difficulty)
 
         for fallback_difficulty in difficulty_fallback:
-            candidates = self.store.search(
+            candidates = self._store.search(
                 query_text=simple_query,
                 filters={"difficulty": fallback_difficulty, "type": {"$in": ["text", "image"]}, "review_status": "approved", **lang_filter},
                 n_results=n_candidates,
@@ -278,7 +291,7 @@ class QuestionRetriever:
 
         # Fallback 3: Minimal constraints (still require approved)
         logger.debug("Fallback 3 - Minimal constraints")
-        candidates = self.store.search(
+        candidates = self._store.search(
             query_text="question",
             filters={"type": {"$in": ["text", "image"]}, "review_status": "approved", **lang_filter},
             n_results=n_candidates,
@@ -301,7 +314,7 @@ class QuestionRetriever:
         Returns:
             None
         """
-        total_count = self.store.count()
+        total_count = self._store.count()
         if total_count == 0:
             logger.error("Database is empty. No questions found.")
         else:
@@ -410,7 +423,7 @@ class QuestionRetriever:
         # Retrieve question objects
         recent_questions = []
         for qid in recent_ids:
-            question = self.store.get(qid)
+            question = self.get(qid)
             if question:
                 recent_questions.append(question)
 
@@ -521,7 +534,7 @@ class QuestionRetriever:
         if not query:
             query = "quiz question"
 
-        return self.store.search(
+        return self._store.search(
             query_text=query,
             filters=filters,
             n_results=limit

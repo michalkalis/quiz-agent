@@ -1,72 +1,115 @@
 # Issue 23: QuestionRetriever — extend the seam to cover all question reads
 
-**Triage:** enhancement · ready-for-agent
-**Status:** Surfaced by `/improve-codebase-architecture` 2026-04-30 — not started
+**Triage:** enhancement · done
+**Status:** Done 2026-05-02 — seam extended; reads in flow/quiz/voice/tts now go through `QuestionRetriever.get()` and `QuestionRetriever.count()`. Store field renamed `_store`. `QuizFlowService` no longer takes `question_store`.
 **Created:** 2026-04-30
 **Surfaced by:** architecture review, candidate #2
 
 ## TL;DR for next session
 
-The question-access seam is half-built. `QuestionRetriever` owns "get the next
-question" but "get a question by ID" bypasses it and goes straight to the
-ChromaDB client.
+The question-access seam is half-built. `QuestionRetriever` owns "select the
+next question" but "get a question by ID" bypasses it and goes straight to the
+underlying `QuestionStore` (the seam introduced by #22).
 
-Concrete leaks:
+Three call sites fetch by ID through the store directly, defeating the seam:
 
-| Where | Code |
+| Where | Current code |
 |---|---|
-| `apps/quiz-agent/app/quiz/flow.py:116` | `self.chroma_client.get_question(evaluated_question_id)` |
-| `apps/quiz-agent/app/api/routes/quiz.py:202,209` | `chroma_client.get_question(...)` |
-| `apps/quiz-agent/app/api/routes/voice.py:90` | `chroma_client.get_question(...)` |
+| `apps/quiz-agent/app/quiz/flow.py:116` | `self.question_store.get(evaluated_question_id)` |
+| `apps/quiz-agent/app/api/routes/quiz.py:202` | `store.get(session.current_question_id)` |
+| `apps/quiz-agent/app/api/routes/quiz.py:209` | `store.get(session.current_question_id)` |
+| `apps/quiz-agent/app/api/routes/voice.py:90` | `store.get(session.current_question_id)` |
 
-`QuizFlowService` is constructed in `main.py:218–227` with **both** a
-`question_retriever` and a raw `chroma_client`. The raw client is needed only
-because the retriever's interface doesn't cover `get_by_id`.
+`QuizFlowService` is constructed in `app/main.py:218–227` with **both** a
+`question_retriever` and a raw `question_store`. The store is needed only
+because the retriever's interface doesn't cover lookup-by-id.
+
+Routes inject both via FastAPI deps (`get_question_retriever`,
+`get_question_store`). Once the retriever covers `get(id)`, every route can
+drop the `store` dep — or keep it only if it actually does writes (none of
+these handlers do).
 
 ## What to implement
 
-Add `get_question(id) -> Question?` to `QuestionRetriever`'s interface and
-remove all direct `chroma_client.get_question` calls from the application
-layer.
+1. **Add a public lookup to `QuestionRetriever`:**
+   ```python
+   def get(self, question_id: str) -> Optional[Question]:
+       return self.store.get(question_id)
+   ```
+   `apps/quiz-agent/app/retrieval/question_retriever.py:23` — the private
+   `_get_recent_questions` helper at line 413 already uses `self.store.get(qid)`
+   internally, so the implementation is trivial. (Optional: refactor
+   `_get_recent_questions` to call the new public method to avoid two paths.)
 
-After that lands, `QuizFlowService` no longer needs a `chroma_client`
-constructor argument — drop it. The route handlers in `routes/quiz.py` and
-`routes/voice.py` switch to the retriever as well.
+2. **Hide the store on the retriever.** Currently `self.store` is public
+   (line 32). Rename to `self._store`. Anything reaching into
+   `retriever.store.<x>` becomes a compile/runtime error and forces routing
+   through the seam. Update internal call sites in this file (search uses,
+   `_get_recent_questions`, `_handle_no_candidates.count()`, etc.).
 
-## Where the work lands
+3. **`flow.py` — drop the redundant store arg.**
+   - `apps/quiz-agent/app/quiz/flow.py:80` — remove `question_store: Any`
+     constructor parameter and `self.question_store = question_store` at :89.
+   - `apps/quiz-agent/app/quiz/flow.py:116` — replace
+     `self.question_store.get(evaluated_question_id)` with
+     `self.question_retriever.get(evaluated_question_id)`.
+   - `apps/quiz-agent/app/main.py:218–227` — drop `question_store=...` from
+     the `QuizFlowService(...)` wiring.
 
-| Where | What changes |
-|---|---|
-| `apps/quiz-agent/app/retrieval/question_retriever.py` | Add `get_question(id)` method; delegates to the underlying store |
-| `apps/quiz-agent/app/quiz/flow.py:86–90, 116` | Drop `chroma_client` constructor arg; replace direct call with `self.question_retriever.get_question(...)` |
-| `apps/quiz-agent/app/main.py:218–227` | Drop `chroma_client` from the `QuizFlowService` constructor wiring |
-| `apps/quiz-agent/app/api/routes/quiz.py:202,209` | Replace `chroma_client.get_question` with retriever |
-| `apps/quiz-agent/app/api/routes/voice.py:90` | Same |
+4. **`routes/quiz.py` — replace direct store reads with retriever:**
+   - `:34` — keep `question_retriever` dep, drop `store=Depends(get_question_store)`
+     unless the handler still needs writes (it doesn't).
+   - `:190` — same: this handler only reads via `store.get` at :202 / :209.
+   - `:202`, `:209` — replace `store.get(session.current_question_id)` with
+     `question_retriever.get(session.current_question_id)`.
+
+5. **`routes/voice.py` — same pattern:**
+   - `:69` — drop `store=Depends(get_question_store)`.
+   - `:90` — replace `store.get(...)` with `question_retriever.get(...)`.
+
+6. **Tests.** Search for `question_store=` in tests (constructors of
+   `QuizFlowService` and any route fixture) and remove the arg. Replace
+   `store.get` mocks with `question_retriever.get`. The grep `rg
+   "question_store|store\.get" apps/quiz-agent/tests` will surface them.
+
+## Validation
+
+- `pytest apps/quiz-agent/tests/ -v` — all pass.
+- `grep -rn "question_store\|\.store\.get" apps/quiz-agent/app/` returns only
+  internal references inside `QuestionRetriever` and the wiring in `main.py`
+  (`question_store = chroma_client.store` at `:141`, passed only to the
+  retriever constructor at `:162`). No application-layer leaks remain.
+- Boot the backend (`uvicorn app.main:app --reload --port 8002`) and hit the
+  endpoints touched (`/quiz/answer`, `/quiz/skip`, `/voice/...`) to confirm
+  no DI signature regressions.
+- `/verify-api` not required — no Pydantic model changes.
 
 ## Benefits
 
-- **Leverage.** A read-through cache, telemetry, or fallback strategy can be
+- **Leverage.** A read-through cache, telemetry, fallback, or tracing can be
   added in one module — `QuestionRetriever` — instead of N call sites.
-- **Locality.** Question access is a single concept with a single home.
-- **Testability.** Mocking the retriever in flow / route tests is now
-  sufficient. No need to mock both the retriever and the client.
-- **Constructor noise reduction.** `QuizFlowService` shrinks one argument.
+- **Locality.** Question access is one concept with one home.
+- **Testability.** Mocking the retriever in flow / route tests is sufficient.
+  No need to mock both retriever and store.
+- **Constructor noise reduction.** `QuizFlowService` shrinks one argument;
+  routes shrink one DI dep.
 
 ## Caveats and traps
 
-- **Order matters with Issue 22.** If 22 lands first and replaces
-  `ChromaDBClient` with `QuestionStore`, then 23 becomes "make
-  `QuestionRetriever` wrap `QuestionStore`, expose `get_question`, and route
-  all reads through it." Either order works; just don't bundle them — they
-  are independent commits.
-- **The retriever currently has retrieval-strategy logic (next-question
-  selection, deduplication).** Don't conflate that with the new pass-through
-  `get_question` — the retriever is allowed to have both a strategy method
-  and a simple lookup method behind the same seam.
-- **Don't reach into `chroma_client.collection` from anywhere new.** Once 22
-  lands, that attribute should be private.
+- **The retriever currently has retrieval-strategy logic** (next-question
+  selection, fallback ladder, semantic diversity scoring). Don't conflate
+  that with the new pass-through `get(id)` — the retriever is allowed to
+  have both a strategy method and a simple lookup behind the same seam.
+- **Don't reach into `retriever._store` from anywhere new.** The whole point
+  of step 2 is to make the store private; if a future caller needs something
+  the retriever doesn't expose, add a method to the retriever instead.
+- **`question_store` is still needed in `main.py`** to construct the
+  retriever (`QuestionRetriever(question_store=question_store)` at :162).
+  That's fine — wiring is the right place for the raw store. Application
+  layer is not.
 
 ## Related
 
-- Issue 22 (QuestionStore split) — ideal predecessor.
+- Issue 22 (QuestionStore split) — landed in `e6ecd47` 2026-04-30. This
+  follow-up extends the seam upward.
 - Memory `project_chroma_update_bug` — orthogonal but in the same area.

@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, File
 from ..deps import (
     InputResponse,
     get_session_manager, get_voice_transcriber, get_question_retriever,
-    get_question_store, get_quiz_flow,
+    get_quiz_flow,
     flow_to_response,
 )
 from ...session.manager import SessionManager
@@ -66,7 +66,6 @@ async def transcribe_and_submit(
     session_manager: SessionManager = Depends(get_session_manager),
     voice_transcriber: VoiceTranscriber = Depends(get_voice_transcriber),
     question_retriever: QuestionRetriever = Depends(get_question_retriever),
-    store=Depends(get_question_store),
     quiz_flow: QuizFlowService = Depends(get_quiz_flow),
     audio: UploadFile = File(..., description="Audio file with quiz answer"),
     participant_id: Optional[str] = None,
@@ -87,7 +86,7 @@ async def transcribe_and_submit(
                 detail=f"Unsupported audio format. Supported: {', '.join(VoiceTranscriber.SUPPORTED_FORMATS)}",
             )
 
-        current_question = store.get(session.current_question_id)
+        current_question = question_retriever.get(session.current_question_id)
         if not current_question:
             raise HTTPException(status_code=500, detail="Current question not found")
 

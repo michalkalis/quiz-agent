@@ -224,7 +224,6 @@ async def lifespan(app: FastAPI):
         answer_evaluator=answer_evaluator,
         tts_service=tts_service,
         usage_tracker=usage_tracker,
-        question_store=question_store,
         translation_service=translation_service,
     )
     logger.info("API dependencies configured")

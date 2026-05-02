@@ -1,5 +1,24 @@
 # Question Pipeline — Remaining Tasks
 
+**Triage:** enhancement · superseded
+**Status:** Superseded 2026-05-02 — content split into focused issues. See "Issue split" below. Kept for archaeology only; do not extend.
+
+## Issue split (2026-05-02)
+
+| Was | Now | Status |
+|---|---|---|
+| Group A | (shipped 2026-04-15, commit `c7b0743`) | done |
+| Group B (iOS category picker + `age_appropriate`) | [#28](issue-28-ios-category-picker-expansion.md) | ready-for-agent |
+| Group D1 (backfill existing questions) | [#29](issue-29-backfill-existing-questions.md) | ready-for-agent |
+| Group E (batch generate new categories) | [#30](issue-30-batch-generate-categories.md) | ready-for-agent (gate on #28 + #29) |
+| Group C (multi-model A/B + analytics) | **deferred** | data-blocked: needs ≥50 user ratings before C2/C3 are meaningful. Revisit after #30 batches accumulate ratings. |
+| Group D2 (rating feedback loop) | **deferred** | same — needs ratings volume |
+| Group D3 (difficulty calibration) | **deferred** | same — needs correctness telemetry first |
+
+The original umbrella `#21` is closed in favor of #28/#29/#30. Deferred items will get their own issues when the data prerequisite clears.
+
+---
+
 ## What Was Done (commit c7b0743)
 
 Implementované v predchádzajúcom vlákne:

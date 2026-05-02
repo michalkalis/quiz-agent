@@ -86,30 +86,24 @@ async def import_questions(
     source: str = Form("chatgpt"),
     skip_duplicates: Optional[str] = Form(None)
 ):
-    """Import questions from JSON."""
+    """Import questions as pending review (does NOT touch ChromaDB)."""
     try:
-        # Parse JSON
         data = json.loads(json_data)
 
-        # Extract questions array
         if "questions" in data:
             questions_data = data["questions"]
         else:
             questions_data = [data]
 
-        # Convert to Question objects
-        questions = []
+        added = 0
         for q_data in questions_data:
             question = Question.from_dict(q_data, source=source)
-            questions.append(question)
+            if storage.add_pending(question):
+                added += 1
 
-        # Import questions
-        skip_dups = skip_duplicates == "true"
-        approved, failed = storage.bulk_approve(questions, force=not skip_dups)
-
-        message = f"Successfully imported {len(approved)} questions!"
-        if failed:
-            message += f" ({len(failed)} skipped as duplicates)"
+        message = f"Imported {added} questions to pending review."
+        if added < len(questions_data):
+            message += f" ({len(questions_data) - added} failed.)"
 
         return templates.TemplateResponse("import.html", {
             "request": request,
@@ -137,16 +131,11 @@ async def import_questions(
 @router.get("/review", response_class=HTMLResponse)
 async def review_list(request: Request):
     """Review page - redirect to first pending question."""
-    # Get first pending question
-    pending = storage.search_questions(
-        filters={"review_status": "pending_review"},
-        limit=1
-    )
+    pending = storage.list_pending(status="pending_review", limit=1)
 
     if pending:
         return RedirectResponse(url=f"/web/review/{pending[0].id}", status_code=302)
     else:
-        # No pending questions, show empty state
         return templates.TemplateResponse("review.html", {
             "request": request,
             "question": None,
@@ -162,11 +151,7 @@ async def review_question(request: Request, question_id: str):
     if not question:
         return RedirectResponse(url="/web/review", status_code=302)
 
-    # Get total pending count for progress indicator
-    pending = storage.search_questions(
-        filters={"review_status": "pending_review"},
-        limit=1000
-    )
+    pending = storage.list_pending(status="pending_review", limit=1000)
     total_pending = len(pending)
     current_index = next((i + 1 for i, q in enumerate(pending) if q.id == question_id), 1)
 
@@ -196,26 +181,17 @@ async def submit_review(
     if not question:
         return RedirectResponse(url="/web/review", status_code=302)
 
-    # Get next pending question BEFORE updating this one
-    # This ensures we get the next question in the queue
-    all_pending = storage.search_questions(
-        filters={"review_status": "pending_review"},
-        limit=1000
-    )
+    # Snapshot the queue BEFORE mutating so the redirect lands on a still-pending row.
+    all_pending = storage.list_pending(status="pending_review", limit=1000)
 
-    # Find next question after current one
     next_question = None
     for i, q in enumerate(all_pending):
         if q.id == question_id and i + 1 < len(all_pending):
             next_question = all_pending[i + 1]
             break
-
-    # If current question is last or not found, use first pending (excluding current)
     if not next_question:
         next_question = next((q for q in all_pending if q.id != question_id), None)
 
-    # Update review fields
-    question.review_status = status
     question.reviewed_by = "admin"  # TODO: Get from auth
     question.reviewed_at = datetime.now()
     question.review_notes = review_notes if review_notes else None
@@ -226,10 +202,12 @@ async def submit_review(
         "creativity": creativity
     }
 
-    # Save
-    storage.update_question(question)
+    if status == "approved":
+        storage.approve_question(question, force=True)
+    else:
+        question.review_status = status
+        storage.update_question(question)
 
-    # Redirect to next pending question or back to review page if none left
     if next_question:
         return RedirectResponse(url=f"/web/review/{next_question.id}", status_code=303)
     else:

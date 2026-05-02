@@ -562,15 +562,15 @@ def stage_output(
             json.dump(output_data, f, indent=2, ensure_ascii=False)
         print(f"\nSaved {len(questions)} questions to {args.output}")
 
-    # --- ChromaDB import ---
+    # --- Pending-review import ---
     if args.import_to_db:
-        print("\nImporting to ChromaDB...")
+        print("\nImporting to PendingStore as pending_review...")
         storage = QuestionStorage()
-        approved, failed = storage.bulk_approve(questions)
-        print(f"  Approved: {len(approved)}")
-        if failed:
-            for q, reason in failed:
-                print(f"  Failed: {q.question[:50]}... — {reason}")
+        added = 0
+        for q in questions:
+            if storage.add_pending(q):
+                added += 1
+        print(f"  Pending: {added}/{len(questions)}")
 
 
 # ---------------------------------------------------------------------------

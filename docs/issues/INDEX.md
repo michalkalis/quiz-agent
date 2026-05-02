@@ -18,8 +18,6 @@ Dashboard of all `issue-NN-*.md` files. Updated by `/triage` whenever a `**Triag
 | 18 | [First autonomous regression run — RS-01 end-to-end](issue-18-rs01-end-to-end.md) | enhancement · ready-for-agent | | Listener landed in `becd1b2`; ready to drive RS-01 |
 | 19 | [Auto-confirm of unedited transcript routes through `resubmitAnswer`](issue-19-auto-confirm-resubmit-bug.md) | bug · needs-info | `[ ]` #19 | Fix path not yet chosen — user needs to pick approach |
 | 21 | Generate question Groups B-E | enhancement · ready-for-agent | `[ ]` #21 | Pipeline operational for Group A; B-E queued |
-| 26 | [TaskBag — concentrate QuizViewModel task lifecycle](issue-26-task-bag-lifecycle.md) | enhancement · ready-for-agent | `[ ]` #26 | Shrinks 1085-line ViewModel; helps Wave 3 timer bug |
-| 27 | [PendingStore — question pipeline pending state](issue-27-pending-store-question-pipeline.md) | enhancement · ready-for-agent | `[ ]` #27 | Unblocks autonomous Groups B-E pipeline |
 | – | [Question Pipeline — Remaining Tasks](question-pipeline-remaining.md) | enhancement · needs-triage | | Mixed — some shipped (`c7b0743`), some queued; needs split |
 
 ## Done
@@ -43,6 +41,8 @@ Dashboard of all `issue-NN-*.md` files. Updated by `/triage` whenever a `**Triag
 | 23 | [QuestionRetriever — extend seam to all reads](issue-23-question-retriever-seam.md) | Done 2026-05-02 |
 | 24 | [Consolidate `question_to_dict_translated`](issue-24-translated-serializer-locality.md) | Done 2026-04-30 |
 | 25 | [Backend session phase — transition guard](issue-25-session-phase-transition-guard.md) | Done 2026-05-02 |
+| 26 | [TaskBag — concentrate QuizViewModel task lifecycle](issue-26-task-bag-lifecycle.md) | Done 2026-05-02 |
+| 27 | [PendingStore — question pipeline pending state](issue-27-pending-store-question-pipeline.md) | Done 2026-05-02 — unblocks autonomous Groups B-E |
 
 ## Conventions
 

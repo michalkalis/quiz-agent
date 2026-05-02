@@ -1,7 +1,7 @@
 # Issue 27: Question pipeline — introduce a `PendingStore` seam
 
-**Triage:** enhancement · ready-for-agent
-**Status:** Surfaced by `/improve-codebase-architecture` 2026-04-30 — not started
+**Triage:** enhancement · done
+**Status:** Done 2026-05-02 — `PendingStore` Protocol + SQLite/in-memory adapters land in `packages/shared/quiz_shared/database/pending_store.py`. `/import` now persists pending questions; `/questions/approve` and `/reviews/submit` promote to ChromaDB and delete from pending. Web reviewer reads from PendingStore. 32 new tests covering both adapters and the orchestrator transition all pass.
 **Created:** 2026-04-30
 **Surfaced by:** architecture review, candidate #6
 

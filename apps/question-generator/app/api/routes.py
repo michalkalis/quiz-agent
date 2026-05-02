@@ -147,20 +147,14 @@ async def import_questions(request: ImportRequest):
         Import summary with pending review IDs
     """
     try:
-        questions = []
+        pending_ids: list[str] = []
         for q_dict in request.questions:
-            # Convert dict to Question object
             question = Question.from_dict(q_dict, source=request.source)
-            questions.append(question)
-
-        # Store as pending (temp IDs)
-        pending_ids = [q.id for q in questions]
-
-        # TODO: Implement pending review storage
-        # For now, just return the IDs
+            if storage.add_pending(question):
+                pending_ids.append(question.id)
 
         return ImportResponse(
-            imported_count=len(questions),
+            imported_count=len(pending_ids),
             pending_review=pending_ids
         )
 
@@ -373,12 +367,12 @@ async def list_pending_reviews(limit: int = 50, offset: int = 0):
         Questions with status pending_review or needs_revision
     """
     try:
-        # Search for pending questions
-        pending_questions = storage.search_questions(
-            query=None,
-            filters={"review_status": "pending_review"},
-            limit=limit
+        pending_questions = storage.list_pending(
+            status="pending_review",
+            limit=limit,
+            offset=offset,
         )
+        total = storage.count_pending(status="pending_review")
 
         question_responses = [
             _question_to_advanced_response(q) for q in pending_questions
@@ -386,7 +380,7 @@ async def list_pending_reviews(limit: int = 50, offset: int = 0):
 
         return PendingReviewResponse(
             questions=question_responses,
-            total=len(pending_questions)
+            total=total
         )
 
     except Exception as e:
@@ -397,30 +391,33 @@ async def list_pending_reviews(limit: int = 50, offset: int = 0):
 async def submit_review(request: ReviewRequest):
     """Submit a review for a question (approve/reject/needs revision).
 
-    Args:
-        request: Review data with ratings and status
-
-    Returns:
-        Review confirmation
+    On approval, the question is promoted from `PendingStore` to ChromaDB.
+    On reject/revision, the question stays in `PendingStore` with its new
+    status so it never appears in semantic search.
     """
     try:
         from datetime import datetime
 
-        # Get question
         question = storage.get_question(request.question_id)
 
         if not question:
             raise HTTPException(status_code=404, detail="Question not found")
 
-        # Update review fields
-        question.review_status = request.status
         question.reviewed_by = request.reviewer_id
         question.reviewed_at = datetime.now()
         question.review_notes = request.review_notes
         question.quality_ratings = request.quality_ratings
 
-        # Save updated question
-        storage.update_question(question)
+        if request.status == "approved":
+            # Promote to ChromaDB; force=True because this is an explicit
+            # reviewer decision — duplicate detection is a separate concern
+            # of /questions/approve.
+            success, error, _ = storage.approve_question(question, force=True)
+            if not success:
+                raise HTTPException(status_code=500, detail=error or "Approval failed")
+        else:
+            question.review_status = request.status
+            storage.update_question(question)
 
         return ReviewResponse(
             question_id=request.question_id,

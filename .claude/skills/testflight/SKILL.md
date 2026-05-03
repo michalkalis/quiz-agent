@@ -34,7 +34,27 @@ git log origin/main..HEAD --oneline   # must be empty
 
 If there are unpushed commits, ask the user before pushing (per `feedback_commit_autonomy` memory: push needs explicit confirmation).
 
-### 2. Trigger the workflow
+### 2. Pre-flight — verify prod backend is healthy
+
+A TestFlight build is useless if the prod API is down or the question DB is empty. Always check before triggering. The `/api/v1/admin/health` endpoint is unauthenticated and returns alerts:
+
+```bash
+# Public liveness — must return 200 with "healthy"
+curl -fsS https://quiz-agent-api.fly.dev/api/v1/health | python3 -m json.tool
+
+# DB / runway — must return level != "critical" and total_approved > 0
+curl -fsS https://quiz-agent-api.fly.dev/api/v1/admin/health | python3 -m json.tool
+```
+
+Stop and tell the user **before triggering the workflow** if any of these are true:
+- liveness endpoint non-200 or `status != "healthy"`
+- admin-health `level == "critical"`
+- admin-health `total_approved == 0` (CRITICAL: No questions in database)
+- admin-health `runway_days < 7` (warn — questions will run out soon)
+
+Common fix for empty DB: `CHROMA_PATH` Fly secret out of sync with `fly.toml` mount destination — chroma initializes on the ephemeral filesystem and gets wiped on every deploy. Verify with `fly logs -a quiz-agent-api --no-tail | grep "QuestionStore initialized"` and compare the path to the `[mounts]` destination in `apps/quiz-agent/fly.toml`. See memory `project_prod_chroma_mount.md`.
+
+### 3. Trigger the workflow
 
 ```bash
 gh workflow run ios-release.yml --ref main -f notes="<short release notes>"
@@ -42,7 +62,7 @@ gh workflow run ios-release.yml --ref main -f notes="<short release notes>"
 
 Notes are optional. Keep them short — they show up in workflow run metadata, not in TestFlight itself.
 
-### 3. Watch the run
+### 4. Watch the run
 
 ```bash
 # Get the run ID of the most recent release
@@ -57,7 +77,7 @@ gh run view <run-id> --json status,conclusion,jobs
 
 **Typical timing:** ~10–15 min for build + upload. TestFlight then needs another ~5–10 min before the build is installable (Apple-side processing).
 
-### 4. Handle failures
+### 5. Handle failures
 
 If the run fails, get the logs:
 

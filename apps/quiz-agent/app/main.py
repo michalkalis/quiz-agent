@@ -134,6 +134,9 @@ async def lifespan(app: FastAPI):
         # Ensure directory exists
         os.makedirs(chroma_path, exist_ok=True)
 
+        from .startup_checks import verify_chroma_path_on_volume
+        verify_chroma_path_on_volume(chroma_path)
+
         chroma_client = ChromaDBClient(
             collection_name="quiz_questions",
             persist_directory=chroma_path

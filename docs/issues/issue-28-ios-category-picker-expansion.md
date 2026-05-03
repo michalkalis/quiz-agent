@@ -1,7 +1,7 @@
 # Issue 28: iOS category picker — expand catalog + add `age_appropriate`
 
-**Triage:** enhancement · ready-for-agent
-**Status:** Open
+**Triage:** enhancement · done
+**Status:** Closed — shipped 544eeb3 (2026-05-03)
 **Created:** 2026-05-02
 **Surfaced by:** Split of #21 (Groups B-E). This is **Group B** of `question-pipeline-remaining.md`.
 

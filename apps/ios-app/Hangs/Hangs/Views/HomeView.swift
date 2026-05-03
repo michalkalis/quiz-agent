@@ -97,6 +97,8 @@ struct HomeView: View {
                 difficultyRow
                 HangsDivider()
                 categoriesRow
+                HangsDivider()
+                ageAppropriateRow
             }
         }
     }
@@ -145,6 +147,22 @@ struct HomeView: View {
                 label: "Categories",
                 value: viewModel.settings.categoryDisplayName(),
                 valueColor: Theme.Hangs.Colors.blue
+            )
+        }
+    }
+
+    private var ageAppropriateRow: some View {
+        Menu {
+            ForEach(Config.ageAppropriateOptions, id: \.id) { option in
+                Button(option.display) {
+                    viewModel.settings.ageAppropriate = option.id
+                }
+            }
+        } label: {
+            configRowVisual(
+                label: "Age",
+                value: viewModel.settings.ageAppropriateDisplayName(),
+                valueColor: Theme.Hangs.Colors.pink
             )
         }
     }

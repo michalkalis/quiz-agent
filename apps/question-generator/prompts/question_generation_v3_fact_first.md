@@ -219,6 +219,7 @@ For EACH question, respond with this EXACT structure:
       "difficulty": "{difficulty}",
       "tags": ["tag1", "tag2"],
       "language_dependent": false,
+      "age_appropriate": "all",
       "source_url": "URL from the source fact (if available)",
       "source_excerpt": "Brief 1-2 sentence excerpt from the source confirming the answer",
       "self_critique": {{

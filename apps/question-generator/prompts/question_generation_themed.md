@@ -158,6 +158,7 @@ Respond ONLY with valid JSON:
       "difficulty": "medium",
       "tags": ["{theme_tag}", "behind-the-scenes"],
       "language_dependent": false,
+      "age_appropriate": "all",
       "explanation": "Interesting backstory or context",
       "self_critique": {
         "surprise_factor": 8,

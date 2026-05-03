@@ -181,6 +181,7 @@ Respond ONLY with valid JSON:
       "difficulty": "easy",
       "tags": ["animals", "nature"],
       "language_dependent": false,
+      "age_appropriate": "8+",
       "explanation": "Fun explanation of the answer",
       "self_critique": {
         "cool_factor": 9,

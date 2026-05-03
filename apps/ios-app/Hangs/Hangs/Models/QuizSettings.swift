@@ -21,8 +21,12 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// Number of questions per quiz session
     var numberOfQuestions: Int
 
-    /// Optional category filter (nil = all categories, "adults", "general")
+    /// Optional category filter (nil = all categories). See `Config.categoryOptions` for valid ids.
     var category: String?
+
+    /// Optional age-appropriate filter. nil = no filter, otherwise one of "all" | "8+" | "12+" | "16+".
+    /// Matches `Question.age_appropriate` on the backend.
+    var ageAppropriate: String?
 
     /// Difficulty level ("easy", "medium", "hard", "random")
     var difficulty: String
@@ -69,7 +73,8 @@ struct QuizSettings: Codable, Equatable, Sendable {
         autoRecordEnabled: Bool = true,
         autoConfirmEnabled: Bool = true,
         showConfirmSheet: Bool = true,
-        isMuted: Bool = false
+        isMuted: Bool = false,
+        ageAppropriate: String? = nil
     ) {
         self.language = language
         self.audioMode = audioMode
@@ -84,6 +89,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
         self.autoConfirmEnabled = autoConfirmEnabled
         self.showConfirmSheet = showConfirmSheet
         self.isMuted = isMuted
+        self.ageAppropriate = ageAppropriate
     }
 
     // MARK: - Default Configuration
@@ -126,6 +132,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
         autoConfirmEnabled = try container.decodeIfPresent(Bool.self, forKey: .autoConfirmEnabled) ?? true
         showConfirmSheet = try container.decodeIfPresent(Bool.self, forKey: .showConfirmSheet) ?? true
         isMuted = try container.decodeIfPresent(Bool.self, forKey: .isMuted) ?? false
+        ageAppropriate = try container.decodeIfPresent(String.self, forKey: .ageAppropriate)
     }
 
     // MARK: - Validation Helpers
@@ -145,20 +152,42 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// Valid thinking time options (seconds, 0 = immediate recording)
     static let thinkingTimeOptions = [0, 15, 30, 45, 60, 90, 120]
 
-    /// Valid category options (nil means "All Categories")
-    static let categoryOptions: [String?] = [nil, "adults", "general"]
+    /// Valid category options (nil means "All Categories"). Mirrors `Config.categoryOptions`.
+    static let categoryOptions: [String?] = [
+        nil, "general", "adults", "kids",
+        "wizarding-world", "superheroes", "disney",
+        "football", "sports-mix"
+    ]
 
-    /// Display name for category (handles nil case)
+    /// Valid age-appropriate options (nil means no filter). Mirrors `Config.ageAppropriateOptions`.
+    static let ageAppropriateOptions: [String?] = [nil, "all", "8+", "12+", "16+"]
+
+    /// Display name for category (handles nil case).
+    /// Lookup table mirrors `Config.categoryOptions` — keep them in sync.
     func categoryDisplayName() -> String {
         switch category {
-        case nil:
-            return "All Categories"
-        case "adults":
-            return "Adults"
-        case "general":
-            return "General"
-        default:
-            return "Unknown"
+        case nil: return "All Categories"
+        case "general": return "General"
+        case "adults": return "Adults"
+        case "kids": return "Kids"
+        case "wizarding-world": return "Wizarding World"
+        case "superheroes": return "Superheroes"
+        case "disney": return "Disney"
+        case "football": return "Football"
+        case "sports-mix": return "Sports Mix"
+        default: return "Unknown"
+        }
+    }
+
+    /// Display name for the active age-appropriate filter.
+    func ageAppropriateDisplayName() -> String {
+        switch ageAppropriate {
+        case nil: return "Any age"
+        case "all": return "Family-friendly"
+        case "8+": return "8+"
+        case "12+": return "12+"
+        case "16+": return "16+"
+        default: return "Unknown"
         }
     }
 

@@ -53,6 +53,10 @@ class Question(BaseModel):
         False,
         description="True if question relies on English language properties (wordplay, spelling, letter counts, acronyms)"
     )
+    age_appropriate: Optional[str] = Field(
+        None,
+        description="Minimum recommended age band: 'all' | '8+' | '12+' | '16+'. None = unrated (legacy)."
+    )
 
     # Metadata
     created_at: datetime = Field(default_factory=datetime.now)
@@ -249,6 +253,7 @@ class Question(BaseModel):
             difficulty=data.get("difficulty", default_difficulty),
             tags=data.get("tags", []),
             language_dependent=data.get("language_dependent", False),
+            age_appropriate=data.get("age_appropriate"),
             media_url=data.get("media_url"),
             image_subtype=data.get("image_subtype"),
             explanation=data.get("explanation"),

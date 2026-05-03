@@ -72,10 +72,27 @@ nonisolated enum Config {
     ]
 
     /// Available category options for quiz settings (nil = All Categories)
+    /// Order: All → core → themed packs. Backend filters on whatever id is sent.
     static let categoryOptions: [(id: String?, display: String)] = [
         (nil, "All Categories"),
+        ("general", "General"),
         ("adults", "Adults"),
-        ("general", "General")
+        ("kids", "Kids"),
+        ("wizarding-world", "Wizarding World"),
+        ("superheroes", "Superheroes"),
+        ("disney", "Disney"),
+        ("football", "Football"),
+        ("sports-mix", "Sports Mix")
+    ]
+
+    /// Available age-appropriate filter options (nil = no filter / show all)
+    /// Values match `Question.age_appropriate` on the backend.
+    static let ageAppropriateOptions: [(id: String?, display: String)] = [
+        (nil, "Any age"),
+        ("all", "Family-friendly"),
+        ("8+", "8+"),
+        ("12+", "12+"),
+        ("16+", "16+")
     ]
 
     /// Available auto-advance delay options (in seconds)

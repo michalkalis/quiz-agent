@@ -302,6 +302,9 @@ class ChromaDBQuestionStore:
         if question.freshness_tag:
             metadata["freshness_tag"] = question.freshness_tag
 
+        if question.age_appropriate:
+            metadata["age_appropriate"] = question.age_appropriate
+
         return metadata
 
     @staticmethod
@@ -387,6 +390,7 @@ class ChromaDBQuestionStore:
             embedding=embedding,
             expires_at=expires_at,
             freshness_tag=metadata.get("freshness_tag"),
+            age_appropriate=metadata.get("age_appropriate"),
         )
 
     @staticmethod

@@ -22,6 +22,7 @@ struct Question: Codable, Identifiable, Equatable, Sendable {
     let imageSubtype: String?
     let explanation: String?
     let generatedBy: String?
+    let ageAppropriate: String?
 
     /// Whether this question has an associated image
     var hasImage: Bool {
@@ -53,6 +54,59 @@ struct Question: Codable, Identifiable, Equatable, Sendable {
         case imageSubtype = "image_subtype"
         case explanation
         case generatedBy = "generated_by"
+        case ageAppropriate = "age_appropriate"
+    }
+
+    /// Backward-compatible decoder — `ageAppropriate` is optional so existing
+    /// questions without the field still decode without errors.
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        question = try container.decode(String.self, forKey: .question)
+        type = try container.decodeIfPresent(QuestionType.self, forKey: .type) ?? .text
+        possibleAnswers = try container.decodeIfPresent([String: String].self, forKey: .possibleAnswers)
+        difficulty = try container.decode(String.self, forKey: .difficulty)
+        topic = try container.decode(String.self, forKey: .topic)
+        category = try container.decode(String.self, forKey: .category)
+        sourceUrl = try container.decodeIfPresent(String.self, forKey: .sourceUrl)
+        sourceExcerpt = try container.decodeIfPresent(String.self, forKey: .sourceExcerpt)
+        mediaUrl = try container.decodeIfPresent(String.self, forKey: .mediaUrl)
+        imageSubtype = try container.decodeIfPresent(String.self, forKey: .imageSubtype)
+        explanation = try container.decodeIfPresent(String.self, forKey: .explanation)
+        generatedBy = try container.decodeIfPresent(String.self, forKey: .generatedBy)
+        ageAppropriate = try container.decodeIfPresent(String.self, forKey: .ageAppropriate)
+    }
+
+    init(
+        id: String,
+        question: String,
+        type: QuestionType,
+        possibleAnswers: [String: String]?,
+        difficulty: String,
+        topic: String,
+        category: String,
+        sourceUrl: String?,
+        sourceExcerpt: String?,
+        mediaUrl: String?,
+        imageSubtype: String?,
+        explanation: String?,
+        generatedBy: String?,
+        ageAppropriate: String? = nil
+    ) {
+        self.id = id
+        self.question = question
+        self.type = type
+        self.possibleAnswers = possibleAnswers
+        self.difficulty = difficulty
+        self.topic = topic
+        self.category = category
+        self.sourceUrl = sourceUrl
+        self.sourceExcerpt = sourceExcerpt
+        self.mediaUrl = mediaUrl
+        self.imageSubtype = imageSubtype
+        self.explanation = explanation
+        self.generatedBy = generatedBy
+        self.ageAppropriate = ageAppropriate
     }
 }
 

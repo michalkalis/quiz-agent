@@ -123,7 +123,8 @@ Respond in this exact JSON format:
       "category": "{categories}",
       "difficulty": "{difficulty}",
       "tags": ["tag1", "tag2"],
-      "language_dependent": false
+      "language_dependent": false,
+      "age_appropriate": "all"
     }}
   ]
 }}

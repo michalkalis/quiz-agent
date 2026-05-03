@@ -485,6 +485,7 @@ For EACH question, respond with this EXACT structure:
       "difficulty": "{difficulty}",
       "tags": ["tag1", "tag2"],
       "language_dependent": false,
+      "age_appropriate": "all",
       "self_critique": {{
         "surprise_factor": 9,
         "universal_appeal": 8,

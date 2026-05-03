@@ -14,5 +14,5 @@ States: `[ ]` todo · `[~]` wip · `[x]` done. Numbers continue the `docs/issues
 - [x] #26 `TaskBag` — concentrate `QuizViewModel` task lifecycle — [plan](../issues/issue-26-task-bag-lifecycle.md)
 - [x] #27 `PendingStore` — question pipeline pending state — [plan](../issues/issue-27-pending-store-question-pipeline.md)
 - [x] #28 iOS category picker — expand catalog + add `age_appropriate` — [plan](../issues/issue-28-ios-category-picker-expansion.md)
-- [ ] #29 Backfill `source_url` / `source_excerpt` on existing questions — [plan](../issues/issue-29-backfill-existing-questions.md)
+- [~] #29 Backfill `source_url` / `source_excerpt` on existing questions — [plan](../issues/issue-29-backfill-existing-questions.md) — local snapshot done 2026-05-03 (67/67 approved sourced); prod sync pending sign-off
 - [ ] #30 Batch-generate questions for new categories — [plan](../issues/issue-30-batch-generate-categories.md) (gate on #28 + #29)

@@ -18,7 +18,6 @@ Dashboard of all `issue-NN-*.md` files. Updated by `/triage` whenever a `**Triag
 | 18 | [First autonomous regression run — RS-01 end-to-end](issue-18-rs01-end-to-end.md) | enhancement · ready-for-agent | | Listener landed in `becd1b2`; ready to drive RS-01 |
 | 19 | [Auto-confirm of unedited transcript routes through `resubmitAnswer`](issue-19-auto-confirm-resubmit-bug.md) | bug · needs-info | `[ ]` #19 | Fix path not yet chosen — user needs to pick approach |
 | 28 | [iOS category picker — expand catalog + add `age_appropriate`](issue-28-ios-category-picker-expansion.md) | enhancement · done | `[x]` #28 | Shipped 544eeb3 (2026-05-03) |
-| 29 | [Backfill `source_url` / `source_excerpt` on existing questions](issue-29-backfill-existing-questions.md) | enhancement · ready-for-human | `[~]` #29 | Local DB sourced 2026-05-03; flagged review file at `data/questions/backfill-needs-fix.md`; prod sync awaits sign-off |
 | 30 | [Batch-generate questions for new categories](issue-30-batch-generate-categories.md) | enhancement · ready-for-agent | `[ ]` #30 | Was Group E of #21; gate on #28 + #29 |
 
 ## Done
@@ -44,6 +43,7 @@ Dashboard of all `issue-NN-*.md` files. Updated by `/triage` whenever a `**Triag
 | 25 | [Backend session phase — transition guard](issue-25-session-phase-transition-guard.md) | Done 2026-05-02 |
 | 26 | [TaskBag — concentrate QuizViewModel task lifecycle](issue-26-task-bag-lifecycle.md) | Done 2026-05-02 |
 | 27 | [PendingStore — question pipeline pending state](issue-27-pending-store-question-pipeline.md) | Done 2026-05-02 — unblocks autonomous Groups B-E |
+| 29 | [Backfill `source_url` / `source_excerpt` on existing questions](issue-29-backfill-existing-questions.md) | Done 2026-05-04 — local + prod sourced; 8 flagged questions corrected per human review |
 | 21 | Generate question Groups B-E | Superseded 2026-05-02 — split into #28 (Group B), #29 (Group D1), #30 (Group E); Groups C/D2/D3 deferred (data-blocked) |
 
 ## Conventions

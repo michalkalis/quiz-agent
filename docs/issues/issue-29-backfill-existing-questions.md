@@ -1,8 +1,9 @@
 # Issue 29: Backfill `source_url` / `source_excerpt` on existing questions
 
-**Triage:** enhancement · ready-for-agent
-**Status:** Open
+**Triage:** enhancement · done
+**Status:** Done
 **Created:** 2026-05-02
+**Closed:** 2026-05-04
 **Surfaced by:** Split of #21 (Groups B-E). This is **Group D1** of `question-pipeline-remaining.md`.
 
 ## TL;DR
@@ -57,3 +58,40 @@ Fact-check the existing corpus, populate source fields, flag questions that don'
 - #30 — New batch content (Group E); should run *after* this so we don't fact-check brand-new questions a second time.
 - Memory `project_chroma_update_bug` — historical no-op now fixed via `QuestionStore.upsert`.
 - Memory `project_prod_chroma_mount` — production volume layout.
+
+## Outcome (2026-05-04)
+
+Two-phase landing.
+
+**Phase 1 — backfill script + bulk source push (commit 58a4253):**
+- `scripts/backfill_sources.py` updated: multi-file input, last-writer-wins
+  merge, idempotent on re-run.
+- Local ChromaDB: 67/67 approved questions carry `source_url` (100%); 134
+  pending also sourced.
+- 8 approved + 1 pending questions flagged needs_fix/needs_review by the
+  verifier — surfaced to `data/questions/backfill-needs-fix.md` per the
+  "no auto-fix" rule, awaiting human decision.
+
+**Phase 2 — human-reviewed corrections + prod sync (this commit):**
+- `data/verification/corrections_2026-05-04.json` — 8 field-level diffs
+  applied per verifier suggestions:
+  - 7 in-rotation: rephrased to remove false claims (legal ban → guidelines,
+    debunked myths reframed as "legendarily said to", etc.)
+  - 1 pending (`q_tech_002`): answer "Bill Gates" → "Bill Gates and Paul
+    Allen", flipped to `approved`.
+  - 1 (`q_img_hint_image_003` Moon Landing painting): kept as-is — flagged
+    only because Gemini was unavailable; per user, no Gemini soon.
+- `scripts/apply_question_corrections.py` — applies field-level patches
+  locally via `QuestionStore.upsert`, then to prod via DELETE + IMPORT +
+  backfill-sources. Rate-limit-aware (admin endpoints are 5/min capped).
+- `scripts/push_sources_to_prod.py` — extended to accept multiple files,
+  merges to one POST.
+- Prod sync: 8 corrections deleted+reimported with sources backfilled;
+  bulk push covered 49 newly-updated source attributions across the
+  remaining corpus. Total prod questions unchanged at 300.
+
+Acceptance criteria met:
+- All approved questions in prod carry `source_url` + `source_excerpt`.
+- Flagged questions are recorded in `backfill-needs-fix.md` with the
+  verifier's reasoning; corrections are tracked in `corrections_*.json`.
+- Backfill + correction scripts are idempotent (last-writer-wins).

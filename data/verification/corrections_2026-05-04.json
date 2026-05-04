@@ -1,0 +1,68 @@
+{
+  "_comment": "Human-reviewed corrections for 8 questions flagged needs_fix/needs_review by /verify-questions. Source: data/questions/backfill-needs-fix.md (issue #29). Each entry is a field-level diff applied via scripts/apply_question_corrections.py — the script fetches the existing Question from the store and patches only listed fields, so unspecified fields (topic, category, difficulty, language_dependent, etc.) stay intact.",
+  "corrections": [
+    {
+      "id": "q_imported_05b0ca937e35",
+      "question": "Which country's media regulator issued guidelines discouraging time travel plots in films and TV shows in 2011?",
+      "correct_answer": "China",
+      "source_url": "https://www.hollywoodreporter.com/news/general-news/china-bans-time-travel-films-177801/",
+      "source_excerpt": "China's media authorities stopped the clock on time travel in film and television in 2011, saying the sci-fi notion 'disrespects history,' though the guidance was not a strict legal ban."
+    },
+    {
+      "id": "q_imported_6d19afb101f2",
+      "question": "Which drink was created in 1886 by a pharmacist who was searching for a substitute for his morphine habit?",
+      "correct_answer": "Coca-Cola",
+      "alternative_answers": ["Coca Cola", "Coke"],
+      "source_url": "https://en.wikipedia.org/wiki/John_Stith_Pemberton",
+      "source_excerpt": "John Stith Pemberton was an American pharmacist and Confederate veteran who created the original formula for Coca-Cola. Pemberton developed an addiction to morphine after being wounded in the Civil War."
+    },
+    {
+      "id": "q_imported_607a6177522e",
+      "question": "What numeric system do most retail barcodes encode?",
+      "correct_answer": "Universal Product Code",
+      "alternative_answers": ["UPC", "Universal Product Code (UPC)"],
+      "source_url": "https://en.wikipedia.org/wiki/Universal_Product_Code",
+      "source_excerpt": "A UPC barcode encodes a GS1 company prefix identifying the manufacturer, a product reference number, and a check digit."
+    },
+    {
+      "id": "q_imported_3a6984e88b51",
+      "question": "Which U.S. president is legendarily said to have kept a pet alligator in the White House, supposedly a gift from the Marquis de Lafayette?",
+      "correct_answer": "John Quincy Adams",
+      "alternative_answers": ["Adams", "J.Q. Adams", "JQ Adams"],
+      "source_url": "https://www.snopes.com/fact-check/alligators-white-house-pets/",
+      "source_excerpt": "The claim that John Quincy Adams kept an alligator in the White House is rated 'Unproven' — researchers found no primary sources confirming the anecdote."
+    },
+    {
+      "id": "q_imported_1c847d01902b",
+      "question": "Which U.S. president had a custom bathtub installed in the White House that was large enough to fit four men?",
+      "correct_answer": "William Howard Taft",
+      "alternative_answers": ["Taft", "William Taft", "W.H. Taft"],
+      "source_url": "https://www.history.com/articles/did-william-howard-taft-really-get-stuck-in-a-bathtub",
+      "source_excerpt": "The story of Taft getting stuck in a bathtub has no documentary evidence. The tale first surfaced in a 1934 memoir, two decades after his presidency. However, Taft did have a large custom tub installed."
+    },
+    {
+      "id": "q_imported_3a0162e5fdad",
+      "question": "Which ancient Greek artist painted grapes so realistic that birds flew down to peck at them?",
+      "correct_answer": "Zeuxis",
+      "source_url": "https://en.wikipedia.org/wiki/Zeuxis_(painter)",
+      "source_excerpt": "Zeuxis painted a bunch of grapes so realistic that birds flew toward it to take a nibble, according to Pliny the Elder's Naturalis Historia."
+    },
+    {
+      "id": "q_imported_7df1ab24ade4",
+      "question": "Which legendary jazz singer starred in a famous Memorex commercial campaign where her voice shattered a glass, with the tagline 'Is it live, or is it Memorex?'",
+      "correct_answer": "Ella Fitzgerald",
+      "alternative_answers": ["Fitzgerald", "Ella"],
+      "source_url": "https://www.npr.org/2019/09/03/749019831/the-voice-that-shattered-glass",
+      "source_excerpt": "In 1972, Ella Fitzgerald became the spokesperson for Memorex cassettes in commercials where she scat sings, hits a high note and shatters a goblet, with the tagline 'Is it live, or is it Memorex?'"
+    },
+    {
+      "id": "q_tech_002",
+      "question": "Who founded Microsoft?",
+      "correct_answer": "Bill Gates and Paul Allen",
+      "alternative_answers": ["Bill Gates", "Paul Allen", "Gates and Allen", "Gates", "Allen"],
+      "source_url": "https://en.wikipedia.org/wiki/Microsoft",
+      "source_excerpt": "Microsoft was founded on April 4, 1975, by Bill Gates and Paul Allen in Albuquerque, New Mexico.",
+      "review_status": "approved"
+    }
+  ]
+}

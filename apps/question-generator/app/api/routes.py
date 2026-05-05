@@ -204,7 +204,7 @@ async def approve_questions(request: ApproveRequest):
             else:
                 reason = error or "Unknown error"
                 if duplicates:
-                    dup_questions = [d[0].question[:50] for d, _ in duplicates[:2]]
+                    dup_questions = [q.question[:50] for q, _ in duplicates[:2]]
                     reason = f"Duplicates found: {', '.join(dup_questions)}..."
                 failed.append({"id": qid, "reason": reason})
 

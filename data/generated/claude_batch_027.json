@@ -1,0 +1,895 @@
+{
+  "questions": [
+    {
+      "question": "Hummingbirds are the only birds in the world that can fly in which surprising direction?",
+      "type": "text",
+      "correct_answer": "Backwards",
+      "possible_answers": null,
+      "alternative_answers": ["backwards", "backward", "in reverse"],
+      "topic": "Animals",
+      "category": "kids",
+      "difficulty": "easy",
+      "tags": ["animals", "birds", "nature"],
+      "language_dependent": false,
+      "age_appropriate": "8+",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Hummingbird",
+      "source_excerpt": "Hummingbirds are the only birds capable of sustained hovering and the only group of birds able to fly backwards, thanks to a unique figure-eight wing motion.",
+      "explanation": "Hummingbird wings move in a figure-eight pattern up to 80 times per second — that's so fast you can't even see them — which lets them fly forward, sideways, and even backward like a tiny helicopter!",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "kids",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Amazing Animal Facts",
+          "why_interesting": "Kids think all birds fly the same way — backwards flight is a wow moment.",
+          "universal_appeal": "Hummingbirds exist worldwide; no cultural barrier.",
+          "boring_check": "Not memorization — surprising fact framed with curiosity."
+        },
+        "self_critique": {
+          "cool_factor": 8,
+          "guessability": 7,
+          "learning_value": 8,
+          "simplicity": 9,
+          "safety": 10,
+          "overall_score": 8.4,
+          "reasoning": "Genuinely surprising and easy to grasp."
+        },
+        "ai_score": 8.4
+      }
+    },
+    {
+      "question": "In which sea is it almost impossible to sink because the water is so salty you just float on top?",
+      "type": "text",
+      "correct_answer": "The Dead Sea",
+      "possible_answers": null,
+      "alternative_answers": ["dead sea"],
+      "topic": "Geography",
+      "category": "kids",
+      "difficulty": "easy",
+      "tags": ["geography", "nature", "water"],
+      "language_dependent": false,
+      "age_appropriate": "8+",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Dead_Sea",
+      "source_excerpt": "The Dead Sea has a salinity of about 34%, almost ten times saltier than the ocean, which makes the water so dense that swimmers float effortlessly on the surface.",
+      "explanation": "The Dead Sea is so salty that swimmers can lie back and read a book without sinking! The salt makes the water heavier than your body, so you bob like a cork.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "kids",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Guess the Country/Place",
+          "why_interesting": "The image of floating without effort is delightful and counterintuitive.",
+          "universal_appeal": "Famous global landmark; mentioned in textbooks worldwide.",
+          "boring_check": "Frames the fact as a sensory experience, not a memorized location."
+        },
+        "self_critique": {
+          "cool_factor": 8,
+          "guessability": 8,
+          "learning_value": 8,
+          "simplicity": 10,
+          "safety": 10,
+          "overall_score": 8.8,
+          "reasoning": "Iconic, simple, and the framing teaches the why."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "Where does cinnamon come from — a fruit, the bark of a tree, or a flower?",
+      "type": "text",
+      "correct_answer": "The bark of a tree",
+      "possible_answers": null,
+      "alternative_answers": ["bark", "tree bark", "from tree bark", "the bark of a cinnamon tree"],
+      "topic": "Food",
+      "category": "kids",
+      "difficulty": "easy",
+      "tags": ["food", "plants", "nature"],
+      "language_dependent": false,
+      "age_appropriate": "8+",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Cinnamon",
+      "source_excerpt": "Cinnamon is a spice obtained from the inner bark of several tree species from the genus Cinnamomum. The bark is harvested, dried and rolled into the familiar cinnamon sticks.",
+      "explanation": "Cinnamon sticks are actually rolled-up pieces of tree bark! Workers carefully peel the inner bark off cinnamon trees, let it dry in the sun, and it curls up into the sticks you see in stores.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "kids",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Everyday Surprises",
+          "why_interesting": "Most kids assume spices come from fruits or seeds; bark is a surprise.",
+          "universal_appeal": "Cinnamon is used in cuisines worldwide.",
+          "boring_check": "Not pure memorization — the multiple-choice framing teaches the reveal."
+        },
+        "self_critique": {
+          "cool_factor": 8,
+          "guessability": 8,
+          "learning_value": 8,
+          "simplicity": 10,
+          "safety": 10,
+          "overall_score": 8.8,
+          "reasoning": "Strong everyday-surprise pattern with reasonable guess options."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "Which fruit has more vitamin C than an orange — a banana, a strawberry, or a kiwifruit?",
+      "type": "text",
+      "correct_answer": "Kiwifruit",
+      "possible_answers": null,
+      "alternative_answers": ["kiwi", "kiwi fruit", "the kiwifruit"],
+      "topic": "Food",
+      "category": "kids",
+      "difficulty": "easy",
+      "tags": ["food", "fruit", "health"],
+      "language_dependent": false,
+      "age_appropriate": "8+",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Kiwifruit",
+      "source_excerpt": "Kiwifruit is high in vitamin C, with about 92.7 mg per 100 g — roughly 1.5 times the amount found in the same weight of orange.",
+      "explanation": "A single kiwi has more vitamin C than an orange! That's why it's such a superhero snack — one little green fruit gives you more than a whole day's worth of vitamin C.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "kids",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Silly Comparisons",
+          "why_interesting": "Oranges are the cliché vitamin C fruit — kiwi is a delightful upset.",
+          "universal_appeal": "All three fruits are widely sold internationally.",
+          "boring_check": "Frames a comparison rather than asking a memorized fact."
+        },
+        "self_critique": {
+          "cool_factor": 8,
+          "guessability": 7,
+          "learning_value": 8,
+          "simplicity": 10,
+          "safety": 10,
+          "overall_score": 8.6,
+          "reasoning": "Clean comparison with a counterintuitive answer."
+        },
+        "ai_score": 8.6
+      }
+    },
+    {
+      "question": "Koalas have something on their fingers that is so similar to a human's that it can fool what kind of investigator?",
+      "type": "text",
+      "correct_answer": "A fingerprint investigator",
+      "possible_answers": null,
+      "alternative_answers": ["fingerprint investigator", "a crime scene investigator", "fingerprint expert", "police fingerprint analyst", "a forensic investigator"],
+      "topic": "Animals",
+      "category": "kids",
+      "difficulty": "easy",
+      "tags": ["animals", "australia", "nature"],
+      "language_dependent": false,
+      "age_appropriate": "8+",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Koala",
+      "source_excerpt": "Koalas have fingerprints that are virtually indistinguishable from those of humans, even under an electron microscope, and have reportedly been mistaken for human prints at crime scenes.",
+      "explanation": "Koalas are one of the only animals with fingerprints — and they look so much like ours that scientists worry koala prints could even be mixed up with human prints by mistake!",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "kids",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Amazing Animal Facts",
+          "why_interesting": "The idea that an animal could be confused with a human at a crime scene is bizarre and funny.",
+          "universal_appeal": "Koalas are globally recognized.",
+          "boring_check": "Frames as a riddle rather than 'name the marsupial'."
+        },
+        "self_critique": {
+          "cool_factor": 9,
+          "guessability": 6,
+          "learning_value": 8,
+          "simplicity": 8,
+          "safety": 10,
+          "overall_score": 8.2,
+          "reasoning": "Genuinely surprising and avoids the violence angle of 'crime scene'."
+        },
+        "ai_score": 8.2
+      }
+    },
+    {
+      "question": "Which mammal sleeps up to 20 hours every day, hanging upside down in caves and under bridges?",
+      "type": "text",
+      "correct_answer": "A bat",
+      "possible_answers": null,
+      "alternative_answers": ["bat", "bats"],
+      "topic": "Animals",
+      "category": "kids",
+      "difficulty": "medium",
+      "tags": ["animals", "mammals", "nature"],
+      "language_dependent": false,
+      "age_appropriate": "8+",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Bat",
+      "source_excerpt": "Many bat species rest for 19 to 20 hours per day, conserving energy in roosts where they hang upside down using a special tendon in their feet that locks their grip without effort.",
+      "explanation": "Bats can hang upside down without getting tired because their feet have a special locking tendon — they actually use less energy hanging on than we do standing up!",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "kids",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Amazing Animal Facts",
+          "why_interesting": "Sleeping 20 hours is wild; the upside-down clue points to bats.",
+          "universal_appeal": "Bats live on every continent except Antarctica.",
+          "boring_check": "Has an interesting clue path, not pure recall."
+        },
+        "self_critique": {
+          "cool_factor": 8,
+          "guessability": 8,
+          "learning_value": 8,
+          "simplicity": 9,
+          "safety": 10,
+          "overall_score": 8.6,
+          "reasoning": "Strong sensory imagery and a clear answer."
+        },
+        "ai_score": 8.6
+      }
+    },
+    {
+      "question": "Naked mole rats almost never get one common disease that most other mammals can get. Which disease is it?",
+      "type": "text",
+      "correct_answer": "Cancer",
+      "possible_answers": null,
+      "alternative_answers": ["cancer"],
+      "topic": "Animals",
+      "category": "kids",
+      "difficulty": "medium",
+      "tags": ["animals", "biology", "science"],
+      "language_dependent": false,
+      "age_appropriate": "8+",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Naked_mole-rat",
+      "source_excerpt": "Naked mole rats display extraordinary resistance to cancer; their cells produce a special form of hyaluronan that prevents cells from clumping together and forming tumours.",
+      "explanation": "Scientists are studying naked mole rats to learn how their bodies block cancer — these wrinkly little animals might one day help humans fight the disease too!",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "kids",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Amazing Animal Facts",
+          "why_interesting": "Connects an obscure animal to a famous human medical mystery.",
+          "universal_appeal": "Cancer awareness is global; mole rats are a known oddity.",
+          "boring_check": "Has a why-this-matters hook beyond rote knowledge."
+        },
+        "self_critique": {
+          "cool_factor": 9,
+          "guessability": 7,
+          "learning_value": 9,
+          "simplicity": 9,
+          "safety": 10,
+          "overall_score": 8.8,
+          "reasoning": "Important and surprising — gentle framing keeps it kid-safe."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "True or false: a group of flamingos is officially called a 'flamboyance'.",
+      "type": "text",
+      "correct_answer": "True",
+      "possible_answers": null,
+      "alternative_answers": ["true", "yes", "correct"],
+      "topic": "Animals",
+      "category": "kids",
+      "difficulty": "medium",
+      "tags": ["animals", "birds", "language"],
+      "language_dependent": false,
+      "age_appropriate": "8+",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Flamingo",
+      "source_excerpt": "A group of flamingos is called a flamboyance, in keeping with their bright pink colouring and showy display behaviour during courtship.",
+      "explanation": "Animal group names can be hilarious — and 'flamboyance' fits perfectly because flamingos love to show off in big pink crowds during their dancing courtship displays.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "kids",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "True or False Surprises",
+          "why_interesting": "Animal collective nouns are inherently delightful.",
+          "universal_appeal": "Flamingos are globally familiar.",
+          "boring_check": "Not pure memorization — the word itself does most of the work."
+        },
+        "self_critique": {
+          "cool_factor": 8,
+          "guessability": 7,
+          "learning_value": 8,
+          "simplicity": 10,
+          "safety": 10,
+          "overall_score": 8.6,
+          "reasoning": "Word play that translates well across languages."
+        },
+        "ai_score": 8.6
+      }
+    },
+    {
+      "question": "Dolphins have something a lot like a name — what is the unique sound each dolphin makes to identify itself?",
+      "type": "text",
+      "correct_answer": "A whistle",
+      "possible_answers": null,
+      "alternative_answers": ["whistle", "signature whistle", "a signature whistle", "its own whistle"],
+      "topic": "Animals",
+      "category": "kids",
+      "difficulty": "medium",
+      "tags": ["animals", "ocean", "communication"],
+      "language_dependent": false,
+      "age_appropriate": "8+",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Bottlenose_dolphin",
+      "source_excerpt": "Each bottlenose dolphin develops a unique signature whistle in its first year of life, used to identify itself to others — functioning much like a name.",
+      "explanation": "Each dolphin invents its own whistle as a baby — and uses it for life, just like a name! Other dolphins can even copy a friend's whistle to call out to them.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "kids",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Amazing Animal Facts",
+          "why_interesting": "The idea that dolphins have names blows kids' minds.",
+          "universal_appeal": "Dolphins are universally adored.",
+          "boring_check": "Story-style framing, not 'what do dolphins use'."
+        },
+        "self_critique": {
+          "cool_factor": 9,
+          "guessability": 7,
+          "learning_value": 9,
+          "simplicity": 8,
+          "safety": 10,
+          "overall_score": 8.6,
+          "reasoning": "Connects deeply to the human concept of names."
+        },
+        "ai_score": 8.6
+      }
+    },
+    {
+      "question": "True or false: every planet in our solar system could fit, side by side, in the gap between the Earth and the Moon.",
+      "type": "text",
+      "correct_answer": "True",
+      "possible_answers": null,
+      "alternative_answers": ["true", "yes", "correct"],
+      "topic": "Space",
+      "category": "kids",
+      "difficulty": "medium",
+      "tags": ["space", "astronomy", "planets"],
+      "language_dependent": false,
+      "age_appropriate": "8+",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Lunar_distance_(astronomy)",
+      "source_excerpt": "The average Earth-Moon distance is about 384,400 km. The combined diameters of all seven other planets in the Solar System sum to roughly 380,000 km, meaning they would just fit, lined up edge-to-edge, in that gap.",
+      "explanation": "The Moon looks close, but it's actually so far away that you could line up Mercury, Venus, Mars, Jupiter, Saturn, Uranus, and Neptune in between — and they'd all fit with a tiny bit of room left over!",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "kids",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Mind-Blowing Numbers",
+          "why_interesting": "Forces a complete rethink of how big and far apart things in space are.",
+          "universal_appeal": "Planets and the Moon are universal.",
+          "boring_check": "Not memorization — invites visualization."
+        },
+        "self_critique": {
+          "cool_factor": 10,
+          "guessability": 7,
+          "learning_value": 9,
+          "simplicity": 9,
+          "safety": 10,
+          "overall_score": 9.0,
+          "reasoning": "One of the most jaw-dropping space facts there is."
+        },
+        "ai_score": 9.0
+      }
+    },
+    {
+      "question": "Saturn's beautiful rings look solid from far away, but they are mostly made of trillions of pieces of what?",
+      "type": "text",
+      "correct_answer": "Ice",
+      "possible_answers": null,
+      "alternative_answers": ["ice", "water ice", "frozen water"],
+      "topic": "Space",
+      "category": "kids",
+      "difficulty": "medium",
+      "tags": ["space", "saturn", "astronomy"],
+      "language_dependent": false,
+      "age_appropriate": "8+",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Rings_of_Saturn",
+      "source_excerpt": "The rings of Saturn are composed mainly of water-ice particles, ranging in size from microscopic dust to chunks several metres across, with a small amount of rocky material.",
+      "explanation": "Saturn's rings are basically a giant cosmic ice rink — countless icy chunks, from grains of sand to house-sized boulders, all orbiting the planet!",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "kids",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Space & Science Wonders",
+          "why_interesting": "Rings looking solid but being ice chunks is a strong reveal.",
+          "universal_appeal": "Saturn is a globally iconic planet.",
+          "boring_check": "Reframes a famous image instead of asking 'name the rings'."
+        },
+        "self_critique": {
+          "cool_factor": 8,
+          "guessability": 7,
+          "learning_value": 8,
+          "simplicity": 9,
+          "safety": 10,
+          "overall_score": 8.4,
+          "reasoning": "Visual and clear; the ice chunks are striking."
+        },
+        "ai_score": 8.4
+      }
+    },
+    {
+      "question": "Astronauts on the International Space Station see how many sunrises every 24 hours?",
+      "type": "text",
+      "correct_answer": "16",
+      "possible_answers": null,
+      "alternative_answers": ["sixteen", "about 16", "around 16"],
+      "topic": "Space",
+      "category": "kids",
+      "difficulty": "medium",
+      "tags": ["space", "iss", "astronomy"],
+      "language_dependent": false,
+      "age_appropriate": "8+",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/International_Space_Station",
+      "source_excerpt": "The ISS orbits the Earth once every 93 minutes at about 28,000 km/h, which means astronauts on board experience approximately 16 sunrises and sunsets every 24 hours.",
+      "explanation": "The ISS zooms around Earth so fast — once every 90 minutes — that astronauts get 16 chances a day to watch the sun pop up over the horizon!",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "kids",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Mind-Blowing Numbers",
+          "why_interesting": "Frames the ISS speed in a relatable, sensory way.",
+          "universal_appeal": "ISS is a global icon.",
+          "boring_check": "Specific surprising number, not 'how big is the ISS'."
+        },
+        "self_critique": {
+          "cool_factor": 9,
+          "guessability": 5,
+          "learning_value": 8,
+          "simplicity": 9,
+          "safety": 10,
+          "overall_score": 8.2,
+          "reasoning": "Number-heavy but the imagery makes it memorable."
+        },
+        "ai_score": 8.2
+      }
+    },
+    {
+      "question": "True or false: your stomach gets a brand-new lining every few days because the acid inside would otherwise digest it.",
+      "type": "text",
+      "correct_answer": "True",
+      "possible_answers": null,
+      "alternative_answers": ["true", "yes", "correct"],
+      "topic": "Human Body",
+      "category": "kids",
+      "difficulty": "medium",
+      "tags": ["human body", "biology", "science"],
+      "language_dependent": false,
+      "age_appropriate": "8+",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Gastric_mucosa",
+      "source_excerpt": "The cells of the gastric mucosa are replaced approximately every 3 to 5 days, protecting the stomach wall from being damaged by its own hydrochloric acid.",
+      "explanation": "Your stomach acid is so strong it could dissolve a metal coin — so your body is constantly building a fresh stomach lining, top to bottom, every 3 to 5 days. It's like getting brand new wallpaper every week!",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "kids",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "True or False Surprises",
+          "why_interesting": "Body horror played as wonder — your stomach acid would eat itself.",
+          "universal_appeal": "Universal biology.",
+          "boring_check": "Reframes anatomy fact as a daily drama."
+        },
+        "self_critique": {
+          "cool_factor": 9,
+          "guessability": 6,
+          "learning_value": 9,
+          "simplicity": 9,
+          "safety": 9,
+          "overall_score": 8.4,
+          "reasoning": "Slightly intense but framed positively for kids."
+        },
+        "ai_score": 8.4
+      }
+    },
+    {
+      "question": "Which speedy plant can grow up to 90 centimeters — about the height of a tall toddler — in just one day?",
+      "type": "text",
+      "correct_answer": "Bamboo",
+      "possible_answers": null,
+      "alternative_answers": ["bamboo", "a bamboo", "the bamboo"],
+      "topic": "Plants",
+      "category": "kids",
+      "difficulty": "medium",
+      "tags": ["plants", "nature", "world records"],
+      "language_dependent": false,
+      "age_appropriate": "8+",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Bamboo",
+      "source_excerpt": "Some bamboo species are among the fastest-growing plants on Earth, with growth rates of up to 91 cm (36 inches) per day in optimal conditions.",
+      "explanation": "Bamboo grows so fast that, on a quiet day, you can almost watch it stretch upward — some species shoot up nearly a meter every 24 hours, faster than your hair grows in months!",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "kids",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Mind-Blowing Numbers",
+          "why_interesting": "A relatable size comparison (toddler) makes the speed real.",
+          "universal_appeal": "Bamboo grows worldwide.",
+          "boring_check": "Frames the surprise around speed, not species recall."
+        },
+        "self_critique": {
+          "cool_factor": 9,
+          "guessability": 8,
+          "learning_value": 8,
+          "simplicity": 9,
+          "safety": 10,
+          "overall_score": 8.8,
+          "reasoning": "Great clue path with a clear surprising fact."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "Antarctica is officially classified as which surprising type of place — a forest, a desert, or a tundra?",
+      "type": "text",
+      "correct_answer": "A desert",
+      "possible_answers": null,
+      "alternative_answers": ["desert", "the desert"],
+      "topic": "Geography",
+      "category": "kids",
+      "difficulty": "medium",
+      "tags": ["geography", "nature", "antarctica"],
+      "language_dependent": false,
+      "age_appropriate": "8+",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Antarctica",
+      "source_excerpt": "Antarctica is the largest desert in the world. Although it is covered in ice, the interior gets less than 50 mm of precipitation per year — drier than the Sahara.",
+      "explanation": "Deserts aren't about being hot — they're about being dry! Antarctica gets less rain or snow than the Sahara, which makes it the biggest desert on Earth, even though it's covered in ice.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "kids",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Everyday Surprises",
+          "why_interesting": "Total reframe of what a desert is.",
+          "universal_appeal": "Universal — Antarctica is on every map.",
+          "boring_check": "Forces a definition update, not memorization."
+        },
+        "self_critique": {
+          "cool_factor": 9,
+          "guessability": 8,
+          "learning_value": 9,
+          "simplicity": 9,
+          "safety": 10,
+          "overall_score": 8.8,
+          "reasoning": "Strong wow-factor and teaches a new definition."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "True or false: Russia is so wide that it stretches across 11 different time zones.",
+      "type": "text",
+      "correct_answer": "True",
+      "possible_answers": null,
+      "alternative_answers": ["true", "yes", "correct"],
+      "topic": "Geography",
+      "category": "kids",
+      "difficulty": "medium",
+      "tags": ["geography", "countries", "time"],
+      "language_dependent": false,
+      "age_appropriate": "8+",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Time_in_Russia",
+      "source_excerpt": "Russia spans 11 official time zones, more than any other country, stretching from Kaliningrad on the Baltic Sea in the west to Kamchatka on the Pacific Ocean in the east.",
+      "explanation": "Russia is so big that when kids in the west are eating breakfast, kids in the east are already getting ready for bed — eleven time zones away!",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "kids",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "True or False Surprises",
+          "why_interesting": "Quantifies vastness in human time experience.",
+          "universal_appeal": "Universal — Russia is globally known.",
+          "boring_check": "Frames size in time, not square kilometers."
+        },
+        "self_critique": {
+          "cool_factor": 8,
+          "guessability": 7,
+          "learning_value": 8,
+          "simplicity": 10,
+          "safety": 10,
+          "overall_score": 8.6,
+          "reasoning": "Memorable framing of size."
+        },
+        "ai_score": 8.6
+      }
+    },
+    {
+      "question": "What tiny ocean creature can snap its claw so loudly that the sound is louder than a jet engine taking off?",
+      "type": "text",
+      "correct_answer": "The pistol shrimp",
+      "possible_answers": null,
+      "alternative_answers": ["pistol shrimp", "a pistol shrimp", "snapping shrimp", "a snapping shrimp"],
+      "topic": "Animals",
+      "category": "kids",
+      "difficulty": "hard",
+      "tags": ["animals", "ocean", "world records"],
+      "language_dependent": false,
+      "age_appropriate": "8+",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Alpheidae",
+      "source_excerpt": "The snap of a pistol shrimp's claw can produce a sound reaching about 218 decibels, louder than a jet engine, by collapsing a cavitation bubble that briefly reaches temperatures near that of the sun's surface.",
+      "explanation": "When a pistol shrimp snaps its claw, it makes a tiny bubble that pops with a flash of light and a boom louder than a jet engine — all from a creature smaller than your hand!",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "kids",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Amazing Animal Facts",
+          "why_interesting": "David and Goliath sound contrast.",
+          "universal_appeal": "Ocean creatures appeal globally.",
+          "boring_check": "Vivid imagery, not a name-the-species recall."
+        },
+        "self_critique": {
+          "cool_factor": 10,
+          "guessability": 5,
+          "learning_value": 9,
+          "simplicity": 9,
+          "safety": 10,
+          "overall_score": 8.6,
+          "reasoning": "Genuinely jaw-dropping; word 'pistol' is the only mild concern but it's the species' real name."
+        },
+        "ai_score": 8.6
+      }
+    },
+    {
+      "question": "There is a tiny jellyfish that scientists call 'immortal' because of an amazing trick it can do when it gets old. What can it do?",
+      "type": "text",
+      "correct_answer": "Turn back into a baby",
+      "possible_answers": null,
+      "alternative_answers": ["turn back into a baby", "go back to being a baby", "become young again", "revert to its young form", "turn into a polyp", "become a polyp again", "turn back into a younger version of itself"],
+      "topic": "Animals",
+      "category": "kids",
+      "difficulty": "hard",
+      "tags": ["animals", "ocean", "biology"],
+      "language_dependent": false,
+      "age_appropriate": "8+",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Turritopsis_dohrnii",
+      "source_excerpt": "Turritopsis dohrnii, sometimes called the immortal jellyfish, can revert from its adult medusa stage back to its juvenile polyp stage when stressed or injured, effectively starting its life cycle over.",
+      "explanation": "When the immortal jellyfish gets hurt or old, its grown-up body can shrink back into a baby and start its whole life over — like aging in reverse!",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "kids",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Amazing Animal Facts",
+          "why_interesting": "Reverse aging is the stuff of fairy tales — and it's real.",
+          "universal_appeal": "Universally fascinating.",
+          "boring_check": "Story-style framing of a real biological wonder."
+        },
+        "self_critique": {
+          "cool_factor": 10,
+          "guessability": 6,
+          "learning_value": 9,
+          "simplicity": 8,
+          "safety": 10,
+          "overall_score": 8.6,
+          "reasoning": "One of the most surprising facts in biology."
+        },
+        "ai_score": 8.6
+      }
+    },
+    {
+      "question": "If you could drive a car straight up at highway speed, about how long would it take to reach the edge of space?",
+      "type": "text",
+      "correct_answer": "About one hour",
+      "possible_answers": null,
+      "alternative_answers": ["one hour", "an hour", "about 1 hour", "around an hour", "roughly one hour"],
+      "topic": "Space",
+      "category": "kids",
+      "difficulty": "hard",
+      "tags": ["space", "physics", "math"],
+      "language_dependent": false,
+      "age_appropriate": "8+",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/K%C3%A1rm%C3%A1n_line",
+      "source_excerpt": "The Kármán line, the commonly used boundary of space, lies at an altitude of 100 km above sea level. At a typical highway speed of about 100 km/h, that distance would be covered in roughly one hour.",
+      "explanation": "Space starts only about 100 km up — closer than many road trips! If you could drive a car straight up at highway speed, you'd be there in about an hour.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "kids",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Mind-Blowing Numbers",
+          "why_interesting": "Space feels infinitely far — this fact makes it shockingly close.",
+          "universal_appeal": "Universal — highways and space exist everywhere.",
+          "boring_check": "Math-with-imagination, not a memorization fact."
+        },
+        "self_critique": {
+          "cool_factor": 10,
+          "guessability": 7,
+          "learning_value": 9,
+          "simplicity": 9,
+          "safety": 10,
+          "overall_score": 9.0,
+          "reasoning": "One of those facts that totally rewires intuition."
+        },
+        "ai_score": 9.0
+      }
+    },
+    {
+      "question": "If you stretched out all the blood vessels in your body in one straight line, about how many times could they wrap around the Earth?",
+      "type": "text",
+      "correct_answer": "About 2.5 times",
+      "possible_answers": null,
+      "alternative_answers": ["2.5 times", "two and a half times", "about two and a half times", "around 2.5 times"],
+      "topic": "Human Body",
+      "category": "kids",
+      "difficulty": "hard",
+      "tags": ["human body", "biology", "math"],
+      "language_dependent": false,
+      "age_appropriate": "8+",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Circulatory_system",
+      "source_excerpt": "The total length of blood vessels in an adult human body is estimated at roughly 100,000 kilometres — enough to wrap around the Earth's equator about 2.5 times.",
+      "explanation": "Your body contains 100,000 kilometers of blood vessels — that's enough to circle the whole planet two and a half times! And it all fits inside you.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "kids",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Mind-Blowing Numbers",
+          "why_interesting": "Inside-the-body and global-scale comparison.",
+          "universal_appeal": "Body works the same in every culture.",
+          "boring_check": "Comparison framing, not 'how long are blood vessels'."
+        },
+        "self_critique": {
+          "cool_factor": 10,
+          "guessability": 7,
+          "learning_value": 9,
+          "simplicity": 9,
+          "safety": 10,
+          "overall_score": 9.0,
+          "reasoning": "Vivid scale comparison kids will remember."
+        },
+        "ai_score": 9.0
+      }
+    },
+    {
+      "question": "True or false: in total darkness, your eye is sensitive enough to spot a single particle of light called a photon.",
+      "type": "text",
+      "correct_answer": "True",
+      "possible_answers": null,
+      "alternative_answers": ["true", "yes", "correct"],
+      "topic": "Human Body",
+      "category": "kids",
+      "difficulty": "hard",
+      "tags": ["human body", "science", "physics"],
+      "language_dependent": false,
+      "age_appropriate": "8+",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Visual_perception",
+      "source_excerpt": "Studies have shown that the human eye, when fully dark-adapted, can detect a single photon — the smallest possible packet of light — under controlled laboratory conditions.",
+      "explanation": "In a perfectly dark room, your eyes are so sensitive they can spot the tiniest speck of light there is — a single photon — just one little particle!",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "kids",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "True or False Surprises",
+          "why_interesting": "Physics-meets-biology fact that feels superhero-like.",
+          "universal_appeal": "Universal anatomy and physics.",
+          "boring_check": "Concrete and surprising, not abstract."
+        },
+        "self_critique": {
+          "cool_factor": 10,
+          "guessability": 6,
+          "learning_value": 9,
+          "simplicity": 9,
+          "safety": 10,
+          "overall_score": 8.8,
+          "reasoning": "Clean and amazing — introduces 'photon' naturally."
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "question": "Which is bigger: the number of grains of sand on every beach on Earth, or the number of stars in the visible universe?",
+      "type": "text",
+      "correct_answer": "The number of stars",
+      "possible_answers": null,
+      "alternative_answers": ["stars", "the stars", "stars in the universe", "number of stars", "the number of stars"],
+      "topic": "Space",
+      "category": "kids",
+      "difficulty": "hard",
+      "tags": ["space", "astronomy", "math"],
+      "language_dependent": false,
+      "age_appropriate": "8+",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Observable_universe",
+      "source_excerpt": "Astronomers estimate the observable universe contains around 10^24 stars, far more than the estimated 10^18 to 10^19 grains of sand on all of Earth's beaches.",
+      "explanation": "There are way more stars in the universe than grains of sand on every single beach on Earth combined — about a million times more! Space is unimaginably full of light.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "kids",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Silly Comparisons",
+          "why_interesting": "Two unimaginable numbers held against each other.",
+          "universal_appeal": "Universal stargazing wonder.",
+          "boring_check": "Framed as a debate-worthy comparison."
+        },
+        "self_critique": {
+          "cool_factor": 10,
+          "guessability": 7,
+          "learning_value": 9,
+          "simplicity": 9,
+          "safety": 10,
+          "overall_score": 9.0,
+          "reasoning": "Iconic 'unbelievable but true' comparison kids love."
+        },
+        "ai_score": 9.0
+      }
+    }
+  ],
+  "metadata": {
+    "model": "claude-opus-4-7",
+    "provider": "anthropic",
+    "generated_at": "2026-05-05T00:00:00Z",
+    "total_generated": 30,
+    "total_selected": 22,
+    "pipeline": "claude_code_session",
+    "prompt_version": "kids",
+    "category": "kids",
+    "theme": null
+  }
+}

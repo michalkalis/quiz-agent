@@ -1,0 +1,1257 @@
+{
+  "metadata": {
+    "model": "claude-opus-4-7",
+    "provider": "anthropic",
+    "generated_at": "2026-05-05T16:00:00Z",
+    "total_generated": 24,
+    "total_selected": 24,
+    "pipeline": "claude_code_session",
+    "prompt_version": "themed",
+    "category": "football",
+    "theme": "Football",
+    "verified_at": "2026-05-05T18:00:54.264832+00:00",
+    "verification_method": "fact_verifier_service + claude_overrides (gemini outage)",
+    "source_file": "data/generated/claude_batch_029.json",
+    "total_questions": 24
+  },
+  "questions": [
+    {
+      "question": "The word 'soccer' is often thought of as American — but it actually originated in 19th-century England as slang. From which official name of the sport was it derived?",
+      "type": "text",
+      "correct_answer": "Association football",
+      "possible_answers": null,
+      "alternative_answers": [
+        "association football",
+        "association",
+        "football association",
+        "assoc football"
+      ],
+      "topic": "Football",
+      "category": "football",
+      "difficulty": "medium",
+      "tags": [
+        "football",
+        "etymology",
+        "history"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "Oxford students in the 1880s shortened 'Association' to 'assoc' and added the slangy '-er' suffix common at the time (compare 'rugger' for rugby), giving 'soccer'. It distinguished the FA's code from rugby football.",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Names_for_association_football",
+      "source_excerpt": "The word soccer is an abbreviation of association (from assoc.) and first appeared in English universities in the late 19th century to differentiate association football from rugby football.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Football",
+        "reasoning": {
+          "pattern_used": "Origin Stories",
+          "why_interesting": "Subverts the common belief that 'soccer' is an Americanism — it's actually British slang.",
+          "universal_appeal": "Anyone who's argued 'football vs soccer' will find this satisfying.",
+          "boring_check": "Not a recall question — has narrative twist."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "fan_appeal": 8,
+          "accessibility": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "overall_score": 8.6,
+          "reasoning": "Universal appeal, debunks a myth, accessible to non-fans."
+        },
+        "ai_score": 8.6
+      },
+      "id": "football_21"
+    },
+    {
+      "question": "Liverpool FC's iconic anthem 'You'll Never Walk Alone' wasn't written for football. It comes from which 1945 Rodgers and Hammerstein musical?",
+      "type": "text",
+      "correct_answer": "Carousel",
+      "possible_answers": null,
+      "alternative_answers": [
+        "carousel"
+      ],
+      "topic": "Football",
+      "category": "football",
+      "difficulty": "medium",
+      "tags": [
+        "football",
+        "liverpool",
+        "music",
+        "history"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "Written by Rodgers and Hammerstein for the 1945 Broadway musical Carousel, the song was covered by Liverpool band Gerry and the Pacemakers in 1963 and adopted on the Kop at Anfield that same year.",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/You%27ll_Never_Walk_Alone",
+      "source_excerpt": "'You'll Never Walk Alone' is a show tune from the 1945 Rodgers and Hammerstein musical Carousel. It became closely associated with Liverpool F.C. after Gerry and the Pacemakers' 1963 recording was adopted as the club's anthem.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Football",
+        "reasoning": {
+          "pattern_used": "Hidden Connections",
+          "why_interesting": "Footballing icon traced to Broadway — unexpected cultural bridge.",
+          "universal_appeal": "Music + sport crossover.",
+          "boring_check": "Not asking 'when was Liverpool founded' — surprising origin."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "fan_appeal": 9,
+          "accessibility": 8,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "overall_score": 8.6,
+          "reasoning": "Hidden connection between musical theatre and football culture."
+        },
+        "ai_score": 8.6
+      },
+      "id": "football_22"
+    },
+    {
+      "question": "Yellow and red cards were introduced to football at the 1970 World Cup. According to referee Ken Aston, who created them, what everyday object inspired the colour scheme?",
+      "type": "text",
+      "correct_answer": "Traffic lights",
+      "possible_answers": null,
+      "alternative_answers": [
+        "traffic light",
+        "traffic signal",
+        "stop lights",
+        "traffic signals"
+      ],
+      "topic": "Football",
+      "category": "football",
+      "difficulty": "medium",
+      "tags": [
+        "football",
+        "rules",
+        "behind-the-scenes",
+        "history"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "While driving down Kensington High Street in London after the chaotic England-Argentina match in 1966, Aston watched the lights turn from amber to red and the idea of using yellow as a caution and red as a sending-off arrived in seconds.",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Ken_Aston",
+      "source_excerpt": "Aston later said the idea for the cards came to him as he drove home from a match in 1966 and stopped at a set of traffic lights, with yellow signalling caution and red signalling stop.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Football",
+        "reasoning": {
+          "pattern_used": "Behind the Scenes",
+          "why_interesting": "Most fans assume cards were always there — surprising, near-banal genesis.",
+          "universal_appeal": "Anyone who has watched a yellow card can relate.",
+          "boring_check": "Not a 'what year' question — origin reasoning."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "fan_appeal": 9,
+          "accessibility": 9,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "overall_score": 9.0,
+          "reasoning": "Strong behind-the-scenes hook with universal appeal."
+        },
+        "ai_score": 9.0
+      },
+      "id": "football_23"
+    },
+    {
+      "question": "True or false: The English Premier League is younger than the original Star Wars trilogy.",
+      "type": "text",
+      "correct_answer": "True",
+      "possible_answers": null,
+      "alternative_answers": [
+        "true",
+        "yes",
+        "correct"
+      ],
+      "topic": "Football",
+      "category": "football",
+      "difficulty": "easy",
+      "tags": [
+        "football",
+        "premier-league",
+        "comparison"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "The Premier League was founded in 1992. Star Wars: A New Hope was released in 1977 and Return of the Jedi in 1983 — making the original trilogy nearly a decade older than the league itself.",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Premier_League",
+      "source_excerpt": "The Premier League was founded as the FA Premier League on 20 February 1992 following the decision of First Division clubs to break away from the Football League.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Football",
+        "reasoning": {
+          "pattern_used": "Surprising Comparisons",
+          "why_interesting": "Shifts mental model — PL feels eternal, but it's a 90s invention.",
+          "universal_appeal": "Star Wars + football, two pop-culture pillars.",
+          "boring_check": "Not a 'when was X founded' question — comparison frame."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "fan_appeal": 8,
+          "accessibility": 10,
+          "clever_framing": 9,
+          "educational_value": 7,
+          "overall_score": 8.4,
+          "reasoning": "Easy but surprising; works as conversation opener."
+        },
+        "ai_score": 8.4
+      },
+      "id": "football_24"
+    },
+    {
+      "question": "The dramatic Champions League anthem you hear before kickoff was composed by Tony Britten in 1992. He based it on which famous Baroque coronation anthem written by George Frideric Handel?",
+      "type": "text",
+      "correct_answer": "Zadok the Priest",
+      "possible_answers": null,
+      "alternative_answers": [
+        "zadok the priest",
+        "zadok"
+      ],
+      "topic": "Football",
+      "category": "football",
+      "difficulty": "hard",
+      "tags": [
+        "football",
+        "champions-league",
+        "music",
+        "behind-the-scenes"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "Britten was commissioned to write something that would feel as grand as a coronation. He modelled the piece directly on Handel's 'Zadok the Priest' — written for the 1727 coronation of King George II and used at every British coronation since.",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/UEFA_Champions_League_Anthem",
+      "source_excerpt": "The UEFA Champions League Anthem was composed in 1992 by Tony Britten, and is an adaptation of George Frideric Handel's 1727 coronation anthem Zadok the Priest.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Football",
+        "reasoning": {
+          "pattern_used": "Hidden Connections",
+          "why_interesting": "Royal coronation music → modern football's biggest stage.",
+          "universal_appeal": "Music + history + football crossover.",
+          "boring_check": "Not 'who wrote' a tune — surprising lineage."
+        },
+        "self_critique": {
+          "surprise_factor": 10,
+          "fan_appeal": 9,
+          "accessibility": 6,
+          "clever_framing": 9,
+          "educational_value": 10,
+          "overall_score": 8.8,
+          "reasoning": "Truly surprising connection; harder due to Handel knowledge."
+        },
+        "ai_score": 8.8
+      },
+      "id": "football_25"
+    },
+    {
+      "question": "When the European Cup (now the Champions League) launched in 1955-56, one club won the first five editions in a row — a streak no other club has ever matched. Which club?",
+      "type": "text",
+      "correct_answer": "Real Madrid",
+      "possible_answers": null,
+      "alternative_answers": [
+        "real madrid",
+        "real madrid cf",
+        "real"
+      ],
+      "topic": "Football",
+      "category": "football",
+      "difficulty": "easy",
+      "tags": [
+        "football",
+        "champions-league",
+        "real-madrid",
+        "records"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "Real Madrid, led by Alfredo Di Stéfano and Ferenc Puskás, won the first five European Cups from 1955-56 to 1959-60, beating Stade de Reims twice and culminating in a 7-3 demolition of Eintracht Frankfurt at Hampden Park.",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/History_of_Real_Madrid_CF",
+      "source_excerpt": "Real Madrid won the first five European Cup tournaments from 1956 to 1960, a feat that has never been equalled.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Football",
+        "reasoning": {
+          "pattern_used": "Numbers & Records",
+          "why_interesting": "Unmatched dominance — feels almost mythical now.",
+          "universal_appeal": "Real Madrid is internationally famous.",
+          "boring_check": "Frames as untouchable record, not just a stat."
+        },
+        "self_critique": {
+          "surprise_factor": 7,
+          "fan_appeal": 9,
+          "accessibility": 9,
+          "clever_framing": 7,
+          "educational_value": 8,
+          "overall_score": 8.0,
+          "reasoning": "Recall-leaning but the unmatched-streak frame keeps it interesting."
+        },
+        "ai_score": 8.0
+      },
+      "id": "football_26"
+    },
+    {
+      "question": "Brazil's iconic Maracanã stadium was completed in time for the 1950 World Cup final between Brazil and Uruguay. The official attendance is recorded at 173,850 — but unofficially, some estimates say how many people were actually in the ground?",
+      "type": "text",
+      "correct_answer": "More than 200,000",
+      "possible_answers": null,
+      "alternative_answers": [
+        "200000",
+        "200,000",
+        "over 200000",
+        "over 200,000",
+        "210000",
+        "210,000",
+        "more than 200000"
+      ],
+      "topic": "Football",
+      "category": "football",
+      "difficulty": "hard",
+      "tags": [
+        "football",
+        "world-cup",
+        "maracana",
+        "records"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "Estimates including non-paying spectators put the crowd at over 210,000 — still the largest gathering at a football match. Uruguay's 2-1 win, the 'Maracanazo', silenced the stadium so completely that two fans reportedly died of shock.",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/1950_FIFA_World_Cup_Final",
+      "source_excerpt": "The official attendance was 173,850, though estimates including non-paying attendees put the actual number at over 200,000, making it the largest crowd ever at a football match.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Football",
+        "reasoning": {
+          "pattern_used": "Numbers & Records",
+          "why_interesting": "An incomprehensibly large crowd, a record likely never to fall (modern stadium rules cap capacity).",
+          "universal_appeal": "Big number anyone can react to.",
+          "boring_check": "Driven by narrative (Maracanazo) not just stat."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "fan_appeal": 9,
+          "accessibility": 8,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "overall_score": 8.6,
+          "reasoning": "Compelling number with strong narrative anchor."
+        },
+        "ai_score": 8.6
+      },
+      "id": "football_27"
+    },
+    {
+      "question": "When Germany famously thrashed Brazil 7-1 in the 2014 World Cup semi-final, something extraordinary happened in the first half. How quickly did Germany score their middle five goals?",
+      "type": "text",
+      "correct_answer": "In about 6 minutes",
+      "possible_answers": null,
+      "alternative_answers": [
+        "6 minutes",
+        "six minutes",
+        "6 min",
+        "in 6 minutes",
+        "less than 7 minutes",
+        "in less than 7 minutes",
+        "in under 7 minutes",
+        "around 6 minutes"
+      ],
+      "topic": "Football",
+      "category": "football",
+      "difficulty": "hard",
+      "tags": [
+        "football",
+        "world-cup",
+        "germany",
+        "brazil",
+        "records"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "Germany scored at 11', then five more between the 23rd and 29th minutes — five goals in roughly six minutes. By half-time it was 5-0; the home crowd in Belo Horizonte sat in stunned silence.",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Brazil_v_Germany_(2014_FIFA_World_Cup)",
+      "source_excerpt": "Germany scored four goals in a span of about six minutes (between the 23rd and 29th minutes), and were 5-0 up after 29 minutes — the most rapid collapse in World Cup knockout history.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Football",
+        "reasoning": {
+          "pattern_used": "Numbers & Records",
+          "why_interesting": "The pace of the collapse is hard to grasp without a concrete number.",
+          "universal_appeal": "Even non-fans heard about 7-1.",
+          "boring_check": "Not 'who scored most' — captures the trauma in time terms."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "fan_appeal": 9,
+          "accessibility": 8,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "overall_score": 8.4,
+          "reasoning": "Memorable match, surprising specificity, conversation-starter."
+        },
+        "ai_score": 8.4
+      },
+      "id": "football_28"
+    },
+    {
+      "question": "Pelé is one of the most recognised names in football — but he hated the nickname as a child and never knew what it meant. What is his actual birth name?",
+      "type": "text",
+      "correct_answer": "Edson Arantes do Nascimento",
+      "possible_answers": null,
+      "alternative_answers": [
+        "edson arantes do nascimento",
+        "edson arantes",
+        "edson"
+      ],
+      "topic": "Football",
+      "category": "football",
+      "difficulty": "medium",
+      "tags": [
+        "football",
+        "pele",
+        "brazil",
+        "history"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "He was named Edson after Thomas Edison. The schoolyard nickname 'Pelé' may have been a mispronunciation of 'Bilé' (a goalkeeper his father admired) — Pelé himself said its meaning was a mystery he couldn't solve.",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Pel%C3%A9",
+      "source_excerpt": "Pelé was born Edson Arantes do Nascimento on 23 October 1940. He stated that he had no idea what 'Pelé' meant, nor did his old friends.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Football",
+        "reasoning": {
+          "pattern_used": "Behind the Scenes",
+          "why_interesting": "Subverts the iconic name — even he didn't know what it meant.",
+          "universal_appeal": "Pelé is a global household name.",
+          "boring_check": "Not 'how many goals' — story angle."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "fan_appeal": 8,
+          "accessibility": 8,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "overall_score": 8.0,
+          "reasoning": "Solid trivia hook with personal narrative."
+        },
+        "ai_score": 8.0
+      },
+      "id": "football_29"
+    },
+    {
+      "question": "Manchester United was founded in 1878 — but not as a football club for the city. It started as a railway-workers' team named after the local depot. What was its original name?",
+      "type": "text",
+      "correct_answer": "Newton Heath",
+      "possible_answers": null,
+      "alternative_answers": [
+        "newton heath",
+        "newton heath lyr",
+        "newton heath l&yr",
+        "newton heath lancashire and yorkshire railway",
+        "newton heath lyr fc"
+      ],
+      "topic": "Football",
+      "category": "football",
+      "difficulty": "hard",
+      "tags": [
+        "football",
+        "manchester-united",
+        "history",
+        "origins"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "The carriage and wagon department of the Lancashire and Yorkshire Railway in Newton Heath, Manchester, founded the team in 1878. Bankruptcy in 1902 led to a takeover, a new green-and-gold-to-red kit change, and a new name: Manchester United.",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Manchester_United_F.C.",
+      "source_excerpt": "Manchester United was founded as Newton Heath LYR Football Club in 1878 by the Carriage and Wagon department of the Lancashire and Yorkshire Railway depot at Newton Heath.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Football",
+        "reasoning": {
+          "pattern_used": "Origin Stories",
+          "why_interesting": "Global mega-club born of railway workers.",
+          "universal_appeal": "Man Utd known worldwide.",
+          "boring_check": "Not 'when founded' — story-led origin."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "fan_appeal": 9,
+          "accessibility": 7,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "overall_score": 8.2,
+          "reasoning": "Good origin story; harder for casuals."
+        },
+        "ai_score": 8.2
+      },
+      "id": "football_30"
+    },
+    {
+      "question": "FIFA finally introduced goal-line technology to the World Cup in 2014. The push to do so was hugely accelerated by which English midfielder's clearly-over-the-line goal that was disallowed against Germany at the 2010 World Cup?",
+      "type": "text",
+      "correct_answer": "Frank Lampard",
+      "possible_answers": null,
+      "alternative_answers": [
+        "frank lampard",
+        "lampard"
+      ],
+      "topic": "Football",
+      "category": "football",
+      "difficulty": "medium",
+      "tags": [
+        "football",
+        "world-cup",
+        "england",
+        "rules",
+        "behind-the-scenes"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "Lampard's shot in the 38th minute of England's last-16 match in Bloemfontein bounced off the bar and a clear yard over the line before being scooped out. The match finished 4-1 to Germany; FIFA's resistance to goal-line tech crumbled within months.",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Goal-line_technology",
+      "source_excerpt": "A turning point came at the 2010 FIFA World Cup when Frank Lampard's shot for England against Germany clearly crossed the line but was not awarded as a goal, prompting FIFA to reverse its long-standing opposition to goal-line technology.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Football",
+        "reasoning": {
+          "pattern_used": "Behind the Scenes",
+          "why_interesting": "Connects a famous moment to a major rules change.",
+          "universal_appeal": "England fans never forget.",
+          "boring_check": "Not a stat — links cause and effect."
+        },
+        "self_critique": {
+          "surprise_factor": 7,
+          "fan_appeal": 9,
+          "accessibility": 8,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "overall_score": 8.0,
+          "reasoning": "Strong narrative hook; medium difficulty."
+        },
+        "ai_score": 8.0
+      },
+      "id": "football_31"
+    },
+    {
+      "question": "The first FIFA World Cup was held in 1930 in Uruguay. Two coincidences made the tiny South American nation an obvious choice — they were the reigning Olympic football champions, and they were celebrating which milestone that year?",
+      "type": "text",
+      "correct_answer": "100 years of independence",
+      "possible_answers": null,
+      "alternative_answers": [
+        "centenary of independence",
+        "centenary",
+        "100th anniversary of independence",
+        "independence centenary",
+        "centenary of constitution",
+        "100 years of constitution"
+      ],
+      "topic": "Football",
+      "category": "football",
+      "difficulty": "hard",
+      "tags": [
+        "football",
+        "world-cup",
+        "uruguay",
+        "history"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "Uruguay was marking the centenary of its first constitution (1830) and had just won back-to-back Olympic football golds in 1924 and 1928. They built the Estadio Centenario in Montevideo for the tournament — and won it on home soil.",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/1930_FIFA_World_Cup",
+      "source_excerpt": "Uruguay was chosen as the host of the inaugural FIFA World Cup, as the country was celebrating the centenary of its first constitution and had won the gold medal in football at the 1924 and 1928 Summer Olympics.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Football",
+        "reasoning": {
+          "pattern_used": "Origin Stories",
+          "why_interesting": "Surprising rationale — sport, politics, anniversary all converge.",
+          "universal_appeal": "Origins of the World Cup matter to all fans.",
+          "boring_check": "Not 'when' — explains 'why'."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "fan_appeal": 8,
+          "accessibility": 6,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "overall_score": 7.8,
+          "reasoning": "Educational and storied; harder for casuals."
+        },
+        "ai_score": 7.8
+      },
+      "id": "football_32"
+    },
+    {
+      "question": "Glasgow's 'Old Firm' derby between Celtic and Rangers is one of football's most intense rivalries. Beyond geography, the two clubs were historically aligned with which divide?",
+      "type": "text",
+      "correct_answer": "Catholic and Protestant",
+      "possible_answers": null,
+      "alternative_answers": [
+        "catholic vs protestant",
+        "religion",
+        "religious",
+        "catholicism and protestantism",
+        "catholics and protestants",
+        "catholic protestant",
+        "irish catholic and scottish protestant"
+      ],
+      "topic": "Football",
+      "category": "football",
+      "difficulty": "medium",
+      "tags": [
+        "football",
+        "scotland",
+        "old-firm",
+        "history"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "Celtic was founded in 1887 by an Irish Catholic Marist brother to raise money for poor Irish immigrants in Glasgow's East End; Rangers became identified with the Protestant working class. The sectarian undertone has eased but never fully disappeared.",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Old_Firm",
+      "source_excerpt": "The rivalry has historically been fuelled by sectarianism: Celtic with the Catholic Irish immigrant community of Glasgow, and Rangers with the Protestant Scottish establishment.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Football",
+        "reasoning": {
+          "pattern_used": "Hidden Connections",
+          "why_interesting": "Football rivalry rooted in social/religious history.",
+          "universal_appeal": "Famous derby.",
+          "boring_check": "Not asking who won what — asks the underlying why."
+        },
+        "self_critique": {
+          "surprise_factor": 7,
+          "fan_appeal": 8,
+          "accessibility": 8,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "overall_score": 8.0,
+          "reasoning": "Educational; balances accessibility with depth."
+        },
+        "ai_score": 8.0
+      },
+      "id": "football_33"
+    },
+    {
+      "question": "AC Milan, despite being a quintessentially Italian club, was founded in 1899 by two Englishmen — and uses the English spelling of the city's name to this day. What is the city actually called in Italian?",
+      "type": "text",
+      "correct_answer": "Milano",
+      "possible_answers": null,
+      "alternative_answers": [
+        "milano"
+      ],
+      "topic": "Football",
+      "category": "football",
+      "difficulty": "medium",
+      "tags": [
+        "football",
+        "ac-milan",
+        "italy",
+        "history",
+        "origins"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "Alfred Edwards and Herbert Kilpin founded the club as the 'Milan Cricket and Football Club' in 1899 — keeping the English spelling 'Milan' instead of 'Milano' has been a quiet badge of pride ever since, even after Mussolini briefly Italianised it in the 1930s.",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/A.C._Milan",
+      "source_excerpt": "AC Milan was founded as Milan Foot-Ball and Cricket Club in December 1899 by English expatriates Alfred Edwards and Herbert Kilpin. The club retains the English spelling 'Milan' rather than the Italian 'Milano'.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Football",
+        "reasoning": {
+          "pattern_used": "Origin Stories",
+          "why_interesting": "Italian footballing icon with English DNA.",
+          "universal_appeal": "AC Milan globally known.",
+          "boring_check": "Not 'when founded' — uses the spelling quirk as the reveal."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "fan_appeal": 8,
+          "accessibility": 7,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "overall_score": 8.0,
+          "reasoning": "Surprising origin paired with naming quirk."
+        },
+        "ai_score": 8.0
+      },
+      "id": "football_34"
+    },
+    {
+      "question": "The football term 'hat-trick' for three goals didn't start in football. It originated in which other sport in the 1850s, where a player taking three wickets in three balls was traditionally rewarded with a hat?",
+      "type": "text",
+      "correct_answer": "Cricket",
+      "possible_answers": null,
+      "alternative_answers": [
+        "cricket"
+      ],
+      "topic": "Football",
+      "category": "football",
+      "difficulty": "easy",
+      "tags": [
+        "football",
+        "cricket",
+        "etymology",
+        "history"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "The term first appeared in cricket in 1858 to describe HH Stephenson's three wickets in three balls, for which he was awarded a hat from a collection. Football borrowed it in the early 20th century.",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Hat-trick",
+      "source_excerpt": "The term hat-trick originated in cricket in 1858, when bowler HH Stephenson took three wickets in three consecutive deliveries and was presented with a hat bought with money raised by a collection.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Football",
+        "reasoning": {
+          "pattern_used": "Origin Stories",
+          "why_interesting": "Etymology bridge between two sports.",
+          "universal_appeal": "Anyone who's heard 'hat-trick'.",
+          "boring_check": "Surprising origin — not a stat."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "fan_appeal": 8,
+          "accessibility": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "overall_score": 8.4,
+          "reasoning": "Universal etymology hook, easy to share."
+        },
+        "ai_score": 8.4
+      },
+      "id": "football_35"
+    },
+    {
+      "question": "At Euro 2004, the bookmakers' 150-1 outsiders pulled off one of football's greatest tournament shocks — beating the host nation in both the opening match and the final. Which country won?",
+      "type": "text",
+      "correct_answer": "Greece",
+      "possible_answers": null,
+      "alternative_answers": [
+        "greece"
+      ],
+      "topic": "Football",
+      "category": "football",
+      "difficulty": "easy",
+      "tags": [
+        "football",
+        "euros",
+        "greece",
+        "upsets"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "Otto Rehhagel's defensively drilled Greece beat hosts Portugal 2-1 in the opening match, then again 1-0 in the final at the Estádio da Luz — Angelos Charisteas's header sealing one of the biggest upsets in international football.",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/UEFA_Euro_2004",
+      "source_excerpt": "Greece, ranked outside the world's top 30 and 150-1 with bookmakers, defeated host nation Portugal 2-1 in the opening match and again 1-0 in the final to win UEFA Euro 2004.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Football",
+        "reasoning": {
+          "pattern_used": "Numbers & Records",
+          "why_interesting": "Underdog story; symmetry of beating Portugal twice.",
+          "universal_appeal": "Underdog runs are universally beloved.",
+          "boring_check": "Not 'who won Euro 2004' — frames the upset arc."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "fan_appeal": 9,
+          "accessibility": 9,
+          "clever_framing": 8,
+          "educational_value": 7,
+          "overall_score": 8.4,
+          "reasoning": "Strong upset narrative anyone can appreciate."
+        },
+        "ai_score": 8.4
+      },
+      "id": "football_36"
+    },
+    {
+      "question": "At the 2022 FIFA World Cup in Qatar, an African nation reached the semi-finals for the first time in the tournament's 92-year history. Which country?",
+      "type": "text",
+      "correct_answer": "Morocco",
+      "possible_answers": null,
+      "alternative_answers": [
+        "morocco",
+        "the atlas lions"
+      ],
+      "topic": "Football",
+      "category": "football",
+      "difficulty": "medium",
+      "tags": [
+        "football",
+        "world-cup",
+        "morocco",
+        "africa",
+        "records"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "Morocco beat Belgium, Spain (on penalties) and Portugal en route to the semi-finals, where they lost 2-0 to eventual finalists France. Cameroon (1990), Senegal (2002) and Ghana (2010) had previously stopped at the quarter-finals.",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Morocco_at_the_FIFA_World_Cup",
+      "source_excerpt": "At the 2022 FIFA World Cup, Morocco became the first African and Arab nation to reach the semi-finals of a FIFA World Cup, defeating Spain and Portugal in the knockout stage.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Football",
+        "reasoning": {
+          "pattern_used": "Numbers & Records",
+          "why_interesting": "Historic first; recent enough to stick in memory.",
+          "universal_appeal": "Global underdog moment.",
+          "boring_check": "Frames as a 92-year-first, not a stat."
+        },
+        "self_critique": {
+          "surprise_factor": 7,
+          "fan_appeal": 8,
+          "accessibility": 8,
+          "clever_framing": 7,
+          "educational_value": 8,
+          "overall_score": 7.6,
+          "reasoning": "Memorable but somewhat recall."
+        },
+        "ai_score": 7.6
+      },
+      "id": "football_37"
+    },
+    {
+      "question": "Brazil entered the 1950 World Cup final at the Maracanã needing only a draw to win the tournament. Uruguay won 2-1 — a national tragedy that became known by what one-word Portuguese name?",
+      "type": "text",
+      "correct_answer": "Maracanazo",
+      "possible_answers": null,
+      "alternative_answers": [
+        "maracanazo",
+        "the maracanazo",
+        "maracanaço"
+      ],
+      "topic": "Football",
+      "category": "football",
+      "difficulty": "hard",
+      "tags": [
+        "football",
+        "world-cup",
+        "brazil",
+        "uruguay",
+        "history"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "The defeat plunged Brazil into mourning so deep that the team abandoned its all-white kit (now linked to bad luck) and adopted yellow, blue and green — the iconic Seleção colours used ever since.",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Maracanazo",
+      "source_excerpt": "The Maracanazo refers to Uruguay's stunning 2-1 victory over Brazil in the deciding match of the 1950 FIFA World Cup, played at the Maracanã in Rio de Janeiro on 16 July 1950.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Football",
+        "reasoning": {
+          "pattern_used": "Origin Stories",
+          "why_interesting": "Match changed Brazil's iconic kit forever.",
+          "universal_appeal": "Brazil yellow is globally recognised.",
+          "boring_check": "Not the score — the cultural fallout."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "fan_appeal": 9,
+          "accessibility": 6,
+          "clever_framing": 8,
+          "educational_value": 10,
+          "overall_score": 8.4,
+          "reasoning": "Rich story; harder term but explanation rewards."
+        },
+        "ai_score": 8.4
+      },
+      "id": "football_38"
+    },
+    {
+      "question": "Italians don't call the sport 'football' — they call it 'calcio', which literally means 'kick'. The name comes from a much older ball game played by which Renaissance city's nobility, who used it to celebrate Carnival in costumed teams?",
+      "type": "text",
+      "correct_answer": "Florence",
+      "possible_answers": null,
+      "alternative_answers": [
+        "florence",
+        "firenze",
+        "florence italy"
+      ],
+      "topic": "Football",
+      "category": "football",
+      "difficulty": "hard",
+      "tags": [
+        "football",
+        "italy",
+        "calcio",
+        "history",
+        "origins"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "Calcio Storico Fiorentino (Historic Florentine Football) dates to at least the 16th century. Teams of 27 in period costumes still play matches in Florence's Piazza Santa Croce every June — a violent precursor of modern football.",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Calcio_storico",
+      "source_excerpt": "Calcio storico fiorentino, also known as calcio in costume, is an early form of football that originated during the Middle Ages in Italy, particularly Florence, where it was played by Renaissance nobility.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Football",
+        "reasoning": {
+          "pattern_used": "Origin Stories",
+          "why_interesting": "Connects modern Italian football to Renaissance pageantry.",
+          "universal_appeal": "Florence is internationally famous.",
+          "boring_check": "Not 'what does X mean' — historical narrative."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "fan_appeal": 8,
+          "accessibility": 6,
+          "clever_framing": 9,
+          "educational_value": 10,
+          "overall_score": 8.4,
+          "reasoning": "Hard but very rich."
+        },
+        "ai_score": 8.4
+      },
+      "id": "football_39"
+    },
+    {
+      "question": "A 17-year-old Pelé scored a hat-trick in the semi-final and two more in the final to lead Brazil to its first World Cup title in 1958. Which European host nation did he beat in the final?",
+      "type": "text",
+      "correct_answer": "Sweden",
+      "possible_answers": null,
+      "alternative_answers": [
+        "sweden"
+      ],
+      "topic": "Football",
+      "category": "football",
+      "difficulty": "easy",
+      "tags": [
+        "football",
+        "pele",
+        "brazil",
+        "world-cup",
+        "history"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "Brazil beat Sweden 5-2 in Stockholm. Pelé's looped chip over the defender, then volley, in the final — at age 17 — remains one of the most replayed goals in World Cup history.",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/1958_FIFA_World_Cup_Final",
+      "source_excerpt": "Brazil defeated Sweden 5-2 in the 1958 FIFA World Cup Final at the Råsunda Stadium in Stockholm. The 17-year-old Pelé scored twice in the final, including a famous looped volley.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Football",
+        "reasoning": {
+          "pattern_used": "Numbers & Records",
+          "why_interesting": "Iconic teenager moment in football history.",
+          "universal_appeal": "Pelé universally famous.",
+          "boring_check": "Frames the youth angle — not 'who won 1958'."
+        },
+        "self_critique": {
+          "surprise_factor": 7,
+          "fan_appeal": 8,
+          "accessibility": 9,
+          "clever_framing": 7,
+          "educational_value": 7,
+          "overall_score": 7.6,
+          "reasoning": "Solid recall question elevated by age frame."
+        },
+        "ai_score": 7.6
+      },
+      "id": "football_40"
+    },
+    {
+      "question": "At the 1954 World Cup final, the heavily favoured Hungarian 'Mighty Magyars' — unbeaten in 32 matches — were defeated 3-2 in a stunning upset that became known as the 'Miracle of Bern'. Which country pulled off the shock win?",
+      "type": "text",
+      "correct_answer": "West Germany",
+      "possible_answers": null,
+      "alternative_answers": [
+        "west germany",
+        "germany",
+        "west german"
+      ],
+      "topic": "Football",
+      "category": "football",
+      "difficulty": "medium",
+      "tags": [
+        "football",
+        "world-cup",
+        "germany",
+        "hungary",
+        "upsets"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "Played in pouring rain in Bern, the comeback (West Germany trailed 2-0 after 8 minutes) became a foundational moment for post-war German national identity. Hungary lost despite Ferenc Puskás scoring inside the first 6 minutes.",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/1954_FIFA_World_Cup_Final",
+      "source_excerpt": "The 1954 FIFA World Cup Final, also known as the Miracle of Bern, saw West Germany defeat the heavily favoured Hungarian Golden Team 3-2 at the Wankdorf Stadium in Bern, Switzerland.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Football",
+        "reasoning": {
+          "pattern_used": "Origin Stories",
+          "why_interesting": "Major upset with cultural significance.",
+          "universal_appeal": "Underdogs + history.",
+          "boring_check": "Frames the upset, not 'who won 1954'."
+        },
+        "self_critique": {
+          "surprise_factor": 7,
+          "fan_appeal": 9,
+          "accessibility": 7,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "overall_score": 8.0,
+          "reasoning": "Memorable upset; classic narrative."
+        },
+        "ai_score": 8.0
+      },
+      "id": "football_41"
+    },
+    {
+      "question": "The first football match ever broadcast on television, in September 1937, wasn't a major fixture — it was a friendly between the first team and reserves of which English club, broadcast experimentally by the BBC?",
+      "type": "text",
+      "correct_answer": "Arsenal",
+      "possible_answers": null,
+      "alternative_answers": [
+        "arsenal",
+        "arsenal fc",
+        "arsenal football club"
+      ],
+      "topic": "Football",
+      "category": "football",
+      "difficulty": "hard",
+      "tags": [
+        "football",
+        "arsenal",
+        "broadcasting",
+        "history",
+        "first"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "On 16 September 1937, the BBC televised parts of an Arsenal first team vs reserves practice match at Highbury. The first competitive match shown live was the 1938 FA Cup final between Preston and Huddersfield.",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/History_of_television_in_the_United_Kingdom",
+      "source_excerpt": "The first football match televised by the BBC was an Arsenal first team versus reserves practice match on 16 September 1937 at Highbury, broadcast experimentally as part of the early television service.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Football",
+        "reasoning": {
+          "pattern_used": "Origin Stories",
+          "why_interesting": "Birth of TV football came from a glorified training match.",
+          "universal_appeal": "Football-on-TV is universal.",
+          "boring_check": "Frames the unlikely origin."
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "fan_appeal": 8,
+          "accessibility": 6,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "overall_score": 7.8,
+          "reasoning": "Strong origin angle but harder for casual fans."
+        },
+        "ai_score": 7.8
+      },
+      "id": "football_42"
+    },
+    {
+      "question": "The phrase 'the beautiful game' as a synonym for football was popularised globally by which Brazilian legend's 1977 autobiography?",
+      "type": "text",
+      "correct_answer": "Pelé",
+      "possible_answers": null,
+      "alternative_answers": [
+        "pele",
+        "pelé",
+        "edson arantes do nascimento"
+      ],
+      "topic": "Football",
+      "category": "football",
+      "difficulty": "medium",
+      "tags": [
+        "football",
+        "pele",
+        "language",
+        "history"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "Pelé's autobiography 'My Life and the Beautiful Game' cemented the phrase in global football vocabulary. Earlier Brazilian commentators had used 'o jogo bonito' but it was Pelé who exported it to the world.",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/The_Beautiful_Game",
+      "source_excerpt": "The phrase 'the beautiful game' was popularized internationally by Pelé in his 1977 autobiography My Life and the Beautiful Game.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Football",
+        "reasoning": {
+          "pattern_used": "Origin Stories",
+          "why_interesting": "Connects famous phrase to its source.",
+          "universal_appeal": "Phrase is widely known.",
+          "boring_check": "Not 'who said' — frames the popularisation."
+        },
+        "self_critique": {
+          "surprise_factor": 7,
+          "fan_appeal": 8,
+          "accessibility": 8,
+          "clever_framing": 7,
+          "educational_value": 8,
+          "overall_score": 7.6,
+          "reasoning": "Recall-leaning; saved by Pelé's universal recognition."
+        },
+        "ai_score": 7.6
+      },
+      "id": "football_43"
+    },
+    {
+      "question": "True or false: Penalty shootouts were not used to decide knockout matches in the FIFA World Cup until 1982 — before that, drawn matches were settled by a coin toss or replay.",
+      "type": "text",
+      "correct_answer": "True",
+      "possible_answers": null,
+      "alternative_answers": [
+        "true",
+        "yes",
+        "correct"
+      ],
+      "topic": "Football",
+      "category": "football",
+      "difficulty": "medium",
+      "tags": [
+        "football",
+        "world-cup",
+        "rules",
+        "history"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "Penalty shootouts were introduced to the World Cup at the 1982 tournament in Spain. The first was West Germany vs France in the semi-final — Germany won. Earlier, drawn knockouts were resolved by replay or, infamously, by drawing lots.",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Penalty_shoot-out_(association_football)",
+      "source_excerpt": "Penalty shoot-outs were officially adopted at FIFA World Cup tournaments starting in 1982; the first occurred in the semi-final between West Germany and France.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Football",
+        "reasoning": {
+          "pattern_used": "The Twist",
+          "why_interesting": "Hard to imagine the World Cup without penalty shootouts.",
+          "universal_appeal": "Anyone who has watched a shootout will be surprised.",
+          "boring_check": "True/false framing keeps it engaging."
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "fan_appeal": 8,
+          "accessibility": 8,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "overall_score": 8.4,
+          "reasoning": "Surprising rule history."
+        },
+        "ai_score": 8.4
+      },
+      "id": "football_44"
+    }
+  ]
+}

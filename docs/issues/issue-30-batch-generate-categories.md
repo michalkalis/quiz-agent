@@ -11,14 +11,14 @@ Run the gen → verify → score → approve → import pipeline at volume to fi
 
 | Category | Type | Target count |
 |---|---|---|
-| `kids` | core | 50 |
-| `general` | core | 50 |
-| `adults` | core | 50 |
-| `wizarding-world` | themed | 30 |
-| `superheroes` | themed | 30 |
-| `disney` | themed | 30 |
-| `football` | themed | 30 |
-| `sports-mix` | themed | 30 |
+| `kids` | core | 50 — DONE (52, 2026-05-05) |
+| `general` | core | 50 — 1/50 |
+| `adults` | core | 50 — DONE (67) |
+| `wizarding-world` | themed | 30 — DONE |
+| `superheroes` | themed | 30 — 26/30 |
+| `disney` | themed | 30 — 20/30 |
+| `football` | themed | 30 — 22/30 |
+| `sports-mix` | themed | 30 — 10/30 |
 
 ## What to do
 

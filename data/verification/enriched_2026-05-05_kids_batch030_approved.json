@@ -1,0 +1,855 @@
+{
+  "metadata": {
+    "model": "claude-opus-4-7",
+    "provider": "anthropic",
+    "generated_at": "2026-05-05T00:00:00Z",
+    "total_generated": 26,
+    "total_selected": 20,
+    "pipeline": "claude_code_session",
+    "prompt_version": "kids",
+    "category": "kids",
+    "theme": null,
+    "verified_at": "2026-05-05T18:26:31.738344+00:00",
+    "verification_method": "fact_verifier_service + claude_overrides (gemini outage)",
+    "source_file": "data/generated/claude_batch_030.json",
+    "filtered_for_import": true,
+    "approved_count": 17
+  },
+  "questions": [
+    {
+      "id": "kids_30_01",
+      "question": "Which big cat can accelerate from 0 to 100 km/h faster than most sports cars — going from a standing start to highway speed in just three seconds?",
+      "type": "text",
+      "correct_answer": "Cheetah",
+      "possible_answers": null,
+      "alternative_answers": [
+        "cheetah",
+        "the cheetah"
+      ],
+      "topic": "Animals",
+      "category": "kids",
+      "difficulty": "easy",
+      "tags": [
+        "animals",
+        "speed",
+        "cheetah"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "8+",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Cheetah",
+      "source_excerpt": "The cheetah can accelerate from 0 to 96.6 km/h (60.0 mph) in under three seconds.",
+      "review_status": "pending_review",
+      "explanation": "A cheetah can hit 100 km/h in about 3 seconds — faster than a Ferrari! Their flexible spine works like a giant spring, stretching and snapping back with every stride.",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "kids",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Silly Comparisons",
+          "why_interesting": "Cars are the benchmark of speed for most kids — a real animal beating one is mind-bending",
+          "universal_appeal": "Cheetahs are universally known; cars are universal too",
+          "boring_check": "Not a school question — concrete comparison kids will remember"
+        },
+        "self_critique": {
+          "cool_factor": 9,
+          "guessability": 8,
+          "learning_value": 8,
+          "simplicity": 9,
+          "safety": 10,
+          "overall_score": 8.8,
+          "reasoning": "Strong opener for a kids batch, easily shareable on the playground"
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "id": "kids_30_02",
+      "question": "Sloths move so slowly that something amazing actually grows in their fur — what is it?",
+      "type": "text",
+      "correct_answer": "Algae",
+      "possible_answers": null,
+      "alternative_answers": [
+        "algae",
+        "green algae",
+        "moss and algae"
+      ],
+      "topic": "Animals",
+      "category": "kids",
+      "difficulty": "medium",
+      "tags": [
+        "animals",
+        "sloths",
+        "nature"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "8+",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Sloth",
+      "source_excerpt": "Sloths' fur exhibits specialized functions: it provides camouflage and is host to symbiotic algae.",
+      "review_status": "pending_review",
+      "explanation": "Sloths move so little that green algae actually grows on their fur, helping them blend into the trees! It's a real two-way deal — the sloth gets camouflage, and the algae gets a place to live.",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "kids",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Amazing Animal Facts",
+          "why_interesting": "Algae growing ON an animal turns biology upside down for kids",
+          "universal_appeal": "Sloths are loved everywhere",
+          "boring_check": "Not a school answer — genuinely surprising biology"
+        },
+        "self_critique": {
+          "cool_factor": 9,
+          "guessability": 7,
+          "learning_value": 9,
+          "simplicity": 9,
+          "safety": 10,
+          "overall_score": 8.8,
+          "reasoning": "Memorable, gross-cool, kids will repeat this"
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "id": "kids_30_03",
+      "question": "Whether a baby crocodile hatches as a boy or a girl is decided by something kids can easily measure with a thermometer — what is it?",
+      "type": "text",
+      "correct_answer": "Temperature",
+      "possible_answers": null,
+      "alternative_answers": [
+        "temperature",
+        "egg temperature",
+        "the temperature"
+      ],
+      "topic": "Animals",
+      "category": "kids",
+      "difficulty": "medium",
+      "tags": [
+        "animals",
+        "reptiles",
+        "biology"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "8+",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Temperature-dependent_sex_determination",
+      "source_excerpt": "In crocodilians, all eggs incubated below approximately 31 °C produce females; at intermediate temperatures, males predominate.",
+      "review_status": "pending_review",
+      "explanation": "Inside crocodile eggs, warmth between about 31-32 °C produces males and cooler or hotter eggs produce females. So a slight temperature change changes the whole nest!",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "kids",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Everyday Surprises",
+          "why_interesting": "The idea that temperature decides gender is wildly counterintuitive",
+          "universal_appeal": "Crocodiles known globally; temperature is a universal concept",
+          "boring_check": "Not memorization — flips a huge assumption about biology"
+        },
+        "self_critique": {
+          "cool_factor": 9,
+          "guessability": 8,
+          "learning_value": 9,
+          "simplicity": 9,
+          "safety": 10,
+          "overall_score": 9.0,
+          "reasoning": "Strong WOW fact, clean phrasing"
+        },
+        "ai_score": 9.0
+      }
+    },
+    {
+      "id": "kids_30_04",
+      "question": "Polar bears look snow-white, but if you could shave one (please don't!) you'd find their skin underneath is a very surprising color. What color is it?",
+      "type": "text",
+      "correct_answer": "Black",
+      "possible_answers": null,
+      "alternative_answers": [
+        "black"
+      ],
+      "topic": "Animals",
+      "category": "kids",
+      "difficulty": "easy",
+      "tags": [
+        "animals",
+        "polar bear",
+        "nature"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "8+",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Polar_bear",
+      "source_excerpt": "Beneath the polar bear's fur, the skin is black; the hairs are colorless and hollow.",
+      "review_status": "pending_review",
+      "explanation": "Polar bear skin is black to soak up the sun's warmth, and their hairs are actually clear, hollow tubes — they only look white because they reflect the snow around them!",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "kids",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Everyday Surprises",
+          "why_interesting": "Visual contradiction — kids see white, answer is black",
+          "universal_appeal": "Polar bears beloved worldwide",
+          "boring_check": "High delight factor — feels like a magic trick"
+        },
+        "self_critique": {
+          "cool_factor": 9,
+          "guessability": 7,
+          "learning_value": 9,
+          "simplicity": 10,
+          "safety": 10,
+          "overall_score": 9.0,
+          "reasoning": "Classic WOW fact with universal appeal"
+        },
+        "ai_score": 9.0
+      }
+    },
+    {
+      "id": "kids_30_05",
+      "question": "What do you call a group of crows when they're all hanging out together — a flock, a herd, or a murder?",
+      "type": "text",
+      "correct_answer": "A murder",
+      "possible_answers": null,
+      "alternative_answers": [
+        "murder",
+        "a murder",
+        "murder of crows"
+      ],
+      "topic": "Language",
+      "category": "kids",
+      "difficulty": "easy",
+      "tags": [
+        "animals",
+        "birds",
+        "language"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "8+",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/List_of_English_terms_of_venery,_by_animal",
+      "source_excerpt": "A group of crows is known as a murder.",
+      "review_status": "pending_review",
+      "explanation": "A group of crows is officially called a 'murder'! Nobody knows exactly why, but it might come from old folktales where crows were thought to gather to judge each other.",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "kids",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "True or False / Multiple Choice Surprises",
+          "why_interesting": "The dramatic word 'murder' applied to birds is a delightful shock",
+          "universal_appeal": "Crows are universal birds",
+          "boring_check": "Not memorization — funny and shareable"
+        },
+        "self_critique": {
+          "cool_factor": 9,
+          "guessability": 8,
+          "learning_value": 8,
+          "simplicity": 10,
+          "safety": 9,
+          "overall_score": 8.8,
+          "reasoning": "Slightly edgy word but used playfully — totally safe in this context"
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "id": "kids_30_07",
+      "question": "Astronauts come back from a few months on the space station having grown a few centimeters TALLER. Why does this happen?",
+      "type": "text",
+      "correct_answer": "No gravity stretches their spine",
+      "possible_answers": null,
+      "alternative_answers": [
+        "no gravity stretches the spine",
+        "gravity doesn't squish their spine",
+        "spine decompresses without gravity",
+        "microgravity stretches spine"
+      ],
+      "topic": "Space",
+      "category": "kids",
+      "difficulty": "medium",
+      "tags": [
+        "space",
+        "astronauts",
+        "human body"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "8+",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Effect_of_spaceflight_on_the_human_body",
+      "source_excerpt": "Astronauts may experience a height increase of up to 5 cm during long-duration spaceflight as the spine decompresses.",
+      "review_status": "pending_review",
+      "explanation": "On Earth, gravity gently squishes the discs between your spine bones all day. In space, those discs un-squish — astronauts can grow up to 5 cm taller before going back to normal on Earth!",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "kids",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "What happens when",
+          "why_interesting": "Kids' bodies feel like fixed objects — the idea you can grow on demand is wild",
+          "universal_appeal": "Astronauts are universal heroes",
+          "boring_check": "Causal reasoning, not memorization"
+        },
+        "self_critique": {
+          "cool_factor": 9,
+          "guessability": 8,
+          "learning_value": 9,
+          "simplicity": 8,
+          "safety": 10,
+          "overall_score": 8.8,
+          "reasoning": "Multi-part reasoning makes it a great car conversation starter"
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "id": "kids_30_08",
+      "question": "True or false: a single day on the planet Venus is actually LONGER than a whole year on Venus.",
+      "type": "text",
+      "correct_answer": "True",
+      "possible_answers": null,
+      "alternative_answers": [
+        "true"
+      ],
+      "topic": "Space",
+      "category": "kids",
+      "difficulty": "hard",
+      "tags": [
+        "space",
+        "planets",
+        "venus"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "8+",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Venus",
+      "source_excerpt": "A sidereal day on Venus lasts 243.0226 Earth days, longer than its orbital period of 224.7 Earth days.",
+      "review_status": "pending_review",
+      "explanation": "Venus spins so slowly that one rotation takes 243 Earth days, but it whips around the Sun in only 225 — so its 'day' really is longer than its 'year'! It's the only planet in our solar system that does this.",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "kids",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "True or False Surprises",
+          "why_interesting": "Breaks the basic rule that days fit inside years",
+          "universal_appeal": "Planets are universal",
+          "boring_check": "Confronts a 'rule' kids think is universal"
+        },
+        "self_critique": {
+          "cool_factor": 10,
+          "guessability": 6,
+          "learning_value": 9,
+          "simplicity": 9,
+          "safety": 10,
+          "overall_score": 8.8,
+          "reasoning": "Brain-twister with a clean explanation"
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "id": "kids_30_09",
+      "question": "We're born with about 300 of one body part, but by the time we're grown up, we only have 206. Some of them fuse together! What body part is it?",
+      "type": "text",
+      "correct_answer": "Bones",
+      "possible_answers": null,
+      "alternative_answers": [
+        "bones",
+        "our bones"
+      ],
+      "topic": "Human Body",
+      "category": "kids",
+      "difficulty": "medium",
+      "tags": [
+        "human body",
+        "bones",
+        "biology"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "8+",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Human_skeleton",
+      "source_excerpt": "An adult human has 206 bones, while a newborn baby has roughly 300 because some bones fuse during growth.",
+      "review_status": "pending_review",
+      "explanation": "Babies are born with around 300 bones, but as we grow, many fuse together to give adults 206 bones. The skull is a great example — it starts as several pieces that knit into one!",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "kids",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Mind-Blowing Numbers",
+          "why_interesting": "We usually think we GAIN parts as we grow, not lose them",
+          "universal_appeal": "Body biology is universal",
+          "boring_check": "Reframe of a textbook number into a story"
+        },
+        "self_critique": {
+          "cool_factor": 9,
+          "guessability": 7,
+          "learning_value": 9,
+          "simplicity": 9,
+          "safety": 10,
+          "overall_score": 8.8,
+          "reasoning": "Memorable, easy to picture"
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "id": "kids_30_10",
+      "question": "Just like fingerprints, every person on Earth has a totally unique pattern on this part of their body — the part you stick out when you make a silly face!",
+      "type": "text",
+      "correct_answer": "Tongue",
+      "possible_answers": null,
+      "alternative_answers": [
+        "tongue",
+        "your tongue",
+        "the tongue"
+      ],
+      "topic": "Human Body",
+      "category": "kids",
+      "difficulty": "easy",
+      "tags": [
+        "human body",
+        "biology"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "8+",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Lingual_papillae",
+      "source_excerpt": "The pattern of papillae and texture of the tongue is considered unique to each individual.",
+      "review_status": "pending_review",
+      "explanation": "Your tongue has a unique pattern of bumps and ridges — no two are alike! Some scientists think tongue prints could even be used as a way to identify people one day.",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "kids",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Everyday Surprises",
+          "why_interesting": "Kids stick out their tongues all the time — never thinking it's unique",
+          "universal_appeal": "Tongues are universal!",
+          "boring_check": "Playful framing, not a textbook fact"
+        },
+        "self_critique": {
+          "cool_factor": 8,
+          "guessability": 8,
+          "learning_value": 8,
+          "simplicity": 10,
+          "safety": 10,
+          "overall_score": 8.8,
+          "reasoning": "Fun, kids will check their tongue in the mirror"
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "id": "kids_30_11",
+      "question": "The Moon is slowly drifting away from Earth — about how much further away does it get every year: a millimeter, a few centimeters, or a meter?",
+      "type": "text",
+      "correct_answer": "A few centimeters",
+      "possible_answers": null,
+      "alternative_answers": [
+        "a few centimeters",
+        "few centimeters",
+        "3.8 cm",
+        "about 3.8 centimeters",
+        "a few cm"
+      ],
+      "topic": "Space",
+      "category": "kids",
+      "difficulty": "medium",
+      "tags": [
+        "space",
+        "moon",
+        "astronomy"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "8+",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Orbit_of_the_Moon",
+      "source_excerpt": "Lunar laser ranging has shown that the Moon recedes from Earth at a rate of approximately 3.8 cm per year.",
+      "review_status": "pending_review",
+      "explanation": "The Moon drifts about 3.8 cm further from Earth each year — about as fast as your fingernails grow! In about 600 million years, this will mean total solar eclipses won't happen anymore.",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "kids",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Mind-Blowing Numbers",
+          "why_interesting": "Kids assume Moon is locked in place",
+          "universal_appeal": "Moon is universal",
+          "boring_check": "Multiple-choice gives a way to reason; the size of effect is surprising both ways"
+        },
+        "self_critique": {
+          "cool_factor": 9,
+          "guessability": 7,
+          "learning_value": 9,
+          "simplicity": 9,
+          "safety": 10,
+          "overall_score": 8.8,
+          "reasoning": "Strong fact with car-trip-friendly comparison"
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "id": "kids_30_12",
+      "question": "An engineer was walking his dog and noticed something prickly clinging to its fur. He looked at it under a microscope and it inspired one of the most useful sticky inventions ever — what did he invent?",
+      "type": "text",
+      "correct_answer": "Velcro",
+      "possible_answers": null,
+      "alternative_answers": [
+        "velcro",
+        "Velcro",
+        "hook-and-loop",
+        "hook and loop fastener"
+      ],
+      "topic": "Inventions",
+      "category": "kids",
+      "difficulty": "medium",
+      "tags": [
+        "inventions",
+        "nature",
+        "biomimicry"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "8+",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Velcro",
+      "source_excerpt": "George de Mestral invented Velcro after observing how burrs of the burdock plant clung to his dog's fur.",
+      "review_status": "pending_review",
+      "explanation": "In 1941, Swiss engineer George de Mestral noticed burrs sticking to his dog's fur and saw they had tiny hooks. He copied the design — and that's how Velcro was born!",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "kids",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Invention Stories",
+          "why_interesting": "A daily-use product traced back to a walk with a dog",
+          "universal_appeal": "Velcro on shoes is universal",
+          "boring_check": "Story-driven; nature-inspired tech"
+        },
+        "self_critique": {
+          "cool_factor": 9,
+          "guessability": 7,
+          "learning_value": 9,
+          "simplicity": 9,
+          "safety": 10,
+          "overall_score": 8.8,
+          "reasoning": "Pattern: nature inspires inventions — kids love this"
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "id": "kids_30_13",
+      "question": "Carrots haven't always been orange. The first cultivated carrots, hundreds of years ago, were a totally different color — what was it?",
+      "type": "text",
+      "correct_answer": "Purple",
+      "possible_answers": null,
+      "alternative_answers": [
+        "purple",
+        "purple (or yellow)",
+        "purple or white",
+        "purple/yellow"
+      ],
+      "topic": "Food",
+      "category": "kids",
+      "difficulty": "hard",
+      "tags": [
+        "food",
+        "history",
+        "vegetables"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "8+",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Carrot",
+      "source_excerpt": "The cultivated carrot probably originated in Persia in shades of purple and yellow; the orange carrot was developed later in the Netherlands.",
+      "review_status": "pending_review",
+      "explanation": "The first cultivated carrots were mostly purple (and sometimes white or yellow). Orange carrots were bred in the Netherlands centuries later and became the standard color we know today!",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "kids",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Everyday Surprises",
+          "why_interesting": "Carrots are the textbook 'orange vegetable' — kids hardly imagine alternatives",
+          "universal_appeal": "Carrots are universal globally",
+          "boring_check": "Reverses a default association"
+        },
+        "self_critique": {
+          "cool_factor": 9,
+          "guessability": 6,
+          "learning_value": 9,
+          "simplicity": 9,
+          "safety": 10,
+          "overall_score": 8.6,
+          "reasoning": "Lovely reframe; pairs well with rainbow-vegetable conversations"
+        },
+        "ai_score": 8.6
+      }
+    },
+    {
+      "id": "kids_30_15",
+      "question": "Honeybees can do something that scientists thought only smart mammals could do — they can recognize and remember individual ones of these. What?",
+      "type": "text",
+      "correct_answer": "Human faces",
+      "possible_answers": null,
+      "alternative_answers": [
+        "human faces",
+        "faces",
+        "people's faces",
+        "human face"
+      ],
+      "topic": "Animals",
+      "category": "kids",
+      "difficulty": "hard",
+      "tags": [
+        "animals",
+        "bees",
+        "biology"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "8+",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Bee_learning_and_communication",
+      "source_excerpt": "Studies have demonstrated that honey bees can be trained to recognize human faces, displaying configural processing previously thought to require larger brains.",
+      "review_status": "pending_review",
+      "explanation": "Honeybees can be trained to recognize human faces by piecing together patterns of dots and shapes — pretty incredible for a brain the size of a sesame seed!",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "kids",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Amazing Animal Facts",
+          "why_interesting": "Tiny brain doing a 'big brain' task",
+          "universal_appeal": "Bees and faces are both universal",
+          "boring_check": "Reverses an assumption about animal intelligence"
+        },
+        "self_critique": {
+          "cool_factor": 9,
+          "guessability": 6,
+          "learning_value": 9,
+          "simplicity": 9,
+          "safety": 10,
+          "overall_score": 8.6,
+          "reasoning": "Strong WOW with science backing"
+        },
+        "ai_score": 8.6
+      }
+    },
+    {
+      "id": "kids_30_16",
+      "question": "Microwave ovens were invented by complete accident — when an engineer noticed something in his pocket suddenly melted near a radar machine. What was in his pocket?",
+      "type": "text",
+      "correct_answer": "A chocolate bar",
+      "possible_answers": null,
+      "alternative_answers": [
+        "chocolate bar",
+        "candy bar",
+        "a chocolate bar",
+        "a candy bar",
+        "chocolate"
+      ],
+      "topic": "Inventions",
+      "category": "kids",
+      "difficulty": "medium",
+      "tags": [
+        "inventions",
+        "history",
+        "technology"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "8+",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Microwave_oven",
+      "source_excerpt": "Engineer Percy Spencer accidentally discovered the heating effect when a chocolate bar in his pocket melted while standing near an active magnetron.",
+      "review_status": "pending_review",
+      "explanation": "In 1945, engineer Percy Spencer noticed a chocolate bar in his pocket had melted while he was working near a radar tube. He realized those waves could cook food — and the microwave oven was born!",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "kids",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Invention Stories",
+          "why_interesting": "Everyday object with a chocolate-bar origin story",
+          "universal_appeal": "Microwaves and chocolate both universal",
+          "boring_check": "Story format, not memorization"
+        },
+        "self_critique": {
+          "cool_factor": 9,
+          "guessability": 7,
+          "learning_value": 9,
+          "simplicity": 9,
+          "safety": 10,
+          "overall_score": 8.8,
+          "reasoning": "Memorable accidental-discovery story"
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "id": "kids_30_17",
+      "question": "If you could fold a normal sheet of paper in half 42 times, surprisingly, how thick would it become — taller than a house, taller than a mountain, or all the way to the Moon?",
+      "type": "text",
+      "correct_answer": "All the way to the Moon",
+      "possible_answers": null,
+      "alternative_answers": [
+        "the Moon",
+        "all the way to the moon",
+        "to the Moon",
+        "moon"
+      ],
+      "topic": "Math",
+      "category": "kids",
+      "difficulty": "hard",
+      "tags": [
+        "math",
+        "exponential growth",
+        "space"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "8+",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Britney_Gallivan#Paper_folding",
+      "source_excerpt": "Doubling 0.1 mm of paper 42 times yields more than 4×10^11 mm, roughly the average Earth–Moon distance.",
+      "review_status": "pending_review",
+      "explanation": "Each fold doubles the thickness — and after 42 folds, the paper would be over 380,000 km thick, roughly the distance to the Moon! In real life paper rips first, but the math is real.",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "kids",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Mind-Blowing Numbers",
+          "why_interesting": "Exponential growth is a wow concept that kids viscerally feel",
+          "universal_appeal": "Paper and Moon both universal",
+          "boring_check": "Pure conceptual surprise; not pure recall"
+        },
+        "self_critique": {
+          "cool_factor": 10,
+          "guessability": 6,
+          "learning_value": 10,
+          "simplicity": 8,
+          "safety": 10,
+          "overall_score": 8.8,
+          "reasoning": "Doubles as a math lesson and a wow moment"
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "id": "kids_30_18",
+      "question": "Octopuses are surprisingly clever — they can even open which everyday human object that has a screwed-on lid?",
+      "type": "text",
+      "correct_answer": "A jar",
+      "possible_answers": null,
+      "alternative_answers": [
+        "jar",
+        "a jar",
+        "glass jar",
+        "screw-top jar"
+      ],
+      "topic": "Animals",
+      "category": "kids",
+      "difficulty": "easy",
+      "tags": [
+        "animals",
+        "octopus",
+        "intelligence"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "8+",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Octopus",
+      "source_excerpt": "Captive octopuses are well known for their problem-solving abilities, including unscrewing the lids of jars.",
+      "review_status": "pending_review",
+      "explanation": "Octopuses can unscrew jar lids to reach food inside! In aquariums they're famous escape artists who solve puzzles, recognize keepers, and even play with toys.",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "kids",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Amazing Animal Facts",
+          "why_interesting": "Crosses everyday human action with surprising sea-creature ability",
+          "universal_appeal": "Both jars and octopuses universal",
+          "boring_check": "Not stated in any textbook — concrete animal behaviour fact"
+        },
+        "self_critique": {
+          "cool_factor": 9,
+          "guessability": 8,
+          "learning_value": 8,
+          "simplicity": 9,
+          "safety": 10,
+          "overall_score": 8.8,
+          "reasoning": "Different from the 3-hearts fact already in the pool"
+        },
+        "ai_score": 8.8
+      }
+    },
+    {
+      "id": "kids_30_19",
+      "question": "Some sea turtles alive today belong to a family that's older than something else amazing — they were swimming around BEFORE which famous extinct creatures appeared?",
+      "type": "text",
+      "correct_answer": "Dinosaurs",
+      "possible_answers": null,
+      "alternative_answers": [
+        "dinosaurs",
+        "the dinosaurs"
+      ],
+      "topic": "Animals",
+      "category": "kids",
+      "difficulty": "medium",
+      "tags": [
+        "animals",
+        "evolution",
+        "turtles"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "8+",
+      "source": "generated",
+      "source_url": "https://en.wikipedia.org/wiki/Turtle",
+      "source_excerpt": "Turtles are among the oldest reptile groups, with the earliest known fossils dating from about 230 million years ago, predating most dinosaurs.",
+      "review_status": "pending_review",
+      "explanation": "Turtles' ancestors first appeared more than 230 million years ago — before dinosaurs! They survived the asteroid that wiped out dinosaurs and are still here today.",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "kids",
+        "stage": "claude_code_session",
+        "reasoning": {
+          "pattern_used": "Amazing Animal Facts",
+          "why_interesting": "Living things older than dinosaurs blow kids' minds",
+          "universal_appeal": "Turtles and dinosaurs both universal",
+          "boring_check": "Reframe rather than memorization"
+        },
+        "self_critique": {
+          "cool_factor": 9,
+          "guessability": 7,
+          "learning_value": 9,
+          "simplicity": 9,
+          "safety": 10,
+          "overall_score": 8.8,
+          "reasoning": "Strong WOW factor with deep evolutionary timeline"
+        },
+        "ai_score": 8.8
+      }
+    }
+  ]
+}

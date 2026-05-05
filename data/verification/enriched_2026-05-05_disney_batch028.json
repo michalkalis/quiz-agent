@@ -1,0 +1,1228 @@
+{
+  "metadata": {
+    "model": "claude-opus-4-7",
+    "provider": "anthropic",
+    "generated_at": "2026-05-05T00:00:00Z",
+    "total_generated": 24,
+    "total_selected": 24,
+    "pipeline": "claude_code_session",
+    "prompt_version": "themed",
+    "category": "disney",
+    "theme": "Disney",
+    "verified_at": "2026-05-05T13:38:37.967752+00:00",
+    "verification_method": "fact_verifier_service + claude_overrides (gemini outage)",
+    "source_file": "data/generated/claude_batch_028.json",
+    "total_questions": 24
+  },
+  "questions": [
+    {
+      "question": "Frozen's fictional kingdom of Arendelle, with its fjords, stave churches, and pointed wooden roofs, is heavily inspired by which real Scandinavian country?",
+      "type": "text",
+      "correct_answer": "Norway",
+      "possible_answers": null,
+      "alternative_answers": [
+        "norway",
+        "Norwegian"
+      ],
+      "topic": "Disney",
+      "category": "disney",
+      "difficulty": "easy",
+      "tags": [
+        "disney",
+        "frozen",
+        "geography",
+        "behind-the-scenes"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "Disney's research team toured Norway, sketching the Akershus Fortress, Bryggen wharf in Bergen, and traditional stave churches. Geirangerfjord and Nærøyfjord shaped the iconic vistas, and the costumes draw on Norwegian bunad embroidery.",
+      "source_url": "https://en.wikipedia.org/wiki/Frozen_(2013_film)",
+      "source_excerpt": "The film's setting and visuals were inspired by Norway, with the filmmakers visiting the country and using Norwegian fjords, stave churches, and architecture as references for the kingdom of Arendelle.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Disney",
+        "reasoning": {
+          "pattern_used": "Hidden Connections",
+          "why_interesting": "Reveals real-world geography behind a beloved fantasy setting",
+          "universal_appeal": "Anyone who's seen Frozen — global audience",
+          "boring_check": "Not just naming the film; asks for the real-world inspiration"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "fan_appeal": 9,
+          "accessibility": 9,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "overall_score": 8.6,
+          "reasoning": "Connects fiction to real travel, sparks 'I want to visit' conversation"
+        },
+        "ai_score": 8.6
+      },
+      "id": "disney_21"
+    },
+    {
+      "question": "Before Mickey Mouse, Walt Disney's first famous animated character was a different studio mascot — one Disney lost the rights to in 1928, sparking the creation of Mickey. Who was that lost character?",
+      "type": "text",
+      "correct_answer": "Oswald the Lucky Rabbit",
+      "possible_answers": null,
+      "alternative_answers": [
+        "Oswald",
+        "Oswald Rabbit",
+        "oswald the lucky rabbit"
+      ],
+      "topic": "Disney",
+      "category": "disney",
+      "difficulty": "medium",
+      "tags": [
+        "disney",
+        "history",
+        "mickey-mouse",
+        "origin-story"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "In 1928, distributor Charles Mintz hired away most of Disney's animators and kept the rights to Oswald — a stinging loss. On the train ride home, Walt and Ub Iwerks designed a new mouse character. Disney finally bought Oswald back from Universal in 2006.",
+      "source_url": "https://en.wikipedia.org/wiki/Oswald_the_Lucky_Rabbit",
+      "source_excerpt": "Oswald the Lucky Rabbit was created by Walt Disney for Universal Pictures in 1927. After Disney lost the rights in 1928, he and Ub Iwerks created Mickey Mouse as a replacement.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Disney",
+        "reasoning": {
+          "pattern_used": "Origin Stories",
+          "why_interesting": "The corporate misfortune that birthed Mickey Mouse",
+          "universal_appeal": "Everyone knows Mickey; few know the prequel",
+          "boring_check": "Not 'who created Mickey?'; asks the better question"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "fan_appeal": 9,
+          "accessibility": 7,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "overall_score": 8.6,
+          "reasoning": "Surprising backstory people enjoy retelling"
+        },
+        "ai_score": 8.6
+      },
+      "id": "disney_22"
+    },
+    {
+      "question": "When Snow White and the Seven Dwarfs (1937) won an honorary Academy Award, the statuette took a unique form that has never been repeated. What did the trophy actually look like?",
+      "type": "text",
+      "correct_answer": "One full-size Oscar accompanied by seven miniature statuettes",
+      "possible_answers": null,
+      "alternative_answers": [
+        "One full-size Oscar with seven miniatures",
+        "A full-sized Oscar plus seven small ones",
+        "one full size and seven miniatures"
+      ],
+      "topic": "Disney",
+      "category": "disney",
+      "difficulty": "hard",
+      "tags": [
+        "disney",
+        "snow-white",
+        "oscars",
+        "history"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "At the 1939 Academy Awards, 10-year-old Shirley Temple presented Walt Disney with one regular-sized Oscar and seven miniature statues — one for each dwarf — recognizing Snow White as a 'significant screen innovation'. It remains in Disney company history as a one-of-a-kind trophy.",
+      "source_url": "https://en.wikipedia.org/wiki/Snow_White_and_the_Seven_Dwarfs_(1937_film)",
+      "source_excerpt": "At the 11th Academy Awards in 1939, Walt Disney received an honorary Oscar for Snow White and the Seven Dwarfs, consisting of one full-size and seven miniature statuettes presented by Shirley Temple.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Disney",
+        "reasoning": {
+          "pattern_used": "Numbers & Records",
+          "why_interesting": "Visual oddity people can picture immediately",
+          "universal_appeal": "Snow White is global; the trophy detail is delightful",
+          "boring_check": "Not 'when did Snow White win?' — asks for the unique form"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "fan_appeal": 9,
+          "accessibility": 7,
+          "clever_framing": 9,
+          "educational_value": 8,
+          "overall_score": 8.4,
+          "reasoning": "Vivid mental image carries the trivia"
+        },
+        "ai_score": 8.4
+      },
+      "id": "disney_23"
+    },
+    {
+      "question": "Disney's Bambi (1942) was based on a 1923 Austrian novel whose author was Jewish — and whose book was banned and burned by the Nazis in 1936. Who wrote the original Bambi?",
+      "type": "text",
+      "correct_answer": "Felix Salten",
+      "possible_answers": null,
+      "alternative_answers": [
+        "Salten",
+        "felix salten"
+      ],
+      "topic": "Disney",
+      "category": "disney",
+      "difficulty": "medium",
+      "tags": [
+        "disney",
+        "bambi",
+        "literature",
+        "history"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "Felix Salten's 'Bambi, A Life in the Woods' was a sober novel about hunted deer; Walt Disney bought the rights for $1,000 in 1933. The Nazi regime banned it in 1936 as political allegory and burned remaining copies. Disney's 1942 adaptation softened the tone but kept the 'man in the forest' menace.",
+      "source_url": "https://en.wikipedia.org/wiki/Felix_Salten",
+      "source_excerpt": "Felix Salten was the Austrian author of Bambi, A Life in the Woods (1923), the Jewish writer's most famous work, which was later adapted by Walt Disney into the 1942 animated film.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Disney",
+        "reasoning": {
+          "pattern_used": "Origin Stories",
+          "why_interesting": "Cute Disney fawn; dark literary backstory",
+          "universal_appeal": "WWII history is widely shared knowledge",
+          "boring_check": "Goes beyond 'who wrote Bambi?' by adding the Nazi-banned hook"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "fan_appeal": 8,
+          "accessibility": 7,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "overall_score": 8.2,
+          "reasoning": "Strong educational value with surprising weight"
+        },
+        "ai_score": 8.2
+      },
+      "id": "disney_24"
+    },
+    {
+      "question": "Disney's Mulan (1998) wasn't invented by Disney — it adapts a Chinese poem that scholars date to roughly 1,500 years ago. What is the original poem traditionally called?",
+      "type": "text",
+      "correct_answer": "The Ballad of Mulan",
+      "possible_answers": null,
+      "alternative_answers": [
+        "Ballad of Mulan",
+        "Mulan Ci",
+        "Mulan Shi",
+        "the ballad of mulan",
+        "Ballad of Hua Mulan"
+      ],
+      "topic": "Disney",
+      "category": "disney",
+      "difficulty": "medium",
+      "tags": [
+        "disney",
+        "mulan",
+        "literature",
+        "origin-story"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "The 'Ballad of Mulan' (木蘭辭) dates to the Northern Wei dynasty, around the 5th–6th century CE. It tells of a young woman who takes her aging father's place in the army. Disney's 1998 film added Mushu and the romance plot but kept the cross-dressing-warrior core.",
+      "source_url": "https://en.wikipedia.org/wiki/Ballad_of_Mulan",
+      "source_excerpt": "The Ballad of Mulan is a Chinese folk song that recounts the legend of Hua Mulan, dating from the Northern Wei dynasty around the 5th to 6th century, later adapted into the 1998 Disney animated film.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Disney",
+        "reasoning": {
+          "pattern_used": "Origin Stories",
+          "why_interesting": "Fans of the film usually don't realize it's a 1500-year-old story",
+          "universal_appeal": "Mulan known globally; ancient poem origin is universally interesting",
+          "boring_check": "Not 'when was Mulan released?'; gives historical depth"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "fan_appeal": 8,
+          "accessibility": 7,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "overall_score": 8.2,
+          "reasoning": "Connects pop culture to deep history"
+        },
+        "ai_score": 8.2
+      },
+      "id": "disney_25"
+    },
+    {
+      "question": "True or false: Walt Disney died in December 1966, but the last animated feature he personally worked on was released ten months after his death.",
+      "type": "text",
+      "correct_answer": "True",
+      "possible_answers": [
+        "True",
+        "False"
+      ],
+      "alternative_answers": [
+        "true",
+        "yes"
+      ],
+      "topic": "Disney",
+      "category": "disney",
+      "difficulty": "medium",
+      "tags": [
+        "disney",
+        "walt-disney",
+        "history",
+        "true-false"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "Walt died of lung cancer on December 15, 1966. The Jungle Book — the last animated feature he personally supervised, including helping shape characters and music — premiered on October 18, 1967, ten months later. It became one of Disney's biggest hits.",
+      "source_url": "https://en.wikipedia.org/wiki/The_Jungle_Book_(1967_film)",
+      "source_excerpt": "The Jungle Book was the last film personally supervised by Walt Disney, who died on December 15, 1966, ten months before its release on October 18, 1967.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Disney",
+        "reasoning": {
+          "pattern_used": "The Twist",
+          "why_interesting": "Connects Walt's death to a beloved film",
+          "universal_appeal": "Jungle Book is widely known; the timing is poignant",
+          "boring_check": "Not 'when did Walt die?'; layered with the posthumous release"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "fan_appeal": 8,
+          "accessibility": 8,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "overall_score": 8.0,
+          "reasoning": "Memorable timing fact framed cleanly as T/F"
+        },
+        "ai_score": 8.0
+      },
+      "id": "disney_26"
+    },
+    {
+      "question": "The opening seconds of The Lion King (1994) feature a soaring chant — 'Nants ingonyama bagithi Baba' — composed by South African Lebo M. What does that opening line actually mean in Zulu?",
+      "type": "text",
+      "correct_answer": "Here comes a lion, Father",
+      "possible_answers": null,
+      "alternative_answers": [
+        "Here comes a lion",
+        "There comes a lion, father",
+        "here comes a lion father"
+      ],
+      "topic": "Disney",
+      "category": "disney",
+      "difficulty": "medium",
+      "tags": [
+        "disney",
+        "lion-king",
+        "language",
+        "music"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "Lebohang 'Lebo M' Morake wrote the Zulu opening to 'Circle of Life'. 'Nants ingonyama bagithi Baba' literally means 'Here comes a lion, Father,' answered by 'Sithi uhm ingonyama' — 'Oh yes, it's a lion.' Disney auditioned dozens of singers; Lebo M nailed it on the first take.",
+      "source_url": "https://en.wikipedia.org/wiki/Circle_of_Life",
+      "source_excerpt": "The opening Zulu chant in 'Circle of Life', composed by Lebo M, translates to 'Here comes a lion, Father' followed by 'Oh yes, it's a lion'.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Disney",
+        "reasoning": {
+          "pattern_used": "Hidden Connections",
+          "why_interesting": "Iconic chant most viewers can hum but never knew the meaning of",
+          "universal_appeal": "Lion King is a global phenomenon",
+          "boring_check": "Not 'who composed Circle of Life?'; reveals hidden meaning"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "fan_appeal": 9,
+          "accessibility": 8,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "overall_score": 8.8,
+          "reasoning": "Reveals meaning of one of cinema's most-quoted opening lines"
+        },
+        "ai_score": 8.8
+      },
+      "id": "disney_27"
+    },
+    {
+      "question": "Mickey Mouse has worn white gloves since 1929's The Opry House — earlier than most signature character traits. Why did Walt Disney's animators add the gloves?",
+      "type": "text",
+      "correct_answer": "To make Mickey's hands visible against his black body during fast movement",
+      "possible_answers": null,
+      "alternative_answers": [
+        "For visibility",
+        "To make hands easier to see",
+        "to help his hands stand out",
+        "visibility against his black body"
+      ],
+      "topic": "Disney",
+      "category": "disney",
+      "difficulty": "medium",
+      "tags": [
+        "disney",
+        "mickey-mouse",
+        "animation",
+        "behind-the-scenes"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "Mickey's body is mostly black, so his black hands disappeared during quick gestures. White gloves solved that — and gave him a friendlier, more human silhouette. Walt later said in a 1957 interview, 'We didn't want him to have mouse hands, because he was supposed to be more human.'",
+      "source_url": "https://en.wikipedia.org/wiki/Mickey_Mouse",
+      "source_excerpt": "Mickey Mouse first wore his iconic white gloves in 1929's The Opry House. Walt Disney explained the gloves were added so Mickey's hands would be visible against his black body and to make him more human-like.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Disney",
+        "reasoning": {
+          "pattern_used": "Behind the Scenes",
+          "why_interesting": "Practical animation reason behind a fashion choice",
+          "universal_appeal": "Mickey Mouse is recognized worldwide",
+          "boring_check": "Not 'when did Mickey debut?' — asks the why behind a quirky detail"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "fan_appeal": 8,
+          "accessibility": 9,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "overall_score": 8.2,
+          "reasoning": "Tiny detail with a satisfying explanation"
+        },
+        "ai_score": 8.2
+      },
+      "id": "disney_28"
+    },
+    {
+      "question": "In 1941, a Disney song became the first ever to win the Academy Award for Best Original Song from an animated film. Which song was it?",
+      "type": "text",
+      "correct_answer": "When You Wish Upon a Star",
+      "possible_answers": null,
+      "alternative_answers": [
+        "When You Wish upon a Star",
+        "when you wish upon a star"
+      ],
+      "topic": "Disney",
+      "category": "disney",
+      "difficulty": "easy",
+      "tags": [
+        "disney",
+        "music",
+        "pinocchio",
+        "oscars"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "Written by Leigh Harline and Ned Washington for Pinocchio (1940), 'When You Wish Upon a Star' won the Oscar at the 13th Academy Awards in 1941. It later became the de facto theme song of the entire Walt Disney Company, played at the start of nearly every Disney film since 1985.",
+      "source_url": "https://en.wikipedia.org/wiki/When_You_Wish_upon_a_Star",
+      "source_excerpt": "'When You Wish upon a Star' from Pinocchio (1940) won the Academy Award for Best Original Song at the 1941 ceremony, becoming the first Disney song to win the award and the company's signature theme song.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Disney",
+        "reasoning": {
+          "pattern_used": "Origin Stories",
+          "why_interesting": "Reveals the song that became Disney's audio identity",
+          "universal_appeal": "Tune most people would recognize within two notes",
+          "boring_check": "Easy but with the deeper Disney-anthem angle"
+        },
+        "self_critique": {
+          "surprise_factor": 7,
+          "fan_appeal": 8,
+          "accessibility": 9,
+          "clever_framing": 7,
+          "educational_value": 8,
+          "overall_score": 7.8,
+          "reasoning": "Easy gateway question; recognized melody"
+        },
+        "ai_score": 7.8
+      },
+      "id": "disney_29"
+    },
+    {
+      "question": "Disney revolutionised animation depth with the multiplane camera, a stacked-glass rig that gave 2D scenes a sense of distance. Which 1937 short film did Disney use to debut it — and incidentally won an Oscar with?",
+      "type": "text",
+      "correct_answer": "The Old Mill",
+      "possible_answers": null,
+      "alternative_answers": [
+        "Old Mill",
+        "the old mill"
+      ],
+      "topic": "Disney",
+      "category": "disney",
+      "difficulty": "hard",
+      "tags": [
+        "disney",
+        "animation",
+        "history",
+        "behind-the-scenes"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "The Old Mill (1937) is a near-silent short following the inhabitants of an abandoned mill through a storm. It served as a proving ground for the multiplane camera before Snow White's release later the same year, and won the Oscar for Best Animated Short.",
+      "source_url": "https://en.wikipedia.org/wiki/The_Old_Mill_(film)",
+      "source_excerpt": "The Old Mill is a 1937 Disney Silly Symphonies cartoon, the first film to use the multiplane camera, winning the Academy Award for Best Animated Short Film.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Disney",
+        "reasoning": {
+          "pattern_used": "Behind the Scenes",
+          "why_interesting": "Pre-Snow-White tech demo that quietly changed animation",
+          "universal_appeal": "Animation depth is something everyone enjoys",
+          "boring_check": "Not 'who invented the multiplane camera?'; asks the practical demo"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "fan_appeal": 8,
+          "accessibility": 6,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "overall_score": 7.8,
+          "reasoning": "Hard for casuals but a great deep cut"
+        },
+        "ai_score": 7.8
+      },
+      "id": "disney_30"
+    },
+    {
+      "question": "Disney bought Pixar in 2006, Marvel in 2009, and Lucasfilm in 2012. Of those three deals, which one cost Disney the most money?",
+      "type": "text",
+      "correct_answer": "Pixar",
+      "possible_answers": [
+        "Pixar",
+        "Marvel",
+        "Lucasfilm"
+      ],
+      "alternative_answers": [
+        "pixar",
+        "Pixar (2006)"
+      ],
+      "topic": "Disney",
+      "category": "disney",
+      "difficulty": "medium",
+      "tags": [
+        "disney",
+        "business",
+        "pixar",
+        "comparison"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "Disney paid roughly $7.4 billion for Pixar in 2006 — more than Marvel ($4 billion in 2009) or Lucasfilm (~$4.05 billion in 2012). Most people guess Marvel or Lucasfilm because of their later commercial impact, but Pixar's price tag was almost as much as the other two combined.",
+      "source_url": "https://en.wikipedia.org/wiki/The_Walt_Disney_Company",
+      "source_excerpt": "Disney acquired Pixar in 2006 for $7.4 billion, Marvel Entertainment in 2009 for $4 billion, and Lucasfilm in 2012 for approximately $4.05 billion.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Disney",
+        "reasoning": {
+          "pattern_used": "Surprising Comparisons",
+          "why_interesting": "Counterintuitive — most assume Marvel or Lucasfilm cost more",
+          "universal_appeal": "Big numbers and franchise-rivalry frame anyone can engage with",
+          "boring_check": "Not 'when did Disney buy Pixar?'; asks the comparative twist"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "fan_appeal": 9,
+          "accessibility": 9,
+          "clever_framing": 9,
+          "educational_value": 8,
+          "overall_score": 8.8,
+          "reasoning": "Counterintuitive answer with a satisfying reveal"
+        },
+        "ai_score": 8.8
+      },
+      "id": "disney_31"
+    },
+    {
+      "question": "WALL-E (2008) won an Oscar for Best Sound Editing despite its main character barely speaking. The film's robotic voice and bleeping sounds were created by which legendary sound designer — also responsible for R2-D2 and Chewbacca?",
+      "type": "text",
+      "correct_answer": "Ben Burtt",
+      "possible_answers": null,
+      "alternative_answers": [
+        "Burtt",
+        "Benjamin Burtt",
+        "ben burtt"
+      ],
+      "topic": "Disney",
+      "category": "disney",
+      "difficulty": "hard",
+      "tags": [
+        "disney",
+        "pixar",
+        "wall-e",
+        "behind-the-scenes"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "Ben Burtt invented the voices of R2-D2 (mixing his own voice with synthesizer noises), Chewbacca (bears, walruses, lions), and the lightsaber (an old film projector motor + TV interference). For WALL-E he built the robot's emotional vocabulary out of similar cobbled-together sounds, earning a fourth Oscar.",
+      "source_url": "https://en.wikipedia.org/wiki/Ben_Burtt",
+      "source_excerpt": "Ben Burtt is the sound designer responsible for the voice of R2-D2 and Chewbacca in Star Wars and the sound design of Pixar's WALL-E (2008), for which he won an Academy Award for Best Sound Editing.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Disney",
+        "reasoning": {
+          "pattern_used": "Hidden Connections",
+          "why_interesting": "Same person made R2-D2 and WALL-E sounds",
+          "universal_appeal": "Star Wars + Pixar — broad audience overlap",
+          "boring_check": "Not generic credits trivia; the cross-franchise link is the hook"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "fan_appeal": 9,
+          "accessibility": 7,
+          "clever_framing": 9,
+          "educational_value": 8,
+          "overall_score": 8.4,
+          "reasoning": "Surprising cross-franchise link draws people in"
+        },
+        "ai_score": 8.4
+      },
+      "id": "disney_32"
+    },
+    {
+      "question": "When The Lion King opened in cinemas in 1994, it shattered a box-office record that had stood for decades. What was that record?",
+      "type": "text",
+      "correct_answer": "Highest-grossing animated film of all time",
+      "possible_answers": null,
+      "alternative_answers": [
+        "Highest grossing animated film",
+        "Top-grossing animated film",
+        "highest grossing animated film ever"
+      ],
+      "topic": "Disney",
+      "category": "disney",
+      "difficulty": "easy",
+      "tags": [
+        "disney",
+        "lion-king",
+        "records",
+        "box-office"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "The Lion King grossed about $968 million globally on its 1994 release, making it the highest-grossing animated film ever — a title it held until Shrek 2 (2004) and Finding Nemo (2003) eventually overtook it. Even today it ranks among the most successful traditionally animated films of all time.",
+      "source_url": "https://en.wikipedia.org/wiki/The_Lion_King",
+      "source_excerpt": "The Lion King became the highest-grossing animated film of all time upon its 1994 release, holding the record for nearly a decade until newer animated features surpassed it.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Disney",
+        "reasoning": {
+          "pattern_used": "Numbers & Records",
+          "why_interesting": "Reveals Lion King's commercial scale at release",
+          "universal_appeal": "Lion King is global; box-office records are widely engaging",
+          "boring_check": "Not 'how much did Lion King make?'; asks the kind of record"
+        },
+        "self_critique": {
+          "surprise_factor": 7,
+          "fan_appeal": 8,
+          "accessibility": 9,
+          "clever_framing": 7,
+          "educational_value": 7,
+          "overall_score": 7.6,
+          "reasoning": "Solid easy question; the record framing helps"
+        },
+        "ai_score": 7.6
+      },
+      "id": "disney_33"
+    },
+    {
+      "question": "Disney's The Princess and the Frog (2009) features Tiana, the studio's first Black princess. In which real-world city is the entire story set?",
+      "type": "text",
+      "correct_answer": "New Orleans",
+      "possible_answers": null,
+      "alternative_answers": [
+        "New Orleans, Louisiana",
+        "new orleans",
+        "NOLA"
+      ],
+      "topic": "Disney",
+      "category": "disney",
+      "difficulty": "easy",
+      "tags": [
+        "disney",
+        "princess-and-the-frog",
+        "geography"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "The Princess and the Frog is set in 1920s New Orleans, with the bayou, jazz score (composed by Randy Newman), and Mardi Gras finale anchoring the story in Louisiana culture. Tiana opens her own restaurant — the first Disney princess with a clear career goal.",
+      "source_url": "https://en.wikipedia.org/wiki/The_Princess_and_the_Frog",
+      "source_excerpt": "The Princess and the Frog is a 2009 Disney animated film set in 1920s New Orleans, Louisiana, featuring Tiana as the first African-American Disney princess.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Disney",
+        "reasoning": {
+          "pattern_used": "Origin Stories",
+          "why_interesting": "Real-city setting many viewers don't fix in mind",
+          "universal_appeal": "New Orleans is globally known",
+          "boring_check": "Adds the 'first Black princess' context to lift it"
+        },
+        "self_critique": {
+          "surprise_factor": 6,
+          "fan_appeal": 8,
+          "accessibility": 9,
+          "clever_framing": 7,
+          "educational_value": 8,
+          "overall_score": 7.6,
+          "reasoning": "Easy but well-anchored to historical context"
+        },
+        "ai_score": 7.6
+      },
+      "id": "disney_34"
+    },
+    {
+      "question": "Walt Disney was just 16 when the United States entered World War I in 1917, too young to enlist. How did he get to Europe anyway?",
+      "type": "text",
+      "correct_answer": "He forged his birth certificate to add a year and joined the Red Cross Ambulance Corps",
+      "possible_answers": null,
+      "alternative_answers": [
+        "Joined the Red Cross",
+        "Red Cross Ambulance Corps",
+        "He lied about his age and joined the Red Cross",
+        "joined the red cross"
+      ],
+      "topic": "Disney",
+      "category": "disney",
+      "difficulty": "medium",
+      "tags": [
+        "disney",
+        "walt-disney",
+        "history",
+        "biography"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "Walt was rejected by the Army for being underage. He doctored his birth certificate to read 1900 instead of 1901, signed up with the Red Cross, and shipped to France just after the armistice in 1918, driving an ambulance and chauffeuring officers — and decorating his vehicle with cartoons.",
+      "source_url": "https://en.wikipedia.org/wiki/Walt_Disney",
+      "source_excerpt": "After being rejected by the army for being underage, Walt Disney forged his birth certificate in 1918 to join the Red Cross Ambulance Corps, serving in France after the World War I armistice.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Disney",
+        "reasoning": {
+          "pattern_used": "Origin Stories",
+          "why_interesting": "Wholesome Disney brand vs Walt forging documents at 16",
+          "universal_appeal": "WWI history universally recognised",
+          "boring_check": "Not 'when was Walt born?'; asks the cool teenage-stowaway story"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "fan_appeal": 8,
+          "accessibility": 8,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "overall_score": 8.6,
+          "reasoning": "Memorable biographical anecdote"
+        },
+        "ai_score": 8.6
+      },
+      "id": "disney_35"
+    },
+    {
+      "question": "After World War II, Disney's animation studio was nearly broke. A 1950 film about a girl with a glass slipper rescued the company financially, paying for Disneyland and the next decade of features. Which film was it?",
+      "type": "text",
+      "correct_answer": "Cinderella",
+      "possible_answers": null,
+      "alternative_answers": [
+        "cinderella",
+        "Cinderella (1950)"
+      ],
+      "topic": "Disney",
+      "category": "disney",
+      "difficulty": "medium",
+      "tags": [
+        "disney",
+        "cinderella",
+        "history",
+        "business"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "Disney spent the war years on government propaganda and educational films, and lost European markets along with most cash flow. Cinderella (1950) cost about $2.2 million and grossed roughly $34 million, restoring the studio's fortunes and bankrolling Peter Pan, Lady and the Tramp, and the Disneyland park itself.",
+      "source_url": "https://en.wikipedia.org/wiki/Cinderella_(1950_film)",
+      "source_excerpt": "Cinderella, released in 1950, was a critical and commercial success that saved the Walt Disney Studios from financial ruin after years of wartime losses, generating enough revenue to fund subsequent feature films and Disneyland.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Disney",
+        "reasoning": {
+          "pattern_used": "Origin Stories",
+          "why_interesting": "Almost-bankrupt Disney saved by a single film",
+          "universal_appeal": "Cinderella universal; financial-savior arc engaging",
+          "boring_check": "Not generic Cinderella facts; asks the rescue role"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "fan_appeal": 9,
+          "accessibility": 8,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "overall_score": 8.4,
+          "reasoning": "Stakes-driven framing makes it memorable"
+        },
+        "ai_score": 8.4
+      },
+      "id": "disney_36"
+    },
+    {
+      "question": "Sleeping Beauty (1959) was a box-office disappointment that nearly killed Disney's traditional animation. Critics later praised its bold visuals — which were modelled on what unusual art-history reference?",
+      "type": "text",
+      "correct_answer": "Medieval tapestries and illuminated manuscripts",
+      "possible_answers": null,
+      "alternative_answers": [
+        "Medieval tapestries",
+        "illuminated manuscripts",
+        "medieval tapestries and gothic art",
+        "Gothic tapestries"
+      ],
+      "topic": "Disney",
+      "category": "disney",
+      "difficulty": "hard",
+      "tags": [
+        "disney",
+        "sleeping-beauty",
+        "art",
+        "behind-the-scenes"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "Background artist Eyvind Earle pushed for a flat, stylised look modelled on the Unicorn Tapestries, illuminated manuscripts, and Persian miniatures — sharply different from the soft Pinocchio/Bambi style. The painstaking layouts cost about $6 million (huge for 1959); the film flopped on release but is now considered a visual masterpiece.",
+      "source_url": "https://en.wikipedia.org/wiki/Sleeping_Beauty_(1959_film)",
+      "source_excerpt": "Sleeping Beauty's distinctive visual style, designed by Eyvind Earle, was inspired by medieval tapestries, illuminated manuscripts, and pre-Renaissance art, contributing to the film's high production cost and initial box-office failure.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Disney",
+        "reasoning": {
+          "pattern_used": "Behind the Scenes",
+          "why_interesting": "Famous flop / influential look paradox",
+          "universal_appeal": "Art-history hook broadens beyond Disney fans",
+          "boring_check": "Not 'when was Sleeping Beauty made?'; asks the design source"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "fan_appeal": 8,
+          "accessibility": 6,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "overall_score": 8.2,
+          "reasoning": "Crosses Disney with art history; meaty for fans"
+        },
+        "ai_score": 8.2
+      },
+      "id": "disney_37"
+    },
+    {
+      "question": "True or false: In Disney's Hercules (1997), the five Muses don't narrate the story in classical Greek style — they sing their lines in the style of 1960s Motown girl groups.",
+      "type": "text",
+      "correct_answer": "True",
+      "possible_answers": [
+        "True",
+        "False"
+      ],
+      "alternative_answers": [
+        "true",
+        "yes"
+      ],
+      "topic": "Disney",
+      "category": "disney",
+      "difficulty": "medium",
+      "tags": [
+        "disney",
+        "hercules",
+        "music",
+        "true-false"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "Composer Alan Menken and lyricist David Zippel rewrote the Muses as a gospel/Motown chorus, drawing from artists like The Supremes and Aretha Franklin. The film was the first time Disney genuinely fused American Black gospel and soul into a fairy-tale score — a creative gamble that defined the film's tone.",
+      "source_url": "https://en.wikipedia.org/wiki/Hercules_(1997_film)",
+      "source_excerpt": "In Hercules (1997), the five Muses act as a Greek chorus singing in a gospel and Motown style, blending classical mythology with American soul music throughout the film's score.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Disney",
+        "reasoning": {
+          "pattern_used": "The Twist",
+          "why_interesting": "Surprising mash-up: ancient Greece + Motown",
+          "universal_appeal": "Both references widely recognised",
+          "boring_check": "Not 'who composed Hercules?'; asks the surprising stylistic clash"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "fan_appeal": 9,
+          "accessibility": 8,
+          "clever_framing": 9,
+          "educational_value": 8,
+          "overall_score": 8.4,
+          "reasoning": "Cross-genre delight wrapped in a T/F"
+        },
+        "ai_score": 8.4
+      },
+      "id": "disney_38"
+    },
+    {
+      "question": "The Sherman Brothers wrote countless Disney songs, including the most-performed song in human history — a relentlessly cheerful park anthem written for the 1964 New York World's Fair. What is it?",
+      "type": "text",
+      "correct_answer": "It's a Small World",
+      "possible_answers": null,
+      "alternative_answers": [
+        "It's A Small World (After All)",
+        "It's a Small World After All",
+        "Its a Small World",
+        "small world"
+      ],
+      "topic": "Disney",
+      "category": "disney",
+      "difficulty": "medium",
+      "tags": [
+        "disney",
+        "music",
+        "sherman-brothers",
+        "history"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "Robert and Richard Sherman wrote 'It's a Small World' as a 'simple prayer for peace' for the UNICEF pavilion at the 1964–65 World's Fair. Disney moved the attraction to Disneyland in 1966; estimates suggest it has been played over 50 million times across Disney parks worldwide, making it the most-performed song on the planet.",
+      "source_url": "https://en.wikipedia.org/wiki/It%27s_a_Small_World",
+      "source_excerpt": "'It's a Small World' was written by the Sherman Brothers for the 1964 New York World's Fair, later moved to Disneyland in 1966, and is widely regarded as the most-played song in history due to its continuous play in Disney theme parks.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Disney",
+        "reasoning": {
+          "pattern_used": "Numbers & Records",
+          "why_interesting": "Most-performed song in history is a Disney park ride song",
+          "universal_appeal": "Global parkgoers know the tune; ear-worm humor",
+          "boring_check": "Not 'who wrote It's a Small World?'; the World's-Fair angle adds depth"
+        },
+        "self_critique": {
+          "surprise_factor": 9,
+          "fan_appeal": 8,
+          "accessibility": 8,
+          "clever_framing": 9,
+          "educational_value": 9,
+          "overall_score": 8.6,
+          "reasoning": "Trivia + record + ear-worm — easy retell"
+        },
+        "ai_score": 8.6
+      },
+      "id": "disney_39"
+    },
+    {
+      "question": "True or false: Disney's Lady and the Tramp (1955) was the first animated feature film ever produced in CinemaScope widescreen format.",
+      "type": "text",
+      "correct_answer": "True",
+      "possible_answers": [
+        "True",
+        "False"
+      ],
+      "alternative_answers": [
+        "true",
+        "yes"
+      ],
+      "topic": "Disney",
+      "category": "disney",
+      "difficulty": "medium",
+      "tags": [
+        "disney",
+        "lady-and-the-tramp",
+        "history",
+        "true-false"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "Lady and the Tramp's 2.55:1 widescreen ratio forced animators to redesign their staging — characters could now move horizontally without crowding the frame. Disney even produced a parallel Academy ratio version for theatres that hadn't yet upgraded their projectors.",
+      "source_url": "https://en.wikipedia.org/wiki/Lady_and_the_Tramp",
+      "source_excerpt": "Lady and the Tramp (1955) is the first animated feature film made in CinemaScope widescreen format, requiring new animation techniques to fill the wider frame.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Disney",
+        "reasoning": {
+          "pattern_used": "The Twist",
+          "why_interesting": "Tech-history first hidden in a romantic dog film",
+          "universal_appeal": "Lady and the Tramp is well-known",
+          "boring_check": "Not generic film-history; the spaghetti-scene context is fun"
+        },
+        "self_critique": {
+          "surprise_factor": 8,
+          "fan_appeal": 7,
+          "accessibility": 7,
+          "clever_framing": 8,
+          "educational_value": 8,
+          "overall_score": 7.6,
+          "reasoning": "Solid technical milestone wrapped in a T/F"
+        },
+        "ai_score": 7.6
+      },
+      "id": "disney_40"
+    },
+    {
+      "question": "Disney's The Hunchback of Notre Dame (1996) is based on a much darker 1831 French novel. Who wrote the original book?",
+      "type": "text",
+      "correct_answer": "Victor Hugo",
+      "possible_answers": null,
+      "alternative_answers": [
+        "Hugo",
+        "victor hugo"
+      ],
+      "topic": "Disney",
+      "category": "disney",
+      "difficulty": "hard",
+      "tags": [
+        "disney",
+        "hunchback",
+        "literature",
+        "origin-story"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "Victor Hugo's 'Notre-Dame de Paris' (1831) was published partly to revive interest in the cathedral, which was crumbling at the time. Hugo's book ends with Quasimodo dying beside Esmeralda's corpse — a far cry from Disney's softened ending, where the gargoyles also sing showtunes.",
+      "source_url": "https://en.wikipedia.org/wiki/The_Hunchback_of_Notre_Dame_(1996_film)",
+      "source_excerpt": "Disney's The Hunchback of Notre Dame (1996) is based on Victor Hugo's 1831 French novel 'Notre-Dame de Paris', which features a much darker ending than the animated adaptation.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Disney",
+        "reasoning": {
+          "pattern_used": "Origin Stories",
+          "why_interesting": "Disney softened a famously bleak literary classic",
+          "universal_appeal": "Hugo and Disney are both globally known",
+          "boring_check": "Not 'who is Quasimodo?'; the book-vs-film angle elevates it"
+        },
+        "self_critique": {
+          "surprise_factor": 7,
+          "fan_appeal": 8,
+          "accessibility": 7,
+          "clever_framing": 8,
+          "educational_value": 9,
+          "overall_score": 7.8,
+          "reasoning": "Strong literary connection; rewards readers"
+        },
+        "ai_score": 7.8
+      },
+      "id": "disney_41"
+    },
+    {
+      "question": "Disney's animated 1953 film Peter Pan was based on a stage play that first premiered in London in 1904. Which Scottish author wrote that original play?",
+      "type": "text",
+      "correct_answer": "J.M. Barrie",
+      "possible_answers": null,
+      "alternative_answers": [
+        "James Matthew Barrie",
+        "Barrie",
+        "j.m. barrie",
+        "JM Barrie"
+      ],
+      "topic": "Disney",
+      "category": "disney",
+      "difficulty": "easy",
+      "tags": [
+        "disney",
+        "peter-pan",
+        "literature"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "J.M. Barrie premiered 'Peter Pan, or The Boy Who Wouldn't Grow Up' on the London stage in 1904 and later adapted it into the 1911 novel 'Peter and Wendy'. Barrie left the entire copyright to Great Ormond Street Hospital for Children — which still receives Peter Pan royalties to this day.",
+      "source_url": "https://en.wikipedia.org/wiki/Peter_Pan",
+      "source_excerpt": "Peter Pan was created by Scottish author J.M. Barrie, premiering as a stage play in London in 1904, with rights donated to Great Ormond Street Hospital for Children, and later adapted by Disney in 1953.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Disney",
+        "reasoning": {
+          "pattern_used": "Origin Stories",
+          "why_interesting": "Hospital-royalty angle adds an unexpected charity twist",
+          "universal_appeal": "Peter Pan is universal; Barrie known to most",
+          "boring_check": "Easy but the Great Ormond Street factoid lifts it"
+        },
+        "self_critique": {
+          "surprise_factor": 7,
+          "fan_appeal": 8,
+          "accessibility": 9,
+          "clever_framing": 7,
+          "educational_value": 8,
+          "overall_score": 7.8,
+          "reasoning": "Easy wedge with charity twist in explanation"
+        },
+        "ai_score": 7.8
+      },
+      "id": "disney_42"
+    },
+    {
+      "question": "In The Lion King (1994), the cackling lead hyena Shenzi was voiced by an Oscar-winning American actress and TV host. Who played her?",
+      "type": "text",
+      "correct_answer": "Whoopi Goldberg",
+      "possible_answers": null,
+      "alternative_answers": [
+        "Goldberg",
+        "whoopi goldberg"
+      ],
+      "topic": "Disney",
+      "category": "disney",
+      "difficulty": "medium",
+      "tags": [
+        "disney",
+        "lion-king",
+        "voice-acting"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "Whoopi Goldberg voiced Shenzi, leader of the hyena trio (with Cheech Marin as Banzai and Jim Cummings as the laughing Ed). Goldberg had won her Oscar for Ghost in 1991, three years before The Lion King's release.",
+      "source_url": "https://en.wikipedia.org/wiki/The_Lion_King",
+      "source_excerpt": "Whoopi Goldberg voiced the hyena Shenzi in Disney's The Lion King (1994), alongside Cheech Marin as Banzai and Jim Cummings as Ed.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Disney",
+        "reasoning": {
+          "pattern_used": "Behind the Scenes",
+          "why_interesting": "Famous voice behind a famous laugh",
+          "universal_appeal": "Whoopi Goldberg is widely recognised",
+          "boring_check": "Not 'who's the villain in Lion King?'; asks the deeper-cut casting"
+        },
+        "self_critique": {
+          "surprise_factor": 7,
+          "fan_appeal": 8,
+          "accessibility": 7,
+          "clever_framing": 7,
+          "educational_value": 7,
+          "overall_score": 7.2,
+          "reasoning": "Casting trivia; medium-strength but reliable"
+        },
+        "ai_score": 7.2
+      },
+      "id": "disney_43"
+    },
+    {
+      "question": "Pixar's Up (2009) opens with a four-minute sequence telling the entire courtship, marriage, and life of Carl and Ellie. What's notable about how that sequence is told?",
+      "type": "text",
+      "correct_answer": "It is told almost entirely without dialogue, using music and visuals",
+      "possible_answers": null,
+      "alternative_answers": [
+        "No dialogue",
+        "Without dialogue",
+        "Almost no dialogue",
+        "wordless",
+        "told in silence",
+        "no spoken dialogue"
+      ],
+      "topic": "Disney",
+      "category": "disney",
+      "difficulty": "medium",
+      "tags": [
+        "disney",
+        "pixar",
+        "up",
+        "behind-the-scenes"
+      ],
+      "language_dependent": false,
+      "age_appropriate": "all",
+      "explanation": "The 'Married Life' montage relies on Michael Giacchino's score and visual storytelling — there's barely any dialogue at all. The sequence won enormous critical praise and is regularly cited among the most powerful four minutes in animation history.",
+      "source_url": "https://en.wikipedia.org/wiki/Up_(2009_film)",
+      "source_excerpt": "Up's opening 'Married Life' sequence depicts the entire relationship of Carl and Ellie almost entirely without dialogue, set to Michael Giacchino's Oscar-winning score.",
+      "review_status": "pending_review",
+      "generation_metadata": {
+        "model": "claude-opus-4-7",
+        "provider": "anthropic",
+        "prompt_version": "themed",
+        "stage": "claude_code_session",
+        "theme": "Disney",
+        "reasoning": {
+          "pattern_used": "Behind the Scenes",
+          "why_interesting": "Animation-craft milestone people remember crying at",
+          "universal_appeal": "Up was a global phenomenon",
+          "boring_check": "Not 'who directed Up?'; asks about a craft choice"
+        },
+        "self_critique": {
+          "surprise_factor": 6,
+          "fan_appeal": 9,
+          "accessibility": 9,
+          "clever_framing": 7,
+          "educational_value": 8,
+          "overall_score": 7.8,
+          "reasoning": "Iconic emotional sequence; sparks shared experience"
+        },
+        "ai_score": 7.8
+      },
+      "id": "disney_44"
+    }
+  ]
+}

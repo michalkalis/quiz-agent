@@ -1,0 +1,31 @@
+{
+  "identifier" : "75957F41-CB84-4FA3-B5D1-B754A0B3F40F",
+  "nonRenewingSubscriptions" : [],
+  "products" : [
+    {
+      "displayPrice" : "4.99",
+      "familyShareable" : false,
+      "internalID" : "D4C523B5-0500-4F6D-A7D3-936D13F31A8C",
+      "localizations" : [
+        {
+          "description" : "Unlimited quiz questions per day",
+          "displayName" : "Hangs Unlimited",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.carquiz.unlimited",
+      "referenceName" : "Hangs Unlimited",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_applicationInternalID" : "0",
+    "_developerTeamID" : "0",
+    "_lastSynchronizedDate" : 0
+  },
+  "subscriptionGroups" : [],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

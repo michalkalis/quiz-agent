@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7A3AC3E24618F03076634783 /* Hangs.storekit in Resources */ = {isa = PBXBuildFile; fileRef = D8A0CF7B2B228C1D9BFB87D4 /* Hangs.storekit */; };
 		12809A90D9684CE9A3A60E9E /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 244A1B53144D4362B6C47909 /* Sentry */; };
 		503020B22F8E706400A567CA /* (null) in Frameworks */ = {isa = PBXBuildFile; };
 		503020B32F8E706400A567CA /* (null) in Frameworks */ = {isa = PBXBuildFile; };
@@ -33,6 +34,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		D8A0CF7B2B228C1D9BFB87D4 /* Hangs.storekit */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file.storekit; name = Hangs.storekit; path = "Hangs/Configuration/Hangs.storekit"; sourceTree = "<group>"; };
 		5004B49A2EF874800068C8D1 /* Hangs.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Hangs.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5004B4A72EF874820068C8D1 /* HangsTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HangsTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		5004B4B12EF874820068C8D1 /* HangsUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HangsUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -52,6 +54,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
+				"Configuration/Hangs.storekit",
 			);
 			target = 5004B4992EF874800068C8D1 /* Hangs */;
 		};
@@ -133,6 +136,7 @@
 		D1CAA8A9A5420227398A3677 /* Configuration */ = {
 			isa = PBXGroup;
 			children = (
+				D8A0CF7B2B228C1D9BFB87D4 /* Hangs.storekit */,
 				961941338301A9636C461FF2 /* Shared.xcconfig */,
 				62FB9AFFE2F29A05D528EFF0 /* Prod.xcconfig */,
 				D86E1E0498FBCF4EF3A9CF7D /* Local.xcconfig */,
@@ -282,6 +286,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7A3AC3E24618F03076634783 /* Hangs.storekit in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -775,14 +780,6 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		D836EF69338645ED82615379 /* XCRemoteSwiftPackageReference "sentry-cocoa" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/getsentry/sentry-cocoa/";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 8.0.0;
-			};
-		};
 		A1B2C3D4E5F6A7B8C9D0E1F2 /* XCRemoteSwiftPackageReference "swift-concurrency-extras" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/pointfreeco/swift-concurrency-extras";
@@ -805,6 +802,14 @@
 			requirement = {
 				kind = upToNextMinorVersion;
 				minimumVersion = 0.10.0;
+			};
+		};
+		D836EF69338645ED82615379 /* XCRemoteSwiftPackageReference "sentry-cocoa" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/getsentry/sentry-cocoa/";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.0.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */

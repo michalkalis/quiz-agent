@@ -86,20 +86,10 @@ private func makeQuestion(id: String, source: String) -> Question {
 @Suite("QuizViewModel Result State Tests")
 struct QuizViewModelResultStateTests {
 
-    /// Creates a fresh ViewModel for each test
-    @MainActor
-    private func makeViewModel() -> QuizViewModel {
-        QuizViewModel(
-            networkService: MockNetworkService(),
-            audioService: MockAudioService(),
-            persistenceStore: MockPersistenceStore()
-        )
-    }
-
     @Test("resultQuestion and resultEvaluation are bundled in showingResult state")
     @MainActor
     func resultDataBundledInState() async throws {
-        let viewModel = makeViewModel()
+        let viewModel = Fixtures.makeViewModel()
         let questionA = makeQuestion(id: "q_001", source: "Source for question A")
         let evaluation = Evaluation(
             userAnswer: "Paris",
@@ -123,7 +113,7 @@ struct QuizViewModelResultStateTests {
     @Test("resultQuestion is nil when not in showingResult state")
     @MainActor
     func resultDataNilOutsideShowingResult() async throws {
-        let viewModel = makeViewModel()
+        let viewModel = Fixtures.makeViewModel()
 
         // In idle state, no result data
         #expect(viewModel.resultQuestion == nil)
@@ -134,7 +124,7 @@ struct QuizViewModelResultStateTests {
     @Test("result data is structurally bound — currentQuestion changes don't affect it")
     @MainActor
     func resultDataStableWhenCurrentQuestionChanges() async throws {
-        let viewModel = makeViewModel()
+        let viewModel = Fixtures.makeViewModel()
         let questionA = makeQuestion(id: "q_001", source: "Source A")
         let questionB = makeQuestion(id: "q_002", source: "Source B")
         let evaluation = Evaluation(
@@ -161,7 +151,7 @@ struct QuizViewModelResultStateTests {
     @Test("proceedToNextQuestion transitions away from showingResult")
     @MainActor
     func proceedClearsResultState() async throws {
-        let viewModel = makeViewModel()
+        let viewModel = Fixtures.makeViewModel()
         let questionA = makeQuestion(id: "q_001", source: "Source A")
         let evaluation = Evaluation(
             userAnswer: "A1",
@@ -196,7 +186,7 @@ struct QuizViewModelResultStateTests {
     @Test("resetToHome resets quiz state cleanly")
     @MainActor
     func resetToHomeResetsState() async throws {
-        let viewModel = makeViewModel()
+        let viewModel = Fixtures.makeViewModel()
         let question = makeQuestion(id: "q_001", source: "Test")
         let evaluation = Evaluation(
             userAnswer: "Test",
@@ -226,7 +216,7 @@ struct QuizViewModelResultStateTests {
     @Test("rapid question transitions maintain correct pairing")
     @MainActor
     func rapidTransitionsMaintainCorrectPairing() async throws {
-        let viewModel = makeViewModel()
+        let viewModel = Fixtures.makeViewModel()
         viewModel.currentSession = QuizSession(
             id: "test_session",
             mode: "single",
@@ -285,52 +275,10 @@ struct QuizViewModelResultStateTests {
 @Suite("QuizViewModel Loading State Tests")
 struct QuizViewModelLoadingStateTests {
 
-    /// Creates a fresh ViewModel with configurable mock network
-    @MainActor
-    private func makeViewModel(shouldFail: Bool = false) -> (QuizViewModel, MockNetworkService) {
-        let mockNetwork = MockNetworkService()
-        mockNetwork.shouldFail = shouldFail
-
-        // Set up default mock session and response
-        mockNetwork.mockSession = QuizSession(
-            id: "test_session_123",
-            mode: "single",
-            phase: "asking",
-            maxQuestions: 10,
-            currentDifficulty: "medium",
-            category: nil,
-            language: "en",
-            participants: [
-                Participant(
-                    id: "p1", userId: nil, displayName: "Player",
-                    score: 0, answeredCount: 0, correctCount: 0,
-                    lastAnswer: nil, lastResult: nil,
-                    isHost: true, isReady: true, joinedAt: Date()
-                )
-            ],
-            expiresAt: Date().addingTimeInterval(30 * 60),
-            createdAt: Date()
-        )
-
-        mockNetwork.mockResponse = makeQuizResponse(
-            evaluationFor: "q_001",
-            userAnswer: "Test",
-            isCorrect: true,
-            nextQuestion: makeQuestion(id: "q_002", source: "Next")
-        )
-
-        let viewModel = QuizViewModel(
-            networkService: mockNetwork,
-            audioService: MockAudioService(),
-            persistenceStore: MockPersistenceStore()
-        )
-        return (viewModel, mockNetwork)
-    }
-
     @Test("submitVoiceAnswer sets quizState to processing then resolves")
     @MainActor
     func submitVoiceAnswerSetsProcessing() async throws {
-        let (viewModel, _) = makeViewModel()
+        let (viewModel, _) = Fixtures.makeViewModelWithNetwork()
         // Set up active session so submitVoiceAnswer doesn't bail early
         viewModel.currentSession = QuizSession(
             id: "test_session_123",
@@ -352,7 +300,7 @@ struct QuizViewModelLoadingStateTests {
     @Test("skipQuestion sets quizState to processing then resolves to showingResult")
     @MainActor
     func skipQuestionSetsProcessing() async throws {
-        let (viewModel, _) = makeViewModel()
+        let (viewModel, _) = Fixtures.makeViewModelWithNetwork()
         viewModel.currentSession = QuizSession(
             id: "test_session_123",
             mode: "single", phase: "asking", maxQuestions: 10,
@@ -372,7 +320,7 @@ struct QuizViewModelLoadingStateTests {
     @Test("resubmitAnswer sets quizState to processing then resolves to showingResult")
     @MainActor
     func resubmitAnswerSetsProcessing() async throws {
-        let (viewModel, _) = makeViewModel()
+        let (viewModel, _) = Fixtures.makeViewModelWithNetwork()
         viewModel.currentSession = QuizSession(
             id: "test_session_123",
             mode: "single", phase: "asking", maxQuestions: 10,
@@ -391,7 +339,7 @@ struct QuizViewModelLoadingStateTests {
     @Test("startNewQuiz transitions to askingQuestion on success")
     @MainActor
     func startNewQuizTransitionsToAskingQuestion() async throws {
-        let (viewModel, _) = makeViewModel()
+        let (viewModel, _) = Fixtures.makeViewModelWithNetwork()
 
         #expect(viewModel.quizState == .idle)
 
@@ -404,7 +352,7 @@ struct QuizViewModelLoadingStateTests {
     @Test("startNewQuiz transitions to error on failure")
     @MainActor
     func startNewQuizTransitionsToError() async throws {
-        let (viewModel, _) = makeViewModel(shouldFail: true)
+        let (viewModel, _) = Fixtures.makeViewModelWithNetwork(shouldFail: true)
 
         await viewModel.startNewQuiz()
 
@@ -414,7 +362,7 @@ struct QuizViewModelLoadingStateTests {
     @Test("resetToHome resets to idle cleanly")
     @MainActor
     func resetToHomeResetsToIdle() async throws {
-        let (viewModel, _) = makeViewModel()
+        let (viewModel, _) = Fixtures.makeViewModelWithNetwork()
         // Put viewModel into non-idle state
         viewModel.quizState = .processing
         viewModel.errorMessage = "Some error"
@@ -434,7 +382,7 @@ struct QuizViewModelLoadingStateTests {
     func noIsLoadingProperty() async throws {
         // This test documents that isLoading has been removed.
         // QuizState.processing is the single source of truth for loading state.
-        let (viewModel, _) = makeViewModel()
+        let (viewModel, _) = Fixtures.makeViewModelWithNetwork()
 
         // The only way to check "is loading" is via quizState
         viewModel.quizState = .processing
@@ -452,7 +400,7 @@ struct QuizViewModelLoadingStateTests {
         // concurrent calls from corrupting state. When skipQuestion is called while
         // already in .processing, the second call through handleQuizResponse is
         // rejected by the guard, keeping state consistent.
-        let (viewModel, _) = makeViewModel()
+        let (viewModel, _) = Fixtures.makeViewModelWithNetwork()
         viewModel.currentSession = QuizSession(
             id: "test_session_123",
             mode: "single", phase: "asking", maxQuestions: 10,
@@ -478,40 +426,6 @@ struct QuizViewModelLoadingStateTests {
 @Suite("QuizViewModel Answer Confirmation Dismiss Tests")
 struct QuizViewModelAnswerConfirmationDismissTests {
 
-    /// Creates a ViewModel with a mock network that returns a valid evaluation response
-    @MainActor
-    private func makeViewModel() -> (QuizViewModel, MockNetworkService) {
-        let mockNetwork = MockNetworkService()
-        mockNetwork.mockSession = QuizSession(
-            id: "test_session_123",
-            mode: "single", phase: "asking", maxQuestions: 10,
-            currentDifficulty: "medium", category: nil, language: "en",
-            participants: [
-                Participant(
-                    id: "p1", userId: nil, displayName: "Player",
-                    score: 0, answeredCount: 0, correctCount: 0,
-                    lastAnswer: nil, lastResult: nil,
-                    isHost: true, isReady: true, joinedAt: Date()
-                )
-            ],
-            expiresAt: Date().addingTimeInterval(30 * 60),
-            createdAt: Date()
-        )
-        mockNetwork.mockResponse = makeQuizResponse(
-            evaluationFor: "q_001",
-            userAnswer: "Paris",
-            isCorrect: true,
-            nextQuestion: makeQuestion(id: "q_002", source: "Next question")
-        )
-
-        let viewModel = QuizViewModel(
-            networkService: mockNetwork,
-            audioService: MockAudioService(),
-            persistenceStore: MockPersistenceStore()
-        )
-        return (viewModel, mockNetwork)
-    }
-
     /// Put ViewModel into post-voice-submission state (pendingResponse set, confirmation sheet showing)
     @MainActor
     private func putIntoConfirmationState(_ viewModel: QuizViewModel) async {
@@ -532,7 +446,14 @@ struct QuizViewModelAnswerConfirmationDismissTests {
     @Test("handleAnswerConfirmationDismissed resets state when pendingResponse exists")
     @MainActor
     func dismissResetsStateWhenPendingResponseExists() async throws {
-        let (viewModel, _) = makeViewModel()
+        let (viewModel, _) = Fixtures.makeViewModelWithNetwork(configure: { mock in
+            mock.mockResponse = makeQuizResponse(
+                evaluationFor: "q_001",
+                userAnswer: "Paris",
+                isCorrect: true,
+                nextQuestion: makeQuestion(id: "q_002", source: "Next question")
+            )
+        })
         await putIntoConfirmationState(viewModel)
 
         // Verify we're in the confirmation state
@@ -551,7 +472,14 @@ struct QuizViewModelAnswerConfirmationDismissTests {
     @Test("handleAnswerConfirmationDismissed is no-op after confirmAnswer")
     @MainActor
     func dismissIsNoOpAfterConfirmAnswer() async throws {
-        let (viewModel, _) = makeViewModel()
+        let (viewModel, _) = Fixtures.makeViewModelWithNetwork(configure: { mock in
+            mock.mockResponse = makeQuizResponse(
+                evaluationFor: "q_001",
+                userAnswer: "Paris",
+                isCorrect: true,
+                nextQuestion: makeQuestion(id: "q_002", source: "Next question")
+            )
+        })
         await putIntoConfirmationState(viewModel)
 
         // User taps Confirm — this clears pendingResponse and processes the answer
@@ -570,7 +498,14 @@ struct QuizViewModelAnswerConfirmationDismissTests {
     @Test("handleAnswerConfirmationDismissed is no-op after rerecordAnswer")
     @MainActor
     func dismissIsNoOpAfterRerecordAnswer() async throws {
-        let (viewModel, _) = makeViewModel()
+        let (viewModel, _) = Fixtures.makeViewModelWithNetwork(configure: { mock in
+            mock.mockResponse = makeQuizResponse(
+                evaluationFor: "q_001",
+                userAnswer: "Paris",
+                isCorrect: true,
+                nextQuestion: makeQuestion(id: "q_002", source: "Next question")
+            )
+        })
         await putIntoConfirmationState(viewModel)
 
         // User taps Re-record — this clears pendingResponse and returns to askingQuestion
@@ -593,46 +528,10 @@ struct QuizViewModelAnswerConfirmationDismissTests {
 @Suite("QuizViewModel Recording Tests")
 struct QuizViewModelRecordingTests {
 
-    @MainActor
-    private func makeViewModel(shouldFailRecording: Bool = false) -> (QuizViewModel, MockAudioService) {
-        let mockAudio = MockAudioService()
-        mockAudio.shouldFailRecording = shouldFailRecording
-
-        let mockNetwork = MockNetworkService()
-        mockNetwork.mockSession = QuizSession(
-            id: "test_session_123",
-            mode: "single", phase: "asking", maxQuestions: 10,
-            currentDifficulty: "medium", category: nil, language: "en",
-            participants: [
-                Participant(
-                    id: "p1", userId: nil, displayName: "Player",
-                    score: 0, answeredCount: 0, correctCount: 0,
-                    lastAnswer: nil, lastResult: nil,
-                    isHost: true, isReady: true, joinedAt: Date()
-                )
-            ],
-            expiresAt: Date().addingTimeInterval(30 * 60),
-            createdAt: Date()
-        )
-        mockNetwork.mockResponse = makeQuizResponse(
-            evaluationFor: "q_001",
-            userAnswer: "Test",
-            isCorrect: true,
-            nextQuestion: makeQuestion(id: "q_002", source: "Next")
-        )
-
-        let viewModel = QuizViewModel(
-            networkService: mockNetwork,
-            audioService: mockAudio,
-            persistenceStore: MockPersistenceStore()
-        )
-        return (viewModel, mockAudio)
-    }
-
     @Test("toggleRecording from askingQuestion starts recording")
     @MainActor
     func toggleRecordingFromAskingQuestionStartsRecording() async throws {
-        let (viewModel, mockAudio) = makeViewModel()
+        let (viewModel, mockAudio) = Fixtures.makeViewModelWithAudio()
         viewModel.quizState = .askingQuestion
 
         await viewModel.toggleRecording()
@@ -645,7 +544,7 @@ struct QuizViewModelRecordingTests {
     @Test("toggleRecording from recording stops and submits")
     @MainActor
     func toggleRecordingFromRecordingStopsAndSubmits() async throws {
-        let (viewModel, _) = makeViewModel()
+        let (viewModel, _) = Fixtures.makeViewModelWithAudio()
         viewModel.currentSession = QuizSession(
             id: "test_session_123",
             mode: "single", phase: "asking", maxQuestions: 10,
@@ -665,7 +564,7 @@ struct QuizViewModelRecordingTests {
     @Test("toggleRecording start failure rolls back to askingQuestion")
     @MainActor
     func toggleRecordingStartFailureRollsBack() async throws {
-        let (viewModel, _) = makeViewModel(shouldFailRecording: true)
+        let (viewModel, _) = Fixtures.makeViewModelWithAudio(shouldFailRecording: true)
         viewModel.quizState = .askingQuestion
 
         await viewModel.toggleRecording()
@@ -678,7 +577,7 @@ struct QuizViewModelRecordingTests {
     @Test("toggleRecording stop failure sets error and returns to askingQuestion")
     @MainActor
     func toggleRecordingStopFailureSetsError() async throws {
-        let (viewModel, mockAudio) = makeViewModel()
+        let (viewModel, mockAudio) = Fixtures.makeViewModelWithAudio()
         viewModel.quizState = .askingQuestion
 
         // First toggle: start recording successfully
@@ -699,7 +598,7 @@ struct QuizViewModelRecordingTests {
     @Test("toggleRecording from processing does nothing")
     @MainActor
     func toggleRecordingFromProcessingDoesNothing() async throws {
-        let (viewModel, _) = makeViewModel()
+        let (viewModel, _) = Fixtures.makeViewModelWithAudio()
         viewModel.quizState = .processing
 
         await viewModel.toggleRecording()
@@ -711,7 +610,7 @@ struct QuizViewModelRecordingTests {
     @Test("toggleRecording from idle does nothing")
     @MainActor
     func toggleRecordingFromIdleDoesNothing() async throws {
-        let (viewModel, _) = makeViewModel()
+        let (viewModel, _) = Fixtures.makeViewModelWithAudio()
         viewModel.quizState = .idle
 
         await viewModel.toggleRecording()
@@ -723,7 +622,7 @@ struct QuizViewModelRecordingTests {
     @Test("retryLastOperation from error with recording context returns to askingQuestion")
     @MainActor
     func retryAfterRecordingErrorReturnsToAskingQuestion() async throws {
-        let (viewModel, _) = makeViewModel(shouldFailRecording: true)
+        let (viewModel, _) = Fixtures.makeViewModelWithAudio(shouldFailRecording: true)
 
         // Put ViewModel into an error state with recording context
         // (In production, recording errors stay inline, but the error screen
@@ -739,7 +638,7 @@ struct QuizViewModelRecordingTests {
     @Test("retryLastOperation from error with initialization context starts new quiz")
     @MainActor
     func retryAfterInitErrorStartsNewQuiz() async throws {
-        let (viewModel, _) = makeViewModel()
+        let (viewModel, _) = Fixtures.makeViewModelWithAudio()
 
         viewModel.quizState = .error(message: "Failed to start", context: .initialization)
 
@@ -755,19 +654,10 @@ struct QuizViewModelRecordingTests {
 @Suite("QuizViewModel Error State Tests")
 struct QuizViewModelErrorStateTests {
 
-    @MainActor
-    private func makeViewModel() -> QuizViewModel {
-        QuizViewModel(
-            networkService: MockNetworkService(),
-            audioService: MockAudioService(),
-            persistenceStore: MockPersistenceStore()
-        )
-    }
-
     @Test("error state carries message and context")
     @MainActor
     func errorStateCarriesData() async throws {
-        let viewModel = makeViewModel()
+        let viewModel = Fixtures.makeViewModel()
         viewModel.quizState = .error(message: "Network error", context: .submission)
 
         #expect(viewModel.quizState.isError)
@@ -777,7 +667,7 @@ struct QuizViewModelErrorStateTests {
     @Test("shouldRetryWithNewSession is true for initialization errors")
     @MainActor
     func shouldRetryWithNewSessionForInitErrors() async throws {
-        let viewModel = makeViewModel()
+        let viewModel = Fixtures.makeViewModel()
         viewModel.quizState = .error(message: "Failed to start", context: .initialization)
 
         #expect(viewModel.shouldRetryWithNewSession == true)
@@ -786,7 +676,7 @@ struct QuizViewModelErrorStateTests {
     @Test("shouldRetryWithNewSession is false when not in error state")
     @MainActor
     func shouldRetryFalseWhenNotInError() async throws {
-        let viewModel = makeViewModel()
+        let viewModel = Fixtures.makeViewModel()
         viewModel.quizState = .idle
 
         #expect(viewModel.shouldRetryWithNewSession == false)
@@ -798,23 +688,10 @@ struct QuizViewModelErrorStateTests {
 @Suite("QuizViewModel Answer Timer Tests")
 struct QuizViewModelAnswerTimerTests {
 
-    @MainActor
-    private func makeViewModel() -> QuizViewModel {
-        let mockStore = MockPersistenceStore()
-        let viewModel = QuizViewModel(
-            networkService: MockNetworkService(),
-            audioService: MockAudioService(),
-            persistenceStore: mockStore
-        )
-        viewModel.currentQuestion = makeQuestion(id: "q_001", source: "Test")
-        viewModel.quizState = .askingQuestion
-        return viewModel
-    }
-
     @Test("countdown resets to 0 when user taps mic")
     @MainActor
     func countdownResetsOnMicTap() async throws {
-        let viewModel = makeViewModel()
+        let viewModel = Fixtures.makeViewModelForTimerTests()
         viewModel.settings.answerTimeLimit = 30
 
         // Manually set countdown as if timer is running
@@ -830,7 +707,7 @@ struct QuizViewModelAnswerTimerTests {
     @Test("no timer when answerTimeLimit is 0")
     @MainActor
     func noTimerWhenTimeLimitOff() async throws {
-        let viewModel = makeViewModel()
+        let viewModel = Fixtures.makeViewModelForTimerTests()
         viewModel.settings.answerTimeLimit = 0
 
         // After startNewQuiz or proceedToNextQuestion, answerTimerCountdown should stay 0
@@ -842,7 +719,7 @@ struct QuizViewModelAnswerTimerTests {
     @Test("resetState clears all timer state")
     @MainActor
     func resetStateClearsTimerState() async throws {
-        let viewModel = makeViewModel()
+        let viewModel = Fixtures.makeViewModelForTimerTests()
         viewModel.answerTimerCountdown = 20
 
         viewModel.resetToHome()
@@ -902,7 +779,7 @@ struct QuizViewModelAnswerTimerTests {
     @Test("rerecordAnswer restarts answer timer with +10s bonus")
     @MainActor
     func rerecordRestartsTimerWithBonus() async throws {
-        let viewModel = makeViewModel()
+        let viewModel = Fixtures.makeViewModelForTimerTests()
 
         // Simulate re-record action
         viewModel.rerecordAnswer()
@@ -920,21 +797,10 @@ struct QuizViewModelAnswerTimerTests {
 @Suite("QuizViewModel Settings Persistence Tests")
 struct QuizViewModelSettingsPersistenceTests {
 
-    @MainActor
-    private func makeViewModel() -> (QuizViewModel, MockPersistenceStore) {
-        let mockStore = MockPersistenceStore()
-        let viewModel = QuizViewModel(
-            networkService: MockNetworkService(),
-            audioService: MockAudioService(),
-            persistenceStore: mockStore
-        )
-        return (viewModel, mockStore)
-    }
-
     @Test("settings auto-persist when a property changes")
     @MainActor
     func settingsAutoPersistOnChange() async throws {
-        let (viewModel, mockStore) = makeViewModel()
+        let (viewModel, mockStore) = Fixtures.makeViewModelWithPersistence()
 
         // Reset counter after init (init loads settings but should not trigger save)
         mockStore.saveSettingsCallCount = 0
@@ -953,7 +819,7 @@ struct QuizViewModelSettingsPersistenceTests {
     @Test("settings don't re-save on init (dropFirst)")
     @MainActor
     func settingsNotSavedOnInit() async throws {
-        let (_, mockStore) = makeViewModel()
+        let (_, mockStore) = Fixtures.makeViewModelWithPersistence()
 
         // Combine $settings replays the initial value; dropFirst() should skip it
         await Task.yield()
@@ -964,7 +830,7 @@ struct QuizViewModelSettingsPersistenceTests {
     @Test("duplicate values don't trigger saves (removeDuplicates)")
     @MainActor
     func duplicateValuesSkipped() async throws {
-        let (viewModel, mockStore) = makeViewModel()
+        let (viewModel, mockStore) = Fixtures.makeViewModelWithPersistence()
         mockStore.saveSettingsCallCount = 0
 
         // Change language to "sk"
@@ -1072,61 +938,37 @@ struct QuizStatsTests {
 @Suite("QuizViewModel MCQ Submission Tests")
 struct QuizViewModelMCQSubmissionTests {
 
-    @MainActor
-    private func makeViewModel(shouldFail: Bool = false) -> (QuizViewModel, MockNetworkService) {
-        let mockNetwork = MockNetworkService()
-        mockNetwork.shouldFail = shouldFail
-        mockNetwork.mockSession = QuizSession(
-            id: "test_session_123",
-            mode: "single", phase: "asking", maxQuestions: 10,
-            currentDifficulty: "medium", category: nil, language: "en",
-            participants: [
-                Participant(
-                    id: "p1", userId: nil, displayName: "Player",
-                    score: 1, answeredCount: 1, correctCount: 1,
-                    lastAnswer: "Paris", lastResult: "correct",
-                    isHost: true, isReady: true, joinedAt: Date()
-                )
-            ],
-            expiresAt: Date().addingTimeInterval(30 * 60),
-            createdAt: Date()
-        )
-        mockNetwork.mockResponse = makeQuizResponse(
-            evaluationFor: "q_mcq_001",
-            userAnswer: "Paris",
-            isCorrect: true,
-            nextQuestion: makeQuestion(id: "q_002", source: "Next")
-        )
-
-        let viewModel = QuizViewModel(
-            networkService: mockNetwork,
-            audioService: MockAudioService(),
-            persistenceStore: MockPersistenceStore()
-        )
-        viewModel.currentSession = mockNetwork.mockSession
-        viewModel.currentQuestion = Question(
-            id: "q_mcq_001",
-            question: "What is the capital of France?",
-            type: .textMultichoice,
-            possibleAnswers: ["a": "Paris", "b": "London", "c": "Berlin", "d": "Madrid"],
-            difficulty: "easy",
-            topic: "Geography",
-            category: "adults",
-            sourceUrl: nil,
-            sourceExcerpt: nil,
-            mediaUrl: nil,
-            imageSubtype: nil,
-            explanation: nil,
-            generatedBy: nil
-        )
-        viewModel.quizState = .askingQuestion
-        return (viewModel, mockNetwork)
-    }
+    /// Shared MCQ question for all tests in this suite.
+    private let mcqQuestion = Question(
+        id: "q_mcq_001",
+        question: "What is the capital of France?",
+        type: .textMultichoice,
+        possibleAnswers: ["a": "Paris", "b": "London", "c": "Berlin", "d": "Madrid"],
+        difficulty: "easy",
+        topic: "Geography",
+        category: "adults",
+        sourceUrl: nil,
+        sourceExcerpt: nil,
+        mediaUrl: nil,
+        imageSubtype: nil,
+        explanation: nil,
+        generatedBy: nil
+    )
 
     @Test("MCQ submission transitions to showingResult on success")
     @MainActor
     func mcqSubmissionSuccess() async throws {
-        let (viewModel, _) = makeViewModel()
+        let (viewModel, mockNetwork) = Fixtures.makeViewModelWithNetwork(configure: { mock in
+            mock.mockResponse = makeQuizResponse(
+                evaluationFor: "q_mcq_001",
+                userAnswer: "Paris",
+                isCorrect: true,
+                nextQuestion: makeQuestion(id: "q_002", source: "Next")
+            )
+        })
+        viewModel.currentSession = mockNetwork.mockSession
+        viewModel.currentQuestion = mcqQuestion
+        viewModel.quizState = .askingQuestion
 
         await viewModel.submitMCQAnswer(key: "a", value: "Paris")
 
@@ -1138,7 +980,17 @@ struct QuizViewModelMCQSubmissionTests {
     func mcqSubmissionTransitionsToProcessing() async throws {
         // We can't observe the intermediate .processing state easily since
         // the async call completes, but we verify it doesn't stay in .askingQuestion
-        let (viewModel, _) = makeViewModel()
+        let (viewModel, mockNetwork) = Fixtures.makeViewModelWithNetwork(configure: { mock in
+            mock.mockResponse = makeQuizResponse(
+                evaluationFor: "q_mcq_001",
+                userAnswer: "Paris",
+                isCorrect: true,
+                nextQuestion: makeQuestion(id: "q_002", source: "Next")
+            )
+        })
+        viewModel.currentSession = mockNetwork.mockSession
+        viewModel.currentQuestion = mcqQuestion
+        viewModel.quizState = .askingQuestion
 
         await viewModel.submitMCQAnswer(key: "a", value: "Paris")
 
@@ -1150,7 +1002,10 @@ struct QuizViewModelMCQSubmissionTests {
     @Test("MCQ submission with network error shows error state")
     @MainActor
     func mcqSubmissionNetworkError() async throws {
-        let (viewModel, _) = makeViewModel(shouldFail: true)
+        let (viewModel, mockNetwork) = Fixtures.makeViewModelWithNetwork(shouldFail: true)
+        viewModel.currentSession = mockNetwork.mockSession
+        viewModel.currentQuestion = mcqQuestion
+        viewModel.quizState = .askingQuestion
 
         await viewModel.submitMCQAnswer(key: "a", value: "Paris")
 
@@ -1160,7 +1015,15 @@ struct QuizViewModelMCQSubmissionTests {
     @Test("MCQ submission without active session shows error message")
     @MainActor
     func mcqSubmissionNoSession() async throws {
-        let (viewModel, _) = makeViewModel()
+        let (viewModel, _) = Fixtures.makeViewModelWithNetwork(configure: { mock in
+            mock.mockResponse = makeQuizResponse(
+                evaluationFor: "q_mcq_001",
+                userAnswer: "Paris",
+                isCorrect: true,
+                nextQuestion: makeQuestion(id: "q_002", source: "Next")
+            )
+        })
+        viewModel.currentQuestion = mcqQuestion
         viewModel.currentSession = nil
 
         await viewModel.submitMCQAnswer(key: "a", value: "Paris")
@@ -1174,19 +1037,10 @@ struct QuizViewModelMCQSubmissionTests {
 @Suite("QuizViewModel State Transition Tests")
 struct QuizViewModelStateTransitionTests {
 
-    @MainActor
-    private func makeViewModel() -> QuizViewModel {
-        QuizViewModel(
-            networkService: MockNetworkService(),
-            audioService: MockAudioService(),
-            persistenceStore: MockPersistenceStore()
-        )
-    }
-
     @Test("valid transition from idle to startingQuiz")
     @MainActor
     func testValidTransitionFromIdleToStartingQuiz() async throws {
-        let viewModel = makeViewModel()
+        let viewModel = Fixtures.makeViewModel()
         #expect(viewModel.quizState == .idle)
 
         viewModel.transition(to: .startingQuiz)
@@ -1197,7 +1051,7 @@ struct QuizViewModelStateTransitionTests {
     @Test("valid transition from askingQuestion to recording")
     @MainActor
     func testValidTransitionFromAskingQuestionToRecording() async throws {
-        let viewModel = makeViewModel()
+        let viewModel = Fixtures.makeViewModel()
         viewModel.quizState = .askingQuestion
 
         viewModel.transition(to: .recording)
@@ -1208,7 +1062,7 @@ struct QuizViewModelStateTransitionTests {
     @Test("transition to error from askingQuestion, recording, and processing")
     @MainActor
     func testTransitionToErrorFromAnyState() async throws {
-        let viewModel = makeViewModel()
+        let viewModel = Fixtures.makeViewModel()
 
         // From askingQuestion
         viewModel.quizState = .askingQuestion
@@ -1229,7 +1083,7 @@ struct QuizViewModelStateTransitionTests {
     @Test("transition from error to idle")
     @MainActor
     func testTransitionFromErrorToIdle() async throws {
-        let viewModel = makeViewModel()
+        let viewModel = Fixtures.makeViewModel()
         viewModel.quizState = .error(message: "Something broke", context: .submission)
 
         viewModel.transition(to: .idle)
@@ -1240,7 +1094,7 @@ struct QuizViewModelStateTransitionTests {
     @Test("transition from error to askingQuestion (retry)")
     @MainActor
     func testTransitionFromErrorToAskingQuestion() async throws {
-        let viewModel = makeViewModel()
+        let viewModel = Fixtures.makeViewModel()
         viewModel.quizState = .error(message: "Recording error", context: .recording)
 
         viewModel.transition(to: .askingQuestion)
@@ -1308,43 +1162,10 @@ struct QuizViewModelStateTransitionTests {
 @Suite("QuizViewModel Double-Stop Guard Tests")
 struct QuizViewModelDoubleStopTests {
 
-    @MainActor
-    private func makeViewModel() -> QuizViewModel {
-        let mockNetwork = MockNetworkService()
-        mockNetwork.mockSession = QuizSession(
-            id: "test_session_123",
-            mode: "single", phase: "asking", maxQuestions: 10,
-            currentDifficulty: "medium", category: nil, language: "en",
-            participants: [
-                Participant(
-                    id: "p1", userId: nil, displayName: "Player",
-                    score: 0, answeredCount: 0, correctCount: 0,
-                    lastAnswer: nil, lastResult: nil,
-                    isHost: true, isReady: true, joinedAt: Date()
-                )
-            ],
-            expiresAt: Date().addingTimeInterval(30 * 60),
-            createdAt: Date()
-        )
-        mockNetwork.mockResponse = makeQuizResponse(
-            evaluationFor: "q_001",
-            userAnswer: "Test",
-            isCorrect: true,
-            nextQuestion: makeQuestion(id: "q_002", source: "Next")
-        )
-
-        let viewModel = QuizViewModel(
-            networkService: mockNetwork,
-            audioService: MockAudioService(),
-            persistenceStore: MockPersistenceStore()
-        )
-        return viewModel
-    }
-
     @Test("isStoppingRecording prevents double stopRecordingAndSubmit call")
     @MainActor
     func testIsStoppingRecordingPreventsDoubleCall() async throws {
-        let viewModel = makeViewModel()
+        let (viewModel, _) = Fixtures.makeViewModelWithNetwork()
         viewModel.currentSession = QuizSession(
             id: "test_session_123",
             mode: "single", phase: "asking", maxQuestions: 10,

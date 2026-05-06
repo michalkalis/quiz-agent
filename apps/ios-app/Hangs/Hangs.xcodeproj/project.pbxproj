@@ -10,6 +10,9 @@
 		12809A90D9684CE9A3A60E9E /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 244A1B53144D4362B6C47909 /* Sentry */; };
 		503020B22F8E706400A567CA /* (null) in Frameworks */ = {isa = PBXBuildFile; };
 		503020B32F8E706400A567CA /* (null) in Frameworks */ = {isa = PBXBuildFile; };
+		A7B8C9D0E1F2A3B4C5D6E7F8 /* ConcurrencyExtras in Frameworks */ = {isa = PBXBuildFile; productRef = D4E5F6A7B8C9D0E1F2A3B4C5 /* ConcurrencyExtras */; };
+		B8C9D0E1F2A3B4C5D6E7F8A9 /* SnapshotTesting in Frameworks */ = {isa = PBXBuildFile; productRef = E5F6A7B8C9D0E1F2A3B4C5D6 /* SnapshotTesting */; };
+		C9D0E1F2A3B4C5D6E7F8A9B0 /* ViewInspector in Frameworks */ = {isa = PBXBuildFile; productRef = F6A7B8C9D0E1F2A3B4C5D6E7 /* ViewInspector */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -89,6 +92,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				503020B22F8E706400A567CA /* (null) in Frameworks */,
+				A7B8C9D0E1F2A3B4C5D6E7F8 /* ConcurrencyExtras in Frameworks */,
+				B8C9D0E1F2A3B4C5D6E7F8A9 /* SnapshotTesting in Frameworks */,
+				C9D0E1F2A3B4C5D6E7F8A9B0 /* ViewInspector in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -184,6 +190,11 @@
 				5004B4AA2EF874820068C8D1 /* HangsTests */,
 			);
 			name = HangsTests;
+			packageProductDependencies = (
+				D4E5F6A7B8C9D0E1F2A3B4C5 /* ConcurrencyExtras */,
+				E5F6A7B8C9D0E1F2A3B4C5D6 /* SnapshotTesting */,
+				F6A7B8C9D0E1F2A3B4C5D6E7 /* ViewInspector */,
+			);
 			productName = HangsTests;
 			productReference = 5004B4A72EF874820068C8D1 /* HangsTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -243,6 +254,9 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				D836EF69338645ED82615379 /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
+				A1B2C3D4E5F6A7B8C9D0E1F2 /* XCRemoteSwiftPackageReference "swift-concurrency-extras" */,
+				B2C3D4E5F6A7B8C9D0E1F2A3 /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */,
+				C3D4E5F6A7B8C9D0E1F2A3B4 /* XCRemoteSwiftPackageReference "ViewInspector" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 5004B49B2EF874800068C8D1 /* Products */;
@@ -769,6 +783,30 @@
 				minimumVersion = 8.0.0;
 			};
 		};
+		A1B2C3D4E5F6A7B8C9D0E1F2 /* XCRemoteSwiftPackageReference "swift-concurrency-extras" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pointfreeco/swift-concurrency-extras";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
+		B2C3D4E5F6A7B8C9D0E1F2A3 /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pointfreeco/swift-snapshot-testing";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
+		C3D4E5F6A7B8C9D0E1F2A3B4 /* XCRemoteSwiftPackageReference "ViewInspector" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/nalexn/ViewInspector";
+			requirement = {
+				kind = upToNextMinorVersion;
+				minimumVersion = 0.10.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -776,6 +814,21 @@
 			isa = XCSwiftPackageProductDependency;
 			package = D836EF69338645ED82615379 /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
 			productName = Sentry;
+		};
+		D4E5F6A7B8C9D0E1F2A3B4C5 /* ConcurrencyExtras */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1B2C3D4E5F6A7B8C9D0E1F2 /* XCRemoteSwiftPackageReference "swift-concurrency-extras" */;
+			productName = ConcurrencyExtras;
+		};
+		E5F6A7B8C9D0E1F2A3B4C5D6 /* SnapshotTesting */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B2C3D4E5F6A7B8C9D0E1F2A3 /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */;
+			productName = SnapshotTesting;
+		};
+		F6A7B8C9D0E1F2A3B4C5D6E7 /* ViewInspector */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C3D4E5F6A7B8C9D0E1F2A3B4 /* XCRemoteSwiftPackageReference "ViewInspector" */;
+			productName = ViewInspector;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

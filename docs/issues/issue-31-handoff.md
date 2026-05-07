@@ -536,7 +536,7 @@ green, ticks the box.
 
 ### Phase 3 — Voice + timer pipeline (5 tasks)
 
-- [ ] **3.1** `HangsTests/QuizViewModelStreamingTests.swift` (new), uses
+- [x] **3.1** `HangsTests/QuizViewModelStreamingTests.swift` (new), uses
   `withMainSerialExecutor`: `startStreamingRecording` happy path, partial
   transcript updates, committed-transcript transitions to `processing`,
   error returns to `askingQuestion`.
@@ -544,6 +544,11 @@ green, ticks the box.
   `confirmation { ... }` for `STTEvent` assertions, place `confirmation`
   on the outside, `withMainSerialExecutor` inside. The reverse triggers a
   Swift 6 sending-isolation warning. See `swift-concurrency-extras#27`.
+  *(4 tests, 163 total green. Initial subagent attempt used fixed `Task.yield()`
+  counts which couldn't pump events through `actor MockSTT` → AsyncStream →
+  listener → `@MainActor` deterministically; replaced with a bounded
+  `waitUntil(predicate:)` helper. `confirmation` wasn't actually needed —
+  polling on `@Published` state under `withMainSerialExecutor` was simpler.)*
 - [ ] **3.2** Split `QuizViewModelAnswerTimerTests` out into
   `HangsTests/QuizViewModelTimerTests.swift`. Add coverage for
   `startAutoAdvance` (cancel-on-mic-tap), `startAutoStopRecordingTimer`

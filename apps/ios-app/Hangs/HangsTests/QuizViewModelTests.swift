@@ -7,6 +7,7 @@
 
 import Foundation
 import Testing
+import ConcurrencyExtras
 @testable import Hangs
 
 // MARK: - Test Fixtures
@@ -691,53 +692,51 @@ struct QuizViewModelSettingsPersistenceTests {
     @Test("settings auto-persist when a property changes")
     @MainActor
     func settingsAutoPersistOnChange() async throws {
-        let (viewModel, mockStore) = Fixtures.makeViewModelWithPersistence()
+        // withMainSerialExecutor collapses scheduling onto a single executor so the
+        // Combine sink hop runs deterministically on the same main-actor turn —
+        // no fragile `Task.yield()` wait needed.
+        await withMainSerialExecutor {
+            let (viewModel, mockStore) = Fixtures.makeViewModelWithPersistence()
 
-        // Reset counter after init (init loads settings but should not trigger save)
-        mockStore.saveSettingsCallCount = 0
+            // Reset counter after init (init loads settings but should not trigger save)
+            mockStore.saveSettingsCallCount = 0
 
-        // Act - change a setting
-        viewModel.settings.language = "sk"
+            viewModel.settings.language = "sk"
 
-        // Combine sink fires asynchronously on the next run loop iteration
-        await Task.yield()
-
-        // Assert
-        #expect(mockStore.saveSettingsCallCount == 1)
-        #expect(mockStore.savedSettings?.language == "sk")
+            #expect(mockStore.saveSettingsCallCount == 1)
+            #expect(mockStore.savedSettings?.language == "sk")
+        }
     }
 
     @Test("settings don't re-save on init (dropFirst)")
     @MainActor
     func settingsNotSavedOnInit() async throws {
-        let (_, mockStore) = Fixtures.makeViewModelWithPersistence()
+        await withMainSerialExecutor {
+            let (_, mockStore) = Fixtures.makeViewModelWithPersistence()
 
-        // Combine $settings replays the initial value; dropFirst() should skip it
-        await Task.yield()
-
-        #expect(mockStore.saveSettingsCallCount == 0)
+            // Combine $settings replays the initial value; dropFirst() should skip it.
+            #expect(mockStore.saveSettingsCallCount == 0)
+        }
     }
 
     @Test("duplicate values don't trigger saves (removeDuplicates)")
     @MainActor
     func duplicateValuesSkipped() async throws {
-        let (viewModel, mockStore) = Fixtures.makeViewModelWithPersistence()
-        mockStore.saveSettingsCallCount = 0
+        await withMainSerialExecutor {
+            let (viewModel, mockStore) = Fixtures.makeViewModelWithPersistence()
+            mockStore.saveSettingsCallCount = 0
 
-        // Change language to "sk"
-        viewModel.settings.language = "sk"
-        await Task.yield()
-        #expect(mockStore.saveSettingsCallCount == 1)
+            viewModel.settings.language = "sk"
+            #expect(mockStore.saveSettingsCallCount == 1)
 
-        // Set same value again — should not trigger another save
-        viewModel.settings.language = "sk"
-        await Task.yield()
-        #expect(mockStore.saveSettingsCallCount == 1)
+            // Set same value again — should not trigger another save
+            viewModel.settings.language = "sk"
+            #expect(mockStore.saveSettingsCallCount == 1)
 
-        // Change to a different value — should trigger save
-        viewModel.settings.language = "de"
-        await Task.yield()
-        #expect(mockStore.saveSettingsCallCount == 2)
+            // Change to a different value — should trigger save
+            viewModel.settings.language = "de"
+            #expect(mockStore.saveSettingsCallCount == 2)
+        }
     }
 }
 

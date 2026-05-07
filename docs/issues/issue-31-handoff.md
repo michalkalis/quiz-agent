@@ -587,10 +587,16 @@ green, ticks the box.
   task 3.3. Decoder tests cover each defaulted key in isolation, all five
   missing simultaneously, unknown legacy keys silently ignored, and a
   required-key-missing negative case.)*
-- [ ] **3.5** Replace `Task.yield()` Combine wait at
+- [x] **3.5** Replace `Task.yield()` Combine wait at
   `QuizViewModelTests.swift:946` with `withMainSerialExecutor`. Drop the
   literal `+10` constant in `rerecordRestartsTimerWithBonus` (line 905);
   assert `> previous` instead.
+  *(188 tests green. Wrapped each of the 3 `QuizViewModelSettingsPersistenceTests`
+  cases in `await withMainSerialExecutor { ... }` and dropped all 5
+  `Task.yield()` waits — Combine $settings.dropFirst().removeDuplicates().sink
+  runs synchronously on the same main-actor turn under the serial executor, so
+  no yield is needed at all. The `+10` literal was already removed in 3.2;
+  3.5 reduced to the yield swap as the hint suggested.)*
 
 ### Phase 4 — ViewInspector + targeted snapshot (3 tasks)
 

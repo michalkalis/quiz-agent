@@ -61,12 +61,14 @@ struct PaywallView: View {
                     ) {
                         Task { await storeManager.purchase() }
                     }
+                    .accessibilityIdentifier("paywall-purchase-button")
                 } else {
                     PrimaryButton(
                         title: "Unlock Unlimited",
                         icon: "lock.open.fill",
                         isLoading: true
                     ) {}
+                    .accessibilityIdentifier("paywall-purchase-button")
                 }
 
                 // Restore purchases
@@ -75,6 +77,7 @@ struct PaywallView: View {
                 }
                 .font(.textSM)
                 .foregroundColor(Theme.Colors.accentPrimary)
+                .accessibilityIdentifier("paywall-restore-button")
 
                 // Dismiss
                 Button("Come Back Tomorrow") {
@@ -83,6 +86,7 @@ struct PaywallView: View {
                 .font(.textSM)
                 .foregroundColor(Theme.Colors.textSecondary)
                 .padding(.top, Theme.Spacing.xs)
+                .accessibilityIdentifier("paywall-close-button")
             }
             .padding(.horizontal, Theme.Spacing.lg)
 

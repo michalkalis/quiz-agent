@@ -198,6 +198,7 @@ struct ResultView: View {
                 ) {
                     showSourceWebView = true
                 }
+                .accessibilityIdentifier("result-view-source-button")
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
 
@@ -306,6 +307,7 @@ struct ResultView: View {
                 ) {
                     showSourceWebView = true
                 }
+                .accessibilityIdentifier("result-why-correct-button")
             }
 
             if viewModel.currentQuestionPaused {
@@ -316,6 +318,7 @@ struct ResultView: View {
                 ) {
                     viewModel.continueToNext()
                 }
+                .accessibilityIdentifier("result-resume-auto-advance-button")
             }
         }
         .padding(.horizontal, 24)

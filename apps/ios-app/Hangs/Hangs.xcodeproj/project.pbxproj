@@ -7,10 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		7A3AC3E24618F03076634783 /* Hangs.storekit in Resources */ = {isa = PBXBuildFile; fileRef = D8A0CF7B2B228C1D9BFB87D4 /* Hangs.storekit */; };
 		12809A90D9684CE9A3A60E9E /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 244A1B53144D4362B6C47909 /* Sentry */; };
 		503020B22F8E706400A567CA /* (null) in Frameworks */ = {isa = PBXBuildFile; };
 		503020B32F8E706400A567CA /* (null) in Frameworks */ = {isa = PBXBuildFile; };
+		7A3AC3E24618F03076634783 /* Hangs.storekit in Resources */ = {isa = PBXBuildFile; fileRef = D8A0CF7B2B228C1D9BFB87D4 /* Hangs.storekit */; };
 		A7B8C9D0E1F2A3B4C5D6E7F8 /* ConcurrencyExtras in Frameworks */ = {isa = PBXBuildFile; productRef = D4E5F6A7B8C9D0E1F2A3B4C5 /* ConcurrencyExtras */; };
 		B8C9D0E1F2A3B4C5D6E7F8A9 /* SnapshotTesting in Frameworks */ = {isa = PBXBuildFile; productRef = E5F6A7B8C9D0E1F2A3B4C5D6 /* SnapshotTesting */; };
 		C9D0E1F2A3B4C5D6E7F8A9B0 /* ViewInspector in Frameworks */ = {isa = PBXBuildFile; productRef = F6A7B8C9D0E1F2A3B4C5D6E7 /* ViewInspector */; };
@@ -34,7 +34,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		D8A0CF7B2B228C1D9BFB87D4 /* Hangs.storekit */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file.storekit; name = Hangs.storekit; path = "Hangs/Configuration/Hangs.storekit"; sourceTree = "<group>"; };
 		5004B49A2EF874800068C8D1 /* Hangs.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Hangs.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5004B4A72EF874820068C8D1 /* HangsTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HangsTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		5004B4B12EF874820068C8D1 /* HangsUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HangsUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -45,6 +44,7 @@
 		BAF2281C5C2F3DD7FFBC7D79 /* Debug-Prod.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Debug-Prod.xcconfig"; path = "Configuration/Debug-Prod.xcconfig"; sourceTree = "<group>"; };
 		D7DFEF43B679028CE5922C00 /* Release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = Configuration/Release.xcconfig; sourceTree = "<group>"; };
 		D86E1E0498FBCF4EF3A9CF7D /* Local.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Local.xcconfig; path = Configuration/Local.xcconfig; sourceTree = "<group>"; };
+		D8A0CF7B2B228C1D9BFB87D4 /* Hangs.storekit */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file.storekit; name = Hangs.storekit; path = Hangs/Configuration/Hangs.storekit; sourceTree = "<group>"; };
 		D90E51253B87EF7A09FAB916 /* Release-Prod.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Release-Prod.xcconfig"; path = "Configuration/Release-Prod.xcconfig"; sourceTree = "<group>"; };
 		F6DEB98440799D43D19E4E03 /* Debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Configuration/Debug.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -53,8 +53,8 @@
 		5004B4C52EF874D00068C8D1 /* Exceptions for "Hangs" folder in "Hangs" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Configuration/Hangs.storekit,
 				Info.plist,
-				"Configuration/Hangs.storekit",
 			);
 			target = 5004B4992EF874800068C8D1 /* Hangs */;
 		};

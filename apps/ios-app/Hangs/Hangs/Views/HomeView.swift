@@ -117,6 +117,7 @@ struct HomeView: View {
                 valueColor: Theme.Hangs.Colors.blue
             )
         }
+        .accessibilityIdentifier("home-language-menu")
     }
 
     private var difficultyRow: some View {
@@ -133,6 +134,7 @@ struct HomeView: View {
                 valueColor: Theme.Hangs.Colors.pink
             )
         }
+        .accessibilityIdentifier("home-difficulty-menu")
     }
 
     private var categoriesRow: some View {
@@ -149,6 +151,7 @@ struct HomeView: View {
                 valueColor: Theme.Hangs.Colors.blue
             )
         }
+        .accessibilityIdentifier("home-categories-menu")
     }
 
     private var ageAppropriateRow: some View {
@@ -165,6 +168,7 @@ struct HomeView: View {
                 valueColor: Theme.Hangs.Colors.pink
             )
         }
+        .accessibilityIdentifier("home-age-menu")
     }
 
     // MARK: - Row visual (replicates HangsConfigRow body w/o inner Button)

@@ -39,11 +39,11 @@ struct AudioErrorTests {
     }
 }
 
-// MARK: - MockAudioService Tests
+// MARK: - MockAudioService Contract Tests
 
-@Suite("MockAudioService Tests")
+@Suite("MockAudioService Contract Tests")
 @MainActor
-struct MockAudioServiceTests {
+struct MockAudioServiceContractTests {
 
     @Test("prepareForRecording stops playback")
     func prepareForRecordingStopsPlayback() async {
@@ -115,37 +115,6 @@ struct MockAudioServiceTests {
         await service.stopPlayback()
 
         #expect(service.isPlaying == false)
-    }
-}
-
-// MARK: - Recording Size Validation Constants
-
-@Suite("Recording Validation Tests")
-struct RecordingValidationTests {
-
-    @Test("minimum valid recording size is reasonable")
-    func minimumSizeIsReasonable() {
-        // The minimum valid size (500 bytes) should be:
-        // - Greater than M4A header size (~28 bytes)
-        // - Less than a 1-second recording (~2KB at 16kHz mono)
-        let minimumValidSize = 500
-        let m4aHeaderSize = 28
-        let oneSecondRecordingSize = 2000  // approximate
-
-        #expect(minimumValidSize > m4aHeaderSize,
-               "Minimum size should be greater than M4A header")
-        #expect(minimumValidSize < oneSecondRecordingSize,
-               "Minimum size should be less than a 1-second recording")
-    }
-
-    @Test("28-byte recording would be rejected")
-    func tinyRecordingWouldBeRejected() {
-        // This tests the invariant that caused the original bug
-        let brokenRecordingSize = 28
-        let minimumValidSize = 500
-
-        #expect(brokenRecordingSize < minimumValidSize,
-               "28-byte recordings (the bug symptom) must be rejected")
     }
 }
 

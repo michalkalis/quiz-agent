@@ -18,6 +18,7 @@ struct SettingsView: View {
             VStack(spacing: 0) {
                 HangsBrandRow {
                     HangsNavChip(icon: "arrow.left") { dismiss() }
+                    .accessibilityIdentifier("settings-back-button")
                 }
 
                 HangsHeroBlock(
@@ -92,6 +93,7 @@ struct SettingsView: View {
                 )
                 .allowsHitTesting(false)
             }
+            .accessibilityIdentifier("settings-language-menu")
         }
     }
 
@@ -104,6 +106,7 @@ struct SettingsView: View {
                     set: { viewModel.settings.isMuted = !$0 }
                 )
             )
+            .accessibilityIdentifier("settings-speak-scores-toggle")
         }
     }
 
@@ -165,6 +168,7 @@ struct SettingsView: View {
             )
             .allowsHitTesting(false)
         }
+        .accessibilityIdentifier("settings-question-count-menu")
     }
 
     private var difficultyRow: some View {
@@ -181,6 +185,7 @@ struct SettingsView: View {
             )
             .allowsHitTesting(false)
         }
+        .accessibilityIdentifier("settings-difficulty-menu")
     }
 
     private var microphoneRow: some View {
@@ -191,6 +196,7 @@ struct SettingsView: View {
         ) {
             viewModel.showingMicrophonePicker = true
         }
+        .accessibilityIdentifier("settings-microphone-row")
     }
 
     private var autoAdvanceRow: some View {
@@ -207,6 +213,7 @@ struct SettingsView: View {
             )
             .allowsHitTesting(false)
         }
+        .accessibilityIdentifier("settings-auto-advance-menu")
     }
 
     private var answerTimeLimitRow: some View {
@@ -225,6 +232,7 @@ struct SettingsView: View {
             )
             .allowsHitTesting(false)
         }
+        .accessibilityIdentifier("settings-answer-time-limit-menu")
     }
 
     private var thinkingTimeRow: some View {
@@ -243,6 +251,7 @@ struct SettingsView: View {
             )
             .allowsHitTesting(false)
         }
+        .accessibilityIdentifier("settings-thinking-time-menu")
     }
 
     private var clearHistoryRow: some View {

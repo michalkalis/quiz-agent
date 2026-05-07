@@ -575,12 +575,18 @@ green, ticks the box.
   `beginEditingTranscript()` → `confirmAnswer()` submits with audio:false
   and clears `transcriptWasEdited`; suppressAudio:true reaches
   `.showingResult`.)*
-- [ ] **3.4** *(file change per audit A2-6)* New file
+- [x] **3.4** *(file change per audit A2-6)* New file
   `HangsTests/QuizViewModelSettingsCompatTests.swift`: exclusion-list wiring
   (`startNewQuiz` calls `getExclusionList()` and forwards IDs to
   `startQuiz(excludedQuestionIds:)`), and `QuizSettings` backward-compat
   decoder (legacy JSON missing `thinkingTime`, `autoConfirmEnabled`,
   `showConfirmSheet`, `isMuted`, `ageAppropriate`).
+  *(2e80d30 — 11 tests, 188 total green. 3 wiring + 8 decoder. Added
+  `capturedStartQuizExcludedIds` capture property to `MockNetworkService`
+  under `#if DEBUG`, mirroring the `capturedTextInputAudio` pattern from
+  task 3.3. Decoder tests cover each defaulted key in isolation, all five
+  missing simultaneously, unknown legacy keys silently ignored, and a
+  required-key-missing negative case.)*
 - [ ] **3.5** Replace `Task.yield()` Combine wait at
   `QuizViewModelTests.swift:946` with `withMainSerialExecutor`. Drop the
   literal `+10` constant in `rerecordRestartsTimerWithBonus` (line 905);

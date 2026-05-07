@@ -1,0 +1,50 @@
+# Local dev stack for quiz-pack-api Phase 1 (issue #33).
+# - postgres:  pgvector/pgvector:pg16 (Postgres + pgvector extension)
+# - redis:     redis:7 (ARQ queue + SSE pubsub)
+#
+# Usage:
+#   make dev-db        # boots postgres + redis in background
+#   make dev           # dev-db + uvicorn (and ARQ worker once 1.10 lands)
+#   make dev-down      # stops + removes containers (volumes preserved)
+#   make dev-reset     # also removes volumes (DESTROYS local data)
+#
+# Note: this directory will be renamed to apps/quiz-pack-api/ in task 1.2.
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: quiz-pack-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: quiz_pack
+      POSTGRES_USER: quiz
+      POSTGRES_PASSWORD: quiz
+    ports:
+      - "5432:5432"
+    volumes:
+      - quiz_pack_postgres:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U quiz -d quiz_pack"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7
+    container_name: quiz-pack-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - quiz_pack_redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  quiz_pack_postgres:
+  quiz_pack_redis:

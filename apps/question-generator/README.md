@@ -140,3 +140,103 @@ question-generator/
 - Implement pending review storage
 - Add analytics dashboard
 - Batch operations for large datasets
+
+---
+
+## quiz-pack-api Phase 1 — local stack + cloud provisioning (issue #33)
+
+This service is being migrated from `apps/question-generator/` → `apps/quiz-pack-api/`
+(Task 1.2). All files in this section already live at their post-rename paths via
+`git mv`, so the docker-compose / Makefile / init script will move along.
+
+### Local stack
+
+```bash
+make dev-db        # boots Postgres (pgvector) + Redis
+make dev           # dev-db + uvicorn on :8003 (ARQ worker added in Task 1.10)
+make dev-down      # stops containers, keeps volumes
+make dev-reset     # ⚠️  drops volumes (destroys local data)
+make dev-psql      # psql shell into local quiz_pack DB
+make dev-redis-cli # redis-cli into local Redis
+```
+
+The compose stack mounts `db/init/01-vector.sql`, which runs `CREATE EXTENSION
+vector;` on first boot. Verify:
+
+```bash
+psql "postgresql://quiz:quiz@localhost:5432/quiz_pack" \
+  -c "SELECT extname FROM pg_extension WHERE extname='vector';"
+# → 1 row
+
+redis-cli -u "redis://localhost:6379/0" ping
+# → PONG
+
+curl -fsS http://localhost:8003/health
+# → {"status":"healthy"}
+```
+
+`.env` (gitignored) should contain `DATABASE_URL`, `TEST_DATABASE_URL`, and
+`REDIS_URL` — see the project-root `.env.example` for the canonical values.
+
+### Cloud provisioning (Phase 1, Task 1.1)
+
+These steps run **once** by the human operator. The Fly secrets land on the new
+`quiz-pack-api` app, which is created in **Task 1.2** — postpone the
+`fly secrets set ... -a quiz-pack-api` calls until after that rename + deploy.
+
+**1. Fly Postgres (`quiz-pack-db`)**
+
+```bash
+# Region cdg, smallest paid tier. Per memory feedback_company_accounts: use the
+# company Fly org. Save the connection string Fly prints — that's $DATABASE_URL.
+fly postgres create \
+  --name quiz-pack-db \
+  --region cdg \
+  --vm-size shared-cpu-1x \
+  --volume-size 1 \
+  --initial-cluster-size 1 \
+  --org <company-org>
+
+# Enable pgvector inside the application database (NOT the postgres superuser db).
+fly postgres connect -a quiz-pack-db -d quiz_pack_db <<'SQL'
+CREATE EXTENSION IF NOT EXISTS vector;
+SELECT extname FROM pg_extension WHERE extname='vector';
+SQL
+```
+
+**256 MB caveat (Risk R7).** The 256 MB `shared-cpu-1x` tier has
+`maintenance_work_mem=64MB` by default, which OOMs the ivfflat index build
+during Task 1.7 (~10 k+ vectors at dim 1536). The Task 1.7 migration script
+runs `SET maintenance_work_mem = '128MB';` in its own session before
+`CREATE INDEX ... USING ivfflat`. If the build still struggles, scale the DB
+to 512 MB for the migration window:
+
+```bash
+fly machine update <machine-id> --vm-memory 512 -a quiz-pack-db
+# ... run migration ...
+fly machine update <machine-id> --vm-memory 256 -a quiz-pack-db
+```
+
+**2. Upstash Redis** (per memory `feedback_company_accounts`: company account)
+
+Create a free-tier global Redis database in the company Upstash account, region
+closest to `cdg` (e.g. `eu-west-1`). Copy the **TLS** connection string
+(`rediss://default:<token>@<host>:<port>`) — that's `$REDIS_URL`.
+
+**3. Fly secrets** (defer to Task 1.2 once the `quiz-pack-api` app exists)
+
+```bash
+fly secrets set \
+  DATABASE_URL='postgres://quiz_pack:...@quiz-pack-db.flycast:5432/quiz_pack_db' \
+  REDIS_URL='rediss://default:...@...upstash.io:6379' \
+  -a quiz-pack-api
+```
+
+Local dev keeps these in `.env` (gitignored), per memory
+`feedback_secrets_management`.
+
+### Acceptance (Task 1.1)
+
+- `psql $DATABASE_URL -c "SELECT extname FROM pg_extension WHERE extname='vector';"` → 1 row (local & prod).
+- `redis-cli -u $REDIS_URL ping` → `PONG` (local & prod).
+- `make dev` boots the full local stack and `curl localhost:8003/health` returns 200.

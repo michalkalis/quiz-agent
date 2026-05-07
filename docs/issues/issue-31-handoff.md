@@ -480,8 +480,8 @@ green, ticks the box.
 
 ### Phase 2 — Critical paths (5 tasks)
 
-- [~] **2.1** `HangsTests/StoreManagerTests.swift` — **rework required (see
-  audit A2-1)**. Current state: 9 tests, 264 lines. 6 of 9 silently skip
+- [x] **2.1** `HangsTests/StoreManagerTests.swift` — **rework required (see
+  audit A2-1)**. *(2715984 — PurchaseService protocol + LivePurchaseService + MockPurchaseService; 12 daemon-free tests, 115 total green)* Current state: 9 tests, 264 lines. 6 of 9 silently skip
   under iOS 26 sim via `storeKitAvailable()` guard → CI is falsely green
   on revenue-critical code. The previously-claimed fix path (in-app-payments
   entitlement + TSAN-off) is **incorrect**: SKTestSession on iOS 26 sim is

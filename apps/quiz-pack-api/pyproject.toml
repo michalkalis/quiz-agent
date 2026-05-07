@@ -17,6 +17,7 @@ dependencies = [
     "boto3>=1.34.0",
     "tavily-python>=0.5.0",
     "google-generativeai>=0.8.0",
+    "jinja2>=3.1.0",
     # Phase 1 (issue #33) — must stay 1:1 with Dockerfile pip install list per
     # memory project_dockerfile_drift.
     "sqlalchemy[asyncio]>=2.0.30",

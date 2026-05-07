@@ -513,7 +513,7 @@ green, ticks the box.
   - Replace `guard await storeKitAvailable() else { return }` with
     `@Test(.disabled("SKTestSession daemon broken on iOS 26 sim — see
     Flutter #184678"))` so skipped tests appear as skipped, not green.
-- [ ] **2.2** `HangsTests/ElevenLabsSTTServiceTests.swift` (new):
+- [x] **2.2** `HangsTests/ElevenLabsSTTServiceTests.swift` (new):
   `handleMessage` parser tests with canned WebSocket JSON
   (`partial_transcript`, `committed_transcript`, `session_started`,
   `error`). URL construction asserts (VAD config, query params, language)

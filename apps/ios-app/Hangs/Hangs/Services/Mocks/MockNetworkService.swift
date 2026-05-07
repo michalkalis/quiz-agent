@@ -23,6 +23,7 @@ final class MockNetworkService: NetworkServiceProtocol {
     // Capture properties for unit-test assertions (additive — no behaviour change)
     var capturedTextInputAudio: Bool?
     var capturedTextInputInput: String?
+    var capturedStartQuizExcludedIds: [String]?
 
     func createSession(maxQuestions: Int, difficulty: String, language: String, category: String?, userId: String?) async throws -> QuizSession {
         if shouldFail {
@@ -35,6 +36,7 @@ final class MockNetworkService: NetworkServiceProtocol {
     }
 
     func startQuiz(sessionId: String, excludedQuestionIds: [String] = []) async throws -> QuizResponse {
+        capturedStartQuizExcludedIds = excludedQuestionIds
         if shouldFail {
             throw NetworkError.invalidResponse
         }

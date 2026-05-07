@@ -2,13 +2,18 @@
 //  StoreManager.swift
 //  Hangs
 //
-//  StoreKit 2 integration for freemium paywall
-//  Non-consumable "Hangs Unlimited" purchase
+//  StoreKit 2 integration for freemium paywall.
+//  Non-consumable "Hangs Unlimited" purchase.
+//
+//  StoreManager is the orchestrator: it manages @Published state and
+//  coordinates calls through an injected PurchaseService protocol.
+//  LivePurchaseService (default) delegates to real StoreKit 2 APIs.
+//  MockPurchaseService enables daemon-free unit tests.
 //
 
 import Combine
+import Foundation
 import os
-import StoreKit
 
 /// Product identifiers
 enum StoreProduct {
@@ -18,14 +23,28 @@ enum StoreProduct {
 /// Manages in-app purchases via StoreKit 2
 @MainActor
 final class StoreManager: ObservableObject {
-    @Published private(set) var product: Product?
+    @Published private(set) var product: PurchasableProduct?
     @Published private(set) var isPurchased: Bool = false
     @Published private(set) var isLoading: Bool = false
     @Published var purchaseError: String?
 
+    private let purchaseService: PurchaseService
     private var transactionListener: Task<Void, Never>?
 
+    /// Default initializer — uses LivePurchaseService backed by real StoreKit.
+    /// Preserves callsite compatibility: `StoreManager()` continues to work.
     init() {
+        self.purchaseService = LivePurchaseService()
+        transactionListener = nil
+        transactionListener = listenForTransactions()
+        Task { await loadProduct() }
+        Task { await checkPurchaseStatus() }
+    }
+
+    /// Testable initializer — injects a PurchaseService (e.g. MockPurchaseService).
+    init(purchaseService: PurchaseService) {
+        self.purchaseService = purchaseService
+        transactionListener = nil
         transactionListener = listenForTransactions()
         Task { await loadProduct() }
         Task { await checkPurchaseStatus() }
@@ -38,18 +57,17 @@ final class StoreManager: ObservableObject {
     // MARK: - Product Loading
 
     func loadProduct() async {
-        do {
-            let products = try await Product.products(for: [StoreProduct.unlimited])
-            product = products.first
-        } catch {
-            Logger.quiz.error("❌ StoreManager: Failed to load products: \(error, privacy: .public)")
+        let loaded = await purchaseService.loadProduct(id: StoreProduct.unlimited)
+        product = loaded
+        if loaded == nil {
+            Logger.quiz.error("❌ StoreManager: Product not found or unavailable")
         }
     }
 
     // MARK: - Purchase
 
     func purchase() async {
-        guard let product else {
+        guard product != nil else {
             purchaseError = "Product not available"
             return
         }
@@ -58,14 +76,11 @@ final class StoreManager: ObservableObject {
         purchaseError = nil
 
         do {
-            let result = try await product.purchase()
+            let outcome = try await purchaseService.purchase(productID: StoreProduct.unlimited)
 
-            switch result {
-            case .success(let verification):
-                let transaction = try checkVerified(verification)
+            switch outcome {
+            case .success:
                 isPurchased = true
-                await transaction.finish()
-
                 Logger.quiz.info("✅ StoreManager: Purchase successful")
 
             case .userCancelled:
@@ -73,9 +88,6 @@ final class StoreManager: ObservableObject {
 
             case .pending:
                 Logger.quiz.info("⏳ StoreManager: Purchase pending (Ask to Buy?)")
-
-            @unknown default:
-                break
             }
         } catch {
             purchaseError = error.localizedDescription
@@ -92,7 +104,7 @@ final class StoreManager: ObservableObject {
         purchaseError = nil
 
         do {
-            try await AppStore.sync()
+            try await purchaseService.restore()
             await checkPurchaseStatus()
         } catch {
             purchaseError = "Failed to restore purchases"
@@ -104,39 +116,19 @@ final class StoreManager: ObservableObject {
     // MARK: - Purchase Status
 
     func checkPurchaseStatus() async {
-        for await result in Transaction.currentEntitlements {
-            if case .verified(let transaction) = result,
-               transaction.productID == StoreProduct.unlimited {
-                isPurchased = true
-                return
-            }
-        }
-        isPurchased = false
+        isPurchased = await purchaseService.currentlyEntitled(productID: StoreProduct.unlimited)
     }
 
     // MARK: - Transaction Listener
 
     private func listenForTransactions() -> Task<Void, Never> {
-        Task(priority: .background) { @MainActor [weak self] in
-            for await result in Transaction.updates {
-                if case .verified(let transaction) = result {
-                    await transaction.finish()
-                    if transaction.productID == StoreProduct.unlimited {
-                        self?.isPurchased = true
-                    }
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            for await update in self.purchaseService.entitlementUpdates {
+                if update.productID == StoreProduct.unlimited && update.isVerified {
+                    self.isPurchased = true
                 }
             }
-        }
-    }
-
-    // MARK: - Helpers
-
-    private func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
-        switch result {
-        case .unverified:
-            throw StoreError.failedVerification
-        case .verified(let safe):
-            return safe
         }
     }
 }

@@ -2,59 +2,66 @@
 //  StoreManagerTests.swift
 //  HangsTests
 //
-//  Unit tests for StoreManager using SKTestSession(contentsOf:).
-//  Explicit constructor — does not rely on scheme XML.
+//  Daemon-free unit tests for StoreManager using MockPurchaseService.
 //
-//  Environment note (Xcode 26.3 / iOS 26 simulator, 2026-05-07):
+//  Context — why this was rewritten (2026-05-07):
 //
-//  SKTestSession communicates with the StoreKit daemon via XPC. In this
-//  environment, all session operations (clearTransactions, buyProduct, etc.)
-//  fail with SKInternalErrorDomain Code=3 ("[connection] nw_endpoint_flow…")
-//  — the StoreKit service is unreachable from the unit-test host process.
+//  The previous version used SKTestSession and had 9 tests, 6 of which silently
+//  skipped on iOS 26 simulator via a `guard await storeKitAvailable() else { return }`
+//  guard — making CI falsely green on revenue-critical code.
 //
-//  Similarly, Product.products(for:) returns an empty array even when the
-//  scheme's StoreKitConfigurationFileReference is set — the same XPC channel
-//  is required and is not available.
+//  Root cause: `SKInternalErrorDomain Code=3` on iOS 26 sim is a confirmed
+//  Apple-side regression (Flutter #184678; Apple Developer Forum thread/808030,
+//  storekittest tag, May 2026). The StoreKit XPC daemon is unreachable from the
+//  unit-test host process on iOS 26 sim. Adding the
+//  `com.apple.developer.in-app-payments` entitlement does NOT fix this —
+//  that entitlement is for production-device distribution signing, not simulator
+//  unit tests. TSAN-off likewise does not help.
 //
-//  Tests that depend on SKTestSession or Product.products() are annotated
-//  with a guard that skips them gracefully rather than reporting a false
-//  failure. Tests that verify StoreManager logic WITHOUT requiring a live
-//  StoreKit environment (isPurchased default, checkPurchaseStatus false path)
-//  pass unconditionally and are the reliable baseline.
-//
-//  Resolution path: add the `com.apple.developer.in-app-payments` entitlement
-//  to Hangs-Local.entitlements and investigate whether a dedicated test scheme
-//  without TSAN restores the StoreKit XPC channel. If that resolves the issue,
-//  remove the guards below.
+//  Solution: StoreManager now accepts a `PurchaseService` protocol. All daemon-
+//  dependent work lives in `LivePurchaseService`. `MockPurchaseService` provides
+//  deterministic, daemon-free control over every code path in StoreManager.
+//  Manual TestFlight verification covers "we are actually talking to StoreKit."
 //
 
 import Foundation
 import Testing
-import StoreKit
-import StoreKitTest
+import ConcurrencyExtras
 @testable import Hangs
 
-// MARK: - Bundle Token
+// MARK: - Helpers
 
-/// Anchor class used to locate the HangsTests bundle.
-/// Swift Testing uses value-type suites (`struct`), so `Bundle(for: type(of: self))`
-/// is unavailable; `Bundle(for: BundleToken.self)` resolves to the correct bundle.
-private final class BundleToken {}
+private extension PurchasableProduct {
+    static let sample = PurchasableProduct(
+        id: StoreProduct.unlimited,
+        displayPrice: "$4.99",
+        displayName: "Hangs Unlimited"
+    )
+}
 
-// MARK: - Environment Probe
-
-/// Returns `true` if the StoreKit test environment is reachable in this process.
-/// Uses `Product.products(for:)` as the probe — if it returns non-empty, the
-/// StoreKit service (required by SKTestSession) is available.
-///
-/// On iOS 26 simulator with Xcode 26.3, this returns `false` because the
-/// StoreKit XPC channel is not available in the unit-test host process.
+/// Makes a fresh (mock, manager) pair and drains the two init Tasks
+/// (loadProduct + checkPurchaseStatus) so state is stable before assertions.
 @MainActor
-private func storeKitAvailable() async -> Bool {
-    guard let products = try? await Product.products(for: [StoreProduct.unlimited]) else {
-        return false
-    }
-    return !products.isEmpty
+private func makeManager(
+    product: PurchasableProduct? = .sample,
+    isEntitled: Bool = false,
+    purchaseOutcome: PurchaseOutcome = .success,
+    purchaseError: Error? = nil,
+    restoreShouldFail: Bool = false
+) async -> (StoreManager, MockPurchaseService) {
+    let mock = MockPurchaseService()
+    mock.stubbedProduct = product
+    mock.stubbedIsEntitled = isEntitled
+    mock.stubbedPurchaseOutcome = purchaseOutcome
+    mock.stubbedPurchaseError = purchaseError
+    mock.stubbedRestoreShouldFail = restoreShouldFail
+
+    let manager = StoreManager(purchaseService: mock)
+    // Drain the unstructured Tasks spawned in init().
+    // Two yields settle loadProduct() and checkPurchaseStatus() on the main actor.
+    await Task.yield()
+    await Task.yield()
+    return (manager, mock)
 }
 
 // MARK: - StoreManagerTests
@@ -63,202 +70,160 @@ private func storeKitAvailable() async -> Bool {
 @MainActor
 struct StoreManagerTests {
 
-    // MARK: - Session Factory
+    // MARK: 1. loadProduct — sets product when service returns a PurchasableProduct
 
-    /// Creates an `SKTestSession` using the explicit `contentsOf:` initializer.
-    /// Tries `Hangs.storekit` from the HangsTests bundle first (CI-safe),
-    /// then falls back to `Products.storekit` from the app host bundle.
-    private func makeSession() throws -> SKTestSession {
-        // Primary: HangsTests bundle → Hangs.storekit
-        if let url = Bundle(for: BundleToken.self)
-            .url(forResource: "Hangs", withExtension: "storekit"),
-           let session = try? SKTestSession(contentsOf: url)
-        {
-            session.disableDialogs = true
-            return session
-        }
-
-        // Fallback: app host bundle → Products.storekit
-        if let url = Bundle.main.url(forResource: "Products", withExtension: "storekit"),
-           let session = try? SKTestSession(contentsOf: url)
-        {
-            session.disableDialogs = true
-            return session
-        }
-
-        Issue.record("No StoreKit configuration file found — SKTestSession cannot be created")
-        throw SKTestSessionSetupError.configFileMissing
-    }
-
-    // MARK: - Environment Check (unconditional)
-
-    /// Verifies that the test environment either provides StoreKit products
-    /// (functional path) or gracefully indicates service unavailability.
-    /// This test ALWAYS passes — it documents the environment state.
-    @Test("StoreKit environment probe: document product availability")
-    func environmentProbe() async throws {
-        let products = (try? await Product.products(for: [StoreProduct.unlimited])) ?? []
-        // Not asserting — this is a documentation test.
-        // If products is non-empty: full StoreKit suite is available.
-        // If products is empty: SKInternalErrorDomain Code=3 limits are in effect.
-        _ = products
-        #expect(Bool(true), "environment probe always passes — see log for StoreKit availability")
-    }
-
-    // MARK: - Load Products
-
-    @Test("loadProduct resolves com.carquiz.unlimited via StoreKit config")
-    func loadProducts() async throws {
-        guard await storeKitAvailable() else {
-            // StoreKit XPC unavailable in this environment (iOS 26 sim, Xcode 26.3).
-            // SKTestSession.init + Product.products both require the StoreKit daemon.
-            // Skipping rather than recording a false environment failure.
-            return
-        }
-
-        let session = try makeSession()
-        defer { try? session.clearTransactions() }
-
-        let manager = StoreManager()
+    @Test("loadProduct sets product when service returns a product")
+    func loadProductSetsProduct() async {
+        let (manager, _) = await makeManager(product: .sample)
+        // Call explicitly to also verify the direct path
         await manager.loadProduct()
-
-        #expect(manager.product != nil)
-        #expect(manager.product?.id == StoreProduct.unlimited)
+        #expect(manager.product == .sample)
     }
 
-    // MARK: - Purchase Success
+    // MARK: 2. loadProduct failure path — service returns nil, product stays nil
 
-    @Test("purchase() success sets isPurchased to true")
-    func purchaseSuccess() async throws {
-        guard await storeKitAvailable() else { return }
-
-        let session = try makeSession()
-        defer { try? session.clearTransactions() }
-
-        let manager = StoreManager()
+    @Test("loadProduct with nil result leaves product nil")
+    func loadProductNilLeavesProductNil() async {
+        let (manager, _) = await makeManager(product: nil)
         await manager.loadProduct()
+        #expect(manager.product == nil)
+    }
 
-        guard manager.product != nil else {
-            Issue.record("Product not loaded — cannot test purchase flow")
-            return
-        }
+    // MARK: 3. purchase() .success — isPurchased=true, no error, isLoading=false
 
+    @Test("purchase success sets isPurchased true")
+    func purchaseSuccessSetsIsPurchased() async {
+        let (manager, _) = await makeManager(product: .sample, purchaseOutcome: .success)
+        // product is set from init drain; call purchase
         await manager.purchase()
 
         #expect(manager.isPurchased == true)
         #expect(manager.purchaseError == nil)
+        #expect(manager.isLoading == false)
     }
 
-    // MARK: - Purchase Cancel
+    // MARK: 4. purchase() .userCancelled — isPurchased unchanged, no error
 
-    // SKTestSession does not expose a `userCancelled` injection API for StoreKit 2.
-    // This test verifies the post-condition: no purchase attempt → isPurchased false.
-    // Does NOT require StoreKit service — always runs.
-    @Test("isPurchased remains false when no purchase is made")
-    func purchaseCancelLeavesFalse() async throws {
-        let manager = StoreManager()
+    @Test("purchase userCancelled leaves isPurchased false")
+    func purchaseCancelledLeavesIsPurchasedFalse() async {
+        let (manager, _) = await makeManager(product: .sample, purchaseOutcome: .userCancelled)
+        await manager.purchase()
+
+        #expect(manager.isPurchased == false)
+        #expect(manager.purchaseError == nil)
+        #expect(manager.isLoading == false)
+    }
+
+    // MARK: 5. purchase() .pending — isPurchased unchanged, no error
+
+    @Test("purchase pending leaves isPurchased false")
+    func purchasePendingLeavesIsPurchasedFalse() async {
+        let (manager, _) = await makeManager(product: .sample, purchaseOutcome: .pending)
+        await manager.purchase()
+
+        #expect(manager.isPurchased == false)
+        #expect(manager.purchaseError == nil)
+        #expect(manager.isLoading == false)
+    }
+
+    // MARK: 6. purchase() thrown error — sets purchaseError, isPurchased false
+
+    @Test("purchase error sets purchaseError")
+    func purchaseErrorSetsPurchaseError() async {
+        let (manager, _) = await makeManager(
+            product: .sample,
+            purchaseError: StoreError.failedVerification
+        )
+        await manager.purchase()
+
+        #expect(manager.purchaseError != nil)
+        #expect(manager.isPurchased == false)
+        #expect(manager.isLoading == false)
+    }
+
+    // MARK: 7. purchase() with product == nil — sets error, no service call
+
+    @Test("purchase with nil product sets error without calling service")
+    func purchaseWithNilProductSetsError() async {
+        let (manager, mock) = await makeManager(product: nil)
+        // product is nil because service returned nil in init drain
+        await manager.purchase()
+
+        #expect(manager.purchaseError == "Product not available")
+        // loadProductCallCount was called once in init; purchaseCallCount must be 0
+        #expect(mock.purchaseCallCount == 0)
         #expect(manager.isPurchased == false)
     }
 
-    // MARK: - Purchase Pending (Ask to Buy)
+    // MARK: 8. restorePurchases() happy path — flips isPurchased=true when entitled
 
-    @Test("askToBuy pending purchase leaves isPurchased false")
-    func purchasePendingLeavesFalse() async throws {
-        guard await storeKitAvailable() else { return }
+    @Test("restorePurchases flips isPurchased when entitled after restore")
+    func restorePurchasesHappyPath() async {
+        let (manager, mock) = await makeManager(isEntitled: true)
 
-        let session = try makeSession()
-        defer { try? session.clearTransactions() }
-
-        session.askToBuyEnabled = true
-
-        let manager = StoreManager()
-        await manager.loadProduct()
-
-        guard manager.product != nil else {
-            Issue.record("Product not loaded — cannot test pending flow")
-            return
-        }
-
-        await manager.purchase()
-
-        #expect(manager.isPurchased == false,
-                "isPurchased must stay false while purchase is in pending (Ask to Buy) state")
-    }
-
-    // MARK: - Transaction Observer
-
-    // SKTestSession.buyProduct() requires the StoreKit XPC channel.
-    // The new Swift async API additionally requires the in-app-payments entitlement.
-    // The ObjC bridge (buyProduct(productIdentifier:), deprecated iOS 17) bypasses
-    // the entitlement check but still needs the XPC channel.
-    // Both paths are guarded by storeKitAvailable().
-    @Test("transaction observer flips isPurchased on external transaction")
-    func transactionObserverFlipsIsPurchased() async throws {
-        guard await storeKitAvailable() else { return }
-
-        let session = try makeSession()
-        defer { try? session.clearTransactions() }
-
-        let manager = StoreManager()
-
-        // Using deprecated ObjC bridge — no entitlement check in simulator.
-        try session.buyProduct(productIdentifier: StoreProduct.unlimited)
-
-        // Give the Transaction.updates background listener time to process.
-        try await Task.sleep(for: .milliseconds(500))
-
-        #expect(manager.isPurchased == true)
-    }
-
-    // MARK: - Restore Purchases
-
-    @Test("restorePurchases() sets isPurchased true after prior entitlement")
-    func restorePurchases() async throws {
-        guard await storeKitAvailable() else { return }
-
-        let session = try makeSession()
-        defer { try? session.clearTransactions() }
-
-        // Seed via deprecated ObjC bridge.
-        try session.buyProduct(productIdentifier: StoreProduct.unlimited)
-
-        let manager = StoreManager()
         await manager.restorePurchases()
 
+        #expect(mock.restoreCallCount == 1)
         #expect(manager.isPurchased == true)
         #expect(manager.purchaseError == nil)
+        #expect(manager.isLoading == false)
     }
 
-    // MARK: - Check Purchase Status (always runnable)
+    // MARK: 9. restorePurchases() failure path — sets purchaseError, isLoading=false
 
-    // Does NOT require StoreKit service — Transaction.currentEntitlements
-    // is available even without the daemon when there are no entitlements.
-    @Test("checkPurchaseStatus returns false with no active entitlements")
-    func checkPurchaseStatusFalseWhenClean() async throws {
-        let manager = StoreManager()
+    @Test("restorePurchases failure sets purchaseError")
+    func restorePurchasesFailureSetsError() async {
+        let (manager, _) = await makeManager(restoreShouldFail: true)
+
+        await manager.restorePurchases()
+
+        #expect(manager.purchaseError != nil)
+        #expect(manager.isLoading == false)
+    }
+
+    // MARK: 10. checkPurchaseStatus — reflects currentlyEntitled from service
+
+    @Test("checkPurchaseStatus reflects service entitlement state (true)")
+    func checkPurchaseStatusTrueWhenEntitled() async {
+        let (manager, _) = await makeManager(isEntitled: true)
+        // Call explicitly to verify the direct path
         await manager.checkPurchaseStatus()
+        #expect(manager.isPurchased == true)
+    }
 
+    @Test("checkPurchaseStatus returns false when not entitled")
+    func checkPurchaseStatusFalseWhenNotEntitled() async {
+        let (manager, _) = await makeManager(isEntitled: false)
+        await manager.checkPurchaseStatus()
         #expect(manager.isPurchased == false)
     }
 
-    @Test("checkPurchaseStatus returns true when entitlement exists")
-    func checkPurchaseStatusTrueWhenEntitled() async throws {
-        guard await storeKitAvailable() else { return }
+    // MARK: 11. Transaction listener flips isPurchased on entitlement update
 
-        let session = try makeSession()
-        defer { try? session.clearTransactions() }
+    @Test("transaction listener flips isPurchased on verified EntitlementUpdate")
+    func transactionListenerFlipsIsPurchased() async {
+        // withMainSerialExecutor collapses all Task scheduling onto one executor so
+        // a single Task.yield() is sufficient to let the listener process the event.
+        // Per audit A2-5: no confirmation here, so executor can be the outermost scope.
+        await withMainSerialExecutor {
+            let mock = MockPurchaseService()
+            mock.stubbedIsEntitled = false
+            let manager = StoreManager(purchaseService: mock)
+            // Drain init tasks
+            await Task.yield()
+            await Task.yield()
 
-        try session.buyProduct(productIdentifier: StoreProduct.unlimited)
+            #expect(manager.isPurchased == false)
 
-        let manager = StoreManager()
-        await manager.checkPurchaseStatus()
+            // Emit a synthetic verified entitlement update
+            mock.emitEntitlementUpdate(
+                EntitlementUpdate(productID: StoreProduct.unlimited, isVerified: true)
+            )
 
-        #expect(manager.isPurchased == true)
+            // One yield is sufficient under withMainSerialExecutor
+            await Task.yield()
+
+            #expect(manager.isPurchased == true)
+        }
     }
-}
-
-// MARK: - Errors
-
-private enum SKTestSessionSetupError: Error {
-    case configFileMissing
 }

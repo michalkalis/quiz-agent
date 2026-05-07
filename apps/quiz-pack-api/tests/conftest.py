@@ -1,0 +1,49 @@
+"""Pytest fixtures for quiz-pack-api (issue #33 Task 1.3).
+
+The async fixtures here target `TEST_DATABASE_URL` so the dev DB stays untouched.
+Bring up the local stack first: `make dev-db` from `apps/quiz-pack-api/`.
+"""
+
+from __future__ import annotations
+
+import os
+from pathlib import Path
+from typing import AsyncIterator
+
+import pytest_asyncio
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
+
+try:
+    from dotenv import load_dotenv
+
+    repo_root = Path(__file__).resolve().parents[3]
+    load_dotenv(repo_root / ".env", override=False)
+except ImportError:
+    pass
+
+from app.db.engine import build_engine, normalize_async_url
+
+
+def _resolve_test_url() -> str:
+    url = os.environ.get("TEST_DATABASE_URL") or os.environ.get("DATABASE_URL")
+    if not url:
+        raise RuntimeError(
+            "TEST_DATABASE_URL (or DATABASE_URL fallback) must be set for db tests."
+        )
+    return normalize_async_url(url)
+
+
+@pytest_asyncio.fixture
+async def engine() -> AsyncIterator[AsyncEngine]:
+    eng = build_engine(_resolve_test_url())
+    try:
+        yield eng
+    finally:
+        await eng.dispose()
+
+
+@pytest_asyncio.fixture
+async def session(engine: AsyncEngine) -> AsyncIterator[AsyncSession]:
+    factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    async with factory() as s:
+        yield s

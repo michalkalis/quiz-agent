@@ -108,6 +108,13 @@ Storage:
 
 **Acceptance.** `pytest tests/db/test_smoke.py` opens a session and runs `SELECT 1`; `alembic upgrade head` is idempotent on a fresh DB.
 
+**Status: done 2026-05-07.** Notes:
+
+1. **DATABASE_URL scheme normalization in `app/db/engine.py`.** The Fly secret is libpq-form (`postgres://`); `normalize_async_url` rewrites `postgres://` and bare `postgresql://` → `postgresql+asyncpg://` at engine-build time. `psql $DATABASE_URL` ergonomics stay intact, no need to maintain two secrets. Unit-tested in `tests/db/test_smoke.py::test_normalize_async_url_rewrites_libpq`.
+2. **Baseline migration enables `pgvector`.** The init revision (`29f509ffa769`) runs `CREATE EXTENSION IF NOT EXISTS vector` so any environment (CI, test DB, prod) bootstraps via `alembic upgrade head` alone — independent of the local `db/init/01-vector.sql` script. **Forward-only policy** (R8) documented in the `alembic/env.py` header.
+3. **`pytest-asyncio` added to BOTH `pyproject.toml` and `Dockerfile`** per memory `project_dockerfile_drift`. `pyproject.toml` also picks up `asyncio_mode = "auto"` so tests don't need explicit `@pytest.mark.asyncio` everywhere.
+4. **Local test DB.** `quiz_pack_test` created on the docker-compose Postgres alongside `quiz_pack`; conftest fixture targets `TEST_DATABASE_URL` (falls back to `DATABASE_URL` so CI doesn't need a separate var).
+
 ### Task 1.4 — `Question` Pydantic field additions + typed `GenerationProvenance`
 
 Edit `packages/shared/quiz_shared/models/question.py` — additive only, every new field `Optional`:

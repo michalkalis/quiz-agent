@@ -549,11 +549,18 @@ green, ticks the box.
   listener → `@MainActor` deterministically; replaced with a bounded
   `waitUntil(predicate:)` helper. `confirmation` wasn't actually needed —
   polling on `@Published` state under `withMainSerialExecutor` was simpler.)*
-- [ ] **3.2** Split `QuizViewModelAnswerTimerTests` out into
+- [x] **3.2** Split `QuizViewModelAnswerTimerTests` out into
   `HangsTests/QuizViewModelTimerTests.swift`. Add coverage for
   `startAutoAdvance` (cancel-on-mic-tap), `startAutoStopRecordingTimer`
   15 s safety, `startThinkingTimeCountdown` cancellation on early submit,
   and `handleBargeIn` (cancels TTS + transitions to `recording`).
+  *(14 tests, 172 total green. Auto-advance "cancel-on-mic-tap" framed as
+  the realistic affordance — mic-tap from .showingResult is a no-op, so
+  tested `pauseQuiz` cancels the .autoAdvance task and the `autoAdvanceEnabled`
+  / `currentQuestionPaused` early-return guards. Auto-stop 15s safety
+  asserted via `taskBag.contains(.autoStopRecording)` rather than waiting
+  on real time. The +10s rerecord literal also dropped here per task 3.5
+  hint — assertion is now `> previous` against `settings.answerTimeLimit`.)*
 - [ ] **3.3** *(file change per audit A2-6)* New file
   `HangsTests/QuizViewModelResubmitTests.swift`: `resubmitAnswer` text path
   (`transcriptWasEdited=true`) does not replay TTS, transitions to

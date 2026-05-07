@@ -53,8 +53,7 @@ actor ElevenLabsSTTService: ElevenLabsSTTServiceProtocol {
 
     // MARK: - Connection
 
-    func connect(token: String, languageCode: String) async throws {
-        // Build WebSocket URL with query parameters
+    nonisolated static func buildWebSocketURL(token: String, languageCode: String) throws -> URL {
         guard var components = URLComponents(string: "wss://api.elevenlabs.io/v1/speech-to-text/realtime") else {
             throw ElevenLabsSTTError.invalidURL
         }
@@ -66,10 +65,14 @@ actor ElevenLabsSTTService: ElevenLabsSTTServiceProtocol {
             URLQueryItem(name: "vad_silence_threshold_secs", value: String(Config.elevenLabsVadSilenceThresholdSecs)),
             URLQueryItem(name: "language_code", value: languageCode),
         ]
-
         guard let url = components.url else {
             throw ElevenLabsSTTError.invalidURL
         }
+        return url
+    }
+
+    func connect(token: String, languageCode: String) async throws {
+        let url = try ElevenLabsSTTService.buildWebSocketURL(token: token, languageCode: languageCode)
 
         Logger.stt.debug("🎙️ ElevenLabs STT: connecting to \(url.host ?? "unknown", privacy: .public)")
 
@@ -176,7 +179,7 @@ actor ElevenLabsSTTService: ElevenLabsSTTServiceProtocol {
         }
     }
 
-    private func handleMessage(_ jsonString: String) {
+    func handleMessage(_ jsonString: String) {
         guard let data = jsonString.data(using: .utf8),
               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let messageType = json["message_type"] as? String else {

@@ -72,7 +72,11 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     /// Silence duration required before emitting `silenceAfterSpeech`.
     private static let silenceThreshold: TimeInterval = 1.5
 
-    init() {
+    private let now: @MainActor () -> Date
+
+    init(now: @escaping @MainActor () -> Date = { Date() }) {
+        self.now = now
+
         var silenceCont: AsyncStream<SilenceEvent>.Continuation!
         self.silenceEvents = AsyncStream { silenceCont = $0 }
         self.silenceContinuation = silenceCont
@@ -241,7 +245,7 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
 
     // MARK: - Result Handling
 
-    private func handleSpeechDetectorResult(speechDetected: Bool) {
+    func handleSpeechDetectorResult(speechDetected: Bool) {
         if speechDetected {
             // Barge-in: only when TTS is playing on an external audio route
             // (echo from the device speaker would trigger false positives).
@@ -265,10 +269,10 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
         } else {
             switch state {
             case .speechActive:
-                state = .silenceAccumulating(since: Date())
+                state = .silenceAccumulating(since: now())
                 Logger.voice.debug("🔇 Silence detection: silence started after speech")
             case .silenceAccumulating(let since):
-                let elapsed = Date().timeIntervalSince(since)
+                let elapsed = now().timeIntervalSince(since)
                 if elapsed >= Self.silenceThreshold {
                     silenceContinuation.yield(.silenceAfterSpeech(duration: elapsed))
                     state = .idle

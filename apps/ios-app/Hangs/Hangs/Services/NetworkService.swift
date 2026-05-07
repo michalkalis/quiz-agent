@@ -34,16 +34,20 @@ actor NetworkService: NetworkServiceProtocol {
     // Task registry for cancellation support
     private var activeTasks: [UUID: URLSessionDataTask] = [:]
 
-    init(baseURL: String = Config.apiBaseURL) {
+    init(baseURL: String = Config.apiBaseURL, session: URLSession? = nil) {
         guard let url = URL(string: baseURL) else {
             fatalError("NetworkService: invalid baseURL '\(baseURL)' — check Config.apiBaseURL")
         }
         self.baseURL = url
 
-        let config = URLSessionConfiguration.default
-        config.timeoutIntervalForRequest = 30
-        config.timeoutIntervalForResource = 60
-        self.session = URLSession(configuration: config)
+        if let session {
+            self.session = session
+        } else {
+            let config = URLSessionConfiguration.default
+            config.timeoutIntervalForRequest = 30
+            config.timeoutIntervalForResource = 60
+            self.session = URLSession(configuration: config)
+        }
     }
 
     // MARK: - Task Registry

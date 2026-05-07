@@ -67,7 +67,7 @@ extension QuizViewModel {
     }
 
     /// Start streaming recording with ElevenLabs Scribe v2 Realtime STT
-    private func startStreamingRecording() async {
+    func startStreamingRecording() async {
         guard let sttService else {
             // Fallback to batch if STT service unavailable
             await startBatchRecording()

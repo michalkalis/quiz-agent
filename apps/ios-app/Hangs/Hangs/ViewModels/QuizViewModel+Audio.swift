@@ -37,7 +37,7 @@ extension QuizViewModel {
     }
 
     /// Handle barge-in: user spoke during TTS playback on external audio route.
-    private func handleBargeIn() async {
+    func handleBargeIn() async {
         guard quizState == .askingQuestion else { return }
 
         Logger.voice.info("🗣️ Barge-in triggered — stopping TTS and starting recording")

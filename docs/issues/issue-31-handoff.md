@@ -620,7 +620,7 @@ will not differentiate state-driven `ResultView` variants)*
   hosted context differs from re-inspected struct storage; model-level
   assertions (`resultEvaluation?.result`, `.points`) used as fallback for
   partial-credit and timeout cases.)*
-- [ ] **4.2** `HangsTests/Snapshots/PaywallViewSnapshotTests.swift` (new):
+- [x] **4.2** `HangsTests/Snapshots/PaywallViewSnapshotTests.swift` (new):
   locked + unlocked **only**. `.dump` strategy is appropriate here — the
   two states differ structurally (locked = lock icon + price + purchase
   button; unlocked = success state with different stack). iPhone 17 Pro

@@ -1,16 +1,14 @@
-# Question Generator API
+# quiz-pack-api
 
-Admin tool for generating and curating quiz questions with RAG-based duplicate detection.
+On-demand quiz pack generation API. Verifies StoreKit JWS, enqueues an ARQ
+job per order, runs sourcing → generating → critiquing → verifying → scoring →
+persisting, and streams progress to the iOS client over SSE. Strategy lives in
+`docs/issues/issue-32-on-demand-generation-service.md`; Phase 1 (this codebase
+shape) is tracked in `docs/issues/issue-33-quiz-pack-api-phase-1.md`.
 
-## Features
-
-- ✅ LLM-powered question generation (batches of 1-50)
-- ✅ Enhanced prompt template with quality examples
-- ✅ RAG-based duplicate detection (cosine similarity > 0.85)
-- ✅ Semantic search for existing questions
-- ✅ Import from ChatGPT JSON output
-- ✅ FastAPI REST endpoints
-- ✅ Multi-type support (text, text_multichoice)
+This directory was renamed from `apps/question-generator/` in issue #33 Task
+1.2. The legacy admin endpoints (`/api/v1/generate`, `/api/v1/import`,
+`/api/v1/questions/*`) are retained until Phase 6 cleanup.
 
 ## Quick Start
 
@@ -18,7 +16,7 @@ Admin tool for generating and curating quiz questions with RAG-based duplicate d
 
 ```bash
 # From project root
-cd apps/question-generator
+cd apps/quiz-pack-api
 uv pip install -e .
 ```
 
@@ -31,21 +29,15 @@ export OPENAI_API_KEY=your_key_here
 ### Run Server
 
 ```bash
-# From apps/question-generator
-python -m uvicorn app.main:app --reload --port 8001
+# From apps/quiz-pack-api
+python -m uvicorn app.main:app --reload --port 8003
 ```
 
-Or:
+API will be available at: `http://localhost:8003`
 
-```bash
-python app/main.py
-```
+Interactive docs at: `http://localhost:8003/docs`
 
-API will be available at: `http://localhost:8001`
-
-Interactive docs at: `http://localhost:8001/docs`
-
-## API Endpoints
+## Legacy admin endpoints (pre-issue-33)
 
 ### Generate Questions
 
@@ -118,7 +110,7 @@ GET /api/v1/export/chatgpt?count=10&difficulty=medium&topics=science
 ## Architecture
 
 ```
-question-generator/
+quiz-pack-api/
 ├── app/
 │   ├── main.py              # FastAPI application
 │   ├── generation/
@@ -131,23 +123,14 @@ question-generator/
 │       └── schemas.py       # Request/response models
 ├── prompts/
 │   └── question_generation.md  # Enhanced prompt template
+├── docker-compose.yml       # Local Postgres+pgvector + Redis (issue #33)
+├── Makefile                 # `make dev` boots the stack
 └── README.md
 ```
 
-## Next Steps
-
-- Add Gradio UI for visual review workflow
-- Implement pending review storage
-- Add analytics dashboard
-- Batch operations for large datasets
-
 ---
 
-## quiz-pack-api Phase 1 — local stack + cloud provisioning (issue #33)
-
-This service is being migrated from `apps/question-generator/` → `apps/quiz-pack-api/`
-(Task 1.2). All files in this section already live at their post-rename paths via
-`git mv`, so the docker-compose / Makefile / init script will move along.
+## Phase 1 — local stack + cloud provisioning (issue #33)
 
 ### Local stack
 
@@ -178,58 +161,43 @@ curl -fsS http://localhost:8003/health
 `.env` (gitignored) should contain `DATABASE_URL`, `TEST_DATABASE_URL`, and
 `REDIS_URL` — see the project-root `.env.example` for the canonical values.
 
-### Cloud provisioning (Phase 1, Task 1.1)
+### Cloud provisioning (Task 1.1, completed 2026-05-07)
 
-These steps run **once** by the human operator. The Fly secrets land on the new
-`quiz-pack-api` app, which is created in **Task 1.2** — postpone the
-`fly secrets set ... -a quiz-pack-api` calls until after that rename + deploy.
+The Fly Postgres app `quiz-pack-db` is provisioned in region `cdg`, sized at
+**1 GB RAM** (the 256 MB tier OOMs `apt-get install`). It runs a custom image
+`registry.fly.io/quiz-pack-db:pgvector-0.8.2` that bakes the
+`postgresql-17-pgvector` apt package into `flyio/postgres-flex:17.2`. The
+default Fly Postgres image lacks pgvector, and runtime `apt install` doesn't
+persist across machine restarts (immutable container, overlay fs is wiped).
 
-**1. Fly Postgres (`quiz-pack-db`)**
+The image Dockerfile + rebuild runbook lives at
+[`infra/quiz-pack-db/`](../../infra/quiz-pack-db/).
 
-```bash
-# Region cdg, smallest paid tier. Per memory feedback_company_accounts: use the
-# company Fly org. Save the connection string Fly prints — that's $DATABASE_URL.
-fly postgres create \
-  --name quiz-pack-db \
-  --region cdg \
-  --vm-size shared-cpu-1x \
-  --volume-size 1 \
-  --initial-cluster-size 1 \
-  --org <company-org>
-
-# Enable pgvector inside the application database (NOT the postgres superuser db).
-fly postgres connect -a quiz-pack-db -d quiz_pack_db <<'SQL'
-CREATE EXTENSION IF NOT EXISTS vector;
-SELECT extname FROM pg_extension WHERE extname='vector';
-SQL
-```
-
-**256 MB caveat (Risk R7).** The 256 MB `shared-cpu-1x` tier has
-`maintenance_work_mem=64MB` by default, which OOMs the ivfflat index build
-during Task 1.7 (~10 k+ vectors at dim 1536). The Task 1.7 migration script
-runs `SET maintenance_work_mem = '128MB';` in its own session before
-`CREATE INDEX ... USING ivfflat`. If the build still struggles, scale the DB
-to 512 MB for the migration window:
+`pgvector` v0.8.2 is created in the `quiz_pack` database on prod (matching the
+local DB name). The Fly secrets `DATABASE_URL` and `REDIS_URL` are set on the
+`quiz-pack-api` Fly app once it exists (Task 1.2 below).
 
 ```bash
-fly machine update <machine-id> --vm-memory 512 -a quiz-pack-db
-# ... run migration ...
-fly machine update <machine-id> --vm-memory 256 -a quiz-pack-db
+# One-time: enable pgvector in the prod quiz_pack DB
+fly ssh console -a quiz-pack-db -C 'bash -lc "PGPASSWORD=$OPERATOR_PASSWORD createdb -h localhost -U postgres quiz_pack && psql -h localhost -U postgres -d quiz_pack -c \"CREATE EXTENSION vector;\""'
 ```
 
-**2. Upstash Redis** (per memory `feedback_company_accounts`: company account)
+### Cloud provisioning — Upstash Redis (Task 1.1)
 
-Create a free-tier global Redis database in the company Upstash account, region
-closest to `cdg` (e.g. `eu-west-1`). Copy the **TLS** connection string
+Create a free-tier global Redis database in Upstash, region closest to `cdg`
+(e.g. `eu-west-1`). Copy the **TLS** connection string
 (`rediss://default:<token>@<host>:<port>`) — that's `$REDIS_URL`.
 
-**3. Fly secrets** (defer to Task 1.2 once the `quiz-pack-api` app exists)
+### Cloud provisioning — Fly secrets (Task 1.2)
+
+Run **after** `fly deploy -c apps/quiz-pack-api/fly.toml` has created the app:
 
 ```bash
 fly secrets set \
-  DATABASE_URL='postgres://quiz_pack:...@quiz-pack-db.flycast:5432/quiz_pack_db' \
-  REDIS_URL='rediss://default:...@...upstash.io:6379' \
+  DATABASE_URL='postgres://postgres:<password>@quiz-pack-db.flycast:5432/quiz_pack' \
+  REDIS_URL='rediss://default:<token>@<host>.upstash.io:6379' \
   -a quiz-pack-api
+fly deploy -c apps/quiz-pack-api/fly.toml   # restart so app picks up secrets
 ```
 
 Local dev keeps these in `.env` (gitignored), per memory
@@ -237,6 +205,6 @@ Local dev keeps these in `.env` (gitignored), per memory
 
 ### Acceptance (Task 1.1)
 
-- `psql $DATABASE_URL -c "SELECT extname FROM pg_extension WHERE extname='vector';"` → 1 row (local & prod).
-- `redis-cli -u $REDIS_URL ping` → `PONG` (local & prod).
-- `make dev` boots the full local stack and `curl localhost:8003/health` returns 200.
+- `psql $DATABASE_URL -c "SELECT extname FROM pg_extension WHERE extname='vector';"` → 1 row (local & prod). ✓
+- `redis-cli -u $REDIS_URL ping` → `PONG` (local & prod). ✓
+- `make dev` boots the full local stack and `curl localhost:8003/health` returns 200. ✓

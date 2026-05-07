@@ -465,7 +465,7 @@ green, ticks the box.
   **Acceptance:** `xcodebuild build -scheme Hangs-Local` green, all 103
   current tests still pass, no public API surface changes.
 
-- [ ] **1.7** *(added 2026-05-07 — see audit A2-4)* CI alignment.
+- [x] **1.7** *(added 2026-05-07 — see audit A2-4)* CI alignment.
   `.github/workflows/ios-ci.yml`:
   - Drop `| xcpretty || true`; add `set -o pipefail` to the test step so
     failures surface

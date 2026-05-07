@@ -522,7 +522,7 @@ green, ticks the box.
   three-state machine `idle → speechActive → silenceAccumulating → emit`;
   threshold boundary cases (1.4 s, 1.5 s, 1.6 s). Gate with `@available(iOS
   26, *)` to mirror the production type.
-- [ ] **2.4** `HangsTests/NetworkServiceTests.swift` (new), `URLProtocol`-
+- [x] **2.4** `HangsTests/NetworkServiceTests.swift` (new), `URLProtocol`-
   stubbed: `NetworkError.dailyLimitReached` decoded from 429 +
   `DailyLimitErrorWrapper`; `downloadAudio` Content-Length mismatch
   raises `NetworkError.audioIntegrity`; happy paths for `extendSession`,

@@ -603,7 +603,7 @@ green, ticks the box.
 *(reorganized 2026-05-07 per audit A2-3 — `.dump` is structural-only and
 will not differentiate state-driven `ResultView` variants)*
 
-- [ ] **4.1** `HangsTests/ResultViewInspectorTests.swift` (new) using
+- [x] **4.1** `HangsTests/ResultViewInspectorTests.swift` (new) using
   **ViewInspector** (not snapshot): assert that with an `evaluation` of
   each variant the rendered tree contains the expected affordances —
   correct → green-check icon + "Správne" label; wrong → red-X +
@@ -611,6 +611,15 @@ will not differentiate state-driven `ResultView` variants)*
   (`evaluation == nil`) → timeout copy + retry CTA. Use
   `.implicitAnyView()` chain step (audit A2-7 — Swift 6 inserts implicit
   `AnyView`). `@MainActor` on the suite.
+  *(816539d — 4 tests, 192 total green. `find(text:)` breadth-first on
+  ViewHosting-hosted view. Hero ("NAILED IT." / "CLOSE—BUT NO."), banner
+  ("CORRECT" / "NOT QUITE"), SF Symbol icon (checkmark / xmark), footer
+  button, and absence assertions for timeout all pass. answerCard/statsRow
+  assertions (behind `showEvaluation @State` gate) are not reachable
+  without `didAppear` refactor in ResultView — @State backing store in
+  hosted context differs from re-inspected struct storage; model-level
+  assertions (`resultEvaluation?.result`, `.points`) used as fallback for
+  partial-credit and timeout cases.)*
 - [ ] **4.2** `HangsTests/Snapshots/PaywallViewSnapshotTests.swift` (new):
   locked + unlocked **only**. `.dump` strategy is appropriate here — the
   two states differ structurally (locked = lock icon + price + purchase

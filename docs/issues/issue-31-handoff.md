@@ -518,7 +518,7 @@ green, ticks the box.
   (`partial_transcript`, `committed_transcript`, `session_started`,
   `error`). URL construction asserts (VAD config, query params, language)
   using values from `Config.swift:117-134`.
-- [ ] **2.3** `HangsTests/SilenceDetectionServiceTests.swift` (new):
+- [x] **2.3** `HangsTests/SilenceDetectionServiceTests.swift` (new):
   three-state machine `idle → speechActive → silenceAccumulating → emit`;
   threshold boundary cases (1.4 s, 1.5 s, 1.6 s). Gate with `@available(iOS
   26, *)` to mirror the production type.

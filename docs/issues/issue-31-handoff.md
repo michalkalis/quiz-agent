@@ -561,11 +561,20 @@ green, ticks the box.
   asserted via `taskBag.contains(.autoStopRecording)` rather than waiting
   on real time. The +10s rerecord literal also dropped here per task 3.5
   hint — assertion is now `> previous` against `settings.answerTimeLimit`.)*
-- [ ] **3.3** *(file change per audit A2-6)* New file
+- [x] **3.3** *(file change per audit A2-6)* New file
   `HangsTests/QuizViewModelResubmitTests.swift`: `resubmitAnswer` text path
   (`transcriptWasEdited=true`) does not replay TTS, transitions to
   `showingResult`. Do NOT add to `QuizViewModelTests.swift` — that file is
   already 1188 lines (file-size memory).
+  *(5 tests, 177 total green. Option A: added `capturedTextInputAudio` /
+  `capturedTextInputInput` to `MockNetworkService` so the `audio:` arg can
+  be asserted directly — same pattern as other `#if DEBUG` test seams. Tests
+  cover: suppressAudio:true → audio:false; suppressAudio:false +
+  audioMode!="off" → audio:true; suppressAudio:false + audioMode=="off" →
+  audio:false (silent setting still respected); end-to-end
+  `beginEditingTranscript()` → `confirmAnswer()` submits with audio:false
+  and clears `transcriptWasEdited`; suppressAudio:true reaches
+  `.showingResult`.)*
 - [ ] **3.4** *(file change per audit A2-6)* New file
   `HangsTests/QuizViewModelSettingsCompatTests.swift`: exclusion-list wiring
   (`startNewQuiz` calls `getExclusionList()` and forwards IDs to

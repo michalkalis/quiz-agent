@@ -20,6 +20,10 @@ final class MockNetworkService: NetworkServiceProtocol {
     var mockAudioData: Data?
     var shouldFail = false
 
+    // Capture properties for unit-test assertions (additive — no behaviour change)
+    var capturedTextInputAudio: Bool?
+    var capturedTextInputInput: String?
+
     func createSession(maxQuestions: Int, difficulty: String, language: String, category: String?, userId: String?) async throws -> QuizSession {
         if shouldFail {
             throw NetworkError.invalidResponse
@@ -51,6 +55,8 @@ final class MockNetworkService: NetworkServiceProtocol {
     }
 
     func submitTextInput(sessionId: String, input: String, audio: Bool) async throws -> QuizResponse {
+        capturedTextInputAudio = audio
+        capturedTextInputInput = input
         if shouldFail {
             throw NetworkError.invalidResponse
         }

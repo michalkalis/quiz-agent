@@ -9,26 +9,47 @@ import Foundation
 import Testing
 @testable import Hangs
 
+// MARK: - IsolatedDefaults
+
+/// Holds a unique UserDefaults suite for the duration of one test.
+/// `deinit` removes the suite — Swift Testing creates a fresh struct per
+/// test, so the helper goes out of scope when the test returns.
+final class IsolatedDefaults {
+    let suiteName: String
+    let defaults: UserDefaults
+
+    init() {
+        suiteName = "test.PersistenceStore.\(UUID().uuidString)"
+        defaults = UserDefaults(suiteName: suiteName)!
+    }
+
+    deinit {
+        defaults.removePersistentDomain(forName: suiteName)
+    }
+
+    func makeStore() -> PersistenceStore {
+        PersistenceStore(userDefaults: defaults)
+    }
+}
+
 // MARK: - Session Tests
 
 @Suite("PersistenceStore Session Tests")
 @MainActor
 struct PersistenceStoreSessionTests {
 
-    /// Creates a PersistenceStore backed by a unique UserDefaults suite.
-    /// Each test gets a fresh, empty defaults domain.
-    private func makeStore() -> (PersistenceStore, UserDefaults) {
-        let suiteName = "test.PersistenceStore.\(UUID().uuidString)"
-        let defaults = UserDefaults(suiteName: suiteName)!
-        let store = PersistenceStore(userDefaults: defaults)
-        return (store, defaults)
+    /// Creates a PersistenceStore backed by a unique, auto-cleaned UserDefaults suite.
+    private func makeStore() -> (PersistenceStore, IsolatedDefaults) {
+        let isolated = IsolatedDefaults()
+        return (isolated.makeStore(), isolated)
     }
 
     // MARK: - Session ID Round-Trip
 
     @Test("saveSession stores and currentSessionId retrieves the ID")
     func saveAndRetrieveSessionId() {
-        let (store, _) = makeStore()
+        let (store, isolated) = makeStore()
+        _ = isolated
 
         store.saveSession(id: "session_abc")
 
@@ -37,7 +58,8 @@ struct PersistenceStoreSessionTests {
 
     @Test("clearSession removes the stored session ID")
     func clearSessionRemovesId() {
-        let (store, _) = makeStore()
+        let (store, isolated) = makeStore()
+        _ = isolated
 
         store.saveSession(id: "session_abc")
         store.clearSession()
@@ -47,7 +69,8 @@ struct PersistenceStoreSessionTests {
 
     @Test("currentSessionId is nil when no session has been saved")
     func currentSessionIdNilByDefault() {
-        let (store, _) = makeStore()
+        let (store, isolated) = makeStore()
+        _ = isolated
 
         #expect(store.currentSessionId == nil)
     }
@@ -56,7 +79,8 @@ struct PersistenceStoreSessionTests {
 
     @Test("saveSettings and loadSettings round-trip correctly")
     func settingsRoundTrip() {
-        let (store, _) = makeStore()
+        let (store, isolated) = makeStore()
+        _ = isolated
 
         let settings = QuizSettings(
             language: "sk",
@@ -77,7 +101,8 @@ struct PersistenceStoreSessionTests {
 
     @Test("loadSettings returns .default when no saved data exists")
     func loadSettingsReturnsDefaultWhenEmpty() {
-        let (store, _) = makeStore()
+        let (store, isolated) = makeStore()
+        _ = isolated
 
         let loaded = store.loadSettings()
 
@@ -86,11 +111,11 @@ struct PersistenceStoreSessionTests {
 
     @Test("loadSettings returns .default when saved data is corrupt JSON")
     func loadSettingsReturnsDefaultOnCorruptData() {
-        let (store, defaults) = makeStore()
+        let (store, isolated) = makeStore()
 
         // Write invalid JSON data to the settings key
         let corruptData = Data("not valid json".utf8)
-        defaults.set(corruptData, forKey: "quiz_settings")
+        isolated.defaults.set(corruptData, forKey: "quiz_settings")
 
         let loaded = store.loadSettings()
 
@@ -101,12 +126,12 @@ struct PersistenceStoreSessionTests {
 
     @Test("loadSettings ignores stale legacy individual keys")
     func loadSettingsIgnoresLegacyKeys() {
-        let (store, defaults) = makeStore()
+        let (store, isolated) = makeStore()
 
         // Legacy keys that existed before the unified QuizSettings JSON.
         // After migration code removal, these should be ignored.
-        defaults.set("sk", forKey: "preferred_language")
-        defaults.set("media", forKey: "preferred_audio_mode")
+        isolated.defaults.set("sk", forKey: "preferred_language")
+        isolated.defaults.set("media", forKey: "preferred_audio_mode")
 
         let loaded = store.loadSettings()
 
@@ -121,18 +146,18 @@ struct PersistenceStoreSessionTests {
 @MainActor
 struct PersistenceStoreQuestionHistoryTests {
 
-    /// Creates a PersistenceStore backed by a unique UserDefaults suite.
-    private func makeStore() -> PersistenceStore {
-        let suiteName = "test.PersistenceStore.\(UUID().uuidString)"
-        let defaults = UserDefaults(suiteName: suiteName)!
-        return PersistenceStore(userDefaults: defaults)
+    /// Creates a PersistenceStore backed by a unique, auto-cleaned UserDefaults suite.
+    private func makeStore() -> (PersistenceStore, IsolatedDefaults) {
+        let isolated = IsolatedDefaults()
+        return (isolated.makeStore(), isolated)
     }
 
     // MARK: - Basic Operations
 
     @Test("addQuestionId persists and retrieves the ID")
     func addAndRetrieve() throws {
-        let store = makeStore()
+        let (store, isolated) = makeStore()
+        _ = isolated
 
         try store.addQuestionId("q_001")
 
@@ -141,7 +166,8 @@ struct PersistenceStoreQuestionHistoryTests {
 
     @Test("adding same ID twice does not create duplicates")
     func deduplication() throws {
-        let store = makeStore()
+        let (store, isolated) = makeStore()
+        _ = isolated
 
         try store.addQuestionId("q_001")
         try store.addQuestionId("q_001")
@@ -151,7 +177,8 @@ struct PersistenceStoreQuestionHistoryTests {
 
     @Test("clearHistory removes all entries")
     func clearHistory() throws {
-        let store = makeStore()
+        let (store, isolated) = makeStore()
+        _ = isolated
 
         try store.addQuestionId("q_001")
         try store.addQuestionId("q_002")
@@ -162,7 +189,8 @@ struct PersistenceStoreQuestionHistoryTests {
 
     @Test("getExclusionList returns same as askedQuestionIds")
     func exclusionListMatchesAskedIds() throws {
-        let store = makeStore()
+        let (store, isolated) = makeStore()
+        _ = isolated
 
         try store.addQuestionId("q_001")
         try store.addQuestionId("q_002")
@@ -172,7 +200,8 @@ struct PersistenceStoreQuestionHistoryTests {
 
     @Test("empty history returns empty array")
     func emptyHistoryReturnsEmptyArray() {
-        let store = makeStore()
+        let (store, isolated) = makeStore()
+        _ = isolated
 
         #expect(store.askedQuestionIds == [])
         #expect(store.getExclusionList() == [])
@@ -182,7 +211,8 @@ struct PersistenceStoreQuestionHistoryTests {
 
     @Test("isAtCapacity returns true at 500 questions")
     func isAtCapacityAt500() throws {
-        let store = makeStore()
+        let (store, isolated) = makeStore()
+        _ = isolated
 
         for i in 0..<500 {
             try store.addQuestionId("q_\(i)")
@@ -193,7 +223,8 @@ struct PersistenceStoreQuestionHistoryTests {
 
     @Test("addQuestionId throws capacityReached at limit")
     func addQuestionIdThrowsAtCapacity() throws {
-        let store = makeStore()
+        let (store, isolated) = makeStore()
+        _ = isolated
 
         for i in 0..<500 {
             try store.addQuestionId("q_\(i)")
@@ -210,7 +241,8 @@ struct PersistenceStoreQuestionHistoryTests {
 
     @Test("addQuestionIds batch-adds with deduplication")
     func batchAddWithDedup() throws {
-        let store = makeStore()
+        let (store, isolated) = makeStore()
+        _ = isolated
 
         try store.addQuestionId("q_001")
         try store.addQuestionIds(["q_001", "q_002", "q_003"])
@@ -220,7 +252,8 @@ struct PersistenceStoreQuestionHistoryTests {
 
     @Test("addQuestionIds throws when batch would exceed capacity")
     func batchAddThrowsWhenExceedingCapacity() throws {
-        let store = makeStore()
+        let (store, isolated) = makeStore()
+        _ = isolated
 
         // Fill to 499
         for i in 0..<499 {

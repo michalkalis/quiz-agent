@@ -527,7 +527,7 @@ green, ticks the box.
   `DailyLimitErrorWrapper`; `downloadAudio` Content-Length mismatch
   raises `NetworkError.audioIntegrity`; happy paths for `extendSession`,
   `rateQuestion`, `flagQuestion`, `getUsage`, `setPremium`.
-- [ ] **2.5** Extend `HangsTests/PersistenceStoreTests.swift`: `QuizStats`
+- [x] **2.5** Extend `HangsTests/PersistenceStoreTests.swift`: `QuizStats`
   save/load round-trip + corruption fallback. Clean up orphaned
   UUID-named `UserDefaults` suites — Swift Testing has no `tearDown`;
   use `struct` `init()`/`deinit` lifecycle (per-test instance) or wrap

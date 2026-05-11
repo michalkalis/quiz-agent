@@ -625,10 +625,48 @@ will not differentiate state-driven `ResultView` variants)*
   two states differ structurally (locked = lock icon + price + purchase
   button; unlocked = success state with different stack). iPhone 17 Pro
   sim, baselines committed.
-- [ ] **4.3** `HangsTests/ComponentInspectorTests.swift` (new) using
+  *(0d94225 + follow-up — 2 tests + 2 baselines. PaywallView has no real
+  "unlocked" view; chosen variants are
+  (A) `limitError` present + product loaded ($4.99) vs.
+  (B) `limitError` nil + product nil (loading). Initially the `.dump`
+  walked through `@ObservedObject → StoreManager → MockPurchaseService`
+  into the `AsyncStream.Continuation` opaque internals, whose
+  `continuations: N elements` count varied across runs depending on
+  observer-registration timing — flaked in the full suite. Fix:
+  `MockPurchaseService: CustomReflectable` returning empty children so
+  Mirror walkers see the mock as opaque. Baselines re-recorded;
+  deterministic.)*
+- [x] **4.3** `HangsTests/ComponentInspectorTests.swift` (new) using
   `ViewInspector` (`@MainActor`, `.implicitAnyView()` per audit A2-7):
   `HangsButton` (label binding, style modifier), `MicButton` (state-driven
   icon + colour), `ProgressBarView` (progress-fraction binding).
+  *(220 tests total green. Split into three files to honour the
+  ~300-line file-size limit:
+  `HangsButtonInspectorTests.swift` (189 lines — Primary/Secondary/Ghost,
+  6+3+5 tests covering title, leading/trailing icon, action tap, loading
+  ProgressView swap, no-icon absence), `MicButtonInspectorTests.swift`
+  (129 lines — 3 states × (icon SF Symbol + accessibility label) +
+  distinctness across states), `ProgressBarViewInspectorTests.swift`
+  (99 lines — 0%/50%/100% percentage Text, custom title,
+  `showPercentage: false` absence, GeometryReader structural presence).
+  ViewHosting.host(view:) for inspection. Colour assertions for
+  MicButton's gradient/shadow are skipped — those modifiers aren't
+  exposed through ViewInspector — but the state-driven SF Symbol icon +
+  accessibility label give equivalent coverage.)*
+
+### Phase 4 — outcome
+
+Phase 4 complete. 220 tests in 40 suites, all green. Coverage added:
+- ResultView 4 state variants (ViewInspector, hero/banner/icon/footer)
+- PaywallView 2 structurally-distinct variants (`.dump` snapshot, baselines
+  committed)
+- 5 reusable UI components (HangsPrimaryButton, HangsSecondaryButton,
+  HangsGhostButton, MicButton, ProgressBarView)
+- Test-stability fix: `MockPurchaseService: CustomReflectable` so any
+  future `.dump`-based tests that transitively reach the mock get
+  deterministic output.
+
+Phase 5 follow-up moves to issue #32 (iOS E2E + agent regression refit).
 
 ### Phase 5 — deferred to issue #32
 

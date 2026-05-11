@@ -18,43 +18,7 @@
       ▿ _purchaseError: Published<Optional<String>>
         ▿ storage: Storage
           - value: Optional<String>.none
-      ▿ purchaseService: MockPurchaseService
-        ▿ continuation: Continuation
-          ▿ storage: _Storage
-            ▿ state: State
-              ▿ continuations: 1 element
-                ▿ UnsafeContinuation<Optional<EntitlementUpdate>, Never>
-                  - context: (Opaque Value)
-              - limit: BufferingPolicy.unbounded
-              - onTermination: Optional<@Sendable (Termination) -> ()>.none
-              - pending: 0 elements
-              - terminal: false
-        - currentlyEntitledCallCount: 1
-        ▿ entitlementUpdates: AsyncStream<EntitlementUpdate>
-          ▿ context: _Context
-            - produce: (Function)
-            ▿ storage: Optional<_Storage>
-              ▿ some: _Storage
-                ▿ state: State
-                  ▿ continuations: 1 element
-                    ▿ UnsafeContinuation<Optional<EntitlementUpdate>, Never>
-                      - context: (Opaque Value)
-                  - limit: BufferingPolicy.unbounded
-                  - onTermination: Optional<@Sendable (Termination) -> ()>.none
-                  - pending: 0 elements
-                  - terminal: false
-        - loadProductCallCount: 1
-        - purchaseCallCount: 0
-        - restoreCallCount: 0
-        - stubbedIsEntitled: false
-        ▿ stubbedProduct: Optional<PurchasableProduct>
-          ▿ some: PurchasableProduct
-            - displayName: "Hangs Unlimited"
-            - displayPrice: "$4.99"
-            - id: "com.carquiz.unlimited"
-        - stubbedPurchaseError: Optional<Error>.none
-        - stubbedPurchaseOutcome: PurchaseOutcome.success
-        - stubbedRestoreShouldFail: false
+      - purchaseService: Hangs.MockPurchaseService
       ▿ transactionListener: Optional<Task<(), Never>>
         ▿ some: Task<(), Never>
           - _task: (Opaque Value)

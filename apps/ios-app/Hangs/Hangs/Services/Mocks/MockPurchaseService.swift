@@ -84,6 +84,16 @@ final class MockPurchaseService: PurchaseService {
     }
 }
 
+// Stable `Mirror` output so snapshot tests (`.dump`) that transitively reflect
+// a StoreManager don't pick up the AsyncStream continuation's opaque internals,
+// which vary across runs depending on observer registration timing. Variants
+// remain distinguishable via StoreManager._product and PaywallView.limitError.
+extension MockPurchaseService: CustomReflectable {
+    nonisolated var customMirror: Mirror {
+        Mirror(self, children: [])
+    }
+}
+
 enum MockPurchaseError: LocalizedError {
     case restoreFailed
 

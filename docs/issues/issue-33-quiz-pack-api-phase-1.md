@@ -230,6 +230,15 @@ Helpers:
 
 **Acceptance.** Dry-run counts == `sqlite3 ... "SELECT COUNT(*) FROM pending_questions"` summed across both files; second `--execute` produces 0 inserts; `SELECT count(*) FROM questions WHERE embedding IS NULL` = 0.
 
+**Status: done 2026-05-11.** Implementation notes:
+
+1. **Script:** `apps/quiz-pack-api/scripts/migrate_pending_to_postgres.py` — async SQLAlchemy via `app.db.engine`, OpenAI batch embeddings (size configurable via `--batch-size`, default 100), `pg_insert(...).on_conflict_do_nothing(index_elements=["id"])` for idempotent inserts.
+2. **Default SQLite paths:** `apps/quiz-pack-api/pending.db`, `apps/quiz-pack-api/data/pending.db`, `./pending.db`. The `data/` entry was added to match the current question-generator's actual on-disk location (the plan sketch assumed bare `pending.db` post-rename).
+3. **Legacy-id mapping (R2 dedupe).** Pydantic `Question.id` was historically a short string like `kids_22`; the Task 1.5 seam refuses non-UUID ids. The script derives a stable `uuid5(NAMESPACE_LEGACY_PENDING, "pending:<legacy_id>")` so the same input always produces the same Postgres row id — second `--execute` is 0 inserts without needing a SELECT-then-INSERT race. Original id preserved at `provenance.extra.legacy_id` for traceability.
+4. **Runbook chosen.** Approach (a) `fly ssh sftp get` from `quiz-agent` to local, run script locally against `$PROD_DATABASE_URL`. Documented in the script module docstring. Approach (b) `fly machine run` rejected — adds infra friction for a one-shot migration.
+5. **Acceptance verified locally.** `apps/quiz-pack-api/data/pending.db` had 1 row (`kids_22`, koala fingerprints). Dry-run reported `Would insert: 1, Need embedding: 1`. After `--execute`: `Inserted: 1`. Second `--execute`: `Inserted: 0`. `SELECT count(*) WHERE embedding IS NULL` = 0. `provenance->'extra'->>'legacy_id'` round-trips to `kids_22`.
+6. **Defaults filled on each row.** `language="en"`, `pack_id=None`, `embedding_model="text-embedding-3-small"`, `embedding_dim=1536`. `prompt_seed` left at JSON value (None for legacy rows — inputs not reconstructable, per plan).
+
 ### Task 1.7 — ChromaDB approved questions → Postgres+pgvector migration
 
 - New script `apps/quiz-pack-api/scripts/migrate_chroma_to_postgres.py`.

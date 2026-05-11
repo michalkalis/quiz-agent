@@ -16,3 +16,7 @@ States: `[ ]` todo · `[~]` wip · `[x]` done. Numbers continue the `docs/issues
 - [x] #28 iOS category picker — expand catalog + add `age_appropriate` — [plan](../issues/issue-28-ios-category-picker-expansion.md)
 - [x] #29 Backfill `source_url` / `source_excerpt` on existing questions — [plan](../issues/issue-29-backfill-existing-questions.md) — done 2026-05-04 (67/67 approved locally + prod synced; 8 flagged questions corrected per human review)
 - [ ] #30 Batch-generate questions for new categories — [plan](../issues/issue-30-batch-generate-categories.md) (gate on #28 + #29)
+- [x] #31 iOS test hardening — lock in current behavior — [strategy](../issues/issue-31-ios-test-hardening.md) · [handoff](../issues/issue-31-handoff.md) — Phases 1–4 done 2026-05-11; 220 tests green
+- [ ] #32 On-demand question generation service — umbrella strategy — [plan](../issues/issue-32-on-demand-generation-service.md) — Phase 1 decomposed into #33; post-review revisions C1/C2/C3 in #33
+- [ ] #33 quiz-pack-api Phase 1 — domain entities + ordered flow — [plan](../issues/issue-33-quiz-pack-api-phase-1.md) — atomic tasks 1.1–1.12; 1.1–1.6 done 2026-05-11; next: 1.7 (Chroma→Postgres)
+- [x] #34 Claude Code context/token optimization — [plan](../issues/issue-34-claude-context-optimization.md) — Tier 1+2.2+3.1/3.2/3.3 hotové; validácia po session restart

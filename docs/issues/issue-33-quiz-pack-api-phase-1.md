@@ -146,6 +146,13 @@ class GenerationProvenance(BaseModel):
 
 **Acceptance.** All existing tests in `apps/quiz-agent/tests/` and `apps/quiz-pack-api/tests/` pass; new tests cover legacy-dict round-trip; `/verify-api` confirms iOS Codable.
 
+**Status: done 2026-05-07.** Notes:
+
+1. **`generation_metadata` is now `Optional[GenerationProvenance]`.** Legacy free-form dicts still construct cleanly: a `model_validator(mode='before')` on `GenerationProvenance` routes known keys to typed fields and drops everything else into `extra` so old data round-trips losslessly. `Question.get_ai_score()` reads `critique_score` first, then falls back to `extra["ai_score"]`.
+2. **Callsites that mutated the field as a dict** (`apps/quiz-pack-api/app/generation/advanced_generator.py:170-176`, `:264-271`) now build/copy `GenerationProvenance` instances directly. `question_store._question_to_metadata` serialises via `model_dump_json()`; the deserialise path is unchanged because Pydantic auto-coerces dict → typed.
+3. **iOS Codable parity** (`apps/ios-app/Hangs/Hangs/Models/Question.swift`): added `language`, `packId`, `promptSeed`, `embeddingModel`, `embeddingDim`, `costCents` as optional fields with snake_case `CodingKeys` and trailing `= nil` init defaults — existing call sites compile unchanged. No iOS UX surface in Phase 1 (per plan).
+4. **Coverage**: 16 new tests in `apps/quiz-pack-api/tests/test_question_provenance.py` exercise legacy-dict round-trip, typed-field routing, `get_ai_score` fallback, and the six new optional `Question` fields. All `apps/quiz-agent/tests/` pass; the only red tests in repo (`tests/db/test_smoke.py`, `tests/test_translation_validation.py`) are pre-existing infra/network issues unrelated to this change.
+
 ### Task 1.5 — SQLAlchemy ORM + Alembic migration for the four tables
 
 Pydantic stays the wire/domain layer; SQLAlchemy is persistence; explicit `to_pydantic()` / `from_pydantic()` at the seam.
@@ -196,6 +203,17 @@ Helpers:
 - `question_packs.actual_count` is written by the worker on `persisting → done` (1.10), not by the API.
 
 **Acceptance.** `alembic upgrade head` creates all tables; round-trip test (Pydantic → ORM → Pydantic) is value-equal; smoke test asserts index existence via `pg_indexes`; concurrent-append test fires 50 parallel `append_step` calls against one job and asserts `len(step_log) == 50` with all `event_id` values present and unique.
+
+**Status: done 2026-05-11.** Notes:
+
+1. **ORM under `app/db/models/`** — one file per table (`question.py`, `order.py`, `job.py`, `pack.py`) plus `__init__.py` that re-exports everything and is in turn re-exported from `app/db/__init__.py`, so `import app.db` registers all four tables on `Base.metadata` without explicit walks. Pydantic↔ORM seam (`question_to_row` / `row_to_question`) lives next to the table it converts (`app/db/models/question.py`) — explicit field-by-field mapping, no `model_dump()` shortcut.
+2. **ORM class is `QuestionRow`, not `Question`** — Pydantic `Question` keeps that name across the codebase, so the persistence shape is named `QuestionRow` to keep the seam unambiguous at call sites.
+3. **`append_step` SQL — single statement, no read-modify-write.** `step_log = step_log || jsonb_build_array(jsonb_set(:payload::jsonb, '{event_id}', to_jsonb(jsonb_array_length(step_log))))`. `step_log` on the right of `SET` evaluates against the OLD row, so `jsonb_array_length(step_log)` is the new entry's index; `RETURNING jsonb_array_length(step_log) - 1` reads the NEW row and yields the same value. Concurrent UPDATEs serialise on the row lock — verified by the 50-call concurrency test.
+4. **Circular FK orders ↔ jobs/packs** handled via SQLAlchemy `use_alter=True` on `generation_orders.job_id` and `pack_id`. Migration order: create `generation_orders` without those FKs → create `generation_jobs`, `question_packs`, `questions` → `ALTER TABLE generation_orders ADD CONSTRAINT fk_orders_job_id/pack_id`. Forward-only per R8.
+5. **Status enums = `VARCHAR + CHECK`** per plan trade-off (`ALTER TYPE ... ADD VALUE` is forward-only pre-PG12 and can't run in a transaction; CHECK is trivial to alter via Alembic). Constants `ORDER_STATUSES`, `JOB_STATUSES`, `REVIEW_STATUSES` exported alongside their ORM classes so app code references one source of truth.
+6. **Indexes built in the migration**: ivfflat `vector_cosine_ops` on `questions.embedding` (`lists=100`), partial btree on `questions.pack_id WHERE pack_id IS NOT NULL`, composite btree on `(language, category, review_status)`. Test asserts existence via `pg_indexes` AND the ivfflat indexdef contains `ivfflat` + `vector_cosine_ops`.
+7. **Test infra** — `tests/db/test_core_entities.py` runs `alembic upgrade head` in a module-scoped autouse fixture so a fresh test DB bootstraps without manual setup. Six tests cover: full + minimal Pydantic round-trip, index existence + ivfflat indexdef, 50-call concurrent `append_step`, CHECK-constraint rejection of bogus status, and orders ↔ packs FK link round-trip. Updated the pre-existing smoke test's hard-coded head-revision assertion (`29f509ffa769` → `1c5e0fa7b3d4`).
+8. **Float-precision caveat**: pgvector stores `Vector(n)` as float32, so list[float] round-trip loses ~6 decimal digits of precision. Round-trip test compares `embedding` separately via `pytest.approx(abs=1e-6)` and clears it before the model-level equality check — documented in the test docstring.
 
 ### Task 1.6 — SQLite `pending.db` → Postgres migration
 

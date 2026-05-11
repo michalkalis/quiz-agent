@@ -1,5 +1,5 @@
 ---
-paths: apps/quiz-agent/**, apps/question-generator/**, packages/shared/**
+paths: ["apps/quiz-agent/**", "apps/quiz-pack-api/**", "packages/shared/**"]
 ---
 
 # Backend Development Rules
@@ -19,6 +19,13 @@ paths: apps/quiz-agent/**, apps/question-generator/**, packages/shared/**
 ### Database
 - **ChromaDB:** Shared instance for question embeddings
 - **SQLite:** Ratings and persistent data
+
+## Local Dev
+
+| Service | Start command |
+|---------|---------------|
+| quiz-agent (`:8002`) | `cd apps/quiz-agent && uvicorn app.main:app --reload --port 8002` |
+| quiz-pack-api (`:8003`) | `cd apps/quiz-pack-api && uvicorn app.main:app --reload --port 8003` |
 
 ## API Design
 
@@ -48,3 +55,7 @@ ruff format apps/quiz-agent/
 - Audio: Opus codec, responses under 50MB
 - Timeouts: 30s default, implement pagination for lists (future)
 - Include session state in responses (iOS needs to know if expired)
+
+## Deployment
+
+Known Fly.io pitfalls (Dockerfile dep drift, CHROMA_PATH/mount mismatch): see `docs/runbooks/fly-deploy.md`. Read it before `fly deploy` or before changing `[[mounts]]` in `fly.toml`.

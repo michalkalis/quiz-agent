@@ -1,5 +1,5 @@
 ---
-paths: apps/ios-app/**
+paths: ["apps/ios-app/**"]
 ---
 
 # iOS Development Rules (Hangs)
@@ -34,15 +34,22 @@ apps/ios-app/Hangs/Hangs/
     └── Logging.swift             # os.Logger categories
 ```
 
-## API Endpoints
+## Schemes & Commands
 
-| Action | Method | Endpoint |
-|--------|--------|----------|
-| Create session | POST | `/api/v1/sessions` |
-| Start quiz | POST | `/api/v1/sessions/{id}/start?audio=true` |
-| Submit voice | POST | `/api/v1/voice/submit/{id}` (multipart) |
-| Text input | POST | `/api/v1/sessions/{id}/input` |
-| End session | DELETE | `/api/v1/sessions/{id}` |
+| Scheme | API URL |
+|--------|---------|
+| Hangs-Local | `http://localhost:8002` |
+| Hangs-Prod | `https://quiz-agent-api.fly.dev` |
+
+| Task | Command |
+|------|---------|
+| Open project | `open apps/ios-app/Hangs/Hangs.xcodeproj` |
+| Build (Local) | `cd apps/ios-app/Hangs && xcodebuild -scheme Hangs-Local -destination 'platform=iOS Simulator,name=iPhone 17 Pro'` |
+| Tests | `cd apps/ios-app/Hangs && xcodebuild test -scheme Hangs-Local -destination 'platform=iOS Simulator,name=iPhone 17 Pro'` |
+
+## API
+
+Endpoints are authoritative in backend OpenAPI spec — `curl http://localhost:8002/openapi.json`. Run `/verify-api` to confirm iOS Codable structs match Pydantic models.
 
 ## Models (Must Match Backend)
 

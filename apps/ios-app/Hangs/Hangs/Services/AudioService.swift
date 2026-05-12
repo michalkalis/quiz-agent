@@ -41,6 +41,7 @@ protocol AudioServiceProtocol: Sendable {
     var currentOutputDeviceName: String { get }
 
     func setupAudioSession(mode: AudioMode) throws
+    func deactivateSession()
     func switchAudioMode(_ mode: AudioMode) async throws
     func requestMicrophonePermission() async -> Bool
     func prepareForRecording() async  // Stops playback and waits for hardware settle
@@ -145,24 +146,36 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         // Configure audio session options based on selected mode
         var options: AVAudioSession.CategoryOptions
 
+        // Duck background audio (Spotify/podcasts) while the quiz is active.
+        // .duckOthers lowers music; .interruptSpokenAudioAndMixWithOthers pauses
+        // podcasts (two simultaneous voices = unintelligible). Apple HIG recommends
+        // this combination for apps with spoken-audio prompts.
+        let duckingOptions: AVAudioSession.CategoryOptions = [
+            .duckOthers,
+            .interruptSpokenAudioAndMixWithOthers
+        ]
+
         switch mode.id {
         case "media":
             // Media Mode: A2DP only (high-quality playback, built-in mic)
             // No HFP = No "phone call" UI in car display
-            options = [.defaultToSpeaker, .allowBluetoothA2DP, .mixWithOthers]
+            options = [.defaultToSpeaker, .allowBluetoothA2DP]
+            options.formUnion(duckingOptions)
 
             Logger.audio.info("🎤 Audio session: Media Mode (A2DP only)")
 
         case "call":
             // Call Mode: HFP + A2DP (Bluetooth mic enabled)
             // May show as "phone call" in car display
-            options = [.defaultToSpeaker, .allowBluetoothHFP, .allowBluetoothA2DP, .mixWithOthers]
+            options = [.defaultToSpeaker, .allowBluetoothHFP, .allowBluetoothA2DP]
+            options.formUnion(duckingOptions)
 
             Logger.audio.info("🎤 Audio session: Call Mode (HFP + A2DP)")
 
         default:
             // Fallback to call mode (current behavior)
-            options = [.defaultToSpeaker, .allowBluetoothHFP, .allowBluetoothA2DP, .mixWithOthers]
+            options = [.defaultToSpeaker, .allowBluetoothHFP, .allowBluetoothA2DP]
+            options.formUnion(duckingOptions)
 
             Logger.audio.warning("⚠️ Unknown audio mode '\(mode.id, privacy: .public)', defaulting to Call Mode")
         }
@@ -171,7 +184,8 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         // .defaultToSpeaker forces output to speaker instead of receiver (louder audio)
         // .allowBluetoothHFP enables Bluetooth microphone input (Hands-Free Profile)
         // .allowBluetoothA2DP enables high-quality Bluetooth playback (A2DP)
-        // .mixWithOthers allows navigation apps to play simultaneously
+        // Ducking options are applied above — replaces previous .mixWithOthers
+        // because mixing at equal volume made TTS inaudible over music.
         try session.setCategory(
             .playAndRecord,
             mode: .spokenAudio,
@@ -200,6 +214,23 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         }
 
         Logger.audio.info("🎤 Audio session configured for background playback and recording")
+    }
+
+    /// Deactivate the audio session and notify other apps so background music
+    /// (Spotify, podcasts) can resume at full volume after the quiz ends.
+    /// Safe to call when already inactive — failures are logged, never thrown.
+    func deactivateSession() {
+        let session = AVAudioSession.sharedInstance()
+        do {
+            try session.setActive(false, options: [.notifyOthersOnDeactivation])
+            Logger.audio.info("🔇 Audio session deactivated (notified others)")
+        } catch {
+            Logger.audio.error("❌ Failed to deactivate audio session: \(error.localizedDescription, privacy: .public)")
+            let crumb = Breadcrumb(level: .error, category: "audio.session_deactivate")
+            crumb.message = "setActive(false) failed"
+            crumb.data = ["error": error.localizedDescription]
+            SentryBreadcrumb.add(crumb)
+        }
     }
 
     /// Switch audio mode dynamically (e.g., during quiz)

@@ -435,6 +435,7 @@ final class QuizViewModel: ObservableObject {
                 dailyLimitError = limitError
                 showPaywall = true
                 transition(to: .idle)
+                audioService.deactivateSession()
             } else {
                 setError(
                     message: "Failed to start quiz: \(error.localizedDescription)",
@@ -474,6 +475,7 @@ final class QuizViewModel: ObservableObject {
             dailyLimitError = limitError
             showPaywall = true
             transition(to: .idle)
+            audioService.deactivateSession()
         } else {
             setError(message: "\(fallbackMessage): \(error.localizedDescription)", context: context, error: error)
         }
@@ -909,6 +911,8 @@ final class QuizViewModel: ObservableObject {
             persistenceStore.saveStats(quizStats)
             transition(to: .finished)
             persistenceStore.clearSession()
+            // Release the audio session so Spotify/podcasts resume full volume.
+            audioService.deactivateSession()
 
             Logger.quiz.info("🎮 Quiz finished! Final score: \(self.score, privacy: .public)")
         } else {
@@ -958,6 +962,9 @@ final class QuizViewModel: ObservableObject {
         // resetToHome() fires an untracked Task separately — brief audio overlap is acceptable.
         isProcessingResponse = false
         transition(to: .idle)
+        // Release audio session so Spotify/podcasts resume full volume after
+        // the quiz is torn down (resetToHome / endQuiz / paywall reset).
+        audioService.deactivateSession()
         currentQuestion = nil
         currentSession = nil
         score = 0.0

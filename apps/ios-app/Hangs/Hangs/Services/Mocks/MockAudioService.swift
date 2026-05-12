@@ -28,6 +28,10 @@ final class MockAudioService: ObservableObject, AudioServiceProtocol {
         // Mock implementation
     }
 
+    func deactivateSession() {
+        // Mock implementation
+    }
+
     func switchAudioMode(_ mode: AudioMode) async throws {
         // Mock implementation
     }

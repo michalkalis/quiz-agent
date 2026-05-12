@@ -233,6 +233,63 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         }
     }
 
+    /// Run a block with the session temporarily switched to `.playback + .spokenAudio`
+    /// (with ducking) and restore the previous category on exit.
+    ///
+    /// `.playAndRecord` attenuates output by ~6dB even when no recording is active,
+    /// which made TTS inaudible over music. Switching to `.playback` for the
+    /// duration of TTS gives full output volume. The restore in `defer` runs on
+    /// every exit path (return, throw, cancellation), so the recording phase is
+    /// unaffected.
+    ///
+    /// Early-returns when the session is already in `.playback` (e.g. nested calls
+    /// or a unit-test environment that pre-set the category).
+    private func withPlaybackCategory<T>(_ body: () async throws -> T) async throws -> T {
+        let session = AVAudioSession.sharedInstance()
+        if session.category == .playback {
+            return try await body()
+        }
+
+        let previousCategory = session.category
+        let previousMode = session.mode
+        let previousOptions = session.categoryOptions
+
+        let ttsOptions: AVAudioSession.CategoryOptions = [
+            .duckOthers,
+            .interruptSpokenAudioAndMixWithOthers
+        ]
+
+        try session.setCategory(.playback, mode: .spokenAudio, options: ttsOptions)
+
+        let switchCrumb = Breadcrumb(level: .info, category: "audio.category_switch")
+        switchCrumb.message = "Switched to .playback for TTS"
+        switchCrumb.data = [
+            "from": previousCategory.rawValue,
+            "to": AVAudioSession.Category.playback.rawValue
+        ]
+        SentryBreadcrumb.add(switchCrumb)
+
+        defer {
+            // Restore must surface errors loudly — if it fails, the next recording
+            // session breaks silently. No `try?` swallow.
+            do {
+                try session.setCategory(previousCategory, mode: previousMode, options: previousOptions)
+                Logger.audio.debug("🔊 Restored audio category: \(previousCategory.rawValue, privacy: .public)")
+            } catch {
+                Logger.audio.error("❌ Failed to restore audio category \(previousCategory.rawValue, privacy: .public): \(error.localizedDescription, privacy: .public)")
+                let crumb = Breadcrumb(level: .error, category: "audio.category_restore")
+                crumb.message = "setCategory restore failed"
+                crumb.data = [
+                    "target": previousCategory.rawValue,
+                    "error": error.localizedDescription
+                ]
+                SentryBreadcrumb.add(crumb)
+            }
+        }
+
+        return try await body()
+    }
+
     /// Switch audio mode dynamically (e.g., during quiz)
     /// - Parameter mode: New audio mode to activate
     func switchAudioMode(_ mode: AudioMode) async throws {
@@ -655,6 +712,15 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
     /// (completion notification, failure notification, stall timer, stopPlayback) is safe.
     /// CheckedContinuation.resume() called twice would crash; this cannot.
     private func performPlayback(data: Data, operationId: UUID) async throws -> TimeInterval {
+        // Switch to .playback for the duration of TTS so we don't pay the ~6dB
+        // attenuation .playAndRecord applies. The defer in withPlaybackCategory
+        // restores the previous category on every exit path.
+        return try await withPlaybackCategory {
+            try await self.performPlaybackBody(data: data, operationId: operationId)
+        }
+    }
+
+    private func performPlaybackBody(data: Data, operationId: UUID) async throws -> TimeInterval {
         // playbackState already set to .playing(id: operationId) by caller
 
         // Save to temporary file for playback (MP3 for universal AVPlayer compatibility)

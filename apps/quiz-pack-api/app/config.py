@@ -9,9 +9,12 @@ the scheme at engine-build time; settings keep the raw value the user provided.
 from __future__ import annotations
 
 from functools import lru_cache
+from pathlib import Path
 from typing import Optional
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_BUNDLED_APPLE_ROOT = Path(__file__).parent / "storekit" / "certs" / "AppleRootCA-G3.cer"
 
 
 class Settings(BaseSettings):
@@ -27,6 +30,13 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
     db_pool_size: int = 5
     db_echo: bool = False
+
+    # StoreKit (issue #33 Task 1.8). app_bundle_id matches iOS xcconfig
+    # BUNDLE_ID_BASE; storekit_environment is "Sandbox" on staging Fly app and
+    # "Production" on prod — keep per-deploy via Fly secrets, not in code.
+    app_bundle_id: str = "com.missinghue.hangs"
+    storekit_environment: str = "Sandbox"
+    storekit_root_cert_path: Path = _BUNDLED_APPLE_ROOT
 
 
 @lru_cache(maxsize=1)

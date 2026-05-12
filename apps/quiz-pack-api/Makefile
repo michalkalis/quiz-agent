@@ -9,19 +9,32 @@
 PORT ?= 8003
 COMPOSE := docker compose
 
-.PHONY: help dev dev-db dev-api dev-worker dev-down dev-reset dev-logs dev-psql dev-redis-cli
+APPLE_ROOT_CERT := app/storekit/certs/AppleRootCA-G3.cer
+
+.PHONY: help dev dev-db dev-api dev-worker dev-down dev-reset dev-logs dev-psql dev-redis-cli fetch-apple-root
 
 help:
 	@echo "Targets:"
-	@echo "  make dev         - boot postgres + redis + uvicorn (ARQ worker once 1.10 lands)"
-	@echo "  make dev-db      - boot postgres + redis only"
-	@echo "  make dev-api     - run uvicorn on :$(PORT) (assumes dev-db already up)"
-	@echo "  make dev-worker  - run ARQ worker (stub until Task 1.10)"
-	@echo "  make dev-down    - stop containers, keep volumes"
-	@echo "  make dev-reset   - stop containers AND drop volumes (DESTROYS data)"
-	@echo "  make dev-logs    - tail compose logs"
-	@echo "  make dev-psql    - psql into local quiz_pack DB"
-	@echo "  make dev-redis-cli - redis-cli into local Redis"
+	@echo "  make dev              - boot postgres + redis + uvicorn (ARQ worker once 1.10 lands)"
+	@echo "  make dev-db           - boot postgres + redis only"
+	@echo "  make dev-api          - run uvicorn on :$(PORT) (assumes dev-db already up)"
+	@echo "  make dev-worker       - run ARQ worker (stub until Task 1.10)"
+	@echo "  make dev-down         - stop containers, keep volumes"
+	@echo "  make dev-reset        - stop containers AND drop volumes (DESTROYS data)"
+	@echo "  make dev-logs         - tail compose logs"
+	@echo "  make dev-psql         - psql into local quiz_pack DB"
+	@echo "  make dev-redis-cli    - redis-cli into local Redis"
+	@echo "  make fetch-apple-root - download AppleRootCA-G3.cer for StoreKit JWS verify (Task 1.8)"
+
+fetch-apple-root:
+	@if [ -f $(APPLE_ROOT_CERT) ]; then \
+		echo "==> $(APPLE_ROOT_CERT) already present, skipping"; \
+	else \
+		echo "==> downloading AppleRootCA-G3.cer"; \
+		curl -fsSL -o $(APPLE_ROOT_CERT) \
+			https://www.apple.com/certificateauthority/AppleRootCA-G3.cer; \
+		shasum -a 256 $(APPLE_ROOT_CERT); \
+	fi
 
 dev: dev-db
 	@echo "==> Starting uvicorn on :$(PORT)"

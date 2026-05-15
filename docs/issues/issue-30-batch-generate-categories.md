@@ -12,7 +12,7 @@ Run the gen → verify → score → approve → import pipeline at volume to fi
 | Category | Type | Target count |
 |---|---|---|
 | `kids` | core | 50 — DONE (52, 2026-05-05) |
-| `general` | core | 50 — 1/50 |
+| `general` | core | 50 — DONE (53, 2026-05-15) |
 | `adults` | core | 50 — DONE (67) |
 | `wizarding-world` | themed | 30 — DONE |
 | `superheroes` | themed | 30 — 26/30 |

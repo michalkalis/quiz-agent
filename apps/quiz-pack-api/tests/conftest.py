@@ -2,6 +2,9 @@
 
 The async fixtures here target `TEST_DATABASE_URL` so the dev DB stays untouched.
 Bring up the local stack first: `make dev-db` from `apps/quiz-pack-api/`.
+
+`test_chain` and `make_jws` are promoted from `tests/storekit/conftest.py` so
+that the API tests in `tests/api/` can also use them without a re-import.
 """
 
 from __future__ import annotations
@@ -22,6 +25,11 @@ except ImportError:
     pass
 
 from app.db.engine import build_engine, normalize_async_url
+
+# Promote storekit fixtures (test_chain, make_jws) to the top-level conftest so
+# tests/api/ can use them. Plain `from ... import` doesn't register fixtures —
+# pytest_plugins does.
+pytest_plugins = ["tests.storekit.conftest"]
 
 
 def _resolve_test_url() -> str:

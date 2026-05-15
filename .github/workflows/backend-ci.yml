@@ -186,7 +186,15 @@ jobs:
         run: |
           cd apps/quiz-agent
           uvicorn app.main:app --host 0.0.0.0 --port 8002 &
-          sleep 15
+          for i in $(seq 1 90); do
+            if curl -sf http://localhost:8002/docs >/dev/null; then
+              echo "server ready after ${i}s"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "server failed to respond within 90s" >&2
+          exit 1
 
       - name: Verify OpenAPI spec is accessible
         run: |

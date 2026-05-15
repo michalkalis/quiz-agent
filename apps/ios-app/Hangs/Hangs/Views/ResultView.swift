@@ -76,6 +76,7 @@ struct ResultView: View {
     private var heroBlock: some View {
         VStack(alignment: .leading, spacing: 8) {
             HangsResultBanner(kind: isCorrect ? .correct : .incorrect)
+                .accessibilityIdentifier("result.heroBanner")
             Text(isCorrect ? "NAILED\nIT." : "CLOSE—\nBUT NO.")
                 .font(.hangsDisplay(isCorrect ? 52 : 44))
                 .tracking(-2)

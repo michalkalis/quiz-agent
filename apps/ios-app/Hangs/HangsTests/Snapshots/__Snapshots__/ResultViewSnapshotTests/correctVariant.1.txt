@@ -1,0 +1,289 @@
+▿ Hangs.ResultView
+  ▿ _viewModel: SwiftUI.ObservedObject<Hangs.QuizViewModel>
+    - _seed: 0
+    ▿ wrappedValue: Hangs.QuizViewModel #0
+      ▿ _quizState: Combine.Published<Hangs.QuizState>
+        ▿ storage: Combine.Published<Hangs.QuizState>.Storage.value
+          ▿ value: Hangs.QuizState.showingResult
+            ▿ showingResult: (2 elements)
+              ▿ question: Hangs.Question
+                - id: "q_preview_123"
+                - question: "What is the capital of France?"
+                - type: Hangs.Question.QuestionType.text
+                - possibleAnswers: nil
+                - difficulty: "easy"
+                - topic: "Geography"
+                - category: "adults"
+                ▿ sourceUrl: Optional("https://en.wikipedia.org/wiki/Paris")
+                  - some: "https://en.wikipedia.org/wiki/Paris"
+                ▿ sourceExcerpt: Optional("Paris is the capital and largest city of France, situated on the Seine River.")
+                  - some: "Paris is the capital and largest city of France, situated on the Seine River."
+                - mediaUrl: nil
+                - imageSubtype: nil
+                ▿ explanation: Optional("Paris has been the capital of France since the 10th century.")
+                  - some: "Paris has been the capital of France since the 10th century."
+                ▿ generatedBy: Optional("claude-opus-4.6")
+                  - some: "claude-opus-4.6"
+                - ageAppropriate: nil
+                - language: nil
+                - packId: nil
+                - promptSeed: nil
+                - embeddingModel: nil
+                - embeddingDim: nil
+                - costCents: nil
+              ▿ evaluation: Hangs.Evaluation
+                - userAnswer: "Paris"
+                - result: Hangs.Evaluation.EvaluationResult.correct
+                - points: 1.0
+                - correctAnswer: "Paris"
+                ▿ questionId: Optional("q_preview_1")
+                  - some: "q_preview_1"
+                ▿ explanation: Optional("Paris has been the capital of France since the 10th century.")
+                  - some: "Paris has been the capital of France since the 10th century."
+      ▿ _currentQuestion: Combine.Published<Swift.Optional<Hangs.Question>>
+        ▿ storage: Combine.Published<Swift.Optional<Hangs.Question>>.Storage.value
+          ▿ value: Optional(Hangs.Question(id: "q_preview_123", question: "What is the capital of France?", type: Hangs.Question.QuestionType.text, possibleAnswers: nil, difficulty: "easy", topic: "Geography", category: "adults", sourceUrl: Optional("https://en.wikipedia.org/wiki/Paris"), sourceExcerpt: Optional("Paris is the capital and largest city of France, situated on the Seine River."), mediaUrl: nil, imageSubtype: nil, explanation: Optional("Paris has been the capital of France since the 10th century."), generatedBy: Optional("claude-opus-4.6"), ageAppropriate: nil, language: nil, packId: nil, promptSeed: nil, embeddingModel: nil, embeddingDim: nil, costCents: nil))
+            ▿ some: Hangs.Question
+              - id: "q_preview_123"
+              - question: "What is the capital of France?"
+              - type: Hangs.Question.QuestionType.text
+              - possibleAnswers: nil
+              - difficulty: "easy"
+              - topic: "Geography"
+              - category: "adults"
+              ▿ sourceUrl: Optional("https://en.wikipedia.org/wiki/Paris")
+                - some: "https://en.wikipedia.org/wiki/Paris"
+              ▿ sourceExcerpt: Optional("Paris is the capital and largest city of France, situated on the Seine River.")
+                - some: "Paris is the capital and largest city of France, situated on the Seine River."
+              - mediaUrl: nil
+              - imageSubtype: nil
+              ▿ explanation: Optional("Paris has been the capital of France since the 10th century.")
+                - some: "Paris has been the capital of France since the 10th century."
+              ▿ generatedBy: Optional("claude-opus-4.6")
+                - some: "claude-opus-4.6"
+              - ageAppropriate: nil
+              - language: nil
+              - packId: nil
+              - promptSeed: nil
+              - embeddingModel: nil
+              - embeddingDim: nil
+              - costCents: nil
+      ▿ _currentSession: Combine.Published<Swift.Optional<Hangs.QuizSession>>
+        ▿ storage: Combine.Published<Swift.Optional<Hangs.QuizSession>>.Storage.value
+          ▿ value: Optional(Hangs.QuizSession(id: "test_sess", mode: "single", phase: "asking", maxQuestions: 10, currentDifficulty: "medium", category: nil, language: "en", participants: [], expiresAt: <date>, createdAt: <date>))
+            ▿ some: Hangs.QuizSession
+              - id: "test_sess"
+              - mode: "single"
+              - phase: "asking"
+              - maxQuestions: 10
+              - currentDifficulty: "medium"
+              - category: nil
+              - language: "en"
+              - participants: 0 elements
+              ▿ expiresAt: <date>
+                - timeIntervalSinceReferenceDate: <n>
+              ▿ createdAt: <date>
+                - timeIntervalSinceReferenceDate: <n>
+      ▿ _score: Combine.Published<Swift.Double>
+        ▿ storage: Combine.Published<Swift.Double>.Storage.value
+          - value: 0.0
+      ▿ _questionsAnswered: Combine.Published<Swift.Int>
+        ▿ storage: Combine.Published<Swift.Int>.Storage.value
+          - value: 1
+      ▿ _errorMessage: Combine.Published<Swift.Optional<Swift.String>>
+        ▿ storage: Combine.Published<Swift.Optional<Swift.String>>.Storage.value
+          - value: nil
+      ▿ _lastErrorDebugInfo: Combine.Published<Swift.Optional<Swift.String>>
+        ▿ storage: Combine.Published<Swift.Optional<Swift.String>>.Storage.value
+          - value: nil
+      ▿ _showPaywall: Combine.Published<Swift.Bool>
+        ▿ storage: Combine.Published<Swift.Bool>.Storage.value
+          - value: false
+      ▿ _dailyLimitError: Combine.Published<Swift.Optional<Hangs.DailyLimitError>>
+        ▿ storage: Combine.Published<Swift.Optional<Hangs.DailyLimitError>>.Storage.value
+          - value: nil
+      ▿ _usageInfo: Combine.Published<Swift.Optional<Hangs.UsageInfo>>
+        ▿ storage: Combine.Published<Swift.Optional<Hangs.UsageInfo>>.Storage.value
+          - value: nil
+      ▿ _showAnswerConfirmation: Combine.Published<Swift.Bool>
+        ▿ storage: Combine.Published<Swift.Bool>.Storage.value
+          - value: false
+      ▿ _transcribedAnswer: Combine.Published<Swift.String>
+        ▿ storage: Combine.Published<Swift.String>.Storage.value
+          - value: ""
+      ▿ _autoConfirmCountdown: Combine.Published<Swift.Int>
+        ▿ storage: Combine.Published<Swift.Int>.Storage.value
+          - value: 0
+      - pendingResponse: nil
+      - transcriptWasEdited: false
+      - preEditTranscript: nil
+      ▿ _autoAdvanceCountdown: Combine.Published<Swift.Int>
+        ▿ storage: Combine.Published<Swift.Int>.Storage.value
+          - value: 0
+      ▿ _answerTimerCountdown: Combine.Published<Swift.Int>
+        ▿ storage: Combine.Published<Swift.Int>.Storage.value
+          - value: 0
+      ▿ _thinkingTimeCountdown: Combine.Published<Swift.Int>
+        ▿ storage: Combine.Published<Swift.Int>.Storage.value
+          - value: 0
+      ▿ _autoAdvanceEnabled: Combine.Published<Swift.Bool>
+        ▿ storage: Combine.Published<Swift.Bool>.Storage.value
+          - value: true
+      ▿ _currentQuestionPaused: Combine.Published<Swift.Bool>
+        ▿ storage: Combine.Published<Swift.Bool>.Storage.value
+          - value: false
+      ▿ _isMinimized: Combine.Published<Swift.Bool>
+        ▿ storage: Combine.Published<Swift.Bool>.Storage.value
+          - value: false
+      ▿ _quizStats: Combine.Published<Hangs.QuizStats>
+        ▿ storage: Combine.Published<Hangs.QuizStats>.Storage.value
+          ▿ value: Hangs.QuizStats
+            - currentStreak: 0
+            - bestStreak: 0
+            - totalCorrect: 0
+            - totalAnswered: 0
+            - totalQuizzes: 0
+      ▿ _settings: Combine.Published<Hangs.QuizSettings>
+        ▿ storage: Combine.Published<Hangs.QuizSettings>.Storage.publisher
+          ▿ publisher: Combine.Published<Hangs.QuizSettings>.Publisher
+            ▿ subject: Combine.PublishedSubject<Hangs.QuizSettings> #1
+              ▿ lock: 0x<addr>
+                - pointerValue: <n>
+              ▿ downstreams: Combine.ConduitList<Hangs.QuizSettings, Swift.Never>.single
+                ▿ single: PublishedSubject #2
+                  - super: Combine.ConduitBase<Hangs.QuizSettings, Swift.Never>
+                  ▿ parent: Optional(Combine.PublishedSubject<Hangs.QuizSettings>)
+                    ▿ some: Combine.PublishedSubject<Hangs.QuizSettings> #1
+                  ▿ downstream: Optional(Drop)
+                    - some: Drop #3
+                  ▿ demand: unlimited
+                    - rawValue: 9223372036854775808
+                  ▿ subject: Optional(Combine.PublishedSubject<Hangs.QuizSettings>)
+                    ▿ some: Combine.PublishedSubject<Hangs.QuizSettings> #1
+              ▿ currentValue: Hangs.QuizSettings
+                - language: "en"
+                - audioMode: "media"
+                - numberOfQuestions: 10
+                - category: nil
+                - ageAppropriate: nil
+                - difficulty: "medium"
+                - autoAdvanceDelay: 8
+                - answerTimeLimit: 30
+                - thinkingTime: 60
+                - preferredInputDeviceId: nil
+                - autoRecordEnabled: true
+                - autoConfirmEnabled: true
+                - showConfirmSheet: true
+                - isMuted: false
+              - upstreamSubscriptions: 0 elements
+              - hasAnyDownstreamDemand: false
+              - changePublisher: nil
+      ▿ _showingLanguagePicker: Combine.Published<Swift.Bool>
+        ▿ storage: Combine.Published<Swift.Bool>.Storage.value
+          - value: false
+      ▿ _showingMicrophonePicker: Combine.Published<Swift.Bool>
+        ▿ storage: Combine.Published<Swift.Bool>.Storage.value
+          - value: false
+      - isProcessingResponse: false
+      - isStoppingRecording: false
+      ▿ _isAutoRecording: Combine.Published<Swift.Bool>
+        ▿ storage: Combine.Published<Swift.Bool>.Storage.value
+          - value: false
+      ▿ _speechDetectedDuringAutoRecord: Combine.Published<Swift.Bool>
+        ▿ storage: Combine.Published<Swift.Bool>.Storage.value
+          - value: false
+      ▿ _liveTranscript: Combine.Published<Swift.String>
+        ▿ storage: Combine.Published<Swift.String>.Storage.value
+          - value: ""
+      ▿ _isStreamingSTT: Combine.Published<Swift.Bool>
+        ▿ storage: Combine.Published<Swift.Bool>.Storage.value
+          - value: false
+      ▿ networkService: Hangs.MockNetworkService #4
+        - mockSession: nil
+        - mockResponse: nil
+        - mockTextInputResponse: nil
+        - mockAudioData: nil
+        - shouldFail: false
+        - capturedTextInputAudio: nil
+        - capturedTextInputInput: nil
+        - capturedStartQuizExcludedIds: nil
+        - createSessionError: nil
+      ▿ audioService: Hangs.MockAudioService #5
+        - isRecording: false
+        - isPlaying: false
+        - shouldFailRecording: false
+        - shouldFailPlayback: false
+        ▿ mockRecordingData: 10 bytes
+          - count: 10
+          ▿ pointer: 0x<addr>
+            - pointerValue: <n>
+          ▿ bytes: 10 elements
+            - 109
+            - 111
+            - 99
+            - 107
+            - 32
+            - 97
+            - 117
+            - 100
+            - 105
+            - 111
+        ▿ availableInputDevices: 2 elements
+          ▿ Hangs.AudioDevice
+            - id: "Built-In-Mic"
+            - name: "iPhone Microphone"
+            - portType: "MicrophoneBuiltIn"
+          ▿ Hangs.AudioDevice
+            - id: "CarPlay-HFP"
+            - name: "Car Audio System"
+            - portType: "BluetoothHFP"
+        - currentInputDevice: nil
+        - currentOutputDeviceName: "iPhone"
+      ▿ persistenceStore: Hangs.MockPersistenceStore #6
+        - deviceId: "dev_mock_test_1234"
+        - hasCompletedOnboarding: true
+        - currentSessionId: nil
+        - savedSettings: nil
+        - saveSettingsCallCount: 0
+        - askedQuestionIds: 0 elements
+        - maxCapacity: 500
+        ▿ stats: Hangs.QuizStats
+          - currentStreak: 0
+          - bestStreak: 0
+          - totalCorrect: 0
+          - totalAnswered: 0
+          - totalQuizzes: 0
+      - silenceDetectionService: nil
+      - sttService: nil
+      ▿ cancellables: 1 member
+        ▿ Combine.AnyCancellable #7
+          ▿ storage: Combine.AnyCancellable.Storage.cancellable
+            - cancellable: Sink #8
+          ▿ lock: 0x<addr>
+            - pointerValue: <n>
+      ▿ taskBag: Hangs.TaskBag #9
+        - tasks: 0 key/value pairs
+      - isRerecording: false
+      - consecutiveTranscriptionFailures: 0
+      - nextQuestionAudioUrl: nil
+      - nextQuestion: nil
+      - currentQuestionAudioUrl: nil
+  ▿ _reduceMotion: SwiftUI.Environment<Swift.Bool>
+    ▿ content: SwiftUI.Environment<Swift.Bool>.Content.keyPath
+      - keyPath: \EnvironmentValues.<computed 0x<addr> (Bool)> #10
+        - super: Swift.KeyPath<SwiftUI.EnvironmentValues, Swift.Bool>
+          - super: Swift.PartialKeyPath<SwiftUI.EnvironmentValues>
+            ▿ super: Swift.AnyKeyPath
+              - _kvcKeyPathStringPtr: nil
+  ▿ _showEvaluation: SwiftUI.State<Swift.Bool>
+    - _value: false
+    - _location: nil
+  ▿ _showSourceWebView: SwiftUI.State<Swift.Bool>
+    - _value: false
+    - _location: nil
+  ▿ _questionRating: SwiftUI.State<Swift.Int>
+    - _value: 0
+    - _location: nil
+  ▿ _questionFlagged: SwiftUI.State<Swift.Bool>
+    - _value: false
+    - _location: nil

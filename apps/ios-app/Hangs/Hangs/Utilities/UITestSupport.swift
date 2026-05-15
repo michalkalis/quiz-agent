@@ -40,7 +40,22 @@ enum UITestSupport {
         let network = MockNetworkService()
         network.mockSession = QuizResponse.previewStartQuiz.session
         network.mockResponse = QuizResponse.previewStartQuiz
-        network.mockTextInputResponse = QuizResponse.previewAnswerCorrect
+
+        if CommandLine.arguments.contains("--ui-test-incorrect") {
+            network.mockTextInputResponse = QuizResponse.previewAnswerIncorrect
+        } else {
+            network.mockTextInputResponse = QuizResponse.previewAnswerCorrect
+        }
+
+        if CommandLine.arguments.contains("--ui-test-paywall") {
+            network.createSessionError = NetworkError.dailyLimitReached(DailyLimitError(
+                error: "Daily limit reached",
+                questionsUsed: 5,
+                questionsLimit: 5,
+                resetsAt: "2099-01-01T08:00:00.000Z",
+                upgradeAvailable: true
+            ))
+        }
 
         let audio = MockAudioService()
         let persistence = MockPersistenceStore()

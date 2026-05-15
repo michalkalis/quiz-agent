@@ -96,6 +96,7 @@ struct HangsQuizNav: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Close quiz")
+                .accessibilityIdentifier("question.closeButton")
                 HangsBrandMark(size: 13)
             }
             Spacer()

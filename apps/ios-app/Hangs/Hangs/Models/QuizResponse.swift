@@ -99,6 +99,46 @@ extension QuizResponse {
         )
     )
 
+    static let previewAnswerIncorrect = QuizResponse(
+        success: true,
+        message: "Input processed",
+        session: QuizSession(
+            id: "sess_preview_123",
+            mode: "single",
+            phase: "asking",
+            maxQuestions: 10,
+            currentDifficulty: "medium",
+            category: nil,
+            language: "en",
+            participants: [
+                Participant(
+                    id: "p_preview_1",
+                    userId: nil,
+                    displayName: "Player",
+                    score: 0.0,
+                    answeredCount: 1,
+                    correctCount: 0,
+                    lastAnswer: "London",
+                    lastResult: "incorrect",
+                    isHost: true,
+                    isReady: true,
+                    joinedAt: Date()
+                )
+            ],
+            expiresAt: Date().addingTimeInterval(30 * 60),
+            createdAt: Date()
+        ),
+        currentQuestion: Question.previewHard,
+        evaluation: Evaluation.previewIncorrect,
+        feedbackReceived: ["answer: incorrect"],
+        audio: AudioInfo(
+            feedbackUrl: "/api/v1/tts/feedback/incorrect",
+            feedbackAudioBase64: nil,
+            questionUrl: "/api/v1/sessions/sess_preview_123/question/audio",
+            format: "opus"
+        )
+    )
+
     static let previewAnswerCorrect = QuizResponse(
         success: true,
         message: "Input processed",

@@ -24,8 +24,11 @@ final class MockNetworkService: NetworkServiceProtocol {
     var capturedTextInputAudio: Bool?
     var capturedTextInputInput: String?
     var capturedStartQuizExcludedIds: [String]?
+    /// When set, `createSession` throws this error instead of the default behaviour.
+    var createSessionError: Error?
 
     func createSession(maxQuestions: Int, difficulty: String, language: String, category: String?, userId: String?) async throws -> QuizSession {
+        if let error = createSessionError { throw error }
         if shouldFail {
             throw NetworkError.invalidResponse
         }

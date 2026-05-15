@@ -16,6 +16,10 @@ from ..voice.transcriber import VoiceTranscriber
 from ..tts.service import TTSService
 from ..usage.tracker import UsageTracker
 from ..quiz.flow import QuizFlowService, FlowResult
+from ..serializers import (
+    question_to_dict as question_to_dict,
+    question_to_dict_translated as question_to_dict_translated,
+)
 
 
 # ── Request/Response Models ──────────────────────────────────────────────────

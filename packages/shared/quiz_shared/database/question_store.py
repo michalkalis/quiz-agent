@@ -301,7 +301,9 @@ class ChromaDBQuestionStore:
         if question.quality_ratings:
             metadata["quality_ratings"] = json.dumps(question.quality_ratings)
         if question.generation_metadata:
-            metadata["generation_metadata"] = json.dumps(question.generation_metadata)
+            metadata["generation_metadata"] = (
+                question.generation_metadata.model_dump_json()
+            )
 
         if question.expires_at:
             metadata["expires_at"] = question.expires_at.isoformat()

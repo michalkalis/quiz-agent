@@ -3,7 +3,51 @@
 import uuid
 from datetime import datetime
 from typing import Dict, List, Optional, Union, Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+
+class GenerationProvenance(BaseModel):
+    """Typed provenance for AI-generated questions.
+
+    Replaces the legacy free-form ``generation_metadata: Dict[str, Any]`` shape.
+    Unknown keys from legacy payloads (e.g. ``ai_score``, ``ai_reasoning``,
+    ``self_critique``, image-pipeline fields) are preserved in ``extra`` so old
+    rows round-trip losslessly through parse → dump.
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    model: Optional[str] = None
+    provider: Optional[str] = None
+    prompt_version: Optional[str] = None
+    pipeline: Optional[str] = None  # "fact_first" | "v2_cot" | "themed" | "kids"
+    generation_temperature: Optional[float] = None
+    critique_model: Optional[str] = None
+    critique_score: Optional[float] = None
+    reasoning_pattern: Optional[str] = None
+    fact_ids: List[str] = Field(default_factory=list)
+    extra: Dict[str, Any] = Field(default_factory=dict)
+    created_at: Optional[datetime] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def _absorb_unknown_keys(cls, data: Any) -> Any:
+        """Move any non-field keys into ``extra`` so dict input is lossless."""
+        if not isinstance(data, dict):
+            return data
+        known = set(cls.model_fields.keys())
+        cleaned: Dict[str, Any] = {}
+        leftover: Dict[str, Any] = dict(data.get("extra") or {})
+        for k, v in data.items():
+            if k == "extra":
+                continue
+            if k in known:
+                cleaned[k] = v
+            else:
+                leftover[k] = v
+        if leftover:
+            cleaned["extra"] = leftover
+        return cleaned
 
 
 class Question(BaseModel):
@@ -56,6 +100,20 @@ class Question(BaseModel):
         None,
         description="Minimum recommended age band: 'all' | '8+' | '12+' | '16+'. None = unrated (legacy).",
     )
+    language: Optional[str] = Field(
+        None,
+        description="BCP-47 language tag of the question text (e.g. 'en', 'sk', 'cs'). None = legacy/unspecified.",
+    )
+
+    # Pack ownership (NULL = global library, per #32 D7)
+    pack_id: Optional[str] = Field(
+        None,
+        description="UUID of the QuestionPack this question belongs to. None = curated/global question.",
+    )
+    prompt_seed: Optional[str] = Field(
+        None,
+        description="Deterministic 16-char hash of (prompt + language + category + theme); groups questions from one user prompt.",
+    )
 
     # Metadata
     created_at: datetime = Field(default_factory=datetime.now)
@@ -92,10 +150,18 @@ class Question(BaseModel):
         description="Detailed ratings: {'surprise_factor': 4, 'clarity': 5, 'universal_appeal': 4, 'creativity': 5} (1-5 scale)",
     )
 
-    # Generation metadata (for AI-generated questions)
-    generation_metadata: Optional[Dict[str, Any]] = Field(
+    # Generation metadata (for AI-generated questions). Typed as
+    # GenerationProvenance; legacy dicts coerce via the sub-model's
+    # before-validator (unknown keys land in ``extra``).
+    generation_metadata: Optional[GenerationProvenance] = Field(
         None,
-        description="AI generation details: {'model': 'gpt-4o', 'temperature': 0.8, 'prompt_version': 'v2', 'stage': 'regenerate', 'ai_score': 8.5, 'ai_reasoning': '...'}",
+        description="Typed AI generation provenance (model, prompt_version, critique_score, fact_ids, ...).",
+    )
+
+    # Per-question accounting (sum of LLM call costs)
+    cost_cents: Optional[int] = Field(
+        None,
+        description="Cost in cents to generate this question (sum of LLM call costs).",
     )
 
     # Media (for audio/image/video types)
@@ -116,6 +182,14 @@ class Question(BaseModel):
     embedding: Optional[List[float]] = Field(
         None,
         description="Cached embedding vector (1536-dim for text-embedding-3-small)",
+    )
+    embedding_model: Optional[str] = Field(
+        None,
+        description="Model that produced ``embedding`` (e.g. 'text-embedding-3-small').",
+    )
+    embedding_dim: Optional[int] = Field(
+        None,
+        description="Dimensionality of ``embedding`` (e.g. 1536). Useful when swapping embedding models.",
     )
 
     # Time-sensitive question support
@@ -155,10 +229,17 @@ class Question(BaseModel):
         return self.review_status in ["pending_review", "needs_revision"]
 
     def get_ai_score(self) -> Optional[float]:
-        """Get AI-generated quality score if available."""
-        if self.generation_metadata and "ai_score" in self.generation_metadata:
-            return self.generation_metadata["ai_score"]
-        return None
+        """Get AI-generated quality score if available.
+
+        Reads ``critique_score`` (new typed field) first, falling back to
+        legacy ``ai_score`` stored in ``extra`` for pre-Phase-1 rows.
+        """
+        if not self.generation_metadata:
+            return None
+        if self.generation_metadata.critique_score is not None:
+            return self.generation_metadata.critique_score
+        legacy = self.generation_metadata.extra.get("ai_score")
+        return legacy if isinstance(legacy, (int, float)) else None
 
     @classmethod
     def from_dict(

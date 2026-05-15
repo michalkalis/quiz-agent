@@ -19,9 +19,9 @@ from app.tts.service import TTSService
 
 async def main():
     """Pre-generate all static feedback audio files."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Pre-generating Static Feedback Audio")
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
 
     # Check for OpenAI API key
     api_key = os.getenv("OPENAI_API_KEY")
@@ -40,19 +40,22 @@ async def main():
 
         # Show cache stats
         stats = tts.get_cache_stats()
-        print(f"\nCache Statistics:")
+        print("\nCache Statistics:")
         print(f"  Static feedback files: {stats['static_feedback_files']}")
         print(f"  Static cache size: {stats['static_size_mb']:.2f} MB")
         print(f"  Questions cached: {stats['questions_cached']}")
-        print(f"  Total cache size: {stats['total_size_mb']:.2f} MB / {stats['max_size_mb']:.0f} MB\n")
+        print(
+            f"  Total cache size: {stats['total_size_mb']:.2f} MB / {stats['max_size_mb']:.0f} MB\n"
+        )
 
-        print("="*60)
+        print("=" * 60)
         print("✅ Static feedback pre-generation complete!")
-        print("="*60 + "\n")
+        print("=" * 60 + "\n")
 
     except Exception as e:
         print(f"\n❌ Error during pre-generation: {e}")
         import traceback
+
         traceback.print_exc()
         print("\nServer will continue without pre-generated feedback.")
         print("Feedback will be generated on-demand (slower first response).\n")

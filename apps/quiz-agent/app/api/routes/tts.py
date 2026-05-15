@@ -7,7 +7,10 @@ from fastapi.responses import Response
 
 from ..deps import (
     SynthesizeTTSRequest,
-    get_session_manager, get_tts_service, get_question_retriever, get_translation_service,
+    get_session_manager,
+    get_tts_service,
+    get_question_retriever,
+    get_translation_service,
     question_to_dict_translated,
 )
 from ...session.manager import SessionManager
@@ -34,7 +37,9 @@ async def synthesize_tts(
         return Response(
             content=audio_data,
             media_type=f"audio/{body.format}",
-            headers={"Content-Disposition": f'attachment; filename="speech.{body.format}"'},
+            headers={
+                "Content-Disposition": f'attachment; filename="speech.{body.format}"'
+            },
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -66,9 +71,13 @@ async def get_question_audio(
         else:
             current_question = question_retriever.get(session.current_question_id)
             if not current_question:
-                raise HTTPException(status_code=404, detail="Current question not found")
+                raise HTTPException(
+                    status_code=404, detail="Current question not found"
+                )
 
-            translated_dict = await question_to_dict_translated(current_question, session.language, translation_service)
+            translated_dict = await question_to_dict_translated(
+                current_question, session.language, translation_service
+            )
             question_text = translated_dict["question"]
 
             session.current_question_text = question_text
@@ -85,7 +94,9 @@ async def get_question_audio(
             },
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Audio generation failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Audio generation failed: {str(e)}"
+        )
 
 
 @router.get("/tts/feedback/{result}")
@@ -95,7 +106,13 @@ async def get_feedback_audio(
     variant: Optional[int] = None,
 ):
     """Get pre-cached feedback audio (instant response)."""
-    valid_results = ["correct", "incorrect", "partially_correct", "partially_incorrect", "skipped"]
+    valid_results = [
+        "correct",
+        "incorrect",
+        "partially_correct",
+        "partially_incorrect",
+        "skipped",
+    ]
     if result not in valid_results:
         raise HTTPException(
             status_code=400,
@@ -121,7 +138,9 @@ async def get_feedback_audio(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve feedback audio: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to retrieve feedback audio: {str(e)}"
+        )
 
 
 @router.get("/sessions/{session_id}/feedback/{result}/audio")
@@ -137,7 +156,13 @@ async def get_session_feedback_audio(
     if not session:
         raise HTTPException(status_code=404, detail="Session not found or expired")
 
-    valid_results = ["correct", "incorrect", "partially_correct", "partially_incorrect", "skipped"]
+    valid_results = [
+        "correct",
+        "incorrect",
+        "partially_correct",
+        "partially_incorrect",
+        "skipped",
+    ]
     if result not in valid_results:
         raise HTTPException(
             status_code=400,
@@ -159,4 +184,6 @@ async def get_session_feedback_audio(
             },
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to generate feedback audio: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to generate feedback audio: {str(e)}"
+        )

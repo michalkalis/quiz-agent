@@ -1,13 +1,14 @@
 """Quiz Agent API Client - handles all HTTP communication with the backend."""
 
 import requests
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any
 from dataclasses import dataclass
 
 
 @dataclass
 class Question:
     """Represents a quiz question."""
+
     id: str
     question: str
     type: str
@@ -20,6 +21,7 @@ class Question:
 @dataclass
 class Evaluation:
     """Represents answer evaluation result."""
+
     user_answer: str
     result: str  # "correct", "partially_correct", "partially_incorrect", "incorrect", "skipped"
     points: float
@@ -29,6 +31,7 @@ class Evaluation:
 @dataclass
 class Participant:
     """Represents a quiz participant."""
+
     participant_id: str
     user_id: str
     display_name: str
@@ -40,6 +43,7 @@ class Participant:
 
 class QuizAPIError(Exception):
     """Custom exception for Quiz API errors."""
+
     pass
 
 
@@ -65,14 +69,14 @@ class QuizClient:
         difficulty: str = "medium",
         user_id: Optional[str] = None,
         category: Optional[str] = None,
-        ttl_minutes: int = 30
+        ttl_minutes: int = 30,
     ) -> Dict[str, Any]:
         """Create a new quiz session."""
         payload = {
             "max_questions": max_questions,
             "difficulty": difficulty,
             "mode": "single",
-            "ttl_minutes": ttl_minutes
+            "ttl_minutes": ttl_minutes,
         }
 
         if user_id:
@@ -100,8 +104,7 @@ class QuizClient:
 
         try:
             response = requests.post(
-                f"{self.base_url}/sessions/{self.session_id}/start",
-                json={}
+                f"{self.base_url}/sessions/{self.session_id}/start", json={}
             )
             response.raise_for_status()
             return response.json()
@@ -122,15 +125,16 @@ class QuizClient:
 
         try:
             response = requests.post(
-                f"{self.base_url}/sessions/{self.session_id}/input",
-                json=payload
+                f"{self.base_url}/sessions/{self.session_id}/input", json=payload
             )
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
             raise QuizAPIError(f"Failed to submit input: {e}")
 
-    def rate_question(self, rating: int, feedback_text: Optional[str] = None) -> Dict[str, Any]:
+    def rate_question(
+        self, rating: int, feedback_text: Optional[str] = None
+    ) -> Dict[str, Any]:
         """Rate the current question (1-5 stars)."""
         if not self.session_id:
             raise QuizAPIError("No active session. Create a session first.")
@@ -143,8 +147,7 @@ class QuizClient:
 
         try:
             response = requests.post(
-                f"{self.base_url}/sessions/{self.session_id}/rate",
-                json=payload
+                f"{self.base_url}/sessions/{self.session_id}/rate", json=payload
             )
             response.raise_for_status()
             return response.json()
@@ -184,9 +187,11 @@ class QuizClient:
     def transcribe_audio(self, audio_file_path: str) -> Dict[str, Any]:
         """Transcribe audio file to text using Whisper API."""
         try:
-            with open(audio_file_path, 'rb') as audio_file:
-                files = {'audio': audio_file}
-                response = requests.post(f"{self.base_url}/voice/transcribe", files=files)
+            with open(audio_file_path, "rb") as audio_file:
+                files = {"audio": audio_file}
+                response = requests.post(
+                    f"{self.base_url}/voice/transcribe", files=files
+                )
                 response.raise_for_status()
                 return response.json()
         except requests.exceptions.RequestException as e:
@@ -198,16 +203,16 @@ class QuizClient:
             raise QuizAPIError("No active session. Create a session first.")
 
         try:
-            with open(audio_file_path, 'rb') as audio_file:
-                files = {'audio': audio_file}
+            with open(audio_file_path, "rb") as audio_file:
+                files = {"audio": audio_file}
                 data = {}
                 if self.participant_id:
-                    data['participant_id'] = self.participant_id
+                    data["participant_id"] = self.participant_id
 
                 response = requests.post(
                     f"{self.base_url}/voice/submit/{self.session_id}",
                     files=files,
-                    data=data
+                    data=data,
                 )
                 response.raise_for_status()
                 return response.json()
@@ -228,7 +233,7 @@ class QuizClient:
             difficulty=question_data["difficulty"],
             topic=question_data["topic"],
             category=question_data["category"],
-            possible_answers=question_data.get("possible_answers")
+            possible_answers=question_data.get("possible_answers"),
         )
 
     @staticmethod
@@ -242,7 +247,7 @@ class QuizClient:
             user_answer=eval_data["user_answer"],
             result=eval_data["result"],
             points=eval_data["points"],
-            correct_answer=eval_data["correct_answer"]
+            correct_answer=eval_data["correct_answer"],
         )
 
     @staticmethod
@@ -262,5 +267,5 @@ class QuizClient:
             score=p["score"],
             answered_count=p["answered_count"],
             is_host=p["is_host"],
-            is_ready=p["is_ready"]
+            is_ready=p["is_ready"],
         )

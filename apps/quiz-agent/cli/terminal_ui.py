@@ -26,7 +26,7 @@ class QuizTerminalUI:
         self.quiz_settings = {
             "num_questions": 10,
             "difficulty": "random",  # Will be randomized if "random" is selected
-            "category": ""  # Empty means all categories
+            "category": "",  # Empty means all categories
         }
 
     def clear_screen(self):
@@ -58,12 +58,14 @@ Welcome to the AI-powered quiz experience!
 - `harder` / `easier` - Adjust difficulty
         """
 
-        self.console.print(Panel(
-            Markdown(welcome_text),
-            title="Welcome",
-            border_style="cyan",
-            box=box.DOUBLE
-        ))
+        self.console.print(
+            Panel(
+                Markdown(welcome_text),
+                title="Welcome",
+                border_style="cyan",
+                box=box.DOUBLE,
+            )
+        )
         self.console.print()
 
     def check_backend(self) -> bool:
@@ -72,7 +74,7 @@ Welcome to the AI-powered quiz experience!
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
             console=self.console,
-            transient=True
+            transient=True,
         ) as progress:
             progress.add_task(description="Connecting to Quiz Agent API...", total=None)
 
@@ -91,53 +93,57 @@ Welcome to the AI-powered quiz experience!
         difficulty_display = self.quiz_settings["difficulty"]
         if difficulty_display == "random":
             difficulty_display = "random (any)"
-        
-        category_display = self.quiz_settings["category"] if self.quiz_settings["category"] else "all"
-        
+
+        category_display = (
+            self.quiz_settings["category"] if self.quiz_settings["category"] else "all"
+        )
+
         settings_text = f"""
 **Current Settings:**
 - Number of questions: {self.quiz_settings["num_questions"]}
 - Starting difficulty: {difficulty_display}
 - Category: {category_display}
         """
-        
-        self.console.print(Panel(
-            Markdown(settings_text),
-            title="Quiz Settings",
-            border_style="cyan",
-            box=box.ROUNDED
-        ))
+
+        self.console.print(
+            Panel(
+                Markdown(settings_text),
+                title="Quiz Settings",
+                border_style="cyan",
+                box=box.ROUNDED,
+            )
+        )
         self.console.print()
 
     def configure_settings(self):
         """Configure quiz settings interactively."""
         self.console.print("[bold cyan]Configure Quiz Settings[/bold cyan]\n")
-        
+
         # Number of questions
         num_questions = IntPrompt.ask(
             "Number of questions",
             default=self.quiz_settings["num_questions"],
-            console=self.console
+            console=self.console,
         )
         self.quiz_settings["num_questions"] = num_questions
-        
+
         # Difficulty
         difficulty = Prompt.ask(
             "Starting difficulty",
             choices=["easy", "medium", "hard", "random"],
             default=self.quiz_settings["difficulty"],
-            console=self.console
+            console=self.console,
         )
         self.quiz_settings["difficulty"] = difficulty
-        
+
         # Category
         category = Prompt.ask(
             "Category (optional, leave empty for all)",
             default=self.quiz_settings["category"],
-            console=self.console
+            console=self.console,
         )
         self.quiz_settings["category"] = category.strip() if category else ""
-        
+
         self.console.print("\n✅ [green]Settings saved![/green]\n")
 
     def start_quiz(self) -> bool:
@@ -158,25 +164,31 @@ Welcome to the AI-powered quiz experience!
                 SpinnerColumn(),
                 TextColumn("[progress.description]{task.description}"),
                 console=self.console,
-                transient=True
+                transient=True,
             ) as progress:
                 progress.add_task(description="Creating quiz session...", total=None)
 
-                session_data = self.client.create_session(
+                self.client.create_session(
                     max_questions=self.quiz_settings["num_questions"],
                     difficulty=difficulty,
-                    category=self.quiz_settings["category"] if self.quiz_settings["category"] else None
+                    category=self.quiz_settings["category"]
+                    if self.quiz_settings["category"]
+                    else None,
                 )
 
-            self.console.print(f"✅ [green]Session created: {self.client.session_id}[/green]")
-            self.console.print(f"📝 Questions: {self.quiz_settings['num_questions']} | Difficulty: {difficulty_display}\n")
+            self.console.print(
+                f"✅ [green]Session created: {self.client.session_id}[/green]"
+            )
+            self.console.print(
+                f"📝 Questions: {self.quiz_settings['num_questions']} | Difficulty: {difficulty_display}\n"
+            )
 
             # Start quiz
             with Progress(
                 SpinnerColumn(),
                 TextColumn("[progress.description]{task.description}"),
                 console=self.console,
-                transient=True
+                transient=True,
             ) as progress:
                 progress.add_task(description="Starting quiz...", total=None)
                 result = self.client.start_quiz()
@@ -191,7 +203,9 @@ Welcome to the AI-powered quiz experience!
             self.console.print(f"\n❌ [red]Error: {e}[/red]\n")
             return False
 
-    def display_question(self, question: Question, question_num: int, max_questions: int):
+    def display_question(
+        self, question: Question, question_num: int, max_questions: int
+    ):
         """Display the current question."""
         # Create question panel
         question_text = f"\n[bold white]{question.question}[/bold white]\n"
@@ -203,12 +217,14 @@ Welcome to the AI-powered quiz experience!
             f"Type: {question.type}[/dim]"
         )
 
-        self.console.print(Panel(
-            question_text + metadata,
-            title=f"Question {question_num}/{max_questions}",
-            border_style="yellow",
-            box=box.ROUNDED
-        ))
+        self.console.print(
+            Panel(
+                question_text + metadata,
+                title=f"Question {question_num}/{max_questions}",
+                border_style="yellow",
+                box=box.ROUNDED,
+            )
+        )
 
         # If multiple choice, show options
         if question.possible_answers:
@@ -225,12 +241,11 @@ Welcome to the AI-powered quiz experience!
             "partially_correct": ("⚠️", "yellow", "Partially Correct"),
             "partially_incorrect": ("⚠️", "orange1", "Partially Incorrect"),
             "incorrect": ("❌", "red", "Incorrect"),
-            "skipped": ("⏭️", "dim", "Skipped")
+            "skipped": ("⏭️", "dim", "Skipped"),
         }
 
         emoji, color, text = result_display.get(
-            evaluation.result,
-            ("❓", "white", "Unknown")
+            evaluation.result, ("❓", "white", "Unknown")
         )
 
         # Create result panel
@@ -240,12 +255,9 @@ Welcome to the AI-powered quiz experience!
         result_text += f"Points: [bold]{evaluation.points:+.1f}[/bold]"
 
         self.console.print()
-        self.console.print(Panel(
-            result_text,
-            title="Result",
-            border_style=color,
-            box=box.ROUNDED
-        ))
+        self.console.print(
+            Panel(result_text, title="Result", border_style=color, box=box.ROUNDED)
+        )
 
         # Display score
         self.display_score(participant)
@@ -282,14 +294,14 @@ Welcome to the AI-powered quiz experience!
         if not Confirm.ask(
             "\n[dim]Rate this question? (optional)[/dim]",
             default=False,
-            console=self.console
+            console=self.console,
         ):
             return None
 
         rating = IntPrompt.ask(
             "Rating (1=bad, 5=great)",
             choices=["1", "2", "3", "4", "5"],
-            console=self.console
+            console=self.console,
         )
         return rating
 
@@ -301,7 +313,10 @@ Welcome to the AI-powered quiz experience!
 
         # Create results table
         table = Table(title="🎉 Quiz Complete!", box=box.ROUNDED, show_header=False)
-        table.add_row("Final Score", f"[bold cyan]{participant.score:.1f}[/bold cyan] / {max_questions}")
+        table.add_row(
+            "Final Score",
+            f"[bold cyan]{participant.score:.1f}[/bold cyan] / {max_questions}",
+        )
 
         percentage = (participant.score / max_questions) * 100
         table.add_row("Percentage", f"[bold]{percentage:.0f}%[/bold]")
@@ -330,14 +345,19 @@ Welcome to the AI-powered quiz experience!
 
             while self.current_question:
                 # Display question
-                self.display_question(self.current_question, question_number, max_questions)
+                self.display_question(
+                    self.current_question, question_number, max_questions
+                )
 
                 # Get user input
                 user_input = self.get_user_input()
 
                 # Check for quit command
                 if user_input.lower() in ["quit", "exit", "q"]:
-                    if Confirm.ask("\n[yellow]Are you sure you want to quit?[/yellow]", console=self.console):
+                    if Confirm.ask(
+                        "\n[yellow]Are you sure you want to quit?[/yellow]",
+                        console=self.console,
+                    ):
                         self.console.print("\n[dim]Thanks for playing![/dim]\n")
                         return False
                     else:
@@ -348,9 +368,11 @@ Welcome to the AI-powered quiz experience!
                     SpinnerColumn(),
                     TextColumn("[progress.description]{task.description}"),
                     console=self.console,
-                    transient=True
+                    transient=True,
                 ) as progress:
-                    progress.add_task(description="Processing your answer...", total=None)
+                    progress.add_task(
+                        description="Processing your answer...", total=None
+                    )
                     result = self.client.submit_input(user_input)
 
                 # Parse response
@@ -388,7 +410,9 @@ Welcome to the AI-powered quiz experience!
                 question_number += 1
 
                 # Pause before next question
-                self.console.print("[dim]Press Enter for next question...[/dim]", end="")
+                self.console.print(
+                    "[dim]Press Enter for next question...[/dim]", end=""
+                )
                 input()
                 self.clear_screen()
 
@@ -408,9 +432,9 @@ Welcome to the AI-powered quiz experience!
                 "\n[bold cyan]Command[/bold cyan]",
                 choices=["start", "settings", "quit", "help"],
                 default="start",
-                console=self.console
+                console=self.console,
             )
-            
+
             if command == "start":
                 if self.start_quiz():
                     # Run quiz loop
@@ -425,13 +449,13 @@ Welcome to the AI-powered quiz experience!
                 else:
                     # Failed to start, stay in command loop
                     continue
-                    
+
             elif command == "settings":
                 self.configure_settings()
-                
+
             elif command == "help":
                 self.show_welcome()
-                
+
             elif command == "quit":
                 self.console.print("\n[yellow]Goodbye![/yellow]\n")
                 return
@@ -465,7 +489,7 @@ def main():
     parser.add_argument(
         "--api-url",
         default="http://localhost:8002/api/v1",
-        help="Quiz Agent API URL (default: http://localhost:8002/api/v1)"
+        help="Quiz Agent API URL (default: http://localhost:8002/api/v1)",
     )
 
     args = parser.parse_args()

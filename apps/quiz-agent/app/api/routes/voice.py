@@ -8,7 +8,9 @@ from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, File
 
 from ..deps import (
     InputResponse,
-    get_session_manager, get_voice_transcriber, get_question_retriever,
+    get_session_manager,
+    get_voice_transcriber,
+    get_question_retriever,
     get_quiz_flow,
     flow_to_response,
 )
@@ -38,7 +40,9 @@ async def transcribe_audio(
                 detail=f"Unsupported audio format. Supported: {', '.join(VoiceTranscriber.SUPPORTED_FORMATS)}",
             )
 
-        result = await voice_transcriber.transcribe(audio_file=audio.file, filename=audio.filename)
+        result = await voice_transcriber.transcribe(
+            audio_file=audio.file, filename=audio.filename
+        )
 
         return {
             "success": True,
@@ -103,8 +107,11 @@ async def transcribe_and_submit(
             rejection_reason = transcription_result.get_rejection_reason()
             logger.warning(
                 "Transcription rejected for session %s: %s (text='%s', no_speech=%.3f, logprob=%.3f)",
-                session_id, rejection_reason, transcription_result.text,
-                transcription_result.no_speech_prob, transcription_result.avg_logprob,
+                session_id,
+                rejection_reason,
+                transcription_result.text,
+                transcription_result.no_speech_prob,
+                transcription_result.avg_logprob,
             )
             raise HTTPException(
                 status_code=400,
@@ -114,15 +121,25 @@ async def transcribe_and_submit(
         transcribed_text = transcription_result.text
         logger.info(
             "Transcribed: '%s' (no_speech=%.2f, logprob=%.2f)",
-            transcribed_text, transcription_result.no_speech_prob, transcription_result.avg_logprob,
+            transcribed_text,
+            transcription_result.no_speech_prob,
+            transcription_result.avg_logprob,
         )
 
         # Contamination detection
         if len(transcribed_text) > 100:
-            logger.warning("Transcription unusually long (%d chars) - possible TTS leakage", len(transcribed_text))
-        similarity = SequenceMatcher(None, transcribed_text.lower(), current_question.question.lower()).ratio()
+            logger.warning(
+                "Transcription unusually long (%d chars) - possible TTS leakage",
+                len(transcribed_text),
+            )
+        similarity = SequenceMatcher(
+            None, transcribed_text.lower(), current_question.question.lower()
+        ).ratio()
         if similarity > 0.5:
-            logger.warning("Transcription %.0f%% similar to question - possible TTS leakage", similarity * 100)
+            logger.warning(
+                "Transcription %.0f%% similar to question - possible TTS leakage",
+                similarity * 100,
+            )
 
         # Parallel next-question prefetch
         next_question_task = None
@@ -146,7 +163,9 @@ async def transcribe_and_submit(
 
         # Voice-specific: require an answer intent
         if flow_result.evaluation is None:
-            logger.warning("No answer intent detected in transcription: '%s'", transcribed_text)
+            logger.warning(
+                "No answer intent detected in transcription: '%s'", transcribed_text
+            )
             raise HTTPException(
                 status_code=400,
                 detail="Could not understand your answer. Please speak clearly and try again.",
@@ -167,4 +186,6 @@ async def transcribe_and_submit(
     except RuntimeError as e:
         raise HTTPException(status_code=500, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Voice submission failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Voice submission failed: {str(e)}"
+        )

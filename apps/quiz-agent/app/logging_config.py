@@ -46,10 +46,12 @@ def setup_logging() -> None:
     if env == "production":
         handler.setFormatter(JSONFormatter())
     else:
-        handler.setFormatter(logging.Formatter(
-            "%(asctime)s %(levelname)-8s [%(name)s] %(message)s",
-            datefmt="%H:%M:%S",
-        ))
+        handler.setFormatter(
+            logging.Formatter(
+                "%(asctime)s %(levelname)-8s [%(name)s] %(message)s",
+                datefmt="%H:%M:%S",
+            )
+        )
 
     root_logger.addHandler(handler)
 

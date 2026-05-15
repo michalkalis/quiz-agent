@@ -9,7 +9,7 @@ import os
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, timezone
 from threading import Lock
-from typing import Dict, Optional, Tuple
+from typing import Dict, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +73,9 @@ class UsageTracker:
             record.questions_today += 1
             logger.debug(
                 "Usage: user=%s questions_today=%d limit=%d",
-                user_id, record.questions_today, self.daily_limit,
+                user_id,
+                record.questions_today,
+                self.daily_limit,
             )
         return record.questions_today
 
@@ -117,7 +119,9 @@ class UsageTracker:
         """Get next midnight UTC."""
         now = datetime.now(timezone.utc)
         tomorrow = datetime(
-            now.year, now.month, now.day,
+            now.year,
+            now.month,
+            now.day,
             tzinfo=timezone.utc,
         ) + timedelta(days=1)
         return tomorrow

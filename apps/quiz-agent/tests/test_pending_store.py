@@ -133,8 +133,12 @@ def test_sqlite_roundtrip_preserves_quality_ratings(tmp_path):
     store = SQLitePendingStore(database_url=f"sqlite:///{db_path}")
     q = _make_question(
         review_notes="great question",
-        quality_ratings={"surprise_factor": 4, "clarity": 5,
-                         "universal_appeal": 4, "creativity": 5},
+        quality_ratings={
+            "surprise_factor": 4,
+            "clarity": 5,
+            "universal_appeal": 4,
+            "creativity": 5,
+        },
     )
     store.upsert(q)
     fetched = store.get(q.id)

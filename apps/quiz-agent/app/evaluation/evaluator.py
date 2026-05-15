@@ -30,10 +30,7 @@ class AnswerEvaluator:
         self.temperature = temperature
 
     async def evaluate(
-        self,
-        user_answer: str,
-        question: Question,
-        question_text: str = ""
+        self, user_answer: str, question: Question, question_text: str = ""
     ) -> Tuple[str, float]:
         """Evaluate user's answer against correct answer.
 
@@ -84,7 +81,7 @@ class AnswerEvaluator:
         result = await self._llm_evaluate(
             user_answer=user_answer,
             correct_answer=str(correct_answer),
-            question_text=question_text or question.question
+            question_text=question_text or question.question,
         )
 
         # Map result to score delta
@@ -92,7 +89,7 @@ class AnswerEvaluator:
             "correct": 1.0,
             "partially_correct": 0.5,
             "partially_incorrect": 0.25,
-            "incorrect": 0.0
+            "incorrect": 0.0,
         }
 
         return result, score_map.get(result, 0.0)
@@ -141,10 +138,7 @@ class AnswerEvaluator:
         return ("correct", 1.0) if selected_key == correct_key else ("incorrect", 0.0)
 
     async def _llm_evaluate(
-        self,
-        user_answer: str,
-        correct_answer: str,
-        question_text: str
+        self, user_answer: str, correct_answer: str, question_text: str
     ) -> str:
         """Use LLM for nuanced answer evaluation.
 
@@ -181,7 +175,10 @@ Respond with EXACTLY one of these words: correct, partially_correct, partially_i
             model=self.model,
             temperature=self.temperature,
             messages=[
-                {"role": "system", "content": "You are a fair quiz evaluator. Accept answers that demonstrate the user knows the correct information."},
+                {
+                    "role": "system",
+                    "content": "You are a fair quiz evaluator. Accept answers that demonstrate the user knows the correct information.",
+                },
                 {"role": "user", "content": eval_prompt},
             ],
         )

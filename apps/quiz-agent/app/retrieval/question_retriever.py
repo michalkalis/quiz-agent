@@ -8,7 +8,7 @@ Proper RAG Implementation:
 """
 
 import logging
-from typing import List, Optional, Tuple
+from typing import List, Optional
 import random
 
 logger = logging.getLogger(__name__)
@@ -48,7 +48,7 @@ class QuestionRetriever:
         self,
         session: QuizSession,
         n_candidates: int = 50,  # Fetch more for better semantic selection
-        client_excluded_ids: Optional[List[str]] = None
+        client_excluded_ids: Optional[List[str]] = None,
     ) -> Optional[Question]:
         """Get next question using RAG-first approach.
 
@@ -81,27 +81,30 @@ class QuestionRetriever:
         client_excluded = client_excluded_ids or []
         all_excluded_ids = list(set(session_excluded + client_excluded))
 
-        logger.debug("Excluding %d questions total (session: %d, client: %d)",
-                     len(all_excluded_ids), len(session_excluded), len(client_excluded))
+        logger.debug(
+            "Excluding %d questions total (session: %d, client: %d)",
+            len(all_excluded_ids),
+            len(session_excluded),
+            len(client_excluded),
+        )
 
         # Step 5: Retrieve candidates using semantic search (PRIMARY mechanism)
         candidates = self._retrieve_candidates_semantic(
             semantic_query=semantic_query,
             filters=filters,
             n_candidates=n_candidates,
-            excluded_ids=all_excluded_ids
+            excluded_ids=all_excluded_ids,
         )
 
         # Filter out expired questions
         candidates = [c for c in candidates if not c.is_expired()]
 
         if not candidates:
-            logger.debug("No candidates from semantic search, trying fallback strategies")
+            logger.debug(
+                "No candidates from semantic search, trying fallback strategies"
+            )
             candidates = self._fallback_retrieval(
-                session,
-                question_difficulty,
-                n_candidates,
-                all_excluded_ids
+                session, question_difficulty, n_candidates, all_excluded_ids
             )
             # Filter out expired questions from fallback results too
             candidates = [c for c in candidates if not c.is_expired()]
@@ -136,9 +139,11 @@ class QuestionRetriever:
             "easy": "accessible and straightforward",
             "medium": "moderately challenging",
             "hard": "advanced and complex",
-            "random": "engaging"  # Generic for random
+            "random": "engaging",  # Generic for random
         }
-        diff_descriptor = difficulty_descriptors.get(session.current_difficulty, "interesting")
+        diff_descriptor = difficulty_descriptors.get(
+            session.current_difficulty, "interesting"
+        )
         query_parts.append(diff_descriptor)
 
         # Add topic preferences (semantic matching)
@@ -176,11 +181,7 @@ class QuestionRetriever:
             logger.debug("Selected random difficulty: %s", question_difficulty)
         return question_difficulty
 
-    def _build_metadata_filters(
-        self,
-        difficulty: str,
-        session: QuizSession
-    ) -> dict:
+    def _build_metadata_filters(self, difficulty: str, session: QuizSession) -> dict:
         """Build metadata filters as CONSTRAINTS (not primary selection).
 
         Args:
@@ -212,7 +213,7 @@ class QuestionRetriever:
         semantic_query: str,
         filters: dict,
         n_candidates: int,
-        excluded_ids: List[str]
+        excluded_ids: List[str],
     ) -> List[Question]:
         """Retrieve candidates using semantic search as PRIMARY mechanism.
 
@@ -230,7 +231,7 @@ class QuestionRetriever:
             query_text=semantic_query,  # Always provide semantic query
             filters=filters,
             n_results=n_candidates,
-            excluded_ids=excluded_ids
+            excluded_ids=excluded_ids,
         )
 
         logger.debug("Retrieved %d candidates via semantic search", len(candidates))
@@ -241,7 +242,7 @@ class QuestionRetriever:
         session: QuizSession,
         question_difficulty: str,
         n_candidates: int,
-        excluded_ids: List[str]
+        excluded_ids: List[str],
     ) -> List[Question]:
         """Fallback retrieval strategies when primary semantic search fails.
 
@@ -265,9 +266,14 @@ class QuestionRetriever:
         simple_query = "quiz question"
         candidates = self._store.search(
             query_text=simple_query,
-            filters={"difficulty": question_difficulty, "type": {"$in": ["text", "image"]}, "review_status": "approved", **lang_filter},
+            filters={
+                "difficulty": question_difficulty,
+                "type": {"$in": ["text", "image"]},
+                "review_status": "approved",
+                **lang_filter,
+            },
             n_results=n_candidates,
-            excluded_ids=excluded_ids
+            excluded_ids=excluded_ids,
         )
         if candidates:
             return candidates
@@ -281,29 +287,40 @@ class QuestionRetriever:
         for fallback_difficulty in difficulty_fallback:
             candidates = self._store.search(
                 query_text=simple_query,
-                filters={"difficulty": fallback_difficulty, "type": {"$in": ["text", "image"]}, "review_status": "approved", **lang_filter},
+                filters={
+                    "difficulty": fallback_difficulty,
+                    "type": {"$in": ["text", "image"]},
+                    "review_status": "approved",
+                    **lang_filter,
+                },
                 n_results=n_candidates,
-                excluded_ids=excluded_ids
+                excluded_ids=excluded_ids,
             )
             if candidates:
-                logger.debug("Found %d candidates with difficulty %s", len(candidates), fallback_difficulty)
+                logger.debug(
+                    "Found %d candidates with difficulty %s",
+                    len(candidates),
+                    fallback_difficulty,
+                )
                 return candidates
 
         # Fallback 3: Minimal constraints (still require approved)
         logger.debug("Fallback 3 - Minimal constraints")
         candidates = self._store.search(
             query_text="question",
-            filters={"type": {"$in": ["text", "image"]}, "review_status": "approved", **lang_filter},
+            filters={
+                "type": {"$in": ["text", "image"]},
+                "review_status": "approved",
+                **lang_filter,
+            },
             n_results=n_candidates,
-            excluded_ids=excluded_ids
+            excluded_ids=excluded_ids,
         )
 
         return candidates
 
     def _handle_no_candidates(
-        self,
-        session: QuizSession,
-        question_difficulty: str
+        self, session: QuizSession, question_difficulty: str
     ) -> None:
         """Handle case when no candidates found.
 
@@ -318,8 +335,12 @@ class QuestionRetriever:
         if total_count == 0:
             logger.error("Database is empty. No questions found.")
         else:
-            logger.error("No questions available. Database has %d questions (asked: %d, difficulty: %s)",
-                         total_count, len(session.asked_question_ids), question_difficulty)
+            logger.error(
+                "No questions available. Database has %d questions (asked: %d, difficulty: %s)",
+                total_count,
+                len(session.asked_question_ids),
+                question_difficulty,
+            )
         return None
 
     def _apply_image_cap(
@@ -333,11 +354,15 @@ class QuestionRetriever:
         - Max image questions per session: min(3, max_questions // 4)
         - Never two image questions in a row
         """
-        max_questions = session.max_questions if hasattr(session, "max_questions") else 10
+        max_questions = (
+            session.max_questions if hasattr(session, "max_questions") else 10
+        )
         image_cap = min(3, max_questions // 4)
 
         # Count image questions already asked
-        recent_questions = self._get_recent_questions(session, limit=len(session.asked_question_ids))
+        recent_questions = self._get_recent_questions(
+            session, limit=len(session.asked_question_ids)
+        )
         image_count = sum(1 for q in recent_questions if q.type == "image")
         last_was_image = bool(recent_questions and recent_questions[-1].type == "image")
 
@@ -349,9 +374,7 @@ class QuestionRetriever:
         return candidates
 
     def _select_with_semantic_diversity(
-        self,
-        candidates: List[Question],
-        session: QuizSession
+        self, candidates: List[Question], session: QuizSession
     ) -> Question:
         """Select question using semantic diversity scoring.
 
@@ -401,9 +424,7 @@ class QuestionRetriever:
         return selected
 
     def _get_recent_questions(
-        self,
-        session: QuizSession,
-        limit: int = 3
+        self, session: QuizSession, limit: int = 3
     ) -> List[Question]:
         """Get recently asked questions from session.
 
@@ -430,9 +451,7 @@ class QuestionRetriever:
         return recent_questions
 
     def _calculate_semantic_diversity(
-        self,
-        candidate: Question,
-        recent_questions: List[Question]
+        self, candidate: Question, recent_questions: List[Question]
     ) -> float:
         """Calculate semantic diversity score for a candidate.
 
@@ -471,9 +490,7 @@ class QuestionRetriever:
         return diversity_score
 
     def _select_diverse_by_topic(
-        self,
-        candidates: List[Question],
-        session: QuizSession
+        self, candidates: List[Question], session: QuizSession
     ) -> Question:
         """Fallback diversity selection using topic matching.
 
@@ -490,10 +507,7 @@ class QuestionRetriever:
             recent_topics.append(session.current_topic)
 
         # Filter out recent topics if possible
-        diverse_candidates = [
-            q for q in candidates
-            if q.topic not in recent_topics
-        ]
+        diverse_candidates = [q for q in candidates if q.topic not in recent_topics]
 
         # If all candidates are recent topics, use all
         if not diverse_candidates:
@@ -508,7 +522,7 @@ class QuestionRetriever:
         difficulty: Optional[str] = None,
         topic: Optional[str] = None,
         category: Optional[str] = None,
-        limit: int = 10
+        limit: int = 10,
     ) -> List[Question]:
         """Search questions with filters.
 
@@ -534,8 +548,4 @@ class QuestionRetriever:
         if not query:
             query = "quiz question"
 
-        return self._store.search(
-            query_text=query,
-            filters=filters,
-            n_results=limit
-        )
+        return self._store.search(query_text=query, filters=filters, n_results=limit)

@@ -20,7 +20,7 @@ import os
 import json
 import requests
 import argparse
-from typing import List, Dict, Any
+
 
 def import_questions(
     api_url: str,
@@ -28,7 +28,7 @@ def import_questions(
     questions_file: str = "questions_export.json",
     skip_duplicates: bool = True,
     force: bool = False,
-    batch_size: int = 50
+    batch_size: int = 50,
 ):
     """Import questions to API.
 
@@ -73,26 +73,27 @@ def import_questions(
     endpoint = f"{api_url}/api/v1/admin/questions/import"
 
     for i in range(0, len(questions), batch_size):
-        batch = questions[i:i+batch_size]
+        batch = questions[i : i + batch_size]
         batch_num = (i // batch_size) + 1
         total_batches = (len(questions) + batch_size - 1) // batch_size
 
-        print(f"\nImporting batch {batch_num}/{total_batches} ({len(batch)} questions)...")
+        print(
+            f"\nImporting batch {batch_num}/{total_batches} ({len(batch)} questions)..."
+        )
 
         # Prepare request
-        headers = {
-            "Content-Type": "application/json",
-            "X-Admin-Key": admin_key
-        }
+        headers = {"Content-Type": "application/json", "X-Admin-Key": admin_key}
 
         payload = {
             "questions": batch,
             "skip_duplicates": skip_duplicates,
-            "force": force
+            "force": force,
         }
 
         try:
-            response = requests.post(endpoint, json=payload, headers=headers, timeout=60)
+            response = requests.post(
+                endpoint, json=payload, headers=headers, timeout=60
+            )
 
             if response.status_code == 200:
                 result = response.json()
@@ -108,8 +109,8 @@ def import_questions(
 
                 print(f"  ✓ Imported: {imported}, Skipped: {skipped}, Failed: {failed}")
             elif response.status_code == 401:
-                print(f"  ✗ ERROR: Invalid admin API key")
-                print(f"    Make sure ADMIN_API_KEY is set on the server")
+                print("  ✗ ERROR: Invalid admin API key")
+                print("    Make sure ADMIN_API_KEY is set on the server")
                 sys.exit(1)
             else:
                 print(f"  ✗ ERROR: HTTP {response.status_code}")
@@ -117,7 +118,7 @@ def import_questions(
                 total_failed += len(batch)
 
         except requests.exceptions.Timeout:
-            print(f"  ✗ ERROR: Request timeout")
+            print("  ✗ ERROR: Request timeout")
             total_failed += len(batch)
         except requests.exceptions.ConnectionError as e:
             print(f"  ✗ ERROR: Connection failed: {e}")
@@ -128,9 +129,9 @@ def import_questions(
             total_failed += len(batch)
 
     # Summary
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("IMPORT SUMMARY")
-    print("="*60)
+    print("=" * 60)
     print(f"Total questions: {len(questions)}")
     print(f"Imported: {total_imported}")
     print(f"Skipped: {total_skipped}")
@@ -151,12 +152,12 @@ def import_questions(
             print(f"  ... and {len(all_failed_ids) - 10} more")
 
     # Verify by checking stats
-    print(f"\nVerifying import...")
+    print("\nVerifying import...")
     try:
         stats_response = requests.get(
             f"{api_url}/api/v1/admin/questions/stats",
             headers={"X-Admin-Key": admin_key},
-            timeout=10
+            timeout=10,
         )
         if stats_response.status_code == 200:
             stats = stats_response.json()
@@ -175,34 +176,34 @@ if __name__ == "__main__":
     parser.add_argument(
         "--api-url",
         default="https://quiz-agent-api.fly.dev",
-        help="API base URL (default: production)"
+        help="API base URL (default: production)",
     )
     parser.add_argument(
         "--admin-key",
         default=os.getenv("ADMIN_API_KEY"),
-        help="Admin API key (or set ADMIN_API_KEY env var)"
+        help="Admin API key (or set ADMIN_API_KEY env var)",
     )
     parser.add_argument(
         "--questions-file",
         default="questions_export.json",
-        help="Path to questions JSON file"
+        help="Path to questions JSON file",
     )
     parser.add_argument(
         "--skip-duplicates",
         action="store_true",
         default=True,
-        help="Skip questions that already exist by ID"
+        help="Skip questions that already exist by ID",
     )
     parser.add_argument(
         "--force",
         action="store_true",
-        help="Force import even if semantic duplicates detected"
+        help="Force import even if semantic duplicates detected",
     )
     parser.add_argument(
         "--batch-size",
         type=int,
         default=50,
-        help="Number of questions per batch (default: 50)"
+        help="Number of questions per batch (default: 50)",
     )
 
     args = parser.parse_args()
@@ -218,5 +219,5 @@ if __name__ == "__main__":
         questions_file=args.questions_file,
         skip_duplicates=args.skip_duplicates,
         force=args.force,
-        batch_size=args.batch_size
+        batch_size=args.batch_size,
     )

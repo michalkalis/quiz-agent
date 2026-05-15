@@ -23,7 +23,9 @@ from .deps import get_question_store
 router = APIRouter(prefix="/api/v1/admin", tags=["Admin"])
 
 
-def verify_admin_key(x_admin_key: str = Header(..., description="Admin API key for authentication")):
+def verify_admin_key(
+    x_admin_key: str = Header(..., description="Admin API key for authentication"),
+):
     """Verify admin API key from header.
 
     Args:
@@ -37,19 +39,19 @@ def verify_admin_key(x_admin_key: str = Header(..., description="Admin API key f
     if not admin_key:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Admin API key not configured on server. Set ADMIN_API_KEY environment variable."
+            detail="Admin API key not configured on server. Set ADMIN_API_KEY environment variable.",
         )
 
     if x_admin_key != admin_key:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid admin API key"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid admin API key"
         )
 
 
 # Pydantic models for request/response
 class QuestionImport(BaseModel):
     """Question data for import."""
+
     id: str
     question: str
     type: str = "text"
@@ -72,13 +74,21 @@ class QuestionImport(BaseModel):
 
 class ImportQuestionsRequest(BaseModel):
     """Request to import questions."""
-    questions: List[QuestionImport] = Field(..., description="List of questions to import")
-    skip_duplicates: bool = Field(True, description="Skip questions that already exist (by ID)")
-    force: bool = Field(False, description="Force import even if duplicates detected (by similarity)")
+
+    questions: List[QuestionImport] = Field(
+        ..., description="List of questions to import"
+    )
+    skip_duplicates: bool = Field(
+        True, description="Skip questions that already exist (by ID)"
+    )
+    force: bool = Field(
+        False, description="Force import even if duplicates detected (by similarity)"
+    )
 
 
 class ImportQuestionsResponse(BaseModel):
     """Response from question import."""
+
     success: bool
     imported_count: int
     skipped_count: int
@@ -90,6 +100,7 @@ class ImportQuestionsResponse(BaseModel):
 
 class SourceBackfillItem(BaseModel):
     """Single source attribution update for a question."""
+
     id: str
     source_url: Optional[str] = None
     source_excerpt: Optional[str] = None
@@ -97,11 +108,13 @@ class SourceBackfillItem(BaseModel):
 
 class BackfillSourcesRequest(BaseModel):
     """Request to backfill source_url / source_excerpt on existing questions."""
+
     items: List[SourceBackfillItem]
 
 
 class BackfillSourcesResponse(BaseModel):
     """Response from source backfill."""
+
     success: bool
     updated_count: int
     not_found_count: int
@@ -111,6 +124,7 @@ class BackfillSourcesResponse(BaseModel):
 
 class QuestionStats(BaseModel):
     """Statistics about questions in database."""
+
     total_questions: int
     by_difficulty: Dict[str, int]
     by_topic: Dict[str, int]
@@ -165,7 +179,7 @@ async def import_questions(
                 generation_metadata=q_data.generation_metadata,
                 usage_count=0,
                 user_ratings={},
-                review_status="approved"  # Auto-approve imports
+                review_status="approved",  # Auto-approve imports
             )
 
             # Check for semantic duplicates unless forced
@@ -175,7 +189,9 @@ async def import_questions(
                     # Question text is very similar to existing question
                     skipped += 1
                     skipped_ids.append(q_data.id)
-                    logger.info("Skipped %s: Similar to %s", q_data.id, duplicates[0][0].id)
+                    logger.info(
+                        "Skipped %s: Similar to %s", q_data.id, duplicates[0][0].id
+                    )
                     continue
 
             # Add to database
@@ -199,7 +215,7 @@ async def import_questions(
         failed_count=failed,
         skipped_ids=skipped_ids,
         failed_ids=failed_ids,
-        message=f"Imported {imported} questions, skipped {skipped}, failed {failed}"
+        message=f"Imported {imported} questions, skipped {skipped}, failed {failed}",
     )
 
 
@@ -233,7 +249,10 @@ async def backfill_sources(
         if item.source_url is not None and question.source_url != item.source_url:
             question.source_url = item.source_url
             changed = True
-        if item.source_excerpt is not None and question.source_excerpt != item.source_excerpt:
+        if (
+            item.source_excerpt is not None
+            and question.source_excerpt != item.source_excerpt
+        ):
             question.source_excerpt = item.source_excerpt
             changed = True
         if not changed:
@@ -273,14 +292,16 @@ async def list_questions(
             continue
         if topic and q.topic.lower() != topic.lower():
             continue
-        results.append({
-            "id": q.id,
-            "question": q.question,
-            "correct_answer": q.correct_answer,
-            "topic": q.topic,
-            "difficulty": q.difficulty,
-            "type": q.type,
-        })
+        results.append(
+            {
+                "id": q.id,
+                "question": q.question,
+                "correct_answer": q.correct_answer,
+                "topic": q.topic,
+                "difficulty": q.difficulty,
+                "type": q.type,
+            }
+        )
 
     return {"total": len(results), "questions": results}
 
@@ -315,7 +336,7 @@ async def get_question_stats(
         total_questions=len(all_questions),
         by_difficulty=by_difficulty,
         by_topic=by_topic,
-        by_category=by_category
+        by_category=by_category,
     )
 
 
@@ -333,7 +354,7 @@ async def delete_question(
     if not question:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Question {question_id} not found"
+            detail=f"Question {question_id} not found",
         )
 
     # Delete question
@@ -342,7 +363,7 @@ async def delete_question(
     if not success:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to delete question"
+            detail="Failed to delete question",
         )
 
     return {"success": True, "message": f"Deleted question {question_id}"}

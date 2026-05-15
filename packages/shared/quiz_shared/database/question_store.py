@@ -122,7 +122,11 @@ class ChromaDBQuestionStore:
 
             embedding = None
             embeddings = result.get("embeddings")
-            if embeddings is not None and len(embeddings) > 0 and embeddings[0] is not None:
+            if (
+                embeddings is not None
+                and len(embeddings) > 0
+                and embeddings[0] is not None
+            ):
                 embedding = embeddings[0]
 
             return self._metadata_to_question(
@@ -216,7 +220,9 @@ class ChromaDBQuestionStore:
             ids_inner = ids[0]
             documents = results["documents"][0]
             metadatas = results["metadatas"][0]
-            distances = results.get("distances", [[]])[0] if results.get("distances") else []
+            distances = (
+                results.get("distances", [[]])[0] if results.get("distances") else []
+            )
 
             for i, qid in enumerate(ids_inner):
                 similarity = 1 - distances[i] if distances else 0.0

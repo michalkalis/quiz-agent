@@ -27,39 +27,33 @@ class QuizSession(BaseModel):
     room_code: Optional[str] = Field(None, description="Room code for multiplayer")
     participants: List[Participant] = Field(
         default_factory=list,
-        description="Participants in session (1 for single, N for multiplayer)"
+        description="Participants in session (1 for single, N for multiplayer)",
     )
 
     # Configuration
     max_questions: int = Field(10, description="Total questions in quiz")
     current_difficulty: str = Field(
-        "medium",
-        description="Difficulty: easy | medium | hard"
+        "medium", description="Difficulty: easy | medium | hard"
     )
     category: Optional[str] = Field(
-        None,
-        description="Current category filter (e.g., 'music', 'movies', 'all')"
+        None, description="Current category filter (e.g., 'music', 'movies', 'all')"
     )
     language: str = Field("en", description="Preferred language code (ISO 639-1)")
     preferred_topics: List[str] = Field(
-        default_factory=list,
-        description="Preferred topics: ['science', 'history']"
+        default_factory=list, description="Preferred topics: ['science', 'history']"
     )
     excluded_topics: List[str] = Field(
-        default_factory=list,
-        description="Excluded topics: ['sports', 'geography']"
+        default_factory=list, description="Excluded topics: ['sports', 'geography']"
     )
     disliked_topics: List[str] = Field(
         default_factory=list,
-        description="Disliked topics (alias for excluded_topics): ['sports', 'geography']"
+        description="Disliked topics (alias for excluded_topics): ['sports', 'geography']",
     )
     preferred_categories: List[str] = Field(
-        default_factory=list,
-        description="Preferred categories: ['music', 'movies']"
+        default_factory=list, description="Preferred categories: ['music', 'movies']"
     )
     excluded_categories: List[str] = Field(
-        default_factory=list,
-        description="Excluded categories: ['children']"
+        default_factory=list, description="Excluded categories: ['children']"
     )
 
     # Progress (single-player or aggregate)
@@ -67,28 +61,28 @@ class QuizSession(BaseModel):
     score: float = Field(0.0, description="Running score (single-player only)")
     phase: SessionPhase = Field(
         SessionPhase.IDLE,
-        description="Phase: idle | asking | awaiting_answer | finished"
+        description="Phase: idle | asking | awaiting_answer | finished",
     )
 
     # Question history
     asked_question_ids: List[str] = Field(
-        default_factory=list,
-        description="IDs of questions already asked this session"
+        default_factory=list, description="IDs of questions already asked this session"
     )
     skipped_question_numbers: List[int] = Field(
-        default_factory=list,
-        description="Question numbers that were skipped"
+        default_factory=list, description="Question numbers that were skipped"
     )
 
     # Current question
     current_question_id: Optional[str] = Field(None, description="Current question ID")
-    current_question_text: Optional[str] = Field(None, description="Current question text")
+    current_question_text: Optional[str] = Field(
+        None, description="Current question text"
+    )
     current_answer: Optional[str] = Field(None, description="Current correct answer")
     current_topic: Optional[str] = Field(None, description="Current question topic")
     last_user_answer: Optional[str] = Field(None, description="Last answer provided")
     last_result: Optional[str] = Field(
         None,
-        description="Last result: correct | partially_correct | incorrect | skipped"
+        description="Last result: correct | partially_correct | incorrect | skipped",
     )
 
     # Timestamps
@@ -96,7 +90,7 @@ class QuizSession(BaseModel):
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     expires_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc) + timedelta(minutes=30),
-        description="Session expiry (30 min TTL)"
+        description="Session expiry (30 min TTL)",
     )
 
     def get_participant(self, participant_id: str) -> Optional[Participant]:
@@ -110,7 +104,9 @@ class QuizSession(BaseModel):
         """Check if session is multiplayer."""
         return self.mode == "multiplayer" or len(self.participants) > 1
 
-    def transition(self, to: Union[SessionPhase, str], *, caller: Optional[str] = None) -> None:
+    def transition(
+        self, to: Union[SessionPhase, str], *, caller: Optional[str] = None
+    ) -> None:
         """Move the session to a new phase, validating against the transition table.
 
         Raises `InvalidPhaseTransition` if the table forbids `current -> to`.
@@ -118,12 +114,19 @@ class QuizSession(BaseModel):
         phase, that's a logic bug at the call site (Issue 19 family).
         """
         target = SessionPhase(to) if not isinstance(to, SessionPhase) else to
-        current = self.phase if isinstance(self.phase, SessionPhase) else SessionPhase(self.phase)
+        current = (
+            self.phase
+            if isinstance(self.phase, SessionPhase)
+            else SessionPhase(self.phase)
+        )
 
         if not is_valid_transition(current, target):
             logger.warning(
                 "Invalid phase transition rejected: %s -> %s (caller=%s, session=%s)",
-                current.value, target.value, caller or "?", self.session_id,
+                current.value,
+                target.value,
+                caller or "?",
+                self.session_id,
             )
             raise InvalidPhaseTransition(current, target)
 

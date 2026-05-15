@@ -21,9 +21,7 @@ def _get_openai_client(api_key: Optional[str] = None) -> OpenAI:
 
 
 def generate_embedding(
-    text: str,
-    model: str = "text-embedding-3-small",
-    api_key: Optional[str] = None
+    text: str, model: str = "text-embedding-3-small", api_key: Optional[str] = None
 ) -> List[float]:
     """Generate embedding vector for text using OpenAI.
 
@@ -42,10 +40,7 @@ def generate_embedding(
     """
     client = _get_openai_client(api_key)
 
-    response = client.embeddings.create(
-        model=model,
-        input=text
-    )
+    response = client.embeddings.create(model=model, input=text)
 
     return response.data[0].embedding
 
@@ -82,9 +77,7 @@ def calculate_similarity(embedding1: List[float], embedding2: List[float]) -> fl
 
 
 def is_duplicate(
-    question_text: str,
-    existing_embeddings: List[List[float]],
-    threshold: float = 0.85
+    question_text: str, existing_embeddings: List[List[float]], threshold: float = 0.85
 ) -> tuple[bool, float]:
     """Check if question is duplicate of existing questions.
 

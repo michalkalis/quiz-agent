@@ -28,7 +28,7 @@ class FeedbackService:
         self,
         question_store: QuestionStore,
         sql_client: SQLClient,
-        low_rating_threshold: float = 2.5
+        low_rating_threshold: float = 2.5,
     ):
         """Initialize feedback service.
 
@@ -46,7 +46,7 @@ class FeedbackService:
         question_id: str,
         user_id: str,
         rating: int,
-        feedback_text: Optional[str] = None
+        feedback_text: Optional[str] = None,
     ) -> Tuple[bool, str]:
         """Submit a rating for a question.
 
@@ -88,7 +88,7 @@ class FeedbackService:
                 user_id=user_id,
                 rating=rating,
                 feedback_text=feedback_text,
-                created_at=datetime.now()
+                created_at=datetime.now(),
             )
 
             sql_success = self.sql.add_rating(rating_obj)
@@ -102,10 +102,7 @@ class FeedbackService:
         except Exception as e:
             return False, f"Failed to submit rating: {str(e)}"
 
-    def get_question_ratings(
-        self,
-        question_id: str
-    ) -> List[QuestionRating]:
+    def get_question_ratings(self, question_id: str) -> List[QuestionRating]:
         """Get all ratings for a question.
 
         Args:
@@ -128,8 +125,7 @@ class FeedbackService:
         return self.sql.get_avg_rating(question_id)
 
     def get_low_rated_questions(
-        self,
-        threshold: Optional[float] = None
+        self, threshold: Optional[float] = None
     ) -> List[Tuple[str, float]]:
         """Get questions with low average ratings.
 
@@ -162,7 +158,9 @@ class FeedbackService:
             if not question:
                 return False, "Question not found in database"
             question.review_status = "needs_revision"
-            question.review_notes = f"Flagged by {user_id}: {reason or 'No reason given'}"
+            question.review_notes = (
+                f"Flagged by {user_id}: {reason or 'No reason given'}"
+            )
             if not self.store.upsert(question):
                 return False, "Failed to persist flag"
 
@@ -180,7 +178,11 @@ class FeedbackService:
         low_rated = self.get_low_rated_questions()
 
         if low_rated:
-            logger.info("Found %d low-rated questions (< %.1f)", len(low_rated), self.low_rating_threshold)
+            logger.info(
+                "Found %d low-rated questions (< %.1f)",
+                len(low_rated),
+                self.low_rating_threshold,
+            )
             for qid, rating in low_rated:
                 logger.info("  %s: %.2f avg rating", qid, rating)
 

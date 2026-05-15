@@ -7,10 +7,9 @@ This script exports all questions from the local database for import to producti
 import sys
 import os
 import json
-from datetime import datetime
 
 # Add shared package to path
-sys.path.insert(0, '../../packages/shared')
+sys.path.insert(0, "../../packages/shared")
 
 from quiz_shared.database.chroma_client import ChromaDBClient
 
@@ -29,10 +28,7 @@ if not os.path.exists(chroma_path):
     sys.exit(1)
 
 # Initialize ChromaDB client
-client = ChromaDBClient(
-    collection_name="quiz_questions",
-    persist_directory=chroma_path
-)
+client = ChromaDBClient(collection_name="quiz_questions", persist_directory=chroma_path)
 
 # Get all questions
 print("\nFetching all questions...")
@@ -83,11 +79,11 @@ for q in questions:
     by_topic[q.topic] = by_topic.get(q.topic, 0) + 1
 
 print("\nStatistics:")
-print(f"  By difficulty:")
+print("  By difficulty:")
 for diff, count in sorted(by_difficulty.items()):
     print(f"    - {diff}: {count}")
-print(f"  By topic:")
+print("  By topic:")
 for topic, count in sorted(by_topic.items()):
     print(f"    - {topic}: {count}")
 
-print(f"\nNext step: Use import_questions.py to import to production")
+print("\nNext step: Use import_questions.py to import to production")

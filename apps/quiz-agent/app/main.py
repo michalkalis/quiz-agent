@@ -17,9 +17,8 @@ Run with: uvicorn app.main:app --reload --port 8002
 
 import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
@@ -29,6 +28,7 @@ import sentry_sdk
 # Load environment variables from .env files
 try:
     from dotenv import load_dotenv
+
     # Repo root is 3 levels up from app/main.py: app/ → quiz-agent/ → apps/ → repo root
     base_dir = os.path.dirname(os.path.abspath(__file__))
     repo_root = os.path.join(base_dir, "../../..")
@@ -40,6 +40,7 @@ except ImportError:
 
 # Setup logging before anything else
 from .logging_config import setup_logging
+
 setup_logging()
 logger = logging.getLogger(__name__)
 
@@ -51,7 +52,9 @@ if sentry_dsn:
         traces_sample_rate=0.1,
         environment=os.environ.get("ENVIRONMENT", "development"),
     )
-    logger.info("Sentry initialized (env=%s)", os.environ.get("ENVIRONMENT", "development"))
+    logger.info(
+        "Sentry initialized (env=%s)", os.environ.get("ENVIRONMENT", "development")
+    )
 
 from quiz_shared.database.chroma_client import ChromaDBClient
 from quiz_shared.database.sql_client import SQLClient
@@ -128,21 +131,25 @@ async def lifespan(app: FastAPI):
         chroma_path = os.getenv("CHROMA_PATH")
         if not chroma_path:
             # Local development: use shared ChromaDB at project root
-            project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
+            project_root = os.path.abspath(
+                os.path.join(os.path.dirname(__file__), "../../..")
+            )
             chroma_path = os.path.join(project_root, "chroma_data")
 
         # Ensure directory exists
         os.makedirs(chroma_path, exist_ok=True)
 
         from .startup_checks import verify_chroma_path_on_volume
+
         verify_chroma_path_on_volume(chroma_path)
 
         chroma_client = ChromaDBClient(
-            collection_name="quiz_questions",
-            persist_directory=chroma_path
+            collection_name="quiz_questions", persist_directory=chroma_path
         )
         question_store = chroma_client.store
-        logger.info("ChromaDB client + QuestionStore initialized (using %s)", chroma_path)
+        logger.info(
+            "ChromaDB client + QuestionStore initialized (using %s)", chroma_path
+        )
     except Exception as e:
         logger.error("Failed to initialize ChromaDB: %s", e, exc_info=True)
         raise
@@ -167,13 +174,16 @@ async def lifespan(app: FastAPI):
         feedback_service = FeedbackService(
             question_store=question_store,
             sql_client=sql_client,
-            low_rating_threshold=2.5
+            low_rating_threshold=2.5,
         )
         voice_transcriber = VoiceTranscriber()
         tts_service = TTSService()
         translation_service = TranslationService()
         usage_tracker = UsageTracker()
-        logger.info("Services initialized (free limit: %d questions/day)", usage_tracker.daily_limit)
+        logger.info(
+            "Services initialized (free limit: %d questions/day)",
+            usage_tracker.daily_limit,
+        )
     except Exception as e:
         logger.error("Failed to initialize services: %s", e, exc_info=True)
         raise
@@ -253,7 +263,7 @@ app = FastAPI(
         "Client-agnostic design for iOS, TV, terminal, and web clients."
     ),
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # Register rate limiter
@@ -300,10 +310,10 @@ async def root():
             "Nuanced answer evaluation",
             "User ratings and feedback",
             "Multiplayer support",
-            "Client-agnostic design"
+            "Client-agnostic design",
         ],
         "docs": "/docs",
-        "health": "/api/v1/health"
+        "health": "/api/v1/health",
     }
 
 
@@ -311,9 +321,5 @@ if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run(
-        "app.main:app",
-        host="0.0.0.0",
-        port=8002,
-        reload=True,
-        log_level="info"
+        "app.main:app", host="0.0.0.0", port=8002, reload=True, log_level="info"
     )

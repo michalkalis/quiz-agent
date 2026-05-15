@@ -9,8 +9,8 @@ import re
 def normalize_text(text: str) -> str:
     """Copy of quiz_shared.utils.text_normalization.normalize_text."""
     text = text.lower().strip()
-    text = re.sub(r'[.,!?;:\'"()-]', '', text)
-    text = re.sub(r'\s+', ' ', text)
+    text = re.sub(r'[.,!?;:\'"()-]', "", text)
+    text = re.sub(r"\s+", " ", text)
     return text
 
 
@@ -41,7 +41,6 @@ OPTIONS = {"a": "Paris", "b": "London", "c": "Berlin", "d": "Madrid"}
 
 
 class TestMCQEvaluator:
-
     def test_correct_by_key(self):
         assert _evaluate_mcq("a", OPTIONS, "a") == ("correct", 1.0)
 

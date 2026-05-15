@@ -25,7 +25,7 @@ class Participant(BaseModel):
     last_answer: Optional[str] = Field(None, description="Last answer submitted")
     last_result: Optional[str] = Field(
         None,
-        description="Last result: correct | partially_correct | incorrect | skipped"
+        description="Last result: correct | partially_correct | incorrect | skipped",
     )
     is_ready: bool = Field(True, description="Ready for next question")
 
@@ -43,6 +43,6 @@ class Participant(BaseModel):
                 "answered_count": 9,
                 "correct_count": 6,
                 "is_host": True,
-                "is_ready": True
+                "is_ready": True,
             }
         }

@@ -16,24 +16,36 @@ from ..voice.transcriber import VoiceTranscriber
 from ..tts.service import TTSService
 from ..usage.tracker import UsageTracker
 from ..quiz.flow import QuizFlowService, FlowResult
-from ..serializers import question_to_dict, question_to_dict_translated
 
 
 # ── Request/Response Models ──────────────────────────────────────────────────
 
+
 class CreateSessionRequest(BaseModel):
     """Request to create a new quiz session."""
-    max_questions: int = Field(default=10, ge=1, le=50, description="Number of questions")
-    difficulty: str = Field(default="medium", pattern="^(easy|medium|hard|random)$", description="Difficulty level or 'random' for varying difficulty per question")
+
+    max_questions: int = Field(
+        default=10, ge=1, le=50, description="Number of questions"
+    )
+    difficulty: str = Field(
+        default="medium",
+        pattern="^(easy|medium|hard|random)$",
+        description="Difficulty level or 'random' for varying difficulty per question",
+    )
     user_id: Optional[str] = None
     mode: str = Field(default="single", pattern="^(single|multiplayer)$")
     category: Optional[str] = Field(default=None, description="Category filter")
-    language: str = Field(default="en", pattern="^[a-z]{2}$", description="Language code (ISO 639-1)")
-    ttl_minutes: int = Field(default=30, ge=10, le=120, description="Session expiry time")
+    language: str = Field(
+        default="en", pattern="^[a-z]{2}$", description="Language code (ISO 639-1)"
+    )
+    ttl_minutes: int = Field(
+        default=30, ge=10, le=120, description="Session expiry time"
+    )
 
 
 class SessionResponse(BaseModel):
     """Response containing session data."""
+
     session_id: str
     mode: str
     phase: str
@@ -48,63 +60,90 @@ class SessionResponse(BaseModel):
 
 class StartQuizRequest(BaseModel):
     """Request to start the quiz."""
+
     excluded_question_ids: Optional[List[str]] = Field(
         default=None,
-        description="Question IDs to exclude from selection (client-side history)"
+        description="Question IDs to exclude from selection (client-side history)",
     )
 
 
 class SubmitInputRequest(BaseModel):
     """Request to submit user input (AI-powered parsing)."""
+
     input: str = Field(..., min_length=1, description="User's natural language input")
     participant_id: Optional[str] = Field(default=None, description="For multiplayer")
 
 
 class InputResponse(BaseModel):
     """Response after processing input."""
+
     success: bool
     message: str
     session: SessionResponse
     current_question: Optional[Dict[str, Any]] = None
     evaluation: Optional[Dict[str, Any]] = None
-    feedback_received: List[str] = Field(default_factory=list, description="Parsed intents")
-    audio: Optional[Dict[str, Any]] = Field(default=None, description="Audio URLs when audio=true")
+    feedback_received: List[str] = Field(
+        default_factory=list, description="Parsed intents"
+    )
+    audio: Optional[Dict[str, Any]] = Field(
+        default=None, description="Audio URLs when audio=true"
+    )
 
 
 class RateQuestionRequest(BaseModel):
     """Request to rate a question."""
+
     rating: int = Field(..., ge=1, le=5, description="Rating 1-5")
-    feedback_text: Optional[str] = Field(default=None, description="Optional text feedback")
+    feedback_text: Optional[str] = Field(
+        default=None, description="Optional text feedback"
+    )
     participant_id: Optional[str] = Field(default=None, description="For multiplayer")
 
 
 class FlagQuestionRequest(BaseModel):
     """Request to flag a question as potentially incorrect."""
-    reason: Optional[str] = Field(default=None, max_length=500, description="Why the user thinks the answer is wrong")
+
+    reason: Optional[str] = Field(
+        default=None,
+        max_length=500,
+        description="Why the user thinks the answer is wrong",
+    )
     participant_id: Optional[str] = Field(default=None, description="For multiplayer")
 
 
 class AddParticipantRequest(BaseModel):
     """Request to add participant to multiplayer session."""
+
     display_name: str = Field(..., min_length=1, max_length=50)
     user_id: Optional[str] = None
 
 
 class SynthesizeTTSRequest(BaseModel):
     """Request to synthesize text to speech."""
-    text: str = Field(..., min_length=1, max_length=1000, description="Text to synthesize")
-    voice: Optional[str] = Field(default="nova", description="Voice name (nova, shimmer, onyx)")
-    format: Optional[str] = Field(default="opus", description="Audio format (opus, mp3, aac)")
+
+    text: str = Field(
+        ..., min_length=1, max_length=1000, description="Text to synthesize"
+    )
+    voice: Optional[str] = Field(
+        default="nova", description="Voice name (nova, shimmer, onyx)"
+    )
+    format: Optional[str] = Field(
+        default="opus", description="Audio format (opus, mp3, aac)"
+    )
 
 
 class ElevenLabsTokenResponse(BaseModel):
     """Response with single-use ElevenLabs token for client-side WebSocket auth."""
-    token: str = Field(description="Single-use token for ElevenLabs WebSocket connection (expires in 15 minutes)")
+
+    token: str = Field(
+        description="Single-use token for ElevenLabs WebSocket connection (expires in 15 minutes)"
+    )
 
 
 # ── Dependency Injection (FastAPI Depends) ───────────────────────────────────
 # Services are stored on app.state during lifespan startup (see main.py).
 # These functions retrieve them for use in route signatures via Depends().
+
 
 def get_session_manager(request: Request) -> SessionManager:
     return request.app.state.session_manager
@@ -148,6 +187,7 @@ def get_translation_service(request: Request):
 
 
 # ── Helper Functions ─────────────────────────────────────────────────────────
+
 
 def session_to_response(session: QuizSession) -> SessionResponse:
     """Convert QuizSession to API response."""

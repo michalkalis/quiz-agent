@@ -4,7 +4,9 @@ import sys
 import os
 
 # Add shared package to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../../..", "packages/shared"))
+sys.path.insert(
+    0, os.path.join(os.path.dirname(__file__), "../../../..", "packages/shared")
+)
 
 from app.session.manager import SessionManager
 
@@ -16,7 +18,9 @@ class StubSQLClient:
     """
 
     def __init__(self):
-        self._store: dict[str, tuple[str, bool]] = {}  # session_id -> (data_json, is_active)
+        self._store: dict[
+            str, tuple[str, bool]
+        ] = {}  # session_id -> (data_json, is_active)
 
     def save_session(self, session_id: str, data_json: str) -> bool:
         self._store[session_id] = (data_json, True)

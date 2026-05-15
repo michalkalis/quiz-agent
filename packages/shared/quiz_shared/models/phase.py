@@ -30,8 +30,12 @@ class SessionPhase(str, Enum):
 # Allowed successors for each phase. `FINISHED` is terminal.
 VALID_TRANSITIONS: Dict[SessionPhase, FrozenSet[SessionPhase]] = {
     SessionPhase.IDLE: frozenset({SessionPhase.ASKING}),
-    SessionPhase.ASKING: frozenset({SessionPhase.AWAITING_ANSWER, SessionPhase.FINISHED}),
-    SessionPhase.AWAITING_ANSWER: frozenset({SessionPhase.ASKING, SessionPhase.FINISHED}),
+    SessionPhase.ASKING: frozenset(
+        {SessionPhase.AWAITING_ANSWER, SessionPhase.FINISHED}
+    ),
+    SessionPhase.AWAITING_ANSWER: frozenset(
+        {SessionPhase.ASKING, SessionPhase.FINISHED}
+    ),
     SessionPhase.FINISHED: frozenset(),
 }
 

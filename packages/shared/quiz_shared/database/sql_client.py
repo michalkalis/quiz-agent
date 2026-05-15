@@ -1,7 +1,16 @@
 """SQL client for ratings and session persistence."""
 
 import logging
-from sqlalchemy import create_engine, Column, String, Integer, Float, Boolean, DateTime, Text
+from sqlalchemy import (
+    create_engine,
+    Column,
+    String,
+    Integer,
+    Float,
+    Boolean,
+    DateTime,
+    Text,
+)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from datetime import datetime
@@ -16,6 +25,7 @@ Base = declarative_base()
 
 class QuizSessionDB(Base):
     """SQLAlchemy model for persisted quiz sessions."""
+
     __tablename__ = "quiz_sessions"
 
     session_id = Column(String, primary_key=True)
@@ -27,6 +37,7 @@ class QuizSessionDB(Base):
 
 class RatingDB(Base):
     """SQLAlchemy model for question ratings."""
+
     __tablename__ = "question_ratings"
 
     id = Column(String, primary_key=True)
@@ -43,12 +54,15 @@ class RatingDB(Base):
 
 class ModelScoreDB(Base):
     """SQLAlchemy model for multi-model quality scores (A/B testing)."""
+
     __tablename__ = "model_scores"
 
     id = Column(String, primary_key=True)
     question_id = Column(String, nullable=False, index=True)
     scored_by = Column(String, nullable=False, index=True)  # e.g. "claude-sonnet-4.6"
-    scores_json = Column(Text, nullable=False)  # JSON: {"conversation_spark": 8, "fun": 9, ...}
+    scores_json = Column(
+        Text, nullable=False
+    )  # JSON: {"conversation_spark": 8, "fun": 9, ...}
     overall_score = Column(Float, nullable=False)
     created_at = Column(DateTime, default=datetime.now, index=True)
 
@@ -97,7 +111,7 @@ class SQLClient:
                 was_correct=rating.was_correct,
                 user_answer=rating.user_answer,
                 difficulty_at_time=rating.difficulty_at_time,
-                created_at=rating.created_at
+                created_at=rating.created_at,
             )
 
             session.add(db_rating)
@@ -124,9 +138,11 @@ class SQLClient:
         """
         try:
             session = self._get_session()
-            ratings = session.query(RatingDB).filter(
-                RatingDB.question_id == question_id
-            ).all()
+            ratings = (
+                session.query(RatingDB)
+                .filter(RatingDB.question_id == question_id)
+                .all()
+            )
 
             result = [self._db_to_rating(r) for r in ratings]
             session.close()
@@ -150,9 +166,9 @@ class SQLClient:
         """
         try:
             session = self._get_session()
-            ratings = session.query(RatingDB).filter(
-                RatingDB.session_id == session_id
-            ).all()
+            ratings = (
+                session.query(RatingDB).filter(RatingDB.session_id == session_id).all()
+            )
 
             result = [self._db_to_rating(r) for r in ratings]
             session.close()
@@ -176,9 +192,11 @@ class SQLClient:
         """
         try:
             session = self._get_session()
-            ratings = session.query(RatingDB.rating).filter(
-                RatingDB.question_id == question_id
-            ).all()
+            ratings = (
+                session.query(RatingDB.rating)
+                .filter(RatingDB.question_id == question_id)
+                .all()
+            )
 
             session.close()
 
@@ -194,9 +212,7 @@ class SQLClient:
             return None
 
     def get_low_rated_questions(
-        self,
-        threshold: float = 2.5,
-        min_ratings: int = 3
+        self, threshold: float = 2.5, min_ratings: int = 3
     ) -> List[tuple[str, float]]:
         """Get questions with low average ratings.
 
@@ -212,17 +228,18 @@ class SQLClient:
 
             # Query with grouping
             from sqlalchemy import func
-            results = session.query(
-                RatingDB.question_id,
-                func.avg(RatingDB.rating).label('avg_rating'),
-                func.count(RatingDB.id).label('rating_count')
-            ).group_by(
-                RatingDB.question_id
-            ).having(
-                func.count(RatingDB.id) >= min_ratings
-            ).having(
-                func.avg(RatingDB.rating) < threshold
-            ).all()
+
+            results = (
+                session.query(
+                    RatingDB.question_id,
+                    func.avg(RatingDB.rating).label("avg_rating"),
+                    func.count(RatingDB.id).label("rating_count"),
+                )
+                .group_by(RatingDB.question_id)
+                .having(func.count(RatingDB.id) >= min_ratings)
+                .having(func.avg(RatingDB.rating) < threshold)
+                .all()
+            )
 
             session.close()
 
@@ -255,13 +272,15 @@ class SQLClient:
                 existing.updated_at = now
                 existing.is_active = True
             else:
-                db_session.add(QuizSessionDB(
-                    session_id=session_id,
-                    data_json=data_json,
-                    is_active=True,
-                    created_at=now,
-                    updated_at=now,
-                ))
+                db_session.add(
+                    QuizSessionDB(
+                        session_id=session_id,
+                        data_json=data_json,
+                        is_active=True,
+                        created_at=now,
+                        updated_at=now,
+                    )
+                )
             db_session.commit()
             db_session.close()
             return True
@@ -299,9 +318,13 @@ class SQLClient:
         """
         try:
             db_session = self._get_session()
-            rows = db_session.query(QuizSessionDB).filter(
-                QuizSessionDB.is_active == True  # noqa: E712
-            ).all()
+            rows = (
+                db_session.query(QuizSessionDB)
+                .filter(
+                    QuizSessionDB.is_active == True  # noqa: E712
+                )
+                .all()
+            )
             result = [(r.session_id, r.data_json) for r in rows]
             db_session.close()
             return result
@@ -328,16 +351,19 @@ class SQLClient:
         """
         import json
         import uuid
+
         try:
             db_session = self._get_session()
-            db_session.add(ModelScoreDB(
-                id=str(uuid.uuid4()),
-                question_id=question_id,
-                scored_by=scored_by,
-                scores_json=json.dumps(scores),
-                overall_score=overall_score,
-                created_at=datetime.now(),
-            ))
+            db_session.add(
+                ModelScoreDB(
+                    id=str(uuid.uuid4()),
+                    question_id=question_id,
+                    scored_by=scored_by,
+                    scores_json=json.dumps(scores),
+                    overall_score=overall_score,
+                    created_at=datetime.now(),
+                )
+            )
             db_session.commit()
             db_session.close()
             return True
@@ -351,11 +377,14 @@ class SQLClient:
         Returns list of {scored_by, scores, overall_score, created_at}.
         """
         import json
+
         try:
             db_session = self._get_session()
-            rows = db_session.query(ModelScoreDB).filter(
-                ModelScoreDB.question_id == question_id
-            ).all()
+            rows = (
+                db_session.query(ModelScoreDB)
+                .filter(ModelScoreDB.question_id == question_id)
+                .all()
+            )
             result = [
                 {
                     "scored_by": r.scored_by,
@@ -378,12 +407,17 @@ class SQLClient:
         """
         try:
             from sqlalchemy import func
+
             db_session = self._get_session()
-            results = db_session.query(
-                ModelScoreDB.scored_by,
-                func.avg(ModelScoreDB.overall_score).label("avg_score"),
-                func.count(ModelScoreDB.id).label("count"),
-            ).group_by(ModelScoreDB.scored_by).all()
+            results = (
+                db_session.query(
+                    ModelScoreDB.scored_by,
+                    func.avg(ModelScoreDB.overall_score).label("avg_score"),
+                    func.count(ModelScoreDB.id).label("count"),
+                )
+                .group_by(ModelScoreDB.scored_by)
+                .all()
+            )
             db_session.close()
             return [
                 {
@@ -416,5 +450,5 @@ class SQLClient:
             was_correct=db_rating.was_correct,
             user_answer=db_rating.user_answer,
             difficulty_at_time=db_rating.difficulty_at_time,
-            created_at=db_rating.created_at
+            created_at=db_rating.created_at,
         )

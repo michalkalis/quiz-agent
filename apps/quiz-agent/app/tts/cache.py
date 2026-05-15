@@ -9,9 +9,8 @@ Implements 3-tier caching:
 import hashlib
 import logging
 import time
-import os
 from pathlib import Path
-from typing import Optional, Dict, Tuple
+from typing import Optional, Dict
 from dataclasses import dataclass
 import json
 
@@ -21,6 +20,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class CacheEntry:
     """Cache entry metadata."""
+
     path: Path
     last_access: float
     size_bytes: int
@@ -49,11 +49,7 @@ class TTSCache:
     └── metadata.json        # Cache metadata
     """
 
-    def __init__(
-        self,
-        cache_dir: str = "./data/tts_cache",
-        max_size_mb: int = 100
-    ):
+    def __init__(self, cache_dir: str = "./data/tts_cache", max_size_mb: int = 100):
         """Initialize TTS cache.
 
         Args:
@@ -80,14 +76,14 @@ class TTSCache:
         """Load cache metadata from disk."""
         if self.metadata_path.exists():
             try:
-                with open(self.metadata_path, 'r') as f:
+                with open(self.metadata_path, "r") as f:
                     data = json.load(f)
                     for key, entry_dict in data.items():
                         self.lru[key] = CacheEntry(
                             path=Path(entry_dict["path"]),
                             last_access=entry_dict["last_access"],
                             size_bytes=entry_dict["size_bytes"],
-                            voice=entry_dict["voice"]
+                            voice=entry_dict["voice"],
                         )
             except Exception as e:
                 logger.warning("Failed to load cache metadata: %s", e)
@@ -101,11 +97,11 @@ class TTSCache:
                     "path": str(entry.path),
                     "last_access": entry.last_access,
                     "size_bytes": entry.size_bytes,
-                    "voice": entry.voice
+                    "voice": entry.voice,
                 }
                 for key, entry in self.lru.items()
             }
-            with open(self.metadata_path, 'w') as f:
+            with open(self.metadata_path, "w") as f:
                 json.dump(data, f, indent=2)
         except Exception as e:
             logger.warning("Failed to save cache metadata: %s", e)
@@ -179,10 +175,7 @@ class TTSCache:
 
         # Update LRU metadata
         self.lru[cache_key] = CacheEntry(
-            path=path,
-            last_access=time.time(),
-            size_bytes=len(audio_data),
-            voice=voice
+            path=path, last_access=time.time(), size_bytes=len(audio_data), voice=voice
         )
 
         # Evict old entries if needed
@@ -199,10 +192,7 @@ class TTSCache:
             return
 
         # Sort by last access time (oldest first)
-        sorted_entries = sorted(
-            self.lru.items(),
-            key=lambda x: x[1].last_access
-        )
+        sorted_entries = sorted(self.lru.items(), key=lambda x: x[1].last_access)
 
         # Remove oldest entries until under limit
         for key, entry in sorted_entries:

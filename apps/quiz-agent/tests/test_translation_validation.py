@@ -12,7 +12,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 # Add shared package to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../../..", "packages/shared"))
+sys.path.insert(
+    0, os.path.join(os.path.dirname(__file__), "../../../..", "packages/shared")
+)
 
 from app.translation.translator import TranslationService
 
@@ -24,7 +26,9 @@ def service():
         return TranslationService()
 
 
-ORIGINAL_QUESTION = "What is the capital city of France and why is it historically significant?"
+ORIGINAL_QUESTION = (
+    "What is the capital city of France and why is it historically significant?"
+)
 
 
 class TestValidateTranslation:
@@ -118,9 +122,9 @@ class TestTranslateQuestionIntegration:
         service.client.chat.completions.create = AsyncMock(
             return_value=self._mock_openai_response(translated)
         )
-        result = asyncio.run(service.translate_question(
-            "What is the capital of France?", "sk"
-        ))
+        result = asyncio.run(
+            service.translate_question("What is the capital of France?", "sk")
+        )
         assert result == translated
 
     def test_garbage_translation_returns_original(self, service):
@@ -162,9 +166,9 @@ class TestTranslateQuestionIntegration:
         service.client.chat.completions.create = AsyncMock(
             return_value=self._mock_openai_response(f'"{translated}"')
         )
-        result = asyncio.run(service.translate_question(
-            "What is the capital of France?", "sk"
-        ))
+        result = asyncio.run(
+            service.translate_question("What is the capital of France?", "sk")
+        )
         assert result == translated
 
     def test_disproportionately_short_returns_original(self, service):

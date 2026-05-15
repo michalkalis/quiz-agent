@@ -25,6 +25,6 @@ def normalize_text(text: str) -> str:
         'london'
     """
     text = text.lower().strip()
-    text = re.sub(r'[.,!?;:\'"()-]', '', text)
-    text = re.sub(r'\s+', ' ', text)
+    text = re.sub(r'[.,!?;:\'"()-]', "", text)
+    text = re.sub(r"\s+", " ", text)
     return text

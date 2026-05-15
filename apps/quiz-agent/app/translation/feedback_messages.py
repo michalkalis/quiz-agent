@@ -8,71 +8,71 @@ FEEDBACK_MESSAGES = {
         "incorrect": "Incorrect.",
         "partially_correct": "Partially correct.",
         "partially_incorrect": "Partially incorrect.",
-        "skipped": "Skipped."
+        "skipped": "Skipped.",
     },
     "sk": {  # Slovak
         "correct": "Správne!",
         "incorrect": "Nesprávne.",
         "partially_correct": "Čiastočne správne.",
         "partially_incorrect": "Čiastočne nesprávne.",
-        "skipped": "Preskočené."
+        "skipped": "Preskočené.",
     },
     "cs": {  # Czech
         "correct": "Správně!",
         "incorrect": "Nesprávně.",
         "partially_correct": "Částečně správně.",
         "partially_incorrect": "Částečně nesprávně.",
-        "skipped": "Přeskočeno."
+        "skipped": "Přeskočeno.",
     },
     "de": {  # German
         "correct": "Richtig!",
         "incorrect": "Falsch.",
         "partially_correct": "Teilweise richtig.",
         "partially_incorrect": "Teilweise falsch.",
-        "skipped": "Übersprungen."
+        "skipped": "Übersprungen.",
     },
     "fr": {  # French
         "correct": "Correct!",
         "incorrect": "Incorrect.",
         "partially_correct": "Partiellement correct.",
         "partially_incorrect": "Partiellement incorrect.",
-        "skipped": "Sauté."
+        "skipped": "Sauté.",
     },
     "es": {  # Spanish
         "correct": "¡Correcto!",
         "incorrect": "Incorrecto.",
         "partially_correct": "Parcialmente correcto.",
         "partially_incorrect": "Parcialmente incorrecto.",
-        "skipped": "Omitido."
+        "skipped": "Omitido.",
     },
     "it": {  # Italian
         "correct": "Corretto!",
         "incorrect": "Sbagliato.",
         "partially_correct": "Parzialmente corretto.",
         "partially_incorrect": "Parzialmente sbagliato.",
-        "skipped": "Saltato."
+        "skipped": "Saltato.",
     },
     "pl": {  # Polish
         "correct": "Poprawnie!",
         "incorrect": "Niepoprawnie.",
         "partially_correct": "Częściowo poprawnie.",
         "partially_incorrect": "Częściowo niepoprawnie.",
-        "skipped": "Pominięte."
+        "skipped": "Pominięte.",
     },
     "hu": {  # Hungarian
         "correct": "Helyes!",
         "incorrect": "Helytelen.",
         "partially_correct": "Részben helyes.",
         "partially_incorrect": "Részben helytelen.",
-        "skipped": "Kihagyva."
+        "skipped": "Kihagyva.",
     },
     "ro": {  # Romanian
         "correct": "Corect!",
         "incorrect": "Incorect.",
         "partially_correct": "Parțial corect.",
         "partially_incorrect": "Parțial incorect.",
-        "skipped": "Sărit."
-    }
+        "skipped": "Sărit.",
+    },
 }
 
 
@@ -83,62 +83,62 @@ CORRECT_ANSWER_TEMPLATES = {
         "correct": "Correct! The answer is {answer}.",
         "incorrect": "Incorrect. The correct answer is {answer}.",
         "partially_correct": "Partially correct. The correct answer is {answer}.",
-        "partially_incorrect": "Partially incorrect. The correct answer is {answer}."
+        "partially_incorrect": "Partially incorrect. The correct answer is {answer}.",
     },
     "sk": {  # Slovak
         "correct": "Správne! Odpoveď je {answer}.",
         "incorrect": "Nesprávne. Správna odpoveď je {answer}.",
         "partially_correct": "Čiastočne správne. Správna odpoveď je {answer}.",
-        "partially_incorrect": "Čiastočne nesprávne. Správna odpoveď je {answer}."
+        "partially_incorrect": "Čiastočne nesprávne. Správna odpoveď je {answer}.",
     },
     "cs": {  # Czech
         "correct": "Správně! Odpověď je {answer}.",
         "incorrect": "Nesprávně. Správná odpověď je {answer}.",
         "partially_correct": "Částečně správně. Správná odpověď je {answer}.",
-        "partially_incorrect": "Částečně nesprávně. Správná odpověď je {answer}."
+        "partially_incorrect": "Částečně nesprávně. Správná odpověď je {answer}.",
     },
     "de": {  # German
         "correct": "Richtig! Die Antwort ist {answer}.",
         "incorrect": "Falsch. Die richtige Antwort ist {answer}.",
         "partially_correct": "Teilweise richtig. Die richtige Antwort ist {answer}.",
-        "partially_incorrect": "Teilweise falsch. Die richtige Antwort ist {answer}."
+        "partially_incorrect": "Teilweise falsch. Die richtige Antwort ist {answer}.",
     },
     "fr": {  # French
         "correct": "Correct! La réponse est {answer}.",
         "incorrect": "Incorrect. La bonne réponse est {answer}.",
         "partially_correct": "Partiellement correct. La bonne réponse est {answer}.",
-        "partially_incorrect": "Partiellement incorrect. La bonne réponse est {answer}."
+        "partially_incorrect": "Partiellement incorrect. La bonne réponse est {answer}.",
     },
     "es": {  # Spanish
         "correct": "¡Correcto! La respuesta es {answer}.",
         "incorrect": "Incorrecto. La respuesta correcta es {answer}.",
         "partially_correct": "Parcialmente correcto. La respuesta correcta es {answer}.",
-        "partially_incorrect": "Parcialmente incorrecto. La respuesta correcta es {answer}."
+        "partially_incorrect": "Parcialmente incorrecto. La respuesta correcta es {answer}.",
     },
     "it": {  # Italian
         "correct": "Corretto! La risposta è {answer}.",
         "incorrect": "Sbagliato. La risposta corretta è {answer}.",
         "partially_correct": "Parzialmente corretto. La risposta corretta è {answer}.",
-        "partially_incorrect": "Parzialmente sbagliato. La risposta corretta è {answer}."
+        "partially_incorrect": "Parzialmente sbagliato. La risposta corretta è {answer}.",
     },
     "pl": {  # Polish
         "correct": "Poprawnie! Odpowiedź to {answer}.",
         "incorrect": "Niepoprawnie. Poprawna odpowiedź to {answer}.",
         "partially_correct": "Częściowo poprawnie. Poprawna odpowiedź to {answer}.",
-        "partially_incorrect": "Częściowo niepoprawnie. Poprawna odpowiedź to {answer}."
+        "partially_incorrect": "Częściowo niepoprawnie. Poprawna odpowiedź to {answer}.",
     },
     "hu": {  # Hungarian
         "correct": "Helyes! A válasz: {answer}.",
         "incorrect": "Helytelen. A helyes válasz: {answer}.",
         "partially_correct": "Részben helyes. A helyes válasz: {answer}.",
-        "partially_incorrect": "Részben helytelen. A helyes válasz: {answer}."
+        "partially_incorrect": "Részben helytelen. A helyes válasz: {answer}.",
     },
     "ro": {  # Romanian
         "correct": "Corect! Răspunsul este {answer}.",
         "incorrect": "Incorect. Răspunsul corect este {answer}.",
         "partially_correct": "Parțial corect. Răspunsul corect este {answer}.",
-        "partially_incorrect": "Parțial incorect. Răspunsul corect este {answer}."
-    }
+        "partially_incorrect": "Parțial incorect. Răspunsul corect este {answer}.",
+    },
 }
 
 

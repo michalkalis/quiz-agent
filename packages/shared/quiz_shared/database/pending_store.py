@@ -15,7 +15,7 @@ from __future__ import annotations
 import logging
 import os
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Protocol
+from typing import Dict, List, Optional, Protocol
 
 from sqlalchemy import Column, DateTime, String, Text, create_engine
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
@@ -55,6 +55,7 @@ _Base = declarative_base()
 
 class _PendingQuestionDB(_Base):
     """SQLAlchemy model for pending review questions."""
+
     __tablename__ = "pending_questions"
 
     id = Column(String, primary_key=True)
@@ -93,13 +94,15 @@ class SQLitePendingStore:
         session = self._session()
         try:
             now = datetime.now()
-            session.add(_PendingQuestionDB(
-                id=question.id,
-                data_json=question.model_dump_json(),
-                review_status=question.review_status,
-                created_at=question.created_at or now,
-                updated_at=now,
-            ))
+            session.add(
+                _PendingQuestionDB(
+                    id=question.id,
+                    data_json=question.model_dump_json(),
+                    review_status=question.review_status,
+                    created_at=question.created_at or now,
+                    updated_at=now,
+                )
+            )
             session.commit()
             return True
         except Exception as e:
@@ -120,17 +123,21 @@ class SQLitePendingStore:
                 existing.review_status = question.review_status
                 existing.updated_at = now
             else:
-                session.add(_PendingQuestionDB(
-                    id=question.id,
-                    data_json=question.model_dump_json(),
-                    review_status=question.review_status,
-                    created_at=question.created_at or now,
-                    updated_at=now,
-                ))
+                session.add(
+                    _PendingQuestionDB(
+                        id=question.id,
+                        data_json=question.model_dump_json(),
+                        review_status=question.review_status,
+                        created_at=question.created_at or now,
+                        updated_at=now,
+                    )
+                )
             session.commit()
             return True
         except Exception as e:
-            logger.error("Error upserting pending question %s: %s", question.id, e, exc_info=True)
+            logger.error(
+                "Error upserting pending question %s: %s", question.id, e, exc_info=True
+            )
             session.rollback()
             return False
         finally:
@@ -242,7 +249,7 @@ class InMemoryPendingStore:
         if status is not None:
             items = [q for q in items if q.review_status == status]
         items.sort(key=lambda q: q.created_at)
-        sliced = items[offset:offset + limit]
+        sliced = items[offset : offset + limit]
         return [q.model_copy(deep=True) for q in sliced]
 
     def count(self, status: Optional[str] = None) -> int:

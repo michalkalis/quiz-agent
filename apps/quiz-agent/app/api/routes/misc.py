@@ -51,6 +51,7 @@ async def get_elevenlabs_token():
 
 # Usage / Freemium
 
+
 @router.get("/usage/{user_id}")
 async def get_usage(
     user_id: str,
@@ -79,6 +80,7 @@ async def set_premium(
 
 
 # Health
+
 
 @router.get("/health")
 async def health_check():

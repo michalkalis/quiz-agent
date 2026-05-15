@@ -20,7 +20,7 @@ from quiz_shared.models.question import Question
 from quiz_shared.models.session import QuizSession
 from quiz_shared.models.phase import SessionPhase
 
-from ..serializers import question_to_dict, question_to_dict_translated
+from ..serializers import question_to_dict_translated
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,9 @@ logger = logging.getLogger(__name__)
 _prefetch_tasks: "set[asyncio.Task]" = set()
 
 
-def prefetch_question_audio(tts_service: Optional[TTSService], question_text: str) -> None:
+def prefetch_question_audio(
+    tts_service: Optional[TTSService], question_text: str
+) -> None:
     """Fire-and-forget TTS warm-up so the next /question/audio request hits the cache.
 
     Returns immediately. Failures are logged but never propagate to the caller —
@@ -214,7 +216,9 @@ class QuizFlowService:
 
         # Check if quiz is finished
         if len(session.asked_question_ids) >= session.max_questions:
-            session.transition(to=SessionPhase.FINISHED, caller="flow.process_answer:max_questions")
+            session.transition(
+                to=SessionPhase.FINISHED, caller="flow.process_answer:max_questions"
+            )
             self.session_manager.update_session(session)
             result.quiz_finished = True
             result.message = "Quiz completed!"
@@ -222,9 +226,13 @@ class QuizFlowService:
 
         # Check usage limit
         if self.usage_tracker and session.user_id:
-            allowed, remaining, resets_at = self.usage_tracker.check_limit(session.user_id)
+            allowed, remaining, resets_at = self.usage_tracker.check_limit(
+                session.user_id
+            )
             if not allowed:
-                session.transition(to=SessionPhase.FINISHED, caller="flow.process_answer:usage_limit")
+                session.transition(
+                    to=SessionPhase.FINISHED, caller="flow.process_answer:usage_limit"
+                )
                 self.session_manager.update_session(session)
                 usage = self.usage_tracker.get_usage(session.user_id)
                 result.usage_limit_error = {
@@ -242,7 +250,9 @@ class QuizFlowService:
             next_question = self.question_retriever.get_next_question(session)
 
         if not next_question:
-            session.transition(to=SessionPhase.FINISHED, caller="flow.process_answer:no_more_questions")
+            session.transition(
+                to=SessionPhase.FINISHED, caller="flow.process_answer:no_more_questions"
+            )
             self.session_manager.update_session(session)
             result.quiz_finished = True
             result.message = "No more questions available"
@@ -271,7 +281,9 @@ class QuizFlowService:
         if include_audio:
             if not result.audio_info:
                 result.audio_info = {}
-            result.audio_info["question_url"] = f"/api/v1/sessions/{session.session_id}/question/audio"
+            result.audio_info["question_url"] = (
+                f"/api/v1/sessions/{session.session_id}/question/audio"
+            )
             result.audio_info["format"] = "opus"
 
             # Warm TTS cache so iOS gets a cache hit when it requests this URL.
@@ -304,7 +316,9 @@ class QuizFlowService:
         result_type = evaluation.get("result", "")
         if enhanced_feedback_audio:
             return {
-                "feedback_audio_base64": base64.b64encode(enhanced_feedback_audio).decode(),
+                "feedback_audio_base64": base64.b64encode(
+                    enhanced_feedback_audio
+                ).decode(),
                 "format": "opus",
             }
         return {
@@ -338,4 +352,3 @@ class QuizFlowService:
         except Exception as e:
             logger.warning("Failed to translate correct answer to %s: %s", language, e)
             return answer
-

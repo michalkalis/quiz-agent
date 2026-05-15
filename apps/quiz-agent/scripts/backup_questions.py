@@ -23,7 +23,9 @@ from datetime import datetime
 from pathlib import Path
 
 # Add shared package to path (until sys.path hacks are removed)
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../..", "packages/shared"))
+sys.path.insert(
+    0, os.path.join(os.path.dirname(__file__), "../../..", "packages/shared")
+)
 
 from quiz_shared.database.chroma_client import ChromaDBClient
 

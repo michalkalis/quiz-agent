@@ -44,6 +44,7 @@ class TranscriptionResult:
         avg_logprob: Average confidence (-0.5 to 0 good, < -1 low confidence)
         duration: Audio duration in seconds
     """
+
     text: str
     language: Optional[str]
     no_speech_prob: float
@@ -114,17 +115,11 @@ class VoiceTranscriber:
     - Format flexibility
     """
 
-    SUPPORTED_FORMATS = {
-        "mp3", "mp4", "mpeg", "mpga", "m4a", "wav", "webm", "ogg"
-    }
+    SUPPORTED_FORMATS = {"mp3", "mp4", "mpeg", "mpga", "m4a", "wav", "webm", "ogg"}
 
     MAX_FILE_SIZE = 25 * 1024 * 1024  # 25 MB (Whisper API limit)
 
-    def __init__(
-        self,
-        model: str = "whisper-1",
-        language: Optional[str] = None
-    ):
+    def __init__(self, model: str = "whisper-1", language: Optional[str] = None):
         """Initialize voice transcriber.
 
         Args:
@@ -141,7 +136,7 @@ class VoiceTranscriber:
         audio_file: BinaryIO,
         filename: str,
         prompt: Optional[str] = None,
-        language: Optional[str] = None
+        language: Optional[str] = None,
     ) -> TranscriptionResult:
         """Transcribe audio file to text with confidence metrics.
 
@@ -192,7 +187,7 @@ class VoiceTranscriber:
             params = {
                 "model": self.model,
                 "file": (filename, audio_file),
-                "response_format": "verbose_json"
+                "response_format": "verbose_json",
             }
 
             # Use per-request language if provided, otherwise fall back to instance language
@@ -228,18 +223,25 @@ class VoiceTranscriber:
                 no_speech_prob = total_no_speech / len(segments)
                 avg_logprob = total_logprob / len(segments)
 
-                logger.debug("Transcribe: segments=%d, no_speech_prob=%.3f, avg_logprob=%.3f, duration=%.2fs",
-                             len(segments), no_speech_prob, avg_logprob, duration)
+                logger.debug(
+                    "Transcribe: segments=%d, no_speech_prob=%.3f, avg_logprob=%.3f, duration=%.2fs",
+                    len(segments),
+                    no_speech_prob,
+                    avg_logprob,
+                    duration,
+                )
             else:
                 # Fallback: no segment data available (shouldn't happen with verbose_json)
-                logger.warning("No segment data in Whisper response, falling back to permissive defaults")
+                logger.warning(
+                    "No segment data in Whisper response, falling back to permissive defaults"
+                )
 
             return TranscriptionResult(
                 text=text,
                 language=detected_language,
                 no_speech_prob=no_speech_prob,
                 avg_logprob=avg_logprob,
-                duration=duration
+                duration=duration,
             )
 
         except Exception as e:
@@ -250,7 +252,7 @@ class VoiceTranscriber:
         audio_file: BinaryIO,
         filename: str,
         current_question: Optional[str] = None,
-        language: Optional[str] = None
+        language: Optional[str] = None,
     ) -> TranscriptionResult:
         """Transcribe audio with quiz-specific context.
 
@@ -285,10 +287,7 @@ class VoiceTranscriber:
         prompt += "Expected: short answers, place names, proper nouns, numbers."
 
         return await self.transcribe(
-            audio_file=audio_file,
-            filename=filename,
-            prompt=prompt,
-            language=language
+            audio_file=audio_file, filename=filename, prompt=prompt, language=language
         )
 
     def _get_file_extension(self, filename: str) -> str:

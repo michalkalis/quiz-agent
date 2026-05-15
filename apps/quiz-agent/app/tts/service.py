@@ -14,13 +14,7 @@ from openai import AsyncOpenAI
 logger = logging.getLogger(__name__)
 
 from .cache import TTSCache
-from .voices import (
-    DEFAULT_VOICE,
-    VOICE_PROFILES,
-    STATIC_FEEDBACK,
-    TTS_FORMAT,
-    TTS_SPEED
-)
+from .voices import DEFAULT_VOICE, STATIC_FEEDBACK, TTS_FORMAT, TTS_SPEED
 
 # Target peak level after volume boost (in dBFS)
 # 0 dBFS = maximum digital level. We target -0.5 to leave tiny headroom.
@@ -33,8 +27,11 @@ TARGET_PEAK_DBFS = -0.5
 POST_NORMALIZE_BOOST_DB = 3.0
 
 
-def boost_volume(audio_data: bytes, target_peak: float = TARGET_PEAK_DBFS,
-                 extra_boost: float = POST_NORMALIZE_BOOST_DB) -> bytes:
+def boost_volume(
+    audio_data: bytes,
+    target_peak: float = TARGET_PEAK_DBFS,
+    extra_boost: float = POST_NORMALIZE_BOOST_DB,
+) -> bytes:
     """Maximize audio volume: normalize to peak, then apply extra boost.
 
     Strategy: First normalize so the loudest peak hits target_peak dBFS,
@@ -95,7 +92,7 @@ class TTSService:
         model: str = "tts-1",
         cache_dir: str = "./data/tts_cache",
         max_concurrent: int = 20,
-        max_cache_mb: int = 100
+        max_cache_mb: int = 100,
     ):
         """Initialize TTS service.
 
@@ -111,10 +108,7 @@ class TTSService:
         self._semaphore = asyncio.Semaphore(max_concurrent)
 
     async def synthesize(
-        self,
-        text: str,
-        voice: Optional[str] = None,
-        use_cache: bool = True
+        self, text: str, voice: Optional[str] = None, use_cache: bool = True
     ) -> bytes:
         """Synthesize text to speech with caching.
 
@@ -153,7 +147,7 @@ class TTSService:
                     voice=voice,
                     input=text,
                     response_format=TTS_FORMAT,
-                    speed=TTS_SPEED
+                    speed=TTS_SPEED,
                 )
 
                 # Read audio bytes
@@ -172,9 +166,7 @@ class TTSService:
                 raise RuntimeError(f"TTS synthesis failed: {str(e)}")
 
     async def get_feedback_audio(
-        self,
-        result: str,
-        variant: Optional[int] = None
+        self, result: str, variant: Optional[int] = None
     ) -> Optional[bytes]:
         """Get pre-cached feedback audio.
 
@@ -233,19 +225,23 @@ class TTSService:
                     audio_data = await self.synthesize(
                         text=phrase,
                         voice=DEFAULT_VOICE,
-                        use_cache=False  # Don't cache in LRU, goes to static
+                        use_cache=False,  # Don't cache in LRU, goes to static
                     )
 
                     # Store in static cache
                     self.cache.set_static_feedback(result, i, audio_data)
                     total_generated += 1
 
-                    logger.debug("Generated: %s variant %d - \"%s\"", result, i, phrase)
+                    logger.debug('Generated: %s variant %d - "%s"', result, i, phrase)
 
                 except Exception as e:
                     logger.error("Failed to generate %s variant %d: %s", result, i, e)
 
-        logger.info("Static feedback ready: %d generated, %d already cached", total_generated, total_skipped)
+        logger.info(
+            "Static feedback ready: %d generated, %d already cached",
+            total_generated,
+            total_skipped,
+        )
 
     def get_cache_stats(self) -> dict:
         """Get cache statistics.
@@ -276,9 +272,7 @@ class TTSService:
         self.cache._save_metadata()
 
     async def synthesize_question(
-        self,
-        question_text: str,
-        voice: Optional[str] = None
+        self, question_text: str, voice: Optional[str] = None
     ) -> bytes:
         """Synthesize quiz question with caching.
 
@@ -291,8 +285,4 @@ class TTSService:
         Returns:
             Audio bytes in MP3 format
         """
-        return await self.synthesize(
-            text=question_text,
-            voice=voice,
-            use_cache=True
-        )
+        return await self.synthesize(text=question_text, voice=voice, use_cache=True)

@@ -7,9 +7,9 @@ from typing import Dict, List
 
 # Voice profiles for different use cases
 VOICE_PROFILES: Dict[str, str] = {
-    "default": "nova",       # Female, warm, clear (best for quiz questions)
+    "default": "nova",  # Female, warm, clear (best for quiz questions)
     "alternate": "shimmer",  # Female, upbeat (for positive feedback)
-    "formal": "onyx",        # Male, authoritative (optional alternative)
+    "formal": "onyx",  # Male, authoritative (optional alternative)
 }
 
 # Default voice for all TTS operations
@@ -52,4 +52,4 @@ STATIC_FEEDBACK: Dict[str, List[str]] = {
 # MP3 format: Universally supported by iOS AVPlayer (unlike OggOpus)
 # Note: Opus is NOT natively supported by AVPlayer in Ogg containers
 TTS_FORMAT = "mp3"
-TTS_SPEED = 1.0      # Normal speech speed
+TTS_SPEED = 1.0  # Normal speech speed

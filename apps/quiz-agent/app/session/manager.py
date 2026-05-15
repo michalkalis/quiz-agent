@@ -48,7 +48,9 @@ class SessionManager:
                     session.session_id, session.model_dump_json()
                 )
             except Exception as e:
-                logger.warning("Failed to persist session %s: %s", session.session_id, e)
+                logger.warning(
+                    "Failed to persist session %s: %s", session.session_id, e
+                )
 
     def _deactivate(self, session_id: str) -> None:
         """Mark session inactive in SQLite (best-effort)."""
@@ -119,7 +121,8 @@ class SessionManager:
         now = datetime.now(timezone.utc)
         with self._lock:
             expired = [
-                sid for sid, session in self._sessions.items()
+                sid
+                for sid, session in self._sessions.items()
                 if session.expires_at < now
             ]
             for sid in expired:
@@ -135,7 +138,7 @@ class SessionManager:
         difficulty: str = "medium",
         user_id: Optional[str] = None,
         mode: str = "single",
-        ttl_minutes: int = 30
+        ttl_minutes: int = 30,
     ) -> QuizSession:
         """Create a new quiz session.
 
@@ -162,7 +165,7 @@ class SessionManager:
             max_questions=max_questions,
             current_difficulty=difficulty,
             phase=SessionPhase.IDLE,
-            expires_at=datetime.now(timezone.utc) + timedelta(minutes=ttl_minutes)
+            expires_at=datetime.now(timezone.utc) + timedelta(minutes=ttl_minutes),
         )
 
         # For single-player, create default participant
@@ -171,7 +174,7 @@ class SessionManager:
                 participant_id=f"p_{uuid.uuid4().hex[:8]}",
                 user_id=user_id,
                 display_name=user_id or "Player",
-                is_host=True
+                is_host=True,
             )
             session.participants = [participant]
 
@@ -240,11 +243,7 @@ class SessionManager:
                 return True
             return False
 
-    def extend_session(
-        self,
-        session_id: str,
-        minutes: int = 30
-    ) -> bool:
+    def extend_session(self, session_id: str, minutes: int = 30) -> bool:
         """Extend session expiry time.
 
         Args:
@@ -266,18 +265,14 @@ class SessionManager:
         now = datetime.now(timezone.utc)
         with self._lock:
             active = sum(
-                1 for session in self._sessions.values()
-                if session.expires_at >= now
+                1 for session in self._sessions.values() if session.expires_at >= now
             )
         return active
 
     # Multiplayer support methods
 
     def add_participant(
-        self,
-        session_id: str,
-        display_name: str,
-        user_id: Optional[str] = None
+        self, session_id: str, display_name: str, user_id: Optional[str] = None
     ) -> Optional[Participant]:
         """Add participant to multiplayer session.
 
@@ -297,7 +292,7 @@ class SessionManager:
             participant_id=f"p_{uuid.uuid4().hex[:8]}",
             user_id=user_id,
             display_name=display_name,
-            is_host=len(session.participants) == 0  # First participant is host
+            is_host=len(session.participants) == 0,  # First participant is host
         )
 
         session.participants.append(participant)
@@ -305,11 +300,7 @@ class SessionManager:
 
         return participant
 
-    def remove_participant(
-        self,
-        session_id: str,
-        participant_id: str
-    ) -> bool:
+    def remove_participant(self, session_id: str, participant_id: str) -> bool:
         """Remove participant from session.
 
         Args:
@@ -324,8 +315,7 @@ class SessionManager:
             return False
 
         session.participants = [
-            p for p in session.participants
-            if p.participant_id != participant_id
+            p for p in session.participants if p.participant_id != participant_id
         ]
 
         # If host left, assign new host

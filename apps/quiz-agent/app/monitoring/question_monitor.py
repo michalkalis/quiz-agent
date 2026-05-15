@@ -4,7 +4,6 @@ Checks question inventory levels and alerts when thresholds are breached.
 """
 
 import os
-import json
 from datetime import datetime, timezone
 from dataclasses import dataclass, field
 from typing import Optional
@@ -59,13 +58,19 @@ LOW_RUNWAY_DAYS = 14
 class QuestionMonitor:
     """Monitors question database health."""
 
-    def __init__(self, chroma_client: Optional[chromadb.ClientAPI] = None, chroma_path: Optional[str] = None):
+    def __init__(
+        self,
+        chroma_client: Optional[chromadb.ClientAPI] = None,
+        chroma_path: Optional[str] = None,
+    ):
         if chroma_client:
             self.chroma = chroma_client
         else:
             path = chroma_path or os.environ.get(
                 "CHROMA_PATH",
-                os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "chroma_data"),
+                os.path.join(
+                    os.path.dirname(__file__), "..", "..", "..", "..", "chroma_data"
+                ),
             )
             self.chroma = chromadb.PersistentClient(path=path)
 
@@ -79,7 +84,9 @@ class QuestionMonitor:
         status = HealthStatus(checked_at=datetime.now(timezone.utc).isoformat())
 
         if not self.collection:
-            status.alerts.append("CRITICAL: No quiz_questions collection found in ChromaDB")
+            status.alerts.append(
+                "CRITICAL: No quiz_questions collection found in ChromaDB"
+            )
             return status
 
         # Get all questions with metadata
@@ -125,7 +132,9 @@ class QuestionMonitor:
         # Estimate usage rate (rough: assume 10 questions/user/day, estimate from usage_count)
         total_usage = sum(meta.get("usage_count", 0) for meta in metadatas)
         # Simple estimate: total usage over ~30 days
-        status.avg_daily_usage = total_usage / 30 if total_usage > 0 else 5.0  # assume 5/day minimum
+        status.avg_daily_usage = (
+            total_usage / 30 if total_usage > 0 else 5.0
+        )  # assume 5/day minimum
 
         # Calculate runway
         active_approved = status.total_approved - status.total_expired

@@ -9,9 +9,12 @@ license = {text = "MIT"}
 [tool.uv.workspace]
 members = [
     "packages/shared",
-    "apps/question-generator",
-    "apps/quiz-agent"
+    "apps/quiz-agent",
+    "apps/quiz-pack-api"
 ]
+
+[tool.ruff.lint]
+extend-ignore = ["E402"]
 
 [build-system]
 requires = ["hatchling"]

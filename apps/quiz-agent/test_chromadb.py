@@ -6,10 +6,11 @@ import os
 
 # Load .env from project root
 from dotenv import load_dotenv
-load_dotenv('../../.env')
+
+load_dotenv("../../.env")
 
 # Add shared package to path
-sys.path.insert(0, '../../packages/shared')
+sys.path.insert(0, "../../packages/shared")
 
 from quiz_shared.database.chroma_client import ChromaDBClient
 
@@ -20,10 +21,7 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 chroma_path = os.path.join(project_root, "chroma_data")
 print(f"Using ChromaDB at: {chroma_path}\n")
 
-client = ChromaDBClient(
-    collection_name="quiz_questions",
-    persist_directory=chroma_path
-)
+client = ChromaDBClient(collection_name="quiz_questions", persist_directory=chroma_path)
 
 # Test 1: Count all questions
 print("Test 1: Count all questions")
@@ -50,10 +48,7 @@ except Exception as e:
 # Test 4: Simple where clause (single condition)
 print("Test 4: Simple where clause - type=text")
 try:
-    results = client.collection.get(
-        where={"type": "text"},
-        limit=5
-    )
+    results = client.collection.get(where={"type": "text"}, limit=5)
     print(f"✓ Got {len(results['ids'])} questions\n")
 except Exception as e:
     print(f"✗ Error: {e}\n")
@@ -62,8 +57,7 @@ except Exception as e:
 print("Test 5: $and clause - difficulty=medium AND type=text")
 try:
     results = client.collection.get(
-        where={"$and": [{"difficulty": "medium"}, {"type": "text"}]},
-        limit=5
+        where={"$and": [{"difficulty": "medium"}, {"type": "text"}]}, limit=5
     )
     print(f"✓ Got {len(results['ids'])} questions\n")
 except Exception as e:
@@ -73,11 +67,9 @@ except Exception as e:
 print("Test 6: Query with embedding")
 try:
     from quiz_shared.utils.embeddings import generate_embedding
+
     embedding = generate_embedding("geography questions")
-    results = client.collection.query(
-        query_embeddings=[embedding],
-        n_results=5
-    )
+    results = client.collection.query(query_embeddings=[embedding], n_results=5)
     print(f"✓ Got {len(results['ids'][0])} questions")
     print(f"  Questions: {[doc[:40] + '...' for doc in results['documents'][0]]}\n")
 except Exception as e:
@@ -88,9 +80,7 @@ print("Test 7: Query with embedding AND where clause")
 try:
     embedding = generate_embedding("geography questions")
     results = client.collection.query(
-        query_embeddings=[embedding],
-        where={"type": "text"},
-        n_results=5
+        query_embeddings=[embedding], where={"type": "text"}, n_results=5
     )
     print(f"✓ Got {len(results['ids'][0])} questions\n")
 except Exception as e:
@@ -100,9 +90,7 @@ except Exception as e:
 print("Test 8: search_questions method - type=text only")
 try:
     questions = client.search_questions(
-        query_text=None,
-        filters={"type": "text"},
-        n_results=5
+        query_text=None, filters={"type": "text"}, n_results=5
     )
     print(f"✓ Got {len(questions)} questions\n")
 except Exception as e:
@@ -112,9 +100,7 @@ except Exception as e:
 print("Test 9: search_questions method - difficulty=medium, type=text")
 try:
     questions = client.search_questions(
-        query_text=None,
-        filters={"difficulty": "medium", "type": "text"},
-        n_results=5
+        query_text=None, filters={"difficulty": "medium", "type": "text"}, n_results=5
     )
     print(f"✓ Got {len(questions)} questions\n")
 except Exception as e:

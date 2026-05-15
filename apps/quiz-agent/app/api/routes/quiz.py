@@ -4,12 +4,22 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 from ..deps import (
-    StartQuizRequest, SubmitInputRequest, InputResponse, RateQuestionRequest,
+    StartQuizRequest,
+    SubmitInputRequest,
+    InputResponse,
+    RateQuestionRequest,
     FlagQuestionRequest,
-    get_session_manager, get_question_retriever,
-    get_usage_tracker, get_feedback_service, get_quiz_flow, get_translation_service,
+    get_session_manager,
+    get_question_retriever,
+    get_usage_tracker,
+    get_feedback_service,
+    get_quiz_flow,
+    get_translation_service,
     get_tts_service,
-    session_to_response, question_to_dict, question_to_dict_translated, flow_to_response,
+    session_to_response,
+    question_to_dict,
+    question_to_dict_translated,
+    flow_to_response,
 )
 from ...session.manager import SessionManager
 from ...retrieval.question_retriever import QuestionRetriever
@@ -72,18 +82,26 @@ async def start_quiz(
         session.asked_question_ids = []
 
         # Get first question
-        logger.debug("Getting next question for session %s, difficulty: %s", session_id, session.current_difficulty)
+        logger.debug(
+            "Getting next question for session %s, difficulty: %s",
+            session_id,
+            session.current_difficulty,
+        )
         try:
             question = question_retriever.get_next_question(
                 session, client_excluded_ids=client_excluded_ids
             )
         except Exception as e:
             logger.error("Exception in get_next_question: %s", e, exc_info=True)
-            raise HTTPException(status_code=500, detail=f"Failed to retrieve question: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"Failed to retrieve question: {str(e)}"
+            )
 
         if not question:
             logger.error("get_next_question returned None for session %s", session_id)
-            total_count = question_retriever.count(filters={"review_status": "approved"})
+            total_count = question_retriever.count(
+                filters={"review_status": "approved"}
+            )
             client_seen_count = len(client_excluded_ids)
 
             if total_count > 0 and client_seen_count >= total_count * 0.8:
@@ -109,7 +127,9 @@ async def start_quiz(
                     "- Review status: approved",
                 ]
                 if session.language and session.language != "en":
-                    filter_lines.append(f"- Language-dependent: excluded (session language: {session.language})")
+                    filter_lines.append(
+                        f"- Language-dependent: excluded (session language: {session.language})"
+                    )
                 if session.preferred_categories:
                     filter_lines.append(f"- Categories: {session.preferred_categories}")
                 error_detail = (
@@ -125,7 +145,9 @@ async def start_quiz(
         if usage_tracker and session.user_id:
             usage_tracker.record_question(session.user_id)
 
-        translated_question_dict = await question_to_dict_translated(question, session.language, translation_service)
+        translated_question_dict = await question_to_dict_translated(
+            question, session.language, translation_service
+        )
         session.current_question_text = translated_question_dict["question"]
         session.transition(to=SessionPhase.ASKING, caller="routes.start_quiz")
         session_manager.update_session(session)
@@ -213,7 +235,9 @@ async def get_current_question(
         question = question_retriever.get(session.current_question_id)
         if not question:
             raise HTTPException(status_code=500, detail="Question not found")
-        translated_question = await question_to_dict_translated(question, session.language, translation_service)
+        translated_question = await question_to_dict_translated(
+            question, session.language, translation_service
+        )
 
     return {
         "question": translated_question,

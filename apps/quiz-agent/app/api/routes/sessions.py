@@ -4,20 +4,23 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from ..deps import (
-    CreateSessionRequest, SessionResponse, AddParticipantRequest,
-    get_session_manager, get_usage_tracker,
+    CreateSessionRequest,
+    SessionResponse,
+    AddParticipantRequest,
+    get_session_manager,
     session_to_response,
 )
 from quiz_shared.models.participant import Participant
 from ...session.manager import SessionManager
-from ...usage.tracker import UsageTracker
 from ...rate_limit import limiter
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.post("/sessions", response_model=SessionResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/sessions", response_model=SessionResponse, status_code=status.HTTP_201_CREATED
+)
 @limiter.limit("10/minute")
 async def create_session(
     request: Request,
@@ -39,7 +42,9 @@ async def create_session(
         session_manager.update_session(session)
         return session_to_response(session)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to create session: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to create session: {str(e)}"
+        )
 
 
 @router.get("/sessions/{session_id}", response_model=SessionResponse)
@@ -82,6 +87,7 @@ async def extend_session(
 
 # Multiplayer
 
+
 @router.post("/sessions/{session_id}/participants", response_model=Participant)
 async def add_participant(
     session_id: str,
@@ -99,7 +105,10 @@ async def add_participant(
     return participant
 
 
-@router.delete("/sessions/{session_id}/participants/{participant_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/sessions/{session_id}/participants/{participant_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
 async def remove_participant(
     session_id: str,
     participant_id: str,

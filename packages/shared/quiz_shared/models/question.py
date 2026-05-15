@@ -19,119 +19,103 @@ class Question(BaseModel):
     question: str = Field(..., description="The question text")
     type: str = Field(
         "text",
-        description="Question type: text | text_multichoice | audio | image | video"
+        description="Question type: text | text_multichoice | audio | image | video",
     )
 
     # Answers (flexible for multiple choice or text)
     possible_answers: Optional[Dict[str, str]] = Field(
-        None,
-        description="For multiple choice: {'a': 'Paris', 'b': 'London', ...}"
+        None, description="For multiple choice: {'a': 'Paris', 'b': 'London', ...}"
     )
     correct_answer: Union[str, List[str]] = Field(
         ...,
-        description="Correct answer: 'Paris' or identifier 'a' or ['a', 'c'] for multi-select"
+        description="Correct answer: 'Paris' or identifier 'a' or ['a', 'c'] for multi-select",
     )
 
     # Alternative acceptable answers (for text questions)
     alternative_answers: List[str] = Field(
         default_factory=list,
-        description="Alternative acceptable answers: ['paris', 'paris france']"
+        description="Alternative acceptable answers: ['paris', 'paris france']",
     )
 
     # Classification
     topic: str = Field(..., description="Topic: Geography, History, Science, etc.")
     category: str = Field(
         ...,
-        description="Category: adults, children, harry-potter, music, general, etc."
+        description="Category: adults, children, harry-potter, music, general, etc.",
     )
     difficulty: str = Field(..., description="Difficulty: easy | medium | hard")
     tags: List[str] = Field(
         default_factory=list,
-        description="Additional tags: ['europe', 'capitals', 'france']"
+        description="Additional tags: ['europe', 'capitals', 'france']",
     )
     language_dependent: bool = Field(
         False,
-        description="True if question relies on English language properties (wordplay, spelling, letter counts, acronyms)"
+        description="True if question relies on English language properties (wordplay, spelling, letter counts, acronyms)",
     )
     age_appropriate: Optional[str] = Field(
         None,
-        description="Minimum recommended age band: 'all' | '8+' | '12+' | '16+'. None = unrated (legacy)."
+        description="Minimum recommended age band: 'all' | '8+' | '12+' | '16+'. None = unrated (legacy).",
     )
 
     # Metadata
     created_at: datetime = Field(default_factory=datetime.now)
     created_by: Optional[str] = Field(None, description="Admin user ID")
     source: str = Field(
-        "generated",
-        description="Source: generated | manual | imported"
+        "generated", description="Source: generated | manual | imported"
     )
     source_url: Optional[str] = Field(
-        None,
-        description="URL to source article or reference"
+        None, description="URL to source article or reference"
     )
     source_excerpt: Optional[str] = Field(
-        None,
-        description="Brief excerpt from source (1-2 sentences max)"
+        None, description="Brief excerpt from source (1-2 sentences max)"
     )
 
     # Quality metrics
     usage_count: int = Field(0, description="Times used in quizzes")
     user_ratings: Dict[str, int] = Field(
         default_factory=dict,
-        description="User ratings: {'user_1': 5, 'user_2': 4} (1-5 scale)"
+        description="User ratings: {'user_1': 5, 'user_2': 4} (1-5 scale)",
     )
 
     # Review workflow
     review_status: str = Field(
         "pending_review",
-        description="Status: pending_review | approved | rejected | needs_revision"
+        description="Status: pending_review | approved | rejected | needs_revision",
     )
-    reviewed_by: Optional[str] = Field(
-        None,
-        description="Reviewer user ID"
-    )
-    reviewed_at: Optional[datetime] = Field(
-        None,
-        description="When reviewed"
-    )
-    review_notes: Optional[str] = Field(
-        None,
-        description="Reviewer feedback and notes"
-    )
+    reviewed_by: Optional[str] = Field(None, description="Reviewer user ID")
+    reviewed_at: Optional[datetime] = Field(None, description="When reviewed")
+    review_notes: Optional[str] = Field(None, description="Reviewer feedback and notes")
 
     # Detailed quality ratings (used during review)
     quality_ratings: Optional[Dict[str, int]] = Field(
         None,
-        description="Detailed ratings: {'surprise_factor': 4, 'clarity': 5, 'universal_appeal': 4, 'creativity': 5} (1-5 scale)"
+        description="Detailed ratings: {'surprise_factor': 4, 'clarity': 5, 'universal_appeal': 4, 'creativity': 5} (1-5 scale)",
     )
 
     # Generation metadata (for AI-generated questions)
     generation_metadata: Optional[Dict[str, Any]] = Field(
         None,
-        description="AI generation details: {'model': 'gpt-4o', 'temperature': 0.8, 'prompt_version': 'v2', 'stage': 'regenerate', 'ai_score': 8.5, 'ai_reasoning': '...'}"
+        description="AI generation details: {'model': 'gpt-4o', 'temperature': 0.8, 'prompt_version': 'v2', 'stage': 'regenerate', 'ai_score': 8.5, 'ai_reasoning': '...'}",
     )
 
     # Media (for audio/image/video types)
     media_url: Optional[str] = Field(None, description="URL to audio/image/video file")
     image_subtype: Optional[str] = Field(
-        None,
-        description="Image question subtype: silhouette | blind_map | hint_image"
+        None, description="Image question subtype: silhouette | blind_map | hint_image"
     )
     media_duration_seconds: Optional[int] = Field(
-        None,
-        description="Duration for audio/video"
+        None, description="Duration for audio/video"
     )
 
     # Explanation
     explanation: Optional[str] = Field(
-        None,
-        description="Optional educational context or explanation"
+        None, description="Optional educational context or explanation"
     )
 
     # Embedding cache (for performance optimization)
     embedding: Optional[List[float]] = Field(
         None,
-        description="Cached embedding vector (1536-dim for text-embedding-3-small)"
+        description="Cached embedding vector (1536-dim for text-embedding-3-small)",
     )
 
     # Time-sensitive question support
@@ -143,6 +127,7 @@ class Question(BaseModel):
         if self.expires_at is None:
             return False
         from datetime import timezone
+
         now = datetime.now(timezone.utc)
         expires = self.expires_at
         if expires.tzinfo is None:
@@ -207,8 +192,12 @@ class Question(BaseModel):
             self_critique = {
                 k: data[k]
                 for k in (
-                    "surprise_factor", "universal_appeal", "clever_framing",
-                    "educational_value", "answerability", "overall_score",
+                    "surprise_factor",
+                    "universal_appeal",
+                    "clever_framing",
+                    "educational_value",
+                    "answerability",
+                    "overall_score",
                 )
                 if k in data
             }

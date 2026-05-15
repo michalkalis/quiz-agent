@@ -6,7 +6,6 @@ on:
     paths:
       - 'apps/quiz-agent/**'
       - 'apps/quiz-pack-api/**'
-      - 'apps/question-generator/**'
       - 'packages/shared/**'
       - '.github/workflows/backend-ci.yml'
   pull_request:
@@ -14,7 +13,6 @@ on:
     paths:
       - 'apps/quiz-agent/**'
       - 'apps/quiz-pack-api/**'
-      - 'apps/question-generator/**'
       - 'packages/shared/**'
       - '.github/workflows/backend-ci.yml'
   workflow_dispatch:
@@ -28,13 +26,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
       - name: Install uv
         uses: astral-sh/setup-uv@v4
         with:
           version: "latest"
-
-      - name: Set up Python
-        run: uv python install 3.11
 
       - name: Install dependencies
         run: |
@@ -65,13 +65,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
       - name: Install uv
         uses: astral-sh/setup-uv@v4
         with:
           version: "latest"
-
-      - name: Set up Python
-        run: uv python install 3.11
 
       - name: Install dependencies
         run: |
@@ -79,40 +81,11 @@ jobs:
 
       - name: Run ruff linter
         run: |
-          ruff check apps/quiz-agent/ apps/question-generator/ packages/shared/
+          ruff check apps/quiz-agent/ packages/shared/
 
       - name: Run ruff formatter
         run: |
-          ruff format --check apps/quiz-agent/ apps/question-generator/ packages/shared/
-
-  test-question-generator:
-    name: Test Question Generator
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v4
-        with:
-          version: "latest"
-
-      - name: Set up Python
-        run: uv python install 3.11
-
-      - name: Install dependencies
-        run: |
-          uv pip install --system -e apps/question-generator
-          uv pip install --system -e packages/shared
-          uv pip install --system pytest pytest-asyncio httpx
-
-      - name: Run question generator tests
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: |
-          cd apps/question-generator
-          pytest tests/ -v || echo "No tests found, skipping"
+          ruff format --check apps/quiz-agent/ packages/shared/
 
   test-quiz-pack-api:
     name: Test Quiz Pack API (integration)
@@ -152,13 +125,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
       - name: Install uv
         uses: astral-sh/setup-uv@v4
         with:
           version: "latest"
-
-      - name: Set up Python
-        run: uv python install 3.11
 
       - name: Install dependencies
         run: |
@@ -190,13 +165,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
       - name: Install uv
         uses: astral-sh/setup-uv@v4
         with:
           version: "latest"
-
-      - name: Set up Python
-        run: uv python install 3.11
 
       - name: Install dependencies
         run: |

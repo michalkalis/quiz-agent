@@ -19,6 +19,11 @@ Dashboard of all `issue-NN-*.md` files. Updated by `/triage` whenever a `**Triag
 | 19 | [Auto-confirm of unedited transcript routes through `resubmitAnswer`](issue-19-auto-confirm-resubmit-bug.md) | bug · needs-info | `[ ]` #19 | Fix path not yet chosen — user needs to pick approach |
 | 28 | [iOS category picker — expand catalog + add `age_appropriate`](issue-28-ios-category-picker-expansion.md) | enhancement · done | `[x]` #28 | Shipped 544eeb3 (2026-05-03) |
 | 30 | [Batch-generate questions for new categories](issue-30-batch-generate-categories.md) | enhancement · ready-for-agent | `[ ]` #30 | Was Group E of #21; gate on #28 + #29 |
+| 31 | [iOS test hardening — lock in current behavior](issue-31-ios-test-hardening.md) | enhancement · done (Phase 5 partial) | `[x]` #31 | Phases 1–4 done 2026-05-11; Phase 5 snapshots done 2026-05-15 (225 tests green). XCUITest scaffolding written; needs `HangsUITests` added to Hangs-Local scheme Test action |
+| 32 | [On-demand question generation service — review + strategy](issue-32-on-demand-generation-service.md) | enhancement · ready-for-human | `[ ]` #32 | Umbrella; Phase 1 decomposed into #33. Post-review revisions C1/C2/C3 (pgvector, non-consumable-only, fact-pool cache) live in #33 |
+| 33 | [quiz-pack-api Phase 1 — domain entities + ordered flow](issue-33-quiz-pack-api-phase-1.md) | enhancement · done | `[x]` #33 | 1.1–1.12 code-complete 2026-05-15; awaits next CI green to confirm e2e |
+| 34 | [Claude Code context/token optimization](issue-34-claude-context-optimization.md) | infra · done | `[x]` #34 | Tier 1+2.2+3.1/3.2/3.3 hotové; validácia po session restart |
+| 35 | [Parallel backlog burn-down via subagents](issue-35-parallel-backlog-burndown.md) | infra · done | `[x]` #35 | Tracks A/B/C all landed 2026-05-15 in single session |
 
 ## Done
 

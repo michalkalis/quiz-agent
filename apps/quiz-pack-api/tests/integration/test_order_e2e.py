@@ -147,6 +147,7 @@ async def flush_redis() -> AsyncIterator[None]:
 
 @pytest_asyncio.fixture
 async def test_app(
+    engine: AsyncEngine,
     db_session: AsyncSession,
     verifier: AppleJWSVerifier,
 ) -> AsyncIterator[FastAPI]:
@@ -166,13 +167,16 @@ async def test_app(
     app.dependency_overrides[get_arq_pool] = lambda: arq_pool
     app.dependency_overrides[get_redis_url] = lambda: _REDIS_URL
 
-    # Also patch AsyncSessionLocal used directly inside the SSE bridge / stream route.
+    # Also patch AsyncSessionLocal used directly inside the SSE bridge / stream route
+    # and the in-process ARQ worker. Pass `engine` (AsyncEngine) directly;
+    # `db_session.get_bind()` returns the underlying sync Engine, which
+    # `async_sessionmaker` then rejects at session-construction time.
     import app.db.session as _db_session_mod
     import app.api.v1.orders as _orders_mod
 
     orig_factory = _db_session_mod.AsyncSessionLocal
     test_factory = async_sessionmaker(
-        db_session.get_bind(),  # reuse same engine
+        engine,
         class_=AsyncSession,
         expire_on_commit=False,
     )

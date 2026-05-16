@@ -26,10 +26,11 @@ except ImportError:
 
 from app.db.engine import build_engine, normalize_async_url
 
-# Promote storekit fixtures (test_chain, make_jws) to the top-level conftest so
-# tests/api/ can use them. Plain `from ... import` doesn't register fixtures —
-# pytest_plugins does.
-pytest_plugins = ["tests.storekit.conftest"]
+# Promote storekit fixtures (test_chain, make_jws) so tests/api/ + tests/storekit/
+# can use them. The fixtures live in tests/storekit/_chain_fixtures.py (NOT
+# tests/storekit/conftest.py) so pytest doesn't try to register the same module
+# twice — once via conftest auto-discovery, once via pytest_plugins.
+pytest_plugins = ["tests.storekit._chain_fixtures"]
 
 
 def _resolve_test_url() -> str:

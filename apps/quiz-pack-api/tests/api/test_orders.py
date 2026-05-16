@@ -33,7 +33,7 @@ from app.db.models.job import GenerationJob
 from app.db.models.order import GenerationOrder
 from app.db.session import get_session
 from app.storekit import AppleJWSVerifier
-from tests.storekit.conftest import JWSFactory, TestChain
+from tests.storekit._chain_fixtures import JWSFactory, TestChain
 
 
 # ---------------------------------------------------------------------------

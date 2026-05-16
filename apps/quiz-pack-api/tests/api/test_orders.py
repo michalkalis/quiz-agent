@@ -135,7 +135,7 @@ async def test_create_order_happy_path_202(
     order_id = uuid.UUID(body["order_id"])
 
     # DB assertions
-    await test_session.expire_all()  # flush session cache to read committed data
+    test_session.expire_all()  # flush session cache to read committed data
     stmt = select(GenerationOrder).where(GenerationOrder.id == order_id)
     order = (await test_session.execute(stmt)).scalars().first()
     assert order is not None

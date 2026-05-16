@@ -13,9 +13,10 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Annotated
 
-from fastapi import Depends, Request
+from fastapi import Depends, HTTPException, Request, status
 
-from arq.connections import ArqRedis
+from arq import create_pool
+from arq.connections import ArqRedis, RedisSettings
 
 from ..config import Settings, get_settings
 from ..storekit import AppleJWSVerifier
@@ -40,8 +41,24 @@ def get_jws_verifier(settings: Annotated[Settings, Depends(get_settings)]) -> Ap
 
 
 async def get_arq_pool(request: Request) -> ArqRedis:
-    """Return the ARQ pool stored on app state by the lifespan."""
-    return request.app.state.arq_pool
+    """Return the ARQ pool stored on app state by the lifespan.
+
+    If startup couldn't reach Redis (e.g. Upstash flake during boot), retry pool
+    creation on demand so the API recovers without a full machine restart.
+    """
+    pool = request.app.state.arq_pool
+    if pool is not None:
+        return pool
+    settings = get_settings()
+    try:
+        pool = await create_pool(RedisSettings.from_dsn(settings.redis_url))
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="queue backend unavailable",
+        ) from exc
+    request.app.state.arq_pool = pool
+    return pool
 
 
 def get_redis_url(settings: Annotated[Settings, Depends(get_settings)]) -> str:

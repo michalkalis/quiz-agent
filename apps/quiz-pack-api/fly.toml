@@ -7,14 +7,14 @@ primary_region = "cdg"
   dockerfile = "Dockerfile"
   build_context = "../.."
 
-# Phase 1 ships the web process group only. The ARQ worker process group is
-# wired in Task 1.10 (app.worker.WorkerSettings does not exist yet); uncomment
-# the [processes] block below at that point.
-# [processes]
-#   web = "uvicorn app.main:app --host 0.0.0.0 --port 8003"
-#   worker = "arq app.worker.WorkerSettings"
+# Task 1.10 wired the ARQ worker process group. Both web and worker run as
+# separate Fly process groups sharing the same image.
+[processes]
+  web = "uvicorn app.main:app --host 0.0.0.0 --port 8003"
+  worker = "arq app.worker.WorkerSettings"
 
 [[services]]
+  processes = ["web"]
   protocol = "tcp"
   internal_port = 8003
   auto_stop_machines = "stop"

@@ -254,7 +254,7 @@ Helpers:
 
 **Acceptance.** Local: ChromaDB count == `SELECT count(*) FROM questions WHERE pack_id IS NULL AND review_status='approved'`. Prod: same equality, verified via `fly ssh`. Voice quiz regression suite (`apps/quiz-agent/tests/`) green.
 
-**Status: code complete 2026-05-12, prod migration pending.** Implementation notes:
+**Status: done 2026-05-16 (prod migrated, 358 rows).** Implementation notes:
 
 1. **Script:** `apps/quiz-pack-api/scripts/migrate_chroma_to_postgres.py` — async SQLAlchemy via `app.db.engine`, paginated read from ChromaDB via `collection.get(limit=500, offset=…)` so a large prod volume doesn't load everything into RAM. Embeddings are copied straight across — no re-embed, no OpenAI calls, no cost (the ChromaDB-cached vectors are already `text-embedding-3-small` 1536-d).
 2. **ID parity with 1.6.** The script imports `_legacy_to_uuid` and the `NAMESPACE_LEGACY_PENDING` namespace from `migrate_pending_to_postgres` directly. A question whose legacy id is `kids_42` resolves to the same Postgres UUID in both migrations, so a question that lived in both stores collides on one row instead of duplicating. Verified via `_legacy_to_uuid("kids_42") == legacy16("kids_42")`.
@@ -265,6 +265,7 @@ Helpers:
 7. **Dockerfile excludes chromadb deliberately.** Per `apps/quiz-pack-api/Dockerfile` comment, heavy script-only deps (chromadb included) are excluded from the prod image — they aren't reachable from any FastAPI route. The script imports chromadb lazily and prints a clear error if it's missing, so prod (approach a) runs locally where the workspace has chromadb installed via `quiz-shared`.
 8. **Provenance stamped.** Legacy chroma id preserved at `provenance.extra.legacy_id` + `legacy_source="chroma"` so a future audit can trace each Postgres row back to its ChromaDB origin without a separate mapping table.
 9. **Local acceptance pending real data.** The local `apps/quiz-agent/chroma_data/` is empty (count=0). Smoke check `_build_question` against synthetic metadata returns a valid `Question` with the right overrides and a 1536-d embedding. Full acceptance (`count == SELECT count(*) WHERE pack_id IS NULL AND review_status='approved'`) runs on prod data after the sftp pull. **Voice quiz regression suite still reads ChromaDB through Phase 1** (read-path cutover is Phase 2), so this script is a one-shot copy, not a dual-write.
+10. **Prod run (2026-05-16).** Active chroma path on `quiz-agent-api` was `/data/chroma/` (not `/data/chroma_data/` as the script docstring and earlier handoffs claimed — that dir was stale from Feb). Required `fly proxy 15432:5432 -a quiz-pack-db` since the prod DATABASE_URL points at `quiz-pack-db.flycast` which only resolves inside Fly's wireguard network. **Prod DB had no schema** — Alembic was never applied before, so `alembic upgrade head` ran first (created `alembic_version` + 4 core tables on the empty DB), then `--execute` inserted 358 rows (0 collisions, 0 skipped). Verified: `SELECT count(*) FROM questions WHERE pack_id IS NULL AND review_status='approved' = 358`.
 
 ### Task 1.8 — StoreKit JWS verifier (non-consumable scope)
 

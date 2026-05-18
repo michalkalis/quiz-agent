@@ -17,7 +17,7 @@
 
 import XCTest
 
-final class RegressionTests: XCTestCase {
+nonisolated final class RegressionTests: XCTestCase {
 
     private let client = UITestClient()
 

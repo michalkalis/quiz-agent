@@ -42,6 +42,16 @@
                ReferencedContainer = "container:Hangs.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "5004B4B02EF874820068C8D1"
+               BuildableName = "HangsUITests.xctest"
+               BlueprintName = "HangsUITests"
+               ReferencedContainer = "container:Hangs.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction

@@ -12,8 +12,8 @@ curl -fsSL -o AppleRootCA-G3.cer \
 Expected SHA-256:
 
 ```
-63 34 39 41 32 9b 79 7b ed 18 7c 76 76 91 dc 95
-47 9b 73 b1 65 9b 5a a0 0d 9d 1f 5d 80 6a 04 4a
+63 34 3a bf b8 9a 6a 03 eb b5 7e 9b 3f 5f a7 be
+7c 4f 5c 75 6f 30 17 b3 a8 c4 88 c3 65 3e 91 79
 ```
 
 Verify:

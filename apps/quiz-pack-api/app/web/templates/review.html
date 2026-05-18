@@ -32,8 +32,9 @@
         <p><strong>Alternative answers:</strong> {{ question.alternative_answers|join(', ') }}</p>
         {% endif %}
         <p><strong>Topic:</strong> {{ question.topic }} | <strong>Difficulty:</strong> {{ question.difficulty }}</p>
-        {% if question.generation_metadata and question.generation_metadata.get('ai_score') %}
-        <p><strong>AI Score:</strong> {{ question.generation_metadata.ai_score }}/10</p>
+        {% set ai_score = question.get_ai_score() %}
+        {% if ai_score is not none %}
+        <p><strong>AI Score:</strong> {{ ai_score }}/10</p>
         {% endif %}
     </div>
 

@@ -588,5 +588,5 @@ def _question_to_advanced_response(question: Question) -> AdvancedQuestionRespon
         quality_score=question.calculate_avg_rating() if question.user_ratings else None,
         review_status=question.review_status,
         quality_ratings=question.quality_ratings,
-        generation_metadata=question.generation_metadata
+        generation_metadata=question.generation_metadata.model_dump() if question.generation_metadata else None
     )

@@ -15,7 +15,7 @@ from langchain_core.messages import HumanMessage
 
 import os
 
-from quiz_shared.models.question import Question
+from quiz_shared.models.question import GenerationProvenance, Question
 from .prompt_builder import PromptBuilder
 
 try:
@@ -168,8 +168,14 @@ class AdvancedQuestionGenerator:
 
             for q in raw_questions:
                 critique = await self._critique_question(q)
-                q.generation_metadata = q.generation_metadata or {}
-                q.generation_metadata.update(critique)
+                provenance = q.generation_metadata or GenerationProvenance()
+                merged_extra = dict(provenance.extra)
+                merged_extra.update(critique)
+                q.generation_metadata = provenance.model_copy(update={
+                    "critique_model": self.critique_model,
+                    "critique_score": critique.get("overall_score"),
+                    "extra": merged_extra,
+                })
                 questions_with_scores.append((q, critique["overall_score"]))
 
             # Stage 3: Sort by score and select top N
@@ -262,14 +268,14 @@ class AdvancedQuestionGenerator:
 
         # Add generation metadata
         for q in questions:
-            q.generation_metadata = {
-                "model": self.generation_model,
-                "prompt_version": prompt_version,
-                "temperature": self.generation_llm.temperature,
-                "stage": "initial_generation",
-            }
-            if use_fact_first:
-                q.generation_metadata["pipeline"] = "fact_first"
+            q.generation_metadata = GenerationProvenance(
+                model=self.generation_model,
+                provider="openai",
+                prompt_version=prompt_version,
+                generation_temperature=self.generation_llm.temperature,
+                pipeline="fact_first" if use_fact_first else None,
+                extra={"stage": "initial_generation"},
+            )
             # Extract self-critique if present (from V2/V3 CoT prompt)
             # This will be in the parsed data if using V2/V3 prompt
 

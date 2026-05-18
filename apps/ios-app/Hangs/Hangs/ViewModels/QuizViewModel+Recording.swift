@@ -74,6 +74,12 @@ extension QuizViewModel {
             return
         }
 
+        // Flip UI flags up front so the LISTENING card appears the moment the
+        // user taps the mic, not after the WebSocket handshake + first partial.
+        // Catch block resets these on setup failure before falling back to batch.
+        liveTranscript = ""
+        isStreamingSTT = true
+
         do {
             // 1. Get single-use token from backend
             let token = try await networkService.fetchElevenLabsToken()
@@ -83,8 +89,6 @@ extension QuizViewModel {
             try await sttService.connect(token: token, languageCode: languageCode)
 
             // 3. Start listening for STT events
-            liveTranscript = ""
-            isStreamingSTT = true
             startSTTEventListener(sttService: sttService)
 
             // 4. Start PCM recording and stream chunks to WebSocket

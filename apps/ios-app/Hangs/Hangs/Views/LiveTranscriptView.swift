@@ -5,6 +5,7 @@
 //  Animated word-by-word transcript display for streaming STT
 //
 
+import Combine
 import SwiftUI
 
 /// Displays streaming transcript with word-by-word fade-in animation.
@@ -21,7 +22,13 @@ struct LiveTranscriptView: View {
     }
 
     var body: some View {
-        WrappingHStack(words: words, visibleCount: visibleCount, isCommitted: isCommitted)
+        Group {
+            if text.isEmpty && !isCommitted {
+                ListeningPlaceholder()
+            } else {
+                WrappingHStack(words: words, visibleCount: visibleCount, isCommitted: isCommitted)
+            }
+        }
             .onChange(of: text) { _, newValue in
                 let newWords = newValue.split(separator: " ")
                 let newCount = newWords.count
@@ -49,6 +56,33 @@ struct LiveTranscriptView: View {
                 lastWordCount = count
                 visibleCount = count
             }
+    }
+}
+
+// MARK: - Listening Placeholder
+
+/// Three pulsing dots shown while STT is connected but no words have arrived yet.
+/// Keeps the LISTENING card from looking empty during the brief pause between
+/// "user tapped mic" and "first partial transcript arrives".
+private struct ListeningPlaceholder: View {
+    @State private var phase: Int = 0
+    private let timer = Timer.publish(every: 0.35, on: .main, in: .common).autoconnect()
+
+    var body: some View {
+        HStack(spacing: 6) {
+            ForEach(0..<3, id: \.self) { i in
+                Circle()
+                    .fill(Theme.Colors.textPrimary.opacity(0.4))
+                    .frame(width: 6, height: 6)
+                    .opacity(phase == i ? 1.0 : 0.35)
+                    .animation(.easeInOut(duration: 0.3), value: phase)
+            }
+        }
+        .frame(height: 18, alignment: .leading)
+        .onReceive(timer) { _ in
+            phase = (phase + 1) % 3
+        }
+        .accessibilityHidden(true)
     }
 }
 
@@ -124,6 +158,11 @@ private struct FlowLayout: Layout {
 
 #Preview {
     VStack(spacing: 20) {
+        LiveTranscriptView(text: "", isCommitted: false)
+            .padding()
+            .background(Theme.Colors.bgCard.opacity(0.8))
+            .cornerRadius(Theme.Radius.lg)
+
         LiveTranscriptView(text: "This is a test of the word by word animation", isCommitted: false)
             .padding()
             .background(Theme.Colors.bgCard.opacity(0.8))

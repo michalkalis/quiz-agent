@@ -152,7 +152,7 @@ struct QuestionView: View {
                 scrollableQuestionContent(question: question)
 
                 VStack(spacing: 10) {
-                    if isRecording && !viewModel.liveTranscript.isEmpty {
+                    if isRecording && viewModel.isStreamingSTT {
                         transcriptCard
                     }
                     floatingMicRow

@@ -751,3 +751,21 @@ Constraints:
   snapshots to ViewInspector. Phase 3 file-size split (3.3, 3.4 → new
   files). Sub-agent prompt updated with Swift Testing nesting + implicit
   AnyView notes.
+- 2026-05-18 — XCUITest runtime blocker investigated. Added
+  `Hangs-Local-UITests.xcscheme` with `enableThreadSanitizer = "NO"`
+  (option B from prior handoff). **TSAN ruled out as the cause.** With
+  TSAN=NO the same crash still fires on testRSStart launch:
+  `*** Assertion failure in -[XCUIApplication init], XCUIApplication.m:113`
+  `freed pointer was not the last allocation`. Reproduced on **both**
+  `iPhone 17 Pro / iOS 26.3` and `iPhone 16 Pro / iOS 18.6` simulators
+  with Xcode 26.2 — so it's also **not iOS 26.3-specific** as the prior
+  handoff hypothesised. Setting `MallocNanoZone=0` as a launch env var
+  did not change the outcome either. The crash happens inside Apple's
+  `XCUIApplication.init` before our app launches; build-for-testing is
+  green. **Real cause hypothesis (unverified):** `HangsUITests` target's
+  pbxproj configs (`5090EC65`–`5090EC68`) are minimal — only
+  `PRODUCT_NAME = HangsUITests`. They're missing `TEST_TARGET_NAME`,
+  `PRODUCT_BUNDLE_IDENTIFIER`, `IPHONEOS_DEPLOYMENT_TARGET`, signing
+  settings, and other UI-test-target essentials that `HangsTests` has.
+  Next attempt: backfill those in pbxproj and re-run. Scheme kept (TSAN
+  off is still semantically right for UI tests) but doesn't unblock yet.

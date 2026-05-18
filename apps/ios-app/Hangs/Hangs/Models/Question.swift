@@ -23,6 +23,12 @@ struct Question: Codable, Identifiable, Equatable, Sendable {
     let explanation: String?
     let generatedBy: String?
     let ageAppropriate: String?
+    let language: String?
+    let packId: String?
+    let promptSeed: String?
+    let embeddingModel: String?
+    let embeddingDim: Int?
+    let costCents: Int?
 
     /// Whether this question has an associated image
     var hasImage: Bool {
@@ -55,6 +61,12 @@ struct Question: Codable, Identifiable, Equatable, Sendable {
         case explanation
         case generatedBy = "generated_by"
         case ageAppropriate = "age_appropriate"
+        case language
+        case packId = "pack_id"
+        case promptSeed = "prompt_seed"
+        case embeddingModel = "embedding_model"
+        case embeddingDim = "embedding_dim"
+        case costCents = "cost_cents"
     }
 
     /// Backward-compatible decoder — `ageAppropriate` is optional so existing
@@ -75,6 +87,12 @@ struct Question: Codable, Identifiable, Equatable, Sendable {
         explanation = try container.decodeIfPresent(String.self, forKey: .explanation)
         generatedBy = try container.decodeIfPresent(String.self, forKey: .generatedBy)
         ageAppropriate = try container.decodeIfPresent(String.self, forKey: .ageAppropriate)
+        language = try container.decodeIfPresent(String.self, forKey: .language)
+        packId = try container.decodeIfPresent(String.self, forKey: .packId)
+        promptSeed = try container.decodeIfPresent(String.self, forKey: .promptSeed)
+        embeddingModel = try container.decodeIfPresent(String.self, forKey: .embeddingModel)
+        embeddingDim = try container.decodeIfPresent(Int.self, forKey: .embeddingDim)
+        costCents = try container.decodeIfPresent(Int.self, forKey: .costCents)
     }
 
     init(
@@ -91,7 +109,13 @@ struct Question: Codable, Identifiable, Equatable, Sendable {
         imageSubtype: String?,
         explanation: String?,
         generatedBy: String?,
-        ageAppropriate: String? = nil
+        ageAppropriate: String? = nil,
+        language: String? = nil,
+        packId: String? = nil,
+        promptSeed: String? = nil,
+        embeddingModel: String? = nil,
+        embeddingDim: Int? = nil,
+        costCents: Int? = nil
     ) {
         self.id = id
         self.question = question
@@ -107,6 +131,12 @@ struct Question: Codable, Identifiable, Equatable, Sendable {
         self.explanation = explanation
         self.generatedBy = generatedBy
         self.ageAppropriate = ageAppropriate
+        self.language = language
+        self.packId = packId
+        self.promptSeed = promptSeed
+        self.embeddingModel = embeddingModel
+        self.embeddingDim = embeddingDim
+        self.costCents = costCents
     }
 }
 

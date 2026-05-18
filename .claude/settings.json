@@ -11,17 +11,6 @@
         ]
       }
     ],
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/user-prompt-submit.sh",
-            "timeout": 3
-          }
-        ]
-      }
-    ],
     "PostToolUse": [
       {
         "matcher": "Edit|Write",
@@ -46,11 +35,11 @@
     ]
   },
   "enabledPlugins": {
-    "ui-ux-pro-max@ui-ux-pro-max-skill": true,
-    "claude-md-management@claude-plugins-official": true,
-    "figma@claude-plugins-official": true,
-    "claude-code-setup@claude-plugins-official": true,
-    "firecrawl@claude-plugins-official": true
+    "ui-ux-pro-max@ui-ux-pro-max-skill": false,
+    "claude-md-management@claude-plugins-official": false,
+    "figma@claude-plugins-official": false,
+    "claude-code-setup@claude-plugins-official": false,
+    "firecrawl@claude-plugins-official": false
   },
   "permissions": {
     "allow": [

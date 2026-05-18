@@ -65,6 +65,9 @@ apps/ios-app/Hangs/vendor/
 .claude/.last-check
 .claude/scheduled_tasks.lock
 
+# Throwaway HTML artifacts (dashboards, explainers, reports) — see "Output preferences" in CLAUDE.md
+docs/artifacts/
+
 # Pencil design tool — scratch/untitled files
 untitled.pen
 
@@ -98,8 +101,12 @@ langsmith_cache/
 chroma_data/
 **/chroma_data/
 apps/quiz-agent/data/
+apps/quiz-pack-api/data/
 apps/question-generator/data/
 data/backups/
+data/generated/
+data/scored/
+data/verification/
 
 # Logs
 *.log

@@ -10,6 +10,7 @@ Two deps live here:
 
 from __future__ import annotations
 
+import asyncio
 from functools import lru_cache
 from typing import Annotated
 
@@ -20,6 +21,11 @@ from arq.connections import ArqRedis, RedisSettings
 
 from ..config import Settings, get_settings
 from ..storekit import AppleJWSVerifier
+
+# Single-flight guard for lazy pool creation. Without this, concurrent requests
+# during an Upstash flake each spawn their own arq retry storm and the 256 MB
+# web machine OOMs. See get_arq_pool below.
+_arq_pool_lock = asyncio.Lock()
 
 
 @lru_cache(maxsize=1)
@@ -40,25 +46,47 @@ def get_jws_verifier(settings: Annotated[Settings, Depends(get_settings)]) -> Ap
     )
 
 
+def _redis_settings_fast_fail(dsn: str) -> RedisSettings:
+    """RedisSettings tuned to fail fast under flaky upstreams.
+
+    arq defaults retry 5× and TLS to Upstash makes each attempt ~5 s, so a
+    failing `create_pool` blocks a request for ~30 s and holds buffers the
+    whole time. With 1 retry and a 2 s timeout, a doomed attempt returns in
+    ~2 s — bounded memory, fast 503 to the client.
+    """
+    rs = RedisSettings.from_dsn(dsn)
+    rs.conn_timeout = 2
+    rs.conn_retries = 1
+    return rs
+
+
 async def get_arq_pool(request: Request) -> ArqRedis:
     """Return the ARQ pool stored on app state by the lifespan.
 
-    If startup couldn't reach Redis (e.g. Upstash flake during boot), retry pool
-    creation on demand so the API recovers without a full machine restart.
+    If startup couldn't reach Redis (e.g. Upstash flake during boot), retry
+    pool creation on demand so the API recovers without a full machine
+    restart. The lock keeps only one create_pool attempt in flight; concurrent
+    requests during a flake share its outcome instead of each running their
+    own retry storm (which stacked memory enough to OOM the 256 MB web VM).
     """
     pool = request.app.state.arq_pool
     if pool is not None:
         return pool
+
     settings = get_settings()
-    try:
-        pool = await create_pool(RedisSettings.from_dsn(settings.redis_url))
-    except Exception as exc:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="queue backend unavailable",
-        ) from exc
-    request.app.state.arq_pool = pool
-    return pool
+    async with _arq_pool_lock:
+        pool = request.app.state.arq_pool
+        if pool is not None:
+            return pool
+        try:
+            pool = await create_pool(_redis_settings_fast_fail(settings.redis_url))
+        except Exception as exc:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="queue backend unavailable",
+            ) from exc
+        request.app.state.arq_pool = pool
+        return pool
 
 
 def get_redis_url(settings: Annotated[Settings, Depends(get_settings)]) -> str:

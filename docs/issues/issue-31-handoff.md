@@ -769,3 +769,23 @@ Constraints:
   settings, and other UI-test-target essentials that `HangsTests` has.
   Next attempt: backfill those in pbxproj and re-run. Scheme kept (TSAN
   off is still semantically right for UI tests) but doesn't unblock yet.
+- 2026-05-18 (evening) — **XCUITest infra blocker RESOLVED.** Backfilled
+  the four `HangsUITests` build configs (`5090EC65`–`5090EC68`) in
+  `Hangs.xcodeproj/project.pbxproj` with the missing UI-test target
+  settings: `TEST_TARGET_NAME = Hangs`, `PRODUCT_BUNDLE_IDENTIFIER =
+  com.missinghue.hangsUITests`, `IPHONEOS_DEPLOYMENT_TARGET = 18.0`,
+  `CODE_SIGN_STYLE = Automatic`, `GENERATE_INFOPLIST_FILE = YES`,
+  `CURRENT_PROJECT_VERSION`, `MARKETING_VERSION`,
+  `STRING_CATALOG_GENERATE_SYMBOLS`, `SWIFT_APPROACHABLE_CONCURRENCY`,
+  `SWIFT_EMIT_LOC_STRINGS`, `SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY`,
+  `SWIFT_VERSION = 5.0`, `TARGETED_DEVICE_FAMILY = "1,2"`. Switched
+  `PRODUCT_NAME` from literal `HangsUITests` to `$(TARGET_NAME)` for
+  consistency with `HangsTests`. After fix, `testRSStart` launches
+  successfully on `iPhone 17 Pro / iOS 26.3` (Hangs-Local-UITests scheme,
+  TSAN=NO) — `XCUIApplication.init` malloc crash is gone, the app boots
+  and UI hierarchy is inspectable. Test now fails at a different layer
+  (`QuestionPage: question.text not found within 15.0s`) which is a
+  functional concern unrelated to the infra blocker (likely backend on
+  :8002 not running). Build-for-testing remains green. **Infra unblock
+  complete**; remaining work is wiring up RS-01..RS-08 properly under
+  issue #32 with the local stack running.

@@ -789,3 +789,34 @@ Constraints:
   :8002 not running). Build-for-testing remains green. **Infra unblock
   complete**; remaining work is wiring up RS-01..RS-08 properly under
   issue #32 with the local stack running.
+- 2026-05-19 — **All 4 XCUITest RS scenarios GREEN.** Root cause of
+  prior `question.text not found` failure was *not* the local stack
+  (no backend needed — mock services are seeded by `--ui-test` flag in
+  `UITestSupport.makeMockServices`). Three independent a11y / wiring
+  bugs found and fixed:
+  1. `QuestionPage` queried `app.otherElements["question.text"]` but
+     SwiftUI exposes the `.accessibilityIdentifier` on `HangsQuestionPrompt`
+     as a `StaticText` (Text child is the only meaningful descendant).
+     Same mismatch for `question.statusPill`. Fix: switch both queries
+     to `app.staticTexts[...]` in `QuestionPage.swift`.
+  2. `question.state` hidden probe was wrapped in `.hidden()`, which
+     strips the Text's label from the a11y tree → `waitForState` never
+     saw `"askingQuestion"`. Fix: drop `.hidden()` on the 0×0 Text in
+     `QuestionView.swift:318-323`; the empty frame keeps it invisible
+     while preserving label propagation.
+  3. `AnswerConfirmationView` had container-level
+     `.accessibilityIdentifier("confirmation.state.transcript")` /
+     `…state.processing"`) on the outer VStacks. SwiftUI propagated
+     these identifiers down and *overwrote* the buttons' specific
+     identifiers (`confirmation.confirm`, `confirmation.reRecord`,
+     `confirmation.edit`), making `app.buttons["confirmation.confirm"]`
+     unfindable. No test referenced the state-marker identifiers, so
+     removed both container `.accessibilityIdentifier(...)` modifiers.
+  Additional fix on the test side: `testRSCorrect` / `testRSIncorrect`
+  now `tap()` the mic button and wait for `recording` state before
+  injecting `/stt/committed` — `handleCommittedTranscript` has a
+  `guard quizState == .recording` and the STT event listener only
+  starts inside `startStreamingRecording`. Run: 4/4 PASS in 38s on
+  `iPhone 17 Pro / iOS 26.3` (Hangs-Local-UITests, TSAN=NO).
+  **Issue #31 fully closed** — Phase 5 XCUITest scenarios are now a
+  living regression suite.

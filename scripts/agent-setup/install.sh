@@ -21,6 +21,14 @@ fail() { printf "\033[1;31m[fail]\033[0m %s\n" "$*" >&2; exit 1; }
 [[ "$(whoami)" == "agent" ]] || warn "Nie si 'agent' user (si '$(whoami)'). Pokračujem, ale skontroluj."
 [[ "$(uname)" == "Darwin" ]] || fail "Toto je len pre macOS."
 
+# Homebrew install vyžaduje sudo. Skontroluj že user je dočasne admin.
+if ! sudo -nv 2>/dev/null && ! groups | grep -q admin; then
+  fail "User '$(whoami)' nie je v admin skupine. Homebrew install bez admin nepôjde.
+       Riešenie: pod tvojím admin účtom dočasne zapni
+         Users & Groups → 'agent' → 'Allow this user to administer this computer'
+       Po dokončení skriptu admin práva odober."
+fi
+
 # ─── Xcode CLI tools ───────────────────────────────────────────
 if ! xcode-select -p >/dev/null 2>&1; then
   log "Inštalujem Xcode Command Line Tools (môže otvoriť GUI dialóg)…"
@@ -174,7 +182,11 @@ cat <<EOF
   4. Spusti Tailscale.app a prihlás sa
   5. Vyplň ~/.env API kľúčmi (z hlavného účtu)
   6. Pod TVOJÍM admin účtom: sudo xcodebuild -license accept
-  7. Reboot a over: tmux session sa spustí automaticky
+  7. Over FileVault enrollment 'agent' (pod admin účtom):
+       sudo fdesetup list           # mali by tam byť oba useri
+       sudo fdesetup add -usertoadd agent   # ak chýba
+     (V modernom macOS sa enroll deje automaticky pri prvom logine.)
+  8. Reboot, pri FileVault prompte vyber 'agent', tmux sa spustí sám
 
 Z iPhone:
   - Termius: ssh agent@<tailscale-hostname> → 't' (attach tmux) → 'cc' (Claude)

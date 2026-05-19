@@ -15,7 +15,7 @@ Run the gen → verify → score → approve → import pipeline at volume to fi
 | `general` | core | 50 — DONE (53 in batch MDs, 52 approved to local ChromaDB 2026-05-19; 2 flagged as ≥0.85-similarity duplicates: `gen032_q24` honey-in-Egyptian-tombs, `gen033_q06` Venus-day-longer-than-year); prod sync pending |
 | `adults` | core | 50 — DONE (67) |
 | `wizarding-world` | themed | 30 — DONE |
-| `superheroes` | themed | 30 — 26/30 |
+| `superheroes` | themed | 30 — 34/30 DONE (8 approved LOCALLY 2026-05-19; prod sync pending) |
 | `disney` | themed | 30 — 20/30 |
 | `football` | themed | 30 — 22/30 |
 | `sports-mix` | themed | 30 — 10/30 |

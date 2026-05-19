@@ -6,18 +6,14 @@ Sandboxovaný macOS účet pre Claude Code s remote access (SSH + VNC) z iPhonu.
 
 ---
 
-## Pred štartom — rozhodnutie o FileVault
+## Bezpečnostný model — FileVault ON
 
-Auto-login a FileVault sa **vylučujú**. Máš dve cesty:
+Disk je šifrovaný. Pri každom reboote musíš raz zadať heslo na FileVault unlock — `agent` user sa potom prihlási automaticky a LaunchAgent spustí tmux session.
 
-| Cesta | FileVault | Auto-login | Bezpečnosť | Pohodlie |
-|-------|-----------|------------|------------|----------|
-| **A. FileVault ON** | ✅ disk šifrovaný | ❌ — pri reboote musíš zadať heslo raz | Vyššia | Po reštarte 1× login |
-| **B. FileVault OFF** | ❌ disk čitateľný ak ho niekto vyberie | ✅ true auto-login | Nižšia | Plný 24/7 unattended |
-
-**Odporúčam cestu A** — strata pohodlia je 5 sekúnd raz za týždeň (reštart), bezpečnostný zisk je veľký. Tmux + LaunchAgent zariadia, že po prihlásení sa Claude Code spustí sám.
-
-Ak chceš cestu B (true auto-login, ako si vybral), prepni FileVault na MBA OFF: `System Settings → Privacy & Security → FileVault → Turn Off`.
+**Praktický dopad:**
+- Reštart Macu = 1× zadať heslo cez VNC alebo fyzicky (raz za týždeň-mesiac)
+- Bežná prevádzka = 0× login, tmux session beží trvalo
+- Ak Mac len uspí (klapka), žiadny re-login netreba
 
 ---
 
@@ -30,18 +26,43 @@ Ak chceš cestu B (true auto-login, ako si vybral), prepni FileVault na MBA OFF:
    - Password: silné, ulož do 1Password
    - "Allow user to administer this computer": **OFF**
 
-2. **Enable auto-login** (pre `agent`)
-   - System Settings → Users & Groups → Automatically log in as: `agent`
-   - Vyžaduje vypnutý FileVault (pozri vyššie)
+2. **Over FileVault** (mal by byť ON)
+   - System Settings → Privacy & Security → FileVault
+   - Ak je OFF, zapni: `Turn On…` — vyžaduje admin auth + reboot
 
-3. **Fast User Switching** (užitočné aj s auto-login)
+3. **Povoľ `agent` unlocknúť FileVault**
+   - V modernom macOS sa to robí **automaticky** pri prvom prihlásení nového usera.
+   - Postup: cez Fast User Switching prepni na `agent`, prihlás sa → enrollment prebehne sám.
+   - **Overenie** (pod tvojím admin účtom v Termini):
+     ```bash
+     sudo fdesetup list   # mali by tam byť oba: michalkalis aj agent
+     ```
+   - **Ručné pridanie** ak `agent` chýba:
+     ```bash
+     sudo fdesetup add -usertoadd agent
+     ```
+   - Bez tohto sa pri boote nemôžeš prihlásiť priamo ako `agent` — musíš sa najprv prihlásiť ako ty a prepnúť cez Fast User Switching.
+
+4. **Fast User Switching**
    - System Settings → Control Center → Fast User Switching → "Show in Menu Bar"
 
-4. **Reštartuj Mac** → automaticky sa prihlási `agent`
+5. **Reštartuj Mac** → FileVault prompt → vyber `agent` → zadaj heslo → prihlásený
 
 ---
 
 ## Fáza 2 — Setup skript (pod `agent` účtom)
+
+### Dočasné admin práva pre install
+
+Homebrew vyžaduje `sudo` na vytvorenie `/opt/homebrew`. Riešenie:
+
+1. Pod tvojím admin účtom: Users & Groups → `i` vedľa `agent` → zapni "Allow this user to administer this computer"
+2. Spusti install skript (nižšie) pod `agent`
+3. Po dokončení vráť `agent` späť na Standard (vypni admin toggle)
+
+Sandbox tým neutrpí — `/opt/homebrew` zostane vlastníctvom `agent`, takže ďalšie `brew install` operácie fungujú aj ako Standard user. Sudo už po inštalácii agent nepotrebuje na žiadnu bežnú operáciu.
+
+### Spustenie skriptu
 
 Prihlás sa do `agent`, otvor Terminal a spusti:
 
@@ -78,11 +99,11 @@ Toto sa **nedá skriptovať** — Apple TCC vyžaduje user consent.
 
 ### 3.2. Accessibility (klikanie cez cliclick/osascript)
 - System Settings → Privacy & Security → **Accessibility**
-- `+` → pridaj: `Terminal.app` (alebo iTerm), `cliclick`
+- `+` → pridaj: `Terminal.app (alebo Ghostty / iTerm2 / Warp — podľa toho čo používaš)` (alebo iTerm), `cliclick`
 
 ### 3.3. Screen Recording (potrebné pre niektoré accessibility ops)
 - Privacy & Security → **Screen Recording**
-- `+` → `Terminal.app`
+- `+` → `Terminal.app (alebo Ghostty / iTerm2 / Warp — podľa toho čo používaš)`
 
 ### 3.4. Automation
 - Privacy & Security → **Automation**
@@ -90,7 +111,7 @@ Toto sa **nedá skriptovať** — Apple TCC vyžaduje user consent.
 
 ### 3.5. Full Disk Access (len ak Claude potrebuje)
 - Privacy & Security → **Full Disk Access**
-- `+` → `Terminal.app` (zváž — ruší časť sandbox výhod)
+- `+` → `Terminal.app (alebo Ghostty / iTerm2 / Warp — podľa toho čo používaš)` (zváž — ruší časť sandbox výhod)
 
 ### 3.6. Xcode license
 ```bash
@@ -147,7 +168,8 @@ tailscale ip -4               # tvoja Tailscale IP (100.x.x.x)
 ## Verifikácia (checklist)
 
 - [ ] `agent` účet existuje, Standard type, NIE admin
-- [ ] Auto-login funguje (po reboote sa Mac prihlási do `agent`)
+- [ ] FileVault je ON, `agent` má povolené unlocknúť disk
+- [ ] Po reboote: FileVault prompt → vybrať `agent` → prihlásený
 - [ ] `agent` nevidí `/Users/michalkalis/Documents/` (test: `ls /Users/michalkalis/Documents` → Permission denied)
 - [ ] Homebrew + Claude Code nainštalované pod `agent`
 - [ ] `claude` v termináli pod `agent` funguje
@@ -166,7 +188,7 @@ tailscale ip -4               # tvoja Tailscale IP (100.x.x.x)
 2. **API kľúče v `~/.env`** pod `agent`, `chmod 600`. NIKDY do git.
 3. **Tailscale ACL** — môžeš zúžiť: iPhone → Mac len SSH+VNC, nič iné.
 4. **Screen Sharing password ≠ login password** — odporúčam mať odlišné.
-5. **Bez FileVault** disk je čitateľný keď Mac vypneš a vyberieš SSD. Pre MBA s lockom (Activation Lock) je riziko nízke, ale nenulové.
+5. **FileVault ON** — disk šifrovaný, fyzický útok (vytiahnutie SSD) zlyhá.
 
 ---
 

@@ -18,7 +18,7 @@ Run the gen → verify → score → approve → import pipeline at volume to fi
 | `superheroes` | themed | 30 — 34/30 DONE (8 approved LOCALLY 2026-05-19; prod sync pending) |
 | `disney` | themed | 30 — 20/30 |
 | `football` | themed | 30 — 22/30 |
-| `sports-mix` | themed | 30 — 10/30 |
+| `sports-mix` | themed | 30 — 30/30 DONE (20 approved LOCALLY 2026-05-19; prod sync pending) |
 
 ## What to do
 

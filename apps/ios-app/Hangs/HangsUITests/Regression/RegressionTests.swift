@@ -82,6 +82,11 @@ nonisolated final class RegressionTests: XCTestCase {
         question.waitForQuestion(timeout: 15)
         question.waitForState("askingQuestion", timeout: 10)
 
+        // Tap mic to start recording — committed STT events are only consumed
+        // while the VM is in .recording (handleCommittedTranscript guard).
+        question.micButton.tap()
+        question.waitForState("recording", timeout: 5)
+
         // Inject a committed STT event (simulates user saying the answer).
         try await client.sendSTTEvent(path: "/stt/committed", text: "Paris")
 
@@ -120,6 +125,10 @@ nonisolated final class RegressionTests: XCTestCase {
         let question = QuestionPage(app: app)
         question.waitForQuestion(timeout: 15)
         question.waitForState("askingQuestion", timeout: 10)
+
+        // Tap mic to enter .recording so handleCommittedTranscript will accept the event.
+        question.micButton.tap()
+        question.waitForState("recording", timeout: 5)
 
         try await client.sendSTTEvent(path: "/stt/committed", text: "London")
 

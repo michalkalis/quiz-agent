@@ -132,7 +132,6 @@ struct AnswerConfirmationView: View {
             }
             .padding(.top, 14)
         }
-        .accessibilityIdentifier("confirmation.state.transcript")
     }
 
     private var editableTranscript: some View {
@@ -237,7 +236,6 @@ struct AnswerConfirmationView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .accessibilityIdentifier("confirmation.state.processing")
     }
 }
 

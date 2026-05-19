@@ -11,7 +11,7 @@ struct QuestionPage {
     let app: XCUIApplication
 
     var questionText: XCUIElement {
-        app.otherElements["question.text"]
+        app.staticTexts["question.text"]
     }
 
     var micButton: XCUIElement {
@@ -19,7 +19,7 @@ struct QuestionPage {
     }
 
     var statusPill: XCUIElement {
-        app.otherElements["question.statusPill"]
+        app.staticTexts["question.statusPill"]
     }
 
     /// Hidden state probe (DEBUG only). Returns the current QuizState case name.

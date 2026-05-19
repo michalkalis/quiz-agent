@@ -315,9 +315,10 @@ struct QuestionView: View {
         // app.staticTexts["question.state"].label returns the current
         // QuizState case name. Sibling of the pill so the test seam
         // survives copy/layout changes to the visible status pill.
+        // Not .hidden() — that strips the text from the accessibility tree.
+        // A 0×0 frame is invisible enough.
         Text(quizStateName)
             .frame(width: 0, height: 0)
-            .hidden()
             .accessibilityIdentifier("question.state")
         #endif
     }

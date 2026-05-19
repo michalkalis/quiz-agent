@@ -12,7 +12,7 @@ Run the gen → verify → score → approve → import pipeline at volume to fi
 | Category | Type | Target count |
 |---|---|---|
 | `kids` | core | 50 — DONE (52, 2026-05-05) |
-| `general` | core | 50 — DONE (53, 2026-05-15) |
+| `general` | core | 50 — DONE (53 in batch MDs, 52 approved to local ChromaDB 2026-05-19; 2 flagged as ≥0.85-similarity duplicates: `gen032_q24` honey-in-Egyptian-tombs, `gen033_q06` Venus-day-longer-than-year); prod sync pending |
 | `adults` | core | 50 — DONE (67) |
 | `wizarding-world` | themed | 30 — DONE |
 | `superheroes` | themed | 30 — 26/30 |

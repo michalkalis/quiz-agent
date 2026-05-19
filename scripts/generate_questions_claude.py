@@ -522,9 +522,19 @@ def stage_output(
     print("-" * 80)
 
     for i, q in enumerate(questions):
-        meta = q.generation_metadata or {}
-        score = meta.get("critique_score", meta.get("ai_score", "—"))
-        verdict = meta.get("critique_verdict", "—")
+        meta = q.generation_metadata
+        if meta is None:
+            score = "—"
+            verdict = "—"
+        else:
+            extra = getattr(meta, "extra", {}) or {}
+            score = (
+                getattr(meta, "critique_score", None)
+                or extra.get("critique_score")
+                or extra.get("ai_score")
+                or "—"
+            )
+            verdict = extra.get("critique_verdict", "—")
         score_str = f"{score:.1f}" if isinstance(score, (int, float)) else str(score)
         print(
             f"{i+1:>3}  {score_str:>5}  {verdict:14s}  {q.difficulty:6s}  "
@@ -638,11 +648,23 @@ def main() -> None:
             print("No valid questions found in file.")
             sys.exit(1)
 
-        # Build scored list from self-critique scores
+        # Build scored list from self-critique scores. ``generation_metadata`` is
+        # ``GenerationProvenance`` (BaseModel) since the typed-provenance migration;
+        # unknown keys (incl. ``ai_score``) live in ``.extra``. Fall back to the
+        # typed ``critique_score`` field, then 5.0.
         scored = []
         for q in questions:
-            meta = q.generation_metadata or {}
-            ai_score = meta.get("ai_score", meta.get("critique_score", 5.0))
+            meta = q.generation_metadata
+            if meta is None:
+                ai_score = 5.0
+            else:
+                extra = getattr(meta, "extra", {}) or {}
+                ai_score = (
+                    extra.get("ai_score")
+                    or getattr(meta, "critique_score", None)
+                    or extra.get("critique_score")
+                    or 5.0
+                )
             scored.append((q, float(ai_score) if ai_score else 5.0))
 
         # Print summary

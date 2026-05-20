@@ -24,6 +24,7 @@ Dashboard of all `issue-NN-*.md` files. Updated by `/triage` whenever a `**Triag
 | 33 | [quiz-pack-api Phase 1 — domain entities + ordered flow](issue-33-quiz-pack-api-phase-1.md) | enhancement · done | `[x]` #33 | 1.1–1.12 code-complete 2026-05-15; awaits next CI green to confirm e2e |
 | 34 | [Claude Code context/token optimization](issue-34-claude-context-optimization.md) | infra · done | `[x]` #34 | Tier 1+2.2+3.1/3.2/3.3 hotové; validácia po session restart |
 | 35 | [Parallel backlog burn-down via subagents](issue-35-parallel-backlog-burndown.md) | infra · done | `[x]` #35 | Tracks A/B/C all landed 2026-05-15 in single session |
+| 36 | [quiz-pack-api Phase 2 — `PackGenerator` orchestrator + voice-quiz pgvector cutover](issue-36-quiz-pack-api-phase-2.md) | enhancement · ready-for-agent | `[ ]` #36 | Decomposed 2026-05-20 from #32 §3 Phase 2; 22 atomic Ralph-ordered tasks targeting `apps/quiz-pack-api/app/orchestrator/` + voice-quiz cutover (#32 §2.4.1) |
 
 ## Done
 

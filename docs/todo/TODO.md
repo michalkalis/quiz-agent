@@ -22,4 +22,5 @@ States: `[ ]` todo · `[~]` wip · `[x]` done. Numbers continue the `docs/issues
 - [x] #34 Claude Code context/token optimization — [plan](../issues/issue-34-claude-context-optimization.md) — Tier 1+2.2+3.1/3.2/3.3 hotové; validácia po session restart
 - [x] #35 Parallel backlog burn-down via subagents (#30 + #31 + #33) — [plan](../issues/issue-35-parallel-backlog-burndown.md) — Track A (#33) + Track B (#31 Phase 5 partial) + Track C (#30 general) done 2026-05-15
 - [x] Fix last backend-ci failure (test_create_order_happy_path_202: await expire_all) → deploy quiz-pack-api; OOM-resilience fix deployed 2026-05-18 (517ce12)
-- [~] Ralph autonomous loop on agent Mac (`ssh mba`) — deploy + smoke test, then start burn-down sequence for #32 Phases 2–6 — see [handoff](../handoffs/handoff-2026-05-19-2210.md)
+- [ ] #36 quiz-pack-api Phase 2 — `PackGenerator` orchestrator + voice-quiz pgvector cutover — [plan](../issues/issue-36-quiz-pack-api-phase-2.md) (decomposed 2026-05-20 from #32 §3 Phase 2; 22 atomic Ralph-ordered tasks)
+- [~] Ralph autonomous loop on agent Mac (`ssh mba`) — smoke green 2026-05-20; #36 decomposed 2026-05-20; next: launch Ralph against `docs/issues/issue-36-quiz-pack-api-phase-2.md` — see [handoff](../handoffs/handoff-2026-05-20-1120.md)

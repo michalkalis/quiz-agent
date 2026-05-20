@@ -8,9 +8,10 @@ implementations live in `app.orchestrator.stages.*`.
 
 from app.orchestrator.context import OrderContext, StageResult
 from app.orchestrator.pack_generator import PackGenerator, Stage
-from app.orchestrator.progress_sink import ProgressSink
+from app.orchestrator.progress_sink import DBProgressSink, ProgressSink
 
 __all__ = [
+    "DBProgressSink",
     "OrderContext",
     "PackGenerator",
     "ProgressSink",

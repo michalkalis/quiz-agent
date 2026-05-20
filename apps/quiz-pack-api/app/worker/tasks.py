@@ -1,14 +1,14 @@
 """ARQ task: `process_order` stub state machine (issue #33 Task 1.10).
 
 Drives a GenerationOrder through the full job-status pipeline using stub data.
-Phase 2 replaces only this file's inner logic; the pubsub/step_log plumbing
-established here is the contract that SSE (1.11) and the e2e test (1.12) depend on.
+Phase 2 task 2.2 moves the step_log + pubsub plumbing into ``DBProgressSink``
+so the seam is identical to the one Stage objects will use. The stub still
+walks the same 7 steps with the same observable behaviour.
 """
 
 from __future__ import annotations
 
 import asyncio
-import json
 import logging
 import uuid
 from datetime import datetime, timezone
@@ -20,10 +20,10 @@ from app.db.models import (
     GenerationJob,
     GenerationOrder,
     QuestionPack,
-    append_step,
     question_to_row,
 )
 from app.db.session import AsyncSessionLocal
+from app.orchestrator.progress_sink import DBProgressSink
 
 logger = logging.getLogger(__name__)
 
@@ -34,10 +34,6 @@ _PROGRESS = [14, 28, 42, 56, 70, 84, 100]
 
 def _now() -> datetime:
     return datetime.now(timezone.utc)
-
-
-def _pub_payload(event_id: int, step: str, progress: int) -> str:
-    return json.dumps({"event_id": event_id, "step": step, "progress": progress})
 
 
 async def process_order(ctx: Dict[str, Any], order_id: str) -> None:
@@ -52,12 +48,24 @@ async def process_order(ctx: Dict[str, Any], order_id: str) -> None:
     redis = ctx["redis"]
     pack: QuestionPack | None = None
     current_progress = 0
+    sink: DBProgressSink | None = None
 
     logger.info("process_order start order_id=%s attempt=%s", order_id, ctx.get("job_try", 1))
 
     try:
+        # Resolve job_id up front so DBProgressSink can target the right step_log row.
+        async with AsyncSessionLocal() as session:
+            order = await session.get(GenerationOrder, order_uuid)
+            if order is None:
+                raise LookupError(f"GenerationOrder {order_id} not found")
+            job_id = order.job_id
+
+        sink = DBProgressSink(AsyncSessionLocal, redis, channel, job_id)
+
         for step, progress in zip(_STEPS, _PROGRESS):
             current_progress = progress
+
+            event_id = await sink.start_step(step)
 
             async with AsyncSessionLocal() as session:
                 order = await session.get(GenerationOrder, order_uuid)
@@ -67,9 +75,6 @@ async def process_order(ctx: Dict[str, Any], order_id: str) -> None:
                 job = await session.get(GenerationJob, order.job_id)
                 if job is None:
                     raise LookupError(f"GenerationJob for order {order_id} not found")
-
-                started = _now()
-                event_id = await append_step(session, job.id, step=step, started_at=started)
 
                 job.status = step
                 job.progress = progress
@@ -92,7 +97,7 @@ async def process_order(ctx: Dict[str, Any], order_id: str) -> None:
 
                 await session.commit()
 
-            await redis.publish(channel, _pub_payload(event_id, step, progress))
+            await sink.publish(event_id, step, progress)
             logger.info(
                 "process_order step=%s event_id=%s progress=%s order_id=%s",
                 step, event_id, progress, order_id,
@@ -103,7 +108,7 @@ async def process_order(ctx: Dict[str, Any], order_id: str) -> None:
 
     except Exception as exc:
         logger.error("process_order failed order_id=%s error=%r", order_id, exc)
-        await _handle_failure(ctx, order_uuid, order_id, channel, redis, current_progress, exc)
+        await _handle_failure(ctx, order_uuid, order_id, sink, current_progress, exc)
         raise
 
 
@@ -150,8 +155,7 @@ async def _handle_failure(
     ctx: Dict[str, Any],
     order_uuid: uuid.UUID,
     order_id: str,
-    channel: str,
-    redis: Any,
+    sink: DBProgressSink | None,
     current_progress: int,
     exc: Exception,
 ) -> None:
@@ -163,6 +167,20 @@ async def _handle_failure(
     is_final = job_try >= max_tries
 
     try:
+        # If we never got far enough to construct the sink (e.g. order lookup
+        # failed), build one here so the failure event still gets logged.
+        if sink is None:
+            async with AsyncSessionLocal() as session:
+                order = await session.get(GenerationOrder, order_uuid)
+                if order is None:
+                    return
+                job_id = order.job_id
+            sink = DBProgressSink(
+                AsyncSessionLocal, ctx["redis"], f"order:{order_id}:progress", job_id
+            )
+
+        event_id = await sink.start_step("failed", info={"error": repr(exc)})
+
         async with AsyncSessionLocal() as session:
             order = await session.get(GenerationOrder, order_uuid)
             if order is None:
@@ -172,9 +190,6 @@ async def _handle_failure(
             if job is None:
                 return
 
-            event_id = await append_step(
-                session, job.id, step="failed", info={"error": repr(exc)}
-            )
             job.status = "failed"
             job.error = repr(exc)
             job.retry_count = job_try
@@ -185,9 +200,7 @@ async def _handle_failure(
 
             await session.commit()
 
-        await redis.publish(
-            channel, _pub_payload(event_id, "failed", current_progress)
-        )
+        await sink.publish(event_id, "failed", current_progress)
     except Exception as inner:
         logger.error(
             "process_order _handle_failure itself failed order_id=%s inner=%r",

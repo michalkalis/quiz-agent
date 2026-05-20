@@ -125,7 +125,7 @@ async def test_accumulates_cost_cents() -> None:
             return StageResult(cost_cents=0)
 
     stages = [
-        FakeStage("a", cost_cents=10),
+        FakeStage("sourcing", cost_cents=10),
         FakeStage("b", cost_cents=25),
         FakeStage("c", cost_cents=7),
         CaptureStage(),
@@ -162,3 +162,31 @@ async def test_exception_in_stage_skips_later_stages() -> None:
     ]
     assert len(failed_starts) == 1
     assert "LLM exploded" in failed_starts[0]["error"]
+
+
+@pytest.mark.asyncio
+async def test_requires_sourcing_first() -> None:
+    """F8 source-quality gate (#36 task 2.15): every PackGenerator must
+    start with a sourcing stage so persisted questions inherit a real
+    `source_url` rather than letting the LLM hallucinate one. The
+    constructor rejects a stage list that omits sourcing or places it
+    elsewhere — failing loud at wiring time, not at runtime.
+    """
+    sink_factory = lambda _oid: RecordingSink()  # noqa: E731
+
+    # Empty list → rejected.
+    with pytest.raises(ValueError, match="sourcing"):
+        PackGenerator(stages=[], sink_factory=sink_factory)
+
+    # First stage isn't sourcing → rejected.
+    with pytest.raises(ValueError, match="sourcing"):
+        PackGenerator(
+            stages=[FakeStage("generating"), FakeStage("sourcing")],
+            sink_factory=sink_factory,
+        )
+
+    # First stage is sourcing → constructs fine.
+    PackGenerator(
+        stages=[FakeStage("sourcing"), FakeStage("generating")],
+        sink_factory=sink_factory,
+    )

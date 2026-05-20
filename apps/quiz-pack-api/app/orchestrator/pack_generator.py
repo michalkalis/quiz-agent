@@ -44,7 +44,17 @@ class PackGenerator:
         stages: Sequence[Stage],
         sink_factory: Callable[[str], ProgressSink],
     ) -> None:
-        self.stages = list(stages)
+        stages_list = list(stages)
+        # F8 source-quality gate (#36 task 2.15): every PackGenerator run
+        # must start with a sourcing stage so questions inherit a real
+        # `source_url`/`source_excerpt` rather than an LLM hallucination.
+        if not stages_list or stages_list[0].name != "sourcing":
+            raise ValueError(
+                "PackGenerator requires a SourcingStage as the first stage "
+                "(first stage name must be 'sourcing'); got "
+                f"{[s.name for s in stages_list] or 'empty stage list'}"
+            )
+        self.stages = stages_list
         self.sink_factory = sink_factory
         # Populated by `run` so the worker (task 2.10) can read
         # `ctx.cost_cents` to update `job.total_cost_cents`.

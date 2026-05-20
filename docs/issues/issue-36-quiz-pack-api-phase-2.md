@@ -173,7 +173,7 @@ Each task is one Ralph iteration: scoped to ~15 min, one commit, clear acceptanc
 
 ### Phase 2E — F8 source quality + thin-client CLI
 
-- [ ] **2.15 Enforce `SourcingStage` is mandatory.** Make `PackGenerator.__init__` raise `ValueError` if no `SourcingStage` is present in the stage list, or if a `SourcingStage` is not the first stage. This guarantees no path through the orchestrator skips real source attribution.
+- [x] **2.15 Enforce `SourcingStage` is mandatory.** Make `PackGenerator.__init__` raise `ValueError` if no `SourcingStage` is present in the stage list, or if a `SourcingStage` is not the first stage. This guarantees no path through the orchestrator skips real source attribution.
       **Acceptance**: New unit test in `tests/orchestrator/test_pack_generator.py::test_requires_sourcing_first` asserts the `ValueError`. The e2e test from 2.11 already asserts non-null `source_url` end-to-end.
 
 - [ ] **2.16 `scripts/generate_pack.py` CLI thin client.** New file `apps/quiz-pack-api/scripts/generate_pack.py`. Args: `--prompt`, `--language` (default `en`), `--target-count` (default 10), `--category`, `--theme`. Builds an in-memory `GenerationOrder` (no DB insert), constructs a `PackGenerator` with the standard 6 stages and real LLM clients (from env vars), runs it, prints `pack_id` + question summary. Per memory `feedback_qgen_import_cwd`: must run from `apps/quiz-pack-api/` cwd.

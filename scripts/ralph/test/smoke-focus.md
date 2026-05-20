@@ -9,7 +9,7 @@ to confirm the loop is wired correctly.
 
 ## What to do
 
-- [ ] Create `scripts/ralph/test/SMOKE.md` containing exactly one line:
+- [x] Create `scripts/ralph/test/SMOKE.md` containing exactly one line:
   `PASS <YYYY-MM-DD>` (use today's date). Mark this checkbox `[x]` in the same
   commit. Commit message: `test(ralph): smoke pass <YYYY-MM-DD>`.
 

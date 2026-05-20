@@ -90,7 +90,6 @@ async def root():
             "approve": "POST /api/v1/questions/approve",
             "search": "GET /api/v1/questions/search",
             "duplicates": "POST /api/v1/questions/duplicates",
-            "export_chatgpt": "GET /api/v1/export/chatgpt",
             "review_pending": "GET /api/v1/reviews/pending",
             "review_submit": "POST /api/v1/reviews/submit",
             "review_stats": "GET /api/v1/reviews/stats",

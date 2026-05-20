@@ -92,21 +92,6 @@ POST /api/v1/questions/approve
 GET /api/v1/questions/search?query=space questions&difficulty=medium&limit=10
 ```
 
-### Export Prompt for ChatGPT
-
-```bash
-GET /api/v1/export/chatgpt?count=10&difficulty=medium&topics=science
-```
-
-## Manual ChatGPT Workflow
-
-1. Get prompt: `GET /api/v1/export/chatgpt`
-2. Copy prompt to ChatGPT
-3. Generate questions in ChatGPT
-4. Copy JSON output
-5. Import: `POST /api/v1/import`
-6. Review and approve: `POST /api/v1/questions/approve`
-
 ## Architecture
 
 ```

@@ -318,40 +318,6 @@ async def delete_question(question_id: str):
         raise HTTPException(status_code=404, detail="Question not found")
 
 
-@router.get("/export/chatgpt")
-async def export_chatgpt_prompt(
-    count: int = 10,
-    difficulty: str = "medium",
-    topics: str = None,
-    categories: str = None,
-    type: str = "text"
-):
-    """Export prompt for manual ChatGPT usage.
-
-    Args:
-        count: Number of questions
-        difficulty: Difficulty level
-        topics: Comma-separated topics
-        categories: Comma-separated categories
-        type: Question type
-
-    Returns:
-        Prompt text ready to copy-paste
-    """
-    topic_list = topics.split(",") if topics else None
-    category_list = categories.split(",") if categories else None
-
-    prompt = advanced_generator.prompt_builder.build_for_chatgpt(
-        count=count,
-        difficulty=difficulty,
-        topics=topic_list,
-        categories=category_list,
-        question_type=type
-    )
-
-    return {"prompt": prompt}
-
-
 # Review Workflow Endpoints
 
 @router.get("/reviews/pending", response_model=PendingReviewResponse)

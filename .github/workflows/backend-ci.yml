@@ -137,7 +137,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv pip install --system -e apps/quiz-pack-api
+          uv pip install --system -e "apps/quiz-pack-api[test]"
           uv pip install --system -e packages/shared
           uv pip install --system pytest pytest-asyncio httpx
 

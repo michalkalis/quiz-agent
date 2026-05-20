@@ -33,6 +33,14 @@ dependencies = [
     "pytest-asyncio>=0.23.0",
 ]
 
+[project.optional-dependencies]
+# Integration-test extras. CI installs these explicitly; runtime images do not.
+# respx mocks HTTPS at httpx's transport layer — used by tests/integration/ to
+# block real LLM/Tavily calls (task 2.11a–e).
+test = [
+    "respx>=0.21.1",
+]
+
 [tool.uv.sources]
 quiz-shared = { workspace = true }
 

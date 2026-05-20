@@ -272,3 +272,121 @@ def generation_http_mocks(_block_external_http: respx.MockRouter) -> respx.MockR
     """Layer canned OpenAI ChatCompletion routes on the egress-guard router."""
     register_generation_mocks(_block_external_http)
     return _block_external_http
+
+
+# ---------------------------------------------------------------------------
+# Canned payloads (issue #36 task 2.11d — verifier + scorer mocks)
+# ---------------------------------------------------------------------------
+
+# `FactVerifier.verify` reaches `verified` confidence ≈ 0.95 when Tavily returns
+# at least 3 results whose `content` contains the claimed answer (the agree
+# count drives `0.6 + (agreeing/total)*0.35`). Three lower-case "three"s land
+# us at the 0.95 ceiling without forcing the test to monkey-patch confidence.
+_TAVILY_VERIFY_RESPONSE = {
+    "answer": "An octopus has three hearts.",
+    "results": [
+        {
+            "url": "https://example.com/octopus/anatomy",
+            "title": "Octopus anatomy primer",
+            "content": (
+                "Octopuses have three hearts — two branchial hearts pump blood "
+                "through the gills while one systemic heart circulates it to "
+                "the body."
+            ),
+            "score": 0.95,
+        },
+        {
+            "url": "https://example.com/marine-bio/cephalopods",
+            "title": "Cephalopod circulation",
+            "content": (
+                "Cephalopod biology textbooks list three hearts as a defining "
+                "trait of the order Octopoda."
+            ),
+            "score": 0.91,
+        },
+        {
+            "url": "https://example.com/zoology/hearts",
+            "title": "Animals with multiple hearts",
+            "content": (
+                "Among invertebrates, the octopus is famous for having three "
+                "hearts and copper-based hemocyanin in its blood."
+            ),
+            "score": 0.87,
+        },
+    ],
+}
+
+# Multi-model scorer prompt asks for the six dimensions plus `overall_score`.
+# Keeping `overall_score` at 8.5 matches the task spec line (`scores 7.5/8.5`)
+# and stays inside the keep-by-default threshold so this fixture exercises a
+# pass-through happy path. Single model — `langchain_anthropic` is not in the
+# venv so the scorer falls back to OpenAI-only when only OPENAI_API_KEY is set.
+_SCORING_PAYLOAD = {
+    "conversation_spark": 8,
+    "surprise_delight": 9,
+    "tellability": 8,
+    "driving_friendliness": 9,
+    "clever_framing": 8,
+    "factual_confidence": 9,
+    "overall_score": 8.5,
+    "reasoning": "Strong universal-appeal trivia with a verified answer.",
+}
+
+# Anthropic Messages envelope — registered so a future scorer config that
+# enables ANTHROPIC_API_KEY in CI doesn't leak real HTTPS through the
+# egress guard. Not exercised by the verifier (Gemini) or scorer (OpenAI-only)
+# in this test, but kept here so 2.11e can compose it unchanged.
+_ANTHROPIC_MESSAGES_RESPONSE = {
+    "id": "msg_test_123",
+    "type": "message",
+    "role": "assistant",
+    "model": "claude-sonnet-4-6",
+    "stop_reason": "end_turn",
+    "content": [{"type": "text", "text": json.dumps(_SCORING_PAYLOAD)}],
+    "usage": {"input_tokens": 120, "output_tokens": 180},
+}
+
+
+def _scoring_openai_dispatch(request: httpx.Request) -> httpx.Response:
+    """OpenAI ChatCompletion stub for the scoring prompt.
+
+    Returns the scoring JSON regardless of model — this fixture is for tests
+    that only exercise the scoring path. Composition with the generation mock
+    (which discriminates by model name) is handled by 2.11e.
+    """
+    body = json.loads(request.content)
+    model = body.get("model", "gpt-4.1-mini")
+    content = json.dumps(_SCORING_PAYLOAD)
+    return httpx.Response(200, json=_chat_completion_envelope(content, model))
+
+
+def register_verify_score_mocks(router: respx.MockRouter) -> None:
+    """Register HTTP routes for the verification + scoring stages.
+
+    - Tavily ``/search`` returns three results all containing the lowercase
+      claimed answer (``three``) so ``FactVerifier`` hits the verified branch
+      without needing Gemini.
+    - OpenAI ``/v1/chat/completions`` returns the scoring payload for any
+      model — sufficient for ``MultiModelScorer`` with only ``OPENAI_API_KEY``.
+    - Anthropic ``/v1/messages`` is registered defensively for completeness;
+      no test in this group triggers it because ``langchain_anthropic`` is
+      absent from the venv.
+    """
+    router.post("https://api.tavily.com/search").mock(
+        return_value=httpx.Response(200, json=_TAVILY_VERIFY_RESPONSE)
+    )
+    router.post("https://api.openai.com/v1/chat/completions").mock(
+        side_effect=_scoring_openai_dispatch
+    )
+    router.post("https://api.anthropic.com/v1/messages").mock(
+        return_value=httpx.Response(200, json=_ANTHROPIC_MESSAGES_RESPONSE)
+    )
+
+
+@pytest.fixture
+def verify_score_http_mocks(
+    _block_external_http: respx.MockRouter,
+) -> respx.MockRouter:
+    """Layer verifier + scorer canned routes on the egress-guard router."""
+    register_verify_score_mocks(_block_external_http)
+    return _block_external_http

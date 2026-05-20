@@ -46,6 +46,9 @@ class PackGenerator:
     ) -> None:
         self.stages = list(stages)
         self.sink_factory = sink_factory
+        # Populated by `run` so the worker (task 2.10) can read
+        # `ctx.cost_cents` to update `job.total_cost_cents`.
+        self.last_ctx: OrderContext | None = None
 
     async def run(self, order: GenerationOrder) -> QuestionPack | None:
         """Execute every stage in order; emit progress events; return the pack.
@@ -69,6 +72,8 @@ class PackGenerator:
             category=order.category,
             theme=order.theme,
         )
+
+        self.last_ctx = ctx
 
         total = max(len(self.stages), 1)
         pack: QuestionPack | None = None

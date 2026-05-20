@@ -121,7 +121,7 @@ Each task is one Ralph iteration: scoped to ~15 min, one commit, clear acceptanc
 
 ### Phase 2C — Wire it up
 
-- [ ] **2.10 Swap `process_order` stub for `PackGenerator.run()`.** Edit `apps/quiz-pack-api/app/worker/tasks.py` so `process_order` constructs a `PackGenerator` with the six real stages (2.4–2.9) and runs it. Worker startup (in `app/worker/worker.py`) builds LLM clients once and passes them into the stage constructors via the ARQ `ctx`. Remove the stub `_persist_pack` + `_STEPS`/`_PROGRESS` walk.
+- [x] **2.10 Swap `process_order` stub for `PackGenerator.run()`.** Edit `apps/quiz-pack-api/app/worker/tasks.py` so `process_order` constructs a `PackGenerator` with the six real stages (2.4–2.9) and runs it. Worker startup (in `app/worker/worker.py`) builds LLM clients once and passes them into the stage constructors via the ARQ `ctx`. Remove the stub `_persist_pack` + `_STEPS`/`_PROGRESS` walk.
       **Acceptance**: `pytest tests/integration/test_order_e2e.py` still passes against mocked HTTP LLM responses (task 2.11 sets these up). Worker boots without import errors; `arq app.worker.WorkerSettings --check` exits 0.
 
 - [ ] **2.11 Real-pipeline e2e test.** Update `tests/integration/test_order_e2e.py`:

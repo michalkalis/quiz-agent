@@ -130,6 +130,30 @@ Each task is one Ralph iteration: scoped to ~15 min, one commit, clear acceptanc
     - Bump the cost guardrail: `total_cost_cents > 0` AND `total_cost_cents < 100` (Phase 2 sanity ceiling; Phase 3 will tighten with real per-tier caps).
     - Assert every persisted `Question` has a non-null `source_url` (this is the F8 enforcement gate for Phase 2 — see 2.15).
       **Acceptance**: `pytest tests/integration/test_order_e2e.py -v` green locally + in CI. The previous `total_cost_cents == 0` assertion is replaced exactly once; no parallel test branches.
+      **Split (see BLOCKER 2026-05-20 below):** this task is too large for one Ralph iteration. Split into 2.11a–e:
+
+- [ ] **2.11a Add `respx` to test extras + smoke fixture.** Add `respx` (or `pytest-httpx` if a maintainer prefers) to `apps/quiz-pack-api/pyproject.toml` `[project.optional-dependencies].test` and to the CI install line in `.github/workflows/backend-ci.yml`. Add a session-scoped `_block_external_http` autouse fixture in `tests/integration/conftest.py` that asserts no unmocked HTTPS request escapes during integration tests (configure `assert_all_mocked=True`). Mark `test_order_e2e_full` and `test_order_sse_reconnect` `xfail(reason="needs HTTP mocks — 2.11b–e")` so CI stays green.
+      **Acceptance**: `pytest tests/integration/test_order_e2e.py -v` shows two xfails, not pass/fail noise. `git grep -n respx apps/quiz-pack-api/` returns the new dep entry + the conftest fixture.
+
+- [ ] **2.11b Mock sourcing HTTP (Wikipedia, OpenTriviaDB, news RSS, Tavily).** Add a `respx` route group in conftest that returns one canned fact per source: Wikipedia `featured`/`onthisday`/`search` for `en|sk|cs`, OpenTriviaDB `/api.php`, Tavily `/search`, news RSS feeds. Verify by writing a small unit test `tests/integration/test_sourcing_http_mocks.py` that constructs a real `FactSourcer()` and asserts `gather_facts(count=10)` returns ≥ 4 facts from the mocked sources with non-null `source_url`.
+      **Acceptance**: the new unit test is green; mocked routes use `assert_all_called=False` so unused routes don't fail the test.
+
+- [ ] **2.11c Mock generation HTTP (OpenAI ChatCompletion + critique).** Add `respx` route for `https://api.openai.com/v1/chat/completions`. Each call returns a canned JSON-encoded question (the shape `AdvancedQuestionGenerator` parses — pin the structure with a fixture so a refactor breaks loudly). Write `tests/integration/test_generation_http_mocks.py` that calls `AdvancedQuestionGenerator().generate_for_facts(facts=<5 stub facts>, target_count=3, language="en")` and asserts 3 `Question` objects come back with `prompt_seed` and `generation_metadata.pipeline=="fact_first"`.
+      **Acceptance**: new test green; matches the real prompt-response shape `AdvancedQuestionGenerator` expects today (no behaviour change in the generator).
+
+- [ ] **2.11d Mock verifier + scorer HTTP (Anthropic, Gemini, Tavily).** Add `respx` routes for Anthropic `/v1/messages`, Google `generativelanguage` endpoints, and Tavily again (verifier uses it). Returns: verifier `verified=true, confidence=0.95`, scorer scores 7.5/8.5. Unit-test in `tests/integration/test_verify_score_http_mocks.py`.
+      **Acceptance**: new test green; verifier returns the 5 questions it was given (none dropped); scorer fills `ctx.scores` for all 5.
+
+- [ ] **2.11e Flip e2e xfail → real assertions.** Remove the `xfail` from 2.11a; combine the mock groups from 2.11b–d into the e2e test's setup. Replace the `total_cost_cents == 0` assertion with `0 < total_cost_cents < 100`. Add the F8 assertion (every persisted Question has non-null `source_url`). Keep SSE-replay + reconnect assertions intact.
+      **Acceptance**: `pytest tests/integration/test_order_e2e.py -v` green locally + in CI. Both tests pass without xfail. The previous `== 0` assertion is replaced exactly once; no parallel test branches.
+
+## BLOCKER (2026-05-20)
+
+- **Task:** 2.11 Real-pipeline e2e test
+- **Why blocked:** mocking 4 LLM providers (OpenAI, Anthropic, Gemini) + Tavily + Wikipedia REST + MediaWiki + OpenTriviaDB + news RSS at the HTTP boundary with response shapes that survive langchain deserialization is multi-hour work — exceeds the ~15 min / 4k-token Ralph budget per iteration (CLAUDE.md rule #6). Local environment also lacks a Python venv to verify against Postgres + Redis.
+- **What was tried:** read the existing test, traced the real-pipeline collaborators (`FactSourcer`, `AdvancedQuestionGenerator`, `FactVerifier`, `MultiModelScorer`), surveyed HTTP-mock landscape (no `respx`/`pytest-httpx` currently in `pyproject.toml`).
+- **Decomposition:** 2.11 split into 2.11a (respx + xfail), 2.11b (sourcing mocks), 2.11c (generation mocks), 2.11d (verify+score mocks), 2.11e (flip e2e). Each ≤ 15 min, each commits atomically. Ralph picks 2.11a next.
+- **Sequencing note:** 2.11a–e all precede 2.12; the rest of the sequencing in the section below is unchanged.
 
 ### Phase 2D — Delete the duplicates
 

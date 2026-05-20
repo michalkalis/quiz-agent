@@ -157,7 +157,7 @@ Each task is one Ralph iteration: scoped to ~15 min, one commit, clear acceptanc
 
 ### Phase 2D — Delete the duplicates
 
-- [ ] **2.12 Delete basic `QuestionGenerator` (U1).** Remove `apps/quiz-pack-api/app/generation/generator.py`. Search the repo (`git grep -n "from app.generation.generator\|from \.generator import"`) for callers and switch them to `AdvancedQuestionGenerator`. Update `app/generation/__init__.py` exports.
+- [x] **2.12 Delete basic `QuestionGenerator` (U1).** Remove `apps/quiz-pack-api/app/generation/generator.py`. Search the repo (`git grep -n "from app.generation.generator\|from \.generator import"`) for callers and switch them to `AdvancedQuestionGenerator`. Update `app/generation/__init__.py` exports.
       **Acceptance**: `python -c "import app.generation"` works; `git grep -n "QuestionGenerator" apps/quiz-pack-api/` only matches `AdvancedQuestionGenerator`; `pytest apps/quiz-pack-api/tests/` green.
 
 - [ ] **2.13 Delete `/api/v1/export/chatgpt` + `build_for_chatgpt` (U2).** Remove the route + helper. Update `app/api/v1/__init__.py` or whichever module registers the router. Search `git grep -n "build_for_chatgpt\|export/chatgpt"` for stragglers.

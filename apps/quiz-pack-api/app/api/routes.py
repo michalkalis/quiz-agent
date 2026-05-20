@@ -16,14 +16,12 @@ from .schemas import (
     VerifyRequest, VerifyBatchRequest, VerifyResponse, VerifyBatchResponse,
     VerifyBatchItem, SourceInfo,
 )
-from ..generation.generator import QuestionGenerator
 from ..generation.advanced_generator import AdvancedQuestionGenerator
 from ..generation.storage import QuestionStorage
 from ..verification.fact_verifier import FactVerifier
 
 
 # Initialize services
-generator = QuestionGenerator()
 advanced_generator = AdvancedQuestionGenerator(
     generation_model="gpt-4o",
     critique_model="gpt-4o-mini",
@@ -50,13 +48,14 @@ async def generate_questions(request: GenerateRequest):
     start_time = time.time()
 
     try:
-        questions = await generator.generate_questions(
+        questions = await advanced_generator.generate_questions(
             count=request.count,
             difficulty=request.difficulty,
             topics=request.topics,
             categories=request.categories,
             question_type=request.type,
-            excluded_topics=request.excluded_topics
+            excluded_topics=request.excluded_topics,
+            enable_best_of_n=False,
         )
 
         # Convert to response format
@@ -342,7 +341,7 @@ async def export_chatgpt_prompt(
     topic_list = topics.split(",") if topics else None
     category_list = categories.split(",") if categories else None
 
-    prompt = generator.export_for_chatgpt(
+    prompt = advanced_generator.prompt_builder.build_for_chatgpt(
         count=count,
         difficulty=difficulty,
         topics=topic_list,

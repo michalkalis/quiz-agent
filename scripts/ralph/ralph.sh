@@ -94,11 +94,13 @@ for iter in $(seq 1 "$MAX_ITERS"); do
 
     POST_SHA="$(git -C "$REPO_ROOT" rev-parse HEAD)"
 
-    # Parse RALPH_RESULT from log
-    RESULT_LINE="$(grep -oE 'RALPH_RESULT:\s*\{.*\}' "$ITER_LOG" | tail -1 || true)"
+    # Parse RALPH_RESULT from log. Use [[:space:]] (POSIX) not \s — BSD sed on
+    # macOS does not recognize \s and silently returns the input unchanged,
+    # which made every successful "done" iteration count as a failure.
+    RESULT_LINE="$(grep -oE 'RALPH_RESULT:[[:space:]]*\{.*\}' "$ITER_LOG" | tail -1 || true)"
     if [[ -n "$RESULT_LINE" ]]; then
-        STATUS="$(echo "$RESULT_LINE" | sed -E 's/.*"status":\s*"([^"]+)".*/\1/')"
-        TASK="$(echo "$RESULT_LINE" | sed -E 's/.*"task":\s*"([^"]+)".*/\1/')"
+        STATUS="$(echo "$RESULT_LINE" | sed -E 's/.*"status":[[:space:]]*"([^"]+)".*/\1/')"
+        TASK="$(echo "$RESULT_LINE" | sed -E 's/.*"task":[[:space:]]*"([^"]+)".*/\1/')"
     else
         STATUS="parse-fail"
         TASK="(no marker)"

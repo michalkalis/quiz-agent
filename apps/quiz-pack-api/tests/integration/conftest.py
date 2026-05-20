@@ -13,11 +13,18 @@ on top of the guard. The e2e test in ``test_order_e2e.py`` composes them.
 from __future__ import annotations
 
 import json
+import os
 from typing import Iterator
 
 import httpx
 import pytest
 import respx
+
+# Constructor-time env vars: WebSearchSource raises if TAVILY_API_KEY is missing,
+# langchain_openai.ChatOpenAI requires OPENAI_API_KEY. All real HTTPS to these
+# providers is mocked by respx — the placeholders never reach the wire.
+os.environ.setdefault("TAVILY_API_KEY", "tvly-test-placeholder")
+os.environ.setdefault("OPENAI_API_KEY", "sk-test-placeholder")
 
 
 @pytest.fixture(autouse=True)
@@ -389,4 +396,57 @@ def verify_score_http_mocks(
 ) -> respx.MockRouter:
     """Layer verifier + scorer canned routes on the egress-guard router."""
     register_verify_score_mocks(_block_external_http)
+    return _block_external_http
+
+
+# ---------------------------------------------------------------------------
+# Composed e2e mocks (issue #36 task 2.11e — full pipeline)
+# ---------------------------------------------------------------------------
+
+
+def _openai_e2e_dispatch(request: httpx.Request) -> httpx.Response:
+    """Dispatch OpenAI ChatCompletion across all three pipeline call sites.
+
+    Generator (``gpt-4o``) → questions JSON.
+    Critique (``gpt-4o-mini``) → critique JSON.
+    Scorer (``gpt-4.1-mini`` or anything else) → scoring JSON.
+
+    Discriminating by model name keeps the dispatcher decoupled from prompt
+    wording, so future prompt edits don't break the e2e test.
+    """
+    body = json.loads(request.content)
+    model = body.get("model", "")
+    if "gpt-4o-mini" in model:
+        content = json.dumps(_CRITIQUE_PAYLOAD)
+    elif "gpt-4o" in model:
+        content = json.dumps(_generation_payload())
+    else:
+        content = json.dumps(_SCORING_PAYLOAD)
+    return httpx.Response(200, json=_chat_completion_envelope(content, model))
+
+
+def register_e2e_mocks(router: respx.MockRouter) -> None:
+    """Compose sourcing + generation + verify/score routes for the full pipeline.
+
+    The verifier's Tavily response wins over sourcing's (registered last);
+    FactSourcer doesn't care about result content as long as URLs are present,
+    while FactVerifier requires three ``three``-bearing results to land on the
+    verified branch without Gemini.
+    """
+    register_sourcing_mocks(router)
+    router.post("https://api.tavily.com/search").mock(
+        return_value=httpx.Response(200, json=_TAVILY_VERIFY_RESPONSE)
+    )
+    router.post("https://api.openai.com/v1/chat/completions").mock(
+        side_effect=_openai_e2e_dispatch
+    )
+    router.post("https://api.anthropic.com/v1/messages").mock(
+        return_value=httpx.Response(200, json=_ANTHROPIC_MESSAGES_RESPONSE)
+    )
+
+
+@pytest.fixture
+def e2e_http_mocks(_block_external_http: respx.MockRouter) -> respx.MockRouter:
+    """Layer the full pipeline's canned routes on the egress-guard router."""
+    register_e2e_mocks(_block_external_http)
     return _block_external_http

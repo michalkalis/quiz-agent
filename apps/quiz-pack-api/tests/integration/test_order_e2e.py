@@ -210,22 +210,19 @@ async def _run_worker_once(redis_url: str) -> None:
 
     Uses ``arq.worker.Worker`` directly so we can await completion instead of
     spinning a long-lived background process.  ``burst=True`` exits after all
-    queued jobs finish.
+    queued jobs finish. ``on_startup`` builds the LLM-backed collaborators
+    that ``process_order`` reads from ``ctx`` — without it the orchestrator
+    KeyErrors before ever reaching the mocked HTTP routes.
     """
     from arq.connections import RedisSettings
     from arq.worker import Worker
     from app.worker.tasks import process_order
-
-    class _TestWorkerSettings:
-        redis_settings = RedisSettings.from_dsn(redis_url)
-        functions = [process_order]
-        max_jobs = 2
-        max_tries = 1  # no retries in tests — fail fast
-        job_timeout = 60
+    from app.worker.worker import on_startup
 
     worker = Worker(
         functions=[process_order],
         redis_settings=RedisSettings.from_dsn(redis_url),
+        on_startup=on_startup,
         max_jobs=2,
         max_tries=1,
         job_timeout=60,
@@ -314,23 +311,21 @@ async def _collect_sse_events(
 
 
 @pytest.mark.integration
-@pytest.mark.xfail(
-    reason="needs HTTP mocks — 2.11b–e wire respx routes for sourcing/generation/verify/score",
-    strict=False,
-)
 async def test_order_e2e_full(
     client: httpx.AsyncClient,
     db_session: AsyncSession,
     minter: JWSMinter,
+    e2e_http_mocks,
 ) -> None:
     """POST /v1/orders → worker → SSE stream delivers ~7 events ending with 'done'.
 
     Assertions:
     - POST returns 202 with order_id.
     - After worker completes, order.status == 'delivered'.
-    - job.total_cost_cents == 0 (Phase-1 stub pipeline must not call paid LLMs).
+    - 0 < job.total_cost_cents < 100 (real pipeline costs something, Phase-2
+      sanity ceiling; Phase 3 will tighten with per-tier caps).
+    - Every persisted Question has a non-null source_url (F8 enforcement).
     - SSE stream has ≥ 5 events including a terminal 'done'.
-    - stub questions are created with correct pack_id (actual_count == target_count).
     """
     tx_id = f"e2e-full-{uuid.uuid4().hex[:8]}"
     jws = minter.mint(transaction_id=tx_id, product_id="pack_10")
@@ -351,22 +346,32 @@ async def test_order_e2e_full(
     snapshot = await _poll_order(client, order_id, timeout=30.0)
     assert snapshot["status"] == "delivered", f"unexpected status: {snapshot}"
 
-    # 4. Cost guardrail: stub pipeline must cost nothing.
+    # 4. Cost guardrail: real pipeline costs > 0 but stays under the Phase-2
+    # sanity ceiling (100 cents). Phase 3 (#37) tightens this with per-tier caps.
     job_data = snapshot["job"]
     assert job_data is not None
-    assert job_data["total_cost_cents"] == 0, (
-        f"Phase-1 stub pipeline charged {job_data['total_cost_cents']} cents; "
-        "Phase-2 PRs introducing real generation must update this assertion explicitly."
+    cost = job_data["total_cost_cents"]
+    assert 0 < cost < 100, (
+        f"total_cost_cents={cost} outside Phase-2 sanity range (0, 100); "
+        "expected real LLM calls (>0) under the per-pack ceiling (<100)."
     )
 
-    # 5. Stub questions exist with the correct pack_id.
+    # 5. Questions persisted with correct pack_id AND F8: every question must
+    #    have a non-null source_url (no LLM-hallucinated attribution).
     from app.db.models import QuestionRow
-    from sqlalchemy import func
 
     pack_id = uuid.UUID(snapshot["pack_id"])
-    stmt = select(func.count()).where(QuestionRow.pack_id == pack_id)
-    count = (await db_session.execute(stmt)).scalar_one()
-    assert count == 10, f"expected 10 stub questions, found {count}"
+    rows = (
+        await db_session.execute(
+            select(QuestionRow).where(QuestionRow.pack_id == pack_id)
+        )
+    ).scalars().all()
+    assert len(rows) > 0, f"expected ≥1 question for pack {pack_id}, found 0"
+    missing_source = [r.id for r in rows if not r.source_url]
+    assert not missing_source, (
+        f"F8 violation: {len(missing_source)} questions persisted without "
+        f"source_url: {missing_source[:5]}"
+    )
 
     # 6. SSE stream: connect after job is done — replay path only.
     stream_url = f"/v1/orders/{order_id}/stream"
@@ -379,8 +384,10 @@ async def test_order_e2e_full(
     assert len(events) >= 5, f"expected ≥ 5 SSE events, got {len(events)}: {step_names}"
 
     # Replay events come from step_log; progress defaults to 0 there (1.11 note).
-    # Verify step names include the expected pipeline stages.
-    expected_steps = {"sourcing", "generating", "critiquing", "verifying", "scoring", "persisting", "done"}
+    # Verify step names include the expected pipeline stages. Phase 2 stages
+    # per app/orchestrator/stages/*.name + the worker's terminal "done" event;
+    # critique runs inside GenerationStage so no separate event.
+    expected_steps = {"sourcing", "generating", "verifying", "scoring", "dedup", "persisting", "done"}
     received_steps = set(step_names)
     assert received_steps == expected_steps, (
         f"step mismatch. expected={sorted(expected_steps)}, got={sorted(received_steps)}"
@@ -393,13 +400,10 @@ async def test_order_e2e_full(
 
 
 @pytest.mark.integration
-@pytest.mark.xfail(
-    reason="needs HTTP mocks — 2.11b–e wire respx routes for sourcing/generation/verify/score",
-    strict=False,
-)
 async def test_order_sse_reconnect(
     client: httpx.AsyncClient,
     minter: JWSMinter,
+    e2e_http_mocks,
 ) -> None:
     """Reconnecting with Last-Event-ID resumes at next event; no duplicates.
 

@@ -144,7 +144,7 @@ Each task is one Ralph iteration: scoped to ~15 min, one commit, clear acceptanc
 - [x] **2.11d Mock verifier + scorer HTTP (Anthropic, Gemini, Tavily).** Add `respx` routes for Anthropic `/v1/messages`, Google `generativelanguage` endpoints, and Tavily again (verifier uses it). Returns: verifier `verified=true, confidence=0.95`, scorer scores 7.5/8.5. Unit-test in `tests/integration/test_verify_score_http_mocks.py`.
       **Acceptance**: new test green; verifier returns the 5 questions it was given (none dropped); scorer fills `ctx.scores` for all 5.
 
-- [ ] **2.11e Flip e2e xfail → real assertions.** Remove the `xfail` from 2.11a; combine the mock groups from 2.11b–d into the e2e test's setup. Replace the `total_cost_cents == 0` assertion with `0 < total_cost_cents < 100`. Add the F8 assertion (every persisted Question has non-null `source_url`). Keep SSE-replay + reconnect assertions intact.
+- [x] **2.11e Flip e2e xfail → real assertions.** Remove the `xfail` from 2.11a; combine the mock groups from 2.11b–d into the e2e test's setup. Replace the `total_cost_cents == 0` assertion with `0 < total_cost_cents < 100`. Add the F8 assertion (every persisted Question has non-null `source_url`). Keep SSE-replay + reconnect assertions intact.
       **Acceptance**: `pytest tests/integration/test_order_e2e.py -v` green locally + in CI. Both tests pass without xfail. The previous `== 0` assertion is replaced exactly once; no parallel test branches.
 
 ## BLOCKER (2026-05-20)

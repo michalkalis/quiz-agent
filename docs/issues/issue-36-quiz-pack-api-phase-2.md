@@ -109,7 +109,7 @@ Each task is one Ralph iteration: scoped to ~15 min, one commit, clear acceptanc
 - [x] **2.7 `ScoringStage` wrapping `MultiModelScorer`.** New file `app/orchestrator/stages/scoring.py`. Constructor takes a `MultiModelScorer` instance; `run(ctx, sink)` calls `await scorer.score_batch(ctx.questions)` and writes per-model scores to a new `ctx.scores: dict[str, dict[str, float]]` keyed by `question.id`. Does NOT drop questions — drop policy is a Phase 3 concern.
       **Acceptance**: `tests/orchestrator/stages/test_scoring.py` runs a scorer double; asserts `ctx.scores` keys match `ctx.questions[*].id`.
 
-- [ ] **2.8 `DedupStage` (pgvector cosine + Jaccard).** New file `app/orchestrator/stages/dedup.py`. Constructor takes a `PgvectorQuestionStore` (created in 2.16) and the path to `gold_standard.json`. `run(ctx, sink)` for each question:
+- [x] **2.8 `DedupStage` (pgvector cosine + Jaccard).** New file `app/orchestrator/stages/dedup.py`. Constructor takes a `PgvectorQuestionStore` (created in 2.16) and the path to `gold_standard.json`. `run(ctx, sink)` for each question:
     - cosine ≥ 0.85 against existing `questions.embedding` where `pack_id IS NULL` OR `pack_id = ctx.pack_id` → drop;
     - Jaccard ≥ 0.80 against `gold_standard.json` titles → drop.
     Dropped count published via `sink.publish(... info={"dropped": n})`.

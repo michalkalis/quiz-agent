@@ -7,8 +7,6 @@ from .models import Fact, FactBatch
 from .wikipedia_source import WikipediaSource
 from .opentriviadb_source import OpenTriviaDBSource
 from .web_search_source import WebSearchSource
-from .news_source import NewsSource
-from .czech_slovak_source import CzechSlovakSource
 
 
 class FactSourcer:
@@ -19,8 +17,6 @@ class FactSourcer:
         enable_wikipedia: bool = True,
         enable_opentdb: bool = True,
         enable_web_search: bool = True,  # Tavily API key configured in .env
-        enable_news: bool = True,
-        enable_czech_slovak: bool = True,
         wikipedia_languages: Optional[list[str]] = None,
     ):
         self.sources = {}
@@ -33,23 +29,17 @@ class FactSourcer:
             self.sources["opentdb"] = OpenTriviaDBSource()
         if enable_web_search:
             self.sources["web_search"] = WebSearchSource()
-        if enable_news:
-            self.sources["news"] = NewsSource()
-        if enable_czech_slovak:
-            self.sources["czech_slovak"] = CzechSlovakSource()
 
     async def gather_facts(
         self,
         count: int = 30,
         topics: Optional[list[str]] = None,
-        include_news: bool = True,
     ) -> FactBatch:
         """Gather facts from all enabled sources.
 
         Args:
             count: Target number of facts to collect
             topics: Optional topic filter
-            include_news: Include time-sensitive news facts
 
         Returns:
             Deduplicated FactBatch with facts from all sources
@@ -57,11 +47,10 @@ class FactSourcer:
         per_source = max(count // len(self.sources), 5) if self.sources else 0
 
         # Gather from all sources concurrently
-        tasks = {}
-        for name, source in self.sources.items():
-            if name == "news" and not include_news:
-                continue
-            tasks[name] = source.get_facts(count=per_source, topics=topics)
+        tasks = {
+            name: source.get_facts(count=per_source, topics=topics)
+            for name, source in self.sources.items()
+        }
 
         all_facts: list[Fact] = []
         sources_used: list[str] = []

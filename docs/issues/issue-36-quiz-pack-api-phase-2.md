@@ -163,7 +163,7 @@ Each task is one Ralph iteration: scoped to ~15 min, one commit, clear acceptanc
 - [x] **2.13 Delete `/api/v1/export/chatgpt` + `build_for_chatgpt` (U2).** Remove the route + helper. Update `app/api/v1/__init__.py` or whichever module registers the router. Search `git grep -n "build_for_chatgpt\|export/chatgpt"` for stragglers.
       **Acceptance**: `curl http://localhost:8003/api/v1/export/chatgpt` returns 404; no test references that endpoint; `git grep -n "build_for_chatgpt"` returns 0 hits.
 
-- [ ] **2.14 Delete unused sources + legacy scripts.** Remove:
+- [x] **2.14 Delete unused sources + legacy scripts.** Remove:
     - `app/sourcing/czech_slovak_source.py` (U5; functionality already in `WikipediaSource(languages=["sk","cs"])`)
     - `app/sourcing/news_source.py` (U4; RSS too brittle, deferred indefinitely)
     - `scripts/generate_questions_claude.py` (replaced by `scripts/generate_pack.py` in 2.16)

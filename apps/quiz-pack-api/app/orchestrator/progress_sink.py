@@ -89,15 +89,11 @@ class DBProgressSink:
     async def finish_step(
         self, step: str, event_id: int, info: dict[str, Any] | None = None
     ) -> None:
-        async with self._session_factory() as session:
-            await append_step(
-                session,
-                self._job_id,
-                step=step,
-                info=info,
-                finished_at=datetime.now(timezone.utc),
-            )
-            await session.commit()
+        # Phase 1 contract: one `step_log` entry per step (the one `start_step`
+        # appended). The live "finished" signal travels via `publish()` to
+        # Redis pubsub — SSE clients get it from there. Writing a second
+        # `step_log` entry here would double every SSE replay event.
+        return None
 
     async def publish(
         self,

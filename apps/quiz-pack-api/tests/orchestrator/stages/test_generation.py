@@ -142,7 +142,11 @@ async def test_preserves_existing_provenance_fields_when_marking_pipeline() -> N
     questions = [_stub_question(0, generation_metadata=pre)]
     gen = _FakeGenerator(questions)
     stage = GenerationStage(gen)  # type: ignore[arg-type]
-    ctx = _make_ctx(target_count=1, facts=[Fact(text="x")])
+    # F8 (task 2.15): fact needs `source_url` so the stage's fallback can
+    # backfill the question — otherwise the F8 invariant assert trips and
+    # this test (which exercises provenance preservation, not attribution)
+    # never reaches its assertions.
+    ctx = _make_ctx(target_count=1, facts=[Fact(text="x", source_url="https://ex/x")])
 
     await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
 
@@ -195,11 +199,34 @@ async def test_does_not_overwrite_question_supplied_source_url() -> None:
 
 
 @pytest.mark.asyncio
+async def test_raises_when_no_question_has_source_url() -> None:
+    """F8 (task 2.15) requires every persisted question to have `source_url`.
+
+    The wrap's fallback backfills questions from the first attributed
+    fact — but when no fact carries a URL (e.g. an OpenTriviaDB-only run
+    upstream of full sourcing rules), the gap must fail loudly so the
+    pack never reaches PersistStage with null attribution.
+    """
+    questions = [_stub_question(i) for i in range(3)]
+    gen = _FakeGenerator(questions)
+    stage = GenerationStage(gen)  # type: ignore[arg-type]
+    facts = [Fact(text=f"t{i}") for i in range(5)]  # no source_url anywhere
+    ctx = _make_ctx(target_count=3, facts=facts)
+
+    with pytest.raises(ValueError, match="F8 violated"):
+        await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+
+@pytest.mark.asyncio
 async def test_calls_generator_with_target_count_and_facts() -> None:
     questions = [_stub_question(i) for i in range(5)]
     gen = _FakeGenerator(questions)
     stage = GenerationStage(gen)  # type: ignore[arg-type]
-    facts = [Fact(text=f"t{i}") for i in range(20)]
+    # F8 (task 2.15): at least one fact must carry `source_url` so the
+    # fallback can backfill all questions and the F8 invariant assert
+    # doesn't trip — this test pins the generator-kwargs contract, not
+    # attribution.
+    facts = [Fact(text=f"t{i}", source_url=f"https://ex/{i}") for i in range(20)]
     ctx = _make_ctx(target_count=5, facts=facts, category="science", theme="space")
 
     await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]

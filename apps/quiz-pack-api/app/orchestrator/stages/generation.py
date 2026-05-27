@@ -76,6 +76,21 @@ class GenerationStage:
 
         ctx.questions = list(questions)
 
+        # F8 (task 2.15): every persisted question must carry a real source URL.
+        # If the per-question fallback above couldn't fill `source_url` (e.g.
+        # all sourced facts lacked URLs — OpenTriviaDB without attribution),
+        # fail loudly here instead of letting the gap slip into Postgres.
+        missing = [q for q in ctx.questions if not q.source_url]
+        if missing:
+            attributed = sum(
+                1 for f in (ctx.facts or []) if getattr(f, "source_url", None)
+            )
+            raise ValueError(
+                f"F8 violated: {len(missing)}/{len(ctx.questions)} questions "
+                f"have no source_url after GenerationStage "
+                f"({attributed}/{len(ctx.facts or [])} facts had source_url)"
+            )
+
         return StageResult(
             info={"questions": len(ctx.questions)},
             cost_cents=0,

@@ -168,10 +168,21 @@ async def _handle_failure(
                 order.status = "failed"
                 order.refund_eligible = True
             current_progress = job.progress
+            # PackGenerator already appended a "failed" step_log entry via
+            # `sink.start_step("failed", …)` inside its except handler. Capture
+            # that entry's event_id while the session is open so the live
+            # pubsub publish below uses the real monotonic id — otherwise SSE
+            # clients reconnected with `Last-Event-ID > 0` would drop the
+            # event via the bridge's `event_id <= last_event_id` dedup check.
+            failed_event_id = 0
+            if job.step_log:
+                failed_event_id = job.step_log[-1].get("event_id", 0)
             await session.commit()
 
         if sink is not None:
-            await sink.publish(0, "failed", current_progress, info={"error": repr(exc)})
+            await sink.publish(
+                failed_event_id, "failed", current_progress, info={"error": repr(exc)}
+            )
     except Exception as inner:
         logger.error(
             "process_order _handle_failure itself failed order_id=%s inner=%r",

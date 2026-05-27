@@ -12,11 +12,20 @@ F8 (task 2.15) + the e2e assertion in task 2.11 depend on.
 from __future__ import annotations
 
 import hashlib
+import uuid
 
 from app.generation.advanced_generator import AdvancedQuestionGenerator
 from app.orchestrator.context import OrderContext, StageResult
 from app.orchestrator.progress_sink import ProgressSink
 from quiz_shared.models.question import GenerationProvenance
+
+
+def _is_uuid(value: str) -> bool:
+    try:
+        uuid.UUID(value)
+        return True
+    except (ValueError, TypeError, AttributeError):
+        return False
 
 
 def _compute_prompt_seed(
@@ -58,6 +67,14 @@ class GenerationStage:
         )
 
         for q in questions:
+            # AdvancedQuestionGenerator inherits the Phase 1 `q_<hex>` id
+            # convention from `app/generation/storage.py`; PersistStage's
+            # `_coerce_uuid` (app/db/models/question.py:141) refuses non-UUID
+            # ids on purpose. Normalise at the stage boundary so the rest of
+            # the orchestrator can rely on uuid-shaped ids.
+            if not _is_uuid(q.id):
+                q.id = str(uuid.uuid4())
+
             q.prompt_seed = prompt_seed
             q.language = ctx.language
 

@@ -199,6 +199,26 @@ async def test_does_not_overwrite_question_supplied_source_url() -> None:
 
 
 @pytest.mark.asyncio
+async def test_normalises_non_uuid_question_ids() -> None:
+    """AdvancedQuestionGenerator returns questions with `q_<hex>` ids (Phase 1
+    legacy from `app/generation/storage.py`). PersistStage's `_coerce_uuid`
+    refuses non-UUID strings on purpose, so the stage must replace those
+    legacy ids with real UUIDs at the boundary — otherwise the e2e flow
+    fails on the first persist call.
+    """
+    questions = [_stub_question(0, id="q_abc123def456"), _stub_question(1)]
+    gen = _FakeGenerator(questions)
+    stage = GenerationStage(gen)  # type: ignore[arg-type]
+    facts = [Fact(text="t", source_url="https://ex/1")]
+    ctx = _make_ctx(target_count=2, facts=facts)
+
+    await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    for q in ctx.questions:
+        uuid.UUID(q.id)  # raises if not a valid UUID
+
+
+@pytest.mark.asyncio
 async def test_raises_when_no_question_has_source_url() -> None:
     """F8 (task 2.15) requires every persisted question to have `source_url`.
 

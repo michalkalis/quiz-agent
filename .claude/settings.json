@@ -27,7 +27,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'FILE=$(cat | jq -r \".tool_input.file_path // empty\" 2>/dev/null); if [[ -n \"$FILE\" && \"$FILE\" == */apps/quiz-agent/app/* ]]; then cd \"$CLAUDE_PROJECT_DIR/apps/quiz-agent\" && python -m pytest tests/ -x -q --tb=line 2>&1 | tail -5; fi; exit 0'",
+            "command": "bash -c 'FILE=$(cat | jq -r \".tool_input.file_path // empty\" 2>/dev/null); if [[ -n \"$FILE\" && \"$FILE\" == */apps/quiz-agent/app/* ]]; then cd \"$CLAUDE_PROJECT_DIR/apps/quiz-agent\" && python -m pytest tests/ -x -q --tb=line 2>&1 | tail -5; elif [[ -n \"$FILE\" && \"$FILE\" == */apps/quiz-pack-api/app/* ]]; then cd \"$CLAUDE_PROJECT_DIR/apps/quiz-pack-api\" && python -m pytest tests/ -x -q --tb=line 2>&1 | tail -5; fi; exit 0'",
             "timeout": 30
           }
         ]

@@ -19,8 +19,10 @@ Layout: `apps/quiz-agent` (FastAPI backend) · `apps/quiz-pack-api` (order/gener
 | Install deps | `uv pip install -e apps/quiz-agent && uv pip install -e packages/shared` |
 | Backend tests | `cd apps/quiz-agent && pytest tests/ -v` |
 | Start backend (:8002) | `cd apps/quiz-agent && uvicorn app.main:app --reload --port 8002` |
+| Quiz-pack-api tests | `cd apps/quiz-pack-api && pytest tests/ -v` |
+| Start quiz-pack-api (:8003) | `cd apps/quiz-pack-api && uvicorn app.main:app --reload --port 8003` |
 
-Stack-specific commands (iOS build / test / schemes, quiz-pack-api, Fly.io deploy) live in the rules files below.
+Stack-specific commands (iOS build / test / schemes, Fly.io deploy) live in the rules files below.
 
 ## Output
 

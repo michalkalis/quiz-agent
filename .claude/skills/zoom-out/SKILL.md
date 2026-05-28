@@ -1,6 +1,7 @@
 ---
 name: zoom-out
 description: Tell the agent to zoom out and give broader context or a higher-level perspective on a section of code. Use when you're unfamiliar with an area of the codebase and need a map of modules and callers before diving in.
+allowed-tools: Read, Bash, Grep, Glob
 disable-model-invocation: true
 model: sonnet
 ---

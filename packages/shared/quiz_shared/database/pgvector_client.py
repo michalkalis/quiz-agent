@@ -258,7 +258,8 @@ def _question_to_row_dict(
         "source_excerpt": q.source_excerpt,
         "review_status": q.review_status,
         "embedding": embedding,
-        "embedding_model": q.embedding_model or ("text-embedding-3-small" if embedding else None),
+        "embedding_model": q.embedding_model
+        or ("text-embedding-3-small" if embedding else None),
         "embedding_dim": q.embedding_dim or (len(embedding) if embedding else None),
         "usage_count": q.usage_count,
         "created_at": _ensure_utc(q.created_at) or datetime.now(timezone.utc),

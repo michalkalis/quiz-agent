@@ -15,9 +15,12 @@ logger = logging.getLogger(__name__)
 
 from quiz_shared.models.question import Question
 from quiz_shared.models.session import QuizSession
-from quiz_shared.database.chroma_client import ChromaDBClient
+from quiz_shared.database.pgvector_client import PgvectorQuestionStore
 from quiz_shared.database.question_store import QuestionStore
 from quiz_shared.utils.embeddings import generate_embedding, calculate_similarity
+
+from ..config import get_settings
+from .sync_pgvector_store import SyncPgvectorStore
 
 
 class QuestionRetriever:
@@ -27,9 +30,24 @@ class QuestionRetriever:
         """Initialize question retriever.
 
         Args:
-            question_store: QuestionStore for read access (or create default)
+            question_store: QuestionStore for read access. If omitted,
+                defaults to a `PgvectorQuestionStore` constructed from
+                `DATABASE_URL` (the canonical voice-quiz read path since
+                #36 task 2.20 — ChromaDB is documented read-only).
         """
-        self._store = question_store or ChromaDBClient().store
+        self._store = question_store or self._build_default_store()
+
+    @staticmethod
+    def _build_default_store() -> QuestionStore:
+        settings = get_settings()
+        if not settings.database_url:
+            raise RuntimeError(
+                "QuestionRetriever default requires DATABASE_URL. Pass an "
+                "explicit question_store=... or set DATABASE_URL so the "
+                "PgvectorQuestionStore can connect."
+            )
+        async_store = PgvectorQuestionStore(database_url=settings.database_url)
+        return SyncPgvectorStore(async_store)
 
     def get(self, question_id: str) -> Optional[Question]:
         """Look up a single question by ID.

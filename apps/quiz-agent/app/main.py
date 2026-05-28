@@ -57,11 +57,14 @@ if sentry_dsn:
     )
 
 from quiz_shared.database.chroma_client import ChromaDBClient
+from quiz_shared.database.pgvector_client import PgvectorQuestionStore
 from quiz_shared.database.sql_client import SQLClient
 
+from .config import get_settings
 from .session.manager import SessionManager
 from .input.parser import InputParser
 from .retrieval.question_retriever import QuestionRetriever
+from .retrieval.sync_pgvector_store import SyncPgvectorStore
 from .evaluation.evaluator import AnswerEvaluator
 from .rating.feedback import FeedbackService
 from .voice.transcriber import VoiceTranscriber
@@ -146,13 +149,37 @@ async def lifespan(app: FastAPI):
         chroma_client = ChromaDBClient(
             collection_name="quiz_questions", persist_directory=chroma_path
         )
-        question_store = chroma_client.store
+        # ChromaDB stays initialized for write-path (FeedbackService) + the
+        # question health monitor. Voice-quiz reads go through pgvector
+        # since #36 task 2.20; ChromaDB is documented read-only until
+        # Phase 6 (#41) retires it.
+        chroma_question_store = chroma_client.store
         logger.info(
-            "ChromaDB client + QuestionStore initialized (using %s)", chroma_path
+            "ChromaDB client initialized (write-path + monitor, using %s)",
+            chroma_path,
         )
     except Exception as e:
         logger.error("Failed to initialize ChromaDB: %s", e, exc_info=True)
         raise
+
+    # Initialize pgvector store for the voice-quiz read path (#36 task 2.20).
+    # Falls back to the ChromaDB store when DATABASE_URL is unset (local dev
+    # without Postgres) so the dev server still boots.
+    # `question_store` (admin / write surface) stays on ChromaDB — admin
+    # routes still call upsert/delete/get_all/find_duplicates which the
+    # async pgvector store does not expose in Phase 2.
+    settings = get_settings()
+    question_store = chroma_question_store
+    if settings.database_url:
+        async_pgvector = PgvectorQuestionStore(database_url=settings.database_url)
+        retrieval_store = SyncPgvectorStore(async_pgvector)
+        logger.info("Voice-quiz read path: PgvectorQuestionStore (canonical)")
+    else:
+        retrieval_store = chroma_question_store
+        logger.warning(
+            "DATABASE_URL not set — falling back to ChromaDB for voice-quiz "
+            "read path. Production must set DATABASE_URL (#36 task 2.20)."
+        )
 
     try:
         logger.info("Initializing SQL client...")
@@ -169,10 +196,13 @@ async def lifespan(app: FastAPI):
         logger.info("Initializing services...")
         session_manager = SessionManager(cleanup_interval=300, sql_client=sql_client)
         input_parser = InputParser()
-        question_retriever = QuestionRetriever(question_store=question_store)
+        question_retriever = QuestionRetriever(question_store=retrieval_store)
         answer_evaluator = AnswerEvaluator()
+        # FeedbackService stays on ChromaDB for write-path (upsert/delete) —
+        # PgvectorQuestionStore exposes only the read surface in Phase 2.
+        # Full write-path cutover lives in Phase 6 (#41) per #36 plan.
         feedback_service = FeedbackService(
-            question_store=question_store,
+            question_store=chroma_question_store,
             sql_client=sql_client,
             low_rating_threshold=2.5,
         )

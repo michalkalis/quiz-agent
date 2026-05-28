@@ -9,6 +9,8 @@ dependencies = [
     "sqlalchemy>=2.0.0",
     "python-dotenv>=1.0.0",
     "openai>=1.0.0",
+    "asyncpg>=0.29.0",
+    "pgvector>=0.3.0",
 ]
 
 [build-system]

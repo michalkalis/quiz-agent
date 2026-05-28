@@ -192,7 +192,7 @@ Each task is one Ralph iteration: scoped to ~15 min, one commit, clear acceptanc
 
 ### Phase 2G — Voice-quiz pgvector cutover (#32 §2.4.1)
 
-- [ ] **2.19 `PgvectorQuestionStore` in shared package.** New file `packages/shared/quiz_shared/database/pgvector_client.py`. Implements the `QuestionStore` protocol used by `QuestionRetriever`: `get(id)`, `count(filters)`, `query(query_text, n_candidates, filters)` (cosine similarity via pgvector `<=>` operator), `add(question)` (writes embedding + metadata to `questions` table). Async-only — uses the existing `app.db.engine` via a passed-in `AsyncSession` factory, or constructs its own from `DATABASE_URL`.
+- [x] **2.19 `PgvectorQuestionStore` in shared package.** New file `packages/shared/quiz_shared/database/pgvector_client.py`. Implements the `QuestionStore` protocol used by `QuestionRetriever`: `get(id)`, `count(filters)`, `query(query_text, n_candidates, filters)` (cosine similarity via pgvector `<=>` operator), `add(question)` (writes embedding + metadata to `questions` table). Async-only — uses the existing `app.db.engine` via a passed-in `AsyncSession` factory, or constructs its own from `DATABASE_URL`.
     > Tradeoff: `QuestionRetriever` is currently sync (uses `ChromaDBClient` which is sync). This task adds an async client; 2.20 wires it via `asyncio.run` at the retriever seam, accepting the minor blocking cost in the voice-quiz hot path. Full async migration of the voice quiz is out of scope.
       **Acceptance**: `tests/test_pgvector_client.py` round-trips one question, asserts cosine query returns it as the top match. Lives in `packages/shared/tests/` if that exists, else `apps/quiz-pack-api/tests/`.
 

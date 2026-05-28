@@ -1,7 +1,8 @@
 # Issue 36: quiz-pack-api Phase 2 — `PackGenerator` orchestrator + voice-quiz pgvector cutover
 
-**Triage:** enhancement · ready-for-agent
-**Status:** Plan locked 2026-05-20 from #32 §3 Phase 2 scope + open gaps (F1, F8, M-2, voice-quiz cutover per §2.4.1). Atomic `- [ ]` tasks ready for Ralph autonomous burndown.
+**Triage:** enhancement · done
+**Status:** Shipped 2026-05-28 — all 22 atomic tasks (2.1–2.22) complete. `PackGenerator` orchestrator with 6 stages live, duplicate generator paths deleted, M-2 retry endpoint shipped, voice-quiz read-path cut over to pgvector (ChromaDB read-only until Phase 6/#41).
+**Plan history:** Locked 2026-05-20 from #32 §3 Phase 2 scope + open gaps (F1, F8, M-2, voice-quiz cutover per §2.4.1). Atomic `- [ ]` tasks ready for Ralph autonomous burndown.
 **Created:** 2026-05-20
 **Parent:** #32 (umbrella strategy) · predecessor #33 (Phase 1 — code-complete 2026-05-15)
 
@@ -204,7 +205,7 @@ Each task is one Ralph iteration: scoped to ~15 min, one commit, clear acceptanc
 
 ### Phase 2H — Wrap-up
 
-- [ ] **2.22 Close out: TODO, INDEX, #32 cross-references.** Flip `[ ] #36` → `[x] #36` in `docs/todo/TODO.md`. Flip the `[~]` Ralph WIP line to reference the *next* handoff file (after Ralph run completes — operator updates this manually). Add a row in `docs/issues/INDEX.md`. Edit `docs/issues/issue-32-on-demand-generation-service.md` §3 Phase 2: append `**Status:** decomposed into #36; ships YYYY-MM-DD.` and update §5 "Resume" issue-number forecasts (Phase 3 → #37, etc — matches header note above).
+- [x] **2.22 Close out: TODO, INDEX, #32 cross-references.** Flip `[ ] #36` → `[x] #36` in `docs/todo/TODO.md`. Flip the `[~]` Ralph WIP line to reference the *next* handoff file (after Ralph run completes — operator updates this manually). Add a row in `docs/issues/INDEX.md`. Edit `docs/issues/issue-32-on-demand-generation-service.md` §3 Phase 2: append `**Status:** decomposed into #36; ships YYYY-MM-DD.` and update §5 "Resume" issue-number forecasts (Phase 3 → #37, etc — matches header note above).
       **Acceptance**: `git grep -n "#36" docs/` shows the new issue is referenced from TODO, INDEX, and #32. `git log --oneline -1` is the close-out commit.
 
 ---

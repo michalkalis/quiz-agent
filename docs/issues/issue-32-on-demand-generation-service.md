@@ -303,6 +303,7 @@ Each phase is a separate issue once approved. Sizing is rough.
 - ARQ worker scaffold + Fly process group
 
 ### Phase 2 — Pipeline consolidation (3–5 days)
+**Status:** decomposed into [#36](issue-36-quiz-pack-api-phase-2.md); shipped 2026-05-28.
 - Build `PackGenerator` orchestrator (F1)
 - Migrate `AdvancedQuestionGenerator`, `FactVerifier`, `MultiModelScorer` into stages with progress events
 - Delete duplicate generator paths (basic generator, manual ChatGPT export, fact-first vs non-fact-first split)
@@ -392,7 +393,7 @@ Three revisions emerged from Phase 1 decomposition. They supersede the matching 
 ### Resume
 1. **Read #33 first** before any code change in this area. Its C1/C2/C3 revisions supersede portions of §4 (see the "Revisions superseding §4" callout).
 2. Execute #33 atomic tasks 1.1 through 1.12.
-3. Once #33 is `done`: decompose Phase 2 into `docs/issues/issue-35-quiz-pack-api-phase-2.md` (`PackGenerator` orchestrator + delete duplicate generators per F1/U1/U2 + voice-quiz pgvector cutover per §2.4.1). Reference §3 Phase 2 above and #33's out-of-scope traceability table. **Note:** #33's traceability table forecasts Phase 2 as #34 but #34 was claimed by Claude Code context optimization on 2026-05-07; phases shift one number, and with the 2026-05-11 Phase 4 split into 4a/4b they now read: Phase 2 → #35, Phase 3 → #36, **Phase 4a → #37, Phase 4b → #38**, Phase 5 → #39, Phase 6 → #40. Issue numbers are forecast only — anything autonomous-claimed before decomposition shifts the count again. Update #33's table when decomposing Phase 2.
+3. Once #33 is `done`: decompose Phase 2 into `docs/issues/issue-36-quiz-pack-api-phase-2.md` (`PackGenerator` orchestrator + delete duplicate generators per F1/U1/U2 + voice-quiz pgvector cutover per §2.4.1). Reference §3 Phase 2 above and #33's out-of-scope traceability table. **Note (updated 2026-05-28):** #35 was claimed by parallel-backlog-burndown on 2026-05-15, so Phase 2 landed at #36 (next free) and shipped 2026-05-28. Downstream phases shift one number: Phase 3 → #37, **Phase 4a → #38, Phase 4b → #39**, Phase 5 → #40, Phase 6 → #41. Issue numbers are forecast only — anything autonomous-claimed before decomposition shifts the count again.
 
 ### Do NOT do
 - **Do not pre-decompose Phases 3–6.** Their atomic tasks depend on each predecessor's actual implementation.

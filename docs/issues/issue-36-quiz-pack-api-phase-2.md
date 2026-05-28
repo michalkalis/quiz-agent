@@ -124,7 +124,7 @@ Each task is one Ralph iteration: scoped to ~15 min, one commit, clear acceptanc
 - [x] **2.10 Swap `process_order` stub for `PackGenerator.run()`.** Edit `apps/quiz-pack-api/app/worker/tasks.py` so `process_order` constructs a `PackGenerator` with the six real stages (2.4–2.9) and runs it. Worker startup (in `app/worker/worker.py`) builds LLM clients once and passes them into the stage constructors via the ARQ `ctx`. Remove the stub `_persist_pack` + `_STEPS`/`_PROGRESS` walk.
       **Acceptance**: `pytest tests/integration/test_order_e2e.py` still passes against mocked HTTP LLM responses (task 2.11 sets these up). Worker boots without import errors; `arq app.worker.WorkerSettings --check` exits 0.
 
-- [ ] **2.11 Real-pipeline e2e test.** Update `tests/integration/test_order_e2e.py`:
+- [x] **2.11 Real-pipeline e2e test.** Update `tests/integration/test_order_e2e.py`:
     - Mock OpenAI / Anthropic / Tavily / Gemini at the HTTP boundary using `respx` (or `pytest-httpx` — pick whichever is already in `pyproject.toml`; if neither, add `respx` to the test extras).
     - Each mock returns a small canned response (one fact per source, one question per generation request, scores 7.5/8.5, verifier verdict `verified=true`).
     - Bump the cost guardrail: `total_cost_cents > 0` AND `total_cost_cents < 100` (Phase 2 sanity ceiling; Phase 3 will tighten with real per-tier caps).

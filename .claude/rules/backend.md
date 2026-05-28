@@ -14,11 +14,12 @@ paths: ["apps/quiz-agent/**", "apps/quiz-pack-api/**", "packages/shared/**"]
 - **Transcription:** OpenAI Whisper (audio file upload)
 - **Evaluation:** GPT-4 for answer correctness + feedback
 - **TTS:** OpenAI TTS API (Opus format)
-- **RAG:** ChromaDB for semantic question retrieval
+- **RAG:** Postgres + pgvector for semantic question retrieval (voice-quiz read path cut over 2026-05-28, #36 task 2.20)
 
 ### Database
-- **ChromaDB:** Shared instance for question embeddings
-- **SQLite:** Ratings and persistent data
+- **Postgres + pgvector:** Canonical store for question embeddings + metadata. Voice quiz (`apps/quiz-agent`) reads via `PgvectorQuestionStore` (see `packages/shared/quiz_shared/database/pgvector_client.py`). quiz-pack-api writes via `PersistStage`.
+- **ChromaDB:** Read-only legacy store until Phase 6 (#41) retires it. No code path writes to ChromaDB after 2026-05-28; the Fly volume stays mounted but is frozen. Do not add new ChromaDB writers.
+- **SQLite:** Ratings and persistent data.
 
 ## Local Dev
 

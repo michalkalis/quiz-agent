@@ -244,6 +244,99 @@ async def get_order(
     )
 
 
+@router.post("/{order_id}/retry", status_code=202, response_model=OrderCreatedResponse)
+async def retry_order(
+    order_id: uuid.UUID,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    arq_pool: Annotated[ArqRedis, Depends(get_arq_pool)],
+    verifier: Annotated[AppleJWSVerifier, Depends(get_jws_verifier)],
+    redis_url: Annotated[str, Depends(get_redis_url)],
+    x_storekit_jws: Annotated[Optional[str], Header()] = None,
+) -> OrderCreatedResponse:
+    """Re-enqueue a failed order (M-2).
+
+    Authz: ``X-StoreKit-JWS`` must verify and its ``transaction_id`` must match
+    the order's recorded ``transaction_id``. Verification reuses the 60s Redis
+    cache from #33 Task 1.11.
+
+    Flow:
+        409 if ``order.status != 'failed'``.
+        422 if ``job.retry_count >= 3``.
+        Otherwise: ``SELECT ... FOR UPDATE`` row-locks order + job (R14 —
+        prevents double-enqueue under concurrent retries), resets job to
+        ``queued``/``progress=0``/``error=NULL``, increments ``retry_count``,
+        flips order to ``pending`` → commit → ARQ enqueue → ``in_progress``.
+    """
+    if not x_storekit_jws:
+        raise HTTPException(status_code=401, detail="X-StoreKit-JWS header is required")
+
+    redis_conn: Redis = Redis.from_url(redis_url, decode_responses=True)
+    try:
+        try:
+            tx = await verify_jws_cached(x_storekit_jws, verifier, redis_conn)
+        except JWSWrongBundle as exc:
+            raise HTTPException(status_code=403, detail=str(exc)) from exc
+        except JWSError as exc:
+            raise HTTPException(status_code=401, detail=str(exc)) from exc
+    finally:
+        await redis_conn.aclose()
+
+    # Row-lock order: concurrent retries must serialise so we don't double-enqueue
+    # (ARQ's own dedup is best-effort, not transactional — see R14).
+    order_stmt = (
+        select(GenerationOrder).where(GenerationOrder.id == order_id).with_for_update()
+    )
+    order = (await session.execute(order_stmt)).scalars().first()
+    if order is None:
+        raise HTTPException(status_code=404, detail=f"order {order_id} not found")
+
+    if order.transaction_id != tx.transaction_id:
+        raise HTTPException(
+            status_code=403,
+            detail="JWS transaction_id does not match this order",
+        )
+
+    if order.status != "failed":
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                f"order status is {order.status!r}; only 'failed' orders can be retried"
+            ),
+        )
+
+    if order.job_id is None:
+        raise HTTPException(status_code=409, detail="order has no job to retry")
+
+    job_stmt = (
+        select(GenerationJob).where(GenerationJob.id == order.job_id).with_for_update()
+    )
+    job = (await session.execute(job_stmt)).scalars().first()
+    if job is None:
+        raise HTTPException(status_code=409, detail="order has no job to retry")
+
+    if job.retry_count >= 3:
+        raise HTTPException(
+            status_code=422,
+            detail=f"retry cap reached (retry_count={job.retry_count}, max=3)",
+        )
+
+    job.status = "queued"
+    job.progress = 0
+    job.error = None
+    job.retry_count = job.retry_count + 1
+    order.status = "pending"
+    await session.commit()
+
+    await arq_pool.enqueue_job("process_order", str(order.id))
+
+    order.status = "in_progress"
+    await session.commit()
+
+    return OrderCreatedResponse(
+        order_id=order.id, status=order.status, created_at=order.created_at
+    )
+
+
 @router.get("/{order_id}/stream")
 async def stream_order(
     order_id: uuid.UUID,

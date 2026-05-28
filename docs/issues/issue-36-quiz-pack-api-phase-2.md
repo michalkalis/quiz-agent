@@ -184,7 +184,7 @@ Each task is one Ralph iteration: scoped to ~15 min, one commit, clear acceptanc
 
 ### Phase 2F — M-2 retry endpoint
 
-- [ ] **2.18 `POST /v1/orders/{id}/retry` endpoint.** Add to `app/api/v1/orders.py`. Authz: `X-StoreKit-JWS` matching the original `transaction_id` (reuse the JWS verify cache from #33 task 1.11). Body: empty. Flow:
+- [x] **2.18 `POST /v1/orders/{id}/retry` endpoint.** Add to `app/api/v1/orders.py`. Authz: `X-StoreKit-JWS` matching the original `transaction_id` (reuse the JWS verify cache from #33 task 1.11). Body: empty. Flow:
     - Load order. If `status != "failed"` → 409 Conflict.
     - If `retry_count >= 3` → 422 Unprocessable.
     - Else: reset job to `status="queued"`, increment `retry_count`, clear `error`, set order `status="pending"`, re-enqueue ARQ task. Return 202 with the same `order_id`.

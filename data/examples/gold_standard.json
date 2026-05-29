@@ -15,7 +15,7 @@
   },
   {
     "question": "What everyday material connects a pencil, a tennis racket, and a diamond?",
-    "answer": "Carbon (graphite in pencils, carbon fiber in rackets, pure carbon in diamonds)",
+    "answer": "Carbon",
     "why_excellent": "Links three completely different objects through a single element, revealing hidden chemistry in everyday life.",
     "pattern": "Surprising Connection",
     "source": "common knowledge",
@@ -29,7 +29,7 @@
   },
   {
     "question": "In ancient Egypt, butchers wore a specific garment to keep blood off their clothes. What was it?",
-    "answer": "The apron (later adopted by high fashion as a garment concept)",
+    "answer": "The apron",
     "why_excellent": "Connects a mundane kitchen item to ancient Egyptian practicality, subverting expectations about fashion origins.",
     "pattern": "Surprising Connection",
     "source": "Wikipedia",
@@ -64,7 +64,7 @@
   },
   {
     "question": "Which musical instrument shares its name with a type of surgery?",
-    "answer": "The drum (tympanoplasty involves the eardrum/tympanic membrane, and 'tympani' are drums)",
+    "answer": "The drum",
     "why_excellent": "Surprising etymological link between music and medicine through shared Latin/Greek roots.",
     "pattern": "Surprising Connection",
     "source": "common knowledge",
@@ -211,7 +211,7 @@
   },
   {
     "question": "If you drove your car straight up at highway speed, how long would it take to reach space: about 10 minutes, 1 hour, or 6 hours?",
-    "answer": "About 1 hour (space begins at ~100 km altitude; at 100 km/h that's roughly 1 hour)",
+    "answer": "About 1 hour",
     "why_excellent": "Turns an abstract distance (edge of space) into something tangible using a car analogy everyone understands. The estimation format creates engagement — you reason about speed and distance.",
     "pattern": "Estimation Challenge",
     "source": "Kármán line definition (100 km), basic physics",
@@ -225,7 +225,7 @@
   },
   {
     "question": "Which country consumes the most coffee per person: Brazil, the United States, or Finland?",
-    "answer": "Finland (about 12 kg per person per year, nearly double the US)",
+    "answer": "Finland",
     "why_excellent": "Counterintuitive — most people assume Brazil (grows it) or the US (Starbucks culture). The comparison format lets you reason: 'growers don't always consume most' and 'cold Nordic countries might drink more.'",
     "pattern": "Comparison Bet",
     "source": "International Coffee Organization statistics",
@@ -313,7 +313,7 @@
   },
   {
     "question": "If you shuffled a deck of cards perfectly randomly, what are the chances that exact arrangement has ever existed before in history: roughly 50/50, about 1 in a million, or essentially zero?",
-    "answer": "Essentially zero — 52! (52 factorial) is so astronomically large that no two random shuffles in history have likely ever matched",
+    "answer": "Essentially zero",
     "why_excellent": "The three options span from 'plausible' to 'impossible,' creating real tension. Players can reason about it: 'there are only 52 cards but... how many ways can you arrange them?' The answer (essentially zero) is genuinely mind-blowing.",
     "pattern": "Estimation Challenge",
     "source": "Mathematics — 52! ≈ 8×10^67",
@@ -327,7 +327,7 @@
   },
   {
     "question": "Bubble wrap was originally invented and marketed as what kind of home product?",
-    "answer": "Textured wallpaper (inventors sealed two shower curtains together to create 3D wallpaper in 1957)",
+    "answer": "Textured wallpaper",
     "why_excellent": "Everyone knows bubble wrap, so you can reason backward: 'What problem does sealed air bubbles solve besides packaging?' The wallpaper origin is delightfully absurd. A reverse-engineer question where you construct hypotheses.",
     "pattern": "Reverse Engineer",
     "source": "Sealed Air Corporation history",
@@ -355,7 +355,7 @@
   },
   {
     "question": "Oxford University is older than which ancient empire?",
-    "answer": "The Aztec Empire (Oxford teaching from 1096; Aztec Empire founded ~1428)",
+    "answer": "The Aztec Empire",
     "why_excellent": "Juxtaposes a familiar institution with an ancient civilization, revealing that Oxford is far older than most people assume.",
     "pattern": "Scale Surprise",
     "source": "University of Oxford records",
@@ -369,7 +369,7 @@
   },
   {
     "question": "Was Cleopatra closer in time to the building of the Great Pyramid or to the Moon landing?",
-    "answer": "The Moon landing (Great Pyramid built ~2560 BC; Cleopatra died 30 BC; Moon landing 1969 AD)",
+    "answer": "The Moon landing",
     "why_excellent": "Forces a complete recalibration of historical timelines. The math is staggering and universally surprising.",
     "pattern": "Scale Surprise",
     "source": "historical record",
@@ -401,7 +401,7 @@
   },
   {
     "question": "There are more possible iterations of a game of chess than there are atoms in the observable universe. Approximately how many possible chess games are there?",
-    "answer": "About 10 to the power of 120 (the Shannon number), vs roughly 10 to the power of 80 atoms",
+    "answer": "About 10 to the power of 120",
     "why_excellent": "Uses a concrete comparison (atoms in the universe) to make an incomprehensibly large number tangible and astonishing.",
     "pattern": "Scale Surprise",
     "source": "Claude Shannon, 1950",
@@ -416,7 +416,7 @@
   },
   {
     "question": "Which is heavier: all the ants on Earth, or all the humans?",
-    "answer": "All the humans — but ants are surprisingly close at about 80 million tonnes vs 400 million for humans",
+    "answer": "All the humans",
     "why_excellent": "Forces you to reconcile the tiny size of individual ants with their unfathomable numbers. The comparison format creates a natural engagement path — you can estimate and reason your way to an answer.",
     "pattern": "Scale Surprise",
     "source": "Proceedings of the National Academy of Sciences (2022 update)",
@@ -535,7 +535,7 @@
   },
   {
     "question": "In 1996, two Stanford students created a search engine called 'BackRub.' What is it called today?",
-    "answer": "Google (the search engine was called BackRub when created by Larry Page and Sergey Brin in 1996)",
+    "answer": "Google",
     "why_excellent": "The contrast between the awkward original name and the now-ubiquitous brand is amusing and surprising.",
     "pattern": "Historical Quirk",
     "source": "Stanford University archives",
@@ -549,7 +549,7 @@
   },
   {
     "question": "Which popular snack food was accidentally invented when a chef made fries extra thin and crispy to spite a complaining customer?",
-    "answer": "Potato chips (attributed to George Crum at Moon's Lake House, Saratoga Springs, 1853)",
+    "answer": "Potato chips",
     "why_excellent": "An act of kitchen spite leading to one of the world's favorite snacks is a delightful origin story.",
     "pattern": "Historical Quirk",
     "source": "historical record",
@@ -563,7 +563,7 @@
   },
   {
     "question": "On one planet in our solar system, extreme pressure turns methane into diamond rain. Name it.",
-    "answer": "Neptune (and Saturn), where extreme pressure turns methane into diamond rain",
+    "answer": "Neptune",
     "why_excellent": "An utterly alien concept that sounds like science fiction but is supported by planetary science. Universally awe-inspiring.",
     "pattern": "Biological/Physical Oddity",
     "source": "NASA",
@@ -703,7 +703,7 @@
   },
   {
     "question": "Mars is red, but what colour is a Martian sunset?",
-    "answer": "Blue (due to fine dust particles in the Martian atmosphere scattering light differently than on Earth)",
+    "answer": "Blue",
     "why_excellent": "Inverts our Earth-based expectations perfectly: red planet, blue sunset versus blue planet, red sunset. You can reason by analogy — if Earth is blue with red sunsets, maybe Mars inverts it.",
     "pattern": "Verbal Analogy",
     "source": "NASA/Mars rover imagery",
@@ -717,7 +717,7 @@
   },
   {
     "question": "Which of these is NOT a real element on the periodic table: Einsteinium, Kryptonite, Californium, or Oganesson?",
-    "answer": "Kryptonite (Superman's fictional weakness; the other three are all real elements)",
+    "answer": "Kryptonite",
     "why_excellent": "The real element names sound so fantastical that the fictional one blends right in. Elimination and reasoning create an engagement path — you can work through each option.",
     "pattern": "Odd One Out",
     "source": "IUPAC periodic table",

@@ -20,6 +20,7 @@ from typing import Any
 REPO_ROOT = Path(__file__).resolve().parents[3]
 GENERATED_DIR = REPO_ROOT / "data" / "generated"
 PROD_EXPORT = REPO_ROOT / "apps" / "quiz-agent" / "questions_export.json"
+GOLD_STANDARD = REPO_ROOT / "data" / "examples" / "gold_standard.json"
 ARTIFACTS_DIR = REPO_ROOT / "docs" / "artifacts"
 
 # Procedural: imperative-verb starts + multi-step language. Long enough to be
@@ -91,19 +92,32 @@ def _classify(question: dict[str, Any]) -> set[str]:
 def _iter_questions(path: Path):
     data = json.loads(path.read_text())
     qs = data["questions"] if isinstance(data, dict) and "questions" in data else data
+    is_gold = path.name == "gold_standard.json"
     for idx, q in enumerate(qs):
+        if is_gold:
+            # gold_standard.json uses `answer` (no `type`/`correct_answer`).
+            # Map onto the auditor's expected schema so the same classifier
+            # rules apply.
+            q = {
+                "question": q.get("question"),
+                "correct_answer": q.get("answer"),
+                "type": "text",
+                "id": q.get("source") or f"gold-{idx}",
+            }
         yield idx, q
 
 
-def _collect_files() -> list[Path]:
+def _collect_files(include_gold: bool = False) -> list[Path]:
     files = sorted(GENERATED_DIR.glob("*.json"))
     if PROD_EXPORT.exists():
         files.append(PROD_EXPORT)
+    if include_gold and GOLD_STANDARD.exists():
+        files.append(GOLD_STANDARD)
     return files
 
 
-def audit() -> dict[str, Any]:
-    files = _collect_files()
+def audit(include_gold: bool = False) -> dict[str, Any]:
+    files = _collect_files(include_gold=include_gold)
     by_category: dict[str, list[dict[str, Any]]] = defaultdict(list)
     total = 0
 
@@ -187,9 +201,14 @@ def main() -> None:
         default=ARTIFACTS_DIR,
         help="Where to write the JSON + HTML report.",
     )
+    parser.add_argument(
+        "--include-gold-standard",
+        action="store_true",
+        help="Also scan data/examples/gold_standard.json (uses `answer` field).",
+    )
     args = parser.parse_args()
 
-    report = audit()
+    report = audit(include_gold=args.include_gold_standard)
     args.out_dir.mkdir(parents=True, exist_ok=True)
     stamp = report["generated_on"]
     json_path = args.out_dir / f"answer-quality-audit-{stamp}.json"

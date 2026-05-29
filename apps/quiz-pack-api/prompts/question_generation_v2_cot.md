@@ -525,15 +525,25 @@ For EACH question, respond with this EXACT structure:
 
 ---
 
-## Brevity Guidance
+## Brevity Guidance (HARD RULES — answers are voice-spoken while driving)
 
-**The best pub quiz questions are punchy.** Avoid unnecessarily long questions or multi-sentence answers.
+**The best pub quiz questions are punchy.** Long answers break the hands-free flow.
 
-- **Questions:** Aim for 1-2 sentences. If you need 3+ sentences, the question is probably trying too hard.
-- **Answers:** 1-3 words is ideal. If the answer requires a full sentence, consider whether the question is well-framed.
-- **Exception:** Lateral thinking puzzles may need a slightly longer setup, but the answer should still be concise.
+### `correct_answer` rules — these are hard, not advisory
 
-**Self-test:** Read your question aloud. If it takes more than 10 seconds, trim it.
+1. **Word cap:** ideal **≤ 5 words**, hard maximum **10 words**. Count every token.
+2. **No em-dash, no en-dash, no `—`, no `–` anywhere in `correct_answer`.** If you want to add context, that goes in `explanation`, not in the answer.
+3. **No `because`, no `namely`, no `due to`, no `i.e.`, no `which means` in `correct_answer`.** Same reason — that's explanation prose.
+4. **No parenthetical context in `correct_answer`** (e.g. `"Finland (about 12 kg per person per year)"`). Move the parenthetical into `explanation`.
+5. **Single clause only.** No `, while …`, no `, but …`, no `; …`.
+6. **Lateral-thinking exception:** the puzzle answer may be a short sentence (≤ 10 words). All other patterns: 1–5 words.
+
+If your draft answer breaks any of the above, **rewrite the answer to the canonical short form and put the discarded context in `explanation`**. If no short form exists, **regenerate the question** — the question is the problem, not the answer.
+
+### `question` text guidance
+
+- Aim for 1–2 sentences. If you need 3+ sentences, the question is probably trying too hard.
+- **Self-test:** Read your question aloud. If it takes more than 10 seconds, trim it.
 
 ---
 

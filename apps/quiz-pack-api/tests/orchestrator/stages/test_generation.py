@@ -238,6 +238,44 @@ async def test_raises_when_no_question_has_source_url() -> None:
 
 
 @pytest.mark.asyncio
+async def test_drops_questions_violating_answer_brevity() -> None:
+    """Issue #42 task 42.7 — post-generation fail-loud validator.
+
+    Rules enforced (mirror the v3/v2 prompt constraints from 42.5):
+    `correct_answer` ≤ 10 words and free of em/en-dash, "because",
+    "namely", "i.e.", "which means". Violations are dropped and the
+    count is surfaced via `StageResult.info["dropped_quality"]` so
+    SSE clients and the audit log see the filter activity (same
+    shape as DedupStage's `dropped` field).
+    """
+    questions = [
+        _stub_question(0, correct_answer="Paris"),  # OK
+        _stub_question(
+            1,
+            correct_answer="Paris — the capital of France since the tenth century",
+        ),  # em-dash + over cap → drop
+        _stub_question(2, correct_answer="Jupiter"),  # OK
+        _stub_question(
+            3,
+            correct_answer="False because the wall is not actually visible from orbit",
+        ),  # "because" tail → drop
+        _stub_question(4, correct_answer=["Mercury", "Venus"]),  # OK (list, short)
+    ]
+    gen = _FakeGenerator(questions)
+    stage = GenerationStage(gen)  # type: ignore[arg-type]
+    facts = [Fact(text="t", source_url="https://ex/1")]
+    ctx = _make_ctx(target_count=5, facts=facts)
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert len(ctx.questions) == 3
+    kept_ids = {q.question for q in ctx.questions}
+    assert kept_ids == {"stub question 0", "stub question 2", "stub question 4"}
+    assert result.info["dropped_quality"] == 2
+    assert result.info["questions"] == 3
+
+
+@pytest.mark.asyncio
 async def test_calls_generator_with_target_count_and_facts() -> None:
     questions = [_stub_question(i) for i in range(5)]
     gen = _FakeGenerator(questions)

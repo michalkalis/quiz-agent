@@ -12,12 +12,16 @@ F8 (task 2.15) + the e2e assertion in task 2.11 depend on.
 from __future__ import annotations
 
 import hashlib
+import logging
 import uuid
 
 from app.generation.advanced_generator import AdvancedQuestionGenerator
 from app.orchestrator.context import OrderContext, StageResult
 from app.orchestrator.progress_sink import ProgressSink
-from quiz_shared.models.question import GenerationProvenance
+from app.scoring.multi_model_scorer import _ANSWER_TAIL_MARKERS, _ANSWER_WORD_CAP
+from quiz_shared.models.question import GenerationProvenance, Question
+
+logger = logging.getLogger(__name__)
 
 
 def _is_uuid(value: str) -> bool:
@@ -26,6 +30,29 @@ def _is_uuid(value: str) -> bool:
         return True
     except (ValueError, TypeError, AttributeError):
         return False
+
+
+def _violates_answer_brevity(answer: object) -> str | None:
+    """Return a reason string if the answer breaks 42.5/42.7 brevity rules.
+
+    Pure regex/token check (no LLM, per CLAUDE.md rule #5). Mirrors the
+    constraints encoded in the v2/v3 prompts: hard cap at 10 words, no
+    em/en-dash, no `because` / `namely` / `i.e.` / `which means`. Returns
+    `None` when the answer is acceptable so the caller can log the reason
+    alongside the dropped question id.
+    """
+    if answer is None:
+        return "empty_answer"
+    text = ", ".join(str(a) for a in answer) if isinstance(answer, list) else str(answer)
+    if not text.strip():
+        return "empty_answer"
+    if len(text.split()) > _ANSWER_WORD_CAP:
+        return f"over_word_cap_{_ANSWER_WORD_CAP}"
+    lowered = text.lower()
+    for marker in _ANSWER_TAIL_MARKERS:
+        if marker in lowered:
+            return f"tail_marker:{marker.strip() or marker!r}"
+    return None
 
 
 def _compute_prompt_seed(
@@ -91,7 +118,27 @@ class GenerationStage:
                         fallback_fact, "excerpt", None
                     ) or getattr(fallback_fact, "text", None)
 
-        ctx.questions = list(questions)
+        # Issue #42 task 42.7 — fail-loud post-generation brevity validator.
+        # Drops questions whose `correct_answer` violates the constraints the
+        # v2/v3 prompts now require (>10 words, em/en-dash, "because" etc.).
+        # Surfaced via StageResult.info["dropped_quality"] so SSE clients and
+        # the audit trail see how many got filtered, mirroring DedupStage.
+        kept: list[Question] = []
+        dropped_quality = 0
+        for q in questions:
+            reason = _violates_answer_brevity(q.correct_answer)
+            if reason is not None:
+                dropped_quality += 1
+                logger.warning(
+                    "GenerationStage dropped question id=%s reason=%s answer=%r",
+                    q.id,
+                    reason,
+                    q.correct_answer,
+                )
+                continue
+            kept.append(q)
+
+        ctx.questions = kept
 
         # F8 (task 2.15): every persisted question must carry a real source URL.
         # If the per-question fallback above couldn't fill `source_url` (e.g.
@@ -109,6 +156,6 @@ class GenerationStage:
             )
 
         return StageResult(
-            info={"questions": len(ctx.questions)},
+            info={"questions": len(ctx.questions), "dropped_quality": dropped_quality},
             cost_cents=0,
         )

@@ -449,13 +449,16 @@
       }
     },
     {
-      "question": "Which of these words does NOT come from a fictional literary character: utopian, quixotic, machiavellian, lilliputian?",
-      "type": "text",
-      "correct_answer": "Machiavellian",
-      "possible_answers": null,
-      "alternative_answers": [
-        "machiavellian"
-      ],
+      "question": "Which of these words does NOT come from a fictional literary character?",
+      "type": "text_multichoice",
+      "correct_answer": "c",
+      "possible_answers": {
+        "a": "utopian",
+        "b": "quixotic",
+        "c": "machiavellian",
+        "d": "lilliputian"
+      },
+      "alternative_answers": [],
       "explanation": "Utopian comes from Thomas More's fictional island 'Utopia', quixotic from Don Quixote, and lilliputian from the tiny people of Lilliput in Gulliver's Travels. Machiavellian comes from Niccolò Machiavelli — a real historical person, not a fictional character.",
       "topic": "Literature",
       "category": "adults",

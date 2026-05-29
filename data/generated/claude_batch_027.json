@@ -5,11 +5,19 @@
       "type": "text",
       "correct_answer": "Backwards",
       "possible_answers": null,
-      "alternative_answers": ["backwards", "backward", "in reverse"],
+      "alternative_answers": [
+        "backwards",
+        "backward",
+        "in reverse"
+      ],
       "topic": "Animals",
       "category": "kids",
       "difficulty": "easy",
-      "tags": ["animals", "birds", "nature"],
+      "tags": [
+        "animals",
+        "birds",
+        "nature"
+      ],
       "language_dependent": false,
       "age_appropriate": "8+",
       "source": "generated",
@@ -45,11 +53,17 @@
       "type": "text",
       "correct_answer": "The Dead Sea",
       "possible_answers": null,
-      "alternative_answers": ["dead sea"],
+      "alternative_answers": [
+        "dead sea"
+      ],
       "topic": "Geography",
       "category": "kids",
       "difficulty": "easy",
-      "tags": ["geography", "nature", "water"],
+      "tags": [
+        "geography",
+        "nature",
+        "water"
+      ],
       "language_dependent": false,
       "age_appropriate": "8+",
       "source": "generated",
@@ -85,11 +99,20 @@
       "type": "text",
       "correct_answer": "The bark of a tree",
       "possible_answers": null,
-      "alternative_answers": ["bark", "tree bark", "from tree bark", "the bark of a cinnamon tree"],
+      "alternative_answers": [
+        "bark",
+        "tree bark",
+        "from tree bark",
+        "the bark of a cinnamon tree"
+      ],
       "topic": "Food",
       "category": "kids",
       "difficulty": "easy",
-      "tags": ["food", "plants", "nature"],
+      "tags": [
+        "food",
+        "plants",
+        "nature"
+      ],
       "language_dependent": false,
       "age_appropriate": "8+",
       "source": "generated",
@@ -125,11 +148,19 @@
       "type": "text",
       "correct_answer": "Kiwifruit",
       "possible_answers": null,
-      "alternative_answers": ["kiwi", "kiwi fruit", "the kiwifruit"],
+      "alternative_answers": [
+        "kiwi",
+        "kiwi fruit",
+        "the kiwifruit"
+      ],
       "topic": "Food",
       "category": "kids",
       "difficulty": "easy",
-      "tags": ["food", "fruit", "health"],
+      "tags": [
+        "food",
+        "fruit",
+        "health"
+      ],
       "language_dependent": false,
       "age_appropriate": "8+",
       "source": "generated",
@@ -165,11 +196,21 @@
       "type": "text",
       "correct_answer": "A fingerprint investigator",
       "possible_answers": null,
-      "alternative_answers": ["fingerprint investigator", "a crime scene investigator", "fingerprint expert", "police fingerprint analyst", "a forensic investigator"],
+      "alternative_answers": [
+        "fingerprint investigator",
+        "a crime scene investigator",
+        "fingerprint expert",
+        "police fingerprint analyst",
+        "a forensic investigator"
+      ],
       "topic": "Animals",
       "category": "kids",
       "difficulty": "easy",
-      "tags": ["animals", "australia", "nature"],
+      "tags": [
+        "animals",
+        "australia",
+        "nature"
+      ],
       "language_dependent": false,
       "age_appropriate": "8+",
       "source": "generated",
@@ -205,11 +246,18 @@
       "type": "text",
       "correct_answer": "A bat",
       "possible_answers": null,
-      "alternative_answers": ["bat", "bats"],
+      "alternative_answers": [
+        "bat",
+        "bats"
+      ],
       "topic": "Animals",
       "category": "kids",
       "difficulty": "medium",
-      "tags": ["animals", "mammals", "nature"],
+      "tags": [
+        "animals",
+        "mammals",
+        "nature"
+      ],
       "language_dependent": false,
       "age_appropriate": "8+",
       "source": "generated",
@@ -245,11 +293,17 @@
       "type": "text",
       "correct_answer": "Cancer",
       "possible_answers": null,
-      "alternative_answers": ["cancer"],
+      "alternative_answers": [
+        "cancer"
+      ],
       "topic": "Animals",
       "category": "kids",
       "difficulty": "medium",
-      "tags": ["animals", "biology", "science"],
+      "tags": [
+        "animals",
+        "biology",
+        "science"
+      ],
       "language_dependent": false,
       "age_appropriate": "8+",
       "source": "generated",
@@ -285,11 +339,19 @@
       "type": "text",
       "correct_answer": "True",
       "possible_answers": null,
-      "alternative_answers": ["true", "yes", "correct"],
+      "alternative_answers": [
+        "true",
+        "yes",
+        "correct"
+      ],
       "topic": "Animals",
       "category": "kids",
       "difficulty": "medium",
-      "tags": ["animals", "birds", "language"],
+      "tags": [
+        "animals",
+        "birds",
+        "language"
+      ],
       "language_dependent": false,
       "age_appropriate": "8+",
       "source": "generated",
@@ -325,11 +387,20 @@
       "type": "text",
       "correct_answer": "A whistle",
       "possible_answers": null,
-      "alternative_answers": ["whistle", "signature whistle", "a signature whistle", "its own whistle"],
+      "alternative_answers": [
+        "whistle",
+        "signature whistle",
+        "a signature whistle",
+        "its own whistle"
+      ],
       "topic": "Animals",
       "category": "kids",
       "difficulty": "medium",
-      "tags": ["animals", "ocean", "communication"],
+      "tags": [
+        "animals",
+        "ocean",
+        "communication"
+      ],
       "language_dependent": false,
       "age_appropriate": "8+",
       "source": "generated",
@@ -365,11 +436,19 @@
       "type": "text",
       "correct_answer": "True",
       "possible_answers": null,
-      "alternative_answers": ["true", "yes", "correct"],
+      "alternative_answers": [
+        "true",
+        "yes",
+        "correct"
+      ],
       "topic": "Space",
       "category": "kids",
       "difficulty": "medium",
-      "tags": ["space", "astronomy", "planets"],
+      "tags": [
+        "space",
+        "astronomy",
+        "planets"
+      ],
       "language_dependent": false,
       "age_appropriate": "8+",
       "source": "generated",
@@ -405,11 +484,19 @@
       "type": "text",
       "correct_answer": "Ice",
       "possible_answers": null,
-      "alternative_answers": ["ice", "water ice", "frozen water"],
+      "alternative_answers": [
+        "ice",
+        "water ice",
+        "frozen water"
+      ],
       "topic": "Space",
       "category": "kids",
       "difficulty": "medium",
-      "tags": ["space", "saturn", "astronomy"],
+      "tags": [
+        "space",
+        "saturn",
+        "astronomy"
+      ],
       "language_dependent": false,
       "age_appropriate": "8+",
       "source": "generated",
@@ -445,11 +532,19 @@
       "type": "text",
       "correct_answer": "16",
       "possible_answers": null,
-      "alternative_answers": ["sixteen", "about 16", "around 16"],
+      "alternative_answers": [
+        "sixteen",
+        "about 16",
+        "around 16"
+      ],
       "topic": "Space",
       "category": "kids",
       "difficulty": "medium",
-      "tags": ["space", "iss", "astronomy"],
+      "tags": [
+        "space",
+        "iss",
+        "astronomy"
+      ],
       "language_dependent": false,
       "age_appropriate": "8+",
       "source": "generated",
@@ -485,11 +580,19 @@
       "type": "text",
       "correct_answer": "True",
       "possible_answers": null,
-      "alternative_answers": ["true", "yes", "correct"],
+      "alternative_answers": [
+        "true",
+        "yes",
+        "correct"
+      ],
       "topic": "Human Body",
       "category": "kids",
       "difficulty": "medium",
-      "tags": ["human body", "biology", "science"],
+      "tags": [
+        "human body",
+        "biology",
+        "science"
+      ],
       "language_dependent": false,
       "age_appropriate": "8+",
       "source": "generated",
@@ -525,11 +628,19 @@
       "type": "text",
       "correct_answer": "Bamboo",
       "possible_answers": null,
-      "alternative_answers": ["bamboo", "a bamboo", "the bamboo"],
+      "alternative_answers": [
+        "bamboo",
+        "a bamboo",
+        "the bamboo"
+      ],
       "topic": "Plants",
       "category": "kids",
       "difficulty": "medium",
-      "tags": ["plants", "nature", "world records"],
+      "tags": [
+        "plants",
+        "nature",
+        "world records"
+      ],
       "language_dependent": false,
       "age_appropriate": "8+",
       "source": "generated",
@@ -565,11 +676,18 @@
       "type": "text",
       "correct_answer": "A desert",
       "possible_answers": null,
-      "alternative_answers": ["desert", "the desert"],
+      "alternative_answers": [
+        "desert",
+        "the desert"
+      ],
       "topic": "Geography",
       "category": "kids",
       "difficulty": "medium",
-      "tags": ["geography", "nature", "antarctica"],
+      "tags": [
+        "geography",
+        "nature",
+        "antarctica"
+      ],
       "language_dependent": false,
       "age_appropriate": "8+",
       "source": "generated",
@@ -605,11 +723,19 @@
       "type": "text",
       "correct_answer": "True",
       "possible_answers": null,
-      "alternative_answers": ["true", "yes", "correct"],
+      "alternative_answers": [
+        "true",
+        "yes",
+        "correct"
+      ],
       "topic": "Geography",
       "category": "kids",
       "difficulty": "medium",
-      "tags": ["geography", "countries", "time"],
+      "tags": [
+        "geography",
+        "countries",
+        "time"
+      ],
       "language_dependent": false,
       "age_appropriate": "8+",
       "source": "generated",
@@ -645,11 +771,20 @@
       "type": "text",
       "correct_answer": "The pistol shrimp",
       "possible_answers": null,
-      "alternative_answers": ["pistol shrimp", "a pistol shrimp", "snapping shrimp", "a snapping shrimp"],
+      "alternative_answers": [
+        "pistol shrimp",
+        "a pistol shrimp",
+        "snapping shrimp",
+        "a snapping shrimp"
+      ],
       "topic": "Animals",
       "category": "kids",
       "difficulty": "hard",
-      "tags": ["animals", "ocean", "world records"],
+      "tags": [
+        "animals",
+        "ocean",
+        "world records"
+      ],
       "language_dependent": false,
       "age_appropriate": "8+",
       "source": "generated",
@@ -685,11 +820,23 @@
       "type": "text",
       "correct_answer": "Turn back into a baby",
       "possible_answers": null,
-      "alternative_answers": ["turn back into a baby", "go back to being a baby", "become young again", "revert to its young form", "turn into a polyp", "become a polyp again", "turn back into a younger version of itself"],
+      "alternative_answers": [
+        "turn back into a baby",
+        "go back to being a baby",
+        "become young again",
+        "revert to its young form",
+        "turn into a polyp",
+        "become a polyp again",
+        "turn back into a younger version of itself"
+      ],
       "topic": "Animals",
       "category": "kids",
       "difficulty": "hard",
-      "tags": ["animals", "ocean", "biology"],
+      "tags": [
+        "animals",
+        "ocean",
+        "biology"
+      ],
       "language_dependent": false,
       "age_appropriate": "8+",
       "source": "generated",
@@ -725,11 +872,21 @@
       "type": "text",
       "correct_answer": "About one hour",
       "possible_answers": null,
-      "alternative_answers": ["one hour", "an hour", "about 1 hour", "around an hour", "roughly one hour"],
+      "alternative_answers": [
+        "one hour",
+        "an hour",
+        "about 1 hour",
+        "around an hour",
+        "roughly one hour"
+      ],
       "topic": "Space",
       "category": "kids",
       "difficulty": "hard",
-      "tags": ["space", "physics", "math"],
+      "tags": [
+        "space",
+        "physics",
+        "math"
+      ],
       "language_dependent": false,
       "age_appropriate": "8+",
       "source": "generated",
@@ -765,11 +922,20 @@
       "type": "text",
       "correct_answer": "About 2.5 times",
       "possible_answers": null,
-      "alternative_answers": ["2.5 times", "two and a half times", "about two and a half times", "around 2.5 times"],
+      "alternative_answers": [
+        "2.5 times",
+        "two and a half times",
+        "about two and a half times",
+        "around 2.5 times"
+      ],
       "topic": "Human Body",
       "category": "kids",
       "difficulty": "hard",
-      "tags": ["human body", "biology", "math"],
+      "tags": [
+        "human body",
+        "biology",
+        "math"
+      ],
       "language_dependent": false,
       "age_appropriate": "8+",
       "source": "generated",
@@ -805,11 +971,19 @@
       "type": "text",
       "correct_answer": "True",
       "possible_answers": null,
-      "alternative_answers": ["true", "yes", "correct"],
+      "alternative_answers": [
+        "true",
+        "yes",
+        "correct"
+      ],
       "topic": "Human Body",
       "category": "kids",
       "difficulty": "hard",
-      "tags": ["human body", "science", "physics"],
+      "tags": [
+        "human body",
+        "science",
+        "physics"
+      ],
       "language_dependent": false,
       "age_appropriate": "8+",
       "source": "generated",
@@ -841,15 +1015,22 @@
       }
     },
     {
-      "question": "Which is bigger: the number of grains of sand on every beach on Earth, or the number of stars in the visible universe?",
-      "type": "text",
-      "correct_answer": "The number of stars",
-      "possible_answers": null,
-      "alternative_answers": ["stars", "the stars", "stars in the universe", "number of stars", "the number of stars"],
+      "question": "Which is bigger?",
+      "type": "text_multichoice",
+      "correct_answer": "b",
+      "possible_answers": {
+        "a": "the number of grains of sand on every beach on Earth",
+        "b": "the number of stars in the visible universe"
+      },
+      "alternative_answers": [],
       "topic": "Space",
       "category": "kids",
       "difficulty": "hard",
-      "tags": ["space", "astronomy", "math"],
+      "tags": [
+        "space",
+        "astronomy",
+        "math"
+      ],
       "language_dependent": false,
       "age_appropriate": "8+",
       "source": "generated",

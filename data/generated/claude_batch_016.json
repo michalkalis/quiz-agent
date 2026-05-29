@@ -5,11 +5,20 @@
       "type": "text",
       "correct_answer": "A Tale of Two Cities",
       "possible_answers": null,
-      "alternative_answers": ["tale of two cities", "a tale of 2 cities", "Dickens A Tale of Two Cities"],
+      "alternative_answers": [
+        "tale of two cities",
+        "a tale of 2 cities",
+        "Dickens A Tale of Two Cities"
+      ],
       "topic": "Literature",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["novels", "best-sellers", "Charles Dickens", "Victorian literature"],
+      "tags": [
+        "novels",
+        "best-sellers",
+        "Charles Dickens",
+        "Victorian literature"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": null,
@@ -44,12 +53,19 @@
       "type": "text",
       "correct_answer": "312211",
       "possible_answers": null,
-      "alternative_answers": ["three-one-two-two-one-one"],
+      "alternative_answers": [
+        "three-one-two-two-one-one"
+      ],
       "explanation": "This is the 'look-and-say' sequence. Each term is a verbal description of the digits in the previous term: '1' is read as 'one 1' = 11; '11' is 'two 1s' = 21; '21' is 'one 2, one 1' = 1211; '1211' is 'one 1, one 2, two 1s' = 111221; '111221' is 'three 1s, two 2s, one 1' = 312211.",
       "topic": "Logic",
       "category": "adults",
       "difficulty": "hard",
-      "tags": ["number-sequence", "look-and-say", "pattern-recognition", "verbal-description"],
+      "tags": [
+        "number-sequence",
+        "look-and-say",
+        "pattern-recognition",
+        "verbal-description"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": null,
@@ -84,11 +100,22 @@
       "type": "text",
       "correct_answer": "Bring Sherlock Holmes back to life",
       "possible_answers": null,
-      "alternative_answers": ["resurrect Holmes", "bring him back", "revive Holmes", "write Holmes back to life", "bring Holmes back from the dead"],
+      "alternative_answers": [
+        "resurrect Holmes",
+        "bring him back",
+        "revive Holmes",
+        "write Holmes back to life",
+        "bring Holmes back from the dead"
+      ],
       "topic": "Literature",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["Sherlock Holmes", "Arthur Conan Doyle", "literary history", "fan backlash"],
+      "tags": [
+        "Sherlock Holmes",
+        "Arthur Conan Doyle",
+        "literary history",
+        "fan backlash"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": null,
@@ -123,12 +150,23 @@
       "type": "text",
       "correct_answer": "They are three people: a grandfather, his son, and his grandson",
       "possible_answers": null,
-      "alternative_answers": ["three generations", "grandfather father and son", "there are only three people", "one is both a father and a son", "grandpa dad and kid"],
+      "alternative_answers": [
+        "three generations",
+        "grandfather father and son",
+        "there are only three people",
+        "one is both a father and a son",
+        "grandpa dad and kid"
+      ],
       "explanation": "There are only three people at the table: a grandfather, a father, and a son. The grandfather and the father are the 'two fathers,' and the father and the son are the 'two sons.' The father is counted in both groups.",
       "topic": "Logic",
       "category": "adults",
       "difficulty": "easy",
-      "tags": ["lateral-thinking", "word-puzzle", "family", "counting"],
+      "tags": [
+        "lateral-thinking",
+        "word-puzzle",
+        "family",
+        "counting"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": null,
@@ -163,11 +201,21 @@
       "type": "text",
       "correct_answer": "Over 100 languages",
       "possible_answers": null,
-      "alternative_answers": ["more than 100", "over a hundred", "103 languages", "about 100"],
+      "alternative_answers": [
+        "more than 100",
+        "over a hundred",
+        "103 languages",
+        "about 100"
+      ],
       "topic": "Literature",
       "category": "adults",
       "difficulty": "easy",
-      "tags": ["Agatha Christie", "translations", "publishing", "world records"],
+      "tags": [
+        "Agatha Christie",
+        "translations",
+        "publishing",
+        "world records"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": null,
@@ -198,16 +246,27 @@
       }
     },
     {
-      "question": "Four of these numbers share a hidden mathematical property. One is the impostor. Which doesn't belong: 49, 64, 81, 95, 121?",
-      "type": "text",
-      "correct_answer": "95",
-      "possible_answers": null,
-      "alternative_answers": ["ninety-five", "ninety five"],
+      "question": "Four of these numbers share a hidden mathematical property. One is the impostor. Which doesn't belong?",
+      "type": "text_multichoice",
+      "correct_answer": "d",
+      "possible_answers": {
+        "a": "49",
+        "b": "64",
+        "c": "81",
+        "d": "95",
+        "e": "121"
+      },
+      "alternative_answers": [],
       "explanation": "49 (7x7), 64 (8x8), 81 (9x9), and 121 (11x11) are all perfect squares. 95 is not a perfect square — it falls between 81 (9x9) and 100 (10x10).",
       "topic": "Logic",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["odd-one-out", "perfect-squares", "number-properties", "pattern-recognition"],
+      "tags": [
+        "odd-one-out",
+        "perfect-squares",
+        "number-properties",
+        "pattern-recognition"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": null,
@@ -242,12 +301,20 @@
       "type": "text",
       "correct_answer": "2",
       "possible_answers": null,
-      "alternative_answers": ["two", "two weighings"],
+      "alternative_answers": [
+        "two",
+        "two weighings"
+      ],
       "explanation": "Divide the 8 coins into three groups: 3, 3, and 2. Weigh the two groups of 3 against each other. If one side is heavier, the heavy coin is in that group of 3 — weigh any two of those three against each other to find it. If the groups of 3 balance, the heavy coin is one of the remaining 2 — one weighing identifies it. Either way: 2 weighings.",
       "topic": "Logic",
       "category": "adults",
       "difficulty": "hard",
-      "tags": ["balance-scale", "optimization", "deduction", "weighing-puzzle"],
+      "tags": [
+        "balance-scale",
+        "optimization",
+        "deduction",
+        "weighing-puzzle"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": null,
@@ -282,11 +349,23 @@
       "type": "text",
       "correct_answer": "He was an ornithologist",
       "possible_answers": null,
-      "alternative_answers": ["ornithologist", "bird expert", "bird scientist", "birdwatcher", "he studied birds", "ornithology"],
+      "alternative_answers": [
+        "ornithologist",
+        "bird expert",
+        "bird scientist",
+        "birdwatcher",
+        "he studied birds",
+        "ornithology"
+      ],
       "topic": "Literature",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["James Bond", "Ian Fleming", "character names", "literary origins"],
+      "tags": [
+        "James Bond",
+        "Ian Fleming",
+        "character names",
+        "literary origins"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": null,
@@ -321,12 +400,20 @@
       "type": "text",
       "correct_answer": "56",
       "possible_answers": null,
-      "alternative_answers": ["fifty-six", "fifty six"],
+      "alternative_answers": [
+        "fifty-six",
+        "fifty six"
+      ],
       "explanation": "These are pronic numbers (oblong numbers): each term equals n times (n+1). So: 1x2=2, 2x3=6, 3x4=12, 4x5=20, 5x6=30, 6x7=42, 7x8=56. Alternatively, the differences between consecutive terms are 4, 6, 8, 10, 12 — increasing by 2 each time — so the next difference is 14, giving 42+14=56.",
       "topic": "Logic",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["number-sequence", "pronic-numbers", "pattern-recognition", "arithmetic"],
+      "tags": [
+        "number-sequence",
+        "pronic-numbers",
+        "pattern-recognition",
+        "arithmetic"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": null,
@@ -361,12 +448,23 @@
       "type": "text",
       "correct_answer": "About 50%",
       "possible_answers": null,
-      "alternative_answers": ["50%", "fifty percent", "50 percent", "around 50%", "approximately 50%"],
+      "alternative_answers": [
+        "50%",
+        "fifty percent",
+        "50 percent",
+        "around 50%",
+        "approximately 50%"
+      ],
       "explanation": "This is the famous Birthday Paradox. With 23 people, the probability of a shared birthday is about 50.7%. With 70 people it rises to 99.9%. The key insight is that you're comparing all possible pairs — with 23 people there are 253 pairs, far more than people assume.",
       "topic": "Logic",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["birthday-paradox", "probability", "estimation", "counter-intuitive"],
+      "tags": [
+        "birthday-paradox",
+        "probability",
+        "estimation",
+        "counter-intuitive"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": null,
@@ -401,11 +499,20 @@
       "type": "text",
       "correct_answer": "50",
       "possible_answers": null,
-      "alternative_answers": ["fifty", "50 words", "fifty words"],
+      "alternative_answers": [
+        "fifty",
+        "50 words",
+        "fifty words"
+      ],
       "topic": "Literature",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["Dr. Seuss", "children's literature", "writing constraints", "literary bets"],
+      "tags": [
+        "Dr. Seuss",
+        "children's literature",
+        "writing constraints",
+        "literary bets"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": null,
@@ -440,12 +547,22 @@
       "type": "text",
       "correct_answer": "Second place",
       "possible_answers": null,
-      "alternative_answers": ["second", "2nd", "2nd place", "number two"],
+      "alternative_answers": [
+        "second",
+        "2nd",
+        "2nd place",
+        "number two"
+      ],
       "explanation": "If you overtake the person in second place, you take their position — second place. You have not overtaken the person in first place, so you cannot be first.",
       "topic": "Logic",
       "category": "adults",
       "difficulty": "easy",
-      "tags": ["lateral-thinking", "word-trick", "reasoning", "position"],
+      "tags": [
+        "lateral-thinking",
+        "word-trick",
+        "reasoning",
+        "position"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": null,
@@ -480,12 +597,22 @@
       "type": "text",
       "correct_answer": "Two gold coins",
       "possible_answers": null,
-      "alternative_answers": ["both gold", "two gold", "the two gold coins", "gold gold"],
+      "alternative_answers": [
+        "both gold",
+        "two gold",
+        "the two gold coins",
+        "gold gold"
+      ],
       "explanation": "Since ALL boxes are mislabelled, the box labelled 'Gold and Silver' cannot contain one of each. You drew a gold coin, so it can't be the two-silver box. Therefore it must be the two-gold box. From there, the other labels can be deduced too.",
       "topic": "Logic",
       "category": "adults",
       "difficulty": "hard",
-      "tags": ["deduction", "probability", "mislabelled-boxes", "logical-reasoning"],
+      "tags": [
+        "deduction",
+        "probability",
+        "mislabelled-boxes",
+        "logical-reasoning"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": null,
@@ -520,11 +647,22 @@
       "type": "text",
       "correct_answer": "How his novel Les Miserables was selling",
       "possible_answers": null,
-      "alternative_answers": ["book sales", "sales of Les Miserables", "how Les Mis was doing", "his book's sales figures", "the sales of his book"],
+      "alternative_answers": [
+        "book sales",
+        "sales of Les Miserables",
+        "how Les Mis was doing",
+        "his book's sales figures",
+        "the sales of his book"
+      ],
       "topic": "Literature",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["Victor Hugo", "Les Miserables", "literary anecdotes", "correspondence"],
+      "tags": [
+        "Victor Hugo",
+        "Les Miserables",
+        "literary anecdotes",
+        "correspondence"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": null,
@@ -559,11 +697,19 @@
       "type": "text",
       "correct_answer": "E",
       "possible_answers": null,
-      "alternative_answers": ["the letter E", "e"],
+      "alternative_answers": [
+        "the letter E",
+        "e"
+      ],
       "topic": "Literature",
       "category": "adults",
       "difficulty": "hard",
-      "tags": ["constrained writing", "lipogram", "Ernest Vincent Wright", "Gadsby"],
+      "tags": [
+        "constrained writing",
+        "lipogram",
+        "Ernest Vincent Wright",
+        "Gadsby"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": null,
@@ -602,7 +748,10 @@
     "total_selected": 15,
     "pipeline": "claude_code_session",
     "prompt_version": "v2_cot",
-    "topics": ["Literature", "Logic"],
+    "topics": [
+      "Literature",
+      "Logic"
+    ],
     "difficulty_distribution": {
       "easy": 3,
       "medium": 8,

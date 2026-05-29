@@ -466,17 +466,15 @@
       }
     },
     {
-      "question": "The Moon is slowly drifting away from Earth — about how much further away does it get every year: a millimeter, a few centimeters, or a meter?",
-      "type": "text",
-      "correct_answer": "A few centimeters",
-      "possible_answers": null,
-      "alternative_answers": [
-        "a few centimeters",
-        "few centimeters",
-        "3.8 cm",
-        "about 3.8 centimeters",
-        "a few cm"
-      ],
+      "question": "The Moon is slowly drifting away from Earth — about how much further away does it get every year?",
+      "type": "text_multichoice",
+      "correct_answer": "b",
+      "possible_answers": {
+        "a": "a millimeter",
+        "b": "a few centimeters",
+        "c": "a meter"
+      },
+      "alternative_answers": [],
       "topic": "Space",
       "category": "kids",
       "difficulty": "medium",
@@ -895,17 +893,15 @@
       }
     },
     {
-      "question": "Mount Everest is so tall it's still growing — about how much taller does it get every year: a millimeter, a few millimeters, or a meter?",
-      "type": "text",
-      "correct_answer": "A few millimeters",
-      "possible_answers": null,
-      "alternative_answers": [
-        "a few millimeters",
-        "few millimeters",
-        "few mm",
-        "about 4 mm",
-        "4 mm"
-      ],
+      "question": "Mount Everest is so tall it's still growing — about how much taller does it get every year?",
+      "type": "text_multichoice",
+      "correct_answer": "b",
+      "possible_answers": {
+        "a": "a millimeter",
+        "b": "a few millimeters",
+        "c": "a meter"
+      },
+      "alternative_answers": [],
       "topic": "Geography",
       "category": "kids",
       "difficulty": "medium",

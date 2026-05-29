@@ -253,18 +253,15 @@
       }
     },
     {
-      "question": "Formula 1 pit crews can change all four tyres in under two seconds. During a pit stop, roughly how many crew members swarm the car at once: 5, 12, or over 20?",
-      "type": "text",
-      "correct_answer": "Over 20",
-      "possible_answers": null,
-      "alternative_answers": [
-        "more than 20",
-        "about 20",
-        "20",
-        "around 20",
-        "over twenty",
-        "20 or more"
-      ],
+      "question": "Formula 1 pit crews can change all four tyres in under two seconds. During a pit stop, roughly how many crew members swarm the car at once?",
+      "type": "text_multichoice",
+      "correct_answer": "c",
+      "possible_answers": {
+        "a": "5",
+        "b": "12",
+        "c": "over 20"
+      },
+      "alternative_answers": [],
       "topic": "Sports",
       "category": "adults",
       "difficulty": "medium",

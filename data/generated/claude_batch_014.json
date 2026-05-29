@@ -256,16 +256,15 @@
       }
     },
     {
-      "question": "If you played every Beatles song back to back — every studio album from 'Please Please Me' to 'Let It Be' — the total running time would be closer to: 5 hours, 10 hours, or 24 hours?",
-      "type": "text",
-      "correct_answer": "About 10 hours",
-      "possible_answers": null,
-      "alternative_answers": [
-        "10 hours",
-        "around 10 hours",
-        "approximately 10 hours",
-        "roughly 10 hours"
-      ],
+      "question": "If you played every Beatles song back to back — every studio album from 'Please Please Me' to 'Let It Be' — the total running time would be closer to?",
+      "type": "text_multichoice",
+      "correct_answer": "b",
+      "possible_answers": {
+        "a": "5 hours",
+        "b": "10 hours",
+        "c": "24 hours"
+      },
+      "alternative_answers": [],
       "topic": "Music",
       "category": "adults",
       "difficulty": "medium",
@@ -357,17 +356,15 @@
       }
     },
     {
-      "question": "Concert grand pianos are almost always black. But when Steinway or Bosendorfer builds a concert grand, the process takes roughly: 3 months, 1 year, or 3 years from raw wood to finished instrument?",
-      "type": "text",
-      "correct_answer": "About 3 years",
-      "possible_answers": null,
-      "alternative_answers": [
-        "3 years",
-        "three years",
-        "approximately 3 years",
-        "around 3 years",
-        "2-3 years"
-      ],
+      "question": "Concert grand pianos are almost always black. But when Steinway or Bosendorfer builds a concert grand, the process takes roughly?",
+      "type": "text_multichoice",
+      "correct_answer": "c",
+      "possible_answers": {
+        "a": "3 months",
+        "b": "1 year",
+        "c": "3 years from raw wood to finished instrument"
+      },
+      "alternative_answers": [],
       "topic": "Music",
       "category": "adults",
       "difficulty": "medium",
@@ -558,17 +555,15 @@
       }
     },
     {
-      "question": "Most people think the longest film ever made lasts a few hours. In reality, the longest film ever screened has a runtime closer to: 24 hours, 7 days, or 35 days?",
-      "type": "text",
-      "correct_answer": "About 35 days (the Swedish film 'Logistics' runs 857 hours)",
-      "possible_answers": null,
-      "alternative_answers": [
-        "35 days",
-        "about 35 days",
-        "logistics",
-        "over a month",
-        "857 hours"
-      ],
+      "question": "Most people think the longest film ever made lasts a few hours. In reality, the longest film ever screened has a runtime closer to?",
+      "type": "text_multichoice",
+      "correct_answer": "c",
+      "possible_answers": {
+        "a": "24 hours",
+        "b": "7 days",
+        "c": "35 days"
+      },
+      "alternative_answers": [],
       "topic": "Movies",
       "category": "adults",
       "difficulty": "hard",

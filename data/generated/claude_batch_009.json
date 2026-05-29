@@ -1,15 +1,25 @@
 {
   "questions": [
     {
-      "question": "Botanically speaking, which of the following is a true berry: a strawberry, a banana, or a raspberry?",
-      "type": "text",
-      "correct_answer": "A banana",
-      "possible_answers": null,
-      "alternative_answers": ["banana", "the banana"],
+      "question": "Botanically speaking, which of the following is a true berry?",
+      "type": "text_multichoice",
+      "correct_answer": "b",
+      "possible_answers": {
+        "a": "a strawberry",
+        "b": "a banana",
+        "c": "a raspberry"
+      },
+      "alternative_answers": [],
       "topic": "Food",
       "category": "adults",
       "difficulty": "easy",
-      "tags": ["botany", "fruits", "biology", "berries", "classification"],
+      "tags": [
+        "botany",
+        "fruits",
+        "biology",
+        "berries",
+        "classification"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://en.wikipedia.org/wiki/Berry_(botany)",
@@ -43,11 +53,22 @@
       "type": "text",
       "correct_answer": "About 60%",
       "possible_answers": null,
-      "alternative_answers": ["60%", "sixty percent", "around 60%", "roughly 60 percent"],
+      "alternative_answers": [
+        "60%",
+        "sixty percent",
+        "around 60%",
+        "roughly 60 percent"
+      ],
       "topic": "Food",
       "category": "adults",
       "difficulty": "easy",
-      "tags": ["biology", "genetics", "dna", "bananas", "evolution"],
+      "tags": [
+        "biology",
+        "genetics",
+        "dna",
+        "bananas",
+        "evolution"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://en.wikipedia.org/wiki/Genome",
@@ -81,11 +102,24 @@
       "type": "text",
       "correct_answer": "Honey's extremely low water content, high acidity, and natural hydrogen peroxide from bee enzymes create an environment where bacteria cannot survive",
       "possible_answers": null,
-      "alternative_answers": ["low water content", "it's too dry for bacteria", "very low water and high acidity", "bees add antimicrobial enzymes", "hydrogen peroxide from bees", "low moisture and high acid"],
+      "alternative_answers": [
+        "low water content",
+        "it's too dry for bacteria",
+        "very low water and high acidity",
+        "bees add antimicrobial enzymes",
+        "hydrogen peroxide from bees",
+        "low moisture and high acid"
+      ],
       "topic": "Food",
       "category": "adults",
       "difficulty": "easy",
-      "tags": ["honey", "food-science", "bacteria", "egypt", "preservation"],
+      "tags": [
+        "honey",
+        "food-science",
+        "bacteria",
+        "egypt",
+        "preservation"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://en.wikipedia.org/wiki/Honey",
@@ -119,11 +153,24 @@
       "type": "text",
       "correct_answer": "Liver problems, indigestion, and diarrhea",
       "possible_answers": null,
-      "alternative_answers": ["digestive problems", "liver disease", "indigestion", "diarrhoea", "stomach ailments", "various digestive conditions"],
+      "alternative_answers": [
+        "digestive problems",
+        "liver disease",
+        "indigestion",
+        "diarrhoea",
+        "stomach ailments",
+        "various digestive conditions"
+      ],
       "topic": "Food",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["ketchup", "food-history", "medicine", "19th-century", "tomatoes"],
+      "tags": [
+        "ketchup",
+        "food-history",
+        "medicine",
+        "19th-century",
+        "tomatoes"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://en.wikipedia.org/wiki/Ketchup",
@@ -157,11 +204,23 @@
       "type": "text",
       "correct_answer": "Bromelain — an enzyme that breaks down the protein molecules gelatin is made from",
       "possible_answers": null,
-      "alternative_answers": ["bromelain", "an enzyme", "a protein-digesting enzyme", "it contains enzymes that dissolve gelatin", "proteolytic enzyme"],
+      "alternative_answers": [
+        "bromelain",
+        "an enzyme",
+        "a protein-digesting enzyme",
+        "it contains enzymes that dissolve gelatin",
+        "proteolytic enzyme"
+      ],
       "topic": "Food",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["food-science", "enzymes", "pineapple", "gelatin", "chemistry"],
+      "tags": [
+        "food-science",
+        "enzymes",
+        "pineapple",
+        "gelatin",
+        "chemistry"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://en.wikipedia.org/wiki/Bromelain",
@@ -195,11 +254,22 @@
       "type": "text",
       "correct_answer": "Over 1,000 years",
       "possible_answers": null,
-      "alternative_answers": ["more than 1000 years", "over a thousand years", "1000+ years", "for more than a millennium"],
+      "alternative_answers": [
+        "more than 1000 years",
+        "over a thousand years",
+        "1000+ years",
+        "for more than a millennium"
+      ],
       "topic": "Food",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["chocolate", "aztecs", "maya", "food-history", "currency"],
+      "tags": [
+        "chocolate",
+        "aztecs",
+        "maya",
+        "food-history",
+        "currency"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://en.wikipedia.org/wiki/Theobroma_cacao",
@@ -233,11 +303,23 @@
       "type": "text",
       "correct_answer": "Tomatoes belong to the nightshade family, and their acidic juice leached toxic lead from the pewter plates wealthy diners used",
       "possible_answers": null,
-      "alternative_answers": ["nightshade family", "they are related to deadly nightshade", "the pewter plates", "lead from plates", "nightshade relative and lead poisoning"],
+      "alternative_answers": [
+        "nightshade family",
+        "they are related to deadly nightshade",
+        "the pewter plates",
+        "lead from plates",
+        "nightshade relative and lead poisoning"
+      ],
       "topic": "Food",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["tomatoes", "food-history", "poison", "nightshade", "europe"],
+      "tags": [
+        "tomatoes",
+        "food-history",
+        "poison",
+        "nightshade",
+        "europe"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://en.wikipedia.org/wiki/Tomato",
@@ -271,11 +353,20 @@
       "type": "text",
       "correct_answer": "Cheese",
       "possible_answers": null,
-      "alternative_answers": ["cheese", "fromage"],
+      "alternative_answers": [
+        "cheese",
+        "fromage"
+      ],
       "topic": "Food",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["cheese", "theft", "food-facts", "crime", "statistics"],
+      "tags": [
+        "cheese",
+        "theft",
+        "food-facts",
+        "crime",
+        "statistics"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://en.wikipedia.org/wiki/Cheese",
@@ -309,11 +400,23 @@
       "type": "text",
       "correct_answer": "Czech — 'robota' means forced labour or drudgery",
       "possible_answers": null,
-      "alternative_answers": ["czech", "it comes from czech", "czech language", "from czech — meaning drudgery", "robota means drudgery"],
+      "alternative_answers": [
+        "czech",
+        "it comes from czech",
+        "czech language",
+        "from czech — meaning drudgery",
+        "robota means drudgery"
+      ],
       "topic": "Literature",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["etymology", "robots", "czech", "theatre", "language"],
+      "tags": [
+        "etymology",
+        "robots",
+        "czech",
+        "theatre",
+        "language"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://en.wikipedia.org/wiki/Karel_%C4%8Capek",
@@ -347,11 +450,22 @@
       "type": "text",
       "correct_answer": "A ghost story competition with friends including Lord Byron and Percy Shelley, held indoors during the cold, sunless summer caused by the eruption of Mount Tambora",
       "possible_answers": null,
-      "alternative_answers": ["a ghost story competition", "a writing competition", "a bet to write a horror story", "a ghost story contest with Byron and Shelley"],
+      "alternative_answers": [
+        "a ghost story competition",
+        "a writing competition",
+        "a bet to write a horror story",
+        "a ghost story contest with Byron and Shelley"
+      ],
       "topic": "Literature",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["frankenstein", "mary-shelley", "literature", "ghost-story", "year-without-summer"],
+      "tags": [
+        "frankenstein",
+        "mary-shelley",
+        "literature",
+        "ghost-story",
+        "year-without-summer"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://en.wikipedia.org/wiki/Frankenstein",
@@ -385,11 +499,22 @@
       "type": "text",
       "correct_answer": "He reversed the last two digits: 1948 became 1984",
       "possible_answers": null,
-      "alternative_answers": ["he reversed 48 to get 84", "swapped the last two digits", "flipped the digits of 48", "reversed 48 to 84"],
+      "alternative_answers": [
+        "he reversed 48 to get 84",
+        "swapped the last two digits",
+        "flipped the digits of 48",
+        "reversed 48 to 84"
+      ],
       "topic": "Literature",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["george-orwell", "1984", "literature", "dystopia", "title"],
+      "tags": [
+        "george-orwell",
+        "1984",
+        "literature",
+        "dystopia",
+        "title"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://en.wikipedia.org/wiki/Nineteen_Eighty-Four",
@@ -423,11 +548,23 @@
       "type": "text",
       "correct_answer": "It binds to the same nerve receptors (TRPV1) that detect actual heat above 43°C, creating a false sensation of burning",
       "possible_answers": null,
-      "alternative_answers": ["binds to heat receptors", "activates heat-sensing receptors", "triggers heat nerve receptors", "tricks the heat receptors", "activates the same receptors as actual heat"],
+      "alternative_answers": [
+        "binds to heat receptors",
+        "activates heat-sensing receptors",
+        "triggers heat nerve receptors",
+        "tricks the heat receptors",
+        "activates the same receptors as actual heat"
+      ],
       "topic": "Food",
       "category": "adults",
       "difficulty": "hard",
-      "tags": ["chilli", "capsaicin", "neuroscience", "food-science", "pain"],
+      "tags": [
+        "chilli",
+        "capsaicin",
+        "neuroscience",
+        "food-science",
+        "pain"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://en.wikipedia.org/wiki/Capsaicin",
@@ -461,11 +598,23 @@
       "type": "text",
       "correct_answer": "A Persian fairy tale called 'The Three Princes of Serendip' (Serendip being the old name for Sri Lanka)",
       "possible_answers": null,
-      "alternative_answers": ["a persian fairy tale", "the three princes of serendip", "a persian story", "the princes of serendip", "a fairy tale from persia"],
+      "alternative_answers": [
+        "a persian fairy tale",
+        "the three princes of serendip",
+        "a persian story",
+        "the princes of serendip",
+        "a fairy tale from persia"
+      ],
       "topic": "Literature",
       "category": "adults",
       "difficulty": "hard",
-      "tags": ["etymology", "serendipity", "literature", "persian", "sri-lanka"],
+      "tags": [
+        "etymology",
+        "serendipity",
+        "literature",
+        "persian",
+        "sri-lanka"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://en.wikipedia.org/wiki/Serendipity",
@@ -499,11 +648,23 @@
       "type": "text",
       "correct_answer": "None — it has never been decoded despite decades of cryptographic analysis",
       "possible_answers": null,
-      "alternative_answers": ["zero", "none", "it remains undeciphered", "no attempts have succeeded", "nobody has decoded it"],
+      "alternative_answers": [
+        "zero",
+        "none",
+        "it remains undeciphered",
+        "no attempts have succeeded",
+        "nobody has decoded it"
+      ],
       "topic": "Literature",
       "category": "adults",
       "difficulty": "hard",
-      "tags": ["voynich-manuscript", "cryptography", "mystery", "medieval", "books"],
+      "tags": [
+        "voynich-manuscript",
+        "cryptography",
+        "mystery",
+        "medieval",
+        "books"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://en.wikipedia.org/wiki/Voynich_manuscript",
@@ -537,11 +698,24 @@
       "type": "text",
       "correct_answer": "The Elvish languages (he invented Quenya and Sindarin as linguistic experiments before building stories around them)",
       "possible_answers": null,
-      "alternative_answers": ["the elvish language", "quenya", "sindarin", "the languages", "elvish", "the elf languages"],
+      "alternative_answers": [
+        "the elvish language",
+        "quenya",
+        "sindarin",
+        "the languages",
+        "elvish",
+        "the elf languages"
+      ],
       "topic": "Literature",
       "category": "adults",
       "difficulty": "hard",
-      "tags": ["tolkien", "lord-of-the-rings", "elvish", "languages", "creation"],
+      "tags": [
+        "tolkien",
+        "lord-of-the-rings",
+        "elvish",
+        "languages",
+        "creation"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://en.wikipedia.org/wiki/J._R._R._Tolkien",
@@ -579,7 +753,10 @@
     "total_selected": 15,
     "pipeline": "claude_code_session",
     "prompt_version": "v2_cot",
-    "topics": ["Food", "Literature"],
+    "topics": [
+      "Food",
+      "Literature"
+    ],
     "difficulty_distribution": {
       "easy": 3,
       "medium": 8,

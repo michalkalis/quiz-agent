@@ -231,13 +231,17 @@
       }
     },
     {
-      "question": "Which doesn't belong: Mercury, Venus, Earth, Mars, Moon?",
-      "type": "text",
-      "correct_answer": "Moon",
-      "possible_answers": null,
-      "alternative_answers": [
-        "the moon"
-      ],
+      "question": "Which doesn't belong?",
+      "type": "text_multichoice",
+      "correct_answer": "e",
+      "possible_answers": {
+        "a": "Mercury",
+        "b": "Venus",
+        "c": "Earth",
+        "d": "Mars",
+        "e": "Moon"
+      },
+      "alternative_answers": [],
       "explanation": "Mercury, Venus, Earth, and Mars are all planets of the inner solar system. The Moon is a natural satellite (it orbits Earth, not the Sun directly).",
       "topic": "Logic",
       "category": "adults",
@@ -277,13 +281,17 @@
       }
     },
     {
-      "question": "Which is the odd one out: Diamond, Graphite, Charcoal, Coal, Fullerene?",
-      "type": "text",
-      "correct_answer": "Coal",
-      "possible_answers": null,
-      "alternative_answers": [
-        "coal"
-      ],
+      "question": "Which is the odd one out?",
+      "type": "text_multichoice",
+      "correct_answer": "d",
+      "possible_answers": {
+        "a": "Diamond",
+        "b": "Graphite",
+        "c": "Charcoal",
+        "d": "Coal",
+        "e": "Fullerene"
+      },
+      "alternative_answers": [],
       "explanation": "Diamond, graphite, charcoal, and fullerene are all pure allotropes of carbon (different structural forms of the same element). Coal is a mixture of carbon compounds and impurities — not a pure carbon allotrope.",
       "topic": "Logic",
       "category": "adults",
@@ -563,13 +571,17 @@
       }
     },
     {
-      "question": "Here is an art-themed odd one out. Which doesn't belong, and why: Picasso, Monet, Rembrandt, Banksy, Van Gogh?",
-      "type": "text",
-      "correct_answer": "Banksy",
-      "possible_answers": null,
-      "alternative_answers": [
-        "banksy"
-      ],
+      "question": "Here is an art-themed odd one out. Which doesn't belong, and why?",
+      "type": "text_multichoice",
+      "correct_answer": "d",
+      "possible_answers": {
+        "a": "Picasso",
+        "b": "Monet",
+        "c": "Rembrandt",
+        "d": "Banksy",
+        "e": "Van Gogh"
+      },
+      "alternative_answers": [],
       "explanation": "Picasso, Monet, Rembrandt, and Van Gogh are all deceased classical or modern masters whose identities are fully known. Banksy is a living, contemporary street artist whose true identity remains anonymous.",
       "topic": "Art",
       "category": "adults",

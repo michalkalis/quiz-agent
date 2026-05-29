@@ -5,11 +5,20 @@
       "type": "text",
       "correct_answer": "8 minutes",
       "possible_answers": null,
-      "alternative_answers": ["8 min", "eight minutes", "about 8 minutes", "8 minutes 19 seconds"],
+      "alternative_answers": [
+        "8 min",
+        "eight minutes",
+        "about 8 minutes",
+        "8 minutes 19 seconds"
+      ],
       "topic": "Astronomy",
       "category": "adults",
       "difficulty": "easy",
-      "tags": ["space", "physics", "estimation"],
+      "tags": [
+        "space",
+        "physics",
+        "estimation"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://blog.edclass.com/20-unbelievable-science-facts-that-will-shock-you/",
@@ -43,11 +52,21 @@
       "type": "text",
       "correct_answer": "38 minutes",
       "possible_answers": null,
-      "alternative_answers": ["38 min", "thirty-eight minutes", "minutes", "about 38 minutes"],
+      "alternative_answers": [
+        "38 min",
+        "thirty-eight minutes",
+        "minutes",
+        "about 38 minutes"
+      ],
       "topic": "History",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["war", "history", "estimation", "britain"],
+      "tags": [
+        "war",
+        "history",
+        "estimation",
+        "britain"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://science.howstuffworks.com/weird-facts.htm",
@@ -77,15 +96,23 @@
       }
     },
     {
-      "question": "What is greater in number: trees on Earth, or stars in the Milky Way galaxy?",
-      "type": "text",
-      "correct_answer": "trees on Earth",
-      "possible_answers": null,
-      "alternative_answers": ["trees", "the trees", "trees on earth"],
+      "question": "What is greater in number?",
+      "type": "text_multichoice",
+      "correct_answer": "a",
+      "possible_answers": {
+        "a": "trees on Earth",
+        "b": "stars in the Milky Way galaxy"
+      },
+      "alternative_answers": [],
       "topic": "Nature",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["astronomy", "nature", "comparison", "scale"],
+      "tags": [
+        "astronomy",
+        "nature",
+        "comparison",
+        "scale"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://blog.edclass.com/20-unbelievable-science-facts-that-will-shock-you/",
@@ -119,11 +146,21 @@
       "type": "text",
       "correct_answer": "circle",
       "possible_answers": null,
-      "alternative_answers": ["circles", "a circle", "full circle", "a full circle"],
+      "alternative_answers": [
+        "circles",
+        "a circle",
+        "full circle",
+        "a full circle"
+      ],
       "topic": "Physics",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["optics", "weather", "physics", "geometry"],
+      "tags": [
+        "optics",
+        "weather",
+        "physics",
+        "geometry"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://www.livescience.com/science-facts",
@@ -157,11 +194,17 @@
       "type": "text",
       "correct_answer": "Venus",
       "possible_answers": null,
-      "alternative_answers": ["venus"],
+      "alternative_answers": [
+        "venus"
+      ],
       "topic": "Astronomy",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["space", "planets", "odd-one-out"],
+      "tags": [
+        "space",
+        "planets",
+        "odd-one-out"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://blog.edclass.com/20-unbelievable-science-facts-that-will-shock-you/",
@@ -195,11 +238,19 @@
       "type": "text",
       "correct_answer": "vagina",
       "possible_answers": null,
-      "alternative_answers": ["vaginas", "three vaginas", "vagina (three of them)"],
+      "alternative_answers": [
+        "vaginas",
+        "three vaginas",
+        "vagina (three of them)"
+      ],
       "topic": "Biology",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["animals", "biology", "anatomy"],
+      "tags": [
+        "animals",
+        "biology",
+        "anatomy"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://www.livescience.com/science-facts",
@@ -233,11 +284,21 @@
       "type": "text",
       "correct_answer": "10%",
       "possible_answers": null,
-      "alternative_answers": ["10 percent", "ten percent", "about 10%", "10"],
+      "alternative_answers": [
+        "10 percent",
+        "ten percent",
+        "about 10%",
+        "10"
+      ],
       "topic": "Nature",
       "category": "adults",
       "difficulty": "hard",
-      "tags": ["animals", "predator", "comparison", "estimation"],
+      "tags": [
+        "animals",
+        "predator",
+        "comparison",
+        "estimation"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://www.livescience.com/science-facts",
@@ -271,11 +332,20 @@
       "type": "text",
       "correct_answer": "True",
       "possible_answers": null,
-      "alternative_answers": ["true", "yes", "T"],
+      "alternative_answers": [
+        "true",
+        "yes",
+        "T"
+      ],
       "topic": "History",
       "category": "adults",
       "difficulty": "hard",
-      "tags": ["history", "technology", "ancient", "true-false"],
+      "tags": [
+        "history",
+        "technology",
+        "ancient",
+        "true-false"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://www.buzzfeed.com/isabeldaly/random-facts",
@@ -305,15 +375,24 @@
       }
     },
     {
-      "question": "An average cumulus cloud — the puffy white kind — drifts overhead weighing roughly: 50 kilograms, 5 tonnes, or 500 tonnes?",
-      "type": "text",
-      "correct_answer": "500 tonnes",
-      "possible_answers": null,
-      "alternative_answers": ["500 tons", "550 tonnes", "550 tons", "500", "about 500 tonnes"],
+      "question": "An average cumulus cloud — the puffy white kind — drifts overhead weighing roughly?",
+      "type": "text_multichoice",
+      "correct_answer": "c",
+      "possible_answers": {
+        "a": "50 kilograms",
+        "b": "5 tonnes",
+        "c": "500 tonnes"
+      },
+      "alternative_answers": [],
       "topic": "Weather",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["weather", "physics", "estimation", "scale"],
+      "tags": [
+        "weather",
+        "physics",
+        "estimation",
+        "scale"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://www.buzzfeed.com/isabeldaly/random-facts",
@@ -347,11 +426,19 @@
       "type": "text",
       "correct_answer": "elephant",
       "possible_answers": null,
-      "alternative_answers": ["an elephant", "elephants", "African elephant"],
+      "alternative_answers": [
+        "an elephant",
+        "elephants",
+        "African elephant"
+      ],
       "topic": "Nature",
       "category": "adults",
       "difficulty": "easy",
-      "tags": ["animals", "scale", "comparison"],
+      "tags": [
+        "animals",
+        "scale",
+        "comparison"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://science.howstuffworks.com/weird-facts.htm",
@@ -385,11 +472,22 @@
       "type": "text",
       "correct_answer": "bat",
       "possible_answers": null,
-      "alternative_answers": ["bats", "the bat", "bat guano", "bat droppings", "bats (guano)"],
+      "alternative_answers": [
+        "bats",
+        "the bat",
+        "bat guano",
+        "bat droppings",
+        "bats (guano)"
+      ],
       "topic": "Chemistry",
       "category": "adults",
       "difficulty": "hard",
-      "tags": ["chemistry", "history", "animals", "warfare"],
+      "tags": [
+        "chemistry",
+        "history",
+        "animals",
+        "warfare"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://www.runaway.games/blog/science-trivia-questions",
@@ -423,11 +521,20 @@
       "type": "text",
       "correct_answer": "superfluid",
       "possible_answers": null,
-      "alternative_answers": ["super fluid", "superfluidity", "a superfluid", "superfluid state"],
+      "alternative_answers": [
+        "super fluid",
+        "superfluidity",
+        "a superfluid",
+        "superfluid state"
+      ],
       "topic": "Physics",
       "category": "adults",
       "difficulty": "hard",
-      "tags": ["physics", "quantum", "matter"],
+      "tags": [
+        "physics",
+        "quantum",
+        "matter"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://www.rd.com/list/science-facts-never-learned/",
@@ -461,11 +568,20 @@
       "type": "text",
       "correct_answer": "rotten eggs",
       "possible_answers": null,
-      "alternative_answers": ["eggs", "rotten egg", "rotting eggs", "bad eggs"],
+      "alternative_answers": [
+        "eggs",
+        "rotten egg",
+        "rotting eggs",
+        "bad eggs"
+      ],
       "topic": "Astronomy",
       "category": "adults",
       "difficulty": "hard",
-      "tags": ["space", "chemistry", "smell"],
+      "tags": [
+        "space",
+        "chemistry",
+        "smell"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://science.howstuffworks.com/weird-facts.htm",
@@ -499,11 +615,21 @@
       "type": "text",
       "correct_answer": "thermal expansion",
       "possible_answers": null,
-      "alternative_answers": ["heat expansion", "expansion of metal", "metal expanding in heat", "thermal expansion of metal", "expansion"],
+      "alternative_answers": [
+        "heat expansion",
+        "expansion of metal",
+        "metal expanding in heat",
+        "thermal expansion of metal",
+        "expansion"
+      ],
       "topic": "Physics",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["physics", "architecture", "heat"],
+      "tags": [
+        "physics",
+        "architecture",
+        "heat"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://science.howstuffworks.com/weird-facts.htm",
@@ -537,11 +663,21 @@
       "type": "text",
       "correct_answer": "dull",
       "possible_answers": null,
-      "alternative_answers": ["a dull knife", "blunt", "blunt knife", "the dull one", "dull knife"],
+      "alternative_answers": [
+        "a dull knife",
+        "blunt",
+        "blunt knife",
+        "the dull one",
+        "dull knife"
+      ],
       "topic": "Cooking",
       "category": "adults",
       "difficulty": "easy",
-      "tags": ["cooking", "chemistry", "everyday"],
+      "tags": [
+        "cooking",
+        "chemistry",
+        "everyday"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://www.livescience.com/science-facts",
@@ -581,7 +717,11 @@
     "prompt_version": "v3_fact_first",
     "category": "adults",
     "theme": null,
-    "fact_sources_used": ["opentdb", "web_search", "news"],
+    "fact_sources_used": [
+      "opentdb",
+      "web_search",
+      "news"
+    ],
     "fact_count_sourced": 24
   }
 }

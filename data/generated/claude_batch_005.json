@@ -1,15 +1,23 @@
 {
   "questions": [
     {
-      "question": "The Milky Way galaxy contains roughly 300 billion stars. Which is a larger number: stars in the Milky Way, or bacteria living in a human gut?",
-      "type": "text",
-      "correct_answer": "Bacteria in a human gut",
-      "possible_answers": null,
-      "alternative_answers": ["gut bacteria", "bacteria", "the bacteria in a human gut", "human gut bacteria"],
+      "question": "The Milky Way galaxy contains roughly 300 billion stars. Which is a larger number?",
+      "type": "text_multichoice",
+      "correct_answer": "b",
+      "possible_answers": {
+        "a": "stars in the Milky Way",
+        "b": "bacteria living in a human gut"
+      },
+      "alternative_answers": [],
       "topic": "Science",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["biology", "astronomy", "scale", "microbiome"],
+      "tags": [
+        "biology",
+        "astronomy",
+        "scale",
+        "microbiome"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://en.wikipedia.org/wiki/Human_microbiome",
@@ -43,11 +51,23 @@
       "type": "text",
       "correct_answer": "About 100,000 years",
       "possible_answers": null,
-      "alternative_answers": ["100000 years", "a hundred thousand years", "tens of thousands of years", "thousands of years", "100,000 years"],
+      "alternative_answers": [
+        "100000 years",
+        "a hundred thousand years",
+        "tens of thousands of years",
+        "thousands of years",
+        "100,000 years"
+      ],
       "topic": "Science",
       "category": "adults",
       "difficulty": "hard",
-      "tags": ["physics", "astronomy", "solar", "light", "random-walk"],
+      "tags": [
+        "physics",
+        "astronomy",
+        "solar",
+        "light",
+        "random-walk"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://en.wikipedia.org/wiki/Solar_core",
@@ -77,15 +97,24 @@
       }
     },
     {
-      "question": "If it were physically possible to fold a piece of paper in half exactly 42 times, the resulting stack would be taller than: the Eiffel Tower, Mount Everest, or would it reach the Moon?",
-      "type": "text",
-      "correct_answer": "It would reach the Moon",
-      "possible_answers": null,
-      "alternative_answers": ["the moon", "reach the moon", "moon", "past the moon"],
+      "question": "If it were physically possible to fold a piece of paper in half exactly 42 times, the resulting stack would be taller than?",
+      "type": "text_multichoice",
+      "correct_answer": "c",
+      "possible_answers": {
+        "a": "the Eiffel Tower",
+        "b": "Mount Everest",
+        "c": "would it reach the Moon"
+      },
+      "alternative_answers": [],
       "topic": "Science",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["mathematics", "exponential-growth", "scale", "paper-folding"],
+      "tags": [
+        "mathematics",
+        "exponential-growth",
+        "scale",
+        "paper-folding"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://en.wikipedia.org/wiki/Paper_folding",
@@ -115,15 +144,25 @@
       }
     },
     {
-      "question": "Neutron stars are collapsed stellar cores with mind-boggling density. If you could bring a teaspoon of neutron star material to Earth, it would weigh roughly: 10 kilograms, 10 thousand tonnes, or more than 1 billion tonnes?",
-      "type": "text",
-      "correct_answer": "More than 1 billion tonnes",
-      "possible_answers": null,
-      "alternative_answers": ["1 billion tonnes", "billions of tonnes", "about 2 billion tonnes", "a billion tons", "billions of tons"],
+      "question": "Neutron stars are collapsed stellar cores with mind-boggling density. If you could bring a teaspoon of neutron star material to Earth, it would weigh roughly?",
+      "type": "text_multichoice",
+      "correct_answer": "c",
+      "possible_answers": {
+        "a": "10 kilograms",
+        "b": "10 thousand tonnes",
+        "c": "more than 1 billion tonnes"
+      },
+      "alternative_answers": [],
       "topic": "Science",
       "category": "adults",
       "difficulty": "hard",
-      "tags": ["physics", "astronomy", "neutron-stars", "density", "scale"],
+      "tags": [
+        "physics",
+        "astronomy",
+        "neutron-stars",
+        "density",
+        "scale"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://en.wikipedia.org/wiki/Neutron_star",
@@ -157,11 +196,23 @@
       "type": "text",
       "correct_answer": "Indefinitely",
       "possible_answers": null,
-      "alternative_answers": ["unlimited times", "infinite times", "there is no known limit", "limitless", "as many times as it wants"],
+      "alternative_answers": [
+        "unlimited times",
+        "infinite times",
+        "there is no known limit",
+        "limitless",
+        "as many times as it wants"
+      ],
       "topic": "Nature",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["biology", "jellyfish", "immortality", "aging", "marine-life"],
+      "tags": [
+        "biology",
+        "jellyfish",
+        "immortality",
+        "aging",
+        "marine-life"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://en.wikipedia.org/wiki/Turritopsis_dohrnii",
@@ -195,11 +246,22 @@
       "type": "text",
       "correct_answer": "Atoms in a single glass of water",
       "possible_answers": null,
-      "alternative_answers": ["atoms in the glass", "the atoms in one glass of water", "the glass of water", "atoms in a glass"],
+      "alternative_answers": [
+        "atoms in the glass",
+        "the atoms in one glass of water",
+        "the glass of water",
+        "atoms in a glass"
+      ],
       "topic": "Science",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["chemistry", "physics", "scale", "atoms", "water"],
+      "tags": [
+        "chemistry",
+        "physics",
+        "scale",
+        "atoms",
+        "water"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://en.wikipedia.org/wiki/Mole_(unit)",
@@ -233,11 +295,20 @@
       "type": "text",
       "correct_answer": "Sharks",
       "possible_answers": null,
-      "alternative_answers": ["sharks came first", "sharks predate trees"],
+      "alternative_answers": [
+        "sharks came first",
+        "sharks predate trees"
+      ],
       "topic": "Nature",
       "category": "adults",
       "difficulty": "easy",
-      "tags": ["evolution", "sharks", "biology", "natural-history", "paleontology"],
+      "tags": [
+        "evolution",
+        "sharks",
+        "biology",
+        "natural-history",
+        "paleontology"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://en.wikipedia.org/wiki/Shark",
@@ -271,11 +342,23 @@
       "type": "text",
       "correct_answer": "The crows taught each other",
       "possible_answers": null,
-      "alternative_answers": ["social learning", "cultural transmission", "other crows taught them", "they communicated with each other", "they passed on the information"],
+      "alternative_answers": [
+        "social learning",
+        "cultural transmission",
+        "other crows taught them",
+        "they communicated with each other",
+        "they passed on the information"
+      ],
       "topic": "Nature",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["crows", "cognition", "social-learning", "animal-behaviour", "birds"],
+      "tags": [
+        "crows",
+        "cognition",
+        "social-learning",
+        "animal-behaviour",
+        "birds"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://en.wikipedia.org/wiki/Corvidae",
@@ -309,11 +392,21 @@
       "type": "text",
       "correct_answer": "The blue whale",
       "possible_answers": null,
-      "alternative_answers": ["blue whale", "blue whales", "a blue whale"],
+      "alternative_answers": [
+        "blue whale",
+        "blue whales",
+        "a blue whale"
+      ],
       "topic": "Nature",
       "category": "adults",
       "difficulty": "easy",
-      "tags": ["blue-whale", "dinosaurs", "evolution", "biology", "marine-life"],
+      "tags": [
+        "blue-whale",
+        "dinosaurs",
+        "evolution",
+        "biology",
+        "marine-life"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://en.wikipedia.org/wiki/Blue_whale",
@@ -347,11 +440,24 @@
       "type": "text",
       "correct_answer": "It dissolves almost completely into a cellular soup before rebuilding",
       "possible_answers": null,
-      "alternative_answers": ["dissolves", "it liquefies", "turns into liquid", "breaks down completely", "histolysis", "melts into a soup"],
+      "alternative_answers": [
+        "dissolves",
+        "it liquefies",
+        "turns into liquid",
+        "breaks down completely",
+        "histolysis",
+        "melts into a soup"
+      ],
       "topic": "Nature",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["biology", "metamorphosis", "butterflies", "insects", "histolysis"],
+      "tags": [
+        "biology",
+        "metamorphosis",
+        "butterflies",
+        "insects",
+        "histolysis"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://en.wikipedia.org/wiki/Metamorphosis",
@@ -385,11 +491,21 @@
       "type": "text",
       "correct_answer": "A peppercorn",
       "possible_answers": null,
-      "alternative_answers": ["peppercorn", "a small peppercorn", "about a peppercorn"],
+      "alternative_answers": [
+        "peppercorn",
+        "a small peppercorn",
+        "about a peppercorn"
+      ],
       "topic": "Science",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["astronomy", "solar-system", "scale", "earth", "sun"],
+      "tags": [
+        "astronomy",
+        "solar-system",
+        "scale",
+        "earth",
+        "sun"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://en.wikipedia.org/wiki/Solar_System",
@@ -419,15 +535,27 @@
       }
     },
     {
-      "question": "Four birds on this list are all flightless. One is not. Which is the odd one out: Ostrich, Emu, Kiwi, Penguin, or Flamingo?",
-      "type": "text",
-      "correct_answer": "Flamingo",
-      "possible_answers": null,
-      "alternative_answers": ["flamingos", "the flamingo"],
+      "question": "Four birds on this list are all flightless. One is not. Which is the odd one out?",
+      "type": "text_multichoice",
+      "correct_answer": "e",
+      "possible_answers": {
+        "a": "Ostrich",
+        "b": "Emu",
+        "c": "Kiwi",
+        "d": "Penguin",
+        "e": "Flamingo"
+      },
+      "alternative_answers": [],
       "topic": "Nature",
       "category": "adults",
       "difficulty": "easy",
-      "tags": ["birds", "flamingo", "biology", "odd-one-out", "flightless-birds"],
+      "tags": [
+        "birds",
+        "flamingo",
+        "biology",
+        "odd-one-out",
+        "flightless-birds"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://en.wikipedia.org/wiki/Flamingo",
@@ -461,11 +589,23 @@
       "type": "text",
       "correct_answer": "Glucose",
       "possible_answers": null,
-      "alternative_answers": ["glucose", "sugar", "natural antifreeze", "cryoprotectant", "antifreeze"],
+      "alternative_answers": [
+        "glucose",
+        "sugar",
+        "natural antifreeze",
+        "cryoprotectant",
+        "antifreeze"
+      ],
       "topic": "Nature",
       "category": "adults",
       "difficulty": "hard",
-      "tags": ["biology", "frogs", "cryoprotection", "winter", "wood-frog"],
+      "tags": [
+        "biology",
+        "frogs",
+        "cryoprotection",
+        "winter",
+        "wood-frog"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://en.wikipedia.org/wiki/Wood_frog",
@@ -499,11 +639,21 @@
       "type": "text",
       "correct_answer": "Textured wallpaper",
       "possible_answers": null,
-      "alternative_answers": ["wallpaper", "decorative wallpaper", "patterned wallpaper", "wall covering"],
+      "alternative_answers": [
+        "wallpaper",
+        "decorative wallpaper",
+        "patterned wallpaper",
+        "wall covering"
+      ],
       "topic": "Science",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["inventions", "bubble-wrap", "history-of-technology", "reverse-engineer"],
+      "tags": [
+        "inventions",
+        "bubble-wrap",
+        "history-of-technology",
+        "reverse-engineer"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://en.wikipedia.org/wiki/Bubble_wrap",
@@ -537,11 +687,22 @@
       "type": "text",
       "correct_answer": "The Wood Wide Web",
       "possible_answers": null,
-      "alternative_answers": ["wood wide web", "the mycorrhizal network", "mycorrhizal network", "fungal network"],
+      "alternative_answers": [
+        "wood wide web",
+        "the mycorrhizal network",
+        "mycorrhizal network",
+        "fungal network"
+      ],
       "topic": "Nature",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["ecology", "forests", "fungi", "trees", "communication"],
+      "tags": [
+        "ecology",
+        "forests",
+        "fungi",
+        "trees",
+        "communication"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://en.wikipedia.org/wiki/Mycorrhizal_network",
@@ -579,7 +740,10 @@
     "total_selected": 15,
     "pipeline": "claude_code_session",
     "prompt_version": "v2_cot",
-    "topics": ["Nature", "Science"],
+    "topics": [
+      "Nature",
+      "Science"
+    ],
     "difficulty_distribution": {
       "easy": 3,
       "medium": 8,

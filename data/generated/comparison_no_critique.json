@@ -364,10 +364,14 @@
     },
     {
       "id": "temp_4fda8597",
-      "question": "How many trees are there on Earth: closer to 400 million, 40 billion, or 3 trillion?",
-      "type": "text",
-      "possible_answers": null,
-      "correct_answer": "About 3 trillion",
+      "question": "How many trees are there on Earth?",
+      "type": "text_multichoice",
+      "possible_answers": {
+        "a": "closer to 400 million",
+        "b": "40 billion",
+        "c": "3 trillion"
+      },
+      "correct_answer": "c",
       "alternative_answers": [],
       "topic": "Environment",
       "category": "general",

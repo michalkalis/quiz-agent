@@ -42,6 +42,7 @@ class ScoringStage:
                 "correct_answer": _stringify_answer(q.correct_answer),
                 "difficulty": q.difficulty,
                 "topic": q.topic,
+                "possible_answers": q.possible_answers,
             }
             for q in ctx.questions
         ]

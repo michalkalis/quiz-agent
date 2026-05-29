@@ -276,6 +276,65 @@ async def test_drops_questions_violating_answer_brevity() -> None:
 
 
 @pytest.mark.asyncio
+async def test_tags_mcq_type_and_drops_when_options_missing() -> None:
+    """Issue #42 task 42.9a — post-generation MCQ type tagging.
+
+    The LLM picks the reasoning pattern; some patterns
+    (`true_false`, `odd_one_out`, `comparison_bet_older_larger`,
+    `year_guess`) are inherently multiple-choice and must surface as
+    `type="text_multichoice"` so iOS `MCQOptionPicker` activates and
+    the evaluator's `possible_answers` fast-path routes correctly.
+
+    Fail-loud contract: when the pattern requires MCQ but the generator
+    didn't emit `possible_answers`, drop the question rather than ship a
+    half-built MCQ. Surface the drop count via
+    `StageResult.info["dropped_mcq_missing_options"]` so audit / SSE
+    sees the gap (same shape as `dropped_quality`).
+    """
+    questions = [
+        _stub_question(
+            0,
+            correct_answer="a",
+            possible_answers={"a": "True", "b": "False"},
+            generation_metadata=GenerationProvenance(reasoning_pattern="true_false"),
+        ),  # MCQ pattern + options → tag text_multichoice
+        _stub_question(
+            1,
+            correct_answer="b",
+            possible_answers={"a": "True", "b": "False"},
+            generation_metadata=GenerationProvenance(reasoning_pattern="true_false"),
+        ),  # MCQ pattern + options → tag text_multichoice
+        _stub_question(
+            2,
+            correct_answer="True",
+            generation_metadata=GenerationProvenance(reasoning_pattern="true_false"),
+        ),  # MCQ pattern but NO options → drop
+        _stub_question(
+            3,
+            correct_answer="Paris",
+            generation_metadata=GenerationProvenance(reasoning_pattern="fact_recall"),
+        ),  # non-MCQ pattern → keep as text
+    ]
+    gen = _FakeGenerator(questions)
+    stage = GenerationStage(gen)  # type: ignore[arg-type]
+    facts = [Fact(text="t", source_url="https://ex/1")]
+    ctx = _make_ctx(target_count=4, facts=facts)
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert len(ctx.questions) == 3
+    types_by_qtext = {q.question: q.type for q in ctx.questions}
+    assert types_by_qtext == {
+        "stub question 0": "text_multichoice",
+        "stub question 1": "text_multichoice",
+        "stub question 3": "text",
+    }
+    assert result.info["dropped_mcq_missing_options"] == 1
+    assert result.info["dropped_quality"] == 0
+    assert result.info["questions"] == 3
+
+
+@pytest.mark.asyncio
 async def test_calls_generator_with_target_count_and_facts() -> None:
     questions = [_stub_question(i) for i in range(5)]
     gen = _FakeGenerator(questions)

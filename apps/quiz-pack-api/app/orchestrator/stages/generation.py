@@ -16,6 +16,7 @@ import logging
 import uuid
 
 from app.generation.advanced_generator import AdvancedQuestionGenerator
+from app.generation.pattern_routing import choose_question_type
 from app.orchestrator.context import OrderContext, StageResult
 from app.orchestrator.progress_sink import ProgressSink
 from app.scoring.multi_model_scorer import _ANSWER_TAIL_MARKERS, _ANSWER_WORD_CAP
@@ -138,7 +139,41 @@ class GenerationStage:
                 continue
             kept.append(q)
 
-        ctx.questions = kept
+        # Issue #42 task 42.9a — post-generation type tagging for MCQ.
+        # The LLM picks the reasoning pattern per question (stored on the
+        # provenance as `reasoning_pattern`); if that pattern is in the MCQ
+        # set, the question must surface as `text_multichoice` so the iOS
+        # `MCQOptionPicker` activates and the evaluator's fast-path routes
+        # by `possible_answers`. Drop fail-loud when a pattern requires MCQ
+        # but the generator didn't emit options — a half-built MCQ is worse
+        # than no MCQ (evaluator would silently degrade to free-text and the
+        # iOS UI would have nothing to show).
+        tagged: list[Question] = []
+        dropped_mcq_missing_options = 0
+        for q in kept:
+            pattern = (
+                q.generation_metadata.reasoning_pattern
+                if q.generation_metadata is not None
+                else None
+            )
+            desired_type = choose_question_type(pattern)
+            if desired_type == "text_multichoice":
+                if q.possible_answers:
+                    q.type = "text_multichoice"
+                    tagged.append(q)
+                else:
+                    dropped_mcq_missing_options += 1
+                    logger.warning(
+                        "GenerationStage dropped question id=%s reason=mcq_missing_options "
+                        "pattern=%s",
+                        q.id,
+                        pattern,
+                    )
+                    continue
+            else:
+                tagged.append(q)
+
+        ctx.questions = tagged
 
         # F8 (task 2.15): every persisted question must carry a real source URL.
         # If the per-question fallback above couldn't fill `source_url` (e.g.
@@ -156,6 +191,10 @@ class GenerationStage:
             )
 
         return StageResult(
-            info={"questions": len(ctx.questions), "dropped_quality": dropped_quality},
+            info={
+                "questions": len(ctx.questions),
+                "dropped_quality": dropped_quality,
+                "dropped_mcq_missing_options": dropped_mcq_missing_options,
+            },
             cost_cents=0,
         )

@@ -150,7 +150,9 @@ class TestEvaluatorRoutingByPossibleAnswers:
         evaluator = AnswerEvaluator()
         evaluator._llm_evaluate = AsyncMock(return_value="incorrect")
         evaluator._evaluate_mcq = AsyncMock(
-            side_effect=AssertionError("MCQ fast-path must not fire when possible_answers is None")
+            side_effect=AssertionError(
+                "MCQ fast-path must not fire when possible_answers is None"
+            )
         )
 
         q = self._make_question(qtype="text_multichoice", possible_answers=None)
@@ -167,7 +169,9 @@ class TestEvaluatorRoutingByPossibleAnswers:
 
         evaluator = AnswerEvaluator()
         evaluator._llm_evaluate = AsyncMock(
-            side_effect=AssertionError("LLM path must not fire when possible_answers is populated")
+            side_effect=AssertionError(
+                "LLM path must not fire when possible_answers is populated"
+            )
         )
 
         q = self._make_question(qtype="text", possible_answers=OPTIONS)

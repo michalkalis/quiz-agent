@@ -111,6 +111,10 @@ class PromptBuilder:
             "topic_section": topic_section,
             "avoid_section": avoid_section,
             "user_feedback_section": "",  # Reserved for future use
+            # Issue #42 task 42.9b — empty default so v2/v3 prompts can carry
+            # `{mcq_patterns_section}` unconditionally; the caller fills it
+            # via **kwargs when `mcq_patterns` is configured.
+            "mcq_patterns_section": "",
         }
 
         # Merge any extra template variables (e.g., facts_section for V3)

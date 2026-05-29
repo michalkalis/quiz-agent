@@ -16,7 +16,7 @@ import logging
 import uuid
 
 from app.generation.advanced_generator import AdvancedQuestionGenerator
-from app.generation.pattern_routing import choose_question_type
+from app.generation.pattern_routing import PATTERNS_TO_MCQ, choose_question_type
 from app.orchestrator.context import OrderContext, StageResult
 from app.orchestrator.progress_sink import ProgressSink
 from app.scoring.multi_model_scorer import _ANSWER_TAIL_MARKERS, _ANSWER_WORD_CAP
@@ -81,6 +81,12 @@ class GenerationStage:
             topics=topics,
             categories=categories,
             source_facts=ctx.facts or None,
+            # Issue #42 task 42.9b — the generator passes these into the
+            # `{mcq_patterns_section}` of the prompt so the LLM emits
+            # `possible_answers` + key-letter `correct_answer` for any
+            # MCQ-routed pattern. The downstream 42.9a step (below) then
+            # tags the question type from the LLM's chosen pattern.
+            mcq_patterns=set(PATTERNS_TO_MCQ),
         )
 
         prompt_seed = _compute_prompt_seed(

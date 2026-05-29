@@ -352,3 +352,7 @@ async def test_calls_generator_with_target_count_and_facts() -> None:
     assert gen.calls[0]["source_facts"] == facts
     assert gen.calls[0]["topics"] == ["science", "space"]
     assert gen.calls[0]["categories"] == ["science"]
+    # Issue #42 task 42.9b — MCQ patterns must reach the generator so the
+    # prompt's `{mcq_patterns_section}` is non-empty. Loose-set comparison
+    # leaves room for the routing set to grow without churning this pin.
+    assert {"true_false", "odd_one_out"} <= set(gen.calls[0]["mcq_patterns"])

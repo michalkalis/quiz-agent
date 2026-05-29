@@ -547,6 +547,10 @@ If your draft answer breaks any of the above, **rewrite the answer to the canoni
 
 ---
 
+{mcq_patterns_section}
+
+---
+
 ## Final Reminder: Think, Then Generate
 
 1. **REASON** about the pattern and why it's interesting

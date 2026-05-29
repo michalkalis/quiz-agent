@@ -106,6 +106,7 @@ class AdvancedQuestionGenerator:
         n_multiplier: int = 3,
         min_quality_score: float = 7.0,
         source_facts: Optional[list] = None,
+        mcq_patterns: Optional[set[str]] = None,
     ) -> List[Question]:
         """Generate questions using multi-stage quality pipeline.
 
@@ -129,6 +130,13 @@ class AdvancedQuestionGenerator:
             min_quality_score: Minimum acceptable score (default: 7.0/10)
             source_facts: Optional list of Fact objects for fact-first generation.
                 When provided, uses V3 fact-first prompt template instead of V2.
+            mcq_patterns: Optional set of reasoning-pattern keys (e.g.
+                ``{"true_false", "odd_one_out"}``) for which the LLM must emit
+                ``possible_answers`` + a key-letter ``correct_answer``. Routes
+                via the ``{mcq_patterns_section}`` prompt placeholder; the
+                per-question ``Question.type`` is set later by
+                ``GenerationStage`` (#42 task 42.9a) based on the pattern the
+                LLM ended up choosing.
 
         Returns:
             List of Question objects with quality metadata
@@ -158,6 +166,7 @@ class AdvancedQuestionGenerator:
                 avoid_questions=avoid_questions,
                 user_bad_examples=user_bad_examples,
                 source_facts=source_facts,
+                mcq_patterns=mcq_patterns,
             )
 
             print(f"Generated {len(raw_questions)} raw questions")
@@ -210,6 +219,7 @@ class AdvancedQuestionGenerator:
                 avoid_questions=avoid_questions,
                 user_bad_examples=user_bad_examples,
                 source_facts=source_facts,
+                mcq_patterns=mcq_patterns,
             )
 
     async def _generate_batch(
@@ -223,12 +233,18 @@ class AdvancedQuestionGenerator:
         avoid_questions: Optional[List[str]],
         user_bad_examples: Optional[List[str]],
         source_facts: Optional[list] = None,
+        mcq_patterns: Optional[set[str]] = None,
     ) -> List[Question]:
         """Generate a batch of questions.
 
         Args:
             source_facts: Optional list of Fact objects. When provided,
                 uses V3 fact-first prompt template with facts injected.
+            mcq_patterns: Reasoning-pattern keys that must emit MCQ payloads.
+                Rendered into ``{mcq_patterns_section}`` of the prompt; the
+                LLM is told to set ``reasoning.pattern_used`` to one of the
+                snake_case keys and emit ``possible_answers`` + key-letter
+                ``correct_answer`` when it picks one.
         """
         # Determine which prompt builder and version to use
         use_fact_first = source_facts and self.v3_prompt_builder is not None
@@ -240,6 +256,14 @@ class AdvancedQuestionGenerator:
         if use_fact_first:
             facts_section = self._format_facts_section(source_facts)
             extra_kwargs["facts_section"] = facts_section
+
+        # Issue #42 task 42.9b — render MCQ activation rules into the prompt.
+        # Empty section when no MCQ patterns are configured so the prompt
+        # reads cleanly for non-MCQ runs (and back-compat with callers that
+        # haven't been wired through yet, e.g. ad-hoc scripts).
+        extra_kwargs["mcq_patterns_section"] = self._format_mcq_patterns_section(
+            mcq_patterns
+        )
 
         # Build prompt
         prompt = prompt_builder.build_prompt(
@@ -268,12 +292,21 @@ class AdvancedQuestionGenerator:
 
         # Add generation metadata
         for q in questions:
+            # Issue #42 task 42.9b — preserve LLM-emitted `pattern_used` so
+            # the post-generation type-tagging step in `GenerationStage`
+            # (42.9a) can route the question via `PATTERNS_TO_MCQ`. The
+            # `_parse_response` → `Question.from_dict` path lands the
+            # parsed `reasoning` dict under `generation_metadata.extra`
+            # (via GenerationProvenance._absorb_unknown_keys); we lift
+            # `pattern_used` into the typed `reasoning_pattern` slot here.
+            pattern_used = self._extract_pattern_used(q.generation_metadata)
             q.generation_metadata = GenerationProvenance(
                 model=self.generation_model,
                 provider="openai",
                 prompt_version=prompt_version,
                 generation_temperature=self.generation_llm.temperature,
                 pipeline="fact_first" if use_fact_first else None,
+                reasoning_pattern=pattern_used,
                 extra={"stage": "initial_generation"},
             )
             # Extract self-critique if present (from V2/V3 CoT prompt)
@@ -347,6 +380,99 @@ class AdvancedQuestionGenerator:
                 f"  ⚠ Diversity warning: {which_count}/{len(questions)} "
                 f"({ratio:.0%}) questions start with 'Which' (target: ≤{threshold:.0%})"
             )
+
+    @staticmethod
+    def _format_mcq_patterns_section(mcq_patterns: Optional[set[str]]) -> str:
+        """Render the MCQ-activation block for `{mcq_patterns_section}`.
+
+        Empty string when no patterns are configured so the prompt reads as
+        if MCQ wasn't requested (the original non-MCQ behaviour). When
+        patterns are present, we emit a single instruction block per
+        pattern keyed by the exact snake_case label the routing helper
+        (`pattern_routing.choose_question_type`) expects — drift between
+        the two would silently downgrade MCQ output to free-form text.
+
+        Issue #42 task 42.9b.
+        """
+        if not mcq_patterns:
+            return ""
+
+        # Per-pattern emission contract. The keys MUST match
+        # `PATTERNS_TO_MCQ`; the body tells the LLM what shape of
+        # `possible_answers` and `correct_answer` to emit. Order is
+        # deterministic so prompt caching stays warm across runs.
+        recipes: dict[str, str] = {
+            "true_false": (
+                "two options, e.g. `{\"a\": \"True\", \"b\": \"False\"}`, "
+                "with `correct_answer` set to `\"a\"` or `\"b\"`."
+            ),
+            "odd_one_out": (
+                "four options labelled a/b/c/d, with `correct_answer` set to "
+                "the key letter of the odd item. Put the reasoning in "
+                "`explanation`."
+            ),
+            "comparison_bet_older_larger": (
+                "two options A and B as `{\"a\": \"<option A>\", "
+                "\"b\": \"<option B>\"}`, with `correct_answer` set to the "
+                "key letter of the surprising winner."
+            ),
+            "year_guess": (
+                "four plausible year/decade options labelled a/b/c/d, with "
+                "`correct_answer` set to the key letter of the correct year."
+            ),
+        }
+
+        lines = [
+            "## Multiple-Choice Activation (pattern-driven)",
+            "",
+            "When you choose any of the patterns listed below, the question "
+            "MUST be multiple-choice. You MUST:",
+            "",
+            "1. Set `reasoning.pattern_used` to the exact snake_case key "
+            "(e.g. `true_false`, NOT `\"True/False Bet\"`).",
+            "2. Set `type` to `text_multichoice`.",
+            "3. Emit `possible_answers` per the shape described below.",
+            "4. Set `correct_answer` to the key letter (`\"a\"`, `\"b\"`, …), "
+            "not the value.",
+            "",
+            "**Distractor quality rule (all MCQ patterns):** every distractor "
+            "must be plausible. NEVER include a throwaway wrong option, NEVER "
+            "let one option give away the answer through length / specificity, "
+            "NEVER include the correct answer as a substring of a distractor.",
+            "",
+            "**Patterns that require MCQ:**",
+            "",
+        ]
+        for key in sorted(mcq_patterns):
+            recipe = recipes.get(
+                key,
+                "four plausible options labelled a/b/c/d, with "
+                "`correct_answer` set to the key letter.",
+            )
+            lines.append(f"- `{key}` — {recipe}")
+        return "\n".join(lines)
+
+    @staticmethod
+    def _extract_pattern_used(
+        provenance: Optional[GenerationProvenance],
+    ) -> Optional[str]:
+        """Lift the LLM-emitted `reasoning.pattern_used` out of `extra`.
+
+        `Question.from_dict` puts the parsed `reasoning` dict into
+        `generation_metadata` as-is; `GenerationProvenance` routes it to
+        `extra["reasoning"]` via `_absorb_unknown_keys`. This helper
+        normalises the lookup so `_generate_batch` can pass the value
+        into the typed `reasoning_pattern` slot.
+
+        Issue #42 task 42.9b.
+        """
+        if provenance is None:
+            return None
+        reasoning = provenance.extra.get("reasoning")
+        if not isinstance(reasoning, dict):
+            return None
+        pattern = reasoning.get("pattern_used")
+        return pattern if isinstance(pattern, str) and pattern else None
 
     @staticmethod
     def _format_facts_section(facts: list) -> str:

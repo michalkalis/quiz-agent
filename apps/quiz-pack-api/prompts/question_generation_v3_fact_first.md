@@ -204,6 +204,10 @@ If your draft answer breaks any of the above, **rewrite the answer to the canoni
 
 ---
 
+{mcq_patterns_section}
+
+---
+
 ## Response Format
 
 For EACH question, respond with this EXACT structure:

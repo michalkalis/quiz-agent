@@ -728,5 +728,53 @@
     "rated_by": "auto",
     "generator": "claude",
     "engagement_type": "reasoning"
+  },
+  {
+    "question": "True or false: Cleopatra lived closer in time to the Moon landing than to the building of the Great Pyramid.",
+    "answer": "a",
+    "type": "text_multichoice",
+    "possible_answers": {"a": "True", "b": "False"},
+    "why_excellent": "Classic comparison-bet framing fits the true/false MCQ shape perfectly. The surprise reframes the player's mental timeline of antiquity. Distractors are the only two valid responses — no length skew, no substring leak.",
+    "pattern": "true_false",
+    "source": "historical record",
+    "difficulty": "medium",
+    "topic": "history",
+    "human_rating": 9,
+    "decision": "keep",
+    "rated_by": "auto",
+    "generator": "claude",
+    "engagement_type": "reasoning"
+  },
+  {
+    "question": "Which country has the most pyramids?",
+    "answer": "b",
+    "type": "text_multichoice",
+    "possible_answers": {"a": "Egypt", "b": "Sudan", "c": "Mexico", "d": "Peru"},
+    "why_excellent": "Comparison-bet framing as a 4-option MCQ. Every distractor is a country famously associated with pyramids — none gives the answer away through length or specificity, none contains the correct value as a substring. Forces reasoning rather than recall.",
+    "pattern": "comparison_bet_older_larger",
+    "source": "archaeological survey",
+    "difficulty": "medium",
+    "topic": "geography",
+    "human_rating": 9,
+    "decision": "keep",
+    "rated_by": "auto",
+    "generator": "claude",
+    "engagement_type": "reasoning"
+  },
+  {
+    "question": "In what year did the first message cross the ARPANET, the prototype of the modern internet?",
+    "answer": "b",
+    "type": "text_multichoice",
+    "possible_answers": {"a": "1959", "b": "1969", "c": "1979", "d": "1989"},
+    "why_excellent": "Year-guess pattern with evenly-spaced decade distractors. All four years are plausible internet-history candidates; the player can reason from Cold War context. No distractor leaks information through length or framing.",
+    "pattern": "year_guess",
+    "source": "Internet Hall of Fame",
+    "difficulty": "medium",
+    "topic": "technology",
+    "human_rating": 8,
+    "decision": "keep",
+    "rated_by": "auto",
+    "generator": "claude",
+    "engagement_type": "reasoning"
   }
 ]

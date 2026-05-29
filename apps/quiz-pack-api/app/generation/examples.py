@@ -50,13 +50,26 @@ def load_gold_standard(
 
     # Format as prompt text
     # First n-2 examples: full Q+A. Last 2: pattern-only (no answer) to reduce copying.
+    # Issue #42 task 42.10: MCQ entries (type=text_multichoice + possible_answers)
+    # render the options dict so the LLM sees the exact MCQ payload shape; the
+    # `answer` field for MCQ examples is the key letter, value-resolved inline.
     lines = []
     full_count = max(len(selected) - 2, 1)
     for i, ex in enumerate(selected, 1):
         lines.append(f"**Example {i}: {ex.get('pattern', 'Unknown Pattern')}**")
         lines.append(f'Q: "{ex["question"]}"')
+        options = ex.get("possible_answers")
+        is_mcq = ex.get("type") == "text_multichoice" and isinstance(options, dict)
+        if is_mcq:
+            opts_inline = ", ".join(f'{k.upper()}) {v}' for k, v in options.items())
+            lines.append(f"Options: {opts_inline}")
         if i <= full_count:
-            lines.append(f'A: {ex["answer"]}')
+            if is_mcq:
+                key = str(ex["answer"]).strip().lower()
+                resolved = options.get(key, ex["answer"])
+                lines.append(f'A: {key} ({resolved})')
+            else:
+                lines.append(f'A: {ex["answer"]}')
             lines.append(f'**WHY EXCELLENT:** {ex["why_excellent"]}')
         else:
             lines.append(f'*(Answer omitted — study the question structure and pattern, not the answer.)*')

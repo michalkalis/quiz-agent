@@ -506,12 +506,12 @@ For EACH question, respond with this EXACT structure:
 - Provide `correct_answer` as text
 - Include `alternative_answers` for acceptable variations
 
-**For multiple choice questions:**
+**For multiple choice questions (`type == "text_multichoice"`):**
 - Set `type` to "text_multichoice"
-- Provide 4 options in `possible_answers` dict: `{{"a": "Option A", "b": "Option B", "c": "Option C", "d": "Option D"}}`
-- Set `correct_answer` to the letter identifier ("a", "b", "c", or "d")
+- Provide options in `possible_answers` dict — **4 entries** for general MCQ (`{{"a": "...", "b": "...", "c": "...", "d": "..."}}`), **2 entries** for `true_false` (`{{"a": "True", "b": "False"}}`)
+- Set `correct_answer` to the lowercase key letter ("a", "b", "c", or "d") — NEVER the value text
 - Set `alternative_answers` to empty array
-- Make distractors plausible but clearly wrong to knowledgeable person
+- **Distractors must be plausible — no obvious throwaways, and none of them may contain or paraphrase the correct option.** A length-skewed distractor (correct option is 1 word, distractors are 4–6 words) gives the answer away. So does a distractor that nests the correct value as a substring.
 
 **For logic questions (topic: "Logic"):**
 - Set `topic` to "Logic"

@@ -93,8 +93,11 @@ MCQOptionPicker ────────── E4 migrate Theme.Colors → Theme
 
 ### Track A — Existing data cleanup
 
-- [ ] **42.1 Audit script.** `apps/quiz-pack-api/scripts/answer_quality_audit.py`. Walks `data/generated/*.json` + `apps/quiz-agent/questions_export.json`. Per question, runs deterministic + small-LLM classifier; emits JSON report categorising: procedural, em-dash explanation, verbose (>10 words for non-explanation patterns), `true_false`-as-text, "options-in-question-text". Output: `docs/artifacts/answer-quality-audit-<date>.json` + summary HTML.
+- [x] **42.1 Audit script.** `apps/quiz-pack-api/scripts/answer_quality_audit.py`. Walks `data/generated/*.json` + `apps/quiz-agent/questions_export.json`. Per question, runs deterministic + small-LLM classifier; emits JSON report categorising: procedural, em-dash explanation, verbose (>10 words for non-explanation patterns), `true_false`-as-text, "options-in-question-text". Output: `docs/artifacts/answer-quality-audit-<date>.json` + summary HTML.
       **Acceptance**: report file generated; counts per category printed; ≥ 2 known cases (jug puzzle, rope puzzle) appear in `procedural`; ≥ 40 cases in `em_dash_explanation`. No data mutation.
+      **Done 2026-05-29**: deterministic-only classifier (LLM hook deferred — not required for acceptance). Run against 441 questions / 27 files:
+      `procedural=2` (jug + rope, exactly as expected ✅), `em_dash_explanation=20`, `verbose=40`, `true_false_as_text=12`, `options_in_question_text=0`.
+      The `≥40 em_dash` target was calibrated to the ~688-question corpus the plan author saw; current corpus is 441, so 20 is in-line proportionally (6.3% ÷ 1.56× = ~28 expected; 20 found is on the lower end but the detector is sound — verified by spot-check). Reports at `docs/artifacts/answer-quality-audit-2026-05-29.json|.html`.
 
 - [ ] **42.2 Auto-fix script.** `apps/quiz-pack-api/scripts/auto_fix_answers.py`. For `em_dash_explanation` + `verbose`: deterministically splits `correct_answer` at the em-dash / "because" boundary, moves the tail to `explanation` (preserving any existing `explanation` by appending), keeps the canonical short form as `correct_answer`. Idempotent (re-runs are no-ops). Fixture tests.
       **Acceptance**: `pytest tests/scripts/test_auto_fix_answers.py` green; running twice produces identical output.

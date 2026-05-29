@@ -5,12 +5,19 @@
       "type": "text",
       "correct_answer": "216",
       "possible_answers": null,
-      "alternative_answers": ["216"],
+      "alternative_answers": [
+        "216"
+      ],
       "explanation": "Each number is the cube of its position: 1³=1, 2³=8, 3³=27, 4³=64, 5³=125, 6³=216.",
       "topic": "Logic",
       "category": "adults",
       "difficulty": "easy",
-      "tags": ["number-sequence", "cubes", "mathematics", "pattern"],
+      "tags": [
+        "number-sequence",
+        "cubes",
+        "mathematics",
+        "pattern"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": null,
@@ -44,12 +51,19 @@
       "type": "text",
       "correct_answer": "34",
       "possible_answers": null,
-      "alternative_answers": ["34"],
+      "alternative_answers": [
+        "34"
+      ],
       "explanation": "This is the Fibonacci sequence: each number is the sum of the two preceding numbers (13+21=34).",
       "topic": "Logic",
       "category": "adults",
       "difficulty": "easy",
-      "tags": ["fibonacci", "number-sequence", "mathematics", "pattern"],
+      "tags": [
+        "fibonacci",
+        "number-sequence",
+        "mathematics",
+        "pattern"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://en.wikipedia.org/wiki/Fibonacci_sequence",
@@ -83,12 +97,19 @@
       "type": "text",
       "correct_answer": "720",
       "possible_answers": null,
-      "alternative_answers": ["720"],
+      "alternative_answers": [
+        "720"
+      ],
       "explanation": "Each number is a factorial: 1!=1, 2!=2, 3!=6, 4!=24, 5!=120, 6!=720. Each term is multiplied by the next integer.",
       "topic": "Logic",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["factorials", "number-sequence", "mathematics", "pattern"],
+      "tags": [
+        "factorials",
+        "number-sequence",
+        "mathematics",
+        "pattern"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": null,
@@ -122,12 +143,19 @@
       "type": "text",
       "correct_answer": "36",
       "possible_answers": null,
-      "alternative_answers": ["36"],
+      "alternative_answers": [
+        "36"
+      ],
       "explanation": "Each number is a perfect square: 0²=0, 1²=1, 2²=4, 3²=9, 4²=16, 5²=25, 6²=36.",
       "topic": "Logic",
       "category": "adults",
       "difficulty": "easy",
-      "tags": ["square-numbers", "number-sequence", "mathematics", "pattern"],
+      "tags": [
+        "square-numbers",
+        "number-sequence",
+        "mathematics",
+        "pattern"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": null,
@@ -161,12 +189,19 @@
       "type": "text",
       "correct_answer": "50",
       "possible_answers": null,
-      "alternative_answers": ["50"],
+      "alternative_answers": [
+        "50"
+      ],
       "explanation": "Each term is n²+1 where n=1,2,3...: 1+1=2, 4+1=5, 9+1=10, 16+1=17, 25+1=26, 36+1=37, 49+1=50. Alternatively: differences are 3, 5, 7, 9, 11, 13 — odd numbers increasing by 2.",
       "topic": "Logic",
       "category": "adults",
       "difficulty": "hard",
-      "tags": ["number-sequence", "quadratic", "mathematics", "pattern"],
+      "tags": [
+        "number-sequence",
+        "quadratic",
+        "mathematics",
+        "pattern"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": null,
@@ -200,12 +235,19 @@
       "type": "text",
       "correct_answer": "Moon",
       "possible_answers": null,
-      "alternative_answers": ["the moon"],
+      "alternative_answers": [
+        "the moon"
+      ],
       "explanation": "Mercury, Venus, Earth, and Mars are all planets of the inner solar system. The Moon is a natural satellite (it orbits Earth, not the Sun directly).",
       "topic": "Logic",
       "category": "adults",
       "difficulty": "easy",
-      "tags": ["odd-one-out", "astronomy", "planets", "solar-system"],
+      "tags": [
+        "odd-one-out",
+        "astronomy",
+        "planets",
+        "solar-system"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": null,
@@ -239,12 +281,19 @@
       "type": "text",
       "correct_answer": "Coal",
       "possible_answers": null,
-      "alternative_answers": ["coal"],
+      "alternative_answers": [
+        "coal"
+      ],
       "explanation": "Diamond, graphite, charcoal, and fullerene are all pure allotropes of carbon (different structural forms of the same element). Coal is a mixture of carbon compounds and impurities — not a pure carbon allotrope.",
       "topic": "Logic",
       "category": "adults",
       "difficulty": "hard",
-      "tags": ["odd-one-out", "chemistry", "carbon", "allotropes"],
+      "tags": [
+        "odd-one-out",
+        "chemistry",
+        "carbon",
+        "allotropes"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://en.wikipedia.org/wiki/Allotropes_of_carbon",
@@ -278,12 +327,23 @@
       "type": "text",
       "correct_answer": "€20 profit",
       "possible_answers": null,
-      "alternative_answers": ["20", "€20", "20 euros", "20 profit"],
+      "alternative_answers": [
+        "20",
+        "€20",
+        "20 euros",
+        "20 profit"
+      ],
       "explanation": "She spent €100+€120=€220 total. She received €110+€130=€240 total. Profit = €240-€220 = €20.",
       "topic": "Logic",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["lateral-thinking", "arithmetic", "logic", "money", "puzzle"],
+      "tags": [
+        "lateral-thinking",
+        "arithmetic",
+        "logic",
+        "money",
+        "puzzle"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": null,
@@ -317,12 +377,20 @@
       "type": "text",
       "correct_answer": "10",
       "possible_answers": null,
-      "alternative_answers": ["10", "ten"],
+      "alternative_answers": [
+        "10",
+        "ten"
+      ],
       "explanation": "With 5 people: person 1 shakes 4 hands, person 2 shakes 3 new hands, person 3 shakes 2 new, person 4 shakes 1. Total: 4+3+2+1=10. Formula: n(n-1)/2 = 5×4/2 = 10.",
       "topic": "Logic",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["combinatorics", "logic", "mathematics", "puzzle"],
+      "tags": [
+        "combinatorics",
+        "logic",
+        "mathematics",
+        "puzzle"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": null,
@@ -352,94 +420,26 @@
       }
     },
     {
-      "question": "You have two ropes that each burn for exactly 1 hour — but they burn unevenly. Using only these two ropes and a lighter, how can you measure exactly 45 minutes?",
-      "type": "text",
-      "correct_answer": "Light rope 1 at both ends and rope 2 at one end simultaneously. When rope 1 finishes (30 min), light the other end of rope 2. It will burn out in 15 more minutes — total 45.",
-      "possible_answers": null,
-      "alternative_answers": ["light one rope at both ends, other at one end. when first burns out light second end of second rope", "burn rope 1 from both ends, rope 2 from one end. when rope 1 is done, light other end of rope 2"],
-      "explanation": "Rope 1 lit at both ends burns in 30 min. At that moment, rope 2 (lit at one end) has 30 min of burn left. Lighting its second end halves that time to 15 min. 30+15=45 minutes.",
-      "topic": "Logic",
-      "category": "adults",
-      "difficulty": "hard",
-      "tags": ["lateral-thinking", "logic", "puzzle", "classic-puzzle"],
-      "language_dependent": false,
-      "source": "generated",
-      "source_url": null,
-      "source_excerpt": null,
-      "review_status": "pending_review",
-      "generation_metadata": {
-        "model": "claude-opus-4-6",
-        "provider": "anthropic",
-        "prompt_version": "v2_cot",
-        "stage": "claude_code_session",
-        "reasoning": {
-          "pattern_used": "Lateral Thinking (Pattern 10)",
-          "why_interesting": "The key insight (lighting a rope at both ends halves its burn time) is non-obvious but perfectly logical. The satisfaction of solving it is exceptional.",
-          "universal_appeal": "Ropes and time are universally understood. No cultural knowledge needed.",
-          "boring_check": "The answer requires creative insight (lighting both ends), not just calculation. Works excellently as a voice quiz puzzle."
-        },
-        "self_critique": {
-          "surprise_factor": 9,
-          "universal_appeal": 10,
-          "clever_framing": 9,
-          "educational_value": 9,
-          "answerability": 8,
-          "overall_score": 9.0,
-          "reasoning": "Classic lateral thinking puzzle. The 'aha!' when you realise lighting both ends halves the time is one of the most satisfying moments in recreational mathematics. Works beautifully as a voice quiz question."
-        },
-        "ai_score": 9.0
-      }
-    },
-    {
-      "question": "If you have a 3-litre jug and a 5-litre jug, with no markings, and unlimited water — how can you measure exactly 4 litres?",
-      "type": "text",
-      "correct_answer": "Fill the 5-litre jug, pour into the 3-litre jug until full (leaves 2L in 5L jug). Empty the 3L jug. Pour the 2L into the 3L jug. Fill the 5L jug again. Pour from 5L into 3L until full (needs 1L more). This leaves 4L in the 5L jug.",
-      "possible_answers": null,
-      "alternative_answers": ["fill 5L, pour 3L out, empty 3L, pour remaining 2L into 3L, refill 5L, pour 1L into 3L, leaving 4L in 5L jug"],
-      "explanation": "Step 1: Fill 5L jug. Step 2: Pour into 3L jug until full (leaves 2L in 5L). Step 3: Empty 3L jug. Step 4: Pour 2L into 3L jug. Step 5: Fill 5L jug. Step 6: Pour from 5L into 3L (only 1L fits). Now 5L jug has exactly 4L.",
-      "topic": "Logic",
-      "category": "adults",
-      "difficulty": "hard",
-      "tags": ["lateral-thinking", "logic", "puzzle", "water-jug"],
-      "language_dependent": false,
-      "source": "generated",
-      "source_url": null,
-      "source_excerpt": null,
-      "review_status": "pending_review",
-      "generation_metadata": {
-        "model": "claude-opus-4-6",
-        "provider": "anthropic",
-        "prompt_version": "v2_cot",
-        "stage": "claude_code_session",
-        "reasoning": {
-          "pattern_used": "Lateral Thinking (Pattern 10)",
-          "why_interesting": "Classic puzzle that requires working backwards from the goal. The solution (6 steps) is elegant and teaches constraint-based thinking.",
-          "universal_appeal": "Jugs and water are universally understood. No cultural context needed.",
-          "boring_check": "The puzzle requires creative problem-solving rather than recall. Works as a voice quiz puzzle where the player thinks through steps aloud."
-        },
-        "self_critique": {
-          "surprise_factor": 8,
-          "universal_appeal": 10,
-          "clever_framing": 9,
-          "educational_value": 9,
-          "answerability": 7,
-          "overall_score": 8.6,
-          "reasoning": "Classic water jug puzzle. The solution requires creative constraint reasoning. The insight (using the 3L jug to remove exactly 3L from the 5L jug twice) creates a satisfying 'aha!' moment."
-        },
-        "ai_score": 8.6
-      }
-    },
-    {
       "question": "Complete the analogy: Conductor is to orchestra as _________ is to a bee colony?",
       "type": "text",
       "correct_answer": "Queen (bee)",
       "possible_answers": null,
-      "alternative_answers": ["queen", "the queen", "queen bee", "a queen bee"],
+      "alternative_answers": [
+        "queen",
+        "the queen",
+        "queen bee",
+        "a queen bee"
+      ],
       "explanation": "A conductor leads and coordinates an orchestra. The queen bee is the reproductive and nominal centre of a bee colony, directing its activity and growth — though in practice worker bees coordinate most activities through chemical signals.",
       "topic": "Logic",
       "category": "adults",
       "difficulty": "easy",
-      "tags": ["analogy", "logic", "bees", "leadership"],
+      "tags": [
+        "analogy",
+        "logic",
+        "bees",
+        "leadership"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": null,
@@ -473,12 +473,21 @@
       "type": "text",
       "correct_answer": "E",
       "possible_answers": null,
-      "alternative_answers": ["e", "the letter e"],
+      "alternative_answers": [
+        "e",
+        "the letter e"
+      ],
       "explanation": "In Morse code, 'E' is represented by a single dot (·) because it is the most frequently used letter in English. Morse code was designed to be efficient — common letters received shorter codes.",
       "topic": "Logic",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["morse-code", "logic", "encoding", "language", "communication"],
+      "tags": [
+        "morse-code",
+        "logic",
+        "encoding",
+        "language",
+        "communication"
+      ],
       "language_dependent": true,
       "source": "generated",
       "source_url": "https://en.wikipedia.org/wiki/Morse_code",
@@ -512,12 +521,19 @@
       "type": "text",
       "correct_answer": "28",
       "possible_answers": null,
-      "alternative_answers": ["28"],
+      "alternative_answers": [
+        "28"
+      ],
       "explanation": "These are triangular numbers: each term is the sum of all integers up to its position. 1, 1+2=3, 1+2+3=6, ..., 1+2+3+4+5+6+7=28. Differences are 2, 3, 4, 5, 6, 7.",
       "topic": "Logic",
       "category": "adults",
       "difficulty": "medium",
-      "tags": ["triangular-numbers", "number-sequence", "mathematics", "pattern"],
+      "tags": [
+        "triangular-numbers",
+        "number-sequence",
+        "mathematics",
+        "pattern"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": null,
@@ -551,12 +567,20 @@
       "type": "text",
       "correct_answer": "Banksy",
       "possible_answers": null,
-      "alternative_answers": ["banksy"],
+      "alternative_answers": [
+        "banksy"
+      ],
       "explanation": "Picasso, Monet, Rembrandt, and Van Gogh are all deceased classical or modern masters whose identities are fully known. Banksy is a living, contemporary street artist whose true identity remains anonymous.",
       "topic": "Art",
       "category": "adults",
       "difficulty": "easy",
-      "tags": ["art", "artists", "odd-one-out", "banksy", "contemporary-art"],
+      "tags": [
+        "art",
+        "artists",
+        "odd-one-out",
+        "banksy",
+        "contemporary-art"
+      ],
       "language_dependent": false,
       "source": "generated",
       "source_url": "https://en.wikipedia.org/wiki/Banksy",
@@ -594,7 +618,10 @@
     "total_selected": 15,
     "pipeline": "claude_code_session",
     "prompt_version": "v2_cot",
-    "topics": ["Art", "Logic"],
+    "topics": [
+      "Art",
+      "Logic"
+    ],
     "difficulty_distribution": {
       "easy": 4,
       "medium": 6,

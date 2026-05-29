@@ -428,7 +428,7 @@
     "id": "q_imported_5653abe73817",
     "question": "Which Dutch artist drew a lithograph of an endless staircase, later inspiring physicists to build a real water loop that appeared to flow uphill?",
     "type": "text",
-    "correct_answer": "M. C. Escher – “Ascending and Descending”",
+    "correct_answer": "M. C. Escher",
     "alternative_answers": [],
     "possible_answers": null,
     "topic": "Arts",
@@ -439,7 +439,7 @@
     "created_by": null,
     "media_url": null,
     "media_duration_seconds": null,
-    "explanation": null
+    "explanation": "“Ascending and Descending”."
   },
   {
     "id": "q_imported_847a12b5375a",

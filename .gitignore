@@ -68,8 +68,7 @@ apps/ios-app/Hangs/vendor/
 # Throwaway HTML artifacts (dashboards, explainers, reports) — see "Output preferences" in CLAUDE.md
 docs/artifacts/
 
-# Pencil design tool — scratch/untitled files
-untitled.pen
+# Pencil design tool — design source is tracked (untitled.pen)
 
 # OS
 .DS_Store

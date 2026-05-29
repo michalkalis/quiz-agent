@@ -3510,8 +3510,10 @@ name = "quiz-shared"
 version = "0.1.0"
 source = { editable = "packages/shared" }
 dependencies = [
+    { name = "asyncpg" },
     { name = "chromadb" },
     { name = "openai" },
+    { name = "pgvector" },
     { name = "pydantic" },
     { name = "python-dotenv" },
     { name = "sqlalchemy" },
@@ -3519,8 +3521,10 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "asyncpg", specifier = ">=0.29.0" },
     { name = "chromadb", specifier = ">=0.4.0" },
     { name = "openai", specifier = ">=1.0.0" },
+    { name = "pgvector", specifier = ">=0.3.0" },
     { name = "pydantic", specifier = ">=2.0.0" },
     { name = "python-dotenv", specifier = ">=1.0.0" },
     { name = "sqlalchemy", specifier = ">=2.0.0" },

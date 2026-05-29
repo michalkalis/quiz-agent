@@ -2,8 +2,14 @@
 
 import uuid
 from datetime import datetime
-from typing import Dict, List, Optional, Union, Any
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from typing import Dict, List, Literal, Optional, Union, Any
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+
+QuestionType = Literal["text", "text_multichoice", "audio", "image", "video"]
+_ALLOWED_QUESTION_TYPES: frozenset[str] = frozenset(
+    {"text", "text_multichoice", "audio", "image", "video"}
+)
 
 
 class GenerationProvenance(BaseModel):
@@ -65,6 +71,16 @@ class Question(BaseModel):
         "text",
         description="Question type: text | text_multichoice | audio | image | video",
     )
+
+    @field_validator("type")
+    @classmethod
+    def _validate_type(cls, value: str) -> str:
+        if value not in _ALLOWED_QUESTION_TYPES:
+            raise ValueError(
+                f"Question.type must be one of "
+                f"{sorted(_ALLOWED_QUESTION_TYPES)}; got {value!r}"
+            )
+        return value
 
     # Answers (flexible for multiple choice or text)
     possible_answers: Optional[Dict[str, str]] = Field(

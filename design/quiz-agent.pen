@@ -5058,7 +5058,8 @@
                   "content": "Eyes on the road, mind on the game. Hands-free trivia for every drive.",
                   "lineHeight": 1.4,
                   "fontFamily": "Inter",
-                  "fontSize": 15
+                  "fontSize": 15,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -5497,7 +5498,8 @@
                   "content": "Good morning. Let's play some trivia on the road — just your voice, no taps needed.",
                   "lineHeight": 1.45,
                   "fontFamily": "Inter",
-                  "fontSize": 15
+                  "fontSize": 15,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -5921,6 +5923,7 @@
                   "lineHeight": 1.4,
                   "fontFamily": "Inter",
                   "fontSize": 17,
+                  "fontWeight": "normal",
                   "fontStyle": "italic"
                 }
               ]
@@ -9633,10 +9636,13 @@
       "x": 50,
       "y": 4600,
       "name": "NEW_Screen/Home",
+      "theme": {
+        "mode": "light"
+      },
       "clip": true,
       "width": 390,
       "height": 844,
-      "fill": "#F5F1E8",
+      "fill": "$bg-page",
       "layout": "vertical",
       "children": [
         {
@@ -9657,7 +9663,7 @@
               "type": "text",
               "id": "hy6gV",
               "name": "timeText",
-              "fill": "#0E1A2B",
+              "fill": "$text-primary",
               "content": "9:41",
               "fontFamily": "Inter",
               "fontSize": 15,
@@ -9678,7 +9684,7 @@
                   "height": 12,
                   "iconFontName": "signal-high",
                   "iconFontFamily": "lucide",
-                  "fill": "#0E1A2B"
+                  "fill": "$text-primary"
                 },
                 {
                   "type": "icon_font",
@@ -9688,7 +9694,7 @@
                   "height": 12,
                   "iconFontName": "wifi",
                   "iconFontFamily": "lucide",
-                  "fill": "#0E1A2B"
+                  "fill": "$text-primary"
                 },
                 {
                   "type": "icon_font",
@@ -9698,7 +9704,7 @@
                   "height": 12,
                   "iconFontName": "battery-full",
                   "iconFontFamily": "lucide",
-                  "fill": "#0E1A2B"
+                  "fill": "$text-primary"
                 }
               ]
             }
@@ -9727,7 +9733,7 @@
                   "type": "text",
                   "id": "vdqZY",
                   "name": "brandT",
-                  "fill": "#0A84FF",
+                  "fill": "$accent-blue",
                   "content": "hangs.",
                   "fontFamily": "IBM Plex Mono",
                   "fontSize": 17,
@@ -9737,7 +9743,7 @@
                   "type": "ellipse",
                   "id": "03ChE",
                   "name": "brandD",
-                  "fill": "#FF3D8F",
+                  "fill": "$accent-pink",
                   "width": 6,
                   "height": 6
                 }
@@ -9749,7 +9755,7 @@
               "name": "gearBtn",
               "width": 36,
               "height": 36,
-              "fill": "#FFFFFF",
+              "fill": "$bg-card",
               "cornerRadius": 10,
               "effect": {
                 "type": "shadow",
@@ -9772,7 +9778,7 @@
                   "height": 18,
                   "iconFontName": "settings",
                   "iconFontFamily": "lucide",
-                  "fill": "#0E1A2B"
+                  "fill": "$text-primary"
                 }
               ]
             }
@@ -9796,17 +9802,18 @@
               "type": "text",
               "id": "Qzy2T",
               "name": "heroT",
-              "fill": "#0E1A2B",
+              "fill": "$text-primary",
               "content": "HANGS",
               "fontFamily": "Anton",
               "fontSize": 80,
+              "fontWeight": "normal",
               "letterSpacing": -2
             },
             {
               "type": "rectangle",
               "id": "fuwI6",
               "name": "pinkL",
-              "fill": "#FF3D8F",
+              "fill": "$accent-pink",
               "width": 40,
               "height": 2
             },
@@ -9814,12 +9821,13 @@
               "type": "text",
               "id": "vwSXx",
               "name": "sub",
-              "fill": "#6B7280",
+              "fill": "$text-secondary",
               "textGrowth": "fixed-width",
               "width": "fill_container",
               "content": "voice-based trivia for the road",
               "fontFamily": "Inter",
-              "fontSize": 14
+              "fontSize": 14,
+              "fontWeight": "normal"
             }
           ]
         },
@@ -9841,7 +9849,7 @@
               "id": "XJsSA",
               "name": "streakC",
               "width": "fill_container",
-              "fill": "#FFFFFF",
+              "fill": "$bg-card",
               "cornerRadius": 18,
               "effect": {
                 "type": "shadow",
@@ -9864,7 +9872,7 @@
                   "type": "text",
                   "id": "ZBnFc",
                   "name": "streakL",
-                  "fill": "#FF3D8F",
+                  "fill": "$accent-pink",
                   "content": "streak",
                   "fontFamily": "IBM Plex Mono",
                   "fontSize": 11,
@@ -9875,10 +9883,11 @@
                   "type": "text",
                   "id": "jXOKe",
                   "name": "streakV",
-                  "fill": "#0A84FF",
+                  "fill": "$accent-blue",
                   "content": "47",
                   "fontFamily": "Anton",
                   "fontSize": 44,
+                  "fontWeight": "normal",
                   "letterSpacing": -1
                 }
               ]
@@ -9888,7 +9897,7 @@
               "id": "h4Ptr",
               "name": "bestC",
               "width": "fill_container",
-              "fill": "#FFFFFF",
+              "fill": "$bg-card",
               "cornerRadius": 18,
               "effect": {
                 "type": "shadow",
@@ -9911,7 +9920,7 @@
                   "type": "text",
                   "id": "0X5AD",
                   "name": "bestL",
-                  "fill": "#0A84FF",
+                  "fill": "$accent-blue",
                   "content": "best",
                   "fontFamily": "IBM Plex Mono",
                   "fontSize": 11,
@@ -9922,10 +9931,11 @@
                   "type": "text",
                   "id": "4W2C9",
                   "name": "bestV",
-                  "fill": "#FF3D8F",
+                  "fill": "$accent-pink",
                   "content": "9.5",
                   "fontFamily": "Anton",
                   "fontSize": 44,
+                  "fontWeight": "normal",
                   "letterSpacing": -1
                 }
               ]
@@ -9949,7 +9959,7 @@
               "type": "text",
               "id": "6dkEs",
               "name": "sessionL",
-              "fill": "#FF3D8F",
+              "fill": "$accent-pink",
               "content": "session",
               "fontFamily": "IBM Plex Mono",
               "fontSize": 11,
@@ -9974,7 +9984,7 @@
               "id": "6NjPf",
               "name": "configCard",
               "width": "fill_container",
-              "fill": "#FFFFFF",
+              "fill": "$bg-card",
               "cornerRadius": 18,
               "effect": {
                 "type": "shadow",
@@ -10004,7 +10014,7 @@
                       "type": "text",
                       "id": "xv9Bm",
                       "name": "r1L",
-                      "fill": "#0E1A2B",
+                      "fill": "$text-primary",
                       "content": "Language",
                       "fontFamily": "Inter",
                       "fontSize": 17,
@@ -10021,7 +10031,7 @@
                           "type": "text",
                           "id": "ydi8z",
                           "name": "r1V",
-                          "fill": "#0A84FF",
+                          "fill": "$accent-blue",
                           "content": "English",
                           "fontFamily": "Inter",
                           "fontSize": 17,
@@ -10035,7 +10045,7 @@
                           "height": 16,
                           "iconFontName": "chevron-right",
                           "iconFontFamily": "lucide",
-                          "fill": "#0A84FF"
+                          "fill": "$accent-blue"
                         }
                       ]
                     }
@@ -10045,7 +10055,7 @@
                   "type": "rectangle",
                   "id": "0yT5f",
                   "name": "d1",
-                  "fill": "#0E1A2B14",
+                  "fill": "$border-subtle",
                   "width": "fill_container",
                   "height": 1
                 },
@@ -10065,7 +10075,7 @@
                       "type": "text",
                       "id": "m8BVY",
                       "name": "r2L",
-                      "fill": "#0E1A2B",
+                      "fill": "$text-primary",
                       "content": "Difficulty",
                       "fontFamily": "Inter",
                       "fontSize": 17,
@@ -10082,7 +10092,7 @@
                           "type": "text",
                           "id": "iMJ4n",
                           "name": "r2V",
-                          "fill": "#FF3D8F",
+                          "fill": "$accent-pink",
                           "content": "Medium",
                           "fontFamily": "Inter",
                           "fontSize": 17,
@@ -10096,7 +10106,7 @@
                           "height": 16,
                           "iconFontName": "chevron-right",
                           "iconFontFamily": "lucide",
-                          "fill": "#FF3D8F"
+                          "fill": "$accent-pink"
                         }
                       ]
                     }
@@ -10106,7 +10116,7 @@
                   "type": "rectangle",
                   "id": "ylFXa",
                   "name": "d2",
-                  "fill": "#0E1A2B14",
+                  "fill": "$border-subtle",
                   "width": "fill_container",
                   "height": 1
                 },
@@ -10126,7 +10136,7 @@
                       "type": "text",
                       "id": "75B3d",
                       "name": "r3L",
-                      "fill": "#0E1A2B",
+                      "fill": "$text-primary",
                       "content": "Categories",
                       "fontFamily": "Inter",
                       "fontSize": 17,
@@ -10143,7 +10153,7 @@
                           "type": "text",
                           "id": "pX5bJ",
                           "name": "r3V",
-                          "fill": "#0A84FF",
+                          "fill": "$accent-blue",
                           "content": "All",
                           "fontFamily": "Inter",
                           "fontSize": 17,
@@ -10157,7 +10167,7 @@
                           "height": 16,
                           "iconFontName": "chevron-right",
                           "iconFontFamily": "lucide",
-                          "fill": "#0A84FF"
+                          "fill": "$accent-blue"
                         }
                       ]
                     }
@@ -10186,7 +10196,7 @@
               "name": "ctaBtn",
               "width": "fill_container",
               "height": 64,
-              "fill": "#FF3D8F",
+              "fill": "$accent-pink",
               "cornerRadius": 32,
               "effect": {
                 "type": "shadow",
@@ -10210,13 +10220,13 @@
                   "height": 20,
                   "iconFontName": "play",
                   "iconFontFamily": "lucide",
-                  "fill": "#FFFFFF"
+                  "fill": "$text-on-accent"
                 },
                 {
                   "type": "text",
                   "id": "oh348",
                   "name": "ctaT",
-                  "fill": "#FFFFFF",
+                  "fill": "$text-on-accent",
                   "content": "Start Quiz",
                   "fontFamily": "Inter",
                   "fontSize": 17,
@@ -10237,7 +10247,7 @@
       "clip": true,
       "width": 390,
       "height": 844,
-      "fill": "#F5F1E8",
+      "fill": "$bg-page",
       "layout": "vertical",
       "children": [
         {
@@ -10258,7 +10268,7 @@
               "type": "text",
               "id": "V3y9i",
               "name": "tTxt",
-              "fill": "#0E1A2B",
+              "fill": "$text-primary",
               "content": "9:41",
               "fontFamily": "Inter",
               "fontSize": 15,
@@ -10279,7 +10289,7 @@
                   "height": 12,
                   "iconFontName": "signal-high",
                   "iconFontFamily": "lucide",
-                  "fill": "#0E1A2B"
+                  "fill": "$text-primary"
                 },
                 {
                   "type": "icon_font",
@@ -10289,7 +10299,7 @@
                   "height": 12,
                   "iconFontName": "wifi",
                   "iconFontFamily": "lucide",
-                  "fill": "#0E1A2B"
+                  "fill": "$text-primary"
                 },
                 {
                   "type": "icon_font",
@@ -10299,7 +10309,7 @@
                   "height": 12,
                   "iconFontName": "battery-full",
                   "iconFontFamily": "lucide",
-                  "fill": "#0E1A2B"
+                  "fill": "$text-primary"
                 }
               ]
             }
@@ -10328,7 +10338,7 @@
                   "type": "text",
                   "id": "RnTB2",
                   "name": "bT",
-                  "fill": "#0A84FF",
+                  "fill": "$accent-blue",
                   "content": "hangs.",
                   "fontFamily": "IBM Plex Mono",
                   "fontSize": 17,
@@ -10338,7 +10348,7 @@
                   "type": "ellipse",
                   "id": "6FeJQ",
                   "name": "bD",
-                  "fill": "#FF3D8F",
+                  "fill": "$accent-pink",
                   "width": 6,
                   "height": 6
                 }
@@ -10350,7 +10360,7 @@
               "name": "closeBtn",
               "width": 36,
               "height": 36,
-              "fill": "#FFFFFF",
+              "fill": "$bg-card",
               "cornerRadius": 10,
               "effect": {
                 "type": "shadow",
@@ -10373,7 +10383,7 @@
                   "height": 18,
                   "iconFontName": "x",
                   "iconFontFamily": "lucide",
-                  "fill": "#0E1A2B"
+                  "fill": "$text-primary"
                 }
               ]
             }
@@ -10397,17 +10407,18 @@
               "type": "text",
               "id": "FVX8N",
               "name": "heroT",
-              "fill": "#0E1A2B",
+              "fill": "$text-primary",
               "content": "COMPLETE",
               "fontFamily": "Anton",
               "fontSize": 62,
+              "fontWeight": "normal",
               "letterSpacing": -2
             },
             {
               "type": "rectangle",
               "id": "y6DOq",
               "name": "pinkL",
-              "fill": "#FF3D8F",
+              "fill": "$accent-pink",
               "width": 40,
               "height": 2
             },
@@ -10415,12 +10426,13 @@
               "type": "text",
               "id": "gIAjJ",
               "name": "sub",
-              "fill": "#6B7280",
+              "fill": "$text-secondary",
               "textGrowth": "fixed-width",
               "width": "fill_container",
               "content": "nice work — here's your run",
               "fontFamily": "Inter",
-              "fontSize": 14
+              "fontSize": 14,
+              "fontWeight": "normal"
             }
           ]
         },
@@ -10442,7 +10454,7 @@
               "id": "yXch9",
               "name": "scoreInner",
               "width": "fill_container",
-              "fill": "#FFFFFF",
+              "fill": "$bg-card",
               "cornerRadius": 18,
               "effect": {
                 "type": "shadow",
@@ -10466,7 +10478,7 @@
                   "type": "text",
                   "id": "z9SMj",
                   "name": "scoreLabel",
-                  "fill": "#FF3D8F",
+                  "fill": "$accent-pink",
                   "content": "final score",
                   "fontFamily": "IBM Plex Mono",
                   "fontSize": 11,
@@ -10477,17 +10489,18 @@
                   "type": "text",
                   "id": "z24T6",
                   "name": "scoreVal",
-                  "fill": "#0E1A2B",
+                  "fill": "$text-primary",
                   "content": "87",
                   "fontFamily": "Anton",
                   "fontSize": 80,
+                  "fontWeight": "normal",
                   "letterSpacing": -3
                 },
                 {
                   "type": "text",
                   "id": "K5dqC",
                   "name": "scoreSub",
-                  "fill": "#6B7280",
+                  "fill": "$text-secondary",
                   "content": "out of 100",
                   "fontFamily": "Inter",
                   "fontSize": 13,
@@ -10515,7 +10528,7 @@
               "id": "gKByG",
               "name": "breakCard",
               "width": "fill_container",
-              "fill": "#FFFFFF",
+              "fill": "$bg-card",
               "cornerRadius": 18,
               "effect": {
                 "type": "shadow",
@@ -10545,7 +10558,7 @@
                       "type": "text",
                       "id": "uuLGA",
                       "name": "br1L",
-                      "fill": "#0E1A2B",
+                      "fill": "$text-primary",
                       "content": "Correct",
                       "fontFamily": "Inter",
                       "fontSize": 16,
@@ -10555,10 +10568,11 @@
                       "type": "text",
                       "id": "PXS8e",
                       "name": "br1V",
-                      "fill": "#0A84FF",
+                      "fill": "$accent-blue",
                       "content": "8",
                       "fontFamily": "Anton",
-                      "fontSize": 28
+                      "fontSize": 28,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -10566,7 +10580,7 @@
                   "type": "rectangle",
                   "id": "fRBzf",
                   "name": "bd1",
-                  "fill": "#0E1A2B14",
+                  "fill": "$border-subtle",
                   "width": "fill_container",
                   "height": 1
                 },
@@ -10586,7 +10600,7 @@
                       "type": "text",
                       "id": "uzC0F",
                       "name": "br2L",
-                      "fill": "#0E1A2B",
+                      "fill": "$text-primary",
                       "content": "Incorrect",
                       "fontFamily": "Inter",
                       "fontSize": 16,
@@ -10596,10 +10610,11 @@
                       "type": "text",
                       "id": "eqtoa",
                       "name": "br2V",
-                      "fill": "#FF3D8F",
+                      "fill": "$accent-pink",
                       "content": "2",
                       "fontFamily": "Anton",
-                      "fontSize": 28
+                      "fontSize": 28,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -10607,7 +10622,7 @@
                   "type": "rectangle",
                   "id": "gXCn2",
                   "name": "bd2",
-                  "fill": "#0E1A2B14",
+                  "fill": "$border-subtle",
                   "width": "fill_container",
                   "height": 1
                 },
@@ -10627,7 +10642,7 @@
                       "type": "text",
                       "id": "Veo4z",
                       "name": "br3L",
-                      "fill": "#0E1A2B",
+                      "fill": "$text-primary",
                       "content": "Avg points",
                       "fontFamily": "Inter",
                       "fontSize": 16,
@@ -10637,10 +10652,11 @@
                       "type": "text",
                       "id": "UPyNb",
                       "name": "br3V",
-                      "fill": "#0A84FF",
+                      "fill": "$accent-blue",
                       "content": "8.7",
                       "fontFamily": "Anton",
-                      "fontSize": 28
+                      "fontSize": 28,
+                      "fontWeight": "normal"
                     }
                   ]
                 }
@@ -10668,7 +10684,7 @@
               "name": "playBtn",
               "width": "fill_container",
               "height": 58,
-              "fill": "#FF3D8F",
+              "fill": "$accent-pink",
               "cornerRadius": 32,
               "effect": {
                 "type": "shadow",
@@ -10692,13 +10708,13 @@
                   "height": 20,
                   "iconFontName": "rotate-ccw",
                   "iconFontFamily": "lucide",
-                  "fill": "#FFFFFF"
+                  "fill": "$text-on-accent"
                 },
                 {
                   "type": "text",
                   "id": "mUTtj",
                   "name": "playT",
-                  "fill": "#FFFFFF",
+                  "fill": "$text-on-accent",
                   "content": "Play Again",
                   "fontFamily": "Inter",
                   "fontSize": 17,
@@ -10712,11 +10728,11 @@
               "name": "homeBtn",
               "width": "fill_container",
               "height": 52,
-              "fill": "#FFFFFF",
+              "fill": "$bg-card",
               "cornerRadius": 28,
               "stroke": {
                 "thickness": 1,
-                "fill": "#0E1A2B1F"
+                "fill": "$border-standard"
               },
               "gap": 10,
               "justifyContent": "center",
@@ -10730,13 +10746,13 @@
                   "height": 18,
                   "iconFontName": "house",
                   "iconFontFamily": "lucide",
-                  "fill": "#0E1A2B"
+                  "fill": "$text-primary"
                 },
                 {
                   "type": "text",
                   "id": "Iap7X",
                   "name": "homeT",
-                  "fill": "#0E1A2B",
+                  "fill": "$text-primary",
                   "content": "Home",
                   "fontFamily": "Inter",
                   "fontSize": 16,
@@ -10757,7 +10773,7 @@
       "clip": true,
       "width": 390,
       "height": 844,
-      "fill": "#F5F1E8",
+      "fill": "$bg-page",
       "layout": "vertical",
       "children": [
         {
@@ -10778,7 +10794,7 @@
               "type": "text",
               "id": "OO3OP",
               "name": "tTxt",
-              "fill": "#0E1A2B",
+              "fill": "$text-primary",
               "content": "9:41",
               "fontFamily": "Inter",
               "fontSize": 15,
@@ -10799,7 +10815,7 @@
                   "height": 12,
                   "iconFontName": "signal-high",
                   "iconFontFamily": "lucide",
-                  "fill": "#0E1A2B"
+                  "fill": "$text-primary"
                 },
                 {
                   "type": "icon_font",
@@ -10809,7 +10825,7 @@
                   "height": 12,
                   "iconFontName": "wifi",
                   "iconFontFamily": "lucide",
-                  "fill": "#0E1A2B"
+                  "fill": "$text-primary"
                 },
                 {
                   "type": "icon_font",
@@ -10819,7 +10835,7 @@
                   "height": 12,
                   "iconFontName": "battery-full",
                   "iconFontFamily": "lucide",
-                  "fill": "#0E1A2B"
+                  "fill": "$text-primary"
                 }
               ]
             }
@@ -10848,7 +10864,7 @@
                   "type": "text",
                   "id": "nixBw",
                   "name": "bT",
-                  "fill": "#0A84FF",
+                  "fill": "$accent-blue",
                   "content": "hangs.",
                   "fontFamily": "IBM Plex Mono",
                   "fontSize": 17,
@@ -10858,7 +10874,7 @@
                   "type": "ellipse",
                   "id": "9rJ6Q",
                   "name": "bD",
-                  "fill": "#FF3D8F",
+                  "fill": "$accent-pink",
                   "width": 6,
                   "height": 6
                 }
@@ -10870,7 +10886,7 @@
               "name": "backBtn",
               "width": 36,
               "height": 36,
-              "fill": "#FFFFFF",
+              "fill": "$bg-card",
               "cornerRadius": 10,
               "effect": {
                 "type": "shadow",
@@ -10893,7 +10909,7 @@
                   "height": 18,
                   "iconFontName": "arrow-left",
                   "iconFontFamily": "lucide",
-                  "fill": "#0E1A2B"
+                  "fill": "$text-primary"
                 }
               ]
             }
@@ -10915,17 +10931,18 @@
               "type": "text",
               "id": "VunXc",
               "name": "heroT",
-              "fill": "#0E1A2B",
+              "fill": "$text-primary",
               "content": "SETTINGS",
               "fontFamily": "Anton",
               "fontSize": 62,
+              "fontWeight": "normal",
               "letterSpacing": -2
             },
             {
               "type": "rectangle",
               "id": "kZVcH",
               "name": "pinkL",
-              "fill": "#FF3D8F",
+              "fill": "$accent-pink",
               "width": 40,
               "height": 2
             },
@@ -10933,12 +10950,13 @@
               "type": "text",
               "id": "cpli7",
               "name": "sub",
-              "fill": "#6B7280",
+              "fill": "$text-secondary",
               "textGrowth": "fixed-width",
               "width": "fill_container",
               "content": "tune your experience",
               "fontFamily": "Inter",
-              "fontSize": 14
+              "fontSize": 14,
+              "fontWeight": "normal"
             }
           ]
         },
@@ -10960,7 +10978,7 @@
               "type": "text",
               "id": "DMGmn",
               "name": "voiceLbl",
-              "fill": "#FF3D8F",
+              "fill": "$accent-pink",
               "content": "voice",
               "fontFamily": "IBM Plex Mono",
               "fontSize": 11,
@@ -10972,7 +10990,7 @@
               "id": "b5k8o",
               "name": "voiceCard",
               "width": "fill_container",
-              "fill": "#FFFFFF",
+              "fill": "$bg-card",
               "cornerRadius": 18,
               "effect": {
                 "type": "shadow",
@@ -11002,7 +11020,7 @@
                       "type": "text",
                       "id": "gEPhB",
                       "name": "vr1L",
-                      "fill": "#0E1A2B",
+                      "fill": "$text-primary",
                       "content": "Voice commands",
                       "fontFamily": "Inter",
                       "fontSize": 16,
@@ -11014,7 +11032,7 @@
                       "name": "toggle1",
                       "width": 44,
                       "height": 26,
-                      "fill": "#FF3D8F",
+                      "fill": "$accent-pink",
                       "cornerRadius": 13,
                       "padding": [
                         0,
@@ -11027,7 +11045,7 @@
                           "type": "ellipse",
                           "id": "r64q4",
                           "name": "toggle1Dot",
-                          "fill": "#FFFFFF",
+                          "fill": "$text-on-accent",
                           "width": 22,
                           "height": 22
                         }
@@ -11039,7 +11057,7 @@
                   "type": "rectangle",
                   "id": "KTlkX",
                   "name": "vd1",
-                  "fill": "#0E1A2B14",
+                  "fill": "$border-subtle",
                   "width": "fill_container",
                   "height": 1
                 },
@@ -11059,7 +11077,7 @@
                       "type": "text",
                       "id": "lHJkD",
                       "name": "vr2L",
-                      "fill": "#0E1A2B",
+                      "fill": "$text-primary",
                       "content": "Wake word",
                       "fontFamily": "Inter",
                       "fontSize": 16,
@@ -11076,7 +11094,7 @@
                           "type": "text",
                           "id": "sZjyg",
                           "name": "vr2V",
-                          "fill": "#0A84FF",
+                          "fill": "$accent-blue",
                           "content": "hey hangs",
                           "fontFamily": "Inter",
                           "fontSize": 16,
@@ -11090,7 +11108,7 @@
                           "height": 16,
                           "iconFontName": "chevron-right",
                           "iconFontFamily": "lucide",
-                          "fill": "#0A84FF"
+                          "fill": "$accent-blue"
                         }
                       ]
                     }
@@ -11118,7 +11136,7 @@
               "type": "text",
               "id": "tHw2i",
               "name": "langLbl",
-              "fill": "#0A84FF",
+              "fill": "$accent-blue",
               "content": "language",
               "fontFamily": "IBM Plex Mono",
               "fontSize": 11,
@@ -11130,7 +11148,7 @@
               "id": "3ls1K",
               "name": "langCard",
               "width": "fill_container",
-              "fill": "#FFFFFF",
+              "fill": "$bg-card",
               "cornerRadius": 18,
               "effect": {
                 "type": "shadow",
@@ -11160,7 +11178,7 @@
                       "type": "text",
                       "id": "bc8KH",
                       "name": "lrL",
-                      "fill": "#0E1A2B",
+                      "fill": "$text-primary",
                       "content": "Current language",
                       "fontFamily": "Inter",
                       "fontSize": 16,
@@ -11177,7 +11195,7 @@
                           "type": "text",
                           "id": "eMSXL",
                           "name": "lrV",
-                          "fill": "#FF3D8F",
+                          "fill": "$accent-pink",
                           "content": "English",
                           "fontFamily": "Inter",
                           "fontSize": 16,
@@ -11191,7 +11209,7 @@
                           "height": 16,
                           "iconFontName": "chevron-right",
                           "iconFontFamily": "lucide",
-                          "fill": "#FF3D8F"
+                          "fill": "$accent-pink"
                         }
                       ]
                     }
@@ -11219,7 +11237,7 @@
               "type": "text",
               "id": "jvPyf",
               "name": "audioLbl",
-              "fill": "#FF3D8F",
+              "fill": "$accent-pink",
               "content": "audio feedback",
               "fontFamily": "IBM Plex Mono",
               "fontSize": 11,
@@ -11231,7 +11249,7 @@
               "id": "gwkop",
               "name": "audioCard",
               "width": "fill_container",
-              "fill": "#FFFFFF",
+              "fill": "$bg-card",
               "cornerRadius": 18,
               "effect": {
                 "type": "shadow",
@@ -11261,7 +11279,7 @@
                       "type": "text",
                       "id": "HZmRO",
                       "name": "arL",
-                      "fill": "#0E1A2B",
+                      "fill": "$text-primary",
                       "content": "Speak scores aloud",
                       "fontFamily": "Inter",
                       "fontSize": 16,
@@ -11273,7 +11291,7 @@
                       "name": "toggle2",
                       "width": 44,
                       "height": 26,
-                      "fill": "#0E1A2B1F",
+                      "fill": "$border-standard",
                       "cornerRadius": 13,
                       "padding": [
                         0,
@@ -11285,7 +11303,7 @@
                           "type": "ellipse",
                           "id": "0OvaX",
                           "name": "toggle2Dot",
-                          "fill": "#FFFFFF",
+                          "fill": "$text-on-accent",
                           "width": 22,
                           "height": 22
                         }
@@ -11315,7 +11333,7 @@
               "type": "text",
               "id": "xd6AV",
               "name": "aboutLbl",
-              "fill": "#0A84FF",
+              "fill": "$accent-blue",
               "content": "about",
               "fontFamily": "IBM Plex Mono",
               "fontSize": 11,
@@ -11327,7 +11345,7 @@
               "id": "hui1y",
               "name": "aboutCard",
               "width": "fill_container",
-              "fill": "#FFFFFF",
+              "fill": "$bg-card",
               "cornerRadius": 18,
               "effect": {
                 "type": "shadow",
@@ -11357,7 +11375,7 @@
                       "type": "text",
                       "id": "zqySF",
                       "name": "abL",
-                      "fill": "#0E1A2B",
+                      "fill": "$text-primary",
                       "content": "Version",
                       "fontFamily": "Inter",
                       "fontSize": 16,
@@ -11367,7 +11385,7 @@
                       "type": "text",
                       "id": "hFJbi",
                       "name": "abV",
-                      "fill": "#6B7280",
+                      "fill": "$text-secondary",
                       "content": "1.0.0",
                       "fontFamily": "IBM Plex Mono",
                       "fontSize": 14,
@@ -11390,7 +11408,7 @@
       "clip": true,
       "width": 390,
       "height": 844,
-      "fill": "#F5F1E8",
+      "fill": "$bg-page",
       "layout": "vertical",
       "children": [
         {
@@ -11411,7 +11429,7 @@
               "type": "text",
               "id": "oyGo6",
               "name": "tTxt",
-              "fill": "#0E1A2B",
+              "fill": "$text-primary",
               "content": "9:41",
               "fontFamily": "Inter",
               "fontSize": 15,
@@ -11432,7 +11450,7 @@
                   "height": 12,
                   "iconFontName": "signal-high",
                   "iconFontFamily": "lucide",
-                  "fill": "#0E1A2B"
+                  "fill": "$text-primary"
                 },
                 {
                   "type": "icon_font",
@@ -11442,7 +11460,7 @@
                   "height": 12,
                   "iconFontName": "wifi",
                   "iconFontFamily": "lucide",
-                  "fill": "#0E1A2B"
+                  "fill": "$text-primary"
                 },
                 {
                   "type": "icon_font",
@@ -11452,7 +11470,7 @@
                   "height": 12,
                   "iconFontName": "battery-full",
                   "iconFontFamily": "lucide",
-                  "fill": "#0E1A2B"
+                  "fill": "$text-primary"
                 }
               ]
             }
@@ -11481,7 +11499,7 @@
                   "type": "text",
                   "id": "4XCKV",
                   "name": "bT",
-                  "fill": "#0A84FF",
+                  "fill": "$accent-blue",
                   "content": "hangs.",
                   "fontFamily": "IBM Plex Mono",
                   "fontSize": 17,
@@ -11491,7 +11509,7 @@
                   "type": "ellipse",
                   "id": "PrSVt",
                   "name": "bD",
-                  "fill": "#FF3D8F",
+                  "fill": "$accent-pink",
                   "width": 6,
                   "height": 6
                 }
@@ -11539,7 +11557,7 @@
                   "height": 56,
                   "iconFontName": "triangle-alert",
                   "iconFontFamily": "lucide",
-                  "fill": "#FF3D8F"
+                  "fill": "$accent-pink"
                 }
               ]
             }
@@ -11564,17 +11582,18 @@
               "type": "text",
               "id": "5RQn7",
               "name": "heroT",
-              "fill": "#0E1A2B",
+              "fill": "$text-primary",
               "content": "OOPS",
               "fontFamily": "Anton",
               "fontSize": 72,
+              "fontWeight": "normal",
               "letterSpacing": -2
             },
             {
               "type": "rectangle",
               "id": "P2T6D",
               "name": "pinkL",
-              "fill": "#FF3D8F",
+              "fill": "$accent-pink",
               "width": 40,
               "height": 2
             },
@@ -11582,7 +11601,7 @@
               "type": "text",
               "id": "0fsJf",
               "name": "subT",
-              "fill": "#0E1A2B",
+              "fill": "$text-primary",
               "textGrowth": "fixed-width",
               "width": "fill_container",
               "content": "Something went wrong",
@@ -11610,14 +11629,15 @@
               "type": "text",
               "id": "EE6v8",
               "name": "descText",
-              "fill": "#6B7280",
+              "fill": "$text-secondary",
               "textGrowth": "fixed-width",
               "width": "fill_container",
               "content": "We couldn't load your quiz right now. Check your connection and try again in a moment.",
               "lineHeight": 1.5,
               "textAlign": "center",
               "fontFamily": "Inter",
-              "fontSize": 14
+              "fontSize": 14,
+              "fontWeight": "normal"
             }
           ]
         },
@@ -11641,7 +11661,7 @@
               "name": "retryBtn",
               "width": "fill_container",
               "height": 64,
-              "fill": "#FF3D8F",
+              "fill": "$accent-pink",
               "cornerRadius": 32,
               "effect": {
                 "type": "shadow",
@@ -11665,13 +11685,13 @@
                   "height": 20,
                   "iconFontName": "rotate-ccw",
                   "iconFontFamily": "lucide",
-                  "fill": "#FFFFFF"
+                  "fill": "$text-on-accent"
                 },
                 {
                   "type": "text",
                   "id": "n7mUs",
                   "name": "retryT",
-                  "fill": "#FFFFFF",
+                  "fill": "$text-on-accent",
                   "content": "Try Again",
                   "fontFamily": "Inter",
                   "fontSize": 17,
@@ -11685,11 +11705,11 @@
               "name": "homeBtn",
               "width": "fill_container",
               "height": 56,
-              "fill": "#FFFFFF",
+              "fill": "$bg-card",
               "cornerRadius": 28,
               "stroke": {
                 "thickness": 1,
-                "fill": "#0E1A2B1F"
+                "fill": "$border-standard"
               },
               "gap": 10,
               "justifyContent": "center",
@@ -11703,13 +11723,13 @@
                   "height": 18,
                   "iconFontName": "house",
                   "iconFontFamily": "lucide",
-                  "fill": "#0E1A2B"
+                  "fill": "$text-primary"
                 },
                 {
                   "type": "text",
                   "id": "VZs32",
                   "name": "homeT",
-                  "fill": "#0E1A2B",
+                  "fill": "$text-primary",
                   "content": "Go Home",
                   "fontFamily": "Inter",
                   "fontSize": 16,
@@ -11730,7 +11750,7 @@
       "clip": true,
       "width": 390,
       "height": 844,
-      "fill": "#F5F1E8",
+      "fill": "$bg-page",
       "layout": "vertical",
       "children": [
         {
@@ -11750,7 +11770,7 @@
             {
               "type": "text",
               "id": "srC0f",
-              "fill": "#0E1A2B",
+              "fill": "$text-primary",
               "content": "9:41",
               "fontFamily": "Inter",
               "fontSize": 15,
@@ -11763,7 +11783,7 @@
               "height": 22,
               "iconFontName": "ellipsis",
               "iconFontFamily": "lucide",
-              "fill": "#0E1A2B"
+              "fill": "$text-primary"
             }
           ]
         },
@@ -11794,7 +11814,7 @@
                   "name": "closeWrap",
                   "width": 36,
                   "height": 36,
-                  "fill": "#FFFFFF",
+                  "fill": "$bg-card",
                   "cornerRadius": 18,
                   "justifyContent": "center",
                   "alignItems": "center",
@@ -11806,7 +11826,7 @@
                       "height": 18,
                       "iconFontName": "x",
                       "iconFontFamily": "lucide",
-                      "fill": "#0E1A2B"
+                      "fill": "$text-primary"
                     }
                   ]
                 },
@@ -11824,7 +11844,7 @@
                     {
                       "type": "text",
                       "id": "uKEql",
-                      "fill": "#0A84FF",
+                      "fill": "$accent-blue",
                       "content": "hangs",
                       "fontFamily": "IBM Plex Mono",
                       "fontSize": 13,
@@ -11834,7 +11854,7 @@
                     {
                       "type": "ellipse",
                       "id": "h4nD3",
-                      "fill": "#FF3D8F",
+                      "fill": "$accent-pink",
                       "width": 6,
                       "height": 6
                     }
@@ -11845,7 +11865,7 @@
             {
               "type": "text",
               "id": "YkMvy",
-              "fill": "#6B7280",
+              "fill": "$text-secondary",
               "content": "03 / 10",
               "fontFamily": "IBM Plex Mono",
               "fontSize": 13,
@@ -11869,7 +11889,7 @@
               "type": "rectangle",
               "cornerRadius": 2,
               "id": "UNFuG",
-              "fill": "#FF3D8F",
+              "fill": "$accent-pink",
               "width": 100,
               "height": 3
             },
@@ -11877,7 +11897,7 @@
               "type": "rectangle",
               "cornerRadius": 2,
               "id": "Y0QD3",
-              "fill": "#0E1A2B1A",
+              "fill": "$border-subtle",
               "width": "fill_container",
               "height": 3
             }
@@ -11900,7 +11920,7 @@
             {
               "type": "text",
               "id": "bzH5s",
-              "fill": "#FF3D8F",
+              "fill": "$accent-pink",
               "content": "GEOGRAPHY",
               "fontFamily": "IBM Plex Mono",
               "fontSize": 11,
@@ -11918,14 +11938,14 @@
                   "type": "rectangle",
                   "cornerRadius": 2,
                   "id": "EbVp0",
-                  "fill": "#0A84FF",
+                  "fill": "$accent-blue",
                   "width": 3,
                   "height": 52
                 },
                 {
                   "type": "text",
                   "id": "eR1ig",
-                  "fill": "#0E1A2B",
+                  "fill": "$text-primary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
                   "content": "What is the capital of France?",
@@ -11940,12 +11960,13 @@
             {
               "type": "text",
               "id": "bRQeg",
-              "fill": "#6B7280",
+              "fill": "$text-secondary",
               "textGrowth": "fixed-width",
               "width": "fill_container",
               "content": "Answer out loud when the mic glows.",
               "fontFamily": "Inter",
-              "fontSize": 14
+              "fontSize": 14,
+              "fontWeight": "normal"
             }
           ]
         },
@@ -11992,7 +12013,7 @@
                       "name": "micBtn",
                       "width": 148,
                       "height": 148,
-                      "fill": "#FF3D8F",
+                      "fill": "$accent-pink",
                       "cornerRadius": 74,
                       "effect": {
                         "type": "shadow",
@@ -12014,7 +12035,7 @@
                           "height": 56,
                           "iconFontName": "mic",
                           "iconFontFamily": "lucide",
-                          "fill": "#FFFFFF"
+                          "fill": "$text-on-accent"
                         }
                       ]
                     }
@@ -12025,7 +12046,7 @@
             {
               "type": "text",
               "id": "8GnnD",
-              "fill": "#0E1A2B",
+              "fill": "$text-primary",
               "content": "Tap to speak",
               "fontFamily": "Anton",
               "fontSize": 22,
@@ -12035,10 +12056,11 @@
             {
               "type": "text",
               "id": "cYDYZ",
-              "fill": "#6B7280",
+              "fill": "$text-secondary",
               "content": "or say “start” to begin",
               "fontFamily": "Inter",
-              "fontSize": 13
+              "fontSize": 13,
+              "fontWeight": "normal"
             }
           ]
         },
@@ -12062,12 +12084,12 @@
               "name": "skip",
               "width": "fill_container",
               "height": 54,
-              "fill": "#FFFFFF",
+              "fill": "$bg-card",
               "cornerRadius": 27,
               "stroke": {
                 "align": "inside",
                 "thickness": 1,
-                "fill": "#0E1A2B1A"
+                "fill": "$border-subtle"
               },
               "gap": 8,
               "justifyContent": "center",
@@ -12080,12 +12102,12 @@
                   "height": 18,
                   "iconFontName": "skip-forward",
                   "iconFontFamily": "lucide",
-                  "fill": "#0E1A2B"
+                  "fill": "$text-primary"
                 },
                 {
                   "type": "text",
                   "id": "9VaB4",
-                  "fill": "#0E1A2B",
+                  "fill": "$text-primary",
                   "content": "Skip question",
                   "fontFamily": "Inter",
                   "fontSize": 15,
@@ -12106,7 +12128,7 @@
       "clip": true,
       "width": 390,
       "height": 844,
-      "fill": "#F5F1E8",
+      "fill": "$bg-page",
       "layout": "vertical",
       "children": [
         {
@@ -12126,7 +12148,7 @@
             {
               "type": "text",
               "id": "GYJkC",
-              "fill": "#0E1A2B",
+              "fill": "$text-primary",
               "content": "9:41",
               "fontFamily": "Inter",
               "fontSize": 15,
@@ -12139,7 +12161,7 @@
               "height": 22,
               "iconFontName": "ellipsis",
               "iconFontFamily": "lucide",
-              "fill": "#0E1A2B"
+              "fill": "$text-primary"
             }
           ]
         },
@@ -12170,7 +12192,7 @@
                   "name": "cl2",
                   "width": 36,
                   "height": 36,
-                  "fill": "#FFFFFF",
+                  "fill": "$bg-card",
                   "cornerRadius": 18,
                   "justifyContent": "center",
                   "alignItems": "center",
@@ -12182,7 +12204,7 @@
                       "height": 18,
                       "iconFontName": "x",
                       "iconFontFamily": "lucide",
-                      "fill": "#0E1A2B"
+                      "fill": "$text-primary"
                     }
                   ]
                 },
@@ -12196,7 +12218,7 @@
                     {
                       "type": "text",
                       "id": "htvr3",
-                      "fill": "#0A84FF",
+                      "fill": "$accent-blue",
                       "content": "hangs",
                       "fontFamily": "IBM Plex Mono",
                       "fontSize": 13,
@@ -12205,7 +12227,7 @@
                     {
                       "type": "ellipse",
                       "id": "6YUR0",
-                      "fill": "#FF3D8F",
+                      "fill": "$accent-pink",
                       "width": 6,
                       "height": 6
                     }
@@ -12223,14 +12245,14 @@
                 {
                   "type": "ellipse",
                   "id": "Hd36x",
-                  "fill": "#FF3D8F",
+                  "fill": "$accent-pink",
                   "width": 8,
                   "height": 8
                 },
                 {
                   "type": "text",
                   "id": "9Cinh",
-                  "fill": "#FF3D8F",
+                  "fill": "$accent-pink",
                   "content": "0:04",
                   "fontFamily": "IBM Plex Mono",
                   "fontSize": 13,
@@ -12254,7 +12276,7 @@
               "type": "rectangle",
               "cornerRadius": 2,
               "id": "REy6H",
-              "fill": "#FF3D8F",
+              "fill": "$accent-pink",
               "width": 100,
               "height": 3
             },
@@ -12262,7 +12284,7 @@
               "type": "rectangle",
               "cornerRadius": 2,
               "id": "uAwbF",
-              "fill": "#0E1A2B1A",
+              "fill": "$border-subtle",
               "width": "fill_container",
               "height": 3
             }
@@ -12285,7 +12307,7 @@
             {
               "type": "text",
               "id": "zAtCl",
-              "fill": "#0A84FF",
+              "fill": "$accent-blue",
               "content": "GEOGRAPHY · QUESTION 3",
               "fontFamily": "IBM Plex Mono",
               "fontSize": 11,
@@ -12303,14 +12325,14 @@
                   "type": "rectangle",
                   "cornerRadius": 2,
                   "id": "ObKLS",
-                  "fill": "#FF3D8F",
+                  "fill": "$accent-pink",
                   "width": 3,
                   "height": 28
                 },
                 {
                   "type": "text",
                   "id": "Cvmbm",
-                  "fill": "#0E1A2B",
+                  "fill": "$text-primary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
                   "content": "What is the capital of France?",
@@ -12342,7 +12364,7 @@
               "id": "P0Jaw",
               "name": "tBox",
               "width": "fill_container",
-              "fill": "#FFFFFF",
+              "fill": "$bg-card",
               "cornerRadius": 16,
               "effect": {
                 "type": "shadow",
@@ -12361,7 +12383,7 @@
                 {
                   "type": "text",
                   "id": "o7p0R",
-                  "fill": "#FF3D8F",
+                  "fill": "$accent-pink",
                   "content": "LISTENING",
                   "fontFamily": "IBM Plex Mono",
                   "fontSize": 11,
@@ -12371,7 +12393,7 @@
                 {
                   "type": "text",
                   "id": "6bMhL",
-                  "fill": "#0E1A2B",
+                  "fill": "$text-primary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
                   "content": "“I think it’s Paris…”",
@@ -12426,7 +12448,7 @@
                       "name": "pulseC",
                       "width": 130,
                       "height": 130,
-                      "fill": "#FF3D8F",
+                      "fill": "$accent-pink",
                       "cornerRadius": 65,
                       "effect": {
                         "type": "shadow",
@@ -12446,7 +12468,7 @@
                           "type": "rectangle",
                           "cornerRadius": 2,
                           "id": "80zyu",
-                          "fill": "#FFFFFF",
+                          "fill": "$text-on-accent",
                           "width": 4,
                           "height": 22
                         },
@@ -12454,7 +12476,7 @@
                           "type": "rectangle",
                           "cornerRadius": 2,
                           "id": "lcMkI",
-                          "fill": "#FFFFFF",
+                          "fill": "$text-on-accent",
                           "width": 4,
                           "height": 44
                         },
@@ -12462,7 +12484,7 @@
                           "type": "rectangle",
                           "cornerRadius": 2,
                           "id": "BL7gT",
-                          "fill": "#FFFFFF",
+                          "fill": "$text-on-accent",
                           "width": 4,
                           "height": 62
                         },
@@ -12470,7 +12492,7 @@
                           "type": "rectangle",
                           "cornerRadius": 2,
                           "id": "JnFeQ",
-                          "fill": "#FFFFFF",
+                          "fill": "$text-on-accent",
                           "width": 4,
                           "height": 36
                         },
@@ -12478,7 +12500,7 @@
                           "type": "rectangle",
                           "cornerRadius": 2,
                           "id": "KFsoR",
-                          "fill": "#FFFFFF",
+                          "fill": "$text-on-accent",
                           "width": 4,
                           "height": 50
                         },
@@ -12486,7 +12508,7 @@
                           "type": "rectangle",
                           "cornerRadius": 2,
                           "id": "xEBT0",
-                          "fill": "#FFFFFF",
+                          "fill": "$text-on-accent",
                           "width": 4,
                           "height": 28
                         },
@@ -12494,7 +12516,7 @@
                           "type": "rectangle",
                           "cornerRadius": 2,
                           "id": "7QjOE",
-                          "fill": "#FFFFFF",
+                          "fill": "$text-on-accent",
                           "width": 4,
                           "height": 18
                         }
@@ -12507,7 +12529,7 @@
             {
               "type": "text",
               "id": "PpdW1",
-              "fill": "#0E1A2B",
+              "fill": "$text-primary",
               "content": "Listening…",
               "fontFamily": "Anton",
               "fontSize": 22,
@@ -12517,10 +12539,11 @@
             {
               "type": "text",
               "id": "w2kpq",
-              "fill": "#6B7280",
+              "fill": "$text-secondary",
               "content": "say “stop” when finished",
               "fontFamily": "Inter",
-              "fontSize": 13
+              "fontSize": 13,
+              "fontWeight": "normal"
             }
           ]
         },
@@ -12544,7 +12567,7 @@
               "name": "stop",
               "width": "fill_container",
               "height": 60,
-              "fill": "#FF3D8F",
+              "fill": "$accent-pink",
               "cornerRadius": 30,
               "effect": {
                 "type": "shadow",
@@ -12567,12 +12590,12 @@
                   "height": 18,
                   "iconFontName": "square",
                   "iconFontFamily": "lucide",
-                  "fill": "#FFFFFF"
+                  "fill": "$text-on-accent"
                 },
                 {
                   "type": "text",
                   "id": "ldU0o",
-                  "fill": "#FFFFFF",
+                  "fill": "$text-on-accent",
                   "content": "Stop recording",
                   "fontFamily": "Inter",
                   "fontSize": 17,
@@ -12593,7 +12616,7 @@
       "clip": true,
       "width": 390,
       "height": 844,
-      "fill": "#F5F1E8",
+      "fill": "$bg-page",
       "layout": "vertical",
       "children": [
         {
@@ -12613,7 +12636,7 @@
             {
               "type": "text",
               "id": "RP6HI",
-              "fill": "#0E1A2B",
+              "fill": "$text-primary",
               "content": "9:41",
               "fontFamily": "Inter",
               "fontSize": 15,
@@ -12626,7 +12649,7 @@
               "height": 22,
               "iconFontName": "ellipsis",
               "iconFontFamily": "lucide",
-              "fill": "#0E1A2B"
+              "fill": "$text-primary"
             }
           ]
         },
@@ -12657,7 +12680,7 @@
                   "name": "cl3",
                   "width": 36,
                   "height": 36,
-                  "fill": "#FFFFFF",
+                  "fill": "$bg-card",
                   "cornerRadius": 18,
                   "justifyContent": "center",
                   "alignItems": "center",
@@ -12669,7 +12692,7 @@
                       "height": 18,
                       "iconFontName": "x",
                       "iconFontFamily": "lucide",
-                      "fill": "#0E1A2B"
+                      "fill": "$text-primary"
                     }
                   ]
                 },
@@ -12683,7 +12706,7 @@
                     {
                       "type": "text",
                       "id": "GPi6M",
-                      "fill": "#0A84FF",
+                      "fill": "$accent-blue",
                       "content": "hangs",
                       "fontFamily": "IBM Plex Mono",
                       "fontSize": 13,
@@ -12692,7 +12715,7 @@
                     {
                       "type": "ellipse",
                       "id": "3AZ0u",
-                      "fill": "#FF3D8F",
+                      "fill": "$accent-pink",
                       "width": 6,
                       "height": 6
                     }
@@ -12703,7 +12726,7 @@
             {
               "type": "text",
               "id": "WNE0b",
-              "fill": "#6B7280",
+              "fill": "$text-secondary",
               "content": "03 / 10",
               "fontFamily": "IBM Plex Mono",
               "fontSize": 13,
@@ -12725,7 +12748,7 @@
               "type": "rectangle",
               "cornerRadius": 2,
               "id": "evt7O",
-              "fill": "#FF3D8F",
+              "fill": "$accent-pink",
               "width": 117,
               "height": 3
             },
@@ -12733,7 +12756,7 @@
               "type": "rectangle",
               "cornerRadius": 2,
               "id": "Z2GOQ",
-              "fill": "#0E1A2B1A",
+              "fill": "$border-subtle",
               "width": "fill_container",
               "height": 3
             }
@@ -12775,12 +12798,12 @@
                   "height": 14,
                   "iconFontName": "check",
                   "iconFontFamily": "lucide",
-                  "fill": "#16A34A"
+                  "fill": "$success-text"
                 },
                 {
                   "type": "text",
                   "id": "gHlwb",
-                  "fill": "#16A34A",
+                  "fill": "$success-text",
                   "content": "CORRECT",
                   "fontFamily": "IBM Plex Mono",
                   "fontSize": 11,
@@ -12792,7 +12815,7 @@
             {
               "type": "text",
               "id": "9jukp",
-              "fill": "#0E1A2B",
+              "fill": "$text-primary",
               "textGrowth": "fixed-width",
               "width": "fill_container",
               "content": "NAILED\nIT.",
@@ -12805,7 +12828,7 @@
             {
               "type": "text",
               "id": "IS6Mw",
-              "fill": "#6B7280",
+              "fill": "$text-secondary",
               "content": "+ 100 points · streak now 48",
               "fontFamily": "Inter",
               "fontSize": 14,
@@ -12832,7 +12855,7 @@
               "id": "Dk2j6",
               "name": "aCard",
               "width": "fill_container",
-              "fill": "#FFFFFF",
+              "fill": "$bg-card",
               "cornerRadius": 18,
               "effect": {
                 "type": "shadow",
@@ -12859,7 +12882,7 @@
                     {
                       "type": "text",
                       "id": "qlclY",
-                      "fill": "#0A84FF",
+                      "fill": "$accent-blue",
                       "content": "YOUR ANSWER",
                       "fontFamily": "IBM Plex Mono",
                       "fontSize": 11,
@@ -12872,7 +12895,7 @@
                       "name": "chk",
                       "width": 24,
                       "height": 24,
-                      "fill": "#22C55E",
+                      "fill": "$success",
                       "cornerRadius": 12,
                       "justifyContent": "center",
                       "alignItems": "center",
@@ -12884,7 +12907,7 @@
                           "height": 14,
                           "iconFontName": "check",
                           "iconFontFamily": "lucide",
-                          "fill": "#FFFFFF"
+                          "fill": "$text-on-accent"
                         }
                       ]
                     }
@@ -12893,7 +12916,7 @@
                 {
                   "type": "text",
                   "id": "gJd1H",
-                  "fill": "#0E1A2B",
+                  "fill": "$text-primary",
                   "content": "Paris",
                   "fontFamily": "Anton",
                   "fontSize": 32,
@@ -12904,7 +12927,7 @@
                   "type": "rectangle",
                   "id": "RhfEg",
                   "name": "qDiv",
-                  "fill": "#0E1A2B14",
+                  "fill": "$border-subtle",
                   "width": "fill_container",
                   "height": 1
                 },
@@ -12919,7 +12942,7 @@
                     {
                       "type": "text",
                       "id": "ywb9C",
-                      "fill": "#FF3D8F",
+                      "fill": "$accent-pink",
                       "content": "THE QUESTION",
                       "fontFamily": "IBM Plex Mono",
                       "fontSize": 11,
@@ -12929,7 +12952,7 @@
                     {
                       "type": "text",
                       "id": "PZHN3",
-                      "fill": "#0E1A2B",
+                      "fill": "$text-primary",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
                       "content": "What is the capital of France?",
@@ -12959,7 +12982,7 @@
               "id": "RtdMN",
               "name": "sBox1",
               "width": "fill_container",
-              "fill": "#FFFFFF",
+              "fill": "$bg-card",
               "cornerRadius": 16,
               "layout": "vertical",
               "gap": 4,
@@ -12971,7 +12994,7 @@
                 {
                   "type": "text",
                   "id": "b1syz",
-                  "fill": "#0A84FF",
+                  "fill": "$accent-blue",
                   "content": "STREAK",
                   "fontFamily": "IBM Plex Mono",
                   "fontSize": 11,
@@ -12988,7 +13011,7 @@
                     {
                       "type": "text",
                       "id": "IvrJP",
-                      "fill": "#0A84FF",
+                      "fill": "$accent-blue",
                       "content": "48",
                       "fontFamily": "Anton",
                       "fontSize": 36,
@@ -12998,7 +13021,7 @@
                     {
                       "type": "text",
                       "id": "Zb4lq",
-                      "fill": "#6B7280",
+                      "fill": "$text-secondary",
                       "content": "+1",
                       "fontFamily": "Inter",
                       "fontSize": 12,
@@ -13013,7 +13036,7 @@
               "id": "divB8",
               "name": "sBox2",
               "width": "fill_container",
-              "fill": "#FFFFFF",
+              "fill": "$bg-card",
               "cornerRadius": 16,
               "layout": "vertical",
               "gap": 4,
@@ -13025,7 +13048,7 @@
                 {
                   "type": "text",
                   "id": "uTgoG",
-                  "fill": "#FF3D8F",
+                  "fill": "$accent-pink",
                   "content": "POINTS",
                   "fontFamily": "IBM Plex Mono",
                   "fontSize": 11,
@@ -13042,7 +13065,7 @@
                     {
                       "type": "text",
                       "id": "PYr1i",
-                      "fill": "#FF3D8F",
+                      "fill": "$accent-pink",
                       "content": "2.4k",
                       "fontFamily": "Anton",
                       "fontSize": 36,
@@ -13052,7 +13075,7 @@
                     {
                       "type": "text",
                       "id": "8AQRm",
-                      "fill": "#6B7280",
+                      "fill": "$text-secondary",
                       "content": "+100",
                       "fontFamily": "Inter",
                       "fontSize": 12,
@@ -13091,7 +13114,7 @@
               "name": "nextBtn",
               "width": "fill_container",
               "height": 64,
-              "fill": "#FF3D8F",
+              "fill": "$accent-pink",
               "cornerRadius": 32,
               "effect": {
                 "type": "shadow",
@@ -13110,7 +13133,7 @@
                 {
                   "type": "text",
                   "id": "MvpUQ",
-                  "fill": "#FFFFFF",
+                  "fill": "$text-on-accent",
                   "content": "Next question",
                   "fontFamily": "Inter",
                   "fontSize": 17,
@@ -13123,7 +13146,7 @@
                   "height": 18,
                   "iconFontName": "arrow-right",
                   "iconFontFamily": "lucide",
-                  "fill": "#FFFFFF"
+                  "fill": "$text-on-accent"
                 }
               ]
             },
@@ -13147,12 +13170,12 @@
                   "height": 14,
                   "iconFontName": "book-open",
                   "iconFontFamily": "lucide",
-                  "fill": "#0A84FF"
+                  "fill": "$accent-blue"
                 },
                 {
                   "type": "text",
                   "id": "jyFmx",
-                  "fill": "#0A84FF",
+                  "fill": "$accent-blue",
                   "content": "Why is this correct?",
                   "fontFamily": "Inter",
                   "fontSize": 14,
@@ -13173,7 +13196,7 @@
       "clip": true,
       "width": 390,
       "height": 844,
-      "fill": "#F5F1E8",
+      "fill": "$bg-page",
       "layout": "vertical",
       "children": [
         {
@@ -13193,7 +13216,7 @@
             {
               "type": "text",
               "id": "TakhQ",
-              "fill": "#0E1A2B",
+              "fill": "$text-primary",
               "content": "9:41",
               "fontFamily": "Inter",
               "fontSize": 15,
@@ -13206,7 +13229,7 @@
               "height": 22,
               "iconFontName": "ellipsis",
               "iconFontFamily": "lucide",
-              "fill": "#0E1A2B"
+              "fill": "$text-primary"
             }
           ]
         },
@@ -13237,7 +13260,7 @@
                   "name": "cl4",
                   "width": 36,
                   "height": 36,
-                  "fill": "#FFFFFF",
+                  "fill": "$bg-card",
                   "cornerRadius": 18,
                   "justifyContent": "center",
                   "alignItems": "center",
@@ -13249,7 +13272,7 @@
                       "height": 18,
                       "iconFontName": "x",
                       "iconFontFamily": "lucide",
-                      "fill": "#0E1A2B"
+                      "fill": "$text-primary"
                     }
                   ]
                 },
@@ -13263,7 +13286,7 @@
                     {
                       "type": "text",
                       "id": "UG9JO",
-                      "fill": "#0A84FF",
+                      "fill": "$accent-blue",
                       "content": "hangs",
                       "fontFamily": "IBM Plex Mono",
                       "fontSize": 13,
@@ -13272,7 +13295,7 @@
                     {
                       "type": "ellipse",
                       "id": "8tdkN",
-                      "fill": "#FF3D8F",
+                      "fill": "$accent-pink",
                       "width": 6,
                       "height": 6
                     }
@@ -13283,7 +13306,7 @@
             {
               "type": "text",
               "id": "NzPgF",
-              "fill": "#6B7280",
+              "fill": "$text-secondary",
               "content": "03 / 10",
               "fontFamily": "IBM Plex Mono",
               "fontSize": 13,
@@ -13305,7 +13328,7 @@
               "type": "rectangle",
               "cornerRadius": 2,
               "id": "CCXkV",
-              "fill": "#FF3D8F",
+              "fill": "$accent-pink",
               "width": 117,
               "height": 3
             },
@@ -13313,7 +13336,7 @@
               "type": "rectangle",
               "cornerRadius": 2,
               "id": "eTf22",
-              "fill": "#0E1A2B1A",
+              "fill": "$border-subtle",
               "width": "fill_container",
               "height": 3
             }
@@ -13355,12 +13378,12 @@
                   "height": 14,
                   "iconFontName": "x",
                   "iconFontFamily": "lucide",
-                  "fill": "#FF3D8F"
+                  "fill": "$accent-pink"
                 },
                 {
                   "type": "text",
                   "id": "iN4qw",
-                  "fill": "#FF3D8F",
+                  "fill": "$accent-pink",
                   "content": "NOT QUITE",
                   "fontFamily": "IBM Plex Mono",
                   "fontSize": 11,
@@ -13372,7 +13395,7 @@
             {
               "type": "text",
               "id": "WNosj",
-              "fill": "#0E1A2B",
+              "fill": "$text-primary",
               "textGrowth": "fixed-width",
               "width": "fill_container",
               "content": "CLOSE—\nBUT NO.",
@@ -13385,7 +13408,7 @@
             {
               "type": "text",
               "id": "drSp8",
-              "fill": "#6B7280",
+              "fill": "$text-secondary",
               "content": "streak reset · still worth the try",
               "fontFamily": "Inter",
               "fontSize": 14,
@@ -13411,7 +13434,7 @@
               "id": "RACSS",
               "name": "aCard5",
               "width": "fill_container",
-              "fill": "#FFFFFF",
+              "fill": "$bg-card",
               "cornerRadius": 18,
               "effect": {
                 "type": "shadow",
@@ -13438,7 +13461,7 @@
                     {
                       "type": "text",
                       "id": "LVGxH",
-                      "fill": "#FF3D8F",
+                      "fill": "$accent-pink",
                       "content": "YOU SAID",
                       "fontFamily": "IBM Plex Mono",
                       "fontSize": 11,
@@ -13451,7 +13474,7 @@
                       "name": "xW",
                       "width": 20,
                       "height": 20,
-                      "fill": "#FF3D8F",
+                      "fill": "$accent-pink",
                       "cornerRadius": 10,
                       "justifyContent": "center",
                       "alignItems": "center",
@@ -13463,7 +13486,7 @@
                           "height": 12,
                           "iconFontName": "x",
                           "iconFontFamily": "lucide",
-                          "fill": "#FFFFFF"
+                          "fill": "$text-on-accent"
                         }
                       ]
                     }
@@ -13472,7 +13495,7 @@
                 {
                   "type": "text",
                   "id": "Gfg45",
-                  "fill": "#9CA3AF",
+                  "fill": "$text-tertiary",
                   "content": "Lyon",
                   "fontFamily": "Anton",
                   "fontSize": 26,
@@ -13482,7 +13505,7 @@
                 {
                   "type": "rectangle",
                   "id": "6e45P",
-                  "fill": "#0E1A2B14",
+                  "fill": "$border-subtle",
                   "width": "fill_container",
                   "height": 1
                 },
@@ -13497,7 +13520,7 @@
                     {
                       "type": "text",
                       "id": "1vy5g",
-                      "fill": "#0A84FF",
+                      "fill": "$accent-blue",
                       "content": "THE ANSWER",
                       "fontFamily": "IBM Plex Mono",
                       "fontSize": 11,
@@ -13510,7 +13533,7 @@
                       "name": "cW",
                       "width": 20,
                       "height": 20,
-                      "fill": "#0A84FF",
+                      "fill": "$accent-blue",
                       "cornerRadius": 10,
                       "justifyContent": "center",
                       "alignItems": "center",
@@ -13522,7 +13545,7 @@
                           "height": 12,
                           "iconFontName": "check",
                           "iconFontFamily": "lucide",
-                          "fill": "#FFFFFF"
+                          "fill": "$text-on-accent"
                         }
                       ]
                     }
@@ -13531,7 +13554,7 @@
                 {
                   "type": "text",
                   "id": "IecxQ",
-                  "fill": "#0E1A2B",
+                  "fill": "$text-primary",
                   "content": "Paris",
                   "fontFamily": "Anton",
                   "fontSize": 30,
@@ -13560,7 +13583,7 @@
               "id": "juOhm",
               "name": "stB1",
               "width": "fill_container",
-              "fill": "#FFFFFF",
+              "fill": "$bg-card",
               "cornerRadius": 16,
               "layout": "vertical",
               "gap": 4,
@@ -13572,7 +13595,7 @@
                 {
                   "type": "text",
                   "id": "tYj7m",
-                  "fill": "#0A84FF",
+                  "fill": "$accent-blue",
                   "content": "STREAK",
                   "fontFamily": "IBM Plex Mono",
                   "fontSize": 11,
@@ -13589,7 +13612,7 @@
                     {
                       "type": "text",
                       "id": "sSytl",
-                      "fill": "#0A84FF",
+                      "fill": "$accent-blue",
                       "content": "0",
                       "fontFamily": "Anton",
                       "fontSize": 32,
@@ -13599,7 +13622,7 @@
                     {
                       "type": "text",
                       "id": "dZdoX",
-                      "fill": "#6B7280",
+                      "fill": "$text-secondary",
                       "content": "was 47",
                       "fontFamily": "Inter",
                       "fontSize": 12,
@@ -13614,7 +13637,7 @@
               "id": "u47Re",
               "name": "stB2",
               "width": "fill_container",
-              "fill": "#FFFFFF",
+              "fill": "$bg-card",
               "cornerRadius": 16,
               "layout": "vertical",
               "gap": 4,
@@ -13626,7 +13649,7 @@
                 {
                   "type": "text",
                   "id": "oTEto",
-                  "fill": "#FF3D8F",
+                  "fill": "$accent-pink",
                   "content": "POINTS",
                   "fontFamily": "IBM Plex Mono",
                   "fontSize": 11,
@@ -13643,7 +13666,7 @@
                     {
                       "type": "text",
                       "id": "zD9OI",
-                      "fill": "#FF3D8F",
+                      "fill": "$accent-pink",
                       "content": "2.3k",
                       "fontFamily": "Anton",
                       "fontSize": 32,
@@ -13653,7 +13676,7 @@
                     {
                       "type": "text",
                       "id": "7Ew7y",
-                      "fill": "#6B7280",
+                      "fill": "$text-secondary",
                       "content": "+0",
                       "fontFamily": "Inter",
                       "fontSize": 12,
@@ -13685,7 +13708,7 @@
               "name": "nxt",
               "width": "fill_container",
               "height": 60,
-              "fill": "#FF3D8F",
+              "fill": "$accent-pink",
               "cornerRadius": 30,
               "effect": {
                 "type": "shadow",
@@ -13704,7 +13727,7 @@
                 {
                   "type": "text",
                   "id": "L1HKU",
-                  "fill": "#FFFFFF",
+                  "fill": "$text-on-accent",
                   "content": "Next question",
                   "fontFamily": "Inter",
                   "fontSize": 17,
@@ -13717,7 +13740,7 @@
                   "height": 18,
                   "iconFontName": "arrow-right",
                   "iconFontFamily": "lucide",
-                  "fill": "#FFFFFF"
+                  "fill": "$text-on-accent"
                 }
               ]
             },
@@ -13741,12 +13764,12 @@
                   "height": 14,
                   "iconFontName": "rotate-ccw",
                   "iconFontFamily": "lucide",
-                  "fill": "#0A84FF"
+                  "fill": "$accent-blue"
                 },
                 {
                   "type": "text",
                   "id": "HDBrA",
-                  "fill": "#0A84FF",
+                  "fill": "$accent-blue",
                   "content": "Try this question again",
                   "fontFamily": "Inter",
                   "fontSize": 14,
@@ -13768,7 +13791,7 @@
   "variables": {
     "accent-pink": {
       "type": "color",
-      "value": "#FF4FB6"
+      "value": "#FF3D8F"
     },
     "accent-primary": {
       "type": "color",
@@ -13805,19 +13828,71 @@
     },
     "bg-card": {
       "type": "color",
-      "value": "#222222"
+      "value": [
+        {
+          "value": "#FFFFFF",
+          "theme": {
+            "mode": "light"
+          }
+        },
+        {
+          "value": "#1F1F22",
+          "theme": {
+            "mode": "dark"
+          }
+        }
+      ]
     },
     "bg-elevated": {
       "type": "color",
-      "value": "#2A2A2A"
+      "value": [
+        {
+          "value": "#FFFFFF",
+          "theme": {
+            "mode": "light"
+          }
+        },
+        {
+          "value": "#2A2A2A",
+          "theme": {
+            "mode": "dark"
+          }
+        }
+      ]
     },
     "bg-page": {
       "type": "color",
-      "value": "#1A1A1A"
+      "value": [
+        {
+          "value": "#FAFAF8",
+          "theme": {
+            "mode": "light"
+          }
+        },
+        {
+          "value": "#161616",
+          "theme": {
+            "mode": "dark"
+          }
+        }
+      ]
     },
     "border-standard": {
       "type": "color",
-      "value": "#333333"
+      "value": [
+        {
+          "value": "#0E1A2B1F",
+          "theme": {
+            "mode": "light"
+          }
+        },
+        {
+          "value": "#FFFFFF24",
+          "theme": {
+            "mode": "dark"
+          }
+        }
+      ]
     },
     "error": {
       "type": "color",
@@ -13939,15 +14014,54 @@
     },
     "text-primary": {
       "type": "color",
-      "value": "#FFFFFF"
+      "value": [
+        {
+          "value": "#0E1A2B",
+          "theme": {
+            "mode": "light"
+          }
+        },
+        {
+          "value": "#F4F4F4",
+          "theme": {
+            "mode": "dark"
+          }
+        }
+      ]
     },
     "text-secondary": {
       "type": "color",
-      "value": "#9CA3AF"
+      "value": [
+        {
+          "value": "#6B7280",
+          "theme": {
+            "mode": "light"
+          }
+        },
+        {
+          "value": "#9CA3AF",
+          "theme": {
+            "mode": "dark"
+          }
+        }
+      ]
     },
     "text-tertiary": {
       "type": "color",
-      "value": "#6B7280"
+      "value": [
+        {
+          "value": "#9CA3AF",
+          "theme": {
+            "mode": "light"
+          }
+        },
+        {
+          "value": "#6B7280",
+          "theme": {
+            "mode": "dark"
+          }
+        }
+      ]
     },
     "warning": {
       "type": "color",
@@ -14033,6 +14147,40 @@
     "space-2xl": {
       "type": "number",
       "value": 24
+    },
+    "border-subtle": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#0E1A2B14",
+          "theme": {
+            "mode": "light"
+          }
+        },
+        {
+          "value": "#FFFFFF14",
+          "theme": {
+            "mode": "dark"
+          }
+        }
+      ]
+    },
+    "success-text": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#16A34A",
+          "theme": {
+            "mode": "light"
+          }
+        },
+        {
+          "value": "#4ADE80",
+          "theme": {
+            "mode": "dark"
+          }
+        }
+      ]
     }
   }
 }

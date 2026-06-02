@@ -27,6 +27,9 @@ A single play-through containing N questions. Server-side state in memory; not p
 **Question**
 A unit of content with prompt, expected answer, optional images/sources, difficulty, category, language. Backend Pydantic model in `packages/shared/`.
 
+**Question type**
+The five `QuestionType` values: `text`, `text_multichoice`, `audio`, `image`, `video`. Full taxonomy — data shapes, pattern→type routing, evaluation, and per-surface implementation status — in `docs/reference/question-types.md`. Use those exact identifiers; don't invent type names.
+
 **Participant**
 A player in a quiz session. MVP is single-participant. Multiplayer is post-MVP (see `.out-of-scope/multiplayer-mvp.md` if rejected as enhancement).
 

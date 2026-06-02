@@ -11983,7 +11983,7 @@
             8,
             24
           ],
-          "justifyContent": "center",
+          "justifyContent": "end",
           "alignItems": "center",
           "children": [
             {
@@ -14220,6 +14220,7 @@
             8,
             24
           ],
+          "justifyContent": "space_between",
           "alignItems": "center",
           "children": [
             {
@@ -14620,6 +14621,7 @@
             8,
             24
           ],
+          "justifyContent": "space_between",
           "alignItems": "center",
           "children": [
             {

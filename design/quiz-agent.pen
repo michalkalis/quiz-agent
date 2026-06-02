@@ -11963,7 +11963,7 @@
               "fill": "$text-secondary",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "Answer out loud when the mic glows.",
+              "content": "Answer out loud — we're always listening.",
               "fontFamily": "Inter",
               "fontSize": 14,
               "fontWeight": "normal"
@@ -11987,80 +11987,43 @@
           "children": [
             {
               "type": "frame",
-              "id": "TWpZr",
-              "name": "pulse1",
-              "width": 260,
-              "height": 260,
+              "id": "c02y0",
+              "name": "listenPill",
               "fill": "#FF3D8F14",
-              "cornerRadius": 130,
-              "justifyContent": "center",
+              "cornerRadius": 100,
+              "stroke": {
+                "align": "inside",
+                "thickness": 1,
+                "fill": "#FF3D8F33"
+              },
+              "gap": 10,
+              "padding": [
+                12,
+                20
+              ],
               "alignItems": "center",
               "children": [
                 {
-                  "type": "frame",
-                  "id": "eAzAF",
-                  "name": "pulse2",
-                  "width": 200,
-                  "height": 200,
-                  "fill": "#FF3D8F33",
-                  "cornerRadius": 100,
-                  "justifyContent": "center",
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "6IeJy",
-                      "name": "micBtn",
-                      "width": 148,
-                      "height": 148,
-                      "fill": "$accent-pink",
-                      "cornerRadius": 74,
-                      "effect": {
-                        "type": "shadow",
-                        "shadowType": "outer",
-                        "color": "#FF3D8F4D",
-                        "offset": {
-                          "x": 0,
-                          "y": 8
-                        },
-                        "blur": 24
-                      },
-                      "justifyContent": "center",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "icon_font",
-                          "id": "oyY5O",
-                          "width": 56,
-                          "height": 56,
-                          "iconFontName": "mic",
-                          "iconFontFamily": "lucide",
-                          "fill": "$text-on-accent"
-                        }
-                      ]
-                    }
-                  ]
+                  "type": "icon_font",
+                  "id": "flglu",
+                  "name": "listenIcon",
+                  "width": 20,
+                  "height": 20,
+                  "iconFontName": "audio-lines",
+                  "iconFontFamily": "lucide",
+                  "fill": "$accent-pink"
+                },
+                {
+                  "type": "text",
+                  "id": "lO1Ug",
+                  "name": "listenText",
+                  "fill": "$text-primary",
+                  "content": "Listening — say your answer",
+                  "fontFamily": "Inter",
+                  "fontSize": 15,
+                  "fontWeight": "600"
                 }
               ]
-            },
-            {
-              "type": "text",
-              "id": "8GnnD",
-              "fill": "$text-primary",
-              "content": "Tap to speak",
-              "fontFamily": "Anton",
-              "fontSize": 22,
-              "fontWeight": "700",
-              "letterSpacing": -0.5
-            },
-            {
-              "type": "text",
-              "id": "cYDYZ",
-              "fill": "$text-secondary",
-              "content": "or say “start” to begin",
-              "fontFamily": "Inter",
-              "fontSize": 13,
-              "fontWeight": "normal"
             }
           ]
         },
@@ -12422,107 +12385,136 @@
           "children": [
             {
               "type": "frame",
-              "id": "xtuvv",
-              "name": "pulseA",
-              "width": 240,
-              "height": 240,
-              "fill": "#FF3D8F14",
-              "cornerRadius": 120,
-              "justifyContent": "center",
+              "id": "oVlSJ",
+              "name": "waveBar",
+              "gap": 5,
               "alignItems": "center",
               "children": [
                 {
-                  "type": "frame",
-                  "id": "V39i7",
-                  "name": "pulseB",
-                  "width": 180,
-                  "height": 180,
-                  "fill": "#FF3D8F26",
-                  "cornerRadius": 90,
-                  "justifyContent": "center",
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "Vlnbf",
-                      "name": "pulseC",
-                      "width": 130,
-                      "height": 130,
-                      "fill": "$accent-pink",
-                      "cornerRadius": 65,
-                      "effect": {
-                        "type": "shadow",
-                        "shadowType": "outer",
-                        "color": "#FF3D8F66",
-                        "offset": {
-                          "x": 0,
-                          "y": 10
-                        },
-                        "blur": 24
-                      },
-                      "gap": 4,
-                      "justifyContent": "center",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "rectangle",
-                          "cornerRadius": 2,
-                          "id": "80zyu",
-                          "fill": "$text-on-accent",
-                          "width": 4,
-                          "height": 22
-                        },
-                        {
-                          "type": "rectangle",
-                          "cornerRadius": 2,
-                          "id": "lcMkI",
-                          "fill": "$text-on-accent",
-                          "width": 4,
-                          "height": 44
-                        },
-                        {
-                          "type": "rectangle",
-                          "cornerRadius": 2,
-                          "id": "BL7gT",
-                          "fill": "$text-on-accent",
-                          "width": 4,
-                          "height": 62
-                        },
-                        {
-                          "type": "rectangle",
-                          "cornerRadius": 2,
-                          "id": "JnFeQ",
-                          "fill": "$text-on-accent",
-                          "width": 4,
-                          "height": 36
-                        },
-                        {
-                          "type": "rectangle",
-                          "cornerRadius": 2,
-                          "id": "KFsoR",
-                          "fill": "$text-on-accent",
-                          "width": 4,
-                          "height": 50
-                        },
-                        {
-                          "type": "rectangle",
-                          "cornerRadius": 2,
-                          "id": "xEBT0",
-                          "fill": "$text-on-accent",
-                          "width": 4,
-                          "height": 28
-                        },
-                        {
-                          "type": "rectangle",
-                          "cornerRadius": 2,
-                          "id": "7QjOE",
-                          "fill": "$text-on-accent",
-                          "width": 4,
-                          "height": 18
-                        }
-                      ]
-                    }
-                  ]
+                  "type": "rectangle",
+                  "cornerRadius": 2,
+                  "id": "UUiFv",
+                  "name": "b1",
+                  "fill": "$accent-pink",
+                  "width": 4,
+                  "height": 12
+                },
+                {
+                  "type": "rectangle",
+                  "cornerRadius": 2,
+                  "id": "blPwj",
+                  "name": "b2",
+                  "fill": "$accent-pink",
+                  "width": 4,
+                  "height": 24
+                },
+                {
+                  "type": "rectangle",
+                  "cornerRadius": 2,
+                  "id": "EoA5v",
+                  "name": "b3",
+                  "fill": "$accent-pink",
+                  "width": 4,
+                  "height": 38
+                },
+                {
+                  "type": "rectangle",
+                  "cornerRadius": 2,
+                  "id": "O6TS7P",
+                  "name": "b4",
+                  "fill": "$accent-pink",
+                  "width": 4,
+                  "height": 18
+                },
+                {
+                  "type": "rectangle",
+                  "cornerRadius": 2,
+                  "id": "cmsuv",
+                  "name": "b5",
+                  "fill": "$accent-pink",
+                  "width": 4,
+                  "height": 46
+                },
+                {
+                  "type": "rectangle",
+                  "cornerRadius": 2,
+                  "id": "i3ZgJ",
+                  "name": "b6",
+                  "fill": "$accent-pink",
+                  "width": 4,
+                  "height": 28
+                },
+                {
+                  "type": "rectangle",
+                  "cornerRadius": 2,
+                  "id": "M0q3qC",
+                  "name": "b7",
+                  "fill": "$accent-pink",
+                  "width": 4,
+                  "height": 52
+                },
+                {
+                  "type": "rectangle",
+                  "cornerRadius": 2,
+                  "id": "aewEH",
+                  "name": "b8",
+                  "fill": "$accent-pink",
+                  "width": 4,
+                  "height": 32
+                },
+                {
+                  "type": "rectangle",
+                  "cornerRadius": 2,
+                  "id": "AEbhN",
+                  "name": "b9",
+                  "fill": "$accent-pink",
+                  "width": 4,
+                  "height": 48
+                },
+                {
+                  "type": "rectangle",
+                  "cornerRadius": 2,
+                  "id": "WRDq8",
+                  "name": "b10",
+                  "fill": "$accent-pink",
+                  "width": 4,
+                  "height": 26
+                },
+                {
+                  "type": "rectangle",
+                  "cornerRadius": 2,
+                  "id": "TDhBe",
+                  "name": "b11",
+                  "fill": "$accent-pink",
+                  "width": 4,
+                  "height": 40
+                },
+                {
+                  "type": "rectangle",
+                  "cornerRadius": 2,
+                  "id": "KAws8",
+                  "name": "b12",
+                  "fill": "$accent-pink",
+                  "width": 4,
+                  "height": 18
+                },
+                {
+                  "type": "rectangle",
+                  "cornerRadius": 2,
+                  "id": "YYsS5",
+                  "name": "b13",
+                  "fill": "$accent-pink",
+                  "width": 4,
+                  "height": 30
+                },
+                {
+                  "type": "rectangle",
+                  "cornerRadius": 2,
+                  "id": "drOvl",
+                  "name": "b14",
+                  "fill": "$accent-pink",
+                  "width": 4,
+                  "height": 14
                 }
               ]
             },

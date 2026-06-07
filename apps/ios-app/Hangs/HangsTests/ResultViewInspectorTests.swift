@@ -39,9 +39,9 @@
 //
 
 import Foundation
+@testable import Hangs
 import Testing
 import ViewInspector
-@testable import Hangs
 
 // MARK: - Helpers
 
@@ -71,7 +71,6 @@ private func makeViewModelNoEvaluation() -> QuizViewModel {
 @Suite("ResultView ViewInspector Tests")
 @MainActor
 struct ResultViewInspectorTests {
-
     // MARK: - Correct variant
 
     /// evaluation.isCorrect == true:
@@ -244,5 +243,48 @@ struct ResultViewInspectorTests {
             // Model-level: no evaluation set
             #expect(vm.resultEvaluation == nil)
         }
+    }
+
+    // MARK: - Revealed answer (headline_answer ?? correct_answer) — 46.B9
+
+    /// Open-branch reveal: an evaluation carrying `headlineAnswer` surfaces the
+    /// short gist in "THE ANSWER" card, not the long `correctAnswer`.
+    ///
+    /// The answer card sits behind the `showEvaluation` @State gate that
+    /// ViewInspector cannot flip (see design note above), so the reveal logic is
+    /// asserted on ResultView's `revealedAnswer` computed property directly.
+    @Test("Open question reveals headlineAnswer gist, not the long correctAnswer")
+    func openQuestionRevealsHeadlineAnswer() {
+        let evaluation = Evaluation(
+            userAnswer: "desert",
+            result: .incorrect,
+            points: 0.0,
+            correctAnswer: "A lush green landscape with rivers, lakes and abundant wildlife",
+            questionId: "q_open",
+            explanation: "The Sahara was a savanna during the African Humid Period.",
+            headlineAnswer: "Grassland/savanna"
+        )
+        let view = ResultView(viewModel: makeViewModel(evaluation: evaluation))
+
+        // Reveal surfaces the short gist, not the descriptive sentence.
+        #expect(view.revealedAnswer == "Grassland/savanna")
+    }
+
+    /// Closed-branch regression: with no `headlineAnswer` the reveal must remain
+    /// exactly `correctAnswer` — the existing closed-question path is unchanged.
+    @Test("Closed question reveal falls back to correctAnswer unchanged")
+    func closedQuestionRevealsCorrectAnswer() {
+        let evaluation = Evaluation(
+            userAnswer: "London",
+            result: .incorrect,
+            points: 0.0,
+            correctAnswer: "Paris",
+            questionId: "q_closed",
+            explanation: nil
+            // headlineAnswer defaults to nil — closed question
+        )
+        let view = ResultView(viewModel: makeViewModel(evaluation: evaluation))
+
+        #expect(view.revealedAnswer == "Paris")
     }
 }

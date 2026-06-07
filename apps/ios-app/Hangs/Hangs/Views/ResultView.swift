@@ -118,7 +118,7 @@ struct ResultView: View {
                     primaryValueColor: Theme.Hangs.Colors.mutedFaint,
                     primaryBadge: .incorrect,
                     secondaryLabel: "THE ANSWER",
-                    secondaryValue: evaluation.correctAnswer,
+                    secondaryValue: revealedAnswer,
                     secondaryValueColor: Theme.Hangs.Colors.ink,
                     secondaryBadge: .correct,
                     primaryValueFont: .hangsDisplay(26, weight: .black),
@@ -180,7 +180,8 @@ struct ResultView: View {
         VStack(alignment: .leading, spacing: 14) {
             if let explanation = viewModel.resultEvaluation?.explanation
                 ?? viewModel.resultQuestion?.explanation,
-               !explanation.isEmpty {
+                !explanation.isEmpty
+            {
                 VStack(alignment: .leading, spacing: 8) {
                     HangsSectionLabel(text: "EXPLANATION", color: Theme.Hangs.Colors.blue)
                     Text(explanation)
@@ -215,7 +216,7 @@ struct ResultView: View {
 
     private var ratingRow: some View {
         HStack(spacing: 2) {
-            ForEach(1...5, id: \.self) { star in
+            ForEach(1 ... 5, id: \.self) { star in
                 Button {
                     questionRating = star
                     viewModel.rateQuestion(star)
@@ -256,7 +257,8 @@ struct ResultView: View {
     private var countdownBar: some View {
         if viewModel.autoAdvanceEnabled
             && !viewModel.currentQuestionPaused
-            && viewModel.autoAdvanceCountdown > 0 {
+            && viewModel.autoAdvanceCountdown > 0
+        {
             VStack(spacing: 6) {
                 HStack {
                     Text("Next in \(viewModel.autoAdvanceCountdown)s")
@@ -339,6 +341,17 @@ struct ResultView: View {
         viewModel.resultEvaluation?.isCorrect ?? false
     }
 
+    /// The answer surfaced in "THE ANSWER" card. Open questions reveal the short
+    /// `headlineAnswer` gist (the field the evaluator scores against); closed
+    /// questions carry no gist, so this falls back to the full `correctAnswer`,
+    /// leaving the existing reveal path unchanged (46.B9). Internal for tests:
+    /// the answer card sits behind the `showEvaluation` @State gate, which
+    /// ViewInspector cannot flip, so the reveal logic is asserted here directly.
+    var revealedAnswer: String {
+        guard let evaluation = viewModel.resultEvaluation else { return "" }
+        return evaluation.headlineAnswer ?? evaluation.correctAnswer
+    }
+
     private var totalQuestions: Int {
         viewModel.currentSession?.maxQuestions ?? 10
     }
@@ -400,7 +413,7 @@ struct ResultView: View {
 }
 
 #if DEBUG
-#Preview {
-    ResultView(viewModel: QuizViewModel.previewWithEvaluation)
-}
+    #Preview {
+        ResultView(viewModel: QuizViewModel.previewWithEvaluation)
+    }
 #endif

@@ -237,3 +237,36 @@ class TestQuestionNewPhase1Fields:
     def test_language_accepts_supported_bcp47_codes(self, language: str):
         q = Question(**_base_question(language=language))
         assert q.language == language
+
+
+class TestHeadlineAnswer:
+    """Issue #46 D7 — open-branch ``headline_answer`` field."""
+
+    def test_defaults_to_none_for_closed_questions(self):
+        q = Question(**_base_question())
+        assert q.headline_answer is None
+
+    def test_constructs_and_round_trips_through_json(self):
+        q = Question(
+            **_base_question(
+                question="Why are Ferraris red?",
+                correct_answer="National racing colour",
+                headline_answer="Italy's racing colour",
+                explanation="Early Grand Prix assigned each nation a colour; Italy got red.",
+            )
+        )
+
+        re_parsed = Question.model_validate(json.loads(q.model_dump_json()))
+        assert re_parsed.headline_answer == "Italy's racing colour"
+
+    def test_from_dict_carries_headline_answer(self):
+        q = Question.from_dict(
+            _base_question(
+                headline_answer="Italy's racing colour",
+            )
+        )
+        assert q.headline_answer == "Italy's racing colour"
+
+    def test_from_dict_defaults_headline_answer_to_none(self):
+        q = Question.from_dict(_base_question())
+        assert q.headline_answer is None

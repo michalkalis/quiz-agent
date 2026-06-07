@@ -97,6 +97,15 @@ class Question(BaseModel):
         description="Alternative acceptable answers: ['paris', 'paris france']",
     )
 
+    # Open/logical-branch short answer (issue #46 D7). For open-shape questions
+    # (mechanism/cause/puzzle) whose full answer lives in ``explanation``, this
+    # holds the short gettable gist the evaluator scores against. None for
+    # closed-shape questions, which keep their canonical ``correct_answer``.
+    headline_answer: Optional[str] = Field(
+        None,
+        description="Short gettable gist for open-shape questions; scored by the evaluator. None for closed questions.",
+    )
+
     # Classification
     topic: str = Field(..., description="Topic: Geography, History, Science, etc.")
     category: str = Field(
@@ -334,6 +343,7 @@ class Question(BaseModel):
             possible_answers=data.get("possible_answers"),
             correct_answer=data.get("correct_answer", ""),
             alternative_answers=data.get("alternative_answers", []),
+            headline_answer=data.get("headline_answer"),
             topic=data.get("topic", "General"),
             category=data.get("category", default_category),
             difficulty=data.get("difficulty", default_difficulty),

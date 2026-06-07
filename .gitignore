@@ -1,6 +1,9 @@
 # Course reference materials (not part of main project)
 course-examples/
 
+# Claude Code auto-memory (machine-local, not part of the project)
+memory/
+
 # Environment variables (contains API keys)
 .env
 .env.local

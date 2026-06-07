@@ -15,6 +15,7 @@ struct Evaluation: Codable, Equatable, Sendable {
     let correctAnswer: String
     let questionId: String?
     let explanation: String?
+    let headlineAnswer: String?
 
     enum CodingKeys: String, CodingKey {
         case userAnswer = "user_answer"
@@ -23,6 +24,27 @@ struct Evaluation: Codable, Equatable, Sendable {
         case correctAnswer = "correct_answer"
         case questionId = "question_id"
         case explanation
+        case headlineAnswer = "headline_answer"
+    }
+
+    /// `headlineAnswer` defaults to nil so existing call sites (and closed
+    /// questions, which carry no short gist) construct without it.
+    init(
+        userAnswer: String,
+        result: EvaluationResult,
+        points: Double,
+        correctAnswer: String,
+        questionId: String?,
+        explanation: String?,
+        headlineAnswer: String? = nil
+    ) {
+        self.userAnswer = userAnswer
+        self.result = result
+        self.points = points
+        self.correctAnswer = correctAnswer
+        self.questionId = questionId
+        self.explanation = explanation
+        self.headlineAnswer = headlineAnswer
     }
 }
 
@@ -86,32 +108,32 @@ extension Evaluation {
 // MARK: - Preview Helpers
 
 #if DEBUG
-extension Evaluation {
-    static let previewCorrect = Evaluation(
-        userAnswer: "Paris",
-        result: .correct,
-        points: 1.0,
-        correctAnswer: "Paris",
-        questionId: "q_preview_1",
-        explanation: "Paris has been the capital of France since the 10th century."
-    )
+    extension Evaluation {
+        static let previewCorrect = Evaluation(
+            userAnswer: "Paris",
+            result: .correct,
+            points: 1.0,
+            correctAnswer: "Paris",
+            questionId: "q_preview_1",
+            explanation: "Paris has been the capital of France since the 10th century."
+        )
 
-    static let previewIncorrect = Evaluation(
-        userAnswer: "London",
-        result: .incorrect,
-        points: 0.0,
-        correctAnswer: "Paris",
-        questionId: "q_preview_1",
-        explanation: "Paris has been the capital of France since the 10th century."
-    )
+        static let previewIncorrect = Evaluation(
+            userAnswer: "London",
+            result: .incorrect,
+            points: 0.0,
+            correctAnswer: "Paris",
+            questionId: "q_preview_1",
+            explanation: "Paris has been the capital of France since the 10th century."
+        )
 
-    static let previewPartial = Evaluation(
-        userAnswer: "Paris, France",
-        result: .partiallyCorrect,
-        points: 0.5,
-        correctAnswer: "Paris",
-        questionId: "q_preview_1",
-        explanation: nil
-    )
-}
+        static let previewPartial = Evaluation(
+            userAnswer: "Paris, France",
+            result: .partiallyCorrect,
+            points: 0.5,
+            correctAnswer: "Paris",
+            questionId: "q_preview_1",
+            explanation: nil
+        )
+    }
 #endif

@@ -21,6 +21,7 @@ struct Question: Codable, Identifiable, Equatable, Sendable {
     let mediaUrl: String?
     let imageSubtype: String?
     let explanation: String?
+    let headlineAnswer: String?
     let generatedBy: String?
     let ageAppropriate: String?
     let language: String?
@@ -59,6 +60,7 @@ struct Question: Codable, Identifiable, Equatable, Sendable {
         case mediaUrl = "media_url"
         case imageSubtype = "image_subtype"
         case explanation
+        case headlineAnswer = "headline_answer"
         case generatedBy = "generated_by"
         case ageAppropriate = "age_appropriate"
         case language
@@ -85,6 +87,7 @@ struct Question: Codable, Identifiable, Equatable, Sendable {
         mediaUrl = try container.decodeIfPresent(String.self, forKey: .mediaUrl)
         imageSubtype = try container.decodeIfPresent(String.self, forKey: .imageSubtype)
         explanation = try container.decodeIfPresent(String.self, forKey: .explanation)
+        headlineAnswer = try container.decodeIfPresent(String.self, forKey: .headlineAnswer)
         generatedBy = try container.decodeIfPresent(String.self, forKey: .generatedBy)
         ageAppropriate = try container.decodeIfPresent(String.self, forKey: .ageAppropriate)
         language = try container.decodeIfPresent(String.self, forKey: .language)
@@ -108,6 +111,7 @@ struct Question: Codable, Identifiable, Equatable, Sendable {
         mediaUrl: String?,
         imageSubtype: String?,
         explanation: String?,
+        headlineAnswer: String? = nil,
         generatedBy: String?,
         ageAppropriate: String? = nil,
         language: String? = nil,
@@ -129,6 +133,7 @@ struct Question: Codable, Identifiable, Equatable, Sendable {
         self.mediaUrl = mediaUrl
         self.imageSubtype = imageSubtype
         self.explanation = explanation
+        self.headlineAnswer = headlineAnswer
         self.generatedBy = generatedBy
         self.ageAppropriate = ageAppropriate
         self.language = language
@@ -171,69 +176,69 @@ extension Question {
 // MARK: - Preview Helpers
 
 #if DEBUG
-extension Question {
-    static let preview = Question(
-        id: "q_preview_123",
-        question: "What is the capital of France?",
-        type: .text,
-        possibleAnswers: nil,
-        difficulty: "easy",
-        topic: "Geography",
-        category: "adults",
-        sourceUrl: "https://en.wikipedia.org/wiki/Paris",
-        sourceExcerpt: "Paris is the capital and largest city of France, situated on the Seine River.",
-        mediaUrl: nil,
-        imageSubtype: nil,
-        explanation: "Paris has been the capital of France since the 10th century.",
-        generatedBy: "claude-opus-4.6"
-    )
+    extension Question {
+        static let preview = Question(
+            id: "q_preview_123",
+            question: "What is the capital of France?",
+            type: .text,
+            possibleAnswers: nil,
+            difficulty: "easy",
+            topic: "Geography",
+            category: "adults",
+            sourceUrl: "https://en.wikipedia.org/wiki/Paris",
+            sourceExcerpt: "Paris is the capital and largest city of France, situated on the Seine River.",
+            mediaUrl: nil,
+            imageSubtype: nil,
+            explanation: "Paris has been the capital of France since the 10th century.",
+            generatedBy: "claude-opus-4.6"
+        )
 
-    static let previewHard = Question(
-        id: "q_preview_456",
-        question: "What is the chemical formula for sulfuric acid?",
-        type: .text,
-        possibleAnswers: nil,
-        difficulty: "hard",
-        topic: "Chemistry",
-        category: "adults",
-        sourceUrl: nil,
-        sourceExcerpt: nil,
-        mediaUrl: nil,
-        imageSubtype: nil,
-        explanation: nil,
-        generatedBy: nil
-    )
+        static let previewHard = Question(
+            id: "q_preview_456",
+            question: "What is the chemical formula for sulfuric acid?",
+            type: .text,
+            possibleAnswers: nil,
+            difficulty: "hard",
+            topic: "Chemistry",
+            category: "adults",
+            sourceUrl: nil,
+            sourceExcerpt: nil,
+            mediaUrl: nil,
+            imageSubtype: nil,
+            explanation: nil,
+            generatedBy: nil
+        )
 
-    static let previewImage = Question(
-        id: "q_preview_img_001",
-        question: "Which Mediterranean country has this distinctive shape that resembles a high-heeled boot kicking a ball?",
-        type: .image,
-        possibleAnswers: nil,
-        difficulty: "easy",
-        topic: "Geography",
-        category: "adults",
-        sourceUrl: nil,
-        sourceExcerpt: nil,
-        mediaUrl: "https://example.com/silhouettes/italy.png",
-        imageSubtype: "silhouette",
-        explanation: nil,
-        generatedBy: nil
-    )
+        static let previewImage = Question(
+            id: "q_preview_img_001",
+            question: "Which Mediterranean country has this distinctive shape that resembles a high-heeled boot kicking a ball?",
+            type: .image,
+            possibleAnswers: nil,
+            difficulty: "easy",
+            topic: "Geography",
+            category: "adults",
+            sourceUrl: nil,
+            sourceExcerpt: nil,
+            mediaUrl: "https://example.com/silhouettes/italy.png",
+            imageSubtype: "silhouette",
+            explanation: nil,
+            generatedBy: nil
+        )
 
-    static let previewMCQ = Question(
-        id: "q_preview_mcq_001",
-        question: "What is the largest planet in our solar system?",
-        type: .textMultichoice,
-        possibleAnswers: ["a": "Mars", "b": "Jupiter", "c": "Saturn", "d": "Neptune"],
-        difficulty: "easy",
-        topic: "Science",
-        category: "adults",
-        sourceUrl: nil,
-        sourceExcerpt: nil,
-        mediaUrl: nil,
-        imageSubtype: nil,
-        explanation: "Jupiter is by far the largest planet, with a mass more than twice that of all other planets combined.",
-        generatedBy: "gpt-4.1"
-    )
-}
+        static let previewMCQ = Question(
+            id: "q_preview_mcq_001",
+            question: "What is the largest planet in our solar system?",
+            type: .textMultichoice,
+            possibleAnswers: ["a": "Mars", "b": "Jupiter", "c": "Saturn", "d": "Neptune"],
+            difficulty: "easy",
+            topic: "Science",
+            category: "adults",
+            sourceUrl: nil,
+            sourceExcerpt: nil,
+            mediaUrl: nil,
+            imageSubtype: nil,
+            explanation: "Jupiter is by far the largest planet, with a mass more than twice that of all other planets combined.",
+            generatedBy: "gpt-4.1"
+        )
+    }
 #endif

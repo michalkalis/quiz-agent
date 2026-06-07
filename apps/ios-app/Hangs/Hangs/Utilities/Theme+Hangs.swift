@@ -9,25 +9,34 @@
 import SwiftUI
 
 extension Theme {
-
     enum Hangs {
-
         enum Colors {
-            static let bg = Color(hex: "#F5F1E8")           // cream
-            static let bgCard = Color.white
-            static let bgElevated = Color.white
+            // Adaptive surface + text tokens (light / dark). See issue #45 task 45.1
+            // and the "Token values to mirror" table. Decorative translucent fills
+            // below stay hardcoded — they read in both appearances.
+            static let bg = Color(light: "#F6F7F9", dark: "#161616") // page bg
+            static let bgCard = Color(light: "#FFFFFF", dark: "#1F1F22") // white card
+            static let bgElevated = Color(light: "#FFFFFF", dark: "#1F1F22")
 
-            static let ink = Color(hex: "#0E1A2B")          // near-black primary text
-            static let pink = Color(hex: "#FF3D8F")         // brand accent / primary CTA
-            static let blue = Color(hex: "#0A84FF")         // secondary accent
-            static let muted = Color(hex: "#6B7280")        // subtext
-            static let mutedFaint = Color(hex: "#9CA3AF")   // struck-through answer text
+            static let ink = Color(light: "#0E1A2B", dark: "#F4F4F4") // primary text
+            static let pink = Color(hex: "#FF3D8F") // brand accent / primary CTA (both modes)
+            static let blue = Color(hex: "#0A84FF") // secondary accent
+            static let muted = Color(light: "#6B7280", dark: "#9CA3AF") // subtext
+            static let mutedFaint = Color(light: "#9CA3AF", dark: "#6B7280") // struck-through answer text
             static let greenCheck = Color(hex: "#22C55E")
             static let greenCorrect = Color(hex: "#16A34A")
 
-            static let hairline = Color(hex: "#0E1A2B").opacity(0.08)
-            static let subtleBorder = Color(hex: "#0E1A2B").opacity(0.12)
-            static let mutedBorder = Color(hex: "#0E1A2B").opacity(0.10)
+            // Border tokens — alpha differs by mode, so build per-mode Colors
+            // (UIColor(hex:) treats 8-digit hex as ARGB, so don't suffix alpha).
+            static let hairline = Color( // border-subtle
+                light: Color(hex: "#0E1A2B").opacity(0.078),
+                dark: Color(hex: "#FFFFFF").opacity(0.078)
+            )
+            static let subtleBorder = Color( // border-standard
+                light: Color(hex: "#0E1A2B").opacity(0.122),
+                dark: Color(hex: "#FFFFFF").opacity(0.141)
+            )
+            static let mutedBorder = ink.opacity(0.10) // derived, auto-adapts
 
             static let pinkSoft = Color(hex: "#FF3D8F").opacity(0.12)
             static let pinkHalo1 = Color(hex: "#FF3D8F").opacity(0.08)
@@ -92,7 +101,6 @@ extension Theme {
 // MARK: - Fonts
 
 extension Font {
-
     /// Condensed heavy display (approximates Anton). "HANGS", "NAILED IT", question text.
     static func hangsDisplay(_ size: CGFloat, weight: Font.Weight = .black) -> Font {
         .system(size: size, weight: weight).width(.compressed)
@@ -109,13 +117,13 @@ extension Font {
     }
 
     // Convenience presets that match common Pencil sizes.
-    static var hangsBlock: Font { .hangsDisplay(80) }           // "HANGS" hero
-    static var hangsDisplayLG: Font { .hangsDisplay(72) }       // "OOPS", "NAILED IT"
-    static var hangsDisplayMD: Font { .hangsDisplay(62) }       // "COMPLETE", "SETTINGS"
-    static var hangsDisplaySM: Font { .hangsDisplay(40) }       // big question text
-    static var hangsQuestion: Font { .hangsDisplay(26) }        // compact question
-    static var hangsNumber: Font { .hangsDisplay(44) }          // stat numbers
-    static var hangsNumberLG: Font { .hangsDisplay(80) }        // final score
+    static var hangsBlock: Font { .hangsDisplay(80) } // "HANGS" hero
+    static var hangsDisplayLG: Font { .hangsDisplay(72) } // "OOPS", "NAILED IT"
+    static var hangsDisplayMD: Font { .hangsDisplay(62) } // "COMPLETE", "SETTINGS"
+    static var hangsDisplaySM: Font { .hangsDisplay(40) } // big question text
+    static var hangsQuestion: Font { .hangsDisplay(26) } // compact question
+    static var hangsNumber: Font { .hangsDisplay(44) } // stat numbers
+    static var hangsNumberLG: Font { .hangsDisplay(80) } // final score
     static var hangsSubHero: Font { .hangsDisplay(22, weight: .black) }
     static var hangsMonoLabel: Font { .hangsMono(11, weight: .medium) }
     static var hangsMonoMini: Font { .hangsMono(10, weight: .medium) }

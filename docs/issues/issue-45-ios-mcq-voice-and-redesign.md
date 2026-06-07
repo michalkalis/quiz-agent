@@ -60,7 +60,7 @@ A design iteration (Pencil) landed new question screens — tinted page bg, whit
 
 ### Track A — Design tokens (do first; everything imports them)
 
-- [ ] **45.1 Tokenize `Theme.Hangs.Colors` light/dark + tint.** Convert `bg`, `bgCard`, `bgElevated`, `ink`, `muted`, `mutedFaint` (and any border tokens listed above) to `Color(light:dark:)` using the existing helper. Change `bg` cream→`#F6F7F9`/`#161616`, `bgCard`→`#FFFFFF`/`#1F1F22`. Leave decorative `opacity()`-based fills hardcoded. Keep all legacy aliases intact.
+- [x] **45.1 Tokenize `Theme.Hangs.Colors` light/dark + tint.** Convert `bg`, `bgCard`, `bgElevated`, `ink`, `muted`, `mutedFaint` (and any border tokens listed above) to `Color(light:dark:)` using the existing helper. Change `bg` cream→`#F6F7F9`/`#161616`, `bgCard`→`#FFFFFF`/`#1F1F22`. Leave decorative `opacity()`-based fills hardcoded. Keep all legacy aliases intact.
       **Acceptance:** new `HangsColorTokenTests` resolves each adaptive token via `UIColor(...).resolvedColor(with: UITraitCollection(userInterfaceStyle:))` for `.light` and `.dark` and asserts RGB components equal the expected hex (within 1/255). `-only-testing:HangsTests/HangsColorTokenTests` GREEN; full build compiles.
 
 ### Track E (logic) — MCQ voice path (highest product value)

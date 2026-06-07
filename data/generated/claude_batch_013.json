@@ -701,7 +701,8 @@
     {
       "question": "Wi-Fi doesn't actually stand for 'Wireless Fidelity' — that's a common misconception. The Wi-Fi Alliance hired a branding company to create the name. What does 'Wi-Fi' actually stand for?",
       "type": "text",
-      "correct_answer": "Nothing — it's a made-up brand name",
+      "correct_answer": "Nothing",
+      "explanation": "it's a made-up brand name",
       "possible_answers": null,
       "alternative_answers": [
         "nothing",

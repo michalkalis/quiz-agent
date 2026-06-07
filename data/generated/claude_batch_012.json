@@ -54,7 +54,8 @@
     {
       "question": "Lake Baikal in Siberia holds roughly 20% of the world's unfrozen surface fresh water — more than all five North American Great Lakes combined. Is it that large because of its surface area, its extraordinary depth, or both?",
       "type": "text",
-      "correct_answer": "Its extraordinary depth — it is the deepest lake on Earth at over 1,600 metres",
+      "correct_answer": "Its extraordinary depth",
+      "explanation": "it is the deepest lake on Earth at over 1,600 metres",
       "possible_answers": null,
       "alternative_answers": [
         "its depth",
@@ -154,7 +155,8 @@
     {
       "question": "China stretches nearly 5,200 km from east to west — wide enough to span five geographical time zones. Yet the entire country operates on a single official time zone. What does this mean for people in China's far west — does their sunrise come unusually early, or unusually late?",
       "type": "text",
-      "correct_answer": "Unusually late — the sun may not rise until after 10 AM in winter in western China",
+      "correct_answer": "Unusually late",
+      "explanation": "the sun may not rise until after 10 AM in winter in western China",
       "possible_answers": null,
       "alternative_answers": [
         "late",
@@ -252,7 +254,8 @@
     {
       "question": "Glass appears to be a solid, but physicists have long debated its true nature. At the molecular level, glass lacks the ordered crystal structure of a true solid. Is glass technically classified as a solid, a liquid, or something else entirely?",
       "type": "text",
-      "correct_answer": "An amorphous solid — it has the rigidity of a solid but the disordered molecular structure of a liquid",
+      "correct_answer": "An amorphous solid",
+      "explanation": "it has the rigidity of a solid but the disordered molecular structure of a liquid",
       "possible_answers": null,
       "alternative_answers": [
         "amorphous solid",
@@ -547,7 +550,8 @@
     {
       "question": "Every second, the Sun converts roughly 4 million tonnes of its own mass into energy via nuclear fusion. At this rate, has the Sun lost a noticeable fraction of its mass since it formed 4.6 billion years ago? Closer to 0.01%, 0.1%, or 5%?",
       "type": "text",
-      "correct_answer": "About 0.03% — a tiny fraction despite the enormous rate",
+      "correct_answer": "About 0.03%",
+      "explanation": "a tiny fraction despite the enormous rate",
       "possible_answers": null,
       "alternative_answers": [
         "0.03%",
@@ -700,7 +704,8 @@
     {
       "question": "There is a country in Africa where over 800 languages are spoken — more than any other country on Earth. Is it Nigeria, Democratic Republic of Congo, or Papua New Guinea?",
       "type": "text",
-      "correct_answer": "Papua New Guinea — which is actually not in Africa but in Oceania, with over 840 languages",
+      "correct_answer": "Papua New Guinea",
+      "explanation": "which is actually not in Africa but in Oceania, with over 840 languages",
       "possible_answers": null,
       "alternative_answers": [
         "Papua New Guinea",

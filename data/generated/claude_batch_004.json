@@ -42,7 +42,8 @@
     {
       "question": "Before Wi-Fi had its catchy name, the technology was known by its technical standard 'IEEE 802.11b Direct Sequence.' A branding agency was hired to make it catchier. Despite what most people believe, what does 'Wi-Fi' actually stand for?",
       "type": "text",
-      "correct_answer": "Nothing — it's a made-up brand name",
+      "correct_answer": "Nothing",
+      "explanation": "it's a made-up brand name",
       "possible_answers": null,
       "alternative_answers": ["nothing", "it doesn't stand for anything", "it's not an acronym", "it means nothing", "it's a made-up word", "it's a brand name"],
       "topic": "Technology",

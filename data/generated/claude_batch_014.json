@@ -103,7 +103,8 @@
     {
       "question": "When the first 'talkie' — a film with synchronised dialogue — premiered in 1927, it didn't just change cinema. It ended the careers of many silent film stars overnight. What was the main reason most silent stars couldn't transition to sound films?",
       "type": "text",
-      "correct_answer": "Their voices didn't match audience expectations — some had heavy accents, high-pitched voices, or poor vocal delivery",
+      "correct_answer": "Their voices didn't match audience expectations",
+      "explanation": "some had heavy accents, high-pitched voices, or poor vocal delivery",
       "possible_answers": null,
       "alternative_answers": [
         "their voices",

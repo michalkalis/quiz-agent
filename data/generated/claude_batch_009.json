@@ -202,7 +202,8 @@
     {
       "question": "If you add fresh pineapple to gelatin or jelly, the mixture refuses to set and stays liquid. What does pineapple contain that causes this?",
       "type": "text",
-      "correct_answer": "Bromelain — an enzyme that breaks down the protein molecules gelatin is made from",
+      "correct_answer": "Bromelain",
+      "explanation": "an enzyme that breaks down the protein molecules gelatin is made from",
       "possible_answers": null,
       "alternative_answers": [
         "bromelain",
@@ -398,7 +399,8 @@
     {
       "question": "The word 'robot' is now used in virtually every language on Earth — yet it was coined just over 100 years ago for a theatre play. Which language does the word 'robot' come from, and what does it mean?",
       "type": "text",
-      "correct_answer": "Czech — 'robota' means forced labour or drudgery",
+      "correct_answer": "Czech",
+      "explanation": "'robota' means forced labour or drudgery",
       "possible_answers": null,
       "alternative_answers": [
         "czech",
@@ -646,7 +648,8 @@
     {
       "question": "The Voynich Manuscript is a 15th-century hand-written book filled with botanical illustrations, astronomical diagrams, and hundreds of pages of text. How many serious attempts to decode its unknown writing system have succeeded?",
       "type": "text",
-      "correct_answer": "None — it has never been decoded despite decades of cryptographic analysis",
+      "correct_answer": "None",
+      "explanation": "it has never been decoded despite decades of cryptographic analysis",
       "possible_answers": null,
       "alternative_answers": [
         "zero",

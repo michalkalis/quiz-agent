@@ -79,7 +79,8 @@
     {
       "question": "In the 1939 film The Wizard of Oz, Dorothy's ruby slippers were silver in the original book. They were changed to ruby red for the film for a specific technical reason. What was it?",
       "type": "text",
-      "correct_answer": "To show off the new Technicolor process — red looked spectacular on the new colour film",
+      "correct_answer": "To show off the new Technicolor process",
+      "explanation": "red looked spectacular on the new colour film",
       "possible_answers": null,
       "alternative_answers": ["technicolor", "to show off colour film", "to showcase the new colour technology", "because of technicolor", "colour looked better", "red showed better on color film"],
       "topic": "Movies",
@@ -155,7 +156,8 @@
     {
       "question": "Pixar's 1995 film Toy Story was the first feature-length computer-animated film. How many feature films had Pixar's RenderMan software — used to create it — been used in before Toy Story demonstrated it could make an entire movie?",
       "type": "text",
-      "correct_answer": "Zero — Toy Story was the proof of concept",
+      "correct_answer": "Zero",
+      "explanation": "Toy Story was the proof of concept",
       "possible_answers": null,
       "alternative_answers": ["none", "zero", "no films", "it hadn't been used before"],
       "topic": "Movies",
@@ -269,7 +271,8 @@
     {
       "question": "The household microwave oven was discovered by accident in 1945 when an engineer noticed something unexpected while working with radar technology. What happened that led to the invention?",
       "type": "text",
-      "correct_answer": "A chocolate bar in his pocket melted while he stood near an active radar magnetron",
+      "correct_answer": "A chocolate bar in his pocket melted",
+      "explanation": "while he stood near an active radar magnetron",
       "possible_answers": null,
       "alternative_answers": ["chocolate melted in his pocket", "a chocolate bar melted", "candy melted near the radar", "food melted near the radar device"],
       "topic": "Technology",
@@ -345,7 +348,8 @@
     {
       "question": "GPS satellite navigation was initially so accurate that the US military deliberately degraded its precision for civilian use — adding artificial errors to the signal. What was this limitation called, and when was it switched off?",
       "type": "text",
-      "correct_answer": "Selective Availability — switched off in May 2000 by President Clinton",
+      "correct_answer": "Selective Availability",
+      "explanation": "switched off in May 2000 by President Clinton",
       "possible_answers": null,
       "alternative_answers": ["selective availability", "SA", "they turned off selective availability in 2000", "year 2000"],
       "topic": "Technology",
@@ -383,7 +387,8 @@
     {
       "question": "The Wilhelm Scream is a famous sound effect used in hundreds of films since 1951. What makes it so easy to notice once you know it?",
       "type": "text",
-      "correct_answer": "It is always the same single recorded scream — reused across hundreds of films, including Star Wars and Indiana Jones",
+      "correct_answer": "It is always the same single recorded scream",
+      "explanation": "reused across hundreds of films, including Star Wars and Indiana Jones",
       "possible_answers": null,
       "alternative_answers": ["it's always the same scream", "the same recording is reused", "one single recording used in every film", "the same sound clip is used repeatedly"],
       "topic": "Movies",
@@ -421,7 +426,8 @@
     {
       "question": "Velcro was invented by a Swiss engineer who noticed something after a walk in the countryside with his dog. What natural phenomenon inspired the design?",
       "type": "text",
-      "correct_answer": "Burr seeds (burdock) sticking to his dog's fur — tiny hooks latching onto loops",
+      "correct_answer": "Burr seeds (burdock) sticking to his dog's fur",
+      "explanation": "tiny hooks latching onto loops",
       "possible_answers": null,
       "alternative_answers": ["burrs sticking to his dog", "burdock burrs", "burrs from plants", "seed pods clinging to fur", "plant burrs"],
       "topic": "Technology",

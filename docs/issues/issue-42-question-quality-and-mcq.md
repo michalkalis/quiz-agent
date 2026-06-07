@@ -160,6 +160,8 @@ MCQOptionPicker ────────── E4 migrate Theme.Colors → Theme
 
 ### Track E — iOS MCQ voice (human, post-Ralph, simulator required)
 
+> **⤳ Superseded by #45 (2026-06-03).** Track E (42.14–42.18) is folded into `issue-45-ios-mcq-voice-and-redesign.md`, which merges it with the Pencil design-port and splits the work into Ralph-suitable logic/components vs human integration. Do the MCQ-voice work there, not here. Kept below for provenance.
+>
 > Ralph cannot drive Xcode simulator (README excludes iOS UI work). Run this track after backend ships MCQ questions to prod (post Track A–D + #36 task 2.20 pgvector cutover).
 >
 > **Convention:** Track E uses `- [HUMAN]` instead of `- [ ]` so the Ralph harness (which picks the first `- [ ]` top-to-bottom) skips them automatically. Flip to `- [x]` when done by hand.

@@ -32,9 +32,11 @@ def question_to_dict(question: Question) -> Dict[str, Any]:
         result["explanation"] = question.explanation
     if question.age_appropriate:
         result["age_appropriate"] = question.age_appropriate
-    # Extract model name from generation metadata for A/B testing
-    if question.generation_metadata and "model" in question.generation_metadata:
-        result["generated_by"] = question.generation_metadata["model"]
+    if question.headline_answer:
+        result["headline_answer"] = question.headline_answer
+    # generation_metadata is a typed GenerationProvenance model — use attribute access
+    if question.generation_metadata and question.generation_metadata.model:
+        result["generated_by"] = question.generation_metadata.model
     return result
 
 

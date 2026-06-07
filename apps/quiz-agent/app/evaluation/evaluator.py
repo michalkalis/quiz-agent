@@ -64,8 +64,14 @@ class AnswerEvaluator:
         if isinstance(correct_answer, list):
             correct_answer = correct_answer[0]  # Use first if multiple
 
+        # Open-shape questions (46.B7) carry a short `headline_answer` gist — the
+        # gettable answer a player can speak while driving — alongside the long
+        # `correct_answer` resolution. Score against the gist (generously), since
+        # the full resolution would never match a short spoken answer.
+        scoring_answer = question.headline_answer or correct_answer
+
         # Fast path: Normalized exact match
-        if normalize_text(user_answer) == normalize_text(str(correct_answer)):
+        if normalize_text(user_answer) == normalize_text(str(scoring_answer)):
             return "correct", 1.0
 
         # Check alternative answers
@@ -80,7 +86,7 @@ class AnswerEvaluator:
         # LLM evaluation for nuanced scoring
         result = await self._llm_evaluate(
             user_answer=user_answer,
-            correct_answer=str(correct_answer),
+            correct_answer=str(scoring_answer),
             question_text=question_text or question.question,
         )
 

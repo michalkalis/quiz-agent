@@ -154,6 +154,10 @@ class QuizFlowService:
                     "correct_answer": translated_correct,
                     "question_id": evaluated_question_id,
                 }
+                if current_question.headline_answer:
+                    result.evaluation["headline_answer"] = (
+                        current_question.headline_answer
+                    )
                 if current_question.explanation:
                     result.evaluation["explanation"] = current_question.explanation
 
@@ -178,6 +182,10 @@ class QuizFlowService:
                     "correct_answer": translated_correct,
                     "question_id": evaluated_question_id,
                 }
+                if current_question.headline_answer:
+                    result.evaluation["headline_answer"] = (
+                        current_question.headline_answer
+                    )
                 if current_question.explanation:
                     result.evaluation["explanation"] = current_question.explanation
                 result.feedback_received.append("skipped question")

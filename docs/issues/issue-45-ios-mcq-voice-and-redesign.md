@@ -65,7 +65,7 @@ A design iteration (Pencil) landed new question screens — tinted page bg, whit
 
 ### Track E (logic) — MCQ voice path (highest product value)
 
-- [ ] **45.2 `MCQTranscriptMatcher` (pure type + tests).** New value type that maps a committed transcript → matched option key (or nil). Match against: option keys (`"a"`/`"b"`…), Slovak ordinals/letters (`jedna`/`dva`/`tri`/`štyri`, `áčko`/`béčko`…), English ordinals (`one`/`two`…), and fuzzy value match against `sortedAnswerOptions`. Normalize (lowercase, strip punctuation/diacritics-aware). Ambiguous / no match → nil.
+- [x] **45.2 `MCQTranscriptMatcher` (pure type + tests).** New value type that maps a committed transcript → matched option key (or nil). Match against: option keys (`"a"`/`"b"`…), Slovak ordinals/letters (`jedna`/`dva`/`tri`/`štyri`, `áčko`/`béčko`…), English ordinals (`one`/`two`…), and fuzzy value match against `sortedAnswerOptions`. Normalize (lowercase, strip punctuation/diacritics-aware). Ambiguous / no match → nil.
       **Acceptance:** `MCQTranscriptMatcherTests` covers key, SK ordinal, EN ordinal, value, and ambiguous→nil cases (SK + EN). `-only-testing:HangsTests/MCQTranscriptMatcherTests` GREEN.
 
 - [ ] **45.3 Remove MCQ guards + route transcript to submit.** Delete the three `isMultipleChoice` guards (`QuizViewModel.swift:773`, `QuizViewModel+Audio.swift:73,101`). In `handleCommittedTranscript(_:)`, when `currentQuestion?.isMultipleChoice == true`, run the transcript through `MCQTranscriptMatcher`; on a match submit the option **value** via the existing `submitMCQAnswer(key:value:)` / `submitTextInput` path; on no-match leave the existing re-record/fallback behavior. **No UI changes here** (mic wiring into `mcqBody` is 45.9, human).

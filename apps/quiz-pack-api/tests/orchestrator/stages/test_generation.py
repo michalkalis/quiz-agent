@@ -294,6 +294,61 @@ async def test_normalizes_then_drops_violating_answers() -> None:
     assert result.info["questions"] == 5
 
 
+class _FakeNormalizer:
+    """Stand-in AnswerNormalizer: splits a known answer, drops the rest."""
+
+    def __init__(self) -> None:
+        self.calls: list[tuple[str, str]] = []
+
+    async def normalize(self, question: str, answer: str):
+        from app.generation.answer_normalizer import NormalizedAnswer
+
+        self.calls.append((question, answer))
+        if answer.startswith("A lush green landscape"):
+            return NormalizedAnswer(
+                head="Grassland/savanna",
+                explanation="A lush green landscape with rivers and lakes.",
+            )
+        return None  # indivisible / low-confidence → caller drops
+
+
+@pytest.mark.asyncio
+async def test_llm_normalizer_recovers_comma_tailed_remainder() -> None:
+    """Issue #46 task 46.A2b — the comma-tailed over-cap remainder that the
+    deterministic splitter (46.A2) leaves untouched is routed to the injected
+    LLM normalizer. A recoverable head is normalized (Sahara example); an
+    indivisible/low-confidence answer still drops. Without a normalizer (46.A2
+    behaviour) both would drop — this pins the new fallback wiring.
+    """
+    questions = [
+        _stub_question(0, correct_answer="Paris"),  # OK → keep untouched
+        _stub_question(
+            1,
+            correct_answer="A lush green landscape with flowing rivers, lakes and grazing wildlife",
+        ),  # Sahara: comma-only over cap → LLM normalizes to head
+        _stub_question(
+            2,
+            correct_answer="A rambling unverifiable musing, with no canonical core at all here",
+        ),  # comma-only over cap, normalizer returns None → DROP
+    ]
+    gen = _FakeGenerator(questions)
+    normalizer = _FakeNormalizer()
+    stage = GenerationStage(gen, answer_normalizer=normalizer)  # type: ignore[arg-type]
+    facts = [Fact(text="t", source_url="https://ex/1")]
+    ctx = _make_ctx(target_count=3, facts=facts)
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    by_text = {q.question: q for q in ctx.questions}
+    assert set(by_text) == {"stub question 0", "stub question 1"}
+    assert by_text["stub question 1"].correct_answer == "Grassland/savanna"
+    assert "lush green landscape" in by_text["stub question 1"].explanation
+    assert result.info["normalized_quality"] == 1
+    assert result.info["dropped_quality"] == 1
+    # Only the two over-cap remainders reach the normalizer, not "Paris".
+    assert len(normalizer.calls) == 2
+
+
 @pytest.mark.parametrize(
     "answer,expected",
     [

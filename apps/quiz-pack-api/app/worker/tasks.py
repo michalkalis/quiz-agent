@@ -42,7 +42,7 @@ def _build_stages(ctx: Dict[str, Any]) -> list[Stage]:
     session_factory = ctx.get("session_factory") or AsyncSessionLocal
     return [
         SourcingStage(ctx["fact_sourcer"]),
-        GenerationStage(ctx["generator"]),
+        GenerationStage(ctx["generator"], ctx.get("answer_normalizer")),
         VerificationStage(ctx["fact_verifier"]),
         ScoringStage(ctx["scorer"]),
         DedupStage(ctx["question_store"], ctx.get("gold_standard_path")),

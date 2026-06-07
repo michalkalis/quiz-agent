@@ -32,6 +32,7 @@ async def on_startup(ctx: Dict[str, Any]) -> None:
     """Build the per-worker singletons stashed on ARQ ctx."""
     from app.db.session import AsyncSessionLocal
     from app.generation.advanced_generator import AdvancedQuestionGenerator
+    from app.generation.answer_normalizer import AnswerNormalizer
     from app.scoring.multi_model_scorer import MultiModelScorer
     from app.sourcing.fact_sourcer import FactSourcer
     from app.verification.fact_verifier import FactVerifier
@@ -40,6 +41,8 @@ async def on_startup(ctx: Dict[str, Any]) -> None:
     ctx["session_factory"] = AsyncSessionLocal
     ctx["fact_sourcer"] = FactSourcer()
     ctx["generator"] = AdvancedQuestionGenerator()
+    # 46.A2b — fail-safe to drop when GOOGLE_API_KEY is absent.
+    ctx["answer_normalizer"] = AnswerNormalizer()
     ctx["fact_verifier"] = FactVerifier()
     ctx["scorer"] = MultiModelScorer()
     ctx["question_store"] = ChromaDBClient().store

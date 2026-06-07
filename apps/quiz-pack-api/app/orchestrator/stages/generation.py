@@ -16,6 +16,7 @@ import logging
 import uuid
 
 from app.generation.advanced_generator import AdvancedQuestionGenerator
+from app.generation.answer_normalizer import AnswerNormalizer
 from app.generation.pattern_routing import PATTERNS_TO_MCQ, choose_question_type
 from app.orchestrator.context import OrderContext, StageResult
 from app.orchestrator.progress_sink import ProgressSink
@@ -124,8 +125,16 @@ class GenerationStage:
 
     name = "generating"
 
-    def __init__(self, generator: AdvancedQuestionGenerator) -> None:
+    def __init__(
+        self,
+        generator: AdvancedQuestionGenerator,
+        answer_normalizer: AnswerNormalizer | None = None,
+    ) -> None:
         self._generator = generator
+        # Issue #46 task 46.A2b — optional LLM normalizer for the ambiguous
+        # comma-tailed remainder the deterministic splitter can't recover.
+        # `None` keeps the 46.A2 fail-safe behaviour (those answers drop).
+        self._answer_normalizer = answer_normalizer
 
     async def run(self, ctx: OrderContext, sink: ProgressSink) -> StageResult:
         topics = [t for t in (ctx.category, ctx.theme) if t] or None
@@ -216,6 +225,33 @@ class GenerationStage:
                 )
                 kept.append(q)
                 continue
+            # 46.A2b — deterministic split failed (comma-tailed / no marker).
+            # Defer to the optional LLM normalizer for the judgment call
+            # "canonical head + appositive vs. one indivisible answer?". It
+            # fail-safes to None (→ drop) when unavailable or low-confidence,
+            # so nothing is normalized to a guess.
+            if self._answer_normalizer is not None and isinstance(
+                q.correct_answer, str
+            ):
+                normalized = await self._answer_normalizer.normalize(
+                    q.question, q.correct_answer
+                )
+                if normalized is not None:
+                    if normalized.explanation:
+                        q.explanation = _merge_explanation(
+                            q.explanation, normalized.explanation
+                        )
+                    q.correct_answer = normalized.head
+                    normalized_quality += 1
+                    logger.info(
+                        "GenerationStage LLM-normalized question id=%s head=%r "
+                        "reason=%s",
+                        q.id,
+                        normalized.head,
+                        reason,
+                    )
+                    kept.append(q)
+                    continue
             dropped_quality += 1
             logger.warning(
                 "GenerationStage dropped question id=%s reason=%s answer=%r",

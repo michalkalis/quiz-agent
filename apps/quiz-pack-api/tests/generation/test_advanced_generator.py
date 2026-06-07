@@ -210,6 +210,108 @@ def test_format_mcq_patterns_section_lists_each_pattern() -> None:
     assert "Distractor quality rule" in section
 
 
+# --- Issue #46 task 46.B4b — open/logical branch generation ---------------
+#
+# Why these scenarios: B4b wires `question_generation_open.md` (B3) into the
+# generator so open-shape questions are *actually* produced with the two-field
+# `headline_answer` + `explanation` contract — not just post-tagged (B4a). The
+# tests pin (1) that the open slice is generated through the open prompt (the
+# prompt text is the only seam proving the right template was used), (2) that
+# `headline_answer` survives the parse onto the returned Question, and (3) that
+# a pure lateral puzzle is tagged `pipeline="logical_puzzle"` at generation
+# time so F8's source_url relaxation (B4a/D4) applies, while an open-mechanism
+# question stays web-verifiable (no special pipeline).
+
+_OPEN_PUZZLE_RESPONSE = """{
+  "questions": [
+    {
+      "id": "q_open_puzzle",
+      "reasoning": {"pattern_used": "lateral_thinking", "why_interesting": "x",
+        "universal_appeal": "x", "boring_check": "x"},
+      "question": "A man pushes his car to a hotel and loses his fortune. Why?",
+      "type": "text",
+      "headline_answer": "He is playing Monopoly",
+      "correct_answer": "He is playing Monopoly and landed on a hotel-owned property",
+      "explanation": "The car is a Monopoly token; he landed on a hotel-owned property.",
+      "alternative_answers": ["It's a board game"],
+      "possible_answers": null,
+      "topic": "Puzzles",
+      "category": "general",
+      "difficulty": "medium",
+      "tags": [],
+      "language_dependent": false,
+      "age_appropriate": "all"
+    }
+  ]
+}"""
+
+_OPEN_MECHANISM_RESPONSE = """{
+  "questions": [
+    {
+      "id": "q_open_mech",
+      "reasoning": {"pattern_used": "open_question", "why_interesting": "x",
+        "universal_appeal": "x", "boring_check": "x"},
+      "question": "Why are Ferraris traditionally red?",
+      "type": "text",
+      "headline_answer": "Italy's national racing colour",
+      "correct_answer": "Italy's national racing colour (rosso corsa)",
+      "explanation": "Early-1900s Grand Prix rules assigned each nation a colour; red went to Italy.",
+      "alternative_answers": ["rosso corsa"],
+      "possible_answers": null,
+      "topic": "Cars",
+      "category": "general",
+      "difficulty": "medium",
+      "tags": [],
+      "language_dependent": false,
+      "age_appropriate": "all"
+    }
+  ]
+}"""
+
+
+@pytest.mark.asyncio
+async def test_open_count_generates_through_open_prompt_with_headline_answer() -> None:
+    fake_ainvoke = AsyncMock(return_value=_llm_response(_OPEN_PUZZLE_RESPONSE))
+    gen = _make_generator_with_fake_llm(fake_ainvoke)
+
+    questions = await gen.generate_questions(
+        count=1,
+        open_count=1,
+        difficulty="medium",
+        categories=["general"],
+    )
+
+    # The open slice is the whole batch (count - open_count == 0), so best-of-N
+    # never runs and the critique LLM is untouched.
+    assert len(questions) == 1
+    q = questions[0]
+    assert q.headline_answer == "He is playing Monopoly"
+    # Pure lateral puzzle → tagged so F8 lets it persist without a source_url.
+    assert q.generation_metadata is not None
+    assert q.generation_metadata.pipeline == "logical_puzzle"
+    assert q.generation_metadata.prompt_version == "open"
+
+    # Proof the open template (not v2/v3 fact-first) produced this question.
+    prompt_text = fake_ainvoke.await_args.args[0][0].content
+    assert "Open / Logical Branch" in prompt_text
+
+
+@pytest.mark.asyncio
+async def test_open_mechanism_keeps_factual_pipeline() -> None:
+    fake_ainvoke = AsyncMock(return_value=_llm_response(_OPEN_MECHANISM_RESPONSE))
+    gen = _make_generator_with_fake_llm(fake_ainvoke)
+
+    questions = await gen.generate_questions(
+        count=1, open_count=1, difficulty="medium", categories=["general"]
+    )
+
+    q = questions[0]
+    assert q.headline_answer == "Italy's national racing colour"
+    # Open-mechanism answers are web-verifiable → no logical_puzzle tag, so F8
+    # still requires a source_url for them (R3).
+    assert q.generation_metadata.pipeline != "logical_puzzle"
+
+
 def test_extract_pattern_used_returns_none_for_missing_provenance() -> None:
     assert AdvancedQuestionGenerator._extract_pattern_used(None) is None
 

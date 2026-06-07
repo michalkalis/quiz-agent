@@ -17,6 +17,7 @@ import os
 
 from quiz_shared.models.question import GenerationProvenance, Question
 from .prompt_builder import PromptBuilder
+from .pattern_routing import verification_mode
 
 try:
     from ..sourcing.models import Fact
@@ -81,6 +82,17 @@ class AdvancedQuestionGenerator:
         if os.path.exists(v3_template_path):
             self.v3_prompt_builder = PromptBuilder(template_path=v3_template_path)
 
+        # Issue #46 task 46.B4b — open/logical branch template. Open-shape
+        # questions (mechanism + lateral puzzles) are generated through this
+        # prompt so they emit the two-field `headline_answer` + `explanation`
+        # contract (46.B3); pure puzzles are tagged `pipeline="logical_puzzle"`.
+        open_template_path = os.path.join(
+            current_dir, "..", "..", "prompts", "question_generation_open.md"
+        )
+        self.open_prompt_builder = None
+        if os.path.exists(open_template_path):
+            self.open_prompt_builder = PromptBuilder(template_path=open_template_path)
+
         # Load critique prompt (prefer V2 calibrated version)
         critique_v2_path = os.path.join(
             current_dir, "..", "..", "prompts", "question_critique_v2.md"
@@ -107,6 +119,7 @@ class AdvancedQuestionGenerator:
         min_quality_score: float = 7.0,
         source_facts: Optional[list] = None,
         mcq_patterns: Optional[set[str]] = None,
+        open_count: int = 0,
     ) -> List[Question]:
         """Generate questions using multi-stage quality pipeline.
 
@@ -151,6 +164,29 @@ class AdvancedQuestionGenerator:
             ...     n_multiplier=3  # Generate 30, return best 10
             ... )
         """
+        # Issue #46 task 46.B4b — generate the open-shape slice through the
+        # dedicated open/logical prompt (two-field `headline_answer` +
+        # `explanation` contract, 46.B3). Best-of-N / critique stays on the
+        # closed slice; the open slice is generated directly so the sentence
+        # answer survives the critique judge unchanged.
+        open_questions: List[Question] = []
+        if open_count > 0:
+            print(f"Generating {open_count} open-shape questions...")
+            open_questions = await self._generate_batch(
+                count=open_count,
+                difficulty=difficulty,
+                topics=topics,
+                categories=categories,
+                question_type=question_type,
+                excluded_topics=excluded_topics,
+                avoid_questions=avoid_questions,
+                user_bad_examples=user_bad_examples,
+                open_shape=True,
+            )
+            count = max(0, count - open_count)
+        if count == 0:
+            return open_questions
+
         if enable_best_of_n:
             # Stage 1: Generate N x count questions
             generate_count = count * n_multiplier
@@ -205,11 +241,11 @@ class AdvancedQuestionGenerator:
                 # For now, just warn
                 print(f"Warning: {low_quality_count}/{count} questions scored below {min_quality_score}")
 
-            return selected_questions
+            return open_questions + selected_questions
 
         else:
             # Simple generation without Best-of-N
-            return await self._generate_batch(
+            closed_questions = await self._generate_batch(
                 count=count,
                 difficulty=difficulty,
                 topics=topics,
@@ -221,6 +257,7 @@ class AdvancedQuestionGenerator:
                 source_facts=source_facts,
                 mcq_patterns=mcq_patterns,
             )
+            return open_questions + closed_questions
 
     async def _generate_batch(
         self,
@@ -234,6 +271,7 @@ class AdvancedQuestionGenerator:
         user_bad_examples: Optional[List[str]],
         source_facts: Optional[list] = None,
         mcq_patterns: Optional[set[str]] = None,
+        open_shape: bool = False,
     ) -> List[Question]:
         """Generate a batch of questions.
 
@@ -246,10 +284,22 @@ class AdvancedQuestionGenerator:
                 snake_case keys and emit ``possible_answers`` + key-letter
                 ``correct_answer`` when it picks one.
         """
-        # Determine which prompt builder and version to use
-        use_fact_first = source_facts and self.v3_prompt_builder is not None
-        prompt_builder = self.v3_prompt_builder if use_fact_first else self.prompt_builder
-        prompt_version = "v3_fact_first" if use_fact_first else self.prompt_version
+        # Determine which prompt builder and version to use. The open/logical
+        # branch (46.B4b) takes precedence and never uses source_facts — open
+        # questions are generated from the dedicated prompt, not fact-first.
+        use_open = open_shape and self.open_prompt_builder is not None
+        use_fact_first = (
+            not use_open and source_facts and self.v3_prompt_builder is not None
+        )
+        if use_open:
+            prompt_builder = self.open_prompt_builder
+            prompt_version = "open"
+        elif use_fact_first:
+            prompt_builder = self.v3_prompt_builder
+            prompt_version = "v3_fact_first"
+        else:
+            prompt_builder = self.prompt_builder
+            prompt_version = self.prompt_version
 
         # Build the facts section for V3 prompt
         extra_kwargs = {}
@@ -300,12 +350,26 @@ class AdvancedQuestionGenerator:
             # (via GenerationProvenance._absorb_unknown_keys); we lift
             # `pattern_used` into the typed `reasoning_pattern` slot here.
             pattern_used = self._extract_pattern_used(q.generation_metadata)
+            # Issue #46 task 46.B4b — tag pure lateral puzzles
+            # `pipeline="logical_puzzle"` at generation time so F8's
+            # source_url relaxation (46.B4a / D4) applies; open-mechanism
+            # questions stay web-verifiable and keep no special pipeline.
+            if use_open:
+                pipeline = (
+                    "logical_puzzle"
+                    if verification_mode(pattern_used, q.question) == "logical"
+                    else None
+                )
+            elif use_fact_first:
+                pipeline = "fact_first"
+            else:
+                pipeline = None
             q.generation_metadata = GenerationProvenance(
                 model=self.generation_model,
                 provider="openai",
                 prompt_version=prompt_version,
                 generation_temperature=self.generation_llm.temperature,
-                pipeline="fact_first" if use_fact_first else None,
+                pipeline=pipeline,
                 reasoning_pattern=pattern_used,
                 extra={"stage": "initial_generation"},
             )

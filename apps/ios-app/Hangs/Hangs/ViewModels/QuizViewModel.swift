@@ -768,9 +768,9 @@ final class QuizViewModel: ObservableObject {
     // MARK: - Auto-Record or Timer
 
     /// Choose between auto-record (Phase 2) or answer timer (Phase 1) based on settings
-    private func startRecordingOrTimer() {
+    /// (internal so the MCQ guard-removal regression can drive it directly — 45.3).
+    func startRecordingOrTimer() {
         guard quizState == .askingQuestion else { return }
-        guard currentQuestion?.isMultipleChoice != true else { return }
 
         if settings.autoRecordEnabled && silenceDetectionService != nil && !isRerecording {
             // Auto-record path: thinking time countdown → auto-start recording

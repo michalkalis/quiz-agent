@@ -70,7 +70,6 @@ extension QuizViewModel {
         guard !settings.isMuted else {
             await startSilenceDetectionListening()
             guard quizState == .askingQuestion else { return }
-            guard currentQuestion?.isMultipleChoice != true else { return }
 
             if settings.autoRecordEnabled && silenceDetectionService != nil && !isRerecording {
                 startThinkingTimeCountdown()
@@ -97,8 +96,6 @@ extension QuizViewModel {
 
         // After TTS finishes (or was interrupted by barge-in), choose next path
         guard quizState == .askingQuestion else { return }
-        // MCQ questions use tap selection, not recording
-        guard currentQuestion?.isMultipleChoice != true else { return }
 
         if settings.autoRecordEnabled && silenceDetectionService != nil && !isRerecording {
             // Auto-record path: thinking time countdown → auto-start recording

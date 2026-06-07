@@ -159,7 +159,8 @@ extension QuizViewModel {
     }
 
     /// Handle committed transcript from ElevenLabs VAD
-    private func handleCommittedTranscript(_ text: String) async {
+    /// (internal so the MCQ-voice routing can be unit-tested directly — 45.3).
+    func handleCommittedTranscript(_ text: String) async {
         guard quizState == .recording else { return }
 
         // Stop streaming recording
@@ -175,6 +176,17 @@ extension QuizViewModel {
         isStreamingSTT = false
 
         Logger.stt.info("🎙️ Committed transcript: \(text, privacy: .public)")
+
+        // MCQ voice path (45.3): resolve a spoken letter / ordinal / answer text
+        // to an option and submit its value directly, skipping the confirmation
+        // modal. An ambiguous / unrecognized transcript falls through to the
+        // normal modal so the driver can re-record rather than submit a guess.
+        if let question = currentQuestion, question.isMultipleChoice,
+           let key = MCQTranscriptMatcher.match(text, options: question.sortedAnswerOptions),
+           let value = question.possibleAnswers?[key] {
+            await submitMCQAnswer(key: key, value: value)
+            return
+        }
 
         // Show confirmation modal with the transcribed text
         transcribedAnswer = text

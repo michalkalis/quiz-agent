@@ -47,7 +47,8 @@
   },
   {
     "question": "In 1903, a board game was created to demonstrate the evils of unchecked capitalism. What game is it?",
-    "answer": "Monopoly (based on Elizabeth Magie's 'The Landlord's Game' from 1903)",
+    "answer": "Monopoly",
+    "explanation": "Based on Elizabeth Magie's 'The Landlord's Game' from 1903.",
     "why_excellent": "The irony of Monopoly being designed to critique monopolies, yet becoming a celebration of them, creates a delightful surprise.",
     "pattern": "Surprising Connection",
     "source": "Wikipedia",
@@ -96,7 +97,8 @@
   },
   {
     "question": "Ketchup was sold in the 1830s as a cure for which common ailment?",
-    "answer": "Diarrhea (Dr. John Cook Bennett marketed tomato ketchup as medicine)",
+    "answer": "Diarrhea",
+    "explanation": "Dr. John Cook Bennett marketed tomato ketchup as medicine.",
     "why_excellent": "Transforms a ubiquitous condiment into a historical oddity, linking food to quack medicine.",
     "pattern": "Surprising Connection",
     "source": "historical record",
@@ -124,7 +126,8 @@
   },
   {
     "question": "Which Olympic sport was once judged partly on the elegance of a competitor's dive into the water during the swimming events?",
-    "answer": "Diving (originally part of swimming competitions at the 1904 Olympics)",
+    "answer": "Diving",
+    "explanation": "Originally part of swimming competitions at the 1904 Olympics.",
     "why_excellent": "Connects the origin of an entire Olympic discipline to a subsection of another sport.",
     "pattern": "Surprising Connection",
     "source": "International Olympic Committee records",
@@ -239,7 +242,8 @@
   },
   {
     "question": "One part of the human body has no blood supply and gets its oxygen directly from the air. What is it?",
-    "answer": "The cornea (of the eye)",
+    "answer": "The cornea",
+    "explanation": "Of the eye.",
     "why_excellent": "Reveals a surprising property of an organ everyone uses every waking moment. The cornea is the only body part that breathes directly.",
     "pattern": "Hidden Property",
     "source": "American Academy of Ophthalmology",
@@ -253,7 +257,8 @@
   },
   {
     "question": "Name a common household liquid that is more acidic than vinegar.",
-    "answer": "Lemon juice (pH ~2 vs vinegar's ~2.5)",
+    "answer": "Lemon juice",
+    "explanation": "pH ~2 vs vinegar's ~2.5.",
     "why_excellent": "Challenges the assumption that vinegar is the most acidic thing in your kitchen, using a familiar comparison.",
     "pattern": "Hidden Property",
     "source": "common knowledge",
@@ -267,7 +272,8 @@
   },
   {
     "question": "What five-letter English word becomes shorter when you add two letters to it?",
-    "answer": "Short (add 'er' to get 'shorter')",
+    "answer": "Short",
+    "explanation": "Add 'er' to get 'shorter'.",
     "why_excellent": "A pure wordplay puzzle that creates an 'aha!' moment. The paradox of a word becoming 'shorter' by getting longer is delightful.",
     "pattern": "Wordplay Revelation",
     "source": "common knowledge",
@@ -284,7 +290,8 @@
   },
   {
     "question": "If all the world's ice melted, would sea levels rise by about 2 meters, 20 meters, or 70 meters?",
-    "answer": "About 70 meters (enough to submerge most coastal cities)",
+    "answer": "About 70 meters",
+    "explanation": "Enough to submerge most coastal cities.",
     "why_excellent": "Three options that span a massive range. Most people massively underestimate. The estimation format lets you reason: 'Antarctica is huge, Greenland too... it must be a LOT of water.' The scale of 70m is shocking.",
     "pattern": "Estimation Challenge",
     "source": "National Snow and Ice Data Center / USGS",
@@ -341,7 +348,8 @@
   },
   {
     "question": "Which country has more pyramids than Egypt?",
-    "answer": "Sudan (over 200 pyramids compared to Egypt's roughly 130)",
+    "answer": "Sudan",
+    "explanation": "Over 200 pyramids compared to Egypt's roughly 130.",
     "why_excellent": "Directly challenges the universal assumption that Egypt has the most pyramids. The margin is not even close.",
     "pattern": "Scale Surprise",
     "source": "UNESCO World Heritage",
@@ -383,7 +391,8 @@
   },
   {
     "question": "Thanks to its overseas territories, one country spans 12 time zones — more than any other. What country?",
-    "answer": "France (12 time zones, due to its overseas territories)",
+    "answer": "France",
+    "explanation": "12 time zones, due to its overseas territories.",
     "why_excellent": "Challenges the assumption that the largest countries (Russia, USA) would have the most time zones. France's colonial legacy creates this surprise.",
     "pattern": "Scale Surprise",
     "source": "CIA World Factbook",
@@ -431,7 +440,8 @@
   },
   {
     "question": "How many trees are there on Earth: closer to 400 million, 40 billion, or 3 trillion?",
-    "answer": "About 3 trillion (roughly 400 trees per person)",
+    "answer": "About 3 trillion",
+    "explanation": "Roughly 400 trees per person.",
     "why_excellent": "The sheer scale of 3 trillion trees, and the per-person ratio, reframes our understanding of the planet's forests.",
     "pattern": "Scale Surprise",
     "source": "Nature journal (2015)",
@@ -518,7 +528,8 @@
   },
   {
     "question": "Which U.S. president was also a licensed bartender?",
-    "answer": "Abraham Lincoln (he co-owned a tavern in New Salem, Illinois)",
+    "answer": "Abraham Lincoln",
+    "explanation": "He co-owned a tavern in New Salem, Illinois.",
     "why_excellent": "Juxtaposes the gravitas of the presidency with the humbleness of bartending, humanizing a legendary figure.",
     "pattern": "Historical Quirk",
     "source": "Abraham Lincoln Presidential Library",
@@ -591,7 +602,8 @@
   },
   {
     "question": "One animal can survive being frozen completely solid and thaw back to life. What is it?",
-    "answer": "Wood frog (Rana sylvatica)",
+    "answer": "Wood frog",
+    "explanation": "Rana sylvatica.",
     "why_excellent": "A seemingly impossible survival strategy that sounds magical but is real biology. Challenges our definition of 'alive.'",
     "pattern": "Biological/Physical Oddity",
     "source": "Journal of Experimental Biology",
@@ -605,7 +617,8 @@
   },
   {
     "question": "Which animal sleeps with one half of its brain at a time, keeping the other half alert?",
-    "answer": "Dolphin (unihemispheric slow-wave sleep)",
+    "answer": "Dolphin",
+    "explanation": "Unihemispheric slow-wave sleep.",
     "why_excellent": "Half-brain sleeping is a genuinely mind-bending adaptation that reimagines what sleep even means.",
     "pattern": "Biological/Physical Oddity",
     "source": "Nature journal",
@@ -633,7 +646,8 @@
   },
   {
     "question": "Which is the only mammal that can truly fly?",
-    "answer": "Bat (flying squirrels glide, not fly)",
+    "answer": "Bat",
+    "explanation": "Flying squirrels glide, not fly.",
     "why_excellent": "Challenges the common misconception about flying squirrels and highlights bat uniqueness among mammals.",
     "pattern": "Biological/Physical Oddity",
     "source": "common knowledge",
@@ -661,7 +675,8 @@
   },
   {
     "question": "In a room of just 23 people, what is the probability that two share a birthday: about 10%, 30%, or 50%?",
-    "answer": "About 50% (the birthday paradox)",
+    "answer": "About 50%",
+    "explanation": "The birthday paradox.",
     "why_excellent": "One of the most famous counterintuitive results in probability. The estimation format creates engagement — you reason about the odds, and nearly everyone guesses wrong.",
     "pattern": "Estimation Challenge",
     "source": "mathematics (birthday problem)",
@@ -675,7 +690,8 @@
   },
   {
     "question": "If you fold a standard piece of paper in half 42 times (if you could), how far would it reach: the ceiling, the top of Everest, or the Moon?",
-    "answer": "The Moon (exponential doubling reaches approximately 440,000 km)",
+    "answer": "The Moon",
+    "explanation": "Exponential doubling reaches approximately 440,000 km.",
     "why_excellent": "Demonstrates the mind-bending power of exponential growth using an everyday object. The three options create a clear engagement path — you reason about doubling and scale.",
     "pattern": "Estimation Challenge",
     "source": "mathematics",
@@ -689,7 +705,8 @@
   },
   {
     "question": "A bat and a ball cost $1.10 together. The bat costs $1.00 more than the ball. How much does the ball cost?",
-    "answer": "5 cents (not 10 cents as most people instinctively answer)",
+    "answer": "5 cents",
+    "explanation": "Not 10 cents, as most people instinctively answer.",
     "why_excellent": "The classic cognitive reflection test. Maximum engagement — you DO the math, get tricked by intuition, then discover the real answer. Perfect reasoning puzzle.",
     "pattern": "Lateral Thinking Puzzle",
     "source": "Shane Frederick, Cognitive Reflection Test (2005)",

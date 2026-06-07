@@ -24,6 +24,7 @@ from pathlib import Path
 import pytest
 
 from app.generation.examples import load_gold_standard
+from app.scoring.multi_model_scorer import _ANSWER_TAIL_MARKERS, _ANSWER_WORD_CAP
 from quiz_shared.models.question import Question
 
 
@@ -35,10 +36,40 @@ _GOLD_PATH = (
 )
 
 
-def _load_mcq_examples() -> list[dict]:
+def _load_all_examples() -> list[dict]:
     with _GOLD_PATH.open("r", encoding="utf-8") as f:
-        examples = json.load(f)
-    return [e for e in examples if e.get("type") == "text_multichoice"]
+        return json.load(f)
+
+
+def _load_mcq_examples() -> list[dict]:
+    return [e for e in _load_all_examples() if e.get("type") == "text_multichoice"]
+
+
+def _load_text_examples() -> list[dict]:
+    return [e for e in _load_all_examples() if e.get("type") != "text_multichoice"]
+
+
+@pytest.mark.parametrize("ex", _load_text_examples())
+def test_gold_standard_answer_within_word_cap(ex: dict) -> None:
+    """46.A3 acceptance: no gold-standard answer teaches the long form.
+
+    Verbose answers in the prompt's gold-standard examples teach the model
+    that a descriptive sentence is an acceptable `correct_answer` (issue #42
+    notes; issue-46 motivation §"Pipeline gaps"). After A3 every text answer
+    must be a clean canonical head within the word cap with no explanation
+    tail — the context lives in the new `explanation` field instead.
+    """
+    answer = ex["answer"]
+    assert len(answer.split()) <= _ANSWER_WORD_CAP, (
+        f"Gold-standard answer {answer!r} exceeds the {_ANSWER_WORD_CAP}-word "
+        "cap — move the context into `explanation`."
+    )
+    lowered = answer.lower()
+    tail = next((m for m in _ANSWER_TAIL_MARKERS if m in lowered), None)
+    assert tail is None, (
+        f"Gold-standard answer {answer!r} carries an explanation tail "
+        f"({tail!r}) — move it into `explanation`."
+    )
 
 
 def test_gold_standard_contains_at_least_three_mcq_examples() -> None:

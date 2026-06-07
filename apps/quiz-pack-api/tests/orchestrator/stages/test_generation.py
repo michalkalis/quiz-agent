@@ -238,41 +238,92 @@ async def test_raises_when_no_question_has_source_url() -> None:
 
 
 @pytest.mark.asyncio
-async def test_drops_questions_violating_answer_brevity() -> None:
-    """Issue #42 task 42.7 — post-generation fail-loud validator.
+async def test_normalizes_then_drops_violating_answers() -> None:
+    """Issue #46 task 46.A2 — post-generation **normalize-then-drop**.
 
-    Rules enforced (mirror the v3/v2 prompt constraints from 42.5):
-    `correct_answer` ≤ 10 words and free of em/en-dash, "because",
-    "namely", "i.e.", "which means". Violations are dropped and the
-    count is surfaced via `StageResult.info["dropped_quality"]` so
-    SSE clients and the audit log see the filter activity (same
-    shape as DedupStage's `dropped` field).
+    Supersedes the old drop-only behaviour (42.7). A verbose
+    `correct_answer` with a clean short head before an unambiguous tail
+    marker (em/en-dash, "because", "while", …) is *split*: the head stays
+    in `correct_answer`, the tail moves to `explanation` so the context is
+    preserved rather than thrown away (the audit found 96% of "bad"
+    answers were short answers written verbosely). A question is dropped
+    only when no recoverable short head exists. Counts surface via
+    `StageResult.info` so SSE clients + the audit log see the activity.
     """
     questions = [
-        _stub_question(0, correct_answer="Paris"),  # OK
+        _stub_question(0, correct_answer="Paris"),  # OK → keep untouched
         _stub_question(
             1,
-            correct_answer="Paris — the capital of France since the tenth century",
-        ),  # em-dash + over cap → drop
-        _stub_question(2, correct_answer="Jupiter"),  # OK
+            correct_answer="Selective Availability — switched off in 2000 by Clinton",
+        ),  # GPS audit example: em-dash → normalize to head
+        _stub_question(2, correct_answer="Jupiter"),  # OK → keep
         _stub_question(
             3,
             correct_answer="False because the wall is not actually visible from orbit",
-        ),  # "because" tail → drop
+        ),  # "because" tail → normalize to "False"
         _stub_question(4, correct_answer=["Mercury", "Venus"]),  # OK (list, short)
+        _stub_question(
+            5,
+            correct_answer="A lush green landscape with flowing rivers, lakes and abundant grazing wildlife",
+        ),  # Sahara audit example: comma-only, over cap, no head → DROP
     ]
     gen = _FakeGenerator(questions)
     stage = GenerationStage(gen)  # type: ignore[arg-type]
     facts = [Fact(text="t", source_url="https://ex/1")]
-    ctx = _make_ctx(target_count=5, facts=facts)
+    ctx = _make_ctx(target_count=6, facts=facts)
 
     result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
 
-    assert len(ctx.questions) == 3
-    kept_ids = {q.question for q in ctx.questions}
-    assert kept_ids == {"stub question 0", "stub question 2", "stub question 4"}
-    assert result.info["dropped_quality"] == 2
-    assert result.info["questions"] == 3
+    by_text = {q.question: q for q in ctx.questions}
+    assert set(by_text) == {
+        "stub question 0",
+        "stub question 1",
+        "stub question 2",
+        "stub question 3",
+        "stub question 4",
+    }
+    # Normalized heads replace the verbose answer; the tail lands in explanation.
+    assert by_text["stub question 1"].correct_answer == "Selective Availability"
+    assert "switched off in 2000" in by_text["stub question 1"].explanation
+    assert by_text["stub question 3"].correct_answer == "False"
+    assert "because" in by_text["stub question 3"].explanation
+    # Untouched short answers keep an empty explanation.
+    assert by_text["stub question 0"].correct_answer == "Paris"
+    assert result.info["normalized_quality"] == 2
+    assert result.info["dropped_quality"] == 1  # Sahara example, no short head
+    assert result.info["questions"] == 5
+
+
+@pytest.mark.parametrize(
+    "answer,expected",
+    [
+        # Splits: clean head before an unambiguous marker.
+        (
+            "Selective Availability — switched off in 2000 by Clinton",
+            ("Selective Availability", "switched off in 2000 by Clinton"),
+        ),
+        ("True while the others are prime numbers", ("True", "while the others are prime numbers")),
+        # No split: comma is structural in legitimate short answers and must
+        # NOT be split by the deterministic pass (it defers to the LLM fallback).
+        ("Tokyo, Japan", None),
+        ("December 7, 1941", None),
+        ("salt, pepper, flour", None),
+        # No split: comma-only verbose answer has no unambiguous marker.
+        ("A lush green landscape with rivers, lakes and wildlife", None),
+        # No split: marker present but the head is itself over the cap → no
+        # recoverable canonical answer.
+        (
+            "The very long winding country road that goes absolutely nowhere at all — because reasons",
+            None,
+        ),
+    ],
+)
+def test_split_answer_head_deterministic(answer, expected) -> None:
+    """46.A2 — the deterministic splitter only fires on unambiguous markers
+    and never on a bare comma (the comma false-positive guard)."""
+    from app.orchestrator.stages.generation import _split_answer_head
+
+    assert _split_answer_head(answer) == expected
 
 
 @pytest.mark.asyncio

@@ -56,6 +56,61 @@ def _violates_answer_brevity(answer: object) -> str | None:
     return None
 
 
+# Issue #46 task 46.A2 — deterministic split markers for normalize-then-drop.
+# Only UNAMBIGUOUS markers: an em/en-dash or one of these connectives always
+# introduces an explanatory tail after a canonical head. A bare comma is
+# deliberately excluded — it is structural in legitimate short answers
+# ("Tokyo, Japan", "December 7, 1941", "salt, pepper, flour"), so comma-tailed
+# verbose answers are NOT split here; they route to the LLM normalization
+# fallback (46.A2b) where "canonical head vs. one indivisible answer?" is a
+# judgment call (CLAUDE.md rule #5). Word markers carry surrounding spaces so
+# they never match inside a longer token.
+_DETERMINISTIC_SPLIT_MARKERS = (
+    "—",  # em-dash
+    "–",  # en-dash
+    " because ",
+    " while ",
+    " namely ",
+    " due to ",
+    " i.e.",
+)
+
+
+def _split_answer_head(answer: str) -> tuple[str, str] | None:
+    """Deterministically split a verbose answer into (head, explanation_tail).
+
+    Returns the canonical short head and the explanatory tail when a clean
+    head sits before the earliest unambiguous tail marker; returns ``None``
+    when no marker is present or the head is itself empty/over the word cap
+    (i.e. there is no recoverable short answer — the caller must drop or defer
+    to the LLM fallback). Never splits on a bare comma.
+    """
+    lowered = answer.lower()
+    earliest: tuple[int, int] | None = None  # (index, marker_len)
+    for marker in _DETERMINISTIC_SPLIT_MARKERS:
+        idx = lowered.find(marker)
+        if idx > 0 and (earliest is None or idx < earliest[0]):
+            earliest = (idx, len(marker))
+    if earliest is None:
+        return None
+    idx, _mlen = earliest
+    head = answer[:idx].strip(" ,;:")
+    # Strip the dash glyph from a tail's lead but keep connective words
+    # ("because the wall…") so the explanation reads naturally.
+    tail = answer[idx:].lstrip(" —–").strip()
+    if not head or _violates_answer_brevity(head) is not None:
+        return None
+    return head, tail
+
+
+def _merge_explanation(existing: str | None, tail: str) -> str:
+    """Append a recovered answer tail to any existing explanation."""
+    existing = (existing or "").strip()
+    if not existing:
+        return tail
+    return f"{existing} {tail}".strip()
+
+
 def _compute_prompt_seed(
     prompt: str, language: str, category: str | None, theme: str | None
 ) -> str:
@@ -125,25 +180,49 @@ class GenerationStage:
                         fallback_fact, "excerpt", None
                     ) or getattr(fallback_fact, "text", None)
 
-        # Issue #42 task 42.7 — fail-loud post-generation brevity validator.
-        # Drops questions whose `correct_answer` violates the constraints the
-        # v2/v3 prompts now require (>10 words, em/en-dash, "because" etc.).
-        # Surfaced via StageResult.info["dropped_quality"] so SSE clients and
-        # the audit trail see how many got filtered, mirroring DedupStage.
+        # Issue #42 task 42.7 + #46 task 46.A2 — post-generation brevity
+        # validator, now **normalize-then-drop** instead of drop-only. A
+        # `correct_answer` with a clean short head before an unambiguous tail
+        # marker (em/en-dash, "because", "while", …) is split: head stays in
+        # `correct_answer`, tail moves to `explanation` so nothing is lost. A
+        # question is dropped only when no recoverable short head exists (the
+        # comma-tailed ambiguous remainder defers to the LLM fallback, 46.A2b).
+        # `dropped_quality` / `normalized_quality` are surfaced via
+        # StageResult.info so SSE clients + the audit trail see the activity,
+        # mirroring DedupStage.
         kept: list[Question] = []
         dropped_quality = 0
+        normalized_quality = 0
         for q in questions:
             reason = _violates_answer_brevity(q.correct_answer)
-            if reason is not None:
-                dropped_quality += 1
-                logger.warning(
-                    "GenerationStage dropped question id=%s reason=%s answer=%r",
-                    q.id,
-                    reason,
-                    q.correct_answer,
-                )
+            if reason is None:
+                kept.append(q)
                 continue
-            kept.append(q)
+            split = (
+                _split_answer_head(q.correct_answer)
+                if isinstance(q.correct_answer, str)
+                else None
+            )
+            if split is not None:
+                head, tail = split
+                q.explanation = _merge_explanation(q.explanation, tail)
+                q.correct_answer = head
+                normalized_quality += 1
+                logger.info(
+                    "GenerationStage normalized question id=%s head=%r reason=%s",
+                    q.id,
+                    head,
+                    reason,
+                )
+                kept.append(q)
+                continue
+            dropped_quality += 1
+            logger.warning(
+                "GenerationStage dropped question id=%s reason=%s answer=%r",
+                q.id,
+                reason,
+                q.correct_answer,
+            )
 
         # Issue #42 task 42.9a — post-generation type tagging for MCQ.
         # The LLM picks the reasoning pattern per question (stored on the
@@ -200,6 +279,7 @@ class GenerationStage:
             info={
                 "questions": len(ctx.questions),
                 "dropped_quality": dropped_quality,
+                "normalized_quality": normalized_quality,
                 "dropped_mcq_missing_options": dropped_mcq_missing_options,
             },
             cost_cents=0,

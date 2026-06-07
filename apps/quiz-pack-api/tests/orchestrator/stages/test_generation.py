@@ -238,6 +238,60 @@ async def test_raises_when_no_question_has_source_url() -> None:
 
 
 @pytest.mark.asyncio
+async def test_logical_puzzle_persists_without_source_url() -> None:
+    """Issue #46 task 46.B4 — a pure lateral puzzle (``verification_mode``
+    == "logical") is tagged ``pipeline == "logical_puzzle"`` and exempted
+    from F8: it is invented, has no web source, and ships with
+    ``source_url = null`` (D4/D5). Without the exemption the F8 invariant
+    would reject it for lacking attribution.
+    """
+    questions = [
+        _stub_question(
+            0,
+            correct_answer="The candle",
+            generation_metadata=GenerationProvenance(
+                reasoning_pattern="lateral_thinking"
+            ),
+        )
+    ]
+    gen = _FakeGenerator(questions)
+    stage = GenerationStage(gen)  # type: ignore[arg-type]
+    ctx = _make_ctx(target_count=1, facts=[])  # no facts → no source_url backfill
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert len(ctx.questions) == 1
+    q = ctx.questions[0]
+    assert q.source_url is None
+    assert q.generation_metadata.pipeline == "logical_puzzle"
+    assert result.info["questions"] == 1
+
+
+@pytest.mark.asyncio
+async def test_factual_question_without_source_url_still_fails_f8() -> None:
+    """Issue #46 task 46.B4 — the F8 relaxation is keyed strictly on the
+    ``logical_puzzle`` marker. A factual question (any non-logical pattern)
+    with no ``source_url`` must still fail loudly so the relaxation can never
+    mask an unsourced fact (R3).
+    """
+    questions = [
+        _stub_question(
+            0,
+            correct_answer="Paris",
+            generation_metadata=GenerationProvenance(
+                reasoning_pattern="fact_recall"
+            ),
+        )
+    ]
+    gen = _FakeGenerator(questions)
+    stage = GenerationStage(gen)  # type: ignore[arg-type]
+    ctx = _make_ctx(target_count=1, facts=[])
+
+    with pytest.raises(ValueError, match="F8 violated"):
+        await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+
+@pytest.mark.asyncio
 async def test_normalizes_then_drops_violating_answers() -> None:
     """Issue #46 task 46.A2 — post-generation **normalize-then-drop**.
 

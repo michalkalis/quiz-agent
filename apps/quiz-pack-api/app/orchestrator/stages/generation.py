@@ -17,7 +17,11 @@ import uuid
 
 from app.generation.advanced_generator import AdvancedQuestionGenerator
 from app.generation.answer_normalizer import AnswerNormalizer
-from app.generation.pattern_routing import PATTERNS_TO_MCQ, choose_question_type
+from app.generation.pattern_routing import (
+    PATTERNS_TO_MCQ,
+    choose_question_type,
+    verification_mode,
+)
 from app.orchestrator.context import OrderContext, StageResult
 from app.orchestrator.progress_sink import ProgressSink
 from app.scoring.multi_model_scorer import _ANSWER_TAIL_MARKERS, _ANSWER_WORD_CAP
@@ -294,13 +298,48 @@ class GenerationStage:
             else:
                 tagged.append(q)
 
+        # Issue #46 task 46.B4 — open/logical branch tagging (post-route, D1).
+        # A question whose `verification_mode` is "logical" (a pure lateral
+        # puzzle, by reasoning pattern or open framing) has no external source
+        # to attribute — mark its provenance `pipeline = "logical_puzzle"` so
+        # (a) VerificationStage (46.B6) routes it to the consistency judge and
+        # (b) the F8 relaxation below skips it. Fail-safe: everything else
+        # stays factual and keeps the hard source_url requirement (D4/R3).
+        # Prompt-side generation through `question_generation_open.md` (46.B3)
+        # is deferred to 46.B4b; this tags the existing factual output so the
+        # contract + F8 relaxation are exercised end to end first.
+        for q in tagged:
+            pattern = (
+                q.generation_metadata.reasoning_pattern
+                if q.generation_metadata is not None
+                else None
+            )
+            if verification_mode(pattern, q.question) == "logical":
+                provenance = q.generation_metadata or GenerationProvenance()
+                q.generation_metadata = provenance.model_copy(
+                    update={"pipeline": "logical_puzzle"}
+                )
+
         ctx.questions = tagged
 
         # F8 (task 2.15): every persisted question must carry a real source URL.
         # If the per-question fallback above couldn't fill `source_url` (e.g.
         # all sourced facts lacked URLs — OpenTriviaDB without attribution),
         # fail loudly here instead of letting the gap slip into Postgres.
-        missing = [q for q in ctx.questions if not q.source_url]
+        # Issue #46 D4/D5: logical puzzles (`pipeline == "logical_puzzle"`) are
+        # exempt — they are invented, have no web source, and ship with
+        # `source_url = null` plus a provenance marker. The relaxation is keyed
+        # strictly on that marker (set only by the open branch above) so a
+        # mislabelled factual question can never slip through unsourced (R3).
+        missing = [
+            q
+            for q in ctx.questions
+            if not q.source_url
+            and not (
+                q.generation_metadata is not None
+                and q.generation_metadata.pipeline == "logical_puzzle"
+            )
+        ]
         if missing:
             attributed = sum(
                 1 for f in (ctx.facts or []) if getattr(f, "source_url", None)

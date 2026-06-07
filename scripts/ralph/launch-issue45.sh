@@ -18,7 +18,7 @@
 # to start otherwise. Alternatively run the loop on the laptop (builds on iOS 26).
 set -euo pipefail
 
-export PATH=/opt/homebrew/bin:/opt/homebrew/sbin:$PATH
+export PATH="$HOME/.local/bin:/opt/homebrew/bin:/opt/homebrew/sbin:$PATH"
 export TERM=xterm-256color
 # Pick an Xcode that ships the iOS 26 SDK, in priority order:
 #   1. caller-provided DEVELOPER_DIR (respect an explicit override)
@@ -73,8 +73,12 @@ if tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
     exit 0
 fi
 
+# NB: set PATH *inside* the tmux command — a non-login pane shell does not source
+# ~/.zprofile, so `claude` (native install at ~/.local/bin) would be off PATH and
+# every ralph.sh iteration would die with exit 127. Escape $HOME/$PATH so they
+# resolve in the pane, not here.
 tmux new -d -s "$SESSION_NAME" \
-    "cd '$REPO_ROOT' && scripts/ralph/ralph.sh '$FOCUS_FILE' $MAX_ITERS; echo; echo '[ralph] loop finished — pane will sleep for 1h so you can scroll'; sleep 3600"
+    "export PATH=\"\$HOME/.local/bin:/opt/homebrew/bin:/opt/homebrew/sbin:\$PATH\"; cd '$REPO_ROOT' && scripts/ralph/ralph.sh '$FOCUS_FILE' $MAX_ITERS; echo; echo '[ralph] loop finished — pane will sleep for 1h so you can scroll'; sleep 3600"
 
 echo "[launch] started tmux session '$SESSION_NAME' running scripts/ralph/ralph.sh"
 echo "[launch] attach with:"

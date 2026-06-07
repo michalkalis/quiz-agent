@@ -270,3 +270,24 @@ class TestHeadlineAnswer:
     def test_from_dict_defaults_headline_answer_to_none(self):
         q = Question.from_dict(_base_question())
         assert q.headline_answer is None
+
+    def test_from_dict_falls_back_to_headline_when_correct_answer_null(self):
+        """Issue #46 task 46.B4c — the open prompt may emit
+        ``correct_answer: null`` for a pure lateral puzzle, but the field is
+        required (str|list) and iOS decodes it non-null. ``from_dict`` resolves
+        the conflict by using the short ``headline_answer`` gist so the puzzle
+        satisfies the contract without a schema/iOS change."""
+        q = Question.from_dict(
+            _base_question(
+                correct_answer=None,
+                headline_answer="The candle",
+            )
+        )
+        assert q.correct_answer == "The candle"
+        assert q.headline_answer == "The candle"
+
+    def test_from_dict_null_correct_answer_without_headline_stays_empty(self):
+        """Without a headline to fall back on, a null ``correct_answer`` must
+        still coerce to the required empty string rather than fail validation."""
+        q = Question.from_dict(_base_question(correct_answer=None))
+        assert q.correct_answer == ""

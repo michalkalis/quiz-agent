@@ -292,6 +292,55 @@ async def test_factual_question_without_source_url_still_fails_f8() -> None:
 
 
 @pytest.mark.asyncio
+async def test_open_fraction_routes_slice_through_open_pipeline() -> None:
+    """Issue #46 task 46.B4c — the orchestrated path routes a fraction of
+    ``target_count`` to the open slice. With ``open_fraction`` set, the stage
+    passes a non-zero ``open_count`` to the generator and the returned
+    open-shape question (carrying ``headline_answer``, tagged
+    ``pipeline=logical_puzzle``) survives post-processing — including the F8
+    relaxation — so the open contract reaches persistence.
+    """
+    questions = [
+        _stub_question(
+            0,
+            correct_answer="The candle",
+            headline_answer="The candle",
+            generation_metadata=GenerationProvenance(
+                reasoning_pattern="lateral_thinking"
+            ),
+        )
+    ]
+    gen = _FakeGenerator(questions)
+    # 4 * 0.5 = 2 → a deterministic, non-zero open slice.
+    stage = GenerationStage(gen, open_fraction=0.5)  # type: ignore[arg-type]
+    ctx = _make_ctx(target_count=4, facts=[])  # no facts → F8 must rely on the marker
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert gen.calls[0]["open_count"] == 2
+    assert len(ctx.questions) == 1
+    q = ctx.questions[0]
+    assert q.headline_answer == "The candle"
+    assert q.generation_metadata.pipeline == "logical_puzzle"
+    assert q.source_url is None
+    assert result.info["questions"] == 1
+
+
+@pytest.mark.asyncio
+async def test_default_open_fraction_keeps_small_orders_factual() -> None:
+    """Issue #46 task 46.B4c — the default ~4% fraction rounds small orders to
+    zero open questions, so a typical short pack stays entirely on the factual
+    pipeline (open is a forward-looking minority, not the common case)."""
+    gen = _FakeGenerator([_stub_question(0)])
+    stage = GenerationStage(gen)  # type: ignore[arg-type]
+    ctx = _make_ctx(target_count=10, facts=[Fact(text="x", source_url="https://ex/x")])
+
+    await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert gen.calls[0]["open_count"] == 0  # round(10 * 0.04) == 0
+
+
+@pytest.mark.asyncio
 async def test_normalizes_then_drops_violating_answers() -> None:
     """Issue #46 task 46.A2 — post-generation **normalize-then-drop**.
 

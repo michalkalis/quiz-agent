@@ -29,6 +29,13 @@ from quiz_shared.models.question import GenerationProvenance, Question
 
 logger = logging.getLogger(__name__)
 
+# Issue #46 task 46.B4c — fraction of `target_count` routed to the open-shape
+# slice (generated through `question_generation_open.md`, 46.B3/B4b). The
+# 755-question audit found open/lateral-puzzle shapes are ~4% of demand, so the
+# orchestrated path mirrors that by default. Exposed as a ctor override so the
+# product fraction can be tuned without touching call sites.
+OPEN_SHAPE_FRACTION = 0.04
+
 
 def _is_uuid(value: str) -> bool:
     try:
@@ -133,19 +140,30 @@ class GenerationStage:
         self,
         generator: AdvancedQuestionGenerator,
         answer_normalizer: AnswerNormalizer | None = None,
+        open_fraction: float = OPEN_SHAPE_FRACTION,
     ) -> None:
         self._generator = generator
         # Issue #46 task 46.A2b — optional LLM normalizer for the ambiguous
         # comma-tailed remainder the deterministic splitter can't recover.
         # `None` keeps the 46.A2 fail-safe behaviour (those answers drop).
         self._answer_normalizer = answer_normalizer
+        # Issue #46 task 46.B4c — fraction of `target_count` generated through
+        # the open/lateral-puzzle prompt instead of the factual pipeline.
+        self._open_fraction = open_fraction
 
     async def run(self, ctx: OrderContext, sink: ProgressSink) -> StageResult:
         topics = [t for t in (ctx.category, ctx.theme) if t] or None
         categories = [ctx.category] if ctx.category else None
 
+        # Issue #46 task 46.B4c — route the open-shape slice (~4% per audit) of
+        # the order through `question_generation_open.md`; the generator emits
+        # `headline_answer` + tags pure lateral puzzles `pipeline=logical_puzzle`
+        # (46.B4b). `round` keeps small orders entirely factual (10 * 0.04 → 0).
+        open_count = round(ctx.target_count * self._open_fraction)
+
         questions = await self._generator.generate_questions(
             count=ctx.target_count,
+            open_count=open_count,
             topics=topics,
             categories=categories,
             source_facts=ctx.facts or None,

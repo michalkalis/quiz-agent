@@ -336,12 +336,23 @@ class Question(BaseModel):
         if "quality_ratings" in data and data["quality_ratings"]:
             quality_ratings = data["quality_ratings"]
 
+        # Issue #46 task 46.B4c — the open/lateral-puzzle prompt
+        # (question_generation_open.md) may emit `correct_answer: null`, but the
+        # field is required (str|list) and iOS decodes it non-null. Resolve the
+        # conflict by falling back to the short `headline_answer` gist (D7) so a
+        # puzzle satisfies the contract without a schema/iOS change.
+        correct_answer = data.get("correct_answer")
+        if correct_answer in (None, "") and data.get("headline_answer"):
+            correct_answer = data["headline_answer"]
+        elif correct_answer is None:
+            correct_answer = ""
+
         return cls(
             id=question_id,
             question=data.get("question", ""),
             type=data.get("type", "text"),
             possible_answers=data.get("possible_answers"),
-            correct_answer=data.get("correct_answer", ""),
+            correct_answer=correct_answer,
             alternative_answers=data.get("alternative_answers", []),
             headline_answer=data.get("headline_answer"),
             topic=data.get("topic", "General"),

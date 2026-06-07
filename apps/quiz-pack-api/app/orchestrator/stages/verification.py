@@ -20,9 +20,13 @@ follow-up #37 work; we do not stack the two thresholds here.
 
 from __future__ import annotations
 
+from typing import Optional
+
+from app.generation.pattern_routing import verification_mode
 from app.orchestrator.context import OrderContext, StageResult
 from app.orchestrator.progress_sink import ProgressSink
 from app.verification.fact_verifier import FactVerifier
+from app.verification.logical_verifier import LogicalConsistencyVerifier
 from quiz_shared.models.question import GenerationProvenance, Question
 
 DEFAULT_MIN_CONFIDENCE = 0.5
@@ -30,34 +34,65 @@ _VERIFIED_VERDICTS = frozenset({"verified", "likely_correct"})
 
 
 class VerificationStage:
-    """Calls FactVerifier.verify_batch; merges verdicts; drops low-confidence questions."""
+    """Dispatches per question to the right verifier; merges verdicts; drops low-confidence.
+
+    Issue #46 D2: a question's ``verification_mode`` (derived from its
+    reasoning pattern + text) decides which verifier judges it. Pure
+    lateral puzzles (``"logical"``) have no web source, so they go to
+    ``LogicalConsistencyVerifier``; everything else (``"factual"``) goes
+    to ``FactVerifier`` as before. When no logical verifier is supplied,
+    logical questions fall back to ``FactVerifier`` (R2: default to web
+    verification on any uncertainty rather than skipping it).
+    """
 
     name = "verifying"
 
     def __init__(
         self,
         fact_verifier: FactVerifier,
+        logical_verifier: Optional[LogicalConsistencyVerifier] = None,
         min_confidence: float = DEFAULT_MIN_CONFIDENCE,
     ) -> None:
         self._fact_verifier = fact_verifier
+        self._logical_verifier = logical_verifier
         self._min_confidence = min_confidence
 
     async def run(self, ctx: OrderContext, sink: ProgressSink) -> StageResult:
         if not ctx.questions:
             return StageResult(info={"verified": 0, "dropped": 0}, cost_cents=0)
 
-        payload = [
-            {
-                "id": q.id,
-                "question": q.question,
-                "correct_answer": _stringify_answer(q.correct_answer),
-                "topic": q.topic,
-            }
-            for q in ctx.questions
-        ]
-        results = await self._fact_verifier.verify_batch(payload)
+        # Dispatch by verification mode (D2). Logical questions only divert
+        # to the consistency judge when one is wired; otherwise they stay
+        # on FactVerifier (R2 fail-safe — never skip verification).
+        factual: list[Question] = []
+        logical: list[Question] = []
+        for q in ctx.questions:
+            if self._logical_verifier is not None and _is_logical(q):
+                logical.append(q)
+            else:
+                factual.append(q)
 
-        by_id = {r.get("id"): r for r in results}
+        by_id: dict[object, dict] = {}
+
+        if factual:
+            payload = [
+                {
+                    "id": q.id,
+                    "question": q.question,
+                    "correct_answer": _stringify_answer(q.correct_answer),
+                    "topic": q.topic,
+                }
+                for q in factual
+            ]
+            for record in await self._fact_verifier.verify_batch(payload):
+                by_id[record.get("id")] = record
+
+        for q in logical:
+            result = await self._logical_verifier.verify(
+                q.question, _stringify_answer(q.correct_answer), q.topic
+            )
+            by_id[q.id] = {"id": q.id, "verification": result}
+
         kept: list[Question] = []
         dropped = 0
 
@@ -94,6 +129,17 @@ class VerificationStage:
             info={"verified": len(kept), "dropped": dropped},
             cost_cents=0,
         )
+
+
+def _is_logical(q: Question) -> bool:
+    """True iff the question routes to the logical-consistency judge (D2).
+
+    Keyed on ``verification_mode`` derived from the generator's reasoning
+    pattern + question text — the same signal the open-branch generator
+    used to tag ``pipeline = "logical_puzzle"``.
+    """
+    pattern = q.generation_metadata.reasoning_pattern if q.generation_metadata else None
+    return verification_mode(pattern, q.question) == "logical"
 
 
 def _stringify_answer(answer: object) -> str:

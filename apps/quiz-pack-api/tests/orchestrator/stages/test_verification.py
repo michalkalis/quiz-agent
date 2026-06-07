@@ -204,6 +204,78 @@ async def test_no_questions_returns_zero_counts() -> None:
     assert verifier.calls == []
 
 
+class _FakeLogicalVerifier:
+    """LogicalConsistencyVerifier double recording which questions it judged."""
+
+    def __init__(self, verdicts: dict[str, VerificationResult]) -> None:
+        self._verdicts = verdicts
+        self.calls: list[str] = []
+
+    async def verify(
+        self, question: str, claimed_answer: str, topic: str = ""
+    ) -> VerificationResult:
+        self.calls.append(question)
+        return self._verdicts.get(
+            question, VerificationResult(verdict="uncertain", confidence=0.0)
+        )
+
+
+@pytest.mark.asyncio
+async def test_dispatches_logical_questions_to_logical_verifier() -> None:
+    """D2/46.B6: a question whose verification_mode is "logical" (lateral
+    puzzle pattern) must be judged by LogicalConsistencyVerifier, never sent
+    to FactVerifier — a web search on a sourceless puzzle is exactly the
+    spurious-match failure this branch exists to avoid."""
+    puzzle = _stub_question(
+        0,
+        question="A man pushes his car to a hotel. What happened?",
+        generation_metadata=GenerationProvenance(reasoning_pattern="lateral_thinking"),
+    )
+    factual = _stub_question(
+        1,
+        question="What is the capital of France?",
+        generation_metadata=GenerationProvenance(reasoning_pattern="true_false"),
+    )
+    fact_verifier = _FakeFactVerifier(
+        {"q_1": VerificationResult(verdict="verified", confidence=0.9)}
+    )
+    logical_verifier = _FakeLogicalVerifier(
+        {puzzle.question: VerificationResult(verdict="verified", confidence=0.8)}
+    )
+    stage = VerificationStage(fact_verifier, logical_verifier)  # type: ignore[arg-type]
+    ctx = _make_ctx([puzzle, factual])
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    # The puzzle went only to the logical judge; the factual one only to FactVerifier.
+    assert logical_verifier.calls == [puzzle.question]
+    factual_ids = {q["id"] for batch in fact_verifier.calls for q in batch}
+    assert factual_ids == {"q_1"}
+    assert {q.id for q in ctx.questions} == {"q_0", "q_1"}
+    assert result.info["verified"] == 2
+
+
+@pytest.mark.asyncio
+async def test_logical_questions_fall_back_to_fact_verifier_when_unwired() -> None:
+    """R2: with no logical verifier supplied, a logical-mode question must
+    still be web-verified rather than silently skipped."""
+    puzzle = _stub_question(
+        0,
+        question="A man pushes his car to a hotel. What happened?",
+        generation_metadata=GenerationProvenance(reasoning_pattern="lateral_thinking"),
+    )
+    fact_verifier = _FakeFactVerifier(
+        {"q_0": VerificationResult(verdict="verified", confidence=0.9)}
+    )
+    stage = VerificationStage(fact_verifier)  # type: ignore[arg-type]
+    ctx = _make_ctx([puzzle])
+
+    await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    factual_ids = {q["id"] for batch in fact_verifier.calls for q in batch}
+    assert factual_ids == {"q_0"}
+
+
 @pytest.mark.asyncio
 async def test_threshold_default_matches_module_constant() -> None:
     """If the default threshold drifts silently, callers cannot reason about

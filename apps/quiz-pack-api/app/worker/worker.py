@@ -36,6 +36,7 @@ async def on_startup(ctx: Dict[str, Any]) -> None:
     from app.scoring.multi_model_scorer import MultiModelScorer
     from app.sourcing.fact_sourcer import FactSourcer
     from app.verification.fact_verifier import FactVerifier
+    from app.verification.logical_verifier import LogicalConsistencyVerifier
     from quiz_shared.database.chroma_client import ChromaDBClient
 
     ctx["session_factory"] = AsyncSessionLocal
@@ -44,6 +45,9 @@ async def on_startup(ctx: Dict[str, Any]) -> None:
     # 46.A2b — fail-safe to drop when GOOGLE_API_KEY is absent.
     ctx["answer_normalizer"] = AnswerNormalizer()
     ctx["fact_verifier"] = FactVerifier()
+    # 46.B6 — logical-consistency judge for lateral puzzles; fail-safe to
+    # `uncertain` when GOOGLE_API_KEY is absent.
+    ctx["logical_verifier"] = LogicalConsistencyVerifier()
     ctx["scorer"] = MultiModelScorer()
     ctx["question_store"] = ChromaDBClient().store
     ctx["gold_standard_path"] = (

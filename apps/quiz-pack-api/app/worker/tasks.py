@@ -43,7 +43,7 @@ def _build_stages(ctx: Dict[str, Any]) -> list[Stage]:
     return [
         SourcingStage(ctx["fact_sourcer"]),
         GenerationStage(ctx["generator"], ctx.get("answer_normalizer")),
-        VerificationStage(ctx["fact_verifier"]),
+        VerificationStage(ctx["fact_verifier"], ctx.get("logical_verifier")),
         ScoringStage(ctx["scorer"]),
         DedupStage(ctx["question_store"], ctx.get("gold_standard_path")),
         PersistStage(session_factory),

@@ -20,6 +20,7 @@ extension Theme {
 
             static let ink = Color(light: "#0E1A2B", dark: "#F4F4F4") // primary text
             static let pink = Color(hex: "#FF3D8F") // brand accent / primary CTA (both modes)
+            static let accentPrimary = Color(hex: "#8B5CF6") // purple accent — MCQ badge/selected (both modes)
             static let blue = Color(hex: "#0A84FF") // secondary accent
             static let muted = Color(light: "#6B7280", dark: "#9CA3AF") // subtext
             static let mutedFaint = Color(light: "#9CA3AF", dark: "#6B7280") // struck-through answer text

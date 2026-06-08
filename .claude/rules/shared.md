@@ -25,3 +25,9 @@ When changing API models:
 - **Backend:** `pytest tests/ -v` — mock OpenAI calls, use fixtures
 - **iOS:** Unit test ViewModels with mocked services
 - Test commands in CLAUDE.md quick reference table
+
+## Config & Infrastructure
+
+Prefer local and project-scoped config. Before recommending a cloud service or global config change, check whether existing local hardware or project-scoped config already covers the need.
+Use `.claude/settings.local.json` for repo-specific settings, not `~/.claude/settings.json`.
+Ground every infrastructure plan in the actual current state of existing machines and config.

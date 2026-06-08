@@ -32,93 +32,52 @@ Long outputs (>30 lines: summaries, analyses, reports, reviews) → self-contain
 
 These rules apply to every task in this repo unless explicitly overridden.
 Bias: caution over speed on non-trivial work. Use judgment on trivial tasks.
+Token budget (advisory): keep per-task output tight; if a task balloons, summarize and start fresh rather than pushing through — and surface that you did.
 
-### 1. Think Before Coding
-State assumptions explicitly. If uncertain, ask rather than guess.
-Present multiple interpretations when ambiguity exists.
-Push back when a simpler approach exists. Stop when confused; name what's unclear.
+### 1. Minimal Footprint
+State assumptions explicitly; if uncertain, ask rather than guess, and present multiple interpretations when ambiguity exists. Push back when a simpler approach exists; stop when confused and name what's unclear.
+Write the minimum code that solves the problem — nothing speculative, no features beyond what was asked, no abstractions for single-use code, no error handling for impossible scenarios. Would a senior engineer call this overcomplicated? If yes, simplify.
+Touch only what you must. Don't "improve" adjacent code, comments, or formatting; don't refactor what isn't broken. Match existing style and conventions even if you disagree — conformance > taste; if a convention seems harmful, raise it separately rather than forking silently. Every changed line should trace directly to the user's request.
 
-### 2. Simplicity First
-Minimum code that solves the problem. Nothing speculative.
-No features beyond what was asked. No abstractions for single-use code.
-No error handling for impossible scenarios.
-Would a senior engineer call this overcomplicated? If yes, simplify.
+### 2. Goal-Driven + Fail Loud
+Define success criteria and loop until verified. Transform tasks into verifiable goals (e.g. "fix bug" → "write a failing test, then make it pass"); strong success criteria let you loop independently.
+Fail loud. "Migration completed" is wrong if records were silently skipped; "tests pass" is wrong if any were skipped or UI wasn't verified. Default to surfacing uncertainty, not hiding it.
 
-### 3. Surgical Changes
-Touch only what you must. Clean up only your own mess.
-Don't "improve" adjacent code, comments, or formatting.
-Don't refactor what isn't broken. Match existing style.
-Every changed line should trace directly to the user's request.
+### 3. Communication
+Answer the exact question asked before expanding into context. If asked "what is X", give a one-sentence definition first; if asked "how do I do Y given constraint Z", address constraint Z directly. Don't surface adjacent scenarios, future states, or implementation details unless necessary.
+Explain at the conceptual level — what technology or approach, and why, not how it's coded. Never include code snippets, SQL, or implementation abbreviations unless explicitly asked.
 
-### 4. Goal-Driven Execution
-Define success criteria. Loop until verified.
-Transform tasks into verifiable goals (e.g. "fix bug" → "write a failing test, then make it pass").
-Strong success criteria let you loop independently.
-
-### 5. Use the model only for judgment calls
-When writing app code that calls an LLM (question generation, evaluation, scoring):
-use the model for classification, drafting, summarization, extraction.
-Do NOT use it for routing, retries, status-code handling, deterministic transforms.
-
-### 6. Token budgets are not advisory
-Per-task: 4,000 output tokens. Per-session: 30,000 tokens.
-If approaching budget, summarize and start fresh — do not push through. Surface the breach.
-
-### 7. Surface conflicts, don't average them
+### 4. Surface conflicts, don't average them
 If two existing patterns contradict, don't blend them.
 Pick one (more recent / more tested), explain why, flag the other for cleanup.
 
-### 8. Read before you write
+### 5. Read before you write
 Before adding code, read the file's exports, immediate callers, and shared utilities (esp. `packages/shared`).
 "Looks orthogonal to me" is the most dangerous phrase in this codebase.
 
-### 9. Tests verify intent, not just behavior
+### 6. Tests verify intent, not just behavior
 Every test must encode WHY the behavior matters, not just WHAT it does.
 A test that can't fail when business logic changes is wrong.
 Snapshot tests: assert the *meaningful* part of the snapshot.
 
-### 10. Checkpoint after every significant step
+### 7. Checkpoint after every significant step
 After each step in a multi-step task: summarize what was done, what's verified, what's left.
 Update `docs/issues/issue-NN-*.md` and `docs/todo/TODO.md`. If you lose track, stop and restate.
 
-### 11. Match the codebase's conventions, even if you disagree
-Conformance > taste. If a convention seems harmful, raise it separately — don't fork silently.
-
-### 12. Fail loud
-"Migration completed" is wrong if records were silently skipped.
-"Tests pass" is wrong if any were skipped or UI wasn't verified.
-Default to surfacing uncertainty, not hiding it.
-
-### 13. Explain in Plain Language
-Explain at the conceptual level: what technology or approach, and why — not how it is coded.
-Never include code snippets, SQL, or implementation abbreviations unless explicitly asked.
-When asked a focused question, answer it in one or two sentences before offering any further context.
-
-### 14. Commit and Build Autonomously
+### 8. Commit and Build Autonomously
 Commit at every natural checkpoint without asking for permission — incomplete downstream subtasks do not block a valid commit.
 Trigger TestFlight or deploy steps as soon as a testable increment exists; don't wait for the full feature to be complete.
 Ask before destructive git operations (force-push, reset --hard, amend) and before pushing to remote. When in doubt, act rather than defer.
 
-### 15. Prefer Local and Project-Scoped Config
-Before recommending a cloud service or global config change, check whether existing local hardware or project-scoped config already covers the need.
-Use `.claude/settings.local.json` for repo-specific settings, not `~/.claude/settings.json`.
-Ground every infrastructure plan in the actual current state of existing machines and config.
-
-### 16. Pivot When Approach Is Rejected
+### 9. Pivot When Approach Is Rejected
 When a user reports that an approach failed or explicitly rejects it, do not re-offer the same approach in different syntax.
 Pivot immediately: execute the step directly via available tooling, or ask once whether the user wants you to take over.
 Interpret "I can't do this" or "it doesn't work" as a handoff request — act rather than explaining the technical cause.
 
-### 17. Verify Before Stating Constraints
+### 10. Verify Before Stating Constraints
 Treat claims about available software versions, UI option locations, and tool accessibility as hypotheses, not conclusions.
 Before stating a constraint as final (e.g., "X is the maximum version", "this option is at Settings > Y"), either verify it or flag it as unverified.
 When diagnosing a failure, confirm that a suggested workaround is not itself blocked by the same root cause.
-
-### 18. Answer the Question Asked
-Answer the exact question asked before expanding into context.
-If a user asks "what is X", give a one-sentence definition first.
-If a user asks "how do I do Y given constraint Z", address constraint Z directly — do not answer the unconstrained version.
-Do not surface adjacent scenarios, future states, or implementation details unless necessary to answer what was asked.
 
 ## Rules files
 

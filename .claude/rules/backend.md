@@ -16,6 +16,10 @@ paths: ["apps/quiz-agent/**", "apps/quiz-pack-api/**", "packages/shared/**"]
 - **TTS:** OpenAI TTS API (Opus format)
 - **RAG:** Postgres + pgvector for semantic question retrieval (voice-quiz read path cut over 2026-05-28, #36 task 2.20)
 
+### Use the model only for judgment calls
+When writing app code that calls an LLM (question generation, evaluation, scoring): use the model for classification, drafting, summarization, extraction.
+Do NOT use it for routing, retries, status-code handling, deterministic transforms.
+
 ### Database
 - **Postgres + pgvector:** Canonical store for question embeddings + metadata. Voice quiz (`apps/quiz-agent`) reads via `PgvectorQuestionStore` (see `packages/shared/quiz_shared/database/pgvector_client.py`). quiz-pack-api writes via `PersistStage`.
 - **ChromaDB:** Read-only legacy store until Phase 6 (#41) retires it. No code path writes to ChromaDB after 2026-05-28; the Fly volume stays mounted but is frozen. Do not add new ChromaDB writers.

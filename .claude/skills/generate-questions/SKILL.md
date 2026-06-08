@@ -2,7 +2,7 @@
 name: generate-questions
 description: Generate high-quality quiz questions using Claude and save for review
 allowed-tools: Read, Bash, AskUserQuestion
-model: opus
+model: haiku
 argument-hint: "[count] [--category kids|adults|...] [--theme \"Name\"] [--language en|sk|cs] [--dry-run]"
 ---
 

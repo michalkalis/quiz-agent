@@ -34,7 +34,7 @@ Report: "Loaded N questions from <path>"
 
 ### 3. Read Scoring Calibration
 
-Before scoring, read `apps/question-generator/app/scoring/multi_model_scorer.py` to calibrate against the same rubric used by the automated multi-model scoring system. This ensures consistency between Claude Code scoring and API-based scoring.
+Before scoring, read `apps/quiz-pack-api/app/scoring/multi_model_scorer.py` to calibrate against the same rubric used by the automated multi-model scoring system. This ensures consistency between Claude Code scoring and API-based scoring.
 
 ### 4. Score Each Question
 
@@ -66,7 +66,7 @@ Create `data/scored/` directory if it doesn't exist. Save to `data/scored/scored
   "metadata": {
     "scored_at": "<ISO timestamp>",
     "source_file": "<path>",
-    "scored_by": "claude-opus-4-6",
+    "scored_by": "claude-sonnet-4-6",
     "total_questions": 10,
     "recommendations": {
       "approve": 7,
@@ -108,7 +108,7 @@ Sort questions by overall score (descending) and display:
 Scoring Complete
 ================
 Source: data/generated/claude_batch_016.json
-Scored by: claude-opus-4-6
+Scored by: claude-sonnet-4-6
 
   #  Score  Rec      Diff    Topic         CS  S/D  Tell DrF  CF   Question (truncated)
   1   9.2   approve  hard    Nature        9   10   9    8    10   Which creature can...
@@ -126,14 +126,14 @@ Legend: CS=Conversation Spark, S/D=Surprise/Delight, Tell=Tellability, DrF=Drivi
 
 If `--save-to-db` was passed:
 
-1. Check if the question-generator service is running:
+1. Check if the quiz-pack-api service is running:
    ```bash
    curl -s -o /dev/null -w '%{http_code}' http://localhost:8003/api/v1/health
    ```
 
 2. If running, save via Python:
    ```bash
-   cd /Users/michalkalis/Documents/personal/ai-developer-course/code/quiz-agent && .venv/bin/python -c "
+   cd "$CLAUDE_PROJECT_DIR" && .venv/bin/python -c "
    import json, sys
    sys.path.insert(0, 'packages/shared')
    from quiz_shared.database.sql_client import SQLClient
@@ -143,7 +143,7 @@ If `--save-to-db` was passed:
    for q in data['questions']:
        db.add_model_score(
            question_id=q['id'],
-           scored_by='claude-opus-4-6',
+           scored_by='claude-sonnet-4-6',
            scores=q['scores'],
            overall_score=q['overall_score']
        )

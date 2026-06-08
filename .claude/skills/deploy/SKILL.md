@@ -51,13 +51,13 @@ fly version 2>/dev/null
 
 ### Default or "backend"
 ```bash
-cd /Users/michalkalis/Documents/personal/ai-developer-course/code/quiz-agent && fly deploy -c apps/quiz-agent/fly.toml
+cd "$CLAUDE_PROJECT_DIR" && fly deploy -c apps/quiz-agent/fly.toml
 ```
 
 ### "--dry-run"
 Show what would be deployed without actually deploying:
 ```bash
-cd /Users/michalkalis/Documents/personal/ai-developer-course/code/quiz-agent && fly deploy -c apps/quiz-agent/fly.toml --build-only
+cd "$CLAUDE_PROJECT_DIR" && fly deploy -c apps/quiz-agent/fly.toml --build-only
 ```
 Skip post-deploy verification.
 

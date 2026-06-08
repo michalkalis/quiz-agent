@@ -41,7 +41,7 @@ cd apps/web-ui && npm run dev
 Port: **8003**
 
 ```bash
-cd apps/question-generator && uv run uvicorn app.main:app --reload --port 8003
+cd apps/quiz-pack-api && uv run uvicorn app.main:app --reload --port 8003
 ```
 
 Run in background. Verify with: `curl -s -o /dev/null -w '%{http_code}' http://localhost:8003/docs` (expect 200).

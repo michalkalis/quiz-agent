@@ -19,6 +19,9 @@ on:
       - 'apps/web-ui/**'
       - '.github/workflows/web-ui-ci.yml'
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
   build-and-test:
     name: Build and Test Web UI

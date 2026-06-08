@@ -30,7 +30,7 @@ Dashboard of all `issue-NN-*.md` files. Updated by `/triage` whenever a `**Triag
 | 44 | [Mandatory screenshot-verify step](issue-44-screenshot-verify-step.md) | enhancement · ready-for-agent | `[ ]` #44 | From research 2026-06-02; closes agent visual-blindness gap. No new deps; `screenshot` already loadable |
 | 45 | [iOS MCQ voice + design-port redesign](issue-45-ios-mcq-voice-and-redesign.md) | enhancement · ready-for-agent (partial) | `[ ]` #45 | From handoff 2026-06-03. Supersedes #42 Track E (42.14–42.18). 6 Ralph tasks (45.1–45.6, logic+components, unit/inspector-tested) + 7 `[HUMAN]` (integration/visual/sim). ⛔ Ralph BLOCKED on mba: Xcode 16.4 lacks iOS 26 SDK (SpeechAnalyzer won't compile) — upgrade mba to Xcode 26.x or run loop on laptop. Related: #14 (redesign umbrella) |
 | 46 | [Canonical-answer enforcement + branch for open/logical questions](issue-46-answer-shape-and-logical-branch.md) | enhancement · done | `[x]` #46 | Ralph loop completed 2026-06-07 on mba; all A1–B9 landed including iOS B8/B9 under Xcode 26.3. Serializer fix (`generated_by` + `headline_answer`) shipped 2026-06-08 (`16161de`) |
-| 47 | [Upgrade GitHub Actions to Node.js 24-compatible versions](issue-47-github-actions-node24-upgrade.md) | enhancement · ready-for-agent | `[ ]` #47 | Node.js 20 deprecated on runners — forced cutover 2026-06-16, removed 2026-09-16. 4 workflows affected; `webfactory/ssh-agent@v0.9.0` is the main pinned risk |
+| 47 | [Upgrade GitHub Actions to Node.js 24-compatible versions](issue-47-github-actions-node24-upgrade.md) | enhancement · done | `[x]` #47 | Done 2026-06-08: `webfactory/ssh-agent@v0.9.0`→`@v0.10.0` + `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24` in all 4 workflows |
 
 ## Done
 

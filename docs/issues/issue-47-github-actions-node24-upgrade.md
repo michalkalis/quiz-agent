@@ -1,7 +1,7 @@
 # Issue 47: Upgrade GitHub Actions to Node.js 24-compatible versions
 
-**Triage:** enhancement · ready-for-agent
-**Status:** New — created via /triage on 2026-06-08
+**Triage:** enhancement · done
+**Status:** Done 2026-06-08 — `webfactory/ssh-agent@v0.9.0`→`@v0.10.0` in ios-release.yml; `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"` added to all 4 workflows as belt-and-suspenders safeguard for first-party action floating tags
 **Created:** 2026-06-08
 
 ## Context

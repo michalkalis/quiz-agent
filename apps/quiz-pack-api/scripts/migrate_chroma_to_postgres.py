@@ -5,8 +5,12 @@ Reads the ``quiz_questions`` collection from a ChromaDB persist directory and
 upserts each question into the quiz-pack-api ``questions`` table created in
 Task 1.5. Embeddings are copied straight across (no re-embed: ChromaDB stores
 the cached vectors that were generated when the question was approved).
-Every migrated row is stamped ``review_status='approved'`` and ``pack_id=NULL``
-per D7 (existing curated content stays in the global library).
+Only rows whose source ``review_status`` is already ``approved`` are
+migrated — a dev ``chroma_data`` dir mixes approved + ``pending_review`` in
+one collection, and publishing unreviewed rows to the global library would be
+a content-safety bug. Migrated rows are stamped ``review_status='approved'``
+(a no-op normalisation) and ``pack_id=NULL`` per D7 (existing curated content
+stays in the global library).
 
 Idempotency
 -----------
@@ -224,7 +228,11 @@ async def _run(args: argparse.Namespace) -> int:
 
     questions: List[Question] = []
     skipped_no_embedding = 0
+    skipped_not_approved = 0
     for row in rows:
+        if (row.get("metadata") or {}).get("review_status") != "approved":
+            skipped_not_approved += 1
+            continue
         if row["embedding"] is None:
             skipped_no_embedding += 1
             logger.warning(
@@ -251,6 +259,7 @@ async def _run(args: argparse.Namespace) -> int:
 
         print("── ChromaDB → Postgres summary ──────────────────")
         print(f"ChromaDB rows read:              {len(rows)}")
+        print(f"Skipped (not approved):          {skipped_not_approved}")
         print(f"Skipped (no embedding):          {skipped_no_embedding}")
         print(f"Questions to migrate:            {len(questions)}")
         print(f"  ↳ new inserts:                 {len(new_rows)}")

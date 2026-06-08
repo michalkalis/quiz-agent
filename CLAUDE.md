@@ -89,6 +89,37 @@ Conformance > taste. If a convention seems harmful, raise it separately — don'
 "Tests pass" is wrong if any were skipped or UI wasn't verified.
 Default to surfacing uncertainty, not hiding it.
 
+### 13. Explain in Plain Language
+Explain at the conceptual level: what technology or approach, and why — not how it is coded.
+Never include code snippets, SQL, or implementation abbreviations unless explicitly asked.
+When asked a focused question, answer it in one or two sentences before offering any further context.
+
+### 14. Commit and Build Autonomously
+Commit at every natural checkpoint without asking for permission — incomplete downstream subtasks do not block a valid commit.
+Trigger TestFlight or deploy steps as soon as a testable increment exists; don't wait for the full feature to be complete.
+Ask before destructive git operations (force-push, reset --hard, amend) and before pushing to remote. When in doubt, act rather than defer.
+
+### 15. Prefer Local and Project-Scoped Config
+Before recommending a cloud service or global config change, check whether existing local hardware or project-scoped config already covers the need.
+Use `.claude/settings.local.json` for repo-specific settings, not `~/.claude/settings.json`.
+Ground every infrastructure plan in the actual current state of existing machines and config.
+
+### 16. Pivot When Approach Is Rejected
+When a user reports that an approach failed or explicitly rejects it, do not re-offer the same approach in different syntax.
+Pivot immediately: execute the step directly via available tooling, or ask once whether the user wants you to take over.
+Interpret "I can't do this" or "it doesn't work" as a handoff request — act rather than explaining the technical cause.
+
+### 17. Verify Before Stating Constraints
+Treat claims about available software versions, UI option locations, and tool accessibility as hypotheses, not conclusions.
+Before stating a constraint as final (e.g., "X is the maximum version", "this option is at Settings > Y"), either verify it or flag it as unverified.
+When diagnosing a failure, confirm that a suggested workaround is not itself blocked by the same root cause.
+
+### 18. Answer the Question Asked
+Answer the exact question asked before expanding into context.
+If a user asks "what is X", give a one-sentence definition first.
+If a user asks "how do I do Y given constraint Z", address constraint Z directly — do not answer the unconstrained version.
+Do not surface adjacent scenarios, future states, or implementation details unless necessary to answer what was asked.
+
 ## Rules files
 
 - `.claude/rules/shared.md` — Git workflow, API contract, testing (always loaded)

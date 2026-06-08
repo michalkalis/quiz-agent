@@ -229,10 +229,20 @@ async def _run(args: argparse.Namespace) -> int:
     questions: List[Question] = []
     skipped_no_embedding = 0
     skipped_not_approved = 0
+    coerced_true_false = 0
     for row in rows:
-        if (row.get("metadata") or {}).get("review_status") != "approved":
+        meta = row.get("metadata") or {}
+        if meta.get("review_status") != "approved":
             skipped_not_approved += 1
             continue
+        # Legacy bridge: `true_false` is not a supported Question.type. These
+        # statements ("True or false: …", answer kept verbatim) play fine as
+        # open text questions (LLM-evaluated by voice). Normalise on the way
+        # into the canonical pgvector store; chroma stays frozen (backend.md).
+        if meta.get("type") == "true_false":
+            meta["type"] = "text"
+            coerced_true_false += 1
+            logger.warning("Coerced true_false → text for %s", row["id"])
         if row["embedding"] is None:
             skipped_no_embedding += 1
             logger.warning(
@@ -260,6 +270,7 @@ async def _run(args: argparse.Namespace) -> int:
         print("── ChromaDB → Postgres summary ──────────────────")
         print(f"ChromaDB rows read:              {len(rows)}")
         print(f"Skipped (not approved):          {skipped_not_approved}")
+        print(f"Coerced true_false → text:       {coerced_true_false}")
         print(f"Skipped (no embedding):          {skipped_no_embedding}")
         print(f"Questions to migrate:            {len(questions)}")
         print(f"  ↳ new inserts:                 {len(new_rows)}")

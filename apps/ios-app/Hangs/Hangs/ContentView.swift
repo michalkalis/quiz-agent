@@ -39,7 +39,7 @@ struct ContentView: View {
                     case .idle, .startingQuiz:
                         HomeView(viewModel: viewModel)
 
-                    case .askingQuestion, .recording, .processing:
+                    case .askingQuestion, .recording, .processing, .skipping:
                         // Show HomeView when minimized, otherwise QuestionView
                         if viewModel.isMinimized {
                             HomeView(viewModel: viewModel)

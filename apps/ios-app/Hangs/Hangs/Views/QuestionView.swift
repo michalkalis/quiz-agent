@@ -332,6 +332,7 @@ struct QuestionView: View {
         case .askingQuestion: return "askingQuestion"
         case .recording: return "recording"
         case .processing: return "processing"
+        case .skipping: return "skipping"
         case .showingResult: return "showingResult"
         case .finished: return "finished"
         case .error: return "error"
@@ -364,6 +365,16 @@ struct QuestionView: View {
                     ProgressView()
                         .controlSize(.mini)
                         .tint(Theme.Hangs.Colors.blue)
+                )
+            )
+        case .skipping:
+            return QuizStatus(
+                text: "SKIPPING…",
+                color: Theme.Hangs.Colors.muted,
+                leading: AnyView(
+                    ProgressView()
+                        .controlSize(.mini)
+                        .tint(Theme.Hangs.Colors.muted)
                 )
             )
         case .askingQuestion where viewModel.thinkingTimeCountdown > 0:
@@ -544,7 +555,7 @@ struct QuestionView: View {
 
     private var isRecording: Bool { viewModel.quizState == .recording }
 
-    private var isProcessing: Bool { viewModel.quizState == .processing }
+    private var isProcessing: Bool { viewModel.quizState == .processing || viewModel.quizState == .skipping }
 
     private var canInteract: Bool {
         viewModel.quizState == .askingQuestion

@@ -25,6 +25,7 @@ enum QuizState: Sendable {
     case askingQuestion
     case recording
     case processing
+    case skipping
     case showingResult(question: Question, evaluation: Evaluation)
     case finished
     case error(message: String, context: ErrorContext)
@@ -39,6 +40,7 @@ extension QuizState: Equatable {
              (.askingQuestion, .askingQuestion),
              (.recording, .recording),
              (.processing, .processing),
+             (.skipping, .skipping),
              (.showingResult, .showingResult),
              (.finished, .finished),
              (.error, .error):
@@ -68,6 +70,7 @@ extension QuizState {
         case .askingQuestion: return "askingQuestion"
         case .recording: return "recording"
         case .processing: return "processing"
+        case .skipping: return "skipping"
         case .showingResult: return "showingResult"
         case .finished: return "finished"
         case .error: return "error"
@@ -81,9 +84,10 @@ extension QuizState {
         switch self {
         case .idle: return ["startingQuiz"]
         case .startingQuiz: return ["askingQuestion", "error", "idle"]
-        case .askingQuestion: return ["recording", "processing", "error", "idle"]
-        case .recording: return ["processing", "askingQuestion", "error", "idle"]
-        case .processing: return ["showingResult", "askingQuestion", "error", "idle"]
+        case .askingQuestion: return ["recording", "processing", "skipping", "error", "idle"]
+        case .recording: return ["processing", "skipping", "askingQuestion", "error", "idle"]
+        case .processing: return ["showingResult", "skipping", "askingQuestion", "error", "idle"]
+        case .skipping: return ["showingResult", "askingQuestion", "error", "idle"]
         case .showingResult: return ["askingQuestion", "processing", "finished", "idle"]
         case .finished: return ["idle"]
         case .error: return ["idle", "askingQuestion"]
@@ -191,7 +195,7 @@ final class QuizViewModel: ObservableObject {
     /// Enabled during active quiz states (question, recording, processing, results)
     var canMinimize: Bool {
         switch quizState {
-        case .askingQuestion, .recording, .processing, .showingResult:
+        case .askingQuestion, .recording, .processing, .skipping, .showingResult:
             return true
         default:
             return false
@@ -655,7 +659,7 @@ final class QuizViewModel: ObservableObject {
         // Stop any playing question audio immediately
         await stopAnyPlayingAudio()
 
-        transition(to: .processing)
+        transition(to: .skipping)
         errorMessage = nil
 
         do {

@@ -1000,6 +1000,7 @@ struct QuizViewModelStateTransitionTests {
         #expect(QuizState.askingQuestion.label == "askingQuestion")
         #expect(QuizState.recording.label == "recording")
         #expect(QuizState.processing.label == "processing")
+        #expect(QuizState.skipping.label == "skipping")
         #expect(QuizState.finished.label == "finished")
 
         let question = makeQuestion(id: "q_001", source: "Test")
@@ -1021,14 +1022,21 @@ struct QuizViewModelStateTransitionTests {
 
         #expect(QuizState.askingQuestion.validTransitions.contains("recording"))
         #expect(QuizState.askingQuestion.validTransitions.contains("processing"))
+        #expect(QuizState.askingQuestion.validTransitions.contains("skipping"))
         #expect(QuizState.askingQuestion.validTransitions.contains("error"))
 
         #expect(QuizState.recording.validTransitions.contains("processing"))
+        #expect(QuizState.recording.validTransitions.contains("skipping"))
         #expect(QuizState.recording.validTransitions.contains("askingQuestion"))
         #expect(QuizState.recording.validTransitions.contains("error"))
 
         #expect(QuizState.processing.validTransitions.contains("showingResult"))
+        #expect(QuizState.processing.validTransitions.contains("skipping"))
         #expect(QuizState.processing.validTransitions.contains("error"))
+
+        #expect(QuizState.skipping.validTransitions.contains("showingResult"))
+        #expect(QuizState.skipping.validTransitions.contains("askingQuestion"))
+        #expect(QuizState.skipping.validTransitions.contains("error"))
 
         let question = makeQuestion(id: "q_001", source: "Test")
         let evaluation = Evaluation(

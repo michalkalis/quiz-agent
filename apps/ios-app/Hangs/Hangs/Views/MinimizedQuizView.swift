@@ -63,6 +63,17 @@ struct MinimizedQuizView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: Theme.Components.widgetMicHeight)
+            } else if viewModel.quizState == .skipping {
+                HStack(spacing: Theme.Spacing.xs) {
+                    ProgressView()
+                        .scaleEffect(0.7)
+                        .tint(Theme.Colors.textSecondary)
+                    Text("Skipping...")
+                        .font(.textXS)
+                        .foregroundColor(Theme.Colors.textSecondary)
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: Theme.Components.widgetMicHeight)
             } else if viewModel.quizState.isShowingResult {
                 HStack(spacing: Theme.Spacing.xs) {
                     Image(systemName: "checkmark.circle.fill")

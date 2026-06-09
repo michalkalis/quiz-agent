@@ -33,3 +33,4 @@ States: `[ ]` todo · `[~]` wip · `[x]` done. Numbers continue the `docs/issues
 - [ ] #48 Pre-release review gauntlet (App Store) — architecture → security → `/code-review ultra` — [plan](../issues/issue-48-pre-release-review-gauntlet.md) (gate before App Store submission; reviews are **interactive**, only the remediation phase → `#49` is Ralph-able)
 - [ ] Logical-puzzle reference URLs — populate a source/reference link for `pipeline=logical_puzzle` questions (deferred from #46 D5; F8 currently lets puzzles persist with `source_url=null`)
 - [~] Implement Claude Code setup-review recommendations — see docs/handoffs/handoff-2026-06-08-1659.md
+- [ ] #50 MCQ activation — backend retriever cutover — [plan](../issues/issue-50-mcq-retriever-activation.md) (launch decision "MCQ in launch"; Ralph-able backend slice; HUMAN follow-ups: approve MCQ batch, iOS #45.7–45.13, SK/CZ option-translation decision)

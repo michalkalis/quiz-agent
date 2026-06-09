@@ -1,7 +1,6 @@
 ---
 name: handoff
 description: Write a structured handoff doc to docs/handoffs/handoff-YYYY-MM-DD-HHMM.md so a fresh session can resume the current work without re-explaining context. Use when the user wants to save state before ending a session, when context is filling up, or when explicitly invoked.
-disable-model-invocation: true
 allowed-tools: Read, Bash, Grep, Glob, Write, Edit
 model: sonnet
 ---

@@ -1,7 +1,8 @@
 # Issue 43: Maestro MCP — natural-language UI flows on the iOS simulator
 
-**Triage:** enhancement · needs-info
-**Status:** Proposed — low-cost upgrade to the agent UI-test loop. Spun out of `docs/research/cross-platform-vs-native-agent-testability.md` (2026-06-02). Needs a human go/no-go before setup (new MCP server + a Maestro Cloud API key decision).
+**Triage:** enhancement · wontfix
+**Status:** **Won't-do (2026-06-09)** — founder decision #10a in `docs/product/launch-decisions-2026-06-08.md`: not needed. The existing RS harness + planned screenshot-verify (#44) cover the agent UI-test loop; a second framework + Maestro Cloud key isn't worth it. Kept for reference only.
+~~Proposed — low-cost upgrade to the agent UI-test loop. Spun out of `docs/research/cross-platform-vs-native-agent-testability.md` (2026-06-02). Needs a human go/no-go before setup.~~
 **Created:** 2026-06-02
 **Related:** `issue-18-rs01-end-to-end.md`, `issue-17-ui-test-http-fallback.md`, `.claude/skills/regression`
 

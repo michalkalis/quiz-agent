@@ -1,7 +1,7 @@
 # Issue 49: MCQ backend activation — let `text_multichoice` reach the voice quiz
 
-**Triage:** enhancement · ready-for-agent
-**Status:** Ralph-ready — decomposed into atomic tasks below. Backend-only slice of the "MCQ in launch" founder decision (`docs/product/launch-decisions-2026-06-08.md`); spun out of `handoff-2026-06-09-1042.md` next steps.
+**Triage:** enhancement · done
+**Status:** Done 2026-06-09 — Ralph loop (cloud session) landed 49.1 + 49.2 in `560dae4`, 105 tests green (was 98). Backend-only slice of the "MCQ in launch" founder decision (`docs/product/launch-decisions-2026-06-08.md`); spun out of `handoff-2026-06-09-1042.md` next steps. Remaining MCQ launch work elsewhere: approve converted MCQ batch (human/content), iOS #45.7–45.13, deploy.
 **Created:** 2026-06-09
 **Related:** `issue-42-question-quality-and-mcq.md` (generation side, done), `issue-45-ios-mcq-voice-and-redesign.md` (iOS side, 45.7–45.13 human), `docs/product/launch-decisions-2026-06-08.md`
 

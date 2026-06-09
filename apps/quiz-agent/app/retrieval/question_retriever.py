@@ -209,7 +209,7 @@ class QuestionRetriever:
         Returns:
             Metadata filters dict
         """
-        allowed_types = ["text", "image"]
+        allowed_types = ["text", "image", "text_multichoice"]
         filters = {
             "difficulty": difficulty,
             "type": {"$in": allowed_types},

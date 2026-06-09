@@ -1,7 +1,7 @@
 # Issue 51: Product analytics for PRD success metrics
 
-**Triage:** enhancement · needs-info
-**Status:** Proposed — needs a tooling decision before agent execution. From launch decision #11 (`docs/product/launch-decisions-2026-06-08.md`).
+**Triage:** enhancement · ready-for-agent
+**Status:** Tool chosen 2026-06-09 — **reuse Sentry** (founder: "anything free; sentry or firebase"). Sentry is already integrated, EU-aligned, free tier, and satisfies this issue's own "don't ship two analytics SDKs" guard; Firebase Analytics is the fallback if Sentry's funnel surface proves too thin post-launch. From launch decision #11 (`docs/product/launch-decisions-2026-06-08.md`).
 **Created:** 2026-06-09
 **Related:** `docs/product/launch-decisions-2026-06-08.md` (#11), `reference_sentry` memory, PRDs in `docs/product/INDEX.md`
 
@@ -18,15 +18,17 @@ reliability** (how often an answer is captured/understood on first try), and **w
 Without instrumentation we launch blind — we can't tell whether the voice-first model actually works
 for users or where they drop off. Analytics is a stated launch need (#11).
 
-## Open question (needs founder/triage decision before agent execution)
+## Tool decision (resolved 2026-06-09)
 
-**Which analytics tool?** Candidates, weighed against project preferences:
-- **PostHog** (has a REST API + EU hosting; `feedback_api_first_tools` ✅, GDPR-friendly for SK/CZ/EN).
-- **Sentry** already integrated — its product-analytics / custom-event surface could avoid a second SDK.
-- Other (Mixpanel/Amplitude) — heavier, less API-first.
+**Reuse Sentry.** Founder constraint was "anything free; sentry or firebase." Of those:
+- **Sentry** — already integrated (org `missinghue` / project `carquiz`), EU-aligned, free tier, no
+  second SDK. Funnel/event surface is thinner than a dedicated product-analytics tool, but adequate
+  at MVP scale (founder + close circle). **← chosen.**
+- **Firebase Analytics** — best-in-class free mobile funnels, but US data residency (GDPR friction
+  for SK/CZ/EN) and a second SDK. Kept as the fallback if Sentry funnels prove too thin post-launch.
+- PostHog (the earlier EU-hosted candidate) was dropped — founder narrowed to Sentry/Firebase.
 
-Decide tool + hosting region (EU preferred given SK/CZ/EN markets and `feedback_company_accounts`)
-before instrumenting. This is why the issue is `needs-info`.
+Instrument via Sentry custom events/measurements on the existing state-machine transitions.
 
 ## What to implement (once tool is chosen)
 

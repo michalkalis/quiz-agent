@@ -2,6 +2,15 @@
 
 **Triage:** enhancement · ready-for-human
 **Status:** Proposed — needs founder action (Apple account). From launch decisions #5 + #7 (`docs/product/launch-decisions-2026-06-08.md`).
+
+**Founder decision 2026-06-09:** Not started — founder will do the `[HUMAN]` steps; needs exact instructions (issued as `docs/artifacts/asc-setup-instructions-2026-06-09.html`, gitignored/local).
+
+**Key insight (verified 2026-06-09):** Half of step 5 is already done. Because **TestFlight already works** via fastlane:
+- The **ASC API key already exists** — stored as GitHub Actions secrets `ASC_API_KEY_ID` / `ASC_API_ISSUER_ID` / `ASC_API_KEY_CONTENT` (see `.github/workflows/ios-release.yml`) and in `apps/ios-app/Hangs/fastlane/.env`. Do **not** regenerate unless its Access role is narrower than `App Manager` (needed for `deliver` metadata push).
+- The **app record almost certainly already exists** — TestFlight can't upload without it. Verify in ASC → Apps before re-creating.
+- Exact values: bundle id `com.missinghue.hangs`, team `KAGWHPZZFQ`, name `Hangs`.
+
+So the genuinely-remaining `[HUMAN]` work is the **public-listing layer**: sign the **Paid Apps agreement** (gotcha — IAP won't activate without it), set **availability** SK/CZ/EN, create **non-consumable pack IAP products** (send agent the final Product IDs), and fill **privacy + metadata** (agent drafts SK/CZ/EN, founder reviews/clicks).
 **Created:** 2026-06-09
 **Related:** `docs/product/launch-decisions-2026-06-08.md` (#5, #7, #8), `.claude/skills/testflight`, `project_target_users` memory
 

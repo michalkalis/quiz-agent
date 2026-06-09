@@ -2,6 +2,9 @@
 
 **Triage:** interactive (review phase) → ready-for-agent (remediation phase)
 
+**Founder decision 2026-06-09:** **Defer — not yet.** Run this gauntlet later, once the MCQ + design
+blockers are closer to done. Parked for now; no stages started.
+
 Three-stage review pass before the first App Store submission. Run **in order** —
 architecture first (shapes what security/quality looks at), security second (gates
 release), comprehensive review last (catches what the narrow passes miss).

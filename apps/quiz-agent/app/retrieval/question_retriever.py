@@ -23,8 +23,8 @@ from ..config import get_settings
 from .sync_pgvector_store import SyncPgvectorStore
 
 # Single source of truth for question types served to the voice-quiz retriever.
-# Adding "text_multichoice" here (task 50.2) activates MCQ once the batch is approved.
-ALLOWED_QUESTION_TYPES: list = ["text", "image"]
+# "text_multichoice" added per launch decision: docs/product/launch-decisions-2026-06-08.md
+ALLOWED_QUESTION_TYPES: list = ["text", "image", "text_multichoice"]
 
 
 class QuestionRetriever:

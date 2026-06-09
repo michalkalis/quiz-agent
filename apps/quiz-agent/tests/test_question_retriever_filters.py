@@ -1,9 +1,12 @@
-"""Tests for QuestionRetriever type-filter single-source-of-truth (issue #50, task 50.1).
+"""Tests for QuestionRetriever type-filter single-source-of-truth (issue #50, tasks 50.1–50.2).
 
 ALLOWED_QUESTION_TYPES is the sole source of truth for which question types reach the
 voice-quiz retriever.  These tests monkeypatch that constant and prove that *every*
 filter path — primary and all three fallbacks — picks it up.  A stale literal in any
 fallback would silently drop MCQ questions on unhappy paths only; this suite catches that.
+
+Task 50.2 tests (no patching) pin the launch contract: "text_multichoice" must be present
+in all four filter paths so a future tidy-up can't silently de-activate MCQ.
 """
 
 from unittest.mock import patch
@@ -74,4 +77,44 @@ def test_fallback_chain_all_paths_use_constant():
     for i, call_filters in enumerate(stub.calls):
         assert call_filters["type"]["$in"] == ["sentinel_type"], (
             f"call {i} passed {call_filters['type']['$in']!r} instead of ['sentinel_type']"
+        )
+
+
+# ---------------------------------------------------------------------------
+# Task 50.2: "text_multichoice" present in all four filter paths (no patching)
+# Pins the MCQ launch contract — see docs/product/launch-decisions-2026-06-08.md
+# ---------------------------------------------------------------------------
+
+
+def test_primary_filter_includes_text_multichoice():
+    """Primary filter must include 'text_multichoice' (launch contract, task 50.2)."""
+    stub = _StubStore()
+    retriever = QuestionRetriever(question_store=stub)
+    session = _make_session()
+
+    filters = retriever._build_metadata_filters("easy", session)
+
+    assert "text_multichoice" in filters["type"]["$in"], (
+        f"Primary filter missing 'text_multichoice'; got {filters['type']['$in']!r}"
+    )
+
+
+def test_fallback_chain_all_paths_include_text_multichoice():
+    """All fallback store.search calls must include 'text_multichoice' (launch contract)."""
+    stub = _StubStore()
+    retriever = QuestionRetriever(question_store=stub)
+    session = _make_session()
+
+    retriever._fallback_retrieval(
+        session=session,
+        question_difficulty="easy",
+        n_candidates=5,
+        excluded_ids=[],
+    )
+
+    assert len(stub.calls) >= 3, "Expected at least FB-1, FB-2×2, FB-3 calls"
+
+    for i, call_filters in enumerate(stub.calls):
+        assert "text_multichoice" in call_filters["type"]["$in"], (
+            f"Fallback call {i} missing 'text_multichoice'; got {call_filters['type']['$in']!r}"
         )

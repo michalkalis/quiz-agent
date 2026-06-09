@@ -22,6 +22,10 @@ from quiz_shared.utils.embeddings import generate_embedding, calculate_similarit
 from ..config import get_settings
 from .sync_pgvector_store import SyncPgvectorStore
 
+# Single source of truth for question types served to the voice-quiz retriever.
+# Adding "text_multichoice" here (task 50.2) activates MCQ once the batch is approved.
+ALLOWED_QUESTION_TYPES: list = ["text", "image"]
+
 
 class QuestionRetriever:
     """Retrieves questions using proper RAG with semantic search."""
@@ -209,7 +213,7 @@ class QuestionRetriever:
         Returns:
             Metadata filters dict
         """
-        allowed_types = ["text", "image"]
+        allowed_types = ALLOWED_QUESTION_TYPES
         filters = {
             "difficulty": difficulty,
             "type": {"$in": allowed_types},
@@ -286,7 +290,7 @@ class QuestionRetriever:
             query_text=simple_query,
             filters={
                 "difficulty": question_difficulty,
-                "type": {"$in": ["text", "image"]},
+                "type": {"$in": ALLOWED_QUESTION_TYPES},
                 "review_status": "approved",
                 **lang_filter,
             },
@@ -307,7 +311,7 @@ class QuestionRetriever:
                 query_text=simple_query,
                 filters={
                     "difficulty": fallback_difficulty,
-                    "type": {"$in": ["text", "image"]},
+                    "type": {"$in": ALLOWED_QUESTION_TYPES},
                     "review_status": "approved",
                     **lang_filter,
                 },
@@ -327,7 +331,7 @@ class QuestionRetriever:
         candidates = self._store.search(
             query_text="question",
             filters={
-                "type": {"$in": ["text", "image"]},
+                "type": {"$in": ALLOWED_QUESTION_TYPES},
                 "review_status": "approved",
                 **lang_filter,
             },

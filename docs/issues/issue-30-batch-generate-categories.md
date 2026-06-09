@@ -12,7 +12,7 @@ Run the gen → verify → score → approve → import pipeline at volume to fi
 | Category | Type | Target count |
 |---|---|---|
 | `kids` | core | 50 — DONE (52, 2026-05-05) |
-| `general` | core | 50 — DONE (53 in batch MDs, 52 approved to local ChromaDB 2026-05-19; 2 flagged as ≥0.85-similarity duplicates: `gen032_q24` honey-in-Egyptian-tombs, `gen033_q06` Venus-day-longer-than-year); prod sync pending |
+| `general` | core | **500** — ~52 approved (initial target 50 met 2026-05-19); **raised to ~500 by founder 2026-06-09, approached incrementally** (see "General content run" below) |
 | `adults` | core | 50 — DONE (67) |
 | `wizarding-world` | themed | 30 — DONE |
 | `superheroes` | themed | 30 — 34/30 DONE (8 approved LOCALLY 2026-05-19; prod sync pending) |
@@ -79,16 +79,37 @@ Per-batch acceptance bar (mirrors `/score-questions`):
 
 ---
 
-## Tasks — Top-Up Run (2026-06-09)
+## Tasks — General content run toward 500 (2026-06-09)
 
-Six of eight categories are at or above target. Disney and football remain below target and need a top-up run.
+**Founder decision 2026-06-09:** disney/football top-up is **dropped** (not a launch req). The new
+direction is **more `general`-category questions**, target **~500**, **approached slowly** — many
+short, committed runs over time, not one giant batch. This is a **re-runnable** loop: each Ralph run
+(or session) advances the count by a few batches and stops; re-launch later to advance further.
 
-- [ ] **30.1** Generate a new batch of 20 disney questions (`/generate-questions --category disney --count 20`), verify all with `/verify-questions`, score passing ones with `/score-questions`, and approve those that clear the 5-dimension bar. Commit the batch file. Acceptance: at least 5 new questions reach `approved` status in the local question store; batch file saved to `data/questions/`.
-- [ ] **30.2** Generate a second disney batch of 20 if the first batch yielded fewer than 10 approved (i.e., disney is still below 30 total). Same verify → score → approve cycle. Commit. Acceptance: disney approved count ≥ 30 OR a BLOCKER note explains why 30 is unreachable from available IP-safe questions.
-- [ ] **30.3** Generate a new batch of 20 football questions (`/generate-questions --category football --count 20`), verify all with `/verify-questions`, score passing ones with `/score-questions`, and approve those that clear the bar. Commit the batch file. Acceptance: at least 5 new questions reach `approved` status; batch file saved.
-- [ ] **30.4** Generate a second football batch of 20 if the first batch yielded fewer than 8 approved (i.e., football is still below 30 total). Same cycle. Commit. Acceptance: football approved count ≥ 30 OR a BLOCKER note explains why.
-- [ ] **30.5** Run `migrate_chroma_to_postgres.py --execute` (from `apps/quiz-pack-api/`) to push the newly approved disney and football questions to the prod pgvector store. Acceptance: script exits 0 and reports a net-positive count increase; verify by querying prod API `GET /api/v1/questions?category=disney` and `GET /api/v1/questions?category=football` and confirming counts rose above 20 and 22 respectively.
-- [ ] **30.6** Update this issue file: change **Status** to `Done`, update the disney and football rows in the TL;DR table to reflect final approved counts, and reconcile the dangling `#62` reference in `docs/todo/TODO.md` (either inline the note removing the `#62` reference, or create a minimal `docs/issues/issue-62-disney-football-topup.md` stub pointing here). Commit. Acceptance: the file no longer references an open `#62` that doesn't exist; issue-30 header shows Done.
+**Per-run protocol** (repeat 30.G each iteration until the run's iteration budget is spent):
+
+- [ ] **30.G** *(repeatable — the core loop)* Generate one batch of 20 `general` questions
+  (`/generate-questions --category general --count 20`), verify all with `/verify-questions`, score
+  passing ones with `/score-questions`, and approve only those that clear the 5-dimension bar. Commit
+  the batch file to `data/questions/`. **Before generating, check the running `general` approved count**
+  — if it is already ≥ 500, do **not** generate; skip to 30.M then 30.done. **Dedup guard:** run a
+  `QuestionRetriever` semantic check and drop any new question ≥ 0.85 similarity to an existing
+  `general` question (the two known dupes — `gen032_q24`, `gen033_q06` — are the precedent). Acceptance
+  per iteration: ≥ 1 new `general` question reaches `approved`; batch file committed; the running count
+  in the TL;DR `general` row is updated.
+- [ ] **30.M** *(end of each run, or every ~5 batches)* Run `migrate_chroma_to_postgres.py --execute`
+  (from `apps/quiz-pack-api/`) to push newly-approved `general` questions to prod pgvector. Acceptance:
+  script exits 0 with a net-positive count increase; `GET /api/v1/questions?category=general` count rose.
+- [ ] **30.done** *(only when `general` approved ≥ ~500)* Set **Status** to `Done`, update the `general`
+  row to the final count. Until then the issue stays open across runs.
+- [ ] **30.docfix** *(one-time, independent of count)* Reconcile the dangling `#62` reference in
+  `docs/todo/TODO.md` (inline a note removing it, or create a minimal stub pointing here). Acceptance:
+  no open `#62` reference remains pointing to a non-existent file.
+
+> **Why count-based, not a fixed task list:** ~450 questions ≈ 23+ batches at a healthy approval rate —
+> too many to enumerate, and the founder wants this paced. The loop's success criterion is the *count*,
+> not a checkbox per batch. Each run is bounded by `MAX_ITERS` in `launch-issue30.sh`; raise it for a
+> bigger push, lower it to go slower.
 
 ---
 
@@ -96,14 +117,24 @@ Six of eight categories are at or above target. Disney and football remain below
 
 > *This was generated by AI during triage.*
 
+> **⚠ Superseded 2026-06-09 — read the "General content run" task section above, not the disney/football
+> wording below.** Founder dropped the disney/football top-up; the goal is now `general` → ~500,
+> incremental. The pipeline/interfaces below still apply (just point them at `general`).
+
 **Category:** enhancement
-**Summary:** Top up disney and football question counts to 30/30 via the existing gen→verify→score→approve→migrate pipeline, then close out the issue and its dangling #62 reference.
+**Summary:** Grow the `general` core category from ~52 toward ~500 approved questions via the existing
+gen→verify→score→approve→migrate pipeline, paced over many short re-runnable loops; resolve the dangling
+#62 reference once.
 
 **Current behavior:**
-The full batch pipeline was executed in late May 2026. Six of eight categories (kids, general, adults, wizarding-world, superheroes, sports-mix) met or exceeded their targets. Disney reached 20/30 and football reached 22/30. The production pgvector store was synced on 2026-06-09 with all then-approved questions (308 total). No further batches have been generated for disney or football since that sync. The TODO.md entry for #30 was marked `[x]` done but referenced a `#62` issue that has no file — this is a dangling reference.
+The full batch pipeline ran in late May 2026; all eight categories met their *original* targets and prod
+pgvector was synced 2026-06-09 (308 then-approved; 565 total live). `general` sits at ~52 approved. The
+TODO.md entry for #30 referenced a `#62` issue that has no file — a dangling reference.
 
 **Desired behavior:**
-Disney and football each have ≥ 30 approved questions in the prod pgvector store. The issue is marked Done. The `#62` reference is resolved (either as an inline note in TODO.md, or as a created stub issue). The INDEX.md row for #30 reflects `enhancement · done`.
+The `general` category reaches ~500 approved questions in prod pgvector, reached incrementally across
+runs. The `#62` reference is resolved. The issue stays open (with a running count) until ~500 is hit,
+then flips to Done.
 
 **Key interfaces / call paths:**
 - `/generate-questions` skill — generates raw question batches for a named category; persists batch file to `data/questions/batch-NN-<category>.md`
@@ -114,10 +145,10 @@ Disney and football each have ≥ 30 approved questions in the prod pgvector sto
 - Prod pgvector store — queried via `GET /api/v1/questions?category=<cat>` to confirm count
 
 **Acceptance criteria:**
-- [ ] `GET /api/v1/questions?category=disney` returns ≥ 30 questions from prod
-- [ ] `GET /api/v1/questions?category=football` returns ≥ 30 questions from prod
+- [ ] `GET /api/v1/questions?category=general` count climbs toward ~500 across runs (per-run: net-positive)
 - [ ] Every newly approved question has non-empty `source_url` and `source_excerpt` fields
-- [ ] The issue-30 file header shows **Status:** Done
+- [ ] New questions pass the ≥ 0.85-similarity dedup guard against existing `general` questions
+- [ ] The issue-30 file header shows **Status:** Done only once `general` ≥ ~500
 - [ ] No dangling `#62` reference remains in `docs/todo/TODO.md` pointing to a non-existent file
 
 **Out of scope:**

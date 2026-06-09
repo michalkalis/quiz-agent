@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
-# Launch Ralph against the #30 disney/football top-up + doc-drift close-out.
+# Launch Ralph against #30 — grow the `general` category toward ~500 (incremental).
 #
 #   ssh mba bash code/quiz-agent/scripts/ralph/launch-issue30.sh
 #
-# Six tasks (30.1–30.6): generate/verify/score/approve disney + football batches,
-# migrate to prod pgvector, then close out the issue and the dangling #62 reference.
+# Re-runnable loop (per founder decision 2026-06-09): each run advances the
+# `general` approved count by up to MAX_ITERS batches of 20 (generate/verify/
+# score/approve, dedup-guarded), commits each batch, migrates to prod pgvector,
+# and stops. Re-launch later to advance further — the goal is the COUNT (~500),
+# not a fixed task list. See task 30.G in the focus file.
 # All work is Python/backend — no iOS build required, no SDK gate.
 set -euo pipefail
 
@@ -14,8 +17,9 @@ export TERM=xterm-256color
 REPO_ROOT="$HOME/code/quiz-agent"
 FOCUS_FILE="docs/issues/issue-30-batch-generate-categories.md"
 SESSION_NAME="ralph-issue30"
-# 6 tasks + generous slack for batch retries (disney/football may each need 2 rounds).
-MAX_ITERS="${MAX_ITERS:-10}"
+# "Slowly" — keep each run small; ~6 batches advances the count without a marathon.
+# Override per run, e.g. MAX_ITERS=12 ssh mba bash .../launch-issue30.sh for a bigger push.
+MAX_ITERS="${MAX_ITERS:-6}"
 
 cd "$REPO_ROOT"
 

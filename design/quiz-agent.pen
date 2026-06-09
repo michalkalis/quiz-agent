@@ -1122,7 +1122,7 @@
                       "type": "text",
                       "id": "PXS8e",
                       "name": "br1V",
-                      "fill": "$accent-blue",
+                      "fill": "$success",
                       "content": "8",
                       "fontFamily": "Anton",
                       "fontSize": 28,
@@ -1164,7 +1164,7 @@
                       "type": "text",
                       "id": "eqtoa",
                       "name": "br2V",
-                      "fill": "$accent-pink",
+                      "fill": "$error",
                       "content": "2",
                       "fontFamily": "Anton",
                       "fontSize": 28,
@@ -2098,7 +2098,7 @@
               "name": "iconBg",
               "width": 128,
               "height": 128,
-              "fill": "#FF3D8F1A",
+              "fill": "#FF44441A",
               "cornerRadius": 64,
               "justifyContent": "center",
               "alignItems": "center",
@@ -2111,7 +2111,7 @@
                   "height": 56,
                   "iconFontName": "triangle-alert",
                   "iconFontFamily": "lucide",
-                  "fill": "$accent-pink"
+                  "fill": "$error"
                 }
               ]
             }
@@ -2147,7 +2147,7 @@
               "type": "rectangle",
               "id": "P2T6D",
               "name": "pinkL",
-              "fill": "$accent-pink",
+              "fill": "$error",
               "width": 40,
               "height": 2
             },
@@ -3908,7 +3908,7 @@
               "type": "frame",
               "id": "Q0Tp7",
               "name": "bad4",
-              "fill": "#FF3D8F1F",
+              "fill": "#FF44441F",
               "cornerRadius": 14,
               "gap": 8,
               "padding": [
@@ -3926,12 +3926,12 @@
                   "height": 14,
                   "iconFontName": "x",
                   "iconFontFamily": "lucide",
-                  "fill": "$accent-pink"
+                  "fill": "$error"
                 },
                 {
                   "type": "text",
                   "id": "iN4qw",
-                  "fill": "$accent-pink",
+                  "fill": "$error",
                   "content": "NOT QUITE",
                   "fontFamily": "IBM Plex Mono",
                   "fontSize": 11,
@@ -4009,7 +4009,7 @@
                     {
                       "type": "text",
                       "id": "LVGxH",
-                      "fill": "$accent-pink",
+                      "fill": "$error",
                       "content": "YOU SAID",
                       "fontFamily": "IBM Plex Mono",
                       "fontSize": 11,
@@ -4022,7 +4022,7 @@
                       "name": "xW",
                       "width": 20,
                       "height": 20,
-                      "fill": "$accent-pink",
+                      "fill": "$error",
                       "cornerRadius": 10,
                       "justifyContent": "center",
                       "alignItems": "center",
@@ -4068,7 +4068,7 @@
                     {
                       "type": "text",
                       "id": "1vy5g",
-                      "fill": "$accent-blue",
+                      "fill": "$success",
                       "content": "THE ANSWER",
                       "fontFamily": "IBM Plex Mono",
                       "fontSize": 11,
@@ -4081,7 +4081,7 @@
                       "name": "cW",
                       "width": 20,
                       "height": 20,
-                      "fill": "$accent-blue",
+                      "fill": "$success",
                       "cornerRadius": 10,
                       "justifyContent": "center",
                       "alignItems": "center",
@@ -4197,7 +4197,7 @@
                 {
                   "type": "text",
                   "id": "oTEto",
-                  "fill": "$accent-pink",
+                  "fill": "$accent-blue",
                   "content": "POINTS",
                   "fontFamily": "IBM Plex Mono",
                   "fontSize": 11,
@@ -4214,7 +4214,7 @@
                     {
                       "type": "text",
                       "id": "zD9OI",
-                      "fill": "$accent-pink",
+                      "fill": "$accent-blue",
                       "content": "2.3k",
                       "fontFamily": "Anton",
                       "fontSize": 32,
@@ -7503,7 +7503,8 @@
               "content": "Maybe tomorrow",
               "textAlign": "center",
               "fontFamily": "Inter",
-              "fontSize": 14
+              "fontSize": 14,
+              "fontWeight": "normal"
             }
           ]
         }

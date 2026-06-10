@@ -36,8 +36,17 @@ def choose_question_type(pattern: str | None) -> Literal["text", "text_multichoi
     ``None`` / unknown / non-mapped patterns return ``"text"`` so the
     routing is fail-safe: a typo in the LLM's pattern label degrades
     to free-form text, not a half-built MCQ missing options.
+
+    Labels are normalized before lookup, and a leading ``the_`` is
+    stripped: despite 42.9b's exact-snake_case-key prompt instruction,
+    the first live batch (2026-06-10 BLOCKER) showed the LLM derives
+    labels from the Pattern Library titles ("The Odd One Out" →
+    ``the_odd_one_out``), which exact matching silently routed to text.
     """
-    if pattern and pattern in PATTERNS_TO_MCQ:
+    normalized = _normalize_pattern(pattern)
+    if normalized.startswith("the_"):
+        normalized = normalized[len("the_") :]
+    if normalized in PATTERNS_TO_MCQ:
         return "text_multichoice"
     return "text"
 

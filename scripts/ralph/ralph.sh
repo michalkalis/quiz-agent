@@ -26,6 +26,7 @@ fi
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 SCRIPT_DIR="$REPO_ROOT/scripts/ralph"
 PROMPT_TEMPLATE="$SCRIPT_DIR/prompts/work-next.md"
+ROUTER_TEMPLATE="$SCRIPT_DIR/prompts/route-model.md"
 LOG_DIR="$SCRIPT_DIR/logs"
 mkdir -p "$LOG_DIR"
 
@@ -33,6 +34,23 @@ if [[ ! -f "$PROMPT_TEMPLATE" ]]; then
     echo "[ralph] prompt template missing: $PROMPT_TEMPLATE" >&2
     exit 2
 fi
+
+# Per-iteration model routing. Set RALPH_ROUTER=0 to disable (always use $DEFAULT_MODEL).
+RALPH_ROUTER="${RALPH_ROUTER:-1}"
+DEFAULT_MODEL="${RALPH_DEFAULT_MODEL:-sonnet}"
+ROUTER_BUDGET_USD="${RALPH_ROUTER_BUDGET_USD:-0.50}"
+
+# Map a ROUTE: token to a --model value. Aliases work for the latest models;
+# fable is spelled in full to be explicit about the premium tier.
+route_to_model() {
+    case "$1" in
+        haiku)  echo "haiku" ;;
+        sonnet) echo "sonnet" ;;
+        opus)   echo "opus" ;;
+        fable)  echo "claude-fable-5" ;;
+        *)      echo "" ;;
+    esac
+}
 
 # Safety preflight: working tree must be clean (avoid mixing autonomous + manual changes)
 if [[ -n "$(git -C "$REPO_ROOT" status --porcelain)" ]]; then
@@ -70,6 +88,37 @@ for iter in $(seq 1 "$MAX_ITERS"); do
 
     PRE_SHA="$(git -C "$REPO_ROOT" rev-parse HEAD)"
 
+    # ── Router pre-pass: a cheap Haiku call picks the model for THIS iteration.
+    # It reads the focus file (read-only), finds the same "next task" the worker
+    # will pick, applies the rubric in route-model.md, and prints `ROUTE: <model>`.
+    CHOSEN_MODEL="$DEFAULT_MODEL"
+    ROUTE_SOURCE="default"
+    if [[ "$RALPH_ROUTER" == "1" && -f "$ROUTER_TEMPLATE" ]]; then
+        ROUTER_LOG="$LOG_DIR/route-$START_TS-$(printf '%02d' "$iter").log"
+        ROUTER_PROMPT="$(sed "s|__FOCUS_FILE__|$FOCUS_FILE|g" "$ROUTER_TEMPLATE")"
+        set +e
+        claude \
+            -p "Route the next Ralph task on $FOCUS_FILE. End with the ROUTE: line." \
+            --model haiku \
+            --permission-mode bypassPermissions \
+            --allowed-tools "Read" "Grep" "Glob" \
+            --max-budget-usd "$ROUTER_BUDGET_USD" \
+            --no-session-persistence \
+            --append-system-prompt "$ROUTER_PROMPT" \
+            > "$ROUTER_LOG" 2>&1
+        set -e
+        ROUTE_TOKEN="$(grep -oE 'ROUTE:[[:space:]]*[a-zA-Z0-9-]+' "$ROUTER_LOG" | tail -1 | sed -E 's/ROUTE:[[:space:]]*//' || true)"
+        MAPPED_MODEL="$(route_to_model "$ROUTE_TOKEN")"
+        if [[ -n "$MAPPED_MODEL" ]]; then
+            CHOSEN_MODEL="$MAPPED_MODEL"
+            ROUTE_SOURCE="router"
+        else
+            log "  router parse failed (token='$ROUTE_TOKEN') → fallback $DEFAULT_MODEL"
+            ROUTE_SOURCE="fallback"
+        fi
+    fi
+    log "  route=$CHOSEN_MODEL ($ROUTE_SOURCE)"
+
     # Run one Claude iteration. 25 min hard timeout via gtimeout if installed,
     # otherwise rely on --max-budget-usd to bound cost.
     TIMEOUT_CMD=""
@@ -84,6 +133,7 @@ for iter in $(seq 1 "$MAX_ITERS"); do
     # 20 min < the 25 min gtimeout above, so the iteration cap still wins.
     BASH_MAX_TIMEOUT_MS=1200000 $TIMEOUT_CMD claude \
         -p "Run one Ralph iteration on $FOCUS_FILE. End with the RALPH_RESULT marker." \
+        --model "$CHOSEN_MODEL" \
         --permission-mode bypassPermissions \
         --max-budget-usd "$BUDGET_USD" \
         --fallback-model sonnet \

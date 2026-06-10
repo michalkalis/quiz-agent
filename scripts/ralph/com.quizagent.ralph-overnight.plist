@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  LaunchAgent: nightly Ralph overnight burndown on the agent Mac.
+
+  Runs at 00:30 daily. Must be a LaunchAgent in the GUI domain (gui/502) — like
+  com.quizagent.rc — so claude can reach the claude.ai credentials in the macOS
+  Keychain. A Daemon (system domain) cannot.
+
+  Install (as the `agent` user on mba):
+    cp scripts/ralph/com.quizagent.ralph-overnight.plist \
+       ~/Library/LaunchAgents/com.quizagent.ralph-overnight.plist
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.quizagent.ralph-overnight.plist
+    launchctl enable gui/$(id -u)/com.quizagent.ralph-overnight
+
+  Trigger now without waiting for 00:30 (for the verification step):
+    launchctl kickstart -k gui/$(id -u)/com.quizagent.ralph-overnight
+
+  Uninstall:
+    launchctl bootout gui/$(id -u)/com.quizagent.ralph-overnight
+
+  REBOOT GOTCHA: auto-login is OFF on this Mac, so after a full reboot this agent
+  will not fire until the `agent` user logs into the GUI desktop. Enable auto-login
+  or accept that a reboot pauses the scheduler until the next GUI login.
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.quizagent.ralph-overnight</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>-lc</string>
+        <string>/Users/agent/code/quiz-agent/scripts/ralph/run-scheduled.sh</string>
+    </array>
+
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>0</integer>
+        <key>Minute</key>
+        <integer>30</integer>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <false/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/agent/Library/Logs/quizagent-ralph.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/agent/Library/Logs/quizagent-ralph.log</string>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/agent/code/quiz-agent</string>
+</dict>
+</plist>

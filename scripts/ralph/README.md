@@ -100,12 +100,89 @@ Schedule via `~/Library/LaunchAgents/com.quizagent.ralph.plist`. Trigger nightly
 - For tasks without clear acceptance criteria (Ralph will drift; spend the time decomposing first).
 - When you're about to ship something time-sensitive — Ralph commits often, debugging a wrong direction is cheap, but a half-finished Phase 2 in the middle of a deploy window is not.
 
+## Per-iteration model routing
+
+Each iteration is preceded by a cheap **router pre-pass** (Haiku, $0.50 cap,
+read-only). It reads the focus file, finds the same "next task" the worker will
+pick, applies a rubric (`prompts/route-model.md`), and prints `ROUTE: <model>`.
+The worker iteration then runs on that model (`--model`), with `--fallback-model
+sonnet` still as the safety net. The route is logged as `route=<model>` per
+iteration. Rubric biases cheap: `sonnet` is the default; `haiku` for trivial
+doc/checkbox edits; `opus` for hard multi-file logic or strategy decomposition;
+`fable` only for genuine new architecture.
+
+Disable with `RALPH_ROUTER=0` (then every iteration uses `RALPH_DEFAULT_MODEL`,
+default `sonnet`).
+
+## Overnight orchestration
+
+`overnight.sh` chains **multiple** issues through `ralph.sh` in one unattended
+run, isolating everything on a throwaway branch so main stays clean:
+
+```bash
+# Read the priority queue (triage output) and burn it down:
+scripts/ralph/overnight.sh
+
+# Or run a specific subset / dry-run (default iteration cap each):
+scripts/ralph/overnight.sh docs/issues/issue-49-daily-limit-cost-research.md
+```
+
+It cuts `ralph/overnight-YYYYMMDD-HHMM`, runs each focus file sequentially under a
+global wall-clock budget (`OVERNIGHT_MAX_SECONDS`, default 6h), writes a
+consolidated self-contained HTML report (`prompts/report.md` →
+`docs/artifacts/ralph-report-*.html`, force-added so it travels with the branch),
+then **pushes the `ralph/*` branch only** — never main — and returns to main.
+
+### Priority queue format
+
+`docs/issues/overnight-queue.md` (produced by `/triage`). One focus file per line,
+optional `| <max-iters>`; blank lines and `#` comments ignored, a leading `- `
+bullet is stripped:
+
+```
+# highest priority first — #44 unlocks the agent's own visual self-check
+docs/issues/issue-44-screenshot-verify.md | 8
+docs/issues/issue-45-pencil-theme.md | 12
+docs/issues/issue-49-daily-limit-cost-research.md          # iters omitted → default
+```
+
+## Scheduling (agent Mac)
+
+- `com.quizagent.ralph-overnight.plist` — LaunchAgent, fires `run-scheduled.sh` at
+  00:30 daily (GUI domain, for Keychain access). Install/kickstart instructions
+  are in the plist's leading comment.
+- `run-scheduled.sh` — thin launchd entry: sets PATH, cds to the repo, runs
+  `overnight.sh` in the foreground (no tmux at 00:30; the lockfile guards against
+  colliding with a manual run or the Remote Control session).
+- `launch-overnight.sh` — on-demand tmux launcher for when you're awake and want
+  to attach and watch.
+
+**Reboot gotcha:** auto-login is OFF on the agent Mac, so after a full reboot the
+scheduler won't fire until the `agent` user logs into the GUI desktop.
+
+## Morning review (laptop)
+
+```bash
+scripts/ralph/morning.sh
+```
+
+Fetches origin, finds the newest `ralph/overnight-*` branch, opens its HTML report,
+and prints the commit log, BLOCKERs, and the merge command. It does **not** merge —
+reviewing before main is yours.
+
 ## Files
 
 ```
 scripts/ralph/
-  ralph.sh                  ← the loop
-  prompts/work-next.md      ← system prompt template per iteration
-  logs/                     ← run-* and iter-* logs (gitignored)
-  README.md                 ← you are here
+  ralph.sh                          ← the loop (+ per-iteration router)
+  overnight.sh                      ← chains issues on a ralph/* branch, pushes, reports
+  run-scheduled.sh                  ← launchd entry (00:30, no tmux)
+  launch-overnight.sh               ← on-demand tmux launcher
+  morning.sh                        ← laptop review of the overnight branch
+  com.quizagent.ralph-overnight.plist ← LaunchAgent (00:30 daily)
+  prompts/work-next.md              ← worker system prompt per iteration
+  prompts/route-model.md            ← router pre-pass system prompt
+  prompts/report.md                 ← overnight report-writer system prompt
+  logs/                             ← run-*, iter-*, route-*, overnight-* logs (gitignored)
+  README.md                         ← you are here
 ```

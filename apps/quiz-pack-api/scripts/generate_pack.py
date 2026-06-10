@@ -68,15 +68,14 @@ logger = logging.getLogger("generate_pack")
 
 
 # Steering footer appended to the order prompt by `--mcq-bias` (issue #42
-# task 42.19b). Pattern choice stays LLM-side (Risk #7) — this shifts the
-# prior toward the MCQ-routable patterns from `PATTERNS_TO_MCQ`, whose
-# snake_case keys 42.9a's post-generation tagging routes on. The first live
-# run (42.20 BLOCKER 2026-06-10) showed soft preference loses to the prompt
-# template's PATTERN DIVERSITY RULE, so the footer now sets a hard quota and
-# names the diversity-cap exemption that `_format_mcq_patterns_section`
-# grants to MCQ-emphasis orders.
+# task 42.19b). The order prompt never reaches the generation LLM (42.20
+# BLOCKER root cause D) — the operative mechanism is the MCQ_EMPHASIS_MARKER
+# this footer carries: `PackGenerator` detects it and sets
+# `OrderContext.mcq_emphasis`, which travels through `GenerationStage` into
+# `_format_mcq_patterns_section`'s hard quota. The footer text itself only
+# informs sourcing / audit logs.
 _MCQ_BIAS_INSTRUCTION = (
-    "MULTIPLE-CHOICE EMPHASIS: at least 7 of every 10 questions in this "
+    "{marker}: at least 7 of every 10 questions in this "
     "batch MUST use one of these MCQ-routable reasoning patterns: "
     "{patterns} (true/false claims, odd-one-out sets, "
     "which-is-older/larger comparisons, year guesses). For this order "
@@ -87,9 +86,11 @@ _MCQ_BIAS_INSTRUCTION = (
 
 
 def _mcq_bias_instruction() -> str:
-    from app.generation.pattern_routing import PATTERNS_TO_MCQ
+    from app.generation.pattern_routing import MCQ_EMPHASIS_MARKER, PATTERNS_TO_MCQ
 
-    return _MCQ_BIAS_INSTRUCTION.format(patterns=", ".join(sorted(PATTERNS_TO_MCQ)))
+    return _MCQ_BIAS_INSTRUCTION.format(
+        marker=MCQ_EMPHASIS_MARKER, patterns=", ".join(sorted(PATTERNS_TO_MCQ))
+    )
 
 
 # ---------------------------------------------------------------------------

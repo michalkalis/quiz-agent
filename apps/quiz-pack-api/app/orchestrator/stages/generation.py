@@ -173,6 +173,11 @@ class GenerationStage:
             # MCQ-routed pattern. The downstream 42.9a step (below) then
             # tags the question type from the LLM's chosen pattern.
             mcq_patterns=set(PATTERNS_TO_MCQ),
+            # #42 task 42.20 blocker fix (root cause D): the order prompt is
+            # never handed to the generation LLM, so MCQ emphasis travels as
+            # this explicit bool and the generator injects the hard quota
+            # into `{mcq_patterns_section}` itself.
+            mcq_emphasis=ctx.mcq_emphasis,
         )
 
         prompt_seed = _compute_prompt_seed(

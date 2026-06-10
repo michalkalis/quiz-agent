@@ -29,6 +29,14 @@ PATTERNS_TO_MCQ: frozenset[str] = frozenset(
     }
 )
 
+# Issue #42 task 42.20 blocker fix (root cause D). The CLI's `--mcq-bias`
+# footer stamps this marker onto the order prompt; `PackGenerator` detects
+# it deterministically and sets `OrderContext.mcq_emphasis`, which
+# `GenerationStage` plumbs into the generator so the hard MCQ quota is
+# injected directly into the generation prompt (the order prompt itself
+# never reaches the generation LLM).
+MCQ_EMPHASIS_MARKER = "MULTIPLE-CHOICE EMPHASIS"
+
 
 def choose_question_type(pattern: str | None) -> Literal["text", "text_multichoice"]:
     """Return the ``Question.type`` value for a generator-emitted pattern.

@@ -115,6 +115,7 @@ class _StubSourcingStage:
 
     async def run(self, ctx: OrderContext, sink) -> StageResult:
         self._seen["prompt"] = ctx.prompt
+        self._seen["mcq_emphasis"] = ctx.mcq_emphasis
         ctx.questions.extend(self._questions)
         return StageResult()
 
@@ -146,9 +147,12 @@ class TestCliWiring:
         )
 
         assert exit_code == 0
-        # `ctx.prompt` is what GenerationStage passes to the generator —
-        # the bias text being here means the generator receives it.
+        # `ctx.prompt` is NOT handed to the generation LLM (42.20 blocker
+        # root cause D) — the operative channel is `ctx.mcq_emphasis`,
+        # derived by PackGenerator from the footer's marker and plumbed by
+        # GenerationStage into the generator's hard-quota prompt section.
         assert "MULTIPLE-CHOICE EMPHASIS" in seen["prompt"]
+        assert seen["mcq_emphasis"] is True
         assert seen["prompt"].startswith("space exploration")
         entries = json.loads(out.read_text(encoding="utf-8"))
         assert [e["id"] for e in entries] == [question.id]

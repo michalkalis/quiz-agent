@@ -119,6 +119,7 @@ class AdvancedQuestionGenerator:
         min_quality_score: float = 7.0,
         source_facts: Optional[list] = None,
         mcq_patterns: Optional[set[str]] = None,
+        mcq_emphasis: bool = False,
         open_count: int = 0,
     ) -> List[Question]:
         """Generate questions using multi-stage quality pipeline.
@@ -150,6 +151,12 @@ class AdvancedQuestionGenerator:
                 per-question ``Question.type`` is set later by
                 ``GenerationStage`` (#42 task 42.9a) based on the pattern the
                 LLM ended up choosing.
+            mcq_emphasis: When True (an MCQ-biased order, #42 task 42.20),
+                the ``{mcq_patterns_section}`` carries a hard quota — at
+                least 7 of every 10 questions must use an MCQ pattern — and
+                exempts those patterns from the diversity rule's cap. The
+                order prompt never reaches the generation LLM, so this bool
+                is the only channel for the emphasis.
 
         Returns:
             List of Question objects with quality metadata
@@ -203,6 +210,7 @@ class AdvancedQuestionGenerator:
                 user_bad_examples=user_bad_examples,
                 source_facts=source_facts,
                 mcq_patterns=mcq_patterns,
+                mcq_emphasis=mcq_emphasis,
             )
 
             print(f"Generated {len(raw_questions)} raw questions")
@@ -256,6 +264,7 @@ class AdvancedQuestionGenerator:
                 user_bad_examples=user_bad_examples,
                 source_facts=source_facts,
                 mcq_patterns=mcq_patterns,
+                mcq_emphasis=mcq_emphasis,
             )
             return open_questions + closed_questions
 
@@ -271,6 +280,7 @@ class AdvancedQuestionGenerator:
         user_bad_examples: Optional[List[str]],
         source_facts: Optional[list] = None,
         mcq_patterns: Optional[set[str]] = None,
+        mcq_emphasis: bool = False,
         open_shape: bool = False,
     ) -> List[Question]:
         """Generate a batch of questions.
@@ -312,7 +322,7 @@ class AdvancedQuestionGenerator:
         # reads cleanly for non-MCQ runs (and back-compat with callers that
         # haven't been wired through yet, e.g. ad-hoc scripts).
         extra_kwargs["mcq_patterns_section"] = self._format_mcq_patterns_section(
-            mcq_patterns
+            mcq_patterns, mcq_emphasis=mcq_emphasis
         )
 
         # Build prompt
@@ -446,7 +456,9 @@ class AdvancedQuestionGenerator:
             )
 
     @staticmethod
-    def _format_mcq_patterns_section(mcq_patterns: Optional[set[str]]) -> str:
+    def _format_mcq_patterns_section(
+        mcq_patterns: Optional[set[str]], mcq_emphasis: bool = False
+    ) -> str:
         """Render the MCQ-activation block for `{mcq_patterns_section}`.
 
         Empty string when no patterns are configured so the prompt reads as
@@ -456,7 +468,16 @@ class AdvancedQuestionGenerator:
         (`pattern_routing.choose_question_type`) expects — drift between
         the two would silently downgrade MCQ output to free-form text.
 
-        Issue #42 task 42.9b.
+        ``mcq_emphasis`` injects the hard MCQ quota (≥7 of every 10
+        questions) plus an unconditional diversity-rule exemption directly
+        into the section. The previous wording gated the exemption on "if
+        the order prompt declares MULTIPLE-CHOICE EMPHASIS" — a condition
+        the generation LLM can never observe, because the order prompt is
+        not part of the generation prompt (#42 task 42.20 blocker, root
+        cause D). Unbiased runs (the default) keep the diversity rule
+        untouched.
+
+        Issue #42 tasks 42.9b + 42.20 blocker fix.
         """
         if not mcq_patterns:
             return ""
@@ -504,12 +525,18 @@ class AdvancedQuestionGenerator:
             "let one option give away the answer through length / specificity, "
             "NEVER include the correct answer as a substring of a distractor.",
             "",
-            "**Diversity-rule carve-out:** if the order prompt declares "
-            "MULTIPLE-CHOICE EMPHASIS (or otherwise requests mostly "
-            "multiple-choice questions), the patterns listed below are EXEMPT "
-            "from the PATTERN DIVERSITY RULE's per-pattern cap — satisfy the "
-            "order's MCQ quota even where that repeats a single pattern.",
-            "",
+        ]
+        if mcq_emphasis:
+            lines += [
+                "**MULTIPLE-CHOICE EMPHASIS (this order):** at least 7 of "
+                "every 10 questions in this batch MUST use one of the "
+                "patterns listed below. Those patterns are EXEMPT from the "
+                "PATTERN DIVERSITY RULE's per-pattern cap for this order — "
+                "repeating them is expected and correct. Emit "
+                "`possible_answers` for every question using one of them.",
+                "",
+            ]
+        lines += [
             "**Patterns that require MCQ:**",
             "",
         ]

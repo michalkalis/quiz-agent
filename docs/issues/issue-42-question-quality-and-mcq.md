@@ -1,7 +1,7 @@
 # Issue 42: Question quality sweep + multichoice activation
 
 **Triage:** enhancement · ready-for-agent
-**Status:** Plan verified in fresh session 2026-05-28 against actual codebase (commit `ad3643c`). 6 real bugs in the preliminary plan fixed (see Changelog at bottom). Backend tracks A–D are Ralph-suitable atomic tasks; iOS Track E is human-driven (simulator required). Gated on #36 closing tasks 2.16–2.22.
+**Status:** Plan verified in fresh session 2026-05-28 against actual codebase (commit `ad3643c`). 6 real bugs in the preliminary plan fixed (see Changelog at bottom). Backend tracks A–D are Ralph-suitable atomic tasks; iOS Track E is human-driven (simulator required) — superseded by #45. Gated on #36 closing tasks 2.16–2.22. **2026-06-10: Track F added** (fresh MCQ batch per founder decision 2026-06-09) — Ralph launcher `scripts/ralph/launch-issue42-mcq.sh` ready; awaiting founder go.
 **Created:** 2026-05-28
 **Parent / related:** #32 (umbrella). Independent of #36 (which only touches quiz-pack-api orchestrator + voice-quiz pgvector cutover).
 
@@ -181,6 +181,40 @@ MCQOptionPicker ────────── E4 migrate Theme.Colors → Theme
 - [HUMAN] **42.18 RS regression scenario for MCQ.** Add `RS-09 MCQ-voice` and `RS-10 MCQ-tap` to the regression skill — seed an MCQ question, drive both paths, assert correct submission + result screen.
       **Acceptance**: `regression` skill runs both scenarios GREEN.
 
+### Track F — Fresh MCQ batch run (added 2026-06-10)
+
+> **Founder decision 2026-06-09:** generate a fresh MCQ batch first (gen→verify→score, brief review),
+> founder approves what makes sense → import to prod. This track is that run. Tracks A–D landed the
+> MCQ-capable pipeline (42.8–42.10) but **zero MCQ questions have been generated live** — 42.9b was
+> only ever exercised against stubbed LLM responses, and the 26 MCQs from 42.11 are conversions, not
+> fresh generations.
+>
+> **Execution model:** 42.19 / 42.20 / 42.23 are Ralph tasks (`scripts/ralph/launch-issue42-mcq.sh`,
+> runs on mba — backend-only, no iOS SDK gate). 42.21 is an interactive-session **Workflow** (multi-agent
+> distractor screen — needs the Workflow tool, not available headless). 42.22 is founder. 42.24 is an
+> interactive session (touches prod pgvector via fly proxy).
+>
+> **Assumption (founder can override):** target ≈ **40 MCQ candidates** for review (~10 per pattern ×
+> 4 patterns in `PATTERNS_TO_MCQ`) — enough signal for a *brief* review without a marathon.
+
+- [ ] **42.19 CLI support for MCQ-biased batches + file output.** Extend `scripts/generate_pack.py`: (a) `--out <path>` — after the run, dump the surviving `ctx.questions` as a JSON array (full `Question.model_dump`, stamped `review_status="pending_review"`) so dry-run batches land on disk for review and later import; (b) `--mcq-bias` — append a steering instruction to the order prompt nudging the LLM toward the `PATTERNS_TO_MCQ` patterns (true/false, odd-one-out, older/larger comparison, year-guess) — pattern choice stays LLM-side (Risk #7), this only shifts the prior; (c) `--dedup-store pgvector` (optional flag) — when `DATABASE_URL` is set, swap `_NoopQuestionStore` for a real pgvector-backed store so `DedupStage`'s 0.85 guard fires against the live corpus. **Verified 2026-06-10:** shared `PgvectorQuestionStore` (`packages/shared/quiz_shared/database/pgvector_client.py`) has **no** `find_duplicates`; the only pgvector implementation lives in `apps/quiz-agent/app/retrieval/sync_pgvector_store.py:103` — wrong package boundary for quiz-pack-api. Either port that small method into the shared store (preferred, both apps benefit) or ship (a)+(b) only and file the dedup flag as a follow-up — do not block the batch run on it.
+      **Acceptance**: unit tests with a stubbed generator — `--out` file round-trips through `Question.from_dict`; `--mcq-bias` text demonstrably present in the prompt the generator receives; invocation without the new flags is byte-identical in behaviour (existing e2e test still green).
+
+- [ ] **42.20 Generate one MCQ batch** *(repeatable — the core loop)*. From `apps/quiz-pack-api/`: `python scripts/generate_pack.py --prompt "<topic>" --target-count 20 --dry-run --mcq-bias --out ../../data/generated/mcq_batch_NNN.json` (+ `--dedup-store pgvector` if 42.19c landed). Vary `<topic>` per batch (history / science / geography / pop culture / nature …) and record it in the batch file name or metadata — repeated identical prompts breed duplicates. Post-run: filter the out-file to `type == "text_multichoice"` only (survivors are already post-verification + post-scoring, incl. `answer_brevity` + `distractor_quality`), rewrite the file with just the candidates, commit. **Before generating, count cumulative candidates across `data/generated/mcq_batch_*.json` — if ≥ 40, flip this task to `[x]` and move on.** Fail-loud: if a batch yields **< 5** MCQ candidates, do not silently loop — write a `BLOCKER` note here (bias not biting → revisit 42.19b prompt wording or fall back to per-pattern sub-batches per Risk #7).
+      **Acceptance per iteration**: ≥ 5 new `text_multichoice` candidates with populated `possible_answers`, `source_url`, and scores in the committed batch file; running count noted in the commit message.
+
+- [SESSION] **42.21 Workflow distractor screen + founder review artifact.** Interactive session (laptop): run a **Workflow** that fans out per candidate MCQ with three judgment lenses — *distractor plausibility* (would a reasonable person consider it?), *answer leakage* (does any distractor or the question text give the answer away?), *voice-friendliness* (SK driving context — options speakable and distinguishable by ear?). Majority verdict per candidate; this is the LLM-judgment layer the deterministic `distractor_quality` checks (substring/length only) cannot provide. Output: `docs/artifacts/mcq-review-<date>.html` — one row per candidate: question, options (correct marked), pattern, scores, workflow verdicts + one-line rationale, source URL, and an approve/reject recommendation. This HTML is the founder's "brief review" surface.
+      **Acceptance**: HTML covers 100% of candidates (no silent truncation); every row has a verdict; reply `open <path>`.
+
+- [HUMAN] **42.22 Founder brief review.** Approve/reject per candidate (the 42.21 HTML is the surface). Flip `review_status` to `approved` / `rejected` in the `mcq_batch_*.json` files accordingly; commit.
+      **Acceptance**: every candidate carries a final `review_status`; ≥ 1 approved (else Track F loops back to 42.20 with adjusted prompts).
+
+- [ ] **42.23 Importer: `scripts/import_mcq_batches.py`.** Reads `data/generated/mcq_batch_*.json`, selects `review_status == "approved"` only, embeds (`text-embedding-3-small`, batched) and idempotently upserts into the Postgres `questions` table — model on `migrate_chroma_to_postgres.py`'s upsert path (idempotent on id, stamps `review_status='approved'`, `--dry-run` default / `--execute` to write). Code + tests only; no prod execution in this task.
+      **Acceptance**: unit tests cover approved-only selection, payload mapping, and id idempotency (mocked session); `--dry-run` over the committed batch files prints the approved count and exits 0.
+
+- [SESSION] **42.24 Prod import + verify.** Interactive session: run 42.23 with `--execute` against prod pgvector via `fly proxy` tunnel (creds + port gotchas: memory `project_quiz_pack_prod_state`). Verify: prod count of `type=text_multichoice` ≥ approved count; re-run with `--execute` is a no-op (0 new inserts); `GET /api/v1/questions` returns ≥ 1 MCQ with populated `possible_answers`.
+      **Acceptance**: counts verified via API; idempotency re-run logged. This unblocks #45's human MCQ-voice testing against real prod MCQs.
+
 ---
 
 ## Sequencing
@@ -205,6 +239,12 @@ Track E  42.14 → 42.15 → 42.16 → 42.17 → 42.18   (human-driven, simulato
 ```
 
 Strict dependency: do not pick out of order. Track A → B → C → D → E.
+
+Track F (2026-06-10) depends only on Tracks A–D (all done) and runs **independently of Track E** —
+backend-only. Internal order: 42.19 → 42.20 (repeat to ~40) → 42.21 → 42.22 → 42.23 → 42.24.
+42.23 may land any time after 42.19 (it reads the same file shape); prod execution (42.24) is gated
+on founder approval (42.22). Track E / #45 human MCQ-voice testing benefits from 42.24 landing first
+(real MCQs in prod to test against).
 
 **No conflict with #36**: this issue touches `app/generation/`, `app/orchestrator/stages/generation.py`, `app/orchestrator/stages/scoring.py`, `scripts/`, `data/`, prompts, `gold_standard.json`. #36 closes out 2.16–2.22 (`scripts/generate_pack.py`, retry endpoint, `PgvectorQuestionStore`, retriever cutover, ChromaDB lockdown). Zero file overlap.
 
@@ -241,6 +281,7 @@ Strict dependency: do not pick out of order. Track A → B → C → D → E.
 - 42.8–42.11: at least one batch generated with mixed `text` + `text_multichoice` questions; `Question.type` constraint enforced (Literal or validator); existing "options-in-text" questions converted.
 - 42.12–42.13: E2E MCQ test (with stub SourcingStage to satisfy `PackGenerator.__init__`) + evaluator regression test green; routing-by-`possible_answers` contract asserted.
 - 42.14–42.18: iOS MCQ screen supports tap + voice with confirmation; `RS-09` + `RS-10` GREEN.
+- 42.19–42.24 (Track F): ≥ 1 founder-approved fresh MCQ batch imported to prod pgvector; `GET /api/v1/questions` serves `text_multichoice` questions with `possible_answers`; import idempotent.
 
 ---
 

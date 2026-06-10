@@ -37,6 +37,17 @@ PATTERNS_TO_MCQ: frozenset[str] = frozenset(
 # never reaches the generation LLM).
 MCQ_EMPHASIS_MARKER = "MULTIPLE-CHOICE EMPHASIS"
 
+# Issue #42 task 42.20 blocker fix (root cause E). The generation LLM derives
+# pattern labels from the Pattern Library titles, but library pattern 12 "The
+# Comparison Bet" normalizes to `comparison_bet` — which is NOT the canonical
+# MCQ key `comparison_bet_older_larger`, so a Comparison Bet question silently
+# routed to free-form text. This alias maps the library-derived label onto the
+# canonical key without widening `PATTERNS_TO_MCQ` itself (the set stays the
+# source of truth for the per-pattern emission recipes in the generator).
+_MCQ_PATTERN_ALIASES: dict[str, str] = {
+    "comparison_bet": "comparison_bet_older_larger",
+}
+
 
 def choose_question_type(pattern: str | None) -> Literal["text", "text_multichoice"]:
     """Return the ``Question.type`` value for a generator-emitted pattern.
@@ -54,6 +65,7 @@ def choose_question_type(pattern: str | None) -> Literal["text", "text_multichoi
     normalized = _normalize_pattern(pattern)
     if normalized.startswith("the_"):
         normalized = normalized[len("the_") :]
+    normalized = _MCQ_PATTERN_ALIASES.get(normalized, normalized)
     if normalized in PATTERNS_TO_MCQ:
         return "text_multichoice"
     return "text"

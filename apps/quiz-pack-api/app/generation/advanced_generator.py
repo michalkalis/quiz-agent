@@ -488,21 +488,29 @@ class AdvancedQuestionGenerator:
         # deterministic so prompt caching stays warm across runs.
         recipes: dict[str, str] = {
             "true_false": (
-                "two options, e.g. `{\"a\": \"True\", \"b\": \"False\"}`, "
+                "frame the source fact as a single True/False claim "
+                "(pick this directly — it is not numbered in the Pattern "
+                "Library). Two options, e.g. "
+                "`{\"a\": \"True\", \"b\": \"False\"}`, "
                 "with `correct_answer` set to `\"a\"` or `\"b\"`."
             ),
             "odd_one_out": (
-                "four options labelled a/b/c/d, with `correct_answer` set to "
+                "the MCQ form of Pattern Library #9 'The Odd One Out'. "
+                "Four options labelled a/b/c/d, with `correct_answer` set to "
                 "the key letter of the odd item. Put the reasoning in "
                 "`explanation`."
             ),
             "comparison_bet_older_larger": (
-                "two options A and B as `{\"a\": \"<option A>\", "
-                "\"b\": \"<option B>\"}`, with `correct_answer` set to the "
-                "key letter of the surprising winner."
+                "the MCQ form of Pattern Library #12 'The Comparison Bet' "
+                "(which is older / larger / heavier — A or B?). Two options "
+                "A and B as `{\"a\": \"<option A>\", \"b\": \"<option B>\"}`, "
+                "with `correct_answer` set to the key letter of the "
+                "surprising winner."
             ),
             "year_guess": (
-                "four plausible year/decade options labelled a/b/c/d, with "
+                "frame a date/era fact as 'in which year/decade?' (pick "
+                "this directly — it is not numbered in the Pattern Library). "
+                "Four plausible year/decade options labelled a/b/c/d, with "
                 "`correct_answer` set to the key letter of the correct year."
             ),
         }
@@ -519,6 +527,13 @@ class AdvancedQuestionGenerator:
             "3. Emit `possible_answers` per the shape described below.",
             "4. Set `correct_answer` to the key letter (`\"a\"`, `\"b\"`, …), "
             "not the value.",
+            "",
+            "**These patterns are selectable choices, not just the numbered "
+            "Pattern Library.** `odd_one_out` and `comparison_bet_older_larger` "
+            "are the MCQ forms of Library patterns 9 and 12; `true_false` and "
+            "`year_guess` are MCQ patterns in their own right — choose them "
+            "directly even though they are not numbered in the Library above, "
+            "and emit `reasoning.pattern_used` as the exact snake_case key.",
             "",
             "**Distractor quality rule (all MCQ patterns):** every distractor "
             "must be plausible. NEVER include a throwaway wrong option, NEVER "

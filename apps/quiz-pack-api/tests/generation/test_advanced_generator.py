@@ -257,6 +257,24 @@ def test_format_mcq_patterns_section_emphasis_injects_hard_quota() -> None:
     assert "PATTERN DIVERSITY RULE" in section
 
 
+def test_format_mcq_patterns_section_bridges_library_patterns() -> None:
+    # 42.20 BLOCKER root cause E: the generation LLM selects from the numbered
+    # Pattern Library, but `true_false`/`year_guess` are not in it and
+    # `odd_one_out`/`comparison_bet` use different labels there — so the LLM
+    # never picked an MCQ-routable pattern (0/10 live). The activation block
+    # must bridge library titles → snake_case keys and flag the two unnumbered
+    # keys as directly selectable, or the prompt fix silently regresses.
+    section = AdvancedQuestionGenerator._format_mcq_patterns_section(
+        {"true_false", "odd_one_out", "comparison_bet_older_larger", "year_guess"}
+    )
+    assert "Pattern Library" in section
+    # the library-mapped MCQ patterns name their numbered origin
+    assert "#9" in section and "#12" in section
+    # the two unnumbered keys are flagged as pickable in their own right
+    assert "true_false" in section and "year_guess" in section
+    assert "selectable choices" in section
+
+
 # --- Issue #46 task 46.B4b — open/logical branch generation ---------------
 #
 # Why these scenarios: B4b wires `question_generation_open.md` (B3) into the

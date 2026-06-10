@@ -86,6 +86,26 @@ class TestChooseQuestionType:
         assert choose_question_type("The Odd One Out") == "text_multichoice"
         assert choose_question_type("True False") == "text_multichoice"
 
+    # 42.20 BLOCKER root cause E (2026-06-10): Pattern Library #12 "The
+    # Comparison Bet" normalizes to `comparison_bet`, which is NOT the
+    # canonical MCQ key `comparison_bet_older_larger` — so before the alias,
+    # every Comparison Bet question silently routed to free-form text (run 2
+    # selected no odd-one-outs and produced 0/10 MCQ). All library-derived
+    # surface forms must now reach the canonical key.
+    @pytest.mark.parametrize(
+        "pattern",
+        [
+            "comparison_bet",
+            "Comparison Bet",
+            "The Comparison Bet",
+            "comparison bet",
+        ],
+    )
+    def test_comparison_bet_library_label_aliases_to_mcq(
+        self, pattern: str
+    ) -> None:
+        assert choose_question_type(pattern) == "text_multichoice"
+
     def test_expected_mcq_patterns_present(self) -> None:
         # Lock the set membership so accidental removals fail the test
         # rather than silently disabling MCQ routing for that pattern.

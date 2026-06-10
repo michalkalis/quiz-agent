@@ -186,6 +186,9 @@ jobs:
       - name: Start backend server
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY || 'sk-test-key' }}
+          # Skip live OpenAI TTS pre-generation: this job only verifies the
+          # OpenAPI spec, and a cold CI cache would otherwise block startup.
+          TTS_PREGENERATE: "0"
         run: |
           cd apps/quiz-agent
           uvicorn app.main:app --host 0.0.0.0 --port 8002 &

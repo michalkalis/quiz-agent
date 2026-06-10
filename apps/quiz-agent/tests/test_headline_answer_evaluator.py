@@ -50,7 +50,9 @@ class TestHeadlineAnswerEvaluation:
             headline_answer="National racing colour",
         )
 
-        result, score = await evaluator.evaluate("national racing colour", q, q.question)
+        result, score = await evaluator.evaluate(
+            "national racing colour", q, q.question
+        )
 
         assert result == "correct"
         assert score == 1.0

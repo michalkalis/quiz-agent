@@ -241,14 +241,20 @@ async def lifespan(app: FastAPI):
         logger.warning("Question health monitor initialization failed: %s", e)
         app.state.question_monitor = None
 
-    # Pre-generate static feedback audio
-    try:
-        logger.info("Pre-generating static feedback audio...")
-        await tts_service.pregenerate_static_feedback()
-        logger.info("Static feedback audio ready")
-    except Exception as e:
-        logger.warning("Failed to pre-generate feedback audio: %s", e)
-        logger.info("Feedback will be generated on-demand")
+    # Pre-generate static feedback audio.
+    # Skippable (TTS_PREGENERATE=0) so environments without an empty audio cache
+    # — notably CI, which starts cold and would otherwise block startup on live
+    # OpenAI TTS calls — can boot fast. Feedback then falls back to on-demand.
+    if os.getenv("TTS_PREGENERATE", "1") != "0":
+        try:
+            logger.info("Pre-generating static feedback audio...")
+            await tts_service.pregenerate_static_feedback()
+            logger.info("Static feedback audio ready")
+        except Exception as e:
+            logger.warning("Failed to pre-generate feedback audio: %s", e)
+            logger.info("Feedback will be generated on-demand")
+    else:
+        logger.info("TTS_PREGENERATE=0 — skipping static feedback pre-generation")
 
     # Store services on app.state for FastAPI Depends() injection
     app.state.session_manager = session_manager

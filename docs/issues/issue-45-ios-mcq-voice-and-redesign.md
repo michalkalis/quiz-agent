@@ -84,28 +84,40 @@ A design iteration (Pencil) landed new question screens — tinted page bg, whit
 - [x] **45.6 `ListeningPill` component.** Slim capsule: `audio-lines`/waveform-style icon + text, `pinkSoft` fill, pink hairline stroke. Copy by mode: open-ended "Listening — say your answer" · MCQ "Listening — say A–D or the answer" · T/F "Listening — say true or false". a11y id `question.listeningPill`. **Component only** — pinning it above Skip in the two bodies is 45.8 (human, layout).
       **Acceptance:** `ListeningPillInspectorTests` asserts the correct copy per mode + a11y id present + capsule fill/stroke colors. GREEN.
 
-### Human integration / visual / simulator (post-Ralph, laptop)
+### Integration — reclassified 2026-06-10 (mba builds/tests iOS, Xcode 26.5)
 
-> Convention: `- [HUMAN]` so Ralph skips them. Flip to `- [x]` when done by hand. Do these in one laptop session with the simulator + `design/quiz-agent.pen` open (node IDs in Resume context).
+> **Reclassification (2026-06-10).** The original blanket `- [HUMAN]` here assumed iOS needs a laptop + simulator. **mba now runs system Xcode 26.5 + iOS 26 SDK with the license accepted** (verified by `ssh mba`; memory `project_mba_ios26_sdk_gap` updated), so build + unit-test + RS + screenshot-verify (#44) are all machine-verifiable in a headless Ralph iteration. Per the reclassification principle, a task stays `- [HUMAN]` **only** when it needs a genuine **product/UX decision** or **visual fidelity against `design/quiz-agent.pen`**. The rest become `- [ ]` agent tasks, each paired with a short `- [HUMAN]` **morning sign-off** (founder eyeballs the screenshot — verification, not implementation).
+>
+> Acceptance test command (mba): `cd apps/ios-app/Hangs && xcodebuild test -scheme Hangs-Local -destination "platform=iOS Simulator,name=iPhone 16 Pro,OS=26.5" -only-testing:HangsTests/<Suite>`. UI-affecting tasks additionally run the screenshot-verify step from `docs/testing/screenshot-verify-procedure.md` (#44).
+>
+> **Snapshot re-record is deliberately NOT in the agent tasks** — auto-recording a `.dump` baseline just captures whatever rendered (a regression would pass trivially), defeating the review. Agent tasks below therefore do **not** require `QuestionViewSnapshotTests` GREEN; re-recording + judging the baselines is the human task **45.13**.
 
-- [HUMAN] **45.7 Reveal-on-result UX decision + wiring.** Resolve D4 (in-place reveal vs keep `ResultView`). If reveal: drive `AnswerOption` `correct`/`incorrect` from the server result. **Acceptance:** chosen flow works on sim; correct/incorrect states show as designed.
-- [HUMAN] **45.8 Pin `ListeningPill` above Skip** in both `mcqBody` and `voiceBody`, between `chipActionRow` and the Skip button (fixed vertical position). **Acceptance:** pill sits just above Skip in both screens, doesn't scroll with content.
-- [HUMAN] **45.9 Remove big mic + wire mic into MCQ.** Drop `floatingMicRow`/`HangsMicBlock` from `voiceBody` (keep `transcriptCard` + slim `waveformStrip` for active state); make `mcqBody` start recording after question audio (matches non-MCQ flow) and reflect a spoken match by highlighting the matching `AnswerOption`. **Acceptance:** big mic gone; spoken answer on an MCQ on the sim highlights the option and submits.
-- [HUMAN] **45.10 True/False visual variant (optional).** Render the 2 options taller (~80pt) per design. Visual only, no model change. **Acceptance:** T/F screen matches `.pen` node `WCaT6`.
+#### Agent-runnable (Ralph picks the first `- [ ]` top-to-bottom)
+
+- [ ] **45.8 Pin `ListeningPill` above Skip** in both `mcqBody` and `voiceBody`, between `chipActionRow` and the Skip button (fixed vertical position, must not scroll with content). **Acceptance:** `Hangs-Local` builds GREEN; screenshot-verify (#44) on both the MCQ and voice question screens shows the pill pinned directly above Skip in both. (Snapshot re-record deferred to 45.13.)
+- [HUMAN] **45.8-signoff** *(morning, ~1 min)* — eyeball the two screenshots: pill reads correctly above Skip in both screens.
+- [ ] **45.9 Remove big mic + wire mic into MCQ.** Drop `floatingMicRow`/`HangsMicBlock` from `voiceBody` (keep `transcriptCard` + slim `waveformStrip` for the active state); make `mcqBody` start recording after question audio (matches the non-MCQ flow, vzor 45.3) and highlight the matching `AnswerOption` (`selected` state) on a spoken match. **Acceptance:** `grep -c "floatingMicRow\|HangsMicBlock" Hangs/Views/QuestionView.swift` returns 0; build GREEN; a `QuizViewModel` unit test drives a spoken MCQ match → matching `AnswerOption` enters `selected` and submits; screenshot-verify (#44) shows the big mic gone. (Snapshot re-record deferred to 45.13.)
+- [HUMAN] **45.9-signoff** *(morning, ~1 min)* — confirm the screen reads right without the big mic and the spoken-match highlight looks correct.
+- [ ] **45.10 True/False visual variant.** Render the 2 options taller (~80pt) — visual only, no model change. **Acceptance:** `AnswerOption` (or the T/F container) renders at ~80pt height for the 2-option case (ViewInspector/inspector assert on the height), build GREEN, screenshot-verify (#44) on a seeded T/F question shows the taller options. (Snapshot re-record deferred to 45.13.)
+- [HUMAN] **45.10-signoff** *(morning, ~1 min)* — confirm the T/F screen matches `.pen` node `WCaT6`.
+- [ ] **45.12 RS regression for MCQ.** Add `RS-09 MCQ-voice` + `RS-10 MCQ-tap` to the `regression` skill; preserve `question.skip` / `question.micButton` / `question.statusPill` / `question.state` a11y IDs. **Acceptance:** both scenarios run GREEN end-to-end on the mba sim; run reports under `docs/testing/runs/` carry `VERDICT:` + `VISUAL:` lines (per #44). *(Supersedes #42 Track E 42.18 — same two scenarios; do not also add them under #42.)*
+
+#### Genuine `- [HUMAN]` (product/UX decision · `.pen` visual fidelity · snapshot judgment)
+
+- [HUMAN] **45.7 Reveal-on-result UX decision + wiring.** Resolve D4 (in-place reveal vs keep `ResultView`) — a product/UX call. If reveal: drive `AnswerOption` `correct`/`incorrect` from the server result. **Acceptance:** chosen flow works on sim; correct/incorrect states show as designed. *(The decision is human; once decided, the wiring itself can be handed back to Ralph.)*
 - [HUMAN] **45.11 Light + dark visual QA vs `.pen`.** Toggle appearance; confirm tinted bg, white/dark cards, `AnswerOption` 4 states, pill all match `.pen` (`b8zObz`, `WCaT6`, `EZhqr`, `vAXMX`). **Acceptance:** no cream bg remains; tokens adapt; screens read as the design in both modes.
-- [HUMAN] **45.12 RS regression for MCQ.** Add `RS-09 MCQ-voice` + `RS-10 MCQ-tap` to the `regression` skill; preserve `question.skip` / `question.micButton` / `question.statusPill` / `question.state` a11y IDs. **Acceptance:** both scenarios GREEN end-to-end.
-- [HUMAN] **45.13 Snapshot baselines review + sign-off.** Review re-recorded `.dump` baselines for QuestionView/MCQ; confirm the meaningful structural assertions still hold (CLAUDE.md rule 9). **Acceptance:** snapshot suite GREEN, baselines reviewed not blindly accepted.
+- [HUMAN] **45.13 Snapshot baselines review + sign-off.** Re-record the QuestionView/MCQ `.dump` baselines changed by 45.8/45.9/45.10 (and the pre-existing issue-46 `headlineAnswer` drift flagged in the 2026-06-07 45.5 changelog); confirm the meaningful structural assertions still hold (CLAUDE.md rule 6). **Acceptance:** snapshot suite GREEN, baselines reviewed not blindly accepted.
 
 ---
 
 ## Sequencing
 
 ```
-Ralph:  45.1 → 45.2 → 45.3 → 45.4 → 45.5 → 45.6
-Human:  45.7 → 45.8 → 45.9 → (45.10) → 45.11 → 45.12 → 45.13   (laptop + simulator + .pen)
+Ralph (mba):  45.1 → 45.2 → 45.3 → 45.4 → 45.5 → 45.6  [done]  → 45.8 → 45.9 → 45.10 → 45.12
+Human:        45.7 (UX decision) · 45.11 (light/dark vs .pen) · 45.13 (snapshot re-record + sign-off)
 ```
 
-45.1 (tokens) is a hard prerequisite — 45.4/45.5/45.6 reference the new tokens. 45.2 (matcher) gates 45.3. The 6 Ralph tasks are independent of the simulator; expect them to land as 6 compiling, tested building blocks. Human integration then assembles them in QuestionView + does the visual pass.
+45.1 (tokens) is a hard prerequisite — 45.4/45.5/45.6 reference the new tokens. 45.2 (matcher) gates 45.3. The first 6 Ralph tasks landed as compiling, tested building blocks (2026-06-07). After the 2026-06-10 reclassification, 45.8/45.9/45.10/45.12 are also Ralph-runnable on mba (Xcode 26.5) — they assemble the components into QuestionView + add the RS scenarios, self-checked via screenshot-verify (#44). The three remaining human tasks are the reveal-UX decision (45.7), the `.pen` light/dark fidelity pass (45.11), and the snapshot re-record + judgment (45.13).
 
 ## Risks / open questions
 

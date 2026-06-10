@@ -208,6 +208,14 @@ def test_format_mcq_patterns_section_lists_each_pattern() -> None:
     assert "`odd_one_out`" in section
     # Distractor-quality rule is non-negotiable (issue plan 42.10 follow-up).
     assert "Distractor quality rule" in section
+    # 42.20 BLOCKER root cause B: without this carve-out, the PATTERN
+    # DIVERSITY RULE caps MCQ patterns at 3/batch and `--mcq-bias` quotas
+    # can never be met. The wording must reference MULTIPLE-CHOICE EMPHASIS
+    # (the marker the CLI bias footer declares) so the exemption stays
+    # self-gating — unbiased orders keep the diversity cap.
+    assert "Diversity-rule carve-out" in section
+    assert "MULTIPLE-CHOICE EMPHASIS" in section
+    assert "EXEMPT" in section
 
 
 # --- Issue #46 task 46.B4b — open/logical branch generation ---------------

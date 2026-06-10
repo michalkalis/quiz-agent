@@ -52,6 +52,19 @@ class TestMcqBiasFlag:
         for pattern in PATTERNS_TO_MCQ:
             assert pattern in order.prompt
 
+    def test_bias_sets_hard_quota_and_diversity_exemption(self):
+        # 42.20 BLOCKER root cause B: a soft "prefer" footer lost to the
+        # template's PATTERN DIVERSITY RULE (1/9 MCQ candidates). The footer
+        # must carry a hard quota and the diversity-cap exemption keyed to
+        # the carve-out wording in `_format_mcq_patterns_section`.
+        args = generate_pack._parse_args(
+            ["--prompt", "history of flight", "--mcq-bias", "--dry-run"]
+        )
+        order = generate_pack._build_order(args)
+        assert "MULTIPLE-CHOICE EMPHASIS" in order.prompt
+        assert "at least 7 of every 10" in order.prompt
+        assert "EXEMPT from the PATTERN DIVERSITY RULE" in order.prompt
+
     def test_without_flag_prompt_is_byte_identical(self):
         args = generate_pack._parse_args(["--prompt", "history of flight", "--dry-run"])
         order = generate_pack._build_order(args)
@@ -135,7 +148,7 @@ class TestCliWiring:
         assert exit_code == 0
         # `ctx.prompt` is what GenerationStage passes to the generator —
         # the bias text being here means the generator receives it.
-        assert "multiple-choice" in seen["prompt"]
+        assert "MULTIPLE-CHOICE EMPHASIS" in seen["prompt"]
         assert seen["prompt"].startswith("space exploration")
         entries = json.loads(out.read_text(encoding="utf-8"))
         assert [e["id"] for e in entries] == [question.id]

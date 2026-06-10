@@ -504,6 +504,12 @@ class AdvancedQuestionGenerator:
             "let one option give away the answer through length / specificity, "
             "NEVER include the correct answer as a substring of a distractor.",
             "",
+            "**Diversity-rule carve-out:** if the order prompt declares "
+            "MULTIPLE-CHOICE EMPHASIS (or otherwise requests mostly "
+            "multiple-choice questions), the patterns listed below are EXEMPT "
+            "from the PATTERN DIVERSITY RULE's per-pattern cap — satisfy the "
+            "order's MCQ quota even where that repeats a single pattern.",
+            "",
             "**Patterns that require MCQ:**",
             "",
         ]

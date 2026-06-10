@@ -68,13 +68,20 @@ logger = logging.getLogger("generate_pack")
 
 
 # Steering footer appended to the order prompt by `--mcq-bias` (issue #42
-# task 42.19b). Pattern choice stays LLM-side (Risk #7) — this only shifts
-# the prior toward the MCQ-routable patterns from `PATTERNS_TO_MCQ`, whose
-# snake_case keys 42.9a's post-generation tagging routes on.
+# task 42.19b). Pattern choice stays LLM-side (Risk #7) — this shifts the
+# prior toward the MCQ-routable patterns from `PATTERNS_TO_MCQ`, whose
+# snake_case keys 42.9a's post-generation tagging routes on. The first live
+# run (42.20 BLOCKER 2026-06-10) showed soft preference loses to the prompt
+# template's PATTERN DIVERSITY RULE, so the footer now sets a hard quota and
+# names the diversity-cap exemption that `_format_mcq_patterns_section`
+# grants to MCQ-emphasis orders.
 _MCQ_BIAS_INSTRUCTION = (
-    "Strongly prefer question patterns that work as multiple-choice: "
-    "true/false claims, odd-one-out sets, which-is-older/larger comparisons, "
-    "and year guesses (reasoning patterns: {patterns}). "
+    "MULTIPLE-CHOICE EMPHASIS: at least 7 of every 10 questions in this "
+    "batch MUST use one of these MCQ-routable reasoning patterns: "
+    "{patterns} (true/false claims, odd-one-out sets, "
+    "which-is-older/larger comparisons, year guesses). For this order "
+    "those patterns are EXEMPT from the PATTERN DIVERSITY RULE's "
+    "per-pattern cap — repeating them is expected and correct. "
     "Emit possible_answers for every question using one of those patterns."
 )
 

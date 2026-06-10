@@ -203,6 +203,7 @@ MCQOptionPicker ────────── E4 migrate Theme.Colors → Theme
 
 - [ ] **42.20 Generate one MCQ batch** *(repeatable — the core loop)*. From `apps/quiz-pack-api/`: `python scripts/generate_pack.py --prompt "<topic>" --target-count 20 --dry-run --mcq-bias --out ../../data/generated/mcq_batch_NNN.json` (+ `--dedup-store pgvector` if 42.19c landed). Vary `<topic>` per batch (history / science / geography / pop culture / nature …) and record it in the batch file name or metadata — repeated identical prompts breed duplicates. Post-run: filter the out-file to `type == "text_multichoice"` only (survivors are already post-verification + post-scoring, incl. `answer_brevity` + `distractor_quality`), rewrite the file with just the candidates, commit. **Before generating, count cumulative candidates across `data/generated/mcq_batch_*.json` — if ≥ 40, flip this task to `[x]` and move on.** Fail-loud: if a batch yields **< 5** MCQ candidates, do not silently loop — write a `BLOCKER` note here (bias not biting → revisit 42.19b prompt wording or fall back to per-pattern sub-batches per Risk #7).
       **Acceptance per iteration**: ≥ 5 new `text_multichoice` candidates with populated `possible_answers`, `source_url`, and scores in the committed batch file; running count noted in the commit message.
+      **⛔ Blocked 2026-06-10** — first live run yielded 1/9 MCQ candidates; see `## BLOCKER (2026-06-10)` at the bottom of this file. Do not re-run until the pattern-label mismatch is fixed.
 
 - [SESSION] **42.21 Workflow distractor screen + founder review artifact.** Interactive session (laptop): run a **Workflow** that fans out per candidate MCQ with three judgment lenses — *distractor plausibility* (would a reasonable person consider it?), *answer leakage* (does any distractor or the question text give the answer away?), *voice-friendliness* (SK driving context — options speakable and distinguishable by ear?). Majority verdict per candidate; this is the LLM-judgment layer the deterministic `distractor_quality` checks (substring/length only) cannot provide. Output: `docs/artifacts/mcq-review-<date>.html` — one row per candidate: question, options (correct marked), pattern, scores, workflow verdicts + one-line rationale, source URL, and an approve/reject recommendation. This HTML is the founder's "brief review" surface.
       **Acceptance**: HTML covers 100% of candidates (no silent truncation); every row has a verdict; reply `open <path>`.
@@ -296,3 +297,23 @@ on founder approval (42.22). Track E / #45 human MCQ-voice testing benefits from
 6. **Two export copies (42.4 + Risk 8)**: root-level and `apps/quiz-agent/` copies of `questions_export.json` exist and are byte-identical; cleanup must touch both. Legacy `q_<hex>` IDs in the export must be preserved (the `_is_uuid` normalisation only fires inside `GenerationStage`).
 
 Triage flipped `needs-info` → `ready-for-agent`. Granularity holds — 42.9b is the densest task (~20 min) but still within Ralph budget.
+
+---
+
+## BLOCKER (2026-06-10) — 42.20 first live MCQ batch: bias not biting (1/9 candidates)
+
+**What was tried.** First live run of the Track F loop, from `apps/quiz-pack-api/` with its own `.venv` and `OPENAI_API_KEY`/`TAVILY_API_KEY` exported from the repo-root `.env` (note: `source .env` fails — lines 8–9 are not shell-parseable; grep the two keys instead):
+`python scripts/generate_pack.py --prompt "world history and ancient civilizations" --target-count 20 --dry-run --mcq-bias --out ../../data/generated/mcq_batch_001.json`.
+Pipeline completed cleanly (generation 11 → verification 9 → scoring 9 → dedup 9, cost 1¢). Result: **1/9 survivors `text_multichoice`** — below the ≥5 fail-loud threshold, so per this task's instruction the batch was NOT committed (file deleted; regenerable) and the loop stops here.
+
+**Root cause A (primary — pattern-label mismatch).** The LLM emitted `reasoning_pattern` values derived from the prompt's Pattern Library titles: `the_surprising_connection`, `the_hidden_property`, `the_scale_surprise`, `the_odd_one_out`. `choose_question_type` (`app/generation/pattern_routing.py`) exact-matches the bare keys in `PATTERNS_TO_MCQ` (`odd_one_out`, …), so 42.9a's routing fired **zero** times this run — even the one odd-one-out question carried the `the_` prefix despite 42.9b's "exact snake_case key" prompt instruction. That question became MCQ only because the LLM emitted `possible_answers` + `type` directly and the stage's else-branch passes non-routed questions through unchanged.
+
+**Root cause B (bias too weak).** Only 1/9 survivors used an MCQ-routable pattern at all. The prompt's PATTERN DIVERSITY RULE (no pattern >3× per batch of 10) plus the fact-first pipeline (facts drive pattern choice) structurally outweigh the `--mcq-bias` footer appended to the order prompt.
+
+**Observation C (topic drift — pre-existing, surfaced by this run).** Prompt was "world history and ancient civilizations" but all 9 survivors are general trivia (Earl Grey, Michelin stars, saffron…) with `source_url=https://opentdb.com`. The OpenTDB fact source appears not to honour the order topic; this undermines the "vary topic per batch to avoid duplicates" strategy and should be checked before batch 2.
+
+**Next human-touch needs (smallest first):**
+1. Normalise pattern labels in `choose_question_type` — reuse `_normalize_pattern` (already in `pattern_routing.py` from #46) + strip a leading `the_`, or add `the_*` aliases to `PATTERNS_TO_MCQ`. Add a regression test with the four labels observed live.
+2. Consider trusting LLM-emitted `type="text_multichoice"` when `possible_answers` is populated (it is what saved the one candidate) — gated on the same fail-loud missing-options drop.
+3. Strengthen the bias: carve MCQ patterns out of the PATTERN DIVERSITY RULE when `--mcq-bias` is set, or fall back to per-pattern sub-batches (Risk #7).
+4. Check why SourcingStage/OpenTDB ignores the order topic (affects all Track F batches, not just MCQ).

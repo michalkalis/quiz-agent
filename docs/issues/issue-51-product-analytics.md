@@ -1,7 +1,7 @@
 # Issue 51: Product analytics for PRD success metrics
 
 **Triage:** enhancement · ready-for-agent
-**Status:** Tool chosen 2026-06-09 — **reuse Sentry** (founder: "anything free; sentry or firebase"). Sentry is already integrated, EU-aligned, free tier, and satisfies this issue's own "don't ship two analytics SDKs" guard; Firebase Analytics is the fallback if Sentry's funnel surface proves too thin post-launch. From launch decision #11 (`docs/product/launch-decisions-2026-06-08.md`).
+**Status:** Tool chosen 2026-06-09 — **reuse Sentry** (founder: "anything free; sentry or firebase"). Sentry is already integrated, EU-aligned, free tier, and satisfies this issue's own "don't ship two analytics SDKs" guard; Firebase Analytics is the fallback if Sentry's funnel surface proves too thin post-launch. From launch decision #11 (`docs/product/launch-decisions-2026-06-08.md`). **2026-06-10: decomposed into tasks 51.1–51.5** (Ralph 51.1/51.3/51.4 via `scripts/ralph/launch-issue51.sh`; founder gate 51.2; laptop session 51.5).
 **Created:** 2026-06-09
 **Related:** `docs/product/launch-decisions-2026-06-08.md` (#11), `reference_sentry` memory, PRDs in `docs/product/INDEX.md`
 
@@ -52,6 +52,28 @@ Map the PRD metrics to concrete events with properties:
 - No new state machine; hook the existing transitions.
 - Privacy labels (#50) and analytics events must agree — don't collect what you didn't declare.
 - Decide the tool first (this issue is blocked on that); don't ship two analytics SDKs.
+
+## Tasks (atomic, Ralph-ordered) — added 2026-06-10
+
+> 51.1 / 51.3 / 51.4 are Ralph tasks (`scripts/ralph/launch-issue51.sh`; 51.4 builds iOS unit tests
+> on mba under Xcode 26.3 — same pre-flight as `launch-issue46.sh`). 51.2 is founder; 51.5 needs the
+> live Sentry dashboard + simulator (laptop session).
+> **Gate:** 51.3 and 51.4 must not start before 51.2 is `[x]` — if Ralph reaches them while 51.2 is
+> open, exit `status: no-tasks` and leave a note.
+
+- [ ] **51.1 Event taxonomy doc.** Write `docs/product/analytics-events.md`: one table — event name · exact trigger (iOS state-machine transition or backend call site, `file:function`) · properties · PRD metric it feeds · emitter (iOS / backend) · Sentry mechanism (custom event / span / measurement — verify what the current SDK versions support before committing to one). Cover exactly the events in "What to implement" above — no extras (scope guard). No-PII rule per property: no transcript text, no audio refs; question id + category + correctness are fine.
+      **Acceptance**: each of the 3 PRD metrics (completion rate, voice reliability, wrong-answer rate) traces to ≥ 1 event AND every event traces to a metric (or to the #49 cost model); every trigger names a real, grep-verified call site.
+
+- [HUMAN] **51.2 Founder skim of the taxonomy** (~5 min). Confirm the event list + properties; check nothing conflicts with the privacy labels planned in #50. Edit inline, flip to `[x]`.
+
+- [ ] **51.3 Backend instrumentation.** *(Gated on 51.2.)* Emit the backend-truth events from the taxonomy (answer correctness with category + question type; transcription failures) via the existing `sentry_sdk` init (`apps/quiz-agent/app/main.py:50`). Mock Sentry in tests.
+      **Acceptance**: `pytest tests/ -v` green; each emit covered by a unit test asserting event name + properties; zero events not in the taxonomy doc.
+
+- [ ] **51.4 iOS instrumentation — code + unit tests.** *(Gated on 51.2.)* Small `AnalyticsClient` seam (protocol + Sentry-backed impl, mock in tests); hook the existing `QuizViewModel` phase transitions per the taxonomy — no parallel state source (scope guard). Sentry SDK is already initialised in `HangsApp.swift`.
+      **Acceptance**: unit tests with the mocked client assert each iOS taxonomy event fires on its transition; iOS unit-test suite green on mba (Xcode 26.3).
+
+- [SESSION] **51.5 End-to-end verify + dashboard.** Laptop: drive the app in the simulator, confirm events arrive in Sentry (org `missinghue` / project `carquiz`); build the dashboard/queries for completion rate, first-try voice capture rate, wrong-answer rate. Record the dashboard URL here.
+      **Acceptance**: all three metrics visible on a live dashboard fed by real simulator events.
 
 ## Success criteria
 

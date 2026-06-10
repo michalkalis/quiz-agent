@@ -1,6 +1,6 @@
 # Issue 45: iOS MCQ voice + design-port redesign
 
-**Triage:** enhancement · ready-for-agent (partial)
+**Triage:** enhancement · ready-for-human
 **Status:** Decomposed from handoff `docs/handoffs/handoff-2026-06-03-0859.md` (design iteration `b368bc1`→`62c6435`). **Supersedes #42 Track E (42.14–42.18)** — same MCQ-voice work, never started, folded in here with its richer detail. **Fresh-session verified against the codebase at HEAD `62c6435` on 2026-06-03** (laptop host) — line numbers, guards, helpers, test scaffolding and acceptance commands corrected; see Changelog.
 **Created:** 2026-06-03
 **Parent / related:** #42 (Track E moved here). Design source `design/quiz-agent.pen`; reference `docs/reference/question-types.md`.

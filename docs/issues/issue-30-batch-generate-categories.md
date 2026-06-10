@@ -1,7 +1,7 @@
 # Issue 30: Batch-generate questions for new categories
 
 **Triage:** enhancement · ready-for-agent
-**Status:** Open (top-up phase — disney/football below target; doc drift cleanup required)
+**Status:** Open — growing `general` → ~500 incrementally (tasks 30.G/30.M/30.done/30.docfix active; founder decision 2026-06-09). Disney/football top-up dropped 2026-06-09 (not a launch requirement).
 **Created:** 2026-05-02
 **Surfaced by:** Split of #21 (Groups B-E). This is **Group E** of `question-pipeline-remaining.md`. Now unblocked by #27 (PendingStore) and Group A skills.
 
@@ -89,7 +89,7 @@ short, committed runs over time, not one giant batch. This is a **re-runnable** 
 **Per-run protocol** (repeat 30.G each iteration until the run's iteration budget is spent):
 
 - [ ] **30.G** *(repeatable — the core loop)* Generate one batch of 20 `general` questions
-  (`/generate-questions --category general --count 20`), verify all with `/verify-questions`, score
+  (`/generate-questions 20 --category general` — count is positional per the skill's argument-hint), verify all with `/verify-questions`, score
   passing ones with `/score-questions`, and approve only those that clear the 5-dimension bar. Commit
   the batch file to `data/questions/`. **Before generating, check the running `general` approved count**
   — if it is already ≥ 500, do **not** generate; skip to 30.M then 30.done. **Dedup guard:** run a
@@ -144,12 +144,12 @@ then flips to Done.
 - `migrate_chroma_to_postgres.py` in `apps/quiz-pack-api/` — the migration script that pushes approved ChromaDB content to the prod pgvector store (run from `apps/quiz-pack-api/` cwd with `--approved-only` filter and `--execute` flag to make it non-dry-run)
 - Prod pgvector store — queried via `GET /api/v1/questions?category=<cat>` to confirm count
 
-**Acceptance criteria:**
-- [ ] `GET /api/v1/questions?category=general` count climbs toward ~500 across runs (per-run: net-positive)
-- [ ] Every newly approved question has non-empty `source_url` and `source_excerpt` fields
-- [ ] New questions pass the ≥ 0.85-similarity dedup guard against existing `general` questions
-- [ ] The issue-30 file header shows **Status:** Done only once `general` ≥ ~500
-- [ ] No dangling `#62` reference remains in `docs/todo/TODO.md` pointing to a non-existent file
+**Acceptance criteria** *(plain bullets on purpose — these mirror tasks 30.G/30.M/30.done/30.docfix above; checkbox form would make Ralph pick them up as duplicate tasks)*:
+- `GET /api/v1/questions?category=general` count climbs toward ~500 across runs (per-run: net-positive)
+- Every newly approved question has non-empty `source_url` and `source_excerpt` fields
+- New questions pass the ≥ 0.85-similarity dedup guard against existing `general` questions
+- The issue-30 file header shows **Status:** Done only once `general` ≥ ~500
+- No dangling `#62` reference remains in `docs/todo/TODO.md` pointing to a non-existent file
 
 **Out of scope:**
 - Re-verifying or re-scoring already-approved questions in any other category
@@ -158,7 +158,7 @@ then flips to Done.
 - Any iOS or backend API changes
 
 **Suggested feedback loop:**
-After each batch generation and approval cycle, query the local question store count by category. After the migration step, verify prod via `curl https://<prod-host>/api/v1/questions?category=disney` and confirm count ≥ 30. Tasks 30.1–30.4 are self-contained batch units; 30.5 is the single migration gate; 30.6 is the doc cleanup close-out.
+After each batch generation and approval cycle, query the local question store count by category. After the migration step (30.M), verify prod via `curl https://<prod-host>/api/v1/questions?category=general` and confirm the count rose. ~~Tasks 30.1–30.4 are self-contained batch units; 30.5 is the single migration gate; 30.6 is the doc cleanup close-out~~ *(stale task numbers from the dropped disney/football direction — the live tasks are 30.G/30.M/30.done/30.docfix above).*
 
 ---
 

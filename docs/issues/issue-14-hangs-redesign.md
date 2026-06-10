@@ -1,9 +1,11 @@
 # Issue #14: Hangs Redesign (Pencil → iOS)
 
+**Triage:** enhancement · ready-for-human
+
 ## Status: PLANNED
 
 ## Source of truth
-- Pencil file: `untitled.pen`
+- Pencil file: `design/quiz-agent.pen` (formerly `untitled.pen`)
 - Relevant frames: 8 Redesign screens (top-level nodes with `Redesign/` prefix) + `AppIcon/1024` frame (id `VKGLx`)
 - Irrelevant: old `Screen/*` frames, `Home-Dark`, and +14 other top-level frames — will not touch
 

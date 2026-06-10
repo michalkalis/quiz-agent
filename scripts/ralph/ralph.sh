@@ -80,7 +80,9 @@ for iter in $(seq 1 "$MAX_ITERS"); do
     fi
 
     set +e
-    $TIMEOUT_CMD claude \
+    # Allow long foreground Bash calls (generation batches) — see prompt rule #10.
+    # 20 min < the 25 min gtimeout above, so the iteration cap still wins.
+    BASH_MAX_TIMEOUT_MS=1200000 $TIMEOUT_CMD claude \
         -p "Run one Ralph iteration on $FOCUS_FILE. End with the RALPH_RESULT marker." \
         --permission-mode bypassPermissions \
         --max-budget-usd "$BUDGET_USD" \

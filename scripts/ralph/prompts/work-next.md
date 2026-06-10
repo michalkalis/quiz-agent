@@ -29,6 +29,7 @@ If the focus file uses `- [ ]` checkboxes, pick the first one. Otherwise pick th
 7. **Commit atomically** — code + focus-file progress update in one commit. Conventional Commits format per `.claude/rules/shared.md`. Include the task identifier in the message.
 8. **Do NOT push.** The human reviews commits in the morning before pushing to origin.
 9. **Do NOT touch unrelated files.** If you spot adjacent tech debt, leave it.
+10. **Long-running commands run in the FOREGROUND.** You are headless: the session exits the moment you end your turn, killing any background process — "I'll wait for it to finish" loses all work. Never use background execution. For commands that outlive the default 2-minute Bash timeout (generation batches, full test suites), pass an explicit `timeout` of up to 1200000 ms (20 min) in the Bash tool call and wait for completion in the same call.
 
 ## Failure handling
 

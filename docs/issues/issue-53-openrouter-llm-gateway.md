@@ -84,6 +84,28 @@ Record per-capability: ✅ clean / ⚠️ works-with-tweak / ❌ keep-on-direct-
 - Company account for the OpenRouter signup; secret in `.env` (gitignored) only.
 - Solo project, commit directly to main.
 
+## Phase 0 findings — spike results (2026-06-11)
+
+Probed each capability via the OpenAI SDK pointed at `base_url=https://openrouter.ai/api/v1` with the live `OPENROUTER_API_KEY`. Result: **OpenRouter is a chat-completions + embeddings gateway, not an audio/image one.** All text and embedding calls serve cleanly with their contracts intact; TTS, Whisper, and `gpt-image-1` are not served at all and stay on direct OpenAI.
+
+| Capability | OpenRouter slug | Status | Evidence |
+|---|---|---|---|
+| Generation chat | `openai/gpt-4o` | ✅ | returns text, in catalog |
+| Generation/critique JSON | `openai/gpt-4o-mini` | ✅ | `response_format={"type":"json_object"}` parses |
+| Scorer — OpenAI model | `openai/gpt-4.1-mini` | ✅ | in catalog (`gpt-4.1`/`-mini`/`-nano` all present) |
+| Verification verdict JSON | `google/gemini-2.5-flash` | ✅ | full verdict/confidence/reasoning JSON parses |
+| Scorer — Anthropic model | `anthropic/claude-sonnet-4.6` | ✅ | exact codebase model exists as `anthropic/claude-sonnet-4.6` |
+| Embeddings | `text-embedding-3-small` | ✅ | **1536 dims confirmed** (dedup/RAG-compatible); served even though absent from `/models` list |
+| TTS | `tts-1` / `gpt-4o-mini-tts` | ❌ | **zero TTS models in catalog**; `Model does not exist` |
+| Transcription | `whisper-1` | ❌ | **zero whisper models**; `/audio/transcriptions` rejects multipart (`invalid content-type`) |
+| Image | `gpt-image-1` | ❌ | `/images/generations` returns HTML 404; OpenRouter only generates images via chat-completions models (`google/gemini-*-image`, `openai/gpt-5-image*`), not this REST contract |
+
+**Cutover scope set by this table (Phase 3):** Waves A (text chat), B (scorer), C (gemini verification + normalizer), and the embeddings part of Wave D migrate to OpenRouter. **Wave D audio/image — TTS, Whisper, `gpt-image-1` — stays on direct OpenAI.**
+
+**Billing reality (fail-loud):** the stated goal was "one bill". After this migration there are **two**, not one: OpenRouter (generation, critique, verification, scoring, embeddings) + OpenAI (TTS, Whisper, image). The **Google and Anthropic accounts/bills are eliminated** (3 provider bills → 2). Routing the last OpenAI-only pieces elsewhere (image via OpenRouter chat-style image models; TTS via the already-present `ELEVENLABS_API_KEY`) would reach one bill but changes the response contract and is **out of scope** for this transport-only migration — noted as a possible follow-up, not done here.
+
+> Throwaway spike scripts lived in `/tmp/openrouter_spike*.py`; not committed.
+
 ## Appendix — call-site map (2026-06-11)
 
 Generation: `apps/quiz-pack-api/app/generation/advanced_generator.py` (gpt-4o + gpt-4o-mini critique), `app/api/routes.py` defaults, `answer_normalizer.py` (gemini-2.5-flash), `image_generation/*` (gpt-4o + gpt-image-1), `scripts/generate_blind_maps.py`, legacy `graph.py`.

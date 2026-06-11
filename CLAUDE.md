@@ -6,7 +6,7 @@ Layout: `apps/quiz-agent` (FastAPI backend) · `apps/quiz-pack-api` (order/gener
 
 ## Tasks & Indices
 
-- `docs/todo/TODO.md` — `[ ]` todo · `[~]` wip · `[x]` done. Check `[~]` items at session start. `/todo` to manage · `/summarize` for handoff.
+- `docs/todo/TODO.md` — `[ ]` todo · `[~]` wip · `[x]` done. Check `[~]` items at session start. `/todo` to manage. Session handoff: `/handoff` (durable committed file — work crosses a session/day/machine, e.g. Ralph on `mba`) · `/summarize` (ephemeral copy-paste block — finishing today in a new window) · `/catchup` (resume from git diff after a break).
 - Plan files for sizable tasks: `docs/issues/issue-NN-{slug}.md`, linked from TODO line.
 - `CONTEXT.md` — domain glossary, read before PRDs / issues / arch suggestions.
 - `docs/product/INDEX.md` — PRDs with Draft / Approved / Shipped / Deferred status.

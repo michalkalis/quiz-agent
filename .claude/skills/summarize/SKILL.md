@@ -1,6 +1,6 @@
 ---
 name: summarize
-description: Generate a copy-pasteable handoff plan for resuming the current task in a fresh session.
+description: Print an ephemeral copy-pasteable handoff block to resume the current task in a new window today. For a durable committed handoff that crosses a session/day/machine, use /handoff instead.
 disable-model-invocation: true
 allowed-tools: Read, Bash, Grep, Glob
 model: sonnet

@@ -11,6 +11,8 @@ Write a checked-in markdown file at `docs/handoffs/handoff-$(date +%Y-%m-%d-%H%M
 
 This is the **file-on-disk** counterpart to `/summarize` (which prints a one-shot copy-pasteable block). Use `/handoff` when the work is incomplete and you want a durable record committed to the repo.
 
+**When NOT to use this.** If you're staying in the same session/terminal and context just grew, native compaction handles it — don't write a file. If you're resuming after a break and only need "what was I doing", `/catchup` reconstructs from the git diff. Reach for `/handoff` specifically when the work crosses a session, day, or machine boundary (e.g. a fresh session, or an autonomous Ralph run on `mba`) and the reasoning/blockers — not just the diff — must survive.
+
 ## Gather signals
 
 Run in parallel where possible:
@@ -65,6 +67,13 @@ Memory updated (if applicable):
 
 Non-obvious choices made and their rationale. The point of this section is preventing the next session from re-litigating settled questions. Skip the obvious; capture the surprising.
 
+## Verification status
+
+Per CLAUDE.md rule 2 (fail loud), be explicit — never let the next session assume green:
+- **Verified:** what actually passed, at which SHA, by what means (e.g. "Backend CI green at `abc1234`"; "RS-01..04 ran on sim, 0 failures").
+- **Unverified / assumed:** what has *not* been exercised yet, and why it matters (e.g. "MCQ batch unproven live — first overnight run is the real test").
+- **Dead ends:** approaches tried that didn't work, so the next session doesn't repeat them. Omit only if none.
+
 ## Blockers / open questions
 
 Anything unresolved, awaiting a human, or blocked on an external system. If none, say "None."
@@ -85,7 +94,8 @@ Anything unresolved, awaiting a human, or blocked on an external system. If none
    ```
    - [~] Continue {task} — see docs/handoffs/handoff-YYYY-MM-DD-HHMM.md
    ```
-2. Reply to the user with **just** the handoff path (one line, no preamble), so they can paste `Read docs/handoffs/handoff-...md and continue` into a fresh session.
+2. **Archive stale handoffs.** A handoff is live only while its task is still `[~]` in `docs/todo/TODO.md`. After writing the new one, move into `docs/handoffs/archive/` (create it if missing) any handoff in `docs/handoffs/` whose linked task is now `[x]` done — use `git mv` so history follows. This keeps the top-level dir showing only live handoffs. If you can't confidently map a handoff to a done task, leave it.
+3. Reply to the user with **just** the handoff path (one line, no preamble), so they can paste `Read docs/handoffs/handoff-...md and continue` into a fresh session.
 
 ## Rules
 

@@ -250,6 +250,59 @@ edit", not a global "abandon this answer".
 
 ---
 
+## RS-09: MCQ voice answer highlights option and submits
+
+**Hypothesis:** When the app receives a committed transcript that matches an MCQ option,
+`MCQTranscriptMatcher` maps it to the correct key, `mcqVoiceMatchedKey` is set so the matching
+`AnswerOption` highlights as `selected`, and `submitTextInput` is called transitioning to
+`processing`. The voice path is now functional for multiple-choice questions (issue #45, 45.3/45.9).
+
+**Preconditions**
+- Launch with `--ui-test --ui-test-mcq`
+- `Question.previewMCQ` is loaded: "What is the largest planet?" options a=Mars b=Jupiter c=Saturn d=Neptune
+- `answerTimeLimit = 1` (seeded by UITestSupport for `--ui-test-mcq`): recording auto-starts ~1-2s
+  after question audio (no mic button in the redesigned UI)
+
+**Steps**
+1. Tap `home.startQuiz`
+2. Wait for `question.state` label `askingQuestion` (up to 5s)
+3. Confirm `mcq.option.a` is present in the accessibility tree (MCQ screen rendered)
+4. Wait for `question.state` label `recording` (up to 5s — answer timer fires after ~1s, then STT connect)
+5. `curl -s "http://127.0.0.1:9999/stt/committed?text=Jupiter" >/dev/null`
+6. Wait up to 3s
+
+**Asserts**
+- `question.state` label is `processing`
+- `mcq.option.b` is present in the accessibility tree (MCQ options still rendered)
+- App process is alive; no `EXC_*` in log
+- `question.errorBanner` is **not** present
+
+---
+
+## RS-10: MCQ tap answer submits and transitions to processing
+
+**Hypothesis:** Tapping an MCQ option calls `submitMCQAnswer` after the 500ms confirm delay
+and the ViewModel transitions to `processing`. This covers the tap-to-answer path that complements
+the voice path tested in RS-09.
+
+**Preconditions**
+- Launch with `--ui-test --ui-test-mcq`
+- `Question.previewMCQ` is loaded: options a=Mars b=Jupiter c=Saturn d=Neptune
+
+**Steps**
+1. Tap `home.startQuiz`
+2. Wait for `question.state` label `askingQuestion` (up to 5s)
+3. Confirm `mcq.option.b` is present in the accessibility tree
+4. Tap `mcq.option.b` (Jupiter)
+5. Wait up to 2s
+
+**Asserts**
+- `question.state` label is `processing`
+- App process is alive; no `EXC_*` in log
+- `question.errorBanner` is **not** present
+
+---
+
 ## Adding a scenario
 
 1. Pick the next free `RS-NN`.

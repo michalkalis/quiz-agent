@@ -10,6 +10,27 @@ Follow Conventional Commits: `<type>(<scope>): <subject>`
 **Types:** feat, fix, docs, style, refactor, test, chore
 **Scopes:** ios, backend, questions, web, shared, ci
 
+## Referring to Issues & Tasks
+
+A number is an identifier, never a label. Never write a bare `#45` or `42.20` in prose, commits, or docs — always pair it with its short human title so it reads on its own:
+
+- ✅ `#45 — iOS MCQ voice + redesign`, `task 42.20 (make MCQ patterns selectable)`
+- ❌ `reclassified #45`, `42.20 unblocked`
+
+The number stays as the stable anchor (file names, cross-refs, git); the title is what makes it legible to someone without the backlog open. Expand project shorthand on first use in a given doc/message.
+
+### Project shorthand glossary
+
+| Term | Meaning |
+|------|---------|
+| `#NN` | Issue number → `docs/issues/issue-NN-{slug}.md`; the slug is its human title |
+| `NN.X` | Sub-task X within issue #NN (e.g. `42.20`) — name it when referenced |
+| `RS-01`..`RS-NN` | iOS regression scenario (end-to-end sim test), see `/regression` |
+| `Track A/B/…` | A parallel stream of work inside one issue |
+| `Ralph` | Overnight autonomous agent loop (runs on `mba`) |
+| `mba` | The agent Mac (`ssh mba`) that builds iOS + runs Ralph |
+| `MCQ` | Multiple-choice question (vs. open/voice answer) |
+
 ## API Contract
 
 **OpenAPI as source of truth.** FastAPI generates the spec; iOS Codable structs must match backend Pydantic models.

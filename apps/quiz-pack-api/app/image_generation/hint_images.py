@@ -11,7 +11,7 @@ import os
 from pathlib import Path
 from typing import Optional
 
-from openai import OpenAI
+from quiz_shared.llm import factory as llm_factory
 
 # Parameterized image model — verify at implementation time
 IMAGE_MODEL = os.environ.get("IMAGE_MODEL", "gpt-image-1")
@@ -21,8 +21,11 @@ QUESTION_MODEL = "gpt-4o"
 MAX_RETRIES = 3
 
 
-def _get_openai_client() -> OpenAI:
-    return OpenAI()
+def _get_openai_client():
+    # Image generation is direct-only: OpenRouter does not serve gpt-image-1
+    # (issue #53). The chat prompt-drafting + vision-validation calls in this
+    # pipeline share the same direct client to keep the pipeline on one provider.
+    return llm_factory.openai_client(direct=True)
 
 
 def generate_hint_image_prompt(

@@ -6,10 +6,10 @@ Provides voice synthesis for quiz questions and feedback with intelligent cachin
 import asyncio
 import io
 import logging
-import os
 import random
 from typing import Optional
-from openai import AsyncOpenAI
+
+from quiz_shared.llm import factory as llm_factory
 
 logger = logging.getLogger(__name__)
 
@@ -102,7 +102,8 @@ class TTSService:
             max_concurrent: Max concurrent TTS API requests
             max_cache_mb: Max cache size in megabytes
         """
-        self.client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        # TTS is direct-only: OpenRouter does not serve OpenAI TTS (issue #53).
+        self.client = llm_factory.openai_client(async_=True, direct=True)
         self.model = model
         self.cache = TTSCache(cache_dir=cache_dir, max_size_mb=max_cache_mb)
         self._semaphore = asyncio.Semaphore(max_concurrent)

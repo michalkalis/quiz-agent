@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import Optional
 
-from openai import OpenAI
+from quiz_shared.llm import factory as llm_factory
 
 PROMPT_PATH = (
     Path(__file__).parent.parent.parent / "prompts" / "question_generation_silhouette.md"
@@ -26,7 +26,8 @@ def generate_silhouette_question_text(
     Returns:
         Dict with keys: question, alternative_answers, tags, explanation.
     """
-    client = OpenAI()
+    # Part of the image-generation pipeline — stays on canonical OpenAI (issue #53).
+    client = llm_factory.openai_client(direct=True)
 
     prompt_template = PROMPT_PATH.read_text()
     prompt = prompt_template.format(

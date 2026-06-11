@@ -6,8 +6,8 @@ Converts audio files to text for voice-based quiz interaction.
 import logging
 from typing import Optional, BinaryIO
 from dataclasses import dataclass
-from openai import AsyncOpenAI
-import os
+
+from quiz_shared.llm import factory as llm_factory
 
 logger = logging.getLogger(__name__)
 
@@ -127,7 +127,8 @@ class VoiceTranscriber:
             language: ISO 639-1 language code (e.g., "en", "es")
                      If None, auto-detect language
         """
-        self.client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        # Whisper is direct-only: OpenRouter does not serve transcription (issue #53).
+        self.client = llm_factory.openai_client(async_=True, direct=True)
         self.model = model
         self.language = language
 

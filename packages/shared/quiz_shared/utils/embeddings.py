@@ -1,22 +1,25 @@
 """Embedding generation and similarity utilities for RAG."""
 
 import numpy as np
-from openai import OpenAI
 from typing import List, Optional
-import os
 
-# Module-level cached client to avoid creating a new instance per call
-_openai_client: Optional[OpenAI] = None
+from quiz_shared.llm import factory as llm_factory
+
+# Module-level cached client to avoid creating a new instance per call.
+# Routed through the issue #53 gateway: text-embedding-3-small is OpenRouter-served.
+_openai_client = None
 
 
-def _get_openai_client(api_key: Optional[str] = None) -> OpenAI:
-    """Get or create a cached OpenAI client."""
+def _get_openai_client(api_key: Optional[str] = None):
+    """Get or create a cached embeddings client, routed through the gateway."""
     global _openai_client
     if api_key:
-        # Explicit key bypasses cache (for testing or alternate keys)
+        # Explicit key bypasses cache + gateway (for testing or alternate keys).
+        from openai import OpenAI
+
         return OpenAI(api_key=api_key)
     if _openai_client is None:
-        _openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        _openai_client = llm_factory.openai_client()
     return _openai_client
 
 
@@ -40,7 +43,11 @@ def generate_embedding(
     """
     client = _get_openai_client(api_key)
 
-    response = client.embeddings.create(model=model, input=text)
+    # An explicit key forces canonical OpenAI, so the model id is used as-is;
+    # otherwise resolve it to the active gateway's slug (identity for the
+    # embedding model, but keeps a single resolution path).
+    resolved = model if api_key else llm_factory.resolve_model(model)
+    response = client.embeddings.create(model=resolved, input=text)
 
     return response.data[0].embedding
 

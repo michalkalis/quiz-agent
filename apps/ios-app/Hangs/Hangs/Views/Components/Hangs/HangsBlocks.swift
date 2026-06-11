@@ -59,7 +59,7 @@ struct HangsSectionLabel: View {
 
 /// White rounded card with standard Hangs shadow.
 struct HangsCard<Content: View>: View {
-    var padding: EdgeInsets = EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0)
+    var padding: EdgeInsets = .init(top: 0, leading: 0, bottom: 0, trailing: 0)
     var cornerRadius: CGFloat = Theme.Hangs.Radius.card
     @ViewBuilder var content: () -> Content
 
@@ -216,6 +216,7 @@ enum HangsResultKind {
     var color: Color {
         self == .correct ? Theme.Hangs.Colors.greenCorrect : Theme.Hangs.Colors.pink
     }
+
     var softBg: Color {
         self == .correct ? Theme.Hangs.Colors.greenSoft : Theme.Hangs.Colors.pinkSoft
     }
@@ -253,6 +254,40 @@ struct HangsInlineBadge: View {
             .foregroundColor(.white)
             .frame(width: size, height: size)
             .background(Circle().fill(kind.color))
+    }
+}
+
+// MARK: - Stat chip
+
+/// Compact inline stat: value + muted label in a hairline capsule.
+/// Used where full HangsStatBox is too large (e.g. quiz-complete row).
+struct HangsStatChip: View {
+    let label: String
+    let value: String
+    var labelColor: Color = Theme.Hangs.Colors.muted
+    var valueColor: Color = Theme.Hangs.Colors.ink
+    var icon: String? = nil
+
+    var body: some View {
+        HStack(spacing: 6) {
+            if let icon {
+                Image(systemName: icon)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(valueColor)
+            }
+            Text(value)
+                .font(.hangsMono(14, weight: .semibold))
+                .foregroundColor(valueColor)
+            Text(label.uppercased())
+                .font(.hangsMono(10, weight: .medium))
+                .tracking(1)
+                .foregroundColor(labelColor)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 5)
+        .background(
+            Capsule().fill(Theme.Hangs.Colors.hairline)
+        )
     }
 }
 
@@ -299,29 +334,29 @@ struct HangsAnswerRow: View {
 }
 
 #if DEBUG
-#Preview {
-    ScrollView {
-        VStack(spacing: 16) {
-            HangsHeroBlock(title: "HANGS", subtitle: "voice-based trivia for the road")
-            HStack(spacing: 12) {
-                HangsStatBox(label: "streak", value: "47")
-                HangsStatBox(label: "best", value: "9.5",
-                             labelColor: Theme.Hangs.Colors.blue,
-                             valueColor: Theme.Hangs.Colors.pink)
-            }
-            HangsCard {
-                VStack(spacing: 0) {
-                    HangsConfigRow(label: "Language", value: "English")
-                    Rectangle().fill(Theme.Hangs.Colors.hairline).frame(height: 1)
-                    HangsConfigRow(label: "Difficulty", value: "Medium",
-                                   valueColor: Theme.Hangs.Colors.pink)
+    #Preview {
+        ScrollView {
+            VStack(spacing: 16) {
+                HangsHeroBlock(title: "HANGS", subtitle: "voice-based trivia for the road")
+                HStack(spacing: 12) {
+                    HangsStatBox(label: "streak", value: "47")
+                    HangsStatBox(label: "best", value: "9.5",
+                                 labelColor: Theme.Hangs.Colors.blue,
+                                 valueColor: Theme.Hangs.Colors.pink)
                 }
+                HangsCard {
+                    VStack(spacing: 0) {
+                        HangsConfigRow(label: "Language", value: "English")
+                        Rectangle().fill(Theme.Hangs.Colors.hairline).frame(height: 1)
+                        HangsConfigRow(label: "Difficulty", value: "Medium",
+                                       valueColor: Theme.Hangs.Colors.pink)
+                    }
+                }
+                HangsResultBanner(kind: .correct)
+                HangsResultBanner(kind: .incorrect)
             }
-            HangsResultBanner(kind: .correct)
-            HangsResultBanner(kind: .incorrect)
+            .padding(20)
         }
-        .padding(20)
+        .background(Theme.Hangs.Colors.bg)
     }
-    .background(Theme.Hangs.Colors.bg)
-}
 #endif

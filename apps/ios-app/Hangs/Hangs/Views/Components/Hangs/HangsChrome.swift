@@ -133,6 +133,36 @@ struct HangsProgressBar: View {
     }
 }
 
+// MARK: - Page indicator (onboarding dots)
+
+/// Horizontal dot row for onboarding page indication.
+/// Active page renders as a wider pill; inactive pages are narrow circles.
+/// Both colors and widths are token-bound and exposed for unit testing.
+struct HangsPageIndicator: View {
+    let pageCount: Int
+    let currentPage: Int
+    var activeColor: Color = Theme.Hangs.Colors.accentPrimary
+    var inactiveColor: Color = Theme.Hangs.Colors.hairline
+
+    func dotColor(at index: Int) -> Color {
+        index == currentPage ? activeColor : inactiveColor
+    }
+
+    func dotWidth(at index: Int) -> CGFloat {
+        index == currentPage ? 20 : 8
+    }
+
+    var body: some View {
+        HStack(spacing: 8) {
+            ForEach(0 ..< pageCount, id: \.self) { i in
+                Capsule()
+                    .fill(dotColor(at: i))
+                    .frame(width: dotWidth(at: i), height: 8)
+            }
+        }
+    }
+}
+
 // MARK: - Hairline divider (legacy API kept for older callsites)
 
 struct HangsDivider: View {
@@ -259,16 +289,16 @@ struct HangsSessionDot: View {
 }
 
 #if DEBUG
-#Preview {
-    VStack(spacing: 0) {
-        HangsBrandRow {
-            HangsNavChip(icon: "gearshape") {}
+    #Preview {
+        VStack(spacing: 0) {
+            HangsBrandRow {
+                HangsNavChip(icon: "gearshape") {}
+            }
+            HangsQuizNav(onClose: {}, counterText: "03 / 10")
+            HangsProgressBar(progress: 0.3)
+            Spacer()
         }
-        HangsQuizNav(onClose: {}, counterText: "03 / 10")
-        HangsProgressBar(progress: 0.3)
-        Spacer()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Theme.Hangs.Colors.bg)
     }
-    .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .background(Theme.Hangs.Colors.bg)
-}
 #endif

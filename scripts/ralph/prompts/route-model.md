@@ -24,12 +24,17 @@ commit. Read-only.
 | Model | When | Examples |
 |---|---|---|
 | `haiku` | trivial / mechanical | doc or checkbox sync, status rewrite, rename, no-tasks exit |
-| `sonnet` | **DEFAULT** | codegen, research, instrumentation, tests, imports, most iOS Swift changes |
-| `opus` | hard reasoning / many files | tricky multi-file logic, hard debugging, decomposing a strategy doc |
-| `fable` | genuine hard architecture only | rare — new architecture/seam, deep product reasoning |
+| `sonnet` | **DEFAULT** | codegen, research, instrumentation, tests, imports, most iOS Swift changes; screenshot-verify visual iteration; straightforward test/logic tasks |
+| `opus` | hard reasoning / multi-file logic | tricky multi-file debugging; decomposing a strategy doc; reconciling two partially-overlapping subsystems (e.g. merging a partial token port with a full new token set); large design-system ports with test coverage; state-machine implementations with multiple tested branches |
+| `fable` | new architectural seams + product design choices | brand-new navigation/routing architecture; new multi-step user flow (onboarding, wizard) that needs to handle state transitions, permission requests, persistence, and replay — i.e. the *design* of the flow is as hard as the code; designing a shared component library from scratch |
 
 If you cannot confidently justify `opus` or `fable`, choose `sonnet`. If the task
 is obviously a one-line doc/checkbox edit, choose `haiku`.
+
+**Fable is not rare — use it when the task involves creating a new architectural seam where
+multiple designs are plausible and the wrong choice cascades. Don't reach for sonnet just
+because a task is iOS Swift work; reach for fable when the navigation/state design is the
+hard part, not the syntax.**
 
 ## Output (mandatory)
 

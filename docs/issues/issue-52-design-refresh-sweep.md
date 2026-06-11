@@ -41,7 +41,9 @@ The whole sweep runs as a **single overnight Ralph loop on `mba`** (`launch-issu
 
 | Class | Tasks | Acceptance the loop checks | Model |
 |-------|-------|-----------------------------|-------|
-| **Machine-verifiable** (tokens, fonts, components, flow logic) | 52.1–52.7 | unit/inspector/`.dump` test asserts intent + `Hangs-Local` builds GREEN | **Sonnet** |
+| **Token/font foundation** | 52.1–52.2 | token tests + build GREEN | **Opus** (52.1 reconciles two systems) · **Sonnet** (52.2 bundling) |
+| **Components + flow logic** | 52.3–52.4, 52.6–52.7 | inspector/unit tests + build GREEN | **Sonnet** |
+| **New navigation seam** | 52.5 | ViewModel tests for all state-machine branches + build GREEN | **Fable** (new routing architecture + permission + persistence) |
 | **Visual screens** (assemble each frame) | 52.8–52.15 | build GREEN **+ screenshot-verify**: take a light-mode sim screenshot via the #44 harness, compare to the committed reference `docs/design/frames/<frameId>.png`, self-correct until it reads as the design | **Sonnet** |
 | **Human judgment** (skipped by the loop) | 52.16–52.18 | SK copy · final fidelity eyeball · snapshot baselines | **Opus** (52.17) |
 
@@ -69,19 +71,19 @@ From `get_variables(design/quiz-agent.pen)`. **Colors** — `bg-page` `#F6F7F9`/
 ## Phase 0 — Prerequisite: land #45 (gating)
 
 Not #52 tasks; #52's Question/Result slice is blocked until done.
-- [ ] **0.a** Run #45 agent tail on mba (45.8, 45.9, 45.10, 45.12) — already queued in #45.
+- [x] **0.a** Run #45 agent tail on mba (45.8, 45.9, 45.10, 45.12) — done, landed in merge be83537 (2026-06-11).
 - [HUMAN] **0.b** Resolve #45 human tail (45.7 reveal decision, 45.11 light/dark QA, 45.13 snapshot sign-off) and merge #45 to `origin`.
 
 ---
 
-## Phase 1 — Foundation (Ralph loop · Sonnet)
+## Phase 1 — Foundation (Ralph loop · Opus/Sonnet)
 
 - [ ] **52.1 Full token port.** Extend `Theme.Hangs.Colors` (+ a radius/spacing/type-scale companion if one doesn't exist) to cover the **entire** token set above with light/dark. **Acceptance:** a token test in the `HangsColorTokenTests` style asserts each color resolves to the correct light AND dark hex (the test is the intent: a wrong-mode regression must fail it); `Hangs-Local` builds GREEN. *(Reconcile with #45's partial port — extend, don't duplicate.)*
 - [ ] **52.2 Bundle custom fonts.** Add Anton / Inter / IBM Plex Mono (all three confirmed OFL by founder 2026-06-11 — bundle-safe), place under app resources, register in Info.plist, expose via `Font+Theme.swift` as display/body/mono roles. **Acceptance:** a unit test loads each font family by PostScript name and asserts it is registered (not silently falling back to system); build GREEN.
 - [ ] **52.3 Reconcile `AnswerOption` to the 4-state reference (`vAXMX`).** Ensure #45's `AnswerOption` matches default/selected/correct/incorrect (letterBadge fill, statusBadge check/x, stroke per state). **Acceptance:** inspector tests assert each of the 4 states' distinguishing properties; build GREEN. *(No-op if #45 already covers all four — then mark done with a one-line note.)*
 - [ ] **52.4 Shared primitives extraction.** Reusable views recurring across frames: `BrandRow`, `StatusBar` stub, `StatChip`, slim `ProgressBar`, CTA/secondary button styles, `PageIndicator` (onboarding dots). Each token-bound. **Acceptance:** one inspector test per primitive asserting its key tokens/structure; build GREEN.
 
-## Phase 2 — Net-new flow logic (Ralph loop · Sonnet)
+## Phase 2 — Net-new flow logic (Ralph loop · Fable/Sonnet)
 
 - [ ] **52.5 Onboarding navigation + permission state machine.** Model: `Welcome → Features → Permission → (granted → Home | denied → 3b-Denied)`, page index, persisted `hasSeenOnboarding` (first-launch gate), mic-permission request/observe. **Founder decision 2026-06-11: also re-runnable from Settings** — expose a `startOnboarding()` entry that replays the flow without clearing/depending on the persisted flag (Settings entry point wired in 52.9). **Logic only — views in Phase 3.** **Acceptance:** ViewModel unit tests drive each transition incl. granted/denied branches, the first-launch persisted-flag gate on relaunch, AND a manual `startOnboarding()` replay that does not reset the flag; build GREEN.
 - [ ] **52.6 Quiz-Complete aggregation.** Compute end-of-session summary (final score, correct/total, streak/accuracy as the `NPlqf` frame shows) from existing session/stats data. **Acceptance:** unit test feeds a known session → asserts the aggregated summary values; build GREEN.

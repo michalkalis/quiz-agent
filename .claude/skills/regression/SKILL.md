@@ -134,6 +134,26 @@ won't be in the snapshot tree — that's expected.
 Capture one final snapshot at the assertion point. Evaluate every assert
 in the scenario block. Any single failure ⇒ scenario VERDICT: FAIL.
 
+Immediately after the final `snapshot_ui`, capture a screenshot and perform a
+visual check:
+
+```
+screenshot({ simulatorUuid: "918FD36A-..." })
+```
+
+Read the returned image. Evaluate it against the per-screen checklist in
+`docs/testing/screenshot-verify-procedure.md` for the screen shown at the
+assertion point (question screen, home screen, result screen — whichever
+applies to this scenario). Emit one of:
+
+- `VISUAL: PASS` — all checklist criteria satisfied
+- `VISUAL: FAIL — <description of specific defect(s)>` — one or more criteria
+  failed (clipped text, overlapping views, wrong color, zero-frame artifact,
+  Dynamic Island collision, etc.)
+
+A `VISUAL: FAIL` counts as a scenario failure; set the scenario VERDICT to
+FAIL even if all state assertions passed.
+
 Crash check: scan the captured log for `EXC_`, `signal `, or
 `Terminating app due to`. Any hit ⇒ FAIL.
 

@@ -119,6 +119,16 @@ for iter in $(seq 1 "$MAX_ITERS"); do
     fi
     log "  route=$CHOSEN_MODEL ($ROUTE_SOURCE)"
 
+    # Degrade ladder on model-unavailable: the premium tier (fable) falls back to
+    # opus, not all the way down to sonnet — a fable task was routed there because
+    # it needs heavy reasoning, so opus is the right safety net. Every other tier
+    # keeps the sonnet net.
+    if [[ "$CHOSEN_MODEL" == "claude-fable-5" ]]; then
+        FALLBACK_MODEL="opus"
+    else
+        FALLBACK_MODEL="sonnet"
+    fi
+
     # Run one Claude iteration. 25 min hard timeout via gtimeout if installed,
     # otherwise rely on --max-budget-usd to bound cost.
     TIMEOUT_CMD=""
@@ -136,7 +146,7 @@ for iter in $(seq 1 "$MAX_ITERS"); do
         --model "$CHOSEN_MODEL" \
         --permission-mode bypassPermissions \
         --max-budget-usd "$BUDGET_USD" \
-        --fallback-model sonnet \
+        --fallback-model "$FALLBACK_MODEL" \
         --effort high \
         --no-session-persistence \
         --append-system-prompt "$SYSTEM_PROMPT" \

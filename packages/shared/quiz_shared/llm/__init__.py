@@ -1,0 +1,41 @@
+"""Central LLM client factory — see ``factory`` module docstring (issue #53)."""
+
+from .factory import (
+    CRITIQUE,
+    DIRECT,
+    EMBED,
+    EVAL,
+    GEN,
+    NORMALIZE,
+    OPENROUTER,
+    OPENROUTER_BASE_URL,
+    PARSE,
+    SCORE_ANTHROPIC,
+    SCORE_OPENAI,
+    TRANSLATE,
+    VERIFY,
+    chat_openai,
+    gateway,
+    openai_client,
+    resolve_model,
+)
+
+__all__ = [
+    "CRITIQUE",
+    "DIRECT",
+    "EMBED",
+    "EVAL",
+    "GEN",
+    "NORMALIZE",
+    "OPENROUTER",
+    "OPENROUTER_BASE_URL",
+    "PARSE",
+    "SCORE_ANTHROPIC",
+    "SCORE_OPENAI",
+    "TRANSLATE",
+    "VERIFY",
+    "chat_openai",
+    "gateway",
+    "openai_client",
+    "resolve_model",
+]

@@ -565,3 +565,11 @@ async def test_calls_generator_with_target_count_and_facts() -> None:
     # prompt's `{mcq_patterns_section}` is non-empty. Loose-set comparison
     # leaves room for the routing set to grow without churning this pin.
     assert {"true_false", "odd_one_out"} <= set(gen.calls[0]["mcq_patterns"])
+    # 42.20 blocker root cause D — emphasis travels as an explicit bool
+    # (ctx.prompt never reaches the generator). Default is off.
+    assert gen.calls[0]["mcq_emphasis"] is False
+
+    emphasis_ctx = _make_ctx(target_count=5, facts=facts)
+    emphasis_ctx.mcq_emphasis = True
+    await stage.run(emphasis_ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+    assert gen.calls[1]["mcq_emphasis"] is True

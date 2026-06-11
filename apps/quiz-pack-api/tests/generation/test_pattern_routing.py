@@ -62,6 +62,50 @@ class TestChooseQuestionType:
     def test_empty_string_routes_to_text(self) -> None:
         assert choose_question_type("") == "text"
 
+    # 42.20 BLOCKER (2026-06-10): first live batch emitted Pattern Library
+    # title-derived labels with a `the_` prefix; exact matching routed all
+    # of them to "text", so 42.9a's MCQ tagging fired zero times. These are
+    # the four labels observed live — `the_odd_one_out` must route to MCQ,
+    # the rest stay free-form.
+    @pytest.mark.parametrize(
+        ("pattern", "expected"),
+        [
+            ("the_odd_one_out", "text_multichoice"),
+            ("the_surprising_connection", "text"),
+            ("the_hidden_property", "text"),
+            ("the_scale_surprise", "text"),
+        ],
+    )
+    def test_live_observed_the_prefixed_labels(
+        self, pattern: str, expected: str
+    ) -> None:
+        assert choose_question_type(pattern) == expected
+
+    def test_title_case_label_routes_via_normalization(self) -> None:
+        # Free-text Pattern Library title form, not snake_case.
+        assert choose_question_type("The Odd One Out") == "text_multichoice"
+        assert choose_question_type("True False") == "text_multichoice"
+
+    # 42.20 BLOCKER root cause E (2026-06-10): Pattern Library #12 "The
+    # Comparison Bet" normalizes to `comparison_bet`, which is NOT the
+    # canonical MCQ key `comparison_bet_older_larger` — so before the alias,
+    # every Comparison Bet question silently routed to free-form text (run 2
+    # selected no odd-one-outs and produced 0/10 MCQ). All library-derived
+    # surface forms must now reach the canonical key.
+    @pytest.mark.parametrize(
+        "pattern",
+        [
+            "comparison_bet",
+            "Comparison Bet",
+            "The Comparison Bet",
+            "comparison bet",
+        ],
+    )
+    def test_comparison_bet_library_label_aliases_to_mcq(
+        self, pattern: str
+    ) -> None:
+        assert choose_question_type(pattern) == "text_multichoice"
+
     def test_expected_mcq_patterns_present(self) -> None:
         # Lock the set membership so accidental removals fail the test
         # rather than silently disabling MCQ routing for that pattern.

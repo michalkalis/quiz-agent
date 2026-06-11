@@ -29,6 +29,25 @@ PATTERNS_TO_MCQ: frozenset[str] = frozenset(
     }
 )
 
+# Issue #42 task 42.20 blocker fix (root cause D). The CLI's `--mcq-bias`
+# footer stamps this marker onto the order prompt; `PackGenerator` detects
+# it deterministically and sets `OrderContext.mcq_emphasis`, which
+# `GenerationStage` plumbs into the generator so the hard MCQ quota is
+# injected directly into the generation prompt (the order prompt itself
+# never reaches the generation LLM).
+MCQ_EMPHASIS_MARKER = "MULTIPLE-CHOICE EMPHASIS"
+
+# Issue #42 task 42.20 blocker fix (root cause E). The generation LLM derives
+# pattern labels from the Pattern Library titles, but library pattern 12 "The
+# Comparison Bet" normalizes to `comparison_bet` — which is NOT the canonical
+# MCQ key `comparison_bet_older_larger`, so a Comparison Bet question silently
+# routed to free-form text. This alias maps the library-derived label onto the
+# canonical key without widening `PATTERNS_TO_MCQ` itself (the set stays the
+# source of truth for the per-pattern emission recipes in the generator).
+_MCQ_PATTERN_ALIASES: dict[str, str] = {
+    "comparison_bet": "comparison_bet_older_larger",
+}
+
 
 def choose_question_type(pattern: str | None) -> Literal["text", "text_multichoice"]:
     """Return the ``Question.type`` value for a generator-emitted pattern.
@@ -36,8 +55,18 @@ def choose_question_type(pattern: str | None) -> Literal["text", "text_multichoi
     ``None`` / unknown / non-mapped patterns return ``"text"`` so the
     routing is fail-safe: a typo in the LLM's pattern label degrades
     to free-form text, not a half-built MCQ missing options.
+
+    Labels are normalized before lookup, and a leading ``the_`` is
+    stripped: despite 42.9b's exact-snake_case-key prompt instruction,
+    the first live batch (2026-06-10 BLOCKER) showed the LLM derives
+    labels from the Pattern Library titles ("The Odd One Out" →
+    ``the_odd_one_out``), which exact matching silently routed to text.
     """
-    if pattern and pattern in PATTERNS_TO_MCQ:
+    normalized = _normalize_pattern(pattern)
+    if normalized.startswith("the_"):
+        normalized = normalized[len("the_") :]
+    normalized = _MCQ_PATTERN_ALIASES.get(normalized, normalized)
+    if normalized in PATTERNS_TO_MCQ:
         return "text_multichoice"
     return "text"
 

@@ -37,6 +37,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import json
 import logging
 import os
 import sys
@@ -64,6 +65,32 @@ from app.orchestrator.stages import (
 from quiz_shared.models.question import Question
 
 logger = logging.getLogger("generate_pack")
+
+
+# Steering footer appended to the order prompt by `--mcq-bias` (issue #42
+# task 42.19b). The order prompt never reaches the generation LLM (42.20
+# BLOCKER root cause D) — the operative mechanism is the MCQ_EMPHASIS_MARKER
+# this footer carries: `PackGenerator` detects it and sets
+# `OrderContext.mcq_emphasis`, which travels through `GenerationStage` into
+# `_format_mcq_patterns_section`'s hard quota. The footer text itself only
+# informs sourcing / audit logs.
+_MCQ_BIAS_INSTRUCTION = (
+    "{marker}: at least 7 of every 10 questions in this "
+    "batch MUST use one of these MCQ-routable reasoning patterns: "
+    "{patterns} (true/false claims, odd-one-out sets, "
+    "which-is-older/larger comparisons, year guesses). For this order "
+    "those patterns are EXEMPT from the PATTERN DIVERSITY RULE's "
+    "per-pattern cap — repeating them is expected and correct. "
+    "Emit possible_answers for every question using one of those patterns."
+)
+
+
+def _mcq_bias_instruction() -> str:
+    from app.generation.pattern_routing import MCQ_EMPHASIS_MARKER, PATTERNS_TO_MCQ
+
+    return _MCQ_BIAS_INSTRUCTION.format(
+        marker=MCQ_EMPHASIS_MARKER, patterns=", ".join(sorted(PATTERNS_TO_MCQ))
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -154,11 +181,14 @@ class _NoopQuestionStore:
 
 def _build_order(args: argparse.Namespace) -> GenerationOrder:
     """In-memory `GenerationOrder` — never inserted in dry-run mode."""
+    prompt = args.prompt
+    if args.mcq_bias:
+        prompt = f"{prompt}\n\n{_mcq_bias_instruction()}"
     return GenerationOrder(
         id=uuid.uuid4(),
         transaction_id=f"cli-{uuid.uuid4().hex[:12]}",
         product_id="pack_cli",
-        prompt=args.prompt,
+        prompt=prompt,
         category=args.category,
         theme=args.theme,
         target_count=args.target_count,
@@ -186,6 +216,24 @@ def _build_stages(*, persist: bool) -> list[Stage]:
 
         stages.append(PersistStage(AsyncSessionLocal))
     return stages
+
+
+def _write_out(questions: Sequence[Question], path: str) -> None:
+    """Dump surviving questions to ``path`` as a reviewable JSON array.
+
+    Every entry is a full ``Question.model_dump`` stamped
+    ``review_status="pending_review"`` so dry-run batches land on disk in
+    the same shape `Question.from_dict` reads back (42.20 review loop /
+    42.23 importer).
+    """
+    payload = []
+    for q in questions:
+        entry = q.model_dump(mode="json")
+        entry["review_status"] = "pending_review"
+        payload.append(entry)
+    with open(path, "w", encoding="utf-8") as fh:
+        json.dump(payload, fh, ensure_ascii=False, indent=2)
+        fh.write("\n")
 
 
 # ---------------------------------------------------------------------------
@@ -222,6 +270,9 @@ async def _run(args: argparse.Namespace) -> int:
     for i, q in enumerate(questions, start=1):
         source = q.source_url or "(no source)"
         print(f"  {i}. {q.question}  →  {q.correct_answer}   [{source}]")
+    if args.out:
+        _write_out(questions, args.out)
+        print(f"out: wrote {len(questions)} questions to {args.out}")
     return 0
 
 
@@ -240,6 +291,22 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument("--category", default=None, help="Optional category filter")
     parser.add_argument("--theme", default=None, help="Optional theme filter")
+    parser.add_argument(
+        "--out",
+        default=None,
+        help=(
+            "After the run, dump surviving questions to this path as a JSON "
+            "array (full Question dumps, review_status=pending_review)."
+        ),
+    )
+    parser.add_argument(
+        "--mcq-bias",
+        action="store_true",
+        help=(
+            "Append a steering instruction to the order prompt nudging the "
+            "LLM toward MCQ-routable patterns (PATTERNS_TO_MCQ)."
+        ),
+    )
     parser.add_argument(
         "--dry-run",
         action="store_true",

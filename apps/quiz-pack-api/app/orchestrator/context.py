@@ -24,6 +24,11 @@ class OrderContext:
     target_count: int
     category: str | None = None
     theme: str | None = None
+    # Issue #42 task 42.20 blocker fix (root cause D): True when the order
+    # asks for a mostly-MCQ batch. Set by `PackGenerator` from the
+    # MULTIPLE-CHOICE EMPHASIS marker on the order prompt; read by
+    # `GenerationStage` so the hard MCQ quota reaches the generation LLM.
+    mcq_emphasis: bool = False
     pack_id: uuid.UUID | None = None
     facts: list[Any] = field(default_factory=list)
     questions: list[Question] = field(default_factory=list)

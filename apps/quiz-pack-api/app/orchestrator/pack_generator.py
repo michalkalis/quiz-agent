@@ -17,6 +17,7 @@ from __future__ import annotations
 from typing import Callable, Protocol, Sequence
 
 from app.db.models import GenerationOrder, QuestionPack
+from app.generation.pattern_routing import MCQ_EMPHASIS_MARKER
 from app.orchestrator.context import OrderContext, StageResult
 from app.orchestrator.progress_sink import ProgressSink
 
@@ -81,6 +82,11 @@ class PackGenerator:
             target_count=order.target_count,
             category=order.category,
             theme=order.theme,
+            # Deterministic marker check, not LLM-side gating — #42 task
+            # 42.20 blocker (root cause D): `ctx.prompt` never reaches the
+            # generation LLM, so MCQ emphasis must travel as an explicit
+            # bool that GenerationStage hands to the generator.
+            mcq_emphasis=MCQ_EMPHASIS_MARKER in (order.prompt or ""),
         )
 
         self.last_ctx = ctx

@@ -194,6 +194,33 @@ async def test_generate_batch_passes_mcq_patterns_into_prompt() -> None:
     assert "`year_guess`" in prompt_text
 
 
+@pytest.mark.asyncio
+async def test_generate_batch_emphasis_puts_quota_in_prompt() -> None:
+    """42.20 blocker root cause D: the quota must reach the generation LLM.
+
+    `mcq_emphasis=True` (an `--mcq-bias` order) must surface the hard quota
+    in the prompt `ainvoke` receives — the order prompt itself never does.
+    """
+    fake_ainvoke = AsyncMock(return_value=_llm_response(_TEXT_RESPONSE))
+    gen = _make_generator_with_fake_llm(fake_ainvoke)
+    await gen._generate_batch(
+        count=1,
+        difficulty="easy",
+        topics=None,
+        categories=["general"],
+        question_type="text",
+        excluded_topics=None,
+        avoid_questions=None,
+        user_bad_examples=None,
+        mcq_patterns={"true_false", "year_guess"},
+        mcq_emphasis=True,
+    )
+
+    prompt_text = fake_ainvoke.await_args.args[0][0].content
+    assert "MULTIPLE-CHOICE EMPHASIS" in prompt_text
+    assert "at least 7 of every 10 questions" in prompt_text
+
+
 def test_format_mcq_patterns_section_empty_when_no_patterns() -> None:
     assert AdvancedQuestionGenerator._format_mcq_patterns_section(None) == ""
     assert AdvancedQuestionGenerator._format_mcq_patterns_section(set()) == ""
@@ -208,6 +235,44 @@ def test_format_mcq_patterns_section_lists_each_pattern() -> None:
     assert "`odd_one_out`" in section
     # Distractor-quality rule is non-negotiable (issue plan 42.10 follow-up).
     assert "Distractor quality rule" in section
+    # 42.20 BLOCKER root cause D: the old self-gated carve-out ("if the
+    # order prompt declares MULTIPLE-CHOICE EMPHASIS") was dead code — the
+    # generation LLM never sees the order prompt. Default (unbiased) runs
+    # must NOT carry the quota or the diversity-cap exemption.
+    assert "MULTIPLE-CHOICE EMPHASIS" not in section
+    assert "EXEMPT" not in section
+
+
+def test_format_mcq_patterns_section_emphasis_injects_hard_quota() -> None:
+    # 42.20 BLOCKER root causes B+D: `--mcq-bias` orders plumb
+    # `mcq_emphasis=True` through OrderContext → GenerationStage →
+    # `generate_questions`, and the hard quota + diversity-cap exemption
+    # must land directly in the section the generation LLM actually reads.
+    section = AdvancedQuestionGenerator._format_mcq_patterns_section(
+        {"true_false", "odd_one_out"}, mcq_emphasis=True
+    )
+    assert "MULTIPLE-CHOICE EMPHASIS" in section
+    assert "at least 7 of every 10 questions" in section
+    assert "EXEMPT" in section
+    assert "PATTERN DIVERSITY RULE" in section
+
+
+def test_format_mcq_patterns_section_bridges_library_patterns() -> None:
+    # 42.20 BLOCKER root cause E: the generation LLM selects from the numbered
+    # Pattern Library, but `true_false`/`year_guess` are not in it and
+    # `odd_one_out`/`comparison_bet` use different labels there — so the LLM
+    # never picked an MCQ-routable pattern (0/10 live). The activation block
+    # must bridge library titles → snake_case keys and flag the two unnumbered
+    # keys as directly selectable, or the prompt fix silently regresses.
+    section = AdvancedQuestionGenerator._format_mcq_patterns_section(
+        {"true_false", "odd_one_out", "comparison_bet_older_larger", "year_guess"}
+    )
+    assert "Pattern Library" in section
+    # the library-mapped MCQ patterns name their numbered origin
+    assert "#9" in section and "#12" in section
+    # the two unnumbered keys are flagged as pickable in their own right
+    assert "true_false" in section and "year_guess" in section
+    assert "selectable choices" in section
 
 
 # --- Issue #46 task 46.B4b — open/logical branch generation ---------------

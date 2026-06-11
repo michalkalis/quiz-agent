@@ -2,9 +2,10 @@
 //  CompletionView.swift
 //  Hangs
 //
-//  Hangs redesign quiz completion (Pencil NEW_Screen/Quiz-Complete):
-//  cream bg, editorial "COMPLETE" hero, final-score card, breakdown card,
-//  and primary/secondary CTA stack.
+//  Quiz-Complete screen — NPlqf frame.
+//  Editorial "COMPLETE" hero, final-score card, Correct/Incorrect/Accuracy
+//  breakdown card, Play Again + Home CTA stack.
+//  Display data sourced from QuizCompleteSummary (52.6); actions via viewModel.
 //
 
 import SwiftUI
@@ -52,20 +53,20 @@ struct CompletionView: View {
         HangsCard(padding: EdgeInsets(top: 16, leading: 20, bottom: 16, trailing: 20)) {
             VStack(spacing: 6) {
                 HangsSectionLabel(text: "final score", color: Theme.Hangs.Colors.pink)
-                Text("\(Int(viewModel.score))")
+                Text("\(Int(summary.finalScore))")
                     .font(.hangsNumberLG)
                     .tracking(-3)
                     .foregroundColor(Theme.Hangs.Colors.ink)
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
-                Text("out of \(totalQuestions)")
+                Text("out of \(summary.totalQuestions)")
                     .font(.hangsBody(13, weight: .medium))
                     .foregroundColor(Theme.Hangs.Colors.muted)
             }
             .frame(maxWidth: .infinity)
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Final score: \(Int(viewModel.score)) out of \(totalQuestions)")
+        .accessibilityLabel("Final score: \(Int(summary.finalScore)) out of \(summary.totalQuestions)")
         .accessibilityIdentifier("completion.score")
     }
 
@@ -76,24 +77,24 @@ struct CompletionView: View {
             VStack(spacing: 0) {
                 breakdownRow(
                     label: "Correct",
-                    value: "\(correctCount)",
-                    valueColor: Theme.Hangs.Colors.blue
+                    value: "\(summary.correctCount)",
+                    valueColor: Theme.Hangs.Colors.successText
                 )
                 Rectangle()
                     .fill(Theme.Hangs.Colors.hairline)
                     .frame(height: 1)
                 breakdownRow(
                     label: "Incorrect",
-                    value: "\(incorrectCount)",
-                    valueColor: Theme.Hangs.Colors.pink
+                    value: "\(summary.incorrectCount)",
+                    valueColor: Theme.Hangs.Colors.error
                 )
                 Rectangle()
                     .fill(Theme.Hangs.Colors.hairline)
                     .frame(height: 1)
                 breakdownRow(
-                    label: "Avg points",
-                    value: avgPointsText,
-                    valueColor: Theme.Hangs.Colors.blue
+                    label: "Accuracy",
+                    value: "\(Int(summary.sessionAccuracyPercent))%",
+                    valueColor: Theme.Hangs.Colors.ink
                 )
             }
         }
@@ -143,34 +144,27 @@ struct CompletionView: View {
 
     // MARK: - Derived
 
-    private var totalQuestions: Int {
-        viewModel.currentSession?.maxQuestions
-            ?? max(viewModel.questionsAnswered, viewModel.settings.numberOfQuestions)
-    }
-
-    private var correctCount: Int {
-        Int(viewModel.score)
-    }
-
-    private var incorrectCount: Int {
-        max(viewModel.questionsAnswered - correctCount, 0)
-    }
-
-    private var avgPointsText: String {
-        let denom = max(Double(viewModel.questionsAnswered), 1)
-        return String(format: "%.1f", viewModel.score / denom)
+    /// Summary aggregated from viewModel state at .finished phase (52.6).
+    var summary: QuizCompleteSummary {
+        QuizCompleteSummary.from(
+            score: viewModel.score,
+            questionsAnswered: viewModel.questionsAnswered,
+            maxQuestions: viewModel.currentSession?.maxQuestions
+                ?? viewModel.settings.numberOfQuestions,
+            stats: viewModel.quizStats
+        )
     }
 }
 
 #if DEBUG
-#Preview {
-    let viewModel: QuizViewModel = {
-        let vm = QuizViewModel.previewWithEvaluation
-        vm.score = 8.5
-        vm.questionsAnswered = 10
-        vm.quizState = .finished
-        return vm
-    }()
-    return CompletionView(viewModel: viewModel)
-}
+    #Preview {
+        let viewModel: QuizViewModel = {
+            let vm = QuizViewModel.previewWithEvaluation
+            vm.score = 8.5
+            vm.questionsAnswered = 10
+            vm.quizState = .finished
+            return vm
+        }()
+        return CompletionView(viewModel: viewModel)
+    }
 #endif

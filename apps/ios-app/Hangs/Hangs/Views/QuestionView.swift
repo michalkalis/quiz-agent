@@ -155,7 +155,6 @@ struct QuestionView: View {
                     if isRecording && viewModel.isStreamingSTT {
                         transcriptCard
                     }
-                    floatingMicRow
                     statusPill
                 }
                 .padding(.bottom, 4)
@@ -165,6 +164,11 @@ struct QuestionView: View {
             if showTextInput { textInputRow }
 
             chipActionRow
+
+            ListeningPill(mode: .openEnded)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.horizontal, 24)
+                .padding(.top, 8)
 
             footerCTA
         }
@@ -265,7 +269,7 @@ struct QuestionView: View {
 
     private var waveformStrip: some View {
         HStack(spacing: 3) {
-            ForEach(0..<12, id: \.self) { i in
+            ForEach(0 ..< 12, id: \.self) { i in
                 Capsule()
                     .fill(Theme.Hangs.Colors.pink)
                     .frame(width: 2, height: waveBarHeight(i))
@@ -277,16 +281,6 @@ struct QuestionView: View {
     private func waveBarHeight(_ i: Int) -> CGFloat {
         let heights: [CGFloat] = [6, 10, 14, 8, 16, 12, 18, 10, 14, 8, 12, 6]
         return heights[i % heights.count]
-    }
-
-    // MARK: - Floating mic (centered over the question content)
-
-    private var floatingMicRow: some View {
-        HangsMicBlock(mode: isRecording ? .listening : .tap, compact: true) {
-            Task { await viewModel.toggleRecording() }
-        }
-        .accessibilityIdentifier("question.micButton")
-        .frame(maxWidth: .infinity, alignment: .center)
     }
 
     // MARK: - Status pill (single source of state feedback under the mic)
@@ -311,15 +305,15 @@ struct QuestionView: View {
         .accessibilityIdentifier("question.statusPill")
 
         #if DEBUG
-        // Copy-independent state probe for UI tests. Reading
-        // app.staticTexts["question.state"].label returns the current
-        // QuizState case name. Sibling of the pill so the test seam
-        // survives copy/layout changes to the visible status pill.
-        // Not .hidden() — that strips the text from the accessibility tree.
-        // A 0×0 frame is invisible enough.
-        Text(quizStateName)
-            .frame(width: 0, height: 0)
-            .accessibilityIdentifier("question.state")
+            // Copy-independent state probe for UI tests. Reading
+            // app.staticTexts["question.state"].label returns the current
+            // QuizState case name. Sibling of the pill so the test seam
+            // survives copy/layout changes to the visible status pill.
+            // Not .hidden() — that strips the text from the accessibility tree.
+            // A 0×0 frame is invisible enough.
+            Text(quizStateName)
+                .frame(width: 0, height: 0)
+                .accessibilityIdentifier("question.state")
         #endif
     }
 
@@ -417,14 +411,16 @@ struct QuestionView: View {
             navChip(systemName: "speaker.wave.2",
                     label: "Repeat question",
                     identifier: "question.repeat",
-                    isEnabled: canInteract) {
+                    isEnabled: canInteract)
+            {
                 Task { await viewModel.repeatQuestion() }
             }
 
             navChip(systemName: "keyboard",
                     label: "Type answer",
                     identifier: "question.textInputToggle",
-                    isEnabled: canInteract) {
+                    isEnabled: canInteract)
+            {
                 showTextInput.toggle()
                 if showTextInput { isTextFieldFocused = true }
             }
@@ -433,7 +429,8 @@ struct QuestionView: View {
                     label: viewModel.settings.isMuted ? "Unmute" : "Mute",
                     identifier: "question.mute",
                     tint: viewModel.settings.isMuted ? Theme.Hangs.Colors.pink : Theme.Hangs.Colors.ink,
-                    isEnabled: true) {
+                    isEnabled: true)
+            {
                 viewModel.settings.isMuted.toggle()
             }
 
@@ -448,7 +445,8 @@ struct QuestionView: View {
                          identifier: String,
                          tint: Color = Theme.Hangs.Colors.ink,
                          isEnabled: Bool,
-                         action: @escaping () -> Void) -> some View {
+                         action: @escaping () -> Void) -> some View
+    {
         Button(action: action) {
             Image(systemName: systemName)
                 .font(.system(size: 15, weight: .semibold))
@@ -470,7 +468,8 @@ struct QuestionView: View {
     private var footerCTA: some View {
         HangsSecondaryButton(title: "Skip question",
                              icon: "forward.fill",
-                             height: 54) {
+                             height: 54)
+        {
             Task { await viewModel.skipQuestion() }
         }
         .accessibilityIdentifier("question.skip")
@@ -493,15 +492,22 @@ struct QuestionView: View {
                 options: question.sortedAnswerOptions,
                 onSelect: { key, value in
                     Task { await viewModel.submitMCQAnswer(key: key, value: value) }
-                }
+                },
+                externalSelectedKey: viewModel.mcqVoiceMatchedKey
             )
             .padding(.top, 8)
 
             chipActionRow
 
+            ListeningPill(mode: question.sortedAnswerOptions.count == 2 ? .trueFalse : .mcq)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.horizontal, 24)
+                .padding(.top, 8)
+
             HangsSecondaryButton(title: "Skip question",
                                  icon: "forward.fill",
-                                 height: 54) {
+                                 height: 54)
+            {
                 Task { await viewModel.skipQuestion() }
             }
             .accessibilityIdentifier("question.skip")
@@ -568,7 +574,7 @@ struct QuestionView: View {
 }
 
 #if DEBUG
-#Preview {
-    QuestionView(viewModel: QuizViewModel.preview)
-}
+    #Preview {
+        QuestionView(viewModel: QuizViewModel.preview)
+    }
 #endif

@@ -58,125 +58,167 @@ extension QuizResponse {
 // MARK: - Preview Helpers
 
 #if DEBUG
-extension QuizResponse {
-    static let previewStartQuiz = QuizResponse(
-        success: true,
-        message: "Quiz started",
-        session: QuizSession(
-            id: "sess_preview_123",
-            mode: "single",
-            phase: "asking",    
-            maxQuestions: 10,
-            currentDifficulty: "medium",
-            category: nil,
-            language: "en",
-            participants: [
-                Participant(
-                    id: "p_preview_1",
-                    userId: nil,
-                    displayName: "Player",
-                    score: 0.0,
-                    answeredCount: 0,
-                    correctCount: 0,
-                    lastAnswer: nil,
-                    lastResult: nil,
-                    isHost: true,
-                    isReady: true,
-                    joinedAt: Date()
-                )
-            ],
-            expiresAt: Date().addingTimeInterval(30 * 60),
-            createdAt: Date()
-        ),
-        currentQuestion: Question.preview,
-        evaluation: nil,
-        feedbackReceived: [],
-        audio: AudioInfo(
-            feedbackUrl: nil,
-            feedbackAudioBase64: nil,
-            questionUrl: "/api/v1/sessions/sess_preview_123/question/audio",
-            format: "opus"
+    extension QuizResponse {
+        static let previewStartQuiz = QuizResponse(
+            success: true,
+            message: "Quiz started",
+            session: QuizSession(
+                id: "sess_preview_123",
+                mode: "single",
+                phase: "asking",
+                maxQuestions: 10,
+                currentDifficulty: "medium",
+                category: nil,
+                language: "en",
+                participants: [
+                    Participant(
+                        id: "p_preview_1",
+                        userId: nil,
+                        displayName: "Player",
+                        score: 0.0,
+                        answeredCount: 0,
+                        correctCount: 0,
+                        lastAnswer: nil,
+                        lastResult: nil,
+                        isHost: true,
+                        isReady: true,
+                        joinedAt: Date()
+                    ),
+                ],
+                expiresAt: Date().addingTimeInterval(30 * 60),
+                createdAt: Date()
+            ),
+            currentQuestion: Question.preview,
+            evaluation: nil,
+            feedbackReceived: [],
+            audio: AudioInfo(
+                feedbackUrl: nil,
+                feedbackAudioBase64: nil,
+                questionUrl: "/api/v1/sessions/sess_preview_123/question/audio",
+                format: "opus"
+            )
         )
-    )
 
-    static let previewAnswerIncorrect = QuizResponse(
-        success: true,
-        message: "Input processed",
-        session: QuizSession(
-            id: "sess_preview_123",
-            mode: "single",
-            phase: "asking",
-            maxQuestions: 10,
-            currentDifficulty: "medium",
-            category: nil,
-            language: "en",
-            participants: [
-                Participant(
-                    id: "p_preview_1",
-                    userId: nil,
-                    displayName: "Player",
-                    score: 0.0,
-                    answeredCount: 1,
-                    correctCount: 0,
-                    lastAnswer: "London",
-                    lastResult: "incorrect",
-                    isHost: true,
-                    isReady: true,
-                    joinedAt: Date()
-                )
-            ],
-            expiresAt: Date().addingTimeInterval(30 * 60),
-            createdAt: Date()
-        ),
-        currentQuestion: Question.previewHard,
-        evaluation: Evaluation.previewIncorrect,
-        feedbackReceived: ["answer: incorrect"],
-        audio: AudioInfo(
-            feedbackUrl: "/api/v1/tts/feedback/incorrect",
-            feedbackAudioBase64: nil,
-            questionUrl: "/api/v1/sessions/sess_preview_123/question/audio",
-            format: "opus"
+        static let previewAnswerIncorrect = QuizResponse(
+            success: true,
+            message: "Input processed",
+            session: QuizSession(
+                id: "sess_preview_123",
+                mode: "single",
+                phase: "asking",
+                maxQuestions: 10,
+                currentDifficulty: "medium",
+                category: nil,
+                language: "en",
+                participants: [
+                    Participant(
+                        id: "p_preview_1",
+                        userId: nil,
+                        displayName: "Player",
+                        score: 0.0,
+                        answeredCount: 1,
+                        correctCount: 0,
+                        lastAnswer: "London",
+                        lastResult: "incorrect",
+                        isHost: true,
+                        isReady: true,
+                        joinedAt: Date()
+                    ),
+                ],
+                expiresAt: Date().addingTimeInterval(30 * 60),
+                createdAt: Date()
+            ),
+            currentQuestion: Question.previewHard,
+            evaluation: Evaluation.previewIncorrect,
+            feedbackReceived: ["answer: incorrect"],
+            audio: AudioInfo(
+                feedbackUrl: "/api/v1/tts/feedback/incorrect",
+                feedbackAudioBase64: nil,
+                questionUrl: "/api/v1/sessions/sess_preview_123/question/audio",
+                format: "opus"
+            )
         )
-    )
 
-    static let previewAnswerCorrect = QuizResponse(
-        success: true,
-        message: "Input processed",
-        session: QuizSession(
-            id: "sess_preview_123",
-            mode: "single",
-            phase: "asking",
-            maxQuestions: 10,
-            currentDifficulty: "medium",
-            category: nil,
-            language: "en",
-            participants: [
-                Participant(
-                    id: "p_preview_1",
-                    userId: nil,
-                    displayName: "Player",
-                    score: 1.0,
-                    answeredCount: 1,
-                    correctCount: 1,
-                    lastAnswer: "Paris",
-                    lastResult: "correct",
-                    isHost: true,
-                    isReady: true,
-                    joinedAt: Date()
-                )
-            ],
-            expiresAt: Date().addingTimeInterval(30 * 60),
-            createdAt: Date()
-        ),
-        currentQuestion: Question.previewHard,
-        evaluation: Evaluation.previewCorrect,
-        feedbackReceived: ["answer: correct"],
-        audio: AudioInfo(
-            feedbackUrl: "/api/v1/tts/feedback/correct",
-            feedbackAudioBase64: nil,
-            questionUrl: "/api/v1/sessions/sess_preview_123/question/audio",
-            format: "opus"
+        static let previewAnswerCorrect = QuizResponse(
+            success: true,
+            message: "Input processed",
+            session: QuizSession(
+                id: "sess_preview_123",
+                mode: "single",
+                phase: "asking",
+                maxQuestions: 10,
+                currentDifficulty: "medium",
+                category: nil,
+                language: "en",
+                participants: [
+                    Participant(
+                        id: "p_preview_1",
+                        userId: nil,
+                        displayName: "Player",
+                        score: 1.0,
+                        answeredCount: 1,
+                        correctCount: 1,
+                        lastAnswer: "Paris",
+                        lastResult: "correct",
+                        isHost: true,
+                        isReady: true,
+                        joinedAt: Date()
+                    ),
+                ],
+                expiresAt: Date().addingTimeInterval(30 * 60),
+                createdAt: Date()
+            ),
+            currentQuestion: Question.previewHard,
+            evaluation: Evaluation.previewCorrect,
+            feedbackReceived: ["answer: correct"],
+            audio: AudioInfo(
+                feedbackUrl: "/api/v1/tts/feedback/correct",
+                feedbackAudioBase64: nil,
+                questionUrl: "/api/v1/sessions/sess_preview_123/question/audio",
+                format: "opus"
+            )
         )
-    )
-}
+
+        /// MCQ variant of previewStartQuiz — used by `--ui-test-mcq` in UITestSupport.
+        /// Question: "What is the largest planet?" options a=Mars b=Jupiter c=Saturn d=Neptune
+        static let previewStartQuizMCQ = QuizResponse(
+            success: true,
+            message: "Quiz started",
+            session: QuizSession(
+                id: "sess_preview_123",
+                mode: "single",
+                phase: "asking",
+                maxQuestions: 10,
+                currentDifficulty: "medium",
+                category: nil,
+                language: "en",
+                participants: [
+                    Participant(
+                        id: "p_preview_1",
+                        userId: nil,
+                        displayName: "Player",
+                        score: 0.0,
+                        answeredCount: 0,
+                        correctCount: 0,
+                        lastAnswer: nil,
+                        lastResult: nil,
+                        isHost: true,
+                        isReady: true,
+                        joinedAt: Date()
+                    ),
+                ],
+                expiresAt: Date().addingTimeInterval(30 * 60),
+                createdAt: Date()
+            ),
+            currentQuestion: Question.previewMCQ,
+            evaluation: nil,
+            feedbackReceived: [],
+            audio: AudioInfo(
+                feedbackUrl: nil,
+                feedbackAudioBase64: nil,
+                questionUrl: "/api/v1/sessions/sess_preview_123/question/audio",
+                format: "opus"
+            )
+        )
+    }
 #endif

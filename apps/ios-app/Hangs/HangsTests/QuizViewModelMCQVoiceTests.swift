@@ -104,7 +104,23 @@ struct QuizViewModelMCQVoiceTests {
         #expect(viewModel.transcribedAnswer == "something entirely unrelated zzz")
     }
 
-    // MARK: - Test 4: guard removal — recording no longer short-circuited for MCQ
+    // MARK: - Test 4 (45.9): voice match sets mcqVoiceMatchedKey before submitting
+
+    /// The AnswerOption `selected` highlight is driven by `mcqVoiceMatchedKey`.
+    /// A committed transcript that matches an option must set this key (so the
+    /// picker can render the highlight) and then submit the option value.
+    @Test("committed MCQ transcript sets mcqVoiceMatchedKey to matched key and submits value")
+    func voiceMatchSetsHighlightKeyAndSubmits() async throws {
+        let (viewModel, mockNetwork) = makeViewModelRecordingMCQ()
+
+        await viewModel.handleCommittedTranscript("Jupiter")
+
+        #expect(viewModel.mcqVoiceMatchedKey == "b")
+        #expect(mockNetwork.capturedTextInputInput == "Jupiter")
+        #expect(viewModel.quizState.isShowingResult)
+    }
+
+    // MARK: - Test 5: guard removal — recording no longer short-circuited for MCQ
 
     /// Regression: re-introducing any `isMultipleChoice != true` guard would make
     /// `startRecordingOrTimer` bail for MCQ, so the answer timer never starts and

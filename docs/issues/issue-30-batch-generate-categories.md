@@ -12,7 +12,7 @@ Run the gen → verify → score → approve → import pipeline at volume to fi
 | Category | Type | Target count |
 |---|---|---|
 | `kids` | core | 50 — DONE (52, 2026-05-05) |
-| `general` | core | **500** — ~52 approved (initial target 50 met 2026-05-19); **raised to ~500 by founder 2026-06-09, approached incrementally** (see "General content run" below) |
+| `general` | core | **500** — ~147 approved (52 original + 16 from batch-04 2026-06-11 + 19 from batch-05 2026-06-11 + 20 from batch-06 2026-06-11 + 20 from batch-07 2026-06-11 + 20 from batch-08 2026-06-11); **raised to ~500 by founder 2026-06-09, approached incrementally** (see "General content run" below) |
 | `adults` | core | 50 — DONE (67) |
 | `wizarding-world` | themed | 30 — DONE |
 | `superheroes` | themed | 30 — 34/30 DONE (8 approved LOCALLY 2026-05-19; prod sync pending) |
@@ -102,7 +102,7 @@ short, committed runs over time, not one giant batch. This is a **re-runnable** 
   script exits 0 with a net-positive count increase; `GET /api/v1/questions?category=general` count rose.
 - [ ] **30.done** *(only when `general` approved ≥ ~500)* Set **Status** to `Done`, update the `general`
   row to the final count. Until then the issue stays open across runs.
-- [ ] **30.docfix** *(one-time, independent of count)* Reconcile the dangling `#62` reference in
+- [x] **30.docfix** *(done 2026-06-11)* Reconcile the dangling `#62` reference in
   `docs/todo/TODO.md` (inline a note removing it, or create a minimal stub pointing here). Acceptance:
   no open `#62` reference remains pointing to a non-existent file.
 

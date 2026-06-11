@@ -9,8 +9,9 @@ import json
 import os
 from typing import Optional
 
-from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage
+
+from quiz_shared.llm import factory as llm_factory
 
 # Issue #42 task 42.6 — deterministic advisory dimensions. We compute
 # these in code (not via the LLM) per CLAUDE.md rule #5: the criteria
@@ -160,20 +161,33 @@ class MultiModelScorer:
                 - name: display name for tracking
         """
         self.models = models or self._default_models()
-        self._clients: dict[str, ChatOpenAI] = {}
+        self._clients: dict = {}
 
     @staticmethod
     def _default_models() -> list[dict]:
-        """Default models for scoring A/B test."""
+        """Default models for scoring A/B test.
+
+        In the OpenRouter gateway both judges share one key
+        (``OPENROUTER_API_KEY``); in direct mode each provider is gated on its
+        own key as before. The Anthropic judge is only reachable when it has a
+        key — without one it was silently dropped, and that stays true here.
+        """
+        openrouter = llm_factory.gateway() == llm_factory.OPENROUTER
+
+        def _enabled(direct_key: str) -> bool:
+            if openrouter:
+                return bool(os.getenv("OPENROUTER_API_KEY"))
+            return bool(os.getenv(direct_key))
+
         models = []
-        if os.getenv("OPENAI_API_KEY"):
+        if _enabled("OPENAI_API_KEY"):
             models.append({
                 "provider": "openai",
                 "model": "gpt-4.1-mini",
                 "name": "gpt-4.1-mini",
                 "temperature": 0.3,
             })
-        if os.getenv("ANTHROPIC_API_KEY"):
+        if _enabled("ANTHROPIC_API_KEY"):
             models.append({
                 "provider": "anthropic",
                 "model": "claude-sonnet-4-6",
@@ -183,27 +197,19 @@ class MultiModelScorer:
         return models
 
     def _get_client(self, model_config: dict):
-        """Get or create LLM client for a model config."""
+        """Get or create the LLM client for a model config.
+
+        All judges go through the OpenAI-compatible factory client: in the
+        OpenRouter gateway one endpoint serves the OpenAI, Anthropic and Google
+        models alike; in direct mode it is canonical OpenAI. The factory remaps
+        the model id to the active gateway's slug.
+        """
         name = model_config["name"]
         if name not in self._clients:
-            provider = model_config["provider"]
-            if provider == "openai":
-                self._clients[name] = ChatOpenAI(
-                    model=model_config["model"],
-                    temperature=model_config.get("temperature", 0.3),
-                )
-            elif provider == "anthropic":
-                from langchain_anthropic import ChatAnthropic
-                self._clients[name] = ChatAnthropic(
-                    model=model_config["model"],
-                    temperature=model_config.get("temperature", 0.3),
-                )
-            elif provider == "google":
-                from langchain_google_genai import ChatGoogleGenerativeAI
-                self._clients[name] = ChatGoogleGenerativeAI(
-                    model=model_config["model"],
-                    temperature=model_config.get("temperature", 0.3),
-                )
+            self._clients[name] = llm_factory.chat_openai(
+                model_config["model"],
+                temperature=model_config.get("temperature", 0.3),
+            )
         return self._clients[name]
 
     async def score_question(

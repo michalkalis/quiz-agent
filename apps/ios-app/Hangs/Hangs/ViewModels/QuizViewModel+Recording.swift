@@ -12,7 +12,6 @@ import Sentry
 // MARK: - Recording Lifecycle
 
 extension QuizViewModel {
-
     /// Toggle recording: start if asking a question, stop and submit if recording
     func toggleRecording() async {
         switch quizState {
@@ -37,7 +36,7 @@ extension QuizViewModel {
         transition(to: .recording)
 
         // Choose streaming STT or batch M4A based on feature flag
-        if Config.useElevenLabsSTT && sttService != nil {
+        if Config.useElevenLabsSTT, sttService != nil {
             await startStreamingRecording()
         } else {
             await startBatchRecording()
@@ -116,7 +115,7 @@ extension QuizViewModel {
             // Sentry: fallback metadata only — error type name, not the full description (may contain URLs/tokens).
             SentryLog.warn("STT fallback", category: .stt, attributes: [
                 "reason": "streaming_setup_failed",
-                "error_type": String(describing: type(of: error))
+                "error_type": String(describing: type(of: error)),
             ])
 
             await startBatchRecording()
@@ -132,10 +131,10 @@ extension QuizViewModel {
                 guard let self, !Task.isCancelled else { break }
 
                 switch event {
-                case .partialTranscript(let text):
+                case let .partialTranscript(text):
                     self.liveTranscript = text
 
-                case .committedTranscript(let text):
+                case let .committedTranscript(text):
                     self.liveTranscript = text
                     // Auto-stop recording and submit the committed text
                     await self.handleCommittedTranscript(text)
@@ -144,7 +143,7 @@ extension QuizViewModel {
                 case .connected:
                     break // Already handled in startStreamingRecording
 
-                case .disconnected(let error):
+                case let .disconnected(error):
                     if self.isStreamingSTT {
                         Logger.stt.warning("⚠️ STT disconnected unexpectedly: \(error?.localizedDescription ?? "unknown", privacy: .public)")
                         // If we were mid-recording, fall back gracefully
@@ -183,7 +182,9 @@ extension QuizViewModel {
         // normal modal so the driver can re-record rather than submit a guess.
         if let question = currentQuestion, question.isMultipleChoice,
            let key = MCQTranscriptMatcher.match(text, options: question.sortedAnswerOptions),
-           let value = question.possibleAnswers?[key] {
+           let value = question.possibleAnswers?[key]
+        {
+            mcqVoiceMatchedKey = key
             await submitMCQAnswer(key: key, value: value)
             return
         }
@@ -210,7 +211,7 @@ extension QuizViewModel {
                 switch event {
                 case .speechStarted:
                     self.speechDetectedDuringAutoRecord = true
-                case .silenceAfterSpeech(let duration):
+                case let .silenceAfterSpeech(duration):
                     Logger.audio.debug("🔇 Auto-record: silence threshold reached (\(String(format: "%.1f", duration), privacy: .public)s), auto-stopping")
                     await self.stopRecordingAndSubmit()
                     return
@@ -333,7 +334,7 @@ extension QuizViewModel {
                 Logger.network.error("⏱️ Voice submission timed out after 30 seconds")
             } catch let error as NetworkError {
                 // Handle daily limit reached — show paywall
-                if case .dailyLimitReached(let limitError) = error {
+                if case let .dailyLimitReached(limitError) = error {
                     await MainActor.run {
                         self.dailyLimitError = limitError
                         self.showPaywall = true
@@ -343,7 +344,7 @@ extension QuizViewModel {
                 }
 
                 // Handle "speech not understood" errors gracefully - let user re-record
-                if case .serverError(let statusCode, _) = error, statusCode == 400 {
+                if case let .serverError(statusCode, _) = error, statusCode == 400 {
                     await MainActor.run {
                         self.handleTranscriptionFailure()
                     }
@@ -480,7 +481,7 @@ extension QuizViewModel {
         transcriptWasEdited = false
         preEditTranscript = nil
         isRerecording = true
-        transition(to: .askingQuestion)  // Return to ready state, not recording
+        transition(to: .askingQuestion) // Return to ready state, not recording
         errorMessage = nil
         startAnswerTimer(extraSeconds: 10, bypassRerecord: true)
     }

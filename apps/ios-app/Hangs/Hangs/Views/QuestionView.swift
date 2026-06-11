@@ -155,7 +155,6 @@ struct QuestionView: View {
                     if isRecording && viewModel.isStreamingSTT {
                         transcriptCard
                     }
-                    floatingMicRow
                     statusPill
                 }
                 .padding(.bottom, 4)
@@ -282,16 +281,6 @@ struct QuestionView: View {
     private func waveBarHeight(_ i: Int) -> CGFloat {
         let heights: [CGFloat] = [6, 10, 14, 8, 16, 12, 18, 10, 14, 8, 12, 6]
         return heights[i % heights.count]
-    }
-
-    // MARK: - Floating mic (centered over the question content)
-
-    private var floatingMicRow: some View {
-        HangsMicBlock(mode: isRecording ? .listening : .tap, compact: true) {
-            Task { await viewModel.toggleRecording() }
-        }
-        .accessibilityIdentifier("question.micButton")
-        .frame(maxWidth: .infinity, alignment: .center)
     }
 
     // MARK: - Status pill (single source of state feedback under the mic)
@@ -503,7 +492,8 @@ struct QuestionView: View {
                 options: question.sortedAnswerOptions,
                 onSelect: { key, value in
                     Task { await viewModel.submitMCQAnswer(key: key, value: value) }
-                }
+                },
+                externalSelectedKey: viewModel.mcqVoiceMatchedKey
             )
             .padding(.top, 8)
 

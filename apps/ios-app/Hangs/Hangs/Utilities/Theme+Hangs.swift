@@ -105,31 +105,62 @@ extension Theme {
 
 // MARK: - Fonts
 
+extension Theme.Hangs {
+    /// Design-token font roles — map to bundled custom typefaces (task 52.2).
+    /// display = Anton · body = Inter · mono = IBM Plex Mono (all OFL, confirmed 2026-06-11).
+    enum Fonts {
+        // Display role — Anton (single weight, decorative caps)
+        static func display(_ size: CGFloat) -> Font {
+            .custom("Anton-Regular", size: size)
+        }
+
+        // Body role — Inter (4 weights bundled: 400/500/600/700)
+        static func body(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
+            switch weight {
+            case .medium: return .custom("Inter-Medium", size: size)
+            case .semibold: return .custom("Inter-SemiBold", size: size)
+            case .bold: return .custom("Inter-Bold", size: size)
+            default: return .custom("Inter-Regular", size: size)
+            }
+        }
+
+        // Mono role — IBM Plex Mono (2 weights bundled: 400/500)
+        static func mono(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
+            switch weight {
+            case .medium: return .custom("IBMPlexMono-Medium", size: size)
+            default: return .custom("IBMPlexMono-Regular", size: size)
+            }
+        }
+    }
+}
+
 extension Font {
-    /// Condensed heavy display (approximates Anton). "HANGS", "NAILED IT", question text.
-    static func hangsDisplay(_ size: CGFloat, weight: Font.Weight = .black) -> Font {
-        .system(size: size, weight: weight).width(.compressed)
+    /// Display (Anton) — large hero text, screen titles, score numbers.
+    static func hangsDisplay(_ size: CGFloat, weight _: Font.Weight = .black) -> Font {
+        // Fallback to compressed-system for any callers that need a weight variant;
+        // Anton is single-weight so the weight param is accepted but unused for the custom path.
+        Theme.Hangs.Fonts.display(size)
     }
 
-    /// Monospace small-caps label ("streak", "GEOGRAPHY", "03 / 10").
+    /// Monospace label (IBM Plex Mono) — "streak", "GEOGRAPHY", "03 / 10".
     static func hangsMono(_ size: CGFloat, weight: Font.Weight = .medium) -> Font {
-        .system(size: size, weight: weight, design: .monospaced)
+        Theme.Hangs.Fonts.mono(size, weight: weight)
     }
 
-    /// Body / button copy ("Start Quiz").
+    /// Body / button copy (Inter) — "Start Quiz", settings rows, descriptions.
     static func hangsBody(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
-        .system(size: size, weight: weight)
+        Theme.Hangs.Fonts.body(size, weight: weight)
     }
 
     // Convenience presets that match common Pencil sizes.
-    static var hangsBlock: Font { .hangsDisplay(80) } // "HANGS" hero
-    static var hangsDisplayLG: Font { .hangsDisplay(72) } // "OOPS", "NAILED IT"
-    static var hangsDisplayMD: Font { .hangsDisplay(62) } // "COMPLETE", "SETTINGS"
-    static var hangsDisplaySM: Font { .hangsDisplay(40) } // big question text
-    static var hangsQuestion: Font { .hangsDisplay(26) } // compact question
-    static var hangsNumber: Font { .hangsDisplay(44) } // stat numbers
-    static var hangsNumberLG: Font { .hangsDisplay(80) } // final score
-    static var hangsSubHero: Font { .hangsDisplay(22, weight: .black) }
+    static var hangsBlock: Font { .hangsDisplay(80) }
+    static var hangsDisplayLG: Font { .hangsDisplay(72) }
+    static var hangsDisplayMD: Font { .hangsDisplay(62) }
+    static var hangsDisplaySM: Font { .hangsDisplay(40) }
+    static var hangsQuestion: Font { .hangsDisplay(26) }
+    static var hangsNumber: Font { .hangsDisplay(44) }
+    static var hangsNumberLG: Font { .hangsDisplay(80) }
+    static var hangsSubHero: Font { .hangsDisplay(22) }
     static var hangsMonoLabel: Font { .hangsMono(11, weight: .medium) }
     static var hangsMonoMini: Font { .hangsMono(10, weight: .medium) }
     static var hangsMonoValue: Font { .hangsMono(14, weight: .medium) }

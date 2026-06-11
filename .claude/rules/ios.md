@@ -66,6 +66,10 @@ Endpoints are authoritative in backend OpenAPI spec — `curl http://localhost:8
 - **QuizViewModel:** State machine via `transition(to:caller:)` with legal transition table
   States: idle → askingQuestion → recording → processing → showingResult → finished
 
+## UI Verification
+
+Any change that can affect the UI (layout, colors, visibility, spacing) requires a screenshot-verify step before the task is considered done — see `docs/testing/screenshot-verify-procedure.md`. This enforces CLAUDE.md rule #2 "Fail loud": '"tests pass" is wrong if … UI wasn't verified'.
+
 ## Info.plist
 
 Background audio mode enabled. Microphone usage description required.

@@ -4,8 +4,8 @@ Translates questions and feedback to user's preferred language using OpenAI.
 """
 
 import logging
-import os
-from openai import AsyncOpenAI
+
+from quiz_shared.llm import factory as llm_factory
 
 logger = logging.getLogger(__name__)
 
@@ -38,8 +38,8 @@ class TranslationService:
         Args:
             model: OpenAI model to use for translation
         """
-        self.client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-        self.model = model
+        self.client = llm_factory.openai_client(async_=True)
+        self.model = llm_factory.resolve_model(model)
 
     def _validate_translation(
         self, original: str, translated: str, target_language: str

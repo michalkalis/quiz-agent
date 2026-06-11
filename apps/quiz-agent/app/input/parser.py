@@ -7,7 +7,8 @@ import json
 import logging
 from typing import Dict, List, Any
 from difflib import SequenceMatcher
-from openai import AsyncOpenAI
+
+from quiz_shared.llm import factory as llm_factory
 
 logger = logging.getLogger(__name__)
 
@@ -41,8 +42,8 @@ class InputParser:
             model: OpenAI model for intent classification
             temperature: Lower temperature for more deterministic parsing
         """
-        self.client = AsyncOpenAI()
-        self.model = model
+        self.client = llm_factory.openai_client(async_=True)
+        self.model = llm_factory.resolve_model(model)
         self.temperature = temperature
 
     async def parse(

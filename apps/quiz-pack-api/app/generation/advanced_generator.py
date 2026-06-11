@@ -11,8 +11,9 @@ import asyncio
 import json
 import uuid
 from typing import List, Optional, Dict, Any
-from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage
+
+from quiz_shared.llm import factory as llm_factory
 
 import os
 
@@ -49,13 +50,13 @@ class AdvancedQuestionGenerator:
             verbose: Enable verbose logging of raw responses and parsed fields
         """
         self.verbose = verbose
-        self.generation_llm = ChatOpenAI(
-            model=generation_model,
-            temperature=generation_temperature
+        self.generation_llm = llm_factory.chat_openai(
+            generation_model,
+            temperature=generation_temperature,
         )
-        self.critique_llm = ChatOpenAI(
-            model=critique_model,
-            temperature=critique_temperature
+        self.critique_llm = llm_factory.chat_openai(
+            critique_model,
+            temperature=critique_temperature,
         )
 
         self.generation_model = generation_model

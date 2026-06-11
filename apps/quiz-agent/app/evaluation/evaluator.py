@@ -4,8 +4,8 @@ Ported from graph.py:445-518
 """
 
 from typing import Tuple
-from openai import AsyncOpenAI
 
+from quiz_shared.llm import factory as llm_factory
 from quiz_shared.models.question import Question
 from quiz_shared.utils.text_normalization import normalize_text
 
@@ -25,8 +25,8 @@ class AnswerEvaluator:
             model: OpenAI model for evaluation
             temperature: Lower temperature for deterministic evaluation
         """
-        self.client = AsyncOpenAI()
-        self.model = model
+        self.client = llm_factory.openai_client(async_=True)
+        self.model = llm_factory.resolve_model(model)
         self.temperature = temperature
 
     async def evaluate(

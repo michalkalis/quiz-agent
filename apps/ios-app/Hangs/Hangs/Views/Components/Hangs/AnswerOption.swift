@@ -22,6 +22,8 @@ struct AnswerOption: View {
     let key: String
     let value: String
     var state: State = .default
+    /// Minimum row height. Defaults to 64pt (4-option MCQ); pass 80pt for the 2-option T/F variant.
+    var minHeight: CGFloat = 64
     var action: (() -> Void)? = nil
 
     /// Decorative soft-purple badge fill for the default state. Hardcoded per the
@@ -104,7 +106,7 @@ struct AnswerOption: View {
             }
         }
         .padding(.horizontal, Theme.Hangs.Spacing.lg)
-        .frame(maxWidth: .infinity, minHeight: 64)
+        .frame(maxWidth: .infinity, minHeight: minHeight)
         .background(
             RoundedRectangle(cornerRadius: 16).fill(Theme.Hangs.Colors.bgCard)
         )

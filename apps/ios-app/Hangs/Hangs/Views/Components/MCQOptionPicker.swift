@@ -18,6 +18,8 @@ struct MCQOptionPicker: View {
     @State private var selectedKey: String?
 
     private var effectiveSelectedKey: String? { selectedKey ?? externalSelectedKey }
+    /// 80pt for the 2-option T/F variant; 64pt for all other MCQ lists.
+    var optionMinHeight: CGFloat { options.count == 2 ? 80 : 64 }
 
     var body: some View {
         VStack(spacing: Theme.Hangs.Spacing.sm) {
@@ -26,6 +28,7 @@ struct MCQOptionPicker: View {
                     key: option.key,
                     value: option.value,
                     state: effectiveSelectedKey == option.key ? .selected : .default,
+                    minHeight: optionMinHeight,
                     action: {
                         guard effectiveSelectedKey == nil else { return }
                         selectedKey = option.key

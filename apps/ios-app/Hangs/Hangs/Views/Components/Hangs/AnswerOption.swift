@@ -26,10 +26,6 @@ struct AnswerOption: View {
     var minHeight: CGFloat = 64
     var action: (() -> Void)? = nil
 
-    /// Decorative soft-purple badge fill for the default state. Hardcoded per the
-    /// issue-45 token table (translucent fills read in both appearances).
-    static let softBadge = Color(hex: "#8B5CF6").opacity(0.125) // #8B5CF620
-
     // MARK: - State → style mapping (internal so unit tests assert the mapping)
 
     var borderColor: Color {
@@ -43,7 +39,7 @@ struct AnswerOption: View {
 
     var badgeFill: Color {
         switch state {
-        case .default: return Self.softBadge
+        case .default: return Theme.Hangs.Colors.accentPrimarySoft
         case .selected: return Theme.Hangs.Colors.accentPrimary
         case .correct: return Theme.Hangs.Colors.greenCheck
         case .incorrect: return Theme.Hangs.Colors.pink
@@ -62,6 +58,14 @@ struct AnswerOption: View {
         switch state {
         case .correct: return "checkmark"
         case .incorrect: return "xmark"
+        case .default, .selected: return nil
+        }
+    }
+
+    /// Icon color inside the status badge circle (white on colored fill), or nil when no badge.
+    var statusIconColor: Color? {
+        switch state {
+        case .correct, .incorrect: return .white
         case .default, .selected: return nil
         }
     }
@@ -99,10 +103,14 @@ struct AnswerOption: View {
 
             Spacer(minLength: Theme.Hangs.Spacing.sm)
 
-            if let statusSymbol {
-                Image(systemName: statusSymbol)
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundColor(borderColor)
+            if let statusSymbol, let iconColor = statusIconColor {
+                ZStack {
+                    Circle().fill(borderColor)
+                    Image(systemName: statusSymbol)
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(iconColor)
+                }
+                .frame(width: 32, height: 32)
             }
         }
         .padding(.horizontal, Theme.Hangs.Spacing.lg)

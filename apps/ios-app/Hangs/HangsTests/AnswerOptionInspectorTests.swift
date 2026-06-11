@@ -19,40 +19,44 @@ import ViewInspector
 struct AnswerOptionInspectorTests {
     // MARK: - State → color mapping (why: each state must read as its design role)
 
-    @Test("Default state: subtle border, soft-purple badge, purple letter")
+    @Test("Default state: subtle border, soft-purple badge (accentPrimarySoft token), purple letter")
     func defaultStateColors() {
         let view = AnswerOption(key: "a", value: "Mars", state: .default)
         #expect(view.borderColor == Theme.Hangs.Colors.subtleBorder)
-        #expect(view.badgeFill == AnswerOption.softBadge)
+        #expect(view.badgeFill == Theme.Hangs.Colors.accentPrimarySoft)
         #expect(view.letterColor == Theme.Hangs.Colors.accentPrimary)
         #expect(view.statusSymbol == nil)
+        #expect(view.statusIconColor == nil)
     }
 
-    @Test("Selected state: purple border + solid purple badge + white letter")
+    @Test("Selected state: purple border + solid purple badge + white letter, no status badge")
     func selectedStateColors() {
         let view = AnswerOption(key: "b", value: "Jupiter", state: .selected)
         #expect(view.borderColor == Theme.Hangs.Colors.accentPrimary)
         #expect(view.badgeFill == Theme.Hangs.Colors.accentPrimary)
         #expect(view.letterColor == .white)
         #expect(view.statusSymbol == nil)
+        #expect(view.statusIconColor == nil)
     }
 
-    @Test("Correct state: green border + badge + checkmark")
+    @Test("Correct state: green border + badge + checkmark circle (white icon on green fill)")
     func correctStateColors() {
         let view = AnswerOption(key: "c", value: "Saturn", state: .correct)
         #expect(view.borderColor == Theme.Hangs.Colors.greenCheck)
         #expect(view.badgeFill == Theme.Hangs.Colors.greenCheck)
         #expect(view.letterColor == .white)
         #expect(view.statusSymbol == "checkmark")
+        #expect(view.statusIconColor == .white)
     }
 
-    @Test("Incorrect state: pink border + badge + xmark")
+    @Test("Incorrect state: pink border + badge + xmark circle (white icon on pink fill)")
     func incorrectStateColors() {
         let view = AnswerOption(key: "d", value: "Neptune", state: .incorrect)
         #expect(view.borderColor == Theme.Hangs.Colors.pink)
         #expect(view.badgeFill == Theme.Hangs.Colors.pink)
         #expect(view.letterColor == .white)
         #expect(view.statusSymbol == "xmark")
+        #expect(view.statusIconColor == .white)
     }
 
     // MARK: - Rendered structure (ViewInspector)

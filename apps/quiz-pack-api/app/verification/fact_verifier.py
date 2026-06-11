@@ -10,6 +10,8 @@ import os
 from dataclasses import dataclass, field
 from typing import Optional
 
+from quiz_shared.llm import factory as llm_factory
+
 from ..sourcing.web_search_source import WebSearchSource
 
 
@@ -34,16 +36,29 @@ class FactVerifier:
     ):
         self.search = WebSearchSource(api_key=tavily_api_key)
         self.gemini_api_key = gemini_api_key or os.getenv("GOOGLE_API_KEY")
-        self._gemini_model = None
+        self._client = None
 
-    def _get_gemini(self):
-        """Lazy-init Gemini client."""
-        if self._gemini_model is None and self.gemini_api_key:
-            import google.generativeai as genai
+    def _available(self) -> bool:
+        """Whether the LLM judge is reachable.
 
-            genai.configure(api_key=self.gemini_api_key)
-            self._gemini_model = genai.GenerativeModel("gemini-2.5-flash")
-        return self._gemini_model
+        Issue #53: the judge now runs through the OpenAI-compatible factory
+        client. Under the OpenRouter gateway one key serves Gemini; in direct
+        mode an explicit/ambient ``GOOGLE_API_KEY`` still marks it configured.
+        """
+        return bool(self.gemini_api_key) or llm_factory.gateway() == llm_factory.OPENROUTER
+
+    async def _complete(self, prompt: str) -> Optional[str]:
+        """Single LLM boundary: raw model text, or ``None`` on any failure."""
+        if self._client is None:
+            self._client = llm_factory.openai_client(async_=True)
+        try:
+            response = await self._client.chat.completions.create(
+                model=llm_factory.resolve_model("gemini-2.5-flash"),
+                messages=[{"role": "user", "content": prompt}],
+            )
+            return response.choices[0].message.content
+        except Exception:
+            return None
 
     async def verify(
         self, question: str, claimed_answer: str, topic: str = ""
@@ -120,8 +135,7 @@ class FactVerifier:
         tavily_answer: Optional[str],
     ) -> VerificationResult:
         """Stage 2: Use Gemini Flash to analyze search evidence."""
-        gemini = self._get_gemini()
-        if gemini is None:
+        if not self._available():
             # Fallback: use heuristics only
             agreeing = sum(1 for s in sources if s["agrees_with_answer"])
             total = len(sources)
@@ -178,8 +192,10 @@ Rules:
 - Be conservative — "uncertain" is better than a wrong verdict"""
 
         try:
-            response = await gemini.generate_content_async(prompt)
-            text = response.text.strip()
+            text = await self._complete(prompt)
+            if text is None:
+                raise RuntimeError("Gemini call failed")
+            text = text.strip()
 
             # Parse JSON from response
             if text.startswith("```"):

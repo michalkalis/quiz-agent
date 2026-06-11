@@ -13,7 +13,6 @@ is the exact failure mode this branch exists to prevent.
 from __future__ import annotations
 
 import json
-from types import SimpleNamespace
 
 import pytest
 
@@ -21,24 +20,21 @@ from app.verification.fact_verifier import VerificationResult
 from app.verification.logical_verifier import LogicalConsistencyVerifier
 
 
-class _FakeModel:
-    """Returns a canned JSON payload keyed on a substring of the prompt."""
+def _verifier_with(responses: dict[str, str]) -> LogicalConsistencyVerifier:
+    """Verifier whose LLM boundary returns canned text keyed on the prompt.
 
-    def __init__(self, responses: dict[str, str]) -> None:
-        self._responses = responses
-        self.calls: list[str] = []
+    Stubs ``_complete`` (the single LLM call seam, issue #53) so the JSON
+    parsing + verdict logic is exercised without a live model.
+    """
+    verifier = LogicalConsistencyVerifier(gemini_api_key="test-key")
 
-    async def generate_content_async(self, prompt: str):
-        self.calls.append(prompt)
-        for key, payload in self._responses.items():
+    async def _fake_complete(prompt: str) -> str:
+        for key, payload in responses.items():
             if key in prompt:
-                return SimpleNamespace(text=payload)
+                return payload
         raise AssertionError(f"no canned response matched prompt:\n{prompt}")
 
-
-def _verifier_with(responses: dict[str, str]) -> LogicalConsistencyVerifier:
-    verifier = LogicalConsistencyVerifier(gemini_api_key="test-key")
-    verifier._gemini_model = _FakeModel(responses)  # inject, bypass lazy init
+    verifier._complete = _fake_complete  # inject, bypass the live client
     return verifier
 
 

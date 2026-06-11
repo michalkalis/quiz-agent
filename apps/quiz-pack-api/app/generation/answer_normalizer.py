@@ -26,6 +26,8 @@ import os
 from dataclasses import dataclass
 from typing import Optional
 
+from quiz_shared.llm import factory as llm_factory
+
 from app.scoring.multi_model_scorer import _ANSWER_WORD_CAP
 
 _PROMPT = """You normalize trivia answers for a voice quiz read aloud while driving.
@@ -79,16 +81,24 @@ class AnswerNormalizer:
     ) -> None:
         self.gemini_api_key = gemini_api_key or os.getenv("GOOGLE_API_KEY")
         self._min_confidence = min_confidence
-        self._model = None
+        self._client = None
 
-    def _get_model(self):
-        """Lazy-init Gemini client (matches FactVerifier)."""
-        if self._model is None and self.gemini_api_key:
-            import google.generativeai as genai
+    def _available(self) -> bool:
+        """Whether the LLM judge is reachable (see FactVerifier._available)."""
+        return bool(self.gemini_api_key) or llm_factory.gateway() == llm_factory.OPENROUTER
 
-            genai.configure(api_key=self.gemini_api_key)
-            self._model = genai.GenerativeModel("gemini-2.5-flash")
-        return self._model
+    async def _complete(self, prompt: str) -> Optional[str]:
+        """Single LLM boundary: raw model text, or ``None`` on any failure."""
+        if self._client is None:
+            self._client = llm_factory.openai_client(async_=True)
+        try:
+            response = await self._client.chat.completions.create(
+                model=llm_factory.resolve_model("gemini-2.5-flash"),
+                messages=[{"role": "user", "content": prompt}],
+            )
+            return response.choices[0].message.content
+        except Exception:
+            return None
 
     async def normalize(
         self, question: str, answer: str
@@ -99,16 +109,17 @@ class AnswerNormalizer:
         parsed, the model judges the answer indivisible, the head is empty or
         still over the word cap, or confidence is below `min_confidence`.
         """
-        model = self._get_model()
-        if model is None:
+        if not self._available():
             return None
 
         prompt = _PROMPT.format(
             question=question, answer=answer, cap=_ANSWER_WORD_CAP
         )
         try:
-            response = await model.generate_content_async(prompt)
-            text = response.text.strip()
+            text = await self._complete(prompt)
+            if text is None:
+                return None
+            text = text.strip()
             if text.startswith("```"):
                 text = text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
             start = text.find("{")

@@ -25,7 +25,7 @@ A design iteration (Pencil) landed new question screens — tinted page bg, whit
 - **D1 — True/False is NOT a new type.** 2-option `text_multichoice`, visual variant of MCQ. No `QuestionType` enum case, no Codable change.
 - **D2 — No backend change for voice.** `_evaluate_mcq` matches key or value; a recognized phrase submits as-is via `submitTextInput`.
 - **D3 — Port dark into the `Theme.Hangs.Colors` layer**, do not revive the old `Theme.Colors` layer. Flag the two-layer duplication for later consolidation; don't fork silently (CLAUDE.md rule 7).
-- **D4 — Reveal-on-result UX is an OPEN product decision** (in-place correct/incorrect reveal vs. keep jump-to-`ResultView`). Ralph must NOT guess it — built `AnswerOption` exposes the 4 states; wiring the reveal is a human task (45.7).
+- **D4 — Reveal-on-result UX — RESOLVED 2026-06-11 (founder).** ⚠️ **This SUPERSEDES the earlier same-day "immediate in-place reveal" decision recorded in `handoff-2026-06-11-2145.md`** — the founder reversed it in a later session. The 2145 "green/red on the option, no confirm, no result screen" wiring must **not** be implemented; build the flow below instead. MCQ does **not** reveal correct/incorrect in place. Instead MCQ matches the open/voice flow: **tap selects** an option (`AnswerOption` `selected` state only), an explicit **confirm button** submits, then the app **jumps to `ResultView`**, which carries the richer detail (correct answer, **source**, explanation — the `Result-Correct`/`Result-Incorrect` `.pen` frames). Today MCQ taps submit immediately (`submitMCQAnswer` at `QuizViewModel.swift:580`, called from `QuestionView.swift:494`); the change routes the tap through select → the existing `AnswerConfirmationView` / `confirmAnswer()` path → result. The option's `correct`/`incorrect` states stay in the component (per the `vAXMX` design reference) but are **not** used in the live MCQ flow. This wiring is mechanical → Ralph-runnable (`45.7-wire`); only the on-sim sign-off stays human (`45.7-signoff`).
 - **D5 — Ralph/human split by *verifiability*, not "is it iOS".** Pure logic + standalone components with unit/inspector/`.dump` tests → Ralph. QuestionView integration, layout pinning, visual fidelity vs `.pen`, simulator-driven regression → human. (Refines #42's blanket "iOS = human".)
 
 ---
@@ -102,9 +102,13 @@ A design iteration (Pencil) landed new question screens — tinted page bg, whit
 - [HUMAN] **45.10-signoff** *(morning, ~1 min)* — confirm the T/F screen matches `.pen` node `WCaT6`.
 - [ ] **45.12 RS regression for MCQ.** Add `RS-09 MCQ-voice` + `RS-10 MCQ-tap` to the `regression` skill; preserve `question.skip` / `question.micButton` / `question.statusPill` / `question.state` a11y IDs. **Acceptance:** both scenarios run GREEN end-to-end on the mba sim; run reports under `docs/testing/runs/` carry `VERDICT:` + `VISUAL:` lines (per #44). *(Supersedes #42 Track E 42.18 — same two scenarios; do not also add them under #42.)*
 
-#### Genuine `- [HUMAN]` (product/UX decision · `.pen` visual fidelity · snapshot judgment)
+#### Ralph wiring (decision resolved — see D4)
 
-- [HUMAN] **45.7 Reveal-on-result UX decision + wiring.** Resolve D4 (in-place reveal vs keep `ResultView`) — a product/UX call. If reveal: drive `AnswerOption` `correct`/`incorrect` from the server result. **Acceptance:** chosen flow works on sim; correct/incorrect states show as designed. *(The decision is human; once decided, the wiring itself can be handed back to Ralph.)*
+- [ ] **45.7-wire Select→confirm→ResultView for MCQ.** Route MCQ option taps through the existing confirmation flow instead of immediate submit: a tap sets `AnswerOption` `selected` (no network call), and the confirm action (the same `AnswerConfirmationView` / `confirmAnswer()` path open/voice questions use, incl. the auto-confirm countdown) calls `submitMCQAnswer(key:value:)`. On result, the app jumps to the redesigned `ResultView` (visual target lives in #52.11). Do **not** drive `correct`/`incorrect` on the options. **Acceptance:** a ViewModel/inspector test asserts an MCQ tap selects without submitting, and that confirm triggers exactly one `submitTextInput`; `Hangs-Local` builds GREEN; screenshot-verify (#44) on a seeded MCQ shows select → confirm → result. *(`#52` is hard-blocked on this — #52.11 redesigns the `ResultView` this lands on.)*
+
+#### Genuine `- [HUMAN]` (product/UX sign-off · `.pen` visual fidelity · snapshot judgment)
+
+- [HUMAN] **45.7-signoff** *(morning, ~1 min)* — on the sim, confirm MCQ now requires an explicit confirm before submitting and lands on the result screen (no accidental immediate-submit regression).
 - [HUMAN] **45.11 Light + dark visual QA vs `.pen`.** Toggle appearance; confirm tinted bg, white/dark cards, `AnswerOption` 4 states, pill all match `.pen` (`b8zObz`, `WCaT6`, `EZhqr`, `vAXMX`). **Acceptance:** no cream bg remains; tokens adapt; screens read as the design in both modes.
 - [HUMAN] **45.13 Snapshot baselines review + sign-off.** Re-record the QuestionView/MCQ `.dump` baselines changed by 45.8/45.9/45.10 (and the pre-existing issue-46 `headlineAnswer` drift flagged in the 2026-06-07 45.5 changelog); confirm the meaningful structural assertions still hold (CLAUDE.md rule 6). **Acceptance:** snapshot suite GREEN, baselines reviewed not blindly accepted.
 
@@ -113,24 +117,24 @@ A design iteration (Pencil) landed new question screens — tinted page bg, whit
 ## Sequencing
 
 ```
-Ralph (mba):  45.1 → 45.2 → 45.3 → 45.4 → 45.5 → 45.6  [done]  → 45.8 → 45.9 → 45.10 → 45.12
-Human:        45.7 (UX decision) · 45.11 (light/dark vs .pen) · 45.13 (snapshot re-record + sign-off)
+Ralph (mba):  45.1 → 45.2 → 45.3 → 45.4 → 45.5 → 45.6  [done]  → 45.7-wire → 45.8 → 45.9 → 45.10 → 45.12
+Human:        45.7-signoff · 45.11 (light/dark vs .pen) · 45.13 (snapshot re-record + sign-off)
 ```
 
-45.1 (tokens) is a hard prerequisite — 45.4/45.5/45.6 reference the new tokens. 45.2 (matcher) gates 45.3. The first 6 Ralph tasks landed as compiling, tested building blocks (2026-06-07). After the 2026-06-10 reclassification, 45.8/45.9/45.10/45.12 are also Ralph-runnable on mba (Xcode 26.5) — they assemble the components into QuestionView + add the RS scenarios, self-checked via screenshot-verify (#44). The three remaining human tasks are the reveal-UX decision (45.7), the `.pen` light/dark fidelity pass (45.11), and the snapshot re-record + judgment (45.13).
+45.1 (tokens) is a hard prerequisite — 45.4/45.5/45.6 reference the new tokens. 45.2 (matcher) gates 45.3. The first 6 Ralph tasks landed as compiling, tested building blocks (2026-06-07). After the 2026-06-10 reclassification, 45.8/45.9/45.10/45.12 are also Ralph-runnable on mba (Xcode 26.5) — they assemble the components into QuestionView + add the RS scenarios, self-checked via screenshot-verify (#44). With D4 resolved (2026-06-11), `45.7-wire` (select→confirm→ResultView) is now Ralph-runnable too. The remaining human tasks are quick sign-offs: `45.7-signoff`, the `.pen` light/dark fidelity pass (45.11), and the snapshot re-record + judgment (45.13).
 
 ## Risks / open questions
 
 1. **ViewInspector availability.** 45.4/45.6 assume `ViewInspector` is wired into `HangsTests` (existing `*InspectorTests` imply yes). If a component isn't introspectable, fall back to a `.dump` snapshot assertion — do NOT mark done without a real check (rule 12).
 2. **Diacritics in `MCQTranscriptMatcher`.** SK ordinals carry diacritics (`štyri`); STT casing/diacritics vary. Normalize defensively and test both forms.
-3. **Reveal UX (D4)** unresolved — 45.7 owns it; Ralph builds the capability, not the decision.
+3. ~~**Reveal UX (D4)** unresolved~~ — RESOLVED 2026-06-11: MCQ uses select→confirm→`ResultView` (no in-place reveal); `45.7-wire` is the Ralph wiring, `45.7-signoff` the human check.
 4. **Two color layers** — porting dark into Hangs widens the `Theme.Colors`/`Theme.Hangs.Colors` split. Flagged for a later consolidation issue, not this one.
 5. **Line numbers drift** — verified at HEAD `62c6435` on 2026-06-03 (guards, helpers, landmarks, test scaffolding all confirmed present). Per `work-next.md` an iteration should still grep before editing, but the cited locations were accurate at verification time.
 
 ## Definition of done
 
 - 45.1–45.6: six building blocks merged, each with a passing test; `mcqBody` accepts a spoken answer at the ViewModel layer; no `Theme.Colors.*` left in `MCQOptionPicker`.
-- 45.7–45.13: QuestionView reflects the design in light + dark on the simulator; big mic gone; listening pill pinned above Skip; spoken MCQ answer accepted end-to-end; `RS-09`/`RS-10` GREEN.
+- 45.7–45.13: QuestionView reflects the design in light + dark on the simulator; big mic gone; listening pill pinned above Skip; spoken MCQ answer accepted end-to-end; MCQ requires select→confirm before submitting and lands on `ResultView`; `RS-09`/`RS-10` GREEN.
 
 ## Changelog
 

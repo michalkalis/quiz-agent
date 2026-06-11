@@ -33,15 +33,23 @@
 #     iOS task after it can self-verify. Mostly doc/skill edits + one sim smoke (44.5).
 docs/issues/issue-44-screenshot-verify-step.md | 8
 #
-# 2 — iOS MCQ voice + redesign. Reclassified agent tasks 45.8/45.9/45.10/45.12 (Xcode 26.5
-#     on mba). Placed after #44 so it can screenshot-verify. Human tail 45.7/45.11/45.13 skipped.
-docs/issues/issue-45-ios-mcq-voice-and-redesign.md | 7
+# 2 — iOS MCQ voice + redesign. Reclassified agent tasks 45.7-wire/45.8/45.9/45.10/45.12
+#     (Xcode 26.5 on mba). Placed after #44 so it can screenshot-verify. 45.7 reveal UX
+#     RESOLVED 2026-06-11 (select→confirm→ResultView) so 45.7-wire is now Ralph; human tail
+#     45.7-signoff/45.11/45.13 skipped.
+docs/issues/issue-45-ios-mcq-voice-and-redesign.md | 8
 #
-# 3 — analytics taxonomy. Only 51.1 runs unattended; 51.2 is a founder gate that halts
+# 3 — iOS design-refresh sweep (16 NEW_Screen frames). ONE autonomous loop (founder override
+#     of the hybrid). Phase 1/2 machine-verifiable; Phase 3 screens 52.8–52.15 screenshot-verify
+#     against committed refs in docs/design/frames/ (headless loop has no pencil MCP). HARD-blocked
+#     on #45 landing first (shared QuestionView/AnswerOption/tokens). Human tail 52.16–52.18 skipped.
+docs/issues/issue-52-design-refresh-sweep.md | 18
+#
+# 4 — analytics taxonomy. Only 51.1 runs unattended; 51.2 is a founder gate that halts
 #     51.3/51.4 (Ralph exits no-tasks at the gate). Low cap on purpose.
 docs/issues/issue-51-product-analytics.md | 4
 #
-# 4 — post-launch content growth (general -> ~500). Repeatable 30.G/30.M loop, lowest priority.
+# 5 — post-launch content growth (general -> ~500). Repeatable 30.G/30.M loop, lowest priority.
 docs/issues/issue-30-batch-generate-categories.md | 6
 #
 # ====================================================================================

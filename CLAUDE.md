@@ -79,6 +79,11 @@ Treat claims about available software versions, UI option locations, and tool ac
 Before stating a constraint as final (e.g., "X is the maximum version", "this option is at Settings > Y"), either verify it or flag it as unverified.
 When diagnosing a failure, confirm that a suggested workaround is not itself blocked by the same root cause.
 
+### 11. Proactively Surface Cost & Infra Optimizations
+When you notice an optimization the user hasn't asked for — consolidating fragmented services/keys/billing, cheaper or simpler tooling, a unified gateway, reducing per-task token spend, removing duplicated infra — flag it briefly and unprompted.
+Keep it to a one-to-three line "worth considering: X, because Y, tradeoff Z" note; don't derail the current task. Only raise it once per distinct opportunity, and respect prior decisions (don't re-pitch something already declined).
+Examples worth flagging: multiple provider keys/bills for one logical capability, paying for a managed service that local/project-scoped config already covers, an obviously cheaper model for a low-stakes call.
+
 ## Rules files
 
 - `.claude/rules/shared.md` — Git workflow, API contract, testing (always loaded)

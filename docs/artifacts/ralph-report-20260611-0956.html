@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ralph Overnight Report — 2026-06-11 09:56</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.5;
+            color: #333;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px;
+            border-bottom: 4px solid #764ba2;
+        }
+        header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        header p {
+            font-size: 14px;
+            opacity: 0.95;
+        }
+        .toc {
+            position: sticky;
+            top: 0;
+            background: #f9f9f9;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 16px 24px;
+            z-index: 100;
+        }
+        .toc h2 {
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: #666;
+        }
+        .toc ul {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            font-size: 13px;
+        }
+        .toc a {
+            color: #667eea;
+            text-decoration: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        .toc a:hover {
+            background: #f0f0f0;
+            color: #764ba2;
+        }
+        main {
+            padding: 24px;
+        }
+        section {
+            margin-bottom: 32px;
+        }
+        section h2 {
+            font-size: 20px;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #667eea;
+            color: #333;
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .summary-card {
+            background: #f9f9f9;
+            padding: 16px;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+        }
+        .summary-card h3 {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .summary-card .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+        .summary-card .subtext {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        .status-done {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-partial {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .status-blocked {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .issue-block {
+            background: #f9f9f9;
+            padding: 16px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            border-left: 4px solid #667eea;
+        }
+        .issue-block.done {
+            border-left-color: #28a745;
+        }
+        .issue-block.partial {
+            border-left-color: #ffc107;
+        }
+        .issue-block.blocked {
+            border-left-color: #dc3545;
+        }
+        .issue-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .issue-meta {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 12px;
+        }
+        .issue-commits {
+            background: white;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-family: monospace;
+            color: #333;
+            border: 1px solid #e0e0e0;
+        }
+        .blocker-section {
+            background: #fff5f5;
+            border: 2px solid #dc3545;
+            padding: 20px;
+            border-radius: 6px;
+            margin-top: 20px;
+        }
+        .blocker-section h3 {
+            color: #dc3545;
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+        .blocker-item {
+            background: white;
+            padding: 12px;
+            margin-bottom: 12px;
+            border-radius: 4px;
+            border-left: 3px solid #dc3545;
+        }
+        .blocker-item:last-child {
+            margin-bottom: 0;
+        }
+        .blocker-file {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        .blocker-text {
+            font-size: 13px;
+            line-height: 1.6;
+            color: #555;
+        }
+        .blocker-text code {
+            background: #f0f0f0;
+            padding: 2px 4px;
+            border-radius: 2px;
+            font-family: monospace;
+        }
+        details {
+            margin-top: 12px;
+            margin-bottom: 12px;
+        }
+        details summary {
+            cursor: pointer;
+            padding: 12px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            user-select: none;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        details summary:hover {
+            background: #e0e0e0;
+        }
+        details[open] summary {
+            background: #e0e0e0;
+        }
+        details > :not(summary) {
+            padding: 12px 12px 0 12px;
+        }
+        .commit-list {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .commit-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 13px;
+            font-family: monospace;
+            word-break: break-all;
+        }
+        .commit-item:last-child {
+            border-bottom: none;
+        }
+        .commit-hash {
+            color: #667eea;
+            font-weight: bold;
+        }
+        .next-steps {
+            background: #e8f4f8;
+            border-left: 4px solid #17a2b8;
+            padding: 16px;
+            border-radius: 4px;
+        }
+        .next-steps h3 {
+            color: #17a2b8;
+            margin-bottom: 12px;
+        }
+        .next-steps ol {
+            margin-left: 20px;
+        }
+        .next-steps li {
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+        .next-steps code {
+            display: block;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            border: 1px solid #b3dfe0;
+            margin: 8px 0;
+            font-family: monospace;
+            font-size: 12px;
+            color: #333;
+            overflow-x: auto;
+        }
+        .model-breakdown {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 12px;
+            margin-top: 12px;
+        }
+        .model-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .model-item:last-child {
+            border-bottom: none;
+        }
+        .model-name {
+            font-weight: bold;
+        }
+        .model-count {
+            color: #667eea;
+            font-weight: bold;
+        }
+        footer {
+            background: #f9f9f9;
+            border-top: 1px solid #e0e0e0;
+            padding: 16px 24px;
+            font-size: 12px;
+            color: #999;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Ralph Overnight Report</h1>
+            <p>2026-06-11 09:56 UTC • Branch: <code>ralph/overnight-20260611-0956</code></p>
+        </header>
+
+        <nav class="toc">
+            <h2>Jump to:</h2>
+            <ul>
+                <li><a href="#summary">Summary</a></li>
+                <li><a href="#issues">Issues</a></li>
+                <li><a href="#blockers">BLOCKERs</a></li>
+                <li><a href="#commits">Commits</a></li>
+                <li><a href="#next">Next Steps</a></li>
+            </ul>
+        </nav>
+
+        <main>
+            <!-- Summary Section -->
+            <section id="summary">
+                <h2>Summary</h2>
+                <div class="summary-grid">
+                    <div class="summary-card">
+                        <h3>Run Status</h3>
+                        <div class="value">✓ Complete</div>
+                        <div class="subtext">All focus files done</div>
+                    </div>
+                    <div class="summary-card">
+                        <h3>Focus Files</h3>
+                        <div class="value">1</div>
+                        <div class="subtext">docs/issues/issue-49-daily-limit-cost-research.md</div>
+                    </div>
+                    <div class="summary-card">
+                        <h3>Completed</h3>
+                        <div class="value">1</div>
+                        <div class="subtext">Issues fully done</div>
+                    </div>
+                    <div class="summary-card">
+                        <h3>Blocked</h3>
+                        <div class="value">0</div>
+                        <div class="subtext">No blockers this run</div>
+                    </div>
+                    <div class="summary-card">
+                        <h3>Total Commits</h3>
+                        <div class="value">1</div>
+                        <div class="subtext">New commits this run</div>
+                    </div>
+                    <div class="summary-card">
+                        <h3>Model Mix</h3>
+                        <div class="value">2</div>
+                        <div class="subtext">Sonnet + Haiku</div>
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 24px; font-size: 16px; color: #666;">Model Utilization</h3>
+                <div class="model-breakdown">
+                    <div class="model-item">
+                        <span class="model-name">Claude Sonnet 4.6</span>
+                        <span class="model-count">1 iteration</span>
+                    </div>
+                    <div class="model-item">
+                        <span class="model-name">Claude Haiku 4.5</span>
+                        <span class="model-count">1 iteration (validation)</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Issues Section -->
+            <section id="issues">
+                <h2>Per-Issue Breakdown</h2>
+
+                <div class="issue-block done">
+                    <div class="issue-title">
+                        <span class="status-badge status-done">✓ Done</span>
+                        Issue #49 — Daily Limit Cost Research
+                    </div>
+                    <div class="issue-meta">
+                        File: <code>docs/issues/issue-49-daily-limit-cost-research.md</code> • Iterations: 2
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <strong>Status:</strong> All 8 tasks completed (49.1–49.8)
+                    </div>
+                    <details>
+                        <summary>What was completed</summary>
+                        <ul style="margin-left: 20px; margin-top: 12px;">
+                            <li><strong>49.1–49.8 Complete Cost Model Research</strong>
+                                <ul style="margin-left: 20px; margin-top: 8px;">
+                                    <li>Identified serving path uses <strong>OpenAI gpt-4o-mini</strong> ($0.15/$0.60 per 1M tokens) not Claude</li>
+                                    <li>Per-session cost: <strong>$0.00066 (English)</strong> / <strong>$0.00231 (Slovak/Czech with translation)</strong></li>
+                                    <li>Fixed hosting at launch: <strong>$8.96/month</strong> (3 machines + Postgres, Paris CDG)</li>
+                                    <li>Break-even analysis: <strong>~300 DAU (non-EN) / ~1,050 DAU (EN)</strong> at $30/month comfort zone</li>
+                                    <li>Verdict: <strong>YES</strong> — 20/day limit is sustainable for launch audience</li>
+                                    <li>Recommended paid tier: <strong>$2.99/month</strong> (27× margin over English marginal cost)</li>
+                                    <li>Generated HTML artifact: <code>docs/artifacts/daily-limit-cost-model.html</code></li>
+                                    <li>Note: <code>fly</code> CLI unavailable; machine specs sourced from <code>fly.toml</code> + Fly published pricing</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </details>
+                    <div style="margin-top: 12px;">
+                        <strong>Commit:</strong>
+                        <div class="issue-commits">
+77dcebd docs(issues): complete #49 daily-limit cost research — all 49.1–49.8 done
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background: #e8f8f5; border-left: 4px solid #28a745; padding: 12px; border-radius: 4px; margin-top: 16px;">
+                    <strong style="color: #155724;">✓ Iteration 2 (Haiku validation):</strong> Confirmed all tasks marked complete; no work remaining. Exited cleanly.
+                </div>
+            </section>
+
+            <!-- BLOCKERs Section -->
+            <section id="blockers">
+                <h2>BLOCKERs (Needs Human)</h2>
+                <div style="padding: 12px; background: #f0f0f0; border-radius: 4px; margin-bottom: 16px;">
+                    <strong style="color: #28a745;">✓ No blockers from this run.</strong> Issue #49 completed cleanly with no showstoppers.
+                </div>
+
+                <details>
+                    <summary style="background: #fff3cd; color: #856404;">Other outstanding BLOCKERs (from previous runs)</summary>
+                    <div style="margin-top: 12px;">
+                        <div class="blocker-section">
+                            <h3>Issue #42 — Question Quality & MCQ (Two active BLOCKERs)</h3>
+
+                            <div class="blocker-item">
+                                <div class="blocker-file">BLOCKER (2026-06-10, run 1) — 42.20 MCQ batch: bias not biting</div>
+                                <div class="blocker-text">
+                                    File: <code>docs/issues/issue-42-question-quality-and-mcq.md</code>, line 304<br>
+                                    <strong>What:</strong> First live MCQ batch yielded only 1/9 candidates (should be 8–10).<br>
+                                    <strong>Root causes diagnosed:</strong> Pattern-label normalization + hard MCQ quota issues<br>
+                                    <strong>Status:</strong> Root causes A+B fixed in commits; unblocked and re-run attempted, but second run revealed new issue (see below).
+                                </div>
+                            </div>
+
+                            <div class="blocker-item">
+                                <div class="blocker-file">BLOCKER (2026-06-10, run 2) — 42.20 re-run: 0/10 candidates</div>
+                                <div class="blocker-text">
+                                    File: <code>docs/issues/issue-42-question-quality-and-mcq.md</code>, line 324<br>
+                                    <strong>What:</strong> After fixing root causes A+B, second live run yielded 0/10 MCQ candidates.<br>
+                                    <strong>Root cause:</strong> D — "order prompt never reaches the generation LLM"<br>
+                                    <strong>Next step:</strong> Diagnose why the MCQ bias/order parameter is not being passed through to the language model. Check: generation prompt construction, parameter binding, and LLM request serialization.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="blocker-section">
+                            <h3>Issue #36 — Quiz-Pack API Phase 2 (Planning blocker)</h3>
+
+                            <div class="blocker-item">
+                                <div class="blocker-file">BLOCKER (2026-05-20) — Task split required</div>
+                                <div class="blocker-text">
+                                    File: <code>docs/issues/issue-36-quiz-pack-api-phase-2.md</code>, line 134<br>
+                                    <strong>What:</strong> Tasks 2.11 (API generation patterns) deemed too large for one Ralph iteration.<br>
+                                    <strong>Status:</strong> Split into sub-tasks 2.11a–2.11e pending.<br>
+                                    <strong>Next step:</strong> Decompose issue and break out sub-tasks to enable autonomous iteration.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- Commits Section -->
+            <section id="commits">
+                <h2>Commits This Run</h2>
+                <div class="commit-list">
+                    <div class="commit-item">
+                        <span class="commit-hash">77dcebd</span> docs(issues): complete #49 daily-limit cost research — all 49.1–49.8 done
+                    </div>
+                </div>
+                <details style="margin-top: 16px;">
+                    <summary>Full commit stat (git log --stat)</summary>
+                    <pre style="background: white; padding: 12px; border-radius: 4px; font-size: 12px; overflow-x: auto; margin-top: 12px;">commit 77dcebdd75d7c7c44e060ca5f0b9e681f3ee80e4
+Author: agent &lt;agent@Michals-Laptop.local&gt;
+Date:   Thu Jun 11 10:05:41 2026 +0200
+
+    docs(issues): complete #49 daily-limit cost research — all 49.1–49.8 done
+
+    Serving path uses OpenAI gpt-4o-mini (not Claude); $0.00066/EN session,
+    $0.00231/SK-CZ session. Fixed hosting $8.96/mo at launch. Break-even ~1,050
+    DAU (EN) / ~300 DAU (non-EN) at $30/mo. Recommended paid tier: $2.99/mo.
+    HTML artifact written to docs/artifacts/daily-limit-cost-model.html (gitignored,
+    throwaway per CLAUDE.md). fly CLI unavailable — machine specs from fly.toml.
+
+    Co-Authored-By: Claude Sonnet 4.6 &lt;noreply@anthropic.com&gt;
+
+ docs/issues/issue-49-daily-limit-cost-research.md | 24 +++++++++++++++--------
+ docs/todo/TODO.md                                 |  2 +-
+ 2 files changed, 17 insertions(+), 9 deletions(-)
+                    </pre>
+                </details>
+            </section>
+
+            <!-- Next Steps Section -->
+            <section id="next">
+                <div class="next-steps">
+                    <h3>Next Steps (Human)</h3>
+                    <ol>
+                        <li><strong>Review the diff and BLOCKER notes.</strong>
+                            <code>git diff bb2c79122eac47f782291b8097dd377b3f0656d2..HEAD</code>
+                        </li>
+                        <li><strong>Merge this run into main.</strong>
+                            <code>git checkout main && git merge --ff-only ralph/overnight-20260611-0956 && git push</code>
+                        </li>
+                        <li><strong>Address the outstanding BLOCKERs:</strong>
+                            <ul style="margin-top: 8px;">
+                                <li><strong>Issue #42:</strong> Fix the "order prompt not reaching LLM" issue (root cause D) so 42.20 MCQ generation succeeds. See line 324 in <code>docs/issues/issue-42-question-quality-and-mcq.md</code>.</li>
+                                <li><strong>Issue #36:</strong> Decompose the too-large 2.11 task into sub-tasks (2.11a–2.11e) to unblock autonomous iteration. See line 134 in <code>docs/issues/issue-36-quiz-pack-api-phase-2.md</code>.</li>
+                            </ul>
+                        </li>
+                    </ol>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            Generated by Ralph overnight runner | Base: <code>bb2c791</code> | Report: <code>77dcebd..HEAD</code> | 1 focus file, 1 completed, 0 blocked
+        </footer>
+    </div>
+</body>
+</html>

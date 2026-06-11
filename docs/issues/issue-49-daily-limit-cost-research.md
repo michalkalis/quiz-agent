@@ -61,14 +61,22 @@ A short cost model (HTML artifact per `feedback_html_over_long_md`) covering:
 
 ## Tasks
 
-- [ ] 49.1 Read all LLM call sites on the serving path in `apps/quiz-agent` (answer evaluation endpoint) and `apps/quiz-pack-api` — record model name, estimated input/output token sizes per question served.
-- [ ] 49.2 Load current Claude model pricing via the `/claude-api` skill; record the date read and the per-1M-token input/output prices for each model found in 49.1.
-- [ ] 49.3 Run `fly scale show` and `fly status` for `quiz-agent`, `quiz-pack-api`, and `quiz-pack-db` on the Fly.io remote — capture actual machine sizes and regions.
-- [ ] 49.4 Compute per-question LLM cost and per-active-user daily cost (using 20 q/day) from the data gathered in 49.1–49.2.
-- [ ] 49.5 Compute fixed monthly hosting cost from Fly machine specs gathered in 49.3; look up Fly.io published pricing for those machine sizes.
-- [ ] 49.6 Model cost scenarios at 10 / 100 / 1000 DAU each consuming up to 20 q/day; show fixed + variable split and total monthly cost per scenario.
-- [ ] 49.7 Derive break-even DAU count, yes/no sustainability verdict for the launch audience, and a recommended paid-tier price band.
-- [ ] 49.8 Write all findings as a self-contained HTML artifact to `docs/artifacts/daily-limit-cost-model.html` (inline CSS, sticky TOC, color-coded, date-stamped with pricing source date). Commit the artifact.
+- [x] 49.1 Read all LLM call sites on the serving path in `apps/quiz-agent` (answer evaluation endpoint) and `apps/quiz-pack-api` — record model name, estimated input/output token sizes per question served.
+  - **Finding:** serving path uses **OpenAI gpt-4o-mini** (not Anthropic/Claude). Three call sites: evaluator.py:180 (~241 tokens/call, 35% of questions), parser.py:147 (~645 tokens/call, 12% of questions), translator.py:101+157 (~205 tokens/call, 100% of non-EN questions). quiz-pack-api has no serving-path LLM calls (all offline).
+- [x] 49.2 Load current Claude model pricing via the `/claude-api` skill; record the date read and the per-1M-token input/output prices for each model found in 49.1.
+  - **Finding:** Serving path uses OpenAI, not Claude. Claude pricing (Anthropic, 2026-06-04): Haiku 4.5 $1/$5, Sonnet 4.6 $3/$15, Opus 4.8 $5/$25. OpenAI gpt-4o-mini pricing (2026-06-11): input $0.15/1M, output $0.60/1M.
+- [x] 49.3 Run `fly scale show` and `fly status` for `quiz-agent`, `quiz-pack-api`, and `quiz-pack-db` on the Fly.io remote — capture actual machine sizes and regions.
+  - **Finding:** `fly` CLI not installed in this environment. Sourced from fly.toml: quiz-agent-api (cdg, shared-cpu-1x 256 MB default), quiz-pack-api (cdg, 2 processes: web + worker), quiz-pack-db (Fly Postgres single-node dev). **Verify with `fly scale show` before paywall launch.**
+- [x] 49.4 Compute per-question LLM cost and per-active-user daily cost (using 20 q/day) from the data gathered in 49.1–49.2.
+  - English: $0.000657/session ($0.0000329/question). Non-English (SK/CZ): $0.00231/session ($0.000116/question).
+- [x] 49.5 Compute fixed monthly hosting cost from Fly machine specs gathered in 49.3; look up Fly.io published pricing for those machine sizes.
+  - Fixed at launch (min_machines=1): $8.96/month. Currently (min_machines=0): ~$0.90/month (volume storage only).
+- [x] 49.6 Model cost scenarios at 10 / 100 / 1000 DAU each consuming up to 20 q/day; show fixed + variable split and total monthly cost per scenario.
+  - 10 DAU: $9.16 EN / $9.65 non-EN. 100 DAU: $10.93 / $15.89. 1000 DAU: $28.67 / $78.26.
+- [x] 49.7 Derive break-even DAU count, yes/no sustainability verdict for the launch audience, and a recommended paid-tier price band.
+  - **Verdict: YES, sustainable.** Break-even at $30/month: ~1,050 DAU (EN) / ~300 DAU (non-EN). Recommended paid tier: **$2.99/month** (27× EN margin).
+- [x] 49.8 Write all findings as a self-contained HTML artifact to `docs/artifacts/daily-limit-cost-model.html` (inline CSS, sticky TOC, color-coded, date-stamped with pricing source date). Commit the artifact.
+  - Artifact written: `docs/artifacts/daily-limit-cost-model.html`
 
 ## Agent Brief — 2026-06-09
 

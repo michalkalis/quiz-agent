@@ -7,6 +7,7 @@ This implements:
 4. Quality metadata tracking
 """
 
+import asyncio
 import json
 import uuid
 from typing import List, Optional, Dict, Any
@@ -194,6 +195,30 @@ class AdvancedQuestionGenerator:
         if count == 0:
             return open_questions
 
+        # Issue #42 task 42.20 (Risk #7 escalation) — MCQ-emphasis orders
+        # generate one small sub-batch per MCQ pattern instead of a single
+        # large best-of-N call. Asking the generation LLM for
+        # ``count * n_multiplier`` (~57) questions at once returned only 4–10
+        # raw questions live (collapsing yield), and a single mixed-pattern
+        # call let the model satisfy the quota with whichever MCQ pattern was
+        # easiest — or none. Pinning each small sub-batch to one pattern keeps
+        # per-call counts small (the LLM actually fills them) and forces
+        # coverage across every key in ``PATTERNS_TO_MCQ``.
+        if mcq_emphasis and mcq_patterns:
+            closed_questions = await self._generate_mcq_sub_batches(
+                count=count,
+                difficulty=difficulty,
+                topics=topics,
+                categories=categories,
+                question_type=question_type,
+                excluded_topics=excluded_topics,
+                avoid_questions=avoid_questions,
+                user_bad_examples=user_bad_examples,
+                source_facts=source_facts,
+                mcq_patterns=mcq_patterns,
+            )
+            return open_questions + closed_questions
+
         if enable_best_of_n:
             # Stage 1: Generate N x count questions
             generate_count = count * n_multiplier
@@ -267,6 +292,69 @@ class AdvancedQuestionGenerator:
                 mcq_emphasis=mcq_emphasis,
             )
             return open_questions + closed_questions
+
+    async def _generate_mcq_sub_batches(
+        self,
+        count: int,
+        difficulty: str,
+        topics: Optional[List[str]],
+        categories: Optional[List[str]],
+        excluded_topics: Optional[List[str]],
+        avoid_questions: Optional[List[str]],
+        user_bad_examples: Optional[List[str]],
+        source_facts: Optional[list],
+        mcq_patterns: set[str],
+        question_type: str = "text",
+    ) -> List[Question]:
+        """Generate ``count`` questions as one small sub-batch per MCQ pattern.
+
+        Issue #42 task 42.20 (Risk #7). MCQ-emphasis orders previously routed
+        through the best-of-N path, which asked the LLM for
+        ``count * n_multiplier`` (~57) questions in a single call — live runs
+        returned only 4–10 raw questions, and a single mixed-pattern call let
+        the model satisfy the quota with whichever MCQ pattern was easiest (or
+        skip MCQ entirely). Splitting ``count`` into one sub-batch per pattern
+        keeps each call small enough that the LLM actually fills it, and forces
+        coverage across every key in ``mcq_patterns``. Each sub-batch lists a
+        single pattern with ``mcq_emphasis=True`` so the activation section
+        pins that pattern's shape as the required output. Best-of-N critique is
+        intentionally skipped here — the downstream ``ScoringStage`` is the
+        quality gate, and over-generating to ~57 is the very failure mode this
+        path replaces.
+        """
+        patterns = sorted(mcq_patterns)
+        # Spread `count` across the patterns as evenly as possible; the first
+        # `extra` patterns absorb the remainder so the totals sum to `count`.
+        base, extra = divmod(count, len(patterns))
+        per_pattern = [base + (1 if i < extra else 0) for i in range(len(patterns))]
+        print(
+            f"MCQ emphasis: {count} questions across {len(patterns)} "
+            f"per-pattern sub-batches {dict(zip(patterns, per_pattern))}"
+        )
+
+        async def _one(pattern: str, n: int) -> List[Question]:
+            if n <= 0:
+                return []
+            return await self._generate_batch(
+                count=n,
+                difficulty=difficulty,
+                topics=topics,
+                categories=categories,
+                question_type=question_type,
+                excluded_topics=excluded_topics,
+                avoid_questions=avoid_questions,
+                user_bad_examples=user_bad_examples,
+                source_facts=source_facts,
+                mcq_patterns={pattern},
+                mcq_emphasis=True,
+            )
+
+        batches = await asyncio.gather(
+            *(_one(p, n) for p, n in zip(patterns, per_pattern))
+        )
+        questions: List[Question] = [q for batch in batches for q in batch]
+        print(f"MCQ sub-batches produced {len(questions)} raw questions")
+        return questions
 
     async def _generate_batch(
         self,

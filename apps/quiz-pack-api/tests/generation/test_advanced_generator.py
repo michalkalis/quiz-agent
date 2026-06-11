@@ -394,3 +394,58 @@ def test_extract_pattern_used_returns_none_when_reasoning_not_dict() -> None:
     # Defensive: legacy rows or malformed LLM output may put a string here.
     prov = GenerationProvenance(extra={"reasoning": "not a dict"})
     assert AdvancedQuestionGenerator._extract_pattern_used(prov) is None
+
+
+@pytest.mark.asyncio
+async def test_mcq_emphasis_fans_out_one_sub_batch_per_pattern() -> None:
+    """Issue #42 task 42.20 (Risk #7 escalation).
+
+    An MCQ-emphasis order must NOT route through the best-of-N path, which
+    asked the LLM for `count * n_multiplier` (~57) questions in one call and
+    let the model satisfy the quota with whichever single MCQ pattern was
+    easiest (or none). Instead `generate_questions` must split `count` into
+    one small sub-batch per pattern in `mcq_patterns`, each pinned to that
+    single pattern with `mcq_emphasis=True`. This is what forces per-pattern
+    MCQ coverage and keeps per-call counts small enough that the LLM fills
+    them. We stub `_generate_batch` so the assertion is purely about the
+    fan-out shape, not live generation.
+    """
+    from app.generation.pattern_routing import PATTERNS_TO_MCQ
+
+    patterns = set(PATTERNS_TO_MCQ)
+
+    # Each sub-batch returns `count` sentinel questions so we can prove the
+    # per-pattern counts sum back to the requested total.
+    async def _fake_batch(*, count: int, **_kwargs):
+        return ["q"] * count
+
+    gen = _make_generator_with_fake_llm(AsyncMock())
+    gen._generate_batch = AsyncMock(side_effect=_fake_batch)
+
+    questions = await gen.generate_questions(
+        count=12,
+        difficulty="medium",
+        topics=["science"],
+        mcq_patterns=patterns,
+        mcq_emphasis=True,
+        open_count=0,
+    )
+
+    calls = gen._generate_batch.await_args_list
+    # One call per MCQ pattern — no single large best-of-N blow-up.
+    assert len(calls) == len(patterns)
+    seen_patterns = set()
+    total = 0
+    for call in calls:
+        kwargs = call.kwargs
+        # Each sub-batch is pinned to exactly one pattern, in emphasis mode.
+        assert len(kwargs["mcq_patterns"]) == 1
+        assert kwargs["mcq_emphasis"] is True
+        # Per-call counts stay small — never the count*n_multiplier (~57) blow-up.
+        assert kwargs["count"] <= 5
+        seen_patterns |= kwargs["mcq_patterns"]
+        total += kwargs["count"]
+    # Every MCQ pattern got coverage and the split sums to the requested count.
+    assert seen_patterns == patterns
+    assert total == 12
+    assert len(questions) == 12

@@ -16,6 +16,15 @@ paths: ["apps/quiz-agent/**", "apps/quiz-pack-api/**", "packages/shared/**"]
 - **TTS:** OpenAI TTS API (Opus format)
 - **RAG:** Postgres + pgvector for semantic question retrieval (voice-quiz read path cut over 2026-05-28, #36 task 2.20)
 
+### LLM client factory — never instantiate SDK clients directly (issue #53)
+All LLM calls go through `quiz_shared.llm.factory`. Call sites ask it for a client (and, where the model is configurable, `resolve_model(id)`); they **never** read an API key or hardcode a `base_url`. One env var routes the whole pipeline:
+- `LLM_GATEWAY=direct` (default) — canonical provider endpoints, today's behavior. This is the rollback lever.
+- `LLM_GATEWAY=openrouter` — chat + embeddings + Gemini verification + Claude scoring all route through OpenRouter on one key/balance.
+
+Use `factory.openai_client(async_=…)` (native OpenAI SDK) or `factory.chat_openai(model, …)` (LangChain). **Audio (TTS/Whisper) and image (gpt-image-1) pass `direct=True`** — OpenRouter does not serve them, so they stay on canonical OpenAI under either gateway. When adding a new model, add its OpenRouter slug to `_REMAP_OPENROUTER` in the factory, not at the call site.
+
+Direct-mode degradation: without `GOOGLE_API_KEY`, Gemini verification falls back to heuristic; without `ANTHROPIC_API_KEY`, the second scorer drops. `openrouter` mode needs neither.
+
 ### Use the model only for judgment calls
 When writing app code that calls an LLM (question generation, evaluation, scoring): use the model for classification, drafting, summarization, extraction.
 Do NOT use it for routing, retries, status-code handling, deterministic transforms.

@@ -1,7 +1,7 @@
 # Issue 53: Consolidate LLM providers behind a single gateway (OpenRouter)
 
-**Triage:** enhancement · ready-for-human
-**Status:** Decisions locked 2026-06-11 (OpenRouter · credits · all-in staged · company account). **One founder action blocks all code:** create the company OpenRouter account, fund initial credit, drop `OPENROUTER_API_KEY` into `.env`. Then agent runs Phase 0 spike → factory → cutover → verify.
+**Triage:** enhancement · shipped
+**Status:** **Shipped 2026-06-11.** Central factory + all four cutover waves landed; default `LLM_GATEWAY=direct`, flip to `openrouter` to route through OpenRouter. See "Phase 3 + 4 — done" below. Decisions locked 2026-06-11 (OpenRouter · credits · all-in staged · company account).
 **Created:** 2026-06-11
 
 ## Context
@@ -112,3 +112,20 @@ Generation: `apps/quiz-pack-api/app/generation/advanced_generator.py` (gpt-4o + 
 Verification: `app/verification/fact_verifier.py`, `app/verification/logical_verifier.py` (both gemini-2.5-flash, native `google.generativeai`).
 Scoring: `app/scoring/multi_model_scorer.py` (gpt-4.1-mini + claude-sonnet-4-6, optional google path).
 Runtime (quiz-agent): `evaluation/evaluator.py`, `input/parser.py`, `translation/translator.py` (gpt-4o-mini); `voice/transcriber.py` (whisper-1), `tts/service.py` (tts-1), `packages/shared/.../embeddings.py` (text-embedding-3-small).
+
+## Phase 3 + 4 — done (2026-06-11)
+
+**Shipped.** All four cutover waves landed behind the central factory (`packages/shared/quiz_shared/llm/factory.py`); no call site reads a key or hardcodes a `base_url` anymore (only the factory and the embeddings explicit-key test bypass construct a client).
+
+- **Wave A — text chat:** `evaluator.py`, `parser.py`, `translator.py` (native SDK) + `advanced_generator.py` generation/critique (LangChain `ChatOpenAI`).
+- **Wave B — scoring:** `multi_model_scorer.py` — gateway-aware `_enabled()` gating; openrouter mode gates both scorers on `OPENROUTER_API_KEY`.
+- **Wave C — Gemini:** `fact_verifier.py`, `logical_verifier.py`, `answer_normalizer.py` re-implemented off native `google.generativeai` onto the OpenAI-compatible client (`google/gemini-2.5-flash`) via a single `_complete(prompt)->str|None` seam; prompts + JSON contracts byte-identical. Zero `google.generativeai` references remain in app code.
+- **Wave D — embeddings + audio/image:** embeddings follow the gateway (OpenRouter-served); TTS, Whisper, hint-image + silhouette pipelines pinned to canonical OpenAI via `openai_client(direct=True)`.
+
+**Verification.**
+- Unit/integration: quiz-agent **100 passed**; quiz-pack-api **346 passed**, 2 skipped, 3 xfailed (non-DB suites; LLM mocked). 12 dedicated factory tests.
+- Live parity (`LLM_GATEWAY=openrouter`, throwaway smoke, not committed) drove the *refactored objects* across all three client styles: embeddings (1536 dims ✅), `LogicalConsistencyVerifier.verify` with **no** `GOOGLE_API_KEY` → `verified`/0.9 ✅ (proves Gemini routes through OpenRouter), `chat_openai("gpt-4o-mini")` → `PONG` ✅.
+
+**Rollback** = `LLM_GATEWAY=direct` (the default). Works today for every OpenAI-served capability. **Caveat (fail-loud):** `GOOGLE_API_KEY` and `ANTHROPIC_API_KEY` are **not** in `.env`, so under `direct` the Gemini verifiers degrade to heuristic and the second (Claude) scorer drops. To restore full direct-mode fidelity, add those two keys. `openrouter` mode needs neither.
+
+**Docs updated:** `.env.example` (LLM_GATEWAY block + OPENROUTER/GOOGLE keys), `.claude/rules/backend.md` (factory rule + degradation note).

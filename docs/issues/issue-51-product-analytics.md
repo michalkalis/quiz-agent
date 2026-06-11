@@ -61,8 +61,9 @@ Map the PRD metrics to concrete events with properties:
 > **Gate:** 51.3 and 51.4 must not start before 51.2 is `[x]` — if Ralph reaches them while 51.2 is
 > open, exit `status: no-tasks` and leave a note.
 
-- [ ] **51.1 Event taxonomy doc.** Write `docs/product/analytics-events.md`: one table — event name · exact trigger (iOS state-machine transition or backend call site, `file:function`) · properties · PRD metric it feeds · emitter (iOS / backend) · Sentry mechanism (custom event / span / measurement — verify what the current SDK versions support before committing to one). Cover exactly the events in "What to implement" above — no extras (scope guard). No-PII rule per property: no transcript text, no audio refs; question id + category + correctness are fine.
+- [x] **51.1 Event taxonomy doc.** Write `docs/product/analytics-events.md`: one table — event name · exact trigger (iOS state-machine transition or backend call site, `file:function`) · properties · PRD metric it feeds · emitter (iOS / backend) · Sentry mechanism (custom event / span / measurement — verify what the current SDK versions support before committing to one). Cover exactly the events in "What to implement" above — no extras (scope guard). No-PII rule per property: no transcript text, no audio refs; question id + category + correctness are fine.
       **Acceptance**: each of the 3 PRD metrics (completion rate, voice reliability, wrong-answer rate) traces to ≥ 1 event AND every event traces to a metric (or to the #49 cost model); every trigger names a real, grep-verified call site.
+      **Done 2026-06-11**: `docs/product/analytics-events.md` written. 9 events covering 3 PRD metrics. All trigger line numbers grep-verified. Sentry mechanism: `capture_event`/`SentrySDK.capture(event:)` (custom events, both SDK versions confirmed). 51.2 (founder gate) must be `[x]` before 51.3/51.4 start.
 
 - [HUMAN] **51.2 Founder skim of the taxonomy** (~5 min). Confirm the event list + properties; check nothing conflicts with the privacy labels planned in #50. Edit inline, flip to `[x]`.
 

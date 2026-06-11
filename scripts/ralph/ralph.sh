@@ -79,6 +79,22 @@ log "  budget/iter: \$$BUDGET_USD"
 log "  start sha:   $START_SHA"
 log "  run log:     $RUN_LOG"
 
+# iOS focus files need XcodeBuildMCP (build_sim / screenshot / snapshot_ui) for the
+# screenshot-verify + regression steps. The headless `claude -p` does NOT pick up
+# ~/.claude.json MCP servers on mba (the agent user's config has none), so attach a
+# repo-tracked config explicitly — gated to iOS focus files so backend runs don't
+# spawn the npx server every iteration. Empty-array expansion is guarded for bash 3.2.
+MCP_ARGS=()
+if grep -qE "apps/ios-app|xcodebuild" "$REPO_ROOT/$FOCUS_FILE" 2>/dev/null; then
+    XCODE_MCP_CONFIG="$SCRIPT_DIR/xcodebuildmcp.mcp.json"
+    if [[ -f "$XCODE_MCP_CONFIG" ]]; then
+        MCP_ARGS=(--mcp-config "$XCODE_MCP_CONFIG")
+        log "  iOS focus detected → attaching XcodeBuildMCP ($XCODE_MCP_CONFIG)"
+    else
+        log "  ⚠ iOS focus but $XCODE_MCP_CONFIG missing — screenshot-verify unavailable"
+    fi
+fi
+
 # Build the system prompt (substitute focus file path)
 SYSTEM_PROMPT="$(sed "s|__FOCUS_FILE__|$FOCUS_FILE|g" "$PROMPT_TEMPLATE")"
 
@@ -149,6 +165,7 @@ for iter in $(seq 1 "$MAX_ITERS"); do
         --fallback-model "$FALLBACK_MODEL" \
         --effort high \
         --no-session-persistence \
+        ${MCP_ARGS[@]+"${MCP_ARGS[@]}"} \
         --append-system-prompt "$SYSTEM_PROMPT" \
         > "$ITER_LOG" 2>&1
     EXIT_CODE=$?

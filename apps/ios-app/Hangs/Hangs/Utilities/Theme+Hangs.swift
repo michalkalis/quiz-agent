@@ -16,16 +16,19 @@ extension Theme {
             // below stay hardcoded — they read in both appearances.
             static let bg = Color(light: "#F6F7F9", dark: "#161616") // page bg
             static let bgCard = Color(light: "#FFFFFF", dark: "#1F1F22") // white card
-            static let bgElevated = Color(light: "#FFFFFF", dark: "#1F1F22")
+            static let bgElevated = Color(light: "#FFFFFF", dark: "#2A2A2A") // bg-elevated
 
             static let ink = Color(light: "#0E1A2B", dark: "#F4F4F4") // primary text
             static let pink = Color(hex: "#FF3D8F") // brand accent / primary CTA (both modes)
             static let accentPrimary = Color(hex: "#8B5CF6") // purple accent — MCQ badge/selected (both modes)
-            static let blue = Color(hex: "#0A84FF") // secondary accent
+            static let accentPrimarySoft = Color(hex: "#8B5CF6").opacity(0.125) // accent-primary-soft (#8B5CF6 @ 0x20)
+            static let blue = Color(hex: "#0A84FF") // accent-blue (secondary accent)
+            static let accentTeal = Color(hex: "#14B8A6") // accent-teal
             static let muted = Color(light: "#6B7280", dark: "#9CA3AF") // subtext
             static let mutedFaint = Color(light: "#9CA3AF", dark: "#6B7280") // struck-through answer text
-            static let greenCheck = Color(hex: "#22C55E")
+            static let greenCheck = Color(hex: "#22C55E") // accent-green
             static let greenCorrect = Color(hex: "#16A34A")
+            static let successText = Color(light: "#16A34A", dark: "#4ADE80") // success-text adapts per mode
 
             // Border tokens — alpha differs by mode, so build per-mode Colors
             // (UIColor(hex:) treats 8-digit hex as ARGB, so don't suffix alpha).
@@ -51,13 +54,14 @@ extension Theme {
             static let infoAccent = blue
             static let success = greenCorrect
             static let successDim = greenCorrect.opacity(0.15)
-            static let error = pink
-            static let errorDim = pink.opacity(0.15)
+            static let error = Color(hex: "#FF4444") // design `error` token (distinct from brand pink)
+            static let errorDim = error.opacity(0.15)
             static let warning = Color(hex: "#F59E0B")
             static let textPrimary = ink
             static let textSecondary = muted
             static let textTertiary = mutedFaint
             static let textOnAccent = Color.white
+            static let textOnAccentMuted = Color.white.opacity(0.70) // text-on-accent-muted (#FFFFFFB3)
             static let divider = hairline
             static let borderDim = subtleBorder
         }

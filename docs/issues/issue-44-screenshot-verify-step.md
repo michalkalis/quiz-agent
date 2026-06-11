@@ -1,7 +1,7 @@
 # Issue 44: Mandatory screenshot-verify step — close the agent's "visual blindness" gap
 
 **Triage:** enhancement · ready-for-agent
-**Status:** Proposed — low-cost, no new dependencies. Spun out of `docs/research/cross-platform-vs-native-agent-testability.md` (2026-06-02). Ready to execute; no human decision needed.
+**Status:** Shipped — 2026-06-11. All 5 subtasks complete; regression skill wired with mandatory screenshot-verify step. Run report template includes `VISUAL:` line; behavioral expectation added to `ios.md`.
 **Created:** 2026-06-02
 **Related:** `.claude/skills/regression`, `.claude/skills/review-ui`, `issue-18-rs01-end-to-end.md`, `issue-31-ios-test-hardening.md`
 

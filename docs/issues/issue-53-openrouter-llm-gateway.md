@@ -1,7 +1,7 @@
 # Issue 53: Consolidate LLM providers behind a single gateway (OpenRouter)
 
 **Triage:** enhancement · ready-for-human
-**Status:** Planned 2026-06-11 — research done (see chat 2026-06-11); awaits founder decision on gateway choice + billing model before any code lands
+**Status:** Decisions locked 2026-06-11 (OpenRouter · credits · all-in staged · company account). **One founder action blocks all code:** create the company OpenRouter account, fund initial credit, drop `OPENROUTER_API_KEY` into `.env`. Then agent runs Phase 0 spike → factory → cutover → verify.
 **Created:** 2026-06-11
 
 ## Context
@@ -28,14 +28,14 @@ A unified pay-once interface exists. Candidates:
 
 **Recommendation:** OpenRouter, accepting ~5.5 % premium for one bill. Related: cost sustainability work in [#49](issue-49-daily-limit-cost-research.md) — a gateway also gives a single per-question cost dashboard, which feeds #49.
 
-## Decisions needed before code (founder)
+## Decisions (locked 2026-06-11)
 
-1. **Gateway:** OpenRouter (recommended) vs LiteLLM vs status quo.
-2. **Billing model:** OpenRouter **credits** (one bill, ~5.5 % top-up fee) vs **BYOK** (keep provider bills, free routing < 1M req/mo — unifies the dashboard but not the invoice). Credits matches the stated goal; BYOK is the cheaper half-step.
-3. **Scope of cutover:** start with **text LLM calls only** (generation, verification, scoring, evaluation, parsing, translation) — that's where the three-provider pain lives — and leave audio/image/embeddings on direct OpenAI for now? Or go all-in including Whisper/TTS/embeddings/gpt-image-1 (needs per-model coverage verification)?
-4. **Account:** register OpenRouter under a **company account** (per project convention), key into `.env` only.
+1. **Gateway: OpenRouter.**
+2. **Billing: credits.** One prepaid balance, one bill, ~5.5 % top-up fee, no provider accounts to manage. BYOK ("bring your own key") was considered — cheaper (free routing < 1M req/mo) but keeps three provider bills, so it doesn't deliver the stated goal of one invoice. Credits is both simpler *and* goal-satisfying → chosen.
+3. **Scope: all-in, staged + verified.** Migrate everything onto OpenRouter — text calls *and* Whisper/TTS/embeddings/`gpt-image-1`. But stage it: prove text calls first, then add audio/image/embeddings, **verifying each model serves cleanly via OpenRouter (same response contract).** Any layer OpenRouter can't serve cleanly stays on direct OpenAI, and the plan says so loudly rather than forcing it.
+4. **Account:** company account (per convention), key into `.env` only.
 
-> The Agent Brief below assumes the recommended path: **OpenRouter + credits + text-calls-first**. Adjust steps if the founder picks differently.
+> The Agent Brief below reflects these locked decisions.
 
 ## Agent Brief
 
@@ -43,7 +43,7 @@ A unified pay-once interface exists. Candidates:
 
 ### Goal
 
-Route the pipeline's LLM text calls through OpenRouter so generation, verification, and scoring share **one key and one bill**, without changing pipeline behavior. Do it via a **central client factory** (the proper fix), not scattered `base_url` edits.
+Route all of the pipeline's LLM calls through OpenRouter — generation, verification, scoring, plus audio/image/embeddings where OpenRouter serves them cleanly — so everything shares **one key and one bill**, without changing pipeline behavior. Do it via a **central client factory** (the proper fix), not scattered `base_url` edits.
 
 ### Success criteria
 
@@ -55,21 +55,24 @@ Route the pipeline's LLM text calls through OpenRouter so generation, verificati
 
 ### Phases
 
-**Phase 0 — Spike (agent, ~1h, no commit to prod path).** With a throwaway OpenRouter key in a scratch env, confirm via the OpenAI SDK + `base_url=https://openrouter.ai/api/v1` that the three model ids resolve and behave:
-- `openai/gpt-4o`, `openai/gpt-4o-mini` (chat + JSON mode used by generation/critique)
-- `google/gemini-2.5-flash` (the verifiers depend on its JSON output shape — verify it parses)
-- `anthropic/claude-sonnet-4-6` (scoring)
-Record any response-shape or JSON-mode differences. **Output:** a short findings note appended here. Gate Phase 2 on it.
+**Phase 1 — Founder action (the only gate).** Founder creates the company OpenRouter account, funds an initial credit, drops `OPENROUTER_API_KEY` into `.env`. Nothing else needed from the founder. Blocks every code phase below (the spike needs a live key).
 
-**Phase 1 — Founder gate.** Founder confirms gateway + billing model (Decisions 1–2), creates the company OpenRouter account, funds initial credit, drops `OPENROUTER_API_KEY` into `.env`. Blocks Phases 2–4.
+**Phase 0 — Spike (agent, ~1h, no commit to prod path).** Once the key exists, confirm via the OpenAI SDK + `base_url=https://openrouter.ai/api/v1` that each model/capability resolves and keeps its contract. This de-risks the all-in scope:
+- Chat/JSON: `openai/gpt-4o`, `openai/gpt-4o-mini` (generation/critique JSON mode)
+- Verification: `google/gemini-2.5-flash` — verifiers depend on its JSON verdict shape; confirm it parses
+- Scoring: `anthropic/claude-sonnet-4-6`
+- **Audio:** Whisper transcription + TTS endpoints (binary in/out — most likely to differ)
+- **Embeddings:** `text-embedding-3-small` (confirm vector dims match what dedup/RAG expect)
+- **Image:** `gpt-image-1` (confirm availability + image-bytes contract)
+Record per-capability: ✅ clean / ⚠️ works-with-tweak / ❌ keep-on-direct-OpenAI. **Output:** a findings table appended here; it sets the exact cutover scope for Phase 3.
 
 **Phase 2 — Central client factory (agent).** Introduce one module (e.g. `packages/shared/quiz_shared/llm/` or per-app `app/llm/`) that builds the LLM client from config: gateway toggle, base_url, key, and a logical-name → concrete-model map (`GEN`, `CRITIQUE`, `VERIFY`, `SCORE`, …). This is a **seam refactor** in the spirit of #22–#27 and is valuable independent of OpenRouter. Do not change models or behavior yet — just centralize. Commit. Suites green.
 
-**Phase 3 — Cutover, text calls first (agent).** Point the factory at OpenRouter and migrate the in-scope call sites to use it:
-- `langchain_openai` / `openai` chat sites (generation, critique, evaluation, parsing, translation) → factory with `openai/*` model ids.
-- `langchain_anthropic` scorer → factory (`anthropic/claude-sonnet-4-6`, via the OpenAI-compatible wrapper).
-- **Native `google.generativeai` verifiers + normalizer** → the trickiest: re-implement on the OpenAI-compatible client pointed at OpenRouter (`google/gemini-2.5-flash`), preserving the exact prompt and JSON-parsing contract. Verify verdict parsing with the Phase 0 findings.
-Leave Whisper/TTS/embeddings/`gpt-image-1` on direct OpenAI unless Decision 3 says otherwise. Commit per logical group.
+**Phase 3 — Cutover, staged (agent).** Point the factory at OpenRouter and migrate call sites in waves, committing per wave so each is independently verifiable:
+- **Wave A — text chat:** `langchain_openai` / `openai` chat sites (generation, critique, evaluation, parsing, translation) → factory with `openai/*` model ids.
+- **Wave B — scoring:** `langchain_anthropic` scorer → factory (`anthropic/claude-sonnet-4-6`, via the OpenAI-compatible wrapper).
+- **Wave C — verification (trickiest):** native `google.generativeai` verifiers + normalizer → re-implement on the OpenAI-compatible client pointed at OpenRouter (`google/gemini-2.5-flash`), preserving the exact prompt and JSON-parsing contract. Verify verdict parsing against the Phase 0 findings.
+- **Wave D — audio/image/embeddings:** Whisper, TTS, `text-embedding-3-small`, `gpt-image-1` → migrate **only those Phase 0 marked ✅/⚠️**. Anything marked ❌ stays on direct OpenAI; note it explicitly in the done-summary.
 
 **Phase 4 — Verify + document (agent).** Run a real `generate → verify → score` on a small batch through OpenRouter; confirm verdicts/scores match the direct-provider baseline. Confirm the `LLM_GATEWAY=direct` rollback works. Update `.env.example`, `.claude/rules/backend.md` config pointers, and append a "done" note here.
 

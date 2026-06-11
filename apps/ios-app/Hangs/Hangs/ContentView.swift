@@ -10,23 +10,33 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject var appState: AppState
     @StateObject private var viewModel: QuizViewModel
+    @StateObject private var onboardingVM: OnboardingViewModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var showOnboarding: Bool
 
     init(appState: AppState) {
         _viewModel = StateObject(wrappedValue: appState.makeQuizViewModel())
+        _onboardingVM = StateObject(wrappedValue: OnboardingViewModel(
+            audioService: appState.audioService,
+            persistenceStore: appState.persistenceStore
+        ))
         _showOnboarding = State(initialValue: !appState.persistenceStore.hasCompletedOnboarding)
     }
 
     var body: some View {
         if showOnboarding {
-            OnboardingView(audioService: appState.audioService) {
-                appState.persistenceStore.completeOnboarding()
-                showOnboarding = false
-            }
+            OnboardingView(viewModel: onboardingVM)
+                .onChange(of: onboardingVM.isComplete) { _, complete in
+                    if complete { showOnboarding = false }
+                }
         } else {
             mainContent
         }
+    }
+
+    private func replayOnboarding() {
+        onboardingVM.startOnboarding()
+        showOnboarding = true
     }
 
     @ViewBuilder
@@ -37,7 +47,7 @@ struct ContentView: View {
                 Group {
                     switch viewModel.quizState {
                     case .idle, .startingQuiz:
-                        HomeView(viewModel: viewModel)
+                        HomeView(viewModel: viewModel, onReplayOnboarding: replayOnboarding)
 
                     case .askingQuestion, .recording, .processing, .skipping:
                         // Show HomeView when minimized, otherwise QuestionView
@@ -58,7 +68,7 @@ struct ContentView: View {
                     case .finished:
                         CompletionView(viewModel: viewModel)
 
-                    case .error(let message, _):
+                    case let .error(message, _):
                         ErrorView(viewModel: viewModel, errorMessage: message)
                     }
                 }
@@ -116,8 +126,8 @@ struct ErrorView: View {
                 .padding(.horizontal, 20)
 
                 Text(errorMessage.isEmpty
-                     ? "Unable to reach the quiz server. Check your connection and try again."
-                     : errorMessage)
+                    ? "Unable to reach the quiz server. Check your connection and try again."
+                    : errorMessage)
                     .font(.hangsBody(14))
                     .foregroundColor(Theme.Hangs.Colors.muted)
                     .multilineTextAlignment(.center)
@@ -127,10 +137,10 @@ struct ErrorView: View {
                     .accessibilityLabel("Error: \(errorMessage)")
 
                 #if DEBUG
-                if let detail = viewModel.lastErrorDebugInfo {
-                    DebugErrorDetailsView(detail: detail)
-                        .padding(.horizontal, 20)
-                }
+                    if let detail = viewModel.lastErrorDebugInfo {
+                        DebugErrorDetailsView(detail: detail)
+                            .padding(.horizontal, 20)
+                    }
                 #endif
             }
 

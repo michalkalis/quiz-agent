@@ -10,12 +10,13 @@ import SwiftUI
 
 struct HomeView: View {
     @ObservedObject var viewModel: QuizViewModel
+    var onReplayOnboarding: (() -> Void)? = nil
 
     var body: some View {
         VStack(spacing: 0) {
             HangsBrandRow {
                 NavigationLink {
-                    SettingsView(viewModel: viewModel)
+                    SettingsView(viewModel: viewModel, onReplayOnboarding: onReplayOnboarding)
                 } label: {
                     navChipVisual(icon: "gearshape")
                 }

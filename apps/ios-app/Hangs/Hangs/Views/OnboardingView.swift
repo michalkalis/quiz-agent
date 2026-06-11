@@ -2,252 +2,314 @@
 //  OnboardingView.swift
 //  Hangs
 //
-//  First-launch onboarding explaining voice features and requesting mic permission
+//  Onboarding flow bound to OnboardingViewModel (52.5 state machine).
+//  Pages: Welcome (gkeCn) · Features (hTdkE) · Mic Access (haWJM) · Denied (COHnz).
+//  #52 task 52.13.
 //
 
-import AVFoundation
 import SwiftUI
 
 struct OnboardingView: View {
-    let audioService: AudioServiceProtocol
-    let onComplete: () -> Void
-
-    @State private var currentPage = 0
-    @State private var micPermissionGranted = false
-
-    private let pageCount = 3
+    @ObservedObject var viewModel: OnboardingViewModel
+    @Environment(\.openURL) private var openURL
 
     var body: some View {
         VStack(spacing: 0) {
-            // Page content
-            TabView(selection: $currentPage) {
-                welcomePage.tag(0)
-                featuresPage.tag(1)
-                micPermissionPage.tag(2)
+            HangsBrandRow()
+
+            switch viewModel.page {
+            case .welcome: welcomePage
+            case .features: featuresPage
+            case .permission: permissionPage
+            case .permissionDenied: deniedPage
             }
-            .tabViewStyle(.page(indexDisplayMode: .never))
-            .animation(.easeInOut(duration: 0.3), value: currentPage)
 
-            // Bottom controls
-            VStack(spacing: Theme.Spacing.md) {
-                // Page indicator
-                HStack(spacing: Theme.Spacing.xs) {
-                    ForEach(0..<pageCount, id: \.self) { index in
-                        Circle()
-                            .fill(index == currentPage ? Theme.Colors.accentPrimary : Theme.Colors.textMuted)
-                            .frame(width: 8, height: 8)
-                            .accessibilityHidden(true)
-                    }
-                }
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel("Page \(currentPage + 1) of \(pageCount)")
-
-                // Action button
-                if currentPage < pageCount - 1 {
-                    PrimaryButton(title: "Continue", icon: "arrow.right") {
-                        currentPage += 1
-                    }
-                    .accessibilityIdentifier("onboarding.continue")
-                } else {
-                    PrimaryButton(title: "Get Started", icon: "play.fill") {
-                        onComplete()
-                    }
-                    .accessibilityIdentifier("onboarding.getStarted")
-                }
-
-                // Skip (not on last page)
-                if currentPage < pageCount - 1 {
-                    Button("Skip") {
-                        onComplete()
-                    }
-                    .font(.textMDMedium)
-                    .foregroundColor(Theme.Colors.textSecondary)
-                    .accessibilityHint("Skip onboarding and go to the app")
-                    .accessibilityIdentifier("onboarding.skip")
-                }
-            }
-            .padding(.horizontal, Theme.Spacing.lg)
-            .padding(.bottom, Theme.Spacing.xl)
-        }
-        .background(Theme.Colors.bgPrimary)
-    }
-
-    // MARK: - Page 1: Welcome
-
-    private var welcomePage: some View {
-        VStack(spacing: Theme.Spacing.lg) {
             Spacer()
 
-            // Icon
-            ZStack {
-                Circle()
-                    .fill(Theme.Colors.accentPrimaryTint)
-                    .frame(width: 120, height: 120)
+            bottomControls
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
+        .animation(.easeInOut(duration: 0.3), value: viewModel.page)
+        .accessibilityIdentifier("onboarding.root")
+    }
 
-                Image(systemName: "mic.fill")
-                    .font(.system(size: 48, weight: .medium))
-                    .foregroundColor(Theme.Colors.accentPrimary)
+    // MARK: - Pages
+
+    private var welcomePage: some View {
+        VStack(spacing: 24) {
+            Spacer()
+
+            iconCircle(
+                systemName: "mic.fill",
+                bgColor: Theme.Hangs.Colors.pinkSoft,
+                iconColor: Theme.Hangs.Colors.pink
+            )
+
+            headlineBlock(title: "ANSWER BY VOICE", accentColor: Theme.Hangs.Colors.pink)
+
+            subtitle("Hangs reads questions aloud and listens for your answers. No tapping needed during a quiz.")
+
+            Spacer()
+            Spacer()
+        }
+        .accessibilityIdentifier("onboarding.welcome")
+    }
+
+    private var featuresPage: some View {
+        VStack(spacing: 0) {
+            Spacer(minLength: 32)
+
+            VStack(spacing: 10) {
+                Text("HANDS-FREE")
+                    .font(.hangsDisplayMD)
+                    .foregroundColor(Theme.Hangs.Colors.ink)
+                    .multilineTextAlignment(.center)
+                    .accessibilityAddTraits(.isHeader)
+
+                accentLine(color: Theme.Hangs.Colors.pink)
+
+                subtitle("Perfect for driving, cooking, or walking.")
+            }
+            .padding(.horizontal, 20)
+
+            Spacer(minLength: 20)
+
+            featuresCard
+                .padding(.horizontal, 20)
+
+            Spacer()
+            Spacer()
+        }
+        .accessibilityIdentifier("onboarding.features")
+    }
+
+    private var permissionPage: some View {
+        VStack(spacing: 24) {
+            Spacer()
+
+            iconCircle(
+                systemName: "mic",
+                bgColor: Theme.Hangs.Colors.pinkSoft,
+                iconColor: Theme.Hangs.Colors.pink
+            )
+
+            headlineBlock(title: "MIC ACCESS", accentColor: Theme.Hangs.Colors.pink)
+
+            subtitle("Hangs needs microphone access to hear your voice answers. You can also type answers as a fallback.")
+
+            Spacer()
+            Spacer()
+        }
+        .accessibilityIdentifier("onboarding.permission")
+    }
+
+    private var deniedPage: some View {
+        VStack(spacing: 24) {
+            Spacer()
+
+            iconCircle(
+                systemName: "mic.slash",
+                bgColor: Theme.Hangs.Colors.warning.opacity(0.15),
+                iconColor: Theme.Hangs.Colors.warning
+            )
+
+            headlineBlock(title: "MIC IS OFF", accentColor: Theme.Hangs.Colors.warning)
+
+            subtitle("Voice answers need the mic. Turn it on in Settings, or keep playing by typing your answers.")
+
+            Spacer()
+            Spacer()
+        }
+        .accessibilityIdentifier("onboarding.denied")
+    }
+
+    // MARK: - Shared helpers
+
+    private func iconCircle(systemName: String, bgColor: Color, iconColor: Color) -> some View {
+        ZStack {
+            Circle()
+                .fill(bgColor)
+                .frame(width: 120, height: 120)
+            Image(systemName: systemName)
+                .font(.system(size: 48))
+                .foregroundColor(iconColor)
+        }
+        .accessibilityHidden(true)
+    }
+
+    private func headlineBlock(title: String, accentColor: Color) -> some View {
+        VStack(spacing: 8) {
+            Text(title)
+                .font(.hangsDisplayMD)
+                .foregroundColor(Theme.Hangs.Colors.ink)
+                .multilineTextAlignment(.center)
+                .accessibilityAddTraits(.isHeader)
+            accentLine(color: accentColor)
+        }
+        .padding(.horizontal, 20)
+    }
+
+    private func accentLine(color: Color) -> some View {
+        Capsule()
+            .fill(color)
+            .frame(width: 40, height: 3)
+    }
+
+    private func subtitle(_ text: String) -> some View {
+        Text(text)
+            .font(.hangsBody(15))
+            .foregroundColor(Theme.Hangs.Colors.muted)
+            .multilineTextAlignment(.center)
+            .lineSpacing(4)
+            .padding(.horizontal, 28)
+    }
+
+    // MARK: - Features card
+
+    private var featuresCard: some View {
+        VStack(spacing: 0) {
+            ForEach(Array(OnboardingFeature.all.enumerated()), id: \.offset) { index, feature in
+                if index > 0 { HangsDivider() }
+                featureRow(feature)
+            }
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Theme.Hangs.Colors.bgCard)
+                .hangsShadow(Theme.Hangs.Shadow.card)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+
+    private func featureRow(_ feature: OnboardingFeature) -> some View {
+        HStack(spacing: 14) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(Theme.Hangs.Colors.pinkSoft)
+                    .frame(width: 40, height: 40)
+                Image(systemName: feature.icon)
+                    .font(.system(size: 18))
+                    .foregroundColor(Theme.Hangs.Colors.pink)
             }
             .accessibilityHidden(true)
 
-            VStack(spacing: Theme.Spacing.sm) {
-                Text("Answer by Voice")
-                    .font(.displayXXL)
-                    .foregroundColor(Theme.Colors.textPrimary)
-
-                Text("Hangs reads questions aloud and listens for your answers. No tapping needed during a quiz.")
-                    .font(.textMD)
-                    .foregroundColor(Theme.Colors.textSecondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, Theme.Spacing.lg)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(feature.title)
+                    .font(.hangsBody(15, weight: .semibold))
+                    .foregroundColor(Theme.Hangs.Colors.ink)
+                Text(feature.description)
+                    .font(.hangsBody(13))
+                    .foregroundColor(Theme.Hangs.Colors.muted)
+                    .fixedSize(horizontal: false, vertical: true)
             }
 
             Spacer()
-            Spacer()
         }
+        .padding(16)
         .accessibilityElement(children: .combine)
     }
 
-    // MARK: - Page 2: Hands-Free Features
+    // MARK: - Bottom controls
 
-    private var featuresPage: some View {
-        VStack(spacing: Theme.Spacing.lg) {
-            Spacer()
+    private var bottomControls: some View {
+        VStack(spacing: 16) {
+            HangsPageIndicator(
+                pageCount: viewModel.pageCount,
+                currentPage: viewModel.pageIndex,
+                activeColor: viewModel.page == .permissionDenied
+                    ? Theme.Hangs.Colors.warning
+                    : Theme.Hangs.Colors.pink
+            )
+            .accessibilityIdentifier("onboarding.pageIndicator")
 
-            VStack(spacing: Theme.Spacing.sm) {
-                Text("Hands-Free Features")
-                    .font(.displayXXL)
-                    .foregroundColor(Theme.Colors.textPrimary)
+            primaryButton
 
-                Text("Perfect for driving, cooking, or walking.")
-                    .font(.textMD)
-                    .foregroundColor(Theme.Colors.textSecondary)
+            secondaryButton
+        }
+        .padding(.horizontal, 20)
+        .padding(.bottom, 28)
+    }
+
+    @ViewBuilder
+    private var primaryButton: some View {
+        switch viewModel.page {
+        case .welcome, .features:
+            HangsPrimaryButton(title: "Continue", icon: "arrow.right") {
+                viewModel.advance()
             }
+            .accessibilityIdentifier("onboarding.continue")
 
-            VStack(alignment: .leading, spacing: Theme.Spacing.md) {
-                FeatureRow(
-                    icon: "waveform.badge.mic",
-                    title: "Auto-Record",
-                    description: "Recording starts automatically after each question"
-                )
-                FeatureRow(
-                    icon: "hand.raised.fill",
-                    title: "Barge-In",
-                    description: "Start speaking to interrupt the question and answer immediately"
-                )
-                FeatureRow(
-                    icon: "text.bubble",
-                    title: "Voice Commands",
-                    description: "Say \"skip\", \"repeat\", \"score\", or \"help\" anytime"
-                )
-                FeatureRow(
-                    icon: "arrow.forward.circle",
-                    title: "Auto-Advance",
-                    description: "Results advance automatically so you never need to tap"
-                )
+        case .permission:
+            HangsPrimaryButton(title: "Allow Microphone", icon: "mic.fill") {
+                Task { await viewModel.requestMicPermission() }
             }
-            .padding(.horizontal, Theme.Spacing.md)
+            .accessibilityIdentifier("onboarding.allowMic")
 
-            Spacer()
-            Spacer()
+        case .permissionDenied:
+            HangsPrimaryButton(title: "Open Settings", icon: "gearshape.fill") {
+                if let url = URL(string: "app-settings:") {
+                    openURL(url)
+                }
+            }
+            .accessibilityIdentifier("onboarding.openSettings")
         }
     }
 
-    // MARK: - Page 3: Microphone Permission
-
-    private var micPermissionPage: some View {
-        VStack(spacing: Theme.Spacing.lg) {
-            Spacer()
-
-            // Icon
-            ZStack {
-                Circle()
-                    .fill(micPermissionGranted ? Theme.Colors.successBg : Theme.Colors.accentPrimaryTint)
-                    .frame(width: 120, height: 120)
-
-                Image(systemName: micPermissionGranted ? "checkmark.circle.fill" : "mic.badge.plus")
-                    .font(.system(size: 48, weight: .medium))
-                    .foregroundColor(micPermissionGranted ? Theme.Colors.success : Theme.Colors.accentPrimary)
+    @ViewBuilder
+    private var secondaryButton: some View {
+        switch viewModel.page {
+        case .welcome, .features:
+            HangsGhostButton(title: "Skip", color: Theme.Hangs.Colors.muted) {
+                viewModel.continueWithoutMic()
             }
-            .accessibilityHidden(true)
+            .accessibilityIdentifier("onboarding.skip")
 
-            VStack(spacing: Theme.Spacing.sm) {
-                Text(micPermissionGranted ? "You're All Set!" : "Microphone Access")
-                    .font(.displayXXL)
-                    .foregroundColor(Theme.Colors.textPrimary)
-
-                Text(micPermissionGranted
-                     ? "Hangs can hear your answers. Tap \"Get Started\" to play!"
-                     : "Hangs needs microphone access to hear your voice answers. You can also type answers as a fallback.")
-                    .font(.textMD)
-                    .foregroundColor(Theme.Colors.textSecondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, Theme.Spacing.lg)
+        case .permission:
+            HangsGhostButton(title: "Maybe later", color: Theme.Hangs.Colors.muted) {
+                viewModel.continueWithoutMic()
             }
+            .accessibilityIdentifier("onboarding.maybeLater")
 
-            if !micPermissionGranted {
-                Button {
-                    Task {
-                        micPermissionGranted = await audioService.requestMicrophonePermission()
-                    }
-                } label: {
-                    HStack(spacing: Theme.Spacing.xs) {
-                        Image(systemName: "mic.fill")
-                        Text("Allow Microphone")
-                    }
-                    .font(.displayMD)
-                    .foregroundColor(Theme.Colors.textOnAccent)
-                    .padding(.vertical, Theme.Spacing.md)
-                    .padding(.horizontal, Theme.Spacing.xl)
-                    .background(Theme.Gradients.primary())
-                    .cornerRadius(Theme.Radius.full)
-                }
-                .accessibilityHint("Opens system dialog to allow microphone access")
-                .accessibilityIdentifier("onboarding.allowMic")
+        case .permissionDenied:
+            HangsSecondaryButton(title: "Type answers instead", icon: "keyboard") {
+                viewModel.continueWithoutMic()
             }
-
-            Spacer()
-            Spacer()
-        }
-        .onAppear {
-            // Check if permission was already granted
-            let status = AVAudioApplication.shared.recordPermission
-            micPermissionGranted = (status == .granted)
+            .accessibilityIdentifier("onboarding.typeInstead")
         }
     }
 }
 
-// MARK: - Feature Row
+// MARK: - Feature data
 
-private struct FeatureRow: View {
+private struct OnboardingFeature {
     let icon: String
     let title: String
     let description: String
 
-    var body: some View {
-        HStack(alignment: .top, spacing: Theme.Spacing.sm) {
-            Image(systemName: icon)
-                .font(.system(size: Theme.Components.iconMD))
-                .foregroundColor(Theme.Colors.accentPrimary)
-                .frame(width: 32, height: 32)
-                .accessibilityHidden(true)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.displayMD)
-                    .foregroundColor(Theme.Colors.textPrimary)
-
-                Text(description)
-                    .font(.textSM)
-                    .foregroundColor(Theme.Colors.textSecondary)
-            }
-        }
-        .accessibilityElement(children: .combine)
-    }
+    static let all: [OnboardingFeature] = [
+        .init(icon: "mic.fill", title: "Auto-Record", description: "Recording starts automatically after each question"),
+        .init(icon: "hand.raised.fill", title: "Answer Anytime", description: "Start speaking to interrupt and answer immediately"),
+        .init(icon: "bubble.left.fill", title: "Voice Commands", description: #"Say "skip", "repeat", "score", or "help" anytime"#),
+        .init(icon: "forward.end.circle.fill", title: "Auto-Advance", description: "Results advance automatically — never tap"),
+    ]
 }
 
-#Preview {
-    OnboardingView(audioService: AudioService()) {
-        print("Onboarding complete!")
+#if DEBUG
+    #Preview("Welcome") {
+        let vm = OnboardingViewModel(audioService: MockAudioService(), persistenceStore: MockPersistenceStore())
+        OnboardingView(viewModel: vm)
     }
-}
+
+    #Preview("Features") {
+        let vm = OnboardingViewModel(audioService: MockAudioService(), persistenceStore: MockPersistenceStore())
+        vm.advance()
+        return OnboardingView(viewModel: vm)
+    }
+
+    #Preview("Permission") {
+        let vm = OnboardingViewModel(audioService: MockAudioService(), persistenceStore: MockPersistenceStore())
+        vm.advance(); vm.advance()
+        return OnboardingView(viewModel: vm)
+    }
+#endif

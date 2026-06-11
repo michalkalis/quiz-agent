@@ -23,9 +23,9 @@
 //
 
 import Foundation
+@testable import Hangs
 import SnapshotTesting
 import Testing
-@testable import Hangs
 
 // MARK: - Helpers
 
@@ -62,7 +62,6 @@ private func makeResultViewModel(evaluation: Evaluation) -> QuizViewModel {
 @Suite("ResultView Snapshot Tests")
 @MainActor
 struct ResultViewSnapshotTests {
-
     // MARK: - Variant A: correct answer
 
     /// ResultView with a correct evaluation.
@@ -79,12 +78,12 @@ struct ResultViewSnapshotTests {
 
     /// ResultView with an incorrect evaluation.
     /// Structural assertions (verified via dump baseline):
-    ///   • "CLOSE" substring present in heroBlock headline Text ("CLOSE—\nBUT NO.")
+    ///   • "MISSED" substring present in heroBlock headline Text ("MISSED\nIT.")
     ///
     /// answerCard and statsRow gated behind `showEvaluation` (@State = false at
     /// struct init time) are NOT asserted here — see ResultViewInspectorTests for
     /// runtime-state assertions.
-    @Test("Snapshot: incorrect evaluation renders CLOSE headline")
+    @Test("Snapshot: incorrect evaluation renders MISSED headline")
     func incorrectVariant() {
         let view = ResultView(viewModel: makeResultViewModel(evaluation: .previewIncorrect))
         assertSnapshot(of: view, as: .stableDump)

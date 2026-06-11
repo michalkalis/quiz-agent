@@ -22,6 +22,7 @@
                 - imageSubtype: nil
                 ▿ explanation: Optional("Paris has been the capital of France since the 10th century.")
                   - some: "Paris has been the capital of France since the 10th century."
+                - headlineAnswer: nil
                 ▿ generatedBy: Optional("claude-opus-4.6")
                   - some: "claude-opus-4.6"
                 - ageAppropriate: nil
@@ -40,9 +41,10 @@
                   - some: "q_preview_1"
                 ▿ explanation: Optional("Paris has been the capital of France since the 10th century.")
                   - some: "Paris has been the capital of France since the 10th century."
+                - headlineAnswer: nil
       ▿ _currentQuestion: Combine.Published<Swift.Optional<Hangs.Question>>
         ▿ storage: Combine.Published<Swift.Optional<Hangs.Question>>.Storage.value
-          ▿ value: Optional(Hangs.Question(id: "q_preview_123", question: "What is the capital of France?", type: Hangs.Question.QuestionType.text, possibleAnswers: nil, difficulty: "easy", topic: "Geography", category: "adults", sourceUrl: Optional("https://en.wikipedia.org/wiki/Paris"), sourceExcerpt: Optional("Paris is the capital and largest city of France, situated on the Seine River."), mediaUrl: nil, imageSubtype: nil, explanation: Optional("Paris has been the capital of France since the 10th century."), generatedBy: Optional("claude-opus-4.6"), ageAppropriate: nil, language: nil, packId: nil, promptSeed: nil, embeddingModel: nil, embeddingDim: nil, costCents: nil))
+          ▿ value: Optional(Hangs.Question(id: "q_preview_123", question: "What is the capital of France?", type: Hangs.Question.QuestionType.text, possibleAnswers: nil, difficulty: "easy", topic: "Geography", category: "adults", sourceUrl: Optional("https://en.wikipedia.org/wiki/Paris"), sourceExcerpt: Optional("Paris is the capital and largest city of France, situated on the Seine River."), mediaUrl: nil, imageSubtype: nil, explanation: Optional("Paris has been the capital of France since the 10th century."), headlineAnswer: nil, generatedBy: Optional("claude-opus-4.6"), ageAppropriate: nil, language: nil, packId: nil, promptSeed: nil, embeddingModel: nil, embeddingDim: nil, costCents: nil))
             ▿ some: Hangs.Question
               - id: "q_preview_123"
               - question: "What is the capital of France?"
@@ -59,6 +61,7 @@
               - imageSubtype: nil
               ▿ explanation: Optional("Paris has been the capital of France since the 10th century.")
                 - some: "Paris has been the capital of France since the 10th century."
+              - headlineAnswer: nil
               ▿ generatedBy: Optional("claude-opus-4.6")
                 - some: "claude-opus-4.6"
               - ageAppropriate: nil
@@ -198,6 +201,9 @@
       ▿ _isStreamingSTT: Combine.Published<Swift.Bool>
         ▿ storage: Combine.Published<Swift.Bool>.Storage.value
           - value: false
+      ▿ _mcqVoiceMatchedKey: Combine.Published<Swift.Optional<Swift.String>>
+        ▿ storage: Combine.Published<Swift.Optional<Swift.String>>.Storage.value
+          - value: nil
       ▿ networkService: Hangs.MockNetworkService #4
         - mockSession: nil
         - mockResponse: nil
@@ -239,6 +245,7 @@
             - portType: "BluetoothHFP"
         - currentInputDevice: nil
         - currentOutputDeviceName: "iPhone"
+        - micPermissionResult: true
       ▿ persistenceStore: Hangs.MockPersistenceStore #6
         - deviceId: "dev_mock_test_1234"
         - hasCompletedOnboarding: true
@@ -279,11 +286,5 @@
     - _value: false
     - _location: nil
   ▿ _showSourceWebView: SwiftUI.State<Swift.Bool>
-    - _value: false
-    - _location: nil
-  ▿ _questionRating: SwiftUI.State<Swift.Int>
-    - _value: 0
-    - _location: nil
-  ▿ _questionFlagged: SwiftUI.State<Swift.Bool>
     - _value: false
     - _location: nil

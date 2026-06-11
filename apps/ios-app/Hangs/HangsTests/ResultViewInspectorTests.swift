@@ -75,7 +75,7 @@ struct ResultViewInspectorTests {
 
     /// evaluation.isCorrect == true:
     ///   • heroBlock "NAILED\nIT." is present (always rendered, no @State gate)
-    ///   • HangsResultBanner shows "CORRECT" + checkmark icon
+    ///   • HangsResultBanner shows "correct" + checkmark icon
     ///   • resultEvaluation model reports isCorrect (model-level confirmation)
     @Test("Correct evaluation renders NAILED headline and CORRECT banner")
     func correctVariantRendersNailedHeadlineAndBanner() async throws {
@@ -98,9 +98,9 @@ struct ResultViewInspectorTests {
                 try tree.find(text: "NAILED\nIT.")
             }
 
-            // HangsResultBanner label: "CORRECT" for isCorrect == true
+            // HangsResultBanner label: "correct" for isCorrect == true
             #expect(throws: Never.self) {
-                try tree.find(text: "CORRECT")
+                try tree.find(text: "correct")
             }
 
             // HangsResultBanner icon: "checkmark" SF Symbol for correct variant
@@ -119,8 +119,8 @@ struct ResultViewInspectorTests {
     // MARK: - Incorrect variant
 
     /// evaluation.isCorrect == false (result == .incorrect):
-    ///   • heroBlock "CLOSE—\nBUT NO." is present
-    ///   • HangsResultBanner shows "NOT QUITE" + xmark icon
+    ///   • heroBlock "MISSED\nIT." is present
+    ///   • HangsResultBanner shows "not quite" + xmark icon
     ///   • resultEvaluation model reports incorrect result
     @Test("Incorrect evaluation renders CLOSE headline and NOT QUITE banner")
     func incorrectVariantRendersCloseHeadlineAndBanner() async throws {
@@ -138,14 +138,14 @@ struct ResultViewInspectorTests {
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
 
-            // Hero: "CLOSE—\nBUT NO." — presence confirms the incorrect branch rendered
+            // Hero: "MISSED\nIT." — presence confirms the incorrect branch rendered
             #expect(throws: Never.self) {
-                try tree.find(text: "CLOSE—\nBUT NO.")
+                try tree.find(text: "MISSED\nIT.")
             }
 
-            // HangsResultBanner label: "NOT QUITE" for isCorrect == false
+            // HangsResultBanner label: "not quite" for isCorrect == false
             #expect(throws: Never.self) {
-                try tree.find(text: "NOT QUITE")
+                try tree.find(text: "not quite")
             }
 
             // HangsResultBanner icon: "xmark" SF Symbol for incorrect variant
@@ -155,7 +155,7 @@ struct ResultViewInspectorTests {
                 })
             }
 
-            // "NAILED\nIT." must NOT appear
+            // "NAILED\nIT." must NOT appear in incorrect variant
             #expect(throws: (any Error).self) {
                 try tree.find(text: "NAILED\nIT.")
             }
@@ -173,7 +173,7 @@ struct ResultViewInspectorTests {
     ///     limitation of ResultView: no separate partial-credit visual branch exists
     ///     in the always-rendered sections.
     ///   • The model correctly carries result = .partiallyCorrect and partial points.
-    ///   • Asserting "NOT QUITE" + "CLOSE—\nBUT NO." confirms the view chose the
+    ///   • Asserting "not quite" + "MISSED\nIT." confirms the view chose the
     ///     non-correct path, which is the correct rendering for a partial evaluation.
     @Test("Partial-credit evaluation renders incorrect-branch hero and partial result in model")
     func partialVariantRendersIncorrectBranchAndCarriesPartialResult() async throws {
@@ -193,10 +193,10 @@ struct ResultViewInspectorTests {
 
             // isCorrect == false for partial → incorrect visual branch
             #expect(throws: Never.self) {
-                try tree.find(text: "CLOSE—\nBUT NO.")
+                try tree.find(text: "MISSED\nIT.")
             }
             #expect(throws: Never.self) {
-                try tree.find(text: "NOT QUITE")
+                try tree.find(text: "not quite")
             }
 
             // Model-level: result is partiallyCorrect (not just .incorrect)
@@ -286,5 +286,56 @@ struct ResultViewInspectorTests {
         let view = ResultView(viewModel: makeViewModel(evaluation: evaluation))
 
         #expect(view.revealedAnswer == "Paris")
+    }
+
+    // MARK: - 52.11 — "read aloud" button + footer redesign
+
+    /// "read aloud" button renders in both correct and incorrect variants (always present).
+    @Test("Read-aloud button is present in the correct variant hero row")
+    func readAloudButtonPresentInCorrectVariant() async throws {
+        let evaluation = Evaluation(
+            userAnswer: "Paris", result: .correct, points: 1.0,
+            correctAnswer: "Paris", questionId: "q_test", explanation: nil
+        )
+        let vm = makeViewModel(evaluation: evaluation)
+        let view = ResultView(viewModel: vm)
+
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: Never.self) {
+                try tree.find(button: "read aloud")
+            }
+        }
+    }
+
+    /// Incorrect variant footer has "Try this question again" button; correct variant does not.
+    @Test("Incorrect variant footer shows Try this question again; correct does not")
+    func incorrectFooterShowsTryAgain() async throws {
+        let incorrectEval = Evaluation(
+            userAnswer: "London", result: .incorrect, points: 0.0,
+            correctAnswer: "Paris", questionId: "q_test", explanation: nil
+        )
+        let correctEval = Evaluation(
+            userAnswer: "Paris", result: .correct, points: 1.0,
+            correctAnswer: "Paris", questionId: "q_test", explanation: nil
+        )
+
+        let vmIncorrect = makeViewModel(evaluation: incorrectEval)
+        let viewIncorrect = ResultView(viewModel: vmIncorrect)
+        try await ViewHosting.host(viewIncorrect) {
+            let tree = try viewIncorrect.inspect()
+            #expect(throws: Never.self) {
+                try tree.find(button: "Try this question again")
+            }
+        }
+
+        let vmCorrect = makeViewModel(evaluation: correctEval)
+        let viewCorrect = ResultView(viewModel: vmCorrect)
+        try await ViewHosting.host(viewCorrect) {
+            let tree = try viewCorrect.inspect()
+            #expect(throws: (any Error).self) {
+                try tree.find(button: "Try this question again")
+            }
+        }
     }
 }

@@ -17,8 +17,7 @@
 
 import XCTest
 
-nonisolated final class RegressionTests: XCTestCase {
-
+final nonisolated class RegressionTests: XCTestCase {
     private let client = UITestClient()
 
     override func setUp() {
@@ -27,6 +26,7 @@ nonisolated final class RegressionTests: XCTestCase {
     }
 
     // MARK: - RS-start
+
     //
     // Scenario: launch with mock services, tap Start Quiz, verify the quiz screen
     // appears and the mic button is hittable, and the state probe reads "askingQuestion".
@@ -60,6 +60,7 @@ nonisolated final class RegressionTests: XCTestCase {
     }
 
     // MARK: - RS-correct
+
     //
     // Scenario: from askingQuestion state, inject a committed STT event with the
     // correct answer, confirm via the confirmation sheet, and assert the result
@@ -104,13 +105,14 @@ nonisolated final class RegressionTests: XCTestCase {
     }
 
     // MARK: - RS-incorrect
+
     //
     // Scenario: same flow as RS-correct but launched with "--ui-test-incorrect"
     // so the mock returns an incorrect evaluation. Assert the hero text contains
-    // "CLOSE" (the incorrect-branch headline).
+    // "MISSED" (the incorrect-branch headline).
     //
     // Regression guarded: incorrect-answer branch of showingResult renders the
-    // "CLOSE—\nBUT NO." hero.
+    // "MISSED\nIT." hero.
 
     @MainActor
     func testRSIncorrect() async throws {
@@ -141,10 +143,11 @@ nonisolated final class RegressionTests: XCTestCase {
 
         let result = ResultPage(app: app)
         result.waitForResult(timeout: 15)
-        result.assertHeroContains("CLOSE")
+        result.assertHeroContains("MISSED")
     }
 
     // MARK: - RS-paywall
+
     //
     // Scenario: launch with "--ui-test-paywall" so createSession throws
     // dailyLimitReached, tapping Start Quiz triggers the paywall sheet.

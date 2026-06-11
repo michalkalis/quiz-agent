@@ -181,11 +181,16 @@ Use the structure modeled by `RS-01-2026-04-29.md`:
 
 ## VERDICT: PASS | FAIL — <reason if FAIL>
 
+## VISUAL: PASS | FAIL — <description if FAIL>
+
 ## Per-step results
-| # | Step | Result | Evidence |
+| # | Step | Result | Evidence | Screenshot |
 
 ## Assertion results
 | Assert | Expected | Actual | Result |
+
+## Visual check
+<per-screen checklist evaluation from docs/testing/screenshot-verify-procedure.md>
 
 ## State timeline (from log)
 ```
@@ -199,13 +204,14 @@ Use the structure modeled by `RS-01-2026-04-29.md`:
 <…>
 
 VERDICT: PASS | FAIL — <reason>
+VISUAL: PASS | FAIL — <reason>
 ```
 
-Always end with a final `VERDICT:` line so future runs can be diffed.
+Always end with a final `VERDICT:` and `VISUAL:` line so future runs can be diffed. A scenario is fully PASS only when **both** lines show PASS.
 
 #### 1f. Stop on first FAIL
 
-If the scenario verdict is FAIL and `$ARGUMENTS` was `all`, **do not run the
+If the scenario verdict is FAIL (either state assertion or visual check) and `$ARGUMENTS` was `all`, **do not run the
 remaining scenarios**. Surface the failure to the user with a one-line
 summary and the path to the report. The user (or a separate fix session)
 decides whether to triage and re-run.

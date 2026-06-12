@@ -2,11 +2,14 @@
 //  QuizCompleteSummaryTests.swift
 //  HangsTests
 //
-//  #52 task 52.6 — Quiz-Complete aggregation.
+//  #52 task 52.6 — Quiz-Complete aggregation. Reworked in #54 task 54.13:
+//  counts come from per-answer evaluation tallies, never derived from the
+//  (possibly fractional) score.
 //
 //  Why these tests matter:
 //  - Divide-by-zero: accuracy and avgPoints must be 0.0 (not NaN/inf) when questionsAnswered == 0.
-//  - The incorrectCount formula prevents a negative when score somehow exceeds answeredCount.
+//  - Partial credit makes the score fractional; flooring it with Int() displayed the score
+//    low and made incorrectCount wrong (could exceed total) — 54.13.
 //  - The maxQuestions fallback keeps the "out of N" label accurate even when the session
 //    object has been cleared before CompletionView renders.
 //  - The bestStreak comes from QuizStats (updated throughout the quiz) so that the
@@ -23,7 +26,10 @@ struct QuizCompleteSummaryTests {
     @Test("perfect quiz: all correct aggregates cleanly")
     func perfectQuiz() {
         let stats = QuizStats(currentStreak: 5, bestStreak: 5, totalCorrect: 5, totalAnswered: 5, totalQuizzes: 1)
-        let summary = QuizCompleteSummary.from(score: 5.0, questionsAnswered: 5, maxQuestions: 5, stats: stats)
+        let summary = QuizCompleteSummary.from(
+            score: 5.0, questionsAnswered: 5, correctCount: 5, incorrectCount: 0,
+            maxQuestions: 5, stats: stats
+        )
 
         #expect(summary.finalScore == 5.0)
         #expect(summary.correctCount == 5)
@@ -38,7 +44,10 @@ struct QuizCompleteSummaryTests {
     @Test("mixed results: correct/incorrect/accuracy split")
     func mixedQuiz() {
         let stats = QuizStats(currentStreak: 0, bestStreak: 3, totalCorrect: 3, totalAnswered: 5, totalQuizzes: 1)
-        let summary = QuizCompleteSummary.from(score: 3.0, questionsAnswered: 5, maxQuestions: 5, stats: stats)
+        let summary = QuizCompleteSummary.from(
+            score: 3.0, questionsAnswered: 5, correctCount: 3, incorrectCount: 2,
+            maxQuestions: 5, stats: stats
+        )
 
         #expect(summary.correctCount == 3)
         #expect(summary.incorrectCount == 2)
@@ -51,7 +60,10 @@ struct QuizCompleteSummaryTests {
     func bestStreakPreserved() {
         // Last answer was wrong (currentStreak reset to 0), but bestStreak was 4
         let stats = QuizStats(currentStreak: 0, bestStreak: 4, totalCorrect: 4, totalAnswered: 5, totalQuizzes: 1)
-        let summary = QuizCompleteSummary.from(score: 4.0, questionsAnswered: 5, maxQuestions: 5, stats: stats)
+        let summary = QuizCompleteSummary.from(
+            score: 4.0, questionsAnswered: 5, correctCount: 4, incorrectCount: 1,
+            maxQuestions: 5, stats: stats
+        )
 
         #expect(summary.bestStreak == 4)
     }
@@ -60,14 +72,20 @@ struct QuizCompleteSummaryTests {
 
     @Test("maxQuestions falls back to questionsAnswered when session is nil")
     func maxQuestionsFallback() {
-        let summary = QuizCompleteSummary.from(score: 2.0, questionsAnswered: 4, maxQuestions: nil, stats: .empty)
+        let summary = QuizCompleteSummary.from(
+            score: 2.0, questionsAnswered: 4, correctCount: 2, incorrectCount: 2,
+            maxQuestions: nil, stats: .empty
+        )
 
         #expect(summary.totalQuestions == 4)
     }
 
     @Test("zero answers: accuracy and avgPoints are 0.0, not NaN or inf")
     func zeroAnswersNoDivisionByZero() {
-        let summary = QuizCompleteSummary.from(score: 0.0, questionsAnswered: 0, maxQuestions: 5, stats: .empty)
+        let summary = QuizCompleteSummary.from(
+            score: 0.0, questionsAnswered: 0, correctCount: 0, incorrectCount: 0,
+            maxQuestions: 5, stats: .empty
+        )
 
         #expect(summary.sessionAccuracyPercent == 0.0)
         #expect(summary.avgPointsPerQuestion == 0.0)
@@ -76,11 +94,33 @@ struct QuizCompleteSummaryTests {
         #expect(!summary.avgPointsPerQuestion.isNaN)
     }
 
-    @Test("incorrectCount clamps to zero — never negative")
-    func incorrectCountNeverNegative() {
-        // Defensive: score could momentarily exceed answeredCount in edge cases
-        let summary = QuizCompleteSummary.from(score: 5.0, questionsAnswered: 3, maxQuestions: 5, stats: .empty)
+    // MARK: - Fractional scores (54.13)
 
-        #expect(summary.incorrectCount == 0)
+    @Test("fractional score: displays one decimal, counts stay consistent")
+    func fractionalScore() {
+        // 3 correct + 1 partial (0.5 points) + 1 incorrect = 3.5 points / 5 answered.
+        // Pre-54.13 this floored to "3" and computed incorrect = 5 - 3 = 2,
+        // counting the partial as a miss.
+        let summary = QuizCompleteSummary.from(
+            score: 3.5, questionsAnswered: 5, correctCount: 3, incorrectCount: 1,
+            maxQuestions: 5, stats: .empty
+        )
+
+        #expect(summary.displayScore == "3.5")
+        #expect(summary.finalScore == 3.5)
+        #expect(summary.correctCount == 3)
+        #expect(summary.incorrectCount == 1)
+        #expect(summary.correctCount + summary.incorrectCount <= summary.totalAnswered)
+        #expect(summary.sessionAccuracyPercent == 60.0)
+    }
+
+    @Test("whole-number score drops the trailing .0 in display")
+    func wholeScoreDisplay() {
+        let summary = QuizCompleteSummary.from(
+            score: 4.0, questionsAnswered: 5, correctCount: 4, incorrectCount: 1,
+            maxQuestions: 5, stats: .empty
+        )
+
+        #expect(summary.displayScore == "4")
     }
 }

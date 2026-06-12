@@ -80,7 +80,6 @@ struct ResultView: View {
             Text(isCorrect ? "NAILED\nIT." : "MISSED\nIT.")
                 .font(.hangsDisplay(52))
                 .tracking(-2)
-                .lineSpacing(-6)
                 .foregroundColor(Theme.Hangs.Colors.ink)
                 .fixedSize(horizontal: false, vertical: true)
             Text(subHeadline)
@@ -333,10 +332,10 @@ struct ResultView: View {
         return String(format: "%.1f", score)
     }
 
-    /// On an incorrect answer we already reset `currentStreak` to 0 — best proxy
-    /// for "what the streak was" is the all-time best (or 0 when no runs yet).
+    /// On an incorrect answer `currentStreak` is already 0 — the VM captures the
+    /// streak just before it was reset (54.11).
     private var previousStreakForIncorrect: Int {
-        max(viewModel.quizStats.bestStreak, 0)
+        max(viewModel.streakBeforeLastAnswer, 0)
     }
 
     private var subHeadline: String {

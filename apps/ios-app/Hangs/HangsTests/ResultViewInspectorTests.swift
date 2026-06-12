@@ -288,6 +288,35 @@ struct ResultViewInspectorTests {
         #expect(view.revealedAnswer == "Paris")
     }
 
+    // MARK: - 54.10 — totalQuestions fallback to settings
+
+    /// 54.10 regression: with currentSession == nil the question counter must fall
+    /// back to settings.numberOfQuestions (not a hardcoded 10) — a non-10 session
+    /// previously showed a wrong total after the session object was cleared.
+    @Test("Counter falls back to settings.numberOfQuestions when session is nil")
+    func counterFallsBackToSettingsLength() async throws {
+        let evaluation = Evaluation(
+            userAnswer: "Paris", result: .correct, points: 1.0,
+            correctAnswer: "Paris", questionId: "q_test", explanation: nil
+        )
+        let vm = Fixtures.makeViewModel()
+        vm.quizState = .showingResult(
+            question: Fixtures.makeQuestion(),
+            evaluation: evaluation
+        )
+        // No currentSession — fallback path
+        vm.settings.numberOfQuestions = 5
+        vm.questionsAnswered = 2
+        let view = ResultView(viewModel: vm)
+
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: Never.self) {
+                try tree.find(text: "02 / 05")
+            }
+        }
+    }
+
     // MARK: - 52.11 — "read aloud" button + footer redesign
 
     /// "read aloud" button renders in both correct and incorrect variants (always present).

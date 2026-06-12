@@ -8,15 +8,13 @@
 //  Chosen variants and rationale:
 //
 //  A. askingState — quizState == .askingQuestion with a question loaded.
-//     The question prompt (HangsQuestionPrompt, a11y id: question.text) and mic
-//     button (HangsMicBlock, a11y id: question.micButton) are present.
-//     Status pill shows "READY" copy. Waveform Capsule shapes are NOT asserted
-//     (only visible in recording state).
+//     The question prompt (a11y id: question.text) and the Record button
+//     (a11y id: question.record) are present. Waveform Capsule shapes are
+//     NOT asserted (only visible in recording state).
 //
 //  B. recordingState — quizState == .recording.
-//     Status pill (a11y id: question.statusPill) is present and the
-//     "RECORDING" substring appears in the dump because currentStatus.text
-//     is captured by Mirror. Waveform shapes are NOT asserted (dynamic, capsule).
+//     The Stop button (a11y id: question.stop) is present. Waveform shapes
+//     are NOT asserted (dynamic, capsule).
 //
 //  Strategy: .dump only — no image rendering; stable across simulator versions.
 //
@@ -73,9 +71,8 @@ struct QuestionViewSnapshotTests {
 
     /// QuestionView with quizState == .askingQuestion.
     /// Structural assertions (verified by inspecting the dump baseline):
-    ///   • "question.text" identifier present → HangsQuestionPrompt rendered
-    ///   • "question.micButton" identifier present → HangsMicBlock rendered
-    ///   • "READY" substring present in status pill copy
+    ///   • "question.text" identifier present → question prompt rendered
+    ///   • "question.record" identifier present → Record button rendered
     @Test("Snapshot: asking-question state renders question prompt and mic button")
     func askingState() {
         let view = QuestionView(viewModel: makeAskingViewModel())
@@ -86,9 +83,7 @@ struct QuestionViewSnapshotTests {
 
     /// QuestionView with quizState == .recording.
     /// Structural assertions:
-    ///   • "question.statusPill" identifier present
-    ///   • "RECORDING" substring present in statusPill text (currentStatus.text
-    ///     captured by Mirror reflection of QuizStatus.text property)
+    ///   • "question.stop" identifier present → Stop button rendered
     ///
     /// Waveform Capsule shapes are NOT asserted — they are dynamic layout details
     /// with no stable string representation in .dump output.

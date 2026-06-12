@@ -53,7 +53,7 @@ struct CompletionView: View {
         HangsCard(padding: EdgeInsets(top: 16, leading: 20, bottom: 16, trailing: 20)) {
             VStack(spacing: 6) {
                 HangsSectionLabel(text: "final score", color: Theme.Hangs.Colors.pink)
-                Text("\(Int(summary.finalScore))")
+                Text(summary.displayScore)
                     .font(.hangsNumberLG)
                     .tracking(-3)
                     .foregroundColor(Theme.Hangs.Colors.ink)
@@ -66,7 +66,7 @@ struct CompletionView: View {
             .frame(maxWidth: .infinity)
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Final score: \(Int(summary.finalScore)) out of \(summary.totalQuestions)")
+        .accessibilityLabel("Final score: \(summary.displayScore) out of \(summary.totalQuestions)")
         .accessibilityIdentifier("completion.score")
     }
 
@@ -149,6 +149,8 @@ struct CompletionView: View {
         QuizCompleteSummary.from(
             score: viewModel.score,
             questionsAnswered: viewModel.questionsAnswered,
+            correctCount: viewModel.sessionCorrectCount,
+            incorrectCount: viewModel.sessionIncorrectCount,
             maxQuestions: viewModel.currentSession?.maxQuestions
                 ?? viewModel.settings.numberOfQuestions,
             stats: viewModel.quizStats

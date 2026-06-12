@@ -22,7 +22,9 @@ import ViewInspector
 @MainActor
 @Suite("CompletionView — QuizCompleteSummary binding")
 struct CompletionViewSummaryTests {
-    private func makeViewModel(score: Double, answered: Int, maxQuestions _: Int) -> QuizViewModel {
+    private func makeViewModel(
+        score: Double, answered: Int, correct: Int, incorrect: Int
+    ) -> QuizViewModel {
         let vm = QuizViewModel(
             networkService: MockNetworkService(),
             audioService: MockAudioService(),
@@ -30,10 +32,12 @@ struct CompletionViewSummaryTests {
         )
         vm.score = score
         vm.questionsAnswered = answered
+        vm.sessionCorrectCount = correct
+        vm.sessionIncorrectCount = incorrect
         vm.quizStats = QuizStats(
             currentStreak: 0,
             bestStreak: 3,
-            totalCorrect: Int(score),
+            totalCorrect: correct,
             totalAnswered: answered,
             totalQuizzes: 1
         )
@@ -41,30 +45,26 @@ struct CompletionViewSummaryTests {
         return vm
     }
 
-    @Test("summary.correctCount matches score")
-    func summaryCorrectCount() {
-        let vm = makeViewModel(score: 7, answered: 10, maxQuestions: 10)
+    @Test("summary counts come from per-session tallies, not the score (54.13)")
+    func summaryCountsFromTallies() {
+        // Fractional score (partial credit): counts must NOT be derived from it.
+        let vm = makeViewModel(score: 7.5, answered: 10, correct: 7, incorrect: 2)
         let view = CompletionView(viewModel: vm)
         #expect(view.summary.correctCount == 7)
-    }
-
-    @Test("summary.incorrectCount = answered - correct")
-    func summaryIncorrectCount() {
-        let vm = makeViewModel(score: 7, answered: 10, maxQuestions: 10)
-        let view = CompletionView(viewModel: vm)
-        #expect(view.summary.incorrectCount == 3)
+        #expect(view.summary.incorrectCount == 2)
+        #expect(view.summary.displayScore == "7.5")
     }
 
     @Test("summary.sessionAccuracyPercent = 70 for 7/10")
     func summaryAccuracy() {
-        let vm = makeViewModel(score: 7, answered: 10, maxQuestions: 10)
+        let vm = makeViewModel(score: 7, answered: 10, correct: 7, incorrect: 3)
         let view = CompletionView(viewModel: vm)
         #expect(abs(view.summary.sessionAccuracyPercent - 70.0) < 0.01)
     }
 
     @Test("summary.totalQuestions uses settings.numberOfQuestions fallback when session is nil")
     func summaryTotalQuestionsFromSettings() {
-        let vm = makeViewModel(score: 5, answered: 8, maxQuestions: 10)
+        let vm = makeViewModel(score: 5, answered: 8, correct: 5, incorrect: 3)
         vm.settings.numberOfQuestions = 10
         let view = CompletionView(viewModel: vm)
         // currentSession is nil → falls back to settings.numberOfQuestions

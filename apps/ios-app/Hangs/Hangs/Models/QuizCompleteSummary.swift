@@ -20,30 +20,43 @@ struct QuizCompleteSummary: Equatable, Sendable {
     let bestStreak: Int // session end best streak from QuizStats
     let avgPointsPerQuestion: Double
 
+    /// Final score for display — whole numbers drop the trailing ".0"; fractional
+    /// scores from partial credit show one decimal (54.13: never `Int()`-floored).
+    var displayScore: String {
+        if finalScore == finalScore.rounded() {
+            return "\(Int(finalScore))"
+        }
+        return String(format: "%.1f", finalScore)
+    }
+
     /// Aggregate from the primitive values available on QuizViewModel at .finished state.
     /// - Parameters:
-    ///   - score: `QuizViewModel.score` (1 point per correct answer)
+    ///   - score: `QuizViewModel.score` (backend points; partial credit makes it fractional)
     ///   - questionsAnswered: `QuizViewModel.questionsAnswered`
+    ///   - correctCount: per-session count of `.correct` evaluations (54.13: counts come
+    ///     from actual results, never derived from the fractional score)
+    ///   - incorrectCount: per-session count of `.incorrect` evaluations — partials and
+    ///     skips land in neither bucket, so correct + incorrect ≤ answered always holds
     ///   - maxQuestions: `QuizViewModel.currentSession?.maxQuestions` — falls back to `questionsAnswered`
     ///   - stats: `QuizViewModel.quizStats` (streak, accuracy counters updated throughout the quiz)
     static func from(
         score: Double,
         questionsAnswered: Int,
+        correctCount: Int,
+        incorrectCount: Int,
         maxQuestions: Int?,
         stats: QuizStats
     ) -> QuizCompleteSummary {
-        let correct = Int(score)
         let total = maxQuestions ?? questionsAnswered
-        let incorrect = max(questionsAnswered - correct, 0)
         let accuracy = questionsAnswered > 0
-            ? Double(correct) / Double(questionsAnswered) * 100.0
+            ? Double(correctCount) / Double(questionsAnswered) * 100.0
             : 0.0
         let avg = questionsAnswered > 0 ? score / Double(questionsAnswered) : 0.0
 
         return QuizCompleteSummary(
             finalScore: score,
-            correctCount: correct,
-            incorrectCount: incorrect,
+            correctCount: correctCount,
+            incorrectCount: incorrectCount,
             totalAnswered: questionsAnswered,
             totalQuestions: total,
             sessionAccuracyPercent: accuracy,

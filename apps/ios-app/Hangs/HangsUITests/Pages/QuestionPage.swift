@@ -29,10 +29,6 @@ struct QuestionPage {
         app.buttons["question.skip"]
     }
 
-    var statusPill: XCUIElement {
-        app.staticTexts["question.statusPill"]
-    }
-
     /// Hidden state probe (DEBUG only). Returns the current QuizState case name.
     var stateLabel: XCUIElement {
         app.staticTexts["question.state"]

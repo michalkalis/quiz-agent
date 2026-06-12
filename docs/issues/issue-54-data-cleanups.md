@@ -1,9 +1,9 @@
 # Plan 54.11 / 54.13 / 54.16 + hygiene 54.19–54.21 — data + component cleanups (batchable)
 
 **Parent:** `issue-54-design-refresh-regressions.md` (§54.11, §54.13, §54.16, §54.19–§54.21) · **Priority:** P2
-**Status:** ready · These are the leftover cleanups not done in the 2026-06-12 session (the
+**Status:** DONE 2026-06-12 (second session) — all items landed in one commit; targeted suites green.
+These were the leftover cleanups not done in the 2026-06-12 first session (the
 trivial view-only ones — 54.9/54.10/54.12/54.14-lineSpacing — already landed in commit `40b9ff0`).
-Each here needs a small bit more than a one-line view edit.
 
 ---
 
@@ -71,8 +71,21 @@ The landed 54.10 fix (`totalQuestions` fallback → `settings.numberOfQuestions`
 `currentSession == nil`, counter shows 5.
 
 ## Done criteria
-- [ ] 54.11 VM field + test; 54.16 single-submit guard + animation; 54.13 per the resolved
+- [x] 54.11 VM field + test; 54.16 single-submit guard + animation; 54.13 per the resolved
       decision above (fractional display, counts from evaluations).
-- [ ] 54.19 file deleted · 54.20 page object + comments cleaned · 54.21 three no-ops removed ·
+- [x] 54.19 file deleted · 54.20 page object + comments cleaned · 54.21 three no-ops removed ·
       54.10 inspector test added.
-- [ ] Update parent §54.11/§54.13/§54.16/§54.19–§54.21 status.
+- [x] Update parent §54.11/§54.13/§54.16/§54.19–§54.21 status.
+
+## Implementation notes (2026-06-12)
+- 54.11: `QuizViewModel.streakBeforeLastAnswer` set right before `quizStats.recordAnswer`;
+  ResultView reads it. Test fixture uses bestStreak ≠ priorStreak so the old proxy fails it.
+- 54.13: `QuizCompleteSummary.from` takes `correctCount`/`incorrectCount` (new VM per-session
+  tallies `sessionCorrectCount`/`sessionIncorrectCount`; partials/skips in neither bucket) +
+  `displayScore` (one decimal, whole numbers drop ".0"); CompletionView no longer `Int()`-floors.
+- 54.16: delayed tap submit moved into `MCQDelayedSubmit` (@MainActor reference type in @State —
+  a value-type `@State Task` was untestable and copy-fragile); `.onChange(of: externalSelectedKey)`
+  cancels it; animation keyed on `effectiveSelectedKey`. **In-sim voice-match animation verify
+  still owed — batched into the Pencil/snapshot pass.**
+- Tests: `QuizViewModelStreakTests`, `MCQOptionPickerRaceTests` (new files), fractional cases in
+  `QuizCompleteSummaryTests`, 54.10 counter-fallback case in `ResultViewInspectorTests`.

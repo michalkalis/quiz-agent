@@ -32,7 +32,7 @@ Long outputs (>30 lines: summaries, analyses, reports, reviews) → self-contain
 
 These rules apply to every task in this repo unless explicitly overridden.
 Bias: caution over speed on non-trivial work. Use judgment on trivial tasks.
-Token budget (advisory): keep per-task output tight; if a task balloons, summarize and start fresh rather than pushing through — and surface that you did.
+Token budget: keep per-task output tight; context budget is Rule #12.
 
 ### 1. Minimal Footprint
 State assumptions explicitly; if uncertain, ask rather than guess, and present multiple interpretations when ambiguity exists. Push back when a simpler approach exists; stop when confused and name what's unclear.
@@ -83,6 +83,11 @@ When diagnosing a failure, confirm that a suggested workaround is not itself blo
 When you notice an optimization the user hasn't asked for — consolidating fragmented services/keys/billing, cheaper or simpler tooling, a unified gateway, reducing per-task token spend, removing duplicated infra — flag it briefly and unprompted.
 Keep it to a one-to-three line "worth considering: X, because Y, tradeoff Z" note; don't derail the current task. Only raise it once per distinct opportunity, and respect prior decisions (don't re-pitch something already declined).
 Examples worth flagging: multiple provider keys/bills for one logical capability, paying for a managed service that local/project-scoped config already covers, an obviously cheaper model for a low-stakes call.
+
+### 12. Context Budget — 100k Tokens per Session
+Keep session context under ~100k tokens. Plan work upfront so it fits: scope the task, estimate what reading/building/testing it needs, and split it before starting if it won't fit — don't discover the limit mid-task.
+Delegate bulk reading/searching to subagents so raw file contents don't accumulate in the main context.
+If the limit approaches with work unfinished: stop at a clean checkpoint, commit what's valid, and write a handoff via `/handoff` so a fresh session can resume without re-explaining context. Surface that you did this — never silently push past the budget.
 
 ## Rules files
 

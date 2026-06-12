@@ -23,6 +23,7 @@ enum TaskKey: Hashable, Sendable {
     case thinkingTime
     case sttEvent
     case sttChunk
+    case sttCommitWatchdog
     case bargeIn
 }
 

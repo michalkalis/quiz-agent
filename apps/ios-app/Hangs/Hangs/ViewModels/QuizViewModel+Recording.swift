@@ -149,6 +149,17 @@ extension QuizViewModel {
                         // If we were mid-recording, fall back gracefully
                         self.isStreamingSTT = false
                         self.liveTranscript = ""
+                        // A drop mid-recording must not strand the UI in
+                        // .recording — stop the engine and return to
+                        // ready-to-record (#54 task 54.4 stuck-state class).
+                        if self.quizState == .recording {
+                            self.cancelAutoStopRecordingTimer()
+                            self.audioService.stopStreamingRecording()
+                            self.isAutoRecording = false
+                            self.speechDetectedDuringAutoRecord = false
+                            self.errorMessage = "Connection lost. Tap Record to try again."
+                            self.transition(to: .askingQuestion)
+                        }
                     }
                     return
                 }
@@ -164,6 +175,7 @@ extension QuizViewModel {
 
         // Stop streaming recording
         cancelAutoStopRecordingTimer()
+        taskBag.cancel(.sttCommitWatchdog)
         cancelSilenceDetection()
         audioService.stopStreamingRecording()
         isAutoRecording = false
@@ -175,6 +187,14 @@ extension QuizViewModel {
         isStreamingSTT = false
 
         Logger.stt.info("🎙️ Committed transcript: \(text, privacy: .public)")
+
+        // Dead air: a forced commit (15 s cap) returns an empty transcript.
+        // Escalate as a transcription failure (retry prompt → auto-skip), never
+        // an empty confirmation sheet (#54 task 54.4, founder #5).
+        guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            handleTranscriptionFailure()
+            return
+        }
 
         // MCQ voice path (45.3): resolve a spoken letter / ordinal / answer text
         // to an option and submit its value directly, skipping the confirmation
@@ -244,7 +264,11 @@ extension QuizViewModel {
             // Streaming path: commit and let the event listener handle the response
             do {
                 try await sttService?.commitAndClose()
-                // The STT event listener will call handleCommittedTranscript
+                // The STT event listener will call handleCommittedTranscript.
+                // If ElevenLabs never answers the forced commit (dead air, dropped
+                // socket), only this watchdog stops the UI from showing RECORDING
+                // forever (#54 task 54.4, founder #5).
+                startCommitWatchdog()
             } catch {
                 // Cleanup and fallback
                 isStreamingSTT = false
@@ -490,6 +514,7 @@ extension QuizViewModel {
     func cancelProcessing() {
         cancelAutoConfirm()
         taskBag.cancel(.voiceSubmission)
+        taskBag.cancel(.sttCommitWatchdog)
         cancelAnswerTimer()
         cancelAutoStopRecordingTimer()
         cancelSilenceDetection()
@@ -518,6 +543,30 @@ extension QuizViewModel {
             isStreamingSTT = false
             liveTranscript = ""
         }
+    }
+
+    // MARK: - STT Commit Watchdog
+
+    /// Rescue net for the streaming path's fire-and-forget commit: if no
+    /// committed transcript resolves the state within `seconds`, clean up and
+    /// escalate as a transcription failure instead of leaving the UI stuck on
+    /// RECORDING. Cancelled by handleCommittedTranscript / cancelProcessing.
+    /// `seconds` is injectable for tests; production callers use the default.
+    func startCommitWatchdog(seconds: TimeInterval = Config.sttCommitWatchdogSecs) {
+        let task = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+            guard let self, !Task.isCancelled else { return }
+            guard self.quizState == .recording else { return }
+
+            Logger.stt.warning("⏱️ STT commit watchdog fired — no committed transcript within \(seconds, privacy: .public)s")
+
+            self.cleanupStreamingSTT()
+            self.cancelAutoStopRecordingTimer()
+            self.isAutoRecording = false
+            self.speechDetectedDuringAutoRecord = false
+            self.handleTranscriptionFailure()
+        }
+        taskBag.add(task, key: .sttCommitWatchdog)
     }
 
     // MARK: - Transcription Failure Escalation

@@ -104,14 +104,21 @@ struct ElevenLabsSTTServiceTests {
         }
     }
 
-    // MARK: committed_transcript — empty text (filtered out)
+    // MARK: committed_transcript — empty text (dead-air commit MUST be emitted)
 
-    @Test("committed_transcript with empty text emits no event")
+    /// 54.4 (founder #5): a forced commit after dead air returns empty text.
+    /// The VM needs this event to escalate a transcription failure — swallowing
+    /// it left the app stuck on the RECORDING screen forever.
+    @Test("committed_transcript with empty text emits committedTranscript")
     func committedTranscriptEmpty() async {
         let service = ElevenLabsSTTService()
         let json = #"{"message_type":"committed_transcript","text":""}"#
         let event = await firstEvent(from: service, sending: json)
-        #expect(event == nil)
+        guard case .committedTranscript(let text) = event else {
+            Issue.record("Expected .committedTranscript(\"\"), got \(String(describing: event))")
+            return
+        }
+        #expect(text.isEmpty)
     }
 
     // MARK: session_started — no event

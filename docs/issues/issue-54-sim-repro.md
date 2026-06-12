@@ -14,15 +14,34 @@ test. Don't change code before the repro confirms the trigger.
 ---
 
 ## 54.4 — recording doesn't auto-stop when the user says nothing (founder #5)
-**Mechanism:** silence auto-stop (`startSilenceDetection`, `+Recording.swift:203`) only fires on
-`.silenceAfterSpeech` — it **requires speech first**. No speech → no silence event → no stop. The
-only net is the hard cap `startAutoStopRecordingTimer()` (`+Timers.swift:119`) =
-`Config.autoRecordingDuration` (**15 s**), and it's gated `guard !isRerecording` (`:120`) so it's
-skipped on re-record.
-**Plan:** (a) confirm in-sim that 15 s dead air really fails to stop; (b) ensure the hard cap fires
-on the **streaming-STT no-speech path** (and on re-record); (c) consider a shorter no-speech cap +
-a visible countdown so the cap is legible. **Test:** VM/integration test that with no speech the
-recording transitions out of `.recording` within the cap.
+**✅ FIXED 2026-06-12.** Code-trace found **four** holes that together meant dead air could leave
+the UI in `.recording` forever (silence auto-stop requires speech first — `.silenceAfterSpeech` —
+so the hard cap is the only net, and the post-cap path itself leaked):
+1. **Service swallowed empty commits** — `ElevenLabsSTTService` only yielded `committed_transcript`
+   when `text` was non-empty, so a forced commit after dead air produced *no event at all*. Now
+   always yields (empty string = dead-air signal).
+2. **No post-commit timeout** — `stopRecordingAndSubmit`'s streaming branch fired `commitAndClose()`
+   and waited for an event that might never come. New **commit watchdog**
+   (`startCommitWatchdog`, TaskKey `.sttCommitWatchdog`, `Config.sttCommitWatchdogSecs = 5 s`)
+   escalates to `handleTranscriptionFailure()` if nothing arrives.
+3. **Hard cap skipped on re-record** — `guard !isRerecording` removed from
+   `startAutoStopRecordingTimer` (silence detection is *also* off for re-records and never runs on
+   the streaming path, so a silent re-record had no stop mechanism at all). The old
+   `autoStopSkippedDuringRerecord` test encoded that opt-out as intent — flipped to
+   `autoStopArmedDuringRerecord` with documented rationale (CLAUDE.md rule #4).
+4. **`.disconnected` mid-recording stranded state** — handler now stops the stream, clears flags,
+   sets a retry message, and returns to `.askingQuestion`.
+`handleCommittedTranscript` now routes empty/whitespace text to `handleTranscriptionFailure()`
+(3-tier: retry prompt → "closer to the mic" → auto-skip) instead of showing an empty confirmation.
+**Tests (red→green):** `QuizViewModelStreamingTests` Tests 4–7 (disconnect returns to
+`.askingQuestion`; empty commit escalates; watchdog rescues silent commit via
+`commitEmitsNothing` mock seam; cap fires during re-record), `ElevenLabsSTTServiceTests`
+empty-commit emission flipped, `QuizViewModelTimerTests.autoStopArmedDuringRerecord`. Full suite
+370 tests green except 3 pre-existing snapshot fails; streaming-suite full-run flakiness fixed by
+widening `waitUntil` deadline (1 s wall-clock starved under 70 parallel suites).
+**Plan item (c)** — shorter cap + visible countdown — deliberately **not** done: 15 s cap +
+5 s watchdog now guarantee escape; a countdown UI is scope beyond the regression. Live dead-air
+verify is batched into the 54.5 live-streaming sim-confirm (needs backend + real ElevenLabs token).
 
 ## 54.6 — can't end quiz from the minimized view; not redesigned (founder #1)
 **Mechanism:** `MinimizedQuizView.swift` was **not touched by #52** — still old `Theme.Colors.*`
@@ -54,6 +73,6 @@ them off-main (`Task.detached`) — trapped pre-fix exactly like the app, passes
 process alive at every step (screenshots /tmp/hangs-54-7/).
 
 ## Done criteria (per item)
-- [ ] Repro confirmed (or 54.7 closed as non-defect) with sim evidence. *(54.7 ✅ — crash repro 4/4)*
-- [ ] Behavioural test red→green. Screenshot-verify (54.6 light+dark). *(54.7 ✅ — AdaptiveColorIsolationTests)*
-- [ ] Pencil synced for 54.6 minimized frame. Update parent §54.4/§54.6/§54.7. *(§54.7 ✅)*
+- [ ] Repro confirmed (or 54.7 closed as non-defect) with sim evidence. *(54.7 ✅ — crash repro 4/4 · 54.4 ✅ — code-trace, 4 holes; live dead-air check batched into 54.5)*
+- [ ] Behavioural test red→green. Screenshot-verify (54.6 light+dark). *(54.7 ✅ — AdaptiveColorIsolationTests · 54.4 ✅ — streaming Tests 4–7 + service + timer tests)*
+- [ ] Pencil synced for 54.6 minimized frame. Update parent §54.4/§54.6/§54.7. *(§54.7 ✅ · §54.4 ✅)*

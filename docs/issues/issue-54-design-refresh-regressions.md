@@ -32,7 +32,7 @@ Pencil-sync, done-criteria). Pick one per session.
 | [`issue-54-02-voice-overflow.md`](issue-54-02-voice-overflow.md) | 54.2 voice layout overflow | P0 | ✅ fixed 2026-06-12 |
 | [`issue-54-05-resubmit-cancel.md`](issue-54-05-resubmit-cancel.md) | 54.5 + 54.15 cancelled-resubmit + ErrorView factory | P0 | landed (unit-verified; sim-confirm pending) |
 | [`issue-54-01-dark-mode.md`](issue-54-01-dark-mode.md) | 54.1 dark mode (Phase 1 token swap; Phase 2 asset-catalog) | P0 | ✅ Phase 1 landed 2026-06-12 (Phase 2 open) |
-| [`issue-54-sim-repro.md`](issue-54-sim-repro.md) | 54.4, 54.6, 54.7 (need live-sim repro first) | P0 | 54.7 ✅ fixed 2026-06-12 (isolation-trap crash); 54.4/54.6 open |
+| [`issue-54-sim-repro.md`](issue-54-sim-repro.md) | 54.4, 54.6, 54.7 (need live-sim repro first) | P0 | 54.7 ✅ + 54.4 ✅ fixed 2026-06-12; 54.6 open |
 | [`issue-54-recovery-paths.md`](issue-54-recovery-paths.md) | 54.17, 54.18 broken recovery paths (new, 2nd review pass) | P1 | ready (54.18 decided: restore typed input) |
 | [`issue-54-data-cleanups.md`](issue-54-data-cleanups.md) | 54.11, 54.13, 54.16 + hygiene 54.19–54.21 | P2 | ready (54.13 decided: fractional display) |
 | [`issue-54-pencil-snapshot-sync.md`](issue-54-pencil-snapshot-sync.md) | Pencil 1:1 sync + snapshot re-record + CI gate + TSan triage | P1 | run last |
@@ -163,6 +163,18 @@ new ids are `question.record`/`question.stop` (`QuestionView.swift:383`), tests 
 > suite (tap Record → `.recording` → STT → confirm → result).
 
 ### 54.4 — Recording doesn't auto-stop when the user says nothing (founder #5)
+
+> **STATUS: ✅ FIXED 2026-06-12.** Four holes, not one: (1) `ElevenLabsSTTService` swallowed empty
+> committed transcripts (dead-air commit produced *no event*); (2) the streaming branch of
+> `stopRecordingAndSubmit` had no post-commit timeout — new 5 s commit watchdog
+> (`.sttCommitWatchdog`) escalates to `handleTranscriptionFailure()`; (3) the 15 s hard cap was
+> gated `guard !isRerecording` — removed (silent re-records had **no** stop mechanism; the test
+> encoding that opt-out was flipped per rule #4); (4) `.disconnected` mid-recording stranded
+> `.recording` — now returns to `.askingQuestion` with a retry message. Empty/whitespace commits
+> route to the 3-tier transcription-failure escalation instead of an empty confirmation sheet.
+> Tests red→green; full suite 370 green (3 pre-existing snapshot fails). Details:
+> [`issue-54-sim-repro.md`](issue-54-sim-repro.md) §54.4.
+
 **Symptom:** after the answer timer expired, recording auto-started, but with no speech it never
 stopped on its own.
 **Root cause (medium confidence — needs simulator confirm):**

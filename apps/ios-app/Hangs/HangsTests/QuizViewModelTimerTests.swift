@@ -194,20 +194,23 @@ struct QuizViewModelAutoStopRecordingTests {
         #expect(!viewModel.taskBag.contains(.autoStopRecording))
     }
 
-    /// Regression: re-record explicitly opts out of the auto-stop safety so the
-    /// user can hold longer pauses while reformulating. If the `isRerecording`
-    /// guard at the top of `startAutoStopRecordingTimer` is dropped, re-record
-    /// would auto-cut the user off after 15s.
-    @Test("startAutoStopRecordingTimer is a no-op while isRerecording")
+    /// INTENT FLIPPED 2026-06-12 (#54 task 54.4, founder #5): this test used to
+    /// assert re-record opts OUT of the cap ("longer pauses while reformulating").
+    /// But silence detection is also disabled for re-records and never runs on
+    /// the streaming path — so opting out meant a silent re-record could record
+    /// FOREVER. The hard cap must always be armed; 15 s is the same allowance a
+    /// first attempt gets.
+    @Test("startAutoStopRecordingTimer is armed even while isRerecording")
     @MainActor
-    func autoStopSkippedDuringRerecord() async throws {
+    func autoStopArmedDuringRerecord() async throws {
         let viewModel = Fixtures.makeViewModelForTimerTests()
         viewModel.quizState = .recording
         viewModel.isRerecording = true
 
         viewModel.startAutoStopRecordingTimer()
 
-        #expect(!viewModel.taskBag.contains(.autoStopRecording))
+        #expect(viewModel.taskBag.contains(.autoStopRecording))
+        viewModel.cancelAutoStopRecordingTimer()
     }
 }
 

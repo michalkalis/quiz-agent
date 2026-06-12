@@ -12,7 +12,7 @@ Run the gen → verify → score → approve → import pipeline at volume to fi
 | Category | Type | Target count |
 |---|---|---|
 | `kids` | core | 50 — DONE (52, 2026-05-05) |
-| `general` | core | **500** — ~227 approved (52 original + 16 from batch-04 2026-06-11 + 19 from batch-05 2026-06-11 + 20 from batch-06 2026-06-11 + 20 from batch-07 2026-06-11 + 20 from batch-08 2026-06-11 + 20 from batch-09 2026-06-12 + 20 from batch-10 2026-06-12 + 20 from batch-11 2026-06-12 + 20 from batch-12 2026-06-12); **raised to ~500 by founder 2026-06-09, approached incrementally** (see "General content run" below) |
+| `general` | core | **500** — ~247 approved (52 original + 16 from batch-04 2026-06-11 + 19 from batch-05 2026-06-11 + 20 from batch-06 2026-06-11 + 20 from batch-07 2026-06-11 + 20 from batch-08 2026-06-11 + 20 from batch-09 2026-06-12 + 20 from batch-10 2026-06-12 + 20 from batch-11 2026-06-12 + 20 from batch-12 2026-06-12 + 20 from batch-13 2026-06-12); **raised to ~500 by founder 2026-06-09, approached incrementally** (see "General content run" below) |
 | `adults` | core | 50 — DONE (67) |
 | `wizarding-world` | themed | 30 — DONE |
 | `superheroes` | themed | 30 — 34/30 DONE (8 approved LOCALLY 2026-05-19; prod sync pending) |

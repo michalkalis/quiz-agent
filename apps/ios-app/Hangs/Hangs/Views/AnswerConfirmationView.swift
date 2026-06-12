@@ -144,7 +144,6 @@ struct AnswerConfirmationView: View {
                 .font(.hangsDisplay(32, weight: .black))
                 .tracking(-1)
                 .foregroundColor(Theme.Hangs.Colors.ink)
-                .lineSpacing(-2)
                 .tint(Theme.Hangs.Colors.pink)
                 .multilineTextAlignment(.leading)
                 .frame(maxWidth: .infinity, alignment: .leading)

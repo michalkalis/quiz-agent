@@ -28,7 +28,6 @@ struct HangsQuestionPrompt: View {
                 .font(textFont)
                 .tracking(-1)
                 .foregroundColor(textColor)
-                .lineSpacing(-2)
                 .minimumScaleFactor(minimumScaleFactor)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -56,7 +55,7 @@ struct HangsAnswerComparisonCard: View {
         HangsCard(padding: EdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16)) {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    HangsSectionLabel(text: primaryLabel, color: primaryBadge == .correct ? Theme.Hangs.Colors.blue : Theme.Hangs.Colors.pink)
+                    HangsSectionLabel(text: primaryLabel, color: primaryBadge == .correct ? Theme.Hangs.Colors.successText : Theme.Hangs.Colors.pink)
                     Spacer()
                     HangsInlineBadge(kind: primaryBadge, size: 24)
                 }
@@ -67,7 +66,7 @@ struct HangsAnswerComparisonCard: View {
                 Rectangle().fill(Theme.Hangs.Colors.hairline).frame(height: 1)
                 HStack {
                     HangsSectionLabel(text: secondaryLabel,
-                                      color: secondaryBadge == .correct ? Theme.Hangs.Colors.blue : Theme.Hangs.Colors.pink)
+                                      color: secondaryBadge == .correct ? Theme.Hangs.Colors.successText : Theme.Hangs.Colors.pink)
                     if let secondaryBadge {
                         Spacer()
                         HangsInlineBadge(kind: secondaryBadge, size: 20)
@@ -75,6 +74,11 @@ struct HangsAnswerComparisonCard: View {
                 }
                 Text(secondaryValue)
                     .font(secondaryValueFont)
+                    // 54.14: `secondaryValueColor` is currently dropped here (both
+                    // branches were .ink). Wiring it through (ResultView passes .muted
+                    // for the correct-card recap) is a *visual* change — deferred to the
+                    // Pencil-sync pass so the recap colour is confirmed against the design
+                    // and the snapshot re-recorded deliberately.
                     .foregroundColor(secondaryBadge == nil ? Theme.Hangs.Colors.ink : Theme.Hangs.Colors.ink)
                     .minimumScaleFactor(0.7)
                     .fixedSize(horizontal: false, vertical: true)
@@ -85,24 +89,24 @@ struct HangsAnswerComparisonCard: View {
 }
 
 #if DEBUG
-#Preview {
-    VStack(spacing: 20) {
-        HangsQuestionPrompt(
-            text: "What is the capital of France?",
-            barColor: Theme.Hangs.Colors.blue
-        )
-        HangsAnswerComparisonCard(
-            primaryLabel: "YOUR ANSWER",
-            primaryValue: "Paris",
-            primaryValueColor: Theme.Hangs.Colors.ink,
-            primaryBadge: .correct,
-            secondaryLabel: "THE QUESTION",
-            secondaryValue: "What is the capital of France?",
-            secondaryValueColor: Theme.Hangs.Colors.ink,
-            secondaryBadge: nil
-        )
+    #Preview {
+        VStack(spacing: 20) {
+            HangsQuestionPrompt(
+                text: "What is the capital of France?",
+                barColor: Theme.Hangs.Colors.blue
+            )
+            HangsAnswerComparisonCard(
+                primaryLabel: "YOUR ANSWER",
+                primaryValue: "Paris",
+                primaryValueColor: Theme.Hangs.Colors.ink,
+                primaryBadge: .correct,
+                secondaryLabel: "THE QUESTION",
+                secondaryValue: "What is the capital of France?",
+                secondaryValueColor: Theme.Hangs.Colors.ink,
+                secondaryBadge: nil
+            )
+        }
+        .padding(20)
+        .background(Theme.Hangs.Colors.bg)
     }
-    .padding(20)
-    .background(Theme.Hangs.Colors.bg)
-}
 #endif

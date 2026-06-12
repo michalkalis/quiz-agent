@@ -183,8 +183,13 @@ async def lifespan(app: FastAPI):
 
     try:
         logger.info("Initializing SQL client...")
+        # DATABASE_URL is the pgvector questions store (postgresql+asyncpg://,
+        # async-only driver). The sync sqlite ratings store must not inherit
+        # it — with DATABASE_URL set, startup died in create_all (MissingGreenlet).
         sql_client = SQLClient(
-            database_url=os.getenv("DATABASE_URL", "sqlite:///./data/ratings.db")
+            database_url=os.getenv(
+                "RATINGS_DATABASE_URL", "sqlite:///./data/ratings.db"
+            )
         )
         logger.info("SQL client initialized")
     except Exception as e:

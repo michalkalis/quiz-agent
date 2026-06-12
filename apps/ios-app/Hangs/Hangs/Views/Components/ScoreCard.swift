@@ -22,7 +22,6 @@ struct ScoreCard: View {
             Text(formattedScore)
                 .font(.displayXXLHeavy)
                 .foregroundColor(Theme.Colors.textPrimary)
-                .lineSpacing(-4)
         }
         .padding(Theme.Spacing.lg)
         .background(Theme.Colors.bgCard)

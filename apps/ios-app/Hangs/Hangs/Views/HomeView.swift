@@ -10,12 +10,13 @@ import SwiftUI
 
 struct HomeView: View {
     @ObservedObject var viewModel: QuizViewModel
+    var onReplayOnboarding: (() -> Void)? = nil
 
     var body: some View {
         VStack(spacing: 0) {
             HangsBrandRow {
                 NavigationLink {
-                    SettingsView(viewModel: viewModel)
+                    SettingsView(viewModel: viewModel, onReplayOnboarding: onReplayOnboarding)
                 } label: {
                     navChipVisual(icon: "gearshape")
                 }
@@ -26,12 +27,11 @@ struct HomeView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    HangsHeroBlock(
-                        title: "HANGS",
-                        subtitle: "voice-based trivia for the road"
-                    )
-                    .padding(.horizontal, 20)
-                    .padding(.top, 4)
+                    Text("voice-based trivia for the road")
+                        .font(.hangsBody(14))
+                        .foregroundColor(Theme.Hangs.Colors.muted)
+                        .padding(.horizontal, 20)
+                        .padding(.top, 4)
 
                     statsRow
 
@@ -75,13 +75,13 @@ struct HomeView: View {
                 label: "streak",
                 value: "\(viewModel.quizStats.currentStreak)",
                 labelColor: Theme.Hangs.Colors.pink,
-                valueColor: Theme.Hangs.Colors.blue
+                valueColor: Theme.Hangs.Colors.ink
             )
             HangsStatBox(
                 label: "best",
                 value: "\(viewModel.quizStats.bestStreak)",
-                labelColor: Theme.Hangs.Colors.blue,
-                valueColor: Theme.Hangs.Colors.pink
+                labelColor: Theme.Hangs.Colors.pink,
+                valueColor: Theme.Hangs.Colors.ink
             )
         }
         .padding(.horizontal, 20)
@@ -97,8 +97,6 @@ struct HomeView: View {
                 difficultyRow
                 HangsDivider()
                 categoriesRow
-                HangsDivider()
-                ageAppropriateRow
             }
         }
     }
@@ -131,7 +129,7 @@ struct HomeView: View {
             configRowVisual(
                 label: "Difficulty",
                 value: viewModel.settings.difficultyDisplayName(),
-                valueColor: Theme.Hangs.Colors.pink
+                valueColor: Theme.Hangs.Colors.blue
             )
         }
         .accessibilityIdentifier("home-difficulty-menu")
@@ -152,23 +150,6 @@ struct HomeView: View {
             )
         }
         .accessibilityIdentifier("home-categories-menu")
-    }
-
-    private var ageAppropriateRow: some View {
-        Menu {
-            ForEach(Config.ageAppropriateOptions, id: \.id) { option in
-                Button(option.display) {
-                    viewModel.settings.ageAppropriate = option.id
-                }
-            }
-        } label: {
-            configRowVisual(
-                label: "Age",
-                value: viewModel.settings.ageAppropriateDisplayName(),
-                valueColor: Theme.Hangs.Colors.pink
-            )
-        }
-        .accessibilityIdentifier("home-age-menu")
     }
 
     // MARK: - Row visual (replicates HangsConfigRow body w/o inner Button)
@@ -202,16 +183,16 @@ struct HomeView: View {
             .frame(width: 36, height: 36)
             .background(
                 RoundedRectangle(cornerRadius: Theme.Hangs.Radius.navSquare)
-                    .fill(Color.white)
+                    .fill(Theme.Hangs.Colors.bgCard)
             )
             .hangsShadow(Theme.Hangs.Shadow.navChip)
     }
 }
 
 #if DEBUG
-#Preview {
-    NavigationStack {
-        HomeView(viewModel: QuizViewModel.preview)
+    #Preview {
+        NavigationStack {
+            HomeView(viewModel: QuizViewModel.preview)
+        }
     }
-}
 #endif

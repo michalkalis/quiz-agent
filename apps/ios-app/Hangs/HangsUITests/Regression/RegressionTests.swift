@@ -17,8 +17,7 @@
 
 import XCTest
 
-nonisolated final class RegressionTests: XCTestCase {
-
+final nonisolated class RegressionTests: XCTestCase {
     private let client = UITestClient()
 
     override func setUp() {
@@ -27,6 +26,7 @@ nonisolated final class RegressionTests: XCTestCase {
     }
 
     // MARK: - RS-start
+
     //
     // Scenario: launch with mock services, tap Start Quiz, verify the quiz screen
     // appears and the mic button is hittable, and the state probe reads "askingQuestion".
@@ -48,18 +48,19 @@ nonisolated final class RegressionTests: XCTestCase {
         question.waitForQuestion(timeout: 15)
 
         XCTAssertTrue(
-            question.micButton.waitForExistence(timeout: 5),
-            "RS-start: question.micButton not found after navigation to question screen"
+            question.recordButton.waitForExistence(timeout: 5),
+            "RS-start: question.record button not found after navigation to question screen"
         )
         XCTAssertTrue(
-            question.micButton.isHittable,
-            "RS-start: question.micButton is not hittable"
+            question.recordButton.isHittable,
+            "RS-start: question.record button is not hittable"
         )
 
         question.waitForState("askingQuestion", timeout: 5)
     }
 
     // MARK: - RS-correct
+
     //
     // Scenario: from askingQuestion state, inject a committed STT event with the
     // correct answer, confirm via the confirmation sheet, and assert the result
@@ -82,9 +83,9 @@ nonisolated final class RegressionTests: XCTestCase {
         question.waitForQuestion(timeout: 15)
         question.waitForState("askingQuestion", timeout: 10)
 
-        // Tap mic to start recording — committed STT events are only consumed
+        // Tap Record to start recording — committed STT events are only consumed
         // while the VM is in .recording (handleCommittedTranscript guard).
-        question.micButton.tap()
+        question.recordButton.tap()
         question.waitForState("recording", timeout: 5)
 
         // Inject a committed STT event (simulates user saying the answer).
@@ -104,13 +105,14 @@ nonisolated final class RegressionTests: XCTestCase {
     }
 
     // MARK: - RS-incorrect
+
     //
     // Scenario: same flow as RS-correct but launched with "--ui-test-incorrect"
     // so the mock returns an incorrect evaluation. Assert the hero text contains
-    // "CLOSE" (the incorrect-branch headline).
+    // "MISSED" (the incorrect-branch headline).
     //
     // Regression guarded: incorrect-answer branch of showingResult renders the
-    // "CLOSE—\nBUT NO." hero.
+    // "MISSED\nIT." hero.
 
     @MainActor
     func testRSIncorrect() async throws {
@@ -126,8 +128,8 @@ nonisolated final class RegressionTests: XCTestCase {
         question.waitForQuestion(timeout: 15)
         question.waitForState("askingQuestion", timeout: 10)
 
-        // Tap mic to enter .recording so handleCommittedTranscript will accept the event.
-        question.micButton.tap()
+        // Tap Record to enter .recording so handleCommittedTranscript will accept the event.
+        question.recordButton.tap()
         question.waitForState("recording", timeout: 5)
 
         try await client.sendSTTEvent(path: "/stt/committed", text: "London")
@@ -141,10 +143,49 @@ nonisolated final class RegressionTests: XCTestCase {
 
         let result = ResultPage(app: app)
         result.waitForResult(timeout: 15)
-        result.assertHeroContains("CLOSE")
+        result.assertHeroContains("MISSED")
+    }
+
+    // MARK: - RS-long
+
+    //
+    // Scenario: launch with "--ui-test-long" so the seeded voice question is
+    // ~230 characters, navigate to the question screen, and assert the Record
+    // and Skip buttons are hittable (isHittable is false when off-screen).
+    //
+    // Regression guarded: 54.2 — a long voice question must scroll instead of
+    // pushing the Record/Skip action row below the screen.
+
+    @MainActor
+    func testRSLongQuestion() async throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-test", "--ui-test-long"]
+        app.launch()
+
+        let home = HomePage(app: app)
+        home.assertVisible()
+        home.tapStartQuiz()
+
+        let question = QuestionPage(app: app)
+        question.waitForQuestion(timeout: 15)
+        question.waitForState("askingQuestion", timeout: 10)
+
+        XCTAssertTrue(
+            question.recordButton.waitForExistence(timeout: 5),
+            "RS-long: question.record button not found with a long question"
+        )
+        XCTAssertTrue(
+            question.recordButton.isHittable,
+            "RS-long: question.record button is not hittable — long question pushed it off-screen"
+        )
+        XCTAssertTrue(
+            question.skipButton.isHittable,
+            "RS-long: question.skip button is not hittable — long question pushed it off-screen"
+        )
     }
 
     // MARK: - RS-paywall
+
     //
     // Scenario: launch with "--ui-test-paywall" so createSession throws
     // dailyLimitReached, tapping Start Quiz triggers the paywall sheet.

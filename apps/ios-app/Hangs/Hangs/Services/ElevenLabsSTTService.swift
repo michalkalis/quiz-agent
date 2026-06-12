@@ -195,18 +195,21 @@ actor ElevenLabsSTTService: ElevenLabsSTTServiceProtocol {
             }
 
         case "committed_transcript":
-            if let text = json["text"] as? String, !text.isEmpty {
-                eventContinuation?.yield(.committedTranscript(text))
+            // Empty text is a meaningful signal, not noise: a forced commit after
+            // dead air (15 s cap) returns "" and the VM escalates it as a
+            // transcription failure. Swallowing it left the app stuck on the
+            // RECORDING screen forever (#54 task 54.4, founder #5).
+            let text = json["text"] as? String ?? ""
+            eventContinuation?.yield(.committedTranscript(text))
 
-                Logger.stt.info("🎙️ ElevenLabs STT committed: \(text, privacy: .public)")
+            Logger.stt.info("🎙️ ElevenLabs STT committed: \(text, privacy: .public)")
 
-                // Sentry: metadata ONLY — never the transcript text itself.
-                let confidence = (json["confidence"] as? Double) ?? 0
-                let crumb = Breadcrumb(level: .info, category: "stt.result")
-                crumb.message = "committed_transcript"
-                crumb.data = ["length": text.count, "confidence": confidence]
-                SentryBreadcrumb.add(crumb)
-            }
+            // Sentry: metadata ONLY — never the transcript text itself.
+            let confidence = (json["confidence"] as? Double) ?? 0
+            let crumb = Breadcrumb(level: .info, category: "stt.result")
+            crumb.message = "committed_transcript"
+            crumb.data = ["length": text.count, "confidence": confidence]
+            SentryBreadcrumb.add(crumb)
 
         case "session_started":
             Logger.stt.info("🎙️ ElevenLabs STT: session started")

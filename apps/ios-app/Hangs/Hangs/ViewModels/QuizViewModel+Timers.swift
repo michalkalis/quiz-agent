@@ -115,16 +115,18 @@ extension QuizViewModel {
 
     // MARK: - Auto-Stop Recording Timer
 
-    /// Start a timer that auto-stops recording after Config.autoRecordingDuration
-    func startAutoStopRecordingTimer() {
-        guard !isRerecording else { return }
-
+    /// Start a timer that auto-stops recording after `duration`.
+    /// Always armed — including re-record attempts (#54 task 54.4): silence
+    /// detection is disabled for re-records and never runs on the streaming
+    /// path, so this hard cap is the only guarantee recording stops on dead air.
+    /// `duration` is injectable for tests; production callers use the default.
+    func startAutoStopRecordingTimer(duration: TimeInterval = Config.autoRecordingDuration) {
         cancelAutoStopRecordingTimer()
 
         let task = Task { [weak self] in
             guard let self else { return }
 
-            try? await Task.sleep(nanoseconds: UInt64(Config.autoRecordingDuration * 1_000_000_000))
+            try? await Task.sleep(nanoseconds: UInt64(duration * 1_000_000_000))
 
             if Task.isCancelled { return }
 
@@ -192,12 +194,12 @@ extension QuizViewModel {
 
     /// Start a ticking auto-confirm countdown if enabled.
     /// Cancelled by rerecordAnswer() or cancelProcessing().
-    func startAutoConfirmIfEnabled() {
+    /// `duration` is injectable for tests; production callers use the default.
+    func startAutoConfirmIfEnabled(duration: Int = Config.autoConfirmDelaySecs) {
         guard settings.autoConfirmEnabled else {
             autoConfirmCountdown = 0
             return
         }
-        let duration = Config.autoConfirmDelaySecs
         autoConfirmCountdown = duration
         let task = Task { [weak self] in
             for remaining in (0 ..< duration).reversed() {
@@ -207,7 +209,11 @@ extension QuizViewModel {
             }
             guard let self, !Task.isCancelled else { return }
             guard self.showAnswerConfirmation else { return }
-            await self.confirmAnswer()
+            // Hand off to a fresh task: confirmAnswer() cancels the auto-confirm
+            // task (this one), and the streaming-path submit inside it is
+            // cancellation-aware — awaiting it here would throw
+            // URLError.cancelled mid-submit and surface the OOPS screen (54.5).
+            Task { await self.confirmAnswer() }
         }
         taskBag.add(task, key: .autoConfirm)
     }

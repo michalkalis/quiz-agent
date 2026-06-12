@@ -105,7 +105,15 @@ final class QuizViewModel: ObservableObject {
     @Published var currentSession: QuizSession?
     @Published var score: Double = 0.0
     @Published var questionsAnswered: Int = 0
+
+    // Per-session evaluation tallies for the completion breakdown (54.13) —
+    // partials and skips land in neither bucket.
+    @Published var sessionCorrectCount: Int = 0
+    @Published var sessionIncorrectCount: Int = 0
     @Published var errorMessage: String? // Inline errors shown in QuestionView (e.g., recording failures)
+    /// Display model for the full-screen Error state, built by `setError` via
+    /// `AppErrorModel.from` so ErrorView shows localised copy + the right CTA (54.15).
+    @Published private(set) var activeErrorModel: AppErrorModel?
 
     #if DEBUG
         /// Rich debug dump of the most recent error — type, localizedDescription, `String(reflecting:)`,
@@ -148,6 +156,11 @@ final class QuizViewModel: ObservableObject {
     // MARK: - Quiz Stats
 
     @Published var quizStats: QuizStats = .empty
+
+    /// Streak value immediately before the last recorded answer — captured because
+    /// `quizStats.currentStreak` is already 0 by the time ResultView renders an
+    /// incorrect answer (54.11).
+    @Published var streakBeforeLastAnswer: Int = 0
 
     // MARK: - Quiz Settings
 
@@ -370,7 +383,8 @@ final class QuizViewModel: ObservableObject {
         if persistenceStore.isAtCapacity {
             setError(
                 message: "Question history is full. Please reset your history in Settings to continue.",
-                context: .initialization
+                context: .initialization,
+                model: .historyAtCapacity
             )
             return
         }
@@ -470,10 +484,15 @@ final class QuizViewModel: ObservableObject {
     /// and the `.error` state — we deliberately do not speak them aloud.
     /// `error` is optional; when present it is formatted into `lastErrorDebugInfo` (DEBUG only)
     /// so `DebugErrorDetailsView` can show the full chain without parsing log files.
-    func setError(message: String, context: ErrorContext, error: Error? = nil) { // internal for QuizViewModel+Recording
+    /// `model` overrides the derived display model for failures whose copy/CTA
+    /// can't be inferred from the error or context (e.g. history at capacity).
+    func setError(message: String, context: ErrorContext, error: Error? = nil, model: AppErrorModel? = nil) { // internal for QuizViewModel+Recording
         #if DEBUG
             lastErrorDebugInfo = error.map { Self.formatDebugError($0, displayMessage: message) }
         #endif
+        activeErrorModel = model
+            ?? error.map { AppErrorModel.from($0, context: context) }
+            ?? AppErrorModel.from(context: context)
         transition(to: .error(message: message, context: context))
     }
 
@@ -842,8 +861,16 @@ final class QuizViewModel: ObservableObject {
 
         // Update quiz stats (streak tracking)
         if evaluation.result != .skipped {
+            streakBeforeLastAnswer = quizStats.currentStreak
             quizStats.recordAnswer(isCorrect: evaluation.isCorrect)
             persistenceStore.saveStats(quizStats)
+        }
+
+        // Per-session tallies for the completion breakdown (54.13)
+        if evaluation.result == .correct {
+            sessionCorrectCount += 1
+        } else if evaluation.result == .incorrect {
+            sessionIncorrectCount += 1
         }
 
         // Store NEXT question separately (don't update currentQuestion yet!)
@@ -982,6 +1009,8 @@ final class QuizViewModel: ObservableObject {
         currentSession = nil
         score = 0.0
         questionsAnswered = 0
+        sessionCorrectCount = 0
+        sessionIncorrectCount = 0
         errorMessage = nil
         nextQuestionAudioUrl = nil
         nextQuestion = nil
@@ -999,6 +1028,9 @@ final class QuizViewModel: ObservableObject {
         pendingResponse = nil
         transcribedAnswer = ""
         showAnswerConfirmation = false
+        // Ending a quiz from the minimized widget must dismiss the widget —
+        // otherwise a stale card floats over Home (#54 task 54.6).
+        isMinimized = false
     }
 
     // MARK: - Question History Management

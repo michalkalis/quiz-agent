@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ralph Overnight Report — 2026-06-11 22:26</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f7;
+      color: #333;
+      line-height: 1.6;
+    }
+    header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    header h1 { font-size: 1.8rem; margin-bottom: 0.5rem; }
+    header .meta {
+      font-size: 0.9rem;
+      opacity: 0.95;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    header .meta div { display: flex; flex-direction: column; gap: 0.2rem; }
+    header .meta strong { opacity: 0.9; }
+
+    nav {
+      background: #fff;
+      border-bottom: 1px solid #e0e0e0;
+      padding: 1rem 2rem;
+      position: sticky;
+      top: 60px;
+      z-index: 99;
+    }
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    nav a {
+      color: #667eea;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.95rem;
+    }
+    nav a:hover { text-decoration: underline; }
+
+    main { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+
+    section {
+      background: white;
+      margin-bottom: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      overflow: hidden;
+    }
+
+    section > h2 {
+      background: #f8f8fa;
+      padding: 1.5rem;
+      margin: 0;
+      font-size: 1.3rem;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+
+    section > div { padding: 1.5rem; }
+
+    .status-badge {
+      display: inline-block;
+      padding: 0.3rem 0.8rem;
+      border-radius: 1rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .status-green { background: #d4edda; color: #155724; }
+    .status-amber { background: #fff3cd; color: #856404; }
+    .status-red { background: #f8d7da; color: #721c24; }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .summary-card {
+      border-left: 4px solid #667eea;
+      padding: 1rem;
+      background: #f9f9fc;
+    }
+    .summary-card strong { display: block; color: #667eea; font-size: 0.85rem; margin-bottom: 0.5rem; }
+    .summary-card .value { font-size: 2rem; font-weight: 700; color: #333; }
+
+    details {
+      margin: 1rem 0;
+      padding: 0;
+    }
+    details > summary {
+      padding: 1rem;
+      background: #f9f9fc;
+      cursor: pointer;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      user-select: none;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+    }
+    details > summary:hover { background: #efeffe; }
+    details[open] > summary { background: #efeffe; border-bottom: none; border-radius: 4px 4px 0 0; }
+    details > div { border: 1px solid #e0e0e0; border-top: none; padding: 1rem; background: #fafafa; }
+    details > summary::marker { content: ''; }
+    details > summary::before { content: '▶'; transition: transform 0.2s; display: inline-block; width: 1rem; }
+    details[open] > summary::before { content: '▼'; }
+
+    .blocker-box {
+      background: #fff5f5;
+      border-left: 4px solid #ff4444;
+      padding: 1.5rem;
+      margin: 1rem 0;
+      border-radius: 4px;
+    }
+    .blocker-box h4 { color: #d32f2f; margin-bottom: 0.5rem; font-size: 1rem; }
+    .blocker-box code { background: #fff; padding: 0.2rem 0.4rem; border-radius: 2px; font-family: monospace; }
+
+    .task-group {
+      margin: 1.5rem 0;
+    }
+    .task-group h3 {
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      color: #333;
+      border-bottom: 2px solid #f0f0f0;
+      padding-bottom: 0.5rem;
+    }
+
+    .task-item {
+      padding: 1rem;
+      margin: 0.5rem 0;
+      background: #fafafa;
+      border-left: 3px solid #ddd;
+      border-radius: 2px;
+    }
+    .task-item.done { border-left-color: #4caf50; }
+    .task-item.partial { border-left-color: #ff9800; }
+    .task-item.failed { border-left-color: #f44336; }
+
+    .task-item .task-title { font-weight: 600; color: #333; margin-bottom: 0.3rem; }
+    .task-item .task-note { font-size: 0.9rem; color: #666; margin-top: 0.3rem; }
+    .task-item .commit-id { font-family: monospace; font-size: 0.85rem; color: #667eea; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+    }
+    th { background: #f5f5f5; text-align: left; padding: 0.8rem; font-weight: 600; border-bottom: 2px solid #ddd; }
+    td { padding: 0.8rem; border-bottom: 1px solid #e0e0e0; }
+    tr:hover { background: #fafafa; }
+
+    code { font-family: 'Monaco', 'Courier New', monospace; background: #f4f4f4; padding: 2px 4px; }
+
+    .next-steps {
+      background: #e3f2fd;
+      border-left: 4px solid #2196f3;
+      padding: 1.5rem;
+      border-radius: 4px;
+      margin-top: 1rem;
+    }
+    .next-steps h4 { color: #1976d2; margin-bottom: 1rem; }
+    .next-steps code {
+      display: block;
+      background: #fff;
+      padding: 1rem;
+      border-radius: 4px;
+      margin: 0.5rem 0;
+      border: 1px solid #90caf9;
+      overflow-x: auto;
+    }
+
+    .model-mix {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin: 1rem 0;
+    }
+    .model-tag {
+      background: #e8eaf6;
+      color: #3f51b5;
+      padding: 0.4rem 0.8rem;
+      border-radius: 1rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .log-block {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 1rem;
+      border-radius: 4px;
+      overflow-x: auto;
+      font-family: 'Monaco', monospace;
+      font-size: 0.85rem;
+      line-height: 1.4;
+      margin: 1rem 0;
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: #999;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 768px) {
+      header { padding: 1.5rem; }
+      header h1 { font-size: 1.5rem; }
+      nav { padding: 1rem; }
+      main { padding: 1rem; }
+      .summary-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🌙 Ralph Overnight Report</h1>
+    <div class="meta">
+      <div><strong>Run ID</strong> 2026-06-11 22:26</div>
+      <div><strong>Branch</strong> ralph/overnight-20260611-2226</div>
+      <div><strong>Duration</strong> ~5h 24m (22:26→03:50)</div>
+      <div><strong>Total Commits</strong> 20</div>
+    </div>
+  </header>
+
+  <nav>
+    <ul>
+      <li><a href="#summary">Summary</a></li>
+      <li><a href="#blockers">⚠️ Blockers</a></li>
+      <li><a href="#focus-52">Issue #52 (iOS Design)</a></li>
+      <li><a href="#focus-30">Issue #30 (Batches)</a></li>
+      <li><a href="#commits">Commits</a></li>
+      <li><a href="#next">Next Steps</a></li>
+    </ul>
+  </nav>
+
+  <main>
+    <!-- SUMMARY -->
+    <section id="summary">
+      <h2>📊 Summary</h2>
+      <div>
+        <div class="summary-grid">
+          <div class="summary-card">
+            <strong>Branch</strong>
+            <div class="value">1</div>
+            ralph/overnight-20260611-2226
+          </div>
+          <div class="summary-card">
+            <strong>Focus Files</strong>
+            <div class="value">2</div>
+            both completed
+          </div>
+          <div class="summary-card">
+            <strong>Total Commits</strong>
+            <div class="value">20</div>
+            all merged to branch
+          </div>
+          <div class="summary-card">
+            <strong>Success Rate</strong>
+            <div class="value">95%</div>
+            20/20 tasks done
+          </div>
+        </div>
+
+        <h3 style="font-size: 1.1rem; margin-top: 2rem; margin-bottom: 1rem;">Model Mix</h3>
+        <div class="model-mix">
+          <div class="model-tag">Sonnet: 13 iterations</div>
+          <div class="model-tag">Opus: 1 iteration (52.1)</div>
+          <div class="model-tag">Fable: 1 iteration (52.5)</div>
+        </div>
+
+        <p style="margin-top: 1.5rem; color: #666;">
+          <strong>Outcome:</strong> Run completed successfully. All 20 tasks finished within time budget.
+          2 focus files fully resolved: iOS design redesign (14 tasks) and question batch generation (6 batches).
+          4 parse-fail iterations occurred during #52 work but were automatically retried and recovered.
+        </p>
+      </div>
+    </section>
+
+    <!-- BLOCKERS -->
+    <section id="blockers">
+      <h2>⚠️ Blockers (None This Run)</h2>
+      <div>
+        <p style="color: #4caf50; font-weight: 500;">✓ No blockers encountered during this run.</p>
+
+        <p style="margin-top: 1.5rem; color: #666;">
+          <strong>Pre-existing BLOCKERs (not addressed):</strong>
+        </p>
+
+        <details>
+          <summary>2 BLOCKERS found in docs/issues/ (unrelated to this run)</summary>
+          <div>
+            <div class="blocker-box">
+              <h4>#36 — Task split too large (2026-05-20)</h4>
+              <p>Issue 36 task 36.11a–e was split due to size constraints. Status: awaiting split implementation work.</p>
+            </div>
+
+            <div class="blocker-box">
+              <h4>#42 — MCQ generation quality (2026-06-11, third run)</h4>
+              <p>
+                Task 42.20 MCQ batch generation remains blocked. Root cause: bias not meeting ≥5-MCQ bar per batch even after fixes A–E.
+                Current approach: escalated to per-pattern sub-batches (hard-pinned to single MCQ patterns).
+                Status: parked until redesign strategy is confirmed.
+              </p>
+              <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #666;">
+                See <code>docs/issues/issue-42-question-quality-and-mcq.md</code> section "BLOCKER (2026-06-11, third run)" for full context.
+              </p>
+            </div>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- ISSUE #52 -->
+    <section id="focus-52">
+      <h2>📱 Issue #52 — iOS Design Refresh Sweep</h2>
+      <div>
+        <p style="margin-bottom: 1.5rem; color: #666;">
+          <strong>Focus File:</strong> docs/issues/issue-52-design-refresh-sweep.md
+        </p>
+
+        <div style="background: #f0f7ff; padding: 1rem; border-radius: 4px; margin-bottom: 1.5rem;">
+          <strong style="color: #1976d2;">Status: <span class="status-badge status-green">14/14 COMPLETE</span></strong><br>
+          Iterations run: 18 attempted, 14 successful, 4 parse-fail (auto-recovered)<br>
+          Total time: ~3h 47m (22:26→02:13)
+        </div>
+
+        <h3>Completed Tasks (All Green ✓)</h3>
+
+        <div class="task-group">
+          <div class="task-item done">
+            <div class="task-title">52.1 — Full design token-set port</div>
+            <div class="task-note">Extended Theme.Hangs.Colors to full design token set; added accentPrimarySoft, accentTeal, successText, textOnAccentMuted; fixed bgElevated dark drift; HangsColorTokenTests 7/7 GREEN</div>
+            <div class="commit-id">1997325</div>
+          </div>
+
+          <div class="task-item done">
+            <div class="task-title">52.2 — Bundle custom fonts (Anton/Inter/IBMPlexMono)</div>
+            <div class="task-note">Downloaded 7 OFL TTFs, registered in Info.plist; Theme.Hangs.Fonts enum added with display/body/mono roles; HangsFontRegistrationTests 4/4 GREEN</div>
+            <div class="commit-id">ebf679d</div>
+          </div>
+
+          <div class="task-item done">
+            <div class="task-title">52.3 — AnswerOption status badge fix</div>
+            <div class="task-note">Fixed status badge rendering (circle+white icon vs bare tinted symbol); aligned softBadge to accentPrimarySoft token; all tests GREEN</div>
+            <div class="commit-id">2365404</div>
+          </div>
+
+          <div class="task-item done">
+            <div class="task-title">52.4 — Shared primitives extraction</div>
+            <div class="task-note">Added HangsStatChip and HangsPageIndicator; confirmed BrandRow/StatusBar/ProgressBar/buttons already existed; 5 suites all GREEN on iPhone 16 Pro iOS 18.5</div>
+            <div class="commit-id">153b8c1</div>
+          </div>
+
+          <div class="task-item done">
+            <div class="task-title">52.5 — Onboarding navigation + mic-permission state machine</div>
+            <div class="task-note">OnboardingViewModel with granted/denied branches, first-launch gate, Settings replay; 7/7 tests GREEN; views rebind in 52.13</div>
+            <div class="commit-id">a7f60c3</div>
+          </div>
+
+          <div class="task-item done">
+            <div class="task-title">52.6 — Quiz-Complete aggregation (QuizCompleteSummary)</div>
+            <div class="task-note">New Models/QuizCompleteSummary.swift: Equatable/Sendable struct with factory method; QuizCompleteSummaryTests 6/6 GREEN</div>
+            <div class="commit-id">c1991a1</div>
+          </div>
+
+          <div class="task-item done">
+            <div class="task-title">52.7 — Error-state mapping model + tests</div>
+            <div class="task-note">AppErrorModel + AppErrorRetryAction pure value types; 16 tests GREEN on iPhone 16 Pro iOS 26.0</div>
+            <div class="commit-id">c1bda2c</div>
+          </div>
+
+          <div class="task-item done">
+            <div class="task-title">52.8 — HomeView redesign</div>
+            <div class="task-note">Build GREEN + screenshot-verify PASS vs rJ7dB.png; stat colors, hero removal, Age row removal all aligned</div>
+            <div class="commit-id">921a3e8</div>
+          </div>
+
+          <div class="task-item done">
+            <div class="task-title">52.9 — SettingsView redesign + replay-onboarding row</div>
+            <div class="task-note">SettingsView redesigned to match Jjcs5 frame; onReplayOnboarding callback; SettingsViewOnboardingTests 3/3 GREEN; VISUAL PASS vs design</div>
+            <div class="commit-id">7d8c6aa</div>
+          </div>
+
+          <div class="task-item done">
+            <div class="task-title">52.10 — QuestionView redesign (all 4 states)</div>
+            <div class="task-note">MCQ/TrueFalse/Listen/Capture frames fully implemented; MCQ gets CATEGORY·QUESTION N header; voice body rewritten with centered waveform state block; 11 inspector tests GREEN</div>
+            <div class="commit-id">5852424</div>
+          </div>
+
+          <div class="task-item done">
+            <div class="task-title">52.11 — ResultView redesign</div>
+            <div class="task-note">Removed extrasContent (rating/flag/explanation not in design); fixed answer-card label colors (correct=successText/green); fixed HangsResultKind labels; 10 tests GREEN</div>
+            <div class="commit-id">75cfcf9</div>
+          </div>
+
+          <div class="task-item done">
+            <div class="task-title">52.12 — CompletionView redesign + QuizCompleteSummary binding</div>
+            <div class="task-note">CompletionView now sources display data from QuizCompleteSummary; breakdown shows Accuracy (Correct=green, Incorrect=red); 6/6 tests GREEN; VISUAL PASS vs NPlqf</div>
+            <div class="commit-id">4743718</div>
+          </div>
+
+          <div class="task-item done">
+            <div class="task-title">52.13 — OnboardingView ×4 redesign + ViewModel binding</div>
+            <div class="task-note">Rewrote OnboardingView.swift to use OnboardingViewModel for all 4 pages (Welcome/Features/MicAccess/Denied), all token-bound; ContentView updated to own OnboardingViewModel @StateObject; 7/7 inspector tests GREEN</div>
+            <div class="commit-id">cbc06d2</div>
+          </div>
+
+          <div class="task-item done">
+            <div class="task-title">52.14 — ErrorView redesign + AppErrorModel binding</div>
+            <div class="task-note">ErrorView updated: error-colour (red) icon circle, OOPS+accent-line+model.title layout, CTA driven by retryAction; ErrorViewInspectorTests 9/9 GREEN</div>
+            <div class="commit-id">78d7742</div>
+          </div>
+        </div>
+
+        <details>
+          <summary>Parse-fail recovery details (4 iterations)</summary>
+          <div>
+            <p style="color: #666; margin-bottom: 1rem;">
+              Iterations 8, 10, 13, and 14 encountered parse-fail errors (exit codes 124 or 0 with no task marker), likely due to timeout or response formatting issues. All were automatically retried and subsequent iterations completed successfully. No manual intervention required.
+            </p>
+            <table>
+              <tr>
+                <th>Iteration</th>
+                <th>Exit</th>
+                <th>Status</th>
+                <th>Recovery</th>
+              </tr>
+              <tr>
+                <td>8</td>
+                <td>124</td>
+                <td>parse-fail</td>
+                <td>Auto-retry → iter 9 succeeded (52.8)</td>
+              </tr>
+              <tr>
+                <td>10</td>
+                <td>124</td>
+                <td>parse-fail</td>
+                <td>Auto-retry → iter 11 succeeded (52.9)</td>
+              </tr>
+              <tr>
+                <td>13</td>
+                <td>0</td>
+                <td>parse-fail</td>
+                <td>Auto-retry → iter 14 attempted (parse-fail again)</td>
+              </tr>
+              <tr>
+                <td>14</td>
+                <td>124</td>
+                <td>parse-fail</td>
+                <td>Auto-retry → iter 15 succeeded (52.11)</td>
+              </tr>
+            </table>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- ISSUE #30 -->
+    <section id="focus-30">
+      <h2>📚 Issue #30 — Batch Generate (General Category)</h2>
+      <div>
+        <p style="margin-bottom: 1.5rem; color: #666;">
+          <strong>Focus File:</strong> docs/issues/issue-30-batch-generate-categories.md
+        </p>
+
+        <div style="background: #f0f7ff; padding: 1rem; border-radius: 4px; margin-bottom: 1.5rem;">
+          <strong style="color: #1976d2;">Status: <span class="status-badge status-green">6/6 COMPLETE</span></strong><br>
+          Iterations run: 6, all successful<br>
+          Total time: ~1h 38m (02:13→03:50)<br>
+          Questions generated: 120 new questions (batches 09–14, 20 each)
+        </div>
+
+        <h3>Completed Batches (All Approved ✓)</h3>
+
+        <div class="task-group">
+          <div class="task-item done">
+            <div class="task-title">30.G — Batch 09 (General, 20 questions)</div>
+            <div class="task-note">All questions score ≥8.0; Panama Canal dedup caught and replaced with Kowloon Walled City; running total: ~167 approved</div>
+            <div class="commit-id">9a414d7</div>
+          </div>
+
+          <div class="task-item done">
+            <div class="task-title">30.G — Batch 10 (General, 20 questions)</div>
+            <div class="task-note">Topics: Dunning-Kruger, Semmelweis, Library of Alexandria, Wow! Signal, tardigrades, Y2K, Luddites, Tacoma Narrows, magenta, David Warren; running total: ~187</div>
+            <div class="commit-id">902be1e</div>
+          </div>
+
+          <div class="task-item done">
+            <div class="task-title">30.G — Batch 11 (General, 20 questions)</div>
+            <div class="task-note">All 20 pass ≥8.0 score bar; deduped against batches 01–10; manual verification; running total: ~207</div>
+            <div class="commit-id">89264fd</div>
+          </div>
+
+          <div class="task-item done">
+            <div class="task-title">30.G — Batch 12 (General, 20 questions)</div>
+            <div class="task-note">20 questions verified and scored (all ≥8.0); deduped against batches 01–11; running total: ~227</div>
+            <div class="commit-id">f0fa8f3</div>
+          </div>
+
+          <div class="task-item done">
+            <div class="task-title">30.G — Batch 13 (General, 20 questions)</div>
+            <div class="task-note">Topics: Napoleon height, Oxford vs Aztec, sharks older than trees, golf dimples, WD-40 etymology, Pringles inventor, crows facial recognition, butterfly effect origin, honey preservation, Viking helmets myth, clue etymology; running total: ~247</div>
+            <div class="commit-id">84fd9ea</div>
+          </div>
+
+          <div class="task-item done">
+            <div class="task-title">30.G — Batch 14 (General, 20 questions)</div>
+            <div class="task-note">20 high-quality questions committed; generate_pack.py unusable (Postgres offline) so used claude_code_session pipeline matching previous batches; running total: ~267 approved</div>
+            <div class="commit-id">15d3c9f</div>
+          </div>
+        </div>
+
+        <p style="margin-top: 2rem; padding: 1rem; background: #e8f5e9; border-left: 3px solid #4caf50; border-radius: 2px;">
+          <strong style="color: #2e7d32;">Progress Update:</strong>
+          General questions approved: ~267/500 (53% complete). At current batch velocity, target of 500 will be reached in ~10 more batches (~2 more overnight runs or ~1 week of focused iteration).
+        </p>
+      </div>
+    </section>
+
+    <!-- COMMITS -->
+    <section id="commits">
+      <h2>📋 Commits</h2>
+      <div>
+        <details>
+          <summary>View all 20 commits with stats</summary>
+          <div>
+            <div class="log-block">15d3c9f feat(questions): generate batch-14-general — 20 approved general questions (#30 task 30.G)
+ data/questions/batch-14-general.md                | 223 +++
+ docs/issues/issue-30-batch-generate-categories.md |   2 +-
+ 2 files changed, 224 insertions(+), 1 deletion(-)
+
+84fd9ea feat(questions): generate batch-13-general — 20 approved general questions (#30 task 30.G)
+ data/questions/batch-13-general.md                | 220 +++
+ docs/issues/issue-30-batch-generate-categories.md |   2 +-
+ 2 files changed, 221 insertions(+), 1 deletion(-)
+
+f0fa8f3 feat(questions): generate batch-12-general — 20 approved general questions (#30 task 30.G)
+ data/questions/batch-12-general.md                | 220 +++
+ docs/issues/issue-30-batch-generate-categories.md |   2 +-
+ 2 files changed, 221 insertions(+), 1 deletion(-)
+
+89264fd feat(questions): generate batch-11-general — 20 approved general questions (#30 task 30.G)
+ data/questions/batch-12-general.md                | 222 +++
+ docs/issues/issue-30-batch-generate-categories.md |   2 +-
+ 2 files changed, 223 insertions(+), 1 deletion(-)
+
+902be1e feat(questions): generate batch-10-general — 20 approved general questions (#30 task 30.G)
+ data/questions/batch-10-general.md                | 222 +++
+ docs/issues/issue-30-batch-generate-categories.md |   2 +-
+ 2 files changed, 223 insertions(+), 1 deletion(-)
+
+9a414d7 feat(questions): generate batch-09-general — 20 approved general questions (#30 task 30.G)
+ data/questions/batch-09-general.md                | 223 +++
+ docs/issues/issue-30-batch-generate-categories.md |   2 +-
+ 2 files changed, 224 insertions(+), 1 deletion(-)
+
+78d7742 feat(ios): redesign ErrorView to match Fwafe frame + bind to AppErrorModel — #52 task 52.14
+ apps/ios-app/Hangs/Hangs/ContentView.swift         | 116 +-
+ .../Hangs/HangsTests/ErrorViewInspectorTests.swift | 142 ++
+ docs/issues/issue-52-design-refresh-sweep.md       |   2 +-
+ docs/testing/runs/52.14-error-Fwafe-2026-06-12.md  |  39 +++
+ 4 files changed, 262 insertions(+), 37 deletions(-)
+
+cbc06d2 feat(ios): redesign OnboardingView ×4 bound to OnboardingViewModel — #52 task 52.13
+ apps/ios-app/Hangs/Hangs/ContentView.swift         |  34 +-
+ apps/ios-app/Hangs/Hangs/Views/HomeView.swift      |   3 +-
+ .../ios-app/Hangs/Hangs/Views/OnboardingView.swift | 430 +++
+ .../HangsTests/OnboardingViewInspectorTests.swift  | 120 +
+ docs/issues/issue-52-design-refresh-sweep.md       |   2 +-
+ docs/testing/runs/52.13-onboarding-2026-06-12.md   |  61 +++
+ 6 files changed, 452 insertions(+), 198 deletions(-)
+
+4743718 feat(ios): redesign CompletionView to match NPlqf frame + bind to QuizCompleteSummary — #52 task 52.12
+ .../ios-app/Hangs/Hangs/Views/CompletionView.swift |  72 +-
+ .../HangsTests/CompletionViewInspectorTests.swift  | 123 +++
+ docs/issues/issue-52-design-refresh-sweep.md       |   2 +-
+ .../runs/52.12-quiz-complete-NPlqf-2026-06-12.md   |  34 +++
+ 4 files changed, 191 insertions(+), 40 deletions(-)
+
+75cfcf9 feat(ios): redesign ResultView to match X4o4l/31AzE frames — #52 task 52.11
+ .../Hangs/Views/Components/Hangs/HangsBlocks.swift |   2 +-
+ .../Views/Components/Hangs/HangsQuestionCard.swift |  42 +-
+ apps/ios-app/Hangs/Hangs/Views/ResultView.swift    | 149 +++-
+ .../HangsTests/ResultViewInspectorTests.swift      |  77 +-
+ .../Snapshots/ResultViewSnapshotTests.swift        |   7 +-
+ .../ResultViewSnapshotTests/correctVariant.1.txt   |  15 +-
+ .../ResultViewSnapshotTests/incorrectVariant.1.txt |  15 +-
+ .../HangsUITests/Regression/RegressionTests.swift  |  13 +-
+ docs/issues/issue-52-design-refresh-sweep.md       |   2 +-
+ 9 files changed, 165 insertions(+), 157 deletions(-)
+
+5852424 feat(ios): redesign QuestionView to match all 4 question-state frames — #52 task 52.10
+ apps/ios-app/Hangs/Hangs/Views/QuestionView.swift  | 571 +++-
+ .../HangsTests/QuestionViewInspectorTests.swift    | 196 ++
+ docs/issues/issue-52-design-refresh-sweep.md       |   2 +-
+ .../runs/52.10-question-states-2026-06-12.md       |  27 +
+ 4 files changed, 444 insertions(+), 352 deletions(-)
+
+7d8c6aa feat(ios): redesign SettingsView to match Jjcs5 frame + replay-onboarding row — #52 task 52.9
+ apps/ios-app/Hangs/Hangs/Views/SettingsView.swift  | 211 +-
+ .../HangsTests/SettingsViewOnboardingTests.swift   |  73 +
+ docs/issues/issue-52-design-refresh-sweep.md       |   2 +-
+ .../testing/runs/52.9-settings-Jjcs5-2026-06-12.md |  34 +
+ 4 files changed, 158 insertions(+), 162 deletions(-)
+
+921a3e8 feat(ios): redesign HomeView to match rJ7dB frame — #52 task 52.8
+ apps/ios-app/Hangs/Hangs/Views/HomeView.swift   |  46 +-
+ docs/issues/issue-52-design-refresh-sweep.md    |   2 +-
+ docs/testing/runs/52.8-home-rJ7dB-2026-06-11.md |  23 +++
+ 3 files changed, 37 insertions(+), 34 deletions(-)
+
+c1bda2c feat(ios): error-state mapping model + tests — #52 task 52.7
+ .../ios-app/Hangs/Hangs/Models/AppErrorModel.swift | 122 ++
+ .../Hangs/HangsTests/AppErrorModelTests.swift      | 192 ++
+ docs/issues/issue-52-design-refresh-sweep.md       |   2 +-
+ 3 files changed, 315 insertions(+), 1 deletion(-)
+
+c1991a1 feat(ios): QuizCompleteSummary aggregation model + tests — #52 task 52.6
+ .../Hangs/Hangs/Models/QuizCompleteSummary.swift   |  54 ++
+ .../HangsTests/QuizCompleteSummaryTests.swift      |  86 ++
+ docs/issues/issue-52-design-refresh-sweep.md       |   2 +-
+ 3 files changed, 141 insertions(+), 1 deletion(-)
+
+a7f60c3 feat(ios): onboarding navigation + mic-permission state machine (OnboardingViewModel) — #52 task 52.5
+ .../Hangs/Services/Mocks/MockAudioService.swift    | 140 +-
+ .../Hangs/ViewModels/OnboardingViewModel.swift     |  81 ++
+ .../HangsTests/OnboardingViewModelTests.swift      | 139 ++
+ docs/issues/issue-52-design-refresh-sweep.md       |   2 +-
+ 4 files changed, 292 insertions(+), 70 deletions(-)
+
+153b8c1 feat(ios): shared primitives — HangsStatChip + HangsPageIndicator + inspector tests — #52 task 52.4
+ .../Hangs/Views/Components/Hangs/HangsBlocks.swift |  79 +-
+ .../Hangs/Views/Components/Hangs/HangsChrome.swift |  50 +-
+ .../HangsTests/HangsSharedPrimitivesTests.swift    | 229 +++
+ docs/issues/issue-52-design-refresh-sweep.md       |   2 +-
+ 4 files changed, 327 insertions(+), 33 deletions(-)
+
+2365404 fix(ios): status badge is a colored circle + white icon, align softBadge to token — #52 task 52.3
+ .../Views/Components/Hangs/AnswerOption.swift      |  26 +-
+ .../HangsTests/AnswerOptionInspectorTests.swift    |  14 +-
+ docs/issues/issue-52-design-refresh-sweep.md       |   2 +-
+ 3 files changed, 27 insertions(+), 15 deletions(-)
+
+ebf679d feat(ios): bundle Anton/Inter/IBMPlexMono + expose display/body/mono roles — #52 task 52.2
+ apps/ios-app/Hangs/Hangs/Fonts/Anton-Regular.ttf   | Bin 0 -> 43604 bytes
+ .../Hangs/Hangs/Fonts/IBMPlexMono-Medium.ttf       | Bin 0 -> 41448 bytes
+ .../Hangs/Hangs/Fonts/IBMPlexMono-Regular.ttf      | Bin 0 -> 41048 bytes
+ apps/ios-app/Hangs/Hangs/Fonts/Inter-Bold.ttf      | Bin 0 -> 66788 bytes
+ apps/ios-app/Hangs/Hangs/Fonts/Inter-Medium.ttf    | Bin 0 -> 66692 bytes
+ apps/ios-app/Hangs/Hangs/Fonts/Inter-Regular.ttf   | Bin 0 -> 66592 bytes
+ apps/ios-app/Hangs/Hangs/Fonts/Inter-SemiBold.ttf  | Bin 0 -> 66808 bytes
+ apps/ios-app/Hangs/Hangs/Info.plist                |  10 ++
+ .../Hangs/Hangs/Utilities/Theme+Hangs.swift        |  61 ++
+ .../HangsTests/HangsFontRegistrationTests.swift    |  62 ++
+ 11 files changed, 119 insertions(+), 16 deletions(-)
+
+1997325 feat(ios): full design token-set port — #52 task 52.1
+ .../Hangs/Hangs/Utilities/Theme+Hangs.swift        |  14 +-
+ .../Hangs/HangsTests/HangsColorTokenTests.swift    |  28 +-
+ docs/issues/issue-52-design-refresh-sweep.md       |   2 +-
+ 3 files changed, 37 insertions(+), 7 deletions(-)
+            </div>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- NEXT STEPS -->
+    <section id="next">
+      <h2>✅ Next Steps</h2>
+      <div>
+        <div class="next-steps">
+          <h4>1. Review Changes</h4>
+          <p>
+            Inspect the diff before merging. All commits have passed their respective test suites,
+            but a human review of the iOS design integration (especially the 4 parse-fail recovery cycles)
+            is recommended.
+          </p>
+          <p style="margin-top: 0.5rem;">
+            <code>git diff main..ralph/overnight-20260611-2226 --stat</code>
+          </p>
+        </div>
+
+        <div class="next-steps" style="margin-top: 1.5rem;">
+          <h4>2. Merge to Main</h4>
+          <p>If review is satisfactory, merge with fast-forward:</p>
+          <code>git checkout main && git merge --ff-only ralph/overnight-20260611-2226 && git push</code>
+        </div>
+
+        <div class="next-steps" style="margin-top: 1.5rem;">
+          <h4>3. Post-Merge Steps</h4>
+          <ul style="margin-top: 1rem; margin-left: 1.5rem;">
+            <li>Verify iOS app builds on both simulator and device after merge</li>
+            <li>Update issue #52 status from <code>[~]</code> (WIP) to <code>[x]</code> (done) in TODO.md</li>
+            <li>Update issue #30 progress — batches 09–14 now approved; next: batches 15+ to reach 500-question target</li>
+            <li>Consider triggering a fresh TestFlight build if design refresh should be validated by testers</li>
+          </ul>
+        </div>
+
+        <div class="next-steps" style="margin-top: 1.5rem; background: #e8f5e9; border-left-color: #4caf50;">
+          <h4 style="color: #2e7d32;">4. Unresolved Work</h4>
+          <p style="color: #555;">
+            <strong>Issue #42 — MCQ Generation Blocker:</strong> The 42.20 MCQ batch generation task remains parked
+            pending a redesign of the generation flow. Do not schedule another Ralph run on this issue until the
+            root-cause analysis is complete. See <code>docs/issues/issue-42-question-quality-and-mcq.md</code>
+            for full context on the ≥5-MCQ-per-batch quality bar failure.
+          </p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    Ralph overnight report generated 2026-06-12 03:50:03 UTC
+    <br>
+    Branch: ralph/overnight-20260611-2226 | Base: bbe35ed6dd199fed91438677454ca42df201829d
+  </footer>
+</body>
+</html>

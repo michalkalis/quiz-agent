@@ -179,6 +179,48 @@ extension QuizResponse {
             )
         )
 
+        /// Long-question variant of previewStartQuiz — used by `--ui-test-long`
+        /// in UITestSupport to guard the voice-body overflow regression (54.2).
+        static let previewStartQuizLong = QuizResponse(
+            success: true,
+            message: "Quiz started",
+            session: QuizSession(
+                id: "sess_preview_123",
+                mode: "single",
+                phase: "asking",
+                maxQuestions: 10,
+                currentDifficulty: "medium",
+                category: nil,
+                language: "en",
+                participants: [
+                    Participant(
+                        id: "p_preview_1",
+                        userId: nil,
+                        displayName: "Player",
+                        score: 0.0,
+                        answeredCount: 0,
+                        correctCount: 0,
+                        lastAnswer: nil,
+                        lastResult: nil,
+                        isHost: true,
+                        isReady: true,
+                        joinedAt: Date()
+                    ),
+                ],
+                expiresAt: Date().addingTimeInterval(30 * 60),
+                createdAt: Date()
+            ),
+            currentQuestion: Question.previewLong,
+            evaluation: nil,
+            feedbackReceived: [],
+            audio: AudioInfo(
+                feedbackUrl: nil,
+                feedbackAudioBase64: nil,
+                questionUrl: "/api/v1/sessions/sess_preview_123/question/audio",
+                format: "opus"
+            )
+        )
+
         /// MCQ variant of previewStartQuiz — used by `--ui-test-mcq` in UITestSupport.
         /// Question: "What is the largest planet?" options a=Mars b=Jupiter c=Saturn d=Neptune
         static let previewStartQuizMCQ = QuizResponse(

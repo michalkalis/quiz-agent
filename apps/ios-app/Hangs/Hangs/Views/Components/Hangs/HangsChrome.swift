@@ -31,7 +31,7 @@ struct HangsBrandMark: View {
 
 // MARK: - Nav chip button
 
-/// Square 36pt white nav button with subtle drop shadow. Used for gear, close, back.
+/// Square 36pt nav button on the adaptive card surface with subtle drop shadow. Used for gear, close, back.
 struct HangsNavChip: View {
     let icon: String
     var cornerRadius: CGFloat = Theme.Hangs.Radius.navSquare
@@ -45,7 +45,7 @@ struct HangsNavChip: View {
                 .frame(width: 36, height: 36)
                 .background(
                     RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                        .fill(Color.white)
+                        .fill(Theme.Hangs.Colors.bgCard)
                 )
                 .hangsShadow(Theme.Hangs.Shadow.navChip)
         }
@@ -91,7 +91,7 @@ struct HangsQuizNav: View {
                         .foregroundColor(Theme.Hangs.Colors.ink)
                         .frame(width: 36, height: 36)
                         .background(
-                            Circle().fill(Color.white)
+                            Circle().fill(Theme.Hangs.Colors.bgCard)
                         )
                 }
                 .buttonStyle(.plain)
@@ -130,6 +130,36 @@ struct HangsProgressBar: View {
         }
         .frame(height: 3)
         .padding(.horizontal, 24)
+    }
+}
+
+// MARK: - Page indicator (onboarding dots)
+
+/// Horizontal dot row for onboarding page indication.
+/// Active page renders as a wider pill; inactive pages are narrow circles.
+/// Both colors and widths are token-bound and exposed for unit testing.
+struct HangsPageIndicator: View {
+    let pageCount: Int
+    let currentPage: Int
+    var activeColor: Color = Theme.Hangs.Colors.accentPrimary
+    var inactiveColor: Color = Theme.Hangs.Colors.hairline
+
+    func dotColor(at index: Int) -> Color {
+        index == currentPage ? activeColor : inactiveColor
+    }
+
+    func dotWidth(at index: Int) -> CGFloat {
+        index == currentPage ? 20 : 8
+    }
+
+    var body: some View {
+        HStack(spacing: 8) {
+            ForEach(0 ..< pageCount, id: \.self) { i in
+                Capsule()
+                    .fill(dotColor(at: i))
+                    .frame(width: dotWidth(at: i), height: 8)
+            }
+        }
     }
 }
 
@@ -259,16 +289,16 @@ struct HangsSessionDot: View {
 }
 
 #if DEBUG
-#Preview {
-    VStack(spacing: 0) {
-        HangsBrandRow {
-            HangsNavChip(icon: "gearshape") {}
+    #Preview {
+        VStack(spacing: 0) {
+            HangsBrandRow {
+                HangsNavChip(icon: "gearshape") {}
+            }
+            HangsQuizNav(onClose: {}, counterText: "03 / 10")
+            HangsProgressBar(progress: 0.3)
+            Spacer()
         }
-        HangsQuizNav(onClose: {}, counterText: "03 / 10")
-        HangsProgressBar(progress: 0.3)
-        Spacer()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Theme.Hangs.Colors.bg)
     }
-    .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .background(Theme.Hangs.Colors.bg)
-}
 #endif

@@ -108,6 +108,10 @@ nonisolated enum Config {
     /// Increased from 4s to 15s for Phase 2 silence detection (users may speak longer answers)
     static let autoRecordingDuration: TimeInterval = 15.0
 
+    /// How long the streaming path waits after a forced STT commit before
+    /// treating the silence as a transcription failure (#54 task 54.4)
+    static let sttCommitWatchdogSecs: TimeInterval = 5.0
+
     /// Delay after TTS finishes before auto-starting recording (milliseconds)
     static let autoRecordDelayMs: UInt64 = 500
 

@@ -16,6 +16,8 @@ actor MockElevenLabsSTTService: ElevenLabsSTTServiceProtocol {
 
     var mockCommittedText = "Paris"
     var shouldFail = false
+    /// Test seam (54.4): simulate ElevenLabs never answering a forced commit.
+    var commitEmitsNothing = false
 
     init() {
         var continuation: AsyncStream<STTEvent>.Continuation!
@@ -36,10 +38,16 @@ actor MockElevenLabsSTTService: ElevenLabsSTTServiceProtocol {
     }
 
     func commitAndClose() async throws {
+        guard !commitEmitsNothing else { return }
         eventContinuation?.yield(.committedTranscript(mockCommittedText))
     }
 
     func disconnect() async {}
+
+    /// Actor-isolated setter for the test seam above.
+    func setCommitEmitsNothing(_ value: Bool) {
+        commitEmitsNothing = value
+    }
 
     /// Drive an arbitrary STTEvent into the stream from outside (UI test seam).
     /// The default mock paths emit fixed events on `sendAudioChunk` and `commitAndClose`;

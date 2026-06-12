@@ -2,7 +2,9 @@ name: iOS CI
 
 on:
   push:
-    branches: [main]
+    # ralph/**: overnight-agent branches get a remote test run when pushed for
+    # review, so a red branch is visible before it merges (#54 §54.8 item 1).
+    branches: [main, 'ralph/**']
     paths:
       - 'apps/ios-app/**'
       - '.github/workflows/ios-ci.yml'
@@ -12,6 +14,11 @@ on:
       - 'apps/ios-app/**'
       - '.github/workflows/ios-ci.yml'
   workflow_dispatch:
+
+# macOS runners bill at 10× — never run two builds of the same ref concurrently.
+concurrency:
+  group: ios-ci-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"

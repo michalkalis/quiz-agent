@@ -62,6 +62,11 @@ final class MockNetworkService: NetworkServiceProtocol {
     func submitTextInput(sessionId: String, input: String, audio: Bool) async throws -> QuizResponse {
         capturedTextInputAudio = audio
         capturedTextInputInput = input
+        // Mirror URLSession semantics: a cancelled enclosing Task throws
+        // URLError(.cancelled) — the 54.5 self-cancelling-auto-confirm vector.
+        if Task.isCancelled {
+            throw URLError(.cancelled)
+        }
         if shouldFail {
             throw NetworkError.invalidResponse
         }

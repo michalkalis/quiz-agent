@@ -68,6 +68,11 @@
                 network.mockResponse = QuizResponse.previewStartQuizMCQ
             }
 
+            if CommandLine.arguments.contains("--ui-test-long") {
+                network.mockSession = QuizResponse.previewStartQuizLong.session
+                network.mockResponse = QuizResponse.previewStartQuizLong
+            }
+
             var seededSettings = QuizSettings.default
             seededSettings.autoConfirmEnabled = false
             // Short answer timer so recording auto-starts within ~1s (no mic button in redesigned UI).

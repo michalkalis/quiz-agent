@@ -2,10 +2,10 @@
 //  ResultView.swift
 //  Hangs
 //
-//  Pencil Result screen (correct + incorrect variants). Cream bg, editorial
-//  headline, answer comparison card, streak + points stat row, and a footer
-//  CTA. Rating / flag / explanation / source link / auto-advance / pause
-//  behaviours from the original are preserved.
+//  Pencil Result screen — correct (X4o4l) and incorrect (31AzE) variants.
+//  bg-page background, editorial Anton headline, answer comparison card,
+//  streak + score stat boxes, and a footer CTA. Auto-advance countdown bar
+//  and source web-view sheet preserved from original design.
 //
 
 import SwiftUI
@@ -16,8 +16,6 @@ struct ResultView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var showEvaluation = false
     @State private var showSourceWebView = false
-    @State private var questionRating: Int = 0
-    @State private var questionFlagged = false
 
     var body: some View {
         ZStack {
@@ -42,8 +40,6 @@ struct ResultView: View {
                             statsRow
                                 .padding(.horizontal, 24)
                                 .padding(.top, 12)
-
-                            extrasContent
                         }
                     }
                     .padding(.bottom, 8)
@@ -75,12 +71,15 @@ struct ResultView: View {
 
     private var heroBlock: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HangsResultBanner(kind: isCorrect ? .correct : .incorrect)
-                .accessibilityIdentifier("result.heroBanner")
-            Text(isCorrect ? "NAILED\nIT." : "CLOSE—\nBUT NO.")
-                .font(.hangsDisplay(isCorrect ? 52 : 44))
+            HStack(alignment: .center) {
+                HangsResultBanner(kind: isCorrect ? .correct : .incorrect)
+                    .accessibilityIdentifier("result.heroBanner")
+                Spacer()
+                readAloudButton
+            }
+            Text(isCorrect ? "NAILED\nIT." : "MISSED\nIT.")
+                .font(.hangsDisplay(52))
                 .tracking(-2)
-                .lineSpacing(-6)
                 .foregroundColor(Theme.Hangs.Colors.ink)
                 .fixedSize(horizontal: false, vertical: true)
             Text(subHeadline)
@@ -91,6 +90,25 @@ struct ResultView: View {
         .padding(.horizontal, 28)
         .padding(.top, 12)
         .padding(.bottom, 4)
+    }
+
+    private var readAloudButton: some View {
+        Button {
+            if let url = viewModel.currentQuestionAudioUrl {
+                Task { await viewModel.playQuestionAudio(from: url) }
+            }
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: "speaker.wave.2")
+                    .font(.system(size: 11, weight: .semibold))
+                Text("read aloud")
+                    .font(.hangsMono(11, weight: .semibold))
+                    .tracking(2)
+            }
+            .foregroundColor(Theme.Hangs.Colors.blue)
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("result.readAloud")
     }
 
     // MARK: - Answer card
@@ -136,17 +154,17 @@ struct ResultView: View {
                 HangsStatBox(
                     label: "streak",
                     value: "\(viewModel.quizStats.currentStreak)",
-                    labelColor: Theme.Hangs.Colors.blue,
-                    valueColor: Theme.Hangs.Colors.blue,
+                    labelColor: Theme.Hangs.Colors.pink,
+                    valueColor: Theme.Hangs.Colors.ink,
                     suffix: "+1",
                     inlineSuffix: true,
                     compact: true
                 )
                 HangsStatBox(
-                    label: "points",
+                    label: "score",
                     value: formattedScore,
                     labelColor: Theme.Hangs.Colors.pink,
-                    valueColor: Theme.Hangs.Colors.pink,
+                    valueColor: Theme.Hangs.Colors.ink,
                     suffix: pointsDeltaSuffix,
                     inlineSuffix: true,
                     compact: true
@@ -155,100 +173,23 @@ struct ResultView: View {
                 HangsStatBox(
                     label: "streak",
                     value: "0",
-                    labelColor: Theme.Hangs.Colors.blue,
-                    valueColor: Theme.Hangs.Colors.blue,
+                    labelColor: Theme.Hangs.Colors.pink,
+                    valueColor: Theme.Hangs.Colors.ink,
                     suffix: "was \(previousStreakForIncorrect)",
-                    inlineSuffix: true,
+                    inlineSuffix: false,
                     compact: true
                 )
                 HangsStatBox(
-                    label: "points",
+                    label: "score",
                     value: formattedScore,
                     labelColor: Theme.Hangs.Colors.pink,
-                    valueColor: Theme.Hangs.Colors.pink,
+                    valueColor: Theme.Hangs.Colors.ink,
                     suffix: "+0",
                     inlineSuffix: true,
                     compact: true
                 )
             }
         }
-    }
-
-    // MARK: - Extras (explanation / source / rating / flag)
-
-    private var extrasContent: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            if let explanation = viewModel.resultEvaluation?.explanation
-                ?? viewModel.resultQuestion?.explanation,
-                !explanation.isEmpty
-            {
-                VStack(alignment: .leading, spacing: 8) {
-                    HangsSectionLabel(text: "EXPLANATION", color: Theme.Hangs.Colors.blue)
-                    Text(explanation)
-                        .font(.hangsBody(16))
-                        .foregroundColor(Theme.Hangs.Colors.ink)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-            }
-
-            if viewModel.resultQuestion?.sourceUrl != nil {
-                HangsGhostButton(
-                    title: "View source",
-                    icon: "book.closed",
-                    color: Theme.Hangs.Colors.blue
-                ) {
-                    showSourceWebView = true
-                }
-                .accessibilityIdentifier("result-view-source-button")
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
-
-            HStack {
-                ratingRow
-                Spacer()
-                flagButton
-            }
-        }
-        .padding(.horizontal, 24)
-        .padding(.top, 16)
-    }
-
-    private var ratingRow: some View {
-        HStack(spacing: 2) {
-            ForEach(1 ... 5, id: \.self) { star in
-                Button {
-                    questionRating = star
-                    viewModel.rateQuestion(star)
-                } label: {
-                    Image(systemName: star <= questionRating ? "star.fill" : "star")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundColor(
-                            star <= questionRating
-                                ? Theme.Hangs.Colors.pink
-                                : Theme.Hangs.Colors.mutedFaint
-                        )
-                        .frame(minWidth: 32, minHeight: 32)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("\(star) star\(star == 1 ? "" : "s")")
-                .accessibilityIdentifier("result.ratingStar.\(star)")
-            }
-        }
-    }
-
-    private var flagButton: some View {
-        HangsGhostButton(
-            title: questionFlagged ? "Reported" : "Report a problem",
-            icon: questionFlagged ? "flag.fill" : "flag",
-            color: questionFlagged ? Theme.Hangs.Colors.pink : Theme.Hangs.Colors.muted
-        ) {
-            guard !questionFlagged else { return }
-            questionFlagged = true
-            viewModel.flagQuestion(reason: "User reported incorrect answer")
-        }
-        .fixedSize()
-        .accessibilityIdentifier("result.flagQuestion")
     }
 
     // MARK: - Countdown
@@ -353,7 +294,9 @@ struct ResultView: View {
     }
 
     private var totalQuestions: Int {
-        viewModel.currentSession?.maxQuestions ?? 10
+        // 54.10: fall back to the configured length (matching CompletionView /
+        // QuestionView), not a hardcoded 10 — a non-10 session showed a wrong total.
+        viewModel.currentSession?.maxQuestions ?? viewModel.settings.numberOfQuestions
     }
 
     private var counterString: String {
@@ -389,15 +332,17 @@ struct ResultView: View {
         return String(format: "%.1f", score)
     }
 
-    /// On an incorrect answer we already reset `currentStreak` to 0 — best proxy
-    /// for "what the streak was" is the all-time best (or 0 when no runs yet).
+    /// On an incorrect answer `currentStreak` is already 0 — the VM captures the
+    /// streak just before it was reset (54.11).
     private var previousStreakForIncorrect: Int {
-        max(viewModel.quizStats.bestStreak, 0)
+        max(viewModel.streakBeforeLastAnswer, 0)
     }
 
     private var subHeadline: String {
         if isCorrect {
-            return "+ \(pointsDeltaSuffix.trimmingCharacters(in: CharacterSet(charactersIn: "+"))) points · streak now \(viewModel.quizStats.currentStreak)"
+            // 54.12: pointsDeltaSuffix already carries the correct sign (+3 / -2 / +0);
+            // the old "+ " prefix + trim produced "+ -2 points" on a negative delta.
+            return "\(pointsDeltaSuffix) points · streak now \(viewModel.quizStats.currentStreak)"
         }
         return "streak reset · still worth the try"
     }

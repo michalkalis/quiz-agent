@@ -49,7 +49,7 @@ struct HangsPrimaryButton: View {
     }
 }
 
-/// Secondary CTA — white pill with hairline border and black text + optional icon.
+/// Secondary CTA — card-surface pill with hairline border and ink text + optional icon.
 struct HangsSecondaryButton: View {
     let title: String
     var icon: String? = nil
@@ -70,7 +70,7 @@ struct HangsSecondaryButton: View {
             .frame(maxWidth: .infinity)
             .frame(height: height)
             .background(
-                Capsule().fill(Color.white)
+                Capsule().fill(Theme.Hangs.Colors.bgCard)
             )
             .overlay(
                 Capsule().stroke(Theme.Hangs.Colors.subtleBorder, lineWidth: 1)

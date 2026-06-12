@@ -14,12 +14,19 @@ struct QuestionPage {
         app.staticTexts["question.text"]
     }
 
-    var micButton: XCUIElement {
-        app.buttons["question.micButton"]
+    /// The Record button (non-recording state). The redesign (#52) renamed the
+    /// old `question.micButton` to the semantic `question.record` / `question.stop`
+    /// pair that toggles with state; RS taps Record to enter `.recording`.
+    var recordButton: XCUIElement {
+        app.buttons["question.record"]
     }
 
-    var statusPill: XCUIElement {
-        app.staticTexts["question.statusPill"]
+    var stopButton: XCUIElement {
+        app.buttons["question.stop"]
+    }
+
+    var skipButton: XCUIElement {
+        app.buttons["question.skip"]
     }
 
     /// Hidden state probe (DEBUG only). Returns the current QuizState case name.

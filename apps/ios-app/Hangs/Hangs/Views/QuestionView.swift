@@ -2,8 +2,11 @@
 //  QuestionView.swift
 //  Hangs
 //
-//  Hangs redesign question screen — cream bg, pink mic block, editorial prompt.
-//  Preserves MCQ, text input, thinking/answer timers, STT transcript, voice cmds.
+//  QuestionView redesigned to match Pencil frames b8zObz (MCQ), WCaT6 (TrueFalse),
+//  f9csl (Listen/ready), uGhZg (Capture/recording) — issue #52 task 52.10.
+//  MCQ: category+question-number header, AnswerOption list, ListeningPill, Skip.
+//  Voice: lowercase category, display-font question, centered waveform state block,
+//         Record/Stop | Skip action row.
 //
 
 import Combine
@@ -14,10 +17,10 @@ struct QuestionView: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var showEndQuizConfirmation = false
+    @State private var now = Date()
+    @State private var recordingStartedAt: Date?
     @State private var showTextInput = false
     @State private var textAnswer = ""
-    @State private var recordingStartedAt: Date?
-    @State private var now = Date()
     @FocusState private var isTextFieldFocused: Bool
 
     private let clockTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
@@ -101,10 +104,6 @@ struct QuestionView: View {
     }
 
     private var counterString: String {
-        if isRecording {
-            let seconds = recordingElapsed
-            return String(format: "● %d:%02d", seconds / 60, seconds % 60)
-        }
         let total = viewModel.currentSession?.maxQuestions ?? viewModel.settings.numberOfQuestions
         let current = min(viewModel.questionsAnswered + 1, max(total, 1))
         return String(format: "%02d / %02d", current, total)
@@ -140,111 +139,19 @@ struct QuestionView: View {
         .accessibilityIdentifier("question.errorBanner")
     }
 
-    // MARK: - Voice body
-
-    private func voiceBody(question: Question) -> some View {
-        VStack(spacing: 0) {
-            fixedQuestionHeader(question: question)
-
-            // Question scrolls full-height; mic floats over the bottom so the
-            // question text can extend underneath the translucent halos.
-            ZStack(alignment: .bottom) {
-                scrollableQuestionContent(question: question)
-
-                VStack(spacing: 10) {
-                    if isRecording && viewModel.isStreamingSTT {
-                        transcriptCard
-                    }
-                    statusPill
-                }
-                .padding(.bottom, 4)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-            if showTextInput { textInputRow }
-
-            chipActionRow
-
-            ListeningPill(mode: .openEnded)
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.horizontal, 24)
-                .padding(.top, 8)
-
-            footerCTA
-        }
-        .frame(maxHeight: .infinity)
-    }
-
-    // MARK: - Fixed question header (category label + hint)
-
-    private func fixedQuestionHeader(question: Question) -> some View {
-        HangsSectionLabel(
-            text: question.category.uppercased(),
-            color: isRecording ? Theme.Hangs.Colors.blue : Theme.Hangs.Colors.pink
-        )
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 28)
-        .padding(.top, 12)
-        .padding(.bottom, 6)
-    }
-
-    // MARK: - Scrollable question body (text or image)
-
-    private func scrollableQuestionContent(question: Question) -> some View {
-        ScrollView(.vertical, showsIndicators: true) {
-            VStack(alignment: .leading, spacing: 0) {
-                if question.hasImage {
-                    ImageQuestionView(question: question)
-                } else {
-                    HangsQuestionPrompt(
-                        text: question.question,
-                        barColor: isRecording ? Theme.Hangs.Colors.pink : Theme.Hangs.Colors.blue,
-                        textFont: .hangsQuestion
-                    )
-                    .accessibilityIdentifier("question.text")
-                }
-            }
-            .padding(.horizontal, 28)
-            .padding(.vertical, 8)
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
-    // MARK: - Transcript card
-
-    private var transcriptCard: some View {
-        HangsCard(padding: EdgeInsets(top: 14, leading: 16, bottom: 14, trailing: 16)) {
-            VStack(alignment: .leading, spacing: 10) {
-                HangsSectionLabel(text: "LISTENING", color: Theme.Hangs.Colors.pink)
-                LiveTranscriptView(
-                    text: viewModel.liveTranscript,
-                    isCommitted: !viewModel.isStreamingSTT
-                )
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
-        }
-        .padding(.horizontal, 28)
-        .padding(.top, 4)
-        .accessibilityIdentifier("question.liveTranscript")
-    }
-
-    // MARK: - Support row (timers + waveform + voice command hint)
+    // MARK: - Support row (think/answer timers when active)
 
     @ViewBuilder
     private var supportRow: some View {
         let showThink = viewModel.thinkingTimeCountdown > 0 && viewModel.quizState == .askingQuestion
         let showAnswer = viewModel.answerTimerCountdown > 0 && viewModel.quizState == .askingQuestion
-        if showThink || showAnswer || isRecording {
+        if showThink || showAnswer {
             HStack(spacing: 8) {
                 if showThink {
                     timerChip(label: "THINK", seconds: viewModel.thinkingTimeCountdown, color: Theme.Hangs.Colors.blue)
                 }
                 if showAnswer {
                     timerChip(label: "ANSWER", seconds: viewModel.answerTimerCountdown, color: Theme.Hangs.Colors.pink)
-                }
-                if isRecording {
-                    waveformStrip
                 }
                 Spacer(minLength: 0)
             }
@@ -267,226 +174,40 @@ struct QuestionView: View {
         .overlay(Capsule().stroke(color.opacity(0.4), lineWidth: 1))
     }
 
-    private var waveformStrip: some View {
-        HStack(spacing: 3) {
-            ForEach(0 ..< 12, id: \.self) { i in
-                Capsule()
-                    .fill(Theme.Hangs.Colors.pink)
-                    .frame(width: 2, height: waveBarHeight(i))
+    // MARK: - Transcript card
+
+    private var transcriptCard: some View {
+        HangsCard(padding: EdgeInsets(top: 14, leading: 16, bottom: 14, trailing: 16)) {
+            VStack(alignment: .leading, spacing: 10) {
+                HangsSectionLabel(text: "TRANSCRIPT", color: Theme.Hangs.Colors.pink)
+                LiveTranscriptView(
+                    text: viewModel.liveTranscript,
+                    isCommitted: !viewModel.isStreamingSTT
+                )
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
-        }
-        .frame(height: 18)
-    }
-
-    private func waveBarHeight(_ i: Int) -> CGFloat {
-        let heights: [CGFloat] = [6, 10, 14, 8, 16, 12, 18, 10, 14, 8, 12, 6]
-        return heights[i % heights.count]
-    }
-
-    // MARK: - Status pill (single source of state feedback under the mic)
-
-    @ViewBuilder
-    private var statusPill: some View {
-        let status = currentStatus
-        HStack(spacing: 8) {
-            status.leading
-            Text(status.text)
-                .font(.hangsMono(12, weight: .semibold))
-                .tracking(0.5)
-                .foregroundColor(status.color)
-        }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 8)
-        .background(Capsule().fill(status.color.opacity(0.12)))
-        .overlay(Capsule().stroke(status.color.opacity(0.35), lineWidth: 1))
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(status.text)
-        .accessibilityValue(quizStateName)
-        .accessibilityIdentifier("question.statusPill")
-
-        #if DEBUG
-            // Copy-independent state probe for UI tests. Reading
-            // app.staticTexts["question.state"].label returns the current
-            // QuizState case name. Sibling of the pill so the test seam
-            // survives copy/layout changes to the visible status pill.
-            // Not .hidden() — that strips the text from the accessibility tree.
-            // A 0×0 frame is invisible enough.
-            Text(quizStateName)
-                .frame(width: 0, height: 0)
-                .accessibilityIdentifier("question.state")
-        #endif
-    }
-
-    /// Stable string for the current QuizState — exposed via accessibilityValue so
-    /// UI tests can assert state without needing screenshots or string-matching the pill copy.
-    private var quizStateName: String {
-        switch viewModel.quizState {
-        case .idle: return "idle"
-        case .startingQuiz: return "startingQuiz"
-        case .askingQuestion: return "askingQuestion"
-        case .recording: return "recording"
-        case .processing: return "processing"
-        case .skipping: return "skipping"
-        case .showingResult: return "showingResult"
-        case .finished: return "finished"
-        case .error: return "error"
-        }
-    }
-
-    private struct QuizStatus {
-        let text: String
-        let color: Color
-        let leading: AnyView
-    }
-
-    private var currentStatus: QuizStatus {
-        switch viewModel.quizState {
-        case .recording:
-            return QuizStatus(
-                text: #"RECORDING · SAY "STOP" TO FINISH"#,
-                color: Theme.Hangs.Colors.pink,
-                leading: AnyView(
-                    Circle()
-                        .fill(Theme.Hangs.Colors.pink)
-                        .frame(width: 8, height: 8)
-                )
-            )
-        case .processing:
-            return QuizStatus(
-                text: "PROCESSING ANSWER…",
-                color: Theme.Hangs.Colors.blue,
-                leading: AnyView(
-                    ProgressView()
-                        .controlSize(.mini)
-                        .tint(Theme.Hangs.Colors.blue)
-                )
-            )
-        case .skipping:
-            return QuizStatus(
-                text: "SKIPPING…",
-                color: Theme.Hangs.Colors.muted,
-                leading: AnyView(
-                    ProgressView()
-                        .controlSize(.mini)
-                        .tint(Theme.Hangs.Colors.muted)
-                )
-            )
-        case .askingQuestion where viewModel.thinkingTimeCountdown > 0:
-            return QuizStatus(
-                text: "THINKING TIME…",
-                color: Theme.Hangs.Colors.blue,
-                leading: AnyView(
-                    Image(systemName: "hourglass")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundColor(Theme.Hangs.Colors.blue)
-                )
-            )
-        case .askingQuestion where viewModel.answerTimerCountdown > 0:
-            return QuizStatus(
-                text: "RECORDING STARTS AUTOMATICALLY…",
-                color: Theme.Hangs.Colors.pink,
-                leading: AnyView(
-                    Image(systemName: "mic")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundColor(Theme.Hangs.Colors.pink)
-                )
-            )
-        default:
-            return QuizStatus(
-                text: #"READY · TAP MIC OR SAY "START""#,
-                color: Theme.Hangs.Colors.muted,
-                leading: AnyView(
-                    Image(systemName: "mic")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundColor(Theme.Hangs.Colors.muted)
-                )
-            )
-        }
-    }
-
-    // MARK: - Chip action row (repeat / keyboard / mute + voice hint)
-
-    private var chipActionRow: some View {
-        HStack(spacing: 10) {
-            navChip(systemName: "speaker.wave.2",
-                    label: "Repeat question",
-                    identifier: "question.repeat",
-                    isEnabled: canInteract)
-            {
-                Task { await viewModel.repeatQuestion() }
-            }
-
-            navChip(systemName: "keyboard",
-                    label: "Type answer",
-                    identifier: "question.textInputToggle",
-                    isEnabled: canInteract)
-            {
-                showTextInput.toggle()
-                if showTextInput { isTextFieldFocused = true }
-            }
-
-            navChip(systemName: viewModel.settings.isMuted ? "speaker.slash" : "speaker.wave.2.circle",
-                    label: viewModel.settings.isMuted ? "Unmute" : "Mute",
-                    identifier: "question.mute",
-                    tint: viewModel.settings.isMuted ? Theme.Hangs.Colors.pink : Theme.Hangs.Colors.ink,
-                    isEnabled: true)
-            {
-                viewModel.settings.isMuted.toggle()
-            }
-
-            Spacer(minLength: 0)
         }
         .padding(.horizontal, 24)
-        .padding(.top, 8)
+        .accessibilityIdentifier("question.liveTranscript")
     }
 
-    private func navChip(systemName: String,
-                         label: String,
-                         identifier: String,
-                         tint: Color = Theme.Hangs.Colors.ink,
-                         isEnabled: Bool,
-                         action: @escaping () -> Void) -> some View
-    {
-        Button(action: action) {
-            Image(systemName: systemName)
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundColor(tint)
-                .frame(width: 40, height: 40)
-                .background(Circle().fill(Color.white))
-                .hangsShadow(Theme.Hangs.Shadow.navChip)
-        }
-        .buttonStyle(.plain)
-        .disabled(!isEnabled)
-        .opacity(isEnabled ? 1 : 0.45)
-        .accessibilityLabel(label)
-        .accessibilityIdentifier(identifier)
-    }
-
-    // MARK: - Footer CTA
-
-    @ViewBuilder
-    private var footerCTA: some View {
-        HangsSecondaryButton(title: "Skip question",
-                             icon: "forward.fill",
-                             height: 54)
-        {
-            Task { await viewModel.skipQuestion() }
-        }
-        .accessibilityIdentifier("question.skip")
-        .disabled(isRecording || isProcessing)
-        .opacity((isRecording || isProcessing) ? 0.45 : 1)
-        .padding(.horizontal, 24)
-        .padding(.top, 12)
-        .padding(.bottom, 28)
-    }
-
-    // MARK: - MCQ body
+    // MARK: - MCQ body (frames b8zObz / WCaT6)
 
     private func mcqBody(question: Question) -> some View {
         VStack(spacing: 0) {
-            fixedQuestionHeader(question: question)
+            mcqQuestionHeader(question: question)
 
-            scrollableQuestionContent(question: question)
+            ScrollView(.vertical, showsIndicators: false) {
+                HangsQuestionPrompt(
+                    text: question.question,
+                    barColor: Theme.Hangs.Colors.blue,
+                    textFont: .hangsQuestion
+                )
+                .accessibilityIdentifier("question.text")
+                .padding(.horizontal, 28)
+                .padding(.vertical, 12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
 
             MCQOptionPicker(
                 options: question.sortedAnswerOptions,
@@ -497,15 +218,13 @@ struct QuestionView: View {
             )
             .padding(.top, 8)
 
-            chipActionRow
-
             ListeningPill(mode: question.sortedAnswerOptions.count == 2 ? .trueFalse : .mcq)
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.horizontal, 24)
-                .padding(.top, 8)
+                .padding(.top, 12)
 
             HangsSecondaryButton(title: "Skip question",
-                                 icon: "forward.fill",
+                                 icon: "play.forward.fill",
                                  height: 54)
             {
                 Task { await viewModel.skipQuestion() }
@@ -514,11 +233,221 @@ struct QuestionView: View {
             .padding(.horizontal, 24)
             .padding(.top, 12)
             .padding(.bottom, 28)
+
+            #if DEBUG
+                Text(quizStateName)
+                    .frame(width: 0, height: 0)
+                    .accessibilityIdentifier("question.state")
+            #endif
         }
         .frame(maxHeight: .infinity)
     }
 
-    // MARK: - Text input fallback
+    // "CATEGORY · QUESTION N" header for MCQ (frames b8zObz, WCaT6)
+    private func mcqQuestionHeader(question: Question) -> some View {
+        HangsSectionLabel(
+            text: "\(question.category) · QUESTION \(currentQuestionNumber)",
+            color: Theme.Hangs.Colors.pink
+        )
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 28)
+        .padding(.top, 12)
+        .padding(.bottom, 6)
+    }
+
+    // MARK: - Voice body (frames f9csl / uGhZg)
+
+    private func voiceBody(question: Question) -> some View {
+        VStack(spacing: 0) {
+            // Content above the action row scrolls when a long question would
+            // otherwise push Record/Skip off-screen (54.2); minHeight keeps the
+            // centered look for short questions.
+            GeometryReader { geo in
+                ScrollView(.vertical, showsIndicators: false) {
+                    VStack(spacing: 0) {
+                        // Category: lowercase pink, no question number (design: f9csl)
+                        Text(question.category.lowercased())
+                            .font(.hangsMono(11, weight: .medium))
+                            .tracking(2)
+                            .foregroundColor(Theme.Hangs.Colors.pink)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 24)
+                            .padding(.top, 12)
+                            .padding(.bottom, 4)
+                            .accessibilityIdentifier("question.category")
+
+                        // Question: Anton display, no left bar
+                        Text(question.question)
+                            .font(.hangsDisplaySM)
+                            .tracking(-1)
+                            .foregroundColor(Theme.Hangs.Colors.ink)
+                            .minimumScaleFactor(0.55)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 24)
+                            .accessibilityIdentifier("question.text")
+
+                        // Subtitle
+                        Text("Answer out loud — I'm listening.")
+                            .font(.hangsBody(15))
+                            .foregroundColor(Theme.Hangs.Colors.muted)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 24)
+                            .padding(.top, 8)
+
+                        Spacer(minLength: 24)
+
+                        // Centered voice state indicator
+                        voiceCenterBlock
+
+                        Spacer(minLength: 24)
+
+                        // Live transcript (recording + STT streaming)
+                        if isRecording && viewModel.isStreamingSTT {
+                            transcriptCard
+                                .padding(.bottom, 8)
+                        }
+
+                        // Context hint
+                        Text(isRecording
+                            ? "When you finish, your answer sends itself"
+                            : "Tap Record and answer out loud")
+                            .font(.hangsBody(13))
+                            .foregroundColor(Theme.Hangs.Colors.muted)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 24)
+                            .padding(.bottom, 12)
+
+                        // Typed-answer fallback — onboarding promises a keyboard
+                        // path for mic-denied users (#54 task 54.18; removed by 52.10).
+                        if showTextInput {
+                            textInputRow
+                                .padding(.bottom, 12)
+                        } else {
+                            textInputToggle
+                                .padding(.bottom, 12)
+                        }
+                    }
+                    .frame(minHeight: geo.size.height)
+                }
+            }
+
+            // Record/Stop | Skip buttons — pinned below the scroll region
+            voiceActionRow
+                .padding(.horizontal, 24)
+                .padding(.bottom, 28)
+
+            #if DEBUG
+                Text(quizStateName)
+                    .frame(width: 0, height: 0)
+                    .accessibilityIdentifier("question.state")
+            #endif
+        }
+        .frame(maxHeight: .infinity)
+    }
+
+    // MARK: - Voice state indicator (center of voice body)
+
+    @ViewBuilder
+    private var voiceCenterBlock: some View {
+        VStack(spacing: 10) {
+            if isRecording {
+                // "● recording · 0:04" pill
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(Theme.Hangs.Colors.pink)
+                        .frame(width: 8, height: 8)
+                    Text("recording · \(recordingTimeString)")
+                        .font(.hangsMono(12, weight: .semibold))
+                        .foregroundColor(Theme.Hangs.Colors.pink)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(Capsule().fill(Theme.Hangs.Colors.pinkSoft))
+                .accessibilityIdentifier("question.recordingPill")
+            }
+
+            Image(systemName: "waveform")
+                .font(.system(size: 36, weight: .semibold))
+                .foregroundColor(Theme.Hangs.Colors.pink)
+                .accessibilityHidden(true)
+
+            Text(isRecording ? "I hear you..." : "Ready")
+                .font(.hangsBody(17))
+                .foregroundColor(Theme.Hangs.Colors.muted)
+        }
+        .accessibilityIdentifier("question.voiceStateIndicator")
+    }
+
+    // MARK: - Voice action row (Record/Stop | Skip)
+
+    private var voiceActionRow: some View {
+        HStack(spacing: 12) {
+            Button {
+                // Manual override (54.3): toggleRecording starts recording
+                // immediately from .askingQuestion (cancelling the auto-record
+                // think/answer countdown) and stops+submits from .recording.
+                // Auto-record still fires on its own via startRecordingOrTimer()
+                // when the question is presented (QuizViewModel:440/945).
+                Task { await viewModel.toggleRecording() }
+            } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: isRecording ? "stop.fill" : "mic.fill")
+                        .font(.system(size: 17, weight: .semibold))
+                    Text(isRecording ? "Stop" : "Record")
+                        .font(.hangsButton)
+                }
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .frame(height: 56)
+                .background(Capsule().fill(Theme.Hangs.Colors.pink))
+                .hangsShadow(Theme.Hangs.Shadow.cta)
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier(isRecording ? "question.stop" : "question.record")
+
+            Button {
+                Task { await viewModel.skipQuestion() }
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "play.forward.fill")
+                        .font(.system(size: 12, weight: .semibold))
+                    Text("Skip")
+                        .font(.hangsBody(15, weight: .medium))
+                }
+                .foregroundColor(Theme.Hangs.Colors.ink)
+                .frame(height: 56)
+                .padding(.horizontal, 20)
+                .background(Capsule().fill(Theme.Hangs.Colors.bgCard))
+                .overlay(Capsule().stroke(Theme.Hangs.Colors.hairline, lineWidth: 1))
+            }
+            .buttonStyle(.plain)
+            .disabled(isRecording || isProcessing)
+            .opacity((isRecording || isProcessing) ? 0.45 : 1)
+            .accessibilityIdentifier("question.skip")
+        }
+    }
+
+    // MARK: - Typed-answer fallback (54.18)
+
+    private var textInputToggle: some View {
+        Button {
+            showTextInput = true
+            isTextFieldFocused = true
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "keyboard")
+                    .font(.system(size: 12, weight: .semibold))
+                Text("Type answer instead")
+                    .font(.hangsBody(13, weight: .medium))
+            }
+            .foregroundColor(Theme.Hangs.Colors.muted)
+        }
+        .buttonStyle(.plain)
+        .disabled(!canInteract)
+        .opacity(canInteract ? 1 : 0.45)
+        .accessibilityIdentifier("question.textInputToggle")
+    }
 
     private var textInputRow: some View {
         HangsCard(padding: EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 8)) {
@@ -561,15 +490,39 @@ struct QuestionView: View {
 
     private var isRecording: Bool { viewModel.quizState == .recording }
 
-    private var isProcessing: Bool { viewModel.quizState == .processing || viewModel.quizState == .skipping }
+    private var canInteract: Bool { viewModel.quizState == .askingQuestion }
 
-    private var canInteract: Bool {
-        viewModel.quizState == .askingQuestion
+    private var isProcessing: Bool {
+        viewModel.quizState == .processing || viewModel.quizState == .skipping
+    }
+
+    private var currentQuestionNumber: Int {
+        let total = viewModel.currentSession?.maxQuestions ?? viewModel.settings.numberOfQuestions
+        return min(viewModel.questionsAnswered + 1, max(total, 1))
     }
 
     private var recordingElapsed: Int {
         guard let start = recordingStartedAt else { return 0 }
         return max(0, Int(now.timeIntervalSince(start)))
+    }
+
+    private var recordingTimeString: String {
+        let s = recordingElapsed
+        return String(format: "%d:%02d", s / 60, s % 60)
+    }
+
+    private var quizStateName: String {
+        switch viewModel.quizState {
+        case .idle: return "idle"
+        case .startingQuiz: return "startingQuiz"
+        case .askingQuestion: return "askingQuestion"
+        case .recording: return "recording"
+        case .processing: return "processing"
+        case .skipping: return "skipping"
+        case .showingResult: return "showingResult"
+        case .finished: return "finished"
+        case .error: return "error"
+        }
     }
 }
 

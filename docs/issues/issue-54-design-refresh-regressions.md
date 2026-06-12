@@ -30,9 +30,9 @@ Pencil-sync, done-criteria). Pick one per session.
 |---|---|---|---|
 | _(landed)_ | 54.3, 54.8 (RS), 54.9, 54.10, 54.12, 54.14-lineSpacing | P0/P2 | ✅ commits `3eb48d1`, `40b9ff0` |
 | [`issue-54-02-voice-overflow.md`](issue-54-02-voice-overflow.md) | 54.2 voice layout overflow | P0 | ✅ fixed 2026-06-12 |
-| [`issue-54-05-resubmit-cancel.md`](issue-54-05-resubmit-cancel.md) | 54.5 + 54.15 cancelled-resubmit + ErrorView factory | P0 | landed (unit-verified; sim-confirm pending) |
+| [`issue-54-05-resubmit-cancel.md`](issue-54-05-resubmit-cancel.md) | 54.5 + 54.15 cancelled-resubmit + ErrorView factory | P0 | ✅ fixed 2026-06-12 (unit-verified + live ElevenLabs sim-confirm; CompletionView light+dark screenshots done) |
 | [`issue-54-01-dark-mode.md`](issue-54-01-dark-mode.md) | 54.1 dark mode (Phase 1 token swap; Phase 2 asset-catalog) | P0 | ✅ Phase 1 landed 2026-06-12 (Phase 2 open) |
-| [`issue-54-sim-repro.md`](issue-54-sim-repro.md) | 54.4, 54.6, 54.7 (need live-sim repro first) | P0 | 54.7 ✅ + 54.4 ✅ fixed 2026-06-12; 54.6 open |
+| [`issue-54-sim-repro.md`](issue-54-sim-repro.md) | 54.4, 54.6, 54.7 (need live-sim repro first) | P0 | ✅ all three fixed 2026-06-12 (54.7 `506ecb9`; 54.4 `5ac3450`; 54.6 `0f1563a` + Pencil sync frame AAEkz) |
 | [`issue-54-recovery-paths.md`](issue-54-recovery-paths.md) | 54.17, 54.18 broken recovery paths (new, 2nd review pass) | P1 | ready (54.18 decided: restore typed input) |
 | [`issue-54-data-cleanups.md`](issue-54-data-cleanups.md) | 54.11, 54.13, 54.16 + hygiene 54.19–54.21 | P2 | ready (54.13 decided: fractional display) |
 | [`issue-54-pencil-snapshot-sync.md`](issue-54-pencil-snapshot-sync.md) | Pencil 1:1 sync + snapshot re-record + CI gate + TSan triage | P1 | run last |
@@ -49,7 +49,7 @@ Pencil-sync, done-criteria). Pick one per session.
 | Suite | Result (corrected) | Notes |
 |---|---|---|
 | Backend `pytest` | ✅ 100 passed | `apps/quiz-agent` — unaffected by this branch |
-| iOS unit/inspector/model (Swift Testing) | ✅ pass | 359 tests, only the 3 snapshot issues below fail |
+| iOS unit/inspector/model (Swift Testing) | ✅ pass | 371 tests (after 54.6 added `endQuizResetsMinimized`), only the 3 snapshot issues below fail |
 | iOS snapshot | ❌ 3 failed | HomeView idle, QuestionView recording, QuestionView asking — **diff cause known (2nd pass): pure model drift**, 4 new fields (`headlineAnswer`, `_mcqVoiceMatchedKey`, `micPermissionResult`, `onReplayOnboarding`); re-record **after** UI is final |
 | iOS `SilenceDetectionService` | ✅ **passed** | suite green here — original "10 failed" not reproduced |
 | iOS Regression (RS-Start/Correct/Incorrect/Paywall) | ✅ **green — verified 2nd run** | `Executed 4 tests, 0 failures` (2026-06-12 verification pass) — 54.3/54.8 fix confirmed |
@@ -172,7 +172,9 @@ new ids are `question.record`/`question.stop` (`QuestionView.swift:383`), tests 
 > encoding that opt-out was flipped per rule #4); (4) `.disconnected` mid-recording stranded
 > `.recording` — now returns to `.askingQuestion` with a retry message. Empty/whitespace commits
 > route to the 3-tier transcription-failure escalation instead of an empty confirmation sheet.
-> Tests red→green; full suite 370 green (3 pre-existing snapshot fails). Details:
+> Tests red→green; full suite 370 green (3 pre-existing snapshot fails). **Live sim-confirmed
+> 2026-06-12:** all escalation tiers + 15 s cap + tier-3 auto-skip confirmed live on iPhone 17 Pro
+> iOS 26.5 sim (real ElevenLabs WebSocket, real mic). Details:
 > [`issue-54-sim-repro.md`](issue-54-sim-repro.md) §54.4.
 
 **Symptom:** after the answer timer expired, recording auto-started, but with no speech it never
@@ -214,14 +216,32 @@ a dedicated non-self-cancelling submit. Also: the error copy is raw English in a
 retry action is wrong for a cancellation — see 54.15.
 **Confidence:** high on mechanism; verify it's the live trigger (VM file unchanged by this branch — the
 new modal/sheet flow may also contribute).
-> **STATUS 2026-06-12 — FIXED (unit-verified), sim-confirm pending.** Fresh-Task handoff:
+> **STATUS 2026-06-12 — ✅ FIXED, fully verified.** Fresh-Task handoff:
 > `startAutoConfirmIfEnabled` now spawns `Task { await self.confirmAnswer() }` instead of awaiting
 > it inside the auto-confirm Task, so `cancelAutoConfirm()` no longer cancels its own submit.
 > Red→green via `autoConfirmCountdownReachesShowingResult` (`QuizViewModelResubmitTests`); red run
-> reproduced the exact founder error (`NSURLErrorDomain -999`). Live ElevenLabs streaming sim-repro
-> batched with 54.4/54.6/54.7. Details: [`issue-54-05-resubmit-cancel.md`](issue-54-05-resubmit-cancel.md).
+> reproduced the exact founder error (`NSURLErrorDomain -999`). **Live sim-confirmed 2026-06-12:**
+> full ElevenLabs streaming loop on iPhone 17 Pro iOS 26.5 sim (real WebSocket to
+> api.elevenlabs.io, real mic) — live transcript "Oj. Pravda." → auto-confirm → result screen →
+> question 02/10, **no OOPS**. CompletionView live light+dark screenshots captured
+> (`/tmp/hangs-54-6/completion-light.png`, `completion-dark.png`), both clean, no visual bugs.
+> Details: [`issue-54-05-resubmit-cancel.md`](issue-54-05-resubmit-cancel.md).
 
 ### 54.6 — Can't end quiz from the minimized view; minimized view not redesigned (founder #1)
+
+> **STATUS: ✅ FIXED 2026-06-12. Commit `0f1563a`.** Full rewrite of `MinimizedQuizView.swift` to
+> `Theme.Hangs.*` tokens (mono progress, Anton score, pink mic pill, hairline divider). The 22×22
+> offset ✕ chip replaced by a full-width 44 pt "End Quiz" row. **Bonus bug fixed:**
+> `resetState()` never cleared `isMinimized` — ending a quiz from the widget left a stale floating
+> card over Home; fixed at `QuizViewModel.swift:1007`. New test:
+> `QuizViewModelEndQuizTests.endQuizResetsMinimized`. Screenshot-verified light+dark
+> (`/tmp/hangs-54-6/` screenshots 07/09 widget, 08 end-quiz dismissal). Full suite: 371 tests,
+> 368 passed, only 3 pre-existing snapshot fails. **Pencil sync done:** frame
+> `Widget/Minimized-Quiz` (id AAEkz) added to `design/quiz-agent.pen` reusing
+> `$bg-card/$accent-pink/$error/$font-mono/$font-display` tokens. Known pre-existing token gap:
+> Swift `Radius.card=18` vs design `$radius-xl=16`. Details:
+> [`issue-54-sim-repro.md`](issue-54-sim-repro.md) §54.6.
+
 **Symptom:** no usable way to end the quiz from the minimized quiz widget; and this screen still
 needs the redesigned look.
 **Root cause (medium confidence):**

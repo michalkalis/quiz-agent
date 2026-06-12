@@ -44,11 +44,25 @@ widening `waitUntil` deadline (1 s wall-clock starved under 70 parallel suites).
 verify is batched into the 54.5 live-streaming sim-confirm (needs backend + real ElevenLabs token).
 
 ## 54.6 — can't end quiz from the minimized view; not redesigned (founder #1)
-**Mechanism:** `MinimizedQuizView.swift` was **not touched by #52** — still old `Theme.Colors.*`
+**✅ FIXED 2026-06-12.** Full rewrite of `MinimizedQuizView.swift` to `Theme.Hangs.*` tokens (mono
+progress, Anton score, pink mic pill, hairline divider). The 22×22 offset ✕ chip replaced by a
+full-width 44 pt "End Quiz" row — large driving-context tap target, no offset hit-area loss.
+**Bonus bug fixed:** `resetState()` never cleared `isMinimized`, so ending a quiz from the widget
+left a stale floating card over Home. Fix: `QuizViewModel.swift:1007` now sets `isMinimized = false`
+inside `resetState()`. New test: `QuizViewModelEndQuizTests.endQuizResetsMinimized`.
+**Commit:** `0f1563a`. Screenshot-verified light+dark (`/tmp/hangs-54-6/`; screenshots 07/09 widget,
+08 end-quiz dismissal). **Full suite after commit:** 371 tests, 368 passed; only the 3 known
+pre-existing snapshot fails (HomeViewSnapshotTests.idleWithStats,
+QuestionViewSnapshotTests.askingState, QuestionViewSnapshotTests.recordingState).
+**Pencil sync done:** new frame `Widget/Minimized-Quiz` (id AAEkz) created in
+`design/quiz-agent.pen`, matching the implementation, reusing `$bg-card/$accent-pink/$error/$font-mono/$font-display`
+tokens. Known pre-existing token gap: Swift `Radius.card=18` vs design `$radius-xl=16` (frame uses 18).
+
+**Mechanism (original):** `MinimizedQuizView.swift` was **not touched by #52** — still old `Theme.Colors.*`
 (non-adaptive) + old visuals. An end-quiz control exists: a 22×22 "✕" chip top-trailing with
 `.offset(x:6,y:-6)` partly off the card edge (`MinimizedQuizView.swift:98–114`) → tiny/hard to hit;
 it opens an End-Quiz dialog → `viewModel.endQuiz()`.
-**Plan:** redesign MinimizedQuizView to the new design system (`Theme.Hangs.*`) and make end-quiz an
+**Original plan:** redesign MinimizedQuizView to the new design system (`Theme.Hangs.*`) and make end-quiz an
 obvious, comfortably-tappable control. Verify the confirmation dialog presents from the floating
 overlay. **Pencil:** add/repair the minimized-quiz frame (it currently has no redesigned design).
 Overlaps with 54.1 (adaptive tokens) — do the token migration here too.
@@ -72,7 +86,21 @@ them off-main (`Task.detached`) — trapped pre-fix exactly like the app, passes
 **Live verify:** replay intro → Continue → HANDS-FREE → Continue → MIC ACCESS → Maybe later → Home;
 process alive at every step (screenshots /tmp/hangs-54-7/).
 
+## Live-simulator verification (54.4 / 54.5)
+
+**Confirmed 2026-06-12 on iPhone 17 Pro / iOS 26.5 sim** (real ElevenLabs WebSocket to
+`api.elevenlabs.io`, real mic audio, local backend on :8002):
+- **54.4 escalation tiers + 15 s cap + tier-3 auto-skip:** tier-1/tier-2 dead-air banners confirmed
+  live; 15 s cap closes WebSocket exactly on time (app log: token from :8002 + wss to
+  api.elevenlabs.io); tier-3 auto-skip fires after 3rd failure. All four escalation tiers confirmed.
+- **54.5 full live ElevenLabs streaming loop:** audible speech (built-in mic + speakers) produced live
+  transcript "Oj. Pravda." → auto-confirm sheet → auto-confirm timer → result screen → question 02/10,
+  **no OOPS** (54.5 confirm PASSED). Real WebSocket, real mic audio, no mocks.
+- **54.5 CompletionView light+dark screenshots:** live sim run completing a quiz produced
+  `completion-light.png` and `completion-dark.png` at `/tmp/hangs-54-6/` — both clean renders,
+  no visual bugs.
+
 ## Done criteria (per item)
-- [ ] Repro confirmed (or 54.7 closed as non-defect) with sim evidence. *(54.7 ✅ — crash repro 4/4 · 54.4 ✅ — code-trace, 4 holes; live dead-air check batched into 54.5)*
-- [ ] Behavioural test red→green. Screenshot-verify (54.6 light+dark). *(54.7 ✅ — AdaptiveColorIsolationTests · 54.4 ✅ — streaming Tests 4–7 + service + timer tests)*
-- [ ] Pencil synced for 54.6 minimized frame. Update parent §54.4/§54.6/§54.7. *(§54.7 ✅ · §54.4 ✅)*
+- [x] Repro confirmed (or 54.7 closed as non-defect) with sim evidence. *(54.7 ✅ — crash repro 4/4 · 54.4 ✅ — code-trace, 4 holes; live dead-air check confirmed · 54.6 ✅ — sim-verified light+dark)*
+- [x] Behavioural test red→green. Screenshot-verify (54.6 light+dark). *(54.7 ✅ — AdaptiveColorIsolationTests · 54.4 ✅ — streaming Tests 4–7 + service + timer tests · 54.6 ✅ — screenshots 07/09 widget, 08 end-quiz dismissal)*
+- [x] Pencil synced for 54.6 minimized frame. Update parent §54.4/§54.6/§54.7. *(§54.7 ✅ · §54.4 ✅ · §54.6 ✅ — frame AAEkz created)*

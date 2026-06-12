@@ -52,6 +52,11 @@ private func makeViewModelWithSTT()
 /// Timeout is wall-clock: the mock STT actor hops through the global executor,
 /// which is starved when the full suite runs 70 suites in parallel — 1 s
 /// flaked there, so the deadline is generous. Green runs return immediately.
+/// Each iteration also really sleeps 1 ms: tests 6/7 wait on wall-clock
+/// `Task.sleep` timers, and a pure yield-spin can starve their continuations
+/// on a loaded CI runner (autoStopCapFiresOnRerecord flaked exactly this way
+/// on CI run 27445302573). The post-loop predicate check covers a runner that
+/// stalls past the deadline but does deliver the awaited state.
 @MainActor
 private func waitUntil(
     _ predicate: @MainActor () -> Bool,
@@ -63,7 +68,9 @@ private func waitUntil(
     while ContinuousClock.now < deadline {
         if predicate() { return }
         await Task.yield()
+        try? await Task.sleep(for: .milliseconds(1))
     }
+    if predicate() { return }
     Issue.record(comment ?? "waitUntil timed out after \(timeoutMillis)ms", sourceLocation: sourceLocation)
 }
 
@@ -233,6 +240,48 @@ struct QuizViewModelStreamingTests {
             await waitUntil({ viewModel.quizState != .recording }, "cap never fired during re-record")
 
             #expect(viewModel.quizState != .recording)
+        }
+    }
+
+    // MARK: - Test 8: MCQ voice match survives the listener's self-cancel (54.5 class)
+
+    /// Regression: handleCommittedTranscript runs inside the .sttEvent listener
+    /// task and cancels that very task before routing. The MCQ branch then
+    /// submits inline — without the unstructured-task hop the submit inherits
+    /// the cancellation and throws URLError(.cancelled): the driver says the
+    /// right answer and gets the OOPS screen. The direct-call tests in
+    /// QuizViewModelMCQVoiceTests can't catch this (no enclosing cancelled
+    /// task), so this drives the committed transcript through the real event
+    /// stream. Found live in the 54.16 in-sim verify, 2026-06-13.
+    @Test("MCQ voice match through the event stream submits despite the listener self-cancel")
+    func mcqVoiceMatchSubmitsThroughEventStream() async throws {
+        await withMainSerialExecutor {
+            let (viewModel, mockNetwork, _, mockSTT) = makeViewModelWithSTT()
+            viewModel.currentQuestion = Question(
+                id: "q_mcq_001",
+                question: "Largest planet?",
+                type: .textMultichoice,
+                possibleAnswers: ["a": "Mars", "b": "Jupiter", "c": "Venus", "d": "Saturn"],
+                difficulty: "medium",
+                topic: "Astronomy",
+                category: "science",
+                sourceUrl: nil,
+                sourceExcerpt: nil,
+                mediaUrl: nil,
+                imageSubtype: nil,
+                explanation: nil,
+                generatedBy: nil
+            )
+
+            await viewModel.startRecording()
+            await waitUntil({ viewModel.isStreamingSTT }, "streaming never started")
+
+            await mockSTT.injectEvent(.committedTranscript("Jupiter"))
+            await waitUntil({ viewModel.quizState.isShowingResult }, "voice-match submit never completed")
+
+            #expect(mockNetwork.capturedTextInputInput == "Jupiter")
+            #expect(viewModel.mcqVoiceMatchedKey == "b")
+            #expect(viewModel.errorMessage == nil)
         }
     }
 }

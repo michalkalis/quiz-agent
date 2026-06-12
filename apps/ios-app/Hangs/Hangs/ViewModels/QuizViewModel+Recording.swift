@@ -205,7 +205,13 @@ extension QuizViewModel {
            let value = question.possibleAnswers?[key]
         {
             mcqVoiceMatchedKey = key
-            await submitMCQAnswer(key: key, value: value)
+            // This code runs inside the .sttEvent listener task cancelled above,
+            // and the submit's network call is cancellation-aware — awaiting it
+            // directly throws URLError(.cancelled) mid-submit and surfaces the
+            // OOPS screen (same self-cancellation class as 54.5). Hop to an
+            // unstructured task, which does not inherit cancellation, and await
+            // its value so direct callers keep synchronous semantics.
+            await Task { await self.submitMCQAnswer(key: key, value: value) }.value
             return
         }
 

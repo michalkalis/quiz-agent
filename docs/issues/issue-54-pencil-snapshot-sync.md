@@ -89,3 +89,26 @@ excluded — too slow/flaky for unattended headless; CI covers them). (2) `ios-c
 triggers on push to `ralph/**` (red is visible at review-push time, before merge) with a
 `concurrency` group cancelling superseded runs to bound macOS-runner cost. TSan BUS crash: did not
 recur in any of this session's full runs — stays a watch item per the 2026-06-12 downgrade.
+
+## In-sim verify pass (2026-06-13, follow-up session)
+
+The batched verifies owed by this plan — artifact:
+`docs/artifacts/visual-verify-54-pencil-snapshot-sync-2026-06-13.html` (VISUAL: PASS).
+
+- **54.18** toggle + typed input row + full typed submit: PASS (matches Pencil `f9csl`).
+- **54.17** Settings reset row: PASS (live counter 2/500 → confirm → 0/500).
+- **CompletionView**: unreachable in the UI-test harness (mock session never advances phase) —
+  both `displayScore` paths stay unit-covered (`QuizCompleteSummaryTests`,
+  `CompletionViewInspectorTests`); noted in the artifact, no harness scope added.
+- **54.16 found a real bug**: the MCQ voice match resolved but the submit threw
+  `URLError(.cancelled)` → OOPS screen. `handleCommittedTranscript` cancels the `.sttEvent`
+  listener task it runs inside, then the MCQ branch submitted inline from that cancelled
+  context — same self-cancellation class as 54.5; invisible to the direct-call unit tests and
+  to prod (no MCQ questions shipped yet, #42 Track F parked). Fixed with the 54.5
+  unstructured-task hop (awaited, so direct callers stay synchronous); regression test
+  `mcqVoiceMatchSubmitsThroughEventStream` drives the real event stream — verified red
+  without the fix, green with it. Full unit suite green after fix (385/385).
+- **CI run 27445302573 triaged first-hand**: macOS job red = ONE starved-runner flake
+  (`autoStopCapFiresOnRerecord`; 394/395 passed, all 11 UI tests passed — the predicted
+  `testRS*`/micButton failures did NOT occur). `waitUntil` hardened (real 1 ms sleep per spin
+  + post-deadline re-check). The API-verify job's uv issue remains (fix on main post-merge).

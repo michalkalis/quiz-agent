@@ -35,7 +35,7 @@ Pencil-sync, done-criteria). Pick one per session.
 | [`issue-54-sim-repro.md`](issue-54-sim-repro.md) | 54.4, 54.6, 54.7 (need live-sim repro first) | P0 | ✅ all three fixed 2026-06-12 (54.7 `506ecb9`; 54.4 `5ac3450`; 54.6 `0f1563a` + Pencil sync frame AAEkz) |
 | [`issue-54-recovery-paths.md`](issue-54-recovery-paths.md) | 54.17, 54.18 broken recovery paths (new, 2nd review pass) | P1 | ✅ fixed 2026-06-12 (`ddb6538`, `6f1a0f7`) |
 | [`issue-54-data-cleanups.md`](issue-54-data-cleanups.md) | 54.11, 54.13, 54.16 + hygiene 54.19–54.21 | P2 | ✅ landed 2026-06-12 (targeted suites green; 54.16 in-sim animation verify batched into Pencil/snapshot pass) |
-| [`issue-54-pencil-snapshot-sync.md`](issue-54-pencil-snapshot-sync.md) | Pencil 1:1 sync + snapshot re-record + CI gate + TSan triage | P1 | run last |
+| [`issue-54-pencil-snapshot-sync.md`](issue-54-pencil-snapshot-sync.md) | Pencil 1:1 sync + snapshot re-record + CI gate + TSan triage | P1 | ✅ done 2026-06-13 (`ed8d9f4` + in-sim verify pass PASS; 54.16 verify found+fixed a real MCQ submit self-cancellation bug) |
 
 ## Ground-truth test state (2026-06-12)
 

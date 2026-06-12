@@ -68,14 +68,13 @@ struct ContentView: View {
                     case .finished:
                         CompletionView(viewModel: viewModel)
 
-                    case let .error(message, _):
+                    case let .error(_, context):
+                        // activeErrorModel is built by setError via AppErrorModel.from
+                        // (localised copy + context-correct CTA — 54.15); the context
+                        // fallback covers direct transitions that bypass setError.
                         ErrorView(
                             viewModel: viewModel,
-                            model: AppErrorModel(
-                                title: message.isEmpty ? "Niečo sa pokazilo" : message,
-                                description: "Skontroluj pripojenie a skús to znova.",
-                                retryAction: .retryOperation
-                            )
+                            model: viewModel.activeErrorModel ?? AppErrorModel.from(context: context)
                         )
                     }
                 }

@@ -126,6 +126,44 @@ struct AppErrorModelTests {
         #expect(model.retryAction == .dismiss)
     }
 
+    // MARK: - Cancellation (54.15)
+
+    /// Regression: a cancellation surfaced as a generic "retry" error is exactly
+    /// the founder-reported OOPS screen (54.5) — the CTA must be a soft dismiss,
+    /// not a misleading retry, and the copy must be SK (not raw "cancelled").
+    @Test("CancellationError → dismiss with SK copy")
+    func cancellationError() {
+        let model = AppErrorModel.from(CancellationError(), context: .submission)
+
+        #expect(model.retryAction == .dismiss)
+        #expect(!model.title.isEmpty)
+        #expect(!model.title.lowercased().contains("cancelled"))
+    }
+
+    @Test("URLError.cancelled → dismiss with SK copy")
+    func urlErrorCancelled() {
+        let model = AppErrorModel.from(URLError(.cancelled), context: .submission)
+
+        #expect(model.retryAction == .dismiss)
+        #expect(!model.title.lowercased().contains("cancelled"))
+    }
+
+    // MARK: - Context-only factory (54.15: ContentView fallback path)
+
+    /// Regression: ContentView's `.error` case falls back to `from(context:)`
+    /// when no underlying Error was captured — it must produce the same SK
+    /// copy as the error-driven fallback, never raw English.
+    @Test("context-only factory produces SK copy per context")
+    func contextOnlyFactory() {
+        let contexts: [ErrorContext] = [.initialization, .submission, .recording, .general]
+        for context in contexts {
+            let model = AppErrorModel.from(context: context)
+            #expect(!model.title.isEmpty, "title empty for \(context)")
+            #expect(!model.description.isEmpty, "description empty for \(context)")
+            #expect(model.retryAction == .retryOperation)
+        }
+    }
+
     // MARK: - Context-driven fallback
 
     @Test("initialization context fallback → retryOperation")

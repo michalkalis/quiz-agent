@@ -96,6 +96,9 @@
       ▿ _errorMessage: Combine.Published<Swift.Optional<Swift.String>>
         ▿ storage: Combine.Published<Swift.Optional<Swift.String>>.Storage.value
           - value: nil
+      ▿ _activeErrorModel: Combine.Published<Swift.Optional<Hangs.AppErrorModel>>
+        ▿ storage: Combine.Published<Swift.Optional<Hangs.AppErrorModel>>.Storage.value
+          - value: nil
       ▿ _lastErrorDebugInfo: Combine.Published<Swift.Optional<Swift.String>>
         ▿ storage: Combine.Published<Swift.Optional<Swift.String>>.Storage.value
           - value: nil

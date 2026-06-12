@@ -192,12 +192,12 @@ extension QuizViewModel {
 
     /// Start a ticking auto-confirm countdown if enabled.
     /// Cancelled by rerecordAnswer() or cancelProcessing().
-    func startAutoConfirmIfEnabled() {
+    /// `duration` is injectable for tests; production callers use the default.
+    func startAutoConfirmIfEnabled(duration: Int = Config.autoConfirmDelaySecs) {
         guard settings.autoConfirmEnabled else {
             autoConfirmCountdown = 0
             return
         }
-        let duration = Config.autoConfirmDelaySecs
         autoConfirmCountdown = duration
         let task = Task { [weak self] in
             for remaining in (0 ..< duration).reversed() {
@@ -207,7 +207,11 @@ extension QuizViewModel {
             }
             guard let self, !Task.isCancelled else { return }
             guard self.showAnswerConfirmation else { return }
-            await self.confirmAnswer()
+            // Hand off to a fresh task: confirmAnswer() cancels the auto-confirm
+            // task (this one), and the streaming-path submit inside it is
+            // cancellation-aware — awaiting it here would throw
+            // URLError.cancelled mid-submit and surface the OOPS screen (54.5).
+            Task { await self.confirmAnswer() }
         }
         taskBag.add(task, key: .autoConfirm)
     }

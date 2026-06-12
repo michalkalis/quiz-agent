@@ -106,6 +106,9 @@ final class QuizViewModel: ObservableObject {
     @Published var score: Double = 0.0
     @Published var questionsAnswered: Int = 0
     @Published var errorMessage: String? // Inline errors shown in QuestionView (e.g., recording failures)
+    /// Display model for the full-screen Error state, built by `setError` via
+    /// `AppErrorModel.from` so ErrorView shows localised copy + the right CTA (54.15).
+    @Published private(set) var activeErrorModel: AppErrorModel?
 
     #if DEBUG
         /// Rich debug dump of the most recent error — type, localizedDescription, `String(reflecting:)`,
@@ -474,6 +477,8 @@ final class QuizViewModel: ObservableObject {
         #if DEBUG
             lastErrorDebugInfo = error.map { Self.formatDebugError($0, displayMessage: message) }
         #endif
+        activeErrorModel = error.map { AppErrorModel.from($0, context: context) }
+            ?? AppErrorModel.from(context: context)
         transition(to: .error(message: message, context: context))
     }
 

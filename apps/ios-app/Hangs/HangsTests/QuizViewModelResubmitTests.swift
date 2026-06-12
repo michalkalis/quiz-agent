@@ -121,7 +121,39 @@ struct QuizViewModelResubmitTests {
         #expect(viewModel.transcriptWasEdited == false)
     }
 
-    // MARK: - Test 5: Happy-path state transition
+    // MARK: - Test 5: Auto-confirm must not cancel its own submit (54.5)
+
+    /// Regression: the auto-confirm Task used to `await confirmAnswer()` directly;
+    /// confirmAnswer() starts with cancelAutoConfirm() → taskBag.cancel(.autoConfirm)
+    /// → cancels the very Task it is running inside. The streaming-path submit
+    /// (URLSession is cancellation-aware; the mock mirrors this) then throws
+    /// URLError.cancelled → "Failed to resubmit answer: cancelled" OOPS screen
+    /// instead of the result. The fix hands the confirm off to a fresh Task.
+    @Test("auto-confirm fired countdown reaches showingResult, not error")
+    func autoConfirmCountdownReachesShowingResult() async throws {
+        let (viewModel, mockNetwork) = makeViewModelForResubmit()
+        viewModel.settings.autoConfirmEnabled = true
+        // Mirror the confirmation-sheet state after a committed streaming transcript.
+        viewModel.transcribedAnswer = "Paris"
+        viewModel.showAnswerConfirmation = true
+        viewModel.quizState = .processing
+        // pendingResponse nil → confirmAnswer() takes the streaming resubmit path.
+        viewModel.pendingResponse = nil
+
+        // Fire the real auto-confirm countdown (1s injected for test speed).
+        viewModel.startAutoConfirmIfEnabled(duration: 1)
+
+        // Countdown (1s) + handed-off submit; poll up to 4s.
+        for _ in 0 ..< 40 where !viewModel.quizState.isShowingResult {
+            try await Task.sleep(nanoseconds: 100_000_000)
+        }
+
+        #expect(viewModel.quizState.isShowingResult,
+                "auto-confirm ended in \(viewModel.quizState) instead of showingResult")
+        #expect(mockNetwork.capturedTextInputInput == "Paris")
+    }
+
+    // MARK: - Test 6: Happy-path state transition
 
     /// Regression: state-machine regression on the resubmit path — the ViewModel
     /// must reach .showingResult after a successful submitTextInput when

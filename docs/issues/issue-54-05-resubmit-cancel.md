@@ -1,7 +1,7 @@
 # Plan 54.5 + 54.15 — "Failed to resubmit: cancelled" OOPS screen + ErrorView factory
 
 **Parent:** `issue-54-design-refresh-regressions.md` (§54.5, §54.15) · **Priority:** P0 (founder #6)
-**Status:** ready · **Confidence:** high on mechanism (confirm it's the live trigger in-sim)
+**Status:** landed (unit-verified) · **Confidence:** high on mechanism (confirm it's the live trigger in-sim)
 **Type:** ViewModel async-correctness + error-display routing. These two are one unit — the
 cancelled-resubmit case (54.5) is exactly what the ErrorView mis-renders (54.15).
 
@@ -53,6 +53,20 @@ cancellation/submission context. Confirm ContentView renders SK copy (not raw En
 Error frame `Fwafe` — confirm copy/CTA match the factory output. Batch with the cross-cutting pass.
 
 ## Done criteria
-- [ ] Streaming auto-confirm reaches the result screen (test red→green; sim-confirmed).
-- [ ] ErrorView shows SK copy via `AppErrorModel.from`; retry action correct per context.
-- [ ] Update parent §54.5/§54.15 status.
+- [x] Streaming auto-confirm reaches the result screen (test red→green: `autoConfirmCountdownReachesShowingResult` in `QuizViewModelResubmitTests`). **Sim-confirm of the live ElevenLabs streaming path still pending** — batched with the cross-cutting sim-repro pass (54.4/54.6/54.7).
+- [x] ErrorView shows SK copy via `AppErrorModel.from`; retry action correct per context (`.dismiss` for cancellation, covered by new `AppErrorModelTests` cases).
+- [x] Update parent §54.5/§54.15 status.
+
+## Landed 2026-06-12
+**Fix 54.5 (fresh-Task handoff):** `startAutoConfirmIfEnabled` (`+Timers.swift`) hands the confirm
+off to a fresh `Task { await self.confirmAnswer() }` instead of `await`-ing it inside the
+auto-confirm Task — the fresh Task isn't under the `.autoConfirm` key, so `cancelAutoConfirm()`
+no longer cancels the submit it's part of. Keeps manual + auto confirm on the same submit path
+(preserves the #19 fix intent).
+**Fix 54.15:** `QuizViewModel` gained `@Published private(set) var activeErrorModel`, populated in
+`setError` via `AppErrorModel.from(_:context:)`; `ContentView` `.error` case renders it (fallback
+`AppErrorModel.from(context:)`). Factory now maps `CancellationError`/`URLError.cancelled` →
+SK copy + `retryAction: .dismiss`.
+**Tests:** full HangsTests = 363 tests, only the 3 known deferred snapshot failures. 2 ResultView
+`.stableDump` baselines re-recorded (pure model drift from the new `@Published` field).
+**Pencil `Fwafe` frame sync:** still batched with the cross-cutting pass.

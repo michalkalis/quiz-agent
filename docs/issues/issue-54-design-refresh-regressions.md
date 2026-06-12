@@ -30,7 +30,7 @@ Pencil-sync, done-criteria). Pick one per session.
 |---|---|---|---|
 | _(landed)_ | 54.3, 54.8 (RS), 54.9, 54.10, 54.12, 54.14-lineSpacing | P0/P2 | ✅ commits `3eb48d1`, `40b9ff0` |
 | [`issue-54-02-voice-overflow.md`](issue-54-02-voice-overflow.md) | 54.2 voice layout overflow | P0 | ✅ fixed 2026-06-12 |
-| [`issue-54-05-resubmit-cancel.md`](issue-54-05-resubmit-cancel.md) | 54.5 + 54.15 cancelled-resubmit + ErrorView factory | P0 | ready |
+| [`issue-54-05-resubmit-cancel.md`](issue-54-05-resubmit-cancel.md) | 54.5 + 54.15 cancelled-resubmit + ErrorView factory | P0 | landed (unit-verified; sim-confirm pending) |
 | [`issue-54-01-dark-mode.md`](issue-54-01-dark-mode.md) | 54.1 dark mode (Phase 1 token swap; Phase 2 asset-catalog) | P0 | ready |
 | [`issue-54-sim-repro.md`](issue-54-sim-repro.md) | 54.4, 54.6, 54.7 (need live-sim repro first) | P0 | ready |
 | [`issue-54-recovery-paths.md`](issue-54-recovery-paths.md) | 54.17, 54.18 broken recovery paths (new, 2nd review pass) | P1 | ready (54.18 decided: restore typed input) |
@@ -191,6 +191,12 @@ a dedicated non-self-cancelling submit. Also: the error copy is raw English in a
 retry action is wrong for a cancellation — see 54.15.
 **Confidence:** high on mechanism; verify it's the live trigger (VM file unchanged by this branch — the
 new modal/sheet flow may also contribute).
+> **STATUS 2026-06-12 — FIXED (unit-verified), sim-confirm pending.** Fresh-Task handoff:
+> `startAutoConfirmIfEnabled` now spawns `Task { await self.confirmAnswer() }` instead of awaiting
+> it inside the auto-confirm Task, so `cancelAutoConfirm()` no longer cancels its own submit.
+> Red→green via `autoConfirmCountdownReachesShowingResult` (`QuizViewModelResubmitTests`); red run
+> reproduced the exact founder error (`NSURLErrorDomain -999`). Live ElevenLabs streaming sim-repro
+> batched with 54.4/54.6/54.7. Details: [`issue-54-05-resubmit-cancel.md`](issue-54-05-resubmit-cancel.md).
 
 ### 54.6 — Can't end quiz from the minimized view; minimized view not redesigned (founder #1)
 **Symptom:** no usable way to end the quiz from the minimized quiz widget; and this screen still
@@ -283,6 +289,11 @@ the state. Consequences: (a) raw English error text (e.g. "cancelled") shown in 
 (b) wrong retry action for a `CancellationError` (which `AppErrorModel` has no dedicated case for).
 The factory `AppErrorModel.from(context:)` already produces correct SK copy. **Confidence: high.**
 Pairs with 54.5 (the cancelled-resubmit case is exactly what surfaces here).
+> **STATUS 2026-06-12 — FIXED.** `ContentView` `.error` case now renders
+> `viewModel.activeErrorModel` (new `@Published`, set in `setError` via `AppErrorModel.from(_:context:)`)
+> with `AppErrorModel.from(context:)` as fallback. Factory maps `CancellationError`/`URLError.cancelled`
+> → SK copy + `retryAction: .dismiss`. Covered by new `AppErrorModelTests` cases. The 2 ResultView
+> `.stableDump` baselines were re-recorded (model drift from the new field).
 
 ### 54.16 — MCQOptionPicker: tap/voice race + missing animation on voice match
 `MCQOptionPicker.swift` — `submitAfterDelay` spawns a detached `Task` with no handle; if a voice match

@@ -27,6 +27,16 @@ struct AppErrorModel: Equatable, Sendable {
 
     /// Map a thrown error and its quiz context to the Error screen display model.
     static func from(_ error: Error, context: ErrorContext = .general) -> AppErrorModel {
+        // Cancellation: not a network failure — a retry CTA is misleading,
+        // offer a soft dismiss instead (54.15; surfaced by the 54.5 path).
+        if error is CancellationError || (error as? URLError)?.code == .cancelled {
+            return AppErrorModel(
+                title: "Akcia bola zrušená",
+                description: "Odoslanie sa prerušilo. Skús odpovedať znova.",
+                retryAction: .dismiss
+            )
+        }
+
         // URLError: connectivity / timeout
         if let urlError = error as? URLError {
             switch urlError.code {
@@ -92,6 +102,12 @@ struct AppErrorModel: Equatable, Sendable {
         }
 
         // Context-driven fallback when the error type does not map to a specific case
+        return from(context: context)
+    }
+
+    /// Context-only fallback for call sites that have no underlying `Error`
+    /// (e.g. `setError(message:context:)` without an error argument).
+    static func from(context: ErrorContext) -> AppErrorModel {
         switch context {
         case .initialization:
             return AppErrorModel(

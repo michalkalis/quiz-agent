@@ -21,6 +21,21 @@ architectural. Root causes are identified with file:line. Suggested path: fix on
 branch (or cherry-pick the good token/font work), re-record snapshots, make RS + a few
 new behavioural tests green, then merge.
 
+## Child plan files (fresh-session entry points)
+
+Each is self-contained for a fresh-context session (scope, file:lines, fix, verification recipe,
+Pencil-sync, done-criteria). Pick one per session.
+
+| Plan | Covers | Priority | Status |
+|---|---|---|---|
+| _(landed)_ | 54.3, 54.8 (RS), 54.9, 54.10, 54.12, 54.14-lineSpacing | P0/P2 | ✅ commits `3eb48d1`, `40b9ff0` |
+| [`issue-54-02-voice-overflow.md`](issue-54-02-voice-overflow.md) | 54.2 voice layout overflow | P0 | ready |
+| [`issue-54-05-resubmit-cancel.md`](issue-54-05-resubmit-cancel.md) | 54.5 + 54.15 cancelled-resubmit + ErrorView factory | P0 | ready |
+| [`issue-54-01-dark-mode.md`](issue-54-01-dark-mode.md) | 54.1 dark mode (Phase 1 token swap; Phase 2 asset-catalog) | P0 | ready |
+| [`issue-54-sim-repro.md`](issue-54-sim-repro.md) | 54.4, 54.6, 54.7 (need live-sim repro first) | P0 | ready |
+| [`issue-54-data-cleanups.md`](issue-54-data-cleanups.md) | 54.11, 54.13, 54.16 | P2 | ready (54.13 needs a founder display decision) |
+| [`issue-54-pencil-snapshot-sync.md`](issue-54-pencil-snapshot-sync.md) | Pencil 1:1 sync + snapshot re-record + CI gate + TSan triage | P1 | run last |
+
 ## Ground-truth test state (2026-06-12)
 
 > **CORRECTED 2026-06-12 (fix session, iPhone 17 Pro / iOS 26.5):** the original

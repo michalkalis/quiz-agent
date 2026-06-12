@@ -41,12 +41,17 @@ extension Color {
     /// - Parameters:
     ///   - light: Hex string for light mode color
     ///   - dark: Hex string for dark mode color
-    init(light: String, dark: String) {
+    ///
+    /// `nonisolated` is load-bearing: with SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor
+    /// the dynamicProvider closure would be inferred MainActor-isolated, and iOS 26
+    /// SwiftUI resolves dynamic colors on its async render thread — the executor
+    /// check then traps (SIGTRAP, #54 task 54.7 onboarding crash).
+    nonisolated init(light: String, dark: String) {
         // Resolve hex → UIColor eagerly so the dynamicProvider closure stays free
         // of SwiftUI bridges; iOS 26 runs that closure off-main during renderAsync.
         let lightUI = UIColor(hex: light)
         let darkUI = UIColor(hex: dark)
-        self.init(uiColor: UIColor { traits in
+        self.init(uiColor: UIColor { @Sendable traits in
             traits.userInterfaceStyle == .dark ? darkUI : lightUI
         })
     }
@@ -55,10 +60,12 @@ extension Color {
     /// - Parameters:
     ///   - light: Color for light mode
     ///   - dark: Color for dark mode
-    init(light: Color, dark: Color) {
+    ///
+    /// `nonisolated` + `@Sendable`: see `init(light:dark:)` above — same trap otherwise.
+    nonisolated init(light: Color, dark: Color) {
         let lightUI = UIColor(light)
         let darkUI = UIColor(dark)
-        self.init(uiColor: UIColor { traits in
+        self.init(uiColor: UIColor { @Sendable traits in
             traits.userInterfaceStyle == .dark ? darkUI : lightUI
         })
     }
@@ -69,7 +76,8 @@ extension UIColor {
     /// Initialize a UIColor from a hex string (supports #RGB, #RRGGBB, #RRGGBBAA).
     /// Pure-UIKit path — safe to call from a `UIColor(dynamicProvider:)` closure,
     /// which iOS 26 may invoke off the main thread during SwiftUI's async render.
-    convenience init(hex: String) {
+    /// `nonisolated` so the nonisolated adaptive Color inits above can call it.
+    nonisolated convenience init(hex: String) {
         let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
         var int: UInt64 = 0
         Scanner(string: hex).scanHexInt64(&int)

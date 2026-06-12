@@ -32,7 +32,7 @@ Pencil-sync, done-criteria). Pick one per session.
 | [`issue-54-02-voice-overflow.md`](issue-54-02-voice-overflow.md) | 54.2 voice layout overflow | P0 | ✅ fixed 2026-06-12 |
 | [`issue-54-05-resubmit-cancel.md`](issue-54-05-resubmit-cancel.md) | 54.5 + 54.15 cancelled-resubmit + ErrorView factory | P0 | landed (unit-verified; sim-confirm pending) |
 | [`issue-54-01-dark-mode.md`](issue-54-01-dark-mode.md) | 54.1 dark mode (Phase 1 token swap; Phase 2 asset-catalog) | P0 | ✅ Phase 1 landed 2026-06-12 (Phase 2 open) |
-| [`issue-54-sim-repro.md`](issue-54-sim-repro.md) | 54.4, 54.6, 54.7 (need live-sim repro first) | P0 | ready |
+| [`issue-54-sim-repro.md`](issue-54-sim-repro.md) | 54.4, 54.6, 54.7 (need live-sim repro first) | P0 | 54.7 ✅ fixed 2026-06-12 (isolation-trap crash); 54.4/54.6 open |
 | [`issue-54-recovery-paths.md`](issue-54-recovery-paths.md) | 54.17, 54.18 broken recovery paths (new, 2nd review pass) | P1 | ready (54.18 decided: restore typed input) |
 | [`issue-54-data-cleanups.md`](issue-54-data-cleanups.md) | 54.11, 54.13, 54.16 + hygiene 54.19–54.21 | P2 | ready (54.13 decided: fractional display) |
 | [`issue-54-pencil-snapshot-sync.md`](issue-54-pencil-snapshot-sync.md) | Pencil 1:1 sync + snapshot re-record + CI gate + TSan triage | P1 | run last |
@@ -224,13 +224,21 @@ obvious, comfortably-tappable control. Verify the confirmation dialog presents f
 
 ### 54.7 — Onboarding "Continue" button reportedly doesn't advance (founder #7)
 **Symptom:** the button to move to the next onboarding page didn't work.
-**Root cause (LOW confidence — needs simulator repro):** the wiring *looks* correct —
+
+> **STATUS: ✅ FIXED 2026-06-12.** Tapping Continue **crashed the app** (SIGTRAP — looks like
+> "doesn't advance" on device). Root cause was none of the candidates below:
+> `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` made the `UIColor(dynamicProvider:)` closure in
+> `Color(light:dark:)` MainActor-tagged, and iOS 26 SwiftUI resolves dynamic colors on its async
+> render thread during animated page transitions → executor check trap. Fix: `nonisolated` inits +
+> `@Sendable` provider closures in `Color+Theme.swift`; red→green `AdaptiveColorIsolationTests`;
+> live sim verify all 3 pages + exit. App-wide fix (any animated transition could trap). Details:
+> [`issue-54-sim-repro.md`](issue-54-sim-repro.md) §54.7.
+
+**Original analysis (root cause was elsewhere):** the wiring *looks* correct —
 `OnboardingView.swift:238` "Continue" → `viewModel.advance()`; `OnboardingViewModel.advance()`
 (`OnboardingViewModel.swift:46`) correctly steps welcome→features→permission and is unit-tested.
-Candidates to check in the sim: (a) `HangsPrimaryButton` tap target / an overlay swallowing taps;
-(b) the secondary "Skip" button (`continueWithoutMic()` → finishes onboarding entirely) being mistaken
-for "next"; (c) the root `.animation(value: viewModel.page)` interfering. No code defect proven.
-**Confidence:** low — reproduce first, then locate.
+Candidates: (a) tap target / overlay; (b) "Skip" mistaken for "next"; (c) `.animation` interfering
+— (c) was closest: the animation is what routes rendering to the async thread.
 
 ---
 

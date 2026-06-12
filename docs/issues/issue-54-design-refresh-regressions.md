@@ -33,7 +33,8 @@ Pencil-sync, done-criteria). Pick one per session.
 | [`issue-54-05-resubmit-cancel.md`](issue-54-05-resubmit-cancel.md) | 54.5 + 54.15 cancelled-resubmit + ErrorView factory | P0 | ready |
 | [`issue-54-01-dark-mode.md`](issue-54-01-dark-mode.md) | 54.1 dark mode (Phase 1 token swap; Phase 2 asset-catalog) | P0 | ready |
 | [`issue-54-sim-repro.md`](issue-54-sim-repro.md) | 54.4, 54.6, 54.7 (need live-sim repro first) | P0 | ready |
-| [`issue-54-data-cleanups.md`](issue-54-data-cleanups.md) | 54.11, 54.13, 54.16 | P2 | ready (54.13 needs a founder display decision) |
+| [`issue-54-recovery-paths.md`](issue-54-recovery-paths.md) | 54.17, 54.18 broken recovery paths (new, 2nd review pass) | P1 | ready (54.18 needs a founder product decision) |
+| [`issue-54-data-cleanups.md`](issue-54-data-cleanups.md) | 54.11, 54.13, 54.16 + hygiene 54.19–54.21 | P2 | ready (54.13 needs a founder display decision) |
 | [`issue-54-pencil-snapshot-sync.md`](issue-54-pencil-snapshot-sync.md) | Pencil 1:1 sync + snapshot re-record + CI gate + TSan triage | P1 | run last |
 
 ## Ground-truth test state (2026-06-12)
@@ -49,10 +50,10 @@ Pencil-sync, done-criteria). Pick one per session.
 |---|---|---|
 | Backend `pytest` | ✅ 100 passed | `apps/quiz-agent` — unaffected by this branch |
 | iOS unit/inspector/model (Swift Testing) | ✅ pass | 359 tests, only the 3 snapshot issues below fail |
-| iOS snapshot | ❌ 3 failed | HomeView idle, QuestionView recording, QuestionView asking — UI changed, re-record **after** UI is final |
+| iOS snapshot | ❌ 3 failed | HomeView idle, QuestionView recording, QuestionView asking — **diff cause known (2nd pass): pure model drift**, 4 new fields (`headlineAnswer`, `_mcqVoiceMatchedKey`, `micPermissionResult`, `onReplayOnboarding`); re-record **after** UI is final |
 | iOS `SilenceDetectionService` | ✅ **passed** | suite green here — original "10 failed" not reproduced |
-| iOS Regression (RS-Start/Correct/Incorrect) | ❌ 3 failed → **fixed (verifying)** | stale `question.micButton`; renamed to `question.record` + wired Record to `toggleRecording()` — see 54.3 / 54.8 |
-| ThreadSanitizer | ⚠️ BUS crash | `objc_release` during UI-test phase; investigate (54.8) |
+| iOS Regression (RS-Start/Correct/Incorrect/Paywall) | ✅ **green — verified 2nd run** | `Executed 4 tests, 0 failures` (2026-06-12 verification pass) — 54.3/54.8 fix confirmed |
+| ThreadSanitizer | ⚠️ sporadic | BUS crash did **not** reproduce in the 2nd-pass TSan-compiled run — likely teardown noise; watch item only (54.8) |
 
 **Corrected total: 6 iOS failures** (3 snapshot + 3 RS), not 13. The branch was committed
 despite this — the overnight loop / CI did not gate on the full `xcodebuild test` action.
@@ -131,7 +132,8 @@ in auto-record mode. Decide the intended UX (manual record vs pure auto-record) 
 **Confidence:** high. **Note:** this is the same identifier rename that breaks RS tests (54.8):
 new ids are `question.record`/`question.stop` (`QuestionView.swift:383`), tests look for `question.micButton`.
 
-> **STATUS 2026-06-12 — FIXED (verifying).** Founder decision: **auto by default + manual
+> **STATUS 2026-06-12 — FIXED, verified** (2nd-pass RS run green 4/4; `toggleRecording()`
+> confirmed safe from every reachable state). Founder decision: **auto by default + manual
 > override**. Auto-record already fires on its own (`startRecordingOrTimer()` auto-called at
 > `QuizViewModel:440/945` on question presentation), so the button's call to it was redundant
 > *and* the bug (re-armed the think countdown). Rewired the Record button to
@@ -217,7 +219,8 @@ for "next"; (c) the root `.animation(value: viewModel.page)` interfering. No cod
    `question.record`/`question.stop`. Update the page objects/identifiers **and** add genuinely
    *behavioural* coverage: record→records, no-speech→auto-stops, confirm→result (not error). The
    current inspector/snapshot tests assert structure only, which is why #4/#5/#6 passed unit CI.
-   > **STATUS 2026-06-12 — FIXED (verifying).** Conflict resolved per CLAUDE.md rule #4: the
+   > **STATUS 2026-06-12 — FIXED, verified** (2nd-pass run: `Executed 4 tests, 0 failures`).
+   > Conflict resolved per CLAUDE.md rule #4: the
    > newer/more-tested redesign convention (`question.record`/`question.stop`, also asserted by
    > `QuestionViewInspectorTests`) wins over the older RS `question.micButton`. Updated
    > `QuestionPage` (`recordButton`/`stopButton`) + the 3 RS call-sites. The RS suite now doubles
@@ -276,6 +279,32 @@ Pairs with 54.5 (the cancelled-resubmit case is exactly what surfaces here).
 Also the row animation keys on local `selectedKey` only, so a voice-driven selection snaps without
 animation. **Confidence: medium.**
 
+### 54.17 — Settings "Reset question history" removed; VM error still directs users there (2nd pass)
+`QuizViewModel.swift:370–374` surfaces *"…reset your history in Settings…"* at the 500-question cap,
+but the 52.9 Settings redesign removed that row → permanent lockout with no actionable path. VM
+plumbing (`resetQuestionHistory()`) intact; only the UI entry point is gone. **P1, confidence high.**
+→ plan: [`issue-54-recovery-paths.md`](issue-54-recovery-paths.md)
+
+### 54.18 — Onboarding promises typed answers; TextField removed from QuestionView (2nd pass)
+`OnboardingView.swift:99/:119` promise a keyboard fallback and the "Type answers instead" CTA
+(`:275`) finishes onboarding mic-less — but 52.10 removed the TextField from QuestionView, so a
+mic-denied user can't answer voice/open questions (MCQ tap still works). `submitTextInput` exists,
+nothing calls it. **P1, confidence high; needs founder decision (restore typed input vs drop no-mic
+mode).** → plan: [`issue-54-recovery-paths.md`](issue-54-recovery-paths.md)
+
+### 54.19 — `HangsMic.swift` dead code (2nd pass)
+`HangsMicBlock` has zero production callers (replaced by the inline capsule Record button). Delete.
+**P2.** → plan: [`issue-54-data-cleanups.md`](issue-54-data-cleanups.md)
+
+### 54.20 — stale `QuestionPage.statusPill` page-object member (2nd pass)
+`HangsUITests/Pages/QuestionPage.swift:28–30` references the removed `question.statusPill`
+identifier; snapshot-test comments too. **P2.** → plan: [`issue-54-data-cleanups.md`](issue-54-data-cleanups.md)
+
+### 54.21 — negative `.lineSpacing` no-op sweep (2nd pass; same class as 54.14)
+Three more silent no-ops remain after 54.14: `ResultView.swift:83` (`-6`),
+`AnswerConfirmationView.swift:147` (`-2`), `ScoreCard.swift:25` (`-4`). **P2.**
+→ plan: [`issue-54-data-cleanups.md`](issue-54-data-cleanups.md)
+
 ---
 
 ## Fix-session log — 2026-06-12 (interactive, primary Mac, iPhone 17 Pro / iOS 26.5)
@@ -310,6 +339,26 @@ source of truth later — every UI change here must be mirrored in Pencil).
 - **54.1** dark mode — quick token swap (`Color.white` → `bgCard` + legacy `Theme.Colors` islands),
   then the deliberate Pencil redesign as its own task.
 
+## Second review pass — 2026-06-12 (verification + gap-hunt, delegated to sonnet agents)
+
+**What was checked:** (a) every file:line claim in the 6 child plans re-verified against HEAD;
+(b) the two fix commits (`3eb48d1`, `40b9ff0`) reviewed for correctness; (c) a gap-hunt sweep of
+the #52 diff for uncatalogued regressions; (d) a fresh full iOS test run.
+
+**Results:**
+- **Plans are accurate.** All mechanism claims confirmed; only trivial line drifts corrected
+  (ResultView 347→338, QuestionView bgCard 397→398). Fix recipes reference valid symbols;
+  `--ui-test-long` (54.2 recipe) correctly does not exist yet.
+- **Fix commits are correct.** `toggleRecording()` is safe from every reachable state (button
+  disabled during processing); the 54.9 test inversion is semantically right. Two follow-ups
+  filed: stale `statusPill` page-object member (54.20) and a missing test for the 54.10
+  fallback (noted in the cleanups plan).
+- **Test ground truth re-confirmed:** 359 executed / 356 pass / exactly the 3 known snapshot
+  fails (cause isolated: model drift, 4 new fields — see snapshot plan); RS suite green 4/4;
+  TSan crash did not reproduce (downgraded to watch item).
+- **5 new findings filed:** 54.17 + 54.18 (P1 broken recovery paths →
+  `issue-54-recovery-paths.md`), 54.19–54.21 (P2 hygiene → cleanups plan).
+
 ## Suggested execution order (for the fix phase)
 
 1. **54.8** first — get the suite green-able (fix RS identifiers, re-record snapshots, add a behavioural
@@ -319,7 +368,9 @@ source of truth later — every UI change here must be mirrored in Pencil).
 3. **54.2** — voice layout overflow (small, high-value).
 4. **54.1** — dark mode (largest; do the Pencil dark design + asset-catalog migration deliberately).
 5. **54.6 / 54.7** — minimized view redesign + onboarding repro.
-6. **54.9–54.16** — Result/Completion data + component cleanups (batchable).
+6. **54.17 / 54.18** — recovery paths (54.18 after the founder decision; 54.18-restore pairs
+   naturally with 54.2's QuestionView pass).
+7. **54.9–54.16 + 54.19–54.21** — data + component + hygiene cleanups (batchable).
 
 ## Verification checklist per sub-task (for the picking session)
 - [ ] Reproduce in the simulator (light **and** dark) before changing code.

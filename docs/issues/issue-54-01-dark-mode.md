@@ -29,7 +29,8 @@ components (ScoreCard, StatsCard, SettingRow, badges, PrimaryButton, SecondaryBu
 
 ## Phase 1 — quick legibility fix (this task)
 1. Replace the hardcoded `Color.white` card fills above with the adaptive `bgCard` token (confirm
-   `Theme.Hangs.Colors.bgCard` exists and is adaptive; it's already used at `QuestionView.swift:397`).
+   `Theme.Hangs.Colors.bgCard` exists and is adaptive — verified 2026-06-12: `Theme+Hangs.swift:19`,
+   `Color(light: "#FFFFFF", dark: "#1F1F22")`, already used at `QuestionView.swift:398`).
 2. Migrate the legacy `Theme.Colors.*` islands to `Theme.Hangs.*` (or, minimally, ensure the ones
    visible on the main flows adapt). Prioritise screens reachable in normal play.
 3. Verify contrast of `ink`/`muted` on the adapted card in **both** appearances.

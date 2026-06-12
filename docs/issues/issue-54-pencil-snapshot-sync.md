@@ -30,11 +30,25 @@ After the UI is final, re-record the dump baselines left red on purpose:
 SnapshotTesting record mode, then **review the diff** so you re-baseline the *intended* change only —
 don't blindly accept (rule #6: assert the meaningful part).
 
+> **Diff root cause known (2026-06-12 verification run):** all three failures are pure **model
+> drift**, not pixel/layout drift — the live dump adds four fields the baselines predate:
+> `Question.headlineAnswer`, `QuizViewModel._mcqVoiceMatchedKey`,
+> `MockAudioService.micPermissionResult`, `HomeView.onReplayOnboarding`. When re-recording,
+> these four are the *expected* delta; anything else in the diff is unintended and must be
+> investigated, not accepted.
+
 ## Part C — process gate (54.8 item 1)
 The branch was committed red because the overnight loop/CI didn't run the full `xcodebuild test`
 action. Add a gate so design-scale changes can't land red. Also re-check the **ThreadSanitizer BUS
 crash** (`objc_release`) seen in the full-suite UI-test phase — determine if it's a real data race or
 teardown noise; if real, file/fix it.
+
+> **TSan update (2026-06-12 verification run):** full unit (TSan-compiled) + RS UI-test runs did
+> **not** reproduce the crash — consistent with sporadic teardown noise. Keep a watch item, but
+> don't block the CI-gate work on it; downgrade to "investigate only if it recurs in the gated runs".
+
+Also fold in here (test hygiene, same files): **54.20** — remove the stale `QuestionPage.statusPill`
+member + snapshot-test comments (see `issue-54-data-cleanups.md` §54.20) if not already done.
 
 ## Done criteria
 - [ ] Every shipped #54 UI change is reflected in `design/quiz-agent.pen` (screenshots match app).

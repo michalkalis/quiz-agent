@@ -146,6 +146,44 @@ final nonisolated class RegressionTests: XCTestCase {
         result.assertHeroContains("MISSED")
     }
 
+    // MARK: - RS-long
+
+    //
+    // Scenario: launch with "--ui-test-long" so the seeded voice question is
+    // ~230 characters, navigate to the question screen, and assert the Record
+    // and Skip buttons are hittable (isHittable is false when off-screen).
+    //
+    // Regression guarded: 54.2 — a long voice question must scroll instead of
+    // pushing the Record/Skip action row below the screen.
+
+    @MainActor
+    func testRSLongQuestion() async throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-test", "--ui-test-long"]
+        app.launch()
+
+        let home = HomePage(app: app)
+        home.assertVisible()
+        home.tapStartQuiz()
+
+        let question = QuestionPage(app: app)
+        question.waitForQuestion(timeout: 15)
+        question.waitForState("askingQuestion", timeout: 10)
+
+        XCTAssertTrue(
+            question.recordButton.waitForExistence(timeout: 5),
+            "RS-long: question.record button not found with a long question"
+        )
+        XCTAssertTrue(
+            question.recordButton.isHittable,
+            "RS-long: question.record button is not hittable — long question pushed it off-screen"
+        )
+        XCTAssertTrue(
+            question.skipButton.isHittable,
+            "RS-long: question.skip button is not hittable — long question pushed it off-screen"
+        )
+    }
+
     // MARK: - RS-paywall
 
     //

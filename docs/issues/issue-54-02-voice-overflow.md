@@ -1,6 +1,6 @@
 # Plan 54.2 — Voice question text overflow pushes Record/Skip off-screen
 
-**Parent:** `issue-54-design-refresh-regressions.md` (§54.2) · **Priority:** P0 (founder #2) · **Status:** ready
+**Parent:** `issue-54-design-refresh-regressions.md` (§54.2) · **Priority:** P0 (founder #2) · **Status:** ✅ FIXED 2026-06-12 (Pencil-sync + snapshot re-record owed → cross-cutting plan)
 **Confidence:** high · **Type:** view-layer layout + behavioural test
 
 ## Problem (one line)
@@ -56,7 +56,10 @@ frames `f9csl` (Listen/ready) and `uGhZg` (Capture/recording). Batch with the cr
 pass (`issue-54-pencil-snapshot-sync.md`) if doing several at once.
 
 ## Done criteria
-- [ ] Long-question UITest is green and was confirmed RED before the fix.
-- [ ] Record/Skip visible for short and long questions (screenshots attached).
+- [x] Long-question UITest is green and was confirmed RED before the fix. (2026-06-12:
+      `testRSLongQuestion` failed on unfixed code with "question.record button is not
+      hittable", passed after the fix; RS-start + both QuestionView inspector suites green.)
+- [x] Record/Skip visible for short and long questions (screenshot-verified in-sim:
+      long question scrolls with pinned action row; short question stays centred). VISUAL: PASS.
 - [ ] Re-record the QuestionView snapshots (asking/recording) — see pencil/snapshot plan.
-- [ ] Pencil voice frames updated. Update parent §54.2 status.
+- [ ] Pencil voice frames updated (owed — batch with `issue-54-pencil-snapshot-sync.md`).

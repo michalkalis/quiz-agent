@@ -209,6 +209,24 @@ extension Question {
             generatedBy: nil
         )
 
+        /// Very long voice question (~230 chars) — used by `--ui-test-long` to
+        /// guard against the question text pushing Record/Skip off-screen (54.2).
+        static let previewLong = Question(
+            id: "q_preview_long_001",
+            question: "Which European capital city, founded as a Roman settlement on the banks of a major river, later became the seat of a dual monarchy, and is today famous for its thermal baths, its grand parliament building on the riverbank, and a castle district listed as a UNESCO World Heritage Site?",
+            type: .text,
+            possibleAnswers: nil,
+            difficulty: "hard",
+            topic: "Geography",
+            category: "adults",
+            sourceUrl: nil,
+            sourceExcerpt: nil,
+            mediaUrl: nil,
+            imageSubtype: nil,
+            explanation: nil,
+            generatedBy: nil
+        )
+
         static let previewImage = Question(
             id: "q_preview_img_001",
             question: "Which Mediterranean country has this distinctive shape that resembles a high-heeled boot kicking a ball?",

@@ -25,6 +25,10 @@ struct QuestionPage {
         app.buttons["question.stop"]
     }
 
+    var skipButton: XCUIElement {
+        app.buttons["question.skip"]
+    }
+
     var statusPill: XCUIElement {
         app.staticTexts["question.statusPill"]
     }

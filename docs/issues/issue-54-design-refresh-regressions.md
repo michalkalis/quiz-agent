@@ -29,7 +29,7 @@ Pencil-sync, done-criteria). Pick one per session.
 | Plan | Covers | Priority | Status |
 |---|---|---|---|
 | _(landed)_ | 54.3, 54.8 (RS), 54.9, 54.10, 54.12, 54.14-lineSpacing | P0/P2 | ✅ commits `3eb48d1`, `40b9ff0` |
-| [`issue-54-02-voice-overflow.md`](issue-54-02-voice-overflow.md) | 54.2 voice layout overflow | P0 | ready |
+| [`issue-54-02-voice-overflow.md`](issue-54-02-voice-overflow.md) | 54.2 voice layout overflow | P0 | ✅ fixed 2026-06-12 |
 | [`issue-54-05-resubmit-cancel.md`](issue-54-05-resubmit-cancel.md) | 54.5 + 54.15 cancelled-resubmit + ErrorView factory | P0 | ready |
 | [`issue-54-01-dark-mode.md`](issue-54-01-dark-mode.md) | 54.1 dark mode (Phase 1 token swap; Phase 2 asset-catalog) | P0 | ready |
 | [`issue-54-sim-repro.md`](issue-54-sim-repro.md) | 54.4, 54.6, 54.7 (need live-sim repro first) | P0 | ready |
@@ -114,6 +114,15 @@ and lets the headline grow unbounded:
 **Fix approach:** cap the headline (smaller font / `lineLimit` / scrollable region) and/or wrap
 the voice body content above the action row in a `ScrollView`, keeping Record/Skip pinned.
 **Confidence:** high.
+
+> **STATUS 2026-06-12 — FIXED, verified.** Voice-body content above the action row now lives
+> in a `GeometryReader` + `ScrollView` with `minHeight = geo.size.height` (centred when short,
+> scrolls when long); Record/Skip pinned below. New behavioural guard: `--ui-test-long` seeds a
+> ~280-char voice question (`Question.previewLong`); `testRSLongQuestion` asserts
+> `question.record`/`question.skip` are hittable — confirmed RED pre-fix ("not hittable"),
+> green post-fix. RS-start + both QuestionView inspector suites green; screenshot-verified
+> short (centred) + long (scrolls, buttons visible). Pencil f9csl/uGhZg sync + snapshot
+> re-record owed to the cross-cutting plan.
 
 ### 54.3 — "Record" button does nothing but reset the countdown (founder #4)
 **Symptom:** tapping Record on the quiz screen flickers the screen and resets the countdown

@@ -256,60 +256,70 @@ struct QuestionView: View {
 
     private func voiceBody(question: Question) -> some View {
         VStack(spacing: 0) {
-            // Category: lowercase pink, no question number (design: f9csl)
-            Text(question.category.lowercased())
-                .font(.hangsMono(11, weight: .medium))
-                .tracking(2)
-                .foregroundColor(Theme.Hangs.Colors.pink)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 24)
-                .padding(.top, 12)
-                .padding(.bottom, 4)
-                .accessibilityIdentifier("question.category")
+            // Content above the action row scrolls when a long question would
+            // otherwise push Record/Skip off-screen (54.2); minHeight keeps the
+            // centered look for short questions.
+            GeometryReader { geo in
+                ScrollView(.vertical, showsIndicators: false) {
+                    VStack(spacing: 0) {
+                        // Category: lowercase pink, no question number (design: f9csl)
+                        Text(question.category.lowercased())
+                            .font(.hangsMono(11, weight: .medium))
+                            .tracking(2)
+                            .foregroundColor(Theme.Hangs.Colors.pink)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 24)
+                            .padding(.top, 12)
+                            .padding(.bottom, 4)
+                            .accessibilityIdentifier("question.category")
 
-            // Question: Anton display, no left bar
-            Text(question.question)
-                .font(.hangsDisplaySM)
-                .tracking(-1)
-                .foregroundColor(Theme.Hangs.Colors.ink)
-                .minimumScaleFactor(0.55)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 24)
-                .accessibilityIdentifier("question.text")
+                        // Question: Anton display, no left bar
+                        Text(question.question)
+                            .font(.hangsDisplaySM)
+                            .tracking(-1)
+                            .foregroundColor(Theme.Hangs.Colors.ink)
+                            .minimumScaleFactor(0.55)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 24)
+                            .accessibilityIdentifier("question.text")
 
-            // Subtitle
-            Text("Answer out loud — I'm listening.")
-                .font(.hangsBody(15))
-                .foregroundColor(Theme.Hangs.Colors.muted)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 24)
-                .padding(.top, 8)
+                        // Subtitle
+                        Text("Answer out loud — I'm listening.")
+                            .font(.hangsBody(15))
+                            .foregroundColor(Theme.Hangs.Colors.muted)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 24)
+                            .padding(.top, 8)
 
-            Spacer()
+                        Spacer(minLength: 24)
 
-            // Centered voice state indicator
-            voiceCenterBlock
+                        // Centered voice state indicator
+                        voiceCenterBlock
 
-            Spacer()
+                        Spacer(minLength: 24)
 
-            // Live transcript (recording + STT streaming)
-            if isRecording && viewModel.isStreamingSTT {
-                transcriptCard
-                    .padding(.bottom, 8)
+                        // Live transcript (recording + STT streaming)
+                        if isRecording && viewModel.isStreamingSTT {
+                            transcriptCard
+                                .padding(.bottom, 8)
+                        }
+
+                        // Context hint
+                        Text(isRecording
+                            ? "When you finish, your answer sends itself"
+                            : "Tap Record and answer out loud")
+                            .font(.hangsBody(13))
+                            .foregroundColor(Theme.Hangs.Colors.muted)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 24)
+                            .padding(.bottom, 12)
+                    }
+                    .frame(minHeight: geo.size.height)
+                }
             }
 
-            // Context hint
-            Text(isRecording
-                ? "When you finish, your answer sends itself"
-                : "Tap Record and answer out loud")
-                .font(.hangsBody(13))
-                .foregroundColor(Theme.Hangs.Colors.muted)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 24)
-                .padding(.bottom, 12)
-
-            // Record/Stop | Skip buttons
+            // Record/Stop | Skip buttons — pinned below the scroll region
             voiceActionRow
                 .padding(.horizontal, 24)
                 .padding(.bottom, 28)

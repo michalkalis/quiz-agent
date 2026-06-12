@@ -34,17 +34,15 @@ A mic-denied user reaches the quiz and **cannot answer voice/open questions at a
 works via tap; voice questions offer only Skip). The VM's `submitTextInput` path still exists —
 no View calls it. **Confidence: high.**
 
-**Founder decision needed (product call):** restore a typed-answer input on the voice question
-screen (recommended — it's the accessibility/no-mic path and the VM already supports it), or
-drop the no-mic mode entirely (remove the onboarding promise + CTA, require mic). Don't silently
-pick — the app is voice-first by vision, but onboarding currently *offers* the no-mic path.
+**Founder decision — RESOLVED 2026-06-12: restore the typed-answer input.** (Both findings
+re-verified first-hand the same day: VM error text at `QuizViewModel.swift:370`, zero
+history/reset hits in SettingsView, zero TextField/`submitTextInput` hits in QuestionView.)
 
-**Fix approach once decided:** (restore) add a minimal typed-input affordance to `voiceBody`
-wired to `submitTextInput`, mirror it in the Pencil voice frames (`f9csl`/`uGhZg`), coordinate
-with 54.2's layout work so it's done in one QuestionView pass; (drop) delete the two onboarding
-strings + the "Type answers instead" CTA and make the denied page require mic to proceed.
-**Test:** (restore) behavioural — mic-denied launch can submit a typed answer and reach the
-result screen; (drop) onboarding denied page shows no typed-answer promise.
+**Fix approach:** add a minimal typed-input affordance to `voiceBody` wired to
+`submitTextInput`, mirror it in the Pencil voice frames (`f9csl`/`uGhZg`), and coordinate with
+54.2's layout work so QuestionView is touched in one pass (the typed input must live inside the
+54.2 scroll region, above the pinned action row).
+**Test:** behavioural — mic-denied launch can submit a typed answer and reach the result screen.
 
 ## Pencil 1:1 sync
 Whichever option lands changes Settings and/or the voice-question + onboarding frames — batch
@@ -52,5 +50,5 @@ with `issue-54-pencil-snapshot-sync.md`.
 
 ## Done criteria
 - [ ] 54.17: reset-history path reachable again (test green); SK copy.
-- [ ] 54.18: founder decision recorded here, then implemented + behavioural test.
+- [ ] 54.18: typed-answer input restored (decision above) + behavioural test green.
 - [ ] Pencil frames updated. Update parent §54.17/§54.18.

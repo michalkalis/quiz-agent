@@ -33,8 +33,8 @@ Pencil-sync, done-criteria). Pick one per session.
 | [`issue-54-05-resubmit-cancel.md`](issue-54-05-resubmit-cancel.md) | 54.5 + 54.15 cancelled-resubmit + ErrorView factory | P0 | ready |
 | [`issue-54-01-dark-mode.md`](issue-54-01-dark-mode.md) | 54.1 dark mode (Phase 1 token swap; Phase 2 asset-catalog) | P0 | ready |
 | [`issue-54-sim-repro.md`](issue-54-sim-repro.md) | 54.4, 54.6, 54.7 (need live-sim repro first) | P0 | ready |
-| [`issue-54-recovery-paths.md`](issue-54-recovery-paths.md) | 54.17, 54.18 broken recovery paths (new, 2nd review pass) | P1 | ready (54.18 needs a founder product decision) |
-| [`issue-54-data-cleanups.md`](issue-54-data-cleanups.md) | 54.11, 54.13, 54.16 + hygiene 54.19–54.21 | P2 | ready (54.13 needs a founder display decision) |
+| [`issue-54-recovery-paths.md`](issue-54-recovery-paths.md) | 54.17, 54.18 broken recovery paths (new, 2nd review pass) | P1 | ready (54.18 decided: restore typed input) |
+| [`issue-54-data-cleanups.md`](issue-54-data-cleanups.md) | 54.11, 54.13, 54.16 + hygiene 54.19–54.21 | P2 | ready (54.13 decided: fractional display) |
 | [`issue-54-pencil-snapshot-sync.md`](issue-54-pencil-snapshot-sync.md) | Pencil 1:1 sync + snapshot re-record + CI gate + TSan triage | P1 | run last |
 
 ## Ground-truth test state (2026-06-12)
@@ -258,6 +258,8 @@ can go negative. **Confidence: medium.**
 (`Int(summary.finalScore)`) floor a `Double` score. With partial credit, the final score displays
 low and `incorrectCount = answered - correct` becomes wrong (counts can exceed total). **Confidence: medium**
 (depends on whether partial scoring is active).
+> **Decision 2026-06-12 (founder):** show the fractional score as-is ("3.5"); counts from
+> evaluations, not `Int(score)`. Details in the cleanups plan.
 
 ### 54.14 — HangsQuestionCard: invalid `lineSpacing(-2)` + dead `secondaryValueColor`
 `HangsQuestionCard.swift:31` — `.lineSpacing(-2)`: SwiftUI ignores negative line spacing (silent no-op;
@@ -289,8 +291,8 @@ plumbing (`resetQuestionHistory()`) intact; only the UI entry point is gone. **P
 `OnboardingView.swift:99/:119` promise a keyboard fallback and the "Type answers instead" CTA
 (`:275`) finishes onboarding mic-less — but 52.10 removed the TextField from QuestionView, so a
 mic-denied user can't answer voice/open questions (MCQ tap still works). `submitTextInput` exists,
-nothing calls it. **P1, confidence high; needs founder decision (restore typed input vs drop no-mic
-mode).** → plan: [`issue-54-recovery-paths.md`](issue-54-recovery-paths.md)
+nothing calls it. **P1, confidence high. Founder decision 2026-06-12: RESTORE the typed input**
+(pair with 54.2's QuestionView pass). → plan: [`issue-54-recovery-paths.md`](issue-54-recovery-paths.md)
 
 ### 54.19 — `HangsMic.swift` dead code (2nd pass)
 `HangsMicBlock` has zero production callers (replaced by the inline capsule Record button). Delete.
@@ -332,8 +334,8 @@ source of truth later — every UI change here must be mirrored in Pencil).
 - **54.2** voice overflow (ScrollView) — P0, small; do next + Pencil-sync + re-record QuestionView snaps.
 - **54.5** self-cancelling resubmit + **54.15** ErrorView factory — do together (same cancelled path).
 - **54.11** streak "was" — needs a VM field capturing the streak *before* reset (not a view-only fix).
-- **54.13** fractional-score truncation — real (partial scoring exists) but needs a **display decision**
-  (how should a 3.5-point score render as a count?).
+- **54.13** fractional-score truncation — real (partial scoring exists). **Decision 2026-06-12:
+  show the fractional score as-is ("3.5"); derive counts from evaluations, not `Int(score)`.**
 - **54.16** MCQ tap/voice race — medium; needs the detached-Task handle + animation key change.
 - **54.4 / 54.6 / 54.7** — need live simulator repro (auto-stop cap; minimized end-quiz; onboarding).
 - **54.1** dark mode — quick token swap (`Color.white` → `bgCard` + legacy `Theme.Colors` islands),

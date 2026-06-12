@@ -23,11 +23,15 @@ isn't currently retained — by the time ResultView renders, `currentStreak` is 
 enum has `.partiallyCorrect` / `.partiallyIncorrect`, and `score = participant.score` comes from the
 backend), so with partial credit the final score displays low and `incorrectCount = answered -
 correct` becomes wrong (can exceed total).
-**Blocked on a display decision (founder):** what does a 3.5-point score mean as a *count*? Options:
-(a) show the score with one decimal and drop the "correct count" framing; (b) keep integer "correct"
-= count of fully-correct answers (track separately from points); (c) round for display only. **Ask
-the founder before implementing** — this is a product/UX call, not a mechanical fix.
-**Test:** once decided, `QuizCompleteSummaryTests` cases for a fractional score.
+**Display decision — RESOLVED 2026-06-12 (founder): show the fractional score as-is** ("3.5 reads
+fine") — i.e. option (a): display the score with one decimal (drop the trailing `.0` for whole
+numbers), and stop deriving counts from it. Concretely: `CompletionView` hero shows the real
+`finalScore` (formatted, not `Int()`-floored); `QuizCompleteSummary` must not compute
+`correct = Int(score)` — derive correct/incorrect counts from the actual per-answer evaluations
+(or drop the count framing where only points are available), so `incorrectCount` can no longer
+exceed total.
+**Test:** `QuizCompleteSummaryTests` cases for a fractional score — display string "3.5", counts
+consistent (correct + incorrect ≤ answered).
 
 ## 54.16 — MCQOptionPicker: tap/voice race + missing animation on voice match
 `MCQOptionPicker.swift:48` — `submitAfterDelay` spawns a detached `Task` with **no handle**; if a
@@ -67,8 +71,8 @@ The landed 54.10 fix (`totalQuestions` fallback → `settings.numberOfQuestions`
 `currentSession == nil`, counter shows 5.
 
 ## Done criteria
-- [ ] 54.11 VM field + test; 54.16 single-submit guard + animation; 54.13 **only after** the founder
-      decides the fractional-score display.
+- [ ] 54.11 VM field + test; 54.16 single-submit guard + animation; 54.13 per the resolved
+      decision above (fractional display, counts from evaluations).
 - [ ] 54.19 file deleted · 54.20 page object + comments cleaned · 54.21 three no-ops removed ·
       54.10 inspector test added.
 - [ ] Update parent §54.11/§54.13/§54.16/§54.19–§54.21 status.

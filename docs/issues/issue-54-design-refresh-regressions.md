@@ -23,16 +23,26 @@ new behavioural tests green, then merge.
 
 ## Ground-truth test state (2026-06-12)
 
-| Suite | Result | Notes |
+> **CORRECTED 2026-06-12 (fix session, iPhone 17 Pro / iOS 26.5):** the original
+> table below over-counted. A clean `xcodebuild test` run shows **6 failures, not 13**.
+> The `SilenceDetectionService` suite **passes** here (5.38s) — its claimed 10 failures
+> did **not** reproduce, which de-risks 54.4 (the silence state machine is fine). A
+> separate **ThreadSanitizer BUS crash** (`objc_release`, libobjc) appeared during the
+> UI-test phase — likely teardown noise; tracked under 54.8.
+
+| Suite | Result (corrected) | Notes |
 |---|---|---|
 | Backend `pytest` | ✅ 100 passed | `apps/quiz-agent` — unaffected by this branch |
-| iOS unit/inspector | ⚠️ mostly pass | ViewInspector + model tests pass — but they assert *structure*, not behaviour |
-| iOS snapshot | ❌ 3 failed | HomeView idle, QuestionView recording, QuestionView asking — UI changed, snapshots not re-recorded |
-| iOS `SilenceDetectionService` | ❌ 10 failed | whole state-machine suite times out (~5s each) — see 54.4 |
-| iOS Regression (RS-Start/Correct/Incorrect) | ❌ 3 failed | `Failed to tap "question.micButton" — No matches found` — see 54.3 / 54.8 |
+| iOS unit/inspector/model (Swift Testing) | ✅ pass | 359 tests, only the 3 snapshot issues below fail |
+| iOS snapshot | ❌ 3 failed | HomeView idle, QuestionView recording, QuestionView asking — UI changed, re-record **after** UI is final |
+| iOS `SilenceDetectionService` | ✅ **passed** | suite green here — original "10 failed" not reproduced |
+| iOS Regression (RS-Start/Correct/Incorrect) | ❌ 3 failed → **fixed (verifying)** | stale `question.micButton`; renamed to `question.record` + wired Record to `toggleRecording()` — see 54.3 / 54.8 |
+| ThreadSanitizer | ⚠️ BUS crash | `objc_release` during UI-test phase; investigate (54.8) |
 
-**Total: 13 iOS failures.** The branch was committed despite this — the overnight loop /
-CI did not gate on the full `xcodebuild test` action. This is itself a process bug (54.8).
+**Corrected total: 6 iOS failures** (3 snapshot + 3 RS), not 13. The branch was committed
+despite this — the overnight loop / CI did not gate on the full `xcodebuild test` action.
+This is itself a process bug (54.8). The original (pre-correction) table is preserved in
+git history.
 
 > ⚠️ Two of the logic files implicated below (`QuizViewModel*.swift`, `QuizViewModel+Recording/Timers`)
 > were **NOT modified by this branch** (diff touched only Views, Models/AppErrorModel,
@@ -105,6 +115,15 @@ records immediately (skipping/short-circuiting the thinking countdown), or remov
 in auto-record mode. Decide the intended UX (manual record vs pure auto-record) first.
 **Confidence:** high. **Note:** this is the same identifier rename that breaks RS tests (54.8):
 new ids are `question.record`/`question.stop` (`QuestionView.swift:383`), tests look for `question.micButton`.
+
+> **STATUS 2026-06-12 — FIXED (verifying).** Founder decision: **auto by default + manual
+> override**. Auto-record already fires on its own (`startRecordingOrTimer()` auto-called at
+> `QuizViewModel:440/945` on question presentation), so the button's call to it was redundant
+> *and* the bug (re-armed the think countdown). Rewired the Record button to
+> `Task { await viewModel.toggleRecording() }` (`QuestionView.swift:363`) — starts recording
+> immediately from `.askingQuestion` (cancelling timers) and stops+submits from `.recording`
+> (also cancels the auto-stop timer the old branch forgot). Verified behaviourally by the RS
+> suite (tap Record → `.recording` → STT → confirm → result).
 
 ### 54.4 — Recording doesn't auto-stop when the user says nothing (founder #5)
 **Symptom:** after the answer timer expired, recording auto-started, but with no speech it never
@@ -183,7 +202,17 @@ for "next"; (c) the root `.animation(value: viewModel.page)` interfering. No cod
    `question.record`/`question.stop`. Update the page objects/identifiers **and** add genuinely
    *behavioural* coverage: record→records, no-speech→auto-stops, confirm→result (not error). The
    current inspector/snapshot tests assert structure only, which is why #4/#5/#6 passed unit CI.
+   > **STATUS 2026-06-12 — FIXED (verifying).** Conflict resolved per CLAUDE.md rule #4: the
+   > newer/more-tested redesign convention (`question.record`/`question.stop`, also asserted by
+   > `QuestionViewInspectorTests`) wins over the older RS `question.micButton`. Updated
+   > `QuestionPage` (`recordButton`/`stopButton`) + the 3 RS call-sites. The RS suite now doubles
+   > as the behavioural record→confirm→result coverage asked for (it taps Record, drives STT,
+   > asserts the result screen — not the error screen, which also exercises 54.5's path).
 3. Re-record the 3 stale snapshots after the UI is finalized.
+   > **NOTE:** deferred until 54.2 (voice layout) + 54.1 (dark-mode token swap) land, since both
+   > change the QuestionView/HomeView pixels the snapshots capture.
+4. **ThreadSanitizer BUS crash** (`objc_release`, libobjc) observed in the full-suite UI-test
+   phase — not yet root-caused; may be teardown noise. Re-check after the RS suite is green.
 **Note:** also caught a footgun this session — naively running `pytest`/`xcodebuild` with a wrong
 cwd or a stale `-resultBundlePath` exits "success-ish"; always assert a real "Executed N tests" line.
 

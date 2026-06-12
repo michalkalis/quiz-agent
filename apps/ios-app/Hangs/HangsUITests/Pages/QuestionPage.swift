@@ -14,8 +14,15 @@ struct QuestionPage {
         app.staticTexts["question.text"]
     }
 
-    var micButton: XCUIElement {
-        app.buttons["question.micButton"]
+    /// The Record button (non-recording state). The redesign (#52) renamed the
+    /// old `question.micButton` to the semantic `question.record` / `question.stop`
+    /// pair that toggles with state; RS taps Record to enter `.recording`.
+    var recordButton: XCUIElement {
+        app.buttons["question.record"]
+    }
+
+    var stopButton: XCUIElement {
+        app.buttons["question.stop"]
     }
 
     var statusPill: XCUIElement {

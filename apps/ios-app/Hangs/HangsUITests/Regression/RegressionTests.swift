@@ -48,12 +48,12 @@ final nonisolated class RegressionTests: XCTestCase {
         question.waitForQuestion(timeout: 15)
 
         XCTAssertTrue(
-            question.micButton.waitForExistence(timeout: 5),
-            "RS-start: question.micButton not found after navigation to question screen"
+            question.recordButton.waitForExistence(timeout: 5),
+            "RS-start: question.record button not found after navigation to question screen"
         )
         XCTAssertTrue(
-            question.micButton.isHittable,
-            "RS-start: question.micButton is not hittable"
+            question.recordButton.isHittable,
+            "RS-start: question.record button is not hittable"
         )
 
         question.waitForState("askingQuestion", timeout: 5)
@@ -83,9 +83,9 @@ final nonisolated class RegressionTests: XCTestCase {
         question.waitForQuestion(timeout: 15)
         question.waitForState("askingQuestion", timeout: 10)
 
-        // Tap mic to start recording — committed STT events are only consumed
+        // Tap Record to start recording — committed STT events are only consumed
         // while the VM is in .recording (handleCommittedTranscript guard).
-        question.micButton.tap()
+        question.recordButton.tap()
         question.waitForState("recording", timeout: 5)
 
         // Inject a committed STT event (simulates user saying the answer).
@@ -128,8 +128,8 @@ final nonisolated class RegressionTests: XCTestCase {
         question.waitForQuestion(timeout: 15)
         question.waitForState("askingQuestion", timeout: 10)
 
-        // Tap mic to enter .recording so handleCommittedTranscript will accept the event.
-        question.micButton.tap()
+        // Tap Record to enter .recording so handleCommittedTranscript will accept the event.
+        question.recordButton.tap()
         question.waitForState("recording", timeout: 5)
 
         try await client.sendSTTEvent(path: "/stt/committed", text: "London")

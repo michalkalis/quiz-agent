@@ -361,11 +361,12 @@ struct QuestionView: View {
     private var voiceActionRow: some View {
         HStack(spacing: 12) {
             Button {
-                if isRecording {
-                    Task { await viewModel.stopRecordingAndSubmit() }
-                } else {
-                    viewModel.startRecordingOrTimer()
-                }
+                // Manual override (54.3): toggleRecording starts recording
+                // immediately from .askingQuestion (cancelling the auto-record
+                // think/answer countdown) and stops+submits from .recording.
+                // Auto-record still fires on its own via startRecordingOrTimer()
+                // when the question is presented (QuizViewModel:440/945).
+                Task { await viewModel.toggleRecording() }
             } label: {
                 HStack(spacing: 10) {
                     Image(systemName: isRecording ? "stop.fill" : "mic.fill")

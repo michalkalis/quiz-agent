@@ -19,6 +19,9 @@ struct QuestionView: View {
     @State private var showEndQuizConfirmation = false
     @State private var now = Date()
     @State private var recordingStartedAt: Date?
+    @State private var showTextInput = false
+    @State private var textAnswer = ""
+    @FocusState private var isTextFieldFocused: Bool
 
     private let clockTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
@@ -314,6 +317,16 @@ struct QuestionView: View {
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 24)
                             .padding(.bottom, 12)
+
+                        // Typed-answer fallback — onboarding promises a keyboard
+                        // path for mic-denied users (#54 task 54.18; removed by 52.10).
+                        if showTextInput {
+                            textInputRow
+                                .padding(.bottom, 12)
+                        } else {
+                            textInputToggle
+                                .padding(.bottom, 12)
+                        }
                     }
                     .frame(minHeight: geo.size.height)
                 }
@@ -415,9 +428,69 @@ struct QuestionView: View {
         }
     }
 
+    // MARK: - Typed-answer fallback (54.18)
+
+    private var textInputToggle: some View {
+        Button {
+            showTextInput = true
+            isTextFieldFocused = true
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "keyboard")
+                    .font(.system(size: 12, weight: .semibold))
+                Text("Type answer instead")
+                    .font(.hangsBody(13, weight: .medium))
+            }
+            .foregroundColor(Theme.Hangs.Colors.muted)
+        }
+        .buttonStyle(.plain)
+        .disabled(!canInteract)
+        .opacity(canInteract ? 1 : 0.45)
+        .accessibilityIdentifier("question.textInputToggle")
+    }
+
+    private var textInputRow: some View {
+        HangsCard(padding: EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 8)) {
+            HStack(spacing: 8) {
+                TextField("Type your answer…", text: $textAnswer)
+                    .font(.hangsBody(15))
+                    .foregroundColor(Theme.Hangs.Colors.ink)
+                    .frame(height: 40)
+                    .focused($isTextFieldFocused)
+                    .accessibilityIdentifier("question.textField")
+                    .submitLabel(.send)
+                    .onSubmit(submitTypedAnswer)
+
+                Button(action: submitTypedAnswer) {
+                    Image(systemName: "arrow.up")
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundColor(.white)
+                        .frame(width: 40, height: 40)
+                        .background(
+                            Circle()
+                                .fill(textAnswer.isEmpty ? Theme.Hangs.Colors.muted : Theme.Hangs.Colors.pink)
+                        )
+                }
+                .disabled(textAnswer.isEmpty)
+                .accessibilityIdentifier("question.textSubmit")
+            }
+        }
+        .padding(.horizontal, 24)
+    }
+
+    private func submitTypedAnswer() {
+        guard !textAnswer.isEmpty else { return }
+        let answer = textAnswer
+        textAnswer = ""
+        showTextInput = false
+        Task { await viewModel.resubmitAnswer(answer) }
+    }
+
     // MARK: - Derived
 
     private var isRecording: Bool { viewModel.quizState == .recording }
+
+    private var canInteract: Bool { viewModel.quizState == .askingQuestion }
 
     private var isProcessing: Bool {
         viewModel.quizState == .processing || viewModel.quizState == .skipping

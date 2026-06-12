@@ -49,6 +49,12 @@ Whichever option lands changes Settings and/or the voice-question + onboarding f
 with `issue-54-pencil-snapshot-sync.md`.
 
 ## Done criteria
-- [ ] 54.17: reset-history path reachable again (test green); SK copy.
-- [ ] 54.18: typed-answer input restored (decision above) + behavioural test green.
-- [ ] Pencil frames updated. Update parent §54.17/§54.18.
+- [x] 54.17: reset-history path reachable again (test green); SK copy. — `ddb6538` 2026-06-12:
+  row restored in SettingsView about group (confirmation alert, `settings.resetHistory`);
+  at-capacity error now uses dedicated `AppErrorModel.historyAtCapacity` (SK copy, Go Home CTA
+  instead of futile retry). Tests: `SettingsViewHistoryTests` (3) green.
+- [x] 54.18: typed-answer input restored (decision above) + behavioural test green. — 2026-06-12:
+  `textInputToggle` + `textInputRow` in voiceBody scroll region (above pinned action row),
+  wired to `resubmitAnswer` (same as pre-52.10). Tests: `QuestionViewTextInputTests` green.
+- [ ] Pencil frames updated (f9csl/uGhZg typed input; Settings Jjcs5 reset row) — batch with
+  `issue-54-pencil-snapshot-sync.md`. Update parent §54.17/§54.18.

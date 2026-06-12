@@ -28,7 +28,6 @@ struct HangsQuestionPrompt: View {
                 .font(textFont)
                 .tracking(-1)
                 .foregroundColor(textColor)
-                .lineSpacing(-2)
                 .minimumScaleFactor(minimumScaleFactor)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -75,6 +74,11 @@ struct HangsAnswerComparisonCard: View {
                 }
                 Text(secondaryValue)
                     .font(secondaryValueFont)
+                    // 54.14: `secondaryValueColor` is currently dropped here (both
+                    // branches were .ink). Wiring it through (ResultView passes .muted
+                    // for the correct-card recap) is a *visual* change — deferred to the
+                    // Pencil-sync pass so the recap colour is confirmed against the design
+                    // and the snapshot re-recorded deliberately.
                     .foregroundColor(secondaryBadge == nil ? Theme.Hangs.Colors.ink : Theme.Hangs.Colors.ink)
                     .minimumScaleFactor(0.7)
                     .fixedSize(horizontal: false, vertical: true)

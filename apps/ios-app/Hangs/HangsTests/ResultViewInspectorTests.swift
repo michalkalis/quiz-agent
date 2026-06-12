@@ -308,9 +308,11 @@ struct ResultViewInspectorTests {
         }
     }
 
-    /// Incorrect variant footer has "Try this question again" button; correct variant does not.
-    @Test("Incorrect variant footer shows Try this question again; correct does not")
-    func incorrectFooterShowsTryAgain() async throws {
+    /// 54.9: the "Try this question again" button was removed — it called
+    /// continueToNext() (advance to the NEXT question), so the label lied and no
+    /// per-question retry exists. Neither variant should render it now.
+    @Test("Neither result variant shows a retry button (54.9 removed the mislabeled CTA)")
+    func neitherVariantShowsRetryButton() async throws {
         let incorrectEval = Evaluation(
             userAnswer: "London", result: .incorrect, points: 0.0,
             correctAnswer: "Paris", questionId: "q_test", explanation: nil
@@ -324,7 +326,7 @@ struct ResultViewInspectorTests {
         let viewIncorrect = ResultView(viewModel: vmIncorrect)
         try await ViewHosting.host(viewIncorrect) {
             let tree = try viewIncorrect.inspect()
-            #expect(throws: Never.self) {
+            #expect(throws: (any Error).self) {
                 try tree.find(button: "Try this question again")
             }
         }

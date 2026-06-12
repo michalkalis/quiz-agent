@@ -263,6 +263,38 @@ animation. **Confidence: medium.**
 
 ---
 
+## Fix-session log — 2026-06-12 (interactive, primary Mac, iPhone 17 Pro / iOS 26.5)
+
+**Founder decisions taken this session:** (1) record UX = **auto by default + manual override**;
+(2) dark mode = **quick legibility fix now, deliberate Pencil + asset-catalog redesign later**;
+(3) the "Try again" button = **remove it, and keep Pencil 1:1 with the app** (Pencil becomes the
+source of truth later — every UI change here must be mirrored in Pencil).
+
+**Done + verified:**
+- **54.3 / 54.8 (RS)** — Record button → `toggleRecording()`; RS identifiers renamed. RS suite green
+  (`Executed 4 tests, 0 failures`). Commit `3eb48d1`.
+- **54.9** — removed the mislabeled "Try this question again" CTA; updated the inspector test to
+  assert neither variant renders it (passes). ⚠️ **Pencil-sync owed** (remove the button from the
+  Result frame so design matches app).
+- **54.10** — `totalQuestions` fallback `?? 10` → `?? settings.numberOfQuestions` (data-only).
+- **54.12** — subHeadline sign bug fixed (use `pointsDeltaSuffix` directly; no more "+ -2 points").
+- **54.14 (part)** — removed the no-op `.lineSpacing(-2)`. **Deferred:** wiring `secondaryValueColor`
+  (a visual change — verify the recap colour against Pencil + re-record the dump deliberately).
+- Unit suite: **356 pass**; only the **3 pre-existing stale snapshots** fail (HomeView idle,
+  QuestionView asking/recording) — left red on purpose: re-record **after** 54.1 (dark) + 54.2
+  (voice layout) change those pixels.
+
+**Deferred with reason (next sessions):**
+- **54.2** voice overflow (ScrollView) — P0, small; do next + Pencil-sync + re-record QuestionView snaps.
+- **54.5** self-cancelling resubmit + **54.15** ErrorView factory — do together (same cancelled path).
+- **54.11** streak "was" — needs a VM field capturing the streak *before* reset (not a view-only fix).
+- **54.13** fractional-score truncation — real (partial scoring exists) but needs a **display decision**
+  (how should a 3.5-point score render as a count?).
+- **54.16** MCQ tap/voice race — medium; needs the detached-Task handle + animation key change.
+- **54.4 / 54.6 / 54.7** — need live simulator repro (auto-stop cap; minimized end-quiz; onboarding).
+- **54.1** dark mode — quick token swap (`Color.white` → `bgCard` + legacy `Theme.Colors` islands),
+  then the deliberate Pencil redesign as its own task.
+
 ## Suggested execution order (for the fix phase)
 
 1. **54.8** first — get the suite green-able (fix RS identifiers, re-record snapshots, add a behavioural

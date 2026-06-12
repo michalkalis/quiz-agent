@@ -255,17 +255,6 @@ struct ResultView: View {
                 .accessibilityIdentifier("result-why-correct-button")
             }
 
-            if !isCorrect {
-                HangsGhostButton(
-                    title: "Try this question again",
-                    icon: "arrow.counterclockwise",
-                    color: Theme.Hangs.Colors.blue
-                ) {
-                    viewModel.continueToNext()
-                }
-                .accessibilityIdentifier("result.tryAgain")
-            }
-
             if viewModel.currentQuestionPaused {
                 HangsGhostButton(
                     title: "Resume auto-advance",
@@ -306,7 +295,9 @@ struct ResultView: View {
     }
 
     private var totalQuestions: Int {
-        viewModel.currentSession?.maxQuestions ?? 10
+        // 54.10: fall back to the configured length (matching CompletionView /
+        // QuestionView), not a hardcoded 10 — a non-10 session showed a wrong total.
+        viewModel.currentSession?.maxQuestions ?? viewModel.settings.numberOfQuestions
     }
 
     private var counterString: String {
@@ -350,7 +341,9 @@ struct ResultView: View {
 
     private var subHeadline: String {
         if isCorrect {
-            return "+ \(pointsDeltaSuffix.trimmingCharacters(in: CharacterSet(charactersIn: "+"))) points · streak now \(viewModel.quizStats.currentStreak)"
+            // 54.12: pointsDeltaSuffix already carries the correct sign (+3 / -2 / +0);
+            // the old "+ " prefix + trim produced "+ -2 points" on a negative delta.
+            return "\(pointsDeltaSuffix) points · streak now \(viewModel.quizStats.currentStreak)"
         }
         return "streak reset · still worth the try"
     }

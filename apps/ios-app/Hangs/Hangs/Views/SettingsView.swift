@@ -19,6 +19,8 @@ struct SettingsView: View {
     /// `hasCompletedOnboarding` (52.5 founder decision, tested in 52.9 suite).
     var onReplayOnboarding: (() -> Void)? = nil
 
+    @State private var showResetConfirmation = false
+
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
@@ -52,6 +54,12 @@ struct SettingsView: View {
         .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
         .navigationBarBackButtonHidden(true)
         .navigationBarHidden(true)
+        .alert("Reset Question History?", isPresented: $showResetConfirmation) {
+            Button("Cancel", role: .cancel) {}
+            Button("Reset", role: .destructive) { viewModel.resetQuestionHistory() }
+        } message: {
+            Text("This will allow you to see all questions again. This action cannot be undone.")
+        }
         .sheet(isPresented: $viewModel.showingMicrophonePicker) {
             AudioDevicePickerView(viewModel: viewModel)
         }
@@ -135,6 +143,21 @@ struct SettingsView: View {
                 onReplayOnboarding?()
             }
             .accessibilityIdentifier("settings.replayOnboarding")
+
+            hairline
+
+            // Recovery path for the 500-question history cap: the at-capacity
+            // error directs users here (#54 task 54.17 — row was dropped in 52.9).
+            HangsConfigRow(
+                label: "Reset question history",
+                value: "\(viewModel.questionHistoryCount) / 500",
+                valueColor: Theme.Hangs.Colors.pink
+            ) {
+                if viewModel.questionHistoryCount > 0 {
+                    showResetConfirmation = true
+                }
+            }
+            .accessibilityIdentifier("settings.resetHistory")
         }
     }
 

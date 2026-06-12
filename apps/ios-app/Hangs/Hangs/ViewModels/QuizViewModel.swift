@@ -373,7 +373,8 @@ final class QuizViewModel: ObservableObject {
         if persistenceStore.isAtCapacity {
             setError(
                 message: "Question history is full. Please reset your history in Settings to continue.",
-                context: .initialization
+                context: .initialization,
+                model: .historyAtCapacity
             )
             return
         }
@@ -473,11 +474,14 @@ final class QuizViewModel: ObservableObject {
     /// and the `.error` state — we deliberately do not speak them aloud.
     /// `error` is optional; when present it is formatted into `lastErrorDebugInfo` (DEBUG only)
     /// so `DebugErrorDetailsView` can show the full chain without parsing log files.
-    func setError(message: String, context: ErrorContext, error: Error? = nil) { // internal for QuizViewModel+Recording
+    /// `model` overrides the derived display model for failures whose copy/CTA
+    /// can't be inferred from the error or context (e.g. history at capacity).
+    func setError(message: String, context: ErrorContext, error: Error? = nil, model: AppErrorModel? = nil) { // internal for QuizViewModel+Recording
         #if DEBUG
             lastErrorDebugInfo = error.map { Self.formatDebugError($0, displayMessage: message) }
         #endif
-        activeErrorModel = error.map { AppErrorModel.from($0, context: context) }
+        activeErrorModel = model
+            ?? error.map { AppErrorModel.from($0, context: context) }
             ?? AppErrorModel.from(context: context)
         transition(to: .error(message: message, context: context))
     }

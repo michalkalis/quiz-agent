@@ -25,6 +25,15 @@ struct AppErrorModel: Equatable, Sendable {
     let description: String
     let retryAction: AppErrorRetryAction
 
+    /// Question history hit the 500-question cap. Retrying restarts the same
+    /// guard and fails identically, so the CTA is Go Home — the recovery path
+    /// is Settings → "Reset question history" (#54 task 54.17).
+    static let historyAtCapacity = AppErrorModel(
+        title: "História otázok je plná",
+        description: "Vymaž históriu otázok v Nastaveniach (Reset question history) a začni novú hru.",
+        retryAction: .goHome
+    )
+
     /// Map a thrown error and its quiz context to the Error screen display model.
     static func from(_ error: Error, context: ErrorContext = .general) -> AppErrorModel {
         // Cancellation: not a network failure — a retry CTA is misleading,

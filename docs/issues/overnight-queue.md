@@ -50,10 +50,6 @@
 #     NB: do NOT report #52 "done" off a green loop alone — the human fidelity pass (52.17) remains.
 docs/issues/issue-52-design-refresh-sweep.md | 18
 #
-# 2 — post-launch content growth (general → ~500). Repeatable 30.G/30.M loop, lowest priority;
-#     soaks up leftover time budget after #52. Got batches 04–08 in the 1453 run; keep going.
-docs/issues/issue-30-batch-generate-categories.md | 6
-#
 # ====================================================================================
 # DONE — landed on main via the 1453 merge (be83537); removed so the loop won't re-run them
 # ====================================================================================
@@ -70,6 +66,9 @@ docs/issues/issue-30-batch-generate-categories.md | 6
 # #42  Question quality + MCQ — Track F (MCQ batch generation 42.20–42.24) PARKED 2026-06-11
 #      (founder decision: the MCQ generation flow needs redesign, not another param tweak).
 #      Tracks A–D already done. Do NOT queue until Track F is unparked + re-planned.
+# #30  Batch-generate categories (grow general → ~500) — PARKED 2026-06-12 (founder decision:
+#      ALL question generation paused until a proper review of the whole generation process,
+#      same concern as #42 Track F). Do NOT queue until the review happens + unparks it.
 # #50  App Store Connect — needs Apple ID + Paid Apps agreement + IAP creation (external access).
 # #48  Pre-release review gauntlet — founder-deferred; review stages are interactive/billed, not Ralph.
 # #14  Hangs redesign umbrella — per-phase design judgment + .pen visual fidelity.

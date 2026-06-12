@@ -4,6 +4,7 @@ Local task tracker. Manage with `/todo`. Generate a handoff for a fresh session 
 
 States: `[ ]` todo · `[~]` wip · `[x]` done. Numbers continue the `docs/issues/issue-NN-*.md` series — when an item needs a detailed plan, create `docs/issues/issue-NN-{slug}.md` and link it from the line.
 
+- [ ] #54 Design-refresh sweep regressions (#52 fallout) — [plan](../issues/issue-54-design-refresh-regressions.md) — **umbrella, opened 2026-06-12 on `ralph/overnight-20260611-2226`**. Review + test pass found **7 founder-reported + 9 review-found** regressions; iOS suite is **red (13 failures)**. Branch should NOT merge as-is but all items are fixable. Sub-tasks 54.1–54.16 each self-contained for a subagent/session. Highlights: dark mode broken (white cards + invisible text, systemic `Color.white`/legacy tokens · 54.1), voice question text overflow (54.2), Record button only restarts countdown (54.3), no reliable silent auto-stop (54.4), "Failed to resubmit answer: cancelled" = auto-confirm self-cancel (54.5), minimized view un-redesigned (54.6), RS tests broken by `question.micButton`→`question.record` rename + ungated CI (54.8)
 - [x] #19 Auto-confirm resubmit bug fires twice — [plan](../issues/issue-19-auto-confirm-resubmit-bug.md)
 - [x] #20 Timer bug from crash-elimination Wave 3 — fixed 2026-04-15 in `1a19438` (thinkingTimeTask cancellation), follow-ups `991eaba` + `4d34e3b`; RS-01..08 PASS 2026-04-29/30
 - [x] #21 Generate question Groups B-E — superseded 2026-05-02; split into #28 / #29 / #30; Groups C/D2/D3 deferred (data-blocked)

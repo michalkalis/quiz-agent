@@ -14,6 +14,7 @@ Dashboard of all `issue-NN-*.md` files. Updated by `/triage` whenever a `**Triag
 
 | # | Title | Triage | TODO | Notes |
 |---|---|---|---|---|
+| 54 | [Design-refresh sweep regressions (#52 fallout)](issue-54-design-refresh-regressions.md) | bug · ready-for-agent | `[ ]` #54 | Umbrella opened 2026-06-12 on `ralph/overnight-20260611-2226`. 16 regressions (7 founder + 9 review), iOS suite red (13 fail). Branch shouldn't merge as-is; all fixable. Sub-tasks 54.1–54.16 |
 | 14 | [Hangs Redesign (Pencil → iOS)](issue-14-hangs-redesign.md) | enhancement · ready-for-human | | Phased plan exists; needs design judgment per phase |
 | 18 | [First autonomous regression run — RS-01 end-to-end](issue-18-rs01-end-to-end.md) | enhancement · done | | RS-01 PASS `fa892c9` (2026-04-30); RS-01..08 reports landed. Reconciled by triage 2026-06-09 (was stale ready-for-agent) |
 | 19 | [Auto-confirm of unedited transcript routes through `resubmitAnswer`](issue-19-auto-confirm-resubmit-bug.md) | bug · done | `[x]` #19 | Fixed `fa892c9` — resubmit path resolved, RS-01 PASS. Reconciled by triage 2026-06-09 (was stale needs-info; conflicted with TODO `[x]`) |

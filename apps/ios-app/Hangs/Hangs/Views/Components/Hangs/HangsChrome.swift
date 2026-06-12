@@ -31,7 +31,7 @@ struct HangsBrandMark: View {
 
 // MARK: - Nav chip button
 
-/// Square 36pt white nav button with subtle drop shadow. Used for gear, close, back.
+/// Square 36pt nav button on the adaptive card surface with subtle drop shadow. Used for gear, close, back.
 struct HangsNavChip: View {
     let icon: String
     var cornerRadius: CGFloat = Theme.Hangs.Radius.navSquare
@@ -45,7 +45,7 @@ struct HangsNavChip: View {
                 .frame(width: 36, height: 36)
                 .background(
                     RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                        .fill(Color.white)
+                        .fill(Theme.Hangs.Colors.bgCard)
                 )
                 .hangsShadow(Theme.Hangs.Shadow.navChip)
         }
@@ -91,7 +91,7 @@ struct HangsQuizNav: View {
                         .foregroundColor(Theme.Hangs.Colors.ink)
                         .frame(width: 36, height: 36)
                         .background(
-                            Circle().fill(Color.white)
+                            Circle().fill(Theme.Hangs.Colors.bgCard)
                         )
                 }
                 .buttonStyle(.plain)

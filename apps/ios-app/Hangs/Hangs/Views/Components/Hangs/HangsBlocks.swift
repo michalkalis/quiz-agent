@@ -57,7 +57,7 @@ struct HangsSectionLabel: View {
 
 // MARK: - Card wrapper
 
-/// White rounded card with standard Hangs shadow.
+/// Rounded card on the adaptive `bgCard` surface with standard Hangs shadow.
 struct HangsCard<Content: View>: View {
     var padding: EdgeInsets = .init(top: 0, leading: 0, bottom: 0, trailing: 0)
     var cornerRadius: CGFloat = Theme.Hangs.Radius.card
@@ -69,7 +69,7 @@ struct HangsCard<Content: View>: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .fill(Color.white)
+                    .fill(Theme.Hangs.Colors.bgCard)
             )
             .hangsShadow(Theme.Hangs.Shadow.card)
     }
@@ -329,7 +329,7 @@ struct HangsAnswerRow: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(Color.white)
+        .background(Theme.Hangs.Colors.bgCard)
     }
 }
 

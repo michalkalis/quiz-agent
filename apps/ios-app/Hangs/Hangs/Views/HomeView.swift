@@ -183,7 +183,7 @@ struct HomeView: View {
             .frame(width: 36, height: 36)
             .background(
                 RoundedRectangle(cornerRadius: Theme.Hangs.Radius.navSquare)
-                    .fill(Color.white)
+                    .fill(Theme.Hangs.Colors.bgCard)
             )
             .hangsShadow(Theme.Hangs.Shadow.navChip)
     }

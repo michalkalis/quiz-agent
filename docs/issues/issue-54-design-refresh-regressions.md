@@ -31,7 +31,7 @@ Pencil-sync, done-criteria). Pick one per session.
 | _(landed)_ | 54.3, 54.8 (RS), 54.9, 54.10, 54.12, 54.14-lineSpacing | P0/P2 | ✅ commits `3eb48d1`, `40b9ff0` |
 | [`issue-54-02-voice-overflow.md`](issue-54-02-voice-overflow.md) | 54.2 voice layout overflow | P0 | ✅ fixed 2026-06-12 |
 | [`issue-54-05-resubmit-cancel.md`](issue-54-05-resubmit-cancel.md) | 54.5 + 54.15 cancelled-resubmit + ErrorView factory | P0 | landed (unit-verified; sim-confirm pending) |
-| [`issue-54-01-dark-mode.md`](issue-54-01-dark-mode.md) | 54.1 dark mode (Phase 1 token swap; Phase 2 asset-catalog) | P0 | ready |
+| [`issue-54-01-dark-mode.md`](issue-54-01-dark-mode.md) | 54.1 dark mode (Phase 1 token swap; Phase 2 asset-catalog) | P0 | ✅ Phase 1 landed 2026-06-12 (Phase 2 open) |
 | [`issue-54-sim-repro.md`](issue-54-sim-repro.md) | 54.4, 54.6, 54.7 (need live-sim repro first) | P0 | ready |
 | [`issue-54-recovery-paths.md`](issue-54-recovery-paths.md) | 54.17, 54.18 broken recovery paths (new, 2nd review pass) | P1 | ready (54.18 decided: restore typed input) |
 | [`issue-54-data-cleanups.md`](issue-54-data-cleanups.md) | 54.11, 54.13, 54.16 + hygiene 54.19–54.21 | P2 | ready (54.13 decided: fractional display) |
@@ -98,6 +98,17 @@ in Swift) works for the tokens that use it, but the hardcoded `Color.white` and 
 asset-catalog colour sets); (c) re-test both appearances. Confirm contrast for `ink`/`muted`
 on the adapted card.
 **Confidence:** high (mechanism reproduced in code; matches screenshot exactly).
+
+> **STATUS 2026-06-12 — Phase 1 FIXED, verified.** 6 fills swapped `Color.white` → adaptive `bgCard`
+> (the 5 above + `HangsSecondaryButton` HangsButton:73, same bug class — invisible Skip/Re-record
+> labels). New red→green `HangsSurfaceAdaptivityTests` pixel-asserts dark-mode surfaces via
+> ImageRenderer. Screenshot-verified light+dark on Home/Question/Confirmation/Result/Settings —
+> `VISUAL: PASS` (`docs/artifacts/visual-verify-54-1-dark-mode-2026-06-12.html`); Completion
+> indirectly (mock fixture can't reach it — batched into sim-repro). **Correction:** the "18 legacy
+> files are non-adaptive" claim is wrong — `Theme.Colors` is adaptive; live legacy screens are
+> legible in dark, just visually inconsistent (54.6 / Phase 2 restyle work), and most legacy
+> components are caller-less dead code (cleanups plan). Phase 2 (Pencil dark design +
+> asset-catalog) stays open per founder decision.
 
 ### 54.2 — Voice question text too big, pushes Record/Skip off-screen (founder #2)
 **Symptom:** the question text on the quiz screen is oversized and shoves the buttons /

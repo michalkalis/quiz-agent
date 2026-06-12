@@ -98,7 +98,12 @@ struct MCQOptionPickerRaceTests {
             let tree = try view.inspect()
             try tree.find(ViewType.Button.self).tap()
 
-            try await Task.sleep(nanoseconds: 900_000_000)
+            // Poll up to ~3s — the 500ms delayed submit can overshoot a fixed
+            // wait under TSan + parallel-suite load (same pattern as
+            // firesOnceWithoutCancel above).
+            for _ in 0..<150 where selectCount == 0 {
+                try await Task.sleep(nanoseconds: 20_000_000)
+            }
             #expect(selectCount == 1)
         }
     }

@@ -93,6 +93,12 @@
       ▿ _questionsAnswered: Combine.Published<Swift.Int>
         ▿ storage: Combine.Published<Swift.Int>.Storage.value
           - value: 1
+      ▿ _sessionCorrectCount: Combine.Published<Swift.Int>
+        ▿ storage: Combine.Published<Swift.Int>.Storage.value
+          - value: 0
+      ▿ _sessionIncorrectCount: Combine.Published<Swift.Int>
+        ▿ storage: Combine.Published<Swift.Int>.Storage.value
+          - value: 0
       ▿ _errorMessage: Combine.Published<Swift.Optional<Swift.String>>
         ▿ storage: Combine.Published<Swift.Optional<Swift.String>>.Storage.value
           - value: nil
@@ -149,6 +155,9 @@
             - totalCorrect: 0
             - totalAnswered: 0
             - totalQuizzes: 0
+      ▿ _streakBeforeLastAnswer: Combine.Published<Swift.Int>
+        ▿ storage: Combine.Published<Swift.Int>.Storage.value
+          - value: 0
       ▿ _settings: Combine.Published<Hangs.QuizSettings>
         ▿ storage: Combine.Published<Hangs.QuizSettings>.Storage.publisher
           ▿ publisher: Combine.Published<Hangs.QuizSettings>.Publisher

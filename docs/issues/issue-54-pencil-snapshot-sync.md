@@ -1,8 +1,8 @@
 # Plan — Pencil 1:1 sync + snapshot re-record (cross-cutting, run LAST)
 
 **Parent:** `issue-54-design-refresh-regressions.md` (§54.8 item 3, and the founder's "Pencil 1:1"
-requirement) · **Priority:** P1 · **Status:** ongoing — run **after** the UI-changing fixes land so
-nothing is touched twice.
+requirement) · **Priority:** P1 · **Status:** ✅ DONE 2026-06-12 (third session) — see
+implementation notes at the bottom.
 
 ## Why one cross-cutting task
 The founder's directive: **Pencil must match the app 1:1** (`design/quiz-agent.pen`); later Pencil
@@ -51,6 +51,41 @@ Also fold in here (test hygiene, same files): **54.20** — remove the stale `Qu
 member + snapshot-test comments (see `issue-54-data-cleanups.md` §54.20) if not already done.
 
 ## Done criteria
-- [ ] Every shipped #54 UI change is reflected in `design/quiz-agent.pen` (screenshots match app).
-- [ ] The 3 snapshots re-recorded with reviewed diffs; full `xcodebuild test` green.
-- [ ] CI gate added; TSan crash triaged. Update parent §54.8.
+- [x] Every shipped #54 UI change is reflected in `design/quiz-agent.pen` (screenshots match app).
+- [x] The snapshots re-recorded with reviewed diffs; full `xcodebuild test` green.
+- [x] CI gate added; TSan crash triaged (watch item, did not recur). Update parent §54.8.
+
+---
+
+## Implementation notes (2026-06-12, third session)
+
+**Part A — Pencil sync (remaining items):** 54.18 typed-answer toggle ("Type answer instead",
+keyboard icon, `$text-secondary`) added to voice frames `f9csl` (enabled) and `uGhZg` (recording —
+opacity 0.45 mirroring `canInteract == false`), placed between the context hint and the
+Record/Skip row. Settings frame `Jjcs5` about card (`hui1y`): added the two rows the app has and
+the design lacked — "Replay intro" (chevron) and the 54.17 "Reset question history" row
+(`137 / 500` in `$accent-pink`), with hairlines. All three frames screenshot-verified, no overflow.
+(Result/Error/Minimized frames were already synced in earlier #54 sessions.)
+
+**Part B — snapshot re-record:** all **5** drifted baselines re-recorded (not 3 — the P2 batch
+added `streakBeforeLastAnswer` + `sessionCorrect/IncorrectCount`, drifting ResultView's two
+baselines as well). Diffs reviewed line-by-line: only the predicted model-drift fields + the 54.18
+`@State` fields (`_showTextInput`, `_textAnswer`, `_isTextFieldFocused`) — no unintended changes.
+
+Two latent test bugs found by the full-suite run and fixed structurally (rule: root cause, not
+re-record-and-hope):
+- **HomeViewSnapshotTests order-dependence:** it dumped the shared `QuizViewModel.preview`
+  singleton; the 54.17 `SettingsViewHistoryTests` host views on that same singleton, and hosting
+  subscribes → `@Published` storage flips `.value`→`.publisher` → dump pulls in unstable
+  Observation internals. Fix: fresh per-test VM mirroring `.preview` (same pattern as the other
+  snapshot suites).
+- **`tapSubmitsOnceWithoutVoiceMatch` flake:** fixed 900 ms sleep vs. the 500 ms delayed submit
+  under parallel-suite load — switched to the poll-up-to-~3 s pattern from the handoff decisions.
+
+**Part C — process gate:** two layers. (1) `scripts/ralph/ralph.sh` end-of-run gate: if the run
+touched `apps/ios-app/**`, it runs `xcodebuild test -only-testing:HangsTests` and exits 4 with a
+loud `TEST GATE RED` verdict on failure, so the nightly scheduler surfaces a red run (UI tests
+excluded — too slow/flaky for unattended headless; CI covers them). (2) `ios-ci.yml` now also
+triggers on push to `ralph/**` (red is visible at review-push time, before merge) with a
+`concurrency` group cancelling superseded runs to bound macOS-runner cost. TSan BUS crash: did not
+recur in any of this session's full runs — stays a watch item per the 2026-06-12 downgrade.

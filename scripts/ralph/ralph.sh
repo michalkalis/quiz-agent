@@ -230,7 +230,48 @@ log "  completed iterations: $COMPLETED"
 log "  blocked iterations:   $BLOCKED"
 log "  commits this run:     $(git -C "$REPO_ROOT" rev-list --count "$START_SHA..$END_SHA")"
 log "  start → end:          $START_SHA → $END_SHA"
+
+# ── End-of-run iOS test gate (#54 §54.8 item 1): a run that touched iOS code
+# must not end "green" with a red unit suite — that's how the #54 design-refresh
+# branch landed red unnoticed. Unit target only (HangsTests): UI tests are too
+# slow/flaky for an unattended headless gate; CI covers them on push.
+GATE_STATUS="skipped"
+if git -C "$REPO_ROOT" diff --name-only "$START_SHA..$END_SHA" | grep -q '^apps/ios-app/'; then
+    log "─── iOS files changed this run → test gate (xcodebuild test, HangsTests)"
+    GATE_LOG="$LOG_DIR/test-gate-$START_TS.log"
+    GATE_TIMEOUT_CMD=""
+    if command -v gtimeout >/dev/null 2>&1; then
+        GATE_TIMEOUT_CMD="gtimeout 2400"
+    elif command -v timeout >/dev/null 2>&1; then
+        GATE_TIMEOUT_CMD="timeout 2400"
+    fi
+    set +e
+    (cd "$REPO_ROOT/apps/ios-app/Hangs" && $GATE_TIMEOUT_CMD xcodebuild test \
+        -scheme Hangs-Local \
+        -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+        -only-testing:HangsTests \
+        -quiet) > "$GATE_LOG" 2>&1
+    GATE_EXIT=$?
+    set -e
+    if [[ $GATE_EXIT -eq 0 ]]; then
+        GATE_STATUS="green"
+        log "✓ TEST GATE GREEN (HangsTests)"
+    else
+        GATE_STATUS="red"
+        log "✗ TEST GATE RED (exit=$GATE_EXIT) — do NOT push before fixing"
+        log "  gate log: $GATE_LOG"
+        grep -E "Failing tests:|Test [Cc]ase .* failed|error:" "$GATE_LOG" | head -20 | while IFS= read -r line; do
+            log "  $line"
+        done
+    fi
+fi
+
 log ""
 log "Next steps (human):"
 log "  git log $START_SHA..HEAD --oneline    # review commits"
 log "  git push                              # push if happy"
+
+# Red gate = failed run: nonzero exit so the nightly scheduler surfaces it.
+if [[ "$GATE_STATUS" == "red" ]]; then
+    exit 4
+fi

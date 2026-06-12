@@ -2,8 +2,10 @@
 //  PaywallView.swift
 //  Hangs
 //
-//  Shown when daily free question limit is reached.
-//  Offers upgrade to unlimited or dismiss until tomorrow.
+//  Two variants driven by StoreKit availability:
+//    u2ySy — normal paywall ("OUT OF QUESTIONS") shown when product loaded.
+//    PouwN — offline paywall ("CAN'T REACH THE STORE") shown when product
+//            unavailable after a completed load attempt.
 //
 
 import SwiftUI
@@ -13,123 +15,268 @@ struct PaywallView: View {
     let limitError: DailyLimitError?
     let onDismiss: () -> Void
 
-    var body: some View {
-        VStack(spacing: Theme.Spacing.xl) {
-            Spacer()
+    // Offline: load attempt completed but no product returned (StoreKit unreachable).
+    var isOffline: Bool {
+        storeManager.hasAttemptedProductLoad && storeManager.product == nil
+    }
 
-            // MARK: - Icon
-            Image(systemName: "sparkles")
-                .font(.system(size: 56))
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [Theme.Colors.accentPrimary, Theme.Colors.accentSecondary],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
+    var body: some View {
+        VStack(spacing: 0) {
+            HangsBrandRow()
+
+            if isOffline {
+                offlineBody
+            } else {
+                paywallBody
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
+    }
+
+    // MARK: - u2ySy — Out of Questions
+
+    private var paywallBody: some View {
+        ScrollView {
+            VStack(spacing: Theme.Hangs.Spacing.xl) {
+                paywallIconCircle
+                    .padding(.top, Theme.Hangs.Spacing.xl)
+
+                paywallHeroBlock
+
+                if let resetDate = limitError?.resetDate {
+                    CountdownPill(resetDate: resetDate)
+                }
+
+                featureCard
+
+                paywallCTAStack
+            }
+            .padding(.horizontal, Theme.Hangs.Spacing.lg)
+            .padding(.bottom, Theme.Hangs.Spacing.xl)
+        }
+    }
+
+    private var paywallIconCircle: some View {
+        ZStack {
+            Circle()
+                .fill(Theme.Hangs.Colors.pinkSoft)
+                .frame(width: 120, height: 120)
+            Image(systemName: "infinity")
+                .font(.system(size: 48, weight: .medium))
+                .foregroundColor(Theme.Hangs.Colors.pink)
+        }
+        .accessibilityHidden(true)
+        .accessibilityIdentifier("paywall.icon")
+    }
+
+    private var paywallHeroBlock: some View {
+        VStack(spacing: 8) {
+            Text("OUT OF\nQUESTIONS")
+                .font(.hangsDisplayMD)
+                .foregroundColor(Theme.Hangs.Colors.ink)
+                .multilineTextAlignment(.center)
+                .accessibilityAddTraits(.isHeader)
+                .accessibilityIdentifier("paywall.headline")
+
+            Capsule()
+                .fill(Theme.Hangs.Colors.pink)
+                .frame(width: 40, height: 3)
                 .accessibilityHidden(true)
 
-            // MARK: - Title
-            VStack(spacing: Theme.Spacing.sm) {
-                Text("You're on a Roll!")
-                    .font(.displayXL)
-                    .foregroundColor(Theme.Colors.textPrimary)
-                    .multilineTextAlignment(.center)
-
-                Text(limitMessage)
-                    .font(.textMD)
-                    .foregroundColor(Theme.Colors.textSecondary)
-                    .multilineTextAlignment(.center)
-            }
-
-            // MARK: - Reset countdown
-            if let resetDate = limitError?.resetDate {
-                CountdownToReset(resetDate: resetDate)
-            }
-
-            Spacer()
-
-            // MARK: - Actions
-            VStack(spacing: Theme.Spacing.sm) {
-                // Purchase button
-                if let product = storeManager.product {
-                    PrimaryButton(
-                        title: "Unlock Unlimited — \(product.displayPrice)",
-                        icon: "lock.open.fill",
-                        isLoading: storeManager.isLoading
-                    ) {
-                        Task { await storeManager.purchase() }
-                    }
-                    .accessibilityIdentifier("paywall-purchase-button")
-                } else {
-                    PrimaryButton(
-                        title: "Unlock Unlimited",
-                        icon: "lock.open.fill",
-                        isLoading: true
-                    ) {}
-                    .accessibilityIdentifier("paywall-purchase-button")
-                }
-
-                // Restore purchases
-                Button("Restore Purchase") {
-                    Task { await storeManager.restorePurchases() }
-                }
-                .font(.textSM)
-                .foregroundColor(Theme.Colors.accentPrimary)
-                .accessibilityIdentifier("paywall-restore-button")
-
-                // Dismiss
-                Button("Come Back Tomorrow") {
-                    onDismiss()
-                }
-                .font(.textSM)
-                .foregroundColor(Theme.Colors.textSecondary)
-                .padding(.top, Theme.Spacing.xs)
-                .accessibilityIdentifier("paywall-close-button")
-            }
-            .padding(.horizontal, Theme.Spacing.lg)
-
-            // Error message
-            if let error = storeManager.purchaseError {
-                Text(error)
-                    .font(.textSM)
-                    .foregroundColor(Theme.Colors.error)
-                    .multilineTextAlignment(.center)
-            }
-
-            Spacer()
-                .frame(height: Theme.Spacing.xl)
+            Text(limitMessage)
+                .font(.hangsBody(15))
+                .foregroundColor(Theme.Hangs.Colors.muted)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("paywall.subtitle")
         }
-        .padding(Theme.Spacing.lg)
-        .background(Theme.Colors.bgPrimary)
     }
 
     private var limitMessage: String {
         if let limit = limitError {
-            return "You've used all \(limit.questionsLimit) free questions today. Unlock unlimited to keep playing!"
+            return "You've used all \(limit.questionsLimit) free questions today."
         }
-        return "You've used all your free questions today. Unlock unlimited to keep playing!"
+        return "You've used all your free questions today."
+    }
+
+    private var featureCard: some View {
+        VStack(spacing: 0) {
+            Text("unlimited")
+                .font(.hangsMono(11, weight: .medium))
+                .foregroundColor(Theme.Hangs.Colors.pink)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, Theme.Hangs.Spacing.md)
+                .padding(.vertical, Theme.Hangs.Spacing.sm)
+                .accessibilityIdentifier("paywall.featureCard.label")
+
+            HangsDivider()
+            featureRow("Unlimited questions, every day")
+            HangsDivider()
+            featureRow("Never wait for the daily reset")
+            HangsDivider()
+            featureRow("One-time unlock — not a subscription")
+        }
+        .background(
+            RoundedRectangle(cornerRadius: Theme.Hangs.Radius.card, style: .continuous)
+                .fill(Theme.Hangs.Colors.bgCard)
+        )
+        .hangsShadow(Theme.Hangs.Shadow.card)
+        .accessibilityIdentifier("paywall.featureCard")
+    }
+
+    private func featureRow(_ text: String) -> some View {
+        HStack(spacing: Theme.Hangs.Spacing.sm) {
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 20))
+                .foregroundColor(Theme.Hangs.Colors.greenCheck)
+                .accessibilityHidden(true)
+            Text(text)
+                .font(.hangsBody(15))
+                .foregroundColor(Theme.Hangs.Colors.ink)
+            Spacer()
+        }
+        .padding(.horizontal, Theme.Hangs.Spacing.md)
+        .padding(.vertical, Theme.Hangs.Spacing.sm)
+    }
+
+    private var paywallCTAStack: some View {
+        VStack(spacing: Theme.Hangs.Spacing.xs) {
+            if let product = storeManager.product {
+                HangsPrimaryButton(
+                    title: "Unlock Unlimited — \(product.displayPrice)",
+                    icon: "lock.open.fill",
+                    isLoading: storeManager.isLoading
+                ) {
+                    Task { await storeManager.purchase() }
+                }
+                .accessibilityIdentifier("paywall-purchase-button")
+            } else {
+                HangsPrimaryButton(
+                    title: "Unlock Unlimited",
+                    icon: "lock.open.fill",
+                    isLoading: true
+                ) {}
+                    .accessibilityIdentifier("paywall-purchase-button")
+            }
+
+            HangsGhostButton(title: "Restore purchase", color: Theme.Hangs.Colors.blue) {
+                Task { await storeManager.restorePurchases() }
+            }
+            .accessibilityIdentifier("paywall-restore-button")
+
+            HangsGhostButton(
+                title: "Maybe tomorrow",
+                color: Theme.Hangs.Colors.muted,
+                font: .hangsBody(14)
+            ) {
+                onDismiss()
+            }
+            .accessibilityIdentifier("paywall-close-button")
+
+            if let error = storeManager.purchaseError {
+                Text(error)
+                    .font(.hangsBody(13))
+                    .foregroundColor(Theme.Hangs.Colors.error)
+                    .multilineTextAlignment(.center)
+            }
+        }
+    }
+
+    // MARK: - PouwN — Can't Reach The Store
+
+    private var offlineBody: some View {
+        VStack(spacing: Theme.Hangs.Spacing.xl) {
+            Spacer(minLength: Theme.Hangs.Spacing.xxl)
+
+            offlineIconCircle
+
+            offlineHeroBlock
+
+            Spacer()
+
+            offlineCTAStack
+                .padding(.horizontal, Theme.Hangs.Spacing.lg)
+                .padding(.bottom, Theme.Hangs.Spacing.xl)
+        }
+    }
+
+    private var offlineIconCircle: some View {
+        ZStack {
+            Circle()
+                .fill(Theme.Hangs.Colors.warning.opacity(0.12))
+                .frame(width: 120, height: 120)
+            Image(systemName: "wifi.slash")
+                .font(.system(size: 44, weight: .medium))
+                .foregroundColor(Theme.Hangs.Colors.warning)
+        }
+        .accessibilityHidden(true)
+        .accessibilityIdentifier("paywall.offline.icon")
+    }
+
+    private var offlineHeroBlock: some View {
+        VStack(spacing: 8) {
+            Text("CAN'T REACH\nTHE STORE")
+                .font(.hangsDisplayMD)
+                .foregroundColor(Theme.Hangs.Colors.ink)
+                .multilineTextAlignment(.center)
+                .accessibilityAddTraits(.isHeader)
+                .accessibilityIdentifier("paywall.offline.headline")
+
+            Capsule()
+                .fill(Theme.Hangs.Colors.warning)
+                .frame(width: 40, height: 3)
+                .accessibilityHidden(true)
+
+            Text("We couldn't load the upgrade right now. Check your connection and try again.")
+                .font(.hangsBody(15))
+                .foregroundColor(Theme.Hangs.Colors.muted)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 8)
+                .accessibilityIdentifier("paywall.offline.subtitle")
+        }
+        .padding(.horizontal, Theme.Hangs.Spacing.lg)
+    }
+
+    private var offlineCTAStack: some View {
+        VStack(spacing: Theme.Hangs.Spacing.xs) {
+            HangsPrimaryButton(title: "Try Again", icon: "arrow.clockwise") {
+                Task { await storeManager.loadProduct() }
+            }
+            .accessibilityIdentifier("paywall-offline-retry-button")
+
+            HangsSecondaryButton(title: "Maybe tomorrow") {
+                onDismiss()
+            }
+            .accessibilityIdentifier("paywall-close-button")
+        }
     }
 }
 
-// MARK: - Countdown to Reset
+// MARK: - Countdown Pill
 
-private struct CountdownToReset: View {
+private struct CountdownPill: View {
     let resetDate: Date
     @State private var timeRemaining: String = ""
     @State private var timer: Timer?
 
     var body: some View {
-        HStack(spacing: Theme.Spacing.xs) {
+        HStack(spacing: 6) {
             Image(systemName: "clock")
-                .font(.textSM)
+                .font(.system(size: 13, weight: .medium))
                 .accessibilityHidden(true)
             Text("Free questions reset in \(timeRemaining)")
-                .font(.textSM)
+                .font(.hangsBody(13, weight: .medium))
         }
-        .foregroundColor(Theme.Colors.textTertiary)
+        .foregroundColor(Theme.Hangs.Colors.muted)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+        .background(Capsule().fill(Theme.Hangs.Colors.bgCard))
+        .overlay(Capsule().stroke(Theme.Hangs.Colors.subtleBorder, lineWidth: 1))
         .onAppear { startTimer() }
         .onDisappear { timer?.invalidate() }
+        .accessibilityIdentifier("paywall.countdownPill")
     }
 
     private func startTimer() {
@@ -147,11 +294,7 @@ private struct CountdownToReset: View {
         }
         let hours = Int(remaining) / 3600
         let minutes = (Int(remaining) % 3600) / 60
-        if hours > 0 {
-            timeRemaining = "\(hours)h \(minutes)m"
-        } else {
-            timeRemaining = "\(minutes)m"
-        }
+        timeRemaining = hours > 0 ? "\(hours)h \(minutes)m" : "\(minutes)m"
     }
 }
 

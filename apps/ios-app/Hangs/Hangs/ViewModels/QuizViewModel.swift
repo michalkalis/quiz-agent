@@ -1004,6 +1004,9 @@ final class QuizViewModel: ObservableObject {
         pendingResponse = nil
         transcribedAnswer = ""
         showAnswerConfirmation = false
+        // Ending a quiz from the minimized widget must dismiss the widget —
+        // otherwise a stale card floats over Home (#54 task 54.6).
+        isMinimized = false
     }
 
     // MARK: - Question History Management

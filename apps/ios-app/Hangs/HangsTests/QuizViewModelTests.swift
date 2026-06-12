@@ -1084,3 +1084,27 @@ struct QuizViewModelDoubleStopTests {
         #expect(viewModel.quizState == .recording)
     }
 }
+
+// MARK: - End Quiz Tests
+
+@Suite("QuizViewModel End Quiz Tests")
+struct QuizViewModelEndQuizTests {
+
+    /// 54.6 (founder #1): ending the quiz from the minimized floating widget
+    /// must also dismiss the widget — resetState() left isMinimized true, so a
+    /// stale "01/10" card floated over Home after the session was gone.
+    @Test("ending quiz from the minimized widget dismisses the widget")
+    @MainActor
+    func endQuizResetsMinimized() async throws {
+        let (viewModel, _) = Fixtures.makeViewModelWithNetwork()
+        viewModel.currentSession = Fixtures.makeActiveSession()
+        viewModel.quizState = .askingQuestion
+        viewModel.isMinimized = true
+
+        await viewModel.endQuiz()
+
+        #expect(viewModel.isMinimized == false)
+        #expect(viewModel.quizState == .idle)
+        #expect(viewModel.currentSession == nil)
+    }
+}

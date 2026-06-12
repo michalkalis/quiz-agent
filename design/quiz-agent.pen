@@ -7983,6 +7983,133 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "AAEkz",
+      "x": 2770,
+      "y": 7763,
+      "name": "Widget/Minimized-Quiz",
+      "clip": true,
+      "width": 140,
+      "fill": "$bg-card",
+      "cornerRadius": 18,
+      "stroke": "$border-subtle",
+      "strokeWidth": 1,
+      "strokeAlignment": "inner",
+      "effect": {
+        "type": "shadow",
+        "shadowType": "outer",
+        "color": "#0E1A2B14",
+        "offset": {
+          "x": 0,
+          "y": 4
+        },
+        "blur": 20
+      },
+      "layout": "vertical",
+      "gap": 8,
+      "padding": [
+        16,
+        16,
+        4,
+        16
+      ],
+      "children": [
+        {
+          "type": "frame",
+          "id": "MzFEX",
+          "name": "progressBlock",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 4,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "OXa4g",
+              "name": "progressLabel",
+              "fill": "$text-secondary",
+              "content": "01 / 10",
+              "fontFamily": "IBM Plex Mono",
+              "fontSize": 11,
+              "fontWeight": "500",
+              "letterSpacing": 2
+            },
+            {
+              "type": "text",
+              "id": "fKcsx",
+              "name": "scoreValue",
+              "fill": "$text-primary",
+              "content": "7.5",
+              "fontFamily": "Anton",
+              "fontSize": 28
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "tmmug",
+          "name": "micPill",
+          "width": "fill_container",
+          "height": 44,
+          "fill": "$accent-pink",
+          "cornerRadius": 28,
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "#FF3D8F33",
+            "offset": {
+              "x": 0,
+              "y": 6
+            },
+            "blur": 16
+          },
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon",
+              "id": "D2DmZ1",
+              "name": "micIcon",
+              "width": 20,
+              "height": 20,
+              "icon": "mic",
+              "library": "Material Symbols Rounded",
+              "fill": "$text-on-accent"
+            }
+          ]
+        },
+        {
+          "type": "rectangle",
+          "id": "xgOPx",
+          "name": "divider",
+          "fill": "$border-subtle",
+          "width": "fill_container",
+          "height": 1
+        },
+        {
+          "type": "frame",
+          "id": "K2yBmS",
+          "name": "endQuizRow",
+          "width": "fill_container",
+          "height": 44,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "WeBoi",
+              "name": "endQuizLabel",
+              "fill": "$error",
+              "content": "End Quiz",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "600"
+            }
+          ]
+        }
+      ]
     }
   ],
   "themes": {

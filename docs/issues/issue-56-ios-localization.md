@@ -38,6 +38,9 @@ Rejected alternatives: legacy `.strings`/`.stringsdict` (superseded, no plural e
 
 ### Ralph atomic task list (run in order; full detail in §56.x below)
 
+All source paths below are under `apps/ios-app/Hangs/` (e.g. `apps/ios-app/Hangs/Hangs/Models/AppErrorModel.swift`).
+Build + test from `apps/ios-app/Hangs` (scheme `Hangs-Local`); the XcodeBuildMCP server is attached for `build_sim`/`xcodebuild`.
+
 Pick the **first unchecked `- [ ]`** each iteration. **Hard gate at 56.2** — if the
 pilot test fails, append a `## BLOCKER` note and stop; do NOT proceed to mass extraction.
 Each task must end with a green build + its named tests before being checked off.

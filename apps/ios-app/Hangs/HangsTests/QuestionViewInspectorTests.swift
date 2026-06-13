@@ -43,9 +43,10 @@ struct QuestionViewMCQInspectorTests {
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            // The header renders "ADULTS · QUESTION 1" via HangsSectionLabel (uppercased)
+            // HangsSectionLabel stores raw text; .textCase(.uppercase) is a visual modifier
+            // ViewInspector sees the pre-transform value, so search for the raw lowercase category.
             #expect(throws: Never.self) {
-                try tree.find(text: "ADULTS · QUESTION 1")
+                try tree.find(text: "adults · QUESTION 1")
             }
         }
     }

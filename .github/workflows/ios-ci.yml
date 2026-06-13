@@ -103,11 +103,17 @@ jobs:
         run: |
           cd apps/quiz-agent
           "$GITHUB_WORKSPACE/.venv/bin/uvicorn" app.main:app --host 0.0.0.0 --port 8002 &
-          sleep 5
 
       - name: Download and archive OpenAPI spec
         run: |
-          curl -f http://localhost:8002/openapi.json -o openapi-current.json
+          # The app boots in >5 s (TTS/pydub init), so poll for readiness instead
+          # of a fixed sleep — a fixed sleep raced uvicorn and curl got ECONNREFUSED.
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8002/openapi.json -o openapi-current.json && break
+            echo "waiting for backend to accept connections… ($i/30)"
+            sleep 2
+          done
+          test -s openapi-current.json  # fail loud if the server never came up
 
       - name: Upload OpenAPI spec
         uses: actions/upload-artifact@v4

@@ -9,25 +9,25 @@ import Foundation
 
 /// Bluetooth audio mode for quiz playback and recording
 struct AudioMode: Identifiable, Hashable, Sendable {
-    let id: String  // Mode identifier ("call" or "media")
-    let name: String  // Display name (e.g., "Call Mode")
-    let description: String  // User-facing explanation
-    let icon: String  // SF Symbol name for UI
+    let id: String // Mode identifier ("call" or "media")
+    let name: String // Display name (e.g., "Call Mode")
+    let description: String // User-facing explanation
+    let icon: String // SF Symbol name for UI
 
     /// All supported audio modes
     static let supportedModes: [AudioMode] = [
         AudioMode(
             id: "call",
-            name: "Call Mode",
-            description: "Uses Bluetooth microphone (may show as phone call in car)",
+            name: String(localized: "Call Mode", comment: "Audio mode: uses Bluetooth microphone"),
+            description: String(localized: "Uses Bluetooth microphone (may show as phone call in car)", comment: "Audio mode description: Call Mode"),
             icon: "phone.fill"
         ),
         AudioMode(
             id: "media",
-            name: "Media Mode",
-            description: "Car-friendly audio (built-in mic only, no call UI)",
+            name: String(localized: "Media Mode", comment: "Audio mode: car-friendly, no call UI"),
+            description: String(localized: "Car-friendly audio (built-in mic only, no call UI)", comment: "Audio mode description: Media Mode"),
             icon: "car.fill"
-        )
+        ),
     ]
 
     /// Default mode (Media Mode - car-friendly, no call UI)

@@ -165,16 +165,16 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// Display name for a given category ID. Single source of truth for category display strings.
     nonisolated static func categoryDisplayName(for category: String?) -> String {
         switch category {
-        case nil: return "All Categories"
-        case "general": return "General"
-        case "adults": return "Adults"
-        case "kids": return "Kids"
-        case "wizarding-world": return "Wizarding World"
-        case "superheroes": return "Superheroes"
-        case "disney": return "Disney"
-        case "football": return "Football"
-        case "sports-mix": return "Sports Mix"
-        default: return "Unknown"
+        case nil: return String(localized: "All Categories", comment: "Category picker: no filter selected")
+        case "general": return String(localized: "General", comment: "Quiz category: general knowledge")
+        case "adults": return String(localized: "Adults", comment: "Quiz category: adults content")
+        case "kids": return String(localized: "Kids", comment: "Quiz category: children's content")
+        case "wizarding-world": return String(localized: "Wizarding World", comment: "Quiz category: Harry Potter universe")
+        case "superheroes": return String(localized: "Superheroes", comment: "Quiz category: superhero topics")
+        case "disney": return String(localized: "Disney", comment: "Quiz category: Disney")
+        case "football": return String(localized: "Football", comment: "Quiz category: football/soccer")
+        case "sports-mix": return String(localized: "Sports Mix", comment: "Quiz category: mixed sports")
+        default: return String(localized: "Unknown", comment: "Category display name fallback")
         }
     }
 
@@ -183,12 +183,12 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// Display name for a given age-appropriate filter ID. Single source of truth.
     nonisolated static func ageAppropriateDisplayName(for ageAppropriate: String?) -> String {
         switch ageAppropriate {
-        case nil: return "Any age"
-        case "all": return "Family-friendly"
-        case "8+": return "8+"
-        case "12+": return "12+"
-        case "16+": return "16+"
-        default: return "Unknown"
+        case nil: return String(localized: "Any age", comment: "Age filter: no restriction")
+        case "all": return String(localized: "Family-friendly", comment: "Age filter: suitable for all ages")
+        case "8+": return String(localized: "8+", comment: "Age filter: 8 and older")
+        case "12+": return String(localized: "12+", comment: "Age filter: 12 and older")
+        case "16+": return String(localized: "16+", comment: "Age filter: 16 and older")
+        default: return String(localized: "Unknown", comment: "Age filter display name fallback")
         }
     }
 
@@ -197,10 +197,10 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// Display name for a given difficulty ID. Single source of truth.
     nonisolated static func difficultyDisplayName(for difficulty: String) -> String {
         switch difficulty {
-        case "easy": return "Easy"
-        case "medium": return "Medium"
-        case "hard": return "Hard"
-        case "random": return "Random"
+        case "easy": return String(localized: "Easy", comment: "Difficulty level: easy")
+        case "medium": return String(localized: "Medium", comment: "Difficulty level: medium")
+        case "hard": return String(localized: "Hard", comment: "Difficulty level: hard")
+        case "random": return String(localized: "Random", comment: "Difficulty level: random selection")
         default: return difficulty.prefix(1).uppercased() + difficulty.dropFirst()
         }
     }

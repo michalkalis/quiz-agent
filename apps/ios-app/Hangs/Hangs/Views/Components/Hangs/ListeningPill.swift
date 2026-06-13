@@ -20,9 +20,9 @@ struct ListeningPill: View {
         /// Prompt copy telling the driver what to say.
         var copy: String {
             switch self {
-            case .openEnded: return "Listening — say your answer"
-            case .mcq: return "Listening — say A–D or the answer"
-            case .trueFalse: return "Listening — say true or false"
+            case .openEnded: return String(localized: "Listening — say your answer", comment: "Listening pill: open-ended question mode prompt")
+            case .mcq: return String(localized: "Listening — say A–D or the answer", comment: "Listening pill: multiple-choice question mode prompt")
+            case .trueFalse: return String(localized: "Listening — say true or false", comment: "Listening pill: true/false question mode prompt")
             }
         }
     }

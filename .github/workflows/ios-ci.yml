@@ -97,29 +97,16 @@ jobs:
           uv pip install -e apps/quiz-agent
           uv pip install -e packages/shared
 
-      - name: Start backend and archive OpenAPI spec
+      - name: Export OpenAPI spec
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY || 'sk-test-key' }}
         run: |
-          # Start + poll + fetch must live in ONE step: a process backgrounded in a
-          # prior `run:` step does not survive into the next step on GH runners.
+          # Generate the schema directly from the app — no running server. Booting
+          # uvicorn hangs in CI (startup lifespan pre-generates TTS audio, needs
+          # ffmpeg + a real TTS provider). app.openapi() triggers no lifespan events.
           cd apps/quiz-agent
-          "$GITHUB_WORKSPACE/.venv/bin/uvicorn" app.main:app --host 0.0.0.0 --port 8002 \
-            > "$GITHUB_WORKSPACE/uvicorn.log" 2>&1 &
-          UVICORN_PID=$!
-          cd "$GITHUB_WORKSPACE"
-          # The app boots in >5 s (TTS/pydub init), so poll for readiness.
-          for i in $(seq 1 30); do
-            curl -sf http://localhost:8002/openapi.json -o openapi-current.json && break
-            if ! kill -0 "$UVICORN_PID" 2>/dev/null; then
-              echo "::error::uvicorn exited before becoming ready"; cat uvicorn.log; exit 1
-            fi
-            echo "waiting for backend to accept connections… ($i/30)"
-            sleep 2
-          done
-          if [ ! -s openapi-current.json ]; then
-            echo "::error::backend never served openapi.json"; cat uvicorn.log; exit 1
-          fi
+          "$GITHUB_WORKSPACE/.venv/bin/python" scripts/export_openapi.py > "$GITHUB_WORKSPACE/openapi-current.json"
+          test -s "$GITHUB_WORKSPACE/openapi-current.json"  # fail loud if empty
 
       - name: Upload OpenAPI spec
         uses: actions/upload-artifact@v4

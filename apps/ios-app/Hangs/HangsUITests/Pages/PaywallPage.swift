@@ -20,12 +20,17 @@ struct PaywallPage {
         app.buttons["paywall-restore-button"]
     }
 
-    /// Wait for the paywall to appear.
+    /// Offline variant retry button (shown when StoreKit unreachable, e.g. in simulator).
+    var offlineRetryButton: XCUIElement {
+        app.buttons["paywall-offline-retry-button"]
+    }
+
+    /// Wait for the paywall to appear — accepts either the normal (purchase) or
+    /// offline (retry) variant, since the simulator has no real StoreKit connectivity.
     func waitForPaywall(timeout: TimeInterval = 10) {
-        XCTAssertTrue(
-            purchaseButton.waitForExistence(timeout: timeout),
-            "PaywallPage: paywall-purchase-button not found within \(timeout)s"
-        )
+        let appeared = purchaseButton.waitForExistence(timeout: timeout / 2)
+            || offlineRetryButton.waitForExistence(timeout: timeout / 2)
+        XCTAssertTrue(appeared, "PaywallPage: neither paywall-purchase-button nor paywall-offline-retry-button found within \(timeout)s")
     }
 
     func tapClose() {

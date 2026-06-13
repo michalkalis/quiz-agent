@@ -2,6 +2,9 @@
   ▿ _storeManager: ObservedObject<StoreManager>
     - _seed: 0
     ▿ wrappedValue: StoreManager
+      ▿ _hasAttemptedProductLoad: Published<Bool>
+        ▿ storage: Storage
+          - value: true
       ▿ _isLoading: Published<Bool>
         ▿ storage: Storage
           - value: false

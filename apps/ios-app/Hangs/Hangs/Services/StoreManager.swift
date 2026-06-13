@@ -26,6 +26,7 @@ final class StoreManager: ObservableObject {
     @Published private(set) var product: PurchasableProduct?
     @Published private(set) var isPurchased: Bool = false
     @Published private(set) var isLoading: Bool = false
+    @Published private(set) var hasAttemptedProductLoad: Bool = false
     @Published var purchaseError: String?
 
     private let purchaseService: PurchaseService
@@ -34,7 +35,7 @@ final class StoreManager: ObservableObject {
     /// Default initializer — uses LivePurchaseService backed by real StoreKit.
     /// Preserves callsite compatibility: `StoreManager()` continues to work.
     init() {
-        self.purchaseService = LivePurchaseService()
+        purchaseService = LivePurchaseService()
         transactionListener = nil
         transactionListener = listenForTransactions()
         Task { await loadProduct() }
@@ -59,6 +60,7 @@ final class StoreManager: ObservableObject {
     func loadProduct() async {
         let loaded = await purchaseService.loadProduct(id: StoreProduct.unlimited)
         product = loaded
+        hasAttemptedProductLoad = true
         if loaded == nil {
             Logger.quiz.error("❌ StoreManager: Product not found or unavailable")
         }

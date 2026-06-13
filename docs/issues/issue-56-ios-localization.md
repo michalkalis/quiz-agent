@@ -1,7 +1,7 @@
 # Issue #56 — iOS text localization (String Catalog)
 
-**Triage:** refactor · planned
-**Status:** Plan written 2026-06-12. Analysis done, no implementation yet. English is the source language; Slovak and other languages come later as pure translation work in the catalog.
+**Triage:** refactor · queued
+**Status:** Plan written 2026-06-12; atomized into 9 Ralph `- [ ]` tasks + 1 `- [HUMAN]` 2026-06-13 (see task list below). Queued for the next overnight run. English is the source language; Slovak and other languages come later as pure translation work in the catalog.
 
 ## Goal
 
@@ -35,6 +35,22 @@ Rejected alternatives: legacy `.strings`/`.stringsdict` (superseded, no plural e
 - **Intentionally locale-fixed code — do not touch**: `MCQTranscriptMatcher` and `LogEntry` use `en_US_POSIX` on purpose (ASCII matching, log timestamps).
 
 ## Tasks
+
+### Ralph atomic task list (run in order; full detail in §56.x below)
+
+Pick the **first unchecked `- [ ]`** each iteration. **Hard gate at 56.2** — if the
+pilot test fails, append a `## BLOCKER` note and stop; do NOT proceed to mass extraction.
+Each task must end with a green build + its named tests before being checked off.
+
+- [ ] **56.1a** — Rewrite `AppErrorModel.swift` copy Slovak→English (14 title+description pairs); keep the Slovak in the appendix below. Verify `AppErrorModelTests` pass + app builds. (§56.1)
+- [ ] **56.1b** — Single-source the duplicated category/difficulty display names between `Config.swift` and `QuizSettings.swift` (the model is the owner). Build + tests green. (§56.1)
+- [ ] **56.2** — Add `Localizable.xcstrings` to the Hangs target; set `SWIFT_EMIT_LOC_STRINGS = YES` on the **app target only** (not test targets). Build → confirm compiler extraction populates the catalog. **PILOT GATE:** run `OnboardingViewInspectorTests` + one snapshot suite; if `find(text:)` breaks, append a `## BLOCKER` note and STOP — do not start 56.3. (§56.2)
+- [ ] **56.3a** — Convert `QuizViewModel` (+`+Recording`/`+Audio`) user-facing strings + `NetworkService.NetworkError.errorDescription` to `String(localized:comment:)`. Build + targeted tests green. (§56.3)
+- [ ] **56.3b** — Convert display-name computed properties to `String(localized:)`: categories/difficulties (post-56.1b), `AudioMode`, `Language`, `ListeningPill.Mode.copy`, `HangsResultKind.label`, plus `AppErrorModel` (post-56.1a English copy). Build + tests green. (§56.3)
+- [ ] **56.3c** — Convert accessibility labels/hints + interpolated/plural strings to `String(localized:)` with `comment:`; keep interpolation inside the string; add plural variants in the catalog editor; exclude debug-only UI via `Text(verbatim:)`. Build + tests green. (§56.3)
+- [ ] **56.4** — File-by-file sweep of `Views/**` + `Models|Services|ViewModels|Utilities` against the inventory; `Text(verbatim:)` for brand/raw/non-localizable; catalog hygiene (mark "Don't translate", add ambiguous-key comments); add the `String(localized:)` guardrail one-liner to `.claude/rules/ios.md`. (§56.4)
+- [ ] **56.5** — Full unit suite on mba (≈363 tests; expect only known pre-existing snapshot fails). Confirm the app still builds + runs in English. (§56.5)
+- [HUMAN] **56.6** — Pseudo-localization visual smoke (Xcode "Double-Length Pseudolanguage") across every screen; eyeball for missed literals. Visual — human-only.
 
 ### 56.1 Pre-work (no localization yet)
 - Rewrite `AppErrorModel.swift` copy Slovak → English (14 title+description pairs). The Slovak text becomes the first `sk` translation when that language lands — keep it in the issue file appendix below.

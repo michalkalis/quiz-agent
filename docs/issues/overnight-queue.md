@@ -42,17 +42,21 @@
 # QUEUE (priority order)
 # ====================================================================================
 #
-# 1 — iOS design-refresh sweep (#52). One autonomous loop: Phase 1/2 are machine-verifiable
-#     (tokens 52.1, fonts 52.2, components 52.3/52.4, flow logic 52.5–52.7); Phase 3 screens
-#     52.8–52.15 each carry a screenshot-verify acceptance (build → sim screenshot → compare to
-#     docs/design/frames/<frameId>.png → self-correct). 15 '- [ ]' tasks + slack. Only 52.16–52.18
-#     stay '- [HUMAN]' (SK copy / fidelity eyeball / snapshot baselines) and are skipped.
-#     NB: do NOT report #52 "done" off a green loop alone — the human fidelity pass (52.17) remains.
-docs/issues/issue-52-design-refresh-sweep.md | 18
+# 1 — iOS text localization (#56). String Catalog (Localizable.xcstrings) extraction + infra.
+#     9 atomic '- [ ]' tasks + 1 '- [HUMAN]' (see issue file task list). English source text as
+#     the key (keeps ViewInspector find(text:) assertions passing). HARD GATE at 56.2: a pilot
+#     test must confirm find(text:) still passes before mass extraction — if it fails the loop
+#     appends a BLOCKER and stops. 56.6 (pseudo-loc visual smoke) stays '- [HUMAN]', skipped.
+#     NB: touches project.pbxproj (add catalog file + SWIFT_EMIT_LOC_STRINGS) — review the diff
+#     carefully before merge.
+docs/issues/issue-56-ios-localization.md | 12
 #
 # ====================================================================================
-# DONE — landed on main via the 1453 merge (be83537); removed so the loop won't re-run them
+# DONE — landed on main; removed so the loop won't re-run them
 # ====================================================================================
+# #52  iOS design-refresh sweep — Ralph loop COMPLETE 2026-06-13 (merge bf4e023, final task
+#      52.15 Paywall redesign). Human tail 52.16–52.18 (SK copy / fidelity eyeball / snapshot
+#      baselines) stays open in the issue but is NOT Ralph-runnable. Earlier tasks via prior merges.
 # #44  Screenshot-verify step — all subtasks shipped (regression skill wired, VISUAL verdict).
 # #45  iOS MCQ voice + redesign — agent tail 45.8/45.9/45.10/45.12 done; human tail 45.7/45.11/45.13
 #      deferred into #52's 52.17. No '- [ ]' left for Ralph.

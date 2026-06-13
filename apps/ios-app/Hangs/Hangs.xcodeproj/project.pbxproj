@@ -360,6 +360,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 54C27E2EE7BDAB9DCD450988 /* Debug-Local.xcconfig */;
 			buildSettings = {
+				SWIFT_EMIT_LOC_STRINGS = YES;
 			};
 			name = "Debug-Local";
 		};
@@ -367,6 +368,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 99F10802595E52306DAB3E3B /* Release-Local.xcconfig */;
 			buildSettings = {
+				SWIFT_EMIT_LOC_STRINGS = YES;
 			};
 			name = "Release-Local";
 		};
@@ -374,6 +376,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = BAF2281C5C2F3DD7FFBC7D79 /* Debug-Prod.xcconfig */;
 			buildSettings = {
+				SWIFT_EMIT_LOC_STRINGS = YES;
 			};
 			name = "Debug-Prod";
 		};
@@ -381,6 +384,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = D90E51253B87EF7A09FAB916 /* Release-Prod.xcconfig */;
 			buildSettings = {
+				SWIFT_EMIT_LOC_STRINGS = YES;
 			};
 			name = "Release-Prod";
 		};

@@ -31,7 +31,7 @@ struct PrimaryButton: View {
                 Text(title)
             }
         }
-        .accessibilityLabel(isLoading ? "Loading" : title)
+        .accessibilityLabel(isLoading ? String(localized: "Loading", comment: "Button loading state") : title)
         .buttonStyle(.primary)
         .disabled(isLoading)
     }

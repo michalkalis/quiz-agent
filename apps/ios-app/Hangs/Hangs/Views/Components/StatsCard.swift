@@ -37,7 +37,7 @@ struct StatsCard: View {
                 .stroke(Theme.Gradients.cardBorder(), lineWidth: 2)
         )
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(label): \(value)")
+        .accessibilityLabel(String(localized: "\(label): \(value)", comment: "Stats card; label is the stat name (e.g. Accuracy), value is the formatted stat"))
     }
 }
 

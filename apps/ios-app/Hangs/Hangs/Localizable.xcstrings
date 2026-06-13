@@ -1,7 +1,29 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-
+    "Confirm answer, auto-confirming in %lld seconds" : {
+      "comment" : "Confirm button during auto-confirm countdown; count is seconds remaining",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Confirm answer, auto-confirming in %lld second"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Confirm answer, auto-confirming in %lld seconds"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
   },
   "version" : "1.0"
 }

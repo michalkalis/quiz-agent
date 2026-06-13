@@ -135,7 +135,7 @@ struct QuestionView: View {
                 .stroke(Theme.Hangs.Colors.pink.opacity(0.35), lineWidth: 1)
         )
         .padding(.horizontal, 24)
-        .accessibilityLabel("Error: \(error)")
+        .accessibilityLabel(String(localized: "Error: \(error)", comment: "Error banner in quiz question view; value is the error message"))
         .accessibilityIdentifier("question.errorBanner")
     }
 

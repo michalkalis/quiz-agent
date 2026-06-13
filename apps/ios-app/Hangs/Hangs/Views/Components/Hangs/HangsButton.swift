@@ -44,7 +44,7 @@ struct HangsPrimaryButton: View {
             .hangsShadow(isDestructive ? Theme.Hangs.Shadow.ctaStrong : Theme.Hangs.Shadow.cta)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(isLoading ? "Loading" : title)
+        .accessibilityLabel(isLoading ? String(localized: "Loading", comment: "Button loading state") : title)
         .disabled(isLoading)
     }
 }
@@ -108,15 +108,15 @@ struct HangsGhostButton: View {
 }
 
 #if DEBUG
-#Preview {
-    VStack(spacing: 12) {
-        HangsPrimaryButton(title: "Start Quiz", icon: "play.fill") {}
-        HangsPrimaryButton(title: "Next question", trailingIcon: "arrow.right") {}
-        HangsSecondaryButton(title: "Home", icon: "house.fill") {}
-        HangsGhostButton(title: "Why is this correct?", icon: "book.closed") {}
+    #Preview {
+        VStack(spacing: 12) {
+            HangsPrimaryButton(title: "Start Quiz", icon: "play.fill") {}
+            HangsPrimaryButton(title: "Next question", trailingIcon: "arrow.right") {}
+            HangsSecondaryButton(title: "Home", icon: "house.fill") {}
+            HangsGhostButton(title: "Why is this correct?", icon: "book.closed") {}
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Theme.Hangs.Colors.bg)
     }
-    .padding(20)
-    .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .background(Theme.Hangs.Colors.bg)
-}
 #endif

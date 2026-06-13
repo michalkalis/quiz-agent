@@ -47,7 +47,7 @@ struct ProgressBarView: View {
             .frame(height: 8)
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(title): \(Int(progress * 100)) percent")
+        .accessibilityLabel(String(localized: "\(title): \(Int(progress * 100)) percent", comment: "Progress bar; title is the bar label, number is 0–100"))
     }
 }
 

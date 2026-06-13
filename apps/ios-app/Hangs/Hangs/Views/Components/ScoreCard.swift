@@ -31,7 +31,7 @@ struct ScoreCard: View {
                 .stroke(Theme.Gradients.cardBorder(), lineWidth: 2)
         )
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(label): \(formattedScore)")
+        .accessibilityLabel(String(localized: "\(label): \(formattedScore)", comment: "Score card; label is the score field name, formattedScore is e.g. '8 / 10'"))
     }
 
     private var formattedScore: String {

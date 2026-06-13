@@ -82,7 +82,7 @@ struct AnswerOption: View {
             }
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Option \(key.uppercased()): \(value)")
+        .accessibilityLabel(String(localized: "Option \(key.uppercased()): \(value)", comment: "MCQ answer option; key is letter A–D, value is the answer text"))
         .accessibilityIdentifier("mcq.option.\(key)")
     }
 

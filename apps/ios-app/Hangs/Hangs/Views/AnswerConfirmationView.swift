@@ -97,7 +97,7 @@ struct AnswerConfirmationView: View {
                         textColor: Theme.Hangs.Colors.ink,
                         minimumScaleFactor: 0.6
                     )
-                    .accessibilityLabel("Your transcribed answer: \(transcribedAnswer)")
+                    .accessibilityLabel(String(localized: "Your transcribed answer: \(transcribedAnswer)", comment: "The user's voice-transcribed answer text"))
                     .accessibilityIdentifier("confirmation.answer")
                 }
             }
@@ -126,8 +126,8 @@ struct AnswerConfirmationView: View {
                     onConfirm()
                 }
                 .accessibilityLabel(autoConfirmEnabled && autoConfirmCountdown > 0 && !isEditing
-                    ? "Confirm answer, auto-confirming in \(autoConfirmCountdown) seconds"
-                    : "Confirm answer")
+                    ? String(localized: "Confirm answer, auto-confirming in \(autoConfirmCountdown) seconds", comment: "Confirm button during auto-confirm countdown; count is seconds remaining")
+                    : String(localized: "Confirm answer", comment: "Confirm button accessibility label"))
                 .accessibilityIdentifier("confirmation.confirm")
             }
             .padding(.top, 14)
@@ -239,40 +239,40 @@ struct AnswerConfirmationView: View {
 }
 
 #if DEBUG
-#Preview("Transcript") {
-    AnswerConfirmationView(
-        isProcessing: false,
-        transcribedAnswer: .constant("Z mumíí."),
-        autoConfirmCountdown: 7,
-        autoConfirmEnabled: true,
-        autoConfirmTotal: 10,
-        onConfirm: {},
-        onReRecord: {}
-    )
-}
+    #Preview("Transcript") {
+        AnswerConfirmationView(
+            isProcessing: false,
+            transcribedAnswer: .constant("Z mumíí."),
+            autoConfirmCountdown: 7,
+            autoConfirmEnabled: true,
+            autoConfirmTotal: 10,
+            onConfirm: {},
+            onReRecord: {}
+        )
+    }
 
-#Preview("Transcript long") {
-    AnswerConfirmationView(
-        isProcessing: false,
-        transcribedAnswer: .constant("The capital of France is Paris and it has been so since the 10th century."),
-        autoConfirmCountdown: 3,
-        autoConfirmEnabled: true,
-        autoConfirmTotal: 10,
-        onConfirm: {},
-        onReRecord: {}
-    )
-}
+    #Preview("Transcript long") {
+        AnswerConfirmationView(
+            isProcessing: false,
+            transcribedAnswer: .constant("The capital of France is Paris and it has been so since the 10th century."),
+            autoConfirmCountdown: 3,
+            autoConfirmEnabled: true,
+            autoConfirmTotal: 10,
+            onConfirm: {},
+            onReRecord: {}
+        )
+    }
 
-#Preview("Processing") {
-    AnswerConfirmationView(
-        isProcessing: true,
-        transcribedAnswer: .constant(""),
-        autoConfirmCountdown: 0,
-        autoConfirmEnabled: true,
-        autoConfirmTotal: 10,
-        onConfirm: {},
-        onReRecord: {},
-        onCancel: {}
-    )
-}
+    #Preview("Processing") {
+        AnswerConfirmationView(
+            isProcessing: true,
+            transcribedAnswer: .constant(""),
+            autoConfirmCountdown: 0,
+            autoConfirmEnabled: true,
+            autoConfirmTotal: 10,
+            onConfirm: {},
+            onReRecord: {},
+            onCancel: {}
+        )
+    }
 #endif

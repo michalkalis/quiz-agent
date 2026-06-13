@@ -27,7 +27,7 @@ struct MinimizedQuizView: View {
                     .foregroundColor(Theme.Hangs.Colors.ink)
             }
             .accessibilityElement(children: .combine)
-            .accessibilityLabel("Quiz in progress. Question \(viewModel.questionsAnswered + 1) of \(viewModel.currentSession?.maxQuestions ?? 10). Score: \(String(format: "%.1f", viewModel.score))")
+            .accessibilityLabel(String(localized: "Quiz in progress. Question \(viewModel.questionsAnswered + 1) of \(viewModel.currentSession?.maxQuestions ?? 10). Score: \(String(format: "%.1f", viewModel.score))", comment: "Minimized quiz widget summary: current question index, total questions, current score"))
             .accessibilityHint("Tap to expand quiz")
 
             stateRow
@@ -149,12 +149,12 @@ struct MinimizedQuizView: View {
 }
 
 #if DEBUG
-#Preview {
-    VStack {
-        Spacer()
-        MinimizedQuizView(viewModel: QuizViewModel.preview)
-            .padding()
+    #Preview {
+        VStack {
+            Spacer()
+            MinimizedQuizView(viewModel: QuizViewModel.preview)
+                .padding()
+        }
+        .background(Theme.Hangs.Colors.bg)
     }
-    .background(Theme.Hangs.Colors.bg)
-}
 #endif

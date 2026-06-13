@@ -141,7 +141,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
     static let questionCountOptions = [5, 10, 15, 20]
 
     /// Valid difficulty options
-    static let difficultyOptions = ["easy", "medium", "hard", "random"]
+    nonisolated static let difficultyOptions = ["easy", "medium", "hard", "random"]
 
     /// Valid auto-advance delay options (seconds)
     static let autoAdvanceDelayOptions = [5, 8, 10, 15]
@@ -152,19 +152,18 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// Valid thinking time options (seconds, 0 = immediate recording)
     static let thinkingTimeOptions = [0, 15, 30, 45, 60, 90, 120]
 
-    /// Valid category options (nil means "All Categories"). Mirrors `Config.categoryOptions`.
-    static let categoryOptions: [String?] = [
+    /// Valid category IDs (nil = "All Categories"). `Config.categoryOptions` derives display names from these.
+    nonisolated static let categoryOptions: [String?] = [
         nil, "general", "adults", "kids",
         "wizarding-world", "superheroes", "disney",
-        "football", "sports-mix"
+        "football", "sports-mix",
     ]
 
-    /// Valid age-appropriate options (nil means no filter). Mirrors `Config.ageAppropriateOptions`.
-    static let ageAppropriateOptions: [String?] = [nil, "all", "8+", "12+", "16+"]
+    /// Valid age-appropriate filter IDs (nil = no filter). `Config.ageAppropriateOptions` derives display names from these.
+    nonisolated static let ageAppropriateOptions: [String?] = [nil, "all", "8+", "12+", "16+"]
 
-    /// Display name for category (handles nil case).
-    /// Lookup table mirrors `Config.categoryOptions` — keep them in sync.
-    func categoryDisplayName() -> String {
+    /// Display name for a given category ID. Single source of truth for category display strings.
+    nonisolated static func categoryDisplayName(for category: String?) -> String {
         switch category {
         case nil: return "All Categories"
         case "general": return "General"
@@ -179,8 +178,10 @@ struct QuizSettings: Codable, Equatable, Sendable {
         }
     }
 
-    /// Display name for the active age-appropriate filter.
-    func ageAppropriateDisplayName() -> String {
+    func categoryDisplayName() -> String { Self.categoryDisplayName(for: category) }
+
+    /// Display name for a given age-appropriate filter ID. Single source of truth.
+    nonisolated static func ageAppropriateDisplayName(for ageAppropriate: String?) -> String {
         switch ageAppropriate {
         case nil: return "Any age"
         case "all": return "Family-friendly"
@@ -191,25 +192,35 @@ struct QuizSettings: Codable, Equatable, Sendable {
         }
     }
 
-    /// Difficulty display name (capitalize first letter)
-    func difficultyDisplayName() -> String {
-        difficulty.prefix(1).uppercased() + difficulty.dropFirst()
+    func ageAppropriateDisplayName() -> String { Self.ageAppropriateDisplayName(for: ageAppropriate) }
+
+    /// Display name for a given difficulty ID. Single source of truth.
+    nonisolated static func difficultyDisplayName(for difficulty: String) -> String {
+        switch difficulty {
+        case "easy": return "Easy"
+        case "medium": return "Medium"
+        case "hard": return "Hard"
+        case "random": return "Random"
+        default: return difficulty.prefix(1).uppercased() + difficulty.dropFirst()
+        }
     }
+
+    func difficultyDisplayName() -> String { Self.difficultyDisplayName(for: difficulty) }
 }
 
 // MARK: - Preview Helpers
 
 #if DEBUG
-extension QuizSettings {
-    static let previewCustom = QuizSettings(
-        language: "sk",
-        audioMode: "media",
-        numberOfQuestions: 20,
-        category: "adults",
-        difficulty: "hard",
-        autoAdvanceDelay: 5,
-        answerTimeLimit: 45,
-        preferredInputDeviceId: nil
-    )
-}
+    extension QuizSettings {
+        static let previewCustom = QuizSettings(
+            language: "sk",
+            audioMode: "media",
+            numberOfQuestions: 20,
+            category: "adults",
+            difficulty: "hard",
+            autoAdvanceDelay: 5,
+            answerTimeLimit: 45,
+            preferredInputDeviceId: nil
+        )
+    }
 #endif

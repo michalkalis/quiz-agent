@@ -63,37 +63,22 @@ nonisolated enum Config {
     /// Available question count options for quiz settings
     static let questionCountOptions = [5, 10, 15, 20]
 
-    /// Available difficulty options for quiz settings
-    static let difficultyOptions = [
-        ("easy", "Easy"),
-        ("medium", "Medium"),
-        ("hard", "Hard"),
-        ("random", "Random")
-    ]
+    /// Available difficulty options for quiz settings. Display names derived from QuizSettings.
+    static let difficultyOptions: [(id: String, display: String)] = QuizSettings.difficultyOptions.map {
+        (id: $0, display: QuizSettings.difficultyDisplayName(for: $0))
+    }
 
-    /// Available category options for quiz settings (nil = All Categories)
-    /// Order: All → core → themed packs. Backend filters on whatever id is sent.
-    static let categoryOptions: [(id: String?, display: String)] = [
-        (nil, "All Categories"),
-        ("general", "General"),
-        ("adults", "Adults"),
-        ("kids", "Kids"),
-        ("wizarding-world", "Wizarding World"),
-        ("superheroes", "Superheroes"),
-        ("disney", "Disney"),
-        ("football", "Football"),
-        ("sports-mix", "Sports Mix")
-    ]
+    /// Available category options for quiz settings (nil = All Categories).
+    /// Order: All → core → themed packs. Display names derived from QuizSettings.
+    static let categoryOptions: [(id: String?, display: String)] = QuizSettings.categoryOptions.map {
+        (id: $0, display: QuizSettings.categoryDisplayName(for: $0))
+    }
 
-    /// Available age-appropriate filter options (nil = no filter / show all)
-    /// Values match `Question.age_appropriate` on the backend.
-    static let ageAppropriateOptions: [(id: String?, display: String)] = [
-        (nil, "Any age"),
-        ("all", "Family-friendly"),
-        ("8+", "8+"),
-        ("12+", "12+"),
-        ("16+", "16+")
-    ]
+    /// Available age-appropriate filter options (nil = no filter / show all).
+    /// Values match `Question.age_appropriate` on the backend. Display names derived from QuizSettings.
+    static let ageAppropriateOptions: [(id: String?, display: String)] = QuizSettings.ageAppropriateOptions.map {
+        (id: $0, display: QuizSettings.ageAppropriateDisplayName(for: $0))
+    }
 
     /// Available auto-advance delay options (in seconds)
     static let autoAdvanceDelayOptions = [5, 8, 10, 15]
@@ -164,15 +149,15 @@ nonisolated enum Config {
     /// Note: nonisolated needed to access from actors (NetworkService, etc.)
     nonisolated static let verboseLogging: Bool = {
         #if DEBUG
-        return true
+            return true
         #else
-        return false
+            return false
         #endif
     }()
 
     #if DEBUG
-    /// Simulate slow network for testing
-    static let simulateSlowNetwork = false
+        /// Simulate slow network for testing
+        static let simulateSlowNetwork = false
     #endif
 }
 
@@ -182,18 +167,18 @@ extension Config {
     /// Check if running in DEBUG mode
     static var isDebug: Bool {
         #if DEBUG
-        return true
+            return true
         #else
-        return false
+            return false
         #endif
     }
 
     /// Check if running on simulator
     static var isSimulator: Bool {
         #if targetEnvironment(simulator)
-        return true
+            return true
         #else
-        return false
+            return false
         #endif
     }
 }

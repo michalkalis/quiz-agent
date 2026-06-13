@@ -17,13 +17,9 @@ struct QuestionView: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var showEndQuizConfirmation = false
-    @State private var now = Date()
-    @State private var recordingStartedAt: Date?
     @State private var showTextInput = false
     @State private var textAnswer = ""
     @FocusState private var isTextFieldFocused: Bool
-
-    private let clockTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -51,10 +47,6 @@ struct QuestionView: View {
             }
         }
         .sensoryFeedback(.start, trigger: viewModel.quizState == .recording)
-        .onReceive(clockTimer) { _ in now = Date() }
-        .onChange(of: viewModel.quizState) { _, newState in
-            recordingStartedAt = (newState == .recording) ? Date() : nil
-        }
         .interactiveMinimize(
             isMinimized: $viewModel.isMinimized,
             canMinimize: viewModel.canMinimize
@@ -351,22 +343,6 @@ struct QuestionView: View {
     @ViewBuilder
     private var voiceCenterBlock: some View {
         VStack(spacing: 10) {
-            if isRecording {
-                // "● recording · 0:04" pill
-                HStack(spacing: 6) {
-                    Circle()
-                        .fill(Theme.Hangs.Colors.pink)
-                        .frame(width: 8, height: 8)
-                    Text("recording · \(recordingTimeString)")
-                        .font(.hangsMono(12, weight: .semibold))
-                        .foregroundColor(Theme.Hangs.Colors.pink)
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(Capsule().fill(Theme.Hangs.Colors.pinkSoft))
-                .accessibilityIdentifier("question.recordingPill")
-            }
-
             Image(systemName: "waveform")
                 .font(.system(size: 36, weight: .semibold))
                 .foregroundColor(Theme.Hangs.Colors.pink)
@@ -499,16 +475,6 @@ struct QuestionView: View {
     private var currentQuestionNumber: Int {
         let total = viewModel.currentSession?.maxQuestions ?? viewModel.settings.numberOfQuestions
         return min(viewModel.questionsAnswered + 1, max(total, 1))
-    }
-
-    private var recordingElapsed: Int {
-        guard let start = recordingStartedAt else { return 0 }
-        return max(0, Int(now.timeIntervalSince(start)))
-    }
-
-    private var recordingTimeString: String {
-        let s = recordingElapsed
-        return String(format: "%d:%02d", s / 60, s % 60)
     }
 
     private var quizStateName: String {

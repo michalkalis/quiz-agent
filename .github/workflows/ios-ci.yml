@@ -97,17 +97,16 @@ jobs:
           uv pip install -e apps/quiz-agent
           uv pip install -e packages/shared
 
-      - name: Start backend to generate OpenAPI spec
+      - name: Export OpenAPI spec
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY || 'sk-test-key' }}
         run: |
+          # Generate the schema directly from the app — no running server. Booting
+          # uvicorn hangs in CI (startup lifespan pre-generates TTS audio, needs
+          # ffmpeg + a real TTS provider). app.openapi() triggers no lifespan events.
           cd apps/quiz-agent
-          "$GITHUB_WORKSPACE/.venv/bin/uvicorn" app.main:app --host 0.0.0.0 --port 8002 &
-          sleep 5
-
-      - name: Download and archive OpenAPI spec
-        run: |
-          curl -f http://localhost:8002/openapi.json -o openapi-current.json
+          "$GITHUB_WORKSPACE/.venv/bin/python" scripts/export_openapi.py > "$GITHUB_WORKSPACE/openapi-current.json"
+          test -s "$GITHUB_WORKSPACE/openapi-current.json"  # fail loud if empty
 
       - name: Upload OpenAPI spec
         uses: actions/upload-artifact@v4

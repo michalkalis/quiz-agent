@@ -45,7 +45,7 @@ Pick the **first unchecked `- [ ]`** each iteration. **Hard gate at 56.2** — i
 pilot test fails, append a `## BLOCKER` note and stop; do NOT proceed to mass extraction.
 Each task must end with a green build + its named tests before being checked off.
 
-- [ ] **56.1a** — Rewrite `AppErrorModel.swift` copy Slovak→English (14 title+description pairs); keep the Slovak in the appendix below. Verify `AppErrorModelTests` pass + app builds. (§56.1)
+- [x] **56.1a** — Rewrite `AppErrorModel.swift` copy Slovak→English (14 title+description pairs); keep the Slovak in the appendix below. Verify `AppErrorModelTests` pass + app builds. (§56.1)
 - [ ] **56.1b** — Single-source the duplicated category/difficulty display names between `Config.swift` and `QuizSettings.swift` (the model is the owner). Build + tests green. (§56.1)
 - [ ] **56.2** — Add `Localizable.xcstrings` to the Hangs target; set `SWIFT_EMIT_LOC_STRINGS = YES` on the **app target only** (not test targets). Build → confirm compiler extraction populates the catalog. **PILOT GATE:** run `OnboardingViewInspectorTests` + one snapshot suite; if `find(text:)` breaks, append a `## BLOCKER` note and STOP — do not start 56.3. (§56.2)
 - [ ] **56.3a** — Convert `QuizViewModel` (+`+Recording`/`+Audio`) user-facing strings + `NetworkService.NetworkError.errorDescription` to `String(localized:comment:)`. Build + targeted tests green. (§56.3)

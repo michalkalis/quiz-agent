@@ -19,7 +19,7 @@ enum AppErrorRetryAction: Equatable, Sendable {
     case dismiss
 }
 
-/// Maps any thrown error to a localised (SK-first per D6) title + description + retry action.
+/// Maps any thrown error to a localised (English source; `sk` translation pending #56) title + description + retry action.
 struct AppErrorModel: Equatable, Sendable {
     let title: String
     let description: String
@@ -29,8 +29,8 @@ struct AppErrorModel: Equatable, Sendable {
     /// guard and fails identically, so the CTA is Go Home — the recovery path
     /// is Settings → "Reset question history" (#54 task 54.17).
     static let historyAtCapacity = AppErrorModel(
-        title: "História otázok je plná",
-        description: "Vymaž históriu otázok v Nastaveniach (Reset question history) a začni novú hru.",
+        title: "Question history is full",
+        description: "Clear your question history in Settings (Reset question history) and start a new game.",
         retryAction: .goHome
     )
 
@@ -40,8 +40,8 @@ struct AppErrorModel: Equatable, Sendable {
         // offer a soft dismiss instead (54.15; surfaced by the 54.5 path).
         if error is CancellationError || (error as? URLError)?.code == .cancelled {
             return AppErrorModel(
-                title: "Akcia bola zrušená",
-                description: "Odoslanie sa prerušilo. Skús odpovedať znova.",
+                title: "Submission interrupted",
+                description: "The submission was interrupted. Try answering again.",
                 retryAction: .dismiss
             )
         }
@@ -51,14 +51,14 @@ struct AppErrorModel: Equatable, Sendable {
             switch urlError.code {
             case .notConnectedToInternet, .networkConnectionLost:
                 return AppErrorModel(
-                    title: "Nie je internetové pripojenie",
-                    description: "Skontroluj Wi-Fi alebo mobilné dáta a skús to znova.",
+                    title: "No internet connection",
+                    description: "Check your Wi-Fi or mobile data and try again.",
                     retryAction: .retryOperation
                 )
             case .timedOut:
                 return AppErrorModel(
-                    title: "Čas vypršal",
-                    description: "Server odpovedal príliš pomaly. Skús to znova.",
+                    title: "Request timed out",
+                    description: "The server took too long to respond. Try again.",
                     retryAction: .retryOperation
                 )
             default:
@@ -71,38 +71,38 @@ struct AppErrorModel: Equatable, Sendable {
             switch networkError {
             case .dailyLimitReached:
                 return AppErrorModel(
-                    title: "Denný limit dosiahnutý",
-                    description: "Dnes si odpovedal na maximálny počet otázok. Vráť sa zajtra.",
+                    title: "Daily limit reached",
+                    description: "You've answered the maximum number of questions for today. Come back tomorrow.",
                     retryAction: .goHome
                 )
             case .sessionNotFound:
                 return AppErrorModel(
-                    title: "Relácia vypršala",
-                    description: "Táto kvízová relácia už nie je aktívna. Začni novú hru.",
+                    title: "Session expired",
+                    description: "This quiz session is no longer active. Start a new game.",
                     retryAction: .goHome
                 )
             case let .serverError(statusCode, _) where statusCode >= 500:
                 return AppErrorModel(
-                    title: "Chyba servera",
-                    description: "Niečo sa pokazilo na našej strane. Skús to znova.",
+                    title: "Server error",
+                    description: "Something went wrong on our end. Try again.",
                     retryAction: .retryOperation
                 )
             case let .serverError(statusCode, _) where statusCode == 429:
                 return AppErrorModel(
-                    title: "Príliš veľa požiadaviek",
-                    description: "Spomaľ trochu a skús to znova za chvíľu.",
+                    title: "Too many requests",
+                    description: "Slow down a bit and try again shortly.",
                     retryAction: .retryOperation
                 )
             case .decodingError, .invalidResponse:
                 return AppErrorModel(
-                    title: "Neočakávaná odpoveď",
-                    description: "Dostali sme neočakávané dáta. Skús to znova.",
+                    title: "Unexpected response",
+                    description: "We received unexpected data. Try again.",
                     retryAction: .retryOperation
                 )
             case .invalidURL:
                 return AppErrorModel(
-                    title: "Chyba konfigurácie",
-                    description: "Niečo sa pokazilo s nastaveniami aplikácie.",
+                    title: "Configuration error",
+                    description: "Something went wrong with the app settings.",
                     retryAction: .dismiss
                 )
             default:
@@ -120,26 +120,26 @@ struct AppErrorModel: Equatable, Sendable {
         switch context {
         case .initialization:
             return AppErrorModel(
-                title: "Kvíz sa nepodarilo spustiť",
-                description: "Skontroluj pripojenie a skús to znova.",
+                title: "Couldn't start quiz",
+                description: "Check your connection and try again.",
                 retryAction: .retryOperation
             )
         case .submission:
             return AppErrorModel(
-                title: "Odpoveď sa nepodarilo odoslať",
-                description: "Skús odoslať odpoveď znova.",
+                title: "Couldn't submit answer",
+                description: "Try submitting your answer again.",
                 retryAction: .retryOperation
             )
         case .recording:
             return AppErrorModel(
-                title: "Nahrávanie zlyhalo",
-                description: "Skús odpovedať znova.",
+                title: "Recording failed",
+                description: "Try answering again.",
                 retryAction: .retryOperation
             )
         case .general:
             return AppErrorModel(
-                title: "Niečo sa pokazilo",
-                description: "Skús to znova.",
+                title: "Something went wrong",
+                description: "Try again.",
                 retryAction: .retryOperation
             )
         }

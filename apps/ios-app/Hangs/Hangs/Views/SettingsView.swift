@@ -182,7 +182,7 @@ struct SettingsView: View {
     // MARK: - Building blocks
 
     private func groupSection<Content: View>(
-        label: String,
+        label: LocalizedStringKey,
         color: Color,
         @ViewBuilder content: () -> Content
     ) -> some View {

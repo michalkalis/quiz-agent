@@ -77,3 +77,7 @@ Background audio mode enabled. Microphone usage description required.
 ## Mock Implementations
 
 MockNetworkService, MockAudioService, MockPersistenceStore available for testing.
+
+## Localization
+
+User-facing strings in non-view code (ViewModels, Services, Models) → `String(localized: "…", comment: "…")`, never bare string literals. SwiftUI `Text("…")` and `LocalizedStringKey`-typed component parameters are extracted automatically by the compiler (`SWIFT_EMIT_LOC_STRINGS = YES`). Use `Text(verbatim:)` for brand names, raw API values, and developer-only strings (debug views). Do not localize `MCQTranscriptMatcher` or `LogEntry` (intentionally `en_US_POSIX`).

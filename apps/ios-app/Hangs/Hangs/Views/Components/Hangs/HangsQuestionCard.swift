@@ -40,11 +40,11 @@ struct HangsQuestionPrompt: View {
 /// Used on Result-Correct (YOUR ANSWER / THE QUESTION) and Result-Incorrect
 /// (YOU SAID / THE ANSWER).
 struct HangsAnswerComparisonCard: View {
-    let primaryLabel: String
+    let primaryLabel: LocalizedStringKey
     let primaryValue: String
     let primaryValueColor: Color
     let primaryBadge: HangsResultKind
-    let secondaryLabel: String
+    let secondaryLabel: LocalizedStringKey
     let secondaryValue: String
     let secondaryValueColor: Color
     let secondaryBadge: HangsResultKind?

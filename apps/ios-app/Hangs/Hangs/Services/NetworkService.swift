@@ -69,26 +69,26 @@ actor NetworkService: NetworkServiceProtocol {
 
     // MARK: - Sentry Breadcrumb Helpers (metadata only — no request/response bodies)
 
-    nonisolated private func breadcrumbRequest(method: String, endpoint: String) {
+    private nonisolated func breadcrumbRequest(method: String, endpoint: String) {
         let crumb = Breadcrumb(level: .info, category: "network.request")
         crumb.message = "\(method) \(endpoint)"
         crumb.data = ["method": method, "endpoint": endpoint]
         SentryBreadcrumb.add(crumb)
     }
 
-    nonisolated private func breadcrumbResponse(endpoint: String, status: Int, bytes: Int) {
-        let level: SentryLevel = (200...299).contains(status) ? .info : .warning
+    private nonisolated func breadcrumbResponse(endpoint: String, status: Int, bytes: Int) {
+        let level: SentryLevel = (200 ... 299).contains(status) ? .info : .warning
         let crumb = Breadcrumb(level: level, category: "network.response")
         crumb.message = "HTTP \(status) \(endpoint) (\(bytes)B)"
         crumb.data = ["status": status, "bytes": bytes, "endpoint": endpoint]
         SentryBreadcrumb.add(crumb)
     }
 
-    nonisolated private func logHTTPError(endpoint: String, status: Int) {
+    private nonisolated func logHTTPError(endpoint: String, status: Int) {
         // Response body is NOT included — may contain user-generated data.
         SentryLog.error("HTTP error", category: .network, attributes: [
             "status": status,
-            "endpoint": endpoint
+            "endpoint": endpoint,
         ])
     }
 
@@ -109,7 +109,7 @@ actor NetworkService: NetworkServiceProtocol {
             "max_questions": maxQuestions,
             "difficulty": difficulty,
             "mode": "single",
-            "language": language
+            "language": language,
         ]
 
         // Add category if specified
@@ -137,7 +137,8 @@ actor NetworkService: NetworkServiceProtocol {
         }
 
         guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
+              (200 ... 299).contains(httpResponse.statusCode)
+        else {
             if let httpResponse = response as? HTTPURLResponse {
                 logHTTPError(endpoint: endpointPath, status: httpResponse.statusCode)
             }
@@ -167,7 +168,7 @@ actor NetworkService: NetworkServiceProtocol {
 
         // Send excluded question IDs in request body
         let body: [String: Any] = [
-            "excluded_question_ids": excludedQuestionIds
+            "excluded_question_ids": excludedQuestionIds,
         ]
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
@@ -196,7 +197,7 @@ actor NetworkService: NetworkServiceProtocol {
             throw NetworkError.serverError(statusCode: 429, message: "Rate limited")
         }
 
-        guard (200...299).contains(httpResponse.statusCode) else {
+        guard (200 ... 299).contains(httpResponse.statusCode) else {
             let statusCode = httpResponse.statusCode
             Logger.network.error("❌ HTTP error: \(statusCode, privacy: .public)")
             if let responseString = String(data: data, encoding: .utf8) {
@@ -233,7 +234,7 @@ actor NetworkService: NetworkServiceProtocol {
 
         breadcrumbResponse(endpoint: endpointPath, status: httpResponse.statusCode, bytes: data.count)
 
-        guard (200...299).contains(httpResponse.statusCode) else {
+        guard (200 ... 299).contains(httpResponse.statusCode) else {
             let statusCode = httpResponse.statusCode
 
             Logger.network.error("❌ HTTP error: \(statusCode, privacy: .public)")
@@ -270,7 +271,8 @@ actor NetworkService: NetworkServiceProtocol {
         let (_, response) = try await session.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
+              (200 ... 299).contains(httpResponse.statusCode)
+        else {
             throw NetworkError.invalidResponse
         }
     }
@@ -290,7 +292,8 @@ actor NetworkService: NetworkServiceProtocol {
         let (_, response) = try await session.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
+              (200 ... 299).contains(httpResponse.statusCode)
+        else {
             throw NetworkError.invalidResponse
         }
     }
@@ -329,7 +332,7 @@ actor NetworkService: NetworkServiceProtocol {
 
         // Voice submission requires longer timeout due to:
         // 1. Audio upload, 2. Whisper transcription, 3. GPT-4 evaluation, 4. TTS generation
-        request.timeoutInterval = 120  // 2 minutes for AI processing
+        request.timeoutInterval = 120 // 2 minutes for AI processing
 
         // Build multipart form data
         var body = Data()
@@ -366,7 +369,7 @@ actor NetworkService: NetworkServiceProtocol {
             throw NetworkError.serverError(statusCode: 429, message: "Rate limited")
         }
 
-        guard (200...299).contains(httpResponse.statusCode) else {
+        guard (200 ... 299).contains(httpResponse.statusCode) else {
             let statusCode = httpResponse.statusCode
 
             Logger.network.error("❌ HTTP error: \(statusCode, privacy: .public)")
@@ -429,7 +432,7 @@ actor NetworkService: NetworkServiceProtocol {
             throw NetworkError.serverError(statusCode: 429, message: "Rate limited")
         }
 
-        guard (200...299).contains(httpResponse.statusCode) else {
+        guard (200 ... 299).contains(httpResponse.statusCode) else {
             logHTTPError(endpoint: endpointPath, status: httpResponse.statusCode)
             throw NetworkError.invalidResponse
         }
@@ -459,7 +462,7 @@ actor NetworkService: NetworkServiceProtocol {
         // Backend returns same URL for different questions, so we must bypass cache
         var request = URLRequest(url: url)
         request.cachePolicy = .reloadIgnoringLocalCacheData
-        request.timeoutInterval = 10  // Audio downloads should not block the quiz flow
+        request.timeoutInterval = 10 // Audio downloads should not block the quiz flow
 
         // Use withTaskCancellationHandler for proper cleanup
         return try await withTaskCancellationHandler {
@@ -480,8 +483,9 @@ actor NetworkService: NetworkServiceProtocol {
                         }
 
                         guard let httpResponse = response as? HTTPURLResponse,
-                              (200...299).contains(httpResponse.statusCode),
-                              let data = data else {
+                              (200 ... 299).contains(httpResponse.statusCode),
+                              let data = data
+                        else {
                             continuation.resume(throwing: NetworkError.invalidResponse)
                             return
                         }
@@ -489,7 +493,8 @@ actor NetworkService: NetworkServiceProtocol {
                         // Verify download integrity by checking Content-Length
                         if let expectedLength = httpResponse.value(forHTTPHeaderField: "Content-Length"),
                            let expectedBytes = Int64(expectedLength),
-                           expectedBytes > 0 {
+                           expectedBytes > 0
+                        {
                             let actualBytes = Int64(data.count)
 
                             if actualBytes != expectedBytes {
@@ -529,7 +534,8 @@ actor NetworkService: NetworkServiceProtocol {
         let (data, response) = try await session.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
+              (200 ... 299).contains(httpResponse.statusCode)
+        else {
             let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
             Logger.network.error("❌ ElevenLabs token request failed: HTTP \(statusCode, privacy: .public)")
             throw NetworkError.serverError(statusCode: statusCode, message: "Failed to get ElevenLabs token")
@@ -560,7 +566,8 @@ actor NetworkService: NetworkServiceProtocol {
         let (data, response) = try await session.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
+              (200 ... 299).contains(httpResponse.statusCode)
+        else {
             throw NetworkError.invalidResponse
         }
 
@@ -580,7 +587,8 @@ actor NetworkService: NetworkServiceProtocol {
         let (_, response) = try await session.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
+              (200 ... 299).contains(httpResponse.statusCode)
+        else {
             throw NetworkError.invalidResponse
         }
     }
@@ -603,14 +611,14 @@ actor NetworkService: NetworkServiceProtocol {
                 // Log detailed decoding error
                 if let decodingError = error as? DecodingError {
                     switch decodingError {
-                    case .keyNotFound(let key, let context):
+                    case let .keyNotFound(key, context):
                         Logger.network.error("🔍 Missing key: \(key.stringValue, privacy: .public) at path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "), privacy: .public)")
-                    case .typeMismatch(let type, let context):
+                    case let .typeMismatch(type, context):
                         Logger.network.error("🔍 Type mismatch for \(String(describing: type), privacy: .public) at path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "), privacy: .public)")
                         Logger.network.error("   Expected: \(String(describing: type), privacy: .public), context: \(context.debugDescription, privacy: .public)")
-                    case .valueNotFound(let type, let context):
+                    case let .valueNotFound(type, context):
                         Logger.network.error("🔍 Value not found for \(String(describing: type), privacy: .public) at path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "), privacy: .public)")
-                    case .dataCorrupted(let context):
+                    case let .dataCorrupted(context):
                         Logger.network.error("🔍 Data corrupted at path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "), privacy: .public)")
                         Logger.network.error("   Debug: \(context.debugDescription, privacy: .public)")
                     @unknown default:
@@ -626,12 +634,12 @@ actor NetworkService: NetworkServiceProtocol {
 // MARK: - Error Types
 
 /// Backend error response structure
-nonisolated private struct ErrorResponse: Decodable, Sendable {
+private nonisolated struct ErrorResponse: Decodable, Sendable {
     let detail: String
 }
 
 /// Backend 429 response wraps DailyLimitError in "detail" field
-nonisolated private struct DailyLimitErrorWrapper: Decodable, Sendable {
+private nonisolated struct DailyLimitErrorWrapper: Decodable, Sendable {
     let detail: DailyLimitError
 }
 
@@ -646,18 +654,17 @@ enum NetworkError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidResponse:
-            return "Invalid server response"
+            return String(localized: "Invalid server response", comment: "Error when the server returns an unexpected or invalid response")
         case .invalidURL:
-            return "Invalid URL"
-        case .decodingError(let error):
-            return "Failed to decode response: \(error.localizedDescription)"
-        case .serverError(_, let message):
-            return message
+            return String(localized: "Invalid URL", comment: "Error when an API URL is malformed")
+        case let .decodingError(error):
+            return String(localized: "Failed to decode response: \(error.localizedDescription)", comment: "Error when the server response cannot be parsed")
+        case let .serverError(_, message):
+            return message // Backend message — already in the user's content language
         case .dailyLimitReached:
-            return "Daily question limit reached"
+            return String(localized: "Daily question limit reached", comment: "Error when the user has hit their daily free question limit")
         case .sessionNotFound:
-            return "Session not found or already ended"
+            return String(localized: "Session not found or already ended", comment: "Error when a quiz session is no longer active on the backend")
         }
     }
 }
-

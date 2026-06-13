@@ -198,7 +198,7 @@ final class QuizViewModel: ObservableObject {
         if let device = audioService.currentInputDevice {
             return device.name
         }
-        return "Automatic"
+        return String(localized: "Automatic", comment: "Automatic audio input device selection")
     }
 
     /// Sheet presentation state for microphone picker
@@ -382,7 +382,7 @@ final class QuizViewModel: ObservableObject {
         // Check if question history is at capacity
         if persistenceStore.isAtCapacity {
             setError(
-                message: "Question history is full. Please reset your history in Settings to continue.",
+                message: String(localized: "Question history is full. Please reset your history in Settings to continue.", comment: "Error when question history has reached its maximum capacity"),
                 context: .initialization,
                 model: .historyAtCapacity
             )
@@ -462,7 +462,7 @@ final class QuizViewModel: ObservableObject {
                 audioService.deactivateSession()
             } else {
                 setError(
-                    message: "Failed to start quiz: \(error.localizedDescription)",
+                    message: String(localized: "Failed to start quiz: \(error.localizedDescription)", comment: "Error when quiz initialization fails"),
                     context: .initialization,
                     error: error
                 )
@@ -471,7 +471,7 @@ final class QuizViewModel: ObservableObject {
             Logger.quiz.error("❌ Error starting quiz: \(error, privacy: .public)")
         } catch {
             setError(
-                message: "Failed to start quiz: \(error.localizedDescription)",
+                message: String(localized: "Failed to start quiz: \(error.localizedDescription)", comment: "Error when quiz initialization fails"),
                 context: .initialization,
                 error: error
             )
@@ -604,7 +604,7 @@ final class QuizViewModel: ObservableObject {
     /// regardless of whether the evaluator checks by key or value.
     func submitMCQAnswer(key _: String, value: String) async {
         guard let sessionId = currentSession?.id else {
-            errorMessage = "No active session"
+            errorMessage = String(localized: "No active session", comment: "Error when submitting an answer without an active quiz session")
             return
         }
 
@@ -621,14 +621,14 @@ final class QuizViewModel: ObservableObject {
             )
             await handleQuizResponse(response)
         } catch {
-            handleError(error, context: .submission, fallbackMessage: "Failed to submit answer")
+            handleError(error, context: .submission, fallbackMessage: String(localized: "Failed to submit answer", comment: "Fallback error prefix when MCQ answer submission fails"))
         }
     }
 
     /// Resubmit an edited text answer
     func resubmitAnswer(_ newAnswer: String, suppressAudio: Bool = false) async {
         guard let sessionId = currentSession?.id else {
-            errorMessage = "No active session"
+            errorMessage = String(localized: "No active session", comment: "Error when submitting an answer without an active quiz session")
             return
         }
 
@@ -668,7 +668,7 @@ final class QuizViewModel: ObservableObject {
             await handleQuizResponse(response)
 
         } catch {
-            handleError(error, context: .submission, fallbackMessage: "Failed to resubmit answer")
+            handleError(error, context: .submission, fallbackMessage: String(localized: "Failed to resubmit answer", comment: "Fallback error prefix when a re-submitted text answer fails"))
 
             Logger.network.error("❌ Error resubmitting answer: \(error, privacy: .public)")
         }
@@ -698,7 +698,7 @@ final class QuizViewModel: ObservableObject {
 
             await handleQuizResponse(response)
         } catch {
-            handleError(error, context: .submission, fallbackMessage: "Failed to skip question")
+            handleError(error, context: .submission, fallbackMessage: String(localized: "Failed to skip question", comment: "Fallback error prefix when skipping a question fails"))
 
             Logger.quiz.error("❌ Error skipping question: \(error, privacy: .public)")
         }
@@ -719,7 +719,7 @@ final class QuizViewModel: ObservableObject {
 
             Logger.quiz.info("🎮 Quiz ended")
         } catch {
-            errorMessage = "Failed to end quiz: \(error.localizedDescription)"
+            errorMessage = String(localized: "Failed to end quiz: \(error.localizedDescription)", comment: "Error when ending the quiz session fails")
 
             Logger.quiz.error("❌ Error ending quiz: \(error, privacy: .public)")
         }
@@ -728,7 +728,7 @@ final class QuizViewModel: ObservableObject {
     /// Resume a saved session
     func resumeSession() async {
         guard persistenceStore.currentSessionId != nil else {
-            errorMessage = "No saved session found"
+            errorMessage = String(localized: "No saved session found", comment: "Error when trying to resume with no saved session")
             return
         }
 
@@ -831,7 +831,7 @@ final class QuizViewModel: ObservableObject {
         guard let evaluation = response.evaluation else {
             Logger.quiz.error("❌ No evaluation in response, cannot show result")
             setError(
-                message: "Could not evaluate your answer. Please try again.",
+                message: String(localized: "Could not evaluate your answer. Please try again.", comment: "Error shown when the server response doesn't include an evaluation"),
                 context: .submission
             )
             return
@@ -849,7 +849,7 @@ final class QuizViewModel: ObservableObject {
         // The associated value bundles question + evaluation together,
         // making it impossible to show stale/mismatched data
         guard let question = currentQuestion else {
-            setError(message: "No question to evaluate", context: .general)
+            setError(message: String(localized: "No question to evaluate", comment: "Internal error when no current question exists at evaluation time"), context: .general)
             return
         }
 

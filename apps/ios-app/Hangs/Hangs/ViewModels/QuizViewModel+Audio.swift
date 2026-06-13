@@ -11,7 +11,6 @@ import os
 // MARK: - Audio Playback & Silence Detection
 
 extension QuizViewModel {
-
     /// Start listening for silence events and barge-in during question playback.
     /// Safe to call multiple times (the service itself no-ops if already listening).
     func startSilenceDetectionListening() async {
@@ -71,7 +70,7 @@ extension QuizViewModel {
             await startSilenceDetectionListening()
             guard quizState == .askingQuestion else { return }
 
-            if settings.autoRecordEnabled && silenceDetectionService != nil && !isRerecording {
+            if settings.autoRecordEnabled, silenceDetectionService != nil, !isRerecording {
                 startThinkingTimeCountdown()
             } else {
                 startAnswerTimer()
@@ -97,7 +96,7 @@ extension QuizViewModel {
         // After TTS finishes (or was interrupted by barge-in), choose next path
         guard quizState == .askingQuestion else { return }
 
-        if settings.autoRecordEnabled && silenceDetectionService != nil && !isRerecording {
+        if settings.autoRecordEnabled, silenceDetectionService != nil, !isRerecording {
             // Auto-record path: thinking time countdown → auto-start recording
             startThinkingTimeCountdown()
         } else {
@@ -114,7 +113,7 @@ extension QuizViewModel {
             return duration
         } catch {
             Logger.audio.warning("⚠️ Failed to play feedback audio: \(error, privacy: .public)")
-            return 3.0  // Default fallback duration
+            return 3.0 // Default fallback duration
         }
     }
 
@@ -125,7 +124,7 @@ extension QuizViewModel {
             return duration
         } catch {
             Logger.audio.warning("⚠️ Failed to play base64 feedback audio: \(error, privacy: .public)")
-            return 3.0  // Default fallback duration
+            return 3.0 // Default fallback duration
         }
     }
 
@@ -151,7 +150,7 @@ extension QuizViewModel {
 
                 Logger.audio.info("🔄 Switched to \(newMode.name, privacy: .public)")
             } catch {
-                errorMessage = "Failed to switch audio mode: \(error.localizedDescription)"
+                errorMessage = String(localized: "Failed to switch audio mode: \(error.localizedDescription)", comment: "Error when switching between call and media audio modes")
 
                 Logger.audio.error("❌ Error switching audio mode: \(error, privacy: .public)")
             }
@@ -190,7 +189,7 @@ extension QuizViewModel {
 
             Logger.audio.info("🎤 Set preferred input device: \(device?.name ?? "Automatic", privacy: .public)")
         } catch {
-            errorMessage = "Failed to set audio device: \(error.localizedDescription)"
+            errorMessage = String(localized: "Failed to set audio device: \(error.localizedDescription)", comment: "Error when setting the preferred audio input device")
 
             Logger.audio.error("❌ Error setting preferred input device: \(error, privacy: .public)")
         }

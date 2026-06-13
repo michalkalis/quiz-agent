@@ -59,7 +59,7 @@ extension QuizViewModel {
             isAutoRecording = false
             speechDetectedDuringAutoRecord = false
             transition(to: .askingQuestion)
-            errorMessage = "Recording failed: \(error.localizedDescription)"
+            errorMessage = String(localized: "Recording failed: \(error.localizedDescription)", comment: "Error when audio recording fails to start")
 
             Logger.audio.error("❌ Recording failed to start: \(error, privacy: .public)")
         }
@@ -157,7 +157,7 @@ extension QuizViewModel {
                             self.audioService.stopStreamingRecording()
                             self.isAutoRecording = false
                             self.speechDetectedDuringAutoRecord = false
-                            self.errorMessage = "Connection lost. Tap Record to try again."
+                            self.errorMessage = String(localized: "Connection lost. Tap Record to try again.", comment: "Error message when the STT connection drops mid-recording")
                             self.transition(to: .askingQuestion)
                         }
                     }
@@ -280,7 +280,7 @@ extension QuizViewModel {
                 isStreamingSTT = false
                 audioService.stopStreamingRecording()
                 await sttService?.disconnect()
-                errorMessage = "Transcription failed: \(error.localizedDescription)"
+                errorMessage = String(localized: "Transcription failed: \(error.localizedDescription)", comment: "Error when STT transcription commit fails")
                 transition(to: .askingQuestion)
             }
         } else {
@@ -289,7 +289,7 @@ extension QuizViewModel {
                 let data = try await audioService.stopRecording()
                 await submitVoiceAnswer(audioData: data)
             } catch {
-                errorMessage = "Recording failed: \(error.localizedDescription)"
+                errorMessage = String(localized: "Recording failed: \(error.localizedDescription)", comment: "Error when stopping audio recording fails")
                 transition(to: .askingQuestion)
 
                 Logger.audio.error("❌ Recording stop failed: \(error, privacy: .public)")
@@ -300,7 +300,7 @@ extension QuizViewModel {
     /// Submit a voice answer with timeout and cancellation support
     func submitVoiceAnswer(audioData: Data) async {
         guard let sessionId = currentSession?.id else {
-            setError(message: "No active session", context: .general)
+            setError(message: String(localized: "No active session", comment: "Error when submitting a voice answer without an active session"), context: .general)
             return
         }
 
@@ -356,7 +356,7 @@ extension QuizViewModel {
             } catch is TimeoutError {
                 await MainActor.run {
                     self.setError(
-                        message: "Request timed out. Please try again.",
+                        message: String(localized: "Request timed out. Please try again.", comment: "Error when voice submission exceeds the 30-second timeout"),
                         context: .submission
                     )
                 }
@@ -386,7 +386,7 @@ extension QuizViewModel {
                 // Other network errors go to error screen
                 await MainActor.run {
                     self.setError(
-                        message: "Failed to submit answer: \(error.localizedDescription)",
+                        message: String(localized: "Failed to submit answer: \(error.localizedDescription)", comment: "Error when voice answer submission fails"),
                         context: .submission,
                         error: error
                     )
@@ -396,7 +396,7 @@ extension QuizViewModel {
             } catch {
                 await MainActor.run {
                     self.setError(
-                        message: "Failed to submit answer: \(error.localizedDescription)",
+                        message: String(localized: "Failed to submit answer: \(error.localizedDescription)", comment: "Error when voice answer submission fails"),
                         context: .submission,
                         error: error
                     )
@@ -586,11 +586,11 @@ extension QuizViewModel {
 
         switch consecutiveTranscriptionFailures {
         case 1:
-            errorMessage = "Sorry, I didn't catch that. Please try again."
+            errorMessage = String(localized: "Sorry, I didn't catch that. Please try again.", comment: "First transcription failure prompt asking user to retry")
             transition(to: .askingQuestion)
 
         case 2:
-            errorMessage = "Having trouble hearing you. Try speaking closer to the mic."
+            errorMessage = String(localized: "Having trouble hearing you. Try speaking closer to the mic.", comment: "Second transcription failure prompt suggesting mic positioning")
             transition(to: .askingQuestion)
 
         default:

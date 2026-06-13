@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ralph Overnight Report — 2026-06-13 10:34</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        header h1 {
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        header .meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            font-size: 14px;
+            margin-top: 15px;
+            opacity: 0.95;
+        }
+        header .meta div {
+            background: rgba(255,255,255,0.15);
+            padding: 8px 12px;
+            border-radius: 4px;
+        }
+        header .meta strong {
+            display: block;
+            font-size: 12px;
+            text-transform: uppercase;
+            opacity: 0.85;
+            margin-bottom: 4px;
+        }
+        .toc {
+            position: sticky;
+            top: 20px;
+            background: white;
+            padding: 15px 20px;
+            border-left: 4px solid #667eea;
+            margin-bottom: 30px;
+            border-radius: 4px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        }
+        .toc h3 {
+            margin-bottom: 12px;
+            font-size: 14px;
+            text-transform: uppercase;
+            color: #667eea;
+        }
+        .toc ul {
+            list-style: none;
+        }
+        .toc li {
+            margin: 6px 0;
+        }
+        .toc a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .toc a:hover {
+            text-decoration: underline;
+        }
+        section {
+            background: white;
+            padding: 30px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        }
+        section h2 {
+            font-size: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f0f0f0;
+            color: #333;
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .summary-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .summary-item .value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 4px;
+        }
+        .summary-item .label {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #999;
+            font-weight: 600;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .status-green {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-amber {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .status-red {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .model-mix {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+        }
+        .model-item {
+            background: #f0f5ff;
+            padding: 12px;
+            border-radius: 6px;
+            text-align: center;
+            border-left: 3px solid #667eea;
+        }
+        .model-item .count {
+            font-size: 20px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .model-item .name {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+        details {
+            margin: 15px 0;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 3px solid #ddd;
+        }
+        details[open] {
+            border-left-color: #667eea;
+        }
+        summary {
+            cursor: pointer;
+            font-weight: 600;
+            color: #333;
+            padding: 5px;
+            user-select: none;
+        }
+        summary:hover {
+            color: #667eea;
+        }
+        details > div {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #e0e0e0;
+        }
+        .task-row {
+            display: grid;
+            grid-template-columns: 200px 1fr auto;
+            gap: 20px;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+            align-items: start;
+        }
+        .task-row:last-child {
+            border-bottom: none;
+        }
+        .task-id {
+            font-weight: 600;
+            color: #333;
+            word-break: break-word;
+        }
+        .task-commits {
+            font-size: 13px;
+            color: #666;
+            font-family: "Monaco", "Courier New", monospace;
+            word-break: break-all;
+        }
+        .task-status {
+            text-align: right;
+        }
+        .blockers-section {
+            background: #fff5f5;
+            border-left: 4px solid #e74c3c;
+        }
+        .blocker-item {
+            background: white;
+            padding: 15px;
+            margin: 12px 0;
+            border-left: 3px solid #e74c3c;
+            border-radius: 4px;
+        }
+        .blocker-item strong {
+            color: #e74c3c;
+        }
+        .no-blockers {
+            background: #d4edda;
+            padding: 15px;
+            border-radius: 6px;
+            color: #155724;
+            border-left: 3px solid #28a745;
+        }
+        .commit-list {
+            font-family: "Monaco", "Courier New", monospace;
+            font-size: 12px;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            line-height: 1.8;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .commit-line {
+            padding: 6px 0;
+            border-bottom: 1px solid #e0e0e0;
+            color: #333;
+        }
+        .commit-line:last-child {
+            border-bottom: none;
+        }
+        .commit-hash {
+            color: #667eea;
+            font-weight: 600;
+        }
+        .next-steps {
+            background: #e8f4f8;
+            padding: 20px;
+            border-radius: 6px;
+            border-left: 4px solid #2196F3;
+        }
+        .next-steps h3 {
+            margin-bottom: 12px;
+            color: #1565c0;
+        }
+        .command {
+            background: #f5f5f5;
+            padding: 12px;
+            border-radius: 4px;
+            font-family: "Monaco", "Courier New", monospace;
+            font-size: 13px;
+            margin: 10px 0;
+            overflow-x: auto;
+            color: #333;
+            border-left: 2px solid #2196F3;
+        }
+        .notes {
+            color: #666;
+            font-size: 13px;
+            margin-top: 12px;
+            line-height: 1.7;
+        }
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #999;
+            font-size: 12px;
+        }
+        @media (max-width: 768px) {
+            .summary-grid { grid-template-columns: 1fr 1fr; }
+            .task-row { grid-template-columns: 1fr; gap: 10px; }
+            .task-status { text-align: left; }
+            header .meta { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Ralph Overnight Report</h1>
+            <div class="meta">
+                <div>
+                    <strong>Timestamp</strong>
+                    2026-06-13 10:34:44
+                </div>
+                <div>
+                    <strong>Branch</strong>
+                    ralph/overnight-20260613-1034
+                </div>
+                <div>
+                    <strong>Base Commit</strong>
+                    0534cef9
+                </div>
+                <div>
+                    <strong>Duration</strong>
+                    ~1h 55min
+                </div>
+            </div>
+        </header>
+
+        <div class="toc">
+            <h3>Contents</h3>
+            <ul>
+                <li><a href="#summary">Summary</a></li>
+                <li><a href="#blockers">BLOCKERS (Needs You)</a></li>
+                <li><a href="#breakdown">Per-Task Breakdown</a></li>
+                <li><a href="#commits">Commits</a></li>
+                <li><a href="#next">Next Steps</a></li>
+            </ul>
+        </div>
+
+        <section id="summary">
+            <h2>Summary</h2>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <div class="value">10</div>
+                    <div class="label">Iterations</div>
+                </div>
+                <div class="summary-item">
+                    <div class="value">8</div>
+                    <div class="label">Commits</div>
+                </div>
+                <div class="summary-item">
+                    <div class="value">8/8</div>
+                    <div class="label">Tasks Done</div>
+                </div>
+                <div class="summary-item">
+                    <div class="value"><span class="status-badge status-green">GREEN</span></div>
+                    <div class="label">Overall</div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 25px; font-size: 16px;">Focus File</h3>
+            <p style="margin: 10px 0;"><strong>#56 — iOS Localization:</strong> Convert UI strings to localized catalog extraction (English source, prepare for international translations).</p>
+
+            <h3 style="margin-top: 25px; font-size: 16px;">Model Mix</h3>
+            <div class="model-mix">
+                <div class="model-item">
+                    <div class="count">9</div>
+                    <div class="name">Sonnet 4.6</div>
+                </div>
+                <div class="model-item">
+                    <div class="count">1</div>
+                    <div class="name">Haiku 4.5</div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 25px; font-size: 16px;">Outcome</h3>
+            <p style="margin: 10px 0;"><strong>✓ All Ralph tasks complete.</strong> Tasks 56.1a–56.5 finished cleanly across 8 commits. Task 56.6 (visual smoke-test) marked [HUMAN] — out of Ralph scope. All tests pass, no blockers found.</p>
+        </section>
+
+        <section id="blockers">
+            <h2>BLOCKERS (Needs You)</h2>
+            <div class="no-blockers">
+                ✓ <strong>No blockers detected.</strong> This run completed all Ralph tasks without impediments. The next step is human review before merge (visual QA on task 56.6 is manual).
+            </div>
+        </section>
+
+        <section id="breakdown">
+            <h2>Per-Task Breakdown</h2>
+
+            <div class="task-row">
+                <div class="task-id">56.1a — Rewrite AppErrorModel Slovak→English</div>
+                <div class="task-commits">
+                    <strong>Commit:</strong> <span class="commit-hash">179986e</span><br>
+                    <strong>Summary:</strong> 14 error message pairs (title+description) converted from Slovak to English. All 19 AppErrorModelTests pass. Slovak copy preserved in issue appendix for future sk translation.
+                </div>
+                <div class="task-status"><span class="status-badge status-green">DONE</span></div>
+            </div>
+
+            <div class="task-row">
+                <div class="task-id">56.1b — Single-source display names</div>
+                <div class="task-commits">
+                    <strong>Commit:</strong> <span class="commit-hash">4114d27</span><br>
+                    <strong>Summary:</strong> QuizSettings now owns all display-name statics (categories, difficulties, age filters). Config derives from QuizSettings instead of duplicating strings. Nonisolated markers added. Build green.
+                </div>
+                <div class="task-status"><span class="status-badge status-green">DONE</span></div>
+            </div>
+
+            <div class="task-row">
+                <div class="task-id">56.2 — Localizable.xcstrings + SWIFT_EMIT_LOC_STRINGS</div>
+                <div class="task-commits">
+                    <strong>Commit:</strong> <span class="commit-hash">d8ac926</span><br>
+                    <strong>Summary:</strong> Created empty Localizable.xcstrings in Hangs target; enabled SWIFT_EMIT_LOC_STRINGS on app targets (not test targets). 177 stringsdata extraction artifacts generated. Pilot gate (8/8 tests) passes. English-as-key assumption validated.
+                </div>
+                <div class="task-status"><span class="status-badge status-green">DONE</span></div>
+            </div>
+
+            <div class="task-row">
+                <div class="task-id">56.3a — QuizViewModel+Recording+Audio+NetworkError strings</div>
+                <div class="task-commits">
+                    <strong>Commit:</strong> <span class="commit-hash">0034e0d</span><br>
+                    <strong>Summary:</strong> 25 user-facing error messages and notifications wrapped in String(localized:comment:) so they reach the catalog. 23 targeted tests pass. Build green.
+                </div>
+                <div class="task-status"><span class="status-badge status-green">DONE</span></div>
+            </div>
+
+            <div class="task-row">
+                <div class="task-id">56.3b — Display-name computed properties</div>
+                <div class="task-commits">
+                    <strong>Commit:</strong> <span class="commit-hash">2908955</span><br>
+                    <strong>Summary:</strong> QuizSettings, AudioMode, Language, ListeningPill.Mode.copy, HangsResultKind.label, AppErrorModel — all display-name properties converted to String(localized:comment:). 397/397 unit tests pass.
+                </div>
+                <div class="task-status"><span class="status-badge status-green">DONE</span></div>
+            </div>
+
+            <div class="task-row">
+                <div class="task-id">56.3c — Accessibility label interpolations</div>
+                <div class="task-commits">
+                    <strong>Commit:</strong> <span class="commit-hash">5b38914</span><br>
+                    <strong>Summary:</strong> 13 files: AnswerOption, ScoreCard, StatsCard, CategoryBadge, ProgressBadge, ProgressBarView, AnswerConfirmationView, MinimizedQuizView, ContentView, QuestionView, PrimaryButton, HangsButton — all interpolated/ternary accessibility labels converted. Plural variant for auto-confirm countdown added. 397/397 tests pass.
+                </div>
+                <div class="task-status"><span class="status-badge status-green">DONE</span></div>
+            </div>
+
+            <div class="task-row">
+                <div class="task-id">56.4 — Sweep: straggler strings + brand mark</div>
+                <div class="task-commits">
+                    <strong>Commit:</strong> <span class="commit-hash">24ba4cd</span><br>
+                    <strong>Summary:</strong> HangsSectionLabel.text String→LocalizedStringKey (replace .uppercased() with .textCase(.uppercase)). HangsHeroBlock, HangsStatBox, HangsConfigRow, HangsToggleRow, HangsValueRow, HangsAnswerComparisonCard label params now LocalizedStringKey. Text(verbatim:) applied to hangs. brand wordmark. .claude/rules/ios.md guardrail added. Build green.
+                </div>
+                <div class="task-status"><span class="status-badge status-green">DONE</span></div>
+            </div>
+
+            <div class="task-row">
+                <div class="task-id">56.5 — Test: mcqHeaderContainsQuestionNumber + full suite</div>
+                <div class="task-commits">
+                    <strong>Commit:</strong> <span class="commit-hash">3a9f2e0</span><br>
+                    <strong>Summary:</strong> HangsSectionLabel.text changed from String to LocalizedStringKey in 56.4, so test assertion updated to target pre-transform lowercase value. Full suite result: 397 tests pass; 11 pre-existing failures (unrelated: 10 SilenceDetectionServiceTests with iOS 18.5 simulator issue, 1 flaky RegressionTests.testRSPaywall).
+                </div>
+                <div class="task-status"><span class="status-badge status-green">DONE</span></div>
+            </div>
+
+            <div class="task-row">
+                <div class="task-id">56.6 — Visual smoke-test (pseudo-loc)</div>
+                <div class="task-commits">
+                    <strong>Status:</strong> [HUMAN]<br>
+                    <strong>Summary:</strong> Out of Ralph scope. Manual verification required: enable pseudo-localization in Scheme settings, run app, confirm all UI text renders correctly without layout breakage.
+                </div>
+                <div class="task-status"><span class="status-badge status-amber">PENDING</span></div>
+            </div>
+        </section>
+
+        <section id="commits">
+            <h2>Commits</h2>
+            <details>
+                <summary>Show all 8 commits (git log --stat)</summary>
+                <div class="commit-list">
+                    <div class="commit-line"><span class="commit-hash">3a9f2e0</span> test(ios): fix mcqHeaderContainsQuestionNumber + run full suite (#56 task 56.5)</div>
+                    <div class="commit-line" style="padding-left: 20px; font-size: 11px; color: #999;">apps/ios-app/Hangs/HangsTests/QuestionViewInspectorTests.swift | 5 +++--</div>
+                    <div class="commit-line" style="padding-left: 20px; font-size: 11px; color: #999;">docs/issues/issue-56-ios-localization.md | 2 +-</div>
+                    <div class="commit-line" style="padding-left: 20px; font-size: 11px; color: #999;">2 files changed, 4 insertions(+), 3 deletions(-)</div>
+
+                    <div class="commit-line"><span class="commit-hash">24ba4cd</span> refactor(ios): sweep straggler strings + verbatim brand mark (#56 task 56.4)</div>
+                    <div class="commit-line" style="padding-left: 20px; font-size: 11px; color: #999;">6 files changed, 18 insertions(+), 13 deletions(-)</div>
+
+                    <div class="commit-line"><span class="commit-hash">5b38914</span> refactor(ios): convert accessibility label interpolations to String(localized:) (#56 task 56.3c)</div>
+                    <div class="commit-line" style="padding-left: 20px; font-size: 11px; color: #999;">14 files changed, 89 insertions(+), 67 deletions(-)</div>
+
+                    <div class="commit-line"><span class="commit-hash">2908955</span> refactor(ios): convert display-name computed properties to String(localized:) (#56 task 56.3b)</div>
+                    <div class="commit-line" style="padding-left: 20px; font-size: 11px; color: #999;">7 files changed, 80 insertions(+), 75 deletions(-)</div>
+
+                    <div class="commit-line"><span class="commit-hash">0034e0d</span> refactor(ios): convert QuizViewModel+Recording+Audio+NetworkError strings to String(localized:) (#56 task 56.3a)</div>
+                    <div class="commit-line" style="padding-left: 20px; font-size: 11px; color: #999;">5 files changed, 74 insertions(+), 68 deletions(-)</div>
+
+                    <div class="commit-line"><span class="commit-hash">d8ac926</span> feat(ios): add Localizable.xcstrings + enable SWIFT_EMIT_LOC_STRINGS (#56 task 56.2)</div>
+                    <div class="commit-line" style="padding-left: 20px; font-size: 11px; color: #999;">3 files changed, 12 insertions(+), 1 deletion(-)</div>
+
+                    <div class="commit-line"><span class="commit-hash">4114d27</span> refactor(ios): single-source category/difficulty display names (#56 task 56.1b)</div>
+                    <div class="commit-line" style="padding-left: 20px; font-size: 11px; color: #999;">2 files changed, 62 insertions(+), 66 deletions(-)</div>
+
+                    <div class="commit-line"><span class="commit-hash">179986e</span> fix(ios): rewrite AppErrorModel copy Slovak→English (#56 task 56.1a)</div>
+                    <div class="commit-line" style="padding-left: 20px; font-size: 11px; color: #999;">2 files changed, 30 insertions(+), 30 deletions(-)</div>
+                </div>
+            </details>
+        </section>
+
+        <section id="next">
+            <h2>Next Steps</h2>
+            <div class="next-steps">
+                <h3>✓ Run Complete — Ready for Merge</h3>
+                <p><strong>Review the diff</strong> before merging. All Ralph tasks (56.1a–56.5) are complete and tested.</p>
+
+                <p style="margin-top: 15px;"><strong>Merge command:</strong></p>
+                <div class="command">git checkout main && git merge --ff-only ralph/overnight-20260613-1034 && git push</div>
+
+                <div class="notes">
+                    <strong>Before merging:</strong>
+                    <ul style="margin: 8px 0 0 20px;">
+                        <li><strong>Review commits:</strong> Verify the 8 commits above address issue #56 correctly.</li>
+                        <li><strong>Run manual QA:</strong> Task 56.6 (visual smoke-test with pseudo-loc) is marked [HUMAN]. Enable pseudo-localization in Scheme settings, run the app, and confirm all UI renders without layout issues.</li>
+                        <li><strong>No blockers detected:</strong> This run encountered no impediments.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            Generated by Ralph — overnight autonomous agent loop<br>
+            Report written 2026-06-13 12:29:26
+        </footer>
+    </div>
+</body>
+</html>

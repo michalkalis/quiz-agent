@@ -40,11 +40,6 @@ struct QuestionView: View {
                     Spacer()
                 }
             }
-
-            if let error = viewModel.errorMessage {
-                errorBanner(error)
-                    .padding(.top, 80)
-            }
         }
         .sensoryFeedback(.start, trigger: viewModel.quizState == .recording)
         .interactiveMinimize(
@@ -91,6 +86,9 @@ struct QuestionView: View {
                 counterAccent: isRecording ? Theme.Hangs.Colors.pink : Theme.Hangs.Colors.muted
             )
             HangsProgressBar(progress: progressValue)
+            if let error = viewModel.errorMessage {
+                errorBanner(error)
+            }
             supportRow
         }
     }
@@ -114,17 +112,17 @@ struct QuestionView: View {
             Image(systemName: "exclamationmark.triangle.fill")
             Text(error).font(.hangsBody(13))
         }
-        .foregroundColor(Theme.Hangs.Colors.pink)
+        .foregroundColor(Theme.Hangs.Colors.error)
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(Theme.Hangs.Colors.pinkSoft)
+                .fill(Theme.Hangs.Colors.bgCard)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .stroke(Theme.Hangs.Colors.pink.opacity(0.35), lineWidth: 1)
+                .stroke(Theme.Hangs.Colors.error.opacity(0.35), lineWidth: 1)
         )
         .padding(.horizontal, 24)
         .accessibilityLabel("Error: \(error)")

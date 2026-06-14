@@ -85,12 +85,26 @@ final class AppState: ObservableObject {
 
     /// Create a new QuizViewModel with injected dependencies
     func makeQuizViewModel() -> QuizViewModel {
-        QuizViewModel(
+        let viewModel = QuizViewModel(
             networkService: networkService,
             audioService: audioService,
             persistenceStore: persistenceStore,
             silenceDetectionService: silenceDetectionService,
             sttService: sttService
         )
+
+        #if DEBUG
+        // `--ui-test-error`: land directly on a voice QuestionView with the
+        // recording-error banner shown, so the error state can be screenshot-
+        // verified without driving the full record→disconnect flow. Mirrors the
+        // "Connection lost" copy set by QuizViewModel+Recording on STT drop.
+        if CommandLine.arguments.contains("--ui-test-error") {
+            viewModel.currentQuestion = Question.preview
+            viewModel.quizState = .askingQuestion
+            viewModel.errorMessage = "Connection lost. Tap Record to try again."
+        }
+        #endif
+
+        return viewModel
     }
 }

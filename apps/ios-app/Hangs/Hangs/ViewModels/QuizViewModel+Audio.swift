@@ -106,6 +106,31 @@ extension QuizViewModel {
         }
     }
 
+    /// Replay the current question's TTS on demand WITHOUT re-arming the
+    /// think/answer countdown or auto-record (Decision 2 of the voice-answer
+    /// screen fix). Unlike `playQuestionAudio(from:)`, this plays audio only —
+    /// it never calls `startThinkingTimeCountdown()` / `startAnswerTimer()`, so
+    /// a running countdown is left untouched and no new one is armed. Harmless
+    /// no-op when muted (no audio to replay) or when no question URL is known.
+    func replayQuestionAudio() async {
+        guard !settings.isMuted, let urlString = currentQuestionAudioUrl else { return }
+
+        // Stop silence detection before TTS to avoid the AVAudioEngine + AVPlayer
+        // conflict (SpeechAnalyzer's RealtimeMessenger crashes if both run).
+        stopSilenceDetectionListening()
+
+        do {
+            let audioData = try await networkService.downloadAudio(from: urlString)
+            _ = try await audioService.playOpusAudio(audioData)
+        } catch {
+            Logger.audio.warning("⚠️ Failed to replay question audio: \(error, privacy: .public)")
+        }
+
+        // Restart silence detection (and barge-in) after TTS finishes — but
+        // deliberately NO timer re-arming, unlike playQuestionAudio's tail.
+        await startSilenceDetectionListening()
+    }
+
     /// Play feedback audio from URL, returning the playback duration
     func playFeedbackAudio(from urlString: String) async -> TimeInterval {
         do {

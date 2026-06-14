@@ -276,6 +276,26 @@ struct QuestionView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 24)
                             .accessibilityIdentifier("question.text")
+
+                        // Replay button — plays the question TTS again via a
+                        // timer-free audio path (Decision 2): always tappable,
+                        // never restarts the auto-record/think countdown.
+                        Button {
+                            Task { await viewModel.replayQuestionAudio() }
+                        } label: {
+                            HStack(spacing: 6) {
+                                Image(systemName: "play.fill")
+                                    .font(.system(size: 11, weight: .semibold))
+                                Text("replay question")
+                                    .font(.hangsBody(15, weight: .medium))
+                            }
+                            .foregroundColor(Theme.Hangs.Colors.blue)
+                        }
+                        .buttonStyle(.plain)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 24)
+                        .padding(.top, 14)
+                        .accessibilityIdentifier("question.replay")
                     }
                     .frame(minHeight: geo.size.height, alignment: .top)
                 }

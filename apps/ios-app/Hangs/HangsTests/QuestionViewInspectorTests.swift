@@ -130,34 +130,6 @@ struct QuestionViewVoiceInspectorTests {
         }
     }
 
-    @Test("Voice body shows 'Answer out loud' subtitle (design: f9csl)")
-    func voiceShowsSubtitle() async throws {
-        let vm = makeVoiceViewModel()
-        let view = QuestionView(viewModel: vm)
-        try await ViewHosting.host(view) {
-            let tree = try view.inspect()
-            #expect(throws: Never.self) {
-                try tree.find(text: "Answer out loud — I'm listening.")
-            }
-        }
-    }
-
-    @Test("Voice state indicator shows 'Ready' when not recording (design: f9csl center)")
-    func voiceStateIndicatorShowsReady() async throws {
-        let vm = makeVoiceViewModel()
-        let view = QuestionView(viewModel: vm)
-        try await ViewHosting.host(view) {
-            let tree = try view.inspect()
-            // voiceCenterBlock identifier wraps "Ready" text
-            #expect(throws: Never.self) {
-                try tree.find(viewWithAccessibilityIdentifier: "question.voiceStateIndicator")
-            }
-            #expect(throws: Never.self) {
-                try tree.find(text: "Ready")
-            }
-        }
-    }
-
     @Test("Voice body shows Record button in resting state (design: f9csl)")
     func voiceShowsRecordButton() async throws {
         let vm = makeVoiceViewModel()
@@ -182,15 +154,4 @@ struct QuestionViewVoiceInspectorTests {
         }
     }
 
-    @Test("Voice body hint text says Tap Record in resting state")
-    func voiceHintTextResting() async throws {
-        let vm = makeVoiceViewModel()
-        let view = QuestionView(viewModel: vm)
-        try await ViewHosting.host(view) {
-            let tree = try view.inspect()
-            #expect(throws: Never.self) {
-                try tree.find(text: "Tap Record and answer out loud")
-            }
-        }
-    }
 }

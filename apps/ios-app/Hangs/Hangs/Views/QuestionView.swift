@@ -249,9 +249,9 @@ struct QuestionView: View {
 
     private func voiceBody(question: Question) -> some View {
         VStack(spacing: 0) {
-            // Content above the action row scrolls when a long question would
-            // otherwise push Record/Skip off-screen (54.2); minHeight keeps the
-            // centered look for short questions.
+            // Scroll region holds only category + question, so a long Slovak
+            // question can scroll without pushing the pinned controls off-screen
+            // (54.2). minHeight keeps short questions top-aligned, not centered.
             GeometryReader { geo in
                 ScrollView(.vertical, showsIndicators: false) {
                     VStack(spacing: 0) {
@@ -276,56 +276,32 @@ struct QuestionView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 24)
                             .accessibilityIdentifier("question.text")
-
-                        // Subtitle
-                        Text("Answer out loud — I'm listening.")
-                            .font(.hangsBody(15))
-                            .foregroundColor(Theme.Hangs.Colors.muted)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal, 24)
-                            .padding(.top, 8)
-
-                        Spacer(minLength: 24)
-
-                        // Centered voice state indicator
-                        voiceCenterBlock
-
-                        Spacer(minLength: 24)
-
-                        // Live transcript (recording + STT streaming)
-                        if isRecording && viewModel.isStreamingSTT {
-                            transcriptCard
-                                .padding(.bottom, 8)
-                        }
-
-                        // Context hint
-                        Text(isRecording
-                            ? "When you finish, your answer sends itself"
-                            : "Tap Record and answer out loud")
-                            .font(.hangsBody(13))
-                            .foregroundColor(Theme.Hangs.Colors.muted)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, 24)
-                            .padding(.bottom, 12)
-
-                        // Typed-answer fallback — onboarding promises a keyboard
-                        // path for mic-denied users (#54 task 54.18; removed by 52.10).
-                        if showTextInput {
-                            textInputRow
-                                .padding(.bottom, 12)
-                        } else {
-                            textInputToggle
-                                .padding(.bottom, 12)
-                        }
                     }
-                    .frame(minHeight: geo.size.height)
+                    .frame(minHeight: geo.size.height, alignment: .top)
                 }
             }
 
-            // Record/Stop | Skip buttons — pinned below the scroll region
-            voiceActionRow
-                .padding(.horizontal, 24)
-                .padding(.bottom, 28)
+            // Pinned controls below the scroll region — transcript (recording
+            // only), typed-answer fallback, then the Record/Skip action row.
+            VStack(spacing: 12) {
+                // Live transcript (recording + STT streaming) — static, pinned
+                // directly above the buttons so it never scrolls away.
+                if isRecording && viewModel.isStreamingSTT {
+                    transcriptCard
+                }
+
+                // Typed-answer fallback — onboarding promises a keyboard path
+                // for mic-denied users (#54 task 54.18).
+                if showTextInput {
+                    textInputRow
+                } else {
+                    textInputToggle
+                }
+
+                voiceActionRow
+                    .padding(.horizontal, 24)
+            }
+            .padding(.bottom, 28)
 
             #if DEBUG
                 Text(quizStateName)
@@ -334,23 +310,6 @@ struct QuestionView: View {
             #endif
         }
         .frame(maxHeight: .infinity)
-    }
-
-    // MARK: - Voice state indicator (center of voice body)
-
-    @ViewBuilder
-    private var voiceCenterBlock: some View {
-        VStack(spacing: 10) {
-            Image(systemName: "waveform")
-                .font(.system(size: 36, weight: .semibold))
-                .foregroundColor(Theme.Hangs.Colors.pink)
-                .accessibilityHidden(true)
-
-            Text(isRecording ? "I hear you..." : "Ready")
-                .font(.hangsBody(17))
-                .foregroundColor(Theme.Hangs.Colors.muted)
-        }
-        .accessibilityIdentifier("question.voiceStateIndicator")
     }
 
     // MARK: - Voice action row (Record/Stop | Skip)

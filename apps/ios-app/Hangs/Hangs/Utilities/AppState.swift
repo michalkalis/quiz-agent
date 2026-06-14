@@ -103,6 +103,20 @@ final class AppState: ObservableObject {
             viewModel.quizState = .askingQuestion
             viewModel.errorMessage = "Connection lost. Tap Record to try again."
         }
+        // `--ui-test-voice`: land on a voice QuestionView in the resting (Ready)
+        // state so the rewritten voiceBody layout can be screenshot-verified.
+        if CommandLine.arguments.contains("--ui-test-voice") {
+            viewModel.currentQuestion = Question.preview
+            viewModel.quizState = .askingQuestion
+        }
+        // `--ui-test-recording`: voice QuestionView mid-recording with a live
+        // transcript, to verify the transcript card pins above the action row.
+        if CommandLine.arguments.contains("--ui-test-recording") {
+            viewModel.currentQuestion = Question.preview
+            viewModel.quizState = .recording
+            viewModel.liveTranscript = "Paris is the capital of France"
+            viewModel.isStreamingSTT = true
+        }
         #endif
 
         return viewModel

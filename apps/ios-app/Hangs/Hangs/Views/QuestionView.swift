@@ -268,10 +268,9 @@ struct QuestionView: View {
 
                         // Question: Anton display, no left bar
                         Text(question.question)
-                            .font(.hangsDisplaySM)
-                            .tracking(-1)
+                            .font(.hangsDisplay(28))
                             .foregroundColor(Theme.Hangs.Colors.ink)
-                            .minimumScaleFactor(0.55)
+                            .minimumScaleFactor(0.7)
                             .fixedSize(horizontal: false, vertical: true)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 24)
@@ -395,6 +394,10 @@ struct QuestionView: View {
                     .font(.hangsBody(13, weight: .medium))
             }
             .foregroundColor(Theme.Hangs.Colors.muted)
+            .padding(.vertical, 10)
+            .padding(.horizontal, 18)
+            .background(Capsule().fill(Theme.Hangs.Colors.bgCard))
+            .overlay(Capsule().stroke(Theme.Hangs.Colors.hairline, lineWidth: 1))
         }
         .buttonStyle(.plain)
         .disabled(!canInteract)

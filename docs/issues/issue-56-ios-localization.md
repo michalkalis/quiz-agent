@@ -58,7 +58,7 @@ Each task must end with a green build + its named tests before being checked off
 
 - [x] **56.1a** — Rewrite `AppErrorModel.swift` copy Slovak→English (14 title+description pairs); Slovak preserved in appendix below. Updated 2 obsolete `contains("cancelled")` test guards → assert intentional copy. **Done 2026-06-15: 19/19 `AppErrorModelTests` pass, module builds.** (§56.1)
 - [x] **56.1b** — Single-source the duplicated **category** display names: `QuizSettings.categoryDisplayName()` now derives from `Config.categoryOptions` (**Config is the owner** per existing "mirrors Config" comments). Difficulty non-duplicated (dynamic) — no-op. Age-appropriate dup deferred to 56.4 (its method is unused). **Done 2026-06-15: module builds, no tests assert category labels.** (§56.1)
-- [ ] **56.2** — Add `Localizable.xcstrings` to the Hangs target. (`SWIFT_EMIT_LOC_STRINGS = YES` on the app target + `NO` on test targets is **already in place** — verify, don't re-do.) Build → confirm compiler extraction populates the catalog. **PILOT GATE:** run `OnboardingViewInspectorTests` + one snapshot suite; if `find(text:)` breaks, append a `## BLOCKER` note and STOP — do not start 56.3. (§56.2)
+- [x] **56.2** — Added empty `Localizable.xcstrings` at `Hangs/Hangs/Localizable.xcstrings`. Project uses **synchronized file groups** (objectVersion 77) → file auto-joins the Hangs target, no pbxproj edit. Build flags already in place. **PILOT GATE PASSED 2026-06-15:** `OnboardingViewStructureTests` (11 `find(text:)`) + `OnboardingPageIndicatorColorTests` + `HomeViewSnapshotTests` all green with the catalog present → English-as-key holds. Build SUCCEEDED. (§56.2)
 - [ ] **56.3a** — Convert `QuizViewModel` (+`+Recording`/`+Audio`) user-facing strings + `NetworkService.NetworkError.errorDescription` to `String(localized:comment:)`. Build + targeted tests green. (§56.3)
 - [ ] **56.3b** — Convert display-name computed properties to `String(localized:)`: categories/difficulties (post-56.1b), `AudioMode`, `Language`, `ListeningPill.Mode.copy`, `HangsResultKind.label`, plus `AppErrorModel` (post-56.1a English copy). Build + tests green. (§56.3)
 - [ ] **56.3c** — Convert accessibility labels/hints + interpolated/plural strings to `String(localized:)` with `comment:`; keep interpolation inside the string; add plural variants in the catalog editor; exclude debug-only UI via `Text(verbatim:)`. Build + tests green. (§56.3)
@@ -71,11 +71,12 @@ Each task must end with a green build + its named tests before being checked off
 - Single-source the duplicated **category** display names: `QuizSettings.categoryDisplayName()` derives from `Config.categoryOptions` (Config owns it). Difficulty needs nothing. Age-appropriate deferred to 56.4.
 - Verify: `AppErrorModelTests` still pass — note two tests guard `!title.contains("cancelled")` (Slovak-era leak guard); drop that obsolete substring assertion since "Action cancelled" is now the intentional English title. App builds.
 
-### 56.2 Infrastructure + pilot
-- Add `Localizable.xcstrings` to the Hangs target.
-- `SWIFT_EMIT_LOC_STRINGS = YES` (app) / `NO` (test targets) is **already set** in `Shared.xcconfig` + pbxproj overrides — verify only.
-- Build → confirm compiler extraction populates the catalog from existing SwiftUI literals.
-- **Pilot gate**: run `OnboardingViewInspectorTests` + one snapshot suite to confirm the English-as-key assumption holds (find(text:) still passes). If it doesn't, stop and re-plan the test strategy before mass extraction.
+### 56.2 Infrastructure + pilot — DONE 2026-06-15
+
+- Added empty `Localizable.xcstrings` at `Hangs/Hangs/Localizable.xcstrings`. **No pbxproj edit needed** — the project uses Xcode 16 `PBXFileSystemSynchronizedRootGroup` (objectVersion 77), so any file dropped in `Hangs/` auto-joins the Hangs app target.
+- Build flags confirmed already set (`SWIFT_EMIT_LOC_STRINGS = YES` app / `NO` tests).
+- **Extraction caveat (important for 56.3+):** `xcodebuild` CLI does **not** write extracted strings back into the *source* `.xcstrings` (it stayed `strings: {}` after a clean build), even though the compiler emitted 307 `.stringsdata` files. The source-catalog write-back is an **Xcode IDE background task** — open the project in Xcode (or build there) to populate the visible catalog. The empty catalog is harmless: missing keys fall back to the literal, which is exactly the English-as-key behaviour. So adding plural/translation entries (56.3c) will need the catalog populated in the IDE first, or hand-authored `.xcstrings` entries.
+- **Pilot gate PASSED:** `OnboardingViewStructureTests` (5 tests, 11 `find(text:)`) + `OnboardingPageIndicatorColorTests` (2 tests) + `HomeViewSnapshotTests` (1) — all green with the catalog present. English-as-key assumption holds; safe to proceed to mass extraction. (Note: filename `OnboardingViewInspectorTests.swift` ≠ type names — the suites are `OnboardingViewStructureTests` / `OnboardingPageIndicatorColorTests`; use those in `-only-testing`.)
 
 ### 56.3 Non-view strings → `String(localized:)`
 Compiler extraction does not cover plain `String` contexts. Convert explicitly, with `comment:` for translator context:

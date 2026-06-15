@@ -21,7 +21,7 @@ struct HomeView: View {
                     navChipVisual(icon: "gearshape")
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Settings")
+                .accessibilityLabel(String(localized: "Settings", comment: "Accessibility label for the settings navigation button"))
                 .accessibilityIdentifier("home.moreSettings")
             }
 

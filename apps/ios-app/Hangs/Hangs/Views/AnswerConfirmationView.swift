@@ -66,7 +66,7 @@ struct AnswerConfirmationView: View {
                                 Circle().fill(Theme.Hangs.Colors.pinkSoft)
                             )
                     }
-                    .accessibilityLabel("Cancel editing")
+                    .accessibilityLabel(String(localized: "Cancel editing", comment: "Accessibility label for the cancel-editing button on the answer confirmation sheet"))
                     .accessibilityIdentifier("confirmation.editCancel")
                 } else {
                     Button {
@@ -80,7 +80,7 @@ struct AnswerConfirmationView: View {
                                 Circle().fill(Theme.Hangs.Colors.pinkSoft)
                             )
                     }
-                    .accessibilityLabel("Edit answer")
+                    .accessibilityLabel(String(localized: "Edit answer", comment: "Accessibility label for the edit-answer button on the answer confirmation sheet"))
                     .accessibilityIdentifier("confirmation.edit")
                 }
             }
@@ -97,7 +97,7 @@ struct AnswerConfirmationView: View {
                         textColor: Theme.Hangs.Colors.ink,
                         minimumScaleFactor: 0.6
                     )
-                    .accessibilityLabel("Your transcribed answer: \(transcribedAnswer)")
+                    .accessibilityLabel(String(localized: "Your transcribed answer: \(transcribedAnswer)", comment: "Accessibility label reading back the user's transcribed answer"))
                     .accessibilityIdentifier("confirmation.answer")
                 }
             }
@@ -126,8 +126,8 @@ struct AnswerConfirmationView: View {
                     onConfirm()
                 }
                 .accessibilityLabel(autoConfirmEnabled && autoConfirmCountdown > 0 && !isEditing
-                    ? "Confirm answer, auto-confirming in \(autoConfirmCountdown) seconds"
-                    : "Confirm answer")
+                    ? String(localized: "Confirm answer, auto-confirming in \(autoConfirmCountdown) seconds", comment: "Accessibility label for the confirm button while auto-confirm counts down")
+                    : String(localized: "Confirm answer", comment: "Accessibility label for the confirm-answer button"))
                 .accessibilityIdentifier("confirmation.confirm")
             }
             .padding(.top, 14)
@@ -180,7 +180,7 @@ struct AnswerConfirmationView: View {
     private var countdownBar: some View {
         VStack(spacing: 6) {
             HStack {
-                Text("Auto-confirming in \(autoConfirmCountdown)s")
+                Text(String(localized: "Auto-confirming in \(autoConfirmCountdown)s", comment: "Auto-confirm countdown label: seconds until the answer is confirmed"))
                     .font(.hangsMono(11, weight: .medium))
                     .tracking(1.5)
                     .foregroundColor(Theme.Hangs.Colors.muted)
@@ -221,7 +221,7 @@ struct AnswerConfirmationView: View {
                         .tracking(-1)
                         .foregroundColor(Theme.Hangs.Colors.ink)
                 }
-                .accessibilityLabel("Processing your answer")
+                .accessibilityLabel(String(localized: "Processing your answer", comment: "Accessibility label for the processing state on the answer confirmation sheet"))
             }
 
             Spacer(minLength: 0)
@@ -230,7 +230,7 @@ struct AnswerConfirmationView: View {
                 HangsSecondaryButton(title: "Cancel", icon: "xmark", height: 54) {
                     onCancel()
                 }
-                .accessibilityLabel("Cancel processing")
+                .accessibilityLabel(String(localized: "Cancel processing", comment: "Accessibility label for the cancel-processing button"))
                 .accessibilityIdentifier("confirmation.cancel")
             }
         }

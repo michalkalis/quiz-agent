@@ -59,14 +59,14 @@ struct CompletionView: View {
                     .foregroundColor(Theme.Hangs.Colors.ink)
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
-                Text("out of \(summary.totalQuestions)")
+                Text(String(localized: "out of \(summary.totalQuestions)", comment: "Final-score caption: total number of questions"))
                     .font(.hangsBody(13, weight: .medium))
                     .foregroundColor(Theme.Hangs.Colors.muted)
             }
             .frame(maxWidth: .infinity)
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Final score: \(summary.displayScore) out of \(summary.totalQuestions)")
+        .accessibilityLabel(String(localized: "Final score: \(summary.displayScore) out of \(summary.totalQuestions)", comment: "Accessibility label for the final-score card"))
         .accessibilityIdentifier("completion.score")
     }
 

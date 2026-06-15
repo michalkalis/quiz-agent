@@ -125,7 +125,7 @@ struct QuestionView: View {
                 .stroke(Theme.Hangs.Colors.error.opacity(0.35), lineWidth: 1)
         )
         .padding(.horizontal, 24)
-        .accessibilityLabel("Error: \(error)")
+        .accessibilityLabel(String(localized: "Error: \(error)", comment: "Accessibility label for the in-quiz error banner"))
         .accessibilityIdentifier("question.errorBanner")
     }
 
@@ -236,7 +236,7 @@ struct QuestionView: View {
     // "CATEGORY · QUESTION N" header for MCQ (frames b8zObz, WCaT6)
     private func mcqQuestionHeader(question: Question) -> some View {
         HangsSectionLabel(
-            text: "\(question.category) · QUESTION \(currentQuestionNumber)",
+            text: String(localized: "\(question.category) · QUESTION \(currentQuestionNumber)", comment: "MCQ header: question category and current question number"),
             color: Theme.Hangs.Colors.pink
         )
         .frame(maxWidth: .infinity, alignment: .leading)

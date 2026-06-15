@@ -122,7 +122,7 @@ struct ResultBadge: View {
 
     private var accessibilityResultLabel: String {
         if points > 0 {
-            return "\(titleText), \(String(format: "%.1f", points)) points"
+            return String(localized: "\(titleText), \(String(format: "%.1f", points)) points", comment: "Accessibility label for the result badge: result text and points earned")
         } else {
             return titleText
         }
@@ -130,9 +130,9 @@ struct ResultBadge: View {
 
     private var pointsText: String {
         if points > 0 {
-            return "+\(String(format: "%.1f", points)) pts"
+            return String(localized: "+\(String(format: "%.1f", points)) pts", comment: "Points earned shown on the result badge (abbreviated)")
         } else {
-            return "+0 pts"
+            return String(localized: "+0 pts", comment: "Zero points shown on the result badge (abbreviated)")
         }
     }
 }

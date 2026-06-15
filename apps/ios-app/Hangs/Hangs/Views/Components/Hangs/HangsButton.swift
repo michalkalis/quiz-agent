@@ -44,7 +44,7 @@ struct HangsPrimaryButton: View {
             .hangsShadow(isDestructive ? Theme.Hangs.Shadow.ctaStrong : Theme.Hangs.Shadow.cta)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(isLoading ? "Loading" : title)
+        .accessibilityLabel(isLoading ? String(localized: "Loading", comment: "Accessibility label for a button while in its loading state") : title)
         .disabled(isLoading)
     }
 }

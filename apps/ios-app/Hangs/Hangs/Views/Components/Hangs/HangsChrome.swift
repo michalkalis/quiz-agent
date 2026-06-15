@@ -95,7 +95,7 @@ struct HangsQuizNav: View {
                         )
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Close quiz")
+                .accessibilityLabel(String(localized: "Close quiz", comment: "Accessibility label for the in-quiz close button"))
                 .accessibilityIdentifier("question.closeButton")
                 HangsBrandMark(size: 13)
             }

@@ -66,16 +66,16 @@ struct MicButton: View {
 
     private var micLabel: String {
         switch state {
-        case .idle: return "Start recording answer"
-        case .recording: return "Stop recording"
-        case .processing: return "Processing answer"
+        case .idle: return String(localized: "Start recording answer", comment: "Accessibility label for the mic button when idle")
+        case .recording: return String(localized: "Stop recording", comment: "Accessibility label for the mic button while recording")
+        case .processing: return String(localized: "Processing answer", comment: "Accessibility label for the mic button while processing")
         }
     }
 
     private var micHint: String {
         switch state {
-        case .idle: return "Tap to record your answer"
-        case .recording: return "Tap to stop recording"
+        case .idle: return String(localized: "Tap to record your answer", comment: "Accessibility hint for the mic button when idle")
+        case .recording: return String(localized: "Tap to stop recording", comment: "Accessibility hint for the mic button while recording")
         case .processing: return ""
         }
     }

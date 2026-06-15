@@ -175,7 +175,7 @@ struct ResultView: View {
                     value: "0",
                     labelColor: Theme.Hangs.Colors.pink,
                     valueColor: Theme.Hangs.Colors.ink,
-                    suffix: "was \(previousStreakForIncorrect)",
+                    suffix: String(localized: "was \(previousStreakForIncorrect)", comment: "Streak stat suffix on an incorrect answer: the previous streak value"),
                     inlineSuffix: false,
                     compact: true
                 )
@@ -202,7 +202,7 @@ struct ResultView: View {
         {
             VStack(spacing: 6) {
                 HStack {
-                    Text("Next in \(viewModel.autoAdvanceCountdown)s")
+                    Text(String(localized: "Next in \(viewModel.autoAdvanceCountdown)s", comment: "Auto-advance countdown: seconds until the next question"))
                         .font(.hangsMono(11, weight: .medium))
                         .tracking(1.5)
                         .foregroundColor(Theme.Hangs.Colors.muted)
@@ -342,9 +342,9 @@ struct ResultView: View {
         if isCorrect {
             // 54.12: pointsDeltaSuffix already carries the correct sign (+3 / -2 / +0);
             // the old "+ " prefix + trim produced "+ -2 points" on a negative delta.
-            return "\(pointsDeltaSuffix) points · streak now \(viewModel.quizStats.currentStreak)"
+            return String(localized: "\(pointsDeltaSuffix) points · streak now \(viewModel.quizStats.currentStreak)", comment: "Result subheadline on a correct answer: points delta and current streak")
         }
-        return "streak reset · still worth the try"
+        return String(localized: "streak reset · still worth the try", comment: "Result subheadline on an incorrect answer")
     }
 
     private var resultHaptic: SensoryFeedback {

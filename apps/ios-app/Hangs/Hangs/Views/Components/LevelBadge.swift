@@ -17,7 +17,7 @@ struct LevelBadge: View {
                 .font(.system(size: Theme.Components.iconSM, weight: .medium))
                 .foregroundColor(Color(hex: "#FCD34D")) // Gold
 
-            Text("Level \(level)")
+            Text(String(localized: "Level \(level)", comment: "Level badge showing the player's current level number"))
                 .font(.labelMDBold)
                 .foregroundColor(Theme.Colors.textOnAccent)
         }

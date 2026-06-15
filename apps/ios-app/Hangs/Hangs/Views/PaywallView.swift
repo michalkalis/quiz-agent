@@ -95,9 +95,9 @@ struct PaywallView: View {
 
     private var limitMessage: String {
         if let limit = limitError {
-            return "You've used all \(limit.questionsLimit) free questions today."
+            return String(localized: "You've used all \(limit.questionsLimit) free questions today.", comment: "Paywall subtitle when the daily free-question limit is known")
         }
-        return "You've used all your free questions today."
+        return String(localized: "You've used all your free questions today.", comment: "Paywall subtitle when the daily free-question limit is unknown")
     }
 
     private var featureCard: some View {
@@ -144,7 +144,7 @@ struct PaywallView: View {
         VStack(spacing: Theme.Hangs.Spacing.xs) {
             if let product = storeManager.product {
                 HangsPrimaryButton(
-                    title: "Unlock Unlimited — \(product.displayPrice)",
+                    title: String(localized: "Unlock Unlimited — \(product.displayPrice)", comment: "Paywall purchase button title with the localized product price"),
                     icon: "lock.open.fill",
                     isLoading: storeManager.isLoading
                 ) {
@@ -266,7 +266,7 @@ private struct CountdownPill: View {
             Image(systemName: "clock")
                 .font(.system(size: 13, weight: .medium))
                 .accessibilityHidden(true)
-            Text("Free questions reset in \(timeRemaining)")
+            Text(String(localized: "Free questions reset in \(timeRemaining)", comment: "Countdown pill: time until free questions reset"))
                 .font(.hangsBody(13, weight: .medium))
         }
         .foregroundColor(Theme.Hangs.Colors.muted)

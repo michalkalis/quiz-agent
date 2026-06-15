@@ -132,7 +132,7 @@ struct ErrorView: View {
                     .lineSpacing(4)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.horizontal, 28)
-                    .accessibilityLabel("Error: \(model.title). \(model.description)")
+                    .accessibilityLabel(String(localized: "Error: \(model.title). \(model.description)", comment: "Accessibility label for the error screen: error title and description"))
                     .accessibilityIdentifier("error.description")
 
                 #if DEBUG

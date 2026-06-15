@@ -125,7 +125,7 @@ struct PaywallView: View {
         .accessibilityIdentifier("paywall.featureCard")
     }
 
-    private func featureRow(_ text: String) -> some View {
+    private func featureRow(_ text: LocalizedStringKey) -> some View {
         HStack(spacing: Theme.Hangs.Spacing.sm) {
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 20))
@@ -143,8 +143,11 @@ struct PaywallView: View {
     private var paywallCTAStack: some View {
         VStack(spacing: Theme.Hangs.Spacing.xs) {
             if let product = storeManager.product {
+                // #56: title param is LocalizedStringKey; pass the interpolated
+                // literal directly so the compiler extracts "Unlock Unlimited — %@"
+                // (the displayPrice is a runtime placeholder, not translatable).
                 HangsPrimaryButton(
-                    title: String(localized: "Unlock Unlimited — \(product.displayPrice)", comment: "Paywall purchase button title with the localized product price"),
+                    title: "Unlock Unlimited — \(product.displayPrice)",
                     icon: "lock.open.fill",
                     isLoading: storeManager.isLoading
                 ) {
@@ -289,12 +292,14 @@ private struct CountdownPill: View {
     private func updateCountdown() {
         let remaining = resetDate.timeIntervalSince(Date())
         guard remaining > 0 else {
-            timeRemaining = "now"
+            timeRemaining = String(localized: "now", comment: "Countdown pill value when free questions reset imminently")
             return
         }
         let hours = Int(remaining) / 3600
         let minutes = (Int(remaining) % 3600) / 60
-        timeRemaining = hours > 0 ? "\(hours)h \(minutes)m" : "\(minutes)m"
+        timeRemaining = hours > 0
+            ? String(localized: "\(hours)h \(minutes)m", comment: "Compact time remaining: hours and minutes (e.g. 3h 5m)")
+            : String(localized: "\(minutes)m", comment: "Compact time remaining: minutes only (e.g. 5m)")
     }
 }
 

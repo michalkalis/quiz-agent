@@ -12,8 +12,8 @@ import SwiftUI
 
 /// Editorial hero: big Anton-style headline + short pink rule + muted sub.
 struct HangsHeroBlock: View {
-    let title: String
-    var subtitle: String? = nil
+    let title: LocalizedStringKey
+    var subtitle: LocalizedStringKey? = nil
     var titleFont: Font = .hangsBlock
     var alignment: HorizontalAlignment = .leading
     var underlineWidth: CGFloat = 40
@@ -44,11 +44,12 @@ struct HangsHeroBlock: View {
 // MARK: - Section label (pink / blue mono micro-caps)
 
 struct HangsSectionLabel: View {
-    let text: String
+    let text: LocalizedStringKey
     var color: Color = Theme.Hangs.Colors.pink
 
     var body: some View {
-        Text(text.uppercased())
+        Text(text)
+            .textCase(.uppercase)
             .font(.hangsMono(11, weight: .medium))
             .tracking(2)
             .foregroundColor(color)
@@ -79,7 +80,7 @@ struct HangsCard<Content: View>: View {
 
 /// Card with a mono label and a big condensed number. Used for streak, best, points.
 struct HangsStatBox: View {
-    let label: String
+    let label: LocalizedStringKey
     let value: String
     var labelColor: Color = Theme.Hangs.Colors.pink
     var valueColor: Color = Theme.Hangs.Colors.blue
@@ -132,7 +133,7 @@ struct HangsStatBox: View {
 // MARK: - Config row (Language / Difficulty / Categories / settings)
 
 struct HangsConfigRow: View {
-    let label: String
+    let label: LocalizedStringKey
     let value: String
     var valueColor: Color = Theme.Hangs.Colors.blue
     var showsChevron: Bool = true
@@ -166,7 +167,7 @@ struct HangsConfigRow: View {
 
 /// Toggle row for settings (Voice commands, Speak scores aloud).
 struct HangsToggleRow: View {
-    let label: String
+    let label: LocalizedStringKey
     @Binding var isOn: Bool
 
     var body: some View {
@@ -186,7 +187,7 @@ struct HangsToggleRow: View {
 
 /// Static value row (Version · 1.0.0).
 struct HangsValueRow: View {
-    let label: String
+    let label: LocalizedStringKey
     let value: String
     var valueFont: Font = .hangsMono(14, weight: .medium)
 
@@ -262,7 +263,7 @@ struct HangsInlineBadge: View {
 /// Compact inline stat: value + muted label in a hairline capsule.
 /// Used where full HangsStatBox is too large (e.g. quiz-complete row).
 struct HangsStatChip: View {
-    let label: String
+    let label: LocalizedStringKey
     let value: String
     var labelColor: Color = Theme.Hangs.Colors.muted
     var valueColor: Color = Theme.Hangs.Colors.ink
@@ -278,7 +279,8 @@ struct HangsStatChip: View {
             Text(value)
                 .font(.hangsMono(14, weight: .semibold))
                 .foregroundColor(valueColor)
-            Text(label.uppercased())
+            Text(label)
+                .textCase(.uppercase)
                 .font(.hangsMono(10, weight: .medium))
                 .tracking(1)
                 .foregroundColor(labelColor)
@@ -312,7 +314,7 @@ struct HangsVerdictCard: View {
 }
 
 struct HangsAnswerRow: View {
-    let label: String
+    let label: LocalizedStringKey
     let value: String
     var valueColor: Color = Theme.Hangs.Colors.ink
 

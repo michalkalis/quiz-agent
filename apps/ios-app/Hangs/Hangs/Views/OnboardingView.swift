@@ -138,7 +138,7 @@ struct OnboardingView: View {
         .accessibilityHidden(true)
     }
 
-    private func headlineBlock(title: String, accentColor: Color) -> some View {
+    private func headlineBlock(title: LocalizedStringKey, accentColor: Color) -> some View {
         VStack(spacing: 8) {
             Text(title)
                 .font(.hangsDisplayMD)
@@ -156,7 +156,7 @@ struct OnboardingView: View {
             .frame(width: 40, height: 3)
     }
 
-    private func subtitle(_ text: String) -> some View {
+    private func subtitle(_ text: LocalizedStringKey) -> some View {
         Text(text)
             .font(.hangsBody(15))
             .foregroundColor(Theme.Hangs.Colors.muted)
@@ -284,8 +284,8 @@ struct OnboardingView: View {
 
 private struct OnboardingFeature {
     let icon: String
-    let title: String
-    let description: String
+    let title: LocalizedStringKey
+    let description: LocalizedStringKey
 
     static let all: [OnboardingFeature] = [
         .init(icon: "mic.fill", title: "Auto-Record", description: "Recording starts automatically after each question"),

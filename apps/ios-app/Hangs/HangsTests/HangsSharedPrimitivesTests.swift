@@ -96,14 +96,17 @@ struct HangsStatChipInspectorTests {
         }
     }
 
-    @Test("Label is uppercased and appears in rendered tree")
+    @Test("Label appears in rendered tree (uppercasing is a display modifier)")
     func labelIsUppercasedAndRendersInTree() async throws {
         let view = HangsStatChip(label: "streak", value: "47")
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            // label is uppercased by the view, so we look for "STREAK"
+            // #56: the label is a LocalizedStringKey rendered with a
+            // `.textCase(.uppercase)` *display* modifier (no longer a mutated
+            // String), so ViewInspector matches the source key "streak" — the
+            // uppercasing is applied at render time, not baked into the string.
             #expect(throws: Never.self) {
-                try tree.find(text: "STREAK")
+                try tree.find(text: "streak")
             }
         }
     }

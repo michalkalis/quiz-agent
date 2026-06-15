@@ -47,6 +47,15 @@ apps/ios-app/Hangs/Hangs/
 | Build (Local) | `cd apps/ios-app/Hangs && xcodebuild -scheme Hangs-Local -destination 'platform=iOS Simulator,name=iPhone 17 Pro'` |
 | Tests | `cd apps/ios-app/Hangs && xcodebuild test -scheme Hangs-Local -destination 'platform=iOS Simulator,name=iPhone 17 Pro'` |
 
+## Localization (#56)
+
+All user-facing text lives in `Localizable.xcstrings` (English = source key). When adding strings:
+- **SwiftUI views:** use a string literal — `Text("Start")`, `Button`, `.navigationTitle`, `Label`. These are `LocalizedStringKey` and the compiler auto-extracts them. Never pass a runtime `String` where a literal belongs.
+- **Custom component static-text params:** type them `LocalizedStringKey` (not `String`) so call-site literals extract. Pass interpolation as a literal — `title: "Unlock — \(price)"` — never `String(localized:)` (a `String` won't convert to `LocalizedStringKey`).
+- **Non-view code** (ViewModels, Services, models, error enums) and `String`-typed contexts: wrap with `String(localized: "…", comment: "…")` — never a bare literal.
+- **Non-localizable display** (brand wordmark, raw values, `"\(n)%"`, SF-symbol names): use `Text(verbatim:)` so it's excluded from the catalog.
+- Casing: prefer `.textCase(.uppercase)` (display modifier) over `.uppercased()` (string mutation). Note: ViewInspector `find(text:)` then matches the source key, not the uppercased output.
+
 ## API
 
 Endpoints are authoritative in backend OpenAPI spec — `curl http://localhost:8002/openapi.json`. Run `/verify-api` to confirm iOS Codable structs match Pydantic models.

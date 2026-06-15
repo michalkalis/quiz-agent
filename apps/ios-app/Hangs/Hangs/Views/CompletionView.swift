@@ -101,7 +101,7 @@ struct CompletionView: View {
         .accessibilityIdentifier("completion.breakdown")
     }
 
-    private func breakdownRow(label: String, value: String, valueColor: Color) -> some View {
+    private func breakdownRow(label: LocalizedStringKey, value: String, valueColor: Color) -> some View {
         HStack {
             Text(label)
                 .font(.hangsBody(16, weight: .semibold))

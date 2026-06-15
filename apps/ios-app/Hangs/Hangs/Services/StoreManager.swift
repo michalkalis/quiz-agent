@@ -70,7 +70,7 @@ final class StoreManager: ObservableObject {
 
     func purchase() async {
         guard product != nil else {
-            purchaseError = "Product not available"
+            purchaseError = String(localized: "Product not available", comment: "Paywall error shown when the in-app purchase product failed to load")
             return
         }
 
@@ -109,7 +109,7 @@ final class StoreManager: ObservableObject {
             try await purchaseService.restore()
             await checkPurchaseStatus()
         } catch {
-            purchaseError = "Failed to restore purchases"
+            purchaseError = String(localized: "Failed to restore purchases", comment: "Paywall error shown when restoring previous purchases failed")
         }
 
         isLoading = false

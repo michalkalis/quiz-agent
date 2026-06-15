@@ -154,7 +154,7 @@ struct HomeView: View {
 
     // MARK: - Row visual (replicates HangsConfigRow body w/o inner Button)
 
-    private func configRowVisual(label: String, value: String, valueColor: Color) -> some View {
+    private func configRowVisual(label: LocalizedStringKey, value: String, valueColor: Color) -> some View {
         HStack {
             Text(label)
                 .font(.hangsBody(17, weight: .semibold))

@@ -13,7 +13,7 @@ struct ProgressBadge: View {
     let total: Int
 
     var body: some View {
-        Text("Q \(current)/\(total)")
+        Text(verbatim: "Q \(current)/\(total)")
             .font(.labelMD)
             .foregroundColor(Theme.Colors.textPrimary)
             .padding(.vertical, 4)

@@ -17,7 +17,7 @@ struct HangsBrandMark: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            Text("hangs.")
+            Text(verbatim: "hangs.")
                 .font(.hangsMono(size, weight: .semibold))
                 .foregroundColor(Theme.Hangs.Colors.blue)
             if showDot {

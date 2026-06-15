@@ -24,7 +24,7 @@ struct ProgressBarView: View {
                 Spacer()
 
                 if showPercentage {
-                    Text("\(Int(progress * 100))%")
+                    Text(verbatim: "\(Int(progress * 100))%")
                         .font(.labelSMBold)
                         .foregroundColor(Theme.Colors.accentPrimary)
                 }

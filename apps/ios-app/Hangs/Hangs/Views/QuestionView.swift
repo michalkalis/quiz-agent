@@ -149,12 +149,12 @@ struct QuestionView: View {
         }
     }
 
-    private func timerChip(label: String, seconds: Int, color: Color) -> some View {
+    private func timerChip(label: LocalizedStringKey, seconds: Int, color: Color) -> some View {
         HStack(spacing: 6) {
             Text(label)
                 .font(.hangsMono(10, weight: .semibold))
                 .tracking(1.5)
-            Text("\(seconds)s")
+            Text(verbatim: "\(seconds)s")
                 .font(.hangsMono(12, weight: .semibold))
         }
         .foregroundColor(color)
@@ -235,8 +235,11 @@ struct QuestionView: View {
 
     // "CATEGORY · QUESTION N" header for MCQ (frames b8zObz, WCaT6)
     private func mcqQuestionHeader(question: Question) -> some View {
+        // #56: text param is LocalizedStringKey; pass the interpolated literal
+        // directly so the compiler extracts "%@ · QUESTION %lld" (category and
+        // number are runtime placeholders).
         HangsSectionLabel(
-            text: String(localized: "\(question.category) · QUESTION \(currentQuestionNumber)", comment: "MCQ header: question category and current question number"),
+            text: "\(question.category) · QUESTION \(currentQuestionNumber)",
             color: Theme.Hangs.Colors.pink
         )
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -346,7 +349,7 @@ struct QuestionView: View {
                 HStack(spacing: 10) {
                     Image(systemName: isRecording ? "stop.fill" : "mic.fill")
                         .font(.system(size: 17, weight: .semibold))
-                    Text(isRecording ? "Stop" : "Record")
+                    (isRecording ? Text("Stop", comment: "Record button label while recording is active") : Text("Record", comment: "Record button label to start recording an answer"))
                         .font(.hangsButton)
                 }
                 .foregroundColor(.white)

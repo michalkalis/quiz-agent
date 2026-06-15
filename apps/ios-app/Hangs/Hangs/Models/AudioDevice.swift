@@ -59,17 +59,17 @@ struct AudioDevice: Identifiable, Codable, Sendable, Hashable {
     /// Display subtitle describing the device type
     var subtitle: String {
         if isBuiltIn {
-            return "Built-in"
+            return String(localized: "Built-in", comment: "Audio device subtitle: the device's built-in microphone")
         } else if isHFP {
-            return "Bluetooth (Call Mode)"
+            return String(localized: "Bluetooth (Call Mode)", comment: "Audio device subtitle: a Bluetooth mic in hands-free call mode")
         } else if isBluetooth {
-            return "Bluetooth"
+            return String(localized: "Bluetooth", comment: "Audio device subtitle: a Bluetooth audio device")
         } else if portType == AVAudioSession.Port.headphones.rawValue {
-            return "Wired"
+            return String(localized: "Wired", comment: "Audio device subtitle: a wired headset/headphones")
         } else if portType == AVAudioSession.Port.usbAudio.rawValue {
-            return "USB"
+            return String(localized: "USB", comment: "Audio device subtitle: a USB audio device")
         } else {
-            return "External"
+            return String(localized: "External", comment: "Audio device subtitle: a generic external audio device")
         }
     }
 
@@ -91,7 +91,7 @@ struct AudioDevice: Identifiable, Codable, Sendable, Hashable {
     /// "Automatic" device - lets iOS choose the best available input
     static let automatic = AudioDevice(
         id: "automatic",
-        name: "Automatic",
+        name: String(localized: "Automatic", comment: "Name of the automatic audio input device (iOS picks the best mic)"),
         portType: "automatic"
     )
 

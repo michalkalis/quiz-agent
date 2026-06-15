@@ -110,13 +110,13 @@ struct ResultBadge: View {
     private var titleText: String {
         switch type {
         case .correct:
-            return "Correct!"
+            return String(localized: "Correct!", comment: "Result badge title when the answer is correct")
         case .incorrect:
-            return "Incorrect"
+            return String(localized: "Incorrect", comment: "Result badge title when the answer is incorrect")
         case .partiallyCorrect:
-            return "Partial"
+            return String(localized: "Partial", comment: "Result badge title when the answer is partially correct")
         case .skipped:
-            return "Skipped"
+            return String(localized: "Skipped", comment: "Result badge title when the question was skipped")
         }
     }
 

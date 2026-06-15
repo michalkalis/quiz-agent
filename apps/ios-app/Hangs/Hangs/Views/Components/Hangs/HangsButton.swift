@@ -11,7 +11,7 @@ import SwiftUI
 
 /// Primary CTA — pink filled pill. Label + optional leading / trailing SF symbol.
 struct HangsPrimaryButton: View {
-    let title: String
+    let title: LocalizedStringKey
     var icon: String? = nil
     var trailingIcon: String? = nil
     var isLoading: Bool = false
@@ -44,14 +44,14 @@ struct HangsPrimaryButton: View {
             .hangsShadow(isDestructive ? Theme.Hangs.Shadow.ctaStrong : Theme.Hangs.Shadow.cta)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(isLoading ? String(localized: "Loading", comment: "Accessibility label for a button while in its loading state") : title)
+        .accessibilityLabel(isLoading ? Text("Loading", comment: "Accessibility label for a button while in its loading state") : Text(title))
         .disabled(isLoading)
     }
 }
 
 /// Secondary CTA — card-surface pill with hairline border and ink text + optional icon.
 struct HangsSecondaryButton: View {
-    let title: String
+    let title: LocalizedStringKey
     var icon: String? = nil
     var height: CGFloat = 52
     let action: () -> Void
@@ -83,7 +83,7 @@ struct HangsSecondaryButton: View {
 
 /// Ghost CTA — inline blue text link with optional leading icon. No bg, no border.
 struct HangsGhostButton: View {
-    let title: String
+    let title: LocalizedStringKey
     var icon: String? = nil
     var color: Color = Theme.Hangs.Colors.blue
     var font: Font = .hangsBody(14, weight: .medium)

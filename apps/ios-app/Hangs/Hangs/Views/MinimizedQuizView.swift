@@ -130,7 +130,7 @@ struct MinimizedQuizView: View {
         }
     }
 
-    private func statusLabel(text: String, @ViewBuilder icon: () -> some View) -> some View {
+    private func statusLabel(text: LocalizedStringKey, @ViewBuilder icon: () -> some View) -> some View {
         HStack(spacing: Theme.Hangs.Spacing.xs) {
             icon()
             Text(text)

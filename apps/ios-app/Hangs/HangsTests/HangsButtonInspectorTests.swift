@@ -12,6 +12,7 @@
 //
 
 import Foundation
+import SwiftUI
 import Testing
 import ViewInspector
 @testable import Hangs

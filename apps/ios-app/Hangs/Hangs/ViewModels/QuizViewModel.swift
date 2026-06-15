@@ -198,7 +198,7 @@ final class QuizViewModel: ObservableObject {
         if let device = audioService.currentInputDevice {
             return device.name
         }
-        return "Automatic"
+        return String(localized: "Automatic", comment: "Fallback name when no audio input device is selected (iOS picks the best mic)")
     }
 
     /// Sheet presentation state for microphone picker

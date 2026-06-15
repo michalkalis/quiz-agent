@@ -166,7 +166,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// Derives from `Config.categoryOptions`, the single source of id→display
     /// pairs, so each label lives in exactly one place for localization (#56).
     func categoryDisplayName() -> String {
-        Config.categoryOptions.first { $0.id == category }?.display ?? "Unknown"
+        Config.categoryOptions.first { $0.id == category }?.display ?? String(localized: "Unknown", comment: "Fallback category display name when the category id is unrecognized")
     }
 
     /// Display name for the active age-appropriate filter.

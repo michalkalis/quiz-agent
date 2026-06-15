@@ -9,9 +9,10 @@
 //    the Error screen wires the retry closure to re-run the last operation.
 //  - Terminal failures (dailyLimitReached, sessionNotFound) must produce a goHome CTA —
 //    retrying is meaningless and would loop forever.
-//  - Context-driven fallbacks must produce SK-first titles that match the quiz phase,
+//  - Context-driven fallbacks must produce titles that match the quiz phase,
 //    so the user gets actionable feedback (not a generic message) when the error type
 //    does not match a specific NetworkError case.
+//  (#56: copy is now English source text; was Slovak-first per D6.)
 //
 
 import Foundation
@@ -130,22 +131,23 @@ struct AppErrorModelTests {
 
     /// Regression: a cancellation surfaced as a generic "retry" error is exactly
     /// the founder-reported OOPS screen (54.5) — the CTA must be a soft dismiss,
-    /// not a misleading retry, and the copy must be SK (not raw "cancelled").
-    @Test("CancellationError → dismiss with SK copy")
+    /// not a misleading retry, and the copy must be the intentional localized
+    /// string (#56: English source "Action cancelled"), not a raw leaked system
+    /// error string.
+    @Test("CancellationError → dismiss with intentional copy")
     func cancellationError() {
         let model = AppErrorModel.from(CancellationError(), context: .submission)
 
         #expect(model.retryAction == .dismiss)
-        #expect(!model.title.isEmpty)
-        #expect(!model.title.lowercased().contains("cancelled"))
+        #expect(model.title == "Action cancelled")
     }
 
-    @Test("URLError.cancelled → dismiss with SK copy")
+    @Test("URLError.cancelled → dismiss with intentional copy")
     func urlErrorCancelled() {
         let model = AppErrorModel.from(URLError(.cancelled), context: .submission)
 
         #expect(model.retryAction == .dismiss)
-        #expect(!model.title.lowercased().contains("cancelled"))
+        #expect(model.title == "Action cancelled")
     }
 
     // MARK: - Context-only factory (54.15: ContentView fallback path)
@@ -153,7 +155,7 @@ struct AppErrorModelTests {
     /// Regression: ContentView's `.error` case falls back to `from(context:)`
     /// when no underlying Error was captured — it must produce the same SK
     /// copy as the error-driven fallback, never raw English.
-    @Test("context-only factory produces SK copy per context")
+    @Test("context-only factory produces copy per context")
     func contextOnlyFactory() {
         let contexts: [ErrorContext] = [.initialization, .submission, .recording, .general]
         for context in contexts {
@@ -199,9 +201,9 @@ struct AppErrorModelTests {
         #expect(model.retryAction == .retryOperation)
     }
 
-    // MARK: - SK copy sanity (D6: Slovak-first)
+    // MARK: - Copy sanity (#56: English source)
 
-    @Test("all mapped cases produce non-empty SK title and description")
+    @Test("all mapped cases produce non-empty title and description")
     func allCasesHaveNonEmptyStrings() {
         let limitError = DailyLimitError(
             error: "limit_reached",

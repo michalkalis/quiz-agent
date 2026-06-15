@@ -162,21 +162,11 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// Valid age-appropriate options (nil means no filter). Mirrors `Config.ageAppropriateOptions`.
     static let ageAppropriateOptions: [String?] = [nil, "all", "8+", "12+", "16+"]
 
-    /// Display name for category (handles nil case).
-    /// Lookup table mirrors `Config.categoryOptions` — keep them in sync.
+    /// Display name for the active category (nil = "All Categories").
+    /// Derives from `Config.categoryOptions`, the single source of id→display
+    /// pairs, so each label lives in exactly one place for localization (#56).
     func categoryDisplayName() -> String {
-        switch category {
-        case nil: return "All Categories"
-        case "general": return "General"
-        case "adults": return "Adults"
-        case "kids": return "Kids"
-        case "wizarding-world": return "Wizarding World"
-        case "superheroes": return "Superheroes"
-        case "disney": return "Disney"
-        case "football": return "Football"
-        case "sports-mix": return "Sports Mix"
-        default: return "Unknown"
-        }
+        Config.categoryOptions.first { $0.id == category }?.display ?? "Unknown"
     }
 
     /// Display name for the active age-appropriate filter.

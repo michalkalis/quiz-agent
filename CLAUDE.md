@@ -32,7 +32,7 @@ Long outputs (>30 lines: summaries, analyses, reports, reviews) → self-contain
 
 These rules apply to every task in this repo unless explicitly overridden.
 Bias: caution over speed on non-trivial work. Use judgment on trivial tasks.
-Token budget: keep per-task output tight; context budget is Rule #12.
+Keep per-task output tight; manage context per Rule #12.
 
 ### 1. Minimal Footprint
 State assumptions explicitly; if uncertain, ask rather than guess, and present multiple interpretations when ambiguity exists. Push back when a simpler approach exists; stop when confused and name what's unclear.
@@ -44,7 +44,7 @@ Define success criteria and loop until verified. Transform tasks into verifiable
 Fail loud. "Migration completed" is wrong if records were silently skipped; "tests pass" is wrong if any were skipped or UI wasn't verified. Default to surfacing uncertainty, not hiding it.
 
 ### 3. Communication
-Answer the exact question asked before expanding into context. If asked "what is X", give a one-sentence definition first; if asked "how do I do Y given constraint Z", address constraint Z directly. Don't surface adjacent scenarios, future states, or implementation details unless necessary.
+Answer the exact question first, then expand only if it helps. Lead with the answer in whatever form fits the question, and address the user's stated constraint directly (e.g. "what is X" wants a definition; "how do I do Y given Z" wants Z handled). Don't surface adjacent scenarios, future states, or implementation details unless necessary.
 Explain at the conceptual level — what technology or approach, and why, not how it's coded. Never include code snippets, SQL, or implementation abbreviations unless explicitly asked.
 
 ### 4. Surface conflicts, don't average them
@@ -60,9 +60,8 @@ Every test must encode WHY the behavior matters, not just WHAT it does.
 A test that can't fail when business logic changes is wrong.
 Snapshot tests: assert the *meaningful* part of the snapshot.
 
-### 7. Checkpoint after every significant step
-After each step in a multi-step task: summarize what was done, what's verified, what's left.
-Update `docs/issues/issue-NN-*.md` and `docs/todo/TODO.md`. If you lose track, stop and restate.
+### 7. Checkpoint for recoverability
+On multi-step work, keep state durable enough that a fresh context could resume — update `docs/issues/issue-NN-*.md` and `docs/todo/TODO.md` at meaningful milestones, not after every step. If you lose track, stop and restate.
 
 ### 8. Commit and Build Autonomously
 Commit at every natural checkpoint without asking for permission — incomplete downstream subtasks do not block a valid commit.
@@ -81,13 +80,12 @@ When diagnosing a failure, confirm that a suggested workaround is not itself blo
 
 ### 11. Proactively Surface Cost & Infra Optimizations
 When you notice an optimization the user hasn't asked for — consolidating fragmented services/keys/billing, cheaper or simpler tooling, a unified gateway, reducing per-task token spend, removing duplicated infra — flag it briefly and unprompted.
-Keep it to a one-to-three line "worth considering: X, because Y, tradeoff Z" note; don't derail the current task. Only raise it once per distinct opportunity, and respect prior decisions (don't re-pitch something already declined).
+Keep it brief enough not to derail the current task — roughly "worth considering: X, because Y, tradeoff Z". Only raise it once per distinct opportunity, and respect prior decisions (don't re-pitch something already declined).
 Examples worth flagging: multiple provider keys/bills for one logical capability, paying for a managed service that local/project-scoped config already covers, an obviously cheaper model for a low-stakes call.
 
-### 12. Context Budget — 100k Tokens per Session
-Keep session context under ~100k tokens. Plan work upfront so it fits: scope the task, estimate what reading/building/testing it needs, and split it before starting if it won't fit — don't discover the limit mid-task.
-Delegate bulk reading/searching to subagents so raw file contents don't accumulate in the main context.
-If the limit approaches with work unfinished: stop at a clean checkpoint, commit what's valid, and write a handoff via `/handoff` so a fresh session can resume without re-explaining context. Surface that you did this — never silently push past the budget.
+### 12. Context Discipline
+Delegate bulk reading/searching to subagents so raw file contents don't accumulate in the main context. Scope work so it stays navigable; use judgment on size rather than a fixed token cap — don't pre-emptively fragment work that fits one context.
+If a task genuinely won't fit, split it at a clean boundary, commit what's valid, and write a handoff via `/handoff` so a fresh session can resume without re-explaining context. Surface that you did this — never silently push past a limit.
 
 ## Rules files
 

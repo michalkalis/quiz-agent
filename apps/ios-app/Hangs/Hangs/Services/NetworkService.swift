@@ -646,17 +646,18 @@ enum NetworkError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidResponse:
-            return "Invalid server response"
+            return String(localized: "Invalid server response", comment: "Network error: server returned a malformed response")
         case .invalidURL:
-            return "Invalid URL"
+            return String(localized: "Invalid URL", comment: "Network error: the request URL could not be built")
         case .decodingError(let error):
-            return "Failed to decode response: \(error.localizedDescription)"
+            return String(localized: "Failed to decode response: \(error.localizedDescription)", comment: "Network error: response body could not be decoded; placeholder is the underlying error")
         case .serverError(_, let message):
+            // Server-provided message, already localized by the backend — do not wrap.
             return message
         case .dailyLimitReached:
-            return "Daily question limit reached"
+            return String(localized: "Daily question limit reached", comment: "Network error: user hit the free daily question quota")
         case .sessionNotFound:
-            return "Session not found or already ended"
+            return String(localized: "Session not found or already ended", comment: "Network error: the quiz session is no longer active")
         }
     }
 }

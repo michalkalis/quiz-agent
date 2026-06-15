@@ -59,7 +59,7 @@ extension QuizViewModel {
             isAutoRecording = false
             speechDetectedDuringAutoRecord = false
             transition(to: .askingQuestion)
-            errorMessage = "Recording failed: \(error.localizedDescription)"
+            errorMessage = String(localized: "Recording failed: \(error.localizedDescription)", comment: "Inline error when audio recording fails; placeholder is the underlying error")
 
             Logger.audio.error("❌ Recording failed to start: \(error, privacy: .public)")
         }
@@ -157,7 +157,7 @@ extension QuizViewModel {
                             self.audioService.stopStreamingRecording()
                             self.isAutoRecording = false
                             self.speechDetectedDuringAutoRecord = false
-                            self.errorMessage = "Connection lost. Tap Record to try again."
+                            self.errorMessage = String(localized: "Connection lost. Tap Record to try again.", comment: "Inline error when the streaming connection drops mid-recording")
                             self.transition(to: .askingQuestion)
                         }
                     }
@@ -280,7 +280,7 @@ extension QuizViewModel {
                 isStreamingSTT = false
                 audioService.stopStreamingRecording()
                 await sttService?.disconnect()
-                errorMessage = "Transcription failed: \(error.localizedDescription)"
+                errorMessage = String(localized: "Transcription failed: \(error.localizedDescription)", comment: "Inline error when streaming speech-to-text fails; placeholder is the underlying error")
                 transition(to: .askingQuestion)
             }
         } else {
@@ -289,7 +289,7 @@ extension QuizViewModel {
                 let data = try await audioService.stopRecording()
                 await submitVoiceAnswer(audioData: data)
             } catch {
-                errorMessage = "Recording failed: \(error.localizedDescription)"
+                errorMessage = String(localized: "Recording failed: \(error.localizedDescription)", comment: "Inline error when audio recording fails; placeholder is the underlying error")
                 transition(to: .askingQuestion)
 
                 Logger.audio.error("❌ Recording stop failed: \(error, privacy: .public)")
@@ -300,7 +300,7 @@ extension QuizViewModel {
     /// Submit a voice answer with timeout and cancellation support
     func submitVoiceAnswer(audioData: Data) async {
         guard let sessionId = currentSession?.id else {
-            setError(message: "No active session", context: .general)
+            setError(message: String(localized: "No active session", comment: "Inline error: no quiz session is currently active"), context: .general)
             return
         }
 
@@ -356,7 +356,7 @@ extension QuizViewModel {
             } catch is TimeoutError {
                 await MainActor.run {
                     self.setError(
-                        message: "Request timed out. Please try again.",
+                        message: String(localized: "Request timed out. Please try again.", comment: "Inline error when a voice answer submission times out"),
                         context: .submission
                     )
                 }
@@ -386,7 +386,7 @@ extension QuizViewModel {
                 // Other network errors go to error screen
                 await MainActor.run {
                     self.setError(
-                        message: "Failed to submit answer: \(error.localizedDescription)",
+                        message: String(localized: "Failed to submit answer: \(error.localizedDescription)", comment: "Inline error when submitting a voice answer fails; placeholder is the underlying error"),
                         context: .submission,
                         error: error
                     )
@@ -396,7 +396,7 @@ extension QuizViewModel {
             } catch {
                 await MainActor.run {
                     self.setError(
-                        message: "Failed to submit answer: \(error.localizedDescription)",
+                        message: String(localized: "Failed to submit answer: \(error.localizedDescription)", comment: "Inline error when submitting a voice answer fails; placeholder is the underlying error"),
                         context: .submission,
                         error: error
                     )
@@ -586,11 +586,11 @@ extension QuizViewModel {
 
         switch consecutiveTranscriptionFailures {
         case 1:
-            errorMessage = "Sorry, I didn't catch that. Please try again."
+            errorMessage = String(localized: "Sorry, I didn't catch that. Please try again.", comment: "Transcription failure tier 1: ask the user to retry")
             transition(to: .askingQuestion)
 
         case 2:
-            errorMessage = "Having trouble hearing you. Try speaking closer to the mic."
+            errorMessage = String(localized: "Having trouble hearing you. Try speaking closer to the mic.", comment: "Transcription failure tier 2: suggest speaking closer to the mic")
             transition(to: .askingQuestion)
 
         default:

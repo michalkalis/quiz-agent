@@ -176,7 +176,7 @@ extension QuizViewModel {
 
                 Logger.audio.info("🔄 Switched to \(newMode.name, privacy: .public)")
             } catch {
-                errorMessage = "Failed to switch audio mode: \(error.localizedDescription)"
+                errorMessage = String(localized: "Failed to switch audio mode: \(error.localizedDescription)", comment: "Inline error when switching audio output mode fails; placeholder is the underlying error")
 
                 Logger.audio.error("❌ Error switching audio mode: \(error, privacy: .public)")
             }
@@ -215,7 +215,7 @@ extension QuizViewModel {
 
             Logger.audio.info("🎤 Set preferred input device: \(device?.name ?? "Automatic", privacy: .public)")
         } catch {
-            errorMessage = "Failed to set audio device: \(error.localizedDescription)"
+            errorMessage = String(localized: "Failed to set audio device: \(error.localizedDescription)", comment: "Inline error when selecting a preferred input device fails; placeholder is the underlying error")
 
             Logger.audio.error("❌ Error setting preferred input device: \(error, privacy: .public)")
         }

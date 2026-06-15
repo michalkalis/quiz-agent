@@ -382,7 +382,7 @@ final class QuizViewModel: ObservableObject {
         // Check if question history is at capacity
         if persistenceStore.isAtCapacity {
             setError(
-                message: "Question history is full. Please reset your history in Settings to continue.",
+                message: String(localized: "Question history is full. Please reset your history in Settings to continue.", comment: "Shown when saved-question history hit its cap; user must reset history"),
                 context: .initialization,
                 model: .historyAtCapacity
             )
@@ -462,7 +462,7 @@ final class QuizViewModel: ObservableObject {
                 audioService.deactivateSession()
             } else {
                 setError(
-                    message: "Failed to start quiz: \(error.localizedDescription)",
+                    message: String(localized: "Failed to start quiz: \(error.localizedDescription)", comment: "Quiz could not be started; placeholder is the underlying error"),
                     context: .initialization,
                     error: error
                 )
@@ -604,7 +604,7 @@ final class QuizViewModel: ObservableObject {
     /// regardless of whether the evaluator checks by key or value.
     func submitMCQAnswer(key _: String, value: String) async {
         guard let sessionId = currentSession?.id else {
-            errorMessage = "No active session"
+            errorMessage = String(localized: "No active session", comment: "Inline error: no quiz session is currently active")
             return
         }
 
@@ -621,14 +621,14 @@ final class QuizViewModel: ObservableObject {
             )
             await handleQuizResponse(response)
         } catch {
-            handleError(error, context: .submission, fallbackMessage: "Failed to submit answer")
+            handleError(error, context: .submission, fallbackMessage: String(localized: "Failed to submit answer", comment: "Error prefix when submitting an answer fails; error detail is appended"))
         }
     }
 
     /// Resubmit an edited text answer
     func resubmitAnswer(_ newAnswer: String, suppressAudio: Bool = false) async {
         guard let sessionId = currentSession?.id else {
-            errorMessage = "No active session"
+            errorMessage = String(localized: "No active session", comment: "Inline error: no quiz session is currently active")
             return
         }
 
@@ -668,7 +668,7 @@ final class QuizViewModel: ObservableObject {
             await handleQuizResponse(response)
 
         } catch {
-            handleError(error, context: .submission, fallbackMessage: "Failed to resubmit answer")
+            handleError(error, context: .submission, fallbackMessage: String(localized: "Failed to resubmit answer", comment: "Error prefix when resubmitting an edited answer fails; error detail is appended"))
 
             Logger.network.error("❌ Error resubmitting answer: \(error, privacy: .public)")
         }
@@ -698,7 +698,7 @@ final class QuizViewModel: ObservableObject {
 
             await handleQuizResponse(response)
         } catch {
-            handleError(error, context: .submission, fallbackMessage: "Failed to skip question")
+            handleError(error, context: .submission, fallbackMessage: String(localized: "Failed to skip question", comment: "Error prefix when skipping a question fails; error detail is appended"))
 
             Logger.quiz.error("❌ Error skipping question: \(error, privacy: .public)")
         }
@@ -719,7 +719,7 @@ final class QuizViewModel: ObservableObject {
 
             Logger.quiz.info("🎮 Quiz ended")
         } catch {
-            errorMessage = "Failed to end quiz: \(error.localizedDescription)"
+            errorMessage = String(localized: "Failed to end quiz: \(error.localizedDescription)", comment: "Inline error when ending the quiz fails; placeholder is the underlying error")
 
             Logger.quiz.error("❌ Error ending quiz: \(error, privacy: .public)")
         }
@@ -728,7 +728,7 @@ final class QuizViewModel: ObservableObject {
     /// Resume a saved session
     func resumeSession() async {
         guard persistenceStore.currentSessionId != nil else {
-            errorMessage = "No saved session found"
+            errorMessage = String(localized: "No saved session found", comment: "Inline error: no previously saved quiz session exists to resume")
             return
         }
 
@@ -831,7 +831,7 @@ final class QuizViewModel: ObservableObject {
         guard let evaluation = response.evaluation else {
             Logger.quiz.error("❌ No evaluation in response, cannot show result")
             setError(
-                message: "Could not evaluate your answer. Please try again.",
+                message: String(localized: "Could not evaluate your answer. Please try again.", comment: "Shown when the server response contained no evaluation"),
                 context: .submission
             )
             return
@@ -849,7 +849,7 @@ final class QuizViewModel: ObservableObject {
         // The associated value bundles question + evaluation together,
         // making it impossible to show stale/mismatched data
         guard let question = currentQuestion else {
-            setError(message: "No question to evaluate", context: .general)
+            setError(message: String(localized: "No question to evaluate", comment: "Inline error: result arrived but there is no current question to pair it with"), context: .general)
             return
         }
 

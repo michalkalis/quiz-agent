@@ -35,6 +35,19 @@ if [[ ! -f "$PROMPT_TEMPLATE" ]]; then
     exit 2
 fi
 
+# Resolve a pytest runner for the scoped gate (#57 57.2). The headless overnight
+# shell does not auto-activate a venv, so bare `pytest` is often off PATH on mba —
+# that would turn a green change red (command-not-found). Prefer the repo venv,
+# then a PATH pytest, then `uv run`. Empty means "cannot verify" → gate fails loud.
+PYTEST_CMD=""
+if [[ -x "$REPO_ROOT/.venv/bin/pytest" ]]; then
+    PYTEST_CMD="$REPO_ROOT/.venv/bin/pytest"
+elif command -v pytest >/dev/null 2>&1; then
+    PYTEST_CMD="pytest"
+elif command -v uv >/dev/null 2>&1; then
+    PYTEST_CMD="uv run pytest"
+fi
+
 # Per-iteration model routing. Set RALPH_ROUTER=0 to disable (always use $DEFAULT_MODEL).
 RALPH_ROUTER="${RALPH_ROUTER:-1}"
 DEFAULT_MODEL="${RALPH_DEFAULT_MODEL:-sonnet}"
@@ -94,6 +107,121 @@ if grep -qE "apps/ios-app|xcodebuild" "$REPO_ROOT/$FOCUS_FILE" 2>/dev/null; then
         log "  ⚠ iOS focus but $XCODE_MCP_CONFIG missing — screenshot-verify unavailable"
     fi
 fi
+
+# ── Scoped post-iteration test gate (#57 — loop verification backbone, 57.2).
+# After a "done" iteration commits, run ONLY the suites relevant to the changed
+# top-level scope — diff-level, not whole-repo (TDAD: targeted > whole-suite).
+# This is the enforced "something that can say no": prompt-only test guidance is
+# not enough, so the harness itself re-runs the relevant tests and refuses to
+# advance on red. Sets two globals read by the caller:
+#   GATE_KIND           — human label of which suites ran (backend/ios/…)
+#   GATE_SNAPSHOT_ONLY  — 1 when an iOS failure is only .stableDump snapshot
+#                         drift (a re-record signal, not a logic break — #57
+#                         verification altitude); best-effort heuristic.
+# Returns 0 green (or no gate-relevant changes), 1 red.
+scoped_gate() {
+    local pre="$1" post="$2"
+    local changed rc=0
+    changed="$(git -C "$REPO_ROOT" diff --name-only "$pre..$post")"
+    GATE_KIND=""
+    GATE_SNAPSHOT_ONLY=0
+
+    # Backend (quiz-agent) — shared Pydantic models feed it, so packages/shared
+    # changes gate here too (Rule #5: read the immediate callers).
+    if echo "$changed" | grep -qE '^(apps/quiz-agent/|packages/shared/)'; then
+        GATE_KIND="backend"
+        if [[ -z "$PYTEST_CMD" ]]; then
+            log "  ✗ scoped gate RED (backend) — no pytest runner found; cannot verify"
+            rc=1
+        else
+            local glog="$LOG_DIR/gate-$START_TS-$(printf '%02d' "$iter")-backend.log"
+            set +e
+            (cd "$REPO_ROOT/apps/quiz-agent" && $PYTEST_CMD tests/ -q) > "$glog" 2>&1
+            local brc=$?
+            set -e
+            if [[ $brc -ne 0 ]]; then log "  ✗ scoped gate RED (backend, exit=$brc) — $glog"; rc=1; fi
+        fi
+    fi
+
+    # quiz-pack-api (order/generation) — its own suite.
+    if echo "$changed" | grep -qE '^apps/quiz-pack-api/'; then
+        GATE_KIND="${GATE_KIND:+$GATE_KIND+}quiz-pack-api"
+        if [[ -z "$PYTEST_CMD" ]]; then
+            log "  ✗ scoped gate RED (quiz-pack-api) — no pytest runner found; cannot verify"
+            rc=1
+        else
+            local glog="$LOG_DIR/gate-$START_TS-$(printf '%02d' "$iter")-qpack.log"
+            set +e
+            (cd "$REPO_ROOT/apps/quiz-pack-api" && $PYTEST_CMD tests/ -q) > "$glog" 2>&1
+            local prc=$?
+            set -e
+            if [[ $prc -ne 0 ]]; then log "  ✗ scoped gate RED (quiz-pack-api, exit=$prc) — $glog"; rc=1; fi
+        fi
+    fi
+
+    # iOS — flow/state/structure suite only (HangsTests = ViewInspector +
+    # state dumps). NOT pixel/.pen design-fidelity (#57 verification altitude):
+    # the design is still moving, so 1:1-with-.pen would trip on cosmetic drift.
+    # RS click-through UI tests are too slow/flaky for a per-iteration gate;
+    # push-CI + the end-of-run gate cover them.
+    if echo "$changed" | grep -qE '^apps/ios-app/'; then
+        GATE_KIND="${GATE_KIND:+$GATE_KIND+}ios"
+        local glog="$LOG_DIR/gate-$START_TS-$(printf '%02d' "$iter")-ios.log"
+        local gt=""
+        if command -v gtimeout >/dev/null 2>&1; then gt="gtimeout 2400"
+        elif command -v timeout >/dev/null 2>&1; then gt="timeout 2400"; fi
+        set +e
+        (cd "$REPO_ROOT/apps/ios-app/Hangs" && $gt xcodebuild test \
+            -scheme Hangs-Local \
+            -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+            -only-testing:HangsTests \
+            -quiet) > "$glog" 2>&1
+        local irc=$?
+        set -e
+        if [[ $irc -ne 0 ]]; then
+            # Re-record signal vs real break: if the only failure markers are
+            # snapshot dumps (no XCTAssert/compile/fatal), it's intentional-UI
+            # drift to be re-recorded by a human, not silently auto-fixed.
+            if grep -qiE 'stableDump|snapshot' "$glog" \
+               && ! grep -qE 'XCTAssert|error:|Fatal error|Compilation failed' "$glog"; then
+                GATE_SNAPSHOT_ONLY=1
+                log "  ✗ scoped gate RED (ios, exit=$irc) — snapshot drift, needs human re-record — $glog"
+            else
+                log "  ✗ scoped gate RED (ios, exit=$irc) — $glog"
+            fi
+            rc=1
+        fi
+    fi
+
+    if [[ -z "$GATE_KIND" ]]; then
+        log "  scoped gate: no gate-relevant changes — skipped"
+    elif [[ $rc -eq 0 ]]; then
+        log "  ✓ scoped gate GREEN ($GATE_KIND)"
+    fi
+    return $rc
+}
+
+# Append a machine-written ## BLOCKER to the focus file when a gate refuses an
+# otherwise-"done" iteration, and commit it so it travels with the branch. The
+# bad commit is kept (not reverted) for human review on the throwaway branch —
+# reverting risks an infinite redo loop and discards salvageable work.
+append_gate_blocker() {
+    local d kind extra head
+    d="$(date +%F)"
+    kind="${GATE_KIND:-unknown}"
+    head="$(git -C "$REPO_ROOT" rev-parse --short HEAD)"
+    extra=""
+    [[ "$GATE_SNAPSHOT_ONLY" == "1" ]] && extra=" The failing assertions are snapshot (.stableDump) drift — if the UI change was intentional, re-record the snapshot by hand; do NOT auto-edit it."
+    {
+        printf '\n## BLOCKER (%s) — automated test gate (%s)\n\n' "$d" "$kind"
+        printf -- '- The post-iteration scoped test gate failed after iteration %s committed `%s` (reported task: %s).\n' "$iter" "$head" "$TASK"
+        printf -- '- The change is on this branch but the relevant **%s** suite is RED, so the run halted and the branch was NOT pushed.%s\n' "$kind" "$extra"
+        printf -- '- Next human-touch: read the gate log under `scripts/ralph/logs/gate-%s-*`, fix or revert the commit, then re-run.\n' "$START_TS"
+    } >> "$REPO_ROOT/$FOCUS_FILE"
+    git -C "$REPO_ROOT" add "$FOCUS_FILE"
+    git -C "$REPO_ROOT" commit -m "chore(ralph): #57 gate-red BLOCKER on $(basename "$FOCUS_FILE")" >/dev/null 2>&1 || true
+    log "  appended ## BLOCKER to $FOCUS_FILE"
+}
 
 # Build the system prompt (substitute focus file path)
 SYSTEM_PROMPT="$(sed "s|__FOCUS_FILE__|$FOCUS_FILE|g" "$PROMPT_TEMPLATE")"
@@ -194,8 +322,24 @@ for iter in $(seq 1 "$MAX_ITERS"); do
 
     case "$STATUS" in
         done)
-            COMPLETED=$((COMPLETED + 1))
-            CONSECUTIVE_FAILS=0
+            # Enforced verification (#57 57.2): a "done" iteration that committed
+            # code must pass the scoped gate before it counts. The gate, not the
+            # agent's self-report, decides success.
+            if [[ "$PRE_SHA" != "$POST_SHA" ]]; then
+                if scoped_gate "$PRE_SHA" "$POST_SHA"; then
+                    COMPLETED=$((COMPLETED + 1))
+                    CONSECUTIVE_FAILS=0
+                else
+                    CONSECUTIVE_FAILS=$((CONSECUTIVE_FAILS + 1))
+                    append_gate_blocker
+                    log "✗ scoped gate RED on a 'done' iteration — halting run for human review (exit 5)"
+                    exit 5
+                fi
+            else
+                # "done" with no commit (e.g. doc reconcile) — nothing to gate.
+                COMPLETED=$((COMPLETED + 1))
+                CONSECUTIVE_FAILS=0
+            fi
             ;;
         no-tasks)
             log "✓ focus file reports no remaining tasks — exiting cleanly"
@@ -263,6 +407,15 @@ if git -C "$REPO_ROOT" diff --name-only "$START_SHA..$END_SHA" | grep -q '^apps/
         grep -E "Failing tests:|Test [Cc]ase .* failed|error:" "$GATE_LOG" | head -20 | while IFS= read -r line; do
             log "  $line"
         done
+        # Document the block in the focus file so the chain (#57 57.3) and the
+        # human both see why the branch is unpushable.
+        {
+            printf '\n## BLOCKER (%s) — end-of-run iOS test gate\n\n' "$(date +%F)"
+            printf -- '- The HangsTests unit suite is RED at the end of this run; the run touched `apps/ios-app/` so the branch is NOT pushable.\n'
+            printf -- '- Next human-touch: read the gate log `%s`, fix the failure, then re-run.\n' "$GATE_LOG"
+        } >> "$REPO_ROOT/$FOCUS_FILE"
+        git -C "$REPO_ROOT" add "$FOCUS_FILE" >/dev/null 2>&1 || true
+        git -C "$REPO_ROOT" commit -m "chore(ralph): #57 end-gate BLOCKER on $(basename "$FOCUS_FILE")" >/dev/null 2>&1 || true
     fi
 fi
 

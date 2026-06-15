@@ -109,6 +109,13 @@ final class AppState: ObservableObject {
             viewModel.currentQuestion = Question.preview
             viewModel.quizState = .askingQuestion
         }
+        // `--ui-test-voice-sk`: voice QuestionView (Ready) seeded with a long
+        // Slovak question covering every caron (č š ž ľ ť), to verify the
+        // full-Unicode fonts render diacritics in-face (step 7 diacritics pass).
+        if CommandLine.arguments.contains("--ui-test-voice-sk") {
+            viewModel.currentQuestion = Question.previewSlovak
+            viewModel.quizState = .askingQuestion
+        }
         // `--ui-test-recording`: voice QuestionView mid-recording with a live
         // transcript, to verify the transcript card pins above the action row.
         if CommandLine.arguments.contains("--ui-test-recording") {

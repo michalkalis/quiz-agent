@@ -193,6 +193,25 @@ extension Question {
             generatedBy: "claude-opus-4.6"
         )
 
+        /// Long Slovak question exercising every caron in Latin Extended-A
+        /// (č š ž ľ ť) — used by `--ui-test-voice-sk` to screenshot-verify that
+        /// the bundled full-Unicode fonts render diacritics in-face (step 7).
+        static let previewSlovak = Question(
+            id: "q_preview_sk_001",
+            question: "Ktoré slovenské mesto leží na sútoku riek Váh a Dunaj a má najťažšie čitateľný erb so žltým žrebcom?",
+            type: .text,
+            possibleAnswers: nil,
+            difficulty: "medium",
+            topic: "Geografia",
+            category: "dospelí",
+            sourceUrl: nil,
+            sourceExcerpt: nil,
+            mediaUrl: nil,
+            imageSubtype: nil,
+            explanation: nil,
+            generatedBy: nil
+        )
+
         static let previewHard = Question(
             id: "q_preview_456",
             question: "What is the chemical formula for sulfuric acid?",

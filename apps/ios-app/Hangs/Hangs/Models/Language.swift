@@ -16,16 +16,18 @@ struct Language: Identifiable, Hashable, Sendable {
     /// All supported languages
     /// OpenAI TTS supports ~99 languages - add more as needed
     static let supportedLanguages: [Language] = [
-        Language(id: "en", name: "English", nativeName: "English"),
-        Language(id: "sk", name: "Slovak", nativeName: "Slovenčina"),
-        Language(id: "cs", name: "Czech", nativeName: "Čeština"),
-        Language(id: "de", name: "German", nativeName: "Deutsch"),
-        Language(id: "fr", name: "French", nativeName: "Français"),
-        Language(id: "es", name: "Spanish", nativeName: "Español"),
-        Language(id: "it", name: "Italian", nativeName: "Italiano"),
-        Language(id: "pl", name: "Polish", nativeName: "Polski"),
-        Language(id: "hu", name: "Hungarian", nativeName: "Magyar"),
-        Language(id: "ro", name: "Romanian", nativeName: "Română")
+        // `name` is the English exonym shown in the language picker subtitle → localized.
+        // `nativeName` is each language's own name (same in any UI) → kept verbatim, never localized.
+        Language(id: "en", name: String(localized: "English", comment: "Language name (exonym)"), nativeName: "English"),
+        Language(id: "sk", name: String(localized: "Slovak", comment: "Language name (exonym)"), nativeName: "Slovenčina"),
+        Language(id: "cs", name: String(localized: "Czech", comment: "Language name (exonym)"), nativeName: "Čeština"),
+        Language(id: "de", name: String(localized: "German", comment: "Language name (exonym)"), nativeName: "Deutsch"),
+        Language(id: "fr", name: String(localized: "French", comment: "Language name (exonym)"), nativeName: "Français"),
+        Language(id: "es", name: String(localized: "Spanish", comment: "Language name (exonym)"), nativeName: "Español"),
+        Language(id: "it", name: String(localized: "Italian", comment: "Language name (exonym)"), nativeName: "Italiano"),
+        Language(id: "pl", name: String(localized: "Polish", comment: "Language name (exonym)"), nativeName: "Polski"),
+        Language(id: "hu", name: String(localized: "Hungarian", comment: "Language name (exonym)"), nativeName: "Magyar"),
+        Language(id: "ro", name: String(localized: "Romanian", comment: "Language name (exonym)"), nativeName: "Română")
     ]
 
     /// Default language (English)

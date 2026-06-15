@@ -211,7 +211,7 @@ enum HangsResultKind {
     case correct
     case incorrect
 
-    var label: String { self == .correct ? "correct" : "not quite" }
+    var label: String { self == .correct ? String(localized: "correct", comment: "Result banner label when the answer is correct") : String(localized: "not quite", comment: "Result banner label when the answer is incorrect") }
     var icon: String { self == .correct ? "checkmark" : "xmark" }
     var color: Color {
         self == .correct ? Theme.Hangs.Colors.greenCorrect : Theme.Hangs.Colors.pink

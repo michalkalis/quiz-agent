@@ -20,7 +20,7 @@ enum AppErrorRetryAction: Equatable, Sendable {
 }
 
 /// Maps any thrown error to a title + description + retry action.
-/// Copy is English source text (#56) — String Catalog localization is applied in 56.3b;
+/// Copy is English source text localized via the String Catalog (#56 task 56.3b);
 /// the Slovak originals are preserved in `docs/issues/issue-56-ios-localization.md`.
 struct AppErrorModel: Equatable, Sendable {
     let title: String
@@ -31,8 +31,8 @@ struct AppErrorModel: Equatable, Sendable {
     /// guard and fails identically, so the CTA is Go Home — the recovery path
     /// is Settings → "Reset question history" (#54 task 54.17).
     static let historyAtCapacity = AppErrorModel(
-        title: "Question history is full",
-        description: "Clear your question history in Settings (Reset question history) and start a new game.",
+        title: String(localized: "Question history is full", comment: "Error title: saved-question history reached its cap"),
+        description: String(localized: "Clear your question history in Settings (Reset question history) and start a new game.", comment: "Error body: how to recover from a full question history"),
         retryAction: .goHome
     )
 
@@ -42,8 +42,8 @@ struct AppErrorModel: Equatable, Sendable {
         // offer a soft dismiss instead (54.15; surfaced by the 54.5 path).
         if error is CancellationError || (error as? URLError)?.code == .cancelled {
             return AppErrorModel(
-                title: "Action cancelled",
-                description: "Your submission was interrupted. Try answering again.",
+                title: String(localized: "Action cancelled", comment: "Error title: the in-flight operation was cancelled"),
+                description: String(localized: "Your submission was interrupted. Try answering again.", comment: "Error body: a cancelled submission"),
                 retryAction: .dismiss
             )
         }
@@ -53,14 +53,14 @@ struct AppErrorModel: Equatable, Sendable {
             switch urlError.code {
             case .notConnectedToInternet, .networkConnectionLost:
                 return AppErrorModel(
-                    title: "No internet connection",
-                    description: "Check your Wi-Fi or mobile data and try again.",
+                    title: String(localized: "No internet connection", comment: "Error title: device is offline"),
+                    description: String(localized: "Check your Wi-Fi or mobile data and try again.", comment: "Error body: offline recovery"),
                     retryAction: .retryOperation
                 )
             case .timedOut:
                 return AppErrorModel(
-                    title: "Request timed out",
-                    description: "The server took too long to respond. Try again.",
+                    title: String(localized: "Request timed out", comment: "Error title: the request exceeded its timeout"),
+                    description: String(localized: "The server took too long to respond. Try again.", comment: "Error body: request timeout"),
                     retryAction: .retryOperation
                 )
             default:
@@ -73,38 +73,38 @@ struct AppErrorModel: Equatable, Sendable {
             switch networkError {
             case .dailyLimitReached:
                 return AppErrorModel(
-                    title: "Daily limit reached",
-                    description: "You've answered the maximum number of questions today. Come back tomorrow.",
+                    title: String(localized: "Daily limit reached", comment: "Error title: user hit the free daily question quota"),
+                    description: String(localized: "You've answered the maximum number of questions today. Come back tomorrow.", comment: "Error body: daily quota reached"),
                     retryAction: .goHome
                 )
             case .sessionNotFound:
                 return AppErrorModel(
-                    title: "Session expired",
-                    description: "This quiz session is no longer active. Start a new game.",
+                    title: String(localized: "Session expired", comment: "Error title: the quiz session is no longer active"),
+                    description: String(localized: "This quiz session is no longer active. Start a new game.", comment: "Error body: expired session"),
                     retryAction: .goHome
                 )
             case let .serverError(statusCode, _) where statusCode >= 500:
                 return AppErrorModel(
-                    title: "Server error",
-                    description: "Something went wrong on our end. Try again.",
+                    title: String(localized: "Server error", comment: "Error title: backend returned a 5xx"),
+                    description: String(localized: "Something went wrong on our end. Try again.", comment: "Error body: server-side failure"),
                     retryAction: .retryOperation
                 )
             case let .serverError(statusCode, _) where statusCode == 429:
                 return AppErrorModel(
-                    title: "Too many requests",
-                    description: "Slow down a little and try again in a moment.",
+                    title: String(localized: "Too many requests", comment: "Error title: rate limited (HTTP 429)"),
+                    description: String(localized: "Slow down a little and try again in a moment.", comment: "Error body: rate limited"),
                     retryAction: .retryOperation
                 )
             case .decodingError, .invalidResponse:
                 return AppErrorModel(
-                    title: "Unexpected response",
-                    description: "We received unexpected data. Try again.",
+                    title: String(localized: "Unexpected response", comment: "Error title: response could not be decoded"),
+                    description: String(localized: "We received unexpected data. Try again.", comment: "Error body: malformed response"),
                     retryAction: .retryOperation
                 )
             case .invalidURL:
                 return AppErrorModel(
-                    title: "Configuration error",
-                    description: "Something is wrong with the app's settings.",
+                    title: String(localized: "Configuration error", comment: "Error title: app could not build a valid request URL"),
+                    description: String(localized: "Something is wrong with the app's settings.", comment: "Error body: misconfiguration"),
                     retryAction: .dismiss
                 )
             default:
@@ -122,26 +122,26 @@ struct AppErrorModel: Equatable, Sendable {
         switch context {
         case .initialization:
             return AppErrorModel(
-                title: "Couldn't start the quiz",
-                description: "Check your connection and try again.",
+                title: String(localized: "Couldn't start the quiz", comment: "Error title: quiz failed to start (no specific error)"),
+                description: String(localized: "Check your connection and try again.", comment: "Error body: generic start failure"),
                 retryAction: .retryOperation
             )
         case .submission:
             return AppErrorModel(
-                title: "Couldn't submit your answer",
-                description: "Try submitting your answer again.",
+                title: String(localized: "Couldn't submit your answer", comment: "Error title: answer submission failed (no specific error)"),
+                description: String(localized: "Try submitting your answer again.", comment: "Error body: generic submission failure"),
                 retryAction: .retryOperation
             )
         case .recording:
             return AppErrorModel(
-                title: "Recording failed",
-                description: "Try answering again.",
+                title: String(localized: "Recording failed", comment: "Error title: audio recording failed (no specific error)"),
+                description: String(localized: "Try answering again.", comment: "Error body: generic recording failure"),
                 retryAction: .retryOperation
             )
         case .general:
             return AppErrorModel(
-                title: "Something went wrong",
-                description: "Try again.",
+                title: String(localized: "Something went wrong", comment: "Error title: generic catch-all failure"),
+                description: String(localized: "Try again.", comment: "Error body: generic catch-all failure"),
                 retryAction: .retryOperation
             )
         }

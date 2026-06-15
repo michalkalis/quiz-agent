@@ -18,14 +18,14 @@ struct AudioMode: Identifiable, Hashable, Sendable {
     static let supportedModes: [AudioMode] = [
         AudioMode(
             id: "call",
-            name: "Call Mode",
-            description: "Uses Bluetooth microphone (may show as phone call in car)",
+            name: String(localized: "Call Mode", comment: "Audio mode name: uses the Bluetooth call channel"),
+            description: String(localized: "Uses Bluetooth microphone (may show as phone call in car)", comment: "Audio mode explanation for Call Mode"),
             icon: "phone.fill"
         ),
         AudioMode(
             id: "media",
-            name: "Media Mode",
-            description: "Car-friendly audio (built-in mic only, no call UI)",
+            name: String(localized: "Media Mode", comment: "Audio mode name: car-friendly media channel"),
+            description: String(localized: "Car-friendly audio (built-in mic only, no call UI)", comment: "Audio mode explanation for Media Mode"),
             icon: "car.fill"
         )
     ]

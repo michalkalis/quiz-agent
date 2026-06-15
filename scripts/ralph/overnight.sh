@@ -132,6 +132,11 @@ log "time budget: ${MAX_SECONDS}s"
 START_EPOCH="$(date +%s)"
 DEADLINE=$((START_EPOCH + MAX_SECONDS))
 
+# Gate-red latch (#57 57.3): a red verification gate from ralph.sh (exit 4 =
+# end-of-run iOS gate, exit 5 = per-iteration scoped gate) halts the chain and
+# withholds the push — a branch with a known-red gate must not reach review/main.
+GATE_RED=0
+
 for i in "${!FOCUS_FILES[@]}"; do
     focus="${FOCUS_FILES[$i]}"
     iters="${FOCUS_ITERS[$i]}"
@@ -155,6 +160,13 @@ for i in "${!FOCUS_FILES[@]}"; do
     rc=$?
     set -e
     log "    ralph.sh exit=$rc for $focus"
+
+    if [[ $rc -eq 4 || $rc -eq 5 ]]; then
+        GATE_RED=1
+        log "✗ GATE-RED exit ($rc) from ralph.sh on $focus — halting chain; branch will NOT be pushed (#57 57.3)."
+        log "    the BLOCKER is recorded in the focus file + gate logs under scripts/ralph/logs/."
+        break
+    fi
 done
 
 # ── Consolidated report.
@@ -202,7 +214,16 @@ fi
 git add -f "$REPORT_REL"
 git commit -m "docs(ralph): overnight report $TS" >/dev/null 2>&1 || log "  (no report changes to commit)"
 
-# ── Push the ralph/* branch only. Never main.
+# ── Push the ralph/* branch only. Never main. A gate-red run is left local and
+#    unpushed (#57 57.3): the verification gate said no, so nothing reaches review.
+if [[ $GATE_RED -ne 0 ]]; then
+    log "─── gate-red: NOT pushing $BRANCH. Review the BLOCKER in the focus file + gate logs first."
+    git checkout main >/dev/null 2>&1
+    log "    branch left local (unpushed): $BRANCH"
+    log "    on the laptop:  git checkout $BRANCH  &&  git log main..$BRANCH --stat"
+    exit 6
+fi
+
 log "pushing $BRANCH to origin"
 set +e
 git push -u origin "$BRANCH" > "$LOG_DIR/push-$TS.log" 2>&1

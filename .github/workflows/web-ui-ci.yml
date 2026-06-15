@@ -8,6 +8,9 @@ on:
     branches:
       - main
       - develop
+      # ralph/**: overnight-agent branches get a remote test run when pushed for
+      # review, so a red branch is visible before it merges (#57 — loop verification backbone).
+      - 'ralph/**'
     paths:
       - 'apps/web-ui/**'
       - '.github/workflows/web-ui-ci.yml'

@@ -2,7 +2,9 @@ name: Backend CI
 
 on:
   push:
-    branches: [main]
+    # ralph/**: overnight-agent branches get a remote test run when pushed for
+    # review, so a red branch is visible before it merges (#57 — loop verification backbone).
+    branches: [main, 'ralph/**']
     paths:
       - 'apps/quiz-agent/**'
       - 'apps/quiz-pack-api/**'

@@ -53,6 +53,14 @@ RALPH_ROUTER="${RALPH_ROUTER:-1}"
 DEFAULT_MODEL="${RALPH_DEFAULT_MODEL:-sonnet}"
 ROUTER_BUDGET_USD="${RALPH_ROUTER_BUDGET_USD:-0.50}"
 
+# Independent reviewer pass (#57 57.5 — maker ≠ checker). Set RALPH_REVIEWER=0 to
+# disable. Runs after the scoped gate is green, on a fixed capable model (not the
+# router) so the "no" is consistent and independent of the worker's model.
+RALPH_REVIEWER="${RALPH_REVIEWER:-1}"
+REVIEWER_MODEL="${RALPH_REVIEWER_MODEL:-sonnet}"
+REVIEWER_BUDGET_USD="${RALPH_REVIEWER_BUDGET_USD:-1.00}"
+REVIEW_TEMPLATE="$SCRIPT_DIR/prompts/review-task.md"
+
 # Map a ROUTE: token to a --model value. Aliases work for the latest models;
 # fable is spelled in full to be explicit about the premium tier.
 route_to_model() {
@@ -223,6 +231,86 @@ append_gate_blocker() {
     log "  appended ## BLOCKER to $FOCUS_FILE"
 }
 
+# ── Independent reviewer pass (#57 — loop verification backbone, 57.5).
+# The scoped gate proves the tests pass; it does NOT prove the change actually
+# meets its acceptance criteria (maker = checker is the whole problem). So after
+# the gate is GREEN, a SEPARATE `claude -p` — fresh context, no memory of how the
+# change was made — sees ONLY the iteration's diff + the focus file's acceptance,
+# and is prompted to flag *only* correctness / stated-requirement gaps (Anthropic:
+# reviewers over-report, so constrain them). Returns PASS / CONCERNS.
+#   - PASS                → accept the iteration.
+#   - CONCERNS            → block acceptance (the change misses its acceptance).
+#   - no parseable verdict / template missing → block too: "could not confirm"
+#     is not "confirmed" (fail loud, same stance as the gate's missing-pytest).
+# Sets REVIEW_REASON (one line, for the BLOCKER note). Returns 0 PASS, 1 otherwise.
+reviewer_pass() {
+    local pre="$1" post="$2"
+    REVIEW_REASON=""
+    if [[ "$RALPH_REVIEWER" != "1" ]]; then
+        log "  reviewer: disabled (RALPH_REVIEWER=0) — skipped"
+        return 0
+    fi
+    if [[ ! -f "$REVIEW_TEMPLATE" ]]; then
+        REVIEW_REASON="reviewer prompt template missing ($REVIEW_TEMPLATE)"
+        log "  ✗ reviewer RED — $REVIEW_REASON (cannot confirm acceptance)"
+        return 1
+    fi
+
+    # Write the exact iteration diff to a file so the reviewer sees ONLY the diff
+    # (+ the focus file's acceptance), not the worker's reasoning trail.
+    local diff_file="$LOG_DIR/review-$START_TS-$(printf '%02d' "$iter").diff"
+    local rlog="$LOG_DIR/review-$START_TS-$(printf '%02d' "$iter").log"
+    git -C "$REPO_ROOT" diff "$pre..$post" > "$diff_file" 2>/dev/null
+
+    local rprompt
+    rprompt="$(sed -e "s|__FOCUS_FILE__|$FOCUS_FILE|g" -e "s|__DIFF_FILE__|$diff_file|g" "$REVIEW_TEMPLATE")"
+    set +e
+    claude \
+        -p "Review the diff at $diff_file against the acceptance criteria in $FOCUS_FILE. End with the REVIEW_VERDICT line." \
+        --model "$REVIEWER_MODEL" \
+        --permission-mode bypassPermissions \
+        --allowed-tools "Read" "Grep" "Glob" \
+        --max-budget-usd "$REVIEWER_BUDGET_USD" \
+        --no-session-persistence \
+        --append-system-prompt "$rprompt" \
+        > "$rlog" 2>&1
+    set -e
+
+    local verdict
+    verdict="$(grep -oE 'REVIEW_VERDICT:[[:space:]]*(PASS|CONCERNS)' "$rlog" | tail -1 | sed -E 's/REVIEW_VERDICT:[[:space:]]*//' || true)"
+    if [[ "$verdict" == "PASS" ]]; then
+        log "  ✓ reviewer PASS"
+        return 0
+    elif [[ "$verdict" == "CONCERNS" ]]; then
+        REVIEW_REASON="$(grep -oE 'REVIEW_VERDICT:[[:space:]]*CONCERNS.*' "$rlog" | tail -1 | sed -E 's/REVIEW_VERDICT:[[:space:]]*CONCERNS[[:space:]]*[—-]*[[:space:]]*//' || true)"
+        [[ -z "$REVIEW_REASON" ]] && REVIEW_REASON="see $rlog"
+        log "  ✗ reviewer CONCERNS — $REVIEW_REASON ($rlog)"
+        return 1
+    else
+        REVIEW_REASON="reviewer produced no parseable REVIEW_VERDICT (see $rlog)"
+        log "  ✗ reviewer RED — $REVIEW_REASON"
+        return 1
+    fi
+}
+
+# Append a machine-written ## BLOCKER when the independent reviewer (57.5) refuses
+# an otherwise gate-green iteration, and commit it so it travels with the branch.
+append_review_blocker() {
+    local d head
+    d="$(date +%F)"
+    head="$(git -C "$REPO_ROOT" rev-parse --short HEAD)"
+    {
+        printf '\n## BLOCKER (%s) — independent reviewer (CONCERNS)\n\n' "$d"
+        printf -- '- The independent reviewer pass (maker ≠ checker, #57 57.5) returned **CONCERNS** for iteration %s (`%s`, reported task: %s).\n' "$iter" "$head" "$TASK"
+        printf -- '- The scoped test gate was GREEN, but the change does not clearly meet its acceptance criteria: %s\n' "${REVIEW_REASON:-see reviewer log}"
+        printf -- '- The commit is on this branch but NOT accepted; the run halted and the branch was NOT pushed.\n'
+        printf -- '- Next human-touch: read the reviewer log under `scripts/ralph/logs/review-%s-*`, address the concern (or override if it is a false positive), then re-run.\n' "$START_TS"
+    } >> "$REPO_ROOT/$FOCUS_FILE"
+    git -C "$REPO_ROOT" add "$FOCUS_FILE"
+    git -C "$REPO_ROOT" commit -m "chore(ralph): #57 reviewer CONCERNS BLOCKER on $(basename "$FOCUS_FILE")" >/dev/null 2>&1 || true
+    log "  appended ## BLOCKER (reviewer) to $FOCUS_FILE"
+}
+
 # Build the system prompt (substitute focus file path)
 SYSTEM_PROMPT="$(sed "s|__FOCUS_FILE__|$FOCUS_FILE|g" "$PROMPT_TEMPLATE")"
 
@@ -327,8 +415,18 @@ for iter in $(seq 1 "$MAX_ITERS"); do
             # agent's self-report, decides success.
             if [[ "$PRE_SHA" != "$POST_SHA" ]]; then
                 if scoped_gate "$PRE_SHA" "$POST_SHA"; then
-                    COMPLETED=$((COMPLETED + 1))
-                    CONSECUTIVE_FAILS=0
+                    # Gate is green (tests pass). Now the independent reviewer
+                    # (#57 57.5) checks the diff against its acceptance criteria —
+                    # a green gate does not prove the change met its requirements.
+                    if reviewer_pass "$PRE_SHA" "$POST_SHA"; then
+                        COMPLETED=$((COMPLETED + 1))
+                        CONSECUTIVE_FAILS=0
+                    else
+                        CONSECUTIVE_FAILS=$((CONSECUTIVE_FAILS + 1))
+                        append_review_blocker
+                        log "✗ independent reviewer CONCERNS on a gate-green iteration — halting run for human review (exit 6)"
+                        exit 6
+                    fi
                 else
                     CONSECUTIVE_FAILS=$((CONSECUTIVE_FAILS + 1))
                     append_gate_blocker

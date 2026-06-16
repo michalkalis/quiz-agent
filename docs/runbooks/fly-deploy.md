@@ -7,10 +7,12 @@ Read this before deploying or before changing `[[mounts]]` in `apps/quiz-agent/f
 
 ## Pitfall 1: Dockerfile pip deps drift from pyproject.toml
 
-The repo-root `Dockerfile` installs quiz-agent deps via a hardcoded
-`RUN pip install fastapi>=... uvicorn>=... ...` list, NOT from
-`apps/quiz-agent/pyproject.toml`. Any new dep added to `pyproject.toml` must
-also be added to the Dockerfile or prod startup will `ModuleNotFoundError`.
+`apps/quiz-agent/Dockerfile` (the one deploy uses — `fly deploy -c apps/quiz-agent/fly.toml`
+resolves `dockerfile="Dockerfile"` relative to the config file's dir) installs
+quiz-agent deps via a hardcoded `RUN pip install fastapi>=... uvicorn>=... ...`
+list, NOT from `apps/quiz-agent/pyproject.toml`. Any new dep added to
+`pyproject.toml` must also be added to the Dockerfile or prod startup will
+`ModuleNotFoundError`.
 
 History: `slowapi`, `sentry-sdk[fastapi]`, `pydub`, `httpx` have all silently
 drifted in the past — the next deploy after the change is when it's noticed.

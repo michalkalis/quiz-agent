@@ -148,8 +148,9 @@ the worker's model.
 Claude Code has **no native `/goal`** command — this implements the pattern. The
 worker deciding the run is finished (its `no-tasks` self-report, or running out of
 checkboxes) is the same maker = checker flaw 57.5 fixes on the *work*, applied to the
-*stop*. So a separate cheap **Haiku** `claude -p` (read-only, fresh context) re-checks
-the focus file's machine-evaluable `## Acceptance` block (57.6) against the actual repo
+*stop*. So a separate `claude -p` on a fixed model (**sonnet**, read-only, fresh
+context — independent of the worker's router choice) re-checks the
+focus file's machine-evaluable `## Acceptance` block (57.6) against the actual repo
 state and emits `GOAL_MET: YES|NO` (`prompts/goal-check.md`). It verifies the underlying
 evidence for each criterion — a ticked checkbox with no evidence is unmet — and is told
 to **bias to NO when unsure** (a false NO keeps the human-reviewed loop working; a false
@@ -168,7 +169,7 @@ It runs at two points:
 A focus file with **no `## Acceptance` block** (queue files, legacy issues) has nothing
 machine-evaluable to gate on, so the worker's stop signal is accepted as before
 (backward-compatible). Disable with `RALPH_GOALCHECK=0`; tune `RALPH_GOALCHECK_MODEL`
-(default `haiku`) and `RALPH_GOALCHECK_BUDGET_USD` (default `0.50`).
+(default `sonnet`) and `RALPH_GOALCHECK_BUDGET_USD` (default `0.50`).
 
 `overnight.sh` treats ralph.sh `exit 4` (end-of-run iOS gate), `exit 5` (scoped gate),
 `exit 6` (reviewer CONCERNS), and `exit 7` (goal not met) as gate-red: it stops the chain

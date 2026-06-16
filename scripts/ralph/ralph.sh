@@ -63,13 +63,14 @@ REVIEW_TEMPLATE="$SCRIPT_DIR/prompts/review-task.md"
 
 # Goal stop-condition checker (#57 57.7 — the "/goal" pattern). The STOP decision
 # for a single-issue run is owned by a checker, NOT the worker's prose self-report:
-# a cheap Haiku `claude -p` re-checks the focus file's machine-evaluable
+# a separate `claude -p` (sonnet, fixed model — independent of the worker's router
+# choice, like the 57.5 reviewer) re-checks the focus file's machine-evaluable
 # `## Acceptance` block (#57 57.6) against the repo state — each accepted iteration
 # and on the worker's no-tasks claim — and emits GOAL_MET: YES|NO. The loop stops
 # only when the stated done-condition actually holds. Set RALPH_GOALCHECK=0 to
 # disable (revert to trusting the worker's no-tasks cue).
 RALPH_GOALCHECK="${RALPH_GOALCHECK:-1}"
-GOALCHECK_MODEL="${RALPH_GOALCHECK_MODEL:-haiku}"
+GOALCHECK_MODEL="${RALPH_GOALCHECK_MODEL:-sonnet}"
 GOALCHECK_BUDGET_USD="${RALPH_GOALCHECK_BUDGET_USD:-0.50}"
 GOALCHECK_TEMPLATE="$SCRIPT_DIR/prompts/goal-check.md"
 
@@ -327,8 +328,8 @@ append_review_blocker() {
 # Steinberger's "/goal" pattern: the loop "cannot mark the issue done unless the
 # acceptance criteria are met." The worker reporting `no-tasks` (or running out of
 # checkboxes) is a *request* to stop, not the authority to — maker = checker on the
-# STOP decision is the same flaw 57.5 fixes on the work. So a SEPARATE cheap Haiku
-# `claude -p` (fresh context, read-only) reads the focus file's machine-evaluable
+# STOP decision is the same flaw 57.5 fixes on the work. So a SEPARATE `claude -p` on
+# a fixed model (sonnet, fresh context, read-only) reads the focus file's machine-evaluable
 # `## Acceptance` block (#57 57.6) + the repo state and decides whether the stated
 # done-condition actually holds, emitting GOAL_MET: YES|NO. It is told to bias to NO
 # when unsure — a false NO just keeps the (human-reviewed) loop working; a false YES

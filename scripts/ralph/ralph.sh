@@ -51,6 +51,7 @@ fi
 # Per-iteration model routing. Set RALPH_ROUTER=0 to disable (always use $DEFAULT_MODEL).
 RALPH_ROUTER="${RALPH_ROUTER:-1}"
 DEFAULT_MODEL="${RALPH_DEFAULT_MODEL:-sonnet}"
+ROUTER_MODEL="${RALPH_ROUTER_MODEL:-sonnet}"
 ROUTER_BUDGET_USD="${RALPH_ROUTER_BUDGET_USD:-0.50}"
 
 # Independent reviewer pass (#57 57.5 — maker ≠ checker). Set RALPH_REVIEWER=0 to
@@ -420,7 +421,7 @@ for iter in $(seq 1 "$MAX_ITERS"); do
 
     PRE_SHA="$(git -C "$REPO_ROOT" rev-parse HEAD)"
 
-    # ── Router pre-pass: a cheap Haiku call picks the model for THIS iteration.
+    # ── Router pre-pass: a cheap read-only call (sonnet) picks the model for THIS iteration.
     # It reads the focus file (read-only), finds the same "next task" the worker
     # will pick, applies the rubric in route-model.md, and prints `ROUTE: <model>`.
     CHOSEN_MODEL="$DEFAULT_MODEL"
@@ -431,7 +432,7 @@ for iter in $(seq 1 "$MAX_ITERS"); do
         set +e
         claude \
             -p "Route the next Ralph task on $FOCUS_FILE. End with the ROUTE: line." \
-            --model haiku \
+            --model "$ROUTER_MODEL" \
             --permission-mode bypassPermissions \
             --allowed-tools "Read" "Grep" "Glob" \
             --max-budget-usd "$ROUTER_BUDGET_USD" \

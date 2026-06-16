@@ -190,7 +190,7 @@ if [[ -f "$REPORT_TEMPLATE" ]]; then
     set +e
     claude \
         -p "Write the Ralph overnight report HTML to $REPORT_REL. Read the run logs and git history first." \
-        --model haiku \
+        --model "${OVERNIGHT_REPORT_MODEL:-sonnet}" \
         --permission-mode bypassPermissions \
         --max-budget-usd "${OVERNIGHT_REPORT_BUDGET_USD:-1.00}" \
         --no-session-persistence \

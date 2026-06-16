@@ -104,9 +104,10 @@ Schedule via `~/Library/LaunchAgents/com.quizagent.ralph.plist`. Trigger nightly
 
 ## Per-iteration model routing
 
-Each iteration is preceded by a cheap **router pre-pass** (Haiku, $0.50 cap,
-read-only). It reads the focus file, finds the same "next task" the worker will
-pick, applies a rubric (`prompts/route-model.md`), and prints `ROUTE: <model>`.
+Each iteration is preceded by a **router pre-pass** (sonnet by default, `$0.50` cap,
+read-only; override with `RALPH_ROUTER_MODEL`). It reads the focus file, finds the
+same "next task" the worker will pick, applies a rubric (`prompts/route-model.md`),
+and prints `ROUTE: <model>`.
 The worker iteration then runs on that model (`--model`), with `--fallback-model
 sonnet` still as the safety net. The route is logged as `route=<model>` per
 iteration. Rubric biases cheap: `sonnet` is the default; `haiku` for trivial

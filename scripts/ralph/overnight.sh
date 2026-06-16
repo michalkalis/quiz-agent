@@ -29,6 +29,11 @@ QUEUE_FILE="${OVERNIGHT_QUEUE:-$REPO_ROOT/docs/issues/overnight-queue.md}"
 REPORT_TEMPLATE="$SCRIPT_DIR/prompts/report.md"
 LOG_DIR="$SCRIPT_DIR/logs"
 LOCK_DIR="$SCRIPT_DIR/.overnight.lock"
+MIRROR="$SCRIPT_DIR/mirror-issues.sh"
+
+# State-change notifier (#57 57.9) — one terminal ping per run, never per iteration.
+# shellcheck source=/dev/null
+[[ -f "$SCRIPT_DIR/notify.sh" ]] && source "$SCRIPT_DIR/notify.sh"
 
 DEFAULT_ITERS="${OVERNIGHT_DEFAULT_ITERS:-12}"
 # Global wall-clock budget for the whole run. ~6h leaves margin before morning.
@@ -216,6 +221,22 @@ fi
 git add -f "$REPORT_REL"
 git commit -m "docs(ralph): overnight report $TS" >/dev/null 2>&1 || log "  (no report changes to commit)"
 
+# ── GitHub Issues mirror (#57 57.10) — runs in BOTH terminals (gate-red too), so
+#    BLOCKERs land on the GitHub board even when the branch is withheld and the
+#    founder can see them from the phone without ssh. Best-effort; never fails the run.
+#    Reads the working tree (which now carries any BLOCKER the run appended).
+BLOCKED_ISSUES=""
+for f in "${FOCUS_FILES[@]}"; do
+    if grep -qE '^## BLOCKER' "$REPO_ROOT/$f" 2>/dev/null; then
+        nn="$(basename "$f" | sed -E 's/^issue-0*([0-9]+).*/#\1/')"
+        BLOCKED_ISSUES="${BLOCKED_ISSUES:+$BLOCKED_ISSUES, }$nn"
+    fi
+done
+if [[ -x "$MIRROR" ]]; then
+    log "─── mirroring local issue state → GitHub Issues (#57 57.10)"
+    set +e; "$MIRROR" 2>&1 | tee -a "$RUN_LOG"; set -e
+fi
+
 # ── Push the ralph/* branch only. Never main. A gate-red run is left local and
 #    unpushed (#57 57.3): the verification gate said no, so nothing reaches review.
 if [[ $GATE_RED -ne 0 ]]; then
@@ -223,6 +244,9 @@ if [[ $GATE_RED -ne 0 ]]; then
     git checkout main >/dev/null 2>&1
     log "    branch left local (unpushed): $BRANCH"
     log "    on the laptop:  git checkout $BRANCH  &&  git log main..$BRANCH --stat"
+    if type ralph_notify >/dev/null 2>&1; then
+        ralph_notify blocked "$BRANCH · ${BLOCKED_ISSUES:-gate-red} · branch held local, $COMMITS commit(s) — see GitHub board + scripts/ralph/logs/overnight-$TS.log"
+    fi
     exit 6
 fi
 
@@ -241,3 +265,15 @@ log "─── done. On the laptop, run: scripts/ralph/morning.sh"
 log "    branch:  origin/$BRANCH"
 log "    report:  $REPORT_REL (on the branch)"
 log "    commits: git log main..origin/$BRANCH --stat"
+
+# ── One terminal state-change ping (#57 57.9). A run with no commits is "idle",
+#    not "done" — don't imply work that didn't happen (fail-loud / Rule #2).
+if type ralph_notify >/dev/null 2>&1; then
+    if [[ "$COMMITS" -eq 0 ]]; then
+        ralph_notify idle "$BRANCH · no commits this run — nothing to review"
+    elif [[ $push_rc -ne 0 ]]; then
+        ralph_notify blocked "$BRANCH · $COMMITS commit(s) but PUSH FAILED — see scripts/ralph/logs/push-$TS.log"
+    else
+        ralph_notify done "$BRANCH · $COMMITS commit(s) pushed → run scripts/ralph/morning.sh"
+    fi
+fi

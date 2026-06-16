@@ -257,6 +257,34 @@ GUI desktop. No manual re-bootstrap is needed — the agent auto-loads from
 `~/Library/LaunchAgents` on login and `RunAtLoad=true` fires one catch-up run. See
 **Option B — launchd** above for the full behavior and the one-line re-bootstrap.
 
+## Visibility (#57 Track E)
+
+Two surfaces report run state without per-iteration noise. Founder decision 2026-06-16:
+no night-time phone push yet — we review in the morning — so these are pull/glance
+surfaces, with a phone push left one `.env` line away.
+
+- **State-change note (57.9, `notify.sh`).** `overnight.sh` emits **one** terminal ping
+  per run — `done` / `blocked` / `idle`, never per iteration. The default sink is a
+  durable local note for an ssh glance: `logs/LAST-RUN.md` (latest run at a glance) +
+  `logs/status-history.log` (one line per event). Set `RALPH_NOTIFY_WEBHOOK` in `.env`
+  to also POST the one-liner (ntfy topic URL / Slack / Discord) — dormant until set, so
+  turning on phone push later needs no code change.
+- **GitHub Issues mirror (57.10, `mirror-issues.sh`).** A **one-way** sync of the local
+  plan files → GitHub Issues, so post-run state and any `## BLOCKER` are visible from
+  phone/web without ssh. It runs at the end of `overnight.sh` in **both** terminals
+  (including gate-red, so a withheld branch's blockers still show up). Each mirrored
+  issue carries a `ralph-mirror` label, a `[#NN]` title, and exactly one
+  `state:{todo,wip,blocked,done}` label. Source of truth stays the local files; GitHub
+  is never read back. Scope + done-ness come from `docs/issues/INDEX.md` (+ TODO `[x]`),
+  so ancient done issues aren't mass-created and a historical BLOCKER in a shipped issue
+  doesn't read as blocked. Idempotent (matched by `[#NN]`); regenerable — delete the
+  `ralph-mirror` issues and re-run. Best-effort: a missing/unauthed `gh` is a no-op.
+  Run on demand: `scripts/ralph/mirror-issues.sh` (or `MIRROR_DRY_RUN=1 …` to preview).
+
+Standalone `ralph.sh` single-issue runs are interactive (you watch them), so the ping +
+mirror are wired into the unattended `overnight.sh` path. Proven offline (no GitHub
+writes, no model spend): `scripts/ralph/test/test-track-e.sh`.
+
 ## Morning review (laptop)
 
 ```bash
@@ -273,6 +301,8 @@ reviewing before main is yours.
 scripts/ralph/
   ralph.sh                          ← the loop (+ per-iteration router)
   overnight.sh                      ← chains issues on a ralph/* branch, pushes, reports
+  notify.sh                         ← one terminal state-change ping per run (57.9)
+  mirror-issues.sh                  ← one-way local-issues → GitHub Issues board (57.10)
   run-scheduled.sh                  ← launchd entry (00:30, no tmux)
   launch-overnight.sh               ← on-demand tmux launcher
   morning.sh                        ← laptop review of the overnight branch
@@ -282,6 +312,7 @@ scripts/ralph/
   prompts/review-task.md            ← independent reviewer system prompt (57.5)
   prompts/goal-check.md             ← goal stop-condition system prompt (57.7)
   prompts/report.md                 ← overnight report-writer system prompt
-  logs/                             ← run-*, iter-*, route-*, goal-*, overnight-* logs (gitignored)
+  test/test-track-e.sh              ← offline proof for the 57.9/57.10 visibility surfaces
+  logs/                             ← run-*, iter-*, route-*, goal-*, overnight-*, LAST-RUN.md (gitignored)
   README.md                         ← you are here
 ```

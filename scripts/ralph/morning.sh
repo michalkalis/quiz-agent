@@ -55,6 +55,19 @@ git grep -n "BLOCKER" "$BRANCH" -- 'docs/issues/*.md' 2>/dev/null || echo "  (no
 
 echo ""
 echo "════════════════════════════════════════════════════════════════"
+echo "GitHub board (#57 57.10 mirror — state of the active issues):"
+echo "════════════════════════════════════════════════════════════════"
+if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
+    gh issue list --label ralph-mirror --state open \
+        --json number,title,labels \
+        --jq '.[] | "  \(.title)\t[\(.labels | map(.name) | map(select(startswith("state:"))) | join(","))]"' \
+        2>/dev/null || echo "  (mirror not run yet — populates after the next overnight run)"
+else
+    echo "  (gh unavailable — skip)"
+fi
+
+echo ""
+echo "════════════════════════════════════════════════════════════════"
 echo "To merge after review (fast-forward only — review the diff + BLOCKERs first):"
 echo "════════════════════════════════════════════════════════════════"
 echo "  git checkout main"

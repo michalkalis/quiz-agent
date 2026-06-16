@@ -75,6 +75,26 @@ GOALCHECK_MODEL="${RALPH_GOALCHECK_MODEL:-sonnet}"
 GOALCHECK_BUDGET_USD="${RALPH_GOALCHECK_BUDGET_USD:-0.50}"
 GOALCHECK_TEMPLATE="$SCRIPT_DIR/prompts/goal-check.md"
 
+# Plan-readiness pre-flight gate (#57 57.13 — verify the INPUT, symmetric to the
+# 57.2/57.5 gates on the output). Before a LONG autonomous run starts, enforce the
+# Definition-of-Ready: a perfect verification backbone cannot rescue a badly-scoped
+# issue (garbage in, garbage out). Applied DIFFERENTIALLY by run length (the #57
+# anti-bureaucracy scaling rule) — short reversible runs skip it:
+#   MAX_ITERS <  FIELD_MIN              → soft tier: skipped (small reversible work).
+#   FIELD_MIN ≤ MAX_ITERS < REVIEW_MIN  → fields tier: hard DoR field checks only
+#                                         (## Acceptance present, Reversibility=a).
+#   MAX_ITERS ≥ REVIEW_MIN OR overnight → full tier: fields + an independent
+#                                         /ready-check (claude -p) READY verdict.
+# A NOT-READY verdict or a missing hard field blocks the run START: append a
+# ## BLOCKER, withhold the branch (exit 8 — symmetric to 57.3). Set RALPH_READYCHECK=0
+# to disable. overnight.sh sets RALPH_OVERNIGHT=1 to force the full tier.
+RALPH_READYCHECK="${RALPH_READYCHECK:-1}"
+READYCHECK_MODEL="${RALPH_READYCHECK_MODEL:-sonnet}"
+READYCHECK_BUDGET_USD="${RALPH_READYCHECK_BUDGET_USD:-0.50}"
+READYCHECK_TEMPLATE="$SCRIPT_DIR/prompts/ready-check.md"
+READYCHECK_FIELD_MIN_ITERS="${RALPH_READYCHECK_FIELD_MIN_ITERS:-10}"
+READYCHECK_REVIEW_MIN_ITERS="${RALPH_READYCHECK_REVIEW_MIN_ITERS:-30}"
+
 # Map a ROUTE: token to a --model value. Aliases work for the latest models;
 # fable is spelled in full to be explicit about the premium tier.
 route_to_model() {
@@ -412,8 +432,124 @@ append_goal_blocker() {
     log "  appended ## BLOCKER (goal) to $FOCUS_FILE"
 }
 
+# ── Plan-readiness pre-flight gate (#57 — loop verification backbone, 57.13).
+# Verifies the INPUT before the run starts (symmetric to 57.2/57.5 on the output).
+# Tier is chosen by run length (the differential scaling rule). Sets PREFLIGHT_REASON
+# (one line, for the BLOCKER note). Returns 0 ready/skip, 1 not-ready.
+readiness_preflight() {
+    PREFLIGHT_REASON=""
+    if [[ "$RALPH_READYCHECK" != "1" ]]; then
+        log "  readiness: disabled (RALPH_READYCHECK=0) — skipped"
+        return 0
+    fi
+
+    # Differential tier from run length (+ overnight forces full). Below the field
+    # threshold a run is short/reversible — skip the gate (anti-bureaucracy).
+    local tier="soft"
+    if [[ "${RALPH_OVERNIGHT:-0}" == "1" || "$MAX_ITERS" -ge "$READYCHECK_REVIEW_MIN_ITERS" ]]; then
+        tier="full"
+    elif [[ "$MAX_ITERS" -ge "$READYCHECK_FIELD_MIN_ITERS" ]]; then
+        tier="fields"
+    fi
+    if [[ "$tier" == "soft" ]]; then
+        log "  readiness: short run (iters=$MAX_ITERS < $READYCHECK_FIELD_MIN_ITERS) — soft tier, gate skipped"
+        return 0
+    fi
+    log "  readiness pre-flight: $tier tier (iters=$MAX_ITERS, overnight=${RALPH_OVERNIGHT:-0})"
+
+    # Hard DoR field checks — cheap, no model. C3: a machine-evaluable ## Acceptance
+    # block must exist; the whole verification backbone reads it. C6: a Reversibility
+    # class must be declared, and the autonomous loop only runs class `a` (b/c need a
+    # human checkpoint).
+    if ! grep -qE '^## Acceptance[[:space:]]*$' "$REPO_ROOT/$FOCUS_FILE"; then
+        PREFLIGHT_REASON="no machine-evaluable '## Acceptance' block in the issue (C3) — nothing falsifiable for the loop to stop on"
+        log "  ✗ readiness RED — $PREFLIGHT_REASON"
+        return 1
+    fi
+    local rev
+    rev="$(grep -oiE '^\*\*Reversibility:\*\*[[:space:]]*[abc]' "$REPO_ROOT/$FOCUS_FILE" | tail -1 | grep -oiE '[abc]$' | tr 'A-Z' 'a-z' || true)"
+    if [[ -z "$rev" ]]; then
+        PREFLIGHT_REASON="no '**Reversibility:**' class declared in the issue header (C6 undeclared)"
+        log "  ✗ readiness RED — $PREFLIGHT_REASON"
+        return 1
+    fi
+    if [[ "$rev" != "a" ]]; then
+        PREFLIGHT_REASON="reversibility class '$rev' (schema/data migration or auth·payment·prod-deploy) is excluded from unattended runs (C6) — needs a human checkpoint"
+        log "  ✗ readiness RED — $PREFLIGHT_REASON"
+        return 1
+    fi
+
+    if [[ "$tier" != "full" ]]; then
+        log "  ✓ readiness GREEN (fields tier: ## Acceptance present, reversibility=a)"
+        return 0
+    fi
+
+    # Full tier — an independent /ready-check (maker ≠ checker on the input): a
+    # SEPARATE claude -p (fixed model, fresh context) that sees ONLY the issue plan
+    # and tries to DISPROVE autonomous-executability. NOT-READY / unparseable blocks.
+    if [[ ! -f "$READYCHECK_TEMPLATE" ]]; then
+        PREFLIGHT_REASON="ready-check prompt template missing ($READYCHECK_TEMPLATE)"
+        log "  ✗ readiness RED — $PREFLIGHT_REASON (cannot confirm ready)"
+        return 1
+    fi
+    local rclog="$LOG_DIR/ready-$START_TS.log"
+    local rcprompt
+    rcprompt="$(sed "s|__ISSUE_FILE__|$FOCUS_FILE|g" "$READYCHECK_TEMPLATE")"
+    set +e
+    claude \
+        -p "Plan-readiness review of $FOCUS_FILE. Try to disprove it is autonomously executable. End with the READY_VERDICT line." \
+        --model "$READYCHECK_MODEL" \
+        --permission-mode bypassPermissions \
+        --allowed-tools "Read" "Grep" "Glob" \
+        --max-budget-usd "$READYCHECK_BUDGET_USD" \
+        --no-session-persistence \
+        --append-system-prompt "$rcprompt" \
+        > "$rclog" 2>&1
+    set -e
+
+    local verdict
+    verdict="$(grep -oE 'READY_VERDICT:[[:space:]]*(READY|NOT-READY)' "$rclog" | tail -1 | sed -E 's/READY_VERDICT:[[:space:]]*//' || true)"
+    if [[ "$verdict" == "READY" ]]; then
+        log "  ✓ readiness GREEN (full tier: /ready-check READY)"
+        return 0
+    elif [[ "$verdict" == "NOT-READY" ]]; then
+        PREFLIGHT_REASON="$(grep -oE 'READY_VERDICT:[[:space:]]*NOT-READY.*' "$rclog" | tail -1 | sed -E 's/READY_VERDICT:[[:space:]]*NOT-READY[[:space:]]*[—-]*[[:space:]]*//' || true)"
+        [[ -z "$PREFLIGHT_REASON" ]] && PREFLIGHT_REASON="see $rclog"
+        log "  ✗ readiness NOT-READY — $PREFLIGHT_REASON ($rclog)"
+        return 1
+    else
+        PREFLIGHT_REASON="ready-check produced no parseable READY_VERDICT (see $rclog)"
+        log "  ✗ readiness RED — $PREFLIGHT_REASON"
+        return 1
+    fi
+}
+
+# Append a ## BLOCKER when the readiness pre-flight refuses to START a run (#57 57.13).
+# Committed so it travels with the (withheld) branch, like the other gate blockers.
+append_preflight_blocker() {
+    local d
+    d="$(date +%F)"
+    {
+        printf '\n## BLOCKER (%s) — plan-readiness pre-flight (NOT-READY)\n\n' "$d"
+        printf -- '- The readiness gate (#57 57.13) refused to start an autonomous run on this issue: %s\n' "${PREFLIGHT_REASON:-see ready-check log}"
+        printf -- '- No iteration ran; the branch was NOT pushed. Verifying the loop output cannot rescue an unready input (garbage in, garbage out).\n'
+        printf -- '- Next human-touch: clear the Definition-of-Ready (`/triage` C1–C7: add the `## Acceptance` block, declare `**Reversibility:**`, run `/ready-check`), then re-run. Override only by setting `RALPH_READYCHECK=0` for a deliberate exception.\n'
+    } >> "$REPO_ROOT/$FOCUS_FILE"
+    git -C "$REPO_ROOT" add "$FOCUS_FILE"
+    git -C "$REPO_ROOT" commit -m "chore(ralph): #57 readiness-NOT-READY BLOCKER on $(basename "$FOCUS_FILE")" >/dev/null 2>&1 || true
+    log "  appended ## BLOCKER (readiness) to $FOCUS_FILE"
+}
+
 # Build the system prompt (substitute focus file path)
 SYSTEM_PROMPT="$(sed "s|__FOCUS_FILE__|$FOCUS_FILE|g" "$PROMPT_TEMPLATE")"
+
+# Pre-flight readiness gate — runs ONCE before any iteration (#57 57.13). A NOT-READY
+# input halts before the run starts: append the BLOCKER, withhold the branch (exit 8).
+if ! readiness_preflight; then
+    append_preflight_blocker
+    log "✗ plan-readiness pre-flight NOT-READY — refusing to start the run (exit 8)"
+    exit 8
+fi
 
 for iter in $(seq 1 "$MAX_ITERS"); do
     ITER_LOG="$LOG_DIR/iter-$START_TS-$(printf '%02d' "$iter").log"

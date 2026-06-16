@@ -204,9 +204,31 @@ machine-evaluable to gate on, so the worker's stop signal is accepted as before
 (backward-compatible). Disable with `RALPH_GOALCHECK=0`; tune `RALPH_GOALCHECK_MODEL`
 (default `sonnet`) and `RALPH_GOALCHECK_BUDGET_USD` (default `0.50`).
 
+### The input gate: plan-readiness pre-flight (57.13 — verify the *input*)
+
+The gates above say "no" to a bad **diff**; this one says "no" to a badly-scoped
+**issue**, *before the run starts* — a perfect verification backbone cannot rescue
+garbage input. ralph.sh runs a one-shot readiness gate against the focus file,
+**differentially by run length** (the anti-bureaucracy scaling rule), so short
+reversible work is not bench-pressed through it:
+
+| Run length | Tier | What is enforced |
+|------------|------|------------------|
+| `iters < 10` | soft | skipped |
+| `10 ≤ iters < 30` | fields | hard DoR field checks: `## Acceptance` present **and** `**Reversibility:** a` declared |
+| `iters ≥ 30` **or** overnight | full | fields **+** an independent `/ready-check` (`claude -p`, `prompts/ready-check.md`) that sees ONLY the issue plan and tries to **disprove** it is executable; must return `READY_VERDICT: READY` |
+
+A missing hard field, a non-`a` reversibility class (`b`/`c` need a human checkpoint),
+or a `NOT-READY` / unparseable verdict halts **before any iteration**: a readiness
+`## BLOCKER` is appended and the run exits `8` with the branch withheld (symmetric to
+57.3). `overnight.sh` exports `RALPH_OVERNIGHT=1` to force the full tier on every focus.
+Disable with `RALPH_READYCHECK=0` (deliberate override); tune `RALPH_READYCHECK_MODEL`
+(default `sonnet`), `RALPH_READYCHECK_BUDGET_USD` (default `0.50`), and the thresholds
+`RALPH_READYCHECK_FIELD_MIN_ITERS` / `RALPH_READYCHECK_REVIEW_MIN_ITERS`.
+
 `overnight.sh` treats ralph.sh `exit 4` (end-of-run iOS gate), `exit 5` (scoped gate),
-`exit 6` (reviewer CONCERNS), and `exit 7` (goal not met) as gate-red: it stops the chain
-and never pushes the branch.
+`exit 6` (reviewer CONCERNS), `exit 7` (goal not met), and `exit 8` (plan-readiness
+NOT-READY) as gate-red: it stops the chain and never pushes the branch.
 
 ## Overnight orchestration
 

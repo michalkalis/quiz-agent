@@ -39,6 +39,11 @@ DEFAULT_ITERS="${OVERNIGHT_DEFAULT_ITERS:-12}"
 # Global wall-clock budget for the whole run. ~6h leaves margin before morning.
 MAX_SECONDS="${OVERNIGHT_MAX_SECONDS:-21600}"
 
+# Force the full plan-readiness tier on every overnight focus (#57 57.13): an
+# unattended overnight run is exactly the "30+ / cross-cutting / overnight" case the
+# scaling rule gates hardest, regardless of a given focus's per-issue iter budget.
+export RALPH_OVERNIGHT=1
+
 mkdir -p "$LOG_DIR"
 
 # ── Single-instance lock (atomic mkdir; works without flock on macOS).
@@ -137,11 +142,12 @@ log "time budget: ${MAX_SECONDS}s"
 START_EPOCH="$(date +%s)"
 DEADLINE=$((START_EPOCH + MAX_SECONDS))
 
-# Gate-red latch (#57 57.3 + 57.5 + 57.7): a red verification verdict from ralph.sh
-# (exit 4 = end-of-run iOS gate, exit 5 = per-iteration scoped gate, exit 6 =
-# independent reviewer CONCERNS, exit 7 = goal not met / ## Acceptance unsatisfied)
-# halts the chain and withholds the push — a branch with a known-red gate, an
-# unaccepted change, or an unfinished goal must not reach review/main.
+# Gate-red latch (#57 57.3 + 57.5 + 57.7 + 57.13): a red verification verdict from
+# ralph.sh (exit 4 = end-of-run iOS gate, exit 5 = per-iteration scoped gate, exit 6 =
+# independent reviewer CONCERNS, exit 7 = goal not met / ## Acceptance unsatisfied,
+# exit 8 = plan-readiness pre-flight NOT-READY) halts the chain and withholds the push —
+# a branch with a known-red gate, an unaccepted change, an unfinished goal, or an
+# unready input must not reach review/main.
 GATE_RED=0
 
 for i in "${!FOCUS_FILES[@]}"; do
@@ -168,9 +174,9 @@ for i in "${!FOCUS_FILES[@]}"; do
     set -e
     log "    ralph.sh exit=$rc for $focus"
 
-    if [[ $rc -eq 4 || $rc -eq 5 || $rc -eq 6 || $rc -eq 7 ]]; then
+    if [[ $rc -eq 4 || $rc -eq 5 || $rc -eq 6 || $rc -eq 7 || $rc -eq 8 ]]; then
         GATE_RED=1
-        log "✗ GATE-RED exit ($rc) from ralph.sh on $focus — halting chain; branch will NOT be pushed (#57 57.3/57.5/57.7)."
+        log "✗ GATE-RED exit ($rc) from ralph.sh on $focus — halting chain; branch will NOT be pushed (#57 57.3/57.5/57.7/57.13)."
         log "    the BLOCKER is recorded in the focus file + gate/reviewer/goal logs under scripts/ralph/logs/."
         break
     fi

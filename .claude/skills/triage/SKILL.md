@@ -39,6 +39,34 @@ Rules:
 - **Altitude (iOS):** assert flow / state-machine correctness / presence of expected UI elements — **not** pixel or `.pen` design fidelity. The screenshot-verify-against-frames check stays non-gating until the design stabilizes (see `.claude/rules/ios.md`).
 - The block is the single home for done-state. An Agent Brief points at it rather than duplicating criteria.
 
+## Definition-of-Ready (the bar for `ready-for-agent`) — #57 57.11
+
+The `## Acceptance` block above is *necessary but not sufficient*. Verifying the loop's **output** (Tracks A/B) cannot rescue a badly-scoped **input** — garbage in, garbage out. So `ready-for-agent` also requires the issue to clear a 7-point Definition-of-Ready. Grounded in adversarially-verified research (`docs/artifacts/plan-readiness-research-2026-06-16.html`): the single strongest lever is **C2 localization** (naming affected files/symbols up front lifted agent pass-rate ~3×), and **C4 dependency/blast-radius** matters as much as goal-clarity (integration failures are the largest measured failure category).
+
+| # | Criterion | The question it answers |
+|---|-----------|------------------------|
+| **C1** | One-sentence scope | Can you state it in one sentence with no "and"? An "and" means it is two tasks — split it. |
+| **C2** | Affected files/symbols named | Are the files/functions/modules the work touches listed up front? (highest-impact lever) |
+| **C3** | Machine-readable success | Can a shell script / test decide pass-fail? (this is the `## Acceptance` block) |
+| **C4** | Blast-radius + dependencies mapped | What else does this touch? What must exist first? |
+| **C5** | An objective failing check | A test / lint / build that fails on bad output (overlaps C3, names the *mechanism*) |
+| **C6** | Reversibility class declared | `a` commits-only → proceed · `b` schema/data migration → human gate · `c` auth·payment·prod-deploy → excluded from the loop |
+| **C7** | Delegated subtasks self-contained | Each `- [ ]` carries objective + output-format + boundary |
+
+**Reversibility class** is a required header field — see "Where state lives". The autonomous loop only runs class `a`; `b`/`c` are blocked from unattended runs and need a human checkpoint.
+
+### Apply the gate *differentially* (anti-bureaucracy)
+
+A DoR that bench-presses every bug-fix through 7 points is its own failure mode. Scale the gate to task size/type; keep the check under ~10 min:
+
+| Task size | Gate |
+|-----------|------|
+| `<10 turns`, reversible (class `a`) | C1 + C3 + C5 **soft** (note gaps, don't block) |
+| `10–30 turns` | all 7, **hard** on C1 / C5 / C6 |
+| `30+ turns` / cross-cutting / overnight | all 7 **hard** + independent `/ready-check` `READY` + human checkpoint before any class `b`/`c` |
+
+So a small reversible bug-fix is **not** forced through the full 7-point gate; a cross-cutting overnight issue is. Refuse the `ready-for-agent` transition when C1/C3/C5 are absent or C6 is undeclared (at the issue's scale tier). For `30+`/cross-cutting work, also require an independent `/ready-check` pass (maker ≠ checker on the *input*, symmetric to the loop's reviewer on the output).
+
 ## Where state lives
 
 Each issue file has a header block with two structured lines:
@@ -47,10 +75,11 @@ Each issue file has a header block with two structured lines:
 # Issue NN: <title>
 
 **Triage:** <category> · <state>
+**Reversibility:** <a | b | c>
 **Status:** <free-text human commentary, e.g. "Fix path not yet chosen">
 ```
 
-`Triage:` is the machine-readable state. `Status:` is human prose — leave it untouched unless the user asks. Older issue files only have `**Status:**` — when triaging one of those, add the `**Triage:**` line.
+`Triage:` is the machine-readable state. `Reversibility:` is the C6 class (`a` commits-only / `b` schema·data migration / `c` auth·payment·prod-deploy) — required before `ready-for-agent`; the autonomous loop only runs class `a`. `Status:` is human prose — leave it untouched unless the user asks. Older issue files only have `**Status:**` — when triaging one of those, add the `**Triage:**` (and, for `ready-for-agent`, the `**Reversibility:**`) line.
 
 `docs/todo/TODO.md` is the active queue:
 - `[ ]` — todo
@@ -70,7 +99,7 @@ Six **state** roles:
 
 - `needs-triage` — needs evaluation
 - `needs-info` — waiting on the user / external info
-- `ready-for-agent` — fully specified, ready for an autonomous (AFK) agent run. **Requires a machine-evaluable `## Acceptance` block** (see below) — the autonomous loop's stop-condition and independent reviewer evaluate against it (#57).
+- `ready-for-agent` — fully specified, ready for an autonomous (AFK) agent run. **Requires a machine-evaluable `## Acceptance` block** (see below) **and a cleared Definition-of-Ready** (C1–C7, scaled by task size) including a declared `**Reversibility:**` class — the autonomous loop's stop-condition and independent reviewer evaluate against these (#57). The loop only runs class `a`.
 - `ready-for-human` — needs human implementation (judgment call, external access, manual testing)
 - `done` — the work shipped (commit / deploy / release). The file stays as historical record.
 - `wontfix` — will not be actioned
@@ -117,7 +146,7 @@ After the bucket display, also point out any TODO `[~]` items — work-in-progre
 4. **Grill (if needed).** If the issue needs fleshing out, run a brief targeted question session (1–4 questions). Don't blow it up into a full PRD interview unless the scope warrants `/to-prd`.
 
 5. **Apply the outcome:**
-   - `ready-for-agent` — append an Agent Brief section ([AGENT-BRIEF.md](AGENT-BRIEF.md)) **and a top-level `## Acceptance` block** (see "The `## Acceptance` block" above) to the issue file. Do not move to `ready-for-agent` without the `## Acceptance` block. Update the `**Triage:**` line. Optionally surface to TODO.md.
+   - `ready-for-agent` — append an Agent Brief section ([AGENT-BRIEF.md](AGENT-BRIEF.md)) **and a top-level `## Acceptance` block** (see above), and **clear the Definition-of-Ready** (C1–C7 scaled to the task — see "Definition-of-Ready" above): set the `**Reversibility:**` header field (C6), and at the issue's scale tier confirm C1/C3/C5 are present. Do **not** move to `ready-for-agent` when C1/C3/C5 are absent or C6 is undeclared. For a `30+`-turn / cross-cutting issue, also run `/ready-check` and require `READY`. A small reversible (class `a`) bug-fix is not forced through the full 7-point gate (apply C1+C3+C5 soft). Update the `**Triage:**` line. Optionally surface to TODO.md.
    - `ready-for-human` — same brief structure, but note why it can't be delegated (judgment calls, external access, design decisions, manual testing).
    - `needs-info` — append a Triage Notes section (template below). Update `**Triage:**`.
    - `wontfix` (bug) — short polite explanation in the issue, set state to `wontfix`, mark `[x]` in TODO if listed (don't delete the issue file — keep historical record).

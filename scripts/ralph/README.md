@@ -114,6 +114,37 @@ doc/checkbox edits; `opus` for hard multi-file logic or strategy decomposition;
 Disable with `RALPH_ROUTER=0` (then every iteration uses `RALPH_DEFAULT_MODEL`,
 default `sonnet`).
 
+## Enforced verification (the backbone)
+
+A "done" iteration is **not** accepted on the agent's word. After it commits, two
+independent checks must pass before the iteration counts (`#57`):
+
+1. **Scoped test gate (57.2).** The harness re-runs only the suites relevant to the
+   changed top-level scope — backend/quiz-pack-api `pytest`, or the iOS `HangsTests`
+   flow/state suite (ViewInspector + state dumps, **not** pixel/`.pen` design
+   fidelity). Diff-level, not whole-repo. On red the run halts (`exit 5`), a
+   `## BLOCKER` is appended to the focus file, and the branch is **not** advanced.
+   An iOS failure that is *only* `.stableDump` snapshot drift is surfaced as a
+   re-record signal, not a silent auto-fix.
+2. **Independent reviewer (57.5 — maker ≠ checker).** If the gate is green, a
+   *separate* `claude -p` runs with fresh context (no memory of how the change was
+   made), seeing ONLY the iteration's diff + the focus file's acceptance criteria.
+   It is prompted to flag **only** correctness / stated-requirement gaps (not style,
+   not design) and returns `PASS` / `CONCERNS` (`prompts/review-task.md`). A green
+   gate proves the tests pass; the reviewer proves the change actually met its
+   acceptance. `CONCERNS` — or any unparseable verdict ("could not confirm" ≠
+   "confirmed") — blocks acceptance: the run halts (`exit 6`), appends a reviewer
+   `## BLOCKER`, and leaves the branch unpushed.
+
+`overnight.sh` treats ralph.sh `exit 4` (end-of-run iOS gate), `exit 5` (scoped
+gate), and `exit 6` (reviewer CONCERNS) as gate-red: it stops the chain and never
+pushes the branch.
+
+Disable the reviewer with `RALPH_REVIEWER=0`. Tune it with `RALPH_REVIEWER_MODEL`
+(default `sonnet`) and `RALPH_REVIEWER_BUDGET_USD` (default `1.00`). The reviewer
+uses a fixed model, not the router, so the "no" stays consistent and independent of
+the worker's model.
+
 ## Overnight orchestration
 
 `overnight.sh` chains **multiple** issues through `ralph.sh` in one unattended
@@ -182,6 +213,7 @@ scripts/ralph/
   com.quizagent.ralph-overnight.plist ← LaunchAgent (00:30 daily)
   prompts/work-next.md              ← worker system prompt per iteration
   prompts/route-model.md            ← router pre-pass system prompt
+  prompts/review-task.md            ← independent reviewer system prompt (57.5)
   prompts/report.md                 ← overnight report-writer system prompt
   logs/                             ← run-*, iter-*, route-*, overnight-* logs (gitignored)
   README.md                         ← you are here

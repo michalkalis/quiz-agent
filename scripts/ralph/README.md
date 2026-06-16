@@ -85,9 +85,41 @@ scripts/ralph/ralph.sh docs/issues/issue-30-batch-generate-categories.md 30
 # Reattach next morning: tmux attach -t ralph
 ```
 
-### Option B — launchd
+### Option B — launchd (the nightly scheduler, LIVE)
 
-Schedule via `~/Library/LaunchAgents/com.quizagent.ralph.plist`. Trigger nightly. Add later when you've validated the loop is well-behaved.
+The unattended `00:30` run is driven by `com.quizagent.ralph-overnight.plist`, a
+**LaunchAgent in the GUI domain** (`gui/502`) on `mba` — it must be a LaunchAgent,
+not a system Daemon, so `claude` can reach the claude.ai Keychain credentials. It
+runs `run-scheduled.sh` → `overnight.sh` (no tmux; the lockfile guards against
+colliding with a manual run).
+
+Install / re-enable (as the `agent` user on `mba`):
+
+```bash
+cp scripts/ralph/com.quizagent.ralph-overnight.plist \
+   ~/Library/LaunchAgents/com.quizagent.ralph-overnight.plist
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.quizagent.ralph-overnight.plist
+launchctl enable gui/$(id -u)/com.quizagent.ralph-overnight
+# Verify it registered with the 00:30 calendar interval:
+launchctl print gui/$(id -u)/com.quizagent.ralph-overnight | grep -iE 'state|runatload|interval'
+```
+
+**Reboot behavior (FileVault stays ON — #57 Track D decision).** We do **not** disable
+FileVault or enable auto-login. With FileVault on, a reboot leaves the Mac at the
+pre-boot unlock screen and the loop is paused until the `agent` user next logs into
+the GUI desktop (that login also unlocks FileVault + the signing Keychain). This is
+the one rare gap; the Mac is at home and is not power-cycled routinely.
+
+**No manual re-bootstrap is needed after a reboot.** macOS auto-loads every plist in
+`~/Library/LaunchAgents` on GUI login, and `RunAtLoad` is `true`, so logging in both
+re-registers the 00:30 schedule **and** fires one catch-up run immediately for the
+night the reboot missed. The only manual command you ever need is the one-line
+re-bootstrap above — and only to *install/move* the agent, never to recover from a
+reboot. (Side effect: `RunAtLoad` also fires a run on any GUI login, including mid-day
+maintenance; on this dedicated agent Mac the `agent` user only logs in to resume the
+loop, so that is the intended resume, and the `overnight.sh` lockfile prevents overlap.)
+
+Disable / unload: `launchctl bootout gui/$(id -u)/com.quizagent.ralph-overnight`.
 
 ## Safety notes
 
@@ -219,8 +251,11 @@ docs/issues/issue-49-daily-limit-cost-research.md          # iters omitted → d
 - `launch-overnight.sh` — on-demand tmux launcher for when you're awake and want
   to attach and watch.
 
-**Reboot gotcha:** auto-login is OFF on the agent Mac, so after a full reboot the
-scheduler won't fire until the `agent` user logs into the GUI desktop.
+**Reboot gotcha (FileVault ON, #57 Track D):** FileVault stays on and auto-login is
+off, so after a full reboot the loop is paused until the `agent` user logs into the
+GUI desktop. No manual re-bootstrap is needed — the agent auto-loads from
+`~/Library/LaunchAgents` on login and `RunAtLoad=true` fires one catch-up run. See
+**Option B — launchd** above for the full behavior and the one-line re-bootstrap.
 
 ## Morning review (laptop)
 

@@ -29,11 +29,12 @@
 # 2. mba 'main' sync — overnight.sh ff-pulls before each run, but verify if days have passed:
 #    ssh mba 'cd code/quiz-agent && git pull --ff-only'. mba must be GUI-logged-in (auto-login
 #    OFF → after a reboot the 00:30 LaunchAgent won't fire until 'agent' logs in).
-# 3. Scheduled path is OFF until re-bootstrapped (it was unloaded the night of 2026-06-11 to
-#    avoid re-running the 1453 queue). Re-enable AFTER you're happy the merge is good:
-#    ssh mba 'launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.quizagent.ralph-overnight.plist \
-#             && launchctl enable gui/$(id -u)/com.quizagent.ralph-overnight'
-#    (Skip this if you only ever launch on-demand — the queue works the same either way.)
+# 3. Scheduled path is LIVE again (#57 57.8, re-bootstrapped 2026-06-16 with RunAtLoad=true).
+#    The 00:30 LaunchAgent fires unattended while 'agent' is logged in, and auto-resumes on
+#    the next GUI login after a reboot (no manual launchctl needed). To unload it again:
+#    ssh mba 'launchctl bootout gui/502/com.quizagent.ralph-overnight'.
+#    NOTE: with RunAtLoad=true, re-bootstrapping also fires one run immediately — hold the
+#    overnight lock (mkdir scripts/ralph/.overnight.lock) first if you want to register only.
 # 4. iOS builds confirmed on mba (system Xcode 26.5 + iOS 26 SDK, license accepted — verified
 #    2026-06-10). 17 screenshot-verify reference PNGs are committed under docs/design/frames/.
 #    launch-issue52.sh fails loud if the SDK/license/PNGs are missing.

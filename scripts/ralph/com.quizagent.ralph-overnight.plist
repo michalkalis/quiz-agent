@@ -18,9 +18,21 @@
   Uninstall:
     launchctl bootout gui/$(id -u)/com.quizagent.ralph-overnight
 
-  REBOOT GOTCHA: auto-login is OFF on this Mac, so after a full reboot this agent
-  will not fire until the `agent` user logs into the GUI desktop. Enable auto-login
-  or accept that a reboot pauses the scheduler until the next GUI login.
+  REBOOT GOTCHA (FileVault stays ON — #57 Track D founder decision): true zero-touch
+  auto-login is impossible with FileVault on (macOS sits at the pre-boot unlock screen
+  and disables automatic login), and we do NOT disable FileVault. So a reboot pauses
+  the loop until the `agent` user next logs into the GUI desktop (that login also
+  unlocks FileVault + the signing Keychain). Reboots are rare on this home Mac.
+
+  RunAtLoad is true so NO manual re-bootstrap is needed after a reboot: macOS auto-loads
+  every plist in ~/Library/LaunchAgents on GUI login, and RunAtLoad then fires one run
+  immediately to catch up the missed night. Steady-state nightly firing is driven by
+  StartCalendarInterval (00:30) while the agent stays logged in.
+
+  Side effect of RunAtLoad: a run also fires on *any* GUI login (e.g. mid-day
+  maintenance), not just after a reboot. On this dedicated agent Mac the `agent` user
+  logs in only to resume the loop, so this is the intended "resume" behavior; the
+  overnight.sh lockfile prevents it from colliding with an already-running run.
 -->
 <plist version="1.0">
 <dict>
@@ -43,7 +55,7 @@
     </dict>
 
     <key>RunAtLoad</key>
-    <false/>
+    <true/>
 
     <key>StandardOutPath</key>
     <string>/Users/agent/Library/Logs/quizagent-ralph.log</string>

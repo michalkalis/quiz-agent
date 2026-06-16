@@ -157,7 +157,7 @@ struct ErrorView: View {
             Circle()
                 .fill(Theme.Hangs.Colors.error.opacity(0.12))
                 .frame(width: 120, height: 120)
-            Image(systemName: "exclamationmark.triangle.fill")
+            Image(systemName: "exclamationmark.triangle")
                 .font(.system(size: 48))
                 .foregroundColor(Theme.Hangs.Colors.error)
         }

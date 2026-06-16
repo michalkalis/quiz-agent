@@ -1,6 +1,18 @@
 # Issue #58 — Authentication: research + design + plan
 
-**Triage:** enhancement · needs-info (research issue — deliverable is a plan, not code)
+**Triage:** enhancement · researched — **awaiting founder decision** (research issue — deliverable is a plan, not code)
+
+> **✅ Research delivered 2026-06-16:** [`docs/research/auth-research-2026-06-16.md`](../research/auth-research-2026-06-16.md)
+> — options matrix + recommendation + phased plan (#59/#60/#61) + 7 open questions for the founder.
+> Produced via a multi-agent workflow (5 research dimensions, each adversarially fact-checked).
+> **Recommendation:** anonymous-first self-issued JWT on the existing FastAPI/Fly.io+Postgres stack
+> (Phase 1, fixes the freemium bypass) → Sign in with Apple as an upgrade (Phase 2) → cross-device +
+> IAP binding (Phase 3). No managed auth provider. Folds in founder constraints: global (not EU-only),
+> usable without login, Pencil screens.
+>
+> **Research corrected two #58 assumptions:** (1) the `quiz-pack-api` JWS verifier *does* exist
+> (`app/storekit/verifier.py`) but is StoreKit-IAP-only — it cannot be reused for general auth;
+> (2) `POST /api/v1/usage/{userId}/premium` is currently **unauthenticated** — anyone can self-grant premium.
 
 **Founder priority 2026-06-16:** This is the founder's #1 next initiative. **Scope of THIS
 issue is research + analysis + a phased implementation plan only — no auth code is written
@@ -42,12 +54,12 @@ Produce a design doc (`docs/product/auth-research-<date>.md` or a PRD) that cove
 
 ## Deliverable / Acceptance
 
-- [ ] Research doc exists with an **options matrix** (identity model, sign-in methods, backend
+- [x] Research doc exists with an **options matrix** (identity model, sign-in methods, backend
       provider) and a clear **recommendation** with stated tradeoffs.
-- [ ] A **phased implementation plan** (e.g. Phase 1 anonymous identity + server-side limits;
+- [x] A **phased implementation plan** (Phase 1 anonymous identity + server-side limits;
       Phase 2 Sign in with Apple; Phase 3 cross-device/purchase binding) with each phase sized
       and its dependencies on #50 (IAP) and #49 (cost/limits) noted.
-- [ ] Open questions for the founder are listed explicitly.
+- [x] Open questions for the founder are listed explicitly (7 gates — see research doc §8).
 - [ ] Founder picks an approach → implementation issues (#59+) are spun off from the plan.
 
 ## Founder input needed

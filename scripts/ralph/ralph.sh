@@ -61,6 +61,18 @@ REVIEWER_MODEL="${RALPH_REVIEWER_MODEL:-sonnet}"
 REVIEWER_BUDGET_USD="${RALPH_REVIEWER_BUDGET_USD:-1.00}"
 REVIEW_TEMPLATE="$SCRIPT_DIR/prompts/review-task.md"
 
+# Goal stop-condition checker (#57 57.7 — the "/goal" pattern). The STOP decision
+# for a single-issue run is owned by a checker, NOT the worker's prose self-report:
+# a cheap Haiku `claude -p` re-checks the focus file's machine-evaluable
+# `## Acceptance` block (#57 57.6) against the repo state — each accepted iteration
+# and on the worker's no-tasks claim — and emits GOAL_MET: YES|NO. The loop stops
+# only when the stated done-condition actually holds. Set RALPH_GOALCHECK=0 to
+# disable (revert to trusting the worker's no-tasks cue).
+RALPH_GOALCHECK="${RALPH_GOALCHECK:-1}"
+GOALCHECK_MODEL="${RALPH_GOALCHECK_MODEL:-haiku}"
+GOALCHECK_BUDGET_USD="${RALPH_GOALCHECK_BUDGET_USD:-0.50}"
+GOALCHECK_TEMPLATE="$SCRIPT_DIR/prompts/goal-check.md"
+
 # Map a ROUTE: token to a --model value. Aliases work for the latest models;
 # fable is spelled in full to be explicit about the premium tier.
 route_to_model() {
@@ -311,6 +323,93 @@ append_review_blocker() {
     log "  appended ## BLOCKER (reviewer) to $FOCUS_FILE"
 }
 
+# ── Goal stop-condition checker (#57 — loop verification backbone, 57.7).
+# Steinberger's "/goal" pattern: the loop "cannot mark the issue done unless the
+# acceptance criteria are met." The worker reporting `no-tasks` (or running out of
+# checkboxes) is a *request* to stop, not the authority to — maker = checker on the
+# STOP decision is the same flaw 57.5 fixes on the work. So a SEPARATE cheap Haiku
+# `claude -p` (fresh context, read-only) reads the focus file's machine-evaluable
+# `## Acceptance` block (#57 57.6) + the repo state and decides whether the stated
+# done-condition actually holds, emitting GOAL_MET: YES|NO. It is told to bias to NO
+# when unsure — a false NO just keeps the (human-reviewed) loop working; a false YES
+# would stop early.
+#   - YES                       → goal met, the run may stop cleanly.
+#   - NO / unparseable verdict   → not confirmed done (fail loud, same stance as the
+#                                  reviewer's "could not confirm" ≠ "confirmed").
+#   - no `## Acceptance` in focus → nothing machine-evaluable to gate on; accept the
+#                                  worker's stop signal (backward-compat for queue /
+#                                  legacy focus files), logged.
+#   - disabled / template missing → see below.
+# Sets GOAL_REASON (one line). Returns 0 = may-stop, 1 = not-done.
+goal_check() {
+    GOAL_REASON=""
+    if [[ "$RALPH_GOALCHECK" != "1" ]]; then
+        log "  goalcheck: disabled (RALPH_GOALCHECK=0) — trusting worker stop signal"
+        return 0
+    fi
+    # Nothing to evaluate if the focus file carries no machine-evaluable acceptance
+    # block (queue files, not-yet-standardized issues). Don't fail a run we cannot
+    # judge — that would block every legacy focus file.
+    if ! grep -qE '^## Acceptance[[:space:]]*$' "$REPO_ROOT/$FOCUS_FILE"; then
+        log "  goalcheck: no '## Acceptance' block in $FOCUS_FILE — accepting worker stop signal"
+        return 0
+    fi
+    if [[ ! -f "$GOALCHECK_TEMPLATE" ]]; then
+        GOAL_REASON="goal-check prompt template missing ($GOALCHECK_TEMPLATE)"
+        log "  ✗ goalcheck RED — $GOAL_REASON (cannot confirm done)"
+        return 1
+    fi
+
+    local glog="$LOG_DIR/goal-$START_TS-$(printf '%02d' "$iter").log"
+    local gprompt
+    gprompt="$(sed "s|__FOCUS_FILE__|$FOCUS_FILE|g" "$GOALCHECK_TEMPLATE")"
+    set +e
+    claude \
+        -p "Check whether the ## Acceptance criteria in $FOCUS_FILE are met by the current repo state. End with the GOAL_MET line." \
+        --model "$GOALCHECK_MODEL" \
+        --permission-mode bypassPermissions \
+        --allowed-tools "Read" "Grep" "Glob" \
+        --max-budget-usd "$GOALCHECK_BUDGET_USD" \
+        --no-session-persistence \
+        --append-system-prompt "$gprompt" \
+        > "$glog" 2>&1
+    set -e
+
+    local verdict
+    verdict="$(grep -oE 'GOAL_MET:[[:space:]]*(YES|NO)' "$glog" | tail -1 | sed -E 's/GOAL_MET:[[:space:]]*//' || true)"
+    if [[ "$verdict" == "YES" ]]; then
+        log "  ✓ goalcheck: GOAL_MET — ## Acceptance satisfied"
+        return 0
+    elif [[ "$verdict" == "NO" ]]; then
+        GOAL_REASON="$(grep -oE 'GOAL_MET:[[:space:]]*NO.*' "$glog" | tail -1 | sed -E 's/GOAL_MET:[[:space:]]*NO[[:space:]]*[—-]*[[:space:]]*//' || true)"
+        [[ -z "$GOAL_REASON" ]] && GOAL_REASON="see $glog"
+        log "  ✗ goalcheck: GOAL_MET=NO — $GOAL_REASON ($glog)"
+        return 1
+    else
+        GOAL_REASON="goal-check produced no parseable GOAL_MET verdict (see $glog)"
+        log "  ✗ goalcheck RED — $GOAL_REASON"
+        return 1
+    fi
+}
+
+# Append a ## BLOCKER when the worker requested a stop (no-tasks) but the goal
+# checker found the `## Acceptance` criteria unmet — the loop must not silently
+# exit "clean" on an unfinished issue (#57: "a loop that silently stops running is
+# not a loop"). Committed so it travels with the branch.
+append_goal_blocker() {
+    local d
+    d="$(date +%F)"
+    {
+        printf '\n## BLOCKER (%s) — goal not met (## Acceptance unsatisfied)\n\n' "$d"
+        printf -- '- The worker reported no remaining tasks, but the independent goal check (#57 57.7) found the `## Acceptance` criteria are NOT all met: %s\n' "${GOAL_REASON:-see goal-check log}"
+        printf -- '- The run halted instead of exiting "clean" on an unfinished issue; the branch was NOT pushed.\n'
+        printf -- '- Next human-touch: read the goal-check log under `scripts/ralph/logs/goal-%s-*`, finish the unmet criteria (or correct the `## Acceptance` block / override if it is a false negative), then re-run.\n' "$START_TS"
+    } >> "$REPO_ROOT/$FOCUS_FILE"
+    git -C "$REPO_ROOT" add "$FOCUS_FILE"
+    git -C "$REPO_ROOT" commit -m "chore(ralph): #57 goal-unmet BLOCKER on $(basename "$FOCUS_FILE")" >/dev/null 2>&1 || true
+    log "  appended ## BLOCKER (goal) to $FOCUS_FILE"
+}
+
 # Build the system prompt (substitute focus file path)
 SYSTEM_PROMPT="$(sed "s|__FOCUS_FILE__|$FOCUS_FILE|g" "$PROMPT_TEMPLATE")"
 
@@ -440,8 +539,19 @@ for iter in $(seq 1 "$MAX_ITERS"); do
             fi
             ;;
         no-tasks)
-            log "✓ focus file reports no remaining tasks — exiting cleanly"
-            break
+            # The worker requests a stop. The goal checker — not the worker's
+            # prose self-report — decides whether the issue is actually done
+            # (#57 57.7). On an unmet goal the loop fails loud rather than exiting
+            # "clean" on an unfinished issue.
+            if goal_check; then
+                log "✓ goal stop-condition met (no-tasks + ## Acceptance satisfied) — exiting cleanly"
+                break
+            else
+                CONSECUTIVE_FAILS=$((CONSECUTIVE_FAILS + 1))
+                append_goal_blocker
+                log "✗ worker reported no-tasks but ## Acceptance is NOT met — halting for human review (exit 7)"
+                exit 7
+            fi
             ;;
         blocked)
             BLOCKED=$((BLOCKED + 1))
@@ -453,6 +563,18 @@ for iter in $(seq 1 "$MAX_ITERS"); do
             log "✗ iteration failed (status=$STATUS, exit=$EXIT_CODE)"
             ;;
     esac
+
+    # Goal stop-condition (#57 57.7): after a genuinely-accepted "done" iteration
+    # (gate GREEN + reviewer PASS), re-check whether the issue's ## Acceptance is now
+    # fully met — stop the moment the stated goal holds rather than looping until the
+    # worker happens to report no-tasks. A "done" that passed both checks leaves
+    # CONSECUTIVE_FAILS at 0; gate-red / reviewer-CONCERNS already exited above.
+    if [[ "$STATUS" == "done" && $CONSECUTIVE_FAILS -eq 0 ]]; then
+        if goal_check; then
+            log "✓ goal stop-condition met (## Acceptance satisfied) — exiting cleanly"
+            break
+        fi
+    fi
 
     if [[ $CONSECUTIVE_FAILS -ge $MAX_CONSEC_FAILS ]]; then
         log "✗ $MAX_CONSEC_FAILS consecutive failures — stopping for human review"

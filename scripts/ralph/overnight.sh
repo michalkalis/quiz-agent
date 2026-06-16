@@ -132,10 +132,11 @@ log "time budget: ${MAX_SECONDS}s"
 START_EPOCH="$(date +%s)"
 DEADLINE=$((START_EPOCH + MAX_SECONDS))
 
-# Gate-red latch (#57 57.3 + 57.5): a red verification verdict from ralph.sh
+# Gate-red latch (#57 57.3 + 57.5 + 57.7): a red verification verdict from ralph.sh
 # (exit 4 = end-of-run iOS gate, exit 5 = per-iteration scoped gate, exit 6 =
-# independent reviewer CONCERNS) halts the chain and withholds the push — a branch
-# with a known-red gate or an unaccepted change must not reach review/main.
+# independent reviewer CONCERNS, exit 7 = goal not met / ## Acceptance unsatisfied)
+# halts the chain and withholds the push — a branch with a known-red gate, an
+# unaccepted change, or an unfinished goal must not reach review/main.
 GATE_RED=0
 
 for i in "${!FOCUS_FILES[@]}"; do
@@ -162,10 +163,10 @@ for i in "${!FOCUS_FILES[@]}"; do
     set -e
     log "    ralph.sh exit=$rc for $focus"
 
-    if [[ $rc -eq 4 || $rc -eq 5 || $rc -eq 6 ]]; then
+    if [[ $rc -eq 4 || $rc -eq 5 || $rc -eq 6 || $rc -eq 7 ]]; then
         GATE_RED=1
-        log "✗ GATE-RED exit ($rc) from ralph.sh on $focus — halting chain; branch will NOT be pushed (#57 57.3/57.5)."
-        log "    the BLOCKER is recorded in the focus file + gate/reviewer logs under scripts/ralph/logs/."
+        log "✗ GATE-RED exit ($rc) from ralph.sh on $focus — halting chain; branch will NOT be pushed (#57 57.3/57.5/57.7)."
+        log "    the BLOCKER is recorded in the focus file + gate/reviewer/goal logs under scripts/ralph/logs/."
         break
     fi
 done

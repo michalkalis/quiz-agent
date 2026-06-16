@@ -46,10 +46,12 @@ Full protocol in `prompts/work-next.md`.
 
 | Status | Meaning | Harness behavior |
 |---|---|---|
-| `done` | Task completed, committed | Continue to next iteration |
-| `no-tasks` | Focus file has nothing actionable left | Exit cleanly |
+| `done` | Task completed, committed | Verify (gate + reviewer), then **goal-check**; continue or stop if the goal is met |
+| `no-tasks` | Worker reports nothing actionable left | **Goal-checked, not trusted** — stop cleanly only if `## Acceptance` is met; else `## BLOCKER` + halt (`exit 7`) |
 | `blocked` | Task tried, failed, BLOCKER note written | Count toward consecutive-failure cap |
 | `parse-fail` / other | Output didn't include marker | Treat as failure |
+
+The stop decision is owned by the goal-check (#57 57.7), not the worker's self-report — see **Enforced verification** below.
 
 After 3 consecutive failures Ralph stops and waits for human review. Exponential backoff (2^N seconds) between failed iterations to ride out API hiccups.
 
@@ -136,14 +138,41 @@ independent checks must pass before the iteration counts (`#57`):
    "confirmed") — blocks acceptance: the run halts (`exit 6`), appends a reviewer
    `## BLOCKER`, and leaves the branch unpushed.
 
-`overnight.sh` treats ralph.sh `exit 4` (end-of-run iOS gate), `exit 5` (scoped
-gate), and `exit 6` (reviewer CONCERNS) as gate-red: it stops the chain and never
-pushes the branch.
-
 Disable the reviewer with `RALPH_REVIEWER=0`. Tune it with `RALPH_REVIEWER_MODEL`
 (default `sonnet`) and `RALPH_REVIEWER_BUDGET_USD` (default `1.00`). The reviewer
 uses a fixed model, not the router, so the "no" stays consistent and independent of
 the worker's model.
+
+### The stop-condition: goal-check (57.7 — the "/goal" pattern)
+
+Claude Code has **no native `/goal`** command — this implements the pattern. The
+worker deciding the run is finished (its `no-tasks` self-report, or running out of
+checkboxes) is the same maker = checker flaw 57.5 fixes on the *work*, applied to the
+*stop*. So a separate cheap **Haiku** `claude -p` (read-only, fresh context) re-checks
+the focus file's machine-evaluable `## Acceptance` block (57.6) against the actual repo
+state and emits `GOAL_MET: YES|NO` (`prompts/goal-check.md`). It verifies the underlying
+evidence for each criterion — a ticked checkbox with no evidence is unmet — and is told
+to **bias to NO when unsure** (a false NO keeps the human-reviewed loop working; a false
+YES stops early). Criteria marked `[HUMAN]` or needing a simulator/deploy/live dashboard
+are out of the loop's reach and don't block the stop.
+
+It runs at two points:
+
+- **After each accepted `done` iteration** (gate GREEN + reviewer PASS) — `GOAL_MET: YES`
+  stops the run the moment the stated goal holds, rather than looping until the worker
+  happens to report `no-tasks`.
+- **On the worker's `no-tasks`** — the run exits clean only if the goal-check agrees;
+  `GOAL_MET: NO` (or an unparseable verdict) appends a goal `## BLOCKER` and halts
+  (`exit 7`) rather than silently exiting "clean" on an unfinished issue.
+
+A focus file with **no `## Acceptance` block** (queue files, legacy issues) has nothing
+machine-evaluable to gate on, so the worker's stop signal is accepted as before
+(backward-compatible). Disable with `RALPH_GOALCHECK=0`; tune `RALPH_GOALCHECK_MODEL`
+(default `haiku`) and `RALPH_GOALCHECK_BUDGET_USD` (default `0.50`).
+
+`overnight.sh` treats ralph.sh `exit 4` (end-of-run iOS gate), `exit 5` (scoped gate),
+`exit 6` (reviewer CONCERNS), and `exit 7` (goal not met) as gate-red: it stops the chain
+and never pushes the branch.
 
 ## Overnight orchestration
 
@@ -214,7 +243,8 @@ scripts/ralph/
   prompts/work-next.md              ← worker system prompt per iteration
   prompts/route-model.md            ← router pre-pass system prompt
   prompts/review-task.md            ← independent reviewer system prompt (57.5)
+  prompts/goal-check.md             ← goal stop-condition system prompt (57.7)
   prompts/report.md                 ← overnight report-writer system prompt
-  logs/                             ← run-*, iter-*, route-*, overnight-* logs (gitignored)
+  logs/                             ← run-*, iter-*, route-*, goal-*, overnight-* logs (gitignored)
   README.md                         ← you are here
 ```

@@ -277,7 +277,7 @@ on founder approval (42.22). Track E / #45 human MCQ-voice testing benefits from
 
 ---
 
-## Acceptance for closing this issue
+## Acceptance
 
 - 42.1–42.4: audit + auto-fix + delete pass run; report committed; both prod-export copies re-audit zero `procedural` / zero `em_dash_explanation`; `sha256sum` matches between the two export paths.
 - 42.5–42.7: prompts + scoring + validator landed; CI green; new batch generation produces zero verbose / em-dash answers.

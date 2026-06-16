@@ -75,9 +75,17 @@ Endpoints are authoritative in backend OpenAPI spec — `curl http://localhost:8
 - **QuizViewModel:** State machine via `transition(to:caller:)` with legal transition table
   States: idle → askingQuestion → recording → processing → showingResult → finished
 
+## Verification Altitude (#57)
+
+Tests — and the autonomous loop's gate — verify **the right flow and correct states, not design fidelity.** Write tests at this altitude:
+
+- **Gate on flow, state-machine correctness, and presence of expected UI elements.** Assert the user can click through the flow and the expected buttons/text/elements are present and the state machine reaches the right state. This is what HangsTests already does (ViewInspector `find(text:)`/`find(button:)` structure assertions + `.stableDump`/`.dump` textual state snapshots + the `HangsUITests` RS click-through scenarios) — keep tests there.
+- **Do NOT gate on pixel / `.pen` design fidelity.** The screenshot-verify-against-`docs/design/frames/` step (#44/#52) is a *separate, non-gating* visual check, not part of `xcodebuild test`. The design is still moving, so 1:1-with-`.pen` would trip on cosmetic drift. It stays on-demand / human until the design stabilizes.
+- **A `.stableDump`/`.dump` snapshot diff from an intentional UI change is a re-record signal, not a hard block.** Surface it for human re-record sign-off; don't silently "fix" it or hard-fail the run on it.
+
 ## UI Verification
 
-Any change that can affect the UI (layout, colors, visibility, spacing) requires a screenshot-verify step before the task is considered done — see `docs/testing/screenshot-verify-procedure.md`. This enforces CLAUDE.md rule #2 "Fail loud": '"tests pass" is wrong if … UI wasn't verified'.
+Any change that can affect the UI (layout, colors, visibility, spacing) requires a screenshot-verify step before the task is considered done — see `docs/testing/screenshot-verify-procedure.md`. This enforces CLAUDE.md rule #2 "Fail loud": '"tests pass" is wrong if … UI wasn't verified'. Per **Verification Altitude** above, this screenshot-verify is a non-gating human/on-demand check — it does not block the autonomous merge gate.
 
 ## Info.plist
 

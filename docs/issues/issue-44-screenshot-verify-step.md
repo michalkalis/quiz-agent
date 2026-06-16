@@ -60,6 +60,14 @@ The checklist content can lean on the existing **`review-ui`** skill (HIG-based 
 - The `regression` skill's RS reports include a screenshot + `VISUAL:` line at the key assertion point.
 - "Fail loud" is satisfied: a layout regression that passes state asserts is still caught by the visual check.
 
+## Acceptance
+
+- [ ] `docs/testing/screenshot-verify-procedure.md` exists with a per-screen checklist for the question screen (≥5 concrete, Slovak-aware criteria — e.g. text not truncated, mic button present and unobstructed).
+- [ ] The `regression` skill instructs the agent to capture a screenshot, read it against the checklist, and emit a `VISUAL: PASS|FAIL` verdict at the key assertion point.
+- [ ] The `regression` skill report template includes a `VISUAL:` line, and a scenario is only fully PASS when both `VERDICT: PASS` and `VISUAL: PASS` are present.
+- [ ] `.claude/rules/ios.md` states that any UI-affecting change requires the screenshot-verify before done, citing `docs/testing/screenshot-verify-procedure.md`.
+- [ ] At least one RS run report exists containing both a `VERDICT:` and a `VISUAL:` line, demonstrating the step end-to-end.
+
 ## Memory references
 - `feedback_modular_plans.md` — fresh-context executable brief
 - `user_language.md` — app verified in Slovak; checklist accounts for longer strings

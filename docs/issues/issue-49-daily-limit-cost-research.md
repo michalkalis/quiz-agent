@@ -52,6 +52,14 @@ A short cost model (HTML artifact per `feedback_html_over_long_md`) covering:
 - A clear yes/no on 20/day sustainability for launch, with the break-even user count.
 - A recommended paid-tier price band for the paywall fast-follow.
 
+## Acceptance
+
+- [ ] `docs/artifacts/daily-limit-cost-model.html` exists, self-contained (inline CSS), with per-question, per-user, and fixed monthly cost figures.
+- [ ] The model name(s) and per-token prices are read from the actual serving-path code/config (not assumed), with the date the pricing was retrieved noted.
+- [ ] A scenario table covers at least 10 / 100 / 1000 DAU, splitting fixed vs variable cost.
+- [ ] The artifact gives an explicit yes/no verdict on whether 20 questions/day is sustainable for launch, plus a numeric break-even DAU count.
+- [ ] The artifact recommends a paid-tier price band with a one-line rationale.
+
 ## Memory references
 
 - `feedback_html_over_long_md` — long analysis → HTML artifact

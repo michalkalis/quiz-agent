@@ -83,6 +83,14 @@ Map the PRD metrics to concrete events with properties:
 - Core funnel (start → question → answer → complete) emits events on iOS + backend, verified end-to-end.
 - A dashboard shows completion rate, first-try voice capture rate, and wrong-answer rate.
 
+## Acceptance
+
+- [ ] An event taxonomy doc exists; each event traces to a PRD success metric, and each of the three target metrics (completion rate, first-try voice capture rate, wrong-answer rate) traces to ≥1 event.
+- [ ] `pytest tests/ -v` is green in `apps/quiz-agent`; every backend taxonomy event has a unit test asserting its name + required properties, and no event outside the taxonomy is emitted.
+- [ ] iOS unit tests pass on mba; each iOS taxonomy event is asserted to fire on its named `QuizViewModel` state transition via the mocked analytics client.
+- [ ] A live Sentry dashboard shows completion rate, first-try voice capture rate, and wrong-answer rate fed by real (simulator) events; its URL is recorded in this issue.
+- [ ] No analytics key/credential is committed (lives in gitignored `.env`).
+
 ## Memory references
 
 - `feedback_api_first_tools` — prefer an analytics tool with a REST API for agent automation

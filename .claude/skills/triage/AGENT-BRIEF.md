@@ -27,7 +27,7 @@ Describe **what** the system should do, not **how** to implement it. The agent w
 
 ### Complete acceptance criteria
 
-The agent needs to know when it's done. Every brief must have concrete, testable acceptance criteria, each independently verifiable.
+The agent needs to know when it's done. Every `ready-for-agent` issue must carry a **top-level `## Acceptance` block** (not nested inside the brief) — the canonical, machine-evaluable done-state that the autonomous loop's stop-condition (#57 57.7) and independent reviewer (#57 57.5) evaluate against. See "The `## Acceptance` block" in [SKILL.md](SKILL.md) for the exact shape. The brief *references* it; it does not duplicate the criteria. Each criterion must be concrete and independently verifiable.
 
 - **Good:** "RS-05 reaches its terminal assertion (state `evaluated`, evaluation surface populated) without going through a REJECTED `processing → processing` transition."
 - **Bad:** "Auto-confirm should work correctly."
@@ -59,10 +59,7 @@ about edge cases and error conditions.
 - `functionName()` return type — what it currently returns vs what it should return
 - Specific call paths or transitions, named in CONTEXT.md vocabulary
 
-**Acceptance criteria:**
-- [ ] Specific, testable criterion 1 (ideally an existing or new RS-NN)
-- [ ] Specific, testable criterion 2
-- [ ] Specific, testable criterion 3
+**Acceptance:** see the top-level `## Acceptance` block (required; the machine-evaluable done-state).
 
 **Out of scope:**
 - Thing that should NOT be changed or addressed
@@ -72,6 +69,16 @@ about edge cases and error conditions.
 What `/diagnose` Phase 1 loop the agent should reach for first
 (e.g. "RS-05 via `/regression`", "pytest tests/<dir>/test_<x>.py", "curl
 against `localhost:8002/...`").
+```
+
+The issue file must also contain (as a sibling top-level section, not inside the brief):
+
+```markdown
+## Acceptance
+
+- [ ] Specific, testable criterion 1 (ideally an existing or new RS-NN)
+- [ ] Specific, testable criterion 2
+- [ ] Specific, testable criterion 3
 ```
 
 ## Examples

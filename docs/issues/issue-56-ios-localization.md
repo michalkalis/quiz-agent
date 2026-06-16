@@ -24,6 +24,14 @@ Verifiable success criteria:
 3. All 363 unit tests pass (ViewInspector + snapshot).
 4. App runs identically in English — no visible copy change except the AppErrorModel fix (see 56.1).
 
+## Acceptance
+
+- [ ] `Localizable.xcstrings` exists and the app builds with scheme `Hangs-Local`; building populates the catalog via compiler extraction.
+- [ ] Zero user-facing string literals remain outside the catalog (per the file-by-file sweep); `AppErrorModel` is English source text (Slovak preserved in the appendix), with 19/19 `AppErrorModelTests` passing.
+- [ ] Full `HangsTests` run = 394 tests with exactly the 12 known pre-existing failures (10 × `SilenceDetectionService` timing + 2 × stale `QuestionViewSnapshotTests`) and zero new failures introduced by localization.
+- [ ] The app runs in the simulator in English with no visible copy change versus pre-#56 behaviour, except the AppErrorModel English rewrite.
+- [ ] [HUMAN] Pseudo-localization smoke ("Double-Length Pseudolanguage") across every screen shows doubled text everywhere; any normal-length string (a missed literal) is fixed (task 56.6).
+
 ## Chosen approach: String Catalog (`.xcstrings`)
 
 The modern Apple-standard mechanism (Xcode 15+, fully supported on our iOS 18.0 target):

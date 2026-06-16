@@ -20,6 +20,25 @@ Every comment or new section the agent appends during triage **must** start with
 - [AGENT-BRIEF.md](AGENT-BRIEF.md) — how to write a durable agent brief that survives codebase drift
 - [OUT-OF-SCOPE.md](OUT-OF-SCOPE.md) — how the `.out-of-scope/` knowledge base works
 
+## The `## Acceptance` block (required for `ready-for-agent`)
+
+Every issue moving to `ready-for-agent` must carry a top-level `## Acceptance` block — the canonical, **machine-evaluable** done-state. It is the contract the autonomous loop checks: the independent reviewer (#57 57.5) and the `/goal` stop-condition (#57 57.7) both read this exact heading to decide whether the work is accepted and whether the run may stop. Without it the loop has nothing falsifiable to stop on.
+
+Shape — a flat checklist under the exact heading `## Acceptance`:
+
+```markdown
+## Acceptance
+
+- [ ] <concrete, falsifiable criterion — independently checkable by a test, command, RS-NN scenario, or file/state inspection>
+- [ ] <each criterion names HOW it is checked (pytest path, `/verify-api`, RS-09 GREEN, a curl, a file contains X)>
+```
+
+Rules:
+- **Falsifiable, not aspirational.** "RS-05 reaches its terminal assertion with no REJECTED transitions" — not "auto-confirm works correctly".
+- **Each criterion independently checkable** by something concrete (a test, a command, a scenario, an inspectable file/state).
+- **Altitude (iOS):** assert flow / state-machine correctness / presence of expected UI elements — **not** pixel or `.pen` design fidelity. The screenshot-verify-against-frames check stays non-gating until the design stabilizes (see `.claude/rules/ios.md`).
+- The block is the single home for done-state. An Agent Brief points at it rather than duplicating criteria.
+
 ## Where state lives
 
 Each issue file has a header block with two structured lines:
@@ -51,7 +70,7 @@ Six **state** roles:
 
 - `needs-triage` — needs evaluation
 - `needs-info` — waiting on the user / external info
-- `ready-for-agent` — fully specified, ready for an autonomous (AFK) agent run
+- `ready-for-agent` — fully specified, ready for an autonomous (AFK) agent run. **Requires a machine-evaluable `## Acceptance` block** (see below) — the autonomous loop's stop-condition and independent reviewer evaluate against it (#57).
 - `ready-for-human` — needs human implementation (judgment call, external access, manual testing)
 - `done` — the work shipped (commit / deploy / release). The file stays as historical record.
 - `wontfix` — will not be actioned
@@ -98,7 +117,7 @@ After the bucket display, also point out any TODO `[~]` items — work-in-progre
 4. **Grill (if needed).** If the issue needs fleshing out, run a brief targeted question session (1–4 questions). Don't blow it up into a full PRD interview unless the scope warrants `/to-prd`.
 
 5. **Apply the outcome:**
-   - `ready-for-agent` — append an Agent Brief section ([AGENT-BRIEF.md](AGENT-BRIEF.md)) to the issue file. Update the `**Triage:**` line. Optionally surface to TODO.md.
+   - `ready-for-agent` — append an Agent Brief section ([AGENT-BRIEF.md](AGENT-BRIEF.md)) **and a top-level `## Acceptance` block** (see "The `## Acceptance` block" above) to the issue file. Do not move to `ready-for-agent` without the `## Acceptance` block. Update the `**Triage:**` line. Optionally surface to TODO.md.
    - `ready-for-human` — same brief structure, but note why it can't be delegated (judgment calls, external access, design decisions, manual testing).
    - `needs-info` — append a Triage Notes section (template below). Update `**Triage:**`.
    - `wontfix` (bug) — short polite explanation in the issue, set state to `wontfix`, mark `[x]` in TODO if listed (don't delete the issue file — keep historical record).
@@ -107,7 +126,7 @@ After the bucket display, also point out any TODO `[~]` items — work-in-progre
 
 ## Quick state override
 
-If the user says "move 19 to ready-for-agent", trust them and apply the role directly. Confirm what you're about to do (Triage line change, optional appended brief, TODO move), then act. Skip grilling. If moving to `ready-for-agent` without a brief on the file, ask whether they want one written.
+If the user says "move 19 to ready-for-agent", trust them and apply the role directly. Confirm what you're about to do (Triage line change, optional appended brief, TODO move), then act. Skip grilling. If moving to `ready-for-agent` without a brief **or without a `## Acceptance` block** on the file, ask whether they want them written — `ready-for-agent` is not valid without a machine-evaluable `## Acceptance` block.
 
 ## Creating a new issue
 

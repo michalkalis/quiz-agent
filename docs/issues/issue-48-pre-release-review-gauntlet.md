@@ -5,9 +5,26 @@
 **Founder decision 2026-06-09:** **Defer — not yet.** Run this gauntlet later, once the MCQ + design
 blockers are closer to done. Parked for now; no stages started.
 
-Three-stage review pass before the first App Store submission. Run **in order** —
-architecture first (shapes what security/quality looks at), security second (gates
-release), comprehensive review last (catches what the narrow passes miss).
+**Founder steer 2026-06-16:** this issue is the home for the "full app review" the founder wants —
+"is the app ready for release?" from **two angles**: (1) **iOS UX/UI** release-readiness, and
+(2) **backend security + release-readiness**. Added **Stage 0 (iOS UX/UI review)** below to make the
+UX/UI angle explicit. **Deliverable of every stage is a research/analysis report + a ranked,
+prioritised findings list + a go/no-go call — not code.** Remediation is spun off into follow-up
+issues. Still not started this session; queue it after the #45 MCQ tail lands.
+
+Four-stage review pass before the first App Store submission. Run **in order** — UX/UI and
+architecture first (shape what the deeper passes look at), security next (gates release),
+comprehensive review last (catches what the narrow passes miss).
+
+## Stage 0 — iOS UX/UI release-readiness review
+
+- Tools: `review-ui` skill on key-screen screenshots (drive the sim via XcodeBuildMCP), plus a
+  manual heuristic pass against the iOS HIG and the `.pen` design intent.
+- Scope: onboarding flow, the voice-answer + MCQ core loop, error/recovery paths, result/completion,
+  settings, paywall/paywall-offline — light **and** dark mode. Hands-free-while-driving ergonomics
+  (tap targets, glanceability, audio-first affordances) get special weight since that is the product.
+- Output: ranked UX/UI findings (blocker vs. polish vs. defer) and an explicit **"is the app
+  UX/UI-ready to release?"** verdict.
 
 ## Ralph suitability — NOT for the review stages
 
@@ -65,8 +82,9 @@ data-handling hygiene we have not formally audited.
 
 ## Success criteria
 
-- [ ] Stage 1 report written, blockers extracted as issues
-- [ ] Stage 2 report written, **zero open security blockers**
-- [ ] Stage 3 run, findings triaged
-- [ ] Backend remediation findings decomposed into `#49` atomic `- [ ]` tasks (Ralph handoff)
-- [ ] Go/no-go summary for App Store submission
+- [ ] Stage 0 iOS UX/UI report written, **UX/UI release-readiness verdict** given, blockers extracted
+- [ ] Stage 1 architecture report written, blockers extracted as issues
+- [ ] Stage 2 security report written, **zero open security blockers**
+- [ ] Stage 3 comprehensive review run, findings triaged
+- [ ] Remediation findings decomposed into atomic `- [ ]` tasks (Ralph handoff) per area
+- [ ] Go/no-go summary for App Store submission (UX/UI **and** backend)

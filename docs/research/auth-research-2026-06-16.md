@@ -312,6 +312,25 @@ These are the decision gates that must be resolved before #59 can be spec'd and 
 
 ---
 
+## 8b. Founder Decisions (2026-06-17)
+
+The founder reviewed §8. Resolutions below; these are the inputs for spinning off #59/#60/#61.
+
+1. **Anti-abuse level → STRONG NOW.** App Attest is pulled **into Phase 1** (not deferred). The anonymous bootstrap endpoint must verify the request comes from a genuine app build (`DCAppAttestService`), so even the self-issued anonymous token can't be minted by a fake client. *Impact: Phase 1 grows from M to **L** (~1 week added for `cbor2`/`cryptography` attestation verification + one Apple round-trip at first install).*
+
+2. **Platforms → iOS-only for MVP; keep the door open.** Web/Android are expected *eventually* but not soon (only after iPhone shows relative success). So MVP ships **Sign in with Apple only**; **email magic link is deferred**. The self-issued-JWT architecture already keeps magic link cheap to add later (no provider swap) — this property must be preserved (don't adopt anything Apple-only at the token layer).
+
+3. **Paid IAP without login → APPROVED, with one constraint (verified 2026-06-17).** Verified against first-party Apple sources (WWDC22 "Implement proactive in-app purchase restore", TN2413, Review Guidelines §3.1.1/§5.1.1(v)):
+   - **Auto-renewable subscriptions** and **non-consumables** restore automatically via the Apple ID through `Transaction.currentEntitlements` — **no app account required**, fully documented, and a Restore Purchases mechanism is itself mandated by §3.1.1.
+   - **Consumables are NOT restorable** (TN2413) and are excluded from `currentEntitlements`; surviving reinstall/cross-device would force a server-side ledger keyed to an identity *before* launch.
+   - **→ Constraint for #50:** ship premium as an **auto-renewable subscription** (and any "packs" as **non-consumables**, never consumables). Then paid IAP launches cleanly on anonymous identity, and Sign in with Apple is a pure Phase-2 upgrade. *Founder caveat:* if deferring login later proves to complicate the upgrade/merge, reconsider pulling Sign in with Apple into the App Store launch release.
+
+4. **EU data residency → already satisfied.** Both Fly.io apps run `primary_region = "cdg"` (Paris). No migration needed for the EU launch; add US regions (iad/sjc) on expansion, no auth-vendor change (the reason self-owned JWT was chosen).
+
+5. **Deferred technical questions (not blocking #59):** grace period for old in-field installs = **30 days** (default accepted); Apple `.p8` key rotation (6-month max) and Supabase-as-escape-hatch are **Phase 2 notes**, revisited when #60 is specced.
+
+---
+
 ## 9. Design (Pencil screens)
 
 The auth flow is **anonymous-first with a contextual upgrade** (founder constraint #2 — no login wall). Screens to design in the live Pencil source `design/quiz-agent.pen`:

@@ -19,6 +19,13 @@ import os
         var shouldFailPlayback = false
         var mockRecordingData = Data("mock audio".utf8)
 
+        // TTS spy (RS-11 / #59.1): the real audio stack is replaced by a no-op in
+        // tests, so "was TTS actually attempted" is otherwise unobservable. Every
+        // playOpusAudio call increments the count and records the last payload, even
+        // when shouldFailPlayback throws (the attempt still happened).
+        var playOpusCallCount = 0
+        var lastPlayedData: Data?
+
         // Device management
         var availableInputDevices: [AudioDevice] = [.previewBuiltIn, .previewBluetooth]
         var currentInputDevice: AudioDevice?
@@ -61,7 +68,9 @@ import os
             return mockRecordingData
         }
 
-        func playOpusAudio(_: Data) async throws -> TimeInterval {
+        func playOpusAudio(_ data: Data) async throws -> TimeInterval {
+            playOpusCallCount += 1
+            lastPlayedData = data
             if shouldFailPlayback {
                 throw AudioError.playbackFailed
             }

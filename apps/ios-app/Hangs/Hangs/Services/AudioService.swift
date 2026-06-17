@@ -137,15 +137,19 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
     // MARK: - Audio Session Setup
 
-    func setupAudioSession(mode: AudioMode) throws {
-        let session = AVAudioSession.sharedInstance()
-
-        // Store current mode
-        currentAudioMode = mode
-
-        // Configure audio session options based on selected mode
-        var options: AVAudioSession.CategoryOptions
-
+    /// The `AVAudioSession.CategoryOptions` for a given audio mode.
+    ///
+    /// Pure (no session activation, no I/O) so the option set is unit-testable on the
+    /// simulator without touching a live `AVAudioSession` — RS-18 / #59.3. The literal
+    /// "real instance + setupAudioSession" guard was reworked to this seam because
+    /// `setupAudioSession` calls `setActive(true)`, which is the suspected cause of the
+    /// HangsTests hang on the sim.
+    ///
+    /// `.allowBluetoothHFP` MUST stay in **every** branch: A2DP is output-only, so
+    /// without HFP the Bluetooth (AirPods) microphone is never an available input and
+    /// recording silently misroutes to the built-in mic. Media mode keeps A2DP too so
+    /// playback stays high-quality and the car "phone-call UI" stays off.
+    nonisolated static func categoryOptions(for mode: AudioMode) -> AVAudioSession.CategoryOptions {
         // Duck background audio (Spotify/podcasts) while the quiz is active.
         // .duckOthers lowers music; .interruptSpokenAudioAndMixWithOthers pauses
         // podcasts (two simultaneous voices = unintelligible). Apple HIG recommends
@@ -155,28 +159,37 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
             .interruptSpokenAudioAndMixWithOthers
         ]
 
+        var options: AVAudioSession.CategoryOptions
         switch mode.id {
         case "media":
-            // Media Mode: A2DP only (high-quality playback, built-in mic)
-            // No HFP = No "phone call" UI in car display
-            options = [.defaultToSpeaker, .allowBluetoothA2DP]
-            options.formUnion(duckingOptions)
-
-            Logger.audio.info("🎤 Audio session: Media Mode (A2DP only)")
-
+            // Media Mode: A2DP (high-quality playback) + HFP (Bluetooth mic reachable).
+            options = [.defaultToSpeaker, .allowBluetoothA2DP, .allowBluetoothHFP]
         case "call":
-            // Call Mode: HFP + A2DP (Bluetooth mic enabled)
-            // May show as "phone call" in car display
+            // Call Mode: HFP + A2DP (Bluetooth mic enabled; may show "phone call" in car).
             options = [.defaultToSpeaker, .allowBluetoothHFP, .allowBluetoothA2DP]
-            options.formUnion(duckingOptions)
-
-            Logger.audio.info("🎤 Audio session: Call Mode (HFP + A2DP)")
-
         default:
-            // Fallback to call mode (current behavior)
+            // Fallback to call mode.
             options = [.defaultToSpeaker, .allowBluetoothHFP, .allowBluetoothA2DP]
-            options.formUnion(duckingOptions)
+        }
+        options.formUnion(duckingOptions)
+        return options
+    }
 
+    func setupAudioSession(mode: AudioMode) throws {
+        let session = AVAudioSession.sharedInstance()
+
+        // Store current mode
+        currentAudioMode = mode
+
+        // Configure audio session options based on selected mode (pure helper above).
+        let options = Self.categoryOptions(for: mode)
+
+        switch mode.id {
+        case "media":
+            Logger.audio.info("🎤 Audio session: Media Mode (A2DP + HFP mic)")
+        case "call":
+            Logger.audio.info("🎤 Audio session: Call Mode (HFP + A2DP)")
+        default:
             Logger.audio.warning("⚠️ Unknown audio mode '\(mode.id, privacy: .public)', defaulting to Call Mode")
         }
 
@@ -260,6 +273,11 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         ]
 
         try session.setCategory(.playback, mode: .spokenAudio, options: ttsOptions)
+        // A category change does not reactivate the session. After the mic engine
+        // has run, AVPlayer otherwise stalls in .waitingToPlayAtSpecifiedRate and the
+        // 5s stall timer fires AudioError.playbackFailed → TTS never speaks. Mirror
+        // the setActive(true) that setupAudioSession does after its setCategory.
+        try session.setActive(true)
 
         let switchCrumb = Breadcrumb(level: .info, category: "audio.category_switch")
         switchCrumb.message = "Switched to .playback for TTS"
@@ -274,6 +292,9 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
             // session breaks silently. No `try?` swallow.
             do {
                 try session.setCategory(previousCategory, mode: previousMode, options: previousOptions)
+                // Reactivate after restoring — a name-only restore leaves the session
+                // wired for .playback (no input), which silently breaks the next recording.
+                try session.setActive(true)
                 Logger.audio.debug("🔊 Restored audio category: \(previousCategory.rawValue, privacy: .public)")
             } catch {
                 Logger.audio.error("❌ Failed to restore audio category \(previousCategory.rawValue, privacy: .public): \(error.localizedDescription, privacy: .public)")
@@ -284,6 +305,14 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
                     "error": error.localizedDescription
                 ]
                 SentryBreadcrumb.add(crumb)
+                // Recovery: a failed restore can strand the session in .playback (no mic).
+                // Re-establish a known-good record-capable session for the current mode.
+                do {
+                    try setupAudioSession(mode: currentAudioMode)
+                    Logger.audio.info("🔊 Recovered audio session via setupAudioSession after failed restore")
+                } catch {
+                    Logger.audio.error("❌ Audio session recovery failed: \(error.localizedDescription, privacy: .public)")
+                }
             }
         }
 

@@ -131,8 +131,8 @@ A `/goal` or Ralph loop can run per-bug with the matching RS scenario as the mac
 Founder approved the full-set, priority-ordered run 2026-06-17. Each task is independently committable; the new RS guard for that bug must land in the same commit and is the thing that goes red→green (per #57).
 
 **P0 — both in `AudioService`:**
-- [ ] **59.3** — Add `.allowBluetoothHFP` to media-mode session options (`AudioService.swift:159-163`); add a `setupAudioSession(mode:)` recovery in the `withPlaybackCategory` defer-catch. Land **RS-18** (real-`AudioService` `categoryOptions` read-back unit test).
-- [ ] **59.1** — Add `try session.setActive(true)` after `setCategory` at `AudioService.swift:262` **and** in the defer-restore block. Add `playOpusCallCount: Int` + `lastPlayedData: Data?` TTS-spy to `MockAudioService`. Land **RS-11**.
+- [x] **59.3** — Added `.allowBluetoothHFP` to media-mode session options; added a `setupAudioSession(mode:)` recovery in the `withPlaybackCategory` defer-catch. Landed **RS-18** — but **reworked**: the option logic was extracted into a pure `nonisolated static AudioService.categoryOptions(for:)` and the test reads that back, instead of instantiating a live `AudioService` + `setActive` (the suspected HangsTests-hang path, per handoff 2026-06-17-1555). RS-18 spec in `regression-scenarios.md` updated to match. *(green on iPhone 17 Pro sim)*
+- [x] **59.1** — Added `try session.setActive(true)` after the `.playback` `setCategory` **and** in the defer-restore block (plus session-recovery in the catch, shared with 59.3). Added `playOpusCallCount: Int` + `lastPlayedData: Data?` TTS-spy to `MockAudioService`. Landed **RS-11** (`QuizViewModelTTSSpyTests` + mock spy-contract tests). *(green on sim; real-device confirm still pending — see `[HUMAN]` below)*
 - [HUMAN] **59.1-device-confirm** — OUT OF LOOP. Confirm on a real iOS 26 device (Slovak, AirPods) that the question is actually spoken aloud. Root cause is medium-confidence and the symptom is not observable on the simulator (mock TTS always "succeeds"). Do **not** mark 59.1 fully done off a green sim suite.
 
 **P1:**

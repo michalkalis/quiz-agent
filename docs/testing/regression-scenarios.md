@@ -472,21 +472,31 @@ straight to the next question.
 
 ## RS-18: Media-mode audio session keeps the Bluetooth mic reachable
 
-**Type:** Unit (HangsTests, real `AudioService` on the sim — no hardware). Guards issue #59.3.
+**Type:** Unit (HangsTests, pure helper — no live session, no hardware). Guards issue #59.3.
 
 **Hypothesis:** The media audio mode must request `.allowBluetoothHFP` so the
 AirPods microphone is reachable for recording — A2DP is output-only and
 stripping HFP silently misroutes the mic.
 
+**Reworked from the original "real `AudioService` + `setActive`" design:** calling
+`setupAudioSession` activates a live `AVAudioSession` on the sim, which is the
+suspected cause of the HangsTests hang that killed the autonomous loop
+(2026-06-17). The option-building logic was extracted into the pure, non-isolated
+`AudioService.categoryOptions(for:)` so the invariant is read back deterministically
+with no session activation, permission prompt, or I/O. This is a *stronger* guard:
+it pins the exact option set `setupAudioSession` applies, with zero hang surface.
+
 **Preconditions**
-- Real `AudioService` instance (not the mock); runs on the simulator, touches no hardware.
+- None — the helper is pure (no instance state, no session, no hardware).
 
 **Steps**
-1. Instantiate `AudioService`; call `setupAudioSession(mode: .media)`.
-2. Read `AVAudioSession.sharedInstance().categoryOptions`.
+1. Call `AudioService.categoryOptions(for: .media)` (and `.call`, `.default`).
+2. Inspect the returned `AVAudioSession.CategoryOptions`.
 
 **Asserts**
-- `categoryOptions` contains `.allowBluetoothHFP`.
+- Media options contain `.allowBluetoothHFP` (and still `.allowBluetoothA2DP`).
+- `AudioMode.default` is `media` and carries HFP (pins the default against regression).
+- Every mode ducks others + defaults to speaker.
 - (Test body documents *why* HFP must stay: Bluetooth mic access, not phone-call UI — fails the instant anyone strips it.)
 
 ---

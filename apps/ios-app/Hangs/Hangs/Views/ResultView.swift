@@ -94,9 +94,12 @@ struct ResultView: View {
 
     private var readAloudButton: some View {
         Button {
-            if let url = viewModel.currentQuestionAudioUrl {
-                Task { await viewModel.playQuestionAudio(from: url) }
-            }
+            // 59.7 Bug A: use the timer-safe `replayQuestionAudio()` — `playQuestionAudio`
+            // is the question-screen flow function (it tears down silence detection and
+            // re-arms the think/answer timers), which is wrong on the result screen and can
+            // silently drop playback. `replayQuestionAudio()` reads the URL internally and
+            // leaves the running auto-advance countdown untouched.
+            Task { await viewModel.replayQuestionAudio() }
         } label: {
             HStack(spacing: 4) {
                 Image(systemName: "speaker.wave.2")

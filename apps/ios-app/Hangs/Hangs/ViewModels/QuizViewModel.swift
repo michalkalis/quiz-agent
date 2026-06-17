@@ -918,21 +918,28 @@ final class QuizViewModel: ObservableObject {
             }
         }
 
-        // Play feedback audio and start countdown in background
+        // 59.7 Bug B: start the auto-advance countdown immediately so the countdown bar is
+        // visible the moment the result appears — previously it ran feedback audio first and
+        // only started the countdown afterwards, so the bar sat invisible for 3-5s. Feedback
+        // audio now plays concurrently (async let) while the countdown runs. The configured
+        // delay (default 8s) normally exceeds the feedback length, so playback isn't cut off.
         Task {
-            var feedbackDuration: TimeInterval = 0.0
-
-            if let audioInfo = response.audio {
+            async let feedbackDuration: TimeInterval = {
+                guard let audioInfo = response.audio else { return 0.0 }
                 // Prioritize base64 (enhanced feedback) over URL (generic feedback)
                 if let base64 = audioInfo.feedbackAudioBase64 {
-                    feedbackDuration = await playFeedbackAudioBase64(base64)
+                    return await playFeedbackAudioBase64(base64)
                 } else if let feedbackUrl = audioInfo.feedbackUrl {
-                    feedbackDuration = await playFeedbackAudio(from: feedbackUrl)
+                    return await playFeedbackAudio(from: feedbackUrl)
                 }
-            }
+                return 0.0
+            }()
 
-            // Start auto-advance countdown after audio completes (or immediately if no audio)
-            await startAutoAdvanceCountdown(duration: settings.autoAdvanceDelay, audioDuration: feedbackDuration)
+            await startAutoAdvanceCountdown(duration: settings.autoAdvanceDelay, audioDuration: 0)
+
+            // Keep the feedback audio playing to completion (and surface any failure log)
+            // before this task ends; the countdown above is already running concurrently.
+            _ = await feedbackDuration
         }
     }
 

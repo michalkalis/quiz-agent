@@ -43,7 +43,19 @@
 # QUEUE (priority order)
 # ====================================================================================
 #
-# 1 — iOS text localization (#56). String Catalog (Localizable.xcstrings) extraction + infra.
+# 1 — Quiz-flow bug cluster (#59). 8 founder-reported voice-screen regressions, root-caused +
+#     adversarially verified. Founder approved the FULL set in priority order 2026-06-17. Runs
+#     FIRST: these are P0/P1 live-device breakages (core hands-free value broken), so they outrank
+#     the #56 refactor — if the wall-clock budget runs out, #56's tail drops, not these.
+#     7 atomic '- [ ]' tasks (P0: 59.3/59.1 · P1: 59.4/59.7 · P2: 59.2/59.5/59.6/59.8) + 1 '- [HUMAN]'
+#     (59.1 real-device TTS confirm — OUT OF LOOP; do NOT mark 59.1 done off the green sim suite).
+#     Each task lands its fix + its RS guard (RS-11..RS-18, see docs/testing/regression-scenarios.md)
+#     in one commit; the guard is the thing that goes red→green (#57). Cap is higher than task-count
+#     because each is a real bug fix + NEW test infra (spy/injectable-error/a11y-id/geometry), and the
+#     #57 gate spends build/test/reviewer/goal-check iterations per task on iOS.
+docs/issues/issue-59-quiz-flow-bug-cluster.md | 26
+#
+# 2 — iOS text localization (#56). String Catalog (Localizable.xcstrings) extraction + infra.
 #     9 atomic '- [ ]' tasks + 1 '- [HUMAN]' (see issue file task list). English source text as
 #     the key (keeps ViewInspector find(text:) assertions passing). HARD GATE at 56.2: a pilot
 #     test must confirm find(text:) still passes before mass extraction — if it fails the loop

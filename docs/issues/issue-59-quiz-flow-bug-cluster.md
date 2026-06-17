@@ -1,6 +1,7 @@
 # Issue #59 — Quiz-flow bug cluster (8 voice-screen regressions)
 
 **Triage:** bug · ready-for-agent
+**Reversibility:** a · commits-only (no schema migration, no auth/payment, no prod deploy) — overnight-loop eligible
 **Status:** Founder-reported 2026-06-17 from a live device session (Slovak, real AirPods). 8 bugs on the question + result screens. Root-caused + adversarially verified by a multi-agent workflow (`wf_59921dfa-ac4`, 17 agents). **No fixes applied yet — this is the evidence + plan.** Fixes are loop-able once founder picks the order.
 
 ## Why this issue exists (the meta-problem)
@@ -122,6 +123,37 @@ Suggested order once founder approves (P0 first; each is independently committab
 3. **59.2 / 59.5 / 59.6 / 59.8** — P2 UX; land RS-12/RS-14/RS-15/RS-17 + guards.
 
 A `/goal` or Ralph loop can run per-bug with the matching RS scenario as the machine-checkable acceptance. Do NOT mark a bug done off a green mock suite alone — the new guard for that bug must be the thing that goes red→green.
+
+---
+
+## Tasks (atomic — Ralph self-selects in order; one fix + its guard + its RS scenario per task)
+
+Founder approved the full-set, priority-ordered run 2026-06-17. Each task is independently committable; the new RS guard for that bug must land in the same commit and is the thing that goes red→green (per #57).
+
+**P0 — both in `AudioService`:**
+- [ ] **59.3** — Add `.allowBluetoothHFP` to media-mode session options (`AudioService.swift:159-163`); add a `setupAudioSession(mode:)` recovery in the `withPlaybackCategory` defer-catch. Land **RS-18** (real-`AudioService` `categoryOptions` read-back unit test).
+- [ ] **59.1** — Add `try session.setActive(true)` after `setCategory` at `AudioService.swift:262` **and** in the defer-restore block. Add `playOpusCallCount: Int` + `lastPlayedData: Data?` TTS-spy to `MockAudioService`. Land **RS-11**.
+- [HUMAN] **59.1-device-confirm** — OUT OF LOOP. Confirm on a real iOS 26 device (Slovak, AirPods) that the question is actually spoken aloud. Root cause is medium-confidence and the symptom is not observable on the simulator (mock TTS always "succeeds"). Do **not** mark 59.1 fully done off a green sim suite.
+
+**P1:**
+- [ ] **59.4** — Split end-quiz concerns (`QuizViewModel.swift:708-726`): on `NetworkError.sessionNotFound` treat as success → `resetToHome()`; show the banner only for errors meaning the session may still be live; warn-log the `extendSession` failure. Add `endSessionError: Error?` + `endSessionCallCount: Int` to `MockNetworkService`. Land **RS-13**.
+- [ ] **59.7** — `ResultView.readAloudButton` (`ResultView.swift:96-111`) calls `replayQuestionAudio()` not `playQuestionAudio`; start the auto-advance countdown on screen-appear (concurrent Task, duration `max(autoAdvanceDelay, feedbackDuration)`). Land **RS-16**.
+
+**P2 — UX:**
+- [ ] **59.2** — Take the countdown chips out of `topChrome` (`QuestionView.swift:81-94,134-150`): reserved-height row toggled with `.opacity`/`.hidden`, or bottom overlay/ZStack — so appearance never reflows pinned controls. Land **RS-12** (frame-origin delta < 4 pt).
+- [ ] **59.5** — Add `var canReplayAudio: Bool` to the VM; gate `question.replay` with `.disabled(!canReplayAudio)`. Land **RS-14** (ViewInspector disabled-state).
+- [ ] **59.6** — Add an `if isProcessing { processingRow … }` branch (with a `question.processingIndicator` a11y-id) to the pinned-controls `VStack` on the typed-answer path (`QuestionView.swift` voiceBody). Land **RS-15**.
+- [ ] **59.8** — Add `resumeAutoAdvance()` to `QuizViewModel`; wire the "Resume auto-advance" button (`ResultView.swift:257-265`) to it. "Next question" keeps `continueToNext()`. Land **RS-17**.
+
+## Acceptance
+
+Loop-evaluable on the simulator (the `[HUMAN]` line is out-of-loop and must NOT gate the run):
+
+- [ ] All 7 `- [ ]` tasks above are committed, and each bug's fix + its RS guard landed in the same commit.
+- [ ] iOS unit suite green: `xcodebuild test -only-testing:HangsTests` (scheme `Hangs-Local`, config `Debug-Local`). New tests for RS-11/13/14/16/17/18 exist and pass; RS-01..RS-10 still green (no regression of the regression suite).
+- [ ] Structural seams exist and compile (they are themselves the guards): `MockAudioService.playOpusCallCount`/`lastPlayedData`; `MockNetworkService.endSessionError`/`endSessionCallCount`; `QuizViewModel.resumeAutoAdvance()` and `canReplayAudio`; a11y-id `question.processingIndicator` in the typed-answer processing branch.
+- [ ] RS-11..RS-18 are appended to `docs/testing/regression-scenarios.md`; the sim-driven legs (RS-11/12/13/15/16/17) pass via the `/regression` skill on the iPhone 17 Pro sim, with per-run reports written to `docs/testing/runs/`.
+- [HUMAN] 59.1 real-device confirm (see task above) — the closing check that TTS actually speaks on iOS 26 hardware. Out of loop; founder verifies in the morning.
 
 ---
 

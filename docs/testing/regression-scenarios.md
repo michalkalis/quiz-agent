@@ -303,6 +303,194 @@ the voice path tested in RS-09.
 
 ---
 
+## RS-11: Question TTS is actually attempted (and re-attempted after a playback failure)
+
+**Type:** Unit (HangsTests) + Sim. Guards issue #59.1.
+
+**Hypothesis:** Reaching `askingQuestion` must invoke question-audio playback
+at least once, and a playback failure must NOT abort the quiz — the app still
+reaches `recording` and TTS is re-attempted on the next question. (The real
+59.1 bug is a missing `setActive(true)`; the spy proves the *attempt* fired,
+the real-device confirm — out of loop — proves sound came out.)
+
+**Preconditions**
+- New seam on `MockAudioService`: `playOpusCallCount: Int` (+ `lastPlayedData: Data?`), incremented every `playOpusAudio`.
+- Launch with `--ui-test`.
+
+**Steps**
+1. Tap `home.startQuiz`; wait for `question.state` label `askingQuestion`.
+2. (Unit) Assert `mockAudio.playOpusCallCount >= 1`.
+3. (Unit) Set `mockAudio.shouldFailPlayback = true`, advance one question, assert state reaches `recording` AND `playOpusCallCount` increments again on the next question.
+
+**Asserts**
+- `playOpusCallCount >= 1` after `askingQuestion`.
+- With `shouldFailPlayback`, quiz still reaches `recording`; no `question.errorBanner`; TTS re-attempted next question.
+- App process is alive; no `EXC_*` in log.
+
+---
+
+## RS-12: Answer/think countdown does not reflow pinned controls
+
+**Type:** Sim (geometry). Guards issue #59.2.
+
+**Hypothesis:** When `answerTimerCountdown`/`thinkingTimeCountdown` becomes
+non-zero, the countdown chip must appear without shoving the question and
+action row downward — the y-origin of `question.record` must stay put.
+
+**Preconditions**
+- Launch with `--ui-test`.
+
+**Steps**
+1. Tap `home.startQuiz`; wait for `askingQuestion`.
+2. `snapshot_ui`; record `frame.origin.y` of `question.record` (y0).
+3. Wait until the answer/think countdown chip is present (`answerTimerCountdown > 0`).
+4. `snapshot_ui`; record `frame.origin.y` of `question.record` (y1).
+
+**Asserts**
+- `abs(y1 - y0) < 4` pt (no reflow).
+- `question.record` still present and tappable.
+- App process is alive; no `EXC_*` in log.
+
+---
+
+## RS-13: Tapping X with a dead backend session still returns Home (no stranding)
+
+**Type:** Unit (HangsTests) + Sim. Guards issue #59.4.
+
+**Hypothesis:** `endQuiz()` must treat a `NetworkError.sessionNotFound` (the
+session is already gone) as success — clear session, reset state, stop audio,
+return Home — and must NOT leave the user stranded on the question screen
+behind a red banner.
+
+**Preconditions**
+- New seams on `MockNetworkService`: `endSessionError: Error?` (parallel to `createSessionError`) and `endSessionCallCount: Int`.
+- Launch with `--ui-test`.
+
+**Steps**
+1. (Unit) Set `mockNetwork.endSessionError = NetworkError.sessionNotFound`; call `endQuiz()`.
+2. (Sim) Tap `home.startQuiz`; reach `askingQuestion`; tap the close/X control mid-quiz.
+
+**Asserts**
+- (Unit) `quizState == .idle`, `currentSession == nil`, `errorMessage == nil`, `endSessionCallCount == 1`.
+- (Sim) App returns to `HomeView` (`home.startQuiz` visible); `question.errorBanner` is **not** present.
+- App process is alive; no `EXC_*` in log.
+
+---
+
+## RS-14: Replay button reflects audio availability (no dead interactive control)
+
+**Type:** Unit (ViewInspector). Guards issue #59.5.
+
+**Hypothesis:** `question.replay` must be disabled/absent when no question
+audio is available (`currentQuestionAudioUrl == nil` or muted) so it never
+looks tappable while silently no-opping; enabled only when replay can do
+something.
+
+**Preconditions**
+- New VM computed prop `canReplayAudio` (`!settings.isMuted && currentQuestionAudioUrl != nil`).
+
+**Steps**
+1. (Unit) `currentQuestionAudioUrl == nil` → inspect `question.replay`.
+2. (Unit) `currentQuestionAudioUrl != nil`, not muted → inspect `question.replay`.
+
+**Asserts**
+- nil URL (or muted) → `question.replay` is disabled (or absent).
+- non-nil URL, not muted → `question.replay` is enabled.
+
+---
+
+## RS-15: Typed-answer submit shows a processing indicator before the result
+
+**Type:** Sim (timing). Guards issue #59.6.
+
+**Hypothesis:** Submitting a typed answer must show in-flight feedback
+(`question.processingIndicator`) while the evaluation call runs — the screen
+must not appear frozen until the result lands.
+
+**Preconditions**
+- New a11y-id `question.processingIndicator` in the typed-answer processing branch of the pinned controls.
+- Launch with `--ui-test`.
+
+**Steps**
+1. Tap `home.startQuiz`; reach `askingQuestion`.
+2. Open "Type answer instead", type `Paris`, tap send.
+3. `snapshot_ui` within ~200 ms of submit.
+
+**Asserts**
+- `question.processingIndicator` is present before `question.state` becomes `showingResult`.
+- App process is alive; no `EXC_*` in log.
+
+---
+
+## RS-16: Result read-aloud replays the question without disturbing the countdown
+
+**Type:** Unit (HangsTests) + Sim. Guards issue #59.7.
+
+**Hypothesis:** `ResultView` read-aloud must call the timer-safe
+`replayQuestionAudio()` (not `playQuestionAudio`) — it plays the question
+audio once and leaves the running auto-advance countdown untouched; tapping
+it must not advance to the next question.
+
+**Preconditions**
+- `playOpusCallCount` spy from RS-11 in place.
+- Launch with `--ui-test`.
+
+**Steps**
+1. (Unit) On the result screen, capture `autoAdvanceCountdown`; call `replayQuestionAudio()`.
+2. (Sim) Reach `showingResult`; tap `result.readAloud`.
+
+**Asserts**
+- (Unit) `playOpusCallCount == 1` after the call AND `autoAdvanceCountdown` unchanged.
+- (Sim) state stays `showingResult`; countdown value preserved (not reset/aborted).
+- App process is alive; no `EXC_*` in log.
+
+---
+
+## RS-17: "Resume auto-advance" resumes the countdown, does not skip to next question
+
+**Type:** Unit (HangsTests) + Sim. Guards issue #59.8.
+
+**Hypothesis:** "Resume auto-advance" must call a dedicated
+`resumeAutoAdvance()` (clear the pause flag, restart the countdown) and stay
+on the result screen — it must NOT share `continueToNext()`, which jumps
+straight to the next question.
+
+**Preconditions**
+- New VM method `resumeAutoAdvance()`.
+- Launch with `--ui-test`.
+
+**Steps**
+1. (Unit) `pauseQuiz()` on a result, then `resumeAutoAdvance()`.
+2. (Sim) Reach `showingResult`; pause (Stay here); tap "Resume auto-advance".
+
+**Asserts**
+- (Unit) `quizState == .showingResult` (NOT `askingQuestion`) AND `autoAdvanceCountdown > 0`.
+- (Sim) still on the result screen after resume; countdown running.
+- App process is alive; no `EXC_*` in log.
+
+---
+
+## RS-18: Media-mode audio session keeps the Bluetooth mic reachable
+
+**Type:** Unit (HangsTests, real `AudioService` on the sim — no hardware). Guards issue #59.3.
+
+**Hypothesis:** The media audio mode must request `.allowBluetoothHFP` so the
+AirPods microphone is reachable for recording — A2DP is output-only and
+stripping HFP silently misroutes the mic.
+
+**Preconditions**
+- Real `AudioService` instance (not the mock); runs on the simulator, touches no hardware.
+
+**Steps**
+1. Instantiate `AudioService`; call `setupAudioSession(mode: .media)`.
+2. Read `AVAudioSession.sharedInstance().categoryOptions`.
+
+**Asserts**
+- `categoryOptions` contains `.allowBluetoothHFP`.
+- (Test body documents *why* HFP must stay: Bluetooth mic access, not phone-call UI — fails the instant anyone strips it.)
+
+---
+
 ## Adding a scenario
 
 1. Pick the next free `RS-NN`.

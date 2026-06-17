@@ -1,6 +1,6 @@
 # Issue #58 — Authentication: Research, Design & Plan
 
-**Scope:** Research and planning only. No auth code is written in this issue. Implementation issues are #59+.
+**Scope:** Research and planning only. No auth code is written in this issue. Implementation issues are #60+ (#59 is taken by the quiz-flow bug cluster).
 **Date:** 2026-06-16
 **Status:** Ready for founder decision
 
@@ -200,7 +200,7 @@ Write a one-page RoPA documenting: data category, purpose, lawful basis, retenti
 
 ## 6. Phased Implementation Plan
 
-> These phases become separate implementation issues #59, #60, #61. Issue #58 (this document) is planning only.
+> These phases become separate implementation issues #60, #61, #62. Issue #58 (this document) is planning only.
 
 ### Phase 1 — Server-Trusted Anonymous Identity (fixes the bypass)
 
@@ -225,7 +225,7 @@ iOS (`apps/ios-app`):
 
 **Size: M** (backend migration is the main work; iOS Keychain setup is well-scoped)
 **Dependencies:** None — this is the foundation. #49 and #50 depend on Phase 1.
-**Issue:** #59 (new)
+**Issue:** #60 (new)
 
 ---
 
@@ -252,7 +252,7 @@ iOS:
 **Size: M–L** (Apple client_secret generation + token revocation are the trickiest parts)
 **Dependencies:** Phase 1 (server auth middleware must be in place; `anon_id` must exist to merge).
 **Also depends on #50** (StoreKit IAP binding): `apple_sub` is the anchor that StoreKit purchases bind to. Coordinate with #50 so the `users` table schema satisfies both.
-**Issue:** #60 (new)
+**Issue:** #61 (new)
 
 ---
 
@@ -268,7 +268,7 @@ iOS:
 
 **Size: L** (IAP binding + passkeys + multi-device recovery are substantial)
 **Dependencies:** Phase 2 (apple_sub must exist); #50 (IAP must be live).
-**Issue:** #61 (new)
+**Issue:** #62 (new)
 
 ---
 
@@ -294,7 +294,7 @@ The following claims in the original #58 issue framing were checked against prim
 
 ## 8. Open Questions for the Founder
 
-These are the decision gates that must be resolved before #59 can be spec'd and handed to the agent loop:
+These are the decision gates that must be resolved before #60 can be spec'd and handed to the agent loop:
 
 1. **App Attest on Phase 1 bootstrap?** App Attest makes the anonymous identity harder to mint from non-genuine app builds, closing the most sophisticated bypass. The tradeoff: one extra Apple server round-trip at first install, ~1 week of backend work (Python `cbor2` + `cryptography` verification). Given the app is in founder + close-circle beta, is the abuse risk high enough to justify Phase 1 App Attest, or is IP-based rate limiting on the bootstrap endpoint sufficient for now?
 
@@ -314,7 +314,8 @@ These are the decision gates that must be resolved before #59 can be spec'd and 
 
 ## 8b. Founder Decisions (2026-06-17)
 
-The founder reviewed §8. Resolutions below; these are the inputs for spinning off #59/#60/#61.
+The founder reviewed §8. Resolutions below; these are the inputs for spinning off #60/#61/#62
+(**not** #59/#60/#61 — #59 was taken by the quiz-flow bug cluster).
 
 1. **Anti-abuse level → STRONG NOW.** App Attest is pulled **into Phase 1** (not deferred). The anonymous bootstrap endpoint must verify the request comes from a genuine app build (`DCAppAttestService`), so even the self-issued anonymous token can't be minted by a fake client. *Impact: Phase 1 grows from M to **L** (~1 week added for `cbor2`/`cryptography` attestation verification + one Apple round-trip at first install).*
 
@@ -327,7 +328,7 @@ The founder reviewed §8. Resolutions below; these are the inputs for spinning o
 
 4. **EU data residency → already satisfied.** Both Fly.io apps run `primary_region = "cdg"` (Paris). No migration needed for the EU launch; add US regions (iad/sjc) on expansion, no auth-vendor change (the reason self-owned JWT was chosen).
 
-5. **Deferred technical questions (not blocking #59):** grace period for old in-field installs = **30 days** (default accepted); Apple `.p8` key rotation (6-month max) and Supabase-as-escape-hatch are **Phase 2 notes**, revisited when #60 is specced.
+5. **Deferred technical questions (not blocking #60):** grace period for old in-field installs = **30 days** (default accepted); Apple `.p8` key rotation (6-month max) and Supabase-as-escape-hatch are **Phase 2 notes**, revisited when #61 is specced.
 
 ---
 
@@ -340,7 +341,7 @@ The auth flow is **anonymous-first with a contextual upgrade** (founder constrai
 3. **Account / Manage screen** — signed-in state: account identity, premium status, restore purchases (ties to #50), **Delete account** (in-app, mandatory — App Store §5.1.1(v) + GDPR Art. 17) and **Export my data** (Art. 20). Deletion needs a confirm step.
 4. *(optional)* **Post-upgrade confirmation** — brief "your progress is saved across devices" affirmation after the anonymous→Apple merge, to make the value of signing in tangible.
 
-These mockups are produced as a follow-up step once this doc is approved (the flow must be fixed first). They feed the iOS implementation in Phase 2 (#60).
+These mockups are produced as a follow-up step once this doc is approved (the flow must be fixed first). They feed the iOS implementation in Phase 2 (#61).
 
 ---
 

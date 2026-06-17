@@ -3,7 +3,7 @@
 **Triage:** enhancement · researched — **awaiting founder decision** (research issue — deliverable is a plan, not code)
 
 > **✅ Research delivered 2026-06-16:** [`docs/research/auth-research-2026-06-16.md`](../research/auth-research-2026-06-16.md)
-> — options matrix + recommendation + phased plan (#59/#60/#61) + 7 open questions for the founder.
+> — options matrix + recommendation + phased plan (impl issues **#60/#61/#62** — #59 is taken) + 7 open questions (founder-answered 2026-06-17, doc §8b).
 > Produced via a multi-agent workflow (5 research dimensions, each adversarially fact-checked).
 > **Recommendation:** anonymous-first self-issued JWT on the existing FastAPI/Fly.io+Postgres stack
 > (Phase 1, fixes the freemium bypass) → Sign in with Apple as an upgrade (Phase 2) → cross-device +
@@ -60,7 +60,7 @@ Produce a design doc (`docs/product/auth-research-<date>.md` or a PRD) that cove
       Phase 2 Sign in with Apple; Phase 3 cross-device/purchase binding) with each phase sized
       and its dependencies on #50 (IAP) and #49 (cost/limits) noted.
 - [x] Open questions for the founder are listed explicitly (7 gates — see research doc §8).
-- [ ] Founder picks an approach → implementation issues (#59+) are spun off from the plan.
+- [x] Founder picked the approach (doc §8b, 2026-06-17) → implementation issues **#60/#61/#62** to be spun off from the plan (remaining work).
 
 ## Founder input needed
 

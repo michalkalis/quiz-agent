@@ -26,6 +26,13 @@ final class MockNetworkService: NetworkServiceProtocol {
     var capturedStartQuizExcludedIds: [String]?
     /// When set, `createSession` throws this error instead of the default behaviour.
     var createSessionError: Error?
+    /// When set, `endSession` throws this error instead of the default behaviour.
+    /// Lets one test exercise the 404-only end-quiz path (#59.4) without making
+    /// every other network call fail via `shouldFail`.
+    var endSessionError: Error?
+    /// Number of times `endSession` was invoked — for assertions that X actually
+    /// attempted server-side cleanup.
+    var endSessionCallCount = 0
 
     func createSession(maxQuestions: Int, difficulty: String, language: String, category: String?, userId: String?) async throws -> QuizSession {
         if let error = createSessionError { throw error }
@@ -84,6 +91,8 @@ final class MockNetworkService: NetworkServiceProtocol {
     }
 
     func endSession(sessionId: String) async throws {
+        endSessionCallCount += 1
+        if let error = endSessionError { throw error }
         if shouldFail {
             throw NetworkError.invalidResponse
         }

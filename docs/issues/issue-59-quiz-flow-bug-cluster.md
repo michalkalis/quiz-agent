@@ -136,7 +136,7 @@ Founder approved the full-set, priority-ordered run 2026-06-17. Each task is ind
 - [HUMAN] **59.1-device-confirm** — OUT OF LOOP. Confirm on a real iOS 26 device (Slovak, AirPods) that the question is actually spoken aloud. Root cause is medium-confidence and the symptom is not observable on the simulator (mock TTS always "succeeds"). Do **not** mark 59.1 fully done off a green sim suite.
 
 **P1:**
-- [ ] **59.4** — Split end-quiz concerns (`QuizViewModel.swift:708-726`): on `NetworkError.sessionNotFound` treat as success → `resetToHome()`; show the banner only for errors meaning the session may still be live; warn-log the `extendSession` failure. Add `endSessionError: Error?` + `endSessionCallCount: Int` to `MockNetworkService`. Land **RS-13**.
+- [x] **59.4** — Split end-quiz concerns in `endQuiz()`: `catch NetworkError.sessionNotFound` → `resetToHome()` (already-gone session = success, no banner); generic `catch` keeps the banner for errors meaning the session may still be live (no reset, user can retry); `extendSession` is now a warn-logged `do/catch` (was silent `try?`). Added `endSessionError: Error?` + `endSessionCallCount: Int` to `MockNetworkService`. Landed **RS-13** as two `@Test`s in the existing `QuizViewModel End Quiz Tests` suite (sessionNotFound→Home+no-banner; live-error→banner+no-reset). *(both green on iPhone 17 Pro sim; sim-driven leg of RS-13 runs via `/regression`)*
 - [ ] **59.7** — `ResultView.readAloudButton` (`ResultView.swift:96-111`) calls `replayQuestionAudio()` not `playQuestionAudio`; start the auto-advance countdown on screen-appear (concurrent Task, duration `max(autoAdvanceDelay, feedbackDuration)`). Land **RS-16**.
 
 **P2 — UX:**

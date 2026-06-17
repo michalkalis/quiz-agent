@@ -1107,4 +1107,54 @@ struct QuizViewModelEndQuizTests {
         #expect(viewModel.quizState == .idle)
         #expect(viewModel.currentSession == nil)
     }
+
+    /// 59.4 (RS-13): a backend 404 (`sessionNotFound`) on endSession is *correct* backend
+    /// behaviour for an already-expired or restart-lost session. The end-quiz invariant is
+    /// "tapping X always returns Home" — the user must never be stranded on the question
+    /// screen behind a misleading "session not found" banner. This is the red→green guard:
+    /// before the fix the catch only set `errorMessage` and left state untouched.
+    @Test("endQuiz treats sessionNotFound as success and returns Home (RS-13)")
+    @MainActor
+    func endQuizSessionNotFoundResetsToHome() async throws {
+        let (viewModel, mockNetwork) = Fixtures.makeViewModelWithNetwork()
+        mockNetwork.endSessionError = NetworkError.sessionNotFound
+        viewModel.currentSession = Fixtures.makeActiveSession()
+        let question = Fixtures.makeQuestion()
+        viewModel.quizState = .showingResult(
+            question: question,
+            evaluation: Evaluation(
+                userAnswer: "x",
+                result: .correct,
+                points: 1.0,
+                correctAnswer: "x",
+                questionId: question.id,
+                explanation: nil
+            )
+        )
+
+        await viewModel.endQuiz()
+
+        #expect(mockNetwork.endSessionCallCount == 1) // server-side cleanup was attempted
+        #expect(viewModel.quizState == .idle)
+        #expect(viewModel.currentSession == nil)
+        #expect(viewModel.errorMessage == nil) // no misleading banner
+    }
+
+    /// 59.4 (RS-13): an error that means the session may still be live (e.g. a 5xx / timeout)
+    /// DOES surface a banner — but unlike the 404 path it keeps the user on screen so they
+    /// can retry, rather than silently dropping a session the backend still holds.
+    @Test("endQuiz surfaces a banner for live-session errors and does not reset (RS-13)")
+    @MainActor
+    func endQuizLiveErrorShowsBanner() async throws {
+        let (viewModel, mockNetwork) = Fixtures.makeViewModelWithNetwork()
+        mockNetwork.endSessionError = NetworkError.serverError(statusCode: 500, message: "boom")
+        viewModel.currentSession = Fixtures.makeActiveSession()
+        viewModel.quizState = .askingQuestion
+
+        await viewModel.endQuiz()
+
+        #expect(mockNetwork.endSessionCallCount == 1)
+        #expect(viewModel.errorMessage != nil)
+        #expect(viewModel.currentSession != nil) // not dropped — may still be live
+    }
 }

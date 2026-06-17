@@ -718,7 +718,18 @@ final class QuizViewModel: ObservableObject {
             resetState()
 
             Logger.quiz.info("🎮 Quiz ended")
+        } catch NetworkError.sessionNotFound {
+            // Backend 404: the session is already gone (TTL expiry, backend restart, or a
+            // prior end). This is *correct* backend behaviour — there is nothing left to clean
+            // up server-side. The end-quiz invariant is "tapping X always returns Home", so
+            // treat an already-ended session as success rather than stranding the user behind
+            // a misleading "session not found" banner.
+            Logger.quiz.info("🎮 Session already ended on backend (404) — resetting to home")
+            resetToHome()
         } catch {
+            // Errors here mean the session may still be live on the backend (e.g. a timeout).
+            // Surface a banner so the user knows server-side cleanup may not have happened and
+            // can retry; do not silently drop a possibly-live session.
             errorMessage = String(localized: "Failed to end quiz: \(error.localizedDescription)", comment: "Inline error when ending the quiz fails; placeholder is the underlying error")
 
             Logger.quiz.error("❌ Error ending quiz: \(error, privacy: .public)")
@@ -897,7 +908,13 @@ final class QuizViewModel: ObservableObject {
         // Auto-extend session TTL to prevent timeout on long drives
         if let sessionId = currentSession?.id {
             Task {
-                try? await networkService.extendSession(sessionId: sessionId, minutes: 30)
+                do {
+                    try await networkService.extendSession(sessionId: sessionId, minutes: 30)
+                } catch {
+                    // Fire-and-forget by design, but warn-log so silent TTL drift (a 404 on a
+                    // later endQuiz / extend) is diagnosable rather than invisible (#59.4).
+                    Logger.quiz.warning("⚠️ Failed to extend session TTL: \(error, privacy: .public)")
+                }
             }
         }
 

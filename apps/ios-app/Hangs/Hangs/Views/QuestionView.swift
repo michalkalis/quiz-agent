@@ -131,11 +131,20 @@ struct QuestionView: View {
 
     // MARK: - Support row (think/answer timers when active)
 
+    /// Fixed height reserved for the timer-chip row throughout `askingQuestion`, so the
+    /// chips fading in when the countdown starts never push the question + pinned controls
+    /// downward (#59.2). ~timerChip height (text + 5pt vertical padding × 2 + capsule).
+    private let supportRowHeight: CGFloat = 30
+
     @ViewBuilder
     private var supportRow: some View {
-        let showThink = viewModel.thinkingTimeCountdown > 0 && viewModel.quizState == .askingQuestion
-        let showAnswer = viewModel.answerTimerCountdown > 0 && viewModel.quizState == .askingQuestion
-        if showThink || showAnswer {
+        // 59.2: reserve the slot for the *whole* askingQuestion phase rather than toggling
+        // from EmptyView → real row the instant the countdown becomes non-zero. The chips
+        // are conditionally rendered inside a constant-height frame so their appearance is a
+        // pure fade-in with zero layout shift; the slot collapses once we leave askingQuestion.
+        if viewModel.quizState == .askingQuestion {
+            let showThink = viewModel.thinkingTimeCountdown > 0
+            let showAnswer = viewModel.answerTimerCountdown > 0
             HStack(spacing: 8) {
                 if showThink {
                     timerChip(label: "THINK", seconds: viewModel.thinkingTimeCountdown, color: Theme.Hangs.Colors.blue)
@@ -146,6 +155,7 @@ struct QuestionView: View {
                 Spacer(minLength: 0)
             }
             .padding(.horizontal, 28)
+            .frame(height: supportRowHeight, alignment: .leading)
         }
     }
 
@@ -280,8 +290,10 @@ struct QuestionView: View {
                             .accessibilityIdentifier("question.text")
 
                         // Replay button — plays the question TTS again via a
-                        // timer-free audio path (Decision 2): always tappable,
-                        // never restarts the auto-record/think countdown.
+                        // timer-free audio path (Decision 2): never restarts the
+                        // auto-record/think countdown. Disabled when there's nothing to
+                        // replay (muted or no question audio URL) so it doesn't look
+                        // interactive while silently no-opping (#59.5).
                         Button {
                             Task { await viewModel.replayQuestionAudio() }
                         } label: {
@@ -294,6 +306,8 @@ struct QuestionView: View {
                             .foregroundColor(Theme.Hangs.Colors.blue)
                         }
                         .buttonStyle(.plain)
+                        .disabled(!viewModel.canReplayAudio)
+                        .opacity(viewModel.canReplayAudio ? 1 : 0.4)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, 24)
                         .padding(.top, 14)
@@ -306,22 +320,30 @@ struct QuestionView: View {
             // Pinned controls below the scroll region — transcript (recording
             // only), typed-answer fallback, then the Record/Skip action row.
             VStack(spacing: 12) {
-                // Live transcript (recording + STT streaming) — static, pinned
-                // directly above the buttons so it never scrolls away.
-                if isRecording && viewModel.isStreamingSTT {
-                    transcriptCard
-                }
-
-                // Typed-answer fallback — onboarding promises a keyboard path
-                // for mic-denied users (#54 task 54.18).
-                if showTextInput {
-                    textInputRow
+                if isProcessing {
+                    // 59.6: the typed-answer path (resubmitAnswer → .processing) stays on
+                    // QuestionView — it does NOT open the voice AnswerConfirmationView sheet
+                    // that owns the only other spinner. Without this branch the screen looked
+                    // frozen between "send" and the result. Mirrors the sheet's processingBody.
+                    processingRow
                 } else {
-                    textInputToggle
-                }
+                    // Live transcript (recording + STT streaming) — static, pinned
+                    // directly above the buttons so it never scrolls away.
+                    if isRecording && viewModel.isStreamingSTT {
+                        transcriptCard
+                    }
 
-                voiceActionRow
-                    .padding(.horizontal, 24)
+                    // Typed-answer fallback — onboarding promises a keyboard path
+                    // for mic-denied users (#54 task 54.18).
+                    if showTextInput {
+                        textInputRow
+                    } else {
+                        textInputToggle
+                    }
+
+                    voiceActionRow
+                        .padding(.horizontal, 24)
+                }
             }
             .padding(.bottom, 28)
 
@@ -435,6 +457,21 @@ struct QuestionView: View {
             }
         }
         .padding(.horizontal, 24)
+    }
+
+    // MARK: - Processing indicator (typed-answer path, 59.6)
+
+    private var processingRow: some View {
+        VStack(spacing: 12) {
+            ProgressView()
+                .tint(Theme.Hangs.Colors.pink)
+            Text("Evaluating…")
+                .font(.hangsBody(15, weight: .medium))
+                .foregroundColor(Theme.Hangs.Colors.muted)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 16)
+        .accessibilityIdentifier("question.processingIndicator")
     }
 
     private func submitTypedAnswer() {

@@ -106,6 +106,14 @@ extension QuizViewModel {
         }
     }
 
+    /// Whether the on-demand "replay question" control can actually do something:
+    /// audio is not muted AND a question audio URL is known. The replay button must
+    /// track this capability (`.disabled(!canReplayAudio)`) rather than look interactive
+    /// while silently no-opping when the backend supplied no question audio (#59.5).
+    var canReplayAudio: Bool {
+        !settings.isMuted && currentQuestionAudioUrl != nil
+    }
+
     /// Replay the current question's TTS on demand WITHOUT re-arming the
     /// think/answer countdown or auto-record (Decision 2 of the voice-answer
     /// screen fix). Unlike `playQuestionAudio(from:)`, this plays audio only —

@@ -1158,3 +1158,51 @@ struct QuizViewModelEndQuizTests {
         #expect(viewModel.currentSession != nil) // not dropped — may still be live
     }
 }
+
+// MARK: - Resume Auto-Advance Tests (RS-17, #59.8)
+
+@Suite("QuizViewModel Resume Auto-Advance Tests")
+struct QuizViewModelResumeAutoAdvanceTests {
+
+    /// 59.8 (RS-17): "Resume auto-advance" must re-arm the countdown and KEEP the user on
+    /// the result screen — it is a different action from "Next question" (`continueToNext()`,
+    /// which advances immediately). Before the fix the button wired to `continueToNext()`, so
+    /// tapping it jumped straight to the next question. The presence of a dedicated
+    /// `resumeAutoAdvance()` method is itself the structural guard.
+    @Test("resumeAutoAdvance re-arms the countdown and stays on the result screen (RS-17)")
+    @MainActor
+    func resumeAutoAdvanceStaysOnResult() async throws {
+        let viewModel = Fixtures.makeViewModel()
+        let question = makeQuestion(id: "q_001", source: "Test")
+        let evaluation = Evaluation(
+            userAnswer: "x",
+            result: .correct,
+            points: 1.0,
+            correctAnswer: "x",
+            questionId: "q_001",
+            explanation: nil
+        )
+        viewModel.autoAdvanceEnabled = true
+        viewModel.quizState = .showingResult(question: question, evaluation: evaluation)
+
+        // Pause first (mirrors "Stay here"): countdown cancelled, pause flag set.
+        viewModel.pauseQuiz()
+        #expect(viewModel.currentQuestionPaused)
+
+        viewModel.resumeAutoAdvance()
+
+        // resumeAutoAdvance arms the countdown via a fire-and-forget Task — let it run.
+        var waited = 0
+        while viewModel.autoAdvanceCountdown == 0 && waited < 50 {
+            await Task.yield()
+            waited += 1
+        }
+
+        #expect(viewModel.quizState.isShowingResult) // did NOT jump to the next question
+        #expect(viewModel.autoAdvanceCountdown > 0) // countdown re-armed
+        #expect(!viewModel.currentQuestionPaused) // pause cleared
+
+        // Cleanup: cancel the long-lived countdown task so it can't fire mid-suite.
+        viewModel.pauseQuiz()
+    }
+}

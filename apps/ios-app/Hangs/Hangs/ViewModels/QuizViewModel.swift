@@ -769,6 +769,21 @@ final class QuizViewModel: ObservableObject {
         Logger.quiz.info("⏸️ Current question paused - auto-advance will resume on next question")
     }
 
+    /// Resume the auto-advance countdown for the *current* result without jumping to the
+    /// next question. Distinct from `continueToNext()` (which advances immediately): the
+    /// "Resume auto-advance" button must re-arm the countdown so the user stays on the
+    /// result screen and the next question is reached via the timer, not instantly (#59.8).
+    /// Clears the pause flag first — `startAutoAdvanceCountdown` bails while paused.
+    func resumeAutoAdvance() {
+        currentQuestionPaused = false
+
+        Task {
+            await startAutoAdvanceCountdown(duration: settings.autoAdvanceDelay, audioDuration: 0)
+        }
+
+        Logger.quiz.info("▶️ Resuming auto-advance countdown (staying on result)")
+    }
+
     /// Continue to next question after user paused current one
     func continueToNext() {
         // Reset per-question pause state

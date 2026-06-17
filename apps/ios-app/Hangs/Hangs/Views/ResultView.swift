@@ -263,7 +263,9 @@ struct ResultView: View {
                     icon: "play.fill",
                     color: Theme.Hangs.Colors.muted
                 ) {
-                    viewModel.continueToNext()
+                    // 59.8: resume the countdown (stay on the result), NOT continueToNext()
+                    // which is the "Next question" action and jumps straight to the next Q.
+                    viewModel.resumeAutoAdvance()
                 }
                 .accessibilityIdentifier("result-resume-auto-advance-button")
             }

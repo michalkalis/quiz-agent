@@ -157,3 +157,77 @@ struct QuestionViewVoiceInspectorTests {
     }
 
 }
+
+// MARK: - Replay availability + processing indicator (RS-14 / RS-15)
+
+@MainActor
+@Suite("QuestionView — replay availability & processing indicator (RS-14 / RS-15)")
+struct QuestionViewReplayProcessingInspectorTests {
+    private func makeVoiceViewModel() -> QuizViewModel {
+        let vm = QuizViewModel(
+            networkService: MockNetworkService(),
+            audioService: MockAudioService(),
+            persistenceStore: MockPersistenceStore()
+        )
+        vm.currentQuestion = Question.preview // .text → voice body
+        vm.quizState = .askingQuestion
+        return vm
+    }
+
+    /// 59.5 (RS-14): the replay control must reflect capability — when no question audio
+    /// is available it must be disabled, never look interactive while silently no-opping.
+    @Test("replay button is disabled when no question audio URL is available (RS-14)")
+    func replayDisabledWhenNoAudio() async throws {
+        let vm = makeVoiceViewModel()
+        vm.currentQuestionAudioUrl = nil
+        let view = QuestionView(viewModel: vm)
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            let replay = try tree.find(viewWithAccessibilityIdentifier: "question.replay")
+            #expect(try replay.isDisabled())
+        }
+    }
+
+    @Test("replay button is enabled when a question audio URL is available (RS-14)")
+    func replayEnabledWhenAudioPresent() async throws {
+        let vm = makeVoiceViewModel()
+        vm.settings.isMuted = false
+        vm.currentQuestionAudioUrl = "https://example.com/q.mp3"
+        let view = QuestionView(viewModel: vm)
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            let replay = try tree.find(viewWithAccessibilityIdentifier: "question.replay")
+            #expect(try replay.isDisabled() == false)
+        }
+    }
+
+    /// 59.6 (RS-15): the typed-answer path stays on QuestionView while the answer is
+    /// evaluated (it bypasses the voice confirmation sheet that owns the only other
+    /// spinner). The `question.processingIndicator` must appear in the `.processing` state
+    /// so the screen isn't blank between submit and result.
+    @Test("processing indicator is present while in the processing state (RS-15)")
+    func processingIndicatorPresentWhenProcessing() async throws {
+        let vm = makeVoiceViewModel()
+        vm.quizState = .processing
+        let view = QuestionView(viewModel: vm)
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: Never.self) {
+                try tree.find(viewWithAccessibilityIdentifier: "question.processingIndicator")
+            }
+        }
+    }
+
+    @Test("processing indicator is absent while asking a question (RS-15)")
+    func processingIndicatorAbsentWhenAsking() async throws {
+        let vm = makeVoiceViewModel()
+        vm.quizState = .askingQuestion
+        let view = QuestionView(viewModel: vm)
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: (any Error).self) {
+                _ = try tree.find(viewWithAccessibilityIdentifier: "question.processingIndicator")
+            }
+        }
+    }
+}

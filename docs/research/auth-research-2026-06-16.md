@@ -343,6 +343,12 @@ The auth flow is **anonymous-first with a contextual upgrade** (founder constrai
 
 These mockups are produced as a follow-up step once this doc is approved (the flow must be fixed first). They feed the iOS implementation in Phase 2 (#61).
 
+**✅ Screens drawn 2026-06-18** in `design/quiz-agent.pen` (faithful to the existing Hangs design system — Anton hero, mono section labels, `bg-card` r18 cards, pink CTA pill):
+- `Auth/Anonymous-Start` — first-launch "no gate": WELCOME hero, "Playing as guest" card, Start Quiz CTA, subtle "sign in later to save across devices" footer.
+- `Auth/Account-Prompt` — contextual bottom sheet (dimmed scrim) shown only at the free limit / purchase: "KEEP GOING?", **Sign in with Apple** (Apple-style black button), "Maybe later — keep playing as guest", privacy footnote. Never at launch.
+- `Auth/Account-Manage` — signed-in: identity card (name/email + Apple chip), Premium **ACTIVE** + auto-renew date + Restore purchases, Export my data, **Delete account** (red), Sign out.
+- `Auth/Upgrade-Confirm` — post-merge affirmation: "YOU'RE ALL SET", progress-saved-across-devices, "47-day streak kept" chip, Continue.
+
 ---
 
 ## Key Sources

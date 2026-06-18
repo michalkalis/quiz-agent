@@ -61,7 +61,7 @@ Produce a design doc (`docs/product/auth-research-<date>.md` or a PRD) that cove
       and its dependencies on #50 (IAP) and #49 (cost/limits) noted.
 - [x] Open questions for the founder are listed explicitly (7 gates — see research doc §8).
 - [x] Founder picked the approach (doc §8b, 2026-06-17) → implementation issues **#60/#61/#62** spun off 2026-06-18 (`issue-60/61/62-*.md` + INDEX rows + TODO queue).
-- [ ] Pencil auth-flow screens drawn in `design/quiz-agent.pen` per §9 (anonymous-start / contextual account prompt / manage+delete+export) — **remaining work on this issue**.
+- [x] Pencil auth-flow screens drawn in `design/quiz-agent.pen` per §9 (2026-06-18): `Auth/Anonymous-Start`, `Auth/Account-Prompt` (Sign in with Apple sheet), `Auth/Account-Manage` (premium status + restore + in-app Delete + Export + Sign out), `Auth/Upgrade-Confirm`. Feeds Phase 2 (#61).
 
 ## Founder input needed
 

@@ -24,6 +24,9 @@ class Settings:
     auth_jwt_issuer: str = "quiz-agent"
     auth_jwt_audience: str = "quiz-agent-clients"
     access_token_ttl_seconds: int = 900  # 15 min (D-spec)
+    # Refresh tokens: sliding per-token window, capped by an absolute family age.
+    refresh_token_ttl_days: int = 30
+    refresh_family_max_days: int = 60
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -35,6 +38,8 @@ class Settings:
             auth_jwt_issuer=os.getenv("AUTH_JWT_ISSUER", "quiz-agent"),
             auth_jwt_audience=os.getenv("AUTH_JWT_AUDIENCE", "quiz-agent-clients"),
             access_token_ttl_seconds=int(os.getenv("ACCESS_TOKEN_TTL_SECONDS", "900")),
+            refresh_token_ttl_days=int(os.getenv("REFRESH_TOKEN_TTL_DAYS", "30")),
+            refresh_family_max_days=int(os.getenv("REFRESH_FAMILY_MAX_DAYS", "60")),
         )
 
 

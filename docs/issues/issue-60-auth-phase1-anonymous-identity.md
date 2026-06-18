@@ -64,7 +64,7 @@ These were ambiguous or wrong in the prior draft; resolved here so the loop has 
 ### Tasks (Part A — atomic, loop-able)
 
 - [x] 60.1 — Set up Alembic in `apps/quiz-agent` (copy the `quiz-pack-api` pattern, async/asyncpg) + migration for `anonymous_identities`, `refresh_tokens`, `daily_usage`. *Done 2026-06-18: `app/db/{base,engine,models}.py`, `alembic/` scaffold, migration `0001_auth_phase1`. Verified — models map cleanly, offline DDL renders correct TEXT/TIMESTAMPTZ/UUID + FK/indexes, 100 existing tests still collect, ruff clean. **Not yet applied to live DB** (`alembic upgrade head` needs Postgres access — run at deploy time).*
-- [ ] 60.2 — Token module (PyJWT, HS256, isolated sign/verify, explicit `algorithms` allowlist, full claim set incl. `jti`); `AUTH_JWT_SECRET` as a Fly secret (≥64-char CSPRNG).
+- [x] 60.2 — Token module (PyJWT, HS256, isolated sign/verify, explicit `algorithms` allowlist, full claim set incl. `jti`); `AUTH_JWT_SECRET` as a Fly secret (≥64-char CSPRNG). *Done 2026-06-18: `app/auth/tokens.py` (`TokenService`, algorithm + min-secret length isolated in one module), `AUTH_JWT_*` settings. 10 unit tests green incl. expiry/tamper/issuer/audience/wrong-secret rejection and the `alg=none` confusion attack. Secret still to be set as a Fly secret at deploy.*
 - [ ] 60.3 — Refresh-token store: opaque random → SHA-256 hash, `family_id`, rotation + reuse-detection (atomic).
 - [ ] 60.4 — `POST /auth/anon-bootstrap` (IP rate-limited on `Fly-Client-IP`) + `POST /auth/refresh` (rotation).
 - [ ] 60.5 — Migrate `UsageTracker` to `daily_usage` (async Postgres), public names stable, lazy UTC reset preserved; update sessions-route call sites.

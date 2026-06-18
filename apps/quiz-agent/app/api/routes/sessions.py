@@ -7,10 +7,14 @@ from ..deps import (
     CreateSessionRequest,
     SessionResponse,
     AddParticipantRequest,
+    get_auth_sessionmaker,
     get_session_manager,
+    get_token_service,
     session_to_response,
 )
 from quiz_shared.models.participant import Participant
+from ...auth.identity import resolve_session_subject
+from ...auth.tokens import TokenService
 from ...session.manager import SessionManager
 from ...rate_limit import limiter
 
@@ -26,13 +30,24 @@ async def create_session(
     request: Request,
     body: CreateSessionRequest,
     session_manager: SessionManager = Depends(get_session_manager),
+    token_service: TokenService = Depends(get_token_service),
+    auth_sessionmaker=Depends(get_auth_sessionmaker),
 ):
-    """Create a new quiz session."""
+    """Create a new quiz session.
+
+    The subject the session is counted against is derived from the bearer token
+    (issue #60.6) — not the client-supplied ``user_id`` — so changing the body
+    field can no longer mint a fresh free bucket. During the legacy grace window
+    a bearer-less request still falls back to ``body.user_id``.
+    """
+    subject = await resolve_session_subject(
+        request, body.user_id, token_service, auth_sessionmaker
+    )
     try:
         session = session_manager.create_session(
             max_questions=body.max_questions,
             difficulty=body.difficulty,
-            user_id=body.user_id,
+            user_id=subject.subject_id,
             mode=body.mode,
             ttl_minutes=body.ttl_minutes,
         )

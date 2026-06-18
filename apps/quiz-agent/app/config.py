@@ -16,10 +16,16 @@ class Settings:
     """Subset of env vars the quiz-agent app reads at startup."""
 
     database_url: Optional[str]
+    db_pool_size: int = 5
+    db_echo: bool = False
 
     @classmethod
     def from_env(cls) -> "Settings":
-        return cls(database_url=os.getenv("DATABASE_URL"))
+        return cls(
+            database_url=os.getenv("DATABASE_URL"),
+            db_pool_size=int(os.getenv("DB_POOL_SIZE", "5")),
+            db_echo=os.getenv("DB_ECHO", "false").lower() == "true",
+        )
 
 
 def get_settings() -> Settings:

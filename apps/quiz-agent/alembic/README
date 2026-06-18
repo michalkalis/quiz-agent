@@ -1,0 +1,2 @@
+Auth/usage migrations for quiz-agent (issue #60). Async env, reads DATABASE_URL.
+Run from apps/quiz-agent/: `alembic upgrade head`.

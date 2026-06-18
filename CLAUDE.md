@@ -26,7 +26,9 @@ Stack-specific commands (iOS build / test / schemes, Fly.io deploy) live in the 
 
 ## Output
 
-Long outputs (>30 lines: summaries, analyses, reports, reviews) → self-contained HTML at `docs/artifacts/<slug>.html` (inline CSS, sticky TOC, collapsible, color-coded). Reply `open <path>`. Not for: commits, TODO, issue plan files, short replies. **MD = persistent. HTML = throwaway.**
+Long outputs (>30 lines: summaries, analyses, reports, reviews, recaps) → self-contained HTML at `docs/artifacts/<slug>.html` (inline CSS, no external deps/CDN, no network). Reply `open <path>`. Not for: commits, TODO, issue plan files, short replies. **MD = persistent. HTML = throwaway.**
+
+**Visual-first, not a wall of text.** Default to actual visual structure over prose: status boards / card grids, color-coded status + priority badges, area tags, count dashboards, dependency-chain / flow diagrams (ASCII or inline SVG), collapsible `<details>` for depth, sticky TOC for long docs. Dark theme, scannable at a glance. Reference exemplar: `docs/artifacts/issues-visual-recap-2026-06-18.html`. This is our local equivalent of agent-native `/visual-recap` — no external service, opens in any browser.
 
 ## File Placement
 

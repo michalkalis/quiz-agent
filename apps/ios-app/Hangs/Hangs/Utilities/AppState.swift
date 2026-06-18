@@ -35,8 +35,12 @@ final class AppState: ObservableObject {
         }
         #endif
 
-        // Production dependencies
-        self.networkService = NetworkService(baseURL: Config.apiBaseURL)
+        // Production dependencies — NetworkService carries the server-trusted
+        // anonymous bearer minted by AuthService (#60); first launch bootstraps
+        // an identity into the Keychain, and a 401 triggers a single-flight
+        // refresh transparently.
+        let authService = AuthService(baseURL: Config.apiBaseURL)
+        self.networkService = NetworkService(baseURL: Config.apiBaseURL, authService: authService)
         self.audioService = AudioService()
         self.persistenceStore = PersistenceStore()
         self.storeManager = StoreManager()

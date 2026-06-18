@@ -268,32 +268,81 @@ struct NetworkServiceTests {
         }
     }
 
-    // MARK: 11. setPremium happy path
+    // MARK: 11. Bearer attached + 401 → single-flight refresh → retry (#60.8)
+    //
+    // With an AuthService wired, every request carries `Authorization: Bearer
+    // <access>`. A 401 must trigger exactly one refresh and one retry that
+    // carries the *new* bearer. Uses a stub AuthService so this isolates
+    // NetworkService's retry logic from the real bootstrap/refresh flow.
 
-    @Test("setPremium 200 → completes without throw")
-    func setPremiumHappyPath() async throws {
-        let service = makeService()
-        StubURLProtocol.handler = { _ in (.make(status: 200), Data()) }
-        defer { StubURLProtocol.handler = nil }
+    @Test("401 → refresh → retry carries new bearer and succeeds")
+    func unauthorizedTriggersRefreshAndRetry() async throws {
+        let auth = StubAuthService(initialToken: "stale", refreshedToken: "fresh")
+        let service = NetworkService(
+            baseURL: Stubs.baseURL,
+            session: StubURLProtocol.makeSession(),
+            authService: auth
+        )
 
-        try await service.setPremium(userId: "user_abc")
-    }
-
-    // MARK: 12. setPremium 4xx → .invalidResponse
-
-    @Test("setPremium 404 → .invalidResponse")
-    func setPremiumNotFound() async throws {
-        let service = makeService()
-        StubURLProtocol.handler = { _ in (.make(status: 404), Data()) }
-        defer { StubURLProtocol.handler = nil }
-
-        do {
-            try await service.setPremium(userId: "user_abc")
-            Issue.record("Expected throw, got success")
-        } catch let error as NetworkError {
-            guard case .invalidResponse = error else {
-                Issue.record("Expected .invalidResponse, got \(error)"); return
+        // Record the bearer seen on each request; 401 for "stale", 200 for "fresh".
+        let seen = OSAllocatedUnfairLock<[String]>(initialState: [])
+        StubURLProtocol.handler = { req in
+            let bearer = req.value(forHTTPHeaderField: "Authorization") ?? ""
+            seen.withLock { $0.append(bearer) }
+            if bearer == "Bearer fresh" {
+                return (.make(status: 200), Data(Stubs.usageInfoJSON.utf8))
             }
+            return (.make(status: 401), Data())
         }
+        defer { StubURLProtocol.handler = nil }
+
+        let usage = try await service.getUsage(userId: "user_abc")
+        #expect(usage.userId == "user_abc")
+
+        let bearers = seen.withLock { $0 }
+        #expect(bearers == ["Bearer stale", "Bearer fresh"])
+        let refreshes = await auth.refreshCallCount()
+        #expect(refreshes == 1)
     }
+
+    // MARK: 12. No authService → no Authorization header (grace path)
+
+    @Test("no authService → request carries no Authorization header")
+    func noAuthServiceSendsNoBearer() async throws {
+        let service = makeService()  // built without authService
+        let captured = OSAllocatedUnfairLock<URLRequest?>(initialState: nil)
+        StubURLProtocol.handler = { req in
+            captured.withLock { $0 = req }
+            return (.make(status: 200), Data(Stubs.usageInfoJSON.utf8))
+        }
+        defer { StubURLProtocol.handler = nil }
+
+        _ = try await service.getUsage(userId: "user_abc")
+        let request = try #require(captured.withLock { $0 })
+        #expect(request.value(forHTTPHeaderField: "Authorization") == nil)
+    }
+}
+
+// MARK: - StubAuthService
+
+/// Deterministic AuthService for NetworkService retry tests: hands out a fixed
+/// access token, then a fixed refreshed token, counting refresh calls.
+private actor StubAuthService: AuthServiceProtocol {
+    private let initialToken: String
+    private let refreshedToken: String
+    private var refreshes = 0
+
+    init(initialToken: String, refreshedToken: String) {
+        self.initialToken = initialToken
+        self.refreshedToken = refreshedToken
+    }
+
+    func accessToken() async -> String? { initialToken }
+
+    func refreshedAccessToken(replacing staleToken: String) async -> String? {
+        refreshes += 1
+        return refreshedToken
+    }
+
+    func refreshCallCount() -> Int { refreshes }
 }

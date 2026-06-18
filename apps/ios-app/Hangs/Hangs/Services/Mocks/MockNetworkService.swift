@@ -136,11 +136,5 @@ final class MockNetworkService: NetworkServiceProtocol {
             resetsAt: ISO8601DateFormatter().string(from: Date().addingTimeInterval(86400))
         )
     }
-
-    func setPremium(userId: String) async throws {
-        if shouldFail {
-            throw NetworkError.invalidResponse
-        }
-    }
 }
 #endif

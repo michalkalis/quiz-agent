@@ -23,22 +23,27 @@ protocol NetworkServiceProtocol: Sendable {
     func flagQuestion(sessionId: String, reason: String?) async throws
     func fetchElevenLabsToken() async throws -> String
     func getUsage(userId: String) async throws -> UsageInfo
-    func setPremium(userId: String) async throws
 }
 
 /// Thread-safe network service using Swift 6 actor
 actor NetworkService: NetworkServiceProtocol {
     private let baseURL: URL
     private let session: URLSession
+    /// Server-trusted anonymous identity (#60). When present, every request
+    /// carries `Authorization: Bearer <access>` and a 401 triggers a
+    /// single-flight refresh + one retry. Nil in tests / before wiring → the
+    /// request still goes out unauthenticated (legacy `user_id` grace path).
+    private let authService: AuthServiceProtocol?
 
     // Task registry for cancellation support
     private var activeTasks: [UUID: URLSessionDataTask] = [:]
 
-    init(baseURL: String = Config.apiBaseURL, session: URLSession? = nil) {
+    init(baseURL: String = Config.apiBaseURL, session: URLSession? = nil, authService: AuthServiceProtocol? = nil) {
         guard let url = URL(string: baseURL) else {
             fatalError("NetworkService: invalid baseURL '\(baseURL)' — check Config.apiBaseURL")
         }
         self.baseURL = url
+        self.authService = authService
 
         if let session {
             self.session = session
@@ -48,6 +53,37 @@ actor NetworkService: NetworkServiceProtocol {
             config.timeoutIntervalForResource = 60
             self.session = URLSession(configuration: config)
         }
+    }
+
+    // MARK: - Authorized Request Helper
+
+    /// Send a request with the anonymous bearer attached (when auth is wired).
+    /// On a 401 it refreshes once (single-flight, deduped in `AuthService`),
+    /// re-attaches the new bearer, and retries exactly once. Falls through to a
+    /// plain send when no `authService` is present or no token is available, so
+    /// the legacy `user_id` grace path keeps working through the staged rollout.
+    private func sendAuthorized(_ request: URLRequest) async throws -> (Data, URLResponse) {
+        guard let authService else {
+            return try await session.data(for: request)
+        }
+
+        var req = request
+        let token = await authService.accessToken()
+        if let token {
+            req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+
+        let (data, response) = try await session.data(for: req)
+
+        // Only retry on a 401 that followed a bearer we actually sent.
+        guard let http = response as? HTTPURLResponse, http.statusCode == 401, let token else {
+            return (data, response)
+        }
+        guard let fresh = await authService.refreshedAccessToken(replacing: token) else {
+            return (data, response)  // refresh unavailable → surface the 401
+        }
+        req.setValue("Bearer \(fresh)", forHTTPHeaderField: "Authorization")
+        return try await session.data(for: req)
     }
 
     // MARK: - Task Registry
@@ -128,7 +164,7 @@ actor NetworkService: NetworkServiceProtocol {
         Logger.network.debug("🌐 POST \(endpoint, privacy: .public)")
         breadcrumbRequest(method: "POST", endpoint: endpointPath)
 
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await sendAuthorized(request)
 
         Logger.network.debug("📥 Response received: \(data.count, privacy: .public) bytes")
         if let httpResponse = response as? HTTPURLResponse {
@@ -175,7 +211,7 @@ actor NetworkService: NetworkServiceProtocol {
         Logger.network.debug("🌐 POST \(url, privacy: .public) with \(excludedQuestionIds.count, privacy: .public) excluded IDs")
         breadcrumbRequest(method: "POST", endpoint: endpointPath)
 
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await sendAuthorized(request)
 
         Logger.network.debug("📥 Response received: \(data.count, privacy: .public) bytes")
         if let httpResponse = response as? HTTPURLResponse {
@@ -225,7 +261,7 @@ actor NetworkService: NetworkServiceProtocol {
         Logger.network.debug("🌐 DELETE \(endpoint, privacy: .public)")
         breadcrumbRequest(method: "DELETE", endpoint: endpointPath)
 
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await sendAuthorized(request)
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw NetworkError.invalidResponse
@@ -267,7 +303,7 @@ actor NetworkService: NetworkServiceProtocol {
 
         Logger.network.debug("🌐 POST \(endpoint, privacy: .public) (extend \(minutes, privacy: .public)min)")
 
-        let (_, response) = try await session.data(for: request)
+        let (_, response) = try await sendAuthorized(request)
 
         guard let httpResponse = response as? HTTPURLResponse,
               (200...299).contains(httpResponse.statusCode) else {
@@ -287,7 +323,7 @@ actor NetworkService: NetworkServiceProtocol {
 
         Logger.network.debug("🌐 POST \(endpoint, privacy: .public) (rating: \(rating, privacy: .public))")
 
-        let (_, response) = try await session.data(for: request)
+        let (_, response) = try await sendAuthorized(request)
 
         guard let httpResponse = response as? HTTPURLResponse,
               (200...299).contains(httpResponse.statusCode) else {
@@ -308,7 +344,7 @@ actor NetworkService: NetworkServiceProtocol {
 
         Logger.network.debug("🌐 POST \(endpoint, privacy: .public) (flag)")
 
-        let (_, response) = try await session.data(for: request)
+        let (_, response) = try await sendAuthorized(request)
 
         guard let httpResponse = response as? HTTPURLResponse,
               (200 ... 299).contains(httpResponse.statusCode)
@@ -345,7 +381,7 @@ actor NetworkService: NetworkServiceProtocol {
         Logger.network.debug("🌐 POST \(endpoint, privacy: .public) (audio: \(audioData.count, privacy: .public) bytes)")
         breadcrumbRequest(method: "POST", endpoint: endpointPath)
 
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await sendAuthorized(request)
 
         Logger.network.debug("📥 Voice response received: \(data.count, privacy: .public) bytes")
         if let httpResponse = response as? HTTPURLResponse {
@@ -412,7 +448,7 @@ actor NetworkService: NetworkServiceProtocol {
         // Breadcrumb: metadata only — do NOT include the text input (may be user answer).
         breadcrumbRequest(method: "POST", endpoint: endpointPath)
 
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await sendAuthorized(request)
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw NetworkError.invalidResponse
@@ -526,7 +562,7 @@ actor NetworkService: NetworkServiceProtocol {
 
         Logger.network.debug("🌐 POST \(endpoint, privacy: .public) (ElevenLabs token)")
 
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await sendAuthorized(request)
 
         guard let httpResponse = response as? HTTPURLResponse,
               (200...299).contains(httpResponse.statusCode) else {
@@ -557,7 +593,7 @@ actor NetworkService: NetworkServiceProtocol {
 
         Logger.network.debug("🌐 GET \(endpoint, privacy: .public)")
 
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await sendAuthorized(request)
 
         guard let httpResponse = response as? HTTPURLResponse,
               (200...299).contains(httpResponse.statusCode) else {
@@ -566,23 +602,6 @@ actor NetworkService: NetworkServiceProtocol {
 
         let decoder = JSONDecoder()
         return try decoder.decode(UsageInfo.self, from: data)
-    }
-
-    func setPremium(userId: String) async throws {
-        let endpoint = baseURL.appendingPathComponent("/api/v1/usage/\(userId)/premium")
-
-        var request = URLRequest(url: endpoint)
-        request.httpMethod = "POST"
-        request.timeoutInterval = 10
-
-        Logger.network.debug("🌐 POST \(endpoint, privacy: .public) (set premium)")
-
-        let (_, response) = try await session.data(for: request)
-
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
-            throw NetworkError.invalidResponse
-        }
     }
 
     // MARK: - Helper Methods

@@ -549,14 +549,11 @@ final class QuizViewModel: ObservableObject {
         }
     }
 
-    /// Notify backend that this device purchased premium
+    /// Refresh usage after a premium purchase. Premium is granted server-side
+    /// via IAP (#50) — the client no longer self-grants (the old `setPremium`
+    /// call sent no admin key and always 401'd, #60). Just refresh the display.
     func notifyPremiumPurchased() async {
-        do {
-            try await networkService.setPremium(userId: persistenceStore.deviceId)
-            await refreshUsage()
-        } catch {
-            Logger.network.warning("⚠️ Failed to notify backend of premium purchase: \(error, privacy: .public)")
-        }
+        await refreshUsage()
     }
 
     /// Whether to retry with a new session (for initialization errors)

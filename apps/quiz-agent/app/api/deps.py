@@ -15,6 +15,8 @@ from ..rating.feedback import FeedbackService
 from ..voice.transcriber import VoiceTranscriber
 from ..tts.service import TTSService
 from ..usage.tracker import UsageTracker
+from ..auth.tokens import TokenService
+from ..auth.refresh import RefreshTokenStore
 from ..quiz.flow import QuizFlowService, FlowResult
 from ..serializers import (
     question_to_dict as question_to_dict,
@@ -144,6 +146,26 @@ class ElevenLabsTokenResponse(BaseModel):
     )
 
 
+class RefreshRequest(BaseModel):
+    """Request to rotate a refresh token (issue #60, task 60.4)."""
+
+    refresh_token: str = Field(
+        ..., min_length=1, description="The opaque refresh token"
+    )
+
+
+class AuthTokenResponse(BaseModel):
+    """Token pair returned by anon-bootstrap and refresh (issue #60, task 60.4)."""
+
+    access_token: str = Field(description="Short-lived JWT (bearer) for API calls")
+    refresh_token: str = Field(
+        description="Opaque rotating refresh token; store securely, send once on refresh"
+    )
+    token_type: str = Field(default="bearer")
+    expires_in: int = Field(description="Access-token lifetime in seconds")
+    anon_id: str = Field(description="The server-assigned anonymous subject id")
+
+
 # ── Dependency Injection (FastAPI Depends) ───────────────────────────────────
 # Services are stored on app.state during lifespan startup (see main.py).
 # These functions retrieve them for use in route signatures via Depends().
@@ -172,6 +194,20 @@ def get_tts_service(request: Request) -> TTSService:
 def get_usage_tracker(request: Request) -> Optional[UsageTracker]:
     # None when DATABASE_URL is unset (usage persistence disabled); callers guard.
     return request.app.state.usage_tracker
+
+
+def get_token_service(request: Request) -> Optional[TokenService]:
+    # None when DB or AUTH_JWT_SECRET is unset (auth disabled); callers return 503.
+    return getattr(request.app.state, "token_service", None)
+
+
+def get_refresh_store(request: Request) -> Optional[RefreshTokenStore]:
+    return getattr(request.app.state, "refresh_store", None)
+
+
+def get_auth_sessionmaker(request: Request):
+    """Sessionmaker dedicated to the auth tables (None when auth is disabled)."""
+    return getattr(request.app.state, "auth_sessionmaker", None)
 
 
 def get_quiz_flow(request: Request) -> QuizFlowService:

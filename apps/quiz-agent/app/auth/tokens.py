@@ -46,6 +46,7 @@ class TokenService:
         self._issuer = issuer
         self._audience = audience
         self._access_ttl = timedelta(seconds=access_ttl_seconds)
+        self.access_ttl_seconds = access_ttl_seconds  # public: the /auth expires_in
 
     def create_access_token(
         self, subject_id: str, *, now: datetime | None = None

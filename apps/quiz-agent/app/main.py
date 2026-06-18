@@ -217,14 +217,34 @@ async def lifespan(app: FastAPI):
         # Persistent usage tracker on the auth Postgres (#60). Without
         # DATABASE_URL (plain local dev) usage limits are simply not enforced —
         # the dependents all guard a None tracker.
+        auth_sessionmaker = None
+        token_service = None
+        refresh_store = None
         if settings.database_url:
             from .db.engine import get_sessionmaker
 
-            usage_tracker = UsageTracker(get_sessionmaker())
+            auth_sessionmaker = get_sessionmaker()
+            usage_tracker = UsageTracker(auth_sessionmaker)
             logger.info(
                 "Services initialized (free limit: %d questions/day, persistent)",
                 usage_tracker.daily_limit,
             )
+            # Auth token services (#60.4). Need the JWT secret too; without it the
+            # /auth/* endpoints stay disabled (503) rather than minting tokens an
+            # unconfigured secret can't verify. TokenService fails loud on a
+            # too-short secret — a misconfigured prod must not boot half-secured.
+            if settings.auth_jwt_secret:
+                from .auth.refresh import build_refresh_store
+                from .auth.tokens import build_token_service
+
+                token_service = build_token_service(settings)
+                refresh_store = build_refresh_store(auth_sessionmaker, settings)
+                logger.info("Auth endpoints enabled (anon-bootstrap + refresh)")
+            else:
+                logger.warning(
+                    "AUTH_JWT_SECRET not set — /auth/* disabled (503). "
+                    "Production must set a >=64-char secret (#60)."
+                )
         else:
             usage_tracker = None
             logger.warning(
@@ -283,6 +303,9 @@ async def lifespan(app: FastAPI):
     app.state.chroma_client = chroma_client
     app.state.question_store = question_store
     app.state.usage_tracker = usage_tracker
+    app.state.auth_sessionmaker = auth_sessionmaker
+    app.state.token_service = token_service
+    app.state.refresh_store = refresh_store
     app.state.quiz_flow = QuizFlowService(
         session_manager=session_manager,
         input_parser=input_parser,

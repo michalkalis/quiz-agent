@@ -1,6 +1,6 @@
 # Issue #58 — Authentication: research + design + plan
 
-**Triage:** enhancement · researched — **awaiting founder decision** (research issue — deliverable is a plan, not code)
+**Triage:** enhancement · researched — **plan delivered, impl issues spun off** (#60/#61/#62); only Pencil auth screens (§9) remain on this issue
 
 > **✅ Research delivered 2026-06-16:** [`docs/research/auth-research-2026-06-16.md`](../research/auth-research-2026-06-16.md)
 > — options matrix + recommendation + phased plan (impl issues **#60/#61/#62** — #59 is taken) + 7 open questions (founder-answered 2026-06-17, doc §8b).
@@ -60,7 +60,8 @@ Produce a design doc (`docs/product/auth-research-<date>.md` or a PRD) that cove
       Phase 2 Sign in with Apple; Phase 3 cross-device/purchase binding) with each phase sized
       and its dependencies on #50 (IAP) and #49 (cost/limits) noted.
 - [x] Open questions for the founder are listed explicitly (7 gates — see research doc §8).
-- [x] Founder picked the approach (doc §8b, 2026-06-17) → implementation issues **#60/#61/#62** to be spun off from the plan (remaining work).
+- [x] Founder picked the approach (doc §8b, 2026-06-17) → implementation issues **#60/#61/#62** spun off 2026-06-18 (`issue-60/61/62-*.md` + INDEX rows + TODO queue).
+- [ ] Pencil auth-flow screens drawn in `design/quiz-agent.pen` per §9 (anonymous-start / contextual account prompt / manage+delete+export) — **remaining work on this issue**.
 
 ## Founder input needed
 

@@ -234,7 +234,7 @@ class QuizFlowService:
 
         # Check usage limit
         if self.usage_tracker and session.user_id:
-            allowed, remaining, resets_at = self.usage_tracker.check_limit(
+            allowed, remaining, resets_at = await self.usage_tracker.check_limit(
                 session.user_id
             )
             if not allowed:
@@ -242,7 +242,7 @@ class QuizFlowService:
                     to=SessionPhase.FINISHED, caller="flow.process_answer:usage_limit"
                 )
                 self.session_manager.update_session(session)
-                usage = self.usage_tracker.get_usage(session.user_id)
+                usage = await self.usage_tracker.get_usage(session.user_id)
                 result.usage_limit_error = {
                     "error": "daily_limit_reached",
                     "questions_used": usage["questions_used"],
@@ -274,7 +274,7 @@ class QuizFlowService:
 
         # Record usage
         if self.usage_tracker and session.user_id:
-            self.usage_tracker.record_question(session.user_id)
+            await self.usage_tracker.record_question(session.user_id)
 
         # Cache translated question text
         translated_q_dict = await question_to_dict_translated(

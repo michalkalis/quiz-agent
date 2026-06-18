@@ -58,9 +58,11 @@ async def start_quiz(
 
         # Check usage limit (freemium)
         if usage_tracker and session.user_id:
-            allowed, remaining, resets_at = usage_tracker.check_limit(session.user_id)
+            allowed, remaining, resets_at = await usage_tracker.check_limit(
+                session.user_id
+            )
             if not allowed:
-                usage = usage_tracker.get_usage(session.user_id)
+                usage = await usage_tracker.get_usage(session.user_id)
                 raise HTTPException(
                     status_code=429,
                     detail={
@@ -143,7 +145,7 @@ async def start_quiz(
         session.asked_question_ids.append(question.id)
 
         if usage_tracker and session.user_id:
-            usage_tracker.record_question(session.user_id)
+            await usage_tracker.record_question(session.user_id)
 
         translated_question_dict = await question_to_dict_translated(
             question, session.language, translation_service

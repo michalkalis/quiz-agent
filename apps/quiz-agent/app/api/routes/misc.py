@@ -58,7 +58,9 @@ async def get_usage(
     usage_tracker: UsageTracker = Depends(get_usage_tracker),
 ):
     """Get usage stats for a user (questions used today, limit, reset time)."""
-    return usage_tracker.get_usage(user_id)
+    if usage_tracker is None:
+        raise HTTPException(status_code=503, detail="Usage tracking unavailable")
+    return await usage_tracker.get_usage(user_id)
 
 
 @router.post("/usage/{user_id}/premium")
@@ -75,7 +77,9 @@ async def set_premium(
     if not expected_key or admin_key != expected_key:
         raise HTTPException(status_code=401, detail="Invalid admin key")
 
-    usage_tracker.set_premium(user_id, is_premium)
+    if usage_tracker is None:
+        raise HTTPException(status_code=503, detail="Usage tracking unavailable")
+    await usage_tracker.set_premium(user_id, is_premium)
     return {"user_id": user_id, "is_premium": is_premium}
 
 

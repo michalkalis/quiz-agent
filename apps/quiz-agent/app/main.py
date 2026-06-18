@@ -214,11 +214,23 @@ async def lifespan(app: FastAPI):
         voice_transcriber = VoiceTranscriber()
         tts_service = TTSService()
         translation_service = TranslationService()
-        usage_tracker = UsageTracker()
-        logger.info(
-            "Services initialized (free limit: %d questions/day)",
-            usage_tracker.daily_limit,
-        )
+        # Persistent usage tracker on the auth Postgres (#60). Without
+        # DATABASE_URL (plain local dev) usage limits are simply not enforced —
+        # the dependents all guard a None tracker.
+        if settings.database_url:
+            from .db.engine import get_sessionmaker
+
+            usage_tracker = UsageTracker(get_sessionmaker())
+            logger.info(
+                "Services initialized (free limit: %d questions/day, persistent)",
+                usage_tracker.daily_limit,
+            )
+        else:
+            usage_tracker = None
+            logger.warning(
+                "DATABASE_URL not set — usage limits disabled (no daily_usage "
+                "persistence). Production must set DATABASE_URL (#60)."
+            )
     except Exception as e:
         logger.error("Failed to initialize services: %s", e, exc_info=True)
         raise

@@ -108,7 +108,7 @@ These were ambiguous or wrong in the prior draft; resolved here so the loop has 
 ### Tasks (Part B — NOT loop-eligible; device + human verify)
 
 - [x] 60.10 — `app_attest_keys` + `attest_challenges` migration (rev `0002_app_attest`) + `POST /auth/attest-challenge` (single-use, TTL). *Done 2026-06-19 — `ChallengeStore` (issue/consume, row-locked single-use), endpoint live wherever `DATABASE_URL` is set (503 otherwise), `pyattest>=1.0.4` added. 6 tests in `test_attest_challenge.py`; 39 auth tests green.*
-- [ ] 60.11 — Attestation verifier (pyattest, audited; cert-chain pin, nonce, keyId, rpId, counter==0, env/`aaguid`) + key storage.
+- [x] 60.11 — Attestation verifier (pyattest, audited; cert-chain pin, nonce, keyId, rpId, counter==0, env/`aaguid`) + key storage. *Done 2026-06-19 — `AppAttestService` in `app/auth/app_attest.py`: attestation via pyattest, assertion via direct `cbor2`+`cryptography` (signature + **our** strictly-increasing-counter replay guard + rpId, transactional under row lock). 11 tests in `test_app_attest.py` with synthetic EC fixtures + a throwaway test root CA (real-device E2E stays `[HUMAN]`). 153 backend tests green.*
 - [ ] 60.12 — Gate `anon-bootstrap` on a valid assertion (counter strictly-increasing, transactional); `APP_ATTEST_REQUIRED` flag (prod on, dev/test off).
 - [ ] 60.13 — iOS App Attest: `DCAppAttestService` key + attestation on first launch, assertion on bootstrap, `#if targetEnvironment(simulator)` compile-time bypass; handle `attestKey()` Apple round-trip failures (retry + graceful degrade).
 - [ ] 60.14 — Tests: pytest with recorded attestation/assertion fixtures (CI-runnable); **real device end-to-end = `[HUMAN]`** (not sim-verifiable).

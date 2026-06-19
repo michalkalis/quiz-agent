@@ -16,6 +16,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Integer,
+    LargeBinary,
     Text,
 )
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
@@ -73,6 +74,66 @@ class RefreshToken(Base):
     )
     revoked_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
+    )
+
+
+class AttestChallenge(Base):
+    """A single-use, short-TTL random challenge for App Attest (issue #60 Part B).
+
+    The server issues a fresh challenge before each attestation/assertion so the
+    device signs over a value it could not have precomputed — this is the replay
+    defence (a client-chosen nonce gives none). Consumed exactly once: ``used_at``
+    is set the moment a challenge backs a verification, so it can never back two.
+    """
+
+    __tablename__ = "attest_challenges"
+
+    # The raw challenge value (URL-safe base64 of 32 random bytes). Not a secret —
+    # it is echoed to the client and back — so it is stored in the clear, unlike
+    # refresh tokens; its security comes from single-use + TTL, not from hashing.
+    challenge: Mapped[str] = mapped_column(Text, primary_key=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    used_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+
+class AppAttestKey(Base):
+    """A hardware-attested App Attest key (issue #60 Part B).
+
+    Established once per install by a verified *attestation*; every later
+    *assertion* is checked against the stored public key and must carry a
+    strictly greater ``sign_counter`` (the replay guard pyattest does not do for
+    us). ``anon_id`` is nullable because the key can be attested before the
+    identity is minted; bootstrap binds it.
+    """
+
+    __tablename__ = "app_attest_keys"
+
+    # Hex of SHA-256(public key) — the keyId the device reports and Apple binds.
+    key_id: Mapped[str] = mapped_column(Text, primary_key=True)
+    anon_id: Mapped[str | None] = mapped_column(
+        ForeignKey("anonymous_identities.anon_id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
+    )
+    # DER-encoded EC P-256 public key, used to verify every future assertion.
+    public_key: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
+    # Monotonic counter from authData; each accepted assertion must exceed the
+    # stored value, after which we persist the new value (transactional).
+    sign_counter: Mapped[int] = mapped_column(
+        Integer, default=0, nullable=False, server_default="0"
+    )
+    # "development" or "production" — a dev-attested key must never be honoured in
+    # prod (and vice-versa); the aaguid the attestation carried is recorded here.
+    environment: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
     )
 
 

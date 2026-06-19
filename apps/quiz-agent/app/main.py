@@ -220,11 +220,18 @@ async def lifespan(app: FastAPI):
         auth_sessionmaker = None
         token_service = None
         refresh_store = None
+        challenge_store = None
         if settings.database_url:
             from .db.engine import get_sessionmaker
 
             auth_sessionmaker = get_sessionmaker()
             usage_tracker = UsageTracker(auth_sessionmaker)
+            # App Attest challenges need only the DB (no JWT secret), so the
+            # endpoint is live wherever usage persistence is. The verification
+            # gate that *uses* these challenges is flag-controlled (#60.12).
+            from .auth.attest_challenge import build_challenge_store
+
+            challenge_store = build_challenge_store(auth_sessionmaker, settings)
             logger.info(
                 "Services initialized (free limit: %d questions/day, persistent)",
                 usage_tracker.daily_limit,
@@ -306,6 +313,7 @@ async def lifespan(app: FastAPI):
     app.state.auth_sessionmaker = auth_sessionmaker
     app.state.token_service = token_service
     app.state.refresh_store = refresh_store
+    app.state.challenge_store = challenge_store
     app.state.quiz_flow = QuizFlowService(
         session_manager=session_manager,
         input_parser=input_parser,

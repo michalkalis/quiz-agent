@@ -19,6 +19,7 @@ dependencies = [
     "asyncpg>=0.29.0",
     "alembic>=1.13.0",
     "pyjwt[crypto]>=2.8.0",
+    "pyattest>=1.0.4",
 ]
 
 [tool.uv.sources]

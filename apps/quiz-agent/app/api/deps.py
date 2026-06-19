@@ -17,6 +17,7 @@ from ..tts.service import TTSService
 from ..usage.tracker import UsageTracker
 from ..auth.tokens import TokenService
 from ..auth.refresh import RefreshTokenStore
+from ..auth.attest_challenge import ChallengeStore
 from ..quiz.flow import QuizFlowService, FlowResult
 from ..serializers import (
     question_to_dict as question_to_dict,
@@ -154,6 +155,15 @@ class RefreshRequest(BaseModel):
     )
 
 
+class AttestChallengeResponse(BaseModel):
+    """One-time challenge for App Attest (issue #60 Part B, task 60.10)."""
+
+    challenge: str = Field(
+        description="Single-use random value the device signs over; expires soon"
+    )
+    expires_in: int = Field(description="Challenge lifetime in seconds")
+
+
 class AuthTokenResponse(BaseModel):
     """Token pair returned by anon-bootstrap and refresh (issue #60, task 60.4)."""
 
@@ -203,6 +213,11 @@ def get_token_service(request: Request) -> Optional[TokenService]:
 
 def get_refresh_store(request: Request) -> Optional[RefreshTokenStore]:
     return getattr(request.app.state, "refresh_store", None)
+
+
+def get_challenge_store(request: Request) -> Optional[ChallengeStore]:
+    # None when DB is unset (App Attest disabled); callers return 503.
+    return getattr(request.app.state, "challenge_store", None)
 
 
 def get_auth_sessionmaker(request: Request):

@@ -27,6 +27,13 @@ class Settings:
     # Refresh tokens: sliding per-token window, capped by an absolute family age.
     refresh_token_ttl_days: int = 30
     refresh_family_max_days: int = 60
+    # App Attest (#60 Part B). `app_attest_required` is the prod-on/dev-off gate;
+    # `app_attest_app_id` is "<TeamID>.<BundleID>" (the rpId the device attests
+    # over) and `app_attest_production` selects the expected aaguid environment.
+    attest_challenge_ttl_seconds: int = 300  # 5 min — one attest/assert round-trip
+    app_attest_required: bool = False
+    app_attest_app_id: Optional[str] = None
+    app_attest_production: bool = False
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -40,6 +47,14 @@ class Settings:
             access_token_ttl_seconds=int(os.getenv("ACCESS_TOKEN_TTL_SECONDS", "900")),
             refresh_token_ttl_days=int(os.getenv("REFRESH_TOKEN_TTL_DAYS", "30")),
             refresh_family_max_days=int(os.getenv("REFRESH_FAMILY_MAX_DAYS", "60")),
+            attest_challenge_ttl_seconds=int(
+                os.getenv("ATTEST_CHALLENGE_TTL_SECONDS", "300")
+            ),
+            app_attest_required=os.getenv("APP_ATTEST_REQUIRED", "false").lower()
+            in {"1", "true", "on", "yes"},
+            app_attest_app_id=os.getenv("APP_ATTEST_APP_ID"),
+            app_attest_production=os.getenv("APP_ATTEST_PRODUCTION", "false").lower()
+            in {"1", "true", "on", "yes"},
         )
 
 

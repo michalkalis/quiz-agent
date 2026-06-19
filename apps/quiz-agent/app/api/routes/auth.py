@@ -19,12 +19,15 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 from ..deps import (
+    AttestChallengeResponse,
     AuthTokenResponse,
     RefreshRequest,
     get_auth_sessionmaker,
+    get_challenge_store,
     get_refresh_store,
     get_token_service,
 )
+from ...auth.attest_challenge import ChallengeStore
 from ...auth.refresh import RefreshError, RefreshTokenStore
 from ...auth.tokens import TokenService
 from ...db.models import AnonymousIdentity
@@ -65,6 +68,28 @@ async def anon_bootstrap(
         refresh_token=issued.raw_token,
         expires_in=token_service.access_ttl_seconds,
         anon_id=anon_id,
+    )
+
+
+@router.post("/auth/attest-challenge", response_model=AttestChallengeResponse)
+@limiter.limit(_BOOTSTRAP_RATE, key_func=fly_client_ip)
+async def attest_challenge(
+    request: Request,
+    challenge_store: ChallengeStore = Depends(get_challenge_store),
+) -> AttestChallengeResponse:
+    """Hand the device a fresh single-use challenge for App Attest (Part B).
+
+    The device signs over this value when attesting a key or producing an
+    assertion, so it cannot precompute or replay a signature. Returns 503 when
+    App Attest is unconfigured (no DB), matching the other auth endpoints.
+    """
+    if challenge_store is None:
+        raise HTTPException(status_code=503, detail="Auth unavailable")
+
+    challenge = await challenge_store.issue()
+    return AttestChallengeResponse(
+        challenge=challenge,
+        expires_in=challenge_store.ttl_seconds,
     )
 
 

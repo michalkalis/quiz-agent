@@ -77,6 +77,7 @@ class AppAttestService:
         challenge: str,
         *,
         anon_id: str | None = None,
+        session: AsyncSession | None = None,
     ) -> AppAttestKey:
         """Verify a first-install attestation and persist the attested key.
 
@@ -84,6 +85,13 @@ class AppAttestService:
         full Apple attestation check against ``key_id`` (the keyId the client
         reported); on success we store the key with ``sign_counter = 0`` so the
         first assertion must report a strictly greater counter.
+
+        When ``session`` is supplied the key is added to *that* transaction and
+        **not** committed — the caller owns the commit. ``anon-bootstrap`` uses
+        this to mint the identity, bind the key, and issue the first refresh
+        token atomically, so a crash can never leave an attested-but-unbound key
+        next to a token-bearing identity (#60.12). With no ``session`` the method
+        opens and commits its own (standalone verification, used by tests).
         """
         # Lazy import: pyattest pulls a cert-validation stack we only need here.
         from pyattest.attestation import Attestation
@@ -114,19 +122,26 @@ class AppAttestService:
         leaf = attest.data["certs"].last
         public_key_der = leaf.public_key.dump()
 
-        async with self._sessionmaker() as session:
-            session.add(
-                AppAttestKey(
-                    key_id=key_id_b64,
-                    anon_id=anon_id,
-                    public_key=public_key_der,
-                    sign_counter=0,
-                    environment=self._environment,
-                    created_at=_now(),
-                )
-            )
-            await session.commit()
-            return await session.get(AppAttestKey, key_id_b64)
+        key = AppAttestKey(
+            key_id=key_id_b64,
+            anon_id=anon_id,
+            public_key=public_key_der,
+            sign_counter=0,
+            environment=self._environment,
+            created_at=_now(),
+        )
+
+        if session is not None:
+            # Join the caller's transaction; they commit. flush() surfaces a
+            # duplicate-key conflict here rather than at their later commit.
+            session.add(key)
+            await session.flush()
+            return key
+
+        async with self._sessionmaker() as own_session:
+            own_session.add(key)
+            await own_session.commit()
+            return await own_session.get(AppAttestKey, key_id_b64)
 
     # ── Assertion (ongoing) ─────────────────────────────────────────────────
 

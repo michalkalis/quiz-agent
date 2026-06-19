@@ -18,6 +18,7 @@ from ..usage.tracker import UsageTracker
 from ..auth.tokens import TokenService
 from ..auth.refresh import RefreshTokenStore
 from ..auth.attest_challenge import ChallengeStore
+from ..auth.app_attest import AppAttestService
 from ..quiz.flow import QuizFlowService, FlowResult
 from ..serializers import (
     question_to_dict as question_to_dict,
@@ -155,6 +156,36 @@ class RefreshRequest(BaseModel):
     )
 
 
+class AnonBootstrapRequest(BaseModel):
+    """Optional App Attest credentials carried by anon-bootstrap (#60.12).
+
+    All fields are optional so the Part A client (empty body) and the dev/test
+    path (``APP_ATTEST_REQUIRED=off``) keep minting plainly. A device sends
+    exactly one credential against a fresh ``challenge``:
+
+    - first launch → ``attestation`` (proves a real key on a real device); the
+      server mints the identity and binds this key to it 1:1, forever.
+    - re-bootstrap → ``assertion`` (proves possession of that same key); the
+      server returns tokens for the *already-bound* identity and never mints a
+      new one.
+
+    Bytes travel as base64 strings since JSON cannot carry raw bytes.
+    """
+
+    key_id: Optional[str] = Field(
+        default=None, description="base64 App Attest keyId (SHA256 of the public key)"
+    )
+    attestation: Optional[str] = Field(
+        default=None, description="base64 CBOR attestation object (first launch)"
+    )
+    assertion: Optional[str] = Field(
+        default=None, description="base64 CBOR assertion object (re-bootstrap)"
+    )
+    challenge: Optional[str] = Field(
+        default=None, description="The challenge returned by /auth/attest-challenge"
+    )
+
+
 class AttestChallengeResponse(BaseModel):
     """One-time challenge for App Attest (issue #60 Part B, task 60.10)."""
 
@@ -218,6 +249,13 @@ def get_refresh_store(request: Request) -> Optional[RefreshTokenStore]:
 def get_challenge_store(request: Request) -> Optional[ChallengeStore]:
     # None when DB is unset (App Attest disabled); callers return 503.
     return getattr(request.app.state, "challenge_store", None)
+
+
+def get_app_attest_service(request: Request) -> Optional[AppAttestService]:
+    # None when APP_ATTEST_APP_ID is unset (verification not configured). When
+    # APP_ATTEST_REQUIRED is on, the bootstrap route turns a None service into a
+    # 503 rather than minting an unattested identity.
+    return getattr(request.app.state, "app_attest_service", None)
 
 
 def get_auth_sessionmaker(request: Request):

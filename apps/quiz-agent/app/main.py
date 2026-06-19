@@ -221,6 +221,7 @@ async def lifespan(app: FastAPI):
         token_service = None
         refresh_store = None
         challenge_store = None
+        app_attest_service = None
         if settings.database_url:
             from .db.engine import get_sessionmaker
 
@@ -232,6 +233,26 @@ async def lifespan(app: FastAPI):
             from .auth.attest_challenge import build_challenge_store
 
             challenge_store = build_challenge_store(auth_sessionmaker, settings)
+            # App Attest verification (#60.11/.12). Needs the app id ("TeamID.
+            # BundleID") to check the rpId; without it the service stays None.
+            # The bootstrap route gates on APP_ATTEST_REQUIRED: required+None is a
+            # boot misconfiguration that must fail loud, not silently mint.
+            if settings.app_attest_app_id:
+                from .auth.app_attest import build_app_attest_service
+
+                app_attest_service = build_app_attest_service(
+                    auth_sessionmaker, challenge_store, settings
+                )
+                logger.info(
+                    "App Attest verification enabled (env=%s, required=%s)",
+                    "production" if settings.app_attest_production else "development",
+                    settings.app_attest_required,
+                )
+            elif settings.app_attest_required:
+                logger.error(
+                    "APP_ATTEST_REQUIRED=on but APP_ATTEST_APP_ID is unset — "
+                    "anon-bootstrap will fail safe (503) until the app id is set."
+                )
             logger.info(
                 "Services initialized (free limit: %d questions/day, persistent)",
                 usage_tracker.daily_limit,
@@ -314,6 +335,7 @@ async def lifespan(app: FastAPI):
     app.state.token_service = token_service
     app.state.refresh_store = refresh_store
     app.state.challenge_store = challenge_store
+    app.state.app_attest_service = app_attest_service
     app.state.quiz_flow = QuizFlowService(
         session_manager=session_manager,
         input_parser=input_parser,

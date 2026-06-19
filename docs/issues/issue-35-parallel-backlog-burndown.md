@@ -171,3 +171,8 @@ Orchestrator stays read-only on the main thread until at least one track returns
 - Subagent routing rule: memory `feedback_subagent_model_routing`.
 - Deploy flow after Track A: memory `feedback_backend_auto_deploy` + `/deploy` skill.
 - Question quality counts: memory `project_question_quality`.
+
+<!-- obsidian-links:start -->
+## Súvisiace issues
+[[issue-30-batch-generate-categories|#30 Batch-generate questions for new categories]] · [[issue-31-ios-test-hardening|#31 iOS test hardening]] · [[issue-33-quiz-pack-api-phase-1|#33 quiz-pack-api Phase 1]]
+<!-- obsidian-links:end -->

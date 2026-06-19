@@ -51,3 +51,8 @@ UI hookup for `age_appropriate` (filter chip / toggle in `SettingsView`) is in s
 - #29 — Backfill for existing questions (Group D1).
 - #30 — Batch generation that produces content for the new categories (Group E).
 - `docs/issues/question-pipeline-remaining.md` — original spec; will be marked superseded.
+
+<!-- obsidian-links:start -->
+## Súvisiace issues
+[[issue-29-backfill-existing-questions|#29 Backfill `source_url` / `source_excerpt` on existing questions]] · [[issue-30-batch-generate-categories|#30 Batch-generate questions for new categories]]
+<!-- obsidian-links:end -->

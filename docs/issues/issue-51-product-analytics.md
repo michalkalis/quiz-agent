@@ -110,3 +110,8 @@ Map the PRD metrics to concrete events with properties:
 - **B2 (open):** task 51.4 (`AnalyticsClient` seam + `QuizViewModel` hook-points) names no concrete target files/symbols (C2 localization gap) — add the file paths + the iOS test scheme/`xcodebuild` invocation before an unattended run.
 - **B1 (open):** no acceptance criterion names a *currently-failing* test to make green for 51.3/51.4 (C5 start-fail condition).
 - Plus: 51.2 is a `[HUMAN]` founder gate that 51.3/51.4 sit behind. Net: the Ralph-suitable tracks (51.3/51.4) are human-supervised launches behind 51.2, not unattended-overnight work — kept `ready-for-agent` for supervised launch, **excluded from the unattended queue** until B1/B2 are closed.
+
+<!-- obsidian-links:start -->
+## Súvisiace issues
+[[issue-49-daily-limit-cost-research|#49 Daily free-limit cost research]] · [[issue-50-app-store-connect-setup|#50 App Store Connect listing + ASC API setup]] · [[issue-57-loop-verification-backbone|#57 Autonomous loop hardening]]
+<!-- obsidian-links:end -->

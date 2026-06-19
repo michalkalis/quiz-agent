@@ -134,3 +134,8 @@ These were ambiguous or wrong in the prior draft; resolved here so the loop has 
 ## Cross-refs
 
 - #58 (research/plan parent, see §10 corrections) · #49 (limits, now enforceable) · #50 (IAP — ship premium as an auto-renewable subscription so it launches on anonymous identity, §8b #3) · #48 (security review gate) · #57 (loop verification — Part B is not loop-eligible).
+
+<!-- obsidian-links:start -->
+## Súvisiace issues
+[[issue-48-pre-release-review-gauntlet|#48 Pre-release review gauntlet]] · [[issue-49-daily-limit-cost-research|#49 Daily free-limit cost research]] · [[issue-50-app-store-connect-setup|#50 App Store Connect listing + ASC API setup]] · [[issue-57-loop-verification-backbone|#57 Autonomous loop hardening]] · [[issue-58-authentication|#58 Authentication]] · [[issue-61-auth-phase2-sign-in-with-apple|#61 Auth Phase 2]] · [[issue-62-auth-phase3-cross-device-purchase-binding|#62 Auth Phase 3]]
+<!-- obsidian-links:end -->

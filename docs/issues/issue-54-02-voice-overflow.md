@@ -63,3 +63,8 @@ pass (`issue-54-pencil-snapshot-sync.md`) if doing several at once.
       long question scrolls with pinned action row; short question stays centred). VISUAL: PASS.
 - [ ] Re-record the QuestionView snapshots (asking/recording) — see pencil/snapshot plan.
 - [ ] Pencil voice frames updated (owed — batch with `issue-54-pencil-snapshot-sync.md`).
+
+<!-- obsidian-links:start -->
+## Súvisiace issues
+[[issue-52-design-refresh-sweep|#52 iOS design-refresh sweep]]
+<!-- obsidian-links:end -->

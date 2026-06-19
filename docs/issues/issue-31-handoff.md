@@ -820,3 +820,8 @@ Constraints:
   `iPhone 17 Pro / iOS 26.3` (Hangs-Local-UITests, TSAN=NO).
   **Issue #31 fully closed** — Phase 5 XCUITest scenarios are now a
   living regression suite.
+
+<!-- obsidian-links:start -->
+## Súvisiace issues
+[[issue-27-pending-store-question-pipeline|#27 PendingStore]] · [[issue-32-on-demand-generation-service|#32 On-demand question generation service]] · [[issue-34-claude-context-optimization|#34 Claude Code context/token optimization]]
+<!-- obsidian-links:end -->

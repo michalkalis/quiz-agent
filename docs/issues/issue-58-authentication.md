@@ -75,3 +75,8 @@ Produce a design doc (`docs/product/auth-research-<date>.md` or a PRD) that cove
 - #50 (ASC listing + IAP) — purchases must bind to whatever identity this issue chooses.
 - #49 (daily free-limit cost research) — limits are enforced against the identity from #58.
 - #48 (pre-release review) — Stage 2 security review will assess the chosen auth design.
+
+<!-- obsidian-links:start -->
+## Súvisiace issues
+[[issue-48-pre-release-review-gauntlet|#48 Pre-release review gauntlet]] · [[issue-49-daily-limit-cost-research|#49 Daily free-limit cost research]] · [[issue-50-app-store-connect-setup|#50 App Store Connect listing + ASC API setup]] · [[issue-59-quiz-flow-bug-cluster|#59 Quiz-flow bug cluster]] · [[issue-60-auth-phase1-anonymous-identity|#60 Auth Phase 1]] · [[issue-61-auth-phase2-sign-in-with-apple|#61 Auth Phase 2]] · [[issue-62-auth-phase3-cross-device-purchase-binding|#62 Auth Phase 3]]
+<!-- obsidian-links:end -->

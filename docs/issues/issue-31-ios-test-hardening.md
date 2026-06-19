@@ -273,3 +273,8 @@ Summary:
    `Mock*Service` types; SwiftUI previews use inline preview-specific stubs.
 5. **Scope** — phases 1–4 in this issue. Phase 5 (E2E refit + ios-ci +
    RS-NN as XCUITest) becomes **issue #32** opened after phase 4 lands.
+
+<!-- obsidian-links:start -->
+## Súvisiace issues
+[[issue-32-on-demand-generation-service|#32 On-demand question generation service]]
+<!-- obsidian-links:end -->

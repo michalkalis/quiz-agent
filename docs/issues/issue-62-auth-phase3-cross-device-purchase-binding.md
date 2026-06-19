@@ -44,3 +44,8 @@ Phase 2 (#61) gives a recoverable Apple account. Phase 3 closes the loop on **fu
 ## Cross-refs
 
 - #58 (parent) · #61 (Phase 2 prerequisite) · #50 (IAP live) · #48 (security review) · post-MVP multiplayer (product vision).
+
+<!-- obsidian-links:start -->
+## Súvisiace issues
+[[issue-48-pre-release-review-gauntlet|#48 Pre-release review gauntlet]] · [[issue-50-app-store-connect-setup|#50 App Store Connect listing + ASC API setup]] · [[issue-58-authentication|#58 Authentication]] · [[issue-60-auth-phase1-anonymous-identity|#60 Auth Phase 1]] · [[issue-61-auth-phase2-sign-in-with-apple|#61 Auth Phase 2]]
+<!-- obsidian-links:end -->

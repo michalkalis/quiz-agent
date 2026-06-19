@@ -129,3 +129,8 @@ Runtime (quiz-agent): `evaluation/evaluator.py`, `input/parser.py`, `translation
 **Rollback** = `LLM_GATEWAY=direct` (the default). Works today for every OpenAI-served capability. **Caveat (fail-loud):** `GOOGLE_API_KEY` and `ANTHROPIC_API_KEY` are **not** in `.env`, so under `direct` the Gemini verifiers degrade to heuristic and the second (Claude) scorer drops. To restore full direct-mode fidelity, add those two keys. `openrouter` mode needs neither.
 
 **Docs updated:** `.env.example` (LLM_GATEWAY block + OPENROUTER/GOOGLE keys), `.claude/rules/backend.md` (factory rule + degradation note).
+
+<!-- obsidian-links:start -->
+## Súvisiace issues
+[[issue-22-chroma-client-split|#22 ChromaDBClient]] · [[issue-27-pending-store-question-pipeline|#27 PendingStore]] · [[issue-49-daily-limit-cost-research|#49 Daily free-limit cost research]]
+<!-- obsidian-links:end -->

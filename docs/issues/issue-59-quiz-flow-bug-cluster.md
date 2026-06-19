@@ -158,3 +158,8 @@ Loop-evaluable on the simulator (the `[HUMAN]` line is out-of-loop and must NOT 
 ---
 
 *Generated from workflow `wf_59921dfa-ac4` (root-cause → adversarial verify → prevention synthesis). Full per-bug verifier notes available in the run transcript.*
+
+<!-- obsidian-links:start -->
+## Súvisiace issues
+[[issue-54-design-refresh-regressions|#54 Design-refresh sweep regressions]] · [[issue-57-loop-verification-backbone|#57 Autonomous loop hardening]]
+<!-- obsidian-links:end -->

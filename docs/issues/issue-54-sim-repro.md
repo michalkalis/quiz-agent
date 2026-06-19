@@ -104,3 +104,8 @@ process alive at every step (screenshots /tmp/hangs-54-7/).
 - [x] Repro confirmed (or 54.7 closed as non-defect) with sim evidence. *(54.7 ✅ — crash repro 4/4 · 54.4 ✅ — code-trace, 4 holes; live dead-air check confirmed · 54.6 ✅ — sim-verified light+dark)*
 - [x] Behavioural test red→green. Screenshot-verify (54.6 light+dark). *(54.7 ✅ — AdaptiveColorIsolationTests · 54.4 ✅ — streaming Tests 4–7 + service + timer tests · 54.6 ✅ — screenshots 07/09 widget, 08 end-quiz dismissal)*
 - [x] Pencil synced for 54.6 minimized frame. Update parent §54.4/§54.6/§54.7. *(§54.7 ✅ · §54.4 ✅ · §54.6 ✅ — frame AAEkz created)*
+
+<!-- obsidian-links:start -->
+## Súvisiace issues
+[[issue-52-design-refresh-sweep|#52 iOS design-refresh sweep]]
+<!-- obsidian-links:end -->

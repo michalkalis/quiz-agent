@@ -131,3 +131,8 @@ accidentally-committed snapshots, so removing them loses no live fact.
 - `TESTFLIGHT_SETUP.md` is a live runbook (testflight skill) — move + fix skill
   refs in one commit, don't archive.
 - `docs/artifacts/` mass-move deferred precisely because of inbound links.
+
+<!-- obsidian-links:start -->
+## Súvisiace issues
+[[issue-52-design-refresh-sweep|#52 iOS design-refresh sweep]] · [[issue-54-design-refresh-regressions|#54 Design-refresh sweep regressions]]
+<!-- obsidian-links:end -->

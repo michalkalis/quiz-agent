@@ -67,3 +67,8 @@ It pairs naturally with our existing accessibility identifiers (`question.state`
 - `feedback_api_first_tools.md` — Maestro CLI/MCP is exactly the API-first, agent-drivable tool we prefer
 - `feedback_no_gitflow.md` — commit directly to main
 - `project_ios26_url_scheme_bug.md` — why voice events go through the HTTP listener, not URL scheme
+
+<!-- obsidian-links:start -->
+## Súvisiace issues
+[[issue-44-screenshot-verify-step|#44 Mandatory screenshot-verify step]]
+<!-- obsidian-links:end -->

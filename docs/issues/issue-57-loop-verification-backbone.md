@@ -122,3 +122,8 @@ All loop scripts are under `scripts/ralph/`. Tracks A and B are human-reviewed (
 
 - This issue is itself a closed-loop change: it is *about* the loop, so it gets the human-review treatment the research recommends for judgment-heavy infra. Land Track A, prove criterion 1, then layer B–E.
 - Sources + full audit: `docs/artifacts/agent-loops-readiness-v2-2026-06-15.html`.
+
+<!-- obsidian-links:start -->
+## Súvisiace issues
+[[issue-30-batch-generate-categories|#30 Batch-generate questions for new categories]] · [[issue-36-quiz-pack-api-phase-2|#36 quiz-pack-api Phase 2]] · [[issue-42-question-quality-and-mcq|#42 Question quality sweep + multichoice activation]] · [[issue-44-screenshot-verify-step|#44 Mandatory screenshot-verify step]] · [[issue-49-daily-limit-cost-research|#49 Daily free-limit cost research]] · [[issue-51-product-analytics|#51 Product analytics for PRD success metrics]] · [[issue-52-design-refresh-sweep|#52 iOS design-refresh sweep]] · [[issue-53-openrouter-llm-gateway|#53 Consolidate LLM providers behind one gateway]] · [[issue-54-design-refresh-regressions|#54 Design-refresh sweep regressions]] · [[issue-56-ios-localization|#56 iOS text localization]]
+<!-- obsidian-links:end -->

@@ -187,3 +187,8 @@ Full preservation of all 14 title+description pairs from `Hangs/Models/AppErrorM
 
 **Reversibility:** a (String Catalog refactor — commits-only; no schema/data/prod change).
 **`/ready-check` ran; verdict reconciled after a first-hand spot-check.** The reviewers headline blocker ("56.5 bundles a non-scriptable visual pseudo-localization check with no boundary") was a **misread**: the pseudo-localization smoke is correctly fenced as `[HUMAN]` task 56.6 and acceptance criterion #5 is tagged `[HUMAN]`; the autonomous 56.5 task is scriptable (full unit suite + build + runs-in-English). So that blocker does not hold. **One genuine warning recorded:** acceptance criterion #3 ("exactly the 12 known pre-existing failures") can flip non-deterministically if the flaky `SilenceDetectionService` timing tests (run under `withKnownIssue`) change count — the gate should tolerate the known-flaky band rather than hard-fail on an exact integer. Issue stays `in progress` (human-supervised local work), class a; not blocking.
+
+<!-- obsidian-links:start -->
+## Súvisiace issues
+[[issue-50-app-store-connect-setup|#50 App Store Connect listing + ASC API setup]] · [[issue-54-design-refresh-regressions|#54 Design-refresh sweep regressions]]
+<!-- obsidian-links:end -->

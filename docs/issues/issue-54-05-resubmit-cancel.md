@@ -70,3 +70,8 @@ SK copy + `retryAction: .dismiss`.
 **Tests:** full HangsTests = 363 tests, only the 3 known deferred snapshot failures. 2 ResultView
 `.stableDump` baselines re-recorded (pure model drift from the new `@Published` field).
 **Pencil `Fwafe` frame sync:** still batched with the cross-cutting pass.
+
+<!-- obsidian-links:start -->
+## Súvisiace issues
+[[issue-52-design-refresh-sweep|#52 iOS design-refresh sweep]]
+<!-- obsidian-links:end -->

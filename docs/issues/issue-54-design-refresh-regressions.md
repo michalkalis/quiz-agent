@@ -451,3 +451,8 @@ the #52 diff for uncatalogued regressions; (d) a fresh full iOS test run.
 - [ ] Write/extend a test that fails on the bug and passes after the fix (behavioural, not just structural).
 - [ ] Screenshot-verify per `docs/testing/screenshot-verify-procedure.md` (CLAUDE.md rule #2).
 - [ ] Update this file's sub-task status.
+
+<!-- obsidian-links:start -->
+## Súvisiace issues
+[[issue-52-design-refresh-sweep|#52 iOS design-refresh sweep]]
+<!-- obsidian-links:end -->

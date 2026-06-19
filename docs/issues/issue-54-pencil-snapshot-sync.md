@@ -112,3 +112,8 @@ The batched verifies owed by this plan — artifact:
   (`autoStopCapFiresOnRerecord`; 394/395 passed, all 11 UI tests passed — the predicted
   `testRS*`/micButton failures did NOT occur). `waitUntil` hardened (real 1 ms sleep per spin
   + post-deadline re-check). The API-verify job's uv issue remains (fix on main post-merge).
+
+<!-- obsidian-links:start -->
+## Súvisiace issues
+[[issue-42-question-quality-and-mcq|#42 Question quality sweep + multichoice activation]]
+<!-- obsidian-links:end -->

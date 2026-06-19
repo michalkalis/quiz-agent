@@ -58,3 +58,8 @@ with `issue-54-pencil-snapshot-sync.md`.
   wired to `resubmitAnswer` (same as pre-52.10). Tests: `QuestionViewTextInputTests` green.
 - [ ] Pencil frames updated (f9csl/uGhZg typed input; Settings Jjcs5 reset row) — batch with
   `issue-54-pencil-snapshot-sync.md`. Update parent §54.17/§54.18.
+
+<!-- obsidian-links:start -->
+## Súvisiace issues
+[[issue-52-design-refresh-sweep|#52 iOS design-refresh sweep]]
+<!-- obsidian-links:end -->

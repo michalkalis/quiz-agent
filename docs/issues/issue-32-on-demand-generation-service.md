@@ -434,3 +434,8 @@ Added 2026-05-11 review pass:
 - Existing skill pipeline (today's admin path) — `/generate-questions` → `/verify-questions` → `/score-questions`
 - Prod ChromaDB volume mount — context now in `.claude/rules/backend.md` (Production Deployment Pitfalls); volume itself drops in Phase 6 per C1
 - Dockerfile drift — see `.claude/rules/backend.md` (Production Deployment Pitfalls); keep `pyproject.toml` and Dockerfile in sync
+
+<!-- obsidian-links:start -->
+## Súvisiace issues
+[[issue-22-chroma-client-split|#22 ChromaDBClient]] · [[issue-27-pending-store-question-pipeline|#27 PendingStore]] · [[issue-33-quiz-pack-api-phase-1|#33 quiz-pack-api Phase 1]] · [[issue-35-parallel-backlog-burndown|#35 Parallel backlog burn-down via subagents]] · [[issue-36-quiz-pack-api-phase-2|#36 quiz-pack-api Phase 2]]
+<!-- obsidian-links:end -->

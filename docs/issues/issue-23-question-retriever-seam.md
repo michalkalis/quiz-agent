@@ -113,3 +113,8 @@ these handlers do).
 - Issue 22 (QuestionStore split) — landed in `e6ecd47` 2026-04-30. This
   follow-up extends the seam upward.
 - Memory `project_chroma_update_bug` — orthogonal but in the same area.
+
+<!-- obsidian-links:start -->
+## Súvisiace issues
+[[issue-22-chroma-client-split|#22 ChromaDBClient]]
+<!-- obsidian-links:end -->

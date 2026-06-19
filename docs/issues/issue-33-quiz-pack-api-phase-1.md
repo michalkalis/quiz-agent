@@ -396,3 +396,8 @@ Worker is wired and exercises the SSE/pubsub plumbing. **No real generation yet*
 - Reference Dockerfile + fly.toml shape — `apps/quiz-agent/{Dockerfile,fly.toml}`.
 - Custom Postgres image source — `infra/quiz-pack-db/` (Task 1.1).
 - Constraining memory notes: `project_dockerfile_drift`, `feedback_qgen_import_cwd`, `feedback_company_accounts`, `feedback_secrets_management`, `feedback_backend_auto_deploy`, `project_prod_chroma_mount`.
+
+<!-- obsidian-links:start -->
+## Súvisiace issues
+[[issue-22-chroma-client-split|#22 ChromaDBClient]] · [[issue-27-pending-store-question-pipeline|#27 PendingStore]] · [[issue-32-on-demand-generation-service|#32 On-demand question generation service]] · [[issue-34-claude-context-optimization|#34 Claude Code context/token optimization]] · [[issue-35-parallel-backlog-burndown|#35 Parallel backlog burn-down via subagents]] · [[issue-36-quiz-pack-api-phase-2|#36 quiz-pack-api Phase 2]]
+<!-- obsidian-links:end -->

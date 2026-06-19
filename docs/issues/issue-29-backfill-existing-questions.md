@@ -95,3 +95,8 @@ Acceptance criteria met:
 - Flagged questions are recorded in `backfill-needs-fix.md` with the
   verifier's reasoning; corrections are tracked in `corrections_*.json`.
 - Backfill + correction scripts are idempotent (last-writer-wins).
+
+<!-- obsidian-links:start -->
+## Súvisiace issues
+[[issue-22-chroma-client-split|#22 ChromaDBClient]] · [[issue-28-ios-category-picker-expansion|#28 iOS category picker]] · [[issue-30-batch-generate-categories|#30 Batch-generate questions for new categories]]
+<!-- obsidian-links:end -->

@@ -88,3 +88,8 @@ data-handling hygiene we have not formally audited.
 - [ ] Stage 3 comprehensive review run, findings triaged
 - [ ] Remediation findings decomposed into atomic `- [ ]` tasks (Ralph handoff) per area
 - [ ] Go/no-go summary for App Store submission (UX/UI **and** backend)
+
+<!-- obsidian-links:start -->
+## Súvisiace issues
+[[issue-36-quiz-pack-api-phase-2|#36 quiz-pack-api Phase 2]] · [[issue-42-question-quality-and-mcq|#42 Question quality sweep + multichoice activation]] · [[issue-45-ios-mcq-voice-and-redesign|#45 iOS MCQ voice + design-port redesign]] · [[issue-46-answer-shape-and-logical-branch|#46 Canonical-answer enforcement + branch for open/logical questions]] · [[issue-49-daily-limit-cost-research|#49 Daily free-limit cost research]]
+<!-- obsidian-links:end -->

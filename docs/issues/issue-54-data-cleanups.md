@@ -89,3 +89,8 @@ The landed 54.10 fix (`totalQuestions` fallback → `settings.numberOfQuestions`
   still owed — batched into the Pencil/snapshot pass.**
 - Tests: `QuizViewModelStreakTests`, `MCQOptionPickerRaceTests` (new files), fractional cases in
   `QuizCompleteSummaryTests`, 54.10 counter-fallback case in `ResultViewInspectorTests`.
+
+<!-- obsidian-links:start -->
+## Súvisiace issues
+[[issue-52-design-refresh-sweep|#52 iOS design-refresh sweep]]
+<!-- obsidian-links:end -->

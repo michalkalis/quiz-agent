@@ -134,3 +134,8 @@ No tests to run. Acceptance check: `ls docs/artifacts/daily-limit-cost-model.htm
 
 **Reversibility:** a (research-only — produces a doc; commits-only, no schema/data/prod change).
 **`/ready-check` verdict: READY.** The `## Acceptance` block is falsifiable and the done-state is objectively checkable. Warnings recorded (not blocking): (W1) the Fly.io hosting figures in the artifact came from `fly.toml` defaults, not a live `fly scale show` — verify provenance before any paywall launch; (W2) status line still reads "Proposed" though all tasks are `[x]`; (W3) OpenAI gpt-4o-mini pricing was sourced from memory, not a live reference tool.
+
+<!-- obsidian-links:start -->
+## Súvisiace issues
+[[issue-50-app-store-connect-setup|#50 App Store Connect listing + ASC API setup]]
+<!-- obsidian-links:end -->

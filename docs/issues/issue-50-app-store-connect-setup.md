@@ -69,3 +69,8 @@ public listing + IAP products + the API credentials to automate metadata going f
 - `feedback_company_accounts` — register API key under the company Apple account if applicable
 - `feedback_plain_language_explanations` — walk the founder through the `[HUMAN]` steps in plain language
 - `project_target_users` — SK-first audience, families post-MVP
+
+<!-- obsidian-links:start -->
+## Súvisiace issues
+[[issue-30-batch-generate-categories|#30 Batch-generate questions for new categories]] · [[issue-33-quiz-pack-api-phase-1|#33 quiz-pack-api Phase 1]] · [[issue-36-quiz-pack-api-phase-2|#36 quiz-pack-api Phase 2]] · [[issue-49-daily-limit-cost-research|#49 Daily free-limit cost research]]
+<!-- obsidian-links:end -->

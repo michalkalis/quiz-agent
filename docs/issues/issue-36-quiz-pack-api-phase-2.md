@@ -266,3 +266,8 @@ Ralph should pick the first unchecked `- [ ]` top-to-bottom. The only out-of-ord
 - ChromaDB → Postgres migration script (verify before 2.20) — `apps/quiz-pack-api/scripts/migrate_chroma_to_postgres.py`
 - Ralph driver — `scripts/ralph/ralph.sh`; smoke focus file as a shape reference — `scripts/ralph/test/smoke-focus.md`
 - Constraining memory notes: `feedback_qgen_import_cwd`, `feedback_secrets_management`, `feedback_no_gitflow`, `feedback_commit_autonomy`, `feedback_file_size_limit`, `project_dockerfile_drift`, `project_prod_chroma_mount`
+
+<!-- obsidian-links:start -->
+## Súvisiace issues
+[[issue-32-on-demand-generation-service|#32 On-demand question generation service]] · [[issue-33-quiz-pack-api-phase-1|#33 quiz-pack-api Phase 1]] · [[issue-35-parallel-backlog-burndown|#35 Parallel backlog burn-down via subagents]]
+<!-- obsidian-links:end -->

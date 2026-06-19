@@ -39,7 +39,7 @@ final class AppState: ObservableObject {
         // anonymous bearer minted by AuthService (#60); first launch bootstraps
         // an identity into the Keychain, and a 401 triggers a single-flight
         // refresh transparently.
-        let authService = AuthService(baseURL: Config.apiBaseURL)
+        let authService = AuthService(baseURL: Config.apiBaseURL, attestor: AppAttestor())
         self.networkService = NetworkService(baseURL: Config.apiBaseURL, authService: authService)
         self.audioService = AudioService()
         self.persistenceStore = PersistenceStore()

@@ -63,6 +63,10 @@ actor AuthService: AuthServiceProtocol {
     private let baseURL: URL
     private let session: URLSession
     private let store: TokenStore
+    /// App Attest crypto (issue #60 Part B). nil / unsupported (simulator) → the
+    /// bootstrap mints a plain identity, which the backend accepts only while
+    /// `APP_ATTEST_REQUIRED` is off.
+    private let attestor: DeviceAttestor?
 
     /// In-memory cache of the current pair (mirror of the Keychain).
     private var tokens: AuthTokens?
@@ -71,7 +75,12 @@ actor AuthService: AuthServiceProtocol {
     private var bootstrapTask: Task<AuthTokens?, Never>?
     private var refreshTask: Task<AuthTokens?, Never>?
 
-    init(baseURL: String = Config.apiBaseURL, session: URLSession? = nil, store: TokenStore? = nil) {
+    init(
+        baseURL: String = Config.apiBaseURL,
+        session: URLSession? = nil,
+        store: TokenStore? = nil,
+        attestor: DeviceAttestor? = nil
+    ) {
         guard let url = URL(string: baseURL) else {
             fatalError("AuthService: invalid baseURL '\(baseURL)' — check Config.apiBaseURL")
         }
@@ -87,6 +96,7 @@ actor AuthService: AuthServiceProtocol {
         }
 
         self.store = store ?? KeychainTokenStore()
+        self.attestor = attestor
     }
 
     // MARK: AuthServiceProtocol
@@ -133,6 +143,54 @@ actor AuthService: AuthServiceProtocol {
     }
 
     private func performBootstrap() async -> AuthTokens? {
+        if let attestor, attestor.isSupported {
+            return await performAttestedBootstrap(attestor)
+        }
+        return await mintPlain()
+    }
+
+    /// App Attest path (#60 Part B). Re-bootstrap with the existing key first;
+    /// if the backend rejects that assertion (revoked or never-bound key), forget
+    /// it and re-attest a fresh one. If App Attest can't produce a credential at
+    /// all, degrade to a plain mint — which the backend accepts only while
+    /// `APP_ATTEST_REQUIRED` is off, so prod never gets an unattested identity.
+    private func performAttestedBootstrap(_ attestor: DeviceAttestor) async -> AuthTokens? {
+        if attestor.storedKeyID() != nil {
+            if let tokens = await mintAttested(attestor, mode: .assertion) {
+                return tokens
+            }
+            attestor.forgetKey()
+        }
+        if let tokens = await mintAttested(attestor, mode: .attestation) {
+            return tokens
+        }
+        return await mintPlain()
+    }
+
+    /// Fetch a fresh challenge, sign it, and POST the credential to anon-bootstrap.
+    /// On a successful *attestation* mint we persist the keyId only now — so a
+    /// stored keyId always has a matching backend-bound key.
+    private func mintAttested(
+        _ attestor: DeviceAttestor, mode: AttestCredential.Mode
+    ) async -> AuthTokens? {
+        guard let challenge = await fetchChallenge(),
+              let cred = await attestor.credential(for: mode, challenge: challenge),
+              let body = try? JSONSerialization.data(withJSONObject: cred.bootstrapBody),
+              let new = await postTokens(path: "/api/v1/auth/anon-bootstrap", body: body)
+        else {
+            return nil
+        }
+        if mode == .attestation {
+            attestor.confirmKey(cred.keyID)
+        }
+        tokens = new
+        store.save(new)
+        Logger.network.info("🔐 Anon bootstrap (App Attest \(String(describing: mode), privacy: .public)) succeeded")
+        return new
+    }
+
+    /// Plain (unattested) mint — Part A behaviour and the App Attest fallback.
+    private func mintPlain() async -> AuthTokens? {
         guard let new = await postTokens(path: "/api/v1/auth/anon-bootstrap", body: nil) else {
             return nil
         }
@@ -140,6 +198,32 @@ actor AuthService: AuthServiceProtocol {
         store.save(new)
         Logger.network.info("🔐 Anon bootstrap succeeded")
         return new
+    }
+
+    /// Ask the backend for a one-time App Attest challenge. Returns nil on any
+    /// failure so the caller degrades.
+    private func fetchChallenge() async -> String? {
+        var request = URLRequest(url: baseURL.appendingPathComponent("/api/v1/auth/attest-challenge"))
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = Data("{}".utf8)
+        request.timeoutInterval = 15
+        do {
+            let (data, response) = try await session.data(for: request)
+            guard let http = response as? HTTPURLResponse,
+                  (200...299).contains(http.statusCode) else {
+                return nil
+            }
+            return try JSONDecoder().decode(ChallengeResponse.self, from: data).challenge
+        } catch {
+            Logger.network.warning("🔐 attest-challenge error: \(error.localizedDescription, privacy: .public)")
+            return nil
+        }
+    }
+
+    /// Wire shape of the backend `AttestChallengeResponse` (we only need the value).
+    private struct ChallengeResponse: Decodable {
+        let challenge: String
     }
 
     private func performRefreshOrBootstrap() async -> AuthTokens? {

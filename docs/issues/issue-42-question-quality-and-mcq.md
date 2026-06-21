@@ -386,7 +386,7 @@ cannot beat the template default — structured output makes the contract a pars
 
 ### Track F-R tasks (atomic, Ralph-ordered — supersede the parked 42.20 generation loop)
 
-- [ ] **42.25 Structured output for MCQ sub-batches (pivot of lever a).** In `_generate_mcq_sub_batches`
+- [x] **42.25 Structured output for MCQ sub-batches (pivot of lever a).** In `_generate_mcq_sub_batches`
       (`advanced_generator.py:297-358`), replace the plain `ainvoke` + `_parse_response` per sub-batch with
       `self.generation_llm.with_structured_output(MCQBatchOutput)`, where `MCQBatchOutput` is a minimal Pydantic
       model: `type: Literal["text_multichoice"]`, `possible_answers: dict[str,str]` (4 entries; 2 for `true_false`),
@@ -394,6 +394,15 @@ cannot beat the template default — structured output makes the contract a pars
       **Acceptance**: unit test — a stubbed MCQ sub-batch returns questions with `type="text_multichoice"` +
       populated `possible_answers`; existing classic-path tests still green. (LLM_GATEWAY note: scope structured
       output to gpt-4o; OpenRouter passes function-calling through for gpt-4o.)
+      **Done 2026-06-21:** Plan framing corrected — `_generate_mcq_sub_batches` never called `ainvoke`/`_parse_response`
+      directly; it delegated to `_generate_batch` via the `_one()` closure. So instead: added `MCQBatchOutput` +
+      `MCQQuestionItem` Pydantic models, extracted two behavior-preserving helpers from `_generate_batch`
+      (`_build_batch_prompt`, `_finalize_questions`) so the new path reuses prompt-build + provenance/dedup without
+      duplicating ~80 lines, and added `_generate_mcq_batch_structured` (binds `MCQBatchOutput` with
+      `method="function_calling"` — gateway-safe vs the `json_schema` default under `LLM_GATEWAY=openrouter`).
+      `_one()` now calls it; classic best-of-N + `_parse_response` untouched. New test
+      `test_mcq_sub_batch_uses_structured_output` + updated fan-out test (stub target moved to the new helper). 163
+      generation + generation-stage tests green; no live LLM. Verified by 7-agent map+verify workflow first.
 
 - [ ] **42.26 `PgvectorQuestionStore.find_duplicates` (port of lever c).** Add the method to the shared store by
       porting `ChromaDBQuestionStore.find_duplicates` (`question_store.py:205-239`): embed query text, `cosine_distance`

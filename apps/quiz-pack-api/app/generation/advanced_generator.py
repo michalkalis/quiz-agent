@@ -10,8 +10,9 @@ This implements:
 import asyncio
 import json
 import uuid
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Literal
 from langchain_core.messages import HumanMessage
+from pydantic import BaseModel, Field
 
 from quiz_shared.llm import factory as llm_factory
 
@@ -25,6 +26,43 @@ try:
     from ..sourcing.models import Fact
 except ImportError:
     Fact = None  # sourcing package not installed
+
+
+class MCQQuestionItem(BaseModel):
+    """One structured multiple-choice question (#42 task 42.25).
+
+    Mirrors the subset of ``Question`` fields the generation LLM must fill
+    for an MCQ. ``type`` is a fixed ``Literal`` so the model cannot fall
+    back to free-form ``text`` — the v3 template's ``possible_answers:
+    null`` example was the root cause of the collapsed MCQ yield (2/13).
+    Binding this via ``with_structured_output`` turns the contract into a
+    parse-time guarantee that prompt instructions alone could not enforce.
+    """
+
+    question: str = Field(..., description="The question text")
+    possible_answers: Dict[str, str] = Field(
+        ...,
+        description="Answer options keyed by letter, e.g. {'a': 'True', 'b': 'False'}",
+    )
+    correct_answer: str = Field(
+        ..., description="Key letter of the correct option, e.g. 'a'"
+    )
+    type: Literal["text_multichoice"] = "text_multichoice"
+    explanation: Optional[str] = Field(
+        None, description="Short factual context for the answer"
+    )
+    category: Optional[str] = None
+    difficulty: Optional[str] = None
+    pattern_used: Optional[str] = Field(
+        None,
+        description="snake_case reasoning-pattern key, e.g. 'true_false' or 'odd_one_out'",
+    )
+
+
+class MCQBatchOutput(BaseModel):
+    """Structured-output container for one MCQ sub-batch (#42 task 42.25)."""
+
+    questions: List[MCQQuestionItem] = Field(default_factory=list)
 
 
 class AdvancedQuestionGenerator:
@@ -336,7 +374,11 @@ class AdvancedQuestionGenerator:
         async def _one(pattern: str, n: int) -> List[Question]:
             if n <= 0:
                 return []
-            return await self._generate_batch(
+            # #42 task 42.25 — each sub-batch now goes through structured
+            # output so the LLM cannot silently emit free-form ``text`` for
+            # an MCQ-pinned pattern (the 2/13-yield failure). The classic
+            # ``_generate_batch`` path stays for non-MCQ generation.
+            return await self._generate_mcq_batch_structured(
                 count=n,
                 difficulty=difficulty,
                 topics=topics,
@@ -347,7 +389,6 @@ class AdvancedQuestionGenerator:
                 user_bad_examples=user_bad_examples,
                 source_facts=source_facts,
                 mcq_patterns={pattern},
-                mcq_emphasis=True,
             )
 
         batches = await asyncio.gather(
@@ -382,6 +423,63 @@ class AdvancedQuestionGenerator:
                 LLM is told to set ``reasoning.pattern_used`` to one of the
                 snake_case keys and emit ``possible_answers`` + key-letter
                 ``correct_answer`` when it picks one.
+        """
+        prompt, prompt_version, use_open, use_fact_first = self._build_batch_prompt(
+            count=count,
+            difficulty=difficulty,
+            topics=topics,
+            categories=categories,
+            question_type=question_type,
+            excluded_topics=excluded_topics,
+            avoid_questions=avoid_questions,
+            user_bad_examples=user_bad_examples,
+            source_facts=source_facts,
+            mcq_patterns=mcq_patterns,
+            mcq_emphasis=mcq_emphasis,
+            open_shape=open_shape,
+        )
+
+        # Call LLM
+        response = await self.generation_llm.ainvoke([
+            HumanMessage(content=prompt)
+        ])
+
+        # Parse response
+        questions = self._parse_response(
+            response.content,
+            default_difficulty=difficulty,
+            default_category=categories[0] if categories else "general"
+        )
+
+        return self._finalize_questions(
+            questions,
+            prompt_version=prompt_version,
+            use_open=use_open,
+            use_fact_first=use_fact_first,
+        )
+
+    def _build_batch_prompt(
+        self,
+        *,
+        count: int,
+        difficulty: str,
+        topics: Optional[List[str]],
+        categories: Optional[List[str]],
+        question_type: str,
+        excluded_topics: Optional[List[str]],
+        avoid_questions: Optional[List[str]],
+        user_bad_examples: Optional[List[str]],
+        source_facts: Optional[list] = None,
+        mcq_patterns: Optional[set[str]] = None,
+        mcq_emphasis: bool = False,
+        open_shape: bool = False,
+    ):
+        """Select the prompt template and render the generation prompt.
+
+        Extracted from ``_generate_batch`` (#42 task 42.25) so the
+        structured-output MCQ path reuses the identical template-selection
+        and section-rendering rules instead of duplicating them. Returns
+        ``(prompt, prompt_version, use_open, use_fact_first)``.
         """
         # Determine which prompt builder and version to use. The open/logical
         # branch (46.B4b) takes precedence and never uses source_facts — open
@@ -426,19 +524,23 @@ class AdvancedQuestionGenerator:
             user_bad_examples=user_bad_examples,
             **extra_kwargs,
         )
+        return prompt, prompt_version, use_open, use_fact_first
 
-        # Call LLM
-        response = await self.generation_llm.ainvoke([
-            HumanMessage(content=prompt)
-        ])
+    def _finalize_questions(
+        self,
+        questions: List[Question],
+        *,
+        prompt_version: str,
+        use_open: bool,
+        use_fact_first: bool,
+    ) -> List[Question]:
+        """Attach provenance metadata, then dedup vs gold standard + check diversity.
 
-        # Parse response
-        questions = self._parse_response(
-            response.content,
-            default_difficulty=difficulty,
-            default_category=categories[0] if categories else "general"
-        )
-
+        Extracted from ``_generate_batch`` (#42 task 42.25) so the
+        structured-output MCQ path tags provenance (pattern lift,
+        ``pipeline`` classification) and post-filters identically to the
+        classic free-text path.
+        """
         # Add generation metadata
         for q in questions:
             # Issue #42 task 42.9b — preserve LLM-emitted `pattern_used` so
@@ -482,6 +584,95 @@ class AdvancedQuestionGenerator:
         self._check_batch_diversity(questions)
 
         return questions
+
+    async def _generate_mcq_batch_structured(
+        self,
+        *,
+        count: int,
+        difficulty: str,
+        topics: Optional[List[str]],
+        categories: Optional[List[str]],
+        question_type: str,
+        excluded_topics: Optional[List[str]],
+        avoid_questions: Optional[List[str]],
+        user_bad_examples: Optional[List[str]],
+        source_facts: Optional[list],
+        mcq_patterns: set[str],
+    ) -> List[Question]:
+        """Generate one MCQ sub-batch via structured output (#42 task 42.25).
+
+        Replaces the free-text ``ainvoke`` + ``_parse_response`` round-trip
+        (still used by the classic best-of-N path) with
+        ``with_structured_output(MCQBatchOutput)`` so every returned
+        question is a parse-time-guaranteed ``text_multichoice`` with
+        populated ``possible_answers`` + key-letter ``correct_answer``.
+        Prompt instructions alone could not beat the v3 template's
+        ``possible_answers: null`` example — the root cause of the 2/13
+        live MCQ yield; the schema makes the contract a parse-time
+        guarantee.
+
+        ``method="function_calling"`` (not langchain's default
+        ``json_schema``) keeps the path gateway-agnostic: under
+        ``LLM_GATEWAY=openrouter`` the model id becomes ``openai/gpt-4o``
+        and function-calling is proxied reliably, whereas ``json_schema``
+        proxying through OpenRouter is not guaranteed.
+        """
+        prompt, prompt_version, use_open, use_fact_first = self._build_batch_prompt(
+            count=count,
+            difficulty=difficulty,
+            topics=topics,
+            categories=categories,
+            question_type=question_type,
+            excluded_topics=excluded_topics,
+            avoid_questions=avoid_questions,
+            user_bad_examples=user_bad_examples,
+            source_facts=source_facts,
+            mcq_patterns=mcq_patterns,
+            mcq_emphasis=True,
+        )
+
+        structured_llm = self.generation_llm.with_structured_output(
+            MCQBatchOutput, method="function_calling"
+        )
+        result = await structured_llm.ainvoke([HumanMessage(content=prompt)])
+
+        default_category = categories[0] if categories else "general"
+        pinned_pattern = sorted(mcq_patterns)[0] if mcq_patterns else None
+
+        questions: List[Question] = []
+        for item in result.questions if result else []:
+            try:
+                questions.append(
+                    Question.from_dict(
+                        {
+                            "question": item.question,
+                            "type": "text_multichoice",
+                            "possible_answers": item.possible_answers,
+                            "correct_answer": item.correct_answer,
+                            "explanation": item.explanation,
+                            "category": item.category or default_category,
+                            "difficulty": item.difficulty or difficulty,
+                            "reasoning": {
+                                "pattern_used": item.pattern_used or pinned_pattern
+                            },
+                        },
+                        default_difficulty=difficulty,
+                        default_category=default_category,
+                    )
+                )
+            except Exception as e:
+                print(f"Error building structured MCQ question: {e}")
+
+        print(
+            f"MCQ structured sub-batch ({pinned_pattern}) produced "
+            f"{len(questions)} questions"
+        )
+        return self._finalize_questions(
+            questions,
+            prompt_version=prompt_version,
+            use_open=use_open,
+            use_fact_first=use_fact_first,
+        )
 
     @staticmethod
     def _strip_markdown_fences(content: str) -> str:

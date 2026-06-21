@@ -405,10 +405,11 @@ async def test_mcq_emphasis_fans_out_one_sub_batch_per_pattern() -> None:
     let the model satisfy the quota with whichever single MCQ pattern was
     easiest (or none). Instead `generate_questions` must split `count` into
     one small sub-batch per pattern in `mcq_patterns`, each pinned to that
-    single pattern with `mcq_emphasis=True`. This is what forces per-pattern
-    MCQ coverage and keeps per-call counts small enough that the LLM fills
-    them. We stub `_generate_batch` so the assertion is purely about the
-    fan-out shape, not live generation.
+    single pattern. This is what forces per-pattern MCQ coverage and keeps
+    per-call counts small enough that the LLM fills them. We stub
+    `_generate_mcq_batch_structured` (the per-sub-batch helper since #42
+    task 42.25) so the assertion is purely about the fan-out shape, not
+    live generation.
     """
     from app.generation.pattern_routing import PATTERNS_TO_MCQ
 
@@ -420,7 +421,7 @@ async def test_mcq_emphasis_fans_out_one_sub_batch_per_pattern() -> None:
         return ["q"] * count
 
     gen = _make_generator_with_fake_llm(AsyncMock())
-    gen._generate_batch = AsyncMock(side_effect=_fake_batch)
+    gen._generate_mcq_batch_structured = AsyncMock(side_effect=_fake_batch)
 
     questions = await gen.generate_questions(
         count=12,
@@ -431,16 +432,15 @@ async def test_mcq_emphasis_fans_out_one_sub_batch_per_pattern() -> None:
         open_count=0,
     )
 
-    calls = gen._generate_batch.await_args_list
+    calls = gen._generate_mcq_batch_structured.await_args_list
     # One call per MCQ pattern — no single large best-of-N blow-up.
     assert len(calls) == len(patterns)
     seen_patterns = set()
     total = 0
     for call in calls:
         kwargs = call.kwargs
-        # Each sub-batch is pinned to exactly one pattern, in emphasis mode.
+        # Each sub-batch is pinned to exactly one pattern.
         assert len(kwargs["mcq_patterns"]) == 1
-        assert kwargs["mcq_emphasis"] is True
         # Per-call counts stay small — never the count*n_multiplier (~57) blow-up.
         assert kwargs["count"] <= 5
         seen_patterns |= kwargs["mcq_patterns"]
@@ -449,3 +449,85 @@ async def test_mcq_emphasis_fans_out_one_sub_batch_per_pattern() -> None:
     assert seen_patterns == patterns
     assert total == 12
     assert len(questions) == 12
+
+
+@pytest.mark.asyncio
+async def test_mcq_sub_batch_uses_structured_output() -> None:
+    """Issue #42 task 42.25 — the contract test for the un-park gate.
+
+    The live MCQ yield collapsed to 2/13 because the v3 prompt's Response
+    Format example shows `possible_answers: null`; the model copied the
+    template default and emitted free-form `text`, which 42.9a then dropped
+    (`dropped_mcq_missing_options: 0` — it never even attempted MCQ).
+    Prompt instructions cannot beat a template default — so each MCQ
+    sub-batch now binds `MCQBatchOutput` via
+    `generation_llm.with_structured_output(...)`, making
+    `type="text_multichoice"` + populated `possible_answers` a parse-time
+    guarantee. This test pins that guarantee: a stubbed structured call
+    must yield only `text_multichoice` questions with options. If someone
+    reverts the sub-batch to the free-text `_generate_batch` path, the
+    options vanish and this breaks loudly.
+    """
+    from app.generation.advanced_generator import MCQBatchOutput, MCQQuestionItem
+
+    batch_out = MCQBatchOutput(
+        questions=[
+            MCQQuestionItem(
+                question="True or false: the Great Wall is visible from space.",
+                possible_answers={"a": "True", "b": "False"},
+                correct_answer="b",
+                pattern_used="true_false",
+                explanation="It is not visible to the naked eye from orbit.",
+            ),
+            MCQQuestionItem(
+                question="Which is the odd one out?",
+                possible_answers={
+                    "a": "Mercury",
+                    "b": "Venus",
+                    "c": "Mars",
+                    "d": "Pluto",
+                },
+                correct_answer="d",
+                pattern_used="true_false",
+                explanation="Pluto is a dwarf planet.",
+            ),
+        ]
+    )
+
+    structured_chain = SimpleNamespace(ainvoke=AsyncMock(return_value=batch_out))
+    captured = {}
+
+    def _with_structured_output(schema, **kwargs):
+        captured["schema"] = schema
+        captured["method"] = kwargs.get("method")
+        return structured_chain
+
+    gen = _make_generator_with_fake_llm(AsyncMock())
+    gen.generation_llm = SimpleNamespace(
+        with_structured_output=_with_structured_output,
+        temperature=0.8,
+    )
+
+    questions = await gen._generate_mcq_batch_structured(
+        count=2,
+        difficulty="medium",
+        topics=["science"],
+        categories=["general"],
+        question_type="text",
+        excluded_topics=None,
+        avoid_questions=None,
+        user_bad_examples=None,
+        source_facts=None,
+        mcq_patterns={"true_false"},
+    )
+
+    assert len(questions) == 2
+    # The whole point of 42.25 — every question is a real MCQ, not free text.
+    assert all(q.type == "text_multichoice" for q in questions)
+    assert all(q.possible_answers for q in questions)
+    assert questions[0].correct_answer == "b"
+    # The pattern is lifted into typed provenance for downstream routing/analytics.
+    assert questions[0].generation_metadata.reasoning_pattern == "true_false"
+    # Gateway-safe binding: function_calling, not the json_schema default.
+    assert captured["schema"] is MCQBatchOutput
+    assert captured["method"] == "function_calling"

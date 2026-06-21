@@ -301,18 +301,12 @@ class AdvancedQuestionGenerator:
 
             selected_questions = [q for q, score in questions_with_scores[:count]]
 
-            # Stage 4: Optionally regenerate if top questions below threshold
-            low_quality_count = sum(
-                1 for q, score in questions_with_scores[:count]
-                if score < min_quality_score
-            )
-
-            if low_quality_count > 0:
-                print(f"Stage 4: {low_quality_count} questions below {min_quality_score}, regenerating...")
-                # TODO: Implement regeneration with critique feedback
-                # For now, just warn
-                print(f"Warning: {low_quality_count}/{count} questions scored below {min_quality_score}")
-
+            # #42 task 42.29 — the dead Stage 4 "regenerate low-quality" stub
+            # (it warned but never acted — false confidence) was removed. The
+            # real ship gate is now ScoringStage's fail-loud minimum-score drop.
+            # `min_quality_score` stays on the signature: it is still accepted
+            # via the order API (app/api/routes.py → generate_questions); it is
+            # simply no longer consumed in this best-of-N selection path.
             return open_questions + selected_questions
 
         else:

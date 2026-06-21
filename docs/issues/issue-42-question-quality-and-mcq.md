@@ -424,11 +424,21 @@ cannot beat the template default — structured output makes the contract a pars
       **Acceptance**: test asserts (a) distinct fact slices per sub-batch, (b) prompt-derived tokens reach
       `FactSourcer.gather_facts`.
 
-- [ ] **42.29 Make one scorer the blocking gate (fail-loud, Rule #2).** Designate `MultiModelScorer` as the ship gate
+- [x] **42.29 Make one scorer the blocking gate (fail-loud, Rule #2).** Designate `MultiModelScorer` as the ship gate
       (post-verification, domain dims). Implement a minimum-score drop in `ScoringStage` (at least for MCQ via
       `distractor_quality`). Implement OR delete the dead Stage 4 TODO stub (`advanced_generator.py:272-276`) — a gate
       that warns but never drops is false confidence.
       **Acceptance**: test feeds a below-threshold question, asserts it is dropped + count surfaced in `StageResult.info`.
+      **Done 2026-06-21:** `ScoringStage` now drops (was advisory-only): mean `overall_score < MIN_OVERALL_SCORE` (3.0)
+      or, for MCQ, `distractor_quality < MIN_DISTRACTOR_QUALITY` (4) — module-level constants, not magic numbers. Closed
+      the blueprint-flagged gap: the stage now reads the per-model `scores` sub-dict (where `distractor_quality` lives,
+      task 42.6), not just `overall_score`. Unscored questions are KEPT (drop on a bad judgment, never on the absence of
+      one). Drop count surfaces in `StageResult.info["dropped_low_score"]` (mirrors `DedupStage`). Deleted the dead
+      Stage-4 "regenerate low-quality" stub in `advanced_generator.py` (warned but never acted = false confidence);
+      kept `min_quality_score` param — still accepted via the order API (`routes.py`/`schemas.py`). Tests: rewrote the
+      stale "never drops" test to the new intent + 2 drop tests (overall floor, MCQ distractor) + extended
+      `_FakeMultiModelScorer` with a `dims` map. 212 orchestrator/scoring/generation tests green (4 `test_persist.py`
+      errors are the known pre-existing Postgres-fixture issue); ruff clean; no live LLM.
 
 - [ ] **42.30 Re-run audit + RS regression (the machine-verifiable done-state).** After 42.25-42.29: one
       `--mcq-bias` dry-run on any topic yields **≥ 8/10 `text_multichoice` survivors** with valid `possible_answers`

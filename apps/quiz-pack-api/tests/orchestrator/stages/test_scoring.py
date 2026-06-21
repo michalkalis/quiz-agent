@@ -58,10 +58,21 @@ class _FakeMultiModelScorer:
 
     Caller passes a {question_id: {model_name: overall_score}} map.
     Questions without a mapped entry get an empty `model_scores` list.
+
+    `dims` (optional, #42 task 42.29) maps {question_id: {dim: value}} extra
+    score dimensions (e.g. `distractor_quality`) merged into every model's
+    `scores` sub-dict — mirroring how `MultiModelScorer` attaches the
+    deterministic dims from task 42.6 — so drop-gate tests can exercise the
+    MCQ branch.
     """
 
-    def __init__(self, scores: dict[str, dict[str, float]]) -> None:
+    def __init__(
+        self,
+        scores: dict[str, dict[str, float]],
+        dims: dict[str, dict[str, float]] | None = None,
+    ) -> None:
         self._scores = scores
+        self._dims = dims or {}
         self.calls: list[list[dict[str, Any]]] = []
 
     async def score_batch(
@@ -72,13 +83,14 @@ class _FakeMultiModelScorer:
         for q in questions:
             qid = q["id"]
             per_model = self._scores.get(qid, {})
+            extra_dims = self._dims.get(qid, {})
             out.append(
                 {
                     "id": qid,
                     "model_scores": [
                         {
                             "model_name": name,
-                            "scores": {"conversation_spark": 8},
+                            "scores": {"conversation_spark": 8, **extra_dims},
                             "overall_score": overall,
                         }
                         for name, overall in per_model.items()
@@ -132,18 +144,64 @@ async def test_scores_keyed_by_question_id() -> None:
 
 
 @pytest.mark.asyncio
-async def test_does_not_drop_questions() -> None:
-    """Drop policy is a Phase 3 concern — ScoringStage must not mutate
-    `ctx.questions` even when a question receives no scores."""
+async def test_keeps_passing_and_unscored_questions() -> None:
+    """#42 task 42.29 — the gate drops only on a *bad* judgment, never on the
+    *absence* of one. A well-scored question (q_0) and a question the scorer
+    could not score at all (q_1, empty model_scores) must both survive: we do
+    not throw away questions just because the scorer was silent on them."""
     scores = {"q_0": {"gpt-4.1-mini": 9.0}}  # q_1 deliberately unscored
     scorer = _FakeMultiModelScorer(scores)
     stage = ScoringStage(scorer)  # type: ignore[arg-type]
     ctx = _make_ctx([_stub_question(0), _stub_question(1)])
     before_ids = [q.id for q in ctx.questions]
 
-    await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
 
     assert [q.id for q in ctx.questions] == before_ids
+    assert result.info["dropped_low_score"] == 0
+
+
+@pytest.mark.asyncio
+async def test_drops_question_below_overall_floor() -> None:
+    """#42 task 42.29 — fail loud. A question whose mean overall score is below
+    MIN_OVERALL_SCORE (3.0) is a catastrophically bad question and must be
+    dropped from `ctx.questions`, with the drop surfaced in StageResult.info.
+    Before 42.29 the scorers only warned — false confidence that shipped junk."""
+    scores = {
+        "q_0": {"gpt-4.1-mini": 8.0},  # good — kept
+        "q_1": {"gpt-4.1-mini": 2.0, "claude-sonnet-4.6": 2.5},  # mean 2.25 — dropped
+    }
+    scorer = _FakeMultiModelScorer(scores)
+    stage = ScoringStage(scorer)  # type: ignore[arg-type]
+    ctx = _make_ctx([_stub_question(0), _stub_question(1)])
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert [q.id for q in ctx.questions] == ["q_0"]
+    assert result.info["dropped_low_score"] == 1
+    # Dropped question's scores are retained for audit ("why did it fail?").
+    assert "q_1" in ctx.scores
+
+
+@pytest.mark.asyncio
+async def test_drops_mcq_with_low_distractor_quality() -> None:
+    """#42 task 42.29 — the MCQ-specific gate. An MCQ with a strong overall
+    score but broken distractors (duplicate / substring-leak / length-skew →
+    distractor_quality below MIN_DISTRACTOR_QUALITY, 4) must still be dropped.
+    This is the dim that catches give-away options no overall score reflects."""
+    scores = {
+        "q_0": {"gpt-4.1-mini": 8.5},  # great overall...
+        "q_1": {"gpt-4.1-mini": 8.0},  # ...also great overall, but bad distractors
+    }
+    dims = {"q_1": {"distractor_quality": 2}}  # below the floor of 4
+    scorer = _FakeMultiModelScorer(scores, dims=dims)
+    stage = ScoringStage(scorer)  # type: ignore[arg-type]
+    ctx = _make_ctx([_stub_question(0), _stub_question(1)])
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert [q.id for q in ctx.questions] == ["q_0"]
+    assert result.info["dropped_low_score"] == 1
 
 
 @pytest.mark.asyncio
@@ -171,6 +229,6 @@ async def test_no_questions_returns_zero_count() -> None:
 
     result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
 
-    assert result.info == {"scored": 0}
+    assert result.info == {"scored": 0, "dropped_low_score": 0}
     assert ctx.scores == {}
     assert scorer.calls == []

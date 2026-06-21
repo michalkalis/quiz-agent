@@ -8,7 +8,12 @@ import httpx
 from .models import Fact
 
 
-# Map opentdb category IDs to topic names
+# Map opentdb category IDs to topic names. `_map_topics_to_categories` matches
+# these values verbatim (lowercased) against order topics — do NOT rename the
+# existing entries below or topic matching silently breaks. #42 task 42.28
+# widened the map from 10 → 24 against the real opentdb category list so
+# prompt-derived topics like "film", "mythology" or "politics" resolve to a
+# real category instead of falling back to General.
 CATEGORY_MAP = {
     9: "General",
     17: "Science",
@@ -20,6 +25,21 @@ CATEGORY_MAP = {
     12: "Music",
     21: "Sports",
     15: "Entertainment",
+    # #42 task 42.28 — added opentdb categories (accurate IDs, topic-friendly names).
+    10: "Books",
+    11: "Film",
+    13: "Theatre",
+    14: "Television",
+    16: "Board Games",
+    19: "Mathematics",
+    20: "Mythology",
+    24: "Politics",
+    26: "Celebrities",
+    28: "Vehicles",
+    29: "Comics",
+    30: "Gadgets",
+    31: "Anime",
+    32: "Cartoons",
 }
 
 

@@ -416,13 +416,27 @@ cannot beat the template default — structured output makes the contract a pars
       **Acceptance**: a `--dry-run --dedup-store pgvector` test drops a seeded duplicate; default CLI behaviour
       (no flag) unchanged (`_NoopQuestionStore`).
 
-- [ ] **42.28 Fact partition + sourcing topic fix (lever b).** (1) In `_generate_mcq_sub_batches`, slice `ctx.facts`
+- [x] **42.28 Fact partition + sourcing topic fix (lever b).** (1) In `_generate_mcq_sub_batches`, slice `ctx.facts`
       into N equal chunks (one per pattern key) so sub-batches stop generating the same question. (2) In
       `SourcingStage`, derive 2-3 topic tokens from `ctx.prompt` (stopword-filtered, **no LLM**) and pass to
       `FactSourcer` alongside `category`/`theme`; skip Wikipedia DYK/featured when topics are present; widen OpenTDB
       `CATEGORY_MAP` to ≥ 20 entries.
       **Acceptance**: test asserts (a) distinct fact slices per sub-batch, (b) prompt-derived tokens reach
       `FactSourcer.gather_facts`.
+      **Done 2026-06-21:** (1) `_partition_facts(facts, n)` slices `source_facts` into N disjoint contiguous chunks
+      (one per sorted pattern), threaded through the `_one(pattern, n, facts)` closure so each sub-batch mines
+      different material (was: identical list → near-duplicate questions); spare slots get `None` (fact-free fallback)
+      when facts < patterns. (2) `SourcingStage._derive_topics` appends ≤3 lowercased tokens mined from `ctx.prompt`
+      (regex `[a-z0-9]+`, ~40-word stopword set incl. trivia filler "facts"/"fun"/"top", no LLM), case-insensitively
+      de-duped against `category`/`theme` so "History"+prompt-"history" don't double-search. Wikipedia `get_facts`
+      skips the topic-agnostic DYK/featured feeds when topics are present (topic search only; broad feeds still run
+      for un-themed orders). OpenTDB `CATEGORY_MAP` widened 10→24 against the real opentdb category list (existing
+      names NOT renamed — `_map_topics_to_categories` matches verbatim). Tests: partition distinctness + None/short
+      fallback; prompt-tokens-reach-`gather_facts` (with/without metadata, all-stopword→None, case-insensitive dedup);
+      OpenTDB ≥20 + unique names; Wikipedia skip-vs-broad. Fixed the drifted `_FakeFactSourcer` double (dropped phantom
+      `include_news`). 225 unit/stage + 12 integration-e2e green; no live LLM; ruff-clean. 3-lens adversarial review run,
+      fixes folded in. **Flag (out of scope):** widening the map makes OpenTDB's no-topics "diverse mix" issue 24
+      sequential calls vs 10 — free (no API cost) and now rare since prompt tokens almost always populate topics.
 
 - [x] **42.29 Make one scorer the blocking gate (fail-loud, Rule #2).** Designate `MultiModelScorer` as the ship gate
       (post-verification, domain dims). Implement a minimum-score drop in `ScoringStage` (at least for MCQ via

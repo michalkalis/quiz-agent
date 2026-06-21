@@ -19,25 +19,33 @@ class WikipediaSource:
         self.languages = languages or ["en"]
 
     async def get_facts(self, count: int = 20, topics: Optional[list[str]] = None) -> list[Fact]:
-        """Gather facts from multiple Wikipedia sources."""
+        """Gather facts from multiple Wikipedia sources.
+
+        #42 task 42.28: when `topics` are supplied, only the topic search runs.
+        The "Did you know..." and featured/most-read feeds are topic-agnostic —
+        they return whatever is on the main page today — and were the main
+        cause of off-prompt drift (a "Slovak rivers" order picking up the daily
+        featured article). With no topics the broad feeds still run, preserving
+        the back-compat behaviour for un-themed orders.
+        """
         facts: list[Fact] = []
 
         async with httpx.AsyncClient(timeout=15.0) as client:
-            # "Did you know..." facts from main page
-            for lang in self.languages:
-                dyk_facts = await self._get_did_you_know(client, lang)
-                facts.extend(dyk_facts)
-
-            # Featured article extracts
-            for lang in self.languages:
-                featured = await self._get_featured_article_facts(client, lang)
-                facts.extend(featured)
-
-            # Random articles from interesting categories
             if topics:
+                # Topic-scoped search only — skip the topic-agnostic feeds.
                 for topic in topics[:5]:
                     topic_facts = await self._search_topic_facts(client, topic)
                     facts.extend(topic_facts)
+            else:
+                # "Did you know..." facts from main page
+                for lang in self.languages:
+                    dyk_facts = await self._get_did_you_know(client, lang)
+                    facts.extend(dyk_facts)
+
+                # Featured article extracts
+                for lang in self.languages:
+                    featured = await self._get_featured_article_facts(client, lang)
+                    facts.extend(featured)
 
         return facts[:count]
 

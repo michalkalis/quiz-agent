@@ -6,9 +6,10 @@ Each scenario captures why the contract matters:
   task 2.8) needs headroom — if we asked FactSourcer for exactly N facts,
   a near-duplicate drop rate of even 10% would leave a short pack. The 2×
   target_count multiplier is what gives dedup that headroom.
-- `test_passes_category_and_theme_as_topics`: order metadata must flow
-  through to the underlying source so wiki/web queries are actually
-  relevant. A passing test that ignores topics would mask a regression.
+- `test_passes_category_theme_and_prompt_tokens_as_topics`: order metadata
+  AND salient prompt tokens must flow through to the underlying source so
+  wiki/web queries are actually relevant (#42 task 42.28). A passing test
+  that ignores those topics would mask a regression.
 - `test_tavily_call_counts_cost`: per-tier cost cap (Phase 3, #37) and the
   Phase 2 sanity ceiling (`total_cost_cents < 100`) both depend on this
   cost increment landing in `StageResult.cost_cents`.
@@ -63,7 +64,9 @@ class _RecordingSink:
 
 
 class _FakeFactSourcer:
-    """FactSourcer double that returns a canned FactBatch."""
+    """FactSourcer double matching the real `gather_facts(count, topics)`
+    signature. The prior double carried a drifted `include_news` param the
+    real sourcer never had — corrected as part of #42 task 42.28."""
 
     def __init__(self, batch: FactBatch) -> None:
         self.batch = batch
@@ -73,11 +76,8 @@ class _FakeFactSourcer:
         self,
         count: int = 30,
         topics: list[str] | None = None,
-        include_news: bool = True,
     ) -> FactBatch:
-        self.calls.append(
-            {"count": count, "topics": topics, "include_news": include_news}
-        )
+        self.calls.append({"count": count, "topics": topics})
         return self.batch
 
 
@@ -114,21 +114,80 @@ async def test_populates_ctx_facts_with_2x_target() -> None:
 
 
 @pytest.mark.asyncio
-async def test_passes_category_and_theme_as_topics() -> None:
+async def test_passes_category_theme_and_prompt_tokens_as_topics() -> None:
+    """Curated metadata AND salient prompt tokens must reach the sourcer.
+
+    #42 task 42.28: category/theme are blank on most orders, so sourcing was
+    topic-agnostic and the questions drifted off-prompt. Topics now lead with
+    the curated category/theme then append ≤3 stopword-filtered tokens mined
+    from the prompt (no LLM). A test that ignored the prompt tokens would mask
+    the very regression 42.28 fixes."""
     sourcer = _FakeFactSourcer(FactBatch(facts=_make_facts(5), sources_used=["wikipedia"]))
     stage = SourcingStage(sourcer)  # type: ignore[arg-type]
-    ctx = _make_ctx(target_count=3, category="science", theme="space")
+    ctx = _make_ctx(
+        target_count=3,
+        category="science",
+        theme="space",
+        prompt="ancient Roman emperors",
+    )
 
     await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
 
-    assert sourcer.calls[0]["topics"] == ["science", "space"]
+    # Curated metadata first, then the 3 prompt-derived tokens.
+    assert sourcer.calls[0]["topics"] == [
+        "science",
+        "space",
+        "ancient",
+        "roman",
+        "emperors",
+    ]
 
 
 @pytest.mark.asyncio
-async def test_topics_is_none_when_no_category_or_theme() -> None:
+async def test_prompt_tokens_used_when_no_category_or_theme() -> None:
+    """Even with no category/theme, salient prompt tokens steer sourcing —
+    the common case, since most orders omit category/theme (#42 task 42.28)."""
     sourcer = _FakeFactSourcer(FactBatch(facts=_make_facts(5), sources_used=["wikipedia"]))
     stage = SourcingStage(sourcer)  # type: ignore[arg-type]
-    ctx = _make_ctx(target_count=3, category=None, theme=None)
+    ctx = _make_ctx(
+        target_count=3,
+        category=None,
+        theme=None,
+        prompt="ancient Roman emperors",
+    )
+
+    await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert sourcer.calls[0]["topics"] == ["ancient", "roman", "emperors"]
+
+
+@pytest.mark.asyncio
+async def test_prompt_token_dedupes_case_insensitively_and_drops_filler() -> None:
+    """A prompt echoing the category must not produce a duplicate topic, and
+    trivia filler ("facts") must not eat the token budget.
+
+    #42 task 42.28 review fix: category="History" + prompt "…history…" would
+    otherwise yield ["History", "history"], making Wikipedia search the same
+    concept twice and re-introducing the near-duplicate facts the fact
+    partition removes. Dedup is case-insensitive; "facts" is dropped as filler
+    before token selection."""
+    sourcer = _FakeFactSourcer(FactBatch(facts=_make_facts(5), sources_used=["wikipedia"]))
+    stage = SourcingStage(sourcer)  # type: ignore[arg-type]
+    ctx = _make_ctx(target_count=3, category="History", prompt="ancient history facts")
+
+    await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    # "history" deduped against "History"; "facts" filtered as filler.
+    assert sourcer.calls[0]["topics"] == ["History", "ancient"]
+
+
+@pytest.mark.asyncio
+async def test_topics_none_when_no_metadata_and_prompt_all_stopwords() -> None:
+    """No category/theme and a prompt with no salient tokens → topics None,
+    preserving the downstream "no topics → broad feeds" fallback."""
+    sourcer = _FakeFactSourcer(FactBatch(facts=_make_facts(5), sources_used=["wikipedia"]))
+    stage = SourcingStage(sourcer)  # type: ignore[arg-type]
+    ctx = _make_ctx(target_count=3, category=None, theme=None, prompt="make me a quiz")
 
     await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
 

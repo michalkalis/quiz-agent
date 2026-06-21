@@ -531,3 +531,66 @@ async def test_mcq_sub_batch_uses_structured_output() -> None:
     # Gateway-safe binding: function_calling, not the json_schema default.
     assert captured["schema"] is MCQBatchOutput
     assert captured["method"] == "function_calling"
+
+
+@pytest.mark.asyncio
+async def test_mcq_sub_batches_partition_source_facts_disjointly() -> None:
+    """Issue #42 task 42.28 — each MCQ sub-batch gets a distinct fact slice.
+
+    Before 42.28 every per-pattern sub-batch was handed the *same*
+    `source_facts`, so the patterns mined the same handful of facts and the
+    pack filled with near-duplicates (e.g. four variants of one Bob Dylan
+    fact). Each sub-batch must now receive a disjoint contiguous slice so the
+    patterns draw on different material. We stub the structured helper and
+    inspect the `source_facts` each call received: the slices must be pairwise
+    disjoint and together cover every fact exactly once. If someone reverts to
+    passing the shared list, the coverage assertion (facts counted N×) breaks.
+    """
+    facts = [f"fact-{i}" for i in range(9)]
+    patterns = {"alpha", "bravo", "charlie"}
+
+    async def _fake_batch(*, source_facts, **_kwargs):
+        return list(source_facts or [])
+
+    gen = _make_generator_with_fake_llm(AsyncMock())
+    gen._generate_mcq_batch_structured = AsyncMock(side_effect=_fake_batch)
+
+    await gen._generate_mcq_sub_batches(
+        count=9,
+        difficulty="medium",
+        topics=["history"],
+        categories=["general"],
+        excluded_topics=None,
+        avoid_questions=None,
+        user_bad_examples=None,
+        source_facts=facts,
+        mcq_patterns=patterns,
+    )
+
+    slices = [
+        call.kwargs["source_facts"]
+        for call in gen._generate_mcq_batch_structured.await_args_list
+    ]
+    # One slice per pattern (9 facts / 3 patterns = 3 each, all non-empty).
+    assert len(slices) == len(patterns)
+    assert all(s for s in slices)
+    flattened = [f for s in slices for f in s]
+    # Disjoint: no fact appears in two slices.
+    assert len(flattened) == len(set(flattened))
+    # Covering: every source fact is used exactly once across the sub-batches.
+    assert set(flattened) == set(facts)
+    assert len(flattened) == len(facts)
+
+
+def test_partition_facts_handles_none_and_short_inputs() -> None:
+    """#42 task 42.28 — the partition helper degrades gracefully.
+
+    With no facts (or fewer facts than patterns) the spare sub-batch slots
+    must get `None` so those sub-batches fall back to the fact-free prompt
+    (pre-42.28 behaviour) rather than raising or duplicating facts.
+    """
+    # No facts → every slot is None (fact-free prompt fallback).
+    assert AdvancedQuestionGenerator._partition_facts(None, 3) == [None, None, None]
+    assert AdvancedQuestionGenerator._partition_facts([], 3) == [None, None, None]
+    # Fewer facts than patterns → first slots filled, rest None, still disjoint.
+    assert AdvancedQuestionGenerator._partition_facts(["x", "y"], 3) == [["x"], ["y"], None]

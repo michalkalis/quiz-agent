@@ -365,7 +365,15 @@ class AdvancedQuestionGenerator:
             f"per-pattern sub-batches {dict(zip(patterns, per_pattern))}"
         )
 
-        async def _one(pattern: str, n: int) -> List[Question]:
+        # #42 task 42.28 — give each per-pattern sub-batch a DISJOINT slice of
+        # the source facts. Passing the identical ``source_facts`` to every
+        # sub-batch made the patterns mine the same handful of facts and emit
+        # near-duplicate questions (e.g. four variants of "Bob Dylan's Nobel").
+        # Contiguous partitioning keeps the slices distinct so each pattern
+        # draws on different material.
+        fact_slices = self._partition_facts(source_facts, len(patterns))
+
+        async def _one(pattern: str, n: int, facts: Optional[list]) -> List[Question]:
             if n <= 0:
                 return []
             # #42 task 42.25 — each sub-batch now goes through structured
@@ -381,16 +389,46 @@ class AdvancedQuestionGenerator:
                 excluded_topics=excluded_topics,
                 avoid_questions=avoid_questions,
                 user_bad_examples=user_bad_examples,
-                source_facts=source_facts,
+                source_facts=facts,
                 mcq_patterns={pattern},
             )
 
         batches = await asyncio.gather(
-            *(_one(p, n) for p, n in zip(patterns, per_pattern))
+            *(
+                _one(p, n, facts)
+                for p, n, facts in zip(patterns, per_pattern, fact_slices)
+            )
         )
         questions: List[Question] = [q for batch in batches for q in batch]
         print(f"MCQ sub-batches produced {len(questions)} raw questions")
         return questions
+
+    @staticmethod
+    def _partition_facts(facts: Optional[list], n: int) -> List[Optional[list]]:
+        """Split ``facts`` into ``n`` disjoint contiguous chunks (#42 task 42.28).
+
+        One chunk per MCQ pattern sub-batch. The chunks are disjoint and
+        cover the input in order, so no two sub-batches see the same fact —
+        the fix for the near-duplicate questions that resulted from handing
+        every sub-batch the identical fact list. Sizes follow the same
+        even-split-with-remainder rule as ``per_pattern`` above. When there
+        are no facts (or fewer facts than patterns) the spare slots get
+        ``None`` so those sub-batches fall back to the fact-free prompt, the
+        pre-42.28 behaviour.
+        """
+        if n <= 0:
+            return []
+        if not facts:
+            return [None] * n
+        base, extra = divmod(len(facts), n)
+        slices: List[Optional[list]] = []
+        start = 0
+        for i in range(n):
+            size = base + (1 if i < extra else 0)
+            chunk = facts[start:start + size]
+            slices.append(chunk or None)
+            start += size
+        return slices
 
     async def _generate_batch(
         self,

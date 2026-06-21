@@ -2,7 +2,7 @@
 
 **Triage:** enhancement · ready-for-agent
 **Reversibility:** b
-**Status:** Plan verified in fresh session 2026-05-28 against actual codebase (commit `ad3643c`). 6 real bugs in the preliminary plan fixed (see Changelog at bottom). Backend tracks A–D are Ralph-suitable atomic tasks; iOS Track E is human-driven (simulator required) — superseded by #45. Gated on #36 closing tasks 2.16–2.22. **2026-06-10: Track F added** (fresh MCQ batch per founder decision 2026-06-09) — Ralph launcher `scripts/ralph/launch-issue42-mcq.sh` ready; awaiting founder go.
+**Status:** Plan verified in fresh session 2026-05-28 against actual codebase (commit `ad3643c`). 6 real bugs in the preliminary plan fixed (see Changelog at bottom). Backend tracks A–D are Ralph-suitable atomic tasks; iOS Track E is human-driven (simulator required) — superseded by #45. Gated on #36 closing tasks 2.16–2.22. **2026-06-10: Track F added** (fresh MCQ batch per founder decision 2026-06-09) — Ralph launcher `scripts/ralph/launch-issue42-mcq.sh` ready; awaiting founder go. **2026-06-19: Track F PARKED batch loop superseded by `## Track F-R` (MCQ flow redesign)** — founder-requested plan review; levers pivoted to structured output + code ports, decomposed into atomic tasks 42.25-42.30 with a machine-verifiable un-park gate. See `## Track F-R` below + `docs/artifacts/issue-42-generation-review-2026-06-19.html`.
 **Created:** 2026-05-28
 **Parent / related:** #32 (umbrella). Independent of #36 (which only touches quiz-pack-api orchestrator + voice-quiz pgvector cutover).
 
@@ -356,6 +356,91 @@ Pipeline clean (generation 11 → verification 10 → scoring 10 → dedup 10, c
 2. **Shallow, duplicate-heavy survivor pool.** All 4 sub-batches share the same 23 sourced facts, so they independently generate near-identical questions (Bob Dylan Nobel ×4, Kilimanjaro ×2 among the 13). `DedupStage` kept 13 / dropped 0 — the 0.85 guard is a no-op because `--dedup-store pgvector` (42.19c) was deferred and there's no working `find_duplicates`.
 
 **⏸️ Founder decision 2026-06-11 — PARK Track F (MCQ batch generation), revisit after most current TODO issues land.** The escalation was surfaced to the founder, who decided the MCQ **generation flow itself needs review/redesign** rather than another incremental fallback + batch. Stop generating packs. When Track F resumes, treat it as a flow-redesign, not a parameter tweak — the candidate levers identified this session are starting points, not the plan: (a) in the per-pattern sub-batch, **hard-require `type:"text_multichoice"` + `possible_answers`** for the MCQ patterns (strongest lever — fixes cause 1 at the contract level); (b) give each sub-batch a **distinct fact slice / topic** so they stop generating the same question; (c) land the deferred **pgvector dedup** (42.19c) so duplicates stop crowding the pool. Code that landed and stays in `main`: `2469d61` (sub-batches + regression test), `4847011` (fix E) — both are correct improvements, just insufficient on their own.
+
+---
+
+## Track F-R — MCQ flow redesign (plan review 2026-06-19, founder-requested)
+
+> Replaces the "candidate levers" hand-wave in the 2026-06-11 PARK note with an executable plan.
+> Full review report (throwaway): `docs/artifacts/issue-42-generation-review-2026-06-19.html`.
+> Method: 60-agent workflow (4 maps → 5 evals → 50 adversarial verifications, 38 held / 12 refined)
+> + first-hand code spot-check of every load-bearing claim.
+
+**Verdict.** Diagnosis correct, fan-out architecture (`_generate_mcq_sub_batches`) is right and stays.
+But the three original levers, as written, were not executable and lever (a) was a 4th repeat of a
+3×-failed strategy. The corrected plan below pivots (a) and turns (b)/(c) into ports of existing code.
+
+**Reinvention findings (founder's #1 concern — all verified first-hand):**
+- **(a)** "hard-require via prompt" reinvents `ChatOpenAI.with_structured_output()` — available on the
+  existing generator client (`advanced_generator.py:53`), gpt-4o supports `json_schema`, **used nowhere in repo.**
+- **(c)** "pgvector dedup from scratch" reinvents `ChromaDBQuestionStore.find_duplicates`
+  (`question_store.py:205-239`); `PgvectorQuestionStore.search` already uses `cosine_distance` (`pgvector_client.py:205`).
+- **image** "new image scoring rubric" reinvents `prompts/question_critique_image.md` (full 8-dim rubric, **0 call sites — dead**).
+- A 3rd judgment layer would reinvent the **two existing scorers** (critique 5.4–6.4 vs MultiModelScorer 8–9,
+  unreconciled). Pick one as the gate. (42.21 distractor screen is complementary, NOT reinvention.)
+
+**Root cause of MCQ failure (confirmed).** The v3 Response Format example shows `"possible_answers": null`
+(`question_generation_v3_fact_first.md:230`); the model defaults to the template and emits free-form `text`,
+which 42.9a then drops (`dropped_mcq_missing_options: 0` = it never even attempts MCQ). Prompt instructions
+cannot beat the template default — structured output makes the contract a parse-time guarantee.
+
+### Track F-R tasks (atomic, Ralph-ordered — supersede the parked 42.20 generation loop)
+
+- [ ] **42.25 Structured output for MCQ sub-batches (pivot of lever a).** In `_generate_mcq_sub_batches`
+      (`advanced_generator.py:297-358`), replace the plain `ainvoke` + `_parse_response` per sub-batch with
+      `self.generation_llm.with_structured_output(MCQBatchOutput)`, where `MCQBatchOutput` is a minimal Pydantic
+      model: `type: Literal["text_multichoice"]`, `possible_answers: dict[str,str]` (4 entries; 2 for `true_false`),
+      `correct_answer: str` (key letter). **Leave the classic best-of-N path and `_parse_response` untouched.**
+      **Acceptance**: unit test — a stubbed MCQ sub-batch returns questions with `type="text_multichoice"` +
+      populated `possible_answers`; existing classic-path tests still green. (LLM_GATEWAY note: scope structured
+      output to gpt-4o; OpenRouter passes function-calling through for gpt-4o.)
+
+- [ ] **42.26 `PgvectorQuestionStore.find_duplicates` (port of lever c).** Add the method to the shared store by
+      porting `ChromaDBQuestionStore.find_duplicates` (`question_store.py:205-239`): embed query text, `cosine_distance`
+      ORDER BY (same pattern as `.search`, `pgvector_client.py:205`), take top 10, threshold-filter, return
+      `list[tuple[Question, float]]`. Both apps benefit (shared package).
+      **Acceptance**: test seeds a store with one question, asserts a near-paraphrase scores ≥ 0.85 and an unrelated
+      question does not; self-match by id excluded.
+
+- [ ] **42.27 Wire pgvector dedup into worker + CLI.** Change `worker.py:52` from `ChromaDBClient().store` (frozen
+      legacy) to `PgvectorQuestionStore`; add `--dedup-store pgvector` to `generate_pack.py` (was deferred 42.19c).
+      **Acceptance**: a `--dry-run --dedup-store pgvector` test drops a seeded duplicate; default CLI behaviour
+      (no flag) unchanged (`_NoopQuestionStore`).
+
+- [ ] **42.28 Fact partition + sourcing topic fix (lever b).** (1) In `_generate_mcq_sub_batches`, slice `ctx.facts`
+      into N equal chunks (one per pattern key) so sub-batches stop generating the same question. (2) In
+      `SourcingStage`, derive 2-3 topic tokens from `ctx.prompt` (stopword-filtered, **no LLM**) and pass to
+      `FactSourcer` alongside `category`/`theme`; skip Wikipedia DYK/featured when topics are present; widen OpenTDB
+      `CATEGORY_MAP` to ≥ 20 entries.
+      **Acceptance**: test asserts (a) distinct fact slices per sub-batch, (b) prompt-derived tokens reach
+      `FactSourcer.gather_facts`.
+
+- [ ] **42.29 Make one scorer the blocking gate (fail-loud, Rule #2).** Designate `MultiModelScorer` as the ship gate
+      (post-verification, domain dims). Implement a minimum-score drop in `ScoringStage` (at least for MCQ via
+      `distractor_quality`). Implement OR delete the dead Stage 4 TODO stub (`advanced_generator.py:272-276`) — a gate
+      that warns but never drops is false confidence.
+      **Acceptance**: test feeds a below-threshold question, asserts it is dropped + count surfaced in `StageResult.info`.
+
+- [ ] **42.30 Re-run audit + RS regression (the machine-verifiable done-state).** After 42.25-42.29: one
+      `--mcq-bias` dry-run on any topic yields **≥ 8/10 `text_multichoice` survivors** with valid `possible_answers`
+      and **0 verbatim duplicates**. Add an `RS-NN` regression scenario asserting MCQ yield. This is the un-park gate
+      (matches #63 Track A target: MCQ ≥ 8/10, 0 dupes).
+      **Acceptance**: audit run hits the numbers; RS scenario GREEN; founder un-park decision recorded.
+
+> **Out of Track F-R (filed separately):**
+> - **Classic `text` defects (unowned, not MCQ):** best-of-N volume collapse (asks ~57, gets 4-10 → cap
+>   `generate_count`); `--open-count N` CLI flag (open branch dead at default count 10); `_parse_response` retry on
+>   empty; remove the `-0.5` inflation patch + dead prompts (`question_generation_{kids,themed,rewrite}.md`, V1
+>   critique fallback). → new issue.
+> - **Image generation:** keep OUT of #42/#63 (standalone scripts off static datasets; sourcing-first pipeline adds
+>   no value). **One immediate fix:** `scripts/generate_blind_maps.py:42` calls `OpenAI()` directly, bypassing the
+>   #53 gateway — swap to `llm_factory.openai_client(direct=True)`. Deferred: wire `question_critique_image.md` into
+>   the critique loader for `type=="image"`; slug-based dedup in image scripts. → new issue.
+> - **FactVerifier single-sourced on Tavily** (HTTP 432 blocked #63 Track B): raise heuristic-fallback confidence
+>   below the 0.5 gate so quota-exhausted questions drop rather than pass. → #63 Track B follow-up.
+
+> **#63 relationship:** #63 is the *audit* that produced these findings; **#42 Track F-R is the implementation home.**
+> #63 stays the corpus-verification + un-park-decision issue.
 
 ## Plan-readiness note (57.14 — 2026-06-16)
 

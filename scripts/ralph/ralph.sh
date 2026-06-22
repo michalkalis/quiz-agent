@@ -616,7 +616,7 @@ for iter in $(seq 1 "$MAX_ITERS"); do
         --permission-mode bypassPermissions \
         --max-budget-usd "$BUDGET_USD" \
         --fallback-model "$FALLBACK_MODEL" \
-        --effort high \
+        --effort "${RALPH_EFFORT:-high}" \
         --no-session-persistence \
         ${MCP_ARGS[@]+"${MCP_ARGS[@]}"} \
         --append-system-prompt "$SYSTEM_PROMPT" \

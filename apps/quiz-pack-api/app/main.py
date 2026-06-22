@@ -19,9 +19,12 @@ except ImportError:
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 from .api.routes import router
 from .api.v1.orders import router as orders_v1_router
 from .web.routes import router as web_router
+from .rate_limit import limiter
 
 
 @asynccontextmanager
@@ -59,6 +62,10 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+
+# Rate limiter (#65): defense-in-depth on the billable generation/verify routes.
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Add CORS middleware — env-driven origins (#65); was allow_origins=["*"].
 # Defaults to localhost; set CORS_ORIGINS (comma-separated) per deploy.

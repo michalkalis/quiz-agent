@@ -39,4 +39,17 @@ A fourth, related gate: **App Attest is inert by default** (`app_attest_required
 - [x] `POST /api/v1/elevenlabs/token` is rate-limited to ≤10/min per client IP — `@limiter.limit("10/minute")`; `test_misc_elevenlabs_auth.py::test_rate_limited_to_10_per_minute` (11th call → 429)
 - [x] Two requests with different `Fly-Client-IP` values get independent rate-limit counters (regression test) — limiter re-keyed on `fly_client_ip` (real client IP, not Fly proxy); `tests/test_rate_limit_key.py` (5 tests, green)
 - [x] Production startup logs a loud error (or refuses) when `app_attest_required` is false in prod — `warn_if_insecure_production` (called in `main.py` lifespan) logs a `SECURITY` error; `tests/test_startup_checks.py` (4 new tests, green). Warns, does not refuse.
-- [x] Backend test suites stay green — quiz-agent: 179 passed. quiz-pack-api: admin-auth suite green (3 pre-existing alembic-fixture errors unrelated to #65)
+- [x] Backend test suites stay green — quiz-agent: 179 passed. quiz-pack-api: admin-auth + rate-limit suites green; 4 failed / 10 errored are **pre-existing and unrelated** to #65 (3× orders 200-vs-202 status mismatch, verified identical with my changes stashed; 1 alembic-idempotent + 10 alembic schema-already-exists fixture errors).
+
+## Decisions (founder delegated all three to me, 2026-06-22)
+
+1. **Admin-UI auth carriers → keep both.** `X-Admin-Key` header (scripts/agents) + HTTP Basic (so `/web` opens with a browser password prompt). The key is the only secret either way.
+2. **quiz-pack-api generation rate-limit → added now** (founder: "limiting makes sense"). slowapi added to quiz-pack-api (pyproject + Dockerfile, dep-drift rule); `app/rate_limit.py` mirrors quiz-agent (keyed on `fly_client_ip`); `@limiter.limit("10/minute")` on the four billable routes — `/generate`, `/generate/advanced`, `/verify`, `/verify/batch`. The cheap CRUD/review routes stay unlimited. `tests/api/test_generation_rate_limit.py` (2 tests, green).
+3. **Unset `ADMIN_API_KEY` → fail-closed everywhere** (503 in dev and prod alike). No env-dependent security branch; set a dev key locally to use the admin UI.
+
+## Deploy gate (NOT yet deployed — founder triggers)
+
+1. Set `ADMIN_API_KEY` Fly secret on quiz-pack-api **before** deploy — without it `/web` + `/api/v1` return 503 everywhere (by design).
+2. Set `CORS_ORIGINS` on quiz-pack-api — defaults to `localhost:3000`, so the prod web-ui origin is blocked until set.
+3. Confirm `Fly-Client-IP` is edge-stripped by Fly (R-2 in #60) — the rate-limit key trusts it.
+4. Leave `LEGACY_USER_ID_GRACE=on` until #60 iOS auth is on TestFlight — the quiz-agent gate passes header-less requests during grace, so deploying now does not break the pre-auth build.

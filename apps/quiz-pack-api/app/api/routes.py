@@ -2,7 +2,7 @@
 
 import time
 from typing import Dict, Any
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 
 from quiz_shared.models.question import Question
 
@@ -20,6 +20,7 @@ from ..generation.advanced_generator import AdvancedQuestionGenerator
 from ..generation.storage import QuestionStorage
 from ..verification.fact_verifier import FactVerifier
 from .deps import require_admin
+from ..rate_limit import limiter
 
 
 # Initialize services
@@ -37,11 +38,12 @@ router = APIRouter(prefix="/api/v1", tags=["questions"], dependencies=[Depends(r
 
 
 @router.post("/generate", response_model=GenerateResponse)
-async def generate_questions(request: GenerateRequest):
+@limiter.limit("10/minute")
+async def generate_questions(request: Request, body: GenerateRequest):
     """Generate quiz questions using LLM.
 
     Args:
-        request: Generation parameters
+        body: Generation parameters
 
     Returns:
         Generated questions with metadata
@@ -50,12 +52,12 @@ async def generate_questions(request: GenerateRequest):
 
     try:
         questions = await advanced_generator.generate_questions(
-            count=request.count,
-            difficulty=request.difficulty,
-            topics=request.topics,
-            categories=request.categories,
-            question_type=request.type,
-            excluded_topics=request.excluded_topics,
+            count=body.count,
+            difficulty=body.difficulty,
+            topics=body.topics,
+            categories=body.categories,
+            question_type=body.type,
+            excluded_topics=body.excluded_topics,
             enable_best_of_n=False,
         )
 
@@ -76,7 +78,8 @@ async def generate_questions(request: GenerateRequest):
 
 
 @router.post("/generate/advanced", response_model=AdvancedGenerateResponse)
-async def generate_questions_advanced(request: AdvancedGenerateRequest):
+@limiter.limit("10/minute")
+async def generate_questions_advanced(request: Request, body: AdvancedGenerateRequest):
     """Generate quiz questions using advanced multi-stage pipeline.
 
     Pipeline:
@@ -86,7 +89,7 @@ async def generate_questions_advanced(request: AdvancedGenerateRequest):
     4. Store as pending_review
 
     Args:
-        request: Advanced generation parameters
+        body: Advanced generation parameters
 
     Returns:
         Generated questions with quality metadata and statistics
@@ -95,15 +98,15 @@ async def generate_questions_advanced(request: AdvancedGenerateRequest):
 
     try:
         questions = await advanced_generator.generate_questions(
-            count=request.count,
-            difficulty=request.difficulty,
-            topics=request.topics,
-            categories=request.categories,
-            question_type=request.type,
-            excluded_topics=request.excluded_topics,
-            enable_best_of_n=request.enable_best_of_n,
-            n_multiplier=request.n_multiplier,
-            min_quality_score=request.min_quality_score,
+            count=body.count,
+            difficulty=body.difficulty,
+            topics=body.topics,
+            categories=body.categories,
+            question_type=body.type,
+            excluded_topics=body.excluded_topics,
+            enable_best_of_n=body.enable_best_of_n,
+            n_multiplier=body.n_multiplier,
+            min_quality_score=body.min_quality_score,
         )
 
         # Convert to response format
@@ -114,7 +117,7 @@ async def generate_questions_advanced(request: AdvancedGenerateRequest):
         generation_time = time.time() - start_time
 
         # Calculate statistics
-        total_generated = request.count * request.n_multiplier if request.enable_best_of_n else request.count
+        total_generated = body.count * body.n_multiplier if body.enable_best_of_n else body.count
         ai_scores = [q.get_ai_score() for q in questions if q.get_ai_score() is not None]
         avg_ai_score = sum(ai_scores) / len(ai_scores) if ai_scores else None
 
@@ -434,7 +437,8 @@ async def get_review_stats():
 # Verification Endpoints
 
 @router.post("/verify", response_model=VerifyResponse)
-async def verify_question(request: VerifyRequest):
+@limiter.limit("10/minute")
+async def verify_question(request: Request, body: VerifyRequest):
     """Verify a single question-answer pair using Tavily + Gemini Flash.
 
     Returns verdict (verified/likely_correct/uncertain/likely_wrong/wrong)
@@ -442,9 +446,9 @@ async def verify_question(request: VerifyRequest):
     """
     try:
         result = await fact_verifier.verify(
-            question=request.question,
-            claimed_answer=request.correct_answer,
-            topic=request.topic,
+            question=body.question,
+            claimed_answer=body.correct_answer,
+            topic=body.topic,
         )
         return VerifyResponse(
             verdict=result.verdict,
@@ -466,13 +470,14 @@ async def verify_question(request: VerifyRequest):
 
 
 @router.post("/verify/batch", response_model=VerifyBatchResponse)
-async def verify_batch(request: VerifyBatchRequest):
+@limiter.limit("10/minute")
+async def verify_batch(request: Request, body: VerifyBatchRequest):
     """Verify a batch of question-answer pairs.
 
     Each item needs: question, correct_answer, id (optional), topic (optional).
     """
     try:
-        raw_results = await fact_verifier.verify_batch(request.questions)
+        raw_results = await fact_verifier.verify_batch(body.questions)
 
         items = []
         verified = wrong = uncertain = 0

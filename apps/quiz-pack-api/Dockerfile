@@ -35,6 +35,7 @@ RUN pip install --no-cache-dir \
     google-generativeai>=0.8.0 \
     jinja2>=3.1.0 \
     python-multipart>=0.0.6 \
+    slowapi>=0.1.9 \
     "sqlalchemy[asyncio]>=2.0.30" \
     alembic>=1.13.0 \
     asyncpg>=0.29.0 \

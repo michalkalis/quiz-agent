@@ -19,6 +19,7 @@ dependencies = [
     "google-generativeai>=0.8.0",
     "jinja2>=3.1.0",
     "python-multipart>=0.0.6",
+    "slowapi>=0.1.9",
     # Phase 1 (issue #33) — must stay 1:1 with Dockerfile pip install list per
     # memory project_dockerfile_drift.
     "sqlalchemy[asyncio]>=2.0.30",

@@ -20,7 +20,11 @@ RUN pip install --no-cache-dir /build/packages/shared
 COPY apps/quiz-agent /build/app
 WORKDIR /build/app
 
-# Install quiz-agent dependencies
+# Install quiz-agent dependencies.
+# Memory project_dockerfile_drift: this list must stay 1:1 with
+# apps/quiz-agent/pyproject.toml for any dep imported at boot or by an HTTP
+# route. The auth stack (sqlalchemy/asyncpg/alembic/pyjwt/pyattest) is pulled
+# into the boot path via app/api/deps.py -> app/auth/* — omitting it crash-loops.
 RUN pip install --no-cache-dir \
     fastapi>=0.104.0 \
     uvicorn>=0.24.0 \
@@ -31,7 +35,12 @@ RUN pip install --no-cache-dir \
     pydub>=0.25.0 \
     httpx>=0.27.0 \
     slowapi>=0.1.9 \
-    sentry-sdk[fastapi]>=2.0.0
+    sentry-sdk[fastapi]>=2.0.0 \
+    "sqlalchemy[asyncio]>=2.0.0" \
+    asyncpg>=0.29.0 \
+    alembic>=1.13.0 \
+    "pyjwt[crypto]>=2.8.0" \
+    pyattest>=1.0.4
 
 # Production stage
 FROM python:3.11-slim

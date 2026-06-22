@@ -2,6 +2,8 @@
 
 **Triage:** enhancement · ralph-runnable (autonomous build + offline gates; one founder-authorized validation run at the end)
 
+**Reversibility:** a · commits-only, every new behaviour behind a dormant toggle (no schema/data migration, no auth/payment, no prod deploy, no corpus writes) — overnight-loop eligible for **Phases 0–5 only**; Phase 6 is a human checkpoint Ralph must not cross.
+
 **Created:** 2026-06-22 · **Refocused:** 2026-06-22 (founder) · **Founder:** Michal
 
 ## Why
@@ -174,6 +176,40 @@ authorization.* Budget ~$5 (plan 2–3× for an escape-hatch fix + rerun; keep i
   **No LLM-judge proxy replaces this.**
 - *Gate:* flow is "excellent" (un-park) **only if** 6a proxies hold **and** 6b (the founder's ear) says less boring.
 
+## Ralph task list (Phases 0–5 — offline, no paid generation)
+
+Atomic units for the loop; full detail lives in **Plan** above. One iteration ≈ one box.
+Each box's *Gate* is the machine check that must be green before it counts as done.
+
+**Phase 0 — baseline + dormant flags (no LLM)**
+- [ ] **P0.1** Record the offline baseline: full suite green (~139 tests). *Gate:* suite green.
+- [ ] **P0.2** Add dormant flags (`GENERATION_MODEL`, `V3_ESCAPE_HATCH`, `VETO_SHADOW`, …); do **not** flip `LLM_GATEWAY` repo-wide. *Gate:* suite green, output unchanged with flags off.
+
+**Phase 1 — Lever A wiring + deterministic fixes (no LLM)**
+- [ ] **P1.1** Make generation/critique models config-driven; add `claude-opus-4-8` to `_REMAP_OPENROUTER` (dormant default, never hardcode at call site). *Gate:* unit test on config resolution.
+- [ ] **P1.2** RC-9: fix FactVerifier agreement so non-substring (estimation/reasoning) answers can pass; when search/judge unavailable, tag `unverified` + hold, don't drop at conf 0. *Gate:* a test proves a non-substring estimation answer is **not** dropped.
+- [ ] **P1.3** MCQ crash isolation (`return_exceptions=True` + per-sub-batch try/except, `advanced_generator.py:396` = #42 task 42.31). *Gate:* unit test that one bad sub-batch doesn't sink the rest.
+- [ ] **P1.4** Unlock the chosen MCQ reasoning pattern(s) in `PATTERNS_TO_MCQ` + recipes; broaden "comparison bet" via its recipe string (not a key rename). *Gate:* test the new pattern routes as decided.
+- [ ] **P1.5** Repair `OPEN_SHAPE_FRACTION` rounding so open questions aren't 0 on small orders. *Gate:* test ≥1 open question on a standard order.
+
+**Phase 2 — Lever B prompt restoration (read-only, no LLM)**
+- [ ] **P2.1** Backport the 471c41b engagement-path machinery (Patterns 11–13, Answerability, Engagement-Path principle, Structural-Monotony red flags) into the live `v3` prompt. *Gate:* prompt-content assertions.
+- [ ] **P2.2** Add the v3 escape hatch behind `V3_ESCAPE_HATCH` (fully revertible). *Gate:* prompt assertion gated by the flag.
+- [ ] **P2.3** Thread `question_type` into few-shot loading so MCQ batches see MCQ exemplars (answer-stripped). *Gate:* exemplar-count/schema test.
+
+**Phase 3 — input fixes under mocks (no real network)**
+- [ ] **P3.1** RC-1: OpenTDB → bare declarative fact (cheap-model rewrite) with a guard asserting output never contains the original-question substring. *Gate:* respx `assert_all_mocked=True`; guard test.
+- [ ] **P3.2** Wire `top_by_surprise()` + a free heuristic surprise score (no per-fact LLM). *Gate:* unit test the ordering/score.
+
+**Phase 4 — scoring veto as SHADOW (deterministic mocks)**
+- [ ] **P4.1** Wire the Answerability/surprise veto into the live scorer with `critique_v2` anchors in `VETO_SHADOW` mode (log would-drops, drop nothing). *Gate:* a starboard-class recall Q is flagged in shadow on synthetic fixtures, with no false-veto of the good ones.
+- [ ] **P4.2** Restore MCQ-path best-of-N + `self_critique` telemetry. *Gate:* unit test the MCQ critique path runs.
+
+**Phase 5 — validation harness, dormant (no LLM)**
+- [ ] **P5.1** `scripts/validate_generation.py`: asserts machine-checkable quality proxies across all types; guard so it can **never** write to the corpus. *Gate:* harness unit-tested on synthetic data; dry-run shape OK.
+
+🛑 **Phase 6 — STOP. Not a Ralph task.** The single founder-authorized validation run (~$5) and the founder's by-ear judgment (6b) are a **human checkpoint**. When every box above is checked and the suite is green, **Ralph is done** — leave everything dormant behind toggles, push the `ralph/*` branch, and stop. Un-park is the founder's call; Ralph must never start a paid generation run to "finish" this issue.
+
 ## Decisions I made for you (override any)
 
 Per *"nemusíš so mnou riešiť detaily, sám vieš väčšinou lepšie rozhodnúť"*, the old 7 open questions are
@@ -199,12 +235,17 @@ resolved and baked in:
 
 ## Acceptance
 
+> **Ralph stop condition (machine-evaluable, offline):** when every Phase 0–5 box in the task list is
+> checked and the offline suite is green, **Ralph's goal is met — stop cleanly and push the `ralph/*` branch.**
+> The bullet tagged *(human)* below is the founder's Phase-6 un-park gate; Ralph must **never** attempt a paid
+> generation run to satisfy it, and reaching it does not count as a Ralph failure.
+
 - **Phases 0–5 green offline with ZERO paid generation**; each gate labelled *plumbing-correct, not fun-validated*.
 - **Lever A:** generation model is config-driven and defaults to `claude-opus-4-8` via OpenRouter remap (dormant until Phase 6).
 - **Lever B:** the 471c41b engagement-path machinery is live in the `v3` path; the escape hatch is toggle-guarded and revertible.
 - **RC-9 lands before any gate tightening** — a test proves a non-substring estimation answer survives the verifier.
 - A starboard-class recall question is **flagged** by the wired veto in `VETO_SHADOW` on synthetic fixtures (fun enforced in ≥1 place in plumbing).
-- The Phase-6 run produces, **across all types**, output that (a) doesn't crash, (b) includes ≥1 working non-recall pattern per type, and (c) the founder judges **less boring by ear (6b)**. Un-park requires 6b — no proxy substitutes.
+- *(human)* The Phase-6 run produces, **across all types**, output that (a) doesn't crash, (b) includes ≥1 working non-recall pattern per type, and (c) the founder judges **less boring by ear (6b)**. Un-park requires 6b — no proxy substitutes. **This is the founder's gate, not Ralph's.**
 - No corpus writes occur until the founder un-parks; everything ships dormant/behind a toggle otherwise.
 
 ## Links

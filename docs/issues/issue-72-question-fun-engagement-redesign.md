@@ -61,79 +61,142 @@ preferentially *keeps* the recall ones. Fun is measured in five places and **enf
 
 ## Constraints / decisions carried in
 
+- **🔒 FOUNDER MANDATE (2026-06-22): NO generation re-run until the flow is reworked AND excellent.**
+  Verbatim: *"nechcem ziadny re-run spustat kym nie je flow generovania otazok upraveny a vynikajuci."*
+  This **forbids** the old "Phase 0 = run once to validate Tavily" opener and forces **offline-first**
+  sequencing: build everything dormant, validate offline as far as honestly possible, and spend **exactly
+  one** confirming run at the very end as the un-park gate. See `## Plan (offline-first)` below.
+- **🎯 Honest boundary (adversarial review): offline-green ≠ fun.** No offline phase measures the founder's
+  real signal ("prvoplánové" felt while listening hands-free). Every pre-final gate proves
+  **PLUMBING-CORRECT, NOT FUN-VALIDATED.** The only true arbiter of "less boring" is the founder's ear on
+  the final run's output — a **human-listen step is mandatory** at the end.
+- **🧩 The existing corpus has ZERO `text_multichoice`** — 580 = 550 text + 25 image + 5 true_false (#63
+  Track B). #72 is an MCQ problem, so offline shadow-scoring/calibration runs on **non-MCQ data**: it
+  validates the scorer's *text-domain* sense only. **MCQ-specific thresholds + effect are inherently
+  deferred to the final run.** Do not claim MCQ thresholds were calibrated offline.
+- **OpenRouter key is PRESENT** (verified 2026-06-22, len 73); `LLM_GATEWAY` is **unset → direct mode**.
+  Setting `LLM_GATEWAY=openrouter` unlocks the 2nd scorer (Claude) + Gemini verify **without**
+  GOOGLE/ANTHROPIC keys. It is a **global** toggle (affects verify + generation) — **do not flip it
+  repo-wide at baseline**; scope it to the scoring/gate path or set it only at the final gate.
 - **Generation stays PARKED** (founder, 2026-06-12) — nothing here writes to the corpus until un-park.
-  Most of it can be **built + shadow-tested** now; only the corpus re-score (Phase 2b) helps today.
+  Everything is **built + offline-tested** now; the single paid run (final phase) is the un-park gate.
 - **Fix supply BEFORE raising the gate.** Raising the floor on a starved sourcing layer drops yield to
   ~zero. Sequence: supply → floor → conversion → premium sources.
 - **Nothing here has run against real gpt-4o** (cost + park + the known MCQ crash). Magnitudes are
-  hypotheses until Phase 0 + the A/B harness confirm them.
+  hypotheses until the final confirming run; offline phases prove correctness, not effect.
 - **Sources:** keep Tavily (PAYG ok); **reject** SearXNG self-host, Brave, Firecrawl, Reddit API
   ($12k/yr), Wikidata SPARQL (produces more "which is bigger" recall). (memory: web_search_provider.)
 - **No `'haiku'` model id exists in the repo** — use `factory.chat_openai('gpt-4o-mini')` for any rewrite
   step (adversarial pass caught a proposed `chat_openai('haiku')` that would crash).
 
-## Plan (phased)
+## Plan (offline-first)
 
-### Phase 0 — Validate the acute fix (do first; ~5 min; conserve the $10 Tavily cap)
-- **72.0a** Fix the MCQ crash first so `--mcq-bias` is runnable: `return_exceptions=True` +
-  per-sub-batch try/except at `advanced_generator.py:396`; make `_generate_mcq_batch_structured`
-  (`:651-669`) tolerant of non-conforming items. (= #42 task 42.31 — do here or there, link it.)
-- **72.0b** One clean dry-run with Tavily up (`--target-count 5`, no `--mcq-bias`, `--dry-run`). Confirm
-  the sourcing log shows `web_search: N facts (N>0)` and judge the questions. **Quantifies the
-  acute-vs-structural split** before any further code change.
+> **Resequenced 2026-06-22** per the founder mandate (no run until the flow is excellent). The old plan
+> opened with a paid validation run — that is now **forbidden**. Principle: build dormant → validate offline
+> on the **offline validation ladder** (Rungs 0–6 = Phases 0–6) → spend **one** confirming run (Phase 7) as
+> the un-park gate. **Every Phase-0–6 gate proves PLUMBING-CORRECT, NOT FUN-VALIDATED** (see Constraints).
+> Task IDs (72.x) are unchanged; only their order + framing changed. Three adversarial corrections are baked
+> in: **72.13 (RC-9) moves UP before 72.8**; the **72.8-vs-72.12 estimation routing conflict** must be
+> resolved before its locking test; **72.15 is explicitly deferred, not dropped**.
 
-### Phase 1 — Supply: fix the ceiling (sourcing) — highest leverage, S–M
+### Phase 0 — Baseline green + dormant flags (no LLM, no run)
+- Confirm the existing suite is green offline (139 tests, ~0.84s).
+- Add all new behaviour behind **dormant feature flags** (`VETO_SHADOW`, escape-hatch toggle, etc.) so
+  nothing changes pipeline output until explicitly enabled.
+- **Do NOT** flip `LLM_GATEWAY` repo-wide here (global; affects verify + generation) — scope it to the
+  scoring/gate path, or set it only at the Phase-7 gate.
+- *Gate:* suite green, flags dormant. **Plumbing only.**
+
+### Phase 1 — Deterministic code fixes (no LLM, no corpus)
+- **72.0a** (RC, crash) MCQ crash isolation: `return_exceptions=True` + per-sub-batch try/except at
+  `advanced_generator.py:396`; make `_generate_mcq_batch_structured` (`:651-669`) tolerant of
+  non-conforming items. (= #42 task 42.31 — do here or there, link it.)
+- **72.13** (RC-9) **[MOVED UP — must precede 72.8]** FactVerifier agreement is naive substring
+  (`fact_verifier.py:89`); it silently drops exactly the new estimation/reverse answers (they don't match
+  verbatim). Fix the agreement logic so non-recall answers can pass, AND when search/judge is unavailable
+  **tag `unverified` + hold for review** instead of dropping at confidence 0. Keep verification **strict**
+  for crisp factual answers. Do **not** re-architect — mode routing shipped in #46.
+- **72.8** (RC-6) Add the new fun MCQ pattern(s) to `PATTERNS_TO_MCQ` with their own recipes — **only after
+  resolving the routing conflict in Open Q #2** (estimation as open free-text vs bucketed-MCQ). Keep
+  `lateral` free-text. Broaden "comparison bet" via its recipe string (`:815`), **not** a key rename.
+- **72.11a/c** (RC-8) Thread `question_type` into `load_gold_standard` (`examples.py:49`,
+  `prompt_builder.py:67`) so MCQ batches see MCQ examples; keep exemplars **answer-stripped/structural**.
+- **72.12a** Voice/driving constraint text: cap MCQ at 2–3 spoken options, options at end of stem, ~15-word
+  stems. (The estimation-routing half, 72.12b, is gated on Open Q #2.)
+- *Gate:* unit tests green offline (incl. a test proving a non-substring estimation answer is **not**
+  dropped by 72.13, and that 72.8's new pattern routes as decided). **Plumbing only.**
+
+### Phase 2 — Static prompt/data audits (read-only, no LLM)
+- **72.10** (RC-5) Prompt escape hatch (allow a surprising *angle* from general knowledge as long as the
+  factual *claim* traces to source) + "Assumption-Flip" pattern + misconception-distractor rule. **Highest-
+  risk prompt change → behind its own toggle, fully revertible.**
+- **72.11b** Grow the MCQ exemplar pool to 8–10 incl. `odd_one_out`.
+- **72.11d** Factual audit of suspect `gold_standard.json` entries vs sources. **Verify before removing any
+  exemplar as "wrong"** (a prior premise was false — Open Q #6).
+- *Gate:* prompt-content assertions + schema/exemplar-count tests. **Plumbing only** (says nothing about
+  whether the new angle actually lands as fun).
+
+### Phase 3 — HTTP-routing fixes under respx mocks (no real network)
 - **72.1** (RC-1) OpenTDB → emit a bare declarative fact; rewrite via `factory.chat_openai('gpt-4o-mini')`;
-  keep a deterministic entity+category fallback; **add a guard asserting the output never contains the
-  original question substring.**
-- **72.2** (RC-2) Free heuristic surprise scorer (numbers/superlatives/contradiction/origin words score
-  high; bare definitions low) — *no* per-fact LLM call. Then actually call `top_by_surprise()` and
-  quality-weight the per-source budget (`fact_sourcer.py:47`).
-- **72.3** (RC-3) Widen Tavily: 5 surprise-angle templates (misconception/"actually", record, scale,
-  origin-story, counterintuitive) + `include_domains` (Mental Floss, Atlas Obscura, Smithsonian,
-  Britannica); drop the 1-query/topic throttle. Generate query angles in Slovak.
+  deterministic entity+category fallback; **guard asserting output never contains the original question
+  substring.**
+- **72.3** (RC-3) Widen Tavily: 5 surprise-angle templates + `include_domains` (Mental Floss, Atlas Obscura,
+  Smithsonian, Britannica); drop the 1-query/topic throttle. Slovak query angles.
 - **72.4** (RC-4) Wikipedia topic path → REST summary opening paragraphs (not search snippets). **Do NOT
-  re-enable topic-agnostic DYK on themed orders** (that reverts #42 task 42.28).
+  re-enable topic-agnostic DYK on themed orders** (reverts #42 task 42.28).
+- *Gate:* respx `assert_all_mocked=True`. **CODE-CORRECT** (request shape, parsing, guards); content quality
+  is **effect, deferred to Phase 7.**
 
-### Phase 2 — Floor: enforce fun (the missing lever) — M
+### Phase 4 — Surprise scorer + corpus shadow-correlation (local reads only)
+- **72.2** (RC-2) Free heuristic surprise scorer (numbers/superlatives/contradiction/origin words high; bare
+  definitions low) — *no* per-fact LLM call. Then actually call `top_by_surprise()` (defined, zero call
+  sites today) and quality-weight the per-source budget (`fact_sourcer.py:47`).
+- **Shadow-score the 580 corpus** and correlate the heuristic vs the existing `surprise_delight` field.
+  **Label honestly:** this is *agreement with the existing LLM scorer on TEXT questions*, **not** agreement
+  with human fun. Pre-commit a minimum Spearman rho (Open Q #5).
+- *Gate:* positive rho on text. **Directional scorer sanity only** — says nothing about MCQ (corpus has none).
+
+### Phase 5 — Gate plumbing as SHADOW + labelled set (deterministic mocks)
 - **72.5** (RC-10/11) Wire an Answerability/surprise veto into the live scorer: port `question_critique_v2`
-  Dimension 7 **including its calibration anchors** into the scorer prompt; add per-dimension vetoes
-  (drop if Answerability < 4 OR surprise < 4).
-- **72.6** **Shadow-mode first:** log what *would* be dropped for one batch; confirm it kills the starboard
-  class and measure the real approve-rate hit; *then* flip the veto on. Calibrate the threshold
-  empirically on a labelled boring-vs-fun set (the multi-model scorer uses a different scale than
-  critique_v2 — do not hardcode 5.5). Defer raising `MIN_OVERALL_SCORE` until supply (Phase 1) is fixed.
-- **72.7** (independent — helps TODAY) Run the veto as a **re-scoring pass over already-approved questions**
-  to flag boring stock currently being served. **Review-flag, don't auto-delete** — human confirms before
-  anything leaves the live store. (Dovetails with #63 Track B.)
+  Dimension 7 **with its calibration anchors**; per-dimension vetoes. (Approach A vs B = Open Q #3.)
+- **72.6** **`VETO_SHADOW` first:** log what *would* be dropped, never drop. Build a boring-vs-fun labelled
+  set from `triage_merged.json` (T3 quality-reject=95 vs T6 clean=191) — **TEXT only; note the MCQ gap.**
+  Confirm it would kill the starboard-class on text and measure the approve-rate hit. Do **not** hardcode a
+  threshold (multi-model scorer ≠ critique_v2 scale). Defer raising `MIN_OVERALL_SCORE` until supply is fixed.
+- **72.7** (helps later, not "today") Re-scoring pass over already-approved questions to flag boring served
+  stock. **Review-flag, don't auto-delete.** Dovetails with #63 Track B. *(Runs only once Phase 7 enables
+  the scorer — it needs the LLM scorer live.)*
+- *Gate:* veto plumbing unit-tested; shadow logs sane on the text labelled set. **Does NOT prove the veto
+  catches boring MCQs** (none in the set).
 
-### Phase 3 — Conversion: patterns & prompt — M
-- **72.8** (RC-6) Add `estimation_challenge` + `reverse_engineer` to `PATTERNS_TO_MCQ` with their own
-  recipes. **Keep `lateral` as free-text** (its answer shape fights MCQ). Broaden "comparison bet" via its
-  recipe string (`:815`, add price/speed/toxicity), **not** a key rename.
-- **72.9** (RC-7) Restore a gate to the MCQ path: re-add `self_critique` fields as **telemetry** and enable
-  best-of-N for MCQ — but rely on the Phase-2 external gate for enforcement.
-- **72.10** (RC-5) Prompt escape hatch: allow a surprising *angle* from general knowledge as long as the
-  factual *claim* traces to source. Add an "Assumption-Flip" pattern + a misconception-distractor rule
-  (and if it's an MCQ pattern, register it in `PATTERNS_TO_MCQ`).
-- **72.11** (RC-8) Thread `question_type` into `load_gold_standard` so MCQ batches see ≥2 MCQ examples; grow
-  the MCQ exemplar pool to 8–10 incl. `odd_one_out`; keep exemplars **answer-stripped/structural** to defeat
-  verbatim copying. **Verify before removing any exemplar as "wrong"** (a prior premise was false).
-- **72.12** Voice/driving constraints: cap MCQ at 2–3 spoken options, options at end of stem, ~15-word
-  stems, prefer open numeric estimation for quantities.
+### Phase 6 — A/B harness code, dormant (no LLM)
+- **72.14** Stand up `scripts/ab_score_corpus.py` (control vs treatment) — **score-only; guard so it can
+  NEVER invoke the generator.** Corpus-adapter + correlation logic unit-tested on synthetic data.
+- *Gate:* harness unit-tested; dry-run on local corpus shape. **No LLM, no run.**
 
-### Phase 4 — Premium sources & strategic bets (later, L)
-- **72.13** (RC-9, narrow) FactVerifier Tavily-down safety: when search/judge is unavailable, **tag
-  `unverified` and hold for review** rather than dropping at confidence 0. Keep verification **strict** for
-  factual answers (a driver can't fact-check hands-free). Do **not** re-architect — mode routing already
-  shipped in #46.
-- **72.14** (enabler) Stand up the never-run **A/B harness** (control vs treatment; resolvable via the
-  OpenRouter gateway now that the Anthropic-key gap can route through it) to *prove* each change reduces
-  boringness instead of shipping on faith.
-- **72.15** (strategic bet) Invert "fact-first" → "**angle-first, fact-grounded**": generate candidate
-  surprising angles (estimation/assumption-flip/reverse) then bind each to a verified source fact. The
-  existing `question_generation_open.md` path already proves this works — generalize it to MCQ + text.
-  Pairs with Reverse-Question-Answering (NAACL 2025).
+### Phase 7 — The ONLY spend = un-park gate (split 7a / 7b / 7c)
+> The single confirming run. Budget ~$5, but **plan for 2–3×** (the escape hatch may need fix + rerun;
+> keep it on its own toggle so it's revertible without re-running everything).
+- **7a — read-only scoring-inference (ONLY if founder approves it as "not a generation run" — Open Q #1):**
+  `MultiModelScorer` over the existing 580 corpus via `LLM_GATEWAY=openrouter` to populate answerability +
+  check T3/T6 separation + two-judge agreement. ~$1–3. **Still TEXT-only.** Generates **no new questions.**
+- **7b — the one generation run:** ONE small **MCQ-emphasis** batch (~20–30) through the reworked pipeline.
+  Confirm: no crash; no verbatim copying; estimation/reverse patterns actually appear; `self_critique`
+  telemetry + best-of-N present (72.9); distractors obey the rules; `VETO_SHADOW` would catch the dull ones
+  **without** false-vetoing good ones. **This is the first real MCQ data #72 ever sees.**
+- **7c — HUMAN LISTEN (the real arbiter):** founder listens to the 7b MCQs **hands-free** and judges
+  "prvoplánové vs fun." **No LLM-judge proxy replaces this.**
+- *Gate:* **un-park ONLY if 7b effects hold AND 7c (the founder's ear) says less boring.** Keep 7a/7b split
+  so a weak scorer result never forces re-generation.
+
+### Deferred / strategic (NOT on the ladder — explicit, not dropped)
+- **72.9** (RC-7) Restore an MCQ-path gate: re-add `self_critique` as **telemetry** + enable best-of-N for
+  MCQ. Lands as part of Phase 1–3 wiring but is *verified* in 7b (needs a real run). Listed here so it isn't
+  lost.
+- **72.15** (strategic bet, the highest-leverage root fix) Invert "fact-first" → "**angle-first, fact-
+  grounded**": generate surprising angles, then bind each to a verified source fact. Large + exploratory.
+  **Tackle as a follow-up once the ladder proves the periphery — OR pull forward if the founder wants the
+  root fix first (Open Q #4).** Pairs with Reverse-Question-Answering (NAACL 2025). **Flagged, not dropped.**
 
 ## Do NOT retry (already tried & failed, or already shipped)
 
@@ -147,20 +210,34 @@ preferentially *keeps* the recall ones. Fun is measured in five places and **enf
 
 ## Open questions for the founder
 
-1. Has the Tavily-topped-up re-run been run, and what fraction of boringness does it actually recover? (Phase 0.)
-2. Is `ANTHROPIC_API_KEY` / `OPENROUTER_API_KEY` now configured? (Needed for the second scorer + a clean A/B test.)
-3. What approve-rate can the pipeline tolerate? (Sets sequencing — raising the floor on starved sourcing → ~zero yield.)
-4. Does `gold_standard.json` still contain factually-wrong entries teaching bad facts? (Human-review before reuse.)
-5. Filing OK as #72 cross-linked to #42 (Track F-R) and #63 (un-park) — or fold into one of those?
+> **#1 is load-bearing — the whole Phase-7 gate design hinges on it.**
+
+1. **Is a read-only scoring-inference pass over the EXISTING 580 questions (~$1–3, generates NO new
+   questions) a "forbidden run" in your eyes, or does the ban cover only fresh *generation*?** (Phase 7a.)
+2. **Estimation routing — 72.8 vs 72.12b:** open free-text numeric estimate (driving-safe, research-backed)
+   **or** bucketed 3-option order-of-magnitude MCQ (a fun MCQ pattern)? *Recommendation:* default to open
+   free-text; add `reverse_engineer` as the new fun MCQ pattern; allow bucketed-estimation-MCQ only under an
+   explicit mcq-bias. Your call — it must be settled before 72.8's locking test.
+3. **72.5 scorer approach:** swap `MultiModelScorer` to `critique_v2` (one prompt change, alters the 6-dim
+   contract) **or** add a 2nd `critique_v2` judge (doubles scoring cost)?
+4. **72.15 (angle-first root fix):** pull forward as the first real lever, or keep as a later bet after the
+   periphery ladder?
+5. **Minimum Spearman rho** for the 72.2 surprise scorer to count as "directionally OK" on text (e.g. ≥0.3)?
+6. Does `gold_standard.json` still contain factually-wrong entries? (Human-review before reuse — 72.11d.)
+7. Filing OK as #72 cross-linked to #42 (Track F-R) and #63 (un-park) — confirmed standalone, your call.
 
 ## Acceptance
 
-- Phase 0 produces a measured acute-vs-structural split (a number, not "~90%").
-- A boring recall question like the starboard example is **rejected** by the wired external gate
-  (demonstrated in shadow mode on a labelled set) — i.e. fun is enforced in ≥1 place.
-- MCQ generation can emit at least one non-recall pattern (estimation or reverse) end-to-end.
-- The corpus re-score yields a bounded human worklist of flagged-boring served questions (review-flag, not delete).
-- No corpus writes occur until the founder un-parks; every change ships dormant/behind the park otherwise.
+- **Phases 0–6 are green offline with ZERO paid generation**, and each gate is labelled *plumbing-correct,
+  not fun-validated* (no offline pass is allowed to claim "fun" or "MCQ thresholds calibrated").
+- **72.13 (RC-9) lands before/with 72.8** — a test proves a non-substring-matching estimation answer is
+  **not** dropped by the verifier (else the new patterns die silently at the gate).
+- The **72.8-vs-72.12b routing conflict** is resolved as one documented decision **before** its locking test.
+- A boring recall question like the starboard example is **flagged** by the wired veto in `VETO_SHADOW` on
+  the (text) labelled set — i.e. fun is enforced in ≥1 place in *plumbing*.
+- The final run (7b) produces MCQs that (a) don't crash, (b) include ≥1 working non-recall pattern, and
+  (c) the founder judges **less boring by ear (7c)**. **Un-park requires 7c** — no proxy substitutes for it.
+- No corpus writes occur until the founder un-parks; every change ships dormant/behind a toggle otherwise.
 
 ## Links
 
@@ -168,7 +245,11 @@ preferentially *keeps* the recall ones. Fun is measured in five places and **enf
 - Feeds the un-park decision in [[issue-63-question-quality-review]]; MCQ structural survival is
   [[issue-42-question-quality-and-mcq]] Track F-R; general growth [[issue-30-batch-generate-categories]] (also parked).
 - Prior engagement work: `docs/archive/data-tasks/ENGAGEMENT_PATH_FOLLOWUP.md`.
-- Method: workflow `wf_69974eb3-492` (19 agents) + top-level first-hand spot-checks of the 5 load-bearing claims.
+- Method: workflow `wf_69974eb3-492` (19 agents) for the diagnosis + `wf_850581e1-f56` (7 agents) for the
+  offline-validatability audit + adversarial challenge of the resequencing; top-level first-hand spot-checks
+  of the load-bearing claims (corpus = zero MCQ via #63 Track B; RC-9 substring; `top_by_surprise` zero call
+  sites; OpenRouter key present, `LLM_GATEWAY` unset).
+- Resequencing handoff: `docs/handoffs/handoff-2026-06-22-1554.md` (offline-first, founder mandate 2026-06-22).
 
 <!-- obsidian-links:start -->
 ## Súvisiace issues

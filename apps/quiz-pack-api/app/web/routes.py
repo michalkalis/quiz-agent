@@ -2,13 +2,14 @@
 
 import json
 from typing import Optional
-from fastapi import APIRouter, Request, Form
+from fastapi import APIRouter, Depends, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 import os
 from datetime import datetime
 
 from quiz_shared.models.question import Question
+from ..api.deps import require_admin
 from ..generation.storage import QuestionStorage
 
 # Setup templates
@@ -19,8 +20,8 @@ templates = Jinja2Templates(directory=templates_dir)
 # Initialize storage
 storage = QuestionStorage()
 
-# Create router
-router = APIRouter(prefix="/web", tags=["web"])
+# Create router — every /web route is admin-gated (#65).
+router = APIRouter(prefix="/web", tags=["web"], dependencies=[Depends(require_admin)])
 
 
 @router.get("/", response_class=HTMLResponse)

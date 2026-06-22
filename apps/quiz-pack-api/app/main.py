@@ -60,13 +60,15 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Add CORS middleware
+# Add CORS middleware — env-driven origins (#65); was allow_origins=["*"].
+# Defaults to localhost; set CORS_ORIGINS (comma-separated) per deploy.
+cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
+    allow_origins=[o.strip() for o in cors_origins.split(",") if o.strip()],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "X-Admin-Key", "X-StoreKit-JWS", "Authorization"],
 )
 
 # Include API routes

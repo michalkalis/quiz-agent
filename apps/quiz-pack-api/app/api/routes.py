@@ -2,7 +2,7 @@
 
 import time
 from typing import Dict, Any
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
 from quiz_shared.models.question import Question
 
@@ -19,6 +19,7 @@ from .schemas import (
 from ..generation.advanced_generator import AdvancedQuestionGenerator
 from ..generation.storage import QuestionStorage
 from ..verification.fact_verifier import FactVerifier
+from .deps import require_admin
 
 
 # Initialize services
@@ -31,8 +32,8 @@ advanced_generator = AdvancedQuestionGenerator(
 storage = QuestionStorage()
 fact_verifier = FactVerifier()
 
-# Create router
-router = APIRouter(prefix="/api/v1", tags=["questions"])
+# Create router — every /api/v1 question route is admin-gated (#65).
+router = APIRouter(prefix="/api/v1", tags=["questions"], dependencies=[Depends(require_admin)])
 
 
 @router.post("/generate", response_model=GenerateResponse)

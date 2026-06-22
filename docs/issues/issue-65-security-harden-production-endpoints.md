@@ -34,7 +34,7 @@ A fourth, related gate: **App Attest is inert by default** (`app_attest_required
 
 ## Acceptance
 
-- [ ] `GET /web/` and `POST /api/v1/generate/advanced` on quiz-pack-api return 401/403 without a valid admin key
+- [x] `GET /web/` and `POST /api/v1/generate/advanced` on quiz-pack-api return 401/403 without a valid admin key — `require_admin` dep gates both routers; `tests/api/test_admin_auth.py` (7 tests, green)
 - [ ] `POST /api/v1/voice/transcribe` and `POST /api/v1/elevenlabs/token` on quiz-agent return 401 without a valid bearer token
 - [ ] `POST /api/v1/elevenlabs/token` is rate-limited to ≤10/min per client IP
 - [ ] Two requests with different `Fly-Client-IP` values get independent rate-limit counters (regression test)

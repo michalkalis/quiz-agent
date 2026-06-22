@@ -31,6 +31,11 @@ class Settings(BaseSettings):
     db_pool_size: int = 5
     db_echo: bool = False
 
+    # Admin auth (#65). Guards /web admin UI + /api/v1 generation/verify/review
+    # routes. Unset → those routers fail closed with 503. Set the Fly secret
+    # ADMIN_API_KEY in prod; set a dev value locally to use the admin UI.
+    admin_api_key: Optional[str] = None
+
     # StoreKit (issue #33 Task 1.8). app_bundle_id matches iOS xcconfig
     # BUNDLE_ID_BASE; storekit_environment is "Sandbox" on staging Fly app and
     # "Production" on prod — keep per-deploy via Fly secrets, not in code.

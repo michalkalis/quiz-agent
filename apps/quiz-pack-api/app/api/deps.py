@@ -11,6 +11,8 @@ Two deps live here:
 from __future__ import annotations
 
 import asyncio
+import base64
+import secrets
 from functools import lru_cache
 from typing import Annotated
 
@@ -92,3 +94,49 @@ async def get_arq_pool(request: Request) -> ArqRedis:
 def get_redis_url(settings: Annotated[Settings, Depends(get_settings)]) -> str:
     """Return the Redis DSN from settings."""
     return settings.redis_url
+
+
+def _extract_admin_key(request: Request) -> str | None:
+    """Pull the presented admin secret from the request.
+
+    Two carriers (#65): the `X-Admin-Key` header (used by scripts/agents,
+    mirrors quiz-agent's `set_premium`) or HTTP Basic auth (so the `/web`
+    admin UI stays openable in a browser — any username, password = the key).
+    """
+    header = request.headers.get("X-Admin-Key")
+    if header:
+        return header
+    authorization = request.headers.get("Authorization", "")
+    if authorization.startswith("Basic "):
+        try:
+            decoded = base64.b64decode(authorization[len("Basic "):]).decode("utf-8")
+        except (ValueError, UnicodeDecodeError):
+            return None
+        # "username:password" — the password component is the key.
+        return decoded.split(":", 1)[1] if ":" in decoded else decoded
+    return None
+
+
+def require_admin(
+    request: Request,
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> None:
+    """Guard admin routes (#65): require a valid `ADMIN_API_KEY`.
+
+    Fails closed: an unset key → 503 (the route is unusable until the Fly
+    secret / dev key is set), never silently open. A wrong or absent key →
+    401 with `WWW-Authenticate: Basic` so a browser prompts for credentials.
+    """
+    configured = settings.admin_api_key
+    if not configured:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Admin API not configured",
+        )
+    presented = _extract_admin_key(request)
+    if presented is None or not secrets.compare_digest(presented, configured):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or missing admin credentials",
+            headers={"WWW-Authenticate": "Basic"},
+        )

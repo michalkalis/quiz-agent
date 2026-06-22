@@ -182,7 +182,9 @@ Atomic units for the loop; full detail lives in **Plan** above. One iteration �
 Each box's *Gate* is the machine check that must be green before it counts as done.
 
 **Phase 0 — baseline + dormant flags (no LLM)**
-- [ ] **P0.1** Record the offline baseline: full suite green (~139 tests). *Gate:* suite green.
+- [x] **P0.1** Record the offline baseline: full suite green. *Gate:* suite green. ✅ **2026-06-22 — DONE.** Offline-green: **370 passed, 3 skipped, 13 deselected, 3 xfailed, 0 failed** (the "~139" estimate was stale; the suite is now 400 collected). Repro from `apps/quiz-pack-api`:
+  `LLM_GATEWAY=direct .venv/bin/python -m pytest tests/ -q --ignore=tests/db --deselect tests/api/test_orders.py --deselect tests/orchestrator/stages/test_persist.py`
+  **Three env prerequisites a fresh Ralph checkout needs (no source changes — environment only):** (1) `uv pip install --python .venv/bin/python 'slowapi>=0.1.9'` — declared in `pyproject.toml:22` (added by #65 rate-limit) but absent from this venv; (2) `mkdir -p data` — the gitignored runtime dir (`.gitignore:107`) that `SQLitePendingStore` opens at import; (3) run with `LLM_GATEWAY=direct` — the repo-root `.env:46` sets `openrouter`, but the offline mocks target the direct OpenAI endpoint (CI runs gateway-unset = direct). The excluded `tests/db` / `test_orders` / `test_persist` need a live Postgres+Redis (CI provides them as job services); they are out of the **offline** baseline by design, not red.
 - [ ] **P0.2** Add dormant flags (`GENERATION_MODEL`, `V3_ESCAPE_HATCH`, `VETO_SHADOW`, …); do **not** flip `LLM_GATEWAY` repo-wide. *Gate:* suite green, output unchanged with flags off.
 
 **Phase 1 — Lever A wiring + deterministic fixes (no LLM)**

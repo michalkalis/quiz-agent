@@ -267,3 +267,9 @@ resolved and baked in:
 ## Súvisiace issues
 [[issue-42-question-quality-and-mcq|#42 Question quality sweep + multichoice activation]] · [[issue-63-question-quality-review|#63 Question-quality review: generation audit + corpus verification]] · [[issue-30-batch-generate-categories|#30 Batch-generate questions for new categories]]
 <!-- obsidian-links:end -->
+
+## BLOCKER (2026-06-22) — automated test gate (quiz-pack-api)
+
+- The post-iteration scoped test gate failed after iteration 2 committed `2088db3` (reported task: P0.2 — add dormant generation-quality flags (GENERATION_MODEL/CRITIQUE_MODEL/V3_ESCAPE_HATCH/VETO_SHADOW)).
+- The change is on this branch but the relevant **quiz-pack-api** suite is RED, so the run halted and the branch was NOT pushed.
+- Next human-touch: read the gate log under `scripts/ralph/logs/gate-20260622-214251-*`, fix or revert the commit, then re-run.

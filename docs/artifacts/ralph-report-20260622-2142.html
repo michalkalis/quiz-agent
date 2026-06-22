@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ralph Report — 20260622-2142</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --border: #30363d;
+    --text: #c9d1d9;
+    --muted: #8b949e;
+    --green: #3fb950;
+    --green-bg: #0d2a14;
+    --amber: #d29922;
+    --amber-bg: #2d1c00;
+    --red: #f85149;
+    --red-bg: #3d0a09;
+    --blue: #58a6ff;
+    --blue-bg: #0c2a4a;
+    --tag-bg: #21262d;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.6; }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* STICKY TOC */
+  #toc { position: sticky; top: 0; z-index: 100; background: var(--surface); border-bottom: 1px solid var(--border); padding: 8px 16px; display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; }
+  #toc a { color: var(--muted); }
+  #toc a:hover { color: var(--text); }
+
+  .container { max-width: 860px; margin: 0 auto; padding: 24px 16px 60px; }
+
+  h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+  h2 { font-size: 15px; font-weight: 600; margin: 28px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 13px; font-weight: 600; margin: 12px 0 6px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+
+  .run-meta { color: var(--muted); font-size: 12px; margin-bottom: 20px; }
+  .run-meta strong { color: var(--text); }
+
+  /* BADGES */
+  .badge { display: inline-block; padding: 1px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+  .badge-green  { background: var(--green-bg);  color: var(--green); }
+  .badge-amber  { background: var(--amber-bg);  color: var(--amber); }
+  .badge-red    { background: var(--red-bg);    color: var(--red); }
+  .badge-blue   { background: var(--blue-bg);   color: var(--blue); }
+
+  /* STAT CARDS */
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 24px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
+  .stat-val { font-size: 26px; font-weight: 700; line-height: 1; }
+  .stat-lbl { font-size: 11px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: .05em; }
+  .stat-green { color: var(--green); }
+  .stat-amber { color: var(--amber); }
+  .stat-red   { color: var(--red); }
+  .stat-blue  { color: var(--blue); }
+
+  /* MODEL MIX BAR */
+  .model-row { display: flex; align-items: center; gap: 10px; margin: 6px 0; }
+  .model-bar-wrap { flex: 1; height: 8px; background: var(--tag-bg); border-radius: 4px; overflow: hidden; }
+  .model-bar { height: 100%; background: var(--blue); border-radius: 4px; }
+  .model-label { font-size: 12px; color: var(--muted); min-width: 140px; }
+  .model-count { font-size: 12px; color: var(--text); min-width: 40px; text-align: right; }
+
+  /* BLOCKER BOX */
+  .blocker-box { background: var(--red-bg); border: 1px solid var(--red); border-radius: 8px; padding: 14px 16px; margin-bottom: 14px; }
+  .blocker-box h3 { color: var(--red); text-transform: none; font-size: 13px; margin-bottom: 8px; letter-spacing: 0; }
+  .blocker-box ul { padding-left: 18px; }
+  .blocker-box li { margin-bottom: 6px; color: var(--text); font-size: 13px; }
+  .blocker-box .label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; margin-right: 6px; }
+  .blocker-box .action { background: #5c1a18; border: 1px solid var(--red); border-radius: 6px; padding: 8px 12px; margin-top: 10px; font-size: 12px; }
+  .blocker-box .action strong { color: var(--red); }
+
+  /* ISSUE CARDS */
+  .issue-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; margin-bottom: 12px; }
+  .issue-card.red-card    { border-color: var(--red); }
+  .issue-card.amber-card  { border-color: var(--amber); }
+  .issue-card.green-card  { border-color: var(--green); }
+  .issue-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
+  .issue-title { font-weight: 600; font-size: 13px; }
+  .iter-row { display: flex; gap: 8px; align-items: flex-start; margin: 4px 0; font-size: 12px; }
+  .iter-num { color: var(--muted); min-width: 42px; }
+  .iter-task { color: var(--text); flex: 1; }
+  .iter-verdict { }
+  .commit-sha { font-family: 'SF Mono', Menlo, monospace; font-size: 11px; color: var(--blue); background: var(--tag-bg); padding: 1px 5px; border-radius: 4px; }
+  .iter-model { font-size: 10px; color: var(--muted); background: var(--tag-bg); padding: 1px 6px; border-radius: 10px; }
+
+  /* DETAILS / COLLAPSIBLE */
+  details { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 12px; }
+  details summary { padding: 12px 14px; cursor: pointer; font-weight: 600; font-size: 13px; color: var(--text); list-style: none; user-select: none; }
+  details summary::-webkit-details-marker { display: none; }
+  details summary::before { content: "▶ "; font-size: 10px; color: var(--muted); }
+  details[open] summary::before { content: "▼ "; }
+  details .inner { padding: 0 14px 14px; }
+
+  /* COMMIT LOG */
+  .commit-list { font-family: 'SF Mono', Menlo, monospace; font-size: 11px; line-height: 1.8; }
+  .commit-list .sha { color: var(--blue); }
+  .commit-list .msg { color: var(--text); }
+  .commit-list .stat { color: var(--muted); padding-left: 16px; font-size: 10px; }
+  .commit-entry { padding: 6px 0; border-bottom: 1px solid var(--border); }
+  .commit-entry:last-child { border-bottom: none; }
+
+  /* NEXT STEPS */
+  .cmd-box { background: #0d1f0d; border: 1px solid var(--green); border-radius: 6px; padding: 10px 14px; font-family: 'SF Mono', Menlo, monospace; font-size: 12px; color: var(--green); margin: 10px 0; white-space: pre-wrap; word-break: break-all; }
+  .warn { background: var(--amber-bg); border: 1px solid var(--amber); border-radius: 6px; padding: 8px 12px; font-size: 12px; color: var(--amber); margin-top: 8px; }
+
+  .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+  @media (max-width: 500px) {
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .stat-val { font-size: 20px; }
+    #toc { gap: 10px; font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+
+<nav id="toc">
+  <a href="#summary">Summary</a>
+  <a href="#blockers">🔴 Blockers</a>
+  <a href="#issues">Issues</a>
+  <a href="#commits">Commits</a>
+  <a href="#next">Next Steps</a>
+</nav>
+
+<div class="container">
+
+  <h1>Ralph Overnight Report</h1>
+  <div class="run-meta">
+    Run <strong>20260622-2142</strong> &nbsp;·&nbsp;
+    Branch <strong>ralph/overnight-20260622-2142</strong> &nbsp;·&nbsp;
+    Base <code class="commit-sha">a77a880</code> &nbsp;·&nbsp;
+    2026-06-22 21:42 → 22:03
+  </div>
+
+  <!-- ═══════════════════ SUMMARY ═══════════════════ -->
+  <section id="summary">
+    <h2>Summary</h2>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-val stat-blue">3</div>
+        <div class="stat-lbl">Commits</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val">1</div>
+        <div class="stat-lbl">Focus Files</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val stat-red">0</div>
+        <div class="stat-lbl">Completed</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val stat-red">1</div>
+        <div class="stat-lbl">Blocked</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val stat-blue">2</div>
+        <div class="stat-lbl">Iterations</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val stat-amber">21 min</div>
+        <div class="stat-lbl">Wall Time</div>
+      </div>
+    </div>
+
+    <h3>Model Mix</h3>
+    <div class="model-row">
+      <span class="model-label">claude-opus-4-8</span>
+      <div class="model-bar-wrap"><div class="model-bar" style="width:100%"></div></div>
+      <span class="model-count">2 / 2</span>
+    </div>
+
+    <p style="margin-top:12px; font-size:13px; color:var(--muted);">
+      One focus file ran (#72 question fun &amp; engagement redesign). Two iterations completed; the post-iter-2 test gate was <span class="badge badge-red">RED</span>. Branch was <strong>not pushed</strong> per gate-red policy (#57.3).
+    </p>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ═══════════════════ BLOCKERS ═══════════════════ -->
+  <section id="blockers">
+    <h2>🔴 Blockers — Needs You</h2>
+
+    <div class="blocker-box">
+      <h3>#72 question-fun-engagement-redesign — automated test gate RED (quiz-pack-api)</h3>
+
+      <ul>
+        <li><span class="label">File</span><code>docs/issues/issue-72-question-fun-engagement-redesign.md</code></li>
+        <li><span class="label">Trigger</span>Post-iteration scoped gate ran after iter 2 committed <code class="commit-sha">2088db3</code> (P0.2 — dormant generation-quality flags)</li>
+        <li>
+          <span class="label">Root cause</span>
+          <code>ModuleNotFoundError: No module named 'slowapi'</code> — the gate's pytest environment does not have <code>slowapi</code> installed.
+          This caused collection to fail across nearly all test modules in <code>apps/quiz-pack-api/</code>, so the gate returned non-zero.
+          The commit itself records <code>slowapi install per pyproject:22</code> as a prerequisite, but the gate runner's venv didn't have it.
+        </li>
+        <li><span class="label">Branch state</span>Branch exists locally; was NOT pushed (ralph/overnight-20260622-2142). P0.1 and P0.2 commits are clean work — only the gate env is broken.</li>
+        <li><span class="label">Evidence</span><code>scripts/ralph/logs/gate-20260622-214251-02-qpack.log</code></li>
+      </ul>
+
+      <div class="action">
+        <strong>Next human step:</strong> Install the missing dep in the Ralph venv, then re-run:<br><br>
+        1. <code>cd apps/quiz-pack-api &amp;&amp; uv pip install slowapi</code> (or confirm it's in pyproject.toml extras and run <code>uv pip install -e .</code>)<br>
+        2. Confirm gate passes locally: <code>pytest tests/ -v -k "not test_admin_auth" --ignore=tests/api</code> or the full suite<br>
+        3. Re-queue the branch for the next Ralph run — or push manually once the gate is green
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ═══════════════════ PER-ISSUE ═══════════════════ -->
+  <section id="issues">
+    <h2>Per-Issue Breakdown</h2>
+
+    <div class="issue-card red-card">
+      <div class="issue-header">
+        <div>
+          <div class="issue-title">#72 — question-fun-engagement-redesign</div>
+          <div style="font-size:11px; color:var(--muted); margin-top:3px;">
+            <code>docs/issues/issue-72-question-fun-engagement-redesign.md</code>
+          </div>
+        </div>
+        <span class="badge badge-red">Blocked</span>
+      </div>
+
+      <div style="font-size:12px; color:var(--muted); margin-bottom:8px;">
+        Iterations: <strong style="color:var(--text)">2</strong> &nbsp;·&nbsp; iters budget: 22 &nbsp;·&nbsp; model: claude-opus-4-8
+      </div>
+
+      <div class="iter-row">
+        <span class="iter-num">Iter 1</span>
+        <span class="iter-task">P0.1 — record offline test baseline (370 green)</span>
+        <span><code class="commit-sha">27c086d</code></span>
+        &nbsp;<span class="badge badge-green">done</span>
+        &nbsp;<span class="iter-model">reviewer: PASS</span>
+        &nbsp;<span class="iter-model">goal: NO (expected)</span>
+      </div>
+      <div class="iter-row">
+        <span class="iter-num">Iter 2</span>
+        <span class="iter-task">P0.2 — add dormant generation-quality flags (GENERATION_MODEL / CRITIQUE_MODEL / V3_ESCAPE_HATCH / VETO_SHADOW)</span>
+        <span><code class="commit-sha">2088db3</code></span>
+        &nbsp;<span class="badge badge-red">gate red</span>
+      </div>
+
+      <div style="margin-top:10px; font-size:12px; color:var(--muted);">
+        <strong style="color:var(--text)">What got done:</strong> P0.1 (baseline record, docs-only) is clean. P0.2 introduced
+        <code>apps/quiz-pack-api/app/feature_flags.py</code> and 15 tests — all passing in the worker's env (385 total, 0 failed).
+        The post-iter gate ran in a different venv that was missing <code>slowapi</code>, making the gate fail on import rather than test failure.
+        P0.2 code is likely correct; the env is the problem.
+      </div>
+
+      <div style="margin-top:8px; font-size:12px; color:var(--muted);">
+        <strong style="color:var(--text)">Remaining:</strong> P0.3 (model-config validation), P1.x (RC-9 verifier fix), P2.x (prompt restoration),
+        P3.x (input fixes), P4.x (veto shadow wiring), P5.x (validation harness) — 13 tasks unchecked per goal-check log.
+      </div>
+    </div>
+
+  </section>
+
+  <hr class="divider">
+
+  <!-- ═══════════════════ COMMITS ═══════════════════ -->
+  <section id="commits">
+    <details>
+      <summary>Commits (3) — git log --stat</summary>
+      <div class="inner">
+        <div class="commit-list">
+
+          <div class="commit-entry">
+            <div><span class="sha">e30c713</span> &nbsp;<span class="msg">chore(ralph): #57 gate-red BLOCKER on issue-72-question-fun-engagement-redesign.md</span></div>
+            <div class="stat">docs/issues/issue-72-question-fun-engagement-redesign.md | 6 ++++++  &nbsp;·&nbsp; 1 file changed, 6 insertions(+)</div>
+          </div>
+
+          <div class="commit-entry">
+            <div><span class="sha">2088db3</span> &nbsp;<span class="msg">feat(questions): #72 P0.2 — add dormant generation-quality flags</span></div>
+            <div class="stat">
+              apps/quiz-pack-api/app/feature_flags.py &nbsp;| 65 ++++++++++++++++++++++<br>
+              apps/quiz-pack-api/tests/test_feature_flags.py &nbsp;| 55 ++++++++++++++++++<br>
+              docs/issues/issue-72-question-fun-engagement-redesign.md &nbsp;| 2 +-<br>
+              3 files changed, 121 insertions(+), 1 deletion(-)
+            </div>
+          </div>
+
+          <div class="commit-entry">
+            <div><span class="sha">27c086d</span> &nbsp;<span class="msg">docs(questions): #72 P0.1 — record offline test baseline (370 green)</span></div>
+            <div class="stat">docs/issues/issue-72-question-fun-engagement-redesign.md | 4 +++-  &nbsp;·&nbsp; 1 file changed, 3 insertions(+), 1 deletion(-)</div>
+          </div>
+
+        </div>
+      </div>
+    </details>
+  </section>
+
+  <!-- ═══════════════════ NEXT STEPS ═══════════════════ -->
+  <section id="next">
+    <h2>Next Steps</h2>
+
+    <p style="font-size:13px; color:var(--text); margin-bottom:10px;">
+      <strong>Do not merge yet.</strong> The branch gate is red and the branch was not pushed to remote.
+      Fix the blocker first (see above), then re-run Ralph or push manually.
+    </p>
+
+    <p style="font-size:12px; color:var(--muted); margin-bottom:6px;">
+      Once the gate is confirmed green and you are satisfied with the diff, merge with:
+    </p>
+    <div class="cmd-box">git checkout main &amp;&amp; git merge --ff-only ralph/overnight-20260622-2142 &amp;&amp; git push</div>
+
+    <div class="warn">
+      ⚠ Review the BLOCKER above and the diff (<code>git diff main..ralph/overnight-20260622-2142</code>) before merging.
+      P0.2 (feature_flags.py) is dormant code — flags default off, no pipeline reads them yet — but confirm the gate passes cleanly after installing <code>slowapi</code>.
+    </div>
+  </section>
+
+</div>
+</body>
+</html>

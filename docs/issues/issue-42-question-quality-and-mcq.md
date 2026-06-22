@@ -404,17 +404,40 @@ cannot beat the template default — structured output makes the contract a pars
       `test_mcq_sub_batch_uses_structured_output` + updated fan-out test (stub target moved to the new helper). 163
       generation + generation-stage tests green; no live LLM. Verified by 7-agent map+verify workflow first.
 
-- [ ] **42.26 `PgvectorQuestionStore.find_duplicates` (port of lever c).** Add the method to the shared store by
+- [x] **42.26 `PgvectorQuestionStore.find_duplicates` (port of lever c).** Add the method to the shared store by
       porting `ChromaDBQuestionStore.find_duplicates` (`question_store.py:205-239`): embed query text, `cosine_distance`
       ORDER BY (same pattern as `.search`, `pgvector_client.py:205`), take top 10, threshold-filter, return
       `list[tuple[Question, float]]`. Both apps benefit (shared package).
       **Acceptance**: test seeds a store with one question, asserts a near-paraphrase scores ≥ 0.85 and an unrelated
       question does not; self-match by id excluded.
+      **Done 2026-06-22:** added `async find_duplicates(question_text, threshold=0.85)` to the shared
+      `PgvectorQuestionStore`. Mirrors `.search`'s `cosine_distance` ORDER BY but also SELECTs the distance
+      (`select(questions_table, distance.label("distance"))`) so `similarity = 1 - distance` is recovered for the
+      `(Question, score)` tuples DedupStage expects; top-10, threshold-filtered. Added `Tuple` to the typing import.
+      Self-exclusion is **not** done here — the text-only signature carries no id, so a question already in the store
+      is returned and `DedupStage` excludes the self-match by id (re-run stays idempotent), exactly as the ChromaDB
+      store behaves. DB test seeds two questions and asserts a 7/8-overlap paraphrase scores ≥0.85, a 2/8-overlap
+      (~0.5) match stays below the gate, the unrelated question never matches, and the query's own row is returned.
+      Verified against real pgvector (`quiz_pack_test`): 2 passed. No live LLM (deterministic fixture embedder).
 
-- [ ] **42.27 Wire pgvector dedup into worker + CLI.** Change `worker.py:52` from `ChromaDBClient().store` (frozen
+- [x] **42.27 Wire pgvector dedup into worker + CLI.** Change `worker.py:52` from `ChromaDBClient().store` (frozen
       legacy) to `PgvectorQuestionStore`; add `--dedup-store pgvector` to `generate_pack.py` (was deferred 42.19c).
       **Acceptance**: a `--dry-run --dedup-store pgvector` test drops a seeded duplicate; default CLI behaviour
       (no flag) unchanged (`_NoopQuestionStore`).
+      **Done 2026-06-22:** (1) moved `_BackgroundLoop` + `SyncPgvectorStore` from `apps/quiz-agent/app/retrieval/`
+      to `packages/shared/quiz_shared/database/sync_pgvector_store.py` (quiz-pack-api can't import from quiz-agent)
+      and implemented its `find_duplicates` to bridge to the new async one via `run_coroutine_threadsafe`; re-pointed
+      quiz-agent's two importers (`main.py`, `question_retriever.py`) and deleted the old copy. (2) `worker.py`
+      `on_startup` now builds `SyncPgvectorStore(PgvectorQuestionStore(session_factory=AsyncSessionLocal))` instead
+      of `ChromaDBClient().store` — DedupStage dedups against the canonical pgvector corpus (ChromaDB stays frozen
+      read-only legacy). (3) `generate_pack.py` got `--dedup-store {noop,pgvector}` (default `noop`) +
+      `_build_dedup_store` (pgvector path requires `DATABASE_URL`, fails loud). Tests: DB-backed
+      `tests/db/test_pgvector_dedup.py` (SyncPgvectorStore + DedupStage drops a near-paraphrase, keeps the stored
+      question by id — proves the sync→async bridge works against real pgvector from inside an async stage), CLI
+      selection `tests/scripts/test_generate_pack_dedup.py`, and updated the `test_generate_pack_flags` stub for the
+      new `_build_stages(dedup_store=...)` kwarg. Verified: 293 quiz-pack-api (excl. pre-existing alembic-fixture
+      ERRORs in test_smoke/test_core_entities/test_persist) + 161 quiz-agent + 2 order-e2e (`on_startup`) passed;
+      ruff clean on CI-scoped files (`packages/shared` + `apps/quiz-agent`). No live LLM. **Stream B complete.**
 
 - [x] **42.28 Fact partition + sourcing topic fix (lever b).** (1) In `_generate_mcq_sub_batches`, slice `ctx.facts`
       into N equal chunks (one per pattern key) so sub-batches stop generating the same question. (2) In

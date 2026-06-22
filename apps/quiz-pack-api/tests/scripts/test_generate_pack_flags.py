@@ -129,7 +129,7 @@ class TestCliWiring:
         monkeypatch.setattr(
             generate_pack,
             "_build_stages",
-            lambda *, persist: [_StubSourcingStage([question], seen)],
+            lambda *, persist, dedup_store: [_StubSourcingStage([question], seen)],
         )
         out = tmp_path / "mcq_batch_cli.json"
 

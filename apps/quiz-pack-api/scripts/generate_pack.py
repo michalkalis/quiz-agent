@@ -62,6 +62,7 @@ from app.orchestrator.stages import (
     SourcingStage,
     VerificationStage,
 )
+from quiz_shared.database.question_store import QuestionStore
 from quiz_shared.models.question import Question
 
 logger = logging.getLogger("generate_pack")
@@ -197,7 +198,31 @@ def _build_order(args: argparse.Namespace) -> GenerationOrder:
     )
 
 
-def _build_stages(*, persist: bool) -> list[Stage]:
+def _build_dedup_store(name: str) -> QuestionStore:
+    """Select the corpus `DedupStage` checks against.
+
+    ``noop`` (default) finds no duplicates — correct for a one-shot fresh
+    pack with no existing corpus. ``pgvector`` dedups against the live
+    Postgres corpus (requires ``DATABASE_URL``), so the 0.85 cosine guard
+    fires against real history (issue #42 task 42.27, was deferred 42.19c).
+    """
+    if name == "pgvector":
+        from app.db.engine import normalize_async_url
+        from quiz_shared.database.pgvector_client import PgvectorQuestionStore
+        from quiz_shared.database.sync_pgvector_store import SyncPgvectorStore
+
+        url = os.environ.get("DATABASE_URL")
+        if not url:
+            raise SystemExit(
+                "--dedup-store pgvector requires DATABASE_URL (Postgres + pgvector)."
+            )
+        return SyncPgvectorStore(
+            PgvectorQuestionStore(database_url=normalize_async_url(url))
+        )
+    return _NoopQuestionStore()
+
+
+def _build_stages(*, persist: bool, dedup_store: QuestionStore) -> list[Stage]:
     """Construct the standard pipeline. Persist is omitted in dry-run mode."""
     from app.generation.advanced_generator import AdvancedQuestionGenerator
     from app.scoring.multi_model_scorer import MultiModelScorer
@@ -209,7 +234,7 @@ def _build_stages(*, persist: bool) -> list[Stage]:
         GenerationStage(AdvancedQuestionGenerator()),
         VerificationStage(FactVerifier()),
         ScoringStage(MultiModelScorer()),
-        DedupStage(_NoopQuestionStore(), gold_standard_path=None),
+        DedupStage(dedup_store, gold_standard_path=None),
     ]
     if persist:
         from app.db.session import AsyncSessionLocal
@@ -244,7 +269,8 @@ def _write_out(questions: Sequence[Question], path: str) -> None:
 async def _run(args: argparse.Namespace) -> int:
     persist = not args.dry_run
     order = _build_order(args)
-    stages = _build_stages(persist=persist)
+    dedup_store = _build_dedup_store(args.dedup_store)
+    stages = _build_stages(persist=persist, dedup_store=dedup_store)
 
     def _sink_factory(_order_id: str) -> ProgressSink:
         return _StdoutSink()  # type: ignore[return-value]
@@ -305,6 +331,16 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         help=(
             "Append a steering instruction to the order prompt nudging the "
             "LLM toward MCQ-routable patterns (PATTERNS_TO_MCQ)."
+        ),
+    )
+    parser.add_argument(
+        "--dedup-store",
+        choices=["noop", "pgvector"],
+        default="noop",
+        help=(
+            "Corpus the dedup stage checks against. 'noop' (default) finds no "
+            "duplicates; 'pgvector' dedups against the live DATABASE_URL "
+            "corpus so the 0.85 cosine guard fires against real history."
         ),
     )
     parser.add_argument(

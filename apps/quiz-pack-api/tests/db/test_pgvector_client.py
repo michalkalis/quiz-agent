@@ -50,6 +50,83 @@ def _make_question(qid: uuid.UUID, text_: str, embedding: list[float]) -> Questi
     )
 
 
+def _vec(positions: list[int]) -> list[float]:
+    """Unit-weighted vector with 1.0 at the given positions (else 0.0).
+
+    Cosine similarity between two such vectors is ``overlap / sqrt(|a|*|b|)``,
+    so overlapping-position counts give predictable, threshold-crossing scores
+    without touching the OpenAI embedder.
+    """
+    vec = [0.0] * EMBEDDING_DIM
+    for p in positions:
+        vec[p] = 1.0
+    return vec
+
+
+@pytest.mark.asyncio
+async def test_find_duplicates_threshold_and_self(engine: AsyncEngine) -> None:
+    """`find_duplicates` flags near-paraphrases (>= 0.85), rejects weak/unrelated
+    matches, and still returns the query's own row (self-exclusion is the
+    caller's job — `DedupStage` filters by id, which is why this method must
+    NOT)."""
+    factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+
+    # 8-position base vector for the stored "capital of France" question.
+    base = [0, 1, 2, 3, 4, 5, 6, 7]
+    # Query vectors mapped by text so the cosine ranking is deterministic:
+    #   paraphrase: 7/8 overlap -> cos ~0.935  (a real near-duplicate)
+    #   weak:       2/8 overlap -> cos ~0.50   (related-but-distinct, < 0.85)
+    #   self:       exact base  -> cos 1.0      (the query's own row)
+    query_vecs = {
+        "paraphrase": _vec(base[:7]),
+        "weak": _vec(base[:2]),
+        "self": _vec(base),
+    }
+
+    def fake_embedder(query: str) -> list[float]:
+        return query_vecs[query]
+
+    store = PgvectorQuestionStore(session_factory=factory, embedder=fake_embedder)
+
+    target_id = uuid.uuid4()
+    other_id = uuid.uuid4()
+    target = _make_question(target_id, "Capital of France?", _vec(base))
+    # Unrelated question on disjoint positions -> cosine 0 against every query.
+    other = _make_question(other_id, "Famous painters?", _vec([200, 201, 202, 203]))
+
+    try:
+        assert await store.add(target) is True
+        assert await store.add(other) is True
+
+        # Near-paraphrase: target is a duplicate (>= 0.85); the unrelated
+        # question is not returned at all.
+        dups = await store.find_duplicates("paraphrase", threshold=0.85)
+        scored = {q.id: score for q, score in dups}
+        assert str(target_id) in scored, "near-paraphrase should flag the target"
+        assert scored[str(target_id)] >= 0.85
+        assert str(other_id) not in scored, "unrelated question must not match"
+        # Returned items are (Question, float) tuples.
+        q0, score0 = dups[0]
+        assert isinstance(q0, Question)
+        assert isinstance(score0, float)
+
+        # Weak overlap stays below the gate -> no duplicates.
+        weak = await store.find_duplicates("weak", threshold=0.85)
+        assert weak == [], "a 0.5-similarity match must not cross the 0.85 gate"
+
+        # Self-match: the store returns the query's own row by design; the id
+        # filter that keeps a re-run idempotent lives in DedupStage, not here.
+        self_dups = await store.find_duplicates("self", threshold=0.85)
+        assert str(target_id) in {q.id for q, _ in self_dups}
+    finally:
+        async with factory() as session:
+            await session.execute(
+                text("DELETE FROM questions WHERE id IN (:a, :b)"),
+                {"a": target_id, "b": other_id},
+            )
+            await session.commit()
+
+
 @pytest.mark.asyncio
 async def test_round_trip_and_cosine_top_match(engine: AsyncEngine) -> None:
     factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)

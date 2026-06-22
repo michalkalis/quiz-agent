@@ -17,10 +17,10 @@ from quiz_shared.models.question import Question
 from quiz_shared.models.session import QuizSession
 from quiz_shared.database.pgvector_client import PgvectorQuestionStore
 from quiz_shared.database.question_store import QuestionStore
+from quiz_shared.database.sync_pgvector_store import SyncPgvectorStore
 from quiz_shared.utils.embeddings import generate_embedding, calculate_similarity
 
 from ..config import get_settings
-from .sync_pgvector_store import SyncPgvectorStore
 
 
 class QuestionRetriever:

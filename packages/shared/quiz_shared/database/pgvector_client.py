@@ -24,7 +24,7 @@ from __future__ import annotations
 import logging
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
@@ -211,6 +211,38 @@ class PgvectorQuestionStore:
             return [_row_to_question(row) for row in result.mappings().all()][
                 :n_results
             ]
+
+    async def find_duplicates(
+        self, question_text: str, threshold: float = 0.85
+    ) -> List[Tuple[Question, float]]:
+        """Return stored questions whose cosine similarity to ``question_text``
+        is ``>= threshold`` (a port of ``ChromaDBQuestionStore.find_duplicates``).
+
+        Mirrors ``search``'s ``cosine_distance`` ordering but also selects the
+        distance so the similarity (``1 - distance``) can be recovered for the
+        ``(Question, score)`` tuples ``DedupStage`` expects. Self-matches are
+        **not** filtered here — the text-only signature carries no id — so a
+        question already in the store is returned; ``DedupStage`` excludes the
+        self-match by id, keeping a re-run idempotent.
+        """
+        query_embedding = self._embedder(question_text)
+        distance = questions_table.c.embedding.cosine_distance(query_embedding)
+        stmt = (
+            select(questions_table, distance.label("distance"))
+            .where(questions_table.c.embedding.is_not(None))
+            .order_by(distance)
+            .limit(10)
+        )
+        async with self._session_factory() as session:
+            result = await session.execute(stmt)
+            rows = result.mappings().all()
+
+        duplicates: List[Tuple[Question, float]] = []
+        for row in rows:
+            similarity = 1.0 - float(row["distance"])
+            if similarity >= threshold:
+                duplicates.append((_row_to_question(row), similarity))
+        return duplicates
 
     # ── Internal helpers ───────────────────────────────────────────────
 

@@ -59,12 +59,12 @@ if sentry_dsn:
 from quiz_shared.database.chroma_client import ChromaDBClient
 from quiz_shared.database.pgvector_client import PgvectorQuestionStore
 from quiz_shared.database.sql_client import SQLClient
+from quiz_shared.database.sync_pgvector_store import SyncPgvectorStore
 
 from .config import get_settings
 from .session.manager import SessionManager
 from .input.parser import InputParser
 from .retrieval.question_retriever import QuestionRetriever
-from .retrieval.sync_pgvector_store import SyncPgvectorStore
 from .evaluation.evaluator import AnswerEvaluator
 from .rating.feedback import FeedbackService
 from .voice.transcriber import VoiceTranscriber

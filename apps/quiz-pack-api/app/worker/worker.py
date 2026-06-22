@@ -37,7 +37,8 @@ async def on_startup(ctx: Dict[str, Any]) -> None:
     from app.sourcing.fact_sourcer import FactSourcer
     from app.verification.fact_verifier import FactVerifier
     from app.verification.logical_verifier import LogicalConsistencyVerifier
-    from quiz_shared.database.chroma_client import ChromaDBClient
+    from quiz_shared.database.pgvector_client import PgvectorQuestionStore
+    from quiz_shared.database.sync_pgvector_store import SyncPgvectorStore
 
     ctx["session_factory"] = AsyncSessionLocal
     ctx["fact_sourcer"] = FactSourcer()
@@ -49,7 +50,12 @@ async def on_startup(ctx: Dict[str, Any]) -> None:
     # `uncertain` when GOOGLE_API_KEY is absent.
     ctx["logical_verifier"] = LogicalConsistencyVerifier()
     ctx["scorer"] = MultiModelScorer()
-    ctx["question_store"] = ChromaDBClient().store
+    # 42.27 — DedupStage dedups against the canonical pgvector corpus (ChromaDB
+    # is frozen read-only legacy). SyncPgvectorStore bridges DedupStage's sync
+    # `find_duplicates` call to the async store via a background event loop.
+    ctx["question_store"] = SyncPgvectorStore(
+        PgvectorQuestionStore(session_factory=AsyncSessionLocal)
+    )
     ctx["gold_standard_path"] = (
         _GOLD_STANDARD_PATH if _GOLD_STANDARD_PATH.exists() else None
     )

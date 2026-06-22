@@ -1,19 +1,22 @@
-"""Sync adapter over async `PgvectorQuestionStore` (#36 task 2.20).
+"""Sync adapter over the async `PgvectorQuestionStore`.
 
-The voice-quiz `QuestionRetriever` is sync (it predates the pgvector
-cutover and is on the request hot path). The canonical
-`PgvectorQuestionStore` is async-only. Rather than push async upward
-through the retriever, flow service, and route handlers — out of scope
-for Phase 2 per the issue plan — this adapter bridges sync calls to the
-async store via a dedicated background event loop.
+Bridges synchronous `QuestionStore` callers to the async-only pgvector
+store via a dedicated background event loop. Two consumers share it:
+
+- **quiz-agent voice-quiz read path** (#36 task 2.20): `QuestionRetriever`
+  is sync (request hot path), so `get`/`count`/`search` adapt here.
+- **quiz-pack-api `DedupStage`** (#42 task 42.27): the `QuestionStore`
+  Protocol declares `find_duplicates` sync and `DedupStage.run` calls it
+  synchronously, so duplicate detection against the canonical pgvector
+  corpus also routes through this facade.
 
 Why a background loop and not `asyncio.run`?
-  `QuestionRetriever` methods are invoked from FastAPI async handlers,
-  where the calling thread already owns a running event loop. Calling
-  `asyncio.run` inside that thread raises `RuntimeError`. Running the
-  coroutine on a separate, dedicated loop via
-  `run_coroutine_threadsafe` works in both sync and async caller
-  contexts.
+  Both callers invoke these methods from inside a *running* event loop
+  (FastAPI async handlers; the worker/CLI pipeline's async `Stage.run`).
+  Calling `asyncio.run` from such a thread raises `RuntimeError`. Running
+  the coroutine on a separate, dedicated loop via
+  `run_coroutine_threadsafe` works in both sync and async caller contexts,
+  at the cost of blocking the calling thread until the query returns.
 """
 
 from __future__ import annotations
@@ -22,8 +25,8 @@ import asyncio
 import threading
 from typing import Any, Dict, List, Optional, Tuple
 
-from quiz_shared.database.pgvector_client import PgvectorQuestionStore
-from quiz_shared.models.question import Question
+from ..models.question import Question
+from .pgvector_client import PgvectorQuestionStore
 
 
 class _BackgroundLoop:
@@ -58,12 +61,13 @@ class _BackgroundLoop:
 
 
 class SyncPgvectorStore:
-    """Sync facade implementing the read-path methods `QuestionRetriever` uses.
+    """Sync facade over `PgvectorQuestionStore`.
 
-    Only the surface area the retriever touches (`get`, `count`, `search`)
-    is exposed. Write methods (`add`, `upsert`, `delete`) are not provided
-    — the voice-quiz read path does not write to the question store, and
-    Phase 2 keeps ChromaDB as the write target for feedback updates.
+    Exposes the read-path methods `QuestionRetriever` uses (`get`, `count`,
+    `search`) plus `find_duplicates` for `DedupStage`. Write methods (`add`,
+    `upsert`, `delete`) are not provided — neither consumer writes through
+    this facade (the voice-quiz read path does not write; quiz-pack-api
+    persists via `PersistStage`).
     """
 
     def __init__(self, async_store: PgvectorQuestionStore) -> None:
@@ -103,7 +107,6 @@ class SyncPgvectorStore:
     def find_duplicates(
         self, question_text: str, threshold: float = 0.85
     ) -> List[Tuple[Question, float]]:
-        raise NotImplementedError(
-            "SyncPgvectorStore.find_duplicates not implemented — duplicate "
-            "detection lives in quiz-pack-api DedupStage."
+        return self._bridge.run(
+            self._async.find_duplicates(question_text, threshold=threshold)
         )

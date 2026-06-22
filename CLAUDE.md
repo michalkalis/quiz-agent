@@ -98,6 +98,12 @@ Examples worth flagging: multiple provider keys/bills for one logical capability
 Delegate bulk reading/searching to subagents so raw file contents don't accumulate in the main context. Scope work so it stays navigable; use judgment on size rather than a fixed token cap — don't pre-emptively fragment work that fits one context.
 If a task genuinely won't fit, split it at a clean boundary, commit what's valid, and write a handoff via `/handoff` so a fresh session can resume without re-explaining context. Surface that you did this — never silently push past a limit.
 
+### 13. Ask the User Sparingly, In-Session, With Full Context
+Before asking the user for anything — a decision, an answer, or an action for them to perform — first confirm you genuinely can't resolve it better yourself from the code, conventions, or a sensible default. Most questions never need to reach them: decide what you can, state the assumption, and proceed.
+**Always decide product matters *with* the user** (UX, scope, feature behavior, monetization, vision) — these need their input even when a reasonable default exists.
+When you do need them, **ask interactively during the session** (e.g. an in-session question prompt) with enough context to answer without digging. Never bury a question for the user inside a plan/issue/handoff doc where it gets lost — surface it live.
+When the user must perform an action outside the code (set a secret or API key, change a console/dashboard setting, run an auth or login flow), give **exact, numbered, step-by-step instructions** and assume zero prior knowledge — they rarely know how on their own.
+
 ## Rules files
 
 - `.claude/rules/shared.md` — Git workflow, API contract, testing (always loaded)

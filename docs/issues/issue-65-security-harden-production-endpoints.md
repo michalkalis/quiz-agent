@@ -53,3 +53,15 @@ A fourth, related gate: **App Attest is inert by default** (`app_attest_required
 2. Set `CORS_ORIGINS` on quiz-pack-api — defaults to `localhost:3000`, so the prod web-ui origin is blocked until set.
 3. Confirm `Fly-Client-IP` is edge-stripped by Fly (R-2 in #60) — the rate-limit key trusts it.
 4. Leave `LEGACY_USER_ID_GRACE=on` until #60 iOS auth is on TestFlight — the quiz-agent gate passes header-less requests during grace, so deploying now does not break the pre-auth build.
+
+## Deployed & verified in prod (2026-06-22)
+
+Both apps deployed by founder. `ADMIN_API_KEY` set on quiz-pack-api beforehand.
+
+- **quiz-pack-api** — `GET /web/` → 401 without key, `/health` → 200. Admin auth + generation rate-limit live.
+- **quiz-agent-api** — initial deploy **crash-looped** (`ModuleNotFoundError: No module named 'jwt'`): the #60/#61 auth modules are imported at boot via `app/api/deps.py` but the hand-maintained Dockerfile pip list predated the auth phase and lacked `sqlalchemy`/`asyncpg`/`alembic`/`pyjwt`/`pyattest` (this deploy was the **first** to ship the auth code to prod). Fixed in commit `4ed9910` (Dockerfile now 1:1 with pyproject + drift-guard comment), redeployed → healthy.
+- **Auth gate verified live:** invalid bearer → 503 (fail-closed reject, not passed); header-less → 200/422 (grace-passes by design while `LEGACY_USER_ID_GRACE` on). Rate limit verified: 10 `elevenlabs/token`/min/IP then 429.
+
+### Residual items (not blocking, tracked)
+- **`elevenlabs/token` is still mintable without a token while grace is on** — now bounded to 10/min/IP (drain fixed from global to per-client), but full auth lockdown only activates when grace flips off (gated on #60 iOS auth reaching TestFlight).
+- **Set the access-token signing secret on quiz-agent-api before flipping grace off** — currently unset, so any presented bearer fails to 503; harmless now (no clients send tokens), blocking once iOS auth ships.

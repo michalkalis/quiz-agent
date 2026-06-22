@@ -7,8 +7,6 @@ from fastapi import Request
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
-limiter = Limiter(key_func=get_remote_address)
-
 
 def fly_client_ip(request: Request) -> str:
     """Rate-limit key = the real client IP (decision D6).
@@ -19,3 +17,10 @@ def fly_client_ip(request: Request) -> str:
     address off-Fly (local dev / tests have no such header).
     """
     return request.headers.get("Fly-Client-IP") or get_remote_address(request)
+
+
+# Key on the real client IP (#65). Was ``get_remote_address`` — on Fly that is
+# the proxy, collapsing every ``@limiter.limit`` onto one global bucket. Setting
+# it here re-keys all existing decorators; the explicit ``key_func=fly_client_ip``
+# at routes/auth.py:52,182 is now redundant but harmless.
+limiter = Limiter(key_func=fly_client_ip)

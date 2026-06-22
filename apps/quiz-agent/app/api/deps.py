@@ -3,7 +3,7 @@
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field
 from datetime import datetime
-from fastapi import Request
+from fastapi import Depends, Request
 
 from quiz_shared.models.session import QuizSession
 from quiz_shared.models.participant import Participant
@@ -19,6 +19,7 @@ from ..auth.tokens import TokenService
 from ..auth.refresh import RefreshTokenStore
 from ..auth.attest_challenge import ChallengeStore
 from ..auth.app_attest import AppAttestService
+from ..auth.identity import AuthSubject, require_authenticated_subject
 from ..quiz.flow import QuizFlowService, FlowResult
 from ..serializers import (
     question_to_dict as question_to_dict,
@@ -240,6 +241,16 @@ def get_usage_tracker(request: Request) -> Optional[UsageTracker]:
 def get_token_service(request: Request) -> Optional[TokenService]:
     # None when DB or AUTH_JWT_SECRET is unset (auth disabled); callers return 503.
     return getattr(request.app.state, "token_service", None)
+
+
+def require_auth(
+    request: Request,
+    token_service: Optional[TokenService] = Depends(get_token_service),
+) -> AuthSubject:
+    """Gate high-cost AI endpoints (#65): require a valid bearer, or pass during
+    the legacy grace window. Thin FastAPI wrapper — see
+    ``auth.identity.require_authenticated_subject`` for the authority rule."""
+    return require_authenticated_subject(request, token_service)
 
 
 def get_refresh_store(request: Request) -> Optional[RefreshTokenStore]:

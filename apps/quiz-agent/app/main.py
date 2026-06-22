@@ -169,6 +169,12 @@ async def lifespan(app: FastAPI):
     # routes still call upsert/delete/get_all/find_duplicates which the
     # async pgvector store does not expose in Phase 2.
     settings = get_settings()
+
+    # #65: loudly flag a prod boot that ships App Attest inert (does not refuse).
+    from .startup_checks import warn_if_insecure_production
+
+    warn_if_insecure_production(settings, os.getenv("ENVIRONMENT"), logger)
+
     question_store = chroma_question_store
     if settings.database_url:
         async_pgvector = PgvectorQuestionStore(database_url=settings.database_url)

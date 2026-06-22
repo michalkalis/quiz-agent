@@ -120,3 +120,36 @@ async def resolve_session_subject(
     if body_user_id:
         await _touch_identity(sessionmaker, body_user_id, is_legacy=True)
     return AuthSubject(subject_id=body_user_id, is_legacy=True, authenticated=False)
+
+
+def require_authenticated_subject(
+    request: Request,
+    token_service: TokenService | None,
+) -> AuthSubject:
+    """Resolve the subject for a high-cost endpoint — bearer-or-grace (#65).
+
+    A token-only, sync sibling of ``resolve_session_subject`` for routes with no
+    ``user_id`` body that touch no DB (Whisper transcribe, voice submit, TTS,
+    ElevenLabs token). Same authority rule: a *present* bearer must verify (else
+    401; 503 if auth is unavailable); a *missing* bearer passes only during the
+    ``LEGACY_USER_ID_GRACE`` window — so shipping this gate does not break the
+    pre-auth iOS build — and hard-401s once grace is flipped off post-migration.
+    """
+    token = _bearer_token(request)
+    if token is not None:
+        if token_service is None:
+            raise HTTPException(status_code=503, detail="Auth unavailable")
+        try:
+            payload = token_service.decode_access_token(token)
+        except TokenError:
+            raise HTTPException(
+                status_code=401, detail="Invalid or expired access token"
+            )
+        return AuthSubject(
+            subject_id=payload["sub"], is_legacy=False, authenticated=True
+        )
+
+    # No bearer presented.
+    if not legacy_grace_enabled():
+        raise HTTPException(status_code=401, detail="Authentication required")
+    return AuthSubject(subject_id=None, is_legacy=True, authenticated=False)

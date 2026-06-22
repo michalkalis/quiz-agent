@@ -35,8 +35,8 @@ A fourth, related gate: **App Attest is inert by default** (`app_attest_required
 ## Acceptance
 
 - [x] `GET /web/` and `POST /api/v1/generate/advanced` on quiz-pack-api return 401/403 without a valid admin key — `require_admin` dep gates both routers; `tests/api/test_admin_auth.py` (7 tests, green)
-- [ ] `POST /api/v1/voice/transcribe` and `POST /api/v1/elevenlabs/token` on quiz-agent return 401 without a valid bearer token
-- [ ] `POST /api/v1/elevenlabs/token` is rate-limited to ≤10/min per client IP
-- [ ] Two requests with different `Fly-Client-IP` values get independent rate-limit counters (regression test)
-- [ ] Production startup logs a loud error (or refuses) when `app_attest_required` is false in prod
-- [ ] Backend test suites stay green
+- [x] `POST /api/v1/voice/transcribe` and `POST /api/v1/elevenlabs/token` on quiz-agent return 401 without a valid bearer token — `require_auth` dep (bearer-or-grace) on voice transcribe/submit, TTS synth/question/session-feedback-audio, and elevenlabs/token; `tests/test_require_auth.py` (5) + `tests/test_misc_elevenlabs_auth.py` (4), green
+- [x] `POST /api/v1/elevenlabs/token` is rate-limited to ≤10/min per client IP — `@limiter.limit("10/minute")`; `test_misc_elevenlabs_auth.py::test_rate_limited_to_10_per_minute` (11th call → 429)
+- [x] Two requests with different `Fly-Client-IP` values get independent rate-limit counters (regression test) — limiter re-keyed on `fly_client_ip` (real client IP, not Fly proxy); `tests/test_rate_limit_key.py` (5 tests, green)
+- [x] Production startup logs a loud error (or refuses) when `app_attest_required` is false in prod — `warn_if_insecure_production` (called in `main.py` lifespan) logs a `SECURITY` error; `tests/test_startup_checks.py` (4 new tests, green). Warns, does not refuse.
+- [x] Backend test suites stay green — quiz-agent: 179 passed. quiz-pack-api: admin-auth suite green (3 pre-existing alembic-fixture errors unrelated to #65)

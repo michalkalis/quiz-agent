@@ -13,6 +13,7 @@ from ..deps import (
     get_question_retriever,
     get_quiz_flow,
     flow_to_response,
+    require_auth,
 )
 from ...session.manager import SessionManager
 from ...voice.transcriber import VoiceTranscriber
@@ -31,6 +32,7 @@ async def transcribe_audio(
     request: Request,
     voice_transcriber: VoiceTranscriber = Depends(get_voice_transcriber),
     audio: UploadFile = File(..., description="Audio file (mp3, wav, m4a, etc.)"),
+    _auth=Depends(require_auth),
 ):
     """Transcribe audio file to text."""
     try:
@@ -75,6 +77,7 @@ async def transcribe_and_submit(
     audio: UploadFile = File(..., description="Audio file with quiz answer"),
     participant_id: Optional[str] = None,
     include_audio: bool = True,
+    _auth=Depends(require_auth),
 ):
     """Transcribe audio and submit to quiz (one-step voice operation)."""
     session = session_manager.get_session(session_id)

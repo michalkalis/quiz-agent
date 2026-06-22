@@ -5,7 +5,7 @@ import logging
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Request
 
-from ..deps import ElevenLabsTokenResponse, get_usage_tracker
+from ..deps import ElevenLabsTokenResponse, get_usage_tracker, require_auth
 from ...usage.tracker import UsageTracker
 from ...rate_limit import limiter
 
@@ -14,8 +14,18 @@ router = APIRouter()
 
 
 @router.post("/elevenlabs/token", response_model=ElevenLabsTokenResponse)
-async def get_elevenlabs_token():
-    """Generate a single-use ElevenLabs token for realtime STT."""
+@limiter.limit("10/minute")
+async def get_elevenlabs_token(
+    request: Request,
+    _auth=Depends(require_auth),
+):
+    """Generate a single-use ElevenLabs token for realtime STT.
+
+    Auth + rate-limited (#65): this mints a real, billable ElevenLabs realtime
+    token, so it was the clearest budget-drain vector — previously open with no
+    limit. `require_auth` blocks anonymous callers (once grace is off) and the
+    10/min cap bounds abuse per client IP.
+    """
     import httpx
 
     api_key = os.environ.get("ELEVENLABS_API_KEY")

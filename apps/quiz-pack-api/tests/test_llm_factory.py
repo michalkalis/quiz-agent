@@ -35,6 +35,8 @@ def test_resolve_model_is_identity_in_direct(monkeypatch):
     monkeypatch.setenv("LLM_GATEWAY", "direct")
     assert factory.resolve_model("gpt-4o") == "gpt-4o"
     assert factory.resolve_model("claude-sonnet-4-6") == "claude-sonnet-4-6"
+    # #72 Lever A default — identity in direct so the override stays dormant.
+    assert factory.resolve_model("claude-opus-4-8") == "claude-opus-4-8"
 
 
 def test_resolve_model_remaps_in_openrouter(monkeypatch):
@@ -43,6 +45,8 @@ def test_resolve_model_remaps_in_openrouter(monkeypatch):
     assert factory.resolve_model("gpt-4o-mini") == "openai/gpt-4o-mini"
     assert factory.resolve_model("gpt-4.1-mini") == "openai/gpt-4.1-mini"
     assert factory.resolve_model("claude-sonnet-4-6") == "anthropic/claude-sonnet-4.6"
+    # #72 Lever A creative-generation default routes through Anthropic on OpenRouter.
+    assert factory.resolve_model("claude-opus-4-8") == "anthropic/claude-opus-4.8"
     assert factory.resolve_model("gemini-2.5-flash") == "google/gemini-2.5-flash"
     # embeddings keep the same id on OpenRouter
     assert factory.resolve_model("text-embedding-3-small") == "text-embedding-3-small"

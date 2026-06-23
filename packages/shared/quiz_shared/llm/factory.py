@@ -50,6 +50,12 @@ _REMAP_OPENROUTER = {
     "gpt-4.1": "openai/gpt-4.1",
     "gpt-4.1-mini": "openai/gpt-4.1-mini",
     "claude-sonnet-4-6": "anthropic/claude-sonnet-4.6",
+    # Creative-generation default for issue #72 (Lever A), dormant until the
+    # GENERATION_MODEL flag is flipped at Phase 6. Slug follows the established
+    # Anthropic convention (dashes in the direct id -> dot in the OpenRouter
+    # slug, cf. claude-sonnet-4-6); verify against the live catalog before the
+    # Phase-6 flip per the issue's verify-live note.
+    "claude-opus-4-8": "anthropic/claude-opus-4.8",
     "gemini-2.5-flash": "google/gemini-2.5-flash",
     "text-embedding-3-small": "text-embedding-3-small",
 }

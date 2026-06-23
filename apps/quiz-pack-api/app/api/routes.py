@@ -5,6 +5,7 @@ from typing import Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 from quiz_shared.models.question import Question
+from quiz_shared.llm import factory as llm_factory
 
 from .schemas import (
     GenerateRequest, GenerateResponse, QuestionResponse,
@@ -21,15 +22,29 @@ from ..generation.storage import QuestionStorage
 from ..verification.fact_verifier import FactVerifier
 from .deps import require_admin
 from ..rate_limit import limiter
+from .. import feature_flags
+
+
+def _build_advanced_generator() -> AdvancedQuestionGenerator:
+    """Construct the generator with config-driven models (issue #72 P1.1, Lever A).
+
+    The model ids come from the dormant Lever-A flags; with no env set the flags
+    return ``None`` so we fall back to the factory's canonical role defaults
+    (``gpt-4o`` / ``gpt-4o-mini``) and output is unchanged. An override (e.g.
+    ``GENERATION_MODEL=claude-opus-4-8``) is a direct-provider id — its
+    OpenRouter slug lives in the factory's ``_REMAP_OPENROUTER``, never here,
+    per the #53 contract.
+    """
+    return AdvancedQuestionGenerator(
+        generation_model=feature_flags.generation_model() or llm_factory.GEN,
+        critique_model=feature_flags.critique_model() or llm_factory.CRITIQUE,
+        generation_temperature=0.8,
+        critique_temperature=0.3,
+    )
 
 
 # Initialize services
-advanced_generator = AdvancedQuestionGenerator(
-    generation_model="gpt-4o",
-    critique_model="gpt-4o-mini",
-    generation_temperature=0.8,
-    critique_temperature=0.3
-)
+advanced_generator = _build_advanced_generator()
 storage = QuestionStorage()
 fact_verifier = FactVerifier()
 

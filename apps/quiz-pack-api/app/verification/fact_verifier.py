@@ -7,6 +7,7 @@ Two-stage pipeline:
 
 import json
 import os
+import re
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -24,6 +25,58 @@ class VerificationResult:
     sources: list[dict] = field(default_factory=list)  # [{url, excerpt, agrees}]
     alternative_answers: list[str] = field(default_factory=list)
     notes: str = ""
+    held_for_review: bool = False
+
+
+_SCALE = {
+    "thousand": 1_000,
+    "million": 1_000_000,
+    "billion": 1_000_000_000,
+    "trillion": 1_000_000_000_000,
+}
+_NUM_RE = re.compile(r"(\d[\d,]*\.?\d*)\s*(thousand|million|billion|trillion)?", re.IGNORECASE)
+
+
+def _numbers_in(text: str) -> list[float]:
+    """All numeric magnitudes in ``text``, honouring comma grouping + scale words.
+
+    ``"4,000,000"`` → ``4e6``; ``"4 million"`` → ``4e6``; ``"3.5 billion"`` →
+    ``3.5e9``. Powers the RC-9 numeric-agreement check so an estimation answer
+    (``"about 4 million"``) can match a source that writes the figure
+    differently (``"4,000,000"``).
+    """
+    out: list[float] = []
+    for digits, scale in _NUM_RE.findall(text):
+        try:
+            value = float(digits.replace(",", ""))
+        except ValueError:
+            continue
+        if scale:
+            value *= _SCALE[scale.lower()]
+        out.append(value)
+    return out
+
+
+def _answer_supported(claimed_answer: str, content_lower: str) -> bool:
+    """Whether ``content_lower`` supports ``claimed_answer`` (RC-9).
+
+    Crisp/recall answers keep the strict verbatim-substring test, so factual
+    claims stay tightly gated. Numeric *estimation* answers (``"about 4
+    million"``, ``"~30%"``) additionally match when the source states a value
+    within 10% — so a non-substring estimate is no longer scored as
+    disagreement and dropped. Verification used to select FOR boring,
+    crisp-recall answers precisely because estimates never substring-matched.
+    """
+    answer_lower = claimed_answer.lower()
+    if answer_lower in content_lower:
+        return True
+    answer_nums = _numbers_in(answer_lower)
+    if not answer_nums:
+        return False  # non-numeric recall answer → strict substring only
+    target = answer_nums[0]
+    if target == 0:
+        return False
+    return any(abs(n - target) <= 0.10 * abs(target) for n in _numbers_in(content_lower))
 
 
 class FactVerifier:
@@ -76,17 +129,20 @@ class FactVerifier:
         )
 
         if "error" in search_results and not search_results.get("results"):
+            # RC-9: search unavailable ≠ wrong answer. Hold for review instead
+            # of dropping at confidence 0 (a conf-0 drop silently sheds
+            # possibly-good questions whenever the search tool is down).
             return VerificationResult(
-                verdict="uncertain",
+                verdict="unverified",
                 confidence=0.0,
-                notes=f"Search failed: {search_results.get('error')}",
+                held_for_review=True,
+                notes=f"Search unavailable ({search_results.get('error')}); held for review",
             )
 
         sources = []
         for result in search_results.get("results", []):
             content = (result.get("content") or "").lower()
-            answer_lower = claimed_answer.lower()
-            agrees = answer_lower in content
+            agrees = _answer_supported(claimed_answer, content)
             sources.append(
                 {
                     "url": result.get("url", ""),
@@ -146,11 +202,16 @@ class FactVerifier:
                     sources=sources,
                     notes="Gemini unavailable; heuristic verdict based on source agreement",
                 )
+            # RC-9: judge unavailable + no clear source agreement → we simply
+            # could not verify. Hold for review rather than drop at low
+            # confidence; dropping here selects FOR crisp recall answers that
+            # happen to substring-match and against estimation/reasoning ones.
             return VerificationResult(
-                verdict="uncertain",
+                verdict="unverified",
                 confidence=0.3,
                 sources=sources,
-                notes="Gemini unavailable; insufficient evidence for confident verdict",
+                held_for_review=True,
+                notes="Judge unavailable; insufficient source agreement — held for review",
             )
 
         # Build evidence summary for Gemini

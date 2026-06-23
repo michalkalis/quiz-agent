@@ -9,7 +9,10 @@ merges the per-question verdict back onto each `Question`:
 - `generation_metadata.extra["verification_notes"]` — str  (verifier reasoning)
 
 Questions whose verification confidence falls below `min_confidence` are
-dropped from `ctx.questions`. The drop count is reported via the
+dropped from `ctx.questions`. Questions the verifier explicitly held for
+review (`held_for_review`, e.g. search/judge unavailable) are exempt — kept
+and tagged rather than dropped at confidence 0 (RC-9, #72). The drop count is
+reported via the
 `StageResult.info["dropped"]` field — PackGenerator forwards it onto the
 sink's `publish(...)` call, so SSE clients see how many were filtered.
 
@@ -109,6 +112,7 @@ class VerificationStage:
             confidence = float(getattr(verification, "confidence", 0.0))
             verdict = getattr(verification, "verdict", "uncertain")
             notes = getattr(verification, "notes", "")
+            held = bool(getattr(verification, "held_for_review", False))
             verified_flag = verdict in _VERIFIED_VERDICTS
 
             provenance = q.generation_metadata or GenerationProvenance()
@@ -116,8 +120,15 @@ class VerificationStage:
             extra["verified"] = verified_flag
             extra["verification_score"] = confidence
             extra["verification_notes"] = notes
+            if held:
+                extra["held_for_review"] = True
             q.generation_metadata = provenance.model_copy(update={"extra": extra})
 
+            # RC-9 (#72): a question the verifier could not check (search/judge
+            # unavailable) is held for review, never dropped at low confidence.
+            if held:
+                kept.append(q)
+                continue
             if confidence < self._min_confidence:
                 dropped += 1
                 continue

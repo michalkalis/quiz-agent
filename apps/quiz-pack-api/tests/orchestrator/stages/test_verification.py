@@ -135,6 +135,34 @@ async def test_drops_questions_below_confidence_threshold() -> None:
 
 
 @pytest.mark.asyncio
+async def test_held_for_review_question_is_kept_despite_low_confidence() -> None:
+    """RC-9 (#72): a question the verifier could not check (search/judge
+    unavailable) is tagged `held_for_review` and MUST be kept for human
+    review, not dropped at confidence 0. Dropping unverifiable-but-possibly-
+    good questions is exactly how verification used to select FOR crisp recall
+    answers and against estimation/reasoning ones."""
+    verdicts = {
+        # Below the 0.5 threshold, but held — must survive the drop.
+        "q_0": VerificationResult(
+            verdict="unverified", confidence=0.3, held_for_review=True
+        ),
+        # Same low confidence, NOT held — must still drop (strictness preserved).
+        "q_1": VerificationResult(verdict="likely_wrong", confidence=0.3),
+    }
+    verifier = _FakeFactVerifier(verdicts)
+    stage = VerificationStage(verifier)  # type: ignore[arg-type]
+    ctx = _make_ctx([_stub_question(0), _stub_question(1)])
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert {q.id for q in ctx.questions} == {"q_0"}  # held kept, unheld dropped
+    assert result.info["dropped"] == 1
+    extra = ctx.questions[0].generation_metadata.extra
+    assert extra["held_for_review"] is True
+    assert extra["verified"] is False
+
+
+@pytest.mark.asyncio
 async def test_publishes_dropped_count_in_stage_info() -> None:
     verdicts = {
         "q_0": VerificationResult(verdict="verified", confidence=0.9),

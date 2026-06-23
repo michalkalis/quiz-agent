@@ -1,8 +1,60 @@
 # Issue #73 — Stand up Postgres + Redis on mba so quiz-pack-api tests run
 
-**Triage:** chore · ready-for-human (one-time env setup on `mba`; not loop-eligible)
+**Triage:** chore · resolved
 
-**Status:** Open — created 2026-06-23. **Blocks #72** (and any quiz-pack-api Ralph work) on `mba`.
+**Status:** **RESOLVED 2026-06-23.** mba's quiz-pack-api gate is durably green (0 failed, twice in
+a row). **#72 unblocked.** See **Resolution** below.
+
+## Resolution (2026-06-23)
+
+Standing up Postgres + Redis was necessary but **not sufficient** — the gate had two further,
+independent failure modes that the original plan didn't anticipate. All three are now fixed.
+
+**1. Container runtime + stack (the env gap, as planned).** Installed **colima** (headless, no Docker
+Desktop) + the `docker compose` CLI plugin on `mba`, booted the existing
+`apps/quiz-pack-api/docker-compose.yml` (pgvector/pgvector:pg16 + redis:7, both `healthy`), and
+created the `quiz_pack_test` database. `colima` now autostarts on login via `brew services` and the
+containers use `restart: unless-stopped`, so the stack survives a reboot.
+
+**2. LLM-gateway leak (newly found).** The integration tests mock canonical provider endpoints
+(`api.openai.com`, `api.anthropic.com`) behind an `assert_all_mocked` egress guard, and the
+"model unavailable" fail-safes assume **direct** routing. `mba`'s `.env` sets
+`LLM_GATEWAY=openrouter` (deliberately — it lacks GOOGLE/ANTHROPIC keys), which points the client at
+`openrouter.ai`, so every mock missed → `APIConnectionError` (and the e2e tests' retry/backoff
+surfaced as **timeouts**), and the verifier returned a real verdict instead of the 0.0 fail-safe.
+Fix: the top-level `tests/conftest.py` now pins `LLM_GATEWAY=direct` for the test session, so the
+suite is hermetic and identical on every host (the runtime `.env` is untouched).
+
+**3. `test_orders` not re-runnable + ordering (newly found).** `tests/api/test_orders` used fixed
+`transaction_id`s with no cleanup; the orders endpoint is idempotent on `transaction_id`, so a
+**second** gate run against the persistent test DB saw the first run's rows and got `200` where `202`
+was asserted — i.e. the gate would go green once, then red on every Ralph iteration after. It also
+lacked the module-scoped `_alembic_head` fixture its sibling DB-test modules have, so on a fresh
+empty DB (collected before `tests/db/`) it ran against unmigrated tables. Fix: added that
+`_alembic_head` fixture + an autouse `TRUNCATE generation_orders, generation_jobs … CASCADE` so each
+test starts clean and the suite is re-runnable.
+
+**Durability:** folded colima + the compose plugin, a venv sync from declared deps (no more
+hand-patching `respx`/`slowapi`/`limits`), and the stack boot + `quiz_pack_test` creation into
+`scripts/agent-setup/install.sh` so a fresh `mba` checkout reproduces this without hand-steps.
+
+**Acceptance — met.** On `mba`, the exact Ralph gate command
+(`cd apps/quiz-pack-api && ../../.venv/bin/pytest tests/ -q`, no overrides) on a freshly-created
+**empty** test DB: **402 passed / 0 failed**, and a second run on the same DB: **402 passed /
+0 failed**. Laptop parity: 403 passed / 0 failed twice (1 fewer skip than mba). Containers `healthy`;
+colima set to start on login.
+
+**Residual (non-blocking):** `test_order_e2e::test_order_sse_reconnect` timed out **once** across
+~6 mba runs (a timing-sensitive SSE test under load) and passed every other time, including both
+acceptance runs. Pre-existing flake, not gating; left as-is rather than widening scope.
+
+Commit: `e3e378a` (rebased onto `main` as `fdb8df8`).
+
+---
+
+### Original plan (for reference)
+
+**Blocks #72** (and any quiz-pack-api Ralph work) on `mba`.
 
 ## Why
 

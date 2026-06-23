@@ -136,7 +136,19 @@ LLM_GATEWAY=openrouter PYTHONPATH="$(pwd)" python scripts/generate_pack.py \
   jumps the queue. (Worth a real fix later — see finding.)
 - Use the `.venv` (py3.11), not `~/.local/bin/python` (3.14, no deps).
 
-## Track B results — corpus (1) live chroma 580 — 2026-06-19 (PARTIAL: blocked on Tavily)
+## Track B results — corpus (1) live chroma 580 — 2026-06-19 (CLOSED — de-scoped 2026-06-22)
+
+> **Disposition (founder, 2026-06-23):** Track B is **closed**. Corpus 2 (archive 587) and 3 (prod
+> Postgres) were **not** run — "let's not verify or score anything at the moment; we're improving
+> generation flow, not evaluating the existing corpus." The 6 factual problems below are **deferred
+> into the generation redesign** as test-cases/evidence for [[issue-42-question-quality-and-mcq]]
+> Track F-R + [[issue-72-question-fun-engagement-redesign|#72]] — **no corpus writes**, including
+> `gen033_q01`. Fact-verification was also abandoned (Tavily plan quota exhausted, HTTP 432, mid-run).
+>
+> **Read-path conflict to remember:** the handoff calls local chroma "what the app serves," but
+> `backend.md` says ChromaDB is **frozen read-only legacy** since 2026-05-28 and the voice quiz reads
+> from **Fly Postgres (pgvector)**. So `gen033_q01` being `approved` in local chroma does *not* prove
+> real users get it — that lives in the un-queried prod store. Resolve before ever "fixing served copies."
 
 Export (read-only, raw — bypasses the Pydantic validator that chokes on 5 `true_false`):
 580 questions (308 approved / 272 pending; 550 text, 25 image, 5 true_false). **139/580 missing

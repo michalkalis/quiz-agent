@@ -15,6 +15,13 @@ launching Phases 0–5 on 2026-06-23.** Launch + oversight prompt:
 `docs/handoffs/handoff-2026-06-23-1018.md`. Founder steer: a new session launches and oversees; Ralph runs
 Phases 0–5 only and must never cross the 🛑 Phase-6 line.
 
+**Branch-state note (2026-06-23, this run):** P0.1/P0.2 from the 2026-06-22 launch landed on sibling branch
+`ralph/overnight-20260622-2142` (commits `27c086d`, `2088db3`) but that branch hit the #73 gate-red blocker
+and was **never merged**. The current branch (`ralph/overnight-20260623-1132`, == `main` post-#73) does
+**not** contain them — `app/feature_flags.py` is absent here. P0.1 re-recorded fresh below;
+**P0.2 can be cherry-picked from `2088db3`** (`app/feature_flags.py` + 15 tests, verified green there)
+rather than redone.
+
 ## Why
 
 This issue is about **raising the QUALITY of question generation** for **every question type** —
@@ -191,7 +198,7 @@ Atomic units for the loop; full detail lives in **Plan** above. One iteration �
 Each box's *Gate* is the machine check that must be green before it counts as done.
 
 **Phase 0 — baseline + dormant flags (no LLM)**
-- [ ] **P0.1** Record the offline baseline: full suite green (~139 tests). *Gate:* suite green.
+- [x] **P0.1** Record the offline baseline: full suite green. *Gate:* suite green. ✅ **2026-06-23 (branch `ralph/overnight-20260623-1132`):** quiz-pack-api offline suite = **402 passed, 0 failed**, 1 skipped (Apple-root, setup-gated), 3 xfailed (worker stubs, post-#36 task 2.10) in ~74s via `.venv/bin/python -m pytest tests/`. (Plan's "~139" figure was stale; 406 tests collected.)
 - [ ] **P0.2** Add dormant flags (`GENERATION_MODEL`, `V3_ESCAPE_HATCH`, `VETO_SHADOW`, …); do **not** flip `LLM_GATEWAY` repo-wide. *Gate:* suite green, output unchanged with flags off.
 
 **Phase 1 — Lever A wiring + deterministic fixes (no LLM)**

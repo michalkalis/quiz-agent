@@ -8,8 +8,10 @@
 
 **Execution status (2026-06-23):** Phases 0–5 ready to run on `mba` via Ralph (Opus 4.8 @ max effort). The
 2026-06-22 launch went gate-red after 2 good iterations (P0.1/P0.2) due to **environment drift on `mba`, not
-#72 code** — the scoped gate runs the full quiz-pack-api suite but `mba` has no Postgres/Redis. **Blocked on
-[[issue-73-mba-postgres-redis-dev-env]]** until that host stack is up. Launch + oversight prompt:
+#72 code** — the scoped gate runs the full quiz-pack-api suite but `mba` then had no Postgres/Redis.
+**[[issue-73-mba-postgres-redis-dev-env]] is RESOLVED (2026-06-23):** colima Postgres+Redis are up on `mba`
+and the scoped gate is green (402 passed / 0 failed, verified first-hand this session). **Unblocked —
+launching Phases 0–5 on 2026-06-23.** Launch + oversight prompt:
 `docs/handoffs/handoff-2026-06-23-1018.md`. Founder steer: a new session launches and oversees; Ralph runs
 Phases 0–5 only and must never cross the 🛑 Phase-6 line.
 

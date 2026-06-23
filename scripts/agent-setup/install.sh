@@ -63,9 +63,22 @@ brew install \
   uv \
   jq \
   ripgrep \
-  fd
+  fd \
+  colima \
+  docker \
+  docker-compose
 
 brew install --cask tailscale
+
+# ─── Docker runtime: colima + docker compose plugin (issue #73) ──
+# Headless Docker for the quiz-pack-api dev stack (postgres + redis) — no Docker
+# Desktop (GUI/license). Wire the brew `docker-compose` binary as a CLI plugin so
+# `docker compose` (used by the Makefile) works, then start the VM + enable it on login.
+log "Konfigurujem colima + docker compose plugin…"
+mkdir -p "$HOME/.docker/cli-plugins"
+ln -sf "$(brew --prefix)/bin/docker-compose" "$HOME/.docker/cli-plugins/docker-compose"
+colima status >/dev/null 2>&1 || colima start
+brew services start colima 2>/dev/null || warn "brew services start colima zlyhal — colima sa nemusí spustiť po reboote; pridaj 'colima start' do loginu."
 
 # Fly.io CLI
 if ! command -v flyctl >/dev/null 2>&1; then
@@ -113,6 +126,31 @@ if [[ ! -d "$REPO_DIR/.git" ]]; then
   fi
 else
   log "Repo už existuje, preskakujem clone."
+fi
+
+# ─── Python venv sync (issue #73) ──────────────────────────────
+# Declared deps are the source of truth — install editable so a fresh checkout
+# matches pyproject (no hand-patching respx/slowapi/limits, same lesson as the
+# Dockerfile drift). Mirrors the Ralph gate's runner at $REPO_DIR/.venv.
+if [[ -d "$REPO_DIR/.git" ]]; then
+  log "Synchronizujem Python venv z declared deps…"
+  ( cd "$REPO_DIR"
+    [[ -d .venv ]] || uv venv
+    uv pip install --python .venv/bin/python \
+      -e "./apps/quiz-pack-api[test]" \
+      -e "./apps/quiz-agent" \
+      -e "./packages/shared"
+  ) || warn "venv sync zlyhal — over uv a pyproject extras ručne."
+
+  # ─── quiz-pack-api dev stack (issue #73) ─────────────────────
+  # Boot postgres + redis and create the test DB the suite expects. Containers use
+  # restart: unless-stopped, so once colima is up after a reboot they come back on
+  # their own; the test DB persists in its volume. The suite self-migrates both DBs.
+  log "Štartujem quiz-pack-api dev stack (postgres + redis)…"
+  ( cd "$REPO_DIR/apps/quiz-pack-api"
+    docker compose up -d --wait postgres redis \
+      && docker exec quiz-pack-postgres createdb -U quiz quiz_pack_test 2>/dev/null || true
+  ) || warn "dev stack boot zlyhal — over 'colima status' a 'docker compose ps'."
 fi
 
 # ─── .env šablóna ──────────────────────────────────────────────

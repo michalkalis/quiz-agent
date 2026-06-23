@@ -15,7 +15,10 @@ Bring up the local test DB first: `make dev-db` from apps/quiz-pack-api/.
 from __future__ import annotations
 
 import os
+import subprocess
+import sys
 import uuid
+from pathlib import Path
 from typing import AsyncIterator
 from unittest.mock import AsyncMock, MagicMock
 
@@ -23,7 +26,7 @@ import pytest
 import pytest_asyncio
 import httpx
 from fastapi import FastAPI
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from app.api.deps import get_arq_pool, get_jws_verifier
@@ -35,10 +38,35 @@ from app.db.session import get_session
 from app.storekit import AppleJWSVerifier
 from tests.storekit._chain_fixtures import JWSFactory, TestChain
 
+APP_ROOT = Path(__file__).resolve().parents[2]
+
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _alembic_head() -> None:
+    """Bring the test DB to head once per module so tables exist.
+
+    Mirrors tests/db and tests/worker: these API tests live in tests/api/, which
+    pytest collects before tests/db/, so without this they would run against an
+    unmigrated DB on a fresh host (issue #73). Idempotent — a no-op once at head.
+    """
+    raw = os.environ.get("TEST_DATABASE_URL") or os.environ.get("DATABASE_URL")
+    if not raw:
+        pytest.skip("TEST_DATABASE_URL / DATABASE_URL not set")
+    env = os.environ.copy()
+    env["DATABASE_URL"] = raw
+    subprocess.run(
+        [sys.executable, "-m", "alembic", "upgrade", "head"],
+        cwd=APP_ROOT,
+        env=env,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
 
 
 @pytest_asyncio.fixture
@@ -56,6 +84,25 @@ async def test_session(test_engine: AsyncEngine) -> AsyncIterator[AsyncSession]:
     factory = async_sessionmaker(test_engine, class_=AsyncSession, expire_on_commit=False)
     async with factory() as s:
         yield s
+
+
+@pytest_asyncio.fixture(autouse=True)
+async def _clean_orders(test_session: AsyncSession) -> AsyncIterator[None]:
+    """Start each test from an empty orders/jobs slate.
+
+    These tests POST with fixed transaction_ids, and the orders endpoint is
+    idempotent on transaction_id (returns 200 for an existing tx). Against the
+    persistent test DB, rows left by a prior gate run would turn the expected
+    202 into 200 — so the suite must be re-runnable, not just pass once. Other
+    DB-test modules clean up per-id; this module truncates because order_ids are
+    server-generated and not all surface to the test. CASCADE clears any
+    dependent pack/question rows too.
+    """
+    await test_session.execute(
+        text("TRUNCATE generation_orders, generation_jobs RESTART IDENTITY CASCADE")
+    )
+    await test_session.commit()
+    yield
 
 
 @pytest.fixture

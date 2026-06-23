@@ -16,6 +16,15 @@ from typing import AsyncIterator
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
+# Pin the LLM gateway to `direct` for the whole suite BEFORE loading .env or
+# importing the factory. The tests mock canonical provider endpoints
+# (api.openai.com, api.anthropic.com) and the model-unavailable fail-safes
+# assume direct routing. A host whose .env sets LLM_GATEWAY=openrouter (e.g. the
+# agent Mac `mba`, issue #73) would otherwise point the client at openrouter.ai
+# so every mock misses → APIConnectionError / non-fail-safe verdicts. Forcing it
+# here keeps the suite hermetic and identical across machines.
+os.environ["LLM_GATEWAY"] = "direct"
+
 try:
     from dotenv import load_dotenv
 

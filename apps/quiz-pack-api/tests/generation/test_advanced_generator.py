@@ -452,6 +452,54 @@ async def test_mcq_emphasis_fans_out_one_sub_batch_per_pattern() -> None:
 
 
 @pytest.mark.asyncio
+async def test_mcq_sub_batch_failure_does_not_sink_the_rest() -> None:
+    """Issue #72 P1.3 (= #42 task 42.31) — MCQ sub-batch crash isolation.
+
+    The per-pattern sub-batches fan out through ``asyncio.gather``. Before
+    this fix the bare gather propagated the first failing coroutine and
+    cancelled the others, so one bad pattern (an LLM timeout or malformed
+    structured-output parse) sank the entire MCQ order. The sub-batches are
+    now isolated (per-batch try/except + ``return_exceptions=True``), so a
+    failure drops only its own pattern's questions while every sibling
+    sub-batch is still attempted and its questions survive. This matters
+    because a single flaky pattern silently zeroing a whole order is exactly
+    the kind of yield collapse #42 fought to remove.
+    """
+    from app.generation.pattern_routing import PATTERNS_TO_MCQ
+
+    patterns = sorted(PATTERNS_TO_MCQ)
+    # The isolation property is only meaningful with a surviving sibling.
+    assert len(patterns) >= 2
+    doomed = patterns[0]
+
+    async def _fake_batch(*, count: int, mcq_patterns, **_kwargs):
+        if doomed in mcq_patterns:
+            raise RuntimeError("structured output parse failed")
+        return ["q"] * count
+
+    gen = _make_generator_with_fake_llm(AsyncMock())
+    gen._generate_mcq_batch_structured = AsyncMock(side_effect=_fake_batch)
+
+    # Must not raise even though one sub-batch blows up.
+    questions = await gen.generate_questions(
+        count=12,
+        difficulty="medium",
+        topics=["science"],
+        mcq_patterns=set(patterns),
+        mcq_emphasis=True,
+        open_count=0,
+    )
+
+    # Every pattern was still attempted — the failure did NOT cancel siblings.
+    assert gen._generate_mcq_batch_structured.await_count == len(patterns)
+    # Only the doomed pattern's share is lost; all other questions survive.
+    base, extra = divmod(12, len(patterns))
+    doomed_share = base + (1 if extra else 0)  # sorted()[0] absorbs the first remainder
+    assert len(questions) == 12 - doomed_share
+    assert len(questions) > 0
+
+
+@pytest.mark.asyncio
 async def test_mcq_sub_batch_uses_structured_output() -> None:
     """Issue #42 task 42.25 — the contract test for the un-park gate.
 

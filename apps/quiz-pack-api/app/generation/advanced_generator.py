@@ -380,26 +380,41 @@ class AdvancedQuestionGenerator:
             # output so the LLM cannot silently emit free-form ``text`` for
             # an MCQ-pinned pattern (the 2/13-yield failure). The classic
             # ``_generate_batch`` path stays for non-MCQ generation.
-            return await self._generate_mcq_batch_structured(
-                count=n,
-                difficulty=difficulty,
-                topics=topics,
-                categories=categories,
-                question_type=question_type,
-                excluded_topics=excluded_topics,
-                avoid_questions=avoid_questions,
-                user_bad_examples=user_bad_examples,
-                source_facts=facts,
-                mcq_patterns={pattern},
-            )
+            try:
+                return await self._generate_mcq_batch_structured(
+                    count=n,
+                    difficulty=difficulty,
+                    topics=topics,
+                    categories=categories,
+                    question_type=question_type,
+                    excluded_topics=excluded_topics,
+                    avoid_questions=avoid_questions,
+                    user_bad_examples=user_bad_examples,
+                    source_facts=facts,
+                    mcq_patterns={pattern},
+                )
+            except Exception as exc:  # noqa: BLE001
+                # #72 P1.3 (= #42 task 42.31) — crash isolation. One pattern's
+                # sub-batch failing (LLM timeout, malformed structured output)
+                # must not sink the other patterns. Drop just this sub-batch
+                # and let the siblings through.
+                print(f"MCQ sub-batch for pattern {pattern!r} failed: {exc!r}")
+                return []
 
+        # `return_exceptions=True` is a belt-and-suspenders net for the
+        # per-sub-batch try/except above (#72 P1.3): if a failure ever slips
+        # past ``_one`` it surfaces here as a value instead of cancelling the
+        # surviving sub-batches, and the ``isinstance`` guard then skips it.
         batches = await asyncio.gather(
             *(
                 _one(p, n, facts)
                 for p, n, facts in zip(patterns, per_pattern, fact_slices)
-            )
+            ),
+            return_exceptions=True,
         )
-        questions: List[Question] = [q for batch in batches for q in batch]
+        questions: List[Question] = [
+            q for batch in batches if isinstance(batch, list) for q in batch
+        ]
         print(f"MCQ sub-batches produced {len(questions)} raw questions")
         return questions
 

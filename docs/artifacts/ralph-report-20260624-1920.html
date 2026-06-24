@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ralph Overnight Report · 20260624-1920</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --red: #f85149;
+    --red-bg: #3d1a1a;
+    --amber: #d29922;
+    --amber-bg: #2d2007;
+    --green: #3fb950;
+    --green-bg: #0d2516;
+    --blue: #58a6ff;
+    --tag-bg: #21262d;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* Layout */
+  .page { display: flex; min-height: 100vh; }
+  nav {
+    width: 220px;
+    flex-shrink: 0;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 20px 0;
+  }
+  nav h3 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--muted);
+    padding: 0 16px 8px;
+  }
+  nav a {
+    display: block;
+    padding: 5px 16px;
+    color: var(--text);
+    font-size: 13px;
+    border-left: 3px solid transparent;
+  }
+  nav a:hover { background: var(--border); color: var(--blue); }
+  nav a.active { border-left-color: var(--blue); color: var(--blue); }
+  main { flex: 1; padding: 32px 28px; max-width: 900px; }
+
+  /* Header */
+  .run-header { margin-bottom: 28px; }
+  .run-header h1 { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
+  .run-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--tag-bg); border: 1px solid var(--border);
+    border-radius: 6px; padding: 2px 9px; font-size: 12px; color: var(--muted);
+  }
+  .tag strong { color: var(--text); }
+
+  /* Status badges */
+  .badge {
+    display: inline-block;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+  }
+  .badge-red   { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red);   }
+  .badge-amber { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber); }
+  .badge-green { background: var(--green-bg); color: var(--green); border: 1px solid var(--green); }
+
+  /* Section */
+  section { margin-bottom: 36px; }
+  section h2 {
+    font-size: 16px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+    margin-bottom: 16px;
+  }
+
+  /* Blocker card */
+  .blocker-card {
+    background: var(--red-bg);
+    border: 1px solid var(--red);
+    border-radius: 8px;
+    padding: 16px 18px;
+    margin-bottom: 14px;
+  }
+  .blocker-card h3 { color: var(--red); font-size: 14px; margin-bottom: 10px; }
+  .blocker-card p { color: var(--text); margin-bottom: 8px; }
+  .blocker-card ol { padding-left: 18px; }
+  .blocker-card ol li { margin-bottom: 5px; }
+  .blocker-card .label { color: var(--muted); font-size: 12px; margin-bottom: 3px; margin-top: 10px; }
+  code {
+    font-family: "SF Mono", "Fira Code", monospace;
+    background: var(--tag-bg);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-size: 12px;
+  }
+
+  /* Issue breakdown card */
+  .issue-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+  }
+  .issue-card .issue-header {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+  }
+  .issue-card h3 { font-size: 14px; font-weight: 600; flex: 1; }
+  .issue-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+  .issue-stat { color: var(--muted); font-size: 12px; }
+  .issue-stat strong { color: var(--text); }
+
+  /* Summary grid */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .stat-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    text-align: center;
+  }
+  .stat-box .num { font-size: 26px; font-weight: 700; line-height: 1.2; }
+  .stat-box .lbl { font-size: 11px; color: var(--muted); margin-top: 3px; text-transform: uppercase; letter-spacing: .06em; }
+
+  /* Commits */
+  details { margin-bottom: 16px; }
+  summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--blue);
+    padding: 8px 0;
+    user-select: none;
+  }
+  summary:hover { color: var(--text); }
+  .commit-list { list-style: none; padding: 12px 0 0; }
+  .commit-list li {
+    display: flex; gap: 10px; align-items: baseline;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .commit-list li:last-child { border-bottom: none; }
+  .commit-sha {
+    font-family: "SF Mono", "Fira Code", monospace;
+    color: var(--blue);
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+  .commit-msg { flex: 1; }
+  .commit-stat { color: var(--muted); font-size: 11px; white-space: nowrap; }
+
+  /* Steps */
+  .steps-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 18px;
+  }
+  .steps-box ol { padding-left: 18px; }
+  .steps-box ol li { margin-bottom: 10px; }
+  .cmd-block {
+    display: block;
+    background: #010409;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-family: "SF Mono", "Fira Code", monospace;
+    font-size: 12px;
+    color: var(--green);
+    margin-top: 8px;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+  .note {
+    background: var(--amber-bg);
+    border: 1px solid var(--amber);
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin-top: 12px;
+    font-size: 13px;
+    color: var(--amber);
+  }
+
+  /* Pre-flight box */
+  .preflight-box {
+    background: #1a1a2e;
+    border: 1px solid #3d3d7a;
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    font-size: 13px;
+  }
+  .preflight-box .ph { color: #8080c0; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 5px; }
+
+  @media (max-width: 640px) {
+    nav { display: none; }
+    main { padding: 20px 16px; }
+    .summary-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<nav>
+  <h3>Contents</h3>
+  <a href="#summary">Summary</a>
+  <a href="#blockers">⛔ Blockers</a>
+  <a href="#issues">Per-issue</a>
+  <a href="#commits">Commits</a>
+  <a href="#next">Next steps</a>
+</nav>
+
+<main>
+
+  <div class="run-header">
+    <h1>Ralph Overnight Report</h1>
+    <div class="run-meta">
+      <span class="tag">Run <strong>20260624-1920</strong></span>
+      <span class="tag">Branch <strong>ralph/overnight-20260624-1920</strong></span>
+      <span class="tag">Base <code>9c3ea62</code></span>
+      <span class="tag">2026-06-24 19:20 → 19:21</span>
+      <span class="badge badge-red">BLOCKED — branch held local</span>
+    </div>
+  </div>
+
+  <!-- SUMMARY -->
+  <section id="summary">
+    <h2>Summary</h2>
+    <div class="summary-grid">
+      <div class="stat-box">
+        <div class="num" style="color:var(--text)">1</div>
+        <div class="lbl">Commits</div>
+      </div>
+      <div class="stat-box">
+        <div class="num" style="color:var(--text)">1</div>
+        <div class="lbl">Focus files</div>
+      </div>
+      <div class="stat-box">
+        <div class="num" style="color:var(--green)">0</div>
+        <div class="lbl">Completed</div>
+      </div>
+      <div class="stat-box">
+        <div class="num" style="color:var(--red)">1</div>
+        <div class="lbl">Blocked</div>
+      </div>
+      <div class="stat-box">
+        <div class="num" style="color:var(--amber)">0</div>
+        <div class="lbl">Iterations run</div>
+      </div>
+      <div class="stat-box">
+        <div class="num" style="color:var(--muted)">N/A</div>
+        <div class="lbl">Model mix</div>
+      </div>
+    </div>
+    <div class="preflight-box">
+      <div class="ph">What happened</div>
+      The 1920 run queued <strong>issue #72 — Question fun &amp; engagement redesign</strong> (22-iter budget, 6h time budget). The <strong>readiness pre-flight (#57 57.13, full tier)</strong> ran first — it found the issue file already contained a BLOCKER from the prior 1358 run (quiz-pack-api gate RED, commit <code>0ccd25a</code>) and returned <code>NOT-READY</code>. <strong>Zero iterations ran.</strong> The only commit produced was the chore that appended the NOT-READY BLOCKER notice to the issue file. Branch was <strong>not pushed</strong>.
+    </div>
+    <p style="color:var(--muted);font-size:13px;">No model usage to report — the readiness checker (sonnet) fired once but no worker iterations started.</p>
+  </section>
+
+  <!-- BLOCKERS -->
+  <section id="blockers">
+    <h2>⛔ Blockers — needs you</h2>
+
+    <div class="blocker-card">
+      <h3>#72 — Question fun &amp; engagement redesign &nbsp;·&nbsp; BLOCKER 1 of 2: quiz-pack-api gate RED</h3>
+      <p><strong>Source:</strong> prior run 1358, after iteration 3 committed <code>0ccd25a</code> (P1.5 — floor open slice to 1 on standard orders). Gate log: <code>scripts/ralph/logs/gate-20260624-135854-03-qpack.log</code>.</p>
+      <p><strong>Failure:</strong> <code>tests/integration/test_order_e2e.py::test_order_sse_reconnect — Timeout</code>. 435 tests pass; 1 fails.</p>
+      <div class="label">Next human step</div>
+      <ol>
+        <li>Read <code>scripts/ralph/logs/gate-20260624-135854-03-qpack.log</code> to understand what <code>test_order_sse_reconnect</code> expects.</li>
+        <li>Reproduce locally: <code>cd apps/quiz-pack-api &amp;&amp; pytest tests/integration/test_order_e2e.py::test_order_sse_reconnect -v</code></li>
+        <li>Fix the regression introduced by <code>0ccd25a</code>, or revert it if P1.5 is not worth the breakage.</li>
+        <li>Confirm the suite is green: <code>cd apps/quiz-pack-api &amp;&amp; pytest tests/ -v</code></li>
+      </ol>
+    </div>
+
+    <div class="blocker-card">
+      <h3>#72 — Question fun &amp; engagement redesign &nbsp;·&nbsp; BLOCKER 2 of 2: Definition-of-Ready (DoR) not met</h3>
+      <p><strong>Source:</strong> 1920 run pre-flight (57.13). The readiness checker's exact verdict:</p>
+      <blockquote style="border-left:3px solid var(--red);padding-left:12px;margin:10px 0;color:var(--muted);font-size:13px;">
+        "NOT-READY — suite is RED and the issue explicitly requires a human to triage the gate log and fix or revert <code>0ccd25a</code> before any autonomous re-run."
+      </blockquote>
+      <p>Additional warnings from the checker:</p>
+      <ul style="padding-left:18px;margin-top:6px;">
+        <li style="margin-bottom:4px;">P1.5 is marked <code>[x]</code> in the checklist above the BLOCKER section — a fresh agent will treat it as done and skip re-testing it.</li>
+        <li>OpenRouter slug <code>anthropic/claude-opus-4.8</code> is flagged "verify-live before the Phase-6 flip" — not a current blocker but worth confirming before Phase 6.</li>
+      </ul>
+      <div class="label">Next human step</div>
+      <ol>
+        <li>After fixing the gate (BLOCKER 1), update the issue plan: mark P1.5 as needing re-verification, not done.</li>
+        <li>Ensure <code>## Acceptance</code> block and <code>**Reversibility:**</code> field are present in the issue file.</li>
+        <li>Run <code>/ready-check</code> (or set <code>RALPH_READYCHECK=0</code> to bypass) to clear the pre-flight.</li>
+        <li>Then re-run Ralph.</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- PER-ISSUE BREAKDOWN -->
+  <section id="issues">
+    <h2>Per-issue breakdown</h2>
+
+    <div class="issue-card" style="border-color:var(--red)">
+      <div class="issue-header">
+        <h3>#72 — Question fun &amp; engagement redesign</h3>
+        <span class="badge badge-red">BLOCKED</span>
+      </div>
+      <div class="issue-row">
+        <span class="issue-stat">Iters this run: <strong>0</strong></span>
+        <span class="issue-stat">Iters prior run (1358): <strong>3</strong></span>
+        <span class="issue-stat">Focus file: <code>docs/issues/issue-72-question-fun-engagement-redesign.md</code></span>
+      </div>
+      <p style="margin-bottom:8px;font-size:13px;">No work was done in the 1920 run. The pre-flight refused to start any iteration because the quiz-pack-api test suite is RED (from the prior 1358 run).</p>
+      <p style="font-size:13px;color:var(--muted);">Work committed in prior run 1358 (already in branch history, before this run's base):</p>
+      <ul style="padding-left:18px;font-size:13px;color:var(--muted);margin-top:4px;">
+        <li><code>1b29ad7</code> — P1.4: unlock order_of_magnitude MCQ pattern + broaden comparison bet</li>
+        <li><code>0ccd25a</code> — P1.5: floor open slice to 1 on standard orders <span style="color:var(--red)">(⚠ introduced failing test)</span></li>
+        <li><code>86c136e</code> — gate-red BLOCKER appended (1358 run)</li>
+      </ul>
+      <p style="margin-top:10px;font-size:13px;color:var(--muted);">This 1920 run added only: <code>62d0af8</code> — NOT-READY BLOCKER appended (1920 pre-flight).</p>
+    </div>
+  </section>
+
+  <!-- COMMITS -->
+  <section id="commits">
+    <h2>Commits</h2>
+    <details>
+      <summary>1 commit produced by this run (click to expand)</summary>
+      <ul class="commit-list">
+        <li>
+          <span class="commit-sha">62d0af8</span>
+          <span class="commit-msg">chore(ralph): #57 readiness-NOT-READY BLOCKER on issue-72-question-fun-engagement-redesign.md</span>
+          <span class="commit-stat">+6 lines</span>
+        </li>
+      </ul>
+    </details>
+    <p style="color:var(--muted);font-size:12px;margin-top:8px;">Commits from the prior 1358 run that are now in branch history (before base <code>9c3ea62</code>) are not listed here — see the 1358 report for those.</p>
+  </section>
+
+  <!-- NEXT STEPS -->
+  <section id="next">
+    <h2>Next steps</h2>
+    <div class="steps-box">
+      <ol>
+        <li>
+          <strong>Fix the failing test (BLOCKER 1).</strong><br>
+          Read the gate log, reproduce, and fix or revert <code>0ccd25a</code>:
+          <code class="cmd-block">cat scripts/ralph/logs/gate-20260624-135854-03-qpack.log
+cd apps/quiz-pack-api && pytest tests/integration/test_order_e2e.py::test_order_sse_reconnect -v</code>
+        </li>
+        <li>
+          <strong>Repair the issue plan (BLOCKER 2).</strong><br>
+          Unmark P1.5 as done, add missing DoR fields (<code>## Acceptance</code>, <code>**Reversibility:**</code>), run <code>/ready-check</code>.
+        </li>
+        <li>
+          <strong>Verify the full suite is green before re-running Ralph.</strong>
+          <code class="cmd-block">cd apps/quiz-pack-api && pytest tests/ -v</code>
+        </li>
+        <li>
+          <strong>Re-run Ralph</strong> once both blockers are cleared.
+        </li>
+        <li>
+          <strong>Merge only after all of the above</strong> — this branch was never pushed:
+          <code class="cmd-block">git push -u origin ralph/overnight-20260624-1920
+git checkout main && git merge --ff-only ralph/overnight-20260624-1920 && git push</code>
+        </li>
+      </ol>
+      <div class="note">
+        ⚠ Review the diff (<code>git diff main..ralph/overnight-20260624-1920</code>) and confirm both BLOCKERs above are resolved before merging. The branch adds only a BLOCKER chore commit — there is nothing to ship from this run.
+      </div>
+    </div>
+  </section>
+
+</main>
+</div>
+</body>
+</html>

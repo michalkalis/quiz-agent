@@ -281,3 +281,9 @@ resolved and baked in:
 ## Súvisiace issues
 [[issue-42-question-quality-and-mcq|#42 Question quality sweep + multichoice activation]] · [[issue-63-question-quality-review|#63 Question-quality review: generation audit + corpus verification]] · [[issue-30-batch-generate-categories|#30 Batch-generate questions for new categories]]
 <!-- obsidian-links:end -->
+
+## BLOCKER (2026-06-24) — automated test gate (quiz-pack-api)
+
+- The post-iteration scoped test gate failed after iteration 3 committed `0ccd25a` (reported task: P1.5 — floor open slice to 1 on standard orders (repair OPEN_SHAPE_FRACTION rounding)).
+- The change is on this branch but the relevant **quiz-pack-api** suite is RED, so the run halted and the branch was NOT pushed.
+- Next human-touch: read the gate log under `scripts/ralph/logs/gate-20260624-135854-*`, fix or revert the commit, then re-run.

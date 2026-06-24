@@ -299,3 +299,9 @@ resolved and baked in:
 - The readiness gate (#57 57.13) refused to start an autonomous run on this issue: active RED suite means the machine-readable acceptance criterion "offline suite is green" currently fails; file mandates human triage and fix-or-revert of `0ccd25a` before any re-run.
 - No iteration ran; the branch was NOT pushed. Verifying the loop output cannot rescue an unready input (garbage in, garbage out).
 - Next human-touch: clear the Definition-of-Ready (`/triage` C1–C7: add the `## Acceptance` block, declare `**Reversibility:**`, run `/ready-check`), then re-run. Override only by setting `RALPH_READYCHECK=0` for a deliberate exception.
+
+## BLOCKER (2026-06-25) — plan-readiness pre-flight (NOT-READY)
+
+- The readiness gate (#57 57.13) refused to start an autonomous run on this issue: suite is RED (commit `0ccd25a` broke the P1.5 gate); issue mandates human triage and fix-or-revert before autonomous re-run can proceed.
+- No iteration ran; the branch was NOT pushed. Verifying the loop output cannot rescue an unready input (garbage in, garbage out).
+- Next human-touch: clear the Definition-of-Ready (`/triage` C1–C7: add the `## Acceptance` block, declare `**Reversibility:**`, run `/ready-check`), then re-run. Override only by setting `RALPH_READYCHECK=0` for a deliberate exception.

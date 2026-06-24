@@ -327,17 +327,35 @@ async def test_open_fraction_routes_slice_through_open_pipeline() -> None:
 
 
 @pytest.mark.asyncio
-async def test_default_open_fraction_keeps_small_orders_factual() -> None:
-    """Issue #46 task 46.B4c — the default ~4% fraction rounds small orders to
-    zero open questions, so a typical short pack stays entirely on the factual
-    pipeline (open is a forward-looking minority, not the common case)."""
+async def test_default_open_fraction_gives_standard_order_an_open_slice() -> None:
+    """Issue #72 P1.5 — at the default ~4% fraction, bare ``round`` dropped the
+    open slice to zero on a standard 10-question order (round(10 * 0.04) == 0),
+    leaving the open/lateral branch dead at the most common order size. The
+    stage now floors the open count to 1 once the order is at least a standard
+    pack, so a typical order always carries at least one open question."""
     gen = _FakeGenerator([_stub_question(0)])
     stage = GenerationStage(gen)  # type: ignore[arg-type]
     ctx = _make_ctx(target_count=10, facts=[Fact(text="x", source_url="https://ex/x")])
 
     await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
 
-    assert gen.calls[0]["open_count"] == 0  # round(10 * 0.04) == 0
+    # Was 0 before P1.5; the standard order must now route ≥1 open question.
+    assert gen.calls[0]["open_count"] >= 1
+
+
+@pytest.mark.asyncio
+async def test_default_open_fraction_keeps_micro_orders_factual() -> None:
+    """Issue #72 P1.5 — the floor only applies at or above a standard pack
+    (``OPEN_SHAPE_MIN_ORDER``). Below it the ~4% fraction still rounds to zero,
+    so a tiny order stays entirely factual rather than becoming a lateral
+    puzzle — open is a ~4% minority shape, not the common case for short packs."""
+    gen = _FakeGenerator([_stub_question(0)])
+    stage = GenerationStage(gen)  # type: ignore[arg-type]
+    ctx = _make_ctx(target_count=5, facts=[Fact(text="x", source_url="https://ex/x")])
+
+    await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert gen.calls[0]["open_count"] == 0  # 5 < OPEN_SHAPE_MIN_ORDER → round(0.2) == 0
 
 
 @pytest.mark.asyncio

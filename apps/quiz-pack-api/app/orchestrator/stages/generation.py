@@ -36,6 +36,15 @@ logger = logging.getLogger(__name__)
 # product fraction can be tuned without touching call sites.
 OPEN_SHAPE_FRACTION = 0.04
 
+# Issue #72 P1.5 — smallest order that is guaranteed to carry the open slice.
+# At the default 4% fraction `round(target * 0.04)` is 0 for every order up to
+# 12 questions, so the open/lateral branch was dead at the most common order
+# size (a standard 10-question pack). At or above this threshold the open count
+# is floored to 1 so a standard order always gets ≥1 open question; smaller
+# packs (1-9) keep rounding to zero and stay entirely factual, since open is a
+# ~4% minority shape and forcing 1/5 would be 20%, far above the target slice.
+OPEN_SHAPE_MIN_ORDER = 10
+
 
 def _is_uuid(value: str) -> bool:
     try:
@@ -158,8 +167,14 @@ class GenerationStage:
         # Issue #46 task 46.B4c — route the open-shape slice (~4% per audit) of
         # the order through `question_generation_open.md`; the generator emits
         # `headline_answer` + tags pure lateral puzzles `pipeline=logical_puzzle`
-        # (46.B4b). `round` keeps small orders entirely factual (10 * 0.04 → 0).
+        # (46.B4b). Issue #72 P1.5 — bare `round` dropped the slice to zero on a
+        # standard order (round(10 * 0.04) == 0), leaving the branch dead at the
+        # most common size. Floor at 1 once the order is at least a standard pack
+        # (`OPEN_SHAPE_MIN_ORDER`) while keeping `round`'s proportional ~4% slice
+        # at scale; smaller orders still round to zero and stay factual.
         open_count = round(ctx.target_count * self._open_fraction)
+        if open_count == 0 and ctx.target_count >= OPEN_SHAPE_MIN_ORDER:
+            open_count = 1
 
         questions = await self._generator.generate_questions(
             count=ctx.target_count,

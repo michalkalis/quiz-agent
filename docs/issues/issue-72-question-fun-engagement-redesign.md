@@ -287,3 +287,9 @@ resolved and baked in:
 - The post-iteration scoped test gate failed after iteration 3 committed `0ccd25a` (reported task: P1.5 — floor open slice to 1 on standard orders (repair OPEN_SHAPE_FRACTION rounding)).
 - The change is on this branch but the relevant **quiz-pack-api** suite is RED, so the run halted and the branch was NOT pushed.
 - Next human-touch: read the gate log under `scripts/ralph/logs/gate-20260624-135854-*`, fix or revert the commit, then re-run.
+
+## BLOCKER (2026-06-24) — plan-readiness pre-flight (NOT-READY)
+
+- The readiness gate (#57 57.13) refused to start an autonomous run on this issue: suite is RED and the issue explicitly requires a human to triage the gate log and fix or revert `0ccd25a` before any autonomous re-run.
+- No iteration ran; the branch was NOT pushed. Verifying the loop output cannot rescue an unready input (garbage in, garbage out).
+- Next human-touch: clear the Definition-of-Ready (`/triage` C1–C7: add the `## Acceptance` block, declare `**Reversibility:**`, run `/ready-check`), then re-run. Override only by setting `RALPH_READYCHECK=0` for a deliberate exception.

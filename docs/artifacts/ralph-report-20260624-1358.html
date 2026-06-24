@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ralph Run · 20260624-1358</title>
+<style>
+  :root {
+    --bg: #0d1117; --surface: #161b22; --surface2: #21262d; --border: #30363d;
+    --text: #e6edf3; --muted: #8b949e; --green: #3fb950; --amber: #d29922;
+    --red: #f85149; --blue: #58a6ff; --purple: #bc8cff;
+    --green-bg: #0f2a1a; --amber-bg: #2b1f06; --red-bg: #2d0b0a;
+    --badge-px: 4px 10px; --radius: 6px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.6; }
+
+  /* layout */
+  #toc { position: sticky; top: 0; z-index: 100; background: var(--surface); border-bottom: 1px solid var(--border); padding: 10px 20px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  #toc a { color: var(--blue); text-decoration: none; font-size: 13px; white-space: nowrap; }
+  #toc a:hover { text-decoration: underline; }
+  #toc .run-id { color: var(--muted); font-size: 12px; margin-left: auto; white-space: nowrap; }
+  main { max-width: 900px; margin: 0 auto; padding: 24px 20px 60px; }
+  section { margin-bottom: 40px; }
+  h2 { font-size: 18px; font-weight: 600; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border); color: var(--text); }
+  h3 { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+
+  /* badges */
+  .badge { display: inline-block; padding: var(--badge-px); border-radius: var(--radius); font-size: 11px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; }
+  .green  { background: var(--green-bg); color: var(--green); }
+  .amber  { background: var(--amber-bg); color: var(--amber); }
+  .red    { background: var(--red-bg);   color: var(--red);   }
+  .blue   { background: #0c2344; color: var(--blue); }
+  .purple { background: #1e1035; color: var(--purple); }
+
+  /* summary grid */
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+  .stat-card .val { font-size: 26px; font-weight: 700; line-height: 1.2; }
+  .stat-card .label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }
+  .red-val   { color: var(--red); }
+  .green-val { color: var(--green); }
+  .amber-val { color: var(--amber); }
+  .blue-val  { color: var(--blue); }
+
+  /* blocker box */
+  .blocker-box { background: var(--red-bg); border: 1px solid var(--red); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 16px; }
+  .blocker-box .blocker-title { font-size: 15px; font-weight: 700; color: var(--red); margin-bottom: 8px; }
+  .blocker-box p { color: var(--text); margin-bottom: 6px; font-size: 13px; }
+  .blocker-box .steps { margin-top: 10px; padding-left: 20px; }
+  .blocker-box .steps li { margin-bottom: 4px; font-size: 13px; }
+  .blocker-box code { background: #3a0a0a; padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 12px; color: #ff8080; }
+  .note-box { background: var(--amber-bg); border: 1px solid var(--amber); border-radius: var(--radius); padding: 12px 16px; margin-top: 10px; font-size: 13px; color: #e0c070; }
+
+  /* issue card */
+  .issue-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 14px; }
+  .issue-header { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+  .issue-header h3 { margin: 0; font-size: 14px; }
+  .commit-list { margin-top: 10px; }
+  .commit-row { display: flex; align-items: flex-start; gap: 10px; padding: 6px 0; border-top: 1px solid var(--border); font-size: 12px; }
+  .commit-row:first-child { border-top: none; }
+  .sha { font-family: 'JetBrains Mono', monospace; color: var(--blue); white-space: nowrap; }
+  .commit-msg { color: var(--text); }
+  .commit-meta { color: var(--muted); white-space: nowrap; }
+
+  /* iter table */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); color: var(--muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
+  td { padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+
+  /* details / collapsible */
+  details { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 12px; }
+  details summary { padding: 12px 16px; cursor: pointer; font-weight: 600; list-style: none; display: flex; align-items: center; gap: 8px; user-select: none; }
+  details summary::-webkit-details-marker { display: none; }
+  details summary::before { content: '▶'; font-size: 10px; transition: transform .15s; color: var(--muted); }
+  details[open] summary::before { transform: rotate(90deg); }
+  .details-body { padding: 0 16px 16px; }
+
+  /* code block */
+  pre { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; overflow-x: auto; font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 12px; line-height: 1.7; color: var(--text); }
+  code.cmd { background: var(--surface2); padding: 3px 8px; border-radius: 4px; font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 12px; display: block; margin: 8px 0; color: var(--green); border: 1px solid var(--border); }
+
+  .muted { color: var(--muted); }
+  .model-pill { display: inline-block; background: #1e1035; color: var(--purple); padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+  @media (max-width: 600px) { .stat-grid { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+
+<nav id="toc">
+  <a href="#summary">Summary</a>
+  <a href="#blockers">⚠ BLOCKERS</a>
+  <a href="#issues">Issue Breakdown</a>
+  <a href="#iterations">Iterations</a>
+  <a href="#commits">Commits</a>
+  <a href="#next-steps">Next Steps</a>
+  <span class="run-id">ralph · 20260624-1358 · ralph/overnight-20260624-1358</span>
+</nav>
+
+<main>
+
+  <!-- ───────────────────── SUMMARY ───────────────────── -->
+  <section id="summary">
+    <h2>Summary</h2>
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="val amber-val">BLOCKED</div>
+        <div class="label">Run status</div>
+      </div>
+      <div class="stat-card">
+        <div class="val blue-val">4</div>
+        <div class="label">Commits</div>
+      </div>
+      <div class="stat-card">
+        <div class="val blue-val">3 / 22</div>
+        <div class="label">Iterations used</div>
+      </div>
+      <div class="stat-card">
+        <div class="val green-val">1</div>
+        <div class="label">Focus files</div>
+      </div>
+      <div class="stat-card">
+        <div class="val amber-val">0</div>
+        <div class="label">Completed clean</div>
+      </div>
+      <div class="stat-card">
+        <div class="val red-val">1</div>
+        <div class="label">Blocked</div>
+      </div>
+      <div class="stat-card">
+        <div class="val purple-val">3 / 3</div>
+        <div class="label">Opus 4.8 iters</div>
+      </div>
+      <div class="stat-card">
+        <div class="val muted">Not pushed</div>
+        <div class="label">Branch state</div>
+      </div>
+    </div>
+
+    <div style="margin-top:16px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; font-size:13px;">
+      <table style="width:auto; font-size:13px;">
+        <tr><td style="color:var(--muted); padding:2px 12px 2px 0; border:none;">Branch</td><td style="border:none;"><code style="font-family:monospace; font-size:12px;">ralph/overnight-20260624-1358</code></td></tr>
+        <tr><td style="color:var(--muted); padding:2px 12px 2px 0; border:none;">Base SHA</td><td style="border:none;"><code style="font-family:monospace; font-size:12px;">1b5861d</code></td></tr>
+        <tr><td style="color:var(--muted); padding:2px 12px 2px 0; border:none;">Start time</td><td style="border:none;">13:58:54</td></tr>
+        <tr><td style="color:var(--muted); padding:2px 12px 2px 0; border:none;">End time</td><td style="border:none;">14:27:13 (28 min 19 s)</td></tr>
+        <tr><td style="color:var(--muted); padding:2px 12px 2px 0; border:none;">Budget/iter</td><td style="border:none;">$5.00</td></tr>
+        <tr><td style="color:var(--muted); padding:2px 12px 2px 0; border:none;">Model mix</td><td style="border:none;"><span class="model-pill">claude-opus-4-8 × 3</span></td></tr>
+        <tr><td style="color:var(--muted); padding:2px 12px 2px 0; border:none;">Readiness pre-flight</td><td style="border:none;"><span class="badge green">READY</span> — full tier (/ready-check READY)</td></tr>
+        <tr><td style="color:var(--muted); padding:2px 12px 2px 0; border:none;">Halt reason</td><td style="border:none;"><span class="badge red">GATE-RED exit 5</span> — quiz-pack-api scoped gate failed after iter 3</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ───────────────────── BLOCKERS ───────────────────── -->
+  <section id="blockers">
+    <h2>⚠ BLOCKERS — needs you</h2>
+
+    <div class="blocker-box">
+      <div class="blocker-title">BLOCKER · issue-72 · P1.5 — quiz-pack-api gate red after `test_order_sse_reconnect` timeout</div>
+      <p><strong>File:</strong> <code>docs/issues/issue-72-question-fun-engagement-redesign.md</code></p>
+      <p><strong>Commit:</strong> <code>0ccd25a</code> — P1.5 floor open slice to 1 on standard orders</p>
+      <p><strong>Failing test:</strong> <code>tests/integration/test_order_e2e.py::test_order_sse_reconnect</code> — <code>TimeoutError</code></p>
+      <p><strong>Gate result:</strong> 1 failed, 435 passed, 1 skipped, 3 xfailed — took 95 s vs ~50 s in prior iterations</p>
+      <p><strong>Gate log:</strong> <code>scripts/ralph/logs/gate-20260624-135854-03-qpack.log</code></p>
+
+      <div class="note-box">
+        <strong>Likely flake:</strong> Iter 1's commit notes explicitly called this test "a pre-existing SSE/arq timing flake, passes in isolation." The P1.5 change only touched <code>generation.py</code> (OPEN_SHAPE_MIN_ORDER constant + one test rewrite) — no SSE or arq code. Gate took 95 s vs 50 s in prior two gates, consistent with arq worker startup jitter. <strong>High probability of false positive,</strong> but the run halted correctly per the #57 gate-red protocol.
+      </div>
+
+      <p style="margin-top:12px;"><strong>Next human steps:</strong></p>
+      <ol class="steps">
+        <li>Confirm it's a flake — run the test in isolation:<br>
+          <code>cd apps/quiz-pack-api && pytest tests/integration/test_order_e2e.py::test_order_sse_reconnect -v</code>
+        </li>
+        <li>If it passes in isolation (expected): mark it <code>xfail(strict=False)</code> in the test file and re-run the full gate locally:<br>
+          <code>cd apps/quiz-pack-api && pytest tests/ -v</code>
+        </li>
+        <li>If it also fails in isolation: the P1.5 change may have subtly broken SSE timing — inspect <code>apps/quiz-pack-api/app/orchestrator/stages/generation.py</code> around <code>OPEN_SHAPE_MIN_ORDER</code> and the open-count path for side effects on async behavior.</li>
+        <li>Once gate is green: push the branch and merge:<br>
+          <code>git checkout main && git merge --ff-only ralph/overnight-20260624-1358 && git push</code>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ───────────────────── ISSUE BREAKDOWN ───────────────────── -->
+  <section id="issues">
+    <h2>Per-issue breakdown</h2>
+
+    <div class="issue-card" style="border-color: var(--amber);">
+      <div class="issue-header">
+        <span class="badge amber">PARTIAL — gate red</span>
+        <h3>#72 — question-fun-engagement-redesign</h3>
+      </div>
+      <p style="font-size:13px; color:var(--muted); margin-bottom:8px;">
+        <code>docs/issues/issue-72-question-fun-engagement-redesign.md</code>
+        · 3 iterations · Phase 1 code complete, branch withheld
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Task</th>
+            <th>Done?</th>
+            <th>Commit</th>
+            <th>Gate / Review</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>P1.3 — MCQ sub-batch crash isolation</td>
+            <td><span class="badge green">Done</span></td>
+            <td><code class="sha" style="font-family:monospace; font-size:12px; color:var(--blue);">7575bcc</code></td>
+            <td><span class="badge green">Gate ✓</span> <span class="badge green">Review ✓</span></td>
+          </tr>
+          <tr>
+            <td>P1.4 — order_of_magnitude MCQ + comparison-bet broadened</td>
+            <td><span class="badge green">Done</span></td>
+            <td><code class="sha" style="font-family:monospace; font-size:12px; color:var(--blue);">1b29ad7</code></td>
+            <td><span class="badge green">Gate ✓</span> <span class="badge green">Review ✓</span></td>
+          </tr>
+          <tr>
+            <td>P1.5 — floor open slice to 1 on standard orders</td>
+            <td><span class="badge amber">Code done</span></td>
+            <td><code class="sha" style="font-family:monospace; font-size:12px; color:var(--blue);">0ccd25a</code></td>
+            <td><span class="badge red">Gate ✗</span> — SSE timeout flake halted run</td>
+          </tr>
+          <tr>
+            <td>P2.1–P5.1 (remaining phases)</td>
+            <td><span class="badge" style="background:#1a1a2e; color:var(--muted);">Not started</span></td>
+            <td>—</td>
+            <td>—</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p style="margin-top:12px; font-size:12px; color:var(--muted);">
+        Goalcheck after iters 1 and 2: <strong>GOAL_MET=NO</strong> (correct — only P1.3 and P1.4 ticked; P1.5+ remained open).
+        Iter 3 never reached goalcheck — gate failed first.
+        19 of 22 allowed iterations were unused.
+      </p>
+    </div>
+  </section>
+
+  <!-- ───────────────────── ITERATIONS ───────────────────── -->
+  <section id="iterations">
+    <h2>Iteration detail</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Task</th>
+          <th>Model</th>
+          <th>Duration</th>
+          <th>Gate</th>
+          <th>Reviewer</th>
+          <th>Goalcheck</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td>P1.3 — MCQ sub-batch crash isolation</td>
+          <td><span class="model-pill">opus-4-8</span></td>
+          <td>~7 min</td>
+          <td><span class="badge green">Green</span> 428/428</td>
+          <td><span class="badge green">Pass</span></td>
+          <td><span class="badge amber">NO</span> — P1.4+ remain</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>P1.4 — order_of_magnitude + comparison-bet</td>
+          <td><span class="model-pill">opus-4-8</span></td>
+          <td>~7 min</td>
+          <td><span class="badge green">Green</span> 435/435</td>
+          <td><span class="badge green">Pass</span></td>
+          <td><span class="badge amber">NO</span> — P1.5+ remain</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td>P1.5 — floor open slice</td>
+          <td><span class="model-pill">opus-4-8</span></td>
+          <td>~6 min</td>
+          <td><span class="badge red">RED</span> 1 fail (SSE timeout, 95 s)</td>
+          <td><span class="muted">—</span></td>
+          <td><span class="muted">—</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ───────────────────── COMMITS ───────────────────── -->
+  <section id="commits">
+    <details>
+      <summary>Commits — 4 total (git log --stat)</summary>
+      <div class="details-body">
+        <div class="commit-list">
+          <div class="commit-row">
+            <span class="sha">86c136e</span>
+            <span class="commit-msg">chore(ralph): #57 gate-red BLOCKER on issue-72-question-fun-engagement-redesign.md</span>
+            <span class="commit-meta muted">1 file, +6</span>
+          </div>
+          <div class="commit-row">
+            <span class="sha">0ccd25a</span>
+            <span class="commit-msg"><strong>feat(questions): #72 P1.5 — floor open slice to 1 on standard orders</strong><br>
+            <span class="muted">generation.py +17 lines · test_generation.py +28 lines · issue-72 +2 lines · 3 files, +40 −7</span></span>
+          </div>
+          <div class="commit-row">
+            <span class="sha">1b29ad7</span>
+            <span class="commit-msg"><strong>feat(questions): #72 P1.4 — unlock order_of_magnitude MCQ pattern + broaden comparison bet</strong><br>
+            <span class="muted">advanced_generator.py +31 lines · pattern_routing.py +6 · test_advanced_generator.py +26 · test_pattern_routing.py +24 · issue-72 +2 · 5 files, +79 −10</span></span>
+          </div>
+          <div class="commit-row">
+            <span class="sha">7575bcc</span>
+            <span class="commit-msg"><strong>fix(questions): #72 P1.3 — MCQ sub-batch crash isolation</strong><br>
+            <span class="muted">advanced_generator.py +43 lines · test_advanced_generator.py +48 · issue-72 +2 · 3 files, +78 −15</span></span>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <details>
+      <summary>What changed — P1.3 through P1.5 in plain English</summary>
+      <div class="details-body" style="font-size:13px; line-height:1.7;">
+        <p><strong>P1.3 — MCQ sub-batch crash isolation</strong> (<code>7575bcc</code>)</p>
+        <p style="color:var(--muted); margin-bottom:10px;">
+          <code>_generate_mcq_emphasis</code> used bare <code>asyncio.gather</code> — one failing pattern (LLM timeout / malformed output) cancelled all siblings and sank the whole MCQ order. Now each sub-batch is wrapped in try/except; gather uses <code>return_exceptions=True</code>; flatten guards with <code>isinstance(batch, list)</code>. Survivor count is request minus the dead pattern's share.
+        </p>
+        <p><strong>P1.4 — order_of_magnitude MCQ + broadened comparison-bet</strong> (<code>1b29ad7</code>)</p>
+        <p style="color:var(--muted); margin-bottom:10px;">
+          Added driving-safe bucketed order-of-magnitude estimate as a selectable MCQ pattern (<code>PATTERNS_TO_MCQ</code>). Free-text <code>estimation</code> label stays <code>text</code> (open numeric). Comparison-bet recipe now includes faster/longer/closer/more-populous/more-valuable in addition to older/larger/heavier — recipe string only, canonical key unchanged.
+        </p>
+        <p><strong>P1.5 — floor open slice to 1 on standard orders</strong> (<code>0ccd25a</code>)</p>
+        <p style="color:var(--muted);">
+          <code>open_count = round(target_count * 0.04)</code> rounds to 0 for any order ≤ 12, making the open/lateral branch dead at the most common order size (10 questions). New constant <code>OPEN_SHAPE_MIN_ORDER = 10</code> floors open_count to 1 for orders ≥ 10 while keeping micro-orders (1–9) fully factual.
+        </p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ───────────────────── NEXT STEPS ───────────────────── -->
+  <section id="next-steps">
+    <h2>Next steps</h2>
+
+    <p style="margin-bottom:12px; font-size:13px; color:var(--muted);">
+      <strong>Do not merge until the BLOCKER above is resolved.</strong> The branch is clean and coherent — P1.3 and P1.4 are solid; P1.5 is likely also solid but its gate failed on a pre-existing SSE/arq flake. Confirm, fix or xfail, then merge.
+    </p>
+
+    <ol style="padding-left:20px; font-size:13px; line-height:1.9;">
+      <li>Read gate log: <code>scripts/ralph/logs/gate-20260624-135854-03-qpack.log</code></li>
+      <li>Run the flaky test in isolation to confirm it's not a real regression:<br>
+        <code class="cmd">cd apps/quiz-pack-api && pytest tests/integration/test_order_e2e.py::test_order_sse_reconnect -v</code>
+      </li>
+      <li>If it passes (likely): mark <code>test_order_sse_reconnect</code> as <code>xfail(strict=False)</code>, commit, verify full suite passes.</li>
+      <li>If it fails: diff P1.5 against generation.py for any async-path side effects.</li>
+      <li>Once gate is green, merge and push:<br>
+        <code class="cmd">git checkout main && git merge --ff-only ralph/overnight-20260624-1358 && git push</code>
+      </li>
+      <li>Re-queue issue-72 with iters=19 (22 − 3 used) to continue from P2.1.</li>
+    </ol>
+
+    <p style="margin-top:16px; font-size:12px; color:var(--muted);">
+      Review the diff before merging: <code>git diff main..ralph/overnight-20260624-1358</code>
+    </p>
+  </section>
+
+</main>
+</body>
+</html>

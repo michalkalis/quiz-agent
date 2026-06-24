@@ -106,6 +106,29 @@ class TestChooseQuestionType:
     ) -> None:
         assert choose_question_type(pattern) == "text_multichoice"
 
+    # Issue #72 P1.4 (decision #2): the bucketed order-of-magnitude estimate is
+    # unlocked as the new fun MCQ reasoning pattern. It must route to MCQ in
+    # every surface form the generator emits (snake_case key + the free-text
+    # title form), so a normalization regression would trip this rather than
+    # silently downgrade the new pattern to free-form text.
+    @pytest.mark.parametrize(
+        "pattern",
+        [
+            "order_of_magnitude",
+            "Order Of Magnitude",
+            "order of magnitude",
+        ],
+    )
+    def test_order_of_magnitude_routes_to_mcq(self, pattern: str) -> None:
+        assert choose_question_type(pattern) == "text_multichoice"
+
+    def test_estimation_label_stays_text_not_mcq(self) -> None:
+        # decision #2 keeps two distinct patterns: text Estimation is open
+        # free-text numeric, so the bare `estimation` library label must route
+        # to `text`; only the explicit `order_of_magnitude` MCQ form goes to
+        # `text_multichoice`. Conflating them would re-box estimation as MCQ.
+        assert choose_question_type("estimation") == "text"
+
     def test_expected_mcq_patterns_present(self) -> None:
         # Lock the set membership so accidental removals fail the test
         # rather than silently disabling MCQ routing for that pattern.
@@ -115,6 +138,7 @@ class TestChooseQuestionType:
                 "odd_one_out",
                 "comparison_bet_older_larger",
                 "year_guess",
+                "order_of_magnitude",
             }
         )
 

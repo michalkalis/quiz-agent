@@ -828,17 +828,29 @@ class AdvancedQuestionGenerator:
                 "`explanation`."
             ),
             "comparison_bet_older_larger": (
-                "the MCQ form of Pattern Library #12 'The Comparison Bet' "
-                "(which is older / larger / heavier — A or B?). Two options "
-                "A and B as `{\"a\": \"<option A>\", \"b\": \"<option B>\"}`, "
-                "with `correct_answer` set to the key letter of the "
-                "surprising winner."
+                "the MCQ form of Pattern Library #12 'The Comparison Bet' — "
+                "which of two things wins on a surprising dimension (older / "
+                "larger / heavier / faster / longer / closer / more populous / "
+                "more valuable — A or B?). Two options A and B as "
+                "`{\"a\": \"<option A>\", \"b\": \"<option B>\"}`, with "
+                "`correct_answer` set to the key letter of the surprising "
+                "winner."
             ),
             "year_guess": (
                 "frame a date/era fact as 'in which year/decade?' (pick "
                 "this directly — it is not numbered in the Pattern Library). "
                 "Four plausible year/decade options labelled a/b/c/d, with "
                 "`correct_answer` set to the key letter of the correct year."
+            ),
+            "order_of_magnitude": (
+                "the driving-safe MCQ form of the Estimation pattern (pick "
+                "this directly — it is not numbered in the Pattern Library). "
+                "Frame a quantity (population, distance, age, count, size) as "
+                "'roughly how many / how large?' Four NON-overlapping magnitude "
+                "buckets labelled a/b/c/d (e.g. `{\"a\": \"hundreds\", "
+                "\"b\": \"thousands\", \"c\": \"millions\", \"d\": "
+                "\"billions\"}`), with `correct_answer` set to the key letter "
+                "of the bucket the true value falls in."
             ),
         }
 
@@ -857,10 +869,11 @@ class AdvancedQuestionGenerator:
             "",
             "**These patterns are selectable choices, not just the numbered "
             "Pattern Library.** `odd_one_out` and `comparison_bet_older_larger` "
-            "are the MCQ forms of Library patterns 9 and 12; `true_false` and "
-            "`year_guess` are MCQ patterns in their own right — choose them "
-            "directly even though they are not numbered in the Library above, "
-            "and emit `reasoning.pattern_used` as the exact snake_case key.",
+            "are the MCQ forms of Library patterns 9 and 12; `true_false`, "
+            "`year_guess` and `order_of_magnitude` are MCQ patterns in their "
+            "own right — choose them directly even though they are not numbered "
+            "in the Library above, and emit `reasoning.pattern_used` as the "
+            "exact snake_case key.",
             "",
             "**Distractor quality rule (all MCQ patterns):** every distractor "
             "must be plausible. NEVER include a throwaway wrong option, NEVER "

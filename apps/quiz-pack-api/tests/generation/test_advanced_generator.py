@@ -275,6 +275,32 @@ def test_format_mcq_patterns_section_bridges_library_patterns() -> None:
     assert "selectable choices" in section
 
 
+def test_format_mcq_patterns_section_includes_order_of_magnitude_recipe() -> None:
+    # Issue #72 P1.4: the unlocked bucketed-estimate pattern must carry its own
+    # emission recipe (magnitude buckets) AND be flagged as directly selectable
+    # in the bridging prose — without both, the generation LLM never picks it
+    # (root cause E) and the PATTERNS_TO_MCQ entry is a dead unlock.
+    section = AdvancedQuestionGenerator._format_mcq_patterns_section(
+        {"order_of_magnitude"}
+    )
+    assert "`order_of_magnitude`" in section
+    assert "bucket" in section.lower()
+    assert "selectable choices" in section
+
+
+def test_format_mcq_patterns_section_comparison_bet_recipe_is_broadened() -> None:
+    # Issue #72 P1.4: the comparison-bet recipe is broadened beyond the stale
+    # older/larger/heavier trio (via the recipe string, NOT a key rename) so
+    # the LLM can bet on more surprising dimensions. The canonical key is
+    # unchanged — a rename would break the 42.20 alias contract.
+    section = AdvancedQuestionGenerator._format_mcq_patterns_section(
+        {"comparison_bet_older_larger"}
+    )
+    assert "`comparison_bet_older_larger`" in section
+    # at least one newly added dimension is present
+    assert "faster" in section
+
+
 # --- Issue #46 task 46.B4b — open/logical branch generation ---------------
 #
 # Why these scenarios: B4b wires `question_generation_open.md` (B3) into the

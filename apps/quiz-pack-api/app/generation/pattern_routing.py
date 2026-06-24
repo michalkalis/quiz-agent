@@ -26,6 +26,12 @@ PATTERNS_TO_MCQ: frozenset[str] = frozenset(
         "odd_one_out",
         "comparison_bet_older_larger",
         "year_guess",
+        # Issue #72 P1.4 (decision #2): unlock the bucketed order-of-magnitude
+        # estimate as the new fun MCQ reasoning pattern. The text default for
+        # Estimation stays open free-text numeric (library label `estimation`,
+        # deliberately NOT in this set so it routes to `text`); this key is its
+        # driving-safe MCQ form — pick the magnitude bucket the value falls in.
+        "order_of_magnitude",
     }
 )
 

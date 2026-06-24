@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ralph Overnight Report — 20260625-0020</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --card: #1a1d27;
+    --border: #2d3144;
+    --text: #e2e5f0;
+    --muted: #6b7280;
+    --green: #22c55e;
+    --green-bg: #052e16;
+    --amber: #f59e0b;
+    --amber-bg: #2d1f00;
+    --red: #ef4444;
+    --red-bg: #2d0f0f;
+    --blue: #60a5fa;
+    --blue-bg: #0f1f3d;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, 'Segoe UI', sans-serif; font-size: 15px; line-height: 1.6; }
+
+  /* Sticky TOC */
+  #toc {
+    position: sticky; top: 0; z-index: 100;
+    background: #11131c; border-bottom: 1px solid var(--border);
+    padding: 10px 20px; display: flex; gap: 18px; flex-wrap: wrap; align-items: center;
+    font-size: 13px;
+  }
+  #toc a { color: var(--blue); text-decoration: none; white-space: nowrap; }
+  #toc a:hover { text-decoration: underline; }
+  #toc .brand { color: var(--muted); font-weight: 600; margin-right: 6px; }
+
+  main { max-width: 860px; margin: 0 auto; padding: 28px 20px 60px; }
+
+  h1 { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+  h2 { font-size: 17px; font-weight: 600; color: #fff; margin: 32px 0 14px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+  h3 { font-size: 15px; font-weight: 600; color: var(--text); margin: 16px 0 8px; }
+  p { margin-bottom: 10px; }
+  code { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; background: #22253a; padding: 1px 5px; border-radius: 3px; }
+  pre { background: #22253a; border: 1px solid var(--border); border-radius: 6px; padding: 14px; font-size: 13px; overflow-x: auto; white-space: pre-wrap; word-break: break-word; margin-bottom: 12px; }
+
+  /* Badges */
+  .badge { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 12px; font-weight: 600; }
+  .badge-red    { background: var(--red-bg);   color: var(--red);   border: 1px solid #7f1d1d; }
+  .badge-amber  { background: var(--amber-bg); color: var(--amber); border: 1px solid #78350f; }
+  .badge-green  { background: var(--green-bg); color: var(--green); border: 1px solid #14532d; }
+  .badge-blue   { background: var(--blue-bg);  color: var(--blue);  border: 1px solid #1e3a5f; }
+  .badge-muted  { background: #1e2130;         color: var(--muted); border: 1px solid var(--border); }
+
+  /* Summary grid */
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; }
+  .stat-card .val { font-size: 28px; font-weight: 700; color: #fff; }
+  .stat-card .label { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  /* Blocker banner */
+  .blocker-banner {
+    background: var(--red-bg); border: 1px solid #7f1d1d;
+    border-radius: 8px; padding: 16px 20px; margin-bottom: 20px;
+  }
+  .blocker-banner h3 { color: var(--red); margin-top: 0; font-size: 15px; }
+  .blocker-banner .bl-row { margin-top: 10px; padding-top: 10px; border-top: 1px solid #4b1111; }
+  .blocker-banner .bl-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
+  .blocker-banner p { margin-bottom: 6px; }
+
+  /* Issue row */
+  .issue-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; margin-bottom: 12px; }
+  .issue-card.red    { border-left: 4px solid var(--red); }
+  .issue-card.amber  { border-left: 4px solid var(--amber); }
+  .issue-card.green  { border-left: 4px solid var(--green); }
+  .issue-card .header { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .issue-card .title { font-weight: 600; flex: 1; min-width: 200px; }
+  .issue-meta { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 8px; font-size: 13px; color: var(--muted); }
+  .issue-meta span strong { color: var(--text); }
+  .issue-detail { margin-top: 10px; font-size: 14px; }
+  .issue-detail p { margin-bottom: 6px; }
+
+  /* Next steps box */
+  .next-steps { background: var(--blue-bg); border: 1px solid #1e3a5f; border-radius: 8px; padding: 18px 20px; }
+  .next-steps ol { padding-left: 20px; }
+  .next-steps li { margin-bottom: 8px; }
+
+  details summary { cursor: pointer; color: var(--blue); font-size: 14px; user-select: none; padding: 6px 0; }
+  details summary:hover { color: #93c5fd; }
+  details[open] summary { margin-bottom: 10px; }
+
+  .run-meta { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+  .run-meta span { margin-right: 20px; }
+  .run-meta strong { color: var(--text); }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 8px 0 16px; }
+
+  @media (max-width: 500px) {
+    .stat-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav id="toc">
+  <span class="brand">Ralph</span>
+  <a href="#summary">Summary</a>
+  <a href="#blockers">⚠ Blockers</a>
+  <a href="#issues">Per-issue</a>
+  <a href="#commits">Commits</a>
+  <a href="#next">Next steps</a>
+</nav>
+
+<main>
+  <h1>Ralph Overnight Report</h1>
+  <p class="run-meta">
+    <span><strong>Run:</strong> 20260625-0020</span>
+    <span><strong>Branch:</strong> <code>ralph/overnight-20260625-0020</code></span>
+    <span><strong>Base:</strong> <code>ac8b3e2</code></span>
+    <span><strong>Generated:</strong> 2026-06-25</span>
+  </p>
+
+  <!-- ──────────────────────────── SUMMARY ──────────────────────────── -->
+  <h2 id="summary">1. Summary</h2>
+
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="val">1</div>
+      <div class="label">Focus file queued</div>
+    </div>
+    <div class="stat-card">
+      <div class="val" style="color:var(--red)">0</div>
+      <div class="label">Iterations ran</div>
+    </div>
+    <div class="stat-card">
+      <div class="val">1</div>
+      <div class="label">Commits produced</div>
+    </div>
+    <div class="stat-card">
+      <div class="val" style="color:var(--red)">1</div>
+      <div class="label">Blockers</div>
+    </div>
+    <div class="stat-card">
+      <div class="val">0</div>
+      <div class="label">Issues completed</div>
+    </div>
+    <div class="stat-card">
+      <div class="val" style="color:var(--amber)">~1 min</div>
+      <div class="label">Wall-clock (pre-flight only)</div>
+    </div>
+  </div>
+
+  <p>The run attempted <strong>1 focus file</strong> (#72 — question fun &amp; engagement redesign). The readiness pre-flight gate (<strong>57.13 / full tier</strong>, overnight=1) evaluated the issue and returned <span class="badge badge-red">NOT-READY</span> before a single iteration began. No agent work ran; no branch push occurred. The sole commit is the BLOCKER note appended to the issue file.</p>
+
+  <p><strong>Model mix:</strong> no worker iterations ran — zero model calls on the worker path. The ready-check itself uses the default <code>RALPH_READYCHECK_MODEL</code> (sonnet).</p>
+
+  <p>This is the <strong>4th consecutive run</strong> halted on issue-72 (previous: 2026-06-24 ×3). The root cause is unchanged: commit <code>0ccd25a</code> (P1.5 — floor open-slice fix) broke the quiz-pack-api gate and has not been triaged.</p>
+
+  <!-- ──────────────────────────── BLOCKERS ──────────────────────────── -->
+  <h2 id="blockers">2. Blockers — needs you ⚠</h2>
+
+  <div class="blocker-banner">
+    <h3>🔴 BLOCKER — #72 question-fun-engagement-redesign · Plan-readiness pre-flight NOT-READY (exit 8)</h3>
+
+    <div class="bl-row">
+      <div class="bl-label">What was tried</div>
+      <p>Ralph ran the full-tier readiness pre-flight (57.13) against <code>docs/issues/issue-72-question-fun-engagement-redesign.md</code>. The independent ready-check (sonnet, read-only, fresh context) evaluated the issue plan against the current repo state.</p>
+    </div>
+
+    <div class="bl-row">
+      <div class="bl-label">Root cause (unchanged since 2026-06-24)</div>
+      <p>Commit <code>0ccd25a</code> (P1.5 — "floor open slice to 1 on standard orders / repair OPEN_SHAPE_FRACTION rounding") was accepted by the per-iteration gate during the <strong>20260624-1358</strong> run but <strong>broke the full quiz-pack-api suite</strong>. The run halted after iteration 3 and the branch was never pushed. The issue file itself explicitly requires a human to read the gate log at <code>scripts/ralph/logs/gate-20260624-135854-*</code> and decide fix-or-revert before any autonomous re-run.</p>
+      <p>The ready-check correctly identifies that the offline suite's acceptance criterion ("Phases 0–5 green offline") currently <em>fails at the starting line</em>. An autonomous agent inheriting a red baseline cannot make it green — it would loop and block on the very first gate check.</p>
+    </div>
+
+    <div class="bl-row">
+      <div class="bl-label">Ready-check blockers (verbatim)</div>
+      <pre>C3/C5 (objective failing check / machine-readable acceptance): The offline suite is
+RED at the current start state — commit `0ccd25a` (P1.5 open-fraction fix) broke the
+quiz-pack-api gate. The first acceptance criterion ("Phases 0–5 green offline") fails
+immediately. The issue itself explicitly requires a human to read the gate log at
+`scripts/ralph/logs/gate-20260624-135854-*` and decide fix-or-revert before any
+autonomous re-run. An autonomous agent cannot perform that triage; it would inherit
+a red baseline and any "suite green" gate would fail on the very first iteration.
+
+Warnings:
+- 13 subtasks remain (P2.1–P5.1) across 4 phases in a single autonomous run with no
+  explicit mid-run commit/checkpoint cadence specified; context overflow is a non-zero
+  risk on a run of this depth.
+
+READY_VERDICT: NOT-READY</pre>
+    </div>
+
+    <div class="bl-row">
+      <div class="bl-label">Next human step (exact actions)</div>
+      <ol style="padding-left:20px; margin-top:6px;">
+        <li>Read the gate log: <code>scripts/ralph/logs/gate-20260624-135854-*.log</code> — determine which tests broke and why.</li>
+        <li><strong>Fix or revert <code>0ccd25a</code></strong> — either patch the code so the suite goes green, or <code>git revert 0ccd25a</code> on the current branch.</li>
+        <li>Run <code>cd apps/quiz-pack-api &amp;&amp; pytest tests/ -v</code> locally and confirm green.</li>
+        <li>Run <code>/ready-check</code> on issue-72 to get a fresh <code>READY_VERDICT: READY</code>.</li>
+        <li>Re-queue for tonight's Ralph run.</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- ──────────────────────────── PER-ISSUE ──────────────────────────── -->
+  <h2 id="issues">3. Per-issue breakdown</h2>
+
+  <div class="issue-card red">
+    <div class="header">
+      <span class="title">#72 — Question fun &amp; engagement redesign</span>
+      <span class="badge badge-red">BLOCKED</span>
+    </div>
+    <div class="issue-meta">
+      <span><strong>File:</strong> issue-72-question-fun-engagement-redesign.md</span>
+      <span><strong>Iterations this run:</strong> 0 (pre-flight halted)</span>
+      <span><strong>Consecutive blocks:</strong> 4 (since 2026-06-24)</span>
+      <span><strong>Phases done:</strong> P0.1, P0.2, P1.1–P1.5 (partial; P1.5 red)</span>
+    </div>
+    <div class="issue-detail">
+      <p><strong>What got done (previous runs, already committed):</strong> P0.1 (feature-flag scaffold), P0.2 (cherry-picked from sibling branch), P1.1–P1.4 committed and green. P1.5 (OPEN_SHAPE_FRACTION rounding fix, commit <code>0ccd25a</code>) committed but broke the suite gate.</p>
+      <p><strong>This run:</strong> Zero work. The readiness pre-flight refused to start — suite is RED and the issue mandates human triage before any re-run. No iterations, no branch push, one BLOCKER note appended.</p>
+      <p><strong>Remaining:</strong> 13 subtasks (P2.1–P5.1) across 4 phases still pending. Phase 6 is a human-only checkpoint Ralph must never cross.</p>
+    </div>
+  </div>
+
+  <!-- ──────────────────────────── COMMITS ──────────────────────────── -->
+  <h2 id="commits">4. Commits this run</h2>
+
+  <details>
+    <summary>Show 1 commit (git log --stat)</summary>
+    <pre>commit 0f024428f9bd46da8282e5bd05465e7d5f326c09
+Author: agent &lt;agent@Michals-Laptop.local&gt;
+Date:   Thu Jun 25 00:21:21 2026 +0200
+
+    chore(ralph): #57 readiness-NOT-READY BLOCKER on issue-72-question-fun-engagement-redesign.md
+
+ docs/issues/issue-72-question-fun-engagement-redesign.md | 6 ++++++
+ 1 file changed, 6 insertions(+)</pre>
+    <p style="font-size:13px;color:var(--muted)">Branch was <strong>not pushed</strong> (gate-red exit 8 withholds push per 57.3/57.13).</p>
+  </details>
+
+  <!-- ──────────────────────────── NEXT STEPS ──────────────────────────── -->
+  <h2 id="next">5. Next steps</h2>
+
+  <div class="next-steps">
+    <h3 style="color:var(--blue);margin-bottom:12px;">Before merging — required human actions</h3>
+    <ol>
+      <li>Read <code>scripts/ralph/logs/gate-20260624-135854-*.log</code> — find which tests broke in commit <code>0ccd25a</code>.</li>
+      <li>Fix or revert <code>0ccd25a</code>. Confirm <code>cd apps/quiz-pack-api &amp;&amp; pytest tests/ -v</code> is green.</li>
+      <li>Run <code>/ready-check</code> on issue-72 and confirm <code>READY_VERDICT: READY</code>.</li>
+      <li>Re-queue issue-72 for the next overnight run.</li>
+    </ol>
+
+    <hr>
+    <h3 style="color:var(--muted);margin-bottom:8px;">Merge command (after BLOCKER cleared)</h3>
+    <pre>git checkout main &amp;&amp; git merge --ff-only ralph/overnight-20260625-0020 &amp;&amp; git push</pre>
+    <p style="font-size:13px;color:var(--muted)">⚠ Review the diff and clear the BLOCKER in issue-72 before merging. The only change on this branch is the BLOCKER note commit — there is no feature work to merge until the gate is green.</p>
+  </div>
+
+</main>
+</body>
+</html>

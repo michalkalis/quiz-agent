@@ -25,7 +25,7 @@ If the focus file uses `- [ ]` checkboxes, pick the first one. Otherwise pick th
 3. **Identify the single next task.** If multiple are unblocked, take the smallest. If nothing is left, exit with `status: no-tasks`.
 4. **Check it isn't already done.** If `git log --grep="<task keyword>"` finds it, just update the focus file to reflect that and exit `status: done`.
 5. **Implement only that task.** Surgical changes per `CLAUDE.md` rule #3. No drive-by cleanups, no scope expansion.
-6. **Run the relevant tests.** Use the commands in `CLAUDE.md` quick-reference table or the task description. Tests must pass before you commit.
+6. **Run the relevant tests.** Use the commands in `CLAUDE.md` quick-reference table or the task description. Tests must pass before you commit. **Never run the full iOS suite headless yourself** — do NOT invoke `xcodebuild test` / `-only-testing:HangsTests` (or XcodeBuildMCP build/test tools). Headless runs hang and orphan a wedged `xcodebuild` that blocks the overnight scheduler for days (2026-06 incident); the run's end-of-run gate verifies HangsTests automatically. Defer any iOS verification beyond that to a human/GUI run.
 7. **Commit atomically** — code + focus-file progress update in one commit. Conventional Commits format per `.claude/rules/shared.md`. Include the task identifier in the message.
 8. **Do NOT push.** The human reviews commits in the morning before pushing to origin.
 9. **Do NOT touch unrelated files.** If you spot adjacent tech debt, leave it.
@@ -58,5 +58,6 @@ If the harness can't parse this, the iteration counts as a failure. No prose aft
 - Commit, never push.
 - Surface uncertainty, don't hide it (CLAUDE.md rule #12: fail loud).
 - Token budget per CLAUDE.md rule #6: 4k output, 30k session.
+- Never launch a headless iOS build/test (`xcodebuild test` / HangsTests) yourself — the end-of-run gate covers it; ad-hoc headless runs orphan a zombie `xcodebuild` that wedges the scheduler for days.
 
 You have full repo access via `bypassPermissions`. Use it responsibly.

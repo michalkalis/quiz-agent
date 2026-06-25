@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ralph Overnight Report — 20260625-2200</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #21262d;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --green: #3fb950;
+    --green-bg: #0d2614;
+    --amber: #d29922;
+    --amber-bg: #2b1e06;
+    --red: #f85149;
+    --red-bg: #2d0f0e;
+    --blue: #58a6ff;
+    --blue-bg: #0c1f3d;
+    --purple: #bc8cff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* Layout */
+  .wrapper { max-width: 860px; margin: 0 auto; padding: 24px 16px 80px; }
+
+  /* Sticky TOC */
+  .toc {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    font-size: 12px;
+  }
+  .toc a { color: var(--muted); }
+  .toc a:hover { color: var(--text); }
+  .toc-label { color: var(--muted); font-weight: 600; margin-right: 4px; }
+
+  /* Sections */
+  .section { margin-top: 32px; }
+  .section-title {
+    font-size: 18px;
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+    margin-bottom: 16px;
+  }
+
+  /* Header card */
+  .header-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+  }
+  .header-title {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .header-branch {
+    font-family: 'SF Mono', 'Cascadia Code', monospace;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  /* Stat grid */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .stat-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 14px;
+  }
+  .stat-value {
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+  .stat-label {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 4px;
+  }
+  .stat-green { color: var(--green); }
+  .stat-amber { color: var(--amber); }
+  .stat-red { color: var(--red); }
+  .stat-blue { color: var(--blue); }
+
+  /* Status badges */
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .badge-green { background: var(--green-bg); color: var(--green); border: 1px solid #1f4d28; }
+  .badge-amber { background: var(--amber-bg); color: var(--amber); border: 1px solid #5a3e0a; }
+  .badge-red { background: var(--red-bg); color: var(--red); border: 1px solid #5a1c1a; }
+  .badge-blue { background: var(--blue-bg); color: var(--blue); border: 1px solid #1d3a6a; }
+  .badge-purple { background: #1f1535; color: var(--purple); border: 1px solid #3d2470; }
+
+  /* Issue breakdown card */
+  .issue-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+  .issue-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .issue-title { font-weight: 600; flex: 1; min-width: 200px; }
+  .issue-body { padding: 16px; }
+
+  /* Iteration table */
+  .iter-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .iter-table th {
+    text-align: left;
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .iter-table td {
+    padding: 8px 8px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .iter-table tr:last-child td { border-bottom: none; }
+  .iter-table td:first-child { white-space: nowrap; color: var(--muted); }
+
+  code {
+    font-family: 'SF Mono', 'Cascadia Code', monospace;
+    font-size: 12px;
+    background: var(--surface2);
+    padding: 1px 5px;
+    border-radius: 4px;
+    color: var(--purple);
+  }
+
+  /* Gate pills */
+  .gate-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+  .gate-pill {
+    font-size: 11px;
+    padding: 2px 7px;
+    border-radius: 10px;
+    font-weight: 500;
+  }
+  .gate-green { background: var(--green-bg); color: var(--green); }
+  .gate-red { background: var(--red-bg); color: var(--red); }
+
+  /* Blocker section */
+  .blocker-none {
+    background: var(--green-bg);
+    border: 1px solid #1f4d28;
+    border-radius: 8px;
+    padding: 16px 20px;
+    color: var(--green);
+    font-weight: 600;
+    font-size: 15px;
+  }
+
+  /* Collapsible details */
+  details {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  summary {
+    padding: 12px 16px;
+    cursor: pointer;
+    font-weight: 600;
+    user-select: none;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary::before { content: '▶'; font-size: 10px; color: var(--muted); transition: transform 0.15s; }
+  details[open] summary::before { transform: rotate(90deg); }
+  .details-body { padding: 0 16px 16px; }
+
+  /* Commit list */
+  .commit-list { list-style: none; }
+  .commit-item {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 8px;
+    align-items: baseline;
+  }
+  .commit-item:last-child { border-bottom: none; }
+  .commit-sha { font-family: 'SF Mono', 'Cascadia Code', monospace; color: var(--blue); font-size: 12px; }
+  .commit-msg { color: var(--text); }
+  .commit-stats { color: var(--muted); font-size: 11px; margin-top: 2px; }
+
+  /* Model mix */
+  .model-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
+  .model-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px;
+  }
+  .model-count { font-weight: 700; color: var(--purple); }
+
+  /* Next steps box */
+  .next-steps {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+  }
+  .cmd-block {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 14px;
+    font-family: 'SF Mono', 'Cascadia Code', monospace;
+    font-size: 12px;
+    color: var(--green);
+    margin: 12px 0;
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .warning-note {
+    background: var(--amber-bg);
+    border: 1px solid #5a3e0a;
+    border-radius: 6px;
+    padding: 10px 14px;
+    color: var(--amber);
+    font-size: 13px;
+    margin-top: 12px;
+  }
+
+  /* Timeline */
+  .timeline { font-size: 12px; color: var(--muted); margin-top: 8px; }
+  .timeline span { color: var(--text); }
+
+  @media (max-width: 600px) {
+    .stat-grid { grid-template-columns: 1fr 1fr; }
+    .commit-item { grid-template-columns: 1fr; }
+    .commit-sha { font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="toc">
+  <span class="toc-label">Ralph</span>
+  <a href="#summary">Summary</a>
+  <a href="#issues">Issues</a>
+  <a href="#blockers">Blockers</a>
+  <a href="#commits">Commits</a>
+  <a href="#next">Next Steps</a>
+</nav>
+
+<div class="wrapper">
+
+  <!-- Header -->
+  <div class="header-card">
+    <div class="header-title">Ralph Overnight Report</div>
+    <div class="header-branch">ralph/overnight-20260625-2200 &nbsp;·&nbsp; 2026-06-25 22:00 → 23:12</div>
+    <span class="badge badge-green">&#10003; COMPLETED — GOAL MET</span>
+  </div>
+
+  <!-- ── SECTION 1: Summary ── -->
+  <div class="section" id="summary">
+    <div class="section-title">1. Summary</div>
+
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-value stat-blue">7</div>
+        <div class="stat-label">Commits</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value stat-blue">1</div>
+        <div class="stat-label">Focus Files</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value stat-green">1</div>
+        <div class="stat-label">Completed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value stat-green">0</div>
+        <div class="stat-label">Blocked</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value stat-blue">7 / 22</div>
+        <div class="stat-label">Iterations used</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="font-size:18px; color:var(--muted);">71 min</div>
+        <div class="stat-label">Wall-clock</div>
+      </div>
+    </div>
+
+    <div style="margin-top: 20px;">
+      <div style="font-weight:600; margin-bottom:8px; color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.05em;">Model Mix (worker iterations)</div>
+      <div class="model-row">
+        <div class="model-chip">
+          <span class="model-count">7×</span>
+          <span>claude-opus-4-8</span>
+        </div>
+        <div style="font-size:12px; color:var(--muted);">Reviewer + goalcheck: claude-sonnet-4-6 (fixed, not shown per-iter)</div>
+      </div>
+    </div>
+
+    <div class="timeline" style="margin-top:16px;">
+      Pre-flight: <span>READY (full-tier /ready-check PASS, 3 warnings, 0 blockers)</span> &nbsp;·&nbsp;
+      Gate: <span>GREEN all 7 iterations (quiz-pack-api)</span> &nbsp;·&nbsp;
+      Reviewer: <span>PASS all 7</span> &nbsp;·&nbsp;
+      Goal: <span>MET on iter 7</span>
+    </div>
+  </div>
+
+  <!-- ── SECTION 2: Per-issue breakdown ── -->
+  <div class="section" id="issues">
+    <div class="section-title">2. Per-Issue Breakdown</div>
+
+    <div class="issue-card">
+      <div class="issue-header">
+        <span class="badge badge-green">DONE</span>
+        <span class="issue-title">#72 — Question Fun &amp; Engagement Redesign</span>
+        <span style="color:var(--muted);font-size:12px;">7 iters &nbsp;·&nbsp; 7 commits &nbsp;·&nbsp; 71 min</span>
+      </div>
+      <div class="issue-body">
+
+        <table class="iter-table">
+          <thead>
+            <tr>
+              <th>Iter</th>
+              <th>Task</th>
+              <th>Commit</th>
+              <th>Gate</th>
+              <th>Review</th>
+              <th>Goal</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td>P2.2 — dormant v3 escape hatch behind <code>V3_ESCAPE_HATCH</code></td>
+              <td><code>b58e3c9</code></td>
+              <td><span class="badge badge-green">GREEN</span></td>
+              <td><span class="badge badge-green">PASS</span></td>
+              <td><span class="badge badge-amber">NO</span></td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>P2.3 — thread <code>question_type</code> into few-shot loading for MCQ exemplars</td>
+              <td><code>2be0453</code></td>
+              <td><span class="badge badge-green">GREEN</span></td>
+              <td><span class="badge badge-green">PASS</span></td>
+              <td><span class="badge badge-amber">NO</span></td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td>P3.1 — OpenTDB bare-declarative-fact rewrite (RC-1), dormant cheap-model rewriter</td>
+              <td><code>618a642</code></td>
+              <td><span class="badge badge-green">GREEN</span></td>
+              <td><span class="badge badge-green">PASS</span></td>
+              <td><span class="badge badge-amber">NO</span></td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td>P3.2 — heuristic surprise score + wire <code>top_by_surprise()</code> into SourcingStage (RC-2)</td>
+              <td><code>6cd1bd9</code></td>
+              <td><span class="badge badge-green">GREEN</span></td>
+              <td><span class="badge badge-green">PASS</span></td>
+              <td><span class="badge badge-amber">NO</span></td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td>P4.1 — Answerability/surprise veto in <code>ScoringStage</code> (<code>VETO_SHADOW</code>, RC-10/11)</td>
+              <td><code>8087ba8</code></td>
+              <td><span class="badge badge-green">GREEN</span></td>
+              <td><span class="badge badge-green">PASS</span></td>
+              <td><span class="badge badge-amber">NO</span></td>
+            </tr>
+            <tr>
+              <td>6</td>
+              <td>P4.2 — MCQ-path <code>self_critique</code> telemetry, dormant behind <code>MCQ_CRITIQUE_TELEMETRY</code> (RC-7)</td>
+              <td><code>365ff90</code></td>
+              <td><span class="badge badge-green">GREEN</span></td>
+              <td><span class="badge badge-green">PASS</span></td>
+              <td><span class="badge badge-amber">NO</span></td>
+            </tr>
+            <tr>
+              <td>7</td>
+              <td>P5.1 — <code>validate_generation.py</code> quality-proxy harness + 29 tests (no LLM)</td>
+              <td><code>6543e9e</code></td>
+              <td><span class="badge badge-green">GREEN</span></td>
+              <td><span class="badge badge-green">PASS</span></td>
+              <td><span class="badge badge-green">YES ✓</span></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style="margin-top:16px; font-size:13px;">
+          <strong>What got done:</strong> All Phase 2–5 tasks of #72 completed offline. Every change is dormant (flag-gated or dead-code) — no live generation path changed; output is byte-identical to the pre-run state when all flags are off. Final gate count: <strong>495 passed, 1 skipped, 3 xfailed</strong>.
+        </div>
+
+        <div style="margin-top:12px; font-size:13px; color:var(--muted);">
+          <strong style="color:var(--text);">Phase 6 (human gate)</strong> — explicitly marked <code>(human)</code> in the issue and excluded from Ralph's scope. That's the paid live-generation run you do as founder. See issue file for exact steps.
+        </div>
+
+        <div class="gate-row" style="margin-top:12px;">
+          <span class="gate-pill gate-green">quiz-pack-api ✓ ×7</span>
+          <span class="gate-pill gate-green">reviewer PASS ×7</span>
+          <span class="gate-pill gate-green">goal GOAL_MET:YES</span>
+          <span class="gate-pill gate-green">exit=0</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SECTION 3: Blockers ── -->
+  <div class="section" id="blockers">
+    <div class="section-title">3. Blockers (Needs You)</div>
+    <div class="blocker-none">
+      &#10003; No blockers. The run completed cleanly — goal met, branch not held.
+    </div>
+
+    <div style="margin-top: 16px; font-size: 13px; color: var(--muted);">
+      Pre-existing BLOCKERs in other issues (not from this run, not your morning action item unless you choose):
+      <ul style="margin: 8px 0 0 20px; line-height: 1.8;">
+        <li><strong style="color:var(--text);">#36</strong> — quiz-pack-api phase 2 sub-task split (2026-05-20, historical)</li>
+        <li><strong style="color:var(--text);">#42</strong> — MCQ generation flow needs redesign (2026-06-11, parked)</li>
+        <li><strong style="color:var(--text);">#57</strong> — 57.4 branch-protect conflicts with solo commit-to-main rule (founder decision needed)</li>
+      </ul>
+      These are carried over from prior runs and are documented in their respective issue files.
+    </div>
+  </div>
+
+  <!-- ── SECTION 4: Commits ── -->
+  <div class="section" id="commits">
+    <div class="section-title">4. Commits</div>
+
+    <details>
+      <summary>7 commits on <code>ralph/overnight-20260625-2200</code> (click to expand)</summary>
+      <div class="details-body" style="padding-top:12px;">
+        <ul class="commit-list">
+
+          <li class="commit-item">
+            <span class="commit-sha">6543e9e</span>
+            <div>
+              <div class="commit-msg">feat(questions): #72 P5.1 — validation harness with quality proxies (dormant, no LLM)</div>
+              <div class="commit-stats">+682 / −1 &nbsp;·&nbsp; validate_generation.py (398 lines) + 29 tests</div>
+            </div>
+          </li>
+
+          <li class="commit-item">
+            <span class="commit-sha">365ff90</span>
+            <div>
+              <div class="commit-msg">feat(questions): #72 P4.2 — restore MCQ-path self_critique telemetry (RC-7, dormant)</div>
+              <div class="commit-stats">+159 / −5 &nbsp;·&nbsp; feature_flags.py + advanced_generator.py + 2 new tests</div>
+            </div>
+          </li>
+
+          <li class="commit-item">
+            <span class="commit-sha">8087ba8</span>
+            <div>
+              <div class="commit-msg">feat(questions): #72 P4.1 — wire Answerability/surprise veto into ScoringStage (VETO_SHADOW, RC-10/11)</div>
+              <div class="commit-stats">+175 / −3 &nbsp;·&nbsp; scoring.py + test_scoring.py (94 lines)</div>
+            </div>
+          </li>
+
+          <li class="commit-item">
+            <span class="commit-sha">6cd1bd9</span>
+            <div>
+              <div class="commit-msg">feat(questions): #72 P3.2 — wire top_by_surprise() + free heuristic surprise score (RC-2)</div>
+              <div class="commit-stats">+174 / −2 &nbsp;·&nbsp; sourcing/models.py + test_surprise_scoring.py + test_sourcing.py</div>
+            </div>
+          </li>
+
+          <li class="commit-item">
+            <span class="commit-sha">618a642</span>
+            <div>
+              <div class="commit-msg">feat(questions): #72 P3.1 — OpenTDB bare-declarative-fact rewrite (RC-1) behind a guarded, dormant cheap-model rewriter</div>
+              <div class="commit-stats">+249 / −2 &nbsp;·&nbsp; opentriviadb_source.py + test_opentriviadb_rewrite.py (9 cases)</div>
+            </div>
+          </li>
+
+          <li class="commit-item">
+            <span class="commit-sha">2be0453</span>
+            <div>
+              <div class="commit-msg">feat(questions): #72 P2.3 — thread question_type into few-shot loading so MCQ batches see MCQ exemplars</div>
+              <div class="commit-stats">+74 / −1 &nbsp;·&nbsp; examples.py + prompt_builder.py + test_gold_standard_mcq.py</div>
+            </div>
+          </li>
+
+          <li class="commit-item">
+            <span class="commit-sha">b58e3c9</span>
+            <div>
+              <div class="commit-msg">feat(questions): #72 P2.2 — add dormant v3 escape hatch behind V3_ESCAPE_HATCH</div>
+              <div class="commit-stats">+177 / −2 &nbsp;·&nbsp; advanced_generator.py + prompt_builder.py + prompt file + 4 tests</div>
+            </div>
+          </li>
+
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- ── SECTION 5: Next Steps ── -->
+  <div class="section" id="next">
+    <div class="section-title">5. Next Steps</div>
+
+    <div class="next-steps">
+      <p style="font-size:13px; margin-bottom:12px;">
+        The branch is clean, all gates passed, no blockers. Merge when you're ready:
+      </p>
+
+      <div class="cmd-block">git checkout main &amp;&amp; git merge --ff-only ralph/overnight-20260625-2200 &amp;&amp; git push</div>
+
+      <div class="warning-note">
+        &#9888; Review the diff before merging — <code>git diff main..ralph/overnight-20260625-2200</code>.
+        All changes are dormant (flag-gated), but confirm no unintended file is included.
+        Then proceed with <strong>Phase 6</strong> (the paid live-generation run) per issue #72.
+      </div>
+
+      <div style="margin-top:16px; font-size:13px; color:var(--muted);">
+        <strong style="color:var(--text);">Phase 6 reminder</strong> — the only thing left on #72 is the human gate:
+        flip the feature flags, run <code>generate_pack.py</code> with a real topic, inspect the outputs for surprise + MCQ quality,
+        and mark the issue done. No further Ralph iteration needed.
+      </div>
+    </div>
+  </div>
+
+</div><!-- /wrapper -->
+</body>
+</html>

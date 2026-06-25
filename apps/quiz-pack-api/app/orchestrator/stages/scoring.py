@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import logging
 
+from app import feature_flags
 from app.orchestrator.context import OrderContext, StageResult
 from app.orchestrator.progress_sink import ProgressSink
 from app.scoring.multi_model_scorer import MultiModelScorer
@@ -43,6 +44,64 @@ logger = logging.getLogger(__name__)
 # trimmer. Tune here, not at call sites.
 MIN_OVERALL_SCORE = 3.0
 MIN_DISTRACTOR_QUALITY = 4
+
+# --- Answerability/surprise veto (issue #72 P4.1, Lever C — SHADOW only) -------
+# Flags the "starboard-class" boring dead-end recall question ("What term do
+# sailors use for the right side? → Starboard") so fun is *enforced* in at least
+# one place. In VETO_SHADOW mode this only logs + counts would-drops; it never
+# removes a question (drop is gated on by the founder at Phase 6, not Ralph).
+#
+# Thresholds are calibrated to the question_critique_v2 anchors: the "Poor 3-4"
+# boring-recall band sits at surprise 2 / answerability 2 (pure memorization,
+# "the most boring possible format"), while the "Average 5-6 meets minimum bar"
+# anchor sits at surprise 5 / clever_framing 4. A question is flagged only when
+# BOTH signals are at/below the low threshold (logical AND) — so a merely
+# unsurprising estimation question, or a surprising-but-slightly-dead-end one,
+# is never falsely vetoed (the gate's "no false-veto of the good ones").
+VETO_SURPRISE_MAX = 3.0
+VETO_ANSWERABILITY_MAX = 3.0
+
+# The live SCORING_PROMPT emits surprise_delight / clever_framing; the richer
+# question_critique_v2 rubric emits surprise_factor / answerability. The veto
+# reads whichever alias the scorer produced, so it works under either prompt.
+_SURPRISE_KEYS = ("surprise_factor", "surprise_delight")
+_ANSWERABILITY_KEYS = ("answerability", "clever_framing")
+
+
+def _mean_dim(model_scores: list[dict], keys: tuple[str, ...]) -> float | None:
+    """Mean of the first present alias in ``keys`` across models' score dicts.
+
+    Returns None when no model scored any alias — absence of a judgment must
+    not read as a low score (and so must not trigger the veto).
+    """
+    vals: list[float] = []
+    for s in model_scores:
+        dims = s.get("scores") or {}
+        for k in keys:
+            if dims.get(k) is not None:
+                vals.append(float(dims[k]))
+                break
+    return sum(vals) / len(vals) if vals else None
+
+
+def _shadow_veto_reason(model_scores: list[dict]) -> str | None:
+    """Return a would-drop reason for a boring dead-end recall question, else None.
+
+    Shadow only — the caller logs/counts this and KEEPS the question. Returns
+    None unless BOTH the surprise and answerability signals were scored AND both
+    are at/below their low thresholds.
+    """
+    surprise = _mean_dim(model_scores, _SURPRISE_KEYS)
+    answerability = _mean_dim(model_scores, _ANSWERABILITY_KEYS)
+    if surprise is None or answerability is None:
+        return None
+    if surprise <= VETO_SURPRISE_MAX and answerability <= VETO_ANSWERABILITY_MAX:
+        return (
+            f"answerability_surprise_veto(surprise={surprise:.1f}"
+            f"<={VETO_SURPRISE_MAX},answerability={answerability:.1f}"
+            f"<={VETO_ANSWERABILITY_MAX})"
+        )
+    return None
 
 
 class ScoringStage:
@@ -75,8 +134,10 @@ class ScoringStage:
             if r.get("id") is not None
         }
 
+        veto_on = feature_flags.veto_shadow()
         kept: list = []
         dropped = 0
+        veto_flagged = 0
         for q in ctx.questions:
             model_scores = scores_by_id.get(q.id, [])
 
@@ -92,6 +153,21 @@ class ScoringStage:
                 per_model[name] = float(overall)
             ctx.scores[q.id] = per_model
 
+            # Lever C shadow veto: log what the Answerability/surprise veto WOULD
+            # drop, but never remove it here (#72 P4.1). Independent of the score
+            # gate below — a boring question can clear the lenient floor yet still
+            # be flagged as a dead-end recall question.
+            if veto_on:
+                veto_reason = _shadow_veto_reason(model_scores)
+                if veto_reason is not None:
+                    veto_flagged += 1
+                    logger.warning(
+                        "ScoringStage VETO_SHADOW would-drop id=%s reason=%s "
+                        "(shadow mode: kept)",
+                        q.id,
+                        veto_reason,
+                    )
+
             drop_reason = self._gate_reason(model_scores)
             if drop_reason is not None:
                 dropped += 1
@@ -103,7 +179,11 @@ class ScoringStage:
 
         ctx.questions = kept
         return StageResult(
-            info={"scored": len(ctx.scores), "dropped_low_score": dropped},
+            info={
+                "scored": len(ctx.scores),
+                "dropped_low_score": dropped,
+                "veto_shadow_flagged": veto_flagged,
+            },
             cost_cents=0,
         )
 

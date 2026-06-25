@@ -29,7 +29,7 @@ from typing import Any
 import pytest
 
 from app.orchestrator import OrderContext
-from app.orchestrator.stages.scoring import ScoringStage
+from app.orchestrator.stages.scoring import ScoringStage, _shadow_veto_reason
 from quiz_shared.models.question import Question
 
 
@@ -232,3 +232,95 @@ async def test_no_questions_returns_zero_count() -> None:
     assert result.info == {"scored": 0, "dropped_low_score": 0}
     assert ctx.scores == {}
     assert scorer.calls == []
+
+
+# --- Answerability/surprise veto, SHADOW (issue #72 P4.1) ---------------------
+#
+# Why these scenarios: the veto is the one place fun is *enforced* in the
+# plumbing. If it fired on good questions it would be worse than useless (it
+# would teach us to ignore it), so every test pins both halves of the gate —
+# the starboard-class recall question is flagged AND the good ones are not.
+
+
+def _scored(dims: dict[str, float], *, names=("gpt-4.1-mini",)) -> list[dict]:
+    """Build a model_scores list with `dims` attached to every model's scores."""
+    return [
+        {"model_name": n, "scores": dict(dims), "overall_score": 5.0} for n in names
+    ]
+
+
+def test_shadow_veto_reason_flags_starboard_class_recall() -> None:
+    """The "What do sailors call the right side? → Starboard" archetype: a pure
+    dead-end recall question (critique_v2 "Poor 3-4" anchor — surprise 2 /
+    answerability 2) is flagged. A genuinely fun question, the "Average 5-6
+    meets minimum bar" anchor, and a surprising-but-dead-end question are NOT —
+    proving the AND threshold keeps false vetoes at zero."""
+    # Starboard-class — flagged (reads the critique_v2 alias names).
+    assert _shadow_veto_reason(
+        _scored({"surprise_factor": 2, "answerability": 2})
+    ) is not None
+    # Exceptional fun question — never flagged.
+    assert _shadow_veto_reason(
+        _scored({"surprise_factor": 9, "answerability": 8})
+    ) is None
+    # "Average — meets minimum bar" (octopus-hearts anchor): surprise 5 clears
+    # the line, so it is kept even though framing is weak.
+    assert _shadow_veto_reason(
+        _scored({"surprise_factor": 5, "answerability": 4})
+    ) is None
+    # Surprising but somewhat dead-end → kept (AND, not OR: one low signal is
+    # not enough to veto a question that still delivers an "aha").
+    assert _shadow_veto_reason(
+        _scored({"surprise_factor": 8, "answerability": 2})
+    ) is None
+    # No surprise/answerability scored at all → never veto on absent judgment.
+    assert _shadow_veto_reason(_scored({"conversation_spark": 2})) is None
+    assert _shadow_veto_reason([]) is None
+
+
+@pytest.mark.asyncio
+async def test_veto_shadow_flags_starboard_class_but_keeps_it(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Gate for P4.1: with VETO_SHADOW on, a starboard-class recall question
+    that clears the lenient overall floor is FLAGGED (surfaced in info) yet
+    still KEPT — shadow mode logs would-drops, drops nothing — while a good
+    question alongside it is not flagged."""
+    monkeypatch.setenv("VETO_SHADOW", "1")
+    scores = {
+        "q_0": {"gpt-4.1-mini": 4.0},  # clears the 3.0 floor — not score-dropped
+        "q_1": {"gpt-4.1-mini": 8.0},  # good
+    }
+    # Live SCORING_PROMPT alias names — q_0 reads as a boring dead-end recall Q.
+    dims = {
+        "q_0": {"surprise_delight": 2, "clever_framing": 2},
+        "q_1": {"surprise_delight": 8, "clever_framing": 9},
+    }
+    scorer = _FakeMultiModelScorer(scores, dims=dims)
+    stage = ScoringStage(scorer)  # type: ignore[arg-type]
+    ctx = _make_ctx([_stub_question(0), _stub_question(1)])
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    # Shadow: NOTHING dropped — both questions survive.
+    assert [q.id for q in ctx.questions] == ["q_0", "q_1"]
+    assert result.info["dropped_low_score"] == 0
+    # ...but exactly the starboard-class one is flagged.
+    assert result.info["veto_shadow_flagged"] == 1
+
+
+@pytest.mark.asyncio
+async def test_veto_dormant_when_flag_off(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Default (flag off): the veto is not consulted at all — a starboard-class
+    question produces zero flags, so the change is dormant until Phase 6."""
+    monkeypatch.delenv("VETO_SHADOW", raising=False)
+    scores = {"q_0": {"gpt-4.1-mini": 4.0}}
+    dims = {"q_0": {"surprise_delight": 2, "clever_framing": 2}}
+    scorer = _FakeMultiModelScorer(scores, dims=dims)
+    stage = ScoringStage(scorer)  # type: ignore[arg-type]
+    ctx = _make_ctx([_stub_question(0)])
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert [q.id for q in ctx.questions] == ["q_0"]
+    assert result.info["veto_shadow_flagged"] == 0

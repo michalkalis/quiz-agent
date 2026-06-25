@@ -21,7 +21,7 @@ Generate {count} pub quiz questions with these specifications:
 
 **CRITICAL INSTRUCTION: Use ONLY the facts provided below as the basis for your questions. Do NOT invent new facts or rely on your own knowledge for the core factual claim. Every question you generate MUST be traceable to one of these source facts.**
 
-If a fact is not interesting enough to make a good question, skip it — do not force a boring question from a weak fact. But NEVER fabricate a fact that is not in this list.
+If a fact is not interesting enough to make a good question, skip it — do not force a boring question from a weak fact. But NEVER fabricate a fact that is not in this list.{escape_hatch_section}
 
 {facts_section}
 

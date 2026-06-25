@@ -115,6 +115,11 @@ class PromptBuilder:
             # `{mcq_patterns_section}` unconditionally; the caller fills it
             # via **kwargs when `mcq_patterns` is configured.
             "mcq_patterns_section": "",
+            # Issue #72 P2.2 — empty default so the v3 prompt can carry
+            # `{escape_hatch_section}` unconditionally; the caller fills it
+            # via **kwargs only when the `V3_ESCAPE_HATCH` flag is on. Empty
+            # default keeps flag-off output byte-identical to today.
+            "escape_hatch_section": "",
         }
 
         # Merge any extra template variables (e.g., facts_section for V3)

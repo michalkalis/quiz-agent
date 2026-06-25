@@ -21,11 +21,32 @@ import os
 from quiz_shared.models.question import GenerationProvenance, Question
 from .prompt_builder import PromptBuilder
 from .pattern_routing import verification_mode
+from .. import feature_flags
 
 try:
     from ..sourcing.models import Fact
 except ImportError:
     Fact = None  # sourcing package not installed
+
+
+# Issue #72 P2.2 (Lever B / RC-5) — the v3 escape hatch. Dormant unless the
+# `V3_ESCAPE_HATCH` flag is on. v3's hard rule ("rely ONLY on source facts,
+# never your own knowledge") leaves no room for a surprising *angle*, which is
+# why output stays "prvoplánové". This loosens the rule for the *framing* only
+# — the core factual claim (the answer) must still trace to a source fact, so
+# grounding (the reason v3 exists) is preserved. Begins with a blank line so it
+# appends cleanly to the SOURCE FACTS instruction; empty when the flag is off
+# keeps flag-off output byte-identical. Fully revertible (flip the flag off).
+_V3_ESCAPE_HATCH_SECTION = """
+
+### Escape Hatch: A Surprising Angle (the answer still traces to a source)
+
+You MAY draw a surprising *angle, comparison, or framing* from your own general knowledge to make a question more engaging — on **one strict condition: the core factual claim (the answer the player must reach) still traces to one of the source facts above.** Use general knowledge for the *angle*, never for the *answer*.
+
+- ALLOWED: reframe a source fact through an unexpected comparison, estimation, or "aha" connection from general knowledge, as long as the verifiable answer comes from a source fact.
+- NOT ALLOWED: an answer whose correctness depends on a fact that is not in the list above. If the angle only works with an unsourced fact, drop it.
+
+When you use this, `source_excerpt` must still confirm the answer."""
 
 
 class MCQQuestionItem(BaseModel):
@@ -550,6 +571,12 @@ class AdvancedQuestionGenerator:
         if use_fact_first:
             facts_section = self._format_facts_section(source_facts)
             extra_kwargs["facts_section"] = facts_section
+            # Issue #72 P2.2 (Lever B) — inject the v3 escape hatch only when
+            # the flag is on. Dormant by default: with the flag off the
+            # placeholder falls back to its empty default so the prompt is
+            # byte-identical to today's hard-bound v3.
+            if feature_flags.v3_escape_hatch():
+                extra_kwargs["escape_hatch_section"] = _V3_ESCAPE_HATCH_SECTION
 
         # Issue #42 task 42.9b — render MCQ activation rules into the prompt.
         # Empty section when no MCQ patterns are configured so the prompt

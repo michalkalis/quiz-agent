@@ -10,7 +10,6 @@ Forward-only migration policy (issue-33 risk R8):
 from __future__ import annotations
 
 import asyncio
-import os
 from logging.config import fileConfig
 from pathlib import Path
 
@@ -19,14 +18,13 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
+from quiz_shared.paths import load_dotenv_from_ancestors
 
-try:
-    from dotenv import load_dotenv
-
-    repo_root = Path(__file__).resolve().parents[3]
-    load_dotenv(repo_root / ".env", override=False)
-except ImportError:
-    pass
+# Load the repo `.env` (if present) before reading settings, by walking up from
+# this file rather than indexing a fixed parent depth: the local checkout and
+# the Docker `/app` image sit at different depths, and the old fixed index
+# crashed in-container `alembic upgrade head` with IndexError (#60.P3, twin #70).
+load_dotenv_from_ancestors(Path(__file__))
 
 from app.config import get_settings  # noqa: E402
 from app.db.base import Base  # noqa: E402  -- imported so metadata is populated

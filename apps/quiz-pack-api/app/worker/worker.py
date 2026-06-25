@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any, Dict
 
 from arq.connections import RedisSettings
+from quiz_shared.paths import find_in_ancestors
 
 from app.config import get_settings
 
@@ -21,11 +22,15 @@ from .tasks import process_order
 
 logger = logging.getLogger(__name__)
 
-# Locate gold_standard.json relative to the repo root. Used by DedupStage's
-# Jaccard check; missing file means the check is a no-op (the stage handles
-# `None` by skipping the gold-standard comparison).
-_REPO_ROOT = Path(__file__).resolve().parents[4]
-_GOLD_STANDARD_PATH = _REPO_ROOT / "data" / "examples" / "gold_standard.json"
+# Locate gold_standard.json by walking up from this file. Used by DedupStage's
+# Jaccard check; a missing file means the check is a no-op (the stage handles
+# `None` by skipping the gold-standard comparison). Walking up -- rather than a
+# fixed `parents[N]` -- keeps this safe in the Docker `/app` layout, where the
+# repo `data/` dir is absent and a fixed index raised IndexError (#70, twin
+# #60.P3); there it resolves to `None` and the dedup check simply skips.
+_GOLD_STANDARD_PATH = find_in_ancestors(
+    Path(__file__), "data/examples/gold_standard.json"
+)
 
 
 async def on_startup(ctx: Dict[str, Any]) -> None:
@@ -56,9 +61,8 @@ async def on_startup(ctx: Dict[str, Any]) -> None:
     ctx["question_store"] = SyncPgvectorStore(
         PgvectorQuestionStore(session_factory=AsyncSessionLocal)
     )
-    ctx["gold_standard_path"] = (
-        _GOLD_STANDARD_PATH if _GOLD_STANDARD_PATH.exists() else None
-    )
+    # `find_in_ancestors` already returns an existing file or None.
+    ctx["gold_standard_path"] = _GOLD_STANDARD_PATH
     logger.info("worker on_startup: collaborators initialised")
 
 

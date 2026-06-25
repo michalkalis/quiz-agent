@@ -255,13 +255,26 @@ async def _poll_order(
     client: httpx.AsyncClient,
     order_id: str,
     *,
+    db_session: Optional[AsyncSession] = None,
     timeout: float = 30.0,
     interval: float = 0.5,
     terminal: frozenset = frozenset({"delivered", "failed"}),
 ) -> dict:
-    """Poll GET /v1/orders/{order_id} until status is terminal or timeout."""
+    """Poll GET /v1/orders/{order_id} until status is terminal or timeout.
+
+    The orders router shares the test's ``db_session`` (via the get_session
+    dependency override) and that session is built with
+    ``expire_on_commit=False``. Once it has loaded the order it keeps returning
+    the cached row from its identity map, so it never observes the in-process
+    worker's ``delivered``/``failed`` commit (written on a *separate* session on
+    the same engine) — and the poll spins until it times out. Pass ``db_session``
+    so we expire that identity map before each read and the route reloads fresh
+    state from the DB (READ COMMITTED makes the worker's commit visible).
+    """
     deadline = asyncio.get_event_loop().time() + timeout
     while asyncio.get_event_loop().time() < deadline:
+        if db_session is not None:
+            db_session.expire_all()
         resp = await client.get(f"/v1/orders/{order_id}")
         assert resp.status_code == 200, f"poll failed: {resp.text}"
         data = resp.json()
@@ -343,7 +356,7 @@ async def test_order_e2e_full(
     await _run_worker_once(_REDIS_URL)
 
     # 3. Poll until delivered.
-    snapshot = await _poll_order(client, order_id, timeout=30.0)
+    snapshot = await _poll_order(client, order_id, db_session=db_session, timeout=30.0)
     assert snapshot["status"] == "delivered", f"unexpected status: {snapshot}"
 
     # 4. Cost guardrail: real pipeline costs > 0 but stays under the Phase-2
@@ -402,6 +415,7 @@ async def test_order_e2e_full(
 @pytest.mark.integration
 async def test_order_sse_reconnect(
     client: httpx.AsyncClient,
+    db_session: AsyncSession,
     minter: JWSMinter,
     e2e_http_mocks,
 ) -> None:
@@ -426,7 +440,7 @@ async def test_order_sse_reconnect(
 
     # Run worker to completion.
     await _run_worker_once(_REDIS_URL)
-    snapshot = await _poll_order(client, order_id, timeout=30.0)
+    snapshot = await _poll_order(client, order_id, db_session=db_session, timeout=30.0)
     assert snapshot["status"] == "delivered"
 
     stream_url = f"/v1/orders/{order_id}/stream"

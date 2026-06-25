@@ -371,10 +371,13 @@ class AdvancedQuestionGenerator:
         keeps each call small enough that the LLM actually fills it, and forces
         coverage across every key in ``mcq_patterns``. Each sub-batch lists a
         single pattern with ``mcq_emphasis=True`` so the activation section
-        pins that pattern's shape as the required output. Best-of-N critique is
-        intentionally skipped here — the downstream ``ScoringStage`` is the
-        quality gate, and over-generating to ~57 is the very failure mode this
-        path replaces.
+        pins that pattern's shape as the required output. Best-of-N
+        *over-generation* is intentionally skipped here — the downstream
+        ``ScoringStage`` is the quality gate, and over-generating to ~57 is the
+        very failure mode this path replaces. The self_critique judge still
+        runs as opt-in **telemetry** (#72 P4.2, dormant behind
+        ``MCQ_CRITIQUE_TELEMETRY``): it annotates each kept question with a
+        ``critique_score`` but drops nothing.
         """
         patterns = sorted(mcq_patterns)
         # Spread `count` across the patterns as evenly as possible; the first
@@ -437,6 +440,28 @@ class AdvancedQuestionGenerator:
             q for batch in batches if isinstance(batch, list) for q in batch
         ]
         print(f"MCQ sub-batches produced {len(questions)} raw questions")
+
+        # #72 P4.2 (RC-7) — restore self_critique telemetry on the MCQ path.
+        # The sub-batch architecture deliberately does NOT over-generate
+        # (best-of-N *selection* asking for ~57 in one call is the yield
+        # collapse this path replaced — see the issue's "Do NOT retry"). The
+        # critique judge can still run as pure telemetry: when the dormant
+        # ``MCQ_CRITIQUE_TELEMETRY`` flag is on it annotates each kept
+        # question's provenance with a ``critique_score`` so MCQ quality is
+        # observable (fun was measured in ~5 places for text, 0 for MCQ). No
+        # question is dropped — ``ScoringStage`` stays the ship gate.
+        if feature_flags.mcq_critique_telemetry():
+            for q in questions:
+                critique = await self._critique_question(q)
+                provenance = q.generation_metadata or GenerationProvenance()
+                merged_extra = dict(provenance.extra)
+                merged_extra.update(critique)
+                q.generation_metadata = provenance.model_copy(update={
+                    "critique_model": self.critique_model,
+                    "critique_score": critique.get("overall_score"),
+                    "extra": merged_extra,
+                })
+
         return questions
 
     @staticmethod

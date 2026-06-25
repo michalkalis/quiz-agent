@@ -656,6 +656,121 @@ async def test_mcq_sub_batches_partition_source_facts_disjointly() -> None:
     assert len(flattened) == len(facts)
 
 
+def _fake_mcq_questions(n: int, pattern: str) -> list:
+    """Real ``Question`` objects in the shape the structured MCQ sub-batch
+    returns — each already carries provenance (set by ``_finalize_questions``),
+    so the P4.2 telemetry pass has somewhere to stamp the critique score."""
+    from quiz_shared.models.question import GenerationProvenance, Question
+
+    out = []
+    for i in range(n):
+        q = Question(
+            id=f"q_{pattern}_{i}",
+            question=f"Is fact {i} about {pattern} true?",
+            type="text_multichoice",
+            possible_answers={"a": "True", "b": "False"},
+            correct_answer="a",
+            topic="History",
+            category="general",
+            difficulty="medium",
+        )
+        q.generation_metadata = GenerationProvenance(
+            model="gpt-4o",
+            reasoning_pattern=pattern,
+            extra={"stage": "initial_generation"},
+        )
+        out.append(q)
+    return out
+
+
+@pytest.mark.asyncio
+async def test_mcq_critique_telemetry_annotates_each_question_when_flag_on(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Issue #72 P4.2 (RC-7) — restore self_critique telemetry on the MCQ path.
+
+    The text best-of-N path records a ``critique_score`` per question, but the
+    per-pattern MCQ sub-batch path recorded none — so MCQ "fun" was measured in
+    0 places. With ``MCQ_CRITIQUE_TELEMETRY`` on, the critique judge must run
+    once per kept MCQ question and stamp its score into provenance, WITHOUT
+    dropping anything (re-introducing the ~57-question over-generation is the
+    very failure mode this sub-batch path replaced). Removing the telemetry
+    wiring breaks the await-count / metadata assertions loudly.
+    """
+    monkeypatch.setenv("MCQ_CRITIQUE_TELEMETRY", "1")
+    patterns = {"alpha", "bravo"}
+
+    async def _fake_batch(*, count, mcq_patterns, **_kwargs):
+        return _fake_mcq_questions(count, next(iter(mcq_patterns)))
+
+    gen = _make_generator_with_fake_llm(AsyncMock())
+    gen._generate_mcq_batch_structured = AsyncMock(side_effect=_fake_batch)
+    gen._critique_question = AsyncMock(
+        return_value={"overall_score": 8.5, "verdict": "excellent"}
+    )
+
+    questions = await gen._generate_mcq_sub_batches(
+        count=4,
+        difficulty="medium",
+        topics=["history"],
+        categories=["general"],
+        excluded_topics=None,
+        avoid_questions=None,
+        user_bad_examples=None,
+        source_facts=None,
+        mcq_patterns=patterns,
+    )
+
+    # Telemetry, not selection: every generated MCQ question survives.
+    assert len(questions) == 4
+    # The judge ran exactly once per kept question — never the ~57 blow-up.
+    assert gen._critique_question.await_count == 4
+    for q in questions:
+        assert q.generation_metadata is not None
+        assert q.generation_metadata.critique_score == 8.5
+        assert q.generation_metadata.critique_model == gen.critique_model
+        # The full critique dict is merged into provenance.extra for audit,
+        # without clobbering the existing generation stage marker.
+        assert q.generation_metadata.extra["verdict"] == "excellent"
+        assert q.generation_metadata.extra["stage"] == "initial_generation"
+
+
+@pytest.mark.asyncio
+async def test_mcq_critique_telemetry_dormant_when_flag_off(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """P4.2 dormancy — with ``MCQ_CRITIQUE_TELEMETRY`` unset (default), the MCQ
+    sub-batch path makes ZERO critique calls and the questions pass through
+    unannotated, so the shipped per-pattern architecture (and its cost) is
+    byte-identical to today."""
+    monkeypatch.delenv("MCQ_CRITIQUE_TELEMETRY", raising=False)
+    patterns = {"alpha", "bravo"}
+
+    async def _fake_batch(*, count, mcq_patterns, **_kwargs):
+        return _fake_mcq_questions(count, next(iter(mcq_patterns)))
+
+    gen = _make_generator_with_fake_llm(AsyncMock())
+    gen._generate_mcq_batch_structured = AsyncMock(side_effect=_fake_batch)
+    gen._critique_question = AsyncMock()
+
+    questions = await gen._generate_mcq_sub_batches(
+        count=4,
+        difficulty="medium",
+        topics=["history"],
+        categories=["general"],
+        excluded_topics=None,
+        avoid_questions=None,
+        user_bad_examples=None,
+        source_facts=None,
+        mcq_patterns=patterns,
+    )
+
+    assert len(questions) == 4
+    gen._critique_question.assert_not_awaited()
+    # No critique telemetry stamped when dormant.
+    assert all(q.generation_metadata.critique_score is None for q in questions)
+
+
 def test_partition_facts_handles_none_and_short_inputs() -> None:
     """#42 task 42.28 — the partition helper degrades gracefully.
 

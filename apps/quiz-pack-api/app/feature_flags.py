@@ -63,3 +63,17 @@ def veto_shadow() -> bool:
     ``False`` (default) → the veto is not consulted at all.
     """
     return _truthy(os.getenv("VETO_SHADOW"))
+
+
+def mcq_critique_telemetry() -> bool:
+    """Lever D (Phase 4): run the self_critique judge over the MCQ sub-batch
+    questions as **telemetry** — annotate each kept question with a
+    ``critique_score``, drop nothing.
+
+    ``False`` (default) → the per-pattern MCQ sub-batch path stays
+    critique-free (the shipped architecture, no extra LLM call per MCQ
+    question). This restores the RC-7 MCQ quality signal that the text
+    best-of-N path already records, without re-introducing the ~57-question
+    over-generation the sub-batch path was built to replace.
+    """
+    return _truthy(os.getenv("MCQ_CRITIQUE_TELEMETRY"))

@@ -8,6 +8,64 @@
 
 ---
 
+## ▶ Prod activation — decomposed execution plan (re-planned 2026-06-25)
+
+**All of #60 is code-complete; only prod activation remains.** Re-verified first-hand this session and split into small, **one-session-each** tasks — do NOT bundle into a single run (context discipline). Supersedes the flat "Before-prod gate" checklist below; that checklist stays accurate as a summary.
+
+### Verified state (2026-06-25, first-hand)
+- Backend auth code + Alembic migrations `0001` (`daily_usage` + `anonymous_identities` + `refresh_tokens`) and `0002` (App Attest tables) are **in `origin/main` and deployed** — so the `/auth/*` routes and the DB-backed `UsageTracker` are already live in prod (anon-bootstrap's 503 proves the routes ship).
+- **In-container `alembic upgrade head` is broken in BOTH apps.** `alembic/env.py` runs `Path(__file__).resolve().parents[3]` inside `try/except ImportError`; `python-dotenv` is *transitively* present so the line executes, and in Docker (`/app/alembic/env.py`) `parents[3]` → **`IndexError`**. quiz-agent `env.py:20`, quiz-pack-api `env.py:26` (byte-identical; never hit because #30 migrates it via a `fly proxy` local tunnel). Twin of #70's `worker.py:27 parents[4]`. Works locally only (there `parents[3]` = repo root).
+- **The 3 auth Fly secrets are absent** (`fly secrets list`): no `AUTH_JWT_SECRET` / `APP_ATTEST_REQUIRED` / `APP_ATTEST_APP_ID`. `anon-bootstrap` → 503.
+- **cbor2 deploy-ordering trap (NEW finding, sharpens the handoff).** `eb601a8` (adds `cbor2` to the Dockerfile pip list + pyproject) is **NOT in `origin/main`** → the deployed prod image lacks cbor2. `from cbor2 import loads` is **module-level** (`app_attest.py:31`), and `main.py:247` imports that module **the moment `APP_ATTEST_APP_ID` is set**. ∴ setting that one secret on the current image **crash-loops prod at boot** — not merely a verify-time 500. **cbor2 must be in the deployed image *before* `APP_ATTEST_APP_ID`.**
+- **Unconfirmed — needs a prod read (60.P1).** `DATABASE_URL` is **not** in `fly secrets list` nor `fly.toml [env]`, so it is *not proven* the tracker is even live in prod (D1 assumes it is). If `DATABASE_URL` is unset → no fire, and #60 additionally needs Postgres provisioned. Whether `daily_usage` exists is the decisive fire check.
+
+### Why this is more than "set 3 secrets"
+The DB-backed tracker (`main.py:231-235`, gated on `DATABASE_URL`, **not** the JWT secret) queries `daily_usage` with **zero error handling** (`tracker.py`), and `quiz.py:176-180` converts any non-HTTPException into **HTTP 500 "Failed to start quiz"** with `check_limit` sitting inside that `try` (`quiz.py:60-63`). So **IF** `DATABASE_URL` is set **AND** `daily_usage` is missing **AND** the session carries a `user_id` (the legacy-grace field app does) → **every prod `/start` returns 500**. The never-run migration is exactly what creates `daily_usage`. Sequence is therefore **migrate-then-secrets**, not secrets-first.
+
+### Tasks (each = one focused session; obey the dependency order)
+
+**60.P1 — Diagnose prod DB (read-only; GATES everything).** *tiny · needs founder OK for a prod read*
+- Wake the VM (`curl -s -o /dev/null https://quiz-agent-api.fly.dev/openapi.json`), then run a read-only in-container probe (prints only presence + table names, never the URL/password): is `DATABASE_URL` set? which public tables exist? `daily_usage`? `alembic_version`? Pull recent logs for `Failed to start quiz` / 500 on `/start` to see if the fire is actually burning. (Probe lives at `…/scratchpad/prod_probe.py` — session-local, recreate inline.)
+- **Branch on the result:**
+  - `DATABASE_URL` **unset** → tracker is None, **no fire**; #60 needs Postgres provisioned + `DATABASE_URL` set first → re-scope and STOP/report.
+  - set + `daily_usage` **missing** → **ACTIVE FIRE** (field `/start` 500ing) → do 60.P2 now.
+  - set + `daily_usage` **exists** → no fire; confirm `alembic_version == 0002`; skip 60.P2.
+
+**60.P2 — (only if 60.P1 = active fire) Emergency migrate prod via fly-proxy-local.** *small · prod write · stops the bleeding, no redeploy*
+- `fly proxy 5432 -a <postgres-app>` (get the cluster from `fly pg list` / the attached app), then locally `cd apps/quiz-agent && DATABASE_URL='postgresql+asyncpg://…prod…' .venv/bin/alembic upgrade head` (env.py works locally). Creates `daily_usage` + the 4 auth tables.
+- Verify: re-probe → `daily_usage` present, `alembic_version == 0002`; a real `/start` no longer 500s. This is a deliberate fast patch; 60.P3 is still the real fix.
+
+**60.P3 — Structural fix: safe repo-root resolution in `alembic/env.py` (both apps) + #70 twin.** *code+test · fully local, no prod*
+- Replace the fixed `parents[3]` in `apps/quiz-agent/alembic/env.py` and `apps/quiz-pack-api/alembic/env.py` with: walk `Path(__file__).resolve().parents` for the first dir containing `.env`, load it if found, never crash. Add a test that bootstrapping does not raise when no `.env` is found above (the Docker `/app` layout). Fix the #70 twin (`worker.py:27 parents[4]`, same bug class).
+- Verify: `alembic current` works locally in both apps; ruff clean. This is the architecturally-correct fix ([[feedback_proper_solutions]]) that makes in-container `alembic upgrade head` work and clears quiz-pack-api's latent twin.
+
+**60.P4 — Deploy quiz-agent prod (env.py fix + cbor2).** *prod deploy*
+- Precondition: 60.P3 committed **and** cbor2 (`eb601a8`) in the image — **founder push-gate decision needed** (pushes are held to land backend+iOS together). Read `docs/runbooks/fly-deploy.md` first (Dockerfile dep drift — see [[project_dockerfile_drift]]).
+- Deploy → image now has cbor2 (so `APP_ATTEST_APP_ID` is safe) + fixed env.py (in-container `alembic upgrade head` works; idempotent if 60.P2 already ran it).
+- Verify: boots; `openapi.json` OK; `fly ssh … alembic current == 0002` (no IndexError); still 503 on `anon-bootstrap` (secrets not set yet — expected); field app unaffected.
+
+**60.P5 — Set the 3 Fly secrets (activate auth).** *prod config · ordering-critical*
+- Only after 60.P4 (cbor2 in image) **and** tables exist (60.P2 or 60.P4). One `fly secrets set -a quiz-agent-api` call (triggers a restart):
+  - `AUTH_JWT_SECRET` = `python3 -c "import secrets; print(secrets.token_hex(64))"` (≥64-char CSPRNG)
+  - `APP_ATTEST_REQUIRED=on`
+  - `APP_ATTEST_APP_ID=KAGWHPZZFQ.com.missinghue.hangs` (Team `KAGWHPZZFQ` from `project.pbxproj`; bundle `com.missinghue.hangs` from `Shared.xcconfig`)
+- Verify: boots clean (no cbor2 crash-loop); `anon-bootstrap` → **401** with App Attest on (curl/sim can't attest — **EXPECTED**, not a failure), no longer 503; token service initialized in logs.
+
+**60.P6 — End-to-end verify + field-app safety.** *verify · small*
+- `/sessions` + `/start` round-trip → **no 500**. Confirm `LEGACY_USER_ID_GRACE` stays **ON** — the field TestFlight build is pre-auth (iOS auth committed-but-unpushed on `mba`), uses the legacy `user_id` grace path, and never calls `anon-bootstrap`, so `APP_ATTEST_REQUIRED=on` does not break it. Keep grace ON until the auth iOS build ships.
+- Confirm R-2 at deploy: Fly strips inbound `Fly-Client-IP` at the edge (rate-limit key safety).
+- Update issue-60 + TODO + memory; mark #60 prod-activated.
+
+### Decisions needed from founder (live, not buried)
+1. **Approve the read-only prod diagnostic (60.P1)** — a `fly ssh` *read* into `quiz-agent-api` (no writes); it was auto-denied without explicit prod-target approval. Immediate next action.
+2. **Push gate for cbor2 (`eb601a8`)** — must reach prod for activation. Cherry-pick + push just cbor2, or lift the hold? (Pushes are held to land backend+iOS together.)
+3. **If 60.P1 shows an active fire:** OK to run the emergency fly-proxy migration (60.P2) immediately to stop the 500s, before the structural env.py fix?
+
+### Dependency order
+`60.P1 → (60.P2 if fire) → 60.P3 → 60.P4 → 60.P5 → 60.P6`. 60.P3 is local-only and may start in parallel with 60.P1/P2.
+
+---
+
 ## Why (corrected after codebase inspection)
 
 The freemium limit is untrustworthy. **Two of the original three premises were corrected** by reading the actual code (see §10 of the research doc):

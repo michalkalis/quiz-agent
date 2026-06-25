@@ -1,9 +1,12 @@
 """Open Trivia Database source — extracts underlying facts from trivia questions."""
 
 import html
+import os
 from typing import Optional
 
 import httpx
+
+from quiz_shared.llm import factory as llm_factory
 
 from .models import Fact
 
@@ -43,6 +46,67 @@ CATEGORY_MAP = {
 }
 
 
+def _fact_echoes_question(fact_text: str, question: str) -> bool:
+    """RC-1 guard: ``True`` when a rewritten fact still embeds the original
+    trivia question verbatim — i.e. the re-wrap (``The answer to '<question>'
+    is <answer>.``) we are trying to eliminate. The trailing ``?`` is stripped
+    so a declarative rewrite that merely drops the question mark is still
+    caught. Comparison is case-insensitive and substring-based per the issue's
+    "output never contains the original-question substring" spec.
+    """
+    q = question.strip().rstrip("?").strip().lower()
+    return bool(q) and q in fact_text.lower()
+
+
+_REWRITE_PROMPT = """Turn this trivia question and its correct answer into a single, self-contained declarative fact a quiz writer can build a NEW question from.
+
+QUESTION: {question}
+ANSWER: {answer}
+
+Rules:
+- State the underlying fact directly. Do NOT repeat or paraphrase the question, and do NOT write "the answer is ...".
+- One sentence, <= 25 words, factually faithful to the answer.
+- Output ONLY the sentence — no quotes, labels, or preamble."""
+
+
+class OpenTriviaFactRewriter:
+    """Cheap-model rewriter that turns a trivia Q+A into a bare declarative
+    fact (RC-1). Mirrors ``AnswerNormalizer``'s lazy ``llm_factory`` client and
+    fail-safe contract: any unavailability, exception, or empty output returns
+    ``None`` so the caller drops the seed rather than emitting a re-wrap. Routed
+    through the #53 factory — never instantiates an SDK client directly.
+    """
+
+    def __init__(self, model: str = "gpt-4o-mini") -> None:
+        self._model = model
+        self._client = None
+
+    def _available(self) -> bool:
+        """Whether the cheap model is reachable (see AnswerNormalizer)."""
+        return bool(os.getenv("OPENAI_API_KEY")) or llm_factory.gateway() == llm_factory.OPENROUTER
+
+    async def rewrite(self, question: str, answer: str) -> Optional[str]:
+        """Return a bare declarative fact, or ``None`` to drop the seed."""
+        if not self._available():
+            return None
+        if self._client is None:
+            self._client = llm_factory.openai_client(async_=True)
+        try:
+            response = await self._client.chat.completions.create(
+                model=llm_factory.resolve_model(self._model),
+                messages=[
+                    {
+                        "role": "user",
+                        "content": _REWRITE_PROMPT.format(question=question, answer=answer),
+                    }
+                ],
+            )
+            text = (response.choices[0].message.content or "").strip().strip('"').strip()
+            return text or None
+        except Exception:
+            return None
+
+
 class OpenTriviaDBSource:
     """Source fact seeds from Open Trivia Database.
 
@@ -51,6 +115,13 @@ class OpenTriviaDBSource:
     """
 
     BASE_URL = "https://opentdb.com/api.php"
+
+    def __init__(self, rewriter: Optional[OpenTriviaFactRewriter] = None) -> None:
+        # Dormant by default: with no rewriter, `_build_fact` falls through to
+        # the byte-identical `_extract_fact` re-wrap (RC-1 stays present until
+        # the rewriter is wired at Phase 6). When a rewriter is injected, every
+        # emitted fact is a guarded, non-echoing declarative statement.
+        self._rewriter = rewriter
 
     async def get_facts(self, count: int = 20, topics: Optional[list[str]] = None) -> list[Fact]:
         """Get fact seeds from Open Trivia DB."""
@@ -76,7 +147,7 @@ class OpenTriviaDBSource:
                         continue
 
                     for item in data.get("results", []):
-                        fact = self._extract_fact(item, cat_name)
+                        fact = await self._build_fact(item, cat_name)
                         if fact:
                             facts.append(fact)
 
@@ -84,6 +155,27 @@ class OpenTriviaDBSource:
                     print(f"OpenTDB error (category {cat_id}): {e}")
 
         return facts[:count]
+
+    async def _build_fact(self, item: dict, category_name: str) -> Optional[Fact]:
+        """Build a Fact, applying the RC-1 rewrite+guard when a rewriter is set.
+
+        Dormant path (no rewriter) returns `_extract_fact`'s byte-identical
+        re-wrap. Active path replaces the text with a cheap-model declarative
+        fact and drops the seed (returns ``None``) whenever the rewrite is
+        unavailable, empty, or still echoes the question — so an active source
+        never emits the re-wrap the guard is meant to eliminate.
+        """
+        base = self._extract_fact(item, category_name)
+        if base is None or self._rewriter is None:
+            return base
+
+        question = html.unescape(item.get("question", ""))
+        answer = html.unescape(item.get("correct_answer", ""))
+        rewritten = await self._rewriter.rewrite(question, answer)
+        if not rewritten or _fact_echoes_question(rewritten, question):
+            return None
+        base.text = rewritten
+        return base
 
     def _extract_fact(self, item: dict, category_name: str) -> Optional[Fact]:
         """Extract the underlying fact from a trivia question (don't copy the question)."""

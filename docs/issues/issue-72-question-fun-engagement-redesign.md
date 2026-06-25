@@ -290,3 +290,9 @@ resolved and baked in:
 [[issue-42-question-quality-and-mcq|#42 Question quality sweep + multichoice activation]] · [[issue-63-question-quality-review|#63 Question-quality review: generation audit + corpus verification]] · [[issue-30-batch-generate-categories|#30 Batch-generate questions for new categories]]
 <!-- obsidian-links:end -->
 
+
+## BLOCKER (2026-06-26) — plan-readiness pre-flight (NOT-READY)
+
+- The readiness gate (#57 57.13) refused to start an autonomous run on this issue: ready-check produced no parseable READY_VERDICT (see /Users/agent/code/quiz-agent/scripts/ralph/logs/ready-20260626-000008.log)
+- No iteration ran; the branch was NOT pushed. Verifying the loop output cannot rescue an unready input (garbage in, garbage out).
+- Next human-touch: clear the Definition-of-Ready (`/triage` C1–C7: add the `## Acceptance` block, declare `**Reversibility:**`, run `/ready-check`), then re-run. Override only by setting `RALPH_READYCHECK=0` for a deliberate exception.

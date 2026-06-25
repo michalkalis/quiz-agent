@@ -226,6 +226,14 @@ Each box's *Gate* is the machine check that must be green before it counts as do
 
 🛑 **Phase 6 — STOP. Not a Ralph task.** The single founder-authorized validation run (~$5) and the founder's by-ear judgment (6b) are a **human checkpoint**. When every box above is checked and the suite is green, **Ralph is done** — leave everything dormant behind toggles, push the `ralph/*` branch, and stop. Un-park is the founder's call; Ralph must never start a paid generation run to "finish" this issue.
 
+**✅ Ralph-complete (2026-06-25, branch `ralph/overnight-20260625-2330`):** every Phase 0–5 box above is
+checked **and** the full offline suite is verified green **first-hand — 495 passed, 1 skipped (Apple-root,
+setup-gated), 3 xfailed (worker stubs), 0 failed** in ~56s via `.venv/bin/python -m pytest tests/` (Postgres
++ Redis up, #73). This **closes every prior phase note's "full green is the gate machine's to confirm."**
+**The Ralph stop condition is MET — Ralph is done.** Everything ships dormant behind toggles
+(`GENERATION_MODEL`, `V3_ESCAPE_HATCH`, `VETO_SHADOW`, `MCQ_CRITIQUE_TELEMETRY`); **PARKED awaiting the
+founder's Phase-6 un-park** (the one paid validation run + the 6b by-ear judgment). Ralph must not cross the 🛑 line.
+
 ## Decisions I made for you (override any)
 
 Per *"nemusíš so mnou riešiť detaily, sám vieš väčšinou lepšie rozhodnúť"*, the old 7 open questions are

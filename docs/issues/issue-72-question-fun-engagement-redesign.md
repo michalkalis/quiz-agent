@@ -296,3 +296,24 @@ resolved and baked in:
 - The readiness gate (#57 57.13) refused to start an autonomous run on this issue: ready-check produced no parseable READY_VERDICT (see /Users/agent/code/quiz-agent/scripts/ralph/logs/ready-20260626-000008.log)
 - No iteration ran; the branch was NOT pushed. Verifying the loop output cannot rescue an unready input (garbage in, garbage out).
 - Next human-touch: clear the Definition-of-Ready (`/triage` C1–C7: add the `## Acceptance` block, declare `**Reversibility:**`, run `/ready-check`), then re-run. Override only by setting `RALPH_READYCHECK=0` for a deliberate exception.
+
+### RESOLUTION (2026-06-26, branch `ralph/overnight-20260626-0100`) — BLOCKER was a FALSE NEGATIVE, no action needed
+
+The NOT-READY verdict above is **spurious** — the ready-check didn't fail on plan content, it failed because the
+Claude **session usage-limit** was hit. The referenced log
+(`scripts/ralph/logs/ready-20260626-000008.log`) contains a single line:
+`You've hit your session limit · resets 12:30am (Europe/Prague)` — i.e. ready-check got a rate-limit message
+instead of a READY_VERDICT, and the gate mislabeled that as NOT-READY. **Garbage gate-output, not a garbage plan.**
+
+The BLOCKER's own prescribed remediation is **already satisfied in this file**:
+- `## Acceptance` block — **present** (line ~260, with the machine-evaluable Ralph stop condition).
+- `**Reversibility:**` — **declared** (line 5, `a · commits-only`).
+
+And the issue is in fact **Ralph-complete**: all 15 Phase 0–5 boxes are `[x]`, the full offline suite was verified
+green first-hand (**495 passed / 0 failed**, see the 2026-06-25 Ralph-complete note above), and `67a99e3`
+(Ralph-complete) landed *before* `6a445a7` (this BLOCKER) — the gate ran against an issue that was already done.
+**Phase 6 is the 🛑 founder-only checkpoint; there is no Ralph-actionable work left here.**
+
+**No human-touch required to "fix readiness."** If a verdict is ever needed again, re-run ready-check after the
+session limit resets (or set `RALPH_READYCHECK=0`). Otherwise this issue stays **PARKED for the founder's Phase-6
+un-park** — Ralph must not pick it up or cross the 🛑 line.

@@ -71,7 +71,7 @@ if [[ "$CURRENT_BRANCH" != "main" ]]; then
 fi
 
 echo "[overnight] pulling main (ff-only)…"
-git pull --ff-only
+git pull --ff-only || echo "[overnight] ff-pull skipped (origin diverged from local main); continuing on local main."
 
 if ! command -v claude >/dev/null 2>&1; then
     echo "[overnight] claude CLI not on PATH — aborting." >&2

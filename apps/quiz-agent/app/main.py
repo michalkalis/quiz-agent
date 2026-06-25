@@ -177,7 +177,15 @@ async def lifespan(app: FastAPI):
 
     question_store = chroma_question_store
     if settings.database_url:
-        async_pgvector = PgvectorQuestionStore(database_url=settings.database_url)
+        # Fly stores DATABASE_URL as libpq `postgres://`; the async read-path
+        # needs the explicit `postgresql+asyncpg://` driver or create_async_engine
+        # can't load the dialect and #36 voice read-path crashes at boot. The auth
+        # engine already normalizes — reuse the same helper here (#60 flip gate).
+        from .db.engine import normalize_async_url
+
+        async_pgvector = PgvectorQuestionStore(
+            database_url=normalize_async_url(settings.database_url)
+        )
         retrieval_store = SyncPgvectorStore(async_pgvector)
         logger.info("Voice-quiz read path: PgvectorQuestionStore (canonical)")
     else:

@@ -114,6 +114,34 @@ async def test_populates_ctx_facts_with_2x_target() -> None:
 
 
 @pytest.mark.asyncio
+async def test_facts_emerge_surprise_ranked() -> None:
+    """RC-2 (#72 P3.2): the stage must score facts with the free heuristic and
+    rank them — `top_by_surprise()` had zero call sites, so the prompt's "prefer
+    surprising facts" was dead. A dull OpenTDB re-wrap must sink below an extreme
+    fact, and the 2× dedup headroom (count) must be preserved (ordering only)."""
+    dull = Fact(
+        text="The answer to 'What is the capital of France?' is Paris.",
+        source_name="opentdb",
+    )
+    plain = Fact(text="Paris is a city in France.", source_name="wikipedia")
+    extreme = Fact(
+        text="The Nile is the longest river, at 6,650 km.", source_name="wikipedia"
+    )
+    batch = FactBatch(
+        facts=[dull, plain, extreme], sources_used=["opentdb", "wikipedia"]
+    )
+    sourcer = _FakeFactSourcer(batch)
+    stage = SourcingStage(sourcer)  # type: ignore[arg-type]
+    ctx = _make_ctx(target_count=10)
+
+    await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert len(ctx.facts) == 3  # ordering only — no facts dropped
+    assert ctx.facts[0] is extreme  # markers + number rank it first
+    assert ctx.facts[-1] is dull  # the OpenTDB re-wrap sinks to the bottom
+
+
+@pytest.mark.asyncio
 async def test_passes_category_theme_and_prompt_tokens_as_topics() -> None:
     """Curated metadata AND salient prompt tokens must reach the sourcer.
 

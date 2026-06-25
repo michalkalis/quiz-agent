@@ -62,7 +62,14 @@ class SourcingStage:
             count=ctx.target_count * 2,
             topics=topics,
         )
-        ctx.facts = list(batch.facts)
+        # RC-2 (#72 P3.2): give the flat-defaulted facts a real, free surprise
+        # score and actually rank by it — top_by_surprise() previously had zero
+        # call sites, so the generation prompt's "prefer surprising facts" never
+        # bit. Ordering only (n = all facts): the 2× dedup headroom downstream is
+        # preserved, the facts are just surprise-first so generation anchors on
+        # the interesting ones.
+        batch.score_surprise_heuristic()
+        ctx.facts = batch.top_by_surprise(len(batch.facts))
 
         tavily_calls = 1 if "web_search" in batch.sources_used else 0
         cost_cents = tavily_calls * TAVILY_CENTS_PER_CALL

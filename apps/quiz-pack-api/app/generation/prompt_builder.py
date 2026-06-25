@@ -68,6 +68,7 @@ class PromptBuilder:
                 n=5,
                 topics=topics,
                 difficulty=difficulty,
+                question_type=question_type,
             )
 
         if ok_examples is None:

@@ -142,3 +142,55 @@ def test_load_gold_standard_renders_mcq_options_inline() -> None:
             assert "A)" in rendered and "B)" in rendered
             return
     pytest.fail("load_gold_standard never emitted an MCQ example in 20 tries")
+
+
+def test_mcq_question_type_surfaces_mcq_exemplars_deterministically() -> None:
+    """#72 P2.3: an MCQ batch must see MCQ exemplars on *every* roll.
+
+    Without `question_type` threading, `load_gold_standard` samples type-blind:
+    with ~3 MCQ in 53 entries (RC-8) a random n=5 draw frequently surfaces zero
+    MCQ examples (the reason the test above must re-roll up to 20 times), so the
+    LLM gets no demonstration of the `possible_answers` option-dict shape for
+    the very batch that needs it. Threading `question_type="text_multichoice"`
+    biases the sample toward MCQ exemplars, so every MCQ batch sees the shape.
+
+    This test would fail loudly if the threading were dropped (back to the
+    type-blind sample), pinning the P2.3 fix in place.
+    """
+    n = 5
+    num_mcq = len(_load_mcq_examples())
+    assert num_mcq >= 1, "fixture precondition: gold_standard.json has MCQ entries"
+    # With fewer MCQ than n, the top-up fills the rest with non-MCQ examples and
+    # all available MCQ are selected; with >= n MCQ, exactly n MCQ are selected.
+    expected_mcq_rendered = min(num_mcq, n)
+
+    for _ in range(15):  # every roll, not "eventually" — the determinism is the fix
+        rendered = load_gold_standard(n=n, question_type="text_multichoice")
+        assert rendered.count("Options:") == expected_mcq_rendered, (
+            "MCQ batch did not surface the expected MCQ exemplar count — is "
+            "question_type still threaded into load_gold_standard?"
+        )
+        # Schema demonstration: each rendered MCQ shows the keyed option shape.
+        assert "A)" in rendered and "B)" in rendered
+        # Answer-stripping is preserved for the trailing pattern-only examples.
+        assert "Answer omitted" in rendered
+
+
+def test_question_type_text_leaves_sampling_unbiased() -> None:
+    """Regression: only `text_multichoice` triggers the MCQ bias (#72 P2.3).
+
+    A plain text batch must keep the original type-blind sampling — the new
+    parameter is opt-in and must not perturb the dominant text path.
+    """
+    # `text` and the default both fall through the MCQ guard unchanged: a draw
+    # of n from 53 type-blind entries usually contains < num_mcq MCQ examples,
+    # so the rendered MCQ count must not be pinned to the full MCQ pool.
+    biased_full = 0
+    for _ in range(15):
+        rendered = load_gold_standard(n=5, question_type="text")
+        if rendered.count("Options:") >= len(_load_mcq_examples()):
+            biased_full += 1
+    assert biased_full < 15, (
+        "text batches always surfaced the full MCQ pool — the MCQ bias is "
+        "leaking into the text path instead of being gated on text_multichoice"
+    )

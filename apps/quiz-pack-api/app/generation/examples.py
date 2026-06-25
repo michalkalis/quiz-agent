@@ -17,8 +17,14 @@ def load_gold_standard(
     n: int = 5,
     topics: Optional[list[str]] = None,
     difficulty: Optional[str] = None,
+    question_type: Optional[str] = None,
 ) -> str:
     """Load n random gold-standard examples, optionally filtered by topic/difficulty.
+
+    When ``question_type == "text_multichoice"`` the sample is biased toward
+    MCQ-shaped exemplars so MCQ batches actually see the option-dict payload
+    shape (issue #72 P2.3 / RC-8: the library is ~3/53 MCQ, so a type-blind
+    random sample almost never surfaces an MCQ example).
 
     Returns formatted string suitable for prompt injection.
     """
@@ -28,6 +34,20 @@ def load_gold_standard(
 
     with open(path, "r", encoding="utf-8") as f:
         examples = json.load(f)
+
+    # Issue #72 P2.3 — bias toward type-appropriate exemplars FIRST (before the
+    # topic/difficulty narrowing) so MCQ batches reliably see MCQ-shaped
+    # examples (RC-8). Mirror the topic filter's filter-then-top-up so a batch
+    # is never starved of examples when fewer than n MCQ entries exist; the
+    # later topic/difficulty top-ups draw from this MCQ-biased pool, so the MCQ
+    # examples survive. Non-MCQ types fall through unchanged.
+    if question_type == "text_multichoice":
+        mcq = [e for e in examples if e.get("type") == "text_multichoice"]
+        if mcq:
+            if len(mcq) < n:
+                others = [e for e in examples if e not in mcq]
+                mcq = mcq + random.sample(others, min(n - len(mcq), len(others)))
+            examples = mcq
 
     # Filter by topic if specified
     if topics:

@@ -40,6 +40,16 @@ config.set_main_option("sqlalchemy.url", normalize_async_url(_settings.database_
 
 target_metadata = Base.metadata
 
+# These auth/usage tables are co-located in the shared `quiz-pack-db` cluster
+# (issue #60 decision #2 — one cluster, no extra DB bill), the SAME database the
+# #36 voice read-path reads `questions` from. quiz-pack-api already owns the
+# default `alembic_version` table there (head `1c5e0fa7b3d4`). Two independent
+# Alembic histories cannot share one version table — pointing this migration at
+# the default would make Alembic fail to locate quiz-pack's revision. So this app
+# tracks its own state in a dedicated table; the auth table names are disjoint
+# from quiz-pack's, so the two histories coexist cleanly in one database.
+VERSION_TABLE = "alembic_version_quiz_agent"
+
 
 def run_migrations_offline() -> None:
     url = config.get_main_option("sqlalchemy.url")
@@ -48,6 +58,7 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        version_table=VERSION_TABLE,
     )
 
     with context.begin_transaction():
@@ -55,7 +66,11 @@ def run_migrations_offline() -> None:
 
 
 def do_run_migrations(connection: Connection) -> None:
-    context.configure(connection=connection, target_metadata=target_metadata)
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+        version_table=VERSION_TABLE,
+    )
 
     with context.begin_transaction():
         context.run_migrations()

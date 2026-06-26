@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ralph Report — 20260626-0500</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --border: #2a2d3e;
+    --text: #e2e8f0;
+    --muted: #8892a4;
+    --green: #22c55e;
+    --green-dim: #15803d;
+    --amber: #f59e0b;
+    --amber-dim: #92400e;
+    --red: #ef4444;
+    --red-dim: #7f1d1d;
+    --blue: #60a5fa;
+    --blue-dim: #1e3a5f;
+    --toc-w: 200px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* --- TOC (sticky sidebar on desktop, top bar on phone) --- */
+  #toc {
+    position: fixed;
+    top: 0; left: 0;
+    width: var(--toc-w);
+    height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 20px 14px;
+    overflow-y: auto;
+    z-index: 10;
+  }
+  #toc h3 { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 10px; }
+  #toc a {
+    display: block;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 12px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    margin-bottom: 2px;
+    transition: color .15s, background .15s;
+  }
+  #toc a:hover { color: var(--text); background: var(--border); }
+
+  main {
+    margin-left: var(--toc-w);
+    padding: 28px 32px;
+    max-width: 900px;
+  }
+
+  /* --- Header --- */
+  .run-header {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  .run-header h1 { font-size: 20px; font-weight: 700; }
+  .badge {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .04em;
+  }
+  .badge-green  { background: var(--green-dim); color: var(--green); }
+  .badge-amber  { background: var(--amber-dim); color: var(--amber); }
+  .badge-red    { background: var(--red-dim);   color: var(--red);   }
+  .badge-blue   { background: var(--blue-dim);  color: var(--blue);  }
+  .badge-grey   { background: var(--border);    color: var(--muted); }
+
+  /* --- Sections --- */
+  section { margin-bottom: 36px; }
+  section h2 {
+    font-size: 15px;
+    font-weight: 700;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+    color: var(--text);
+  }
+
+  /* --- Stat grid --- */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+  .stat-card .val { font-size: 22px; font-weight: 700; }
+  .stat-card .lbl { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* --- Meta table --- */
+  .meta-table { width: 100%; border-collapse: collapse; }
+  .meta-table td {
+    padding: 5px 10px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .meta-table td:first-child { color: var(--muted); white-space: nowrap; width: 160px; }
+  .meta-table code {
+    font-family: "SF Mono", "Fira Code", monospace;
+    font-size: 12px;
+    background: var(--border);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  /* --- Issue card --- */
+  .issue-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+  }
+  .issue-card.green  { border-left-color: var(--green); }
+  .issue-card.amber  { border-left-color: var(--amber); }
+  .issue-card.red    { border-left-color: var(--red); }
+  .issue-card .issue-title {
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .issue-card .issue-detail { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .issue-card .issue-detail strong { color: var(--text); }
+
+  /* --- Blocker box --- */
+  .blocker-box {
+    background: #200a0a;
+    border: 1px solid var(--red-dim);
+    border-left: 4px solid var(--red);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+  }
+  .blocker-box h3 { color: var(--red); font-size: 14px; margin-bottom: 6px; }
+  .blocker-box p, .blocker-box ul { font-size: 13px; color: var(--muted); }
+  .blocker-box ul { padding-left: 18px; }
+  .blocker-box li { margin-bottom: 4px; }
+  .blocker-box strong { color: var(--text); }
+
+  .none-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  /* --- Collapsible details --- */
+  details {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  summary {
+    cursor: pointer;
+    padding: 10px 14px;
+    font-weight: 600;
+    font-size: 13px;
+    user-select: none;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  summary::before {
+    content: "▶";
+    font-size: 10px;
+    color: var(--muted);
+    transition: transform .15s;
+  }
+  details[open] summary::before { transform: rotate(90deg); }
+  details .detail-body {
+    padding: 0 14px 14px;
+    font-family: "SF Mono", "Fira Code", monospace;
+    font-size: 12px;
+    color: var(--muted);
+    white-space: pre-wrap;
+    word-break: break-all;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+  }
+
+  /* --- Next steps --- */
+  .cmd-block {
+    background: #0a0f1a;
+    border: 1px solid var(--blue-dim);
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-family: "SF Mono", "Fira Code", monospace;
+    font-size: 12px;
+    color: var(--blue);
+    margin-bottom: 10px;
+    word-break: break-all;
+  }
+  .note { font-size: 12px; color: var(--muted); margin-top: 8px; }
+
+  /* --- Mobile --- */
+  @media (max-width: 680px) {
+    #toc { display: none; }
+    main { margin-left: 0; padding: 16px; }
+    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<nav id="toc">
+  <h3>Contents</h3>
+  <a href="#summary">Summary</a>
+  <a href="#breakdown">Per-issue breakdown</a>
+  <a href="#blockers">Blockers</a>
+  <a href="#commits">Commits</a>
+  <a href="#next">Next steps</a>
+</nav>
+
+<main>
+
+  <div class="run-header">
+    <h1>Ralph — 20260626-0500</h1>
+    <span class="badge badge-green">CLEAN EXIT</span>
+    <span class="badge badge-grey">0 commits</span>
+  </div>
+
+  <!-- ── SUMMARY ── -->
+  <section id="summary">
+    <h2>1. Summary</h2>
+
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="val" style="color:var(--muted)">0</div>
+        <div class="lbl">Commits this run</div>
+      </div>
+      <div class="stat-card">
+        <div class="val" style="color:var(--green)">1</div>
+        <div class="lbl">Focus files</div>
+      </div>
+      <div class="stat-card">
+        <div class="val" style="color:var(--green)">1</div>
+        <div class="lbl">Goal-met / done</div>
+      </div>
+      <div class="stat-card">
+        <div class="val" style="color:var(--muted)">0</div>
+        <div class="lbl">Blocked</div>
+      </div>
+      <div class="stat-card">
+        <div class="val" style="color:var(--muted)">0</div>
+        <div class="lbl">Iterations completed</div>
+      </div>
+      <div class="stat-card">
+        <div class="val" style="color:var(--blue)">~4m</div>
+        <div class="lbl">Wall-clock (05:00–05:04)</div>
+      </div>
+    </div>
+
+    <table class="meta-table">
+      <tr><td>Branch</td><td><code>ralph/overnight-20260626-0500</code></td></tr>
+      <tr><td>Base commit</td><td><code>a64d631247ecbdb561897023817945a9faf7f0e8</code></td></tr>
+      <tr><td>HEAD commit</td><td><code>a64d631247ecbdb561897023817945a9faf7f0e8</code> (unchanged)</td></tr>
+      <tr><td>Time budget</td><td>1793 s</td></tr>
+      <tr><td>Max iterations</td><td>22</td></tr>
+      <tr><td>ralph.sh exit</td><td><span class="badge badge-green">0 (clean)</span></td></tr>
+      <tr><td>Model mix</td><td><code>claude-opus-4-8</code> × 1 iteration (goal-check only)</td></tr>
+    </table>
+
+    <p class="note" style="margin-top:10px;">
+      <strong>What happened in one sentence:</strong> Ralph evaluated the only queued focus file, found the
+      goal already met (all 15 Phase 0–5 tasks checked off, suite 495/0), and exited cleanly after a single
+      readiness-check + goal-check pass — zero productive iterations ran, zero commits were made.
+    </p>
+  </section>
+
+  <!-- ── PER-ISSUE BREAKDOWN ── -->
+  <section id="breakdown">
+    <h2>2. Per-issue breakdown</h2>
+
+    <div class="issue-card green">
+      <div class="issue-title">
+        <span>#72 — Question generation-quality overhaul (all types)</span>
+        <span class="badge badge-green">GOAL MET</span>
+        <span class="badge badge-grey">PARKED (Phase 6)</span>
+      </div>
+      <div class="issue-detail">
+        <strong>File:</strong> <code>docs/issues/issue-72-question-fun-engagement-redesign.md</code><br>
+        <strong>Iterations this run:</strong> 0 (worker returned <code>no-tasks</code> immediately)<br>
+        <strong>Goal check:</strong> GOAL_MET — <code>## Acceptance</code> satisfied<br>
+        <strong>Commits:</strong> None (no new work)<br>
+        <strong>Suite at last run:</strong> 495 passed / 0 failed (verified 2026-06-25)<br>
+        <strong>Status detail:</strong> All 15 Phase 0–5 tasks are <code>[x]</code>. Phase 6 is the 🛑
+        founder-only validation checkpoint; Ralph is explicitly blocked from crossing it. The issue is
+        correctly parked — there is nothing autonomous-loop-actionable left.
+      </div>
+    </div>
+  </section>
+
+  <!-- ── BLOCKERS ── -->
+  <section id="blockers">
+    <h2>3. Blockers (needs you)</h2>
+
+    <div class="none-box">
+      <strong style="color:var(--green)">No blockers from this run.</strong> The run exited cleanly
+      (exit 0). The goal-check confirmed the issue is done. No iteration failed a gate, no reviewer
+      raised concerns, no readiness pre-flight refused a start.
+    </div>
+
+    <details style="margin-top:12px;">
+      <summary>Historical BLOCKER in #72 (resolved — for reference only)</summary>
+      <div class="detail-body">2026-06-26 00:00 — Plan-readiness gate returned NOT-READY.
+RESOLUTION (branch ralph/overnight-20260626-0100):
+  FALSE NEGATIVE. The ready-check hit the Claude session usage-limit
+  ("You've hit your session limit · resets 12:30am Europe/Prague") and
+  returned no parseable READY_VERDICT. The plan itself is fully spec'd:
+  ## Acceptance present, Reversibility: a declared, all Phase 0–5 boxes [x].
+No human action required. Gate passed cleanly in the 0500 run.</div>
+    </details>
+  </section>
+
+  <!-- ── COMMITS ── -->
+  <section id="commits">
+    <h2>4. Commits</h2>
+
+    <details open>
+      <summary>git log a64d631..HEAD --stat</summary>
+      <div class="detail-body">(no output — HEAD == base commit a64d631247ecbdb561897023817945a9faf7f0e8)
+
+Zero commits were produced. The branch is identical to its start point.
+This is expected: the focus issue was already complete before the run began.</div>
+    </details>
+  </section>
+
+  <!-- ── NEXT STEPS ── -->
+  <section id="next">
+    <h2>5. Next steps</h2>
+
+    <p style="font-size:13px; color:var(--muted); margin-bottom:10px;">
+      No diff to review and no blockers to clear. The branch carries no new commits, so merge/push
+      is a no-op — but the command is here for completeness:
+    </p>
+    <div class="cmd-block">git checkout main &amp;&amp; git merge --ff-only ralph/overnight-20260626-0500 &amp;&amp; git push</div>
+    <p class="note">
+      ⚠️ Verify: there is nothing to merge (branch == main). Safe to skip the merge entirely.
+    </p>
+
+    <div class="issue-card" style="margin-top:16px; border-left-color:var(--amber);">
+      <div class="issue-title" style="color:var(--amber)">Founder action required — #72 Phase 6</div>
+      <div class="issue-detail">
+        Issue #72 has reached the 🛑 Phase-6 checkpoint. Ralph cannot cross it. Phase 6 is the
+        human-gated validation run: run the generation flow against a real topic, evaluate a
+        sample of output for quality, and decide whether to ship or iterate.<br><br>
+        <strong>To un-park:</strong> complete Phase-6 validation, tick off the Phase-6 tasks in the issue
+        file, and close #72. Then queue the next issue or update <code>docs/issues/overnight-queue.md</code>
+        for the next Ralph run.
+      </div>
+    </div>
+
+    <div class="issue-card" style="margin-top:8px; border-left-color:var(--blue);">
+      <div class="issue-title" style="color:var(--blue)">Queue is now empty</div>
+      <div class="issue-detail">
+        <code>docs/issues/overnight-queue.md</code> had 1 focus file; it is done. Add the next
+        ready-for-agent issue to the queue before the next overnight run or Ralph will idle again.
+      </div>
+    </div>
+  </section>
+
+</main>
+</body>
+</html>

@@ -98,6 +98,7 @@ Fable 5 is the creative #1 but at $4.77/100q is 2× Opus and carries always-on e
 - **Lever A (this report):** `GENERATION_MODEL` is config-driven; `LLM_GATEWAY=openrouter` routes the swap. Default lives in `packages/shared/quiz_shared/llm/factory.py`; `claude-opus-4-8` is already in `_REMAP_OPENROUTER`. Adding the chosen slug is the only code change. Current production generation is `gpt-4o` (temp 0.8); both Claude and Gemini 3.1 Pro beat it on creativity.
 - **Lever B (out of scope here, but decisive):** restore the engagement-path machinery bypassed since 2026-05-20. Per caveat #1, the prompt fix likely matters more than the model swap.
 - **The A/B is a product decision (CLAUDE.md Rule #13 — decide *with* the founder).** Recommended head-to-head: **Gemini 3.1 Pro** (value front-runner) vs **Kimi K2.6** (budget standout) vs **Opus 4.8** (pre-wired ceiling), judged by ear on the same ~10 questions in **Slovak + English** from the live v3 prompt. The founder's hands-free listen (Phase 6b) is the real arbiter — no LLM-judge proxy.
+- **✅ Decision (2026-06-26, founder): A/B set confirmed = `google/gemini-3.1-pro-preview` + `moonshotai/kimi-k2.6` + `anthropic/claude-opus-4.8`.** Opus 4.8 is already in `_REMAP_OPENROUTER`; the other two slugs need adding to the remap (dormant, config-only) before the run. The paid Phase-6 generation run itself stays **parked for the founder** — do not trigger autonomously.
 
 ---
 

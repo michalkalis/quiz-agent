@@ -187,13 +187,17 @@ def root():
     return _build_root()  # (key, cert, pem)
 
 
-def _service(db_sessionmaker, root_pem, *, production=False, app_id=APP_ID):
+def _service(
+    db_sessionmaker, root_pem, *, production=False, environment=None, app_id=APP_ID
+):
     store = ChallengeStore(db_sessionmaker, ttl_seconds=300)
+    if environment is None:
+        environment = "production" if production else "development"
     return AppAttestService(
         db_sessionmaker,
         store,
         app_id=app_id,
-        production=production,
+        environment=environment,
         root_ca=root_pem,
     ), store
 
@@ -259,6 +263,31 @@ async def test_attestation_rejected_for_wrong_environment(db_sessionmaker, root)
     )
     with pytest.raises(AppAttestError):
         await svc.verify_attestation(key_id_b64, attestation, challenge)
+
+
+async def test_attestation_accepts_both_environments_when_configured(
+    db_sessionmaker, root
+):
+    """With ``environment='both'`` one backend honours both a development-aaguid
+    build (Xcode→device) and a production-aaguid build (TestFlight/App Store) —
+    and records which environment each key actually used. This is the
+    no-flag-flipping mode for serving dev + prod builds off one backend."""
+    root_key, root_cert, root_pem = root
+    svc, store = _service(db_sessionmaker, root_pem, environment="both")
+
+    c_dev = await store.issue()
+    att_dev, kid_dev, _ = build_attestation(
+        c_dev, root_key, root_cert, aaguid=_DEV_AAGUID
+    )
+    row_dev = await svc.verify_attestation(kid_dev, att_dev, c_dev)
+    assert row_dev.environment == "development"
+
+    c_prod = await store.issue()
+    att_prod, kid_prod, _ = build_attestation(
+        c_prod, root_key, root_cert, aaguid=_PROD_AAGUID
+    )
+    row_prod = await svc.verify_attestation(kid_prod, att_prod, c_prod)
+    assert row_prod.environment == "production"
 
 
 async def test_attestation_rejected_for_untrusted_root(db_sessionmaker, root):

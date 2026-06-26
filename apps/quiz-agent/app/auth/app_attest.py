@@ -50,23 +50,39 @@ class AppAttestError(Exception):
 
 
 class AppAttestService:
+    # (pyattest ``production`` flag, environment label stored on the key) to try,
+    # in order. "both" lets one backend verify both build distributions without
+    # an environment-flag flip. Order matters: production is tried FIRST because
+    # pyattest's production config strictly rejects a development aaguid, while
+    # its development config is permissive (accepts a production aaguid too) — so
+    # trying development first would mislabel real production builds.
+    _ENV_CANDIDATES = {
+        "development": ((False, "development"),),
+        "production": ((True, "production"),),
+        "both": ((True, "production"), (False, "development")),
+    }
+
     def __init__(
         self,
         sessionmaker: async_sessionmaker[AsyncSession],
         challenge_store: ChallengeStore,
         *,
         app_id: str,
-        production: bool,
+        environment: str = "development",
         root_ca: bytes | None = None,
     ) -> None:
         if not app_id:
             raise RuntimeError("APP_ATTEST_APP_ID must be set to verify App Attest.")
+        if environment not in self._ENV_CANDIDATES:
+            raise RuntimeError(
+                "App Attest environment must be 'development', 'production' or "
+                f"'both' — got {environment!r}."
+            )
         self._sessionmaker = sessionmaker
         self._challenges = challenge_store
         self._app_id = app_id
-        self._production = production
         self._root_ca = root_ca  # None → pyattest's bundled, pinned Apple root CA
-        self._environment = "production" if production else "development"
+        self._candidates = self._ENV_CANDIDATES[environment]
 
     # ── Attestation (first install) ─────────────────────────────────────────
 
@@ -105,17 +121,30 @@ class AppAttestService:
         except Exception as exc:  # malformed keyId from the client
             raise AppAttestError("invalid key id") from exc
 
-        config = AppleConfig(
-            key_id=key_id,
-            app_id=self._app_id,
-            production=self._production,
-            root_ca=self._root_ca,
-        )
-        attest = Attestation(attestation, challenge.encode(), config)
-        try:
-            await attest.verify()
-        except PyAttestException as exc:
-            raise AppAttestError("attestation failed verification") from exc
+        # Try each accepted environment's aaguid; keep the first that verifies. In
+        # "both" mode this serves Xcode→device *development* builds and TestFlight/
+        # App Store *production* builds off one backend without a flag flip — and
+        # records the environment that actually matched on the key.
+        attest = None
+        environment = None
+        last_exc: PyAttestException | None = None
+        for production, env_label in self._candidates:
+            config = AppleConfig(
+                key_id=key_id,
+                app_id=self._app_id,
+                production=production,
+                root_ca=self._root_ca,
+            )
+            candidate = Attestation(attestation, challenge.encode(), config)
+            try:
+                await candidate.verify()
+            except PyAttestException as exc:
+                last_exc = exc
+                continue
+            attest, environment = candidate, env_label
+            break
+        if attest is None:
+            raise AppAttestError("attestation failed verification") from last_exc
 
         # The verified leaf cert's public key, stored as DER SPKI so an assertion
         # can later reload it with cryptography.load_der_public_key.
@@ -127,7 +156,7 @@ class AppAttestService:
             anon_id=anon_id,
             public_key=public_key_der,
             sign_counter=0,
-            environment=self._environment,
+            environment=environment,
             created_at=_now(),
         )
 
@@ -223,5 +252,5 @@ def build_app_attest_service(
         sessionmaker,
         challenge_store,
         app_id=settings.app_attest_app_id,
-        production=settings.app_attest_production,
+        environment=settings.app_attest_environment,
     )

@@ -80,7 +80,11 @@ def _service(db_sessionmaker, root_pem):
     """An AppAttestService + its ChallengeStore wired to the test root CA."""
     store = ChallengeStore(db_sessionmaker, ttl_seconds=300)
     svc = AppAttestService(
-        db_sessionmaker, store, app_id=APP_ID, production=False, root_ca=root_pem
+        db_sessionmaker,
+        store,
+        app_id=APP_ID,
+        environment="development",
+        root_ca=root_pem,
     )
     return svc, store
 

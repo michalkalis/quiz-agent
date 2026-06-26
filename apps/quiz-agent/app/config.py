@@ -11,6 +11,22 @@ from dataclasses import dataclass
 from typing import Optional
 
 
+def _attest_environment(raw: str) -> str:
+    """Map the ``APP_ATTEST_PRODUCTION`` env var to an accepted-environment policy.
+
+    ``both``/``any``/``all`` → accept development *and* production attestations on
+    one backend (lets Xcode→device and TestFlight/App Store builds share a backend
+    without flipping a flag); truthy → production only; anything else (incl. unset
+    / ``false``) → development only.
+    """
+    value = raw.strip().lower()
+    if value in {"both", "any", "all"}:
+        return "both"
+    if value in {"1", "true", "on", "yes", "production", "prod"}:
+        return "production"
+    return "development"
+
+
 @dataclass(frozen=True)
 class Settings:
     """Subset of env vars the quiz-agent app reads at startup."""
@@ -29,11 +45,14 @@ class Settings:
     refresh_family_max_days: int = 60
     # App Attest (#60 Part B). `app_attest_required` is the prod-on/dev-off gate;
     # `app_attest_app_id` is "<TeamID>.<BundleID>" (the rpId the device attests
-    # over) and `app_attest_production` selects the expected aaguid environment.
+    # over). `app_attest_environment` selects which aaguid environment(s) the
+    # verifier accepts: "development" (Xcode→device builds), "production"
+    # (TestFlight/App Store), or "both" (one backend serves both build
+    # distributions without flipping a flag).
     attest_challenge_ttl_seconds: int = 300  # 5 min — one attest/assert round-trip
     app_attest_required: bool = False
     app_attest_app_id: Optional[str] = None
-    app_attest_production: bool = False
+    app_attest_environment: str = "development"
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -53,8 +72,9 @@ class Settings:
             app_attest_required=os.getenv("APP_ATTEST_REQUIRED", "false").lower()
             in {"1", "true", "on", "yes"},
             app_attest_app_id=os.getenv("APP_ATTEST_APP_ID"),
-            app_attest_production=os.getenv("APP_ATTEST_PRODUCTION", "false").lower()
-            in {"1", "true", "on", "yes"},
+            app_attest_environment=_attest_environment(
+                os.getenv("APP_ATTEST_PRODUCTION", "false")
+            ),
         )
 
 

@@ -259,7 +259,7 @@ async def lifespan(app: FastAPI):
                 )
                 logger.info(
                     "App Attest verification enabled (env=%s, required=%s)",
-                    "production" if settings.app_attest_production else "development",
+                    settings.app_attest_environment,
                     settings.app_attest_required,
                 )
             elif settings.app_attest_required:

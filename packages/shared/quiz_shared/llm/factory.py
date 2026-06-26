@@ -56,6 +56,11 @@ _REMAP_OPENROUTER = {
     # slug, cf. claude-sonnet-4-6); verify against the live catalog before the
     # Phase-6 flip per the issue's verify-live note.
     "claude-opus-4-8": "anthropic/claude-opus-4.8",
+    # The other two #72 Phase-6 A/B candidates (founder-chosen 2026-06-26),
+    # likewise dormant until GENERATION_MODEL selects one. Slugs verified live
+    # against the OpenRouter catalog on 2026-06-26.
+    "gemini-3.1-pro-preview": "google/gemini-3.1-pro-preview",
+    "kimi-k2.6": "moonshotai/kimi-k2.6",
     "gemini-2.5-flash": "google/gemini-2.5-flash",
     "text-embedding-3-small": "text-embedding-3-small",
 }

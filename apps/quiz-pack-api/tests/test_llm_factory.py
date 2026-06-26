@@ -47,6 +47,12 @@ def test_resolve_model_remaps_in_openrouter(monkeypatch):
     assert factory.resolve_model("claude-sonnet-4-6") == "anthropic/claude-sonnet-4.6"
     # #72 Lever A creative-generation default routes through Anthropic on OpenRouter.
     assert factory.resolve_model("claude-opus-4-8") == "anthropic/claude-opus-4.8"
+    # The other two #72 Phase-6 A/B candidates (founder-chosen 2026-06-26).
+    assert (
+        factory.resolve_model("gemini-3.1-pro-preview")
+        == "google/gemini-3.1-pro-preview"
+    )
+    assert factory.resolve_model("kimi-k2.6") == "moonshotai/kimi-k2.6"
     assert factory.resolve_model("gemini-2.5-flash") == "google/gemini-2.5-flash"
     # embeddings keep the same id on OpenRouter
     assert factory.resolve_model("text-embedding-3-small") == "text-embedding-3-small"

@@ -35,6 +35,7 @@ _GOLD_STANDARD_PATH = find_in_ancestors(
 
 async def on_startup(ctx: Dict[str, Any]) -> None:
     """Build the per-worker singletons stashed on ARQ ctx."""
+    from app import feature_flags
     from app.db.session import AsyncSessionLocal
     from app.generation.advanced_generator import AdvancedQuestionGenerator
     from app.generation.answer_normalizer import AnswerNormalizer
@@ -44,10 +45,20 @@ async def on_startup(ctx: Dict[str, Any]) -> None:
     from app.verification.logical_verifier import LogicalConsistencyVerifier
     from quiz_shared.database.pgvector_client import PgvectorQuestionStore
     from quiz_shared.database.sync_pgvector_store import SyncPgvectorStore
+    from quiz_shared.llm import factory as llm_factory
 
     ctx["session_factory"] = AsyncSessionLocal
     ctx["fact_sourcer"] = FactSourcer()
-    ctx["generator"] = AdvancedQuestionGenerator()
+    # Lever A (issue #72 P1.1): the ARQ worker is the production generation path,
+    # so it must honour the GENERATION_MODEL toggle the same way the API path's
+    # `_build_advanced_generator` does — otherwise a prod un-park with
+    # GENERATION_MODEL set would silently keep generating on gpt-4o. Dormant
+    # until the env var is set: with no override the flags return None → the
+    # canonical gpt-4o/gpt-4o-mini defaults (output unchanged).
+    ctx["generator"] = AdvancedQuestionGenerator(
+        generation_model=feature_flags.generation_model() or llm_factory.GEN,
+        critique_model=feature_flags.critique_model() or llm_factory.CRITIQUE,
+    )
     # 46.A2b — fail-safe to drop when GOOGLE_API_KEY is absent.
     ctx["answer_normalizer"] = AnswerNormalizer()
     ctx["fact_verifier"] = FactVerifier()

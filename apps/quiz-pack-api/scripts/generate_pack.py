@@ -224,14 +224,27 @@ def _build_dedup_store(name: str) -> QuestionStore:
 
 def _build_stages(*, persist: bool, dedup_store: QuestionStore) -> list[Stage]:
     """Construct the standard pipeline. Persist is omitted in dry-run mode."""
+    from app import feature_flags
     from app.generation.advanced_generator import AdvancedQuestionGenerator
     from app.scoring.multi_model_scorer import MultiModelScorer
     from app.sourcing.fact_sourcer import FactSourcer
     from app.verification.fact_verifier import FactVerifier
+    from quiz_shared.llm import factory as llm_factory
+
+    # Lever A (issue #72 P1.1): source the gen/critique models from the dormant
+    # feature flags, exactly as the API path's `_build_advanced_generator` does,
+    # so `GENERATION_MODEL=claude-opus-4-8` actually reaches the generator on a
+    # CLI run. With no env set the flags return None → the canonical
+    # gpt-4o/gpt-4o-mini defaults (output unchanged). The Phase-6 validation run
+    # goes through this path, so the model toggle MUST be honoured here.
+    generator = AdvancedQuestionGenerator(
+        generation_model=feature_flags.generation_model() or llm_factory.GEN,
+        critique_model=feature_flags.critique_model() or llm_factory.CRITIQUE,
+    )
 
     stages: list[Stage] = [
         SourcingStage(FactSourcer()),
-        GenerationStage(AdvancedQuestionGenerator()),
+        GenerationStage(generator),
         VerificationStage(FactVerifier()),
         ScoringStage(MultiModelScorer()),
         DedupStage(dedup_store, gold_standard_path=None),

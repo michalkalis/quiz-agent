@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ralph Report — 20260627-0500</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --green: #238636;
+    --green-text: #3fb950;
+    --amber: #9e6a03;
+    --amber-text: #d29922;
+    --red: #da3633;
+    --red-text: #ff7b72;
+    --blue: #1f6feb;
+    --blue-text: #58a6ff;
+    --tag-bg: #21262d;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  a { color: var(--blue-text); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* sticky TOC */
+  #toc {
+    position: sticky;
+    top: 0;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    z-index: 100;
+    font-size: 12px;
+  }
+  #toc span { color: var(--muted); }
+  #toc a { color: var(--blue-text); }
+
+  .container { max-width: 860px; margin: 0 auto; padding: 24px 16px 64px; }
+
+  h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  h2 { font-size: 16px; font-weight: 600; margin: 28px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 14px; font-weight: 600; margin: 14px 0 6px; }
+
+  .run-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 12px 0 24px;
+  }
+  .meta-chip {
+    background: var(--tag-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .meta-chip strong { color: var(--text); }
+
+  /* status badges */
+  .badge {
+    display: inline-block;
+    border-radius: 4px;
+    padding: 1px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .badge-red { background: #3d0d0c; color: var(--red-text); border: 1px solid var(--red); }
+  .badge-amber { background: #272108; color: var(--amber-text); border: 1px solid var(--amber); }
+  .badge-green { background: #0d2a13; color: var(--green-text); border: 1px solid var(--green); }
+  .badge-blue { background: #0d1f3c; color: var(--blue-text); border: 1px solid var(--blue); }
+
+  /* summary grid */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    text-align: center;
+  }
+  .stat-card .number { font-size: 28px; font-weight: 700; line-height: 1.1; }
+  .stat-card .label { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .number-red { color: var(--red-text); }
+  .number-amber { color: var(--amber-text); }
+  .number-green { color: var(--green-text); }
+  .number-muted { color: var(--muted); }
+
+  /* blocker card */
+  .blocker-card {
+    background: #1a0a0a;
+    border: 1px solid var(--red);
+    border-left: 4px solid var(--red);
+    border-radius: 8px;
+    padding: 16px 18px;
+    margin-bottom: 14px;
+  }
+  .blocker-card h3 { color: var(--red-text); margin-top: 0; }
+  .blocker-card .bl-meta { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+  .blocker-card .bl-body { color: var(--text); margin-bottom: 10px; }
+  .blocker-card .bl-next { background: #0d1117; border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; font-size: 13px; }
+  .blocker-card .bl-next strong { color: var(--amber-text); }
+
+  /* issue row */
+  .issue-row {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 4px solid;
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+  }
+  .issue-row-red { border-left-color: var(--red); }
+  .issue-row-amber { border-left-color: var(--amber); }
+  .issue-row-green { border-left-color: var(--green); }
+  .issue-row .issue-title { font-weight: 600; margin-bottom: 4px; }
+  .issue-row .issue-detail { font-size: 12px; color: var(--muted); }
+
+  /* commit list */
+  .commit-list { font-family: "SFMono-Regular", Consolas, monospace; font-size: 12px; }
+  .commit-item {
+    display: flex;
+    gap: 10px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border);
+    align-items: flex-start;
+  }
+  .commit-item:last-child { border-bottom: none; }
+  .commit-sha { color: var(--blue-text); flex-shrink: 0; }
+  .commit-msg { color: var(--text); flex: 1; }
+  .commit-stat { color: var(--muted); flex-shrink: 0; white-space: nowrap; }
+
+  /* next steps */
+  .next-steps { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px 18px; }
+  .next-steps ol { padding-left: 20px; }
+  .next-steps li { margin-bottom: 8px; }
+  .cmd {
+    background: #0d1117;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-family: "SFMono-Regular", Consolas, monospace;
+    font-size: 12px;
+    color: var(--green-text);
+    display: inline-block;
+  }
+  .cmd-block {
+    background: #0d1117;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 14px;
+    font-family: "SFMono-Regular", Consolas, monospace;
+    font-size: 12px;
+    color: var(--green-text);
+    margin: 8px 0;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  details { margin-bottom: 10px; }
+  details > summary {
+    cursor: pointer;
+    color: var(--blue-text);
+    font-size: 13px;
+    padding: 6px 0;
+    list-style: none;
+  }
+  details > summary::before { content: "▶ "; font-size: 11px; }
+  details[open] > summary::before { content: "▼ "; }
+  details > summary::-webkit-details-marker { display: none; }
+  details .inner { padding: 10px 0 4px; }
+
+  .warn-box {
+    background: #1a1200;
+    border: 1px solid var(--amber);
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--amber-text);
+    margin-bottom: 14px;
+  }
+  .model-pill {
+    background: var(--tag-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 3px 10px;
+    font-size: 12px;
+    color: var(--muted);
+    display: inline-block;
+    margin: 2px;
+  }
+  .model-count { font-weight: 700; color: var(--text); }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+</style>
+</head>
+<body>
+
+<nav id="toc">
+  <span>Ralph 20260627-0500</span>
+  <a href="#summary">Summary</a>
+  <a href="#blockers">⛔ Blockers</a>
+  <a href="#issues">Issues</a>
+  <a href="#commits">Commits</a>
+  <a href="#next">Next steps</a>
+</nav>
+
+<div class="container">
+
+  <h1>Ralph Overnight Report</h1>
+  <div class="run-meta">
+    <div class="meta-chip">Run <strong>20260627-0500</strong></div>
+    <div class="meta-chip">Branch <strong>ralph/overnight-20260627-0500</strong></div>
+    <div class="meta-chip">Base <strong>d4c4878</strong></div>
+    <div class="meta-chip">Duration <strong>~60 s</strong> (05:00–05:01)</div>
+    <div class="meta-chip">Status <span class="badge badge-red">BLOCKED</span></div>
+    <div class="meta-chip">Branch pushed? <strong style="color:var(--red-text)">NO</strong></div>
+  </div>
+
+  <!-- ───────────── SUMMARY ───────────── -->
+  <h2 id="summary">1. Summary</h2>
+
+  <div class="summary-grid">
+    <div class="stat-card">
+      <div class="number number-muted">1</div>
+      <div class="label">Focus file(s)</div>
+    </div>
+    <div class="stat-card">
+      <div class="number number-muted">0</div>
+      <div class="label">Iterations ran</div>
+    </div>
+    <div class="stat-card">
+      <div class="number number-muted">1</div>
+      <div class="label">Commits</div>
+    </div>
+    <div class="stat-card">
+      <div class="number number-red">1</div>
+      <div class="label">Blocked</div>
+    </div>
+    <div class="stat-card">
+      <div class="number number-green">0</div>
+      <div class="label">Completed</div>
+    </div>
+    <div class="stat-card">
+      <div class="number number-muted">exit 8</div>
+      <div class="label">ralph.sh exit code</div>
+    </div>
+  </div>
+
+  <p style="color:var(--muted); font-size:13px; margin-bottom:10px;">
+    The run was halted at the <strong>readiness pre-flight</strong> stage (57.13) before any worker iteration started.
+    <code style="font-size:11px; color:var(--amber-text);">issue-72</code> is already Ralph-complete (all 15 Phase 0–5 tasks <code>[x]</code>);
+    the ready-check correctly refused to start an autonomous run where no reachable done-state exists.
+    The branch was held local — nothing was pushed to origin.
+  </p>
+
+  <h3>Model mix</h3>
+  <p style="font-size:13px; color:var(--muted); margin-bottom:6px;">
+    No worker iterations ran. The only model invocation was the readiness pre-flight check (ready-check, fixed model: sonnet).
+  </p>
+  <div>
+    <span class="model-pill"><span class="model-count">1</span> call — claude-sonnet (ready-check pre-flight)</span>
+    <span class="model-pill"><span class="model-count">0</span> worker iterations</span>
+  </div>
+
+  <!-- ───────────── BLOCKERS ───────────── -->
+  <h2 id="blockers">2. Blockers — needs you</h2>
+
+  <div class="blocker-card">
+    <h3>⛔ Issue #72 — question-fun-engagement-redesign</h3>
+    <div class="bl-meta">Exit 8 · Readiness pre-flight NOT-READY · <code>ralph/overnight-20260627-0500</code> · 0 iterations · branch NOT pushed</div>
+
+    <div class="bl-body">
+      <p><strong>What was tried:</strong> Ralph attempted to run on
+      <code>docs/issues/issue-72-question-fun-engagement-redesign.md</code> (22-iter budget, $5/iter).
+      The readiness pre-flight (57.13 full-tier) invoked <code>ready-check</code> (sonnet), which returned:</p>
+      <blockquote style="margin: 10px 0 10px 12px; padding-left: 10px; border-left: 3px solid var(--border); color: var(--muted); font-size:13px;">
+        "No autonomous work remains: all 15 Phase 0–5 subtasks are <code>[x]</code>-complete (verified green,
+        2026-06-25, 495 passed / 0 failed); Phase 6 is an explicit 🛑 human checkpoint the plan forbids Ralph
+        from crossing; … no new autonomous done-state is reachable."<br><br>
+        <strong>READY_VERDICT: NOT-READY</strong>
+      </blockquote>
+      <p>No iteration ran. 1 commit was produced (BLOCKER note appended to the issue file). Branch withheld.</p>
+
+      <p style="margin-top:10px;"><strong>Root cause:</strong> Issue-72 is in the overnight queue but should not be — it reached
+      Ralph-complete on 2026-06-25 (commit <code>67a99e3</code>). The run queue has not been updated to reflect that.
+      This is the <strong>3rd consecutive overnight run</strong> (0100, 0430, and now 0500) that has blocked for
+      the same reason. False-positive BLOCKER annotations are now accumulating in the issue file.</p>
+    </div>
+
+    <div class="bl-next">
+      <strong>Next human steps (in order):</strong>
+      <ol style="padding-left:18px; margin-top:8px; line-height:1.8;">
+        <li><strong>Remove issue-72 from the overnight queue.</strong> Edit
+          <code>docs/issues/overnight-queue.md</code> (or equivalent queue config) and remove or comment out
+          issue-72. It has no <code>[ ]</code> Ralph tasks remaining.</li>
+        <li><strong>Park issue-72 in the index.</strong> Update <code>docs/issues/INDEX.md</code> and
+          <code>docs/todo/TODO.md</code>: set issue-72 triage state to <code>PARKED</code> / awaiting
+          Phase-6 founder decision, so mirror-issues.sh reflects this correctly.</li>
+        <li><strong>Decide on Phase 6.</strong> Phase 6 is the 🛑 founder-only checkpoint in issue-72
+          (un-parking the full question-engagement overhaul to production). When you're ready to start it,
+          un-park the issue manually and add the Phase-6 tasks as <code>[ ]</code> items.</li>
+        <li><strong>Optional cleanup:</strong> The three spurious BLOCKER notes appended today
+          (lines 321–337 of the issue file) can be pruned or collapsed — they are noise, not signal.</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- ───────────── PER-ISSUE BREAKDOWN ───────────── -->
+  <h2 id="issues">3. Per-issue breakdown</h2>
+
+  <div class="issue-row issue-row-red">
+    <div class="issue-title">
+      <span class="badge badge-red">BLOCKED</span>&nbsp;
+      <strong>#72 — question-fun-engagement-redesign</strong>
+    </div>
+    <div class="issue-detail" style="margin-top:6px; font-size:13px; color:var(--text);">
+      <strong>Iterations:</strong> 0 &nbsp;|&nbsp;
+      <strong>Commits this run:</strong> 1 (BLOCKER note only) &nbsp;|&nbsp;
+      <strong>Phase 0–5 status:</strong> ✅ Ralph-complete (15/15 <code>[x]</code>, 495 tests green, since 2026-06-25)
+    </div>
+    <div style="margin-top:8px; font-size:13px; color:var(--muted);">
+      <strong>What got done:</strong> Nothing new — the only change is a third BLOCKER annotation appended
+      to the issue file by the gate. The pre-flight correctly identified no actionable work and halted.<br><br>
+      <strong>Final state:</strong> Issue is Ralph-done. Blocked on Phase 6 founder checkpoint (🛑).
+      Queue entry is stale and needs removal (see Blockers section above).
+    </div>
+  </div>
+
+  <!-- ───────────── COMMITS ───────────── -->
+  <h2 id="commits">4. Commits</h2>
+
+  <details>
+    <summary>1 commit on ralph/overnight-20260627-0500 (expand)</summary>
+    <div class="inner">
+      <div class="commit-list">
+        <div class="commit-item">
+          <span class="commit-sha">605ce35</span>
+          <span class="commit-msg">chore(ralph): #57 readiness-NOT-READY BLOCKER on issue-72-question-fun-engagement-redesign.md</span>
+          <span class="commit-stat">+6 / −0</span>
+        </div>
+      </div>
+      <p style="font-size:12px; color:var(--muted); margin-top:10px;">
+        Changed file: <code>docs/issues/issue-72-question-fun-engagement-redesign.md</code> (+6 lines — the BLOCKER block).<br>
+        No code, tests, or feature changes. Branch was NOT pushed to origin.
+      </p>
+    </div>
+  </details>
+
+  <!-- ───────────── NEXT STEPS ───────────── -->
+  <h2 id="next">5. Next steps</h2>
+
+  <div class="next-steps">
+    <p style="color:var(--amber-text); font-weight:600; margin-bottom:12px;">
+      ⚠️ Review the BLOCKER section above before merging. The branch contains only a BLOCKER note commit
+      — merging is optional (the note is informational). The main action is fixing the queue, not merging.
+    </p>
+
+    <h3>If you want to merge this branch to main:</h3>
+    <div class="cmd-block">git checkout main &amp;&amp; git merge --ff-only ralph/overnight-20260627-0500 &amp;&amp; git push</div>
+    <p style="font-size:12px; color:var(--muted);">Only 1 commit (BLOCKER note). No code changes. Safe to merge or skip.</p>
+
+    <hr>
+
+    <h3>Required: fix the overnight queue</h3>
+    <ol style="padding-left:18px; line-height:1.9; margin-top:8px;">
+      <li>Remove issue-72 from the overnight run queue — it is Ralph-complete.</li>
+      <li>Update <code>docs/issues/INDEX.md</code> + <code>docs/todo/TODO.md</code> to park issue-72.</li>
+      <li>Decide Phase 6 timing for issue-72 (founder-only human checkpoint).</li>
+    </ol>
+
+    <p style="font-size:12px; color:var(--muted); margin-top:12px;">
+      Until the queue is fixed, every subsequent Ralph overnight run will waste its pre-flight budget
+      firing a ready-check on an issue that has no remaining work, and append another BLOCKER annotation.
+      This is the 3rd such run in a row (0100, 0430, 0500).
+    </p>
+  </div>
+
+</div>
+</body>
+</html>

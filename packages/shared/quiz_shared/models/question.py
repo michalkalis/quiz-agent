@@ -27,6 +27,7 @@ class GenerationProvenance(BaseModel):
     provider: Optional[str] = None
     prompt_version: Optional[str] = None
     pipeline: Optional[str] = None  # "fact_first" | "v2_cot" | "themed" | "kids"
+    generation_flow: Optional[str] = None  # pipeline lineage, e.g. "fun-redesign-72"
     generation_temperature: Optional[float] = None
     critique_model: Optional[str] = None
     critique_score: Optional[float] = None

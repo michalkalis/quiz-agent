@@ -65,6 +65,33 @@ _REMAP_OPENROUTER = {
     "text-embedding-3-small": "text-embedding-3-small",
 }
 
+# Friendly aliases for OpenRouter org prefixes that read awkwardly raw.
+_PROVIDER_ALIASES = {"moonshotai": "moonshot"}
+
+
+def provider_for_model(model_id: str) -> str:
+    """Best-effort model owner/brand for provenance.
+
+    Returns e.g. ``"openai"`` | ``"anthropic"`` | ``"google"`` | ``"moonshot"``.
+    The OpenRouter slug prefix in ``_REMAP_OPENROUTER`` is the single source of
+    truth; for unmapped/direct ids we infer from the id shape. Without this the
+    generator hardcodes ``"openai"`` and Gemini/Kimi/Claude rows are all
+    mislabelled, defeating the point of recording the model (issue #72 —
+    distinguish question sources).
+    """
+    slug = _REMAP_OPENROUTER.get(model_id, model_id)
+    if "/" in slug:
+        org = slug.split("/", 1)[0]
+        return _PROVIDER_ALIASES.get(org, org)
+    lowered = model_id.lower()
+    if lowered.startswith("claude"):
+        return "anthropic"
+    if lowered.startswith("gemini"):
+        return "google"
+    if lowered.startswith("kimi"):
+        return "moonshot"
+    return "openai"
+
 
 def gateway() -> str:
     """Active gateway, read fresh each call so tests/env flips take effect."""

@@ -29,6 +29,13 @@ except ImportError:
     Fact = None  # sourcing package not installed
 
 
+# Stable id for the current ("fun") generation pipeline, stamped on every
+# question's provenance so rows from this flow stay distinguishable from legacy
+# imports and older runs even if a model id later repeats (issue #72 —
+# distinguish question sources). Bump when the flow materially changes.
+GENERATION_FLOW = "fun-redesign-72"
+
+
 # Issue #72 P2.2 (Lever B / RC-5) — the v3 escape hatch. Dormant unless the
 # `V3_ESCAPE_HATCH` flag is on. v3's hard rule ("rely ONLY on source facts,
 # never your own knowledge") leaves no room for a surprising *angle*, which is
@@ -666,12 +673,16 @@ class AdvancedQuestionGenerator:
                 pipeline = None
             q.generation_metadata = GenerationProvenance(
                 model=self.generation_model,
-                provider="openai",
+                provider=llm_factory.provider_for_model(self.generation_model),
                 prompt_version=prompt_version,
                 generation_temperature=self.generation_llm.temperature,
                 pipeline=pipeline,
                 reasoning_pattern=pattern_used,
-                extra={"stage": "initial_generation"},
+                generation_flow=GENERATION_FLOW,
+                extra={
+                    "stage": "initial_generation",
+                    "escape_hatch": feature_flags.v3_escape_hatch(),
+                },
             )
             # Extract self-critique if present (from V2/V3 CoT prompt)
             # This will be in the parsed data if using V2/V3 prompt
@@ -877,7 +888,16 @@ class AdvancedQuestionGenerator:
                 "the MCQ form of Pattern Library #9 'The Odd One Out'. "
                 "Four options labelled a/b/c/d, with `correct_answer` set to "
                 "the key letter of the odd item. Put the reasoning in "
-                "`explanation`."
+                "`explanation`. CRITICAL — the odd one must NOT be guessable "
+                "from the surface form of the options. All four MUST look like "
+                "the same kind of thing (all real people, all countries, all "
+                "films, all animals, …) so the solver has to KNOW the hidden "
+                "fact to pick it. NEVER make the odd one obviously different on "
+                "its face — e.g. a cartoon character among real people, or a "
+                "fictional name among historical ones — because then the "
+                "question answers itself and tests nothing. The surprising fact "
+                "that sets the odd one apart MUST be the point of the question, "
+                "not a detail you reveal in `explanation`."
             ),
             "comparison_bet_older_larger": (
                 "the MCQ form of Pattern Library #12 'The Comparison Bet' — "

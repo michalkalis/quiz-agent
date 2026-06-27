@@ -4,7 +4,7 @@
 **Reversibility:** a (commits-only — new Claude Code skills, no schema/auth/payments)
 **Status:** design approved 2026-06-27 (cadence = "stop only when blocked"); building Phase 0 next
 
-Research backing this issue: `docs/artifacts/issue-prep-pipeline-research-2026-06-27.html`.
+Research backing this issue: `docs/artifacts/issue-prep-pipeline-research-2026-06-27.html` *(⚠️ not yet on disk — to be regenerated with external-source rigor per D9; the design decisions below already reflect the initial in-session research)*.
 
 ## Why
 
@@ -16,36 +16,41 @@ One input (a founder prompt **or** an existing `issue-NN-*.md`) → a 6-phase pr
 
 The six phases (mapped to existing tools where they exist):
 
-1. **Research** — facts (`/research` / `/deep-research`) + code-recon (Explore subagents) → `docs/research/*` and/or the issue file.
-2. **Plan** — draft `## Why` / `## Scope` / `## Resolved design decisions`.
-3. **Plan review** — adversarial reviewer with *plan-only isolation* (sees the plan, not the authoring chat), reusing `/ready-check` semantics; **loop until it passes** (cap N, then escalate to founder).
+1. **Research** — *outward + inward.* Facts via `/deep-research` (cited, adversarially-verified web sources: official docs, standards/best-practice guides, reputable maintainers, well-regarded blogs, GitHub reference impls) + code-recon (Explore subagents). Includes a **prior-art scan** — is there a proven library/service/pattern that already solves this? → `docs/research/*` and/or the issue file, every non-obvious choice cited (D9, D10).
+2. **Plan** — draft `## Why` / `## Scope` / `## Resolved design decisions`, applying the **second-order lens**: how the change affects the whole system and named future directions (e.g. Apple sign-in today must not wall off Google/email/passkey or a future Android/web client). Target: simple **and** robust — no first-order hack, no speculative over-abstraction (D11).
+3. **Plan review** — *two adversarial reviewers, plan-only isolation* (see the plan, not the authoring chat): (a) `/ready-check` for executability (DoR C1–C7) and (b) a **design-soundness critic** that hunts for flaws and checks D9–D11 (sound approach? not reinventing the wheel? forward-compatible?). **Loop until both pass** (cap N, then escalate to founder) (D12).
 4. **Implementation plan** — draft `## Tasks (atomic)` + machine-evaluable `## Acceptance`.
-5. **Impl-plan review** — `/ready-check` again + DoR C1–C7 (from #57).
+5. **Impl-plan review** — `/ready-check` (DoR C1–C7, from #57) **+ the design-soundness critic again** on the concrete tasks/acceptance (D12).
 6. **Split** — new `/split-issue` → atomic `- [ ]` tasks + `issue-NN-execution-prompts.md` (template = `issue-61-execution-prompts.md`).
 
 ## Resolved design decisions
 
 - **D1 — One orchestrator, not 6 manual skills.** `/prepare-issue` is the single trigger. Per-phase units exist underneath (as sub-prompts) so the founder can re-run *one* phase manually when needed, but the normal interface is one command.
 - **D2 — Cadence: "stop only when blocked"** (founder choice 2026-06-27). Auto-advances through all phases; pauses **only** when a review gate fails N times or a genuine product question surfaces. Founder can interject any time (it runs in-session).
-- **D3 — Each phase = fresh subagent.** Cheap model (sonnet/haiku) for recon/synthesis, strong model only for the adversarial gates. Reuse Ralph's `route-model` logic — do **not** run the whole pipeline on Opus.
+- **D3 — Each phase = fresh subagent, all on Opus 4.8** (founder choice 2026-06-27, overriding the earlier cheap-recon/strong-gate split). Issue-prep is high-leverage and low-frequency — every phase (research, planning, flaw-hunting reviews) benefits from the strongest reasoning, so quality wins over token cost here. Fresh-subagent-per-phase still keeps each context small. This is a deliberate, scoped override of the usual "don't default to Opus" routing rule — it applies to this pipeline only.
 - **D4 — Visibility via a durable `## Prep progress` block** written into the issue file (checked-off phases + latest gate verdict), the source of truth for "what phase is it in"; survives a session restart. Plus live chat narration on every phase transition.
-- **D5 — Reuse, don't rebuild.** Phases 1–5 wrap existing skills/conventions. The only genuinely new capability is the **splitter** (Phase 6).
+- **D5 — Reuse, don't rebuild.** Phases 1–5 wrap existing skills/conventions where they exist (and reuse `/deep-research` for the facts pass rather than a new researcher). The two genuinely new capabilities are the **splitter** (Phase 6) and the **design-soundness critic** (the substance gate at P3/P5, D12) — `/ready-check` only covers form.
 - **D6 — Class b/c guard.** Auth/payments/migrations and schema changes route to `ready-for-human`, **never** `ready-for-agent` (Ralph runs class `a` only).
 - **D7 — Out of scope now:** the unattended/night "prep-Ralph" loop draining a queue of ideas. Deferred to a later issue once `/prepare-issue` earns trust.
 - **D8 — Queue handoff stays manual.** Adding the finished issue to `overnight-queue.md` remains the founder's editorial step.
+- **D9 — Research goes outward, with citations.** Phase 1 consults authoritative external sources — official docs, standards/best-practice guides, reputable maintainers, well-regarded blogs, GitHub reference implementations — not just the codebase. Use `/deep-research` (already does cited, adversarially-verified web research). Every non-obvious technical choice in the plan carries a source.
+- **D10 — Prior-art first; don't reinvent the wheel.** Before proposing custom code, Phases 1–2 check for a proven library, service, or established pattern that already solves the problem. The plan records the build-vs-adopt call and why. Bias to adopt proven, maintained solutions; build only when adoption is genuinely worse.
+- **D11 — Second-order / forward-compatibility lens.** Plans address how the change affects the whole system and the named near-term roadmap, not just the immediate ask (e.g. Sign in with Apple must leave room for Google/email/passkey logins and future Android/web clients). Standing bar: simple (not over-engineered) **and** robust/extensible.
+- **D12 — Design-soundness gate ≠ readiness gate.** `/ready-check` validates only *executability* (DoR C1–C7); it does not judge whether the approach is correct, non-reinventing, or future-proof. So Phases 3 & 5 add a second adversarial reviewer — the design-soundness critic — that actively hunts for flaws and enforces D9–D11. A phase passes only when *both* reviewers pass; same loop-cap → escalate-to-founder rule.
 
 ## Size & dependencies
 
-Size **M**. New code is markdown skill prompts + (optionally) one Workflow script; no app/runtime changes. Depends on #57 (DoR C1–C7 + `/ready-check`, already shipped). Adjacent to #71 (Ralph restore) — independent.
+Size **M**. New code is markdown skill prompts + (optionally) one Workflow script; no app/runtime changes. Depends on #57 (DoR C1–C7 + `/ready-check`, already shipped) and reuses `/deep-research` for the facts pass (D9). Adjacent to #71 (Ralph restore) — independent. All phase subagents run on Opus 4.8 (D3).
 
 ## Tasks (atomic)
 
 - [ ] 75.1 — `/split-issue` skill (Phase 0): input a ready issue plan + a context budget → emit atomic `- [ ]` tasks and, for large issues, `issue-NN-execution-prompts.md` matching the `issue-61-execution-prompts.md` structure (recon snapshot, locked-decisions table, session table, one self-contained paste-in prompt per session). Independently usable on existing issues.
 - [ ] 75.2 — `/prepare-issue` orchestrator skill: chain phases 1–5, call 75.1 for phase 6, write/update the `## Prep progress` block, narrate transitions, run the gate-loop with a failure cap → escalate to founder, pause-and-ask on product questions.
-- [ ] 75.3 — Phase implementations: wire `/research` + Explore recon (P1), plan draft (P2), an adversarial plan-review subagent that reuses `/ready-check` with strict plan-only isolation (P3 + P5), impl-plan draft (P4).
-- [ ] 75.4 — Model routing: reuse Ralph's `route-model` so recon/synthesis run on a cheap model and only the gates use a strong model.
+- [ ] 75.3 — Phase implementations: wire `/deep-research` + prior-art scan + Explore recon (P1, D9/D10), plan draft with the second-order lens (P2, D11), the `/ready-check` reviewer with strict plan-only isolation (P3+P5), impl-plan draft (P4).
+- [ ] 75.4 — Model: pin every phase subagent to Opus 4.8 (D3); no cheap-model routing in this pipeline.
 - [ ] 75.5 — Class b/c guard: detect schema/auth/payment scope and land the output as `ready-for-human`.
 - [ ] 75.6 — Dry-run end-to-end on one small existing backlog issue; founder eyeballs the produced issue file + `execution-prompts.md`.
+- [ ] 75.7 — Design-soundness critic (new): an adversarial, plan-only reviewer subagent that hunts for flaws and renders pass/fail on D9–D11 (sound + cited approach, prior-art considered, forward-compatible, simple-and-robust). Runs alongside `/ready-check` at P3 and P5; a phase passes only when both pass (D12).
 
 ## Acceptance
 
@@ -54,6 +59,9 @@ Size **M**. New code is markdown skill prompts + (optionally) one Workflow scrip
 - [ ] A failing plan-review gate causes a re-plan; after N consecutive failures the run **stops and asks the founder** rather than shipping a weak plan.
 - [ ] A class b/c input lands as `ready-for-human` and is never marked `ready-for-agent`.
 - [ ] `/split-issue` run alone on an existing ready issue emits a valid `execution-prompts.md` whose structure matches the `issue-61` template.
+- [ ] The plan's non-obvious technical choices carry external sources, and the plan explicitly records a build-vs-adopt (prior-art) decision (D9/D10).
+- [ ] The design-soundness critic runs at P3 and P5; a flaw it raises (unsound approach, reinvented wheel, or forward-compat break) blocks the phase until resolved, independently of `/ready-check` (D12).
+- [ ] Every phase subagent is invoked on Opus 4.8 (D3).
 
 ## Open / deferred
 

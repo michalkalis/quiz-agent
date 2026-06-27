@@ -329,3 +329,9 @@ un-park** — Ralph must not pick it up or cross the 🛑 line.
 - The readiness gate (#57 57.13) refused to start an autonomous run on this issue: no [ ] tasks remain for Ralph; Phase 6 is a founder-only human checkpoint; no new autonomous done-state is reachable.
 - No iteration ran; the branch was NOT pushed. Verifying the loop output cannot rescue an unready input (garbage in, garbage out).
 - Next human-touch: clear the Definition-of-Ready (`/triage` C1–C7: add the `## Acceptance` block, declare `**Reversibility:**`, run `/ready-check`), then re-run. Override only by setting `RALPH_READYCHECK=0` for a deliberate exception.
+
+## BLOCKER (2026-06-27) — plan-readiness pre-flight (NOT-READY)
+
+- The readiness gate (#57 57.13) refused to start an autonomous run on this issue: no `[ ]` tasks remain; issue is Ralph-complete and parked awaiting the founder's Phase-6 human checkpoint; no autonomous done-state is reachable.
+- No iteration ran; the branch was NOT pushed. Verifying the loop output cannot rescue an unready input (garbage in, garbage out).
+- Next human-touch: clear the Definition-of-Ready (`/triage` C1–C7: add the `## Acceptance` block, declare `**Reversibility:**`, run `/ready-check`), then re-run. Override only by setting `RALPH_READYCHECK=0` for a deliberate exception.

@@ -19,6 +19,9 @@ from ..auth.tokens import TokenService
 from ..auth.refresh import RefreshTokenStore
 from ..auth.attest_challenge import ChallengeStore
 from ..auth.app_attest import AppAttestService
+from ..auth.apple import AppleIdentityVerifier
+from ..auth.apple_oauth import AppleOAuthClient
+from ..auth.apple_secrets import AppleTokenCipher
 from ..auth.identity import AuthSubject, require_authenticated_subject
 from ..quiz.flow import QuizFlowService, FlowResult
 from ..serializers import (
@@ -197,7 +200,11 @@ class AttestChallengeResponse(BaseModel):
 
 
 class AuthTokenResponse(BaseModel):
-    """Token pair returned by anon-bootstrap and refresh (issue #60, task 60.4)."""
+    """Token pair returned by anon-bootstrap and refresh (issue #60, task 60.4).
+
+    Reused by ``/auth/apple`` (#61): after Sign in with Apple the subject is the
+    new ``users.id``, returned in the (legacy-named) ``anon_id`` field — it always
+    carries the JWT ``sub`` the client should store as its upgrade anchor."""
 
     access_token: str = Field(description="Short-lived JWT (bearer) for API calls")
     refresh_token: str = Field(
@@ -205,7 +212,46 @@ class AuthTokenResponse(BaseModel):
     )
     token_type: str = Field(default="bearer")
     expires_in: int = Field(description="Access-token lifetime in seconds")
-    anon_id: str = Field(description="The server-assigned anonymous subject id")
+    anon_id: str = Field(description="The server-assigned subject id (JWT sub)")
+
+
+class AppleSignInUser(BaseModel):
+    """First-authorization profile Apple hands the *client* exactly once, via the
+    native credential only (never inside the id_token). Both fields are optional —
+    absent on every sign-in after the first. ``name`` is the display name the
+    client assembles from Apple's name components (decision F5)."""
+
+    name: Optional[str] = Field(
+        default=None, description="Display name (first auth only)"
+    )
+    email: Optional[str] = Field(
+        default=None,
+        description="Email (first auth only; the verified id_token email is preferred)",
+    )
+
+
+class AppleSignInRequest(BaseModel):
+    """Body for ``POST /auth/apple`` — Sign in with Apple (issue #61, task 61.4)."""
+
+    identity_token: str = Field(
+        ..., min_length=1, description="Apple id_token (JWT) from the native credential"
+    )
+    authorization_code: str = Field(
+        ...,
+        min_length=1,
+        description="Single-use Apple authorization code (exchanged immediately, F10)",
+    )
+    raw_nonce: str = Field(
+        ...,
+        min_length=1,
+        description=(
+            "The raw nonce the client generated; the id_token nonce claim must equal "
+            "base64url-nopad(sha256(raw_nonce)) (decision F6)"
+        ),
+    )
+    user: Optional[AppleSignInUser] = Field(
+        default=None, description="First-login name/email Apple returns only once"
+    )
 
 
 # ── Dependency Injection (FastAPI Depends) ───────────────────────────────────
@@ -272,6 +318,19 @@ def get_app_attest_service(request: Request) -> Optional[AppAttestService]:
 def get_auth_sessionmaker(request: Request):
     """Sessionmaker dedicated to the auth tables (None when auth is disabled)."""
     return getattr(request.app.state, "auth_sessionmaker", None)
+
+
+def get_apple_verifier(request: Request) -> Optional[AppleIdentityVerifier]:
+    # None until Sign in with Apple is configured; /auth/apple returns 503.
+    return getattr(request.app.state, "apple_verifier", None)
+
+
+def get_apple_oauth_client(request: Request) -> Optional[AppleOAuthClient]:
+    return getattr(request.app.state, "apple_oauth_client", None)
+
+
+def get_apple_token_cipher(request: Request) -> Optional[AppleTokenCipher]:
+    return getattr(request.app.state, "apple_token_cipher", None)
 
 
 def get_quiz_flow(request: Request) -> QuizFlowService:

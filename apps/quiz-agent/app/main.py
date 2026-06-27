@@ -236,6 +236,9 @@ async def lifespan(app: FastAPI):
         refresh_store = None
         challenge_store = None
         app_attest_service = None
+        apple_verifier = None
+        apple_oauth_client = None
+        apple_token_cipher = None
         if settings.database_url:
             from .db.engine import get_sessionmaker
 
@@ -282,6 +285,31 @@ async def lifespan(app: FastAPI):
                 token_service = build_token_service(settings)
                 refresh_store = build_refresh_store(auth_sessionmaker, settings)
                 logger.info("Auth endpoints enabled (anon-bootstrap + refresh)")
+                # Sign in with Apple (#61). /auth/apple needs the verifier
+                # (id_token), the OAuth client (code→Apple refresh token), and the
+                # at-rest cipher (F1/F2) — built only when the full key set is
+                # present so the app still boots SIWA-disabled (the route 503s).
+                if (
+                    settings.apple_signin_client_id
+                    and settings.apple_signin_team_id
+                    and settings.apple_signin_key_id
+                    and settings.apple_signin_private_key
+                    and settings.apple_token_enc_key
+                ):
+                    from .auth.apple import build_apple_identity_verifier
+                    from .auth.apple_oauth import build_apple_oauth_client
+                    from .auth.apple_secrets import build_apple_token_cipher
+
+                    apple_verifier = build_apple_identity_verifier(settings)
+                    apple_oauth_client = build_apple_oauth_client(settings)
+                    apple_token_cipher = build_apple_token_cipher(settings)
+                    logger.info("Sign in with Apple enabled (/auth/apple)")
+                elif settings.apple_signin_client_id:
+                    logger.warning(
+                        "Sign in with Apple partially configured — /auth/apple "
+                        "disabled (503) until APPLE_SIGNIN_{CLIENT_ID,TEAM_ID,"
+                        "KEY_ID,PRIVATE_KEY} and APPLE_TOKEN_ENC_KEY are all set."
+                    )
             else:
                 logger.warning(
                     "AUTH_JWT_SECRET not set — /auth/* disabled (503). "
@@ -350,6 +378,9 @@ async def lifespan(app: FastAPI):
     app.state.refresh_store = refresh_store
     app.state.challenge_store = challenge_store
     app.state.app_attest_service = app_attest_service
+    app.state.apple_verifier = apple_verifier
+    app.state.apple_oauth_client = apple_oauth_client
+    app.state.apple_token_cipher = apple_token_cipher
     app.state.quiz_flow = QuizFlowService(
         session_manager=session_manager,
         input_parser=input_parser,

@@ -16,27 +16,37 @@ from __future__ import annotations
 import base64
 import logging
 import uuid
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from sqlalchemy import select, update
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..deps import (
     AnonBootstrapRequest,
+    AppleSignInRequest,
     AttestChallengeResponse,
     AuthTokenResponse,
     RefreshRequest,
     get_app_attest_service,
+    get_apple_oauth_client,
+    get_apple_token_cipher,
+    get_apple_verifier,
     get_auth_sessionmaker,
     get_challenge_store,
     get_refresh_store,
     get_token_service,
 )
 from ...auth.app_attest import AppAttestError, AppAttestService
+from ...auth.apple import AppleIdentityVerifier, AppleVerificationError
+from ...auth.apple_oauth import AppleOAuthClient, AppleOAuthError
+from ...auth.apple_secrets import AppleTokenCipher
 from ...auth.attest_challenge import ChallengeStore
 from ...auth.refresh import RefreshError, RefreshTokenStore
-from ...auth.tokens import TokenService
+from ...auth.tokens import TokenError, TokenService
 from ...config import get_settings
-from ...db.models import AnonymousIdentity
+from ...db.models import AnonymousIdentity, DailyUsage, RefreshToken, User
 from ...rate_limit import fly_client_ip, limiter
 
 logger = logging.getLogger(__name__)
@@ -224,3 +234,221 @@ async def refresh(
         expires_in=token_service.access_ttl_seconds,
         anon_id=result.anon_id,
     )
+
+
+@router.post("/auth/apple", response_model=AuthTokenResponse)
+@limiter.limit(_BOOTSTRAP_RATE, key_func=fly_client_ip)
+async def apple_sign_in(
+    request: Request,
+    body: AppleSignInRequest,
+    token_service: TokenService = Depends(get_token_service),
+    refresh_store: RefreshTokenStore = Depends(get_refresh_store),
+    sessionmaker=Depends(get_auth_sessionmaker),
+    verifier: Optional[AppleIdentityVerifier] = Depends(get_apple_verifier),
+    oauth_client: Optional[AppleOAuthClient] = Depends(get_apple_oauth_client),
+    cipher: Optional[AppleTokenCipher] = Depends(get_apple_token_cipher),
+) -> AuthTokenResponse:
+    """Upgrade an anonymous identity to a real account via Sign in with Apple.
+
+    Verifies the Apple identity token, exchanges the authorization code for
+    Apple's refresh token, upserts the ``users`` row keyed on ``apple_sub``, folds
+    the caller's anonymous usage into the account (decision F3), stores Apple's
+    refresh token encrypted (F1/F2), and issues *our* access + refresh pair whose
+    subject is ``users.id`` — all in one DB transaction.
+
+    F7: this endpoint is deliberately **not** behind App Attest — a verified Apple
+    identity token is itself a strong barrier (unlike anon-bootstrap, which is
+    attested precisely because it has no such external proof of authenticity).
+    """
+    if (
+        token_service is None
+        or refresh_store is None
+        or sessionmaker is None
+        or verifier is None
+        or oauth_client is None
+        or cipher is None
+    ):
+        raise HTTPException(status_code=503, detail="Sign in with Apple unavailable")
+
+    # 1) Inbound trust boundary: prove the id_token is Apple's, minted for our app,
+    #    for this very sign-in attempt (nonce, F6). Never leak which check failed.
+    try:
+        claims = await verifier.verify(body.identity_token, raw_nonce=body.raw_nonce)
+    except AppleVerificationError:
+        raise HTTPException(status_code=401, detail="Invalid Apple identity token")
+    apple_sub = claims.get("sub")
+    if not apple_sub:
+        raise HTTPException(status_code=401, detail="Invalid Apple identity token")
+
+    # 2) Exchange the authorization code immediately — Apple voids it after ~5 min
+    #    (F10). Capture Apple's refresh token (it is not always present).
+    try:
+        exchange = await oauth_client.exchange_authorization_code(
+            body.authorization_code
+        )
+    except AppleOAuthError:
+        raise HTTPException(status_code=502, detail="Apple token exchange failed")
+
+    # The anon to fold in is named by the *current* bearer's subject (stale-but-ours
+    # still counts — see TokenService.subject_from_token). The Apple token, not this
+    # bearer, authorizes the call (F7), so a missing/foreign bearer is not fatal —
+    # there is simply nothing to merge.
+    anon_id = _anon_subject_for_merge(request, token_service)
+
+    # email: trust the verified id_token claim over the client-supplied body.
+    email = claims.get("email") or (body.user.email if body.user else None)
+    full_name = body.user.name if body.user else None
+    encrypted = (
+        cipher.encrypt(exchange.refresh_token) if exchange.refresh_token else None
+    )
+
+    async with sessionmaker() as session:
+        user = await _upsert_apple_user(
+            session,
+            apple_sub=apple_sub,
+            email=email,
+            full_name=full_name,
+            encrypted_refresh=encrypted,
+        )
+        user_id = str(user.id)
+        if anon_id is not None and anon_id != user_id:
+            await _merge_anonymous_identity(session, anon_id, user_id)
+        issued = await refresh_store.issue(session, user_id)
+        await session.commit()
+
+    access_token = token_service.create_access_token(user_id)
+    logger.info("Apple sign-in: account %s (folded anon=%s)", user_id, anon_id)
+    return AuthTokenResponse(
+        access_token=access_token,
+        refresh_token=issued.raw_token,
+        expires_in=token_service.access_ttl_seconds,
+        anon_id=user_id,  # subject is now users.id (field name is legacy)
+    )
+
+
+def _anon_subject_for_merge(
+    request: Request, token_service: TokenService
+) -> Optional[str]:
+    """The anonymous subject to fold into the account, from the caller's bearer.
+
+    Returns None when there is no bearer, or it is not one of our tokens (then
+    there is nothing to merge — the account is still created). Accepts an *expired*
+    anon access token on purpose: it still authentically names the anon, and
+    folding its usage is what stops a freemium reset by letting the token lapse
+    before upgrading (F3)."""
+    header = request.headers.get("Authorization")
+    if not header:
+        return None
+    scheme, _, token = header.partition(" ")
+    if scheme.lower() != "bearer" or not token.strip():
+        return None
+    try:
+        return token_service.subject_from_token(token.strip(), allow_expired=True)
+    except TokenError:
+        return None
+
+
+async def _upsert_apple_user(
+    session: AsyncSession,
+    *,
+    apple_sub: str,
+    email: Optional[str],
+    full_name: Optional[str],
+    encrypted_refresh: Optional[bytes],
+) -> User:
+    """Find the account for ``apple_sub`` or create it.
+
+    Apple sends email/name only on first authorization, so they are written once
+    and never clobbered by a later null (the user may also hide their email); the
+    encrypted Apple refresh token is refreshed whenever Apple returns a new one."""
+    user = (
+        await session.execute(select(User).where(User.apple_sub == apple_sub))
+    ).scalar_one_or_none()
+    if user is None:
+        user = User(
+            apple_sub=apple_sub,
+            email=email,
+            full_name=full_name,
+            apple_refresh_token_encrypted=encrypted_refresh,
+        )
+        session.add(user)
+        await session.flush()  # populate user.id for the merge + token issue
+        return user
+    if encrypted_refresh is not None:
+        user.apple_refresh_token_encrypted = encrypted_refresh
+    if email and not user.email:
+        user.email = email
+    if full_name and not user.full_name:
+        user.full_name = full_name
+    return user
+
+
+async def _merge_anonymous_identity(
+    session: AsyncSession, anon_id: str, user_id: str
+) -> None:
+    """Fold an anonymous identity's usage into the account, exactly once (F3).
+
+    Guarded by ``anonymous_identities.upgraded_to_user_id``: already this user →
+    idempotent no-op; a different user → 409 (the anon belongs elsewhere). The
+    anon's ``daily_usage`` rows (keyed on ``subject_id``) are **summed** into the
+    account's rows (``is_premium`` OR-ed) — sum, not max, so signing out and back
+    in cannot reset the freemium limit — then removed. The anon's still-live
+    refresh tokens are revoked so the upgraded identity cannot keep minting anon
+    access tokens against a separate (empty) usage bucket. Row-locked to serialise
+    concurrent sign-ins on the same anon."""
+    anon = (
+        await session.execute(
+            select(AnonymousIdentity)
+            .where(AnonymousIdentity.anon_id == anon_id)
+            .with_for_update()
+        )
+    ).scalar_one_or_none()
+    if anon is None:
+        return  # bearer named a subject with no identity row — nothing to merge
+    if anon.upgraded_to_user_id is not None:
+        if anon.upgraded_to_user_id == user_id:
+            return  # already folded into this account — idempotent
+        raise HTTPException(
+            status_code=409,
+            detail="This anonymous identity already belongs to another account",
+        )
+
+    anon_rows = (
+        (
+            await session.execute(
+                select(DailyUsage).where(DailyUsage.subject_id == anon_id)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    for row in anon_rows:
+        existing = (
+            await session.execute(
+                select(DailyUsage).where(
+                    DailyUsage.subject_id == user_id,
+                    DailyUsage.usage_date == row.usage_date,
+                )
+            )
+        ).scalar_one_or_none()
+        if existing is None:
+            session.add(
+                DailyUsage(
+                    subject_id=user_id,
+                    usage_date=row.usage_date,
+                    questions_count=row.questions_count,
+                    is_premium=row.is_premium,
+                )
+            )
+        else:
+            existing.questions_count += row.questions_count  # SUM (F3, not max)
+            existing.is_premium = existing.is_premium or row.is_premium  # OR (F3)
+        await session.delete(row)
+
+    await session.execute(
+        update(RefreshToken)
+        .where(RefreshToken.anon_id == anon_id, RefreshToken.revoked_at.is_(None))
+        .values(revoked_at=datetime.now(timezone.utc))
+    )
+
+    anon.upgraded_to_user_id = user_id

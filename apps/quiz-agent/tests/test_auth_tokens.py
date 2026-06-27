@@ -122,6 +122,55 @@ def test_token_signed_with_other_secret_is_rejected():
         _service().decode_access_token(token)
 
 
+def test_subject_from_token_recovers_subject():
+    svc = _service()
+    assert svc.subject_from_token(svc.create_access_token("anon_abc")) == "anon_abc"
+
+
+def test_subject_from_token_rejects_expired_by_default():
+    """Default behaviour matches decode_access_token — a stale token is rejected,
+    so this can't be mistaken for an authorization check."""
+    svc = _service()
+    past = datetime.now(timezone.utc) - timedelta(hours=2)
+    token = svc.create_access_token("anon_abc", now=past)
+    with pytest.raises(TokenError):
+        svc.subject_from_token(token)
+
+
+def test_subject_from_token_allow_expired_recovers_subject():
+    """/auth/apple identifies the anon to merge even from an expired (but
+    authentically-signed) access token — folding its usage is what stops a
+    freemium reset by letting the token lapse before upgrading (F3)."""
+    svc = _service()
+    past = datetime.now(timezone.utc) - timedelta(hours=2)
+    token = svc.create_access_token("anon_abc", now=past)
+    assert svc.subject_from_token(token, allow_expired=True) == "anon_abc"
+
+
+def test_subject_from_token_allow_expired_still_verifies_signature():
+    """allow_expired skips ONLY expiry — a forged signature is still rejected, so
+    the recovered subject is always cryptographically ours."""
+    svc = _service()
+    token = svc.create_access_token("anon_abc")
+    header, payload, sig = token.split(".")
+    forged = ".".join(
+        [header, payload, sig[:-2] + ("aa" if sig[-2:] != "aa" else "bb")]
+    )
+    with pytest.raises(TokenError):
+        svc.subject_from_token(forged, allow_expired=True)
+
+
+def test_subject_from_token_allow_expired_still_checks_audience():
+    """A token for a different audience is rejected even with allow_expired — the
+    merge anchor must be one of our own subjects."""
+    other = TokenService(
+        secret=SECRET, issuer=ISSUER, audience="someone-else", access_ttl_seconds=900
+    )
+    token = other.create_access_token("anon_abc")
+    with pytest.raises(TokenError):
+        _service().subject_from_token(token, allow_expired=True)
+
+
 def test_missing_secret_fails_loud():
     """No secret → construction fails immediately, never silently signs with an
     empty key."""

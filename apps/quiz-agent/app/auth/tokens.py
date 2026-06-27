@@ -81,6 +81,32 @@ class TokenService:
         except jwt.PyJWTError as exc:
             raise TokenError(str(exc)) from exc
 
+    def subject_from_token(self, token: str, *, allow_expired: bool = False) -> str:
+        """Return the verified ``sub`` of an access token.
+
+        ``allow_expired`` skips *only* the expiry check — signature, issuer, and
+        audience are still enforced, so the subject is still cryptographically
+        ours. Used by ``/auth/apple`` to identify which anonymous subject to fold
+        into the new account: an authentically-signed but stale anon access token
+        still authentically names that anon, and folding its usage is what stops a
+        freemium-limit reset by letting the token lapse before upgrading (F3). Not
+        an authorization check — use ``decode_access_token`` for that."""
+        try:
+            payload = jwt.decode(
+                token,
+                self._secret,
+                algorithms=[_ALGORITHM],
+                audience=self._audience,
+                issuer=self._issuer,
+                options={
+                    "require": ["exp", "iat", "sub", "jti", "iss", "aud"],
+                    "verify_exp": not allow_expired,
+                },
+            )
+        except jwt.PyJWTError as exc:
+            raise TokenError(str(exc)) from exc
+        return payload["sub"]
+
 
 def build_token_service(settings) -> TokenService:
     """Construct a ``TokenService`` from app settings (``app.config.Settings``)."""

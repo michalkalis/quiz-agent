@@ -159,8 +159,8 @@ Done = HangsTests green on the iPhone sim, build clean. Commit, push, tick 61.6/
 - ✅ Recon done (this doc). Decisions F1–F8 + F10 locked; F5 = store name (founder 2026-06-27).
 - ✅ **Session A — Backend foundation DONE 2026-06-27** (commits `51540aa` 61.1, `30dddf5` 61.2, `1f2be31` 61.3). Full suite green (213 passed, 27 new), ruff clean, live alembic up/down/up round-trip OK. See "Session A delivered" below.
 - ✅ **Session B — `POST /auth/apple` DONE 2026-06-27** (commits `8bad2c7` migration/model, `e5f10ae` OAuth client + token helper, `244f7e7` endpoint). Full suite green (234 passed, 21 new), ruff clean, live alembic up/down/up round-trip OK. See "Session B delivered" below.
-- ⬜ Session C — Delete + Export (next).
-- ⬜ Session D — iOS SIWA.
+- ✅ **Session C — Delete + Export DONE 2026-06-27** (`DELETE /auth/me` + `GET /auth/me/export` + `AppleOAuthClient.revoke`; 242 tests green, 8 new, ruff clean). See "Session C delivered" below.
+- ⬜ Session D — iOS SIWA (next).
 - ⬜ Human: Apple Sign in key (`.p8`) + Fly secrets before B/C deploy. `[HUMAN]` real-device verify after D.
 
 ### Session A delivered — exact symbols for B/C/D to import
@@ -178,3 +178,10 @@ Done = HangsTests green on the iPhone sim, build clean. Commit, push, tick 61.6/
 - ⚠️ **Schema change for Session C — migration `0004_refresh_subject`** dropped the `refresh_tokens.anon_id → anonymous_identities` FK (and its `ON DELETE CASCADE`). `refresh_tokens.anon_id` is now a **generic subject id** (anon id *or* `users.id`). **Consequence: `DELETE /auth/me` must delete the user's `refresh_tokens` rows EXPLICITLY** (no cascade) — filter `refresh_tokens.anon_id == users.id`, plus `daily_usage` rows `subject_id == users.id`, plus the `users` row. The merged anon's own refresh tokens are already revoked at sign-in, and its `daily_usage` rows are folded+deleted into the user, so the "anon trail" to clean is mostly the `anonymous_identities` row (kept, `upgraded_to_user_id` points at the deleted user — decide in C whether to null/delete it).
 
 > ⚠️ **NONCE CONFLICT — fix before Session D ships.** The backend verifier enforces **F6**: the id_token `nonce` claim must equal `base64url-nopad(sha256(raw_nonce))`. The **Session D prompt below still says "send sha256(nonce) (hex)"** — that is the exact footgun F6 warns about and will make every sign-in fail the nonce check. **Session D must compute the request nonce as `base64url-nopad(sha256(raw_nonce))`, NOT hex.** The locked decision (F6) wins over the Session D prose; the prose is left as-is only so this note is visible next to it.
+
+### Session C delivered — exact contract for Session D's account UI
+
+- **61.5** `app/api/routes/auth.py`: `delete_account` (`DELETE /api/v1/auth/me`) and `export_account` (`GET /api/v1/auth/me/export`), both rate-limited 20/min/IP and gated by `require_auth`. Authority rule (`_resolve_account`): the bearer's `sub` **must be a `users.id`** — no/invalid bearer → **401**; an authenticated anon/legacy subject (no `users` row) → **404**.
+- **DELETE** → **204 No Content** (empty body). One transaction deletes the `users` row + its `daily_usage` (`subject_id == users.id`) + its `refresh_tokens` (`anon_id == users.id`, explicit — no cascade after `0004`), and **nulls** `anonymous_identities.upgraded_to_user_id` for the merged trail. *After commit*, best-effort Apple revoke (F4): decrypt `apple_refresh_token_encrypted` → `AppleOAuthClient.revoke(token)`; any failure (or a null token) is logged and **still returns 204** — Apple availability never blocks the GDPR delete. iOS: a 2xx means "account gone, drop the stored account tokens and re-bootstrap a fresh anon".
+- **EXPORT** → **200** JSON `AccountExportResponse`: `{ apple_sub, email, full_name, created_at, is_premium, usage: [{ usage_date, questions_count, is_premium }] }` (usage oldest-first; `is_premium` top-level = derived as of today). **No secret** is included (no field for the encrypted Apple refresh token).
+- **outbound** `AppleOAuthClient.revoke(token, *, token_type_hint="refresh_token")` posts to `/auth/revoke` (correct TN3194 slug, F10), reusing the client_secret + a shared `_post` core; raises `AppleOAuthError` (the route swallows it). Apple returns an **empty 200** on success, so revoke does *not* parse a JSON body (unlike token exchange).

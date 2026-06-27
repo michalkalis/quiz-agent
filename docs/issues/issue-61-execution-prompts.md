@@ -143,7 +143,7 @@ Read first: docs/issues/issue-61-execution-prompts.md ("Recon snapshot" iOS sect
 
 Build:
 1) Add `com.apple.developer.applesignin` capability to Hangs-Prod.entitlements AND Hangs-Local.entitlements (array with "Default"). 
-2) Extend AuthService for the Apple upgrade: generate a 32-byte random raw nonce, send sha256(nonce) (hex) as ASAuthorizationAppleIDRequest.nonce, drive ASAuthorizationAppleIDProvider, on credential POST to /api/v1/auth/apple { identity_token, authorization_code, raw_nonce, user } using the CURRENT anon bearer (so the backend can merge), then swap the stored AuthTokens to the returned account tokens (sub = users.id). Add getCredentialState on cold launch + a credentialRevokedNotification observer that drops to a fresh anon identity. Keep the token layer provider-agnostic (no Apple-only types in AuthTokens).
+2) Extend AuthService for the Apple upgrade: generate a 32-byte random raw nonce, send base64url-nopad(sha256(raw_nonce)) as ASAuthorizationAppleIDRequest.nonce (per F6 — NOT hex; the backend verifier built in Session A compares against exactly this encoding), drive ASAuthorizationAppleIDProvider, on credential POST to /api/v1/auth/apple { identity_token, authorization_code, raw_nonce, user } using the CURRENT anon bearer (so the backend can merge), then swap the stored AuthTokens to the returned account tokens (sub = users.id). Add getCredentialState on cold launch + a credentialRevokedNotification observer that drops to a fresh anon identity. Keep the token layer provider-agnostic (no Apple-only types in AuthTokens).
 3) SettingsView: new accountGroup — "Sign in with Apple" (when anon) / signed-in state + "Delete account" (confirm dialog, calls DELETE /auth/me, ≤2 taps) + "Export my data" (GET /auth/me/export). 
 4) App Store privacy nutrition label update (note in the PR; the click-through is founder's in ASC).
 
@@ -157,8 +157,17 @@ Done = HangsTests green on the iPhone sim, build clean. Commit, push, tick 61.6/
 ## Status
 
 - ✅ Recon done (this doc). Decisions F1–F8 + F10 locked; F5 = store name (founder 2026-06-27).
-- ⬜ Session A — Backend foundation (next).
-- ⬜ Session B — `/auth/apple`.
+- ✅ **Session A — Backend foundation DONE 2026-06-27** (commits `51540aa` 61.1, `30dddf5` 61.2, `1f2be31` 61.3). Full suite green (213 passed, 27 new), ruff clean, live alembic up/down/up round-trip OK. See "Session A delivered" below.
+- ⬜ Session B — `/auth/apple` (next).
 - ⬜ Session C — Delete + Export.
 - ⬜ Session D — iOS SIWA.
 - ⬜ Human: Apple Sign in key (`.p8`) + Fly secrets before B/C deploy. `[HUMAN]` real-device verify after D.
+
+### Session A delivered — exact symbols for B/C/D to import
+
+- **61.1** `app/db/models.py::User` + `alembic/versions/0003_users_table.py` (revision `0003_users`, head). Reminder (recon): `daily_usage` is keyed on `subject_id`, not `anon_id`.
+- **61.2** `app/auth/apple.py`: `AppleIdentityVerifier(audience=…, http_client=None)` → `await .verify(identity_token, raw_nonce=…)` returns claims or raises `AppleVerificationError`. Helpers: `expected_nonce_claim(raw_nonce)`, `build_apple_identity_verifier(settings)`.
+- **61.3** `app/auth/apple_secrets.py`: `generate_client_secret(team_id, client_id, key_id, private_key, ttl_seconds=…, now=…)`; `AppleTokenCipher(key).encrypt/decrypt` + `build_apple_token_cipher(settings)`.
+- **config**: `settings.apple_signin_client_id` (= bundle id, the verifier audience), `apple_signin_key_id`, `apple_signin_team_id`, `apple_signin_private_key`, `apple_token_enc_key` — all optional/None.
+
+> ⚠️ **NONCE CONFLICT — fix before Session D ships.** The backend verifier enforces **F6**: the id_token `nonce` claim must equal `base64url-nopad(sha256(raw_nonce))`. The **Session D prompt below still says "send sha256(nonce) (hex)"** — that is the exact footgun F6 warns about and will make every sign-in fail the nonce check. **Session D must compute the request nonce as `base64url-nopad(sha256(raw_nonce))`, NOT hex.** The locked decision (F6) wins over the Session D prose; the prose is left as-is only so this note is visible next to it.

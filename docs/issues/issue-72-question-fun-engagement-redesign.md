@@ -317,3 +317,9 @@ green first-hand (**495 passed / 0 failed**, see the 2026-06-25 Ralph-complete n
 **No human-touch required to "fix readiness."** If a verdict is ever needed again, re-run ready-check after the
 session limit resets (or set `RALPH_READYCHECK=0`). Otherwise this issue stays **PARKED for the founder's Phase-6
 un-park** — Ralph must not pick it up or cross the 🛑 line.
+
+## BLOCKER (2026-06-27) — plan-readiness pre-flight (NOT-READY)
+
+- The readiness gate (#57 57.13) refused to start an autonomous run on this issue: issue is already Ralph-complete (all Phase 0–5 boxes [x]); Phase 6 is a founder-only human checkpoint Ralph must never cross.
+- No iteration ran; the branch was NOT pushed. Verifying the loop output cannot rescue an unready input (garbage in, garbage out).
+- Next human-touch: clear the Definition-of-Ready (`/triage` C1–C7: add the `## Acceptance` block, declare `**Reversibility:**`, run `/ready-check`), then re-run. Override only by setting `RALPH_READYCHECK=0` for a deliberate exception.

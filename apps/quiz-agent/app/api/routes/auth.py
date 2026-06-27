@@ -19,11 +19,13 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request
-from sqlalchemy import select, update
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..deps import (
+    AccountExportResponse,
+    AccountUsageRecord,
     AnonBootstrapRequest,
     AppleSignInRequest,
     AttestChallengeResponse,
@@ -37,12 +39,14 @@ from ..deps import (
     get_challenge_store,
     get_refresh_store,
     get_token_service,
+    require_auth,
 )
 from ...auth.app_attest import AppAttestError, AppAttestService
 from ...auth.apple import AppleIdentityVerifier, AppleVerificationError
 from ...auth.apple_oauth import AppleOAuthClient, AppleOAuthError
 from ...auth.apple_secrets import AppleTokenCipher
 from ...auth.attest_challenge import ChallengeStore
+from ...auth.identity import AuthSubject
 from ...auth.refresh import RefreshError, RefreshTokenStore
 from ...auth.tokens import TokenError, TokenService
 from ...config import get_settings
@@ -452,3 +456,166 @@ async def _merge_anonymous_identity(
     )
 
     anon.upgraded_to_user_id = user_id
+
+
+@router.delete("/auth/me", status_code=204)
+@limiter.limit(_BOOTSTRAP_RATE, key_func=fly_client_ip)
+async def delete_account(
+    request: Request,
+    subject: AuthSubject = Depends(require_auth),
+    sessionmaker=Depends(get_auth_sessionmaker),
+    oauth_client: Optional[AppleOAuthClient] = Depends(get_apple_oauth_client),
+    cipher: Optional[AppleTokenCipher] = Depends(get_apple_token_cipher),
+) -> Response:
+    """Delete the caller's account and all its data (GDPR Art. 17), then sever the
+    Apple grant.
+
+    The local erasure is one transaction: the ``users`` row, its ``daily_usage``
+    (keyed on ``subject_id`` == ``users.id``) and its ``refresh_tokens`` (filtered
+    on ``anon_id`` == ``users.id`` — migration 0004 dropped the cascade, so these
+    go explicitly). The merged anonymous trail is de-linked by nulling
+    ``upgraded_to_user_id``; the leftover anon row is then an unlinked random id
+    (not personal data) and, unlike deleting it, the device's App Attest key
+    binding is left intact.
+
+    F4: the Apple revoke runs *after* the local delete commits and is best-effort —
+    a missing refresh token or an Apple outage never blocks or reverses the erasure.
+    """
+    if sessionmaker is None:
+        raise HTTPException(status_code=503, detail="Auth unavailable")
+
+    async with sessionmaker() as session:
+        user = await _resolve_account(subject, session)
+        user_id = str(user.id)
+        encrypted = user.apple_refresh_token_encrypted
+
+        await session.execute(
+            delete(DailyUsage).where(DailyUsage.subject_id == user_id)
+        )
+        await session.execute(
+            delete(RefreshToken).where(RefreshToken.anon_id == user_id)
+        )
+        await session.execute(
+            update(AnonymousIdentity)
+            .where(AnonymousIdentity.upgraded_to_user_id == user_id)
+            .values(upgraded_to_user_id=None)
+        )
+        await session.execute(delete(User).where(User.id == user.id))
+        await session.commit()
+
+    await _revoke_apple_grant(oauth_client, cipher, encrypted, user_id)
+    logger.info("Account %s deleted (GDPR erasure).", user_id)
+    return Response(status_code=204)
+
+
+@router.get("/auth/me/export", response_model=AccountExportResponse)
+@limiter.limit(_BOOTSTRAP_RATE, key_func=fly_client_ip)
+async def export_account(
+    request: Request,
+    subject: AuthSubject = Depends(require_auth),
+    sessionmaker=Depends(get_auth_sessionmaker),
+) -> AccountExportResponse:
+    """Return the caller's account data as JSON (GDPR Art. 20 portability).
+
+    Profile + full per-day usage history + derived premium. Never includes the
+    encrypted Apple refresh token or any other secret (the response model has no
+    field for one)."""
+    if sessionmaker is None:
+        raise HTTPException(status_code=503, detail="Auth unavailable")
+
+    async with sessionmaker() as session:
+        user = await _resolve_account(subject, session)
+        rows = (
+            (
+                await session.execute(
+                    select(DailyUsage)
+                    .where(DailyUsage.subject_id == str(user.id))
+                    .order_by(DailyUsage.usage_date)
+                )
+            )
+            .scalars()
+            .all()
+        )
+
+    today = datetime.now(timezone.utc).date()
+    is_premium = any(row.is_premium for row in rows if row.usage_date == today)
+    return AccountExportResponse(
+        apple_sub=user.apple_sub,
+        email=user.email,
+        full_name=user.full_name,
+        created_at=user.created_at,
+        is_premium=is_premium,
+        usage=[
+            AccountUsageRecord(
+                usage_date=row.usage_date,
+                questions_count=row.questions_count,
+                is_premium=row.is_premium,
+            )
+            for row in rows
+        ],
+    )
+
+
+async def _resolve_account(subject: AuthSubject, session: AsyncSession) -> User:
+    """Resolve an authenticated subject to its ``users`` row, or reject.
+
+    The account endpoints act on a real account, so the bearer's subject must be a
+    ``users.id`` (minted by Sign in with Apple). A missing/invalid bearer is 401; an
+    *authenticated* anonymous or legacy subject simply has no account → 404 (it is
+    asking about itself, so distinguishing the two leaks nothing)."""
+    if not subject.authenticated or not subject.subject_id:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    try:
+        user_id = uuid.UUID(subject.subject_id)
+    except ValueError:
+        # A non-UUID subject (e.g. a legacy ``dev_…`` id) is never a users.id.
+        raise HTTPException(status_code=404, detail="Account not found")
+    user = (
+        await session.execute(select(User).where(User.id == user_id))
+    ).scalar_one_or_none()
+    if user is None:
+        raise HTTPException(status_code=404, detail="Account not found")
+    return user
+
+
+async def _revoke_apple_grant(
+    oauth_client: Optional[AppleOAuthClient],
+    cipher: Optional[AppleTokenCipher],
+    encrypted: Optional[bytes],
+    user_id: str,
+) -> None:
+    """Best-effort Apple token revoke for a just-deleted account (F4).
+
+    Never raises: the GDPR delete already committed, so neither a missing refresh
+    token, an unconfigured client, a decrypt error, nor an Apple outage may undo it.
+    Every non-revoke is logged loudly rather than swallowed silently."""
+    if encrypted is None:
+        # Apple did not return a refresh token at sign-in, and /auth/revoke requires
+        # a token — there is nothing to revoke. The no-token path (F10): skip + log.
+        logger.info(
+            "Account %s had no stored Apple refresh token — skipping revoke "
+            "(no-token, F10).",
+            user_id,
+        )
+        return
+    if oauth_client is None or cipher is None:
+        logger.warning(
+            "Apple revoke unavailable (client/cipher unconfigured) for deleted "
+            "account %s — local delete stands (F4).",
+            user_id,
+        )
+        return
+    try:
+        await oauth_client.revoke(cipher.decrypt(encrypted))
+        logger.info("Revoked Apple grant for deleted account %s.", user_id)
+    except AppleOAuthError:
+        logger.warning(
+            "Apple revoke failed for deleted account %s — local delete stands (F4).",
+            user_id,
+        )
+    except Exception:  # decrypt error, etc. — must never reverse the GDPR delete
+        logger.exception(
+            "Unexpected error revoking Apple grant for deleted account %s — local "
+            "delete stands (F4).",
+            user_id,
+        )

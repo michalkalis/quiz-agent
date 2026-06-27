@@ -2,7 +2,7 @@
 
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field
-from datetime import datetime
+from datetime import datetime, date
 from fastapi import Depends, Request
 
 from quiz_shared.models.session import QuizSession
@@ -251,6 +251,35 @@ class AppleSignInRequest(BaseModel):
     )
     user: Optional[AppleSignInUser] = Field(
         default=None, description="First-login name/email Apple returns only once"
+    )
+
+
+class AccountUsageRecord(BaseModel):
+    """One UTC day of an account's question usage, for the GDPR export (61.5)."""
+
+    usage_date: date = Field(description="The UTC day this usage is counted for")
+    questions_count: int = Field(description="Questions consumed that day")
+    is_premium: bool = Field(description="Whether premium was active that day")
+
+
+class AccountExportResponse(BaseModel):
+    """GDPR Art. 20 data export for a Sign in with Apple account (issue #61, 61.5).
+
+    Carries only the caller's own data — profile, full usage history, and derived
+    premium. It deliberately has **no field** for the encrypted Apple refresh token
+    or any other secret, so the export cannot leak one."""
+
+    apple_sub: str = Field(description="Apple's stable per-app subject id (anchor)")
+    email: Optional[str] = Field(default=None, description="Email, if Apple shared one")
+    full_name: Optional[str] = Field(
+        default=None, description="Name from first sign-in (F5)"
+    )
+    created_at: datetime = Field(description="When the account was created")
+    is_premium: bool = Field(
+        description="Derived premium state as of today (F8: no plan tier)"
+    )
+    usage: List[AccountUsageRecord] = Field(
+        description="Per-day usage history, oldest first"
     )
 
 

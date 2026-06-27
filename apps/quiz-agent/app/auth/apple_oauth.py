@@ -8,10 +8,12 @@ is the *outbound* side — we authenticate to Apple with the ES256 client_secret
   ``authorization_code`` for Apple's tokens, capturing the **refresh token** we
   store (encrypted) to drive revoke later. Apple voids the code after ~5 min, so
   the route calls this immediately (F10).
+- ``revoke`` (61.5, Session C) — revoke a stored Apple refresh token at
+  ``/auth/revoke`` when an account is deleted (GDPR). Best-effort: the delete
+  route swallows ``AppleOAuthError`` so Apple availability never blocks it (F4).
 
-Revoke (``/auth/revoke``) is added here by Session C. Both share the client_secret
-+ httpx + error handling, which is why this is one small client and not inline in
-the route.
+Both share the client_secret + httpx core (``_post``), which is why this is one
+small client and not inline in the route.
 """
 
 from __future__ import annotations
@@ -23,6 +25,8 @@ import httpx
 from .apple_secrets import generate_client_secret
 
 _APPLE_TOKEN_URL = "https://appleid.apple.com/auth/token"
+# Correct TN3194 slug — the "…-implementing-…" doc variant 404s (F10).
+_APPLE_REVOKE_URL = "https://appleid.apple.com/auth/revoke"
 
 
 class AppleOAuthError(Exception):
@@ -54,6 +58,7 @@ class AppleOAuthClient:
         private_key: str,
         http_client: httpx.AsyncClient | None = None,
         token_url: str = _APPLE_TOKEN_URL,
+        revoke_url: str = _APPLE_REVOKE_URL,
     ) -> None:
         if not (team_id and client_id and key_id and private_key):
             raise RuntimeError(
@@ -67,6 +72,7 @@ class AppleOAuthClient:
         # Injected in tests (httpx.MockTransport); None → a short-lived client.
         self._client = http_client
         self._token_url = token_url
+        self._revoke_url = revoke_url
 
     def _client_secret(self) -> str:
         return generate_client_secret(
@@ -94,17 +100,47 @@ class AppleOAuthClient:
             raise AppleOAuthError(f"Apple token exchange error: {payload['error']}")
         return AppleTokenExchange(refresh_token=payload.get("refresh_token"))
 
+    async def revoke(
+        self, token: str, *, token_type_hint: str = "refresh_token"
+    ) -> None:
+        """Revoke a stored Apple token at ``/auth/revoke`` (61.5, Session C).
+
+        Called when an account is deleted, to sever its Sign in with Apple grant.
+        Apple answers an **empty 200** on success — unlike token exchange there is
+        no JSON body to parse, so this does not go through ``_post_form``. Raises
+        ``AppleOAuthError`` on any non-2xx or network failure; the delete route
+        swallows it (best-effort, F4)."""
+        data = {
+            "client_id": self._client_id,
+            "client_secret": self._client_secret(),
+            "token": token,
+            "token_type_hint": token_type_hint,
+        }
+        try:
+            await self._post(self._revoke_url, data)
+        except httpx.HTTPError as exc:
+            raise AppleOAuthError("Apple token revoke failed") from exc
+
     async def _post_form(self, data: dict) -> dict:
         try:
-            if self._client is not None:
-                resp = await self._client.post(self._token_url, data=data)
-            else:
-                async with httpx.AsyncClient(timeout=10.0) as client:
-                    resp = await client.post(self._token_url, data=data)
-            resp.raise_for_status()
+            resp = await self._post(self._token_url, data)
             return resp.json()
         except (httpx.HTTPError, ValueError) as exc:
             raise AppleOAuthError("Apple OAuth request failed") from exc
+
+    async def _post(self, url: str, data: dict) -> httpx.Response:
+        """POST a form to Apple and return the raised-for-status response.
+
+        Shared by token exchange (parses a JSON body) and revoke (empty body);
+        raises the bare ``httpx.HTTPError`` so each caller wraps it with its own
+        ``AppleOAuthError`` message."""
+        if self._client is not None:
+            resp = await self._client.post(url, data=data)
+        else:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                resp = await client.post(url, data=data)
+        resp.raise_for_status()
+        return resp
 
 
 def build_apple_oauth_client(settings) -> AppleOAuthClient:

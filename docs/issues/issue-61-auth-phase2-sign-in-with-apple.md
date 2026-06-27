@@ -2,7 +2,7 @@
 
 **Triage:** enhancement · ready-for-human (auth/security + Apple secrets — maker≠checker)
 **Reversibility:** c · new `users` table + Apple token exchange + `.p8` Fly secret + account-deletion endpoint — **NOT blind-overnight eligible** (auth + secret handling; human-reviewed, coordinated with #50).
-**Status:** Spun off 2026-06-17 from #58 research §6 Phase 2 + founder decisions §8b. Phase 2 of 3. **Depends on #60.** Plan review 2026-06-26 incorporated — F1–F3 resolved + `plan_tier` dropped (subscriptions deferred); see *Resolved design decisions*.
+**Status:** Spun off 2026-06-17 from #58 research §6 Phase 2 + founder decisions §8b. Phase 2 of 3. **Depends on #60.** Plan review 2026-06-26 incorporated — F1–F3 resolved + `plan_tier` dropped (subscriptions deferred); see *Resolved design decisions*. **2026-06-27: code recon done + split into 4 session-sized chunks with ready-to-paste prompts → [`issue-61-execution-prompts.md`](issue-61-execution-prompts.md)** (also locks F4/F5/F6/F7). Nothing implemented yet — Session A (backend foundation) is next.
 
 > Plan + decisions: [`docs/research/auth-research-2026-06-16.md`](../research/auth-research-2026-06-16.md) §4 (iOS flow), §6 (Phase 2), §5 (privacy endpoints). Research issue: [#58](issue-58-authentication.md).
 
@@ -63,10 +63,10 @@ On `POST /auth/apple`, in **one transaction**:
 
 ## Tasks (atomic)
 
-- [ ] 61.1 — Alembic migration: `users(id UUID PK, apple_sub TEXT UNIQUE NOT NULL, email TEXT NULL, apple_refresh_token_encrypted BYTEA NULL, created_at TIMESTAMPTZ NOT NULL)` — **no `plan_tier`** (F8). Schema reviewed against #50 IAP needs (`apple_sub` anchor).
+- [ ] 61.1 — Alembic migration `0003` (down_revision `0002_app_attest` — current head): `users(id UUID PK, apple_sub TEXT UNIQUE NOT NULL, email TEXT NULL, full_name TEXT NULL, apple_refresh_token_encrypted BYTEA NULL, created_at TIMESTAMPTZ NOT NULL)` — `full_name` = **F5 resolved: store the Apple name** (founder 2026-06-27); **no `plan_tier`** (F8). Schema reviewed against #50 (pack-purchasing only, no schema of its own — `apple_sub` is a sufficient anchor; receipt binding is #62).
 - [ ] 61.2 — Apple identity-token verifier (JWKS RS256, 24h cache, nonce validation).
 - [ ] 61.3 — Apple client_secret generator (PyJWT + `.p8`); `.p8`/Key ID/Team ID **+ `APPLE_TOKEN_ENC_KEY`** (Fernet key, F2) as Fly secrets.
-- [ ] 61.4 — `POST /auth/apple`: authorization_code exchange → upsert user → **merge anon usage per F3** (one transaction, sum counts, OR premium, idempotent via `upgraded_to_user_id`) → **store encrypted Apple refresh token** (F1/F2) → issue JWT.
+- [ ] 61.4 — `POST /auth/apple`: authorization_code exchange → upsert user → **merge anon usage per F3** (one transaction, sum counts, OR premium, idempotent via `upgraded_to_user_id`) → **store encrypted Apple refresh token** (F1/F2) → issue JWT. ⚠️ **recon gotcha:** `daily_usage` is keyed on `subject_id` (= the JWT `sub`), **not** `anon_id` as the F3 text says — fold the anon's `subject_id` rows into `(users.id, usage_date)`. Returned JWT `sub` = `users.id`.
 - [ ] 61.5 — `DELETE /auth/me`: cascade delete + **decrypt stored Apple refresh token (F1/F2) → `/auth/revoke`** (TN3194 no-token fallback if absent); and `GET /auth/me/export`.
 - [ ] 61.6 — iOS Sign in with Apple capability + `AuthService` credential flow, nonce, credential-state/revocation observers, anon→Apple upgrade.
 - [ ] 61.7 — iOS Settings: in-app Delete Account (with confirm) + Export; privacy nutrition label.
@@ -87,7 +87,7 @@ On `POST /auth/apple`, in **one transaction**:
 - `.p8` rotation (6-month max): decide **who rotates** — Ralph (automatable Fly secret set) vs human-calendared. Resolve when this issue is specced (founder decision §8b #5).
 - Supabase Auth (Frankfurt, 50k MAU free) remains the acknowledged escape hatch if self-managed auth ops get burdensome — not adopted now.
 - **Subscriptions / `plan_tier`**: deferred (founder decision 2026-06-26 — not in this release, wanted later). Entitlement model designed when subscriptions are specced; `apple_sub` already provides the durable anchor. *(F8)*
-- **Remaining plan-review items** ([artifact](../artifacts/issue-61-plan-review-2026-06-26.html)): F4 (revoke-failure retry/queue), F5 (Apple name arrives once — schema vs Pencil `Account-Manage`), F6 (nonce compare = `base64url(sha256(raw))`), F7 (App Attest on `/auth/apple`?) still to decide; F9–F10 are implementation notes.
+- **Plan-review items F4–F7 — now resolved** (2026-06-27, see [`issue-61-execution-prompts.md`](issue-61-execution-prompts.md) *Locked decisions*): F4 = delete local immediately + best-effort revoke (retry/queue post-MVP); F5 = store `full_name`; F6 = nonce compare against `base64url-nopad(sha256(raw))`; F7 = `/auth/apple` deliberately **not** behind App Attest (valid Apple id_token suffices). F9 (Apple server-to-server notifications) stays Phase 3; F10 are implementation notes folded into the session prompts.
 
 ## Cross-refs
 

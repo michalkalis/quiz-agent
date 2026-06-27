@@ -317,3 +317,14 @@ green first-hand (**495 passed / 0 failed**, see the 2026-06-25 Ralph-complete n
 **No human-touch required to "fix readiness."** If a verdict is ever needed again, re-run ready-check after the
 session limit resets (or set `RALPH_READYCHECK=0`). Otherwise this issue stays **PARKED for the founder's Phase-6
 un-park** — Ralph must not pick it up or cross the 🛑 line.
+
+
+## Post-Phase-6b follow-ups (founder-queued 2026-06-27)
+
+Phase-6b quality gate **PASSED** by-ear (founder: "celkovo veľmi zaujímavé"). Generation stays **PARKED** — un-park is a separate founder go. Three follow-ups queued to extend the live pipeline (`apps/quiz-pack-api`):
+
+- [x] **F-2 · single-URL attribution fix** (founder: "určite oprav"). ✅ **2026-06-27, `35a3a65`.** Root cause: every question's `source_url` was back-filled from the first sourced fact (`generation.py` global `fallback_fact`), so a pack drawn from varied facts cited ONE page and looked 100% military. Fix: `AdvancedQuestionGenerator._attribute_sources` links each question to the specific fact it was built from within that sub-batch's disjoint `_partition_facts` slice (deterministic content-token match — the model's `source_excerpt` on the text path, question+answer on the MCQ structured path which carries no excerpt). Gap-only (a model-emitted url is kept); orchestrator global fallback demoted to last-resort net so F8 still holds. No schema/prompt change, no LLM call. Tests: `tests/generation/test_source_attribution.py` (8, incl. the 3-distinct-URLs regression); 200 related unit tests green.
+- [ ] **F-1 · no-category "LLM-picks-topics" mode** (founder: "nevyhnutné"; Option A grounded+sourced). The *substance* half of the military bias: an empty/generic prompt lets `general`/`knowledge` survive as literal topic tokens (`sourcing.py:35-46`) → generic Tavily queries → listicle/military facts. Build: when no category is entered, an LLM first proposes a diverse set of concrete topics, then the existing Tavily/Wikipedia/OpenTDB sourcing + verification runs off those (questions stay grounded, keep `source_url`). Relax `--prompt required=True` (`scripts/generate_pack.py:323`). Founder rejected the free/unsourced path.
+- [ ] **F-3 · `entertainment` category** (founder: "zisti" — research first). Celebrities / pop-culture / current viral — low prior-knowledge barrier. Open question: where does fresh/current source material come from? `91de085` deleted the news / CZ-SK fact sources, so current-events sourcing infra likely needs (re)building (e.g. a recency-aware Tavily path). The `questions` table already has `freshness_tag` + `expires_at` for expiry. Then add an `entertainment` prompt/config alongside the kids/themed prompts.
+
+(F-1 and F-3 are sizable + product-shaped — sequence with the founder before execution.)

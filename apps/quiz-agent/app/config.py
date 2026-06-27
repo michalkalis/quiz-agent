@@ -53,6 +53,19 @@ class Settings:
     app_attest_required: bool = False
     app_attest_app_id: Optional[str] = None
     app_attest_environment: str = "development"
+    # Sign in with Apple (#61, auth Phase 2). All optional so the app still boots
+    # without them — only the /auth/apple flow (Session B/C) requires them set.
+    # `apple_signin_client_id` is the app bundle id (com.missinghue.hangs): for a
+    # native SIWA flow it is both the id_token `aud` and the client_secret `sub`.
+    # `apple_signin_private_key` is the .p8 contents (a Fly secret); `…_key_id` /
+    # `…_team_id` form the client_secret header.kid / issuer. `apple_token_enc_key`
+    # is a Fernet key (one `Fernet.generate_key()`) for encrypting Apple's refresh
+    # token at rest (F1/F2).
+    apple_signin_client_id: Optional[str] = None
+    apple_signin_key_id: Optional[str] = None
+    apple_signin_team_id: Optional[str] = None
+    apple_signin_private_key: Optional[str] = None
+    apple_token_enc_key: Optional[str] = None
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -75,6 +88,11 @@ class Settings:
             app_attest_environment=_attest_environment(
                 os.getenv("APP_ATTEST_PRODUCTION", "false")
             ),
+            apple_signin_client_id=os.getenv("APPLE_SIGNIN_CLIENT_ID"),
+            apple_signin_key_id=os.getenv("APPLE_SIGNIN_KEY_ID"),
+            apple_signin_team_id=os.getenv("APPLE_SIGNIN_TEAM_ID"),
+            apple_signin_private_key=os.getenv("APPLE_SIGNIN_PRIVATE_KEY"),
+            apple_token_enc_key=os.getenv("APPLE_TOKEN_ENC_KEY"),
         )
 
 

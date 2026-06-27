@@ -158,8 +158,8 @@ Done = HangsTests green on the iPhone sim, build clean. Commit, push, tick 61.6/
 
 - ✅ Recon done (this doc). Decisions F1–F8 + F10 locked; F5 = store name (founder 2026-06-27).
 - ✅ **Session A — Backend foundation DONE 2026-06-27** (commits `51540aa` 61.1, `30dddf5` 61.2, `1f2be31` 61.3). Full suite green (213 passed, 27 new), ruff clean, live alembic up/down/up round-trip OK. See "Session A delivered" below.
-- ⬜ Session B — `/auth/apple` (next).
-- ⬜ Session C — Delete + Export.
+- ✅ **Session B — `POST /auth/apple` DONE 2026-06-27** (commits `8bad2c7` migration/model, `e5f10ae` OAuth client + token helper, `244f7e7` endpoint). Full suite green (234 passed, 21 new), ruff clean, live alembic up/down/up round-trip OK. See "Session B delivered" below.
+- ⬜ Session C — Delete + Export (next).
 - ⬜ Session D — iOS SIWA.
 - ⬜ Human: Apple Sign in key (`.p8`) + Fly secrets before B/C deploy. `[HUMAN]` real-device verify after D.
 
@@ -169,5 +169,12 @@ Done = HangsTests green on the iPhone sim, build clean. Commit, push, tick 61.6/
 - **61.2** `app/auth/apple.py`: `AppleIdentityVerifier(audience=…, http_client=None)` → `await .verify(identity_token, raw_nonce=…)` returns claims or raises `AppleVerificationError`. Helpers: `expected_nonce_claim(raw_nonce)`, `build_apple_identity_verifier(settings)`.
 - **61.3** `app/auth/apple_secrets.py`: `generate_client_secret(team_id, client_id, key_id, private_key, ttl_seconds=…, now=…)`; `AppleTokenCipher(key).encrypt/decrypt` + `build_apple_token_cipher(settings)`.
 - **config**: `settings.apple_signin_client_id` (= bundle id, the verifier audience), `apple_signin_key_id`, `apple_signin_team_id`, `apple_signin_private_key`, `apple_token_enc_key` — all optional/None.
+
+### Session B delivered — exact symbols + carry-forward for C/D
+
+- **61.4** `app/api/routes/auth.py::apple_sign_in` (`POST /api/v1/auth/apple`, rate-limited 20/min/IP, **not** App-Attest-gated per F7). Request model `AppleSignInRequest{identity_token, authorization_code, raw_nonce, user?{name,email}}` + `get_apple_verifier`/`get_apple_oauth_client`/`get_apple_token_cipher` in `app/api/deps.py`; services built on `app.state` in `main.py` only when the full Apple key set is present (route 503s otherwise). Response is the existing `AuthTokenResponse` with `anon_id` = `users.id`.
+- **outbound** `app/auth/apple_oauth.py`: `AppleOAuthClient(team_id, client_id, key_id, private_key, http_client=None, token_url=…)` → `await .exchange_authorization_code(code)` → `AppleTokenExchange(refresh_token: str|None)`, raises `AppleOAuthError`; `build_apple_oauth_client(settings)`. **Session C adds `.revoke(token)` here** (same client_secret + `_post_form`), and decrypts with the Session-A `AppleTokenCipher(settings.apple_token_enc_key).decrypt(...)`.
+- **token helper** `TokenService.subject_from_token(token, *, allow_expired=False) -> str` (signature/iss/aud enforced; only expiry optional) — used to name the anon to merge.
+- ⚠️ **Schema change for Session C — migration `0004_refresh_subject`** dropped the `refresh_tokens.anon_id → anonymous_identities` FK (and its `ON DELETE CASCADE`). `refresh_tokens.anon_id` is now a **generic subject id** (anon id *or* `users.id`). **Consequence: `DELETE /auth/me` must delete the user's `refresh_tokens` rows EXPLICITLY** (no cascade) — filter `refresh_tokens.anon_id == users.id`, plus `daily_usage` rows `subject_id == users.id`, plus the `users` row. The merged anon's own refresh tokens are already revoked at sign-in, and its `daily_usage` rows are folded+deleted into the user, so the "anon trail" to clean is mostly the `anonymous_identities` row (kept, `upgraded_to_user_id` points at the deleted user — decide in C whether to null/delete it).
 
 > ⚠️ **NONCE CONFLICT — fix before Session D ships.** The backend verifier enforces **F6**: the id_token `nonce` claim must equal `base64url-nopad(sha256(raw_nonce))`. The **Session D prompt below still says "send sha256(nonce) (hex)"** — that is the exact footgun F6 warns about and will make every sign-in fail the nonce check. **Session D must compute the request nonce as `base64url-nopad(sha256(raw_nonce))`, NOT hex.** The locked decision (F6) wins over the Session D prose; the prose is left as-is only so this note is visible next to it.

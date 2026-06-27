@@ -58,11 +58,13 @@ class RefreshToken(Base):
     family_id: Mapped[uuid.UUID] = mapped_column(
         PGUUID(as_uuid=True), nullable=False, index=True
     )
-    anon_id: Mapped[str] = mapped_column(
-        ForeignKey("anonymous_identities.anon_id", ondelete="CASCADE"),
-        nullable=False,
-        index=True,
-    )
+    # The subject the token authenticates — the JWT ``sub``. Generalised in #61:
+    # an anonymous identity id OR a ``users.id`` after Sign in with Apple, so there
+    # is no longer an FK to ``anonymous_identities`` (a user id could not satisfy
+    # it — migration 0004 drops it). Name kept as ``anon_id`` to avoid churning the
+    # refresh subsystem; read it as "subject id". Deletion removes a user's tokens
+    # explicitly (#61 Session C) rather than via the old cascade.
+    anon_id: Mapped[str] = mapped_column(Text, nullable=False, index=True)
     issued_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, nullable=False
     )

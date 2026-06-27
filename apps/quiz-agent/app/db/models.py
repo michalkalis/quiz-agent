@@ -151,3 +151,38 @@ class DailyUsage(Base):
     is_premium: Mapped[bool] = mapped_column(
         Boolean, default=False, nullable=False, server_default="false"
     )
+
+
+class User(Base):
+    """A real account, minted the first time an anonymous identity signs in with
+    Apple (issue #61). The upgrade folds that anon's ``daily_usage`` (keyed on
+    ``subject_id``) into this user and stamps
+    ``AnonymousIdentity.upgraded_to_user_id`` with ``id`` (decision F3).
+
+    ``apple_sub`` (Apple's stable per-app subject id) is the durable account
+    anchor — not the email, which the user can hide/relay. It is also the future
+    purchase/entitlement anchor (#50/#62), so there is no ``plan_tier`` here:
+    subscriptions are deferred and premium stays on ``daily_usage.is_premium``
+    (decision F8).
+    """
+
+    __tablename__ = "users"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    # Apple's `sub` claim from the verified identity token — unique per account.
+    apple_sub: Mapped[str] = mapped_column(Text, unique=True, nullable=False)
+    # Apple only sends these on the FIRST authorization, so they are persisted
+    # then and nullable forever after (the user may also hide their real email).
+    email: Mapped[str | None] = mapped_column(Text, nullable=True)
+    full_name: Mapped[str | None] = mapped_column(Text, nullable=True)  # F5
+    # Fernet ciphertext of Apple's refresh token (F1/F2). Decrypted only at
+    # DELETE /auth/me to drive the Apple token revoke; nullable because Apple
+    # does not always return a refresh token (then we use the no-token revoke).
+    apple_refresh_token_encrypted: Mapped[bytes | None] = mapped_column(
+        LargeBinary, nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )

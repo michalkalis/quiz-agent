@@ -198,9 +198,13 @@ class GenerationStage:
         prompt_seed = _compute_prompt_seed(
             ctx.prompt, ctx.language, ctx.category, ctx.theme
         )
-        # The Phase 2 wrap has no per-question fact-ID linkage yet — fall back
-        # to the first fact with a usable URL. Per-question fact_ids land in
-        # Phase 3 when the cache hook (#37 / C3) needs them.
+        # Issue #72 — per-question attribution now happens in the generator
+        # (`AdvancedQuestionGenerator._attribute_sources`), which matches each
+        # question to the specific fact it was built from within that
+        # sub-batch's slice. This global first-fact-with-URL is now only the
+        # last-resort net for the remainder the generator couldn't attribute
+        # (fact-free sub-batches, or facts without URLs) so F8 below still holds;
+        # it no longer stamps one URL onto an entire pack.
         fallback_fact = next(
             (f for f in ctx.facts if getattr(f, "source_url", None)),
             None,

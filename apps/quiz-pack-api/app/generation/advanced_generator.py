@@ -9,6 +9,7 @@ This implements:
 
 import asyncio
 import json
+import re
 import uuid
 from typing import List, Optional, Dict, Any, Literal
 from langchain_core.messages import HumanMessage
@@ -34,6 +35,36 @@ except ImportError:
 # imports and older runs even if a model id later repeats (issue #72 —
 # distinguish question sources). Bump when the flow materially changes.
 GENERATION_FLOW = "fun-redesign-72"
+
+
+# Issue #72 — per-question source attribution. Tokeniser for matching a
+# generated question back to the specific source Fact it was built from, so each
+# question cites its OWN fact's URL instead of the whole pack inheriting one
+# global URL (the "every question looks military" misattribution). The small
+# stopword set keeps the overlap score driven by content words, not glue words.
+_SOURCE_MATCH_STOPWORDS = frozenset({
+    "the", "and", "for", "with", "from", "are", "was", "were", "been", "its",
+    "this", "that", "these", "those", "which", "who", "what", "when", "where",
+    "how", "why", "than", "then", "into", "about", "over", "after", "before",
+    "more", "most", "some", "any", "all", "one", "two", "first", "also", "has",
+    "have", "had", "but", "not", "you", "your", "they", "their", "them",
+})
+
+
+def _content_tokens(*texts: object) -> set[str]:
+    """Lowercased alphanumeric content tokens (len >= 3, stopwords removed).
+
+    The match key for `_best_matching_fact`: shared content words between a
+    question and a fact signal that the question was built from that fact.
+    """
+    tokens: set[str] = set()
+    for text in texts:
+        if not text:
+            continue
+        for raw in re.findall(r"[a-z0-9]+", str(text).lower()):
+            if len(raw) >= 3 and raw not in _SOURCE_MATCH_STOPWORDS:
+                tokens.add(raw)
+    return tokens
 
 
 # Issue #72 P2.2 (Lever B / RC-5) — the v3 escape hatch. Dormant unless the
@@ -498,6 +529,66 @@ class AdvancedQuestionGenerator:
             start += size
         return slices
 
+    @staticmethod
+    def _best_matching_fact(question: Question, facts: list):
+        """The fact whose text best overlaps this question, or ``None`` when
+        nothing shares a content word.
+
+        Matches the model's confirming ``source_excerpt`` (classic/text path)
+        and the question/answer/explanation (MCQ structured path, which carries
+        no excerpt at all) against each fact's ``text`` + ``excerpt``. Lets a
+        question be linked to the fact it was actually built from instead of the
+        pack's first sourced fact (issue #72 single-URL misattribution).
+        """
+        q_tokens = _content_tokens(
+            question.source_excerpt,
+            question.question,
+            question.correct_answer,
+            question.explanation,
+        )
+        if not q_tokens:
+            return None
+        best = None
+        best_score = 0
+        for fact in facts:
+            f_tokens = _content_tokens(
+                getattr(fact, "text", None), getattr(fact, "excerpt", None)
+            )
+            score = len(q_tokens & f_tokens)
+            if score > best_score:
+                best_score = score
+                best = fact
+        return best
+
+    def _attribute_sources(
+        self, questions: List[Question], facts: Optional[list]
+    ) -> None:
+        """Stamp each question with the ``source_url``/``source_excerpt`` of the
+        fact it was built from, scoped to the facts this sub-batch actually saw
+        (its disjoint ``_partition_facts`` slice).
+
+        Replaces the orchestrator's single global fallback fact that made an
+        entire pack cite one URL (issue #72). Only fills gaps — a ``source_url``
+        the model itself emitted is kept. A question that matches nothing falls
+        back to the slice's first sourced fact (still slice-local, never the
+        global pack head); the orchestrator's global net + the F8 gate catch
+        anything still unsourced (e.g. a fact-free sub-batch).
+        """
+        if not facts:
+            return
+        sourced = [f for f in facts if getattr(f, "source_url", None)]
+        if not sourced:
+            return
+        for q in questions:
+            if q.source_url:
+                continue
+            match = self._best_matching_fact(q, sourced) or sourced[0]
+            q.source_url = getattr(match, "source_url", None)
+            if q.source_excerpt is None:
+                q.source_excerpt = getattr(match, "excerpt", None) or getattr(
+                    match, "text", None
+                )
+
     async def _generate_batch(
         self,
         count: int,
@@ -556,6 +647,7 @@ class AdvancedQuestionGenerator:
             prompt_version=prompt_version,
             use_open=use_open,
             use_fact_first=use_fact_first,
+            source_facts=source_facts,
         )
 
     def _build_batch_prompt(
@@ -639,6 +731,7 @@ class AdvancedQuestionGenerator:
         prompt_version: str,
         use_open: bool,
         use_fact_first: bool,
+        source_facts: Optional[list] = None,
     ) -> List[Question]:
         """Attach provenance metadata, then dedup vs gold standard + check diversity.
 
@@ -686,6 +779,12 @@ class AdvancedQuestionGenerator:
             )
             # Extract self-critique if present (from V2/V3 CoT prompt)
             # This will be in the parsed data if using V2/V3 prompt
+
+        # Issue #72 — link each question to the specific source fact it was built
+        # from (within this sub-batch's disjoint slice), so packs stop citing one
+        # global URL for every question. Runs before dedup so a dropped duplicate
+        # never strands its attribution.
+        self._attribute_sources(questions, source_facts)
 
         # Dedup against gold standard to prevent verbatim copying
         questions = self._dedup_against_gold_standard(questions)
@@ -782,6 +881,7 @@ class AdvancedQuestionGenerator:
             prompt_version=prompt_version,
             use_open=use_open,
             use_fact_first=use_fact_first,
+            source_facts=source_facts,
         )
 
     @staticmethod

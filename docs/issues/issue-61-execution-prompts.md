@@ -134,6 +134,24 @@ Done = pytest green, ruff clean. Commit, push, tick 61.5.
 
 ---
 
+## Before Session D — readiness gate (assessed 2026-06-27)
+
+**Verdict: NOT ready to ship.** Session D *code* can be written now against mocked network (its unit tests stub Apple via `AuthStubURLProtocol`), but the feature cannot be **verified or shipped** until the backend is live and the account UI is designed. Three gaps:
+
+**Gap 1 — Account UI is not designed.** The Settings screen in `design/quiz-agent.pen` (`NEW_Screen/Settings`, node `Jjcs5`) has only voice / language / audio / about cards — **no account section**. Session D task 61.7 needs, in the existing card style (IBM Plex Mono section label + `$bg-card` rounded card + Inter rows + `$border-subtle` dividers):
+- an **account** card with two states — anonymous → "Sign in with Apple" button; signed-in → identity row (name/email) + "Delete account" (destructive) + "Export my data";
+- a **delete-account confirm dialog** (destructive, ≤2 taps from Settings per acceptance).
+Owner: design (Pencil) — no external blocker.
+
+**Gap 2 — Backend A–C is committed but NOT live on prod.** HEAD is `80a5d0b` (A–C, 2026-06-27) but the latest Fly release is **v52 (Jun 26)** — before A–C. `fly.toml` has **no `release_command`**, so deploy does not auto-run Alembic → migrations `0003_users` + `0004_refresh_subject` are **not applied to the prod DB**. And **no Apple Fly secrets are set** (`fly secrets list` shows none of `APPLE_SIGNIN_*` / `APPLE_TOKEN_ENC_KEY`), so `/auth/apple` would `503` even once deployed. Session D's prompt explicitly requires "Backend Sessions A–C live on prod first."
+Owner: deploy + migrations (needs founder OK per migration policy) + set secrets.
+
+**Gap 3 — Apple Developer portal + secrets (founder-only, critical path).** Before the backend can function: enable **Sign in with Apple** on App ID `com.missinghue.hangs`; create a **Sign in with Apple key** (`.p8`), note **Key ID** + **Team ID** (`KAGWHPZZFQ`); then set Fly secrets `APPLE_SIGNIN_KEY_ID`, `APPLE_SIGNIN_TEAM_ID`, `APPLE_SIGNIN_PRIVATE_KEY` (.p8 body), `APPLE_SIGNIN_CLIENT_ID` (= bundle id), `APPLE_TOKEN_ENC_KEY` (one `Fernet.generate_key()`). This is the long pole — start it first.
+
+**Sequence:** (1) founder: Apple portal `.p8` → (2) set Fly secrets + deploy A–C + apply `0003`/`0004` to prod → (3) design account section + delete dialog → (4) implement Session D (61.6/61.7 + iOS tests) against the now-live backend → (5) `[HUMAN]` real-device Slovak sign-in verify. Steps 1 and 3 run in parallel; 2 unblocks E2E; Session D coding can begin against mocks any time but should land after 2–3 so it is verifiable.
+
+---
+
 ## Ready prompt — Session D (iOS Sign in with Apple)
 
 ```
@@ -160,7 +178,7 @@ Done = HangsTests green on the iPhone sim, build clean. Commit, push, tick 61.6/
 - ✅ **Session A — Backend foundation DONE 2026-06-27** (commits `51540aa` 61.1, `30dddf5` 61.2, `1f2be31` 61.3). Full suite green (213 passed, 27 new), ruff clean, live alembic up/down/up round-trip OK. See "Session A delivered" below.
 - ✅ **Session B — `POST /auth/apple` DONE 2026-06-27** (commits `8bad2c7` migration/model, `e5f10ae` OAuth client + token helper, `244f7e7` endpoint). Full suite green (234 passed, 21 new), ruff clean, live alembic up/down/up round-trip OK. See "Session B delivered" below.
 - ✅ **Session C — Delete + Export DONE 2026-06-27** (`DELETE /auth/me` + `GET /auth/me/export` + `AppleOAuthClient.revoke`; 242 tests green, 8 new, ruff clean). See "Session C delivered" below.
-- ⬜ Session D — iOS SIWA (next).
+- ⬜ Session D — iOS SIWA — **gated**: see "Before Session D — readiness gate" (account UI not designed; backend A–C committed but not deployed + Apple secrets/migrations not applied; Apple `.p8` not created).
 - ⬜ Human: Apple Sign in key (`.p8`) + Fly secrets before B/C deploy. `[HUMAN]` real-device verify after D.
 
 ### Session A delivered — exact symbols for B/C/D to import
@@ -177,7 +195,7 @@ Done = HangsTests green on the iPhone sim, build clean. Commit, push, tick 61.6/
 - **token helper** `TokenService.subject_from_token(token, *, allow_expired=False) -> str` (signature/iss/aud enforced; only expiry optional) — used to name the anon to merge.
 - ⚠️ **Schema change for Session C — migration `0004_refresh_subject`** dropped the `refresh_tokens.anon_id → anonymous_identities` FK (and its `ON DELETE CASCADE`). `refresh_tokens.anon_id` is now a **generic subject id** (anon id *or* `users.id`). **Consequence: `DELETE /auth/me` must delete the user's `refresh_tokens` rows EXPLICITLY** (no cascade) — filter `refresh_tokens.anon_id == users.id`, plus `daily_usage` rows `subject_id == users.id`, plus the `users` row. The merged anon's own refresh tokens are already revoked at sign-in, and its `daily_usage` rows are folded+deleted into the user, so the "anon trail" to clean is mostly the `anonymous_identities` row (kept, `upgraded_to_user_id` points at the deleted user — decide in C whether to null/delete it).
 
-> ⚠️ **NONCE CONFLICT — fix before Session D ships.** The backend verifier enforces **F6**: the id_token `nonce` claim must equal `base64url-nopad(sha256(raw_nonce))`. The **Session D prompt below still says "send sha256(nonce) (hex)"** — that is the exact footgun F6 warns about and will make every sign-in fail the nonce check. **Session D must compute the request nonce as `base64url-nopad(sha256(raw_nonce))`, NOT hex.** The locked decision (F6) wins over the Session D prose; the prose is left as-is only so this note is visible next to it.
+> ⚠️ **NONCE (F6) — resolved in the Session D prompt.** The backend verifier enforces **F6**: the id_token `nonce` claim must equal `base64url-nopad(sha256(raw_nonce))` — not raw, not hex. The Session D prompt (step 2) now states this correctly. Keep it: any iOS change must send `base64url-nopad(sha256(raw_nonce))` as `ASAuthorizationAppleIDRequest.nonce`, never hex.
 
 ### Session C delivered — exact contract for Session D's account UI
 

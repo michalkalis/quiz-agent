@@ -328,3 +328,18 @@ Phase-6b quality gate **PASSED** by-ear (founder: "celkovo veľmi zaujímavé").
 - [ ] **F-3 · `entertainment` category** (founder: "zisti" — research first). Celebrities / pop-culture / current viral — low prior-knowledge barrier. Open question: where does fresh/current source material come from? `91de085` deleted the news / CZ-SK fact sources, so current-events sourcing infra likely needs (re)building (e.g. a recency-aware Tavily path). The `questions` table already has `freshness_tag` + `expires_at` for expiry. Then add an `entertainment` prompt/config alongside the kids/themed prompts.
 
 (F-1 and F-3 are sizable + product-shaped — sequence with the founder before execution.)
+
+### F-1 execution plan — **Scope A: CLI/generator only** (founder picked 2026-06-28)
+
+Founder sequenced F-1 next and chose **Scope A** (no-category mode wired into the CLI/batch path only; live API + DB stay untouched). Live-app exposure = **Scope B**, deferred until un-park (needs an order-API relax + a `prompt`-nullable migration → separate founder go).
+
+**Verified root cause (corrected vs prior handoff):** `general`/`knowledge` are NOT hardcoded in `sourcing.py:35-46` (those are stopwords). The real chain: a generic prompt ("general knowledge") survives `_prompt_tokens` (neither word is a stopword) → topics `["general","knowledge"]` → `web_search_source.py:34-38` builds `"surprising facts about general…"` → listicle/military-skewed facts. The orchestrator also requires the **first stage be `sourcing`** (`pack_generator.py:52-57`, F8 gate), so the LLM topic step must live **inside** SourcingStage, not as a pre-stage.
+
+Sub-tasks:
+- [ ] **F-1.1 · `TopicPlanner`** (`app/sourcing/topic_planner.py`) — cheap-model (`gpt-4o-mini` via `llm_factory`) proposes N diverse, concrete topics across distinct domains (prompt explicitly forbids broad/generic topics and a military/war cluster). Lazy client + `_available()` guard + fail-safe `→ None`, mirroring `OpenTriviaFactRewriter`. Default N=5 (Tavily ≈ 2×N searches; keep modest per the "reduce web-search volume" steer). Tolerant JSON parse, dedupe, cap.
+- [ ] **F-1.2 · wire into SourcingStage** — inject `topic_planner` (optional, **dormant by default** so the worker/live path is byte-identical → honors Scope A). When `_derive_topics` yields `None`, call the planner, store on new `ctx.llm_topics`, run sourcing off it; report count in `StageResult.info`.
+- [ ] **F-1.3 · "no-signal" detection** — add generic non-topical words (`general`, `knowledge`, `mixed`, `misc`, `various`, `anything`, `everything`, `surprise`, …) to `_PROMPT_STOPWORDS` so a generic prompt collapses to `None` and triggers the planner.
+- [ ] **F-1.4 · CLI** — `--prompt` no longer `required` (`generate_pack.py:323`, default `""`); inject `TopicPlanner()` only in the CLI `_build_stages` (not the worker).
+- [ ] **F-1.5 · tests** — planner unit (parse/guard/fail-safe, no network), SourcingStage wiring (no-signal → planner fires + `llm_topics` set; signal present → planner NOT called; planner `None` → today's `None`-topics fallback), CLI accepts empty prompt.
+
+`OrderContext` gains `llm_topics: list[str] | None = None`. No prompt/generator-prompt change, no new external source, no migration, no deploy (generation stays PARKED).

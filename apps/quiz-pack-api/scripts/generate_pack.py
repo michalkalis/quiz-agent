@@ -228,6 +228,7 @@ def _build_stages(*, persist: bool, dedup_store: QuestionStore) -> list[Stage]:
     from app.generation.advanced_generator import AdvancedQuestionGenerator
     from app.scoring.multi_model_scorer import MultiModelScorer
     from app.sourcing.fact_sourcer import FactSourcer
+    from app.sourcing.topic_planner import TopicPlanner
     from app.verification.fact_verifier import FactVerifier
     from quiz_shared.llm import factory as llm_factory
 
@@ -243,7 +244,10 @@ def _build_stages(*, persist: bool, dedup_store: QuestionStore) -> list[Stage]:
     )
 
     stages: list[Stage] = [
-        SourcingStage(FactSourcer()),
+        # #72 F-1 (Scope A): the CLI/batch path wires the TopicPlanner so a
+        # no-category run gets a diverse concrete topic set. The worker/live
+        # path deliberately does NOT (stays byte-identical until Scope B).
+        SourcingStage(FactSourcer(), topic_planner=TopicPlanner()),
         GenerationStage(generator),
         VerificationStage(FactVerifier()),
         ScoringStage(MultiModelScorer()),
@@ -320,7 +324,15 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         prog="generate_pack",
         description="Thin-client CLI for the PackGenerator orchestrator.",
     )
-    parser.add_argument("--prompt", required=True, help="User-facing pack prompt")
+    parser.add_argument(
+        "--prompt",
+        default="",
+        help=(
+            "User-facing pack prompt. Optional: omit (or pass a generic prompt "
+            "like 'general knowledge') to trigger #72 F-1 no-category mode, "
+            "where an LLM proposes a diverse concrete topic set for sourcing."
+        ),
+    )
     parser.add_argument("--language", default="en", help="ISO 639-1 language code")
     parser.add_argument(
         "--target-count",

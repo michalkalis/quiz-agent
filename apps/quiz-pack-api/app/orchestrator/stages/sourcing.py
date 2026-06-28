@@ -20,6 +20,7 @@ import re
 from app.orchestrator.context import OrderContext, StageResult
 from app.orchestrator.progress_sink import ProgressSink
 from app.sourcing.fact_sourcer import FactSourcer
+from app.sourcing.topic_planner import TopicPlanner
 
 TAVILY_CENTS_PER_CALL = 1
 
@@ -43,6 +44,15 @@ _PROMPT_STOPWORDS = frozenset(
         # that otherwise eat the token budget before the real topic.
         "fact", "facts", "interesting", "fun", "cool", "top", "best", "most",
         "random",
+        # #72 F-1: generic "no real topic" words. Dropping these makes a generic
+        # prompt ("general knowledge", "surprise me", "mixed trivia") collapse to
+        # no tokens → topics None → SourcingStage triggers the LLM TopicPlanner
+        # instead of searching "surprising facts about general" (the listicle/
+        # military-bias dead end). They are genuinely non-topical, so dropping
+        # them never costs a real topic ("general relativity" still keeps
+        # "relativity").
+        "general", "knowledge", "mixed", "mix", "misc", "miscellaneous",
+        "various", "variety", "anything", "everything", "surprise", "assorted",
     }
 )
 
@@ -52,11 +62,30 @@ class SourcingStage:
 
     name = "sourcing"
 
-    def __init__(self, fact_sourcer: FactSourcer) -> None:
+    def __init__(
+        self,
+        fact_sourcer: FactSourcer,
+        topic_planner: TopicPlanner | None = None,
+    ) -> None:
         self._fact_sourcer = fact_sourcer
+        # #72 F-1: dormant by default. Only the CLI/batch path injects a planner
+        # (Scope A) — the worker/live path leaves it None so its behavior stays
+        # byte-identical until the no-category mode is exposed to the app.
+        self._topic_planner = topic_planner
 
     async def run(self, ctx: OrderContext, sink: ProgressSink) -> StageResult:
         topics = self._derive_topics(ctx)
+
+        # #72 F-1 (no-category mode): a missing topic signal (no category/theme,
+        # generic-only prompt) used to fall straight through to the sources'
+        # broad/generic feeds — the listicle/military-bias dead end. When a
+        # planner is wired, ask it for a diverse concrete topic set first; on any
+        # failure it returns None and we keep today's broad-feed fallback.
+        if topics is None and self._topic_planner is not None:
+            proposed = await self._topic_planner.propose()
+            if proposed:
+                ctx.llm_topics = proposed
+                topics = proposed
 
         batch = await self._fact_sourcer.gather_facts(
             count=ctx.target_count * 2,
@@ -78,6 +107,9 @@ class SourcingStage:
             info={
                 "facts": len(ctx.facts),
                 "sources_used": list(batch.sources_used),
+                # #72 F-1: surfaces which topics the planner picked (None on the
+                # heuristic path) so a no-category run is auditable end-to-end.
+                "llm_topics": ctx.llm_topics,
             },
             cost_cents=cost_cents,
         )

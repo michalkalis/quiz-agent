@@ -72,6 +72,19 @@ class TestMcqBiasFlag:
         assert args.out is None
 
 
+class TestNoCategoryPrompt:
+    """#72 F-1: --prompt is no longer required. Omitting it yields an empty
+    prompt, which produces no heuristic topic tokens → SourcingStage triggers
+    the LLM TopicPlanner (no-category mode). A parser that still demanded
+    --prompt would block that entry point entirely."""
+
+    def test_prompt_optional_defaults_to_empty(self):
+        args = generate_pack._parse_args(["--dry-run"])
+        assert args.prompt == ""
+        order = generate_pack._build_order(args)
+        assert order.prompt == ""
+
+
 class TestOutFlag:
     def test_write_out_round_trips_through_from_dict(self, tmp_path: Path):
         mcq = _make_question()

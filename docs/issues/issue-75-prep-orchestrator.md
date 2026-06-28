@@ -2,7 +2,7 @@
 
 **Triage:** tooling/process · ready-for-human (interactive build, founder-in-loop)
 **Reversibility:** a (commits-only — new Claude Code skills, no schema/auth/payments)
-**Status:** design approved 2026-06-27 (cadence = "stop only when blocked"); building Phase 0 next
+**Status:** design approved 2026-06-27; research on disk + build-vs-adopt recorded (2026-06-28); **Phase 0 (task 75.1) — `/split-issue` skill authored** (`.claude/skills/split-issue/SKILL.md`), live dry-run pending (75.6); orchestrator (75.2) next.
 
 Research backing this issue: [`docs/research/issue-prep-pipeline-research-2026-06-27.md`](../research/issue-prep-pipeline-research-2026-06-27.md) — outward, cited prior-art + best-practices research per D9 (the build-vs-adopt outcome is recorded below).
 
@@ -54,7 +54,7 @@ Size **M**. New code is markdown skill prompts + (optionally) one Workflow scrip
 
 ## Tasks (atomic)
 
-- [ ] 75.1 — `/split-issue` skill (Phase 0): input a ready issue plan + a context budget → emit atomic `- [ ]` tasks and, for large issues, `issue-NN-execution-prompts.md` matching the `issue-61-execution-prompts.md` structure (recon snapshot, locked-decisions table, session table, one self-contained paste-in prompt per session). Independently usable on existing issues.
+- [x] 75.1 — `/split-issue` skill (Phase 0): input a ready issue plan + a context budget → emit atomic `- [ ]` tasks and, for large issues, `issue-NN-execution-prompts.md` matching the `issue-61-execution-prompts.md` structure (recon snapshot, locked-decisions table, session table, one self-contained paste-in prompt per session). Independently usable on existing issues. → authored `.claude/skills/split-issue/SKILL.md` (2026-06-28); structurally verified vs the issue-61 template; live end-to-end dry-run tracked under 75.6.
 - [ ] 75.2 — `/prepare-issue` orchestrator skill: chain phases 1–5, call 75.1 for phase 6, write/update the `## Prep progress` block, narrate transitions, run the gate-loop with a failure cap → escalate to founder, pause-and-ask on product questions.
 - [ ] 75.3 — Phase implementations: wire `/deep-research` + prior-art scan + Explore recon (P1, D9/D10), plan draft with the second-order lens (P2, D11), the `/ready-check` reviewer with strict plan-only isolation (P3+P5), impl-plan draft (P4).
 - [ ] 75.4 — Model: pin every phase subagent to Opus 4.8 (D3); no cheap-model routing in this pipeline.

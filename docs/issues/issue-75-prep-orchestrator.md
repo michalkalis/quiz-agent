@@ -2,7 +2,7 @@
 
 **Triage:** tooling/process · ready-for-human (interactive build, founder-in-loop)
 **Reversibility:** a (commits-only — new Claude Code skills, no schema/auth/payments)
-**Status:** design approved 2026-06-27; research on disk + build-vs-adopt recorded (2026-06-28); **Phase 0 (task 75.1) — `/split-issue` skill authored** (`.claude/skills/split-issue/SKILL.md`), live dry-run pending (75.6); orchestrator (75.2) next.
+**Status:** design approved 2026-06-27; research on disk + build-vs-adopt recorded (2026-06-28). Built so far: **75.1 `/split-issue`** (`.claude/skills/split-issue/SKILL.md`, dry-run-verified on #66) + **75.7 design-soundness critic** (`.claude/skills/design-soundness/SKILL.md`). **Next: 75.2 orchestrator** (`/prepare-issue`), then 75.3 / 75.4 / 75.5 + 75.6 large-issue dry-run.
 
 Research backing this issue: [`docs/research/issue-prep-pipeline-research-2026-06-27.md`](../research/issue-prep-pipeline-research-2026-06-27.md) — outward, cited prior-art + best-practices research per D9 (the build-vs-adopt outcome is recorded below).
 
@@ -60,7 +60,7 @@ Size **M**. New code is markdown skill prompts + (optionally) one Workflow scrip
 - [ ] 75.4 — Model: pin every phase subagent to Opus 4.8 (D3); no cheap-model routing in this pipeline.
 - [ ] 75.5 — Class b/c guard: detect schema/auth/payment scope and land the output as `ready-for-human`.
 - [ ] 75.6 — Dry-run end-to-end on one small existing backlog issue; founder eyeballs the produced issue file + `execution-prompts.md`.
-- [ ] 75.7 — Design-soundness critic (new): an adversarial, plan-only reviewer subagent that hunts for flaws and renders pass/fail on D9–D11 (sound + cited approach, prior-art considered, forward-compatible, simple-and-robust). Runs alongside `/ready-check` at P3 and P5; a phase passes only when both pass (D12). **Cited rubric** (research file): score 0.0–1.0 on — (a) short, well-scoped, explicit artifact hints + implementation guidance; (b) no unresolved external-reference dependencies (config/setup/external APIs measurably hurt agent merge rates); (c) sound / non-reinventing / forward-compatible (D9–D11). The critic **defaults to disprove** (Refute-or-Promote) and may **abstain / flag-uncertain** rather than rubber-stamp (guards against LLM-judge "silent overconfidence"); it is a *separate* agent, never self-critique.
+- [x] 75.7 — Design-soundness critic (new): an adversarial, plan-only reviewer subagent that hunts for flaws and renders pass/fail on D9–D11 (sound + cited approach, prior-art considered, forward-compatible, simple-and-robust). Runs alongside `/ready-check` at P3 and P5; a phase passes only when both pass (D12). **Cited rubric** (research file): score 0.0–1.0 on — (a) short, well-scoped, explicit artifact hints + implementation guidance; (b) no unresolved external-reference dependencies (config/setup/external APIs measurably hurt agent merge rates); (c) sound / non-reinventing / forward-compatible (D9–D11). The critic **defaults to disprove** (Refute-or-Promote) and may **abstain / flag-uncertain** rather than rubber-stamp (guards against LLM-judge "silent overconfidence"); it is a *separate* agent, never self-critique.
 
 ## Acceptance
 

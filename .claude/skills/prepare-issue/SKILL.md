@@ -22,6 +22,7 @@ It **composes existing skills** (D5) — `/deep-research`, `/ready-check`, `/des
 - **Durable progress (D4).** Maintain a `## Prep progress` block in the issue file (template below) — refreshed at **every** phase transition. It is the source of truth for "what phase is it in" and lets a fresh session resume. Plus narrate every transition live in chat.
 - **Stop only when blocked (D2).** Auto-advance through all phases. Pause **only** when (a) a review gate fails the cap, or (b) a genuine **product** question surfaces — then ask the founder live (Rule #13), never guess.
 - **Class b/c guard (D6).** Auth / payments / migrations / schema → land the issue `ready-for-human`, **never** `ready-for-agent` (Ralph runs class `a` only). `/split-issue` enforces this too.
+- **Gated deep research (cost discipline, D9).** Phase 1's expensive web pass (`/deep-research`) is **default-OFF** — it runs only on a real open *external* technical unknown, or when the founder explicitly asks. Code recon + prior-art always run (both cheap, local). Most issues never trigger the web pass; this is where the pipeline's token cost is kept honest (see Phase 1).
 
 ## Setup
 
@@ -33,11 +34,11 @@ It **composes existing skills** (D5) — `/deep-research`, `/ready-check`, `/des
 
 Each phase below is **one fresh Opus subagent** (spawn via `Agent`, `model: opus`, scoped prompt + the issue path). After each phase: refresh `## Prep progress`, narrate the transition, checkpoint. Hand each subagent only what it needs; have it edit the issue file directly and return a short summary.
 
-**Phase 1 — Research (D9 / D10).** The subagent runs three strands and inlines the result into the issue / `docs/research/*`:
-- **Outward facts** — run `/deep-research` on the issue's open *technical* questions: cited, adversarially-verified external sources (official docs, standards/best-practice guides, reputable maintainers, GitHub reference impls).
-- **Prior-art scan (D10)** — is there a proven library / service / established pattern that already solves this? Record an explicit **build-vs-adopt** call with a real reason; bias to adopt proven, maintained solutions.
-- **Code recon** — read-only `Explore` subagents map the exact files / symbols / idioms / test patterns / head migration the work touches.
-- **Inline context, don't defer it** — resolve config / setup / external-API details now (research: issues with unresolved external references merge at lower rates). Every non-obvious choice ends up cited.
+**Phase 1 — Research (D9 / D10).** The subagent inlines its findings into the issue / `docs/research/*`. **Default = the two cheap local strands only; the expensive web pass is gated and off by default:**
+- **Code recon (always).** Read-only `Explore` subagents map the exact files / symbols / idioms / test patterns / head migration the work touches.
+- **Prior-art scan (always, D10).** Is there a proven library / service / established pattern that already solves this? Record an explicit **build-vs-adopt** call with a real reason; bias to adopt proven, maintained solutions.
+- **Outward facts (gated — DEFAULT OFF).** Run `/deep-research` **only** when the issue has a genuine *open external* technical question the recon + prior-art strands cannot settle — a new/unfamiliar third-party API, library, standard, or protocol — **or** when the founder asks for it explicitly. When it does run: cited, adversarially-verified external sources (official docs, standards/best-practice guides, reputable maintainers, GitHub reference impls). **Most issues skip this entirely.** Record one line in the issue stating whether the web pass ran and the reason.
+- **Inline context, don't defer it.** Resolve config / setup / external-API details now (research: issues with unresolved external references merge at lower rates). Every non-obvious choice ends up cited.
 
 **Phase 2 — Plan (D11).** The subagent drafts `## Why` / `## Scope` / `## Resolved design decisions`, applying the **second-order lens**: how the change affects the whole system and the **named** near-term roadmap, not just the immediate ask (e.g. Sign in with Apple must leave room for Google / email / passkey and a future Android/web client). Record the build-vs-adopt outcome from P1. Bar: **simple *and* robust** — no first-order hack, no speculative over-abstraction.
 

@@ -40,7 +40,8 @@ Entertainment splits cleanly into **two pipelines with very different cost**, an
 - `AdvancedQuestionGenerator` loads exactly three prompt templates: `v2_cot`, `v3_fact_first` (active), `open`. **The `question_generation_kids.md` and `question_generation_themed.md` files exist but are NOT wired into any running code** — there is no category→prompt dispatch. A real `entertainment` category needs a prompt file **and** the dispatch logic to select it.
 
 ### Expiry columns — dormant scaffolding
-- `expires_at` + `freshness_tag` exist in the migration, ORM, and shared Pydantic model — but **nothing sets them during generation, and nothing reads them to filter the live pool.** The only expiry script (`scripts/expire_questions.py`) is **dead code** (imports from the deleted `apps/question-generator`). So current/viral expiry has to be built from scratch.
+- `expires_at` + `freshness_tag` exist in the migration, ORM, and shared Pydantic model — but **nothing sets them during generation.** The only expiry *script* (`scripts/expire_questions.py`) is **dead code** (imports from the deleted `apps/question-generator`). So the *write* side has to be built.
+  > **⚠️ CORRECTION (verified first-hand, #76 Phase 2, 2026-06-29):** the claim that "nothing reads them to filter the live pool" is **WRONG.** The live serving read-path **does** filter on expiry — `QuestionRetriever.get_next_question` drops expired candidates at `apps/quiz-agent/app/retrieval/question_retriever.py:118` (and `:128` fallback) via `Question.is_expired()`, which is a verified no-op while `expires_at` is NULL (`packages/shared/quiz_shared/models/question.py:227-228`). So F-3b only needs to **set** `expires_at` to *activate* an existing, correct filter — it does **not** build one. See issue #76 decisions 5–7.
 
 ---
 
@@ -79,7 +80,7 @@ Entertainment splits cleanly into **two pipelines with very different cost**, an
 - **Absolute phrasing, enforced in the prompt:** forbid "current/latest/this year/recently"; require a year anchor in the question text ("In 2026, who won…"). LLMs are temporally blind — a relative-time question silently rots with no error.
 - **Content-class TTL tiers:** `evergreen` (no expiry) · `semi-stable` (award winners, 1–2 yr) · `current` (viral, 7–30 days).
 - **Weekly regeneration** for the `current` tier only; evergreen is generate-once.
-- **Read-path filter:** the live quiz must exclude `expires_at`-past questions — today it doesn't, so stale current questions would leak. This is a hard prerequisite for shipping current/viral.
+- **Read-path filter:** the live quiz must exclude `expires_at`-past questions. **⚠️ CORRECTION (verified #76 Phase 2):** it *already does* — `question_retriever.py:118,128` filters via `Question.is_expired()` (NULL-safe). So this is **not** a thing to build; F-3b only has to start *writing* `expires_at`. The partial-ship risk is therefore *degraded freshness* (pool thins to evergreen if the refresh job lags), **not** stale answers leaking. Shipping current/viral is consequently safer than this section originally implied.
 
 ---
 

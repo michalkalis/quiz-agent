@@ -25,6 +25,11 @@ LANGUAGE_NAMES = {
 }
 
 
+# Process-lifetime cache cap. Translated corpus cardinality (~1160 SK variants) sits well
+# under this, so the guard is a soft safety valve, not a hot-path concern (#69).
+CACHE_MAX_ENTRIES = 2000
+
+
 class TranslationService:
     """Service for translating quiz content to different languages.
 
@@ -40,6 +45,19 @@ class TranslationService:
         """
         self.client = llm_factory.openai_client(async_=True)
         self.model = llm_factory.resolve_model(model)
+        # Process-lifetime cache of validated translations, keyed (kind, text, target_language).
+        # TranslationService is a process-wide singleton, so this survives every request/session.
+        self._cache: dict[tuple[str, str, str], str] = {}
+
+    def _maybe_store(self, key: tuple[str, str, str], value: str) -> None:
+        """Cache a validated translation, bounded by CACHE_MAX_ENTRIES.
+
+        Reads the module-global cap at call-time (so a test can monkeypatch it). Once full,
+        new keys stop being inserted while existing hits keep serving — provably bounded, no
+        eviction bookkeeping.
+        """
+        if len(self._cache) < CACHE_MAX_ENTRIES:
+            self._cache[key] = value
 
     def _validate_translation(
         self, original: str, translated: str, target_language: str
@@ -95,6 +113,11 @@ class TranslationService:
         if source_language == target_language:
             return question
 
+        cache_key = ("question", question, target_language)
+        cached = self._cache.get(cache_key)
+        if cached is not None:
+            return cached
+
         target_lang_name = LANGUAGE_NAMES.get(target_language, target_language)
 
         try:
@@ -130,7 +153,8 @@ class TranslationService:
                     "Translation validation failed, falling back to original: '%s'",
                     question[:50],
                 )
-                return question  # Fallback to original English
+                return question  # Fallback to original English (not cached)
+            self._maybe_store(cache_key, validated)
             return validated
 
         except Exception as e:
@@ -150,6 +174,11 @@ class TranslationService:
         # Skip translation for English
         if target_language == "en":
             return feedback
+
+        cache_key = ("feedback", feedback, target_language)
+        cached = self._cache.get(cache_key)
+        if cached is not None:
+            return cached
 
         target_lang_name = LANGUAGE_NAMES.get(target_language, target_language)
 
@@ -178,8 +207,9 @@ class TranslationService:
             if translated.startswith("'") and translated.endswith("'"):
                 translated = translated[1:-1]
 
+            self._maybe_store(cache_key, translated)
             return translated
 
         except Exception as e:
             logger.warning("Translation failed, using original: %s", e)
-            return feedback
+            return feedback  # Fallback to original (not cached)

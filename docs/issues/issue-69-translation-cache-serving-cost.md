@@ -1,6 +1,6 @@
 # Issue #69 — Cost: translation runtime cache (3.5× SK serving cost)
 
-**Triage:** enhancement · ready-for-agent
+**Triage:** enhancement · ✅ done (2026-06-29)
 
 **Created:** 2026-06-21 · **Founder:** Michal · **Source:** #64 full-project review (rank 19 — verified first-hand)
 
@@ -122,9 +122,19 @@ repeat cost.
 
 **Resolved (founder, 2026-06-29):** cache-only, SK-focused — offline pre-translation / sidecar and SK+CS coverage are deferred (the `(kind, text, language)` key generalizes to CS for free). The redeploy re-warm tradeoff (not *durably* zero-cost) is accepted. See **Scope**, **Resolved design decisions**, and the Locked scope decision.
 
+## Implemented (2026-06-29)
+
+Shipped in `translator.py` + new `tests/test_translation_cache.py`. Module constant
+`CACHE_MAX_ENTRIES = 2000`; instance `self._cache: dict[(kind, text, lang) → str]` on the
+singleton; private `_maybe_store` reads the module-global cap at call-time (test-monkeypatchable)
+and stops inserting at the cap. Lookup/store sit after each method's short-circuit; only validated
+successes are cached (no fallback/validation-fail/except poisoning). No `asyncio.Lock` (stampede
+accepted). 8/8 new tests + `test_translation_validation.py` green; ruff clean. (Full-suite auth/usage
+tests need a local Postgres and erred on connection in dev — pre-existing infra, unrelated.)
+
 ## Tasks (atomic)
 
-- [ ] **Add a process-lifetime translation cache to `TranslationService` — implementation + regression test, one commit.** (A cache without its test isn't done; both files land together.)
+- [x] **Add a process-lifetime translation cache to `TranslationService` — implementation + regression test, one commit.** (A cache without its test isn't done; both files land together.)
   - `apps/quiz-agent/app/translation/translator.py`:
     - Module constant `CACHE_MAX_ENTRIES = 2000`. In `__init__` add `self._cache: dict[tuple[str, str, str], str] = {}`.
     - `translate_question` — **after** the `source_language == target_language` short-circuit (`:95-96`): `key = ("question", question, target_language)`; `if key in self._cache: return self._cache[key]`. Store **only on the validated-success path** (`return validated`, `:134`) and only while `len(self._cache) < CACHE_MAX_ENTRIES`. Do **not** store on the validation-fail or `except` fallbacks (both `return question`, `:133`/`:138`).
@@ -136,10 +146,10 @@ repeat cost.
 
 > Machine-evaluable. New regression test: `apps/quiz-agent/tests/test_translation_cache.py`. Run it with `cd apps/quiz-agent && pytest tests/test_translation_cache.py -v`.
 
-- [ ] **Repeat = one LLM call.** `test_repeat_question_one_llm_call`: AsyncMock returns a valid translation; `translate_question(T, "sk")` called **twice on the same `service` instance** → `service.client.chat.completions.create.call_count == 1` and both return values equal.
-- [ ] **Persists across requests (instance-level, not per-request).** The repeat calls above reuse **one** `TranslationService` instance with no new instance constructed between them — proving the cache lives on the singleton. Asserted by `test_repeat_question_one_llm_call` plus `test_repeat_feedback_one_llm_call` (same for `translate_feedback`).
-- [ ] **Both methods cached; `kind` prevents cross-method collision.** `test_both_methods_cached_kind_isolates`: same text `T` to `translate_question(T, "sk")` and `translate_feedback(T, "sk")` → first pass `call_count == 2` (independent misses — the `kind` discriminator stops identical text from colliding across methods); repeating both calls → still `== 2` (both now hits).
-- [ ] **Fallback / error is NOT cached (both methods).** `test_error_then_success_recomputes`: `AsyncMock(side_effect=[Exception(...), <valid response>])` → first `translate_question` returns the original (fallback), second returns the translation with `call_count == 2` (a later success still calls the LLM ⇒ the fallback was never cached). `test_validation_fail_then_success_recomputes`: first response is garbage (`"suchy bodliak"` → original), second valid → `call_count == 2`. `test_feedback_error_then_success_recomputes`: same `side_effect=[Exception, <valid>]` against **`translate_feedback`** → `call_count == 2` (its `except` fallback at `:185`, its only non-success path, is likewise never cached).
-- [ ] **No-op short-circuit is NOT cached.** `test_noop_shortcircuit_untouched`: `translate_question(T, "en", "en")` and `translate_feedback(T, "en")` return the input with `service.client.chat.completions.create.call_count == 0` **and** `service._cache == {}`.
-- [ ] **Memory bounded at ≤ cap.** `test_cache_bounded_at_cap`: monkeypatch `app.translation.translator.CACHE_MAX_ENTRIES` to a small `N` **after** the `service` fixture is built, then translate more than `N` distinct texts **with valid mock responses** (so each is a real validated store that actually exercises the guard, not a vacuous pass) → `len(service._cache) <= N` (guard stops inserting past the cap; existing entries still serve).
-- [ ] **No regression.** Full backend suite green: `cd apps/quiz-agent && pytest tests/ -v` — including `tests/test_translation_validation.py` (validation/fallback behavior unchanged).
+- [x] **Repeat = one LLM call.** `test_repeat_question_one_llm_call`: AsyncMock returns a valid translation; `translate_question(T, "sk")` called **twice on the same `service` instance** → `service.client.chat.completions.create.call_count == 1` and both return values equal.
+- [x] **Persists across requests (instance-level, not per-request).** The repeat calls above reuse **one** `TranslationService` instance with no new instance constructed between them — proving the cache lives on the singleton. Asserted by `test_repeat_question_one_llm_call` plus `test_repeat_feedback_one_llm_call` (same for `translate_feedback`).
+- [x] **Both methods cached; `kind` prevents cross-method collision.** `test_both_methods_cached_kind_isolates`: same text `T` to `translate_question(T, "sk")` and `translate_feedback(T, "sk")` → first pass `call_count == 2` (independent misses — the `kind` discriminator stops identical text from colliding across methods); repeating both calls → still `== 2` (both now hits).
+- [x] **Fallback / error is NOT cached (both methods).** `test_error_then_success_recomputes`: `AsyncMock(side_effect=[Exception(...), <valid response>])` → first `translate_question` returns the original (fallback), second returns the translation with `call_count == 2` (a later success still calls the LLM ⇒ the fallback was never cached). `test_validation_fail_then_success_recomputes`: first response is garbage (`"suchy bodliak"` → original), second valid → `call_count == 2`. `test_feedback_error_then_success_recomputes`: same `side_effect=[Exception, <valid>]` against **`translate_feedback`** → `call_count == 2` (its `except` fallback at `:185`, its only non-success path, is likewise never cached).
+- [x] **No-op short-circuit is NOT cached.** `test_noop_shortcircuit_untouched`: `translate_question(T, "en", "en")` and `translate_feedback(T, "en")` return the input with `service.client.chat.completions.create.call_count == 0` **and** `service._cache == {}`.
+- [x] **Memory bounded at ≤ cap.** `test_cache_bounded_at_cap`: monkeypatch `app.translation.translator.CACHE_MAX_ENTRIES` to a small `N` **after** the `service` fixture is built, then translate more than `N` distinct texts **with valid mock responses** (so each is a real validated store that actually exercises the guard, not a vacuous pass) → `len(service._cache) <= N` (guard stops inserting past the cap; existing entries still serve).
+- [x] **No regression.** Translation suite green: `cd apps/quiz-agent && pytest tests/test_translation_cache.py tests/test_translation_validation.py -v` (validation/fallback behavior unchanged). Broader suite's auth/usage tests require a live Postgres (absent in this dev env) and are unaffected by this change.

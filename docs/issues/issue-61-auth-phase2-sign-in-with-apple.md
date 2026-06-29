@@ -2,9 +2,25 @@
 
 **Triage:** enhancement · ready-for-human (auth/security + Apple secrets — maker≠checker)
 **Reversibility:** c · new `users` table + Apple token exchange + `.p8` Fly secret + account-deletion endpoint — **NOT blind-overnight eligible** (auth + secret handling; human-reviewed, coordinated with #50).
-**Status:** Spun off 2026-06-17 from #58 research §6 Phase 2 + founder decisions §8b. Phase 2 of 3. **Depends on #60.** Plan review 2026-06-26 incorporated — F1–F3 resolved + `plan_tier` dropped (subscriptions deferred); see *Resolved design decisions*. **2026-06-27: code recon done + split into 4 session-sized chunks with ready-to-paste prompts → [`issue-61-execution-prompts.md`](issue-61-execution-prompts.md)** (also locks F4/F5/F6/F7). Nothing implemented yet — Session A (backend foundation) is next.
+**Status:** Spun off 2026-06-17 from #58 research §6 Phase 2 + founder decisions §8b. Phase 2 of 3. **Depends on #60.** Plan review 2026-06-26 incorporated — F1–F3 resolved + `plan_tier` dropped (subscriptions deferred); see *Resolved design decisions*. **2026-06-27: code recon done + split into 4 session-sized chunks with ready-to-paste prompts → [`issue-61-execution-prompts.md`](issue-61-execution-prompts.md)** (also locks F4/F5/F6/F7). **2026-06-29: backend Sessions A–C done + deployed live (Fly v53), all 5 Apple Fly secrets set, account UI designed in Pencil (`taml6`/`JB9Oi`/`PmJ3A`). Session D (iOS — 61.6/61.7/61.8) is now READY to execute — the Session-D readiness gate is fully cleared.** See the Prep progress block below + the execution-prompts readiness gate.
 
 > Plan + decisions: [`docs/research/auth-research-2026-06-16.md`](../research/auth-research-2026-06-16.md) §4 (iOS flow), §6 (Phase 2), §5 (privacy endpoints). Research issue: [#58](issue-58-authentication.md).
+
+## Prep progress
+
+> *Maintained by `/prepare-issue` — durable record of where prep is; safe to resume from a fresh session. This issue's prep was hand-driven before the orchestrator existed; the 2026-06-29 `/prepare-issue` run did only the **remaining** step — closing the Session-D readiness gate by designing the account UI.*
+
+| Phase | State | Latest gate verdict |
+|-------|-------|---------------------|
+| 1 · Research          | ✅ done | code recon + prior-art in execution-prompts; `auth-research-2026-06-16.md` |
+| 2 · Plan              | ✅ done | `## Why` / `## Scope` / `## Resolved design decisions` |
+| 3 · Plan review       | ✅ done | plan review 2026-06-26 — F1–F3 resolved, `plan_tier` dropped |
+| 4 · Impl-plan         | ✅ done | `## Tasks` 61.1–61.8 + `## Acceptance` |
+| 5 · Impl-plan review  | ✅ done | Session-D readiness gate (2026-06-27) — **all 3 gaps cleared 2026-06-29** |
+| 6 · Split             | ✅ done | `issue-61-execution-prompts.md` — Sessions A/B/C/D |
+
+**Last updated:** 2026-06-29 · **Next:** execution — Session D (iOS 61.6/61.7/61.8); not a prep phase · **Gate attempts:** P3 1/3 · P5 1/3
+**Execution status:** Sessions A–C (backend, 61.1–61.5) done + live (Fly v53); Session D (iOS) READY — gate cleared, not yet implemented.
 
 ## Why
 
@@ -69,7 +85,7 @@ On `POST /auth/apple`, in **one transaction**:
 - [x] 61.4 — `POST /auth/apple`: authorization_code exchange → upsert user → **merge anon usage per F3** (one transaction, sum counts, OR premium, idempotent via `upgraded_to_user_id`) → **store encrypted Apple refresh token** (F1/F2) → issue JWT. ⚠️ **recon gotcha:** `daily_usage` is keyed on `subject_id` (= the JWT `sub`), **not** `anon_id` as the F3 text says — fold the anon's `subject_id` rows into `(users.id, usage_date)`. Returned JWT `sub` = `users.id`. **DONE 2026-06-27 (Session B)** — `app/api/routes/auth.py::apple_sign_in` + helpers, `AppleOAuthClient` (`app/auth/apple_oauth.py`), `TokenService.subject_from_token(allow_expired=)`, deps + `app.state` wiring (`tests/test_auth_apple_endpoint.py`, `tests/test_apple_oauth.py`). ⚠️ **Unplanned but required: migration `0004_refresh_subject`** drops the `refresh_tokens.anon_id → anonymous_identities` FK — Phase 1's FK would reject a `users.id`-subject refresh token, blocking the issue step; the merge also revokes the anon's live refresh tokens so the upgraded identity can't mint a fresh anon bucket. Commits `8bad2c7`/`e5f10ae`/`244f7e7`; 234 tests green (21 new), ruff clean, live migration round-trip OK.
 - [x] 61.5 — `DELETE /auth/me`: explicit delete (no cascade after `0004`) + **decrypt stored Apple refresh token (F1/F2) → `/auth/revoke`** (best-effort F4; no-token *skip* when absent — `/auth/revoke` requires a token, so there is nothing to call); and `GET /auth/me/export` (GDPR Art. 20). **DONE 2026-06-27 (Session C)** — `app/api/routes/auth.py::delete_account`/`export_account` (+ `_resolve_account` authority rule, `_revoke_apple_grant` best-effort), `AppleOAuthClient.revoke()` in `app/auth/apple_oauth.py` (shared `_post` core; revoke skips the JSON parse since Apple answers an empty 200), `AccountExportResponse`/`AccountUsageRecord` in `app/api/deps.py`; `tests/test_auth_me_endpoints.py` (8 tests, real test Postgres + mocked `/auth/revoke`). The merged anon trail is **de-linked by nulling `upgraded_to_user_id`** (keeps the row's App Attest key binding intact, avoids the cascade — the unlinked row is a bare random id, not personal data). 242 tests green (8 new), ruff clean.
 - [ ] 61.6 — iOS Sign in with Apple capability + `AuthService` credential flow, nonce, credential-state/revocation observers, anon→Apple upgrade.
-- [ ] 61.7 — iOS Settings: in-app Delete Account (with confirm) + Export; privacy nutrition label.
+- [ ] 61.7 — iOS Settings: in-app Delete Account (with confirm) + Export; privacy nutrition label. **Design ready (2026-06-29)** — build to `Settings-SignedOut` (`taml6`), `Settings-SignedIn` (`JB9Oi`), `Settings-DeleteConfirm` (`PmJ3A`) in `design/quiz-agent.pen`: dedicated `account` section after audio-feedback / before about, standard SIWA button, destructive Delete in `$accent-red`.
 - [ ] 61.8 — Tests: pytest for apple verify / merge / delete+revoke / export (mock Apple endpoints); iOS unit tests for the credential flow (mocked).
 
 ## Acceptance

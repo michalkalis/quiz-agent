@@ -134,21 +134,20 @@ Done = pytest green, ruff clean. Commit, push, tick 61.5.
 
 ---
 
-## Before Session D — readiness gate (assessed 2026-06-27)
+## Before Session D — readiness gate (assessed 2026-06-27 · **all gaps cleared 2026-06-29**)
 
-**Verdict: NOT ready to ship.** Session D *code* can be written now against mocked network (its unit tests stub Apple via `AuthStubURLProtocol`), but the feature cannot be **verified or shipped** until the backend is live and the account UI is designed. Three gaps:
+**Verdict (2026-06-29): ✅ READY for Session D.** All three blocking gaps are closed — Session D (iOS) can now be implemented *and* verified end-to-end. Original assessment + resolutions:
 
-**Gap 1 — Account UI is not designed.** The Settings screen in `design/quiz-agent.pen` (`NEW_Screen/Settings`, node `Jjcs5`) has only voice / language / audio / about cards — **no account section**. Session D task 61.7 needs, in the existing card style (IBM Plex Mono section label + `$bg-card` rounded card + Inter rows + `$border-subtle` dividers):
-- an **account** card with two states — anonymous → "Sign in with Apple" button; signed-in → identity row (name/email) + "Delete account" (destructive) + "Export my data";
-- a **delete-account confirm dialog** (destructive, ≤2 taps from Settings per acceptance).
-Owner: design (Pencil) — no external blocker.
+**Gap 1 — Account UI — ✅ RESOLVED 2026-06-29.** Designed in `design/quiz-agent.pen` in the existing card style (IBM Plex Mono `account` label in `$accent-teal`, `$bg-card` rounded card, Inter rows, `$border-subtle` dividers), placed after the audio-feedback section and before about — founder choice: a dedicated, balanced `account` section (not a top-of-screen promo). Three artifacts for Session D's 61.7 to build against:
+- `NEW_Screen/Settings-SignedOut` (node `taml6`) — `account` card: one-line benefit (`Sign in to keep your premium and history when you reinstall.`) + standard black "Sign in with Apple" button (Apple logo, HIG style).
+- `NEW_Screen/Settings-SignedIn` (node `JB9Oi`) — identity rows (name + private-relay email) + `Export my data` + `Sign out` + `Delete account` (`$accent-red`, destructive).
+- `NEW_Screen/Settings-DeleteConfirm` (node `PmJ3A`) — iOS-style confirm dialog: "Delete account?" + body + Cancel / Delete (destructive). (Mockup copy is English to match the rest of the file; Slovak comes from app localization.)
 
-**Gap 2 — Backend A–C is committed but NOT live on prod.** HEAD is `80a5d0b` (A–C, 2026-06-27) but the latest Fly release is **v52 (Jun 26)** — before A–C. `fly.toml` has **no `release_command`**, so deploy does not auto-run Alembic → migrations `0003_users` + `0004_refresh_subject` are **not applied to the prod DB**. And **no Apple Fly secrets are set** (`fly secrets list` shows none of `APPLE_SIGNIN_*` / `APPLE_TOKEN_ENC_KEY`), so `/auth/apple` would `503` even once deployed. Session D's prompt explicitly requires "Backend Sessions A–C live on prod first."
-Owner: deploy + migrations (needs founder OK per migration policy) + set secrets.
+**Gap 2 — Backend live — ✅ RESOLVED 2026-06-29.** Backend Sessions A–C deployed live (Fly **v53**, 2026-06-29); migrations `0003_users` + `0004_refresh_subject` applied to prod. (`fly.toml` still has **no `release_command`** — migrations were run manually this round; wire one in later if auto-migrate-on-deploy is wanted.)
 
-**Gap 3 — Apple Developer portal + secrets (founder-only, critical path).** Before the backend can function: enable **Sign in with Apple** on App ID `com.missinghue.hangs`; create a **Sign in with Apple key** (`.p8`), note **Key ID** + **Team ID** (`KAGWHPZZFQ`); then set Fly secrets `APPLE_SIGNIN_KEY_ID`, `APPLE_SIGNIN_TEAM_ID`, `APPLE_SIGNIN_PRIVATE_KEY` (.p8 body), `APPLE_SIGNIN_CLIENT_ID` (= bundle id), `APPLE_TOKEN_ENC_KEY` (one `Fernet.generate_key()`). This is the long pole — start it first.
+**Gap 3 — Apple portal + secrets — ✅ RESOLVED 2026-06-29.** All five Fly secrets present: `APPLE_SIGNIN_KEY_ID`, `APPLE_SIGNIN_TEAM_ID`, `APPLE_SIGNIN_PRIVATE_KEY`, `APPLE_SIGNIN_CLIENT_ID`, `APPLE_TOKEN_ENC_KEY` — `/auth/apple` no longer 503s.
 
-**Sequence:** (1) founder: Apple portal `.p8` → (2) set Fly secrets + deploy A–C + apply `0003`/`0004` to prod → (3) design account section + delete dialog → (4) implement Session D (61.6/61.7 + iOS tests) against the now-live backend → (5) `[HUMAN]` real-device Slovak sign-in verify. Steps 1 and 3 run in parallel; 2 unblocks E2E; Session D coding can begin against mocks any time but should land after 2–3 so it is verifiable.
+**Remaining sequence:** steps 1–3 (Apple `.p8` → deploy+secrets+migrations → account-UI design) are all **done**. Left: **(4) implement Session D** (61.6/61.7 + iOS tests) against the live backend + the Pencil design above → **(5) `[HUMAN]` real-device Slovak sign-in verify**.
 
 ---
 
@@ -178,8 +177,8 @@ Done = HangsTests green on the iPhone sim, build clean. Commit, push, tick 61.6/
 - ✅ **Session A — Backend foundation DONE 2026-06-27** (commits `51540aa` 61.1, `30dddf5` 61.2, `1f2be31` 61.3). Full suite green (213 passed, 27 new), ruff clean, live alembic up/down/up round-trip OK. See "Session A delivered" below.
 - ✅ **Session B — `POST /auth/apple` DONE 2026-06-27** (commits `8bad2c7` migration/model, `e5f10ae` OAuth client + token helper, `244f7e7` endpoint). Full suite green (234 passed, 21 new), ruff clean, live alembic up/down/up round-trip OK. See "Session B delivered" below.
 - ✅ **Session C — Delete + Export DONE 2026-06-27** (`DELETE /auth/me` + `GET /auth/me/export` + `AppleOAuthClient.revoke`; 242 tests green, 8 new, ruff clean). See "Session C delivered" below.
-- ⬜ Session D — iOS SIWA — **gated**: see "Before Session D — readiness gate" (account UI not designed; backend A–C committed but not deployed + Apple secrets/migrations not applied; Apple `.p8` not created).
-- ⬜ Human: Apple Sign in key (`.p8`) + Fly secrets before B/C deploy. `[HUMAN]` real-device verify after D.
+- 🟢 Session D — iOS SIWA — **READY** (gate cleared 2026-06-29): account UI designed (`taml6` signed-out / `JB9Oi` signed-in / `PmJ3A` delete dialog), backend live v53, all 5 Apple secrets set. Paste the Session D prompt above to execute (61.6/61.7 + iOS tests).
+- ✅ Human: Apple Sign in key (`.p8`) + all 5 Fly secrets DONE 2026-06-29 (v53 live). ⬜ `[HUMAN]` real-device Slovak sign-in verify still remains — after Session D lands.
 
 ### Session A delivered — exact symbols for B/C/D to import
 

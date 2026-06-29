@@ -74,8 +74,8 @@ class TestMcqBiasFlag:
 
 class TestNoCategoryPrompt:
     """#72 F-1: --prompt is no longer required. Omitting it yields an empty
-    prompt, which produces no heuristic topic tokens → SourcingStage triggers
-    the LLM TopicPlanner (no-category mode). A parser that still demanded
+    prompt, which produces no heuristic topic tokens → SourcingStage samples
+    the curated TopicPool (no-category mode). A parser that still demanded
     --prompt would block that entry point entirely."""
 
     def test_prompt_optional_defaults_to_empty(self):

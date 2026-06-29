@@ -1,19 +1,19 @@
-"""TopicPlanner — LLM-proposed diverse topics for the no-category path (#72 F-1).
+"""TopicPlanner — LLM proposer of diverse topics, used to refresh the pool (#72 F-1).
 
-When an order carries no usable topic signal (no category/theme, a generic-only
-prompt like "general knowledge"), SourcingStage previously let the literal tokens
-flow into the sources, producing ``"surprising facts about general"`` Tavily
-queries that return listicle/military-skewed facts (the founder's Phase-6b
-complaint). This planner replaces that dead end: a cheap model first proposes a
-spread of *concrete* topics across distinct domains, then the existing
-Tavily/Wikipedia/OpenTDB sourcing + verification runs off them — questions stay
-grounded and keep a real ``source_url``.
+The no-category path samples curated topics from ``TopicPool`` at runtime (no
+per-pack LLM call). This planner is the *offline* engine behind that pool: run
+occasionally by ``scripts/refresh_topic_pool.py`` to propose fresh candidates
+that get merged into ``topic_pool.json``. Keeping the LLM here — off the
+generation hot path — preserves unbounded novelty without paying an LLM call (or
+risking its failure) on every "surprise me" pack.
 
-Mirrors ``OpenTriviaFactRewriter``'s contract: lazy ``llm_factory`` client, an
-``_available()`` guard, and a fail-safe — any unavailability, exception, or
-unparseable output returns ``None`` so the caller falls back to today's
-``topics=None`` broad-feed behavior rather than crashing a generation run.
-Routed through the #53 factory; never instantiates an SDK client directly.
+A cheap model proposes a spread of *concrete* topics across distinct domains,
+explicitly avoiding broad/generic/military clusters (the founder's Phase-6b
+complaint). Mirrors ``OpenTriviaFactRewriter``'s contract: lazy ``llm_factory``
+client, an ``_available()`` guard, and a fail-safe — any unavailability,
+exception, or unparseable output returns ``None`` so a refresh run degrades
+cleanly instead of crashing. Routed through the #53 factory; never instantiates
+an SDK client directly.
 """
 
 from __future__ import annotations
@@ -68,11 +68,11 @@ class TopicPlanner:
         )
 
     async def propose(self) -> Optional[list[str]]:
-        """Return a diverse concrete topic list, or ``None`` to fall back.
+        """Return a diverse concrete topic list, or ``None`` on any failure.
 
-        Temperature is left at the model default (≈1.0) on purpose: each
-        no-category run should propose a *different* spread so repeated
-        "surprise me" packs don't all draw the same topics.
+        Temperature is left at the model default (≈1.0) on purpose: each refresh
+        run proposes a *different* spread, so repeatedly refreshing the pool
+        grows its variety instead of re-proposing the same handful of topics.
         """
         if not self._available():
             return None

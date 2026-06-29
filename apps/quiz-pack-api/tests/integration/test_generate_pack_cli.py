@@ -70,14 +70,16 @@ def test_dry_run_prints_questions_and_pack_id(
     assert question_lines, f"expected ≥1 numbered question line, got:\n{out}"
 
 
-def test_requires_prompt_argument() -> None:
-    """`--prompt` is required — argparse must reject calls without it.
+def test_prompt_optional_defaults_to_empty_string() -> None:
+    """Omitting `--prompt` is allowed (no-category mode) and yields "" — not None.
 
-    Catches a regression where someone makes prompt optional and the CLI
-    silently runs with `None`, which would propagate as a NULL prompt
-    into the orchestrator and fail at the DB write seam in real mode.
+    #72 F-1 made `--prompt` optional so a "surprise me" run can omit a topic and
+    let the curated TopicPool supply one. The default MUST stay an empty string,
+    never None: the orchestrator/DB write seam takes a NOT-NULL prompt, so "" is
+    safe where a None would fail in real mode. This is the guard against someone
+    "fixing" the default back to None.
     """
     import generate_pack
 
-    with pytest.raises(SystemExit):
-        generate_pack._parse_args(["--target-count", "3"])
+    args = generate_pack._parse_args(["--target-count", "3"])
+    assert args.prompt == ""

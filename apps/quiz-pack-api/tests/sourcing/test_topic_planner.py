@@ -1,17 +1,19 @@
-"""#72 F-1 — TopicPlanner proposes diverse concrete topics for no-category mode.
+"""#72 F-1 — TopicPlanner proposes diverse concrete topics to refresh the pool.
 
 Why these scenarios:
 
-The planner is the substance fix for the Phase-6b military-bias complaint: when
-an order has no topic signal, it must hand sourcing a *spread* of concrete topics
-instead of letting "general"/"knowledge" reach Tavily. These tests pin:
+The planner is the offline engine behind the curated topic pool (the no-category
+path samples that pool at runtime, with no LLM call). Run by
+scripts/refresh_topic_pool.py, it must hand back a *spread* of concrete topics
+that explicitly avoids the "general"/"knowledge"/military dead end. These tests
+pin:
 
 - `test_unavailable_returns_none` / `test_client_exception_returns_none`: the
   fail-safe contract (mirrors ``OpenTriviaFactRewriter``/``AnswerNormalizer``).
-  A dead model must degrade to ``None`` so SourcingStage keeps its broad-feed
-  fallback — a generation run never crashes because topic planning failed.
+  A dead model must degrade to ``None`` so a pool-refresh run degrades cleanly
+  (reports "no topics", leaves the pool unchanged) instead of crashing.
 - `test_proposes_parsed_topics`: the happy path actually returns the model's
-  list, so SourcingStage has concrete topics to source from.
+  list, so the refresh tool has concrete topics to merge into the pool.
 - `test_parse_*`: the parser is the only thing standing between a chatty/loose
   model and junk Tavily queries — it must tolerate fences and a ``{"topics":…}``
   wrapper, reject non-lists, dedupe case-insensitively, drop over-long/non-string

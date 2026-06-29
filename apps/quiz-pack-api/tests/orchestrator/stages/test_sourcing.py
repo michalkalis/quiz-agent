@@ -23,7 +23,6 @@ from __future__ import annotations
 
 import uuid
 from typing import Any
-from unittest.mock import AsyncMock
 
 import pytest
 
@@ -32,7 +31,6 @@ from app.orchestrator import OrderContext, PackGenerator
 from app.orchestrator.progress_sink import ProgressSink
 from app.orchestrator.stages.sourcing import TAVILY_CENTS_PER_CALL, SourcingStage
 from app.sourcing.models import Fact, FactBatch
-from app.sourcing.topic_planner import TopicPlanner
 
 
 class _RecordingSink:
@@ -224,96 +222,105 @@ async def test_topics_none_when_no_metadata_and_prompt_all_stopwords() -> None:
     assert sourcer.calls[0]["topics"] is None
 
 
-# --- #72 F-1: no-category LLM topic planner wiring -------------------------
+# --- #72 F-1: no-category curated topic-pool wiring ------------------------
 
-def _planner(topics: list[str] | None) -> TopicPlanner:
-    """A TopicPlanner whose LLM call is stubbed — no network in unit tests."""
-    planner = TopicPlanner()
-    planner.propose = AsyncMock(return_value=topics)  # type: ignore[method-assign]
-    return planner
+
+class _StubPool:
+    """A TopicPool stand-in with a fixed ``sample()`` — keeps these wiring tests
+    about the stage's routing, not the pool's file I/O (covered in
+    test_topic_pool.py). ``calls`` proves the stage only samples on no-signal."""
+
+    def __init__(self, sampled: list[str] | None) -> None:
+        self._sampled = sampled
+        self.calls = 0
+
+    def sample(self, count: int | None = None) -> list[str] | None:
+        self.calls += 1
+        return self._sampled
 
 
 @pytest.mark.asyncio
-async def test_planner_fires_when_no_topic_signal() -> None:
+async def test_pool_sampled_when_no_topic_signal() -> None:
     """The core F-1 contract: no category/theme + a generic-only prompt means
-    the heuristic yields no topics, so the planner's diverse concrete set must
+    the heuristic yields no topics, so the pool's diverse concrete sample must
     reach the sourcer (instead of "surprising facts about general") and be
     recorded on ctx for an auditable no-category run."""
     sourcer = _FakeFactSourcer(FactBatch(facts=_make_facts(5), sources_used=["wikipedia"]))
-    proposed = ["deep-sea bioluminescence", "the history of coffee", "jazz"]
-    planner = _planner(proposed)
-    stage = SourcingStage(sourcer, topic_planner=planner)  # type: ignore[arg-type]
+    sampled = ["deep-sea bioluminescence", "the history of coffee", "jazz"]
+    pool = _StubPool(sampled)
+    stage = SourcingStage(sourcer, topic_pool=pool)  # type: ignore[arg-type]
     ctx = _make_ctx(target_count=3, category=None, theme=None, prompt="general knowledge")
 
     result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
 
-    planner.propose.assert_awaited_once()
-    assert sourcer.calls[0]["topics"] == proposed
-    assert ctx.llm_topics == proposed
-    assert result.info["llm_topics"] == proposed
+    assert pool.calls == 1
+    assert sourcer.calls[0]["topics"] == sampled
+    assert ctx.auto_topics == sampled
+    assert result.info["auto_topics"] == sampled
 
 
 @pytest.mark.asyncio
-async def test_planner_not_called_when_topic_signal_present() -> None:
-    """A real topic must NOT spend an LLM call — the heuristic already steers
-    sourcing, and the planner is only for the no-signal case."""
+async def test_pool_not_sampled_when_topic_signal_present() -> None:
+    """A real topic must NOT touch the pool — the heuristic already steers
+    sourcing, and the pool is only for the no-signal case."""
     sourcer = _FakeFactSourcer(FactBatch(facts=_make_facts(5), sources_used=["wikipedia"]))
-    planner = _planner(["should-not-be-used"])
-    stage = SourcingStage(sourcer, topic_planner=planner)  # type: ignore[arg-type]
+    pool = _StubPool(["should-not-be-used"])
+    stage = SourcingStage(sourcer, topic_pool=pool)  # type: ignore[arg-type]
     ctx = _make_ctx(target_count=3, category=None, theme=None, prompt="ancient Roman emperors")
 
     await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
 
-    planner.propose.assert_not_awaited()
+    assert pool.calls == 0
     assert sourcer.calls[0]["topics"] == ["ancient", "roman", "emperors"]
-    assert ctx.llm_topics is None
+    assert ctx.auto_topics is None
 
 
 @pytest.mark.asyncio
-async def test_planner_none_preserves_broad_feed_fallback() -> None:
-    """When the planner is unavailable/fails (returns None), sourcing must keep
-    today's `topics=None` broad-feed behavior — a topic-planning blip never
+async def test_pool_empty_preserves_broad_feed_fallback() -> None:
+    """When the pool is empty/missing (sample returns None), sourcing must keep
+    today's `topics=None` broad-feed behavior — a missing pool file never
     blocks a generation run."""
     sourcer = _FakeFactSourcer(FactBatch(facts=_make_facts(5), sources_used=["wikipedia"]))
-    stage = SourcingStage(sourcer, topic_planner=_planner(None))  # type: ignore[arg-type]
+    stage = SourcingStage(sourcer, topic_pool=_StubPool(None))  # type: ignore[arg-type]
     ctx = _make_ctx(target_count=3, category=None, theme=None, prompt="surprise me")
 
     await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
 
     assert sourcer.calls[0]["topics"] is None
-    assert ctx.llm_topics is None
+    assert ctx.auto_topics is None
 
 
 @pytest.mark.asyncio
-async def test_generic_words_collapse_so_planner_fires() -> None:
-    """Proves the stopword extension: a prompt made only of generic 'no real
-    topic' words (general/knowledge/mixed) must collapse to no tokens so the
-    planner — not a "surprising facts about general" search — takes over."""
+async def test_generic_words_collapse_so_pool_samples() -> None:
+    """Proves the stopword extension — the actual cure for the military bias:
+    a prompt made only of generic 'no real topic' words (general/knowledge/mixed)
+    must collapse to no tokens so the curated pool — not a "surprising facts
+    about general" search — supplies the topics."""
     sourcer = _FakeFactSourcer(FactBatch(facts=_make_facts(5), sources_used=["wikipedia"]))
-    proposed = ["coral reefs", "renaissance art"]
-    planner = _planner(proposed)
-    stage = SourcingStage(sourcer, topic_planner=planner)  # type: ignore[arg-type]
+    sampled = ["coral reefs", "renaissance art"]
+    pool = _StubPool(sampled)
+    stage = SourcingStage(sourcer, topic_pool=pool)  # type: ignore[arg-type]
     ctx = _make_ctx(target_count=3, category=None, theme=None, prompt="mixed general knowledge")
 
     await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
 
-    planner.propose.assert_awaited_once()
-    assert sourcer.calls[0]["topics"] == proposed
+    assert pool.calls == 1
+    assert sourcer.calls[0]["topics"] == sampled
 
 
 @pytest.mark.asyncio
-async def test_no_planner_keeps_legacy_none_topics() -> None:
-    """Dormant-by-default: with no planner injected (the worker/live path under
+async def test_no_pool_keeps_legacy_none_topics() -> None:
+    """Dormant-by-default: with no pool injected (the worker/live path under
     Scope A), a no-signal order still resolves to None topics exactly as before
     — the live path stays byte-identical."""
     sourcer = _FakeFactSourcer(FactBatch(facts=_make_facts(5), sources_used=["wikipedia"]))
-    stage = SourcingStage(sourcer)  # type: ignore[arg-type]  # no planner
+    stage = SourcingStage(sourcer)  # type: ignore[arg-type]  # no pool
     ctx = _make_ctx(target_count=3, category=None, theme=None, prompt="general knowledge")
 
     await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
 
     assert sourcer.calls[0]["topics"] is None
-    assert ctx.llm_topics is None
+    assert ctx.auto_topics is None
 
 
 @pytest.mark.asyncio

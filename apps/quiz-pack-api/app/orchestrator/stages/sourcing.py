@@ -20,7 +20,7 @@ import re
 from app.orchestrator.context import OrderContext, StageResult
 from app.orchestrator.progress_sink import ProgressSink
 from app.sourcing.fact_sourcer import FactSourcer
-from app.sourcing.topic_planner import TopicPlanner
+from app.sourcing.topic_pool import TopicPool
 
 TAVILY_CENTS_PER_CALL = 1
 
@@ -46,11 +46,12 @@ _PROMPT_STOPWORDS = frozenset(
         "random",
         # #72 F-1: generic "no real topic" words. Dropping these makes a generic
         # prompt ("general knowledge", "surprise me", "mixed trivia") collapse to
-        # no tokens → topics None → SourcingStage triggers the LLM TopicPlanner
+        # no tokens → topics None → SourcingStage samples the curated TopicPool
         # instead of searching "surprising facts about general" (the listicle/
-        # military-bias dead end). They are genuinely non-topical, so dropping
-        # them never costs a real topic ("general relativity" still keeps
-        # "relativity").
+        # military-bias dead end). This stopword set IS the cure for that bias;
+        # the pool only decides what to source on once there's no topic. They are
+        # genuinely non-topical, so dropping them never costs a real topic
+        # ("general relativity" still keeps "relativity").
         "general", "knowledge", "mixed", "mix", "misc", "miscellaneous",
         "various", "variety", "anything", "everything", "surprise", "assorted",
     }
@@ -65,27 +66,27 @@ class SourcingStage:
     def __init__(
         self,
         fact_sourcer: FactSourcer,
-        topic_planner: TopicPlanner | None = None,
+        topic_pool: TopicPool | None = None,
     ) -> None:
         self._fact_sourcer = fact_sourcer
-        # #72 F-1: dormant by default. Only the CLI/batch path injects a planner
+        # #72 F-1: dormant by default. Only the CLI/batch path injects a pool
         # (Scope A) — the worker/live path leaves it None so its behavior stays
         # byte-identical until the no-category mode is exposed to the app.
-        self._topic_planner = topic_planner
+        self._topic_pool = topic_pool
 
     async def run(self, ctx: OrderContext, sink: ProgressSink) -> StageResult:
         topics = self._derive_topics(ctx)
 
         # #72 F-1 (no-category mode): a missing topic signal (no category/theme,
         # generic-only prompt) used to fall straight through to the sources'
-        # broad/generic feeds — the listicle/military-bias dead end. When a
-        # planner is wired, ask it for a diverse concrete topic set first; on any
-        # failure it returns None and we keep today's broad-feed fallback.
-        if topics is None and self._topic_planner is not None:
-            proposed = await self._topic_planner.propose()
-            if proposed:
-                ctx.llm_topics = proposed
-                topics = proposed
+        # broad/generic feeds. When a pool is wired, sample a diverse concrete
+        # topic set from it first (free, no LLM call); an empty/missing pool
+        # returns None and we keep today's broad-feed fallback.
+        if topics is None and self._topic_pool is not None:
+            sampled = self._topic_pool.sample()
+            if sampled:
+                ctx.auto_topics = sampled
+                topics = sampled
 
         batch = await self._fact_sourcer.gather_facts(
             count=ctx.target_count * 2,
@@ -107,9 +108,9 @@ class SourcingStage:
             info={
                 "facts": len(ctx.facts),
                 "sources_used": list(batch.sources_used),
-                # #72 F-1: surfaces which topics the planner picked (None on the
+                # #72 F-1: surfaces which topics the pool picked (None on the
                 # heuristic path) so a no-category run is auditable end-to-end.
-                "llm_topics": ctx.llm_topics,
+                "auto_topics": ctx.auto_topics,
             },
             cost_cents=cost_cents,
         )

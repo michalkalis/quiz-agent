@@ -228,7 +228,7 @@ def _build_stages(*, persist: bool, dedup_store: QuestionStore) -> list[Stage]:
     from app.generation.advanced_generator import AdvancedQuestionGenerator
     from app.scoring.multi_model_scorer import MultiModelScorer
     from app.sourcing.fact_sourcer import FactSourcer
-    from app.sourcing.topic_planner import TopicPlanner
+    from app.sourcing.topic_pool import TopicPool
     from app.verification.fact_verifier import FactVerifier
     from quiz_shared.llm import factory as llm_factory
 
@@ -244,10 +244,11 @@ def _build_stages(*, persist: bool, dedup_store: QuestionStore) -> list[Stage]:
     )
 
     stages: list[Stage] = [
-        # #72 F-1 (Scope A): the CLI/batch path wires the TopicPlanner so a
-        # no-category run gets a diverse concrete topic set. The worker/live
-        # path deliberately does NOT (stays byte-identical until Scope B).
-        SourcingStage(FactSourcer(), topic_planner=TopicPlanner()),
+        # #72 F-1 (Scope A): the CLI/batch path wires the curated TopicPool so a
+        # no-category run samples a diverse concrete topic set (no per-pack LLM
+        # call). The worker/live path deliberately does NOT (stays byte-identical
+        # until Scope B). Refresh the pool offline via scripts/refresh_topic_pool.py.
+        SourcingStage(FactSourcer(), topic_pool=TopicPool()),
         GenerationStage(generator),
         VerificationStage(FactVerifier()),
         ScoringStage(MultiModelScorer()),

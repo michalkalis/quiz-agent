@@ -31,11 +31,11 @@ class OrderContext:
     mcq_emphasis: bool = False
     pack_id: uuid.UUID | None = None
     # Issue #72 F-1 (no-category mode): when an order carries no usable topic
-    # signal (no category/theme, generic-only prompt), SourcingStage asks a
-    # cheap LLM for a diverse concrete topic set and records it here so the
-    # chosen topics surface in progress/telemetry. None when the heuristic
-    # path produced topics or the planner was dormant/unavailable.
-    llm_topics: list[str] | None = None
+    # signal (no category/theme, generic-only prompt), SourcingStage samples a
+    # diverse concrete topic set from the curated TopicPool and records it here
+    # so the chosen topics surface in progress/telemetry. None when the
+    # heuristic path produced topics or the pool was dormant/empty.
+    auto_topics: list[str] | None = None
     facts: list[Any] = field(default_factory=list)
     questions: list[Question] = field(default_factory=list)
     scores: dict[str, dict[str, float]] = field(default_factory=dict)

@@ -52,3 +52,61 @@ def test_entertainment_prompt_registered_at_construction() -> None:
     )
     assert "entertainment" in gen.category_prompt_builders
     assert isinstance(gen.category_prompt_builders["entertainment"], PromptBuilder)
+
+
+# A fact whose `text` carries a distinctive token, so asserting it lands in the
+# rendered prompt proves the `{facts_section}` injection still ran *after* the
+# dispatch swapped the builder — i.e. the category swap didn't bypass fact-first.
+_SOURCE_FACTS = [
+    {
+        "text": "The film The Matrix was released in 1999.",
+        "source_url": "https://example.org/the-matrix",
+        "source_name": "Example",
+        "topic": "Film",
+        "surprise_rating": 8.0,
+    }
+]
+
+
+def test_entertainment_order_dispatches_to_entertainment_builder() -> None:
+    """The heart of F-3a task 3: a fact-first order with
+    `categories=["entertainment"]` must render through the *entertainment*
+    builder (distinct `prompt_version`), and — critically (C-b) — still run the
+    fact-first `{facts_section}` + `{mcq_patterns_section}` injection so the
+    entertainment prompt *composes with* the v3 engagement machinery rather than
+    replacing it. The dispatch changes which fact-first builder runs, never
+    whether facts/MCQ are injected; if the selection had been placed outside the
+    `use_fact_first` branch, the facts/MCQ blocks would silently vanish — these
+    three content assertions are what would catch that.
+    """
+    gen = AdvancedQuestionGenerator(
+        generation_model="gpt-4o",
+        critique_model="gpt-4o-mini",
+        prompt_version="v3_fact_first",
+    )
+    prompt, prompt_version, use_open, use_fact_first = gen._build_batch_prompt(
+        count=10,
+        difficulty="medium",
+        topics=None,
+        categories=["entertainment"],
+        question_type="text",
+        excluded_topics=None,
+        avoid_questions=None,
+        user_bad_examples=None,
+        source_facts=_SOURCE_FACTS,
+        mcq_patterns={"odd_one_out"},
+    )
+    # Rides the fact-first branch (not open, not the generic default) and stamps
+    # the entertainment-specific version so provenance shows which prompt ran.
+    assert use_open is False
+    assert use_fact_first is True
+    assert prompt_version == "v3_fact_first_entertainment"
+    # (a) entertainment sentinel — proves the entertainment builder rendered, not v3
+    # (`pop-culture` appears in neither the v3 nor the open/default templates).
+    assert "pop-culture" in prompt.lower()
+    # (b) the injected source fact survived — the `{facts_section}` injection ran.
+    assert "The Matrix" in prompt
+    # (c) the MCQ activation block rendered — `{mcq_patterns_section}` injection
+    # preserved across the dispatch (C-b: changes the builder, not the injection).
+    assert "## Multiple-Choice Activation (pattern-driven)" in prompt
+    assert "odd_one_out" in prompt

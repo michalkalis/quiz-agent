@@ -710,8 +710,21 @@ class AdvancedQuestionGenerator:
             prompt_builder = self.open_prompt_builder
             prompt_version = "open"
         elif use_fact_first:
-            prompt_builder = self.v3_prompt_builder
-            prompt_version = "v3_fact_first"
+            # Issue #76 F-3a — category→builder dispatch. When the order's
+            # category is registered in `category_prompt_builders`, select that
+            # category's fact-first prompt (e.g. entertainment tone + driving
+            # safety); an unregistered category is byte-identical to the generic
+            # v3 path. Kept *inside* this `use_fact_first` branch so the
+            # {facts_section}/{escape_hatch_section}/{mcq_patterns_section}
+            # injection below still runs unchanged (C-b) — the dispatch changes
+            # *which* fact-first builder, never *whether* facts are injected.
+            category = categories[0] if categories else None
+            if category in self.category_prompt_builders:
+                prompt_builder = self.category_prompt_builders[category]
+                prompt_version = f"v3_fact_first_{category}"
+            else:
+                prompt_builder = self.v3_prompt_builder
+                prompt_version = "v3_fact_first"
         else:
             prompt_builder = self.prompt_builder
             prompt_version = self.prompt_version

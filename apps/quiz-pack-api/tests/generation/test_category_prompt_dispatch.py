@@ -110,3 +110,135 @@ def test_entertainment_order_dispatches_to_entertainment_builder() -> None:
     # preserved across the dispatch (C-b: changes the builder, not the injection).
     assert "## Multiple-Choice Activation (pattern-driven)" in prompt
     assert "odd_one_out" in prompt
+
+
+# ---------------------------------------------------------------------------
+# Dormancy / fall-through regression (issue #76 F-3a task 4).
+#
+# The dispatch tested above must be *invisible* everywhere it doesn't apply.
+# These three tests pin the negative space — every non-entertainment path stays
+# byte-identical to pre-#76 `main`, and a fact-less entertainment order degrades
+# cleanly — so the reversibility/dormancy claim in the issue (decision 7) is a
+# guarded fact, not an assertion. If a future edit let the dispatch leak into a
+# sibling category, shadow the open-shape branch, or raise on the no-facts case,
+# exactly one of these fails loudly.
+# ---------------------------------------------------------------------------
+
+
+def test_unregistered_category_falls_through_to_generic_v3() -> None:
+    """A fact-first order for a *non*-entertainment category renders through the
+    generic v3 path, byte-identically to today — the #76 dispatch must not leak
+    into any other category.
+
+    `prompt_version == "v3_fact_first"` (NOT `v3_fact_first_history`) proves the
+    registry lookup missed and the `else` arm — i.e. `self.v3_prompt_builder` —
+    was selected, exactly as a pre-#76 codebase would. The builder and version
+    are set together in that one arm, so an unchanged version *is* proof the
+    generic v3 template rendered; the absent `pop-culture` sentinel is the
+    belt-and-suspenders check. `use_fact_first is True` documents that the order
+    did ride the fact-first branch and fell through *within* it (facts were
+    present) — that is the precise dormancy claim.
+    """
+    gen = AdvancedQuestionGenerator(
+        generation_model="gpt-4o",
+        critique_model="gpt-4o-mini",
+        prompt_version="v3_fact_first",
+    )
+    prompt, prompt_version, use_open, use_fact_first = gen._build_batch_prompt(
+        count=10,
+        difficulty="medium",
+        topics=None,
+        categories=["history"],
+        question_type="text",
+        excluded_topics=None,
+        avoid_questions=None,
+        user_bad_examples=None,
+        source_facts=_SOURCE_FACTS,
+        mcq_patterns={"odd_one_out"},
+    )
+    assert use_open is False
+    assert use_fact_first is True
+    assert prompt_version == "v3_fact_first"
+    assert "pop-culture" not in prompt.lower()
+
+
+def test_no_facts_entertainment_falls_back_to_generic_prompt() -> None:
+    """No-facts fall-back (the Rule #1 design choice surfaced as Phase-5 caution
+    PC-1): there is deliberately no fact-*less* entertainment prompt —
+    entertainment is a fact-first-only variant. An `entertainment` order that
+    arrives with no source facts must therefore route to the generic default
+    builder, NOT raise and NOT emit entertainment tone.
+
+    With `source_facts=None`, `use_fact_first` is False, so the category dispatch
+    — which lives *inside* the fact-first branch — is never consulted: the call
+    lands in the final `else`, where `prompt_builder = self.prompt_builder` and
+    `prompt_version = self.prompt_version`. Asserting both flags False AND the
+    version equal to `gen.prompt_version` uniquely pins that branch (it is the
+    only one that returns `self.prompt_version`), which is how we prove "builder
+    is `self.prompt_builder`" even though the method doesn't return the builder.
+    The call completing at all is the no-exception guarantee: the generic
+    template tolerates the omitted `{facts_section}` because it has no such
+    placeholder (this is the long-standing default production path).
+    """
+    gen = AdvancedQuestionGenerator(
+        generation_model="gpt-4o",
+        critique_model="gpt-4o-mini",
+        prompt_version="v3_fact_first",
+    )
+    prompt, prompt_version, use_open, use_fact_first = gen._build_batch_prompt(
+        count=10,
+        difficulty="medium",
+        topics=None,
+        categories=["entertainment"],
+        question_type="text",
+        excluded_topics=None,
+        avoid_questions=None,
+        user_bad_examples=None,
+        source_facts=None,
+        mcq_patterns=None,
+    )
+    assert use_open is False
+    # `not` (not `is False`): with `source_facts=None` the `and`-chain that
+    # computes `use_fact_first` short-circuits to the falsy `None`, never the
+    # literal `False`. Downstream uses it only in boolean context, so what
+    # matters — and what we pin — is that fact-first is *not active*.
+    assert not use_fact_first
+    assert prompt_version == gen.prompt_version
+    assert "pop-culture" not in prompt.lower()
+
+
+def test_open_shape_precedence_over_entertainment_dispatch() -> None:
+    """The open/logical branch (#46) outranks both fact-first and the #76
+    entertainment dispatch. Even with `categories=["entertainment"]` AND source
+    facts present, `open_shape=True` must win — open questions are generated from
+    the dedicated open prompt, never fact-first, so the entertainment builder
+    must not hijack an open order.
+
+    `use_open is True` + `use_fact_first is False` + `prompt_version == "open"`
+    pins the first branch; the absent `pop-culture` sentinel proves the
+    entertainment template did not render despite the matching category. This
+    locks the documented precedence (advanced_generator.py:702-708) so a later
+    edit can't let the category dispatch shadow open-shape.
+    """
+    gen = AdvancedQuestionGenerator(
+        generation_model="gpt-4o",
+        critique_model="gpt-4o-mini",
+        prompt_version="v3_fact_first",
+    )
+    prompt, prompt_version, use_open, use_fact_first = gen._build_batch_prompt(
+        count=10,
+        difficulty="medium",
+        topics=None,
+        categories=["entertainment"],
+        question_type="text",
+        excluded_topics=None,
+        avoid_questions=None,
+        user_bad_examples=None,
+        source_facts=_SOURCE_FACTS,
+        mcq_patterns={"odd_one_out"},
+        open_shape=True,
+    )
+    assert use_open is True
+    assert use_fact_first is False
+    assert prompt_version == "open"
+    assert "pop-culture" not in prompt.lower()

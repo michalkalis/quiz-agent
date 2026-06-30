@@ -19,7 +19,8 @@
 | 5 · Impl-plan review  | ✅ done | Session-D readiness gate (2026-06-27) — **all 3 gaps cleared 2026-06-29** |
 | 6 · Split             | ✅ done | `issue-61-execution-prompts.md` — Sessions A/B/C/D |
 
-**Last updated:** 2026-06-30 · **Next:** `[HUMAN]` on-device Slovak sign-in verify + privacy nutrition label (App Store Connect) + human security review (feeds #48). All code (Sessions A–D) landed & green. · **Gate attempts:** P3 1/3 · P5 1/3
+**Last updated:** 2026-06-30 · **Next:** `[HUMAN]` on-device Slovak sign-in verify + privacy nutrition label (App Store Connect) + human security review (feeds #48). · **Gate attempts:** P3 1/3 · P5 1/3
+**Verification pass 2026-06-30** (founder-requested "is it done & correct?"): backend code correct on all F1–F7 (verified first-hand with code quotes), live on Fly **v54**, all 5 Apple secrets deployed, `/auth/apple` returns 422 not 503 (wired); the quiz-agent backend test job is **green in CI** against a real Postgres (the red "Backend CI" badge is the unrelated quiz-pack-api integration flake). iOS code correct (entitlements wired via xcconfig, nonce F6 byte-exact, account UI ≤2 taps). **Found + fixed one Session-D miss:** `SettingsViewOnboardingTests.replayClosureFires` instantiated `SettingsView` without the now-required `AppState` env object → crashed on inspect → that crash (not snapshot drift) is what reddened iOS CI ("0 failures" + "TEST FAILED"). Fixed in `c9f09de` (mirrors the 2 sibling tests Session D did update); iOS CI re-running to confirm green.
 **Execution status:** Sessions A–C (backend, 61.1–61.5) done + live (Fly v53); Session D (iOS) READY — gate cleared, not yet implemented.
 
 ## Why

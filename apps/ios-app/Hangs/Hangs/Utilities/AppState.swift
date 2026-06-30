@@ -18,6 +18,8 @@ final class AppState: ObservableObject {
     let silenceDetectionService: SilenceDetectionServiceProtocol?
     let sttService: ElevenLabsSTTServiceProtocol?
     let storeManager: StoreManager
+    /// The auth service, exposed so SettingsView can drive Apple sign-in, sign-out, and account actions.
+    let authService: AuthService
 
     init() {
         #if DEBUG
@@ -29,6 +31,7 @@ final class AppState: ObservableObject {
             self.silenceDetectionService = mocks.silence
             self.sttService = mocks.stt
             self.storeManager = StoreManager()
+            self.authService = AuthService(baseURL: Config.apiBaseURL)
             UITestSupport.startTestListener()
             Logger.quiz.info("🧪 AppState initialized in UI-test mode")
             return
@@ -36,10 +39,11 @@ final class AppState: ObservableObject {
         #endif
 
         // Production dependencies — NetworkService carries the server-trusted
-        // anonymous bearer minted by AuthService (#60); first launch bootstraps
+        // anonymous bearer minted by AuthService (#60/#61); first launch bootstraps
         // an identity into the Keychain, and a 401 triggers a single-flight
         // refresh transparently.
         let authService = AuthService(baseURL: Config.apiBaseURL, attestor: AppAttestor())
+        self.authService = authService
         self.networkService = NetworkService(baseURL: Config.apiBaseURL, authService: authService)
         self.audioService = AudioService()
         self.persistenceStore = PersistenceStore()
@@ -62,6 +66,13 @@ final class AppState: ObservableObject {
         // Setup audio session with default mode
         try? audioService.setupAudioSession(mode: AudioMode.default)
 
+        // Check Apple credential state and register revocation observer (#61 task 61.6).
+        // Runs asynchronously so it does not block app launch; a revoked credential
+        // drops to a fresh anon identity transparently.
+        Task {
+            await authService.setupAppleCredentialObservation()
+        }
+
         Logger.quiz.info("🚀 AppState initialized")
         Logger.quiz.info("📍 API Base URL: \(Config.apiBaseURL, privacy: .public)")
         let silenceAvailable = self.silenceDetectionService != nil ? "available" : "unavailable (requires iOS 26+)"
@@ -77,7 +88,8 @@ final class AppState: ObservableObject {
         persistenceStore: PersistenceStoreProtocol,
         silenceDetectionService: SilenceDetectionServiceProtocol? = nil,
         sttService: ElevenLabsSTTServiceProtocol? = nil,
-        storeManager: StoreManager? = nil
+        storeManager: StoreManager? = nil,
+        authService: AuthService? = nil
     ) {
         self.networkService = networkService
         self.audioService = audioService
@@ -85,6 +97,7 @@ final class AppState: ObservableObject {
         self.silenceDetectionService = silenceDetectionService
         self.sttService = sttService
         self.storeManager = storeManager ?? StoreManager()
+        self.authService = authService ?? AuthService(baseURL: Config.apiBaseURL)
     }
 
     /// Create a new QuizViewModel with injected dependencies

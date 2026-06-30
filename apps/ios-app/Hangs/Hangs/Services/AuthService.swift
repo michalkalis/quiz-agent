@@ -2,14 +2,14 @@
 //  AuthService.swift
 //  Hangs
 //
-//  Server-trusted anonymous identity (issue #60, tasks 60.7/60.8).
+//  Server-trusted identity (issue #60 anon + issue #61 Sign in with Apple).
 //
-//  Owns the device's anonymous token pair: an access JWT (short-lived bearer)
-//  and an opaque rotating refresh token. Tokens live in the Keychain
+//  Owns the device's token pair: an access JWT (short-lived bearer) and an opaque
+//  rotating refresh token. Tokens live in the Keychain
 //  (kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly — readable while the screen
 //  is locked during a drive; no biometric gate). On first launch it bootstraps a
-//  fresh identity from the backend; NetworkService asks it for the current access
-//  token and, on a 401, for a single-flight refresh.
+//  fresh anonymous identity from the backend; NetworkService asks it for the current
+//  access token and, on a 401, for a single-flight refresh.
 //
 //  Graceful degradation: every public method returns an optional and never
 //  throws. When the backend has auth disabled (503 until AUTH_JWT_SECRET is set)
@@ -17,21 +17,71 @@
 //  the legacy `user_id` grace path — the app keeps working through the staged
 //  auth rollout.
 //
+//  Apple credential state is checked on cold launch via `setupAppleCredentialObservation()`.
+//  If the stored Apple credential is revoked, the service drops to a fresh anon identity.
+//
 
+import AuthenticationServices
+import CryptoKit
 import Foundation
 import os
 
 // MARK: - Token model
 
-/// The anonymous token pair persisted in the Keychain.
+/// The token pair persisted in the Keychain.
 /// `nonisolated` so the actor (and tests) can read/compare it off the main actor
 /// under the project's `-default-isolation=MainActor` build flag.
+///
+/// Account-specific fields (`accountName`, `accountEmail`, `appleUserId`) are nil
+/// for anonymous users and non-nil for users who have signed in with Apple.
+/// Optional fields are backwards-compatible: existing Keychain blobs without
+/// these keys decode with nil (Codable optional default).
 nonisolated struct AuthTokens: Codable, Sendable, Equatable {
     let accessToken: String
     let refreshToken: String
-    /// Server-assigned anonymous subject id (the JWT `sub`). Stored for
-    /// diagnostics / future account-upgrade flows.
+    /// JWT `sub`: the anon identity id (anonymous) OR `users.id` (Apple sign-in).
     let anonId: String
+
+    // MARK: Account fields (nil when anonymous, non-nil after Apple sign-in)
+
+    /// User's full name from Apple (stored on first sign-in only; nil if Apple
+    /// didn't supply it or the user is anonymous).
+    let accountName: String?
+    /// User's email from Apple (may be a private relay address; nil if anonymous).
+    let accountEmail: String?
+    /// Apple's stable user identifier, used by `ASAuthorizationAppleIDProvider.getCredentialState`
+    /// on cold launch to detect revocation. Nil when anonymous.
+    let appleUserId: String?
+
+    /// True when the user has a real (non-anonymous) Apple-backed account.
+    nonisolated var isSignedIn: Bool { appleUserId != nil }
+
+    /// Backwards-compatible init: anonymous usage (no account fields).
+    init(accessToken: String, refreshToken: String, anonId: String) {
+        self.accessToken = accessToken
+        self.refreshToken = refreshToken
+        self.anonId = anonId
+        self.accountName = nil
+        self.accountEmail = nil
+        self.appleUserId = nil
+    }
+
+    /// Full init used when an Apple sign-in credential is resolved.
+    init(
+        accessToken: String,
+        refreshToken: String,
+        anonId: String,
+        accountName: String?,
+        accountEmail: String?,
+        appleUserId: String?
+    ) {
+        self.accessToken = accessToken
+        self.refreshToken = refreshToken
+        self.anonId = anonId
+        self.accountName = accountName
+        self.accountEmail = accountEmail
+        self.appleUserId = appleUserId
+    }
 }
 
 // MARK: - Protocols
@@ -288,6 +338,238 @@ actor AuthService: AuthServiceProtocol {
             case accessToken = "access_token"
             case refreshToken = "refresh_token"
             case anonId = "anon_id"
+        }
+    }
+
+    // MARK: - Apple Sign In (issue #61, task 61.6)
+
+    /// Generate a 32-byte random raw nonce, hex-encoded as a 64-character ASCII string.
+    ///
+    /// The raw nonce string is sent verbatim to the backend as `raw_nonce`. The backend
+    /// computes `base64url-nopad(sha256(raw_nonce.encode('utf-8')))` and compares it to
+    /// the id_token's `nonce` claim — so the iOS and backend computations must use the
+    /// same input (the hex string's UTF-8 bytes), which `hashedNonce(for:)` enforces.
+    nonisolated func generateRawNonce() -> String {
+        var bytes = [UInt8](repeating: 0, count: 32)
+        _ = SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes)
+        return bytes.map { String(format: "%02hhx", $0) }.joined()
+    }
+
+    /// Returns `base64url-nopad(SHA256(rawNonce.utf8))`.
+    ///
+    /// **F6 critical**: this is the exact encoding the backend verifier expects in the
+    /// Apple id_token's `nonce` claim. It must be sent as `ASAuthorizationAppleIDRequest.nonce`.
+    /// NOT hex (64-char), NOT the raw nonce — only base64url-nopad of the SHA256 digest.
+    nonisolated func hashedNonce(for rawNonce: String) -> String {
+        let data = Data(rawNonce.utf8)
+        let digest = SHA256.hash(data: data)
+        return Data(digest).base64EncodedString()
+            .replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "=", with: "")
+    }
+
+    /// Complete an Apple sign-in after `ASAuthorizationAppleIDCredential` is obtained.
+    ///
+    /// POSTs to `/api/v1/auth/apple` using the **current anon bearer** so the backend
+    /// can merge the anon's usage history into the new account (F3). On success, the
+    /// stored tokens are swapped from anon to account tokens (sub = users.id).
+    ///
+    /// - Parameters:
+    ///   - identityToken: Apple's id_token string from the credential.
+    ///   - authorizationCode: Apple's single-use authorization code from the credential.
+    ///   - rawNonce: The raw nonce string generated by `generateRawNonce()`.
+    ///   - user: Apple's stable user identifier from the credential.
+    ///   - fullName: User's formatted full name (only present on first sign-in).
+    ///   - email: User's email (only present on first sign-in; may be private relay).
+    /// - Returns: The new account `AuthTokens` on success, nil on failure.
+    func completeAppleSignIn(
+        identityToken: String,
+        authorizationCode: String,
+        rawNonce: String,
+        user: String,
+        fullName: String?,
+        email: String?
+    ) async -> AuthTokens? {
+        // Send the current anon bearer so the backend can merge usage (F3).
+        let bearer = tokens?.accessToken ?? store.load()?.accessToken
+
+        var body: [String: Any] = [
+            "identity_token": identityToken,
+            "authorization_code": authorizationCode,
+            "raw_nonce": rawNonce,
+        ]
+        // `user` object is only populated on first sign-in (Apple sends name/email once).
+        var userObject: [String: String] = [:]
+        if let fullName { userObject["name"] = fullName }
+        if let email { userObject["email"] = email }
+        if !userObject.isEmpty { body["user"] = userObject }
+
+        guard let bodyData = try? JSONSerialization.data(withJSONObject: body) else {
+            Logger.network.warning("🔐 Apple sign-in: failed to encode request body")
+            return nil
+        }
+
+        var request = URLRequest(url: baseURL.appendingPathComponent("/api/v1/auth/apple"))
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        if let bearer {
+            request.setValue("Bearer \(bearer)", forHTTPHeaderField: "Authorization")
+        }
+        request.httpBody = bodyData
+        request.timeoutInterval = 30
+
+        do {
+            let (data, response) = try await session.data(for: request)
+            guard let http = response as? HTTPURLResponse,
+                  (200...299).contains(http.statusCode) else {
+                let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+                Logger.network.warning("🔐 Apple sign-in → HTTP \(status, privacy: .public)")
+                return nil
+            }
+            let decoded = try JSONDecoder().decode(TokenResponse.self, from: data)
+            let newTokens = AuthTokens(
+                accessToken: decoded.accessToken,
+                refreshToken: decoded.refreshToken,
+                anonId: decoded.anonId,     // now users.id, not the anon id
+                accountName: fullName,
+                accountEmail: email,
+                appleUserId: user
+            )
+            tokens = newTokens
+            store.save(newTokens)
+            Logger.network.info("🔐 Apple sign-in succeeded: sub=\(decoded.anonId, privacy: .public)")
+            return newTokens
+        } catch {
+            Logger.network.warning("🔐 Apple sign-in error: \(error.localizedDescription, privacy: .public)")
+            return nil
+        }
+    }
+
+    /// Check the stored Apple credential state on cold launch.
+    ///
+    /// If the credential is revoked, not found, or transferred to another device,
+    /// the service drops to a fresh anonymous identity. Should be called once at
+    /// startup after `setupAppleCredentialObservation()`.
+    func checkAppleCredentialState() async {
+        let stored = tokens ?? store.load()
+        guard let appleUserId = stored?.appleUserId else {
+            return  // anonymous user — nothing to check
+        }
+        let state = await withCheckedContinuation { continuation in
+            ASAuthorizationAppleIDProvider().getCredentialState(forUserID: appleUserId) { state, _ in
+                continuation.resume(returning: state)
+            }
+        }
+        switch state {
+        case .authorized:
+            break  // credential is still valid
+        case .revoked, .notFound, .transferred:
+            Logger.network.info("🔐 Apple credential \(String(describing: state), privacy: .public) → dropping to anon")
+            await dropToFreshAnon()
+        @unknown default:
+            break
+        }
+    }
+
+    /// Register for `ASAuthorizationAppleIDProvider.credentialRevokedNotification` and check
+    /// the current credential state. Call once from `AppState` after the service is created.
+    func setupAppleCredentialObservation() async {
+        // 1. Check state right now (cold-launch revocation guard).
+        await checkAppleCredentialState()
+
+        // 2. Observe future revocations. The notification fires on an unspecified queue;
+        //    the Task re-enters the actor safely.
+        NotificationCenter.default.addObserver(
+            forName: ASAuthorizationAppleIDProvider.credentialRevokedNotification,
+            object: nil,
+            queue: nil
+        ) { [weak self] _ in
+            guard let self else { return }
+            Task { await self.dropToFreshAnon() }
+        }
+    }
+
+    /// Sign out: clear stored account tokens and re-bootstrap a fresh anonymous identity.
+    func signOut() async {
+        Logger.network.info("🔐 Sign out → dropping to anon")
+        await dropToFreshAnon()
+    }
+
+    /// Delete the account on the backend (DELETE /auth/me), then clear tokens locally and
+    /// re-bootstrap a fresh anonymous identity.
+    ///
+    /// A 2xx from the backend means the account is gone. Local data is cleared regardless
+    /// of the backend revoke step (backend handles Apple revoke best-effort per F4).
+    /// Throws `AuthError.notSignedIn` if there are no tokens, or `AuthError.serverError`
+    /// for non-2xx responses.
+    func deleteAccount() async throws {
+        // Load from cache or Keychain; no tokens at all → not signed in.
+        let current = tokens ?? store.load()
+        guard let current else {
+            throw AuthError.notSignedIn
+        }
+        var request = URLRequest(url: baseURL.appendingPathComponent("/api/v1/auth/me"))
+        request.httpMethod = "DELETE"
+        request.setValue("Bearer \(current.accessToken)", forHTTPHeaderField: "Authorization")
+        request.timeoutInterval = 30
+
+        let (_, response) = try await session.data(for: request)
+        guard let http = response as? HTTPURLResponse,
+              (200...299).contains(http.statusCode) else {
+            let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+            Logger.network.warning("🔐 DELETE /auth/me → HTTP \(status, privacy: .public)")
+            throw AuthError.serverError(status)
+        }
+
+        // Account deleted on backend — clear locally and start a fresh anon identity.
+        await dropToFreshAnon()
+        Logger.network.info("🔐 Account deleted; re-bootstrapped anon")
+    }
+
+    /// Fetch the account's data export (GET /auth/me/export, GDPR Art. 20).
+    /// Returns the raw JSON response body. Throws on non-2xx or network failure.
+    func exportData() async throws -> Data {
+        let current = tokens ?? store.load()
+        guard let current else {
+            throw AuthError.notSignedIn
+        }
+        var request = URLRequest(url: baseURL.appendingPathComponent("/api/v1/auth/me/export"))
+        request.httpMethod = "GET"
+        request.setValue("Bearer \(current.accessToken)", forHTTPHeaderField: "Authorization")
+        request.timeoutInterval = 30
+
+        let (data, response) = try await session.data(for: request)
+        guard let http = response as? HTTPURLResponse,
+              (200...299).contains(http.statusCode) else {
+            let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+            Logger.network.warning("🔐 GET /auth/me/export → HTTP \(status, privacy: .public)")
+            throw AuthError.serverError(status)
+        }
+        return data
+    }
+
+    /// Drop the stored tokens (anon or account), clear the in-memory cache, and
+    /// re-bootstrap a fresh anonymous identity.
+    private func dropToFreshAnon() async {
+        tokens = nil
+        store.clear()
+        _ = await performBootstrap()
+    }
+}
+
+// MARK: - AuthError
+
+enum AuthError: LocalizedError, Sendable {
+    case notSignedIn
+    case serverError(Int)
+
+    var errorDescription: String? {
+        switch self {
+        case .notSignedIn:
+            return String(localized: "Not signed in", comment: "Auth error: no active session")
+        case .serverError(let code):
+            return String(localized: "Server error (\(code))", comment: "Auth error: server returned non-2xx; placeholder is the HTTP status code")
         }
     }
 }

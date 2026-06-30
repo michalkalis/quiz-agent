@@ -5,13 +5,21 @@
 //  Hangs redesign settings — bg-page background, grouped white cards,
 //  pink/blue mono section labels. Matches Pencil NEW_Screen/Settings (Jjcs5).
 //  #52 task 52.9.
+//  #61 task 61.7: account section (Sign in with Apple / signed-in state / delete account).
 //
 
+import AuthenticationServices
 import SwiftUI
+import os
 
 struct SettingsView: View {
     @ObservedObject var viewModel: QuizViewModel
     @Environment(\.dismiss) private var dismiss
+    /// AppState is always present in the environment (set in ContentView). SettingsView
+    /// uses it to access `authService` for Sign in with Apple, sign-out, and account
+    /// actions. Marked `optional` via `@EnvironmentObject` — nil only in raw Xcode previews
+    /// that don't inject AppState; the real app and tests via NavigationStack always have it.
+    @EnvironmentObject private var appState: AppState
 
     /// Called when the user taps "Replay intro". Caller is responsible for
     /// presenting the onboarding flow; this view only fires the callback.
@@ -19,7 +27,21 @@ struct SettingsView: View {
     /// `hasCompletedOnboarding` (52.5 founder decision, tested in 52.9 suite).
     var onReplayOnboarding: (() -> Void)? = nil
 
+    // MARK: State
+
     @State private var showResetConfirmation = false
+    @State private var showDeleteConfirmation = false
+    @State private var isSigningIn = false
+    @State private var isDeletingAccount = false
+    @State private var accountErrorMessage: String? = nil
+    /// Ephemeral raw nonce generated at sign-in tap time; held across the
+    /// `SignInWithAppleButton` onRequest → onCompletion lifecycle.
+    @State private var pendingRawNonce: String = ""
+
+    // Reflects the current Keychain state; refreshed on appear + after auth events.
+    @State private var currentTokens: AuthTokens? = nil
+
+    // MARK: Body
 
     var body: some View {
         ScrollView {
@@ -42,6 +64,7 @@ struct SettingsView: View {
                     voiceGroup
                     languageGroup
                     audioFeedbackGroup
+                    accountGroup
                     aboutGroup
                     #if DEBUG
                         developerGroup
@@ -54,11 +77,23 @@ struct SettingsView: View {
         .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
         .navigationBarBackButtonHidden(true)
         .navigationBarHidden(true)
+        .task {
+            // Load auth state from Keychain on appear.
+            currentTokens = KeychainTokenStore().load()
+        }
         .alert("Reset Question History?", isPresented: $showResetConfirmation) {
             Button("Cancel", role: .cancel) {}
             Button("Reset", role: .destructive) { viewModel.resetQuestionHistory() }
         } message: {
             Text("This will allow you to see all questions again. This action cannot be undone.")
+        }
+        .alert("Delete account?", isPresented: $showDeleteConfirmation) {
+            Button("Cancel", role: .cancel) {}
+            Button("Delete", role: .destructive) {
+                Task { await performDeleteAccount() }
+            }
+        } message: {
+            Text("This permanently removes your data, history, and premium access. This can't be undone.")
         }
         .sheet(isPresented: $viewModel.showingMicrophonePicker) {
             AudioDevicePickerView(viewModel: viewModel)
@@ -125,6 +160,182 @@ struct SettingsView: View {
                 )
             )
             .accessibilityIdentifier("settings-speak-scores-toggle")
+        }
+    }
+
+    // MARK: - Account group (#61 task 61.7)
+    // Placed after audio-feedback, before about — founder decision 2026-06-29.
+    // Design reference: Pencil NEW_Screen/Settings-SignedOut (taml6), Settings-SignedIn (JB9Oi),
+    // Settings-DeleteConfirm (PmJ3A).
+
+    @ViewBuilder
+    private var accountGroup: some View {
+        if let tokens = currentTokens, tokens.isSignedIn {
+            signedInAccountGroup(tokens: tokens)
+        } else {
+            signedOutAccountGroup
+        }
+    }
+
+    private var signedOutAccountGroup: some View {
+        groupSection(label: "account", color: Theme.Hangs.Colors.accentTeal) {
+            VStack(spacing: 16) {
+                Text("Sign in to keep your premium and history when you reinstall.")
+                    .font(.hangsBody(14))
+                    .foregroundColor(Theme.Hangs.Colors.muted)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 18)
+                    .padding(.top, 16)
+
+                SignInWithAppleButton(.signIn) { request in
+                    let rawNonce = appState.authService.generateRawNonce()
+                    pendingRawNonce = rawNonce
+                    request.requestedScopes = [.fullName, .email]
+                    request.nonce = appState.authService.hashedNonce(for: rawNonce)
+                } onCompletion: { result in
+                    handleAppleSignInResult(result)
+                }
+                .signInWithAppleButtonStyle(.black)
+                .frame(height: 50)
+                .padding(.horizontal, 18)
+                .padding(.bottom, 16)
+                .disabled(isSigningIn)
+                .accessibilityIdentifier("account.signInWithApple")
+            }
+        }
+    }
+
+    private func signedInAccountGroup(tokens: AuthTokens) -> some View {
+        groupSection(label: "account", color: Theme.Hangs.Colors.accentTeal) {
+            VStack(spacing: 0) {
+                if let name = tokens.accountName {
+                    HangsValueRow(label: "Name", value: name)
+                        .accessibilityIdentifier("account.name")
+                    hairline
+                }
+                if let email = tokens.accountEmail {
+                    HangsValueRow(label: "Email", value: email)
+                        .accessibilityIdentifier("account.email")
+                    hairline
+                }
+                HangsConfigRow(
+                    label: "Export my data",
+                    value: "",
+                    valueColor: Theme.Hangs.Colors.muted,
+                    showsChevron: true
+                ) {
+                    Task { await performExportData() }
+                }
+                .accessibilityIdentifier("account.exportData")
+
+                hairline
+
+                HangsConfigRow(
+                    label: "Sign out",
+                    value: "",
+                    valueColor: Theme.Hangs.Colors.muted
+                ) {
+                    Task { await performSignOut() }
+                }
+                .accessibilityIdentifier("account.signOut")
+
+                hairline
+
+                HangsConfigRow(
+                    label: "Delete account",
+                    value: "",
+                    valueColor: Theme.Hangs.Colors.error
+                ) {
+                    showDeleteConfirmation = true
+                }
+                .accessibilityIdentifier("account.deleteAccount")
+            }
+        }
+    }
+
+    // MARK: Account actions
+
+    private func handleAppleSignInResult(
+        _ result: Result<ASAuthorization, Error>
+    ) {
+        switch result {
+        case .success(let auth):
+            guard let credential = auth.credential as? ASAuthorizationAppleIDCredential else {
+                return
+            }
+            guard let idTokenData = credential.identityToken,
+                  let idToken = String(data: idTokenData, encoding: .utf8),
+                  let authCodeData = credential.authorizationCode,
+                  let authCode = String(data: authCodeData, encoding: .utf8) else {
+                Logger.network.warning("🔐 Apple sign-in: missing identity_token or authorization_code")
+                return
+            }
+            let rawNonce = pendingRawNonce
+            let appleUser = credential.user
+            let components = credential.fullName
+            let fullName = [components?.givenName, components?.familyName]
+                .compactMap { $0 }
+                .joined(separator: " ")
+                .nilIfEmpty
+            let email = credential.email
+
+            isSigningIn = true
+            Task {
+                let newTokens = await appState.authService.completeAppleSignIn(
+                    identityToken: idToken,
+                    authorizationCode: authCode,
+                    rawNonce: rawNonce,
+                    user: appleUser,
+                    fullName: fullName,
+                    email: email
+                )
+                isSigningIn = false
+                if newTokens != nil {
+                    currentTokens = KeychainTokenStore().load()
+                }
+            }
+        case .failure(let error):
+            // User cancelled or system error — not an app error; ASAuthorizationError.canceled is common.
+            Logger.network.info("🔐 Apple sign-in cancelled/failed: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    private func performSignOut() async {
+        await appState.authService.signOut()
+        currentTokens = KeychainTokenStore().load()
+    }
+
+    private func performDeleteAccount() async {
+        isDeletingAccount = true
+        do {
+            try await appState.authService.deleteAccount()
+            currentTokens = KeychainTokenStore().load()
+        } catch {
+            accountErrorMessage = error.localizedDescription
+        }
+        isDeletingAccount = false
+    }
+
+    private func performExportData() async {
+        do {
+            let data = try await appState.authService.exportData()
+            // Present the export data as a share sheet.
+            let tempURL = FileManager.default.temporaryDirectory
+                .appendingPathComponent("my-data-export.json")
+            try data.write(to: tempURL)
+            await MainActor.run {
+                let activityVC = UIActivityViewController(
+                    activityItems: [tempURL],
+                    applicationActivities: nil
+                )
+                if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                   let root = windowScene.windows.first?.rootViewController {
+                    root.present(activityVC, animated: true)
+                }
+            }
+        } catch {
+            Logger.network.warning("🔐 Export data failed: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -215,7 +426,15 @@ struct SettingsView: View {
         static var previews: some View {
             NavigationStack {
                 SettingsView(viewModel: .preview)
+                    .environmentObject(AppState())
             }
         }
     }
 #endif
+
+// MARK: - Private helpers
+
+private extension String {
+    /// Returns nil when the string is empty (e.g. when Apple provides no given or family name).
+    var nilIfEmpty: String? { isEmpty ? nil : self }
+}

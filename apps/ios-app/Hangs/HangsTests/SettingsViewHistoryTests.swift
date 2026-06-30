@@ -27,7 +27,15 @@ import ViewInspector
 struct SettingsViewHistoryTests {
     @Test("'Reset question history' row label renders in the view tree")
     func resetRowLabelRendersInTree() async throws {
+        // SettingsView reads AppState from the environment (#61 account section);
+        // a mock-backed AppState satisfies it without the heavy production init.
+        let appState = AppState(
+            networkService: MockNetworkService(),
+            audioService: MockAudioService(),
+            persistenceStore: MockPersistenceStore()
+        )
         let view = SettingsView(viewModel: .preview)
+            .environmentObject(appState)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) {

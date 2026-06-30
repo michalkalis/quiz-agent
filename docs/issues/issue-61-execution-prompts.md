@@ -147,7 +147,7 @@ Done = pytest green, ruff clean. Commit, push, tick 61.5.
 
 **Gap 3 — Apple portal + secrets — ✅ RESOLVED 2026-06-29.** All five Fly secrets present: `APPLE_SIGNIN_KEY_ID`, `APPLE_SIGNIN_TEAM_ID`, `APPLE_SIGNIN_PRIVATE_KEY`, `APPLE_SIGNIN_CLIENT_ID`, `APPLE_TOKEN_ENC_KEY` — `/auth/apple` no longer 503s.
 
-**Remaining sequence:** steps 1–3 (Apple `.p8` → deploy+secrets+migrations → account-UI design) are all **done**. Left: **(4) implement Session D** (61.6/61.7 + iOS tests) against the live backend + the Pencil design above → **(5) `[HUMAN]` real-device Slovak sign-in verify**.
+**Remaining sequence:** steps 1–4 (Apple `.p8` → deploy+secrets+migrations → account-UI design → **(4) Session D implemented & green, `16dcde3` 2026-06-30**) are all **done**. Left: **(5) `[HUMAN]` real-device Slovak sign-in verify** (+ privacy nutrition label in App Store Connect + human security review).
 
 ---
 
@@ -177,8 +177,8 @@ Done = HangsTests green on the iPhone sim, build clean. Commit, push, tick 61.6/
 - ✅ **Session A — Backend foundation DONE 2026-06-27** (commits `51540aa` 61.1, `30dddf5` 61.2, `1f2be31` 61.3). Full suite green (213 passed, 27 new), ruff clean, live alembic up/down/up round-trip OK. See "Session A delivered" below.
 - ✅ **Session B — `POST /auth/apple` DONE 2026-06-27** (commits `8bad2c7` migration/model, `e5f10ae` OAuth client + token helper, `244f7e7` endpoint). Full suite green (234 passed, 21 new), ruff clean, live alembic up/down/up round-trip OK. See "Session B delivered" below.
 - ✅ **Session C — Delete + Export DONE 2026-06-27** (`DELETE /auth/me` + `GET /auth/me/export` + `AppleOAuthClient.revoke`; 242 tests green, 8 new, ruff clean). See "Session C delivered" below.
-- 🟢 Session D — iOS SIWA — **READY** (gate cleared 2026-06-29): account UI designed (`taml6` signed-out / `JB9Oi` signed-in / `PmJ3A` delete dialog), backend live v53, all 5 Apple secrets set. Paste the Session D prompt above to execute (61.6/61.7 + iOS tests).
-- ✅ Human: Apple Sign in key (`.p8`) + all 5 Fly secrets DONE 2026-06-29 (v53 live). ⬜ `[HUMAN]` real-device Slovak sign-in verify still remains — after Session D lands.
+- ✅ **Session D — iOS SIWA — DONE 2026-06-30 (`16dcde3`)**: `applesignin` entitlement; `AuthService` Apple flow (F6 request nonce = `base64url-nopad(SHA256(rawNonce.utf8))`, verified byte-for-byte against backend `expected_nonce_claim`; anon-bearer merge; token swap; credential-state + revocation observers; signOut/delete/export); `SettingsView` account section (signed-out/signed-in/delete-confirm, ≤2 taps) matching `taml6`/`JB9Oi`/`PmJ3A`. Build clean; `AppleAuthTests` 4/4 + `SettingsView` 5/5 green on the iOS 26.5 sim. Fixed 2 pre-existing SettingsView ViewInspector tests to inject the new `AppState` env object. (Pre-existing snapshot-drift failures in HomeView/QuestionView/ResultView are stale reference dumps — unrelated, non-gating per `.claude/rules/ios.md`.)
+- ✅ Human: Apple Sign in key (`.p8`) + all 5 Fly secrets DONE 2026-06-29 (v53 live). ⬜ Remaining `[HUMAN]`: real-device Slovak sign-in verify + privacy nutrition label (App Store Connect) + human security review (feeds #48).
 
 ### Session A delivered — exact symbols for B/C/D to import
 

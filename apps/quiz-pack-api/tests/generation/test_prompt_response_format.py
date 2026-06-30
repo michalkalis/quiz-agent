@@ -19,6 +19,10 @@ PROMPTS_DIR = Path(__file__).resolve().parents[2] / "prompts"
 PROMPTS = [
     "question_generation_v3_fact_first.md",
     "question_generation_v2_cot.md",
+    # #76 F-3a — the entertainment prompt is a fact-first variant, so it inherits
+    # the same correct_answer/explanation response-format contract; pin it here so
+    # an edit to the entertainment tone can never silently drop those fields.
+    "question_generation_entertainment.md",
 ]
 
 

@@ -25,6 +25,9 @@ branch (decisions 3, 2d).
 
 from __future__ import annotations
 
+from types import SimpleNamespace
+from unittest.mock import AsyncMock
+
 import pytest
 
 from app.generation.advanced_generator import AdvancedQuestionGenerator
@@ -242,3 +245,121 @@ def test_open_shape_precedence_over_entertainment_dispatch() -> None:
     assert use_fact_first is False
     assert prompt_version == "open"
     assert "pop-culture" not in prompt.lower()
+
+
+# ---------------------------------------------------------------------------
+# End-to-end dispatch + category-stamping through `generate_questions`
+# (issue #76 F-3a task 5).
+#
+# The three tests above pin the dispatch at the `_build_batch_prompt` unit. This
+# one proves the dispatch's two *observable* effects survive the full public
+# `generate_questions` path — internal prompt selection is worthless if the
+# stamped provenance/category don't actually reach the returned questions. It is
+# the F-3a "small dry-run validation" with the generation LLM stubbed; the paid
+# corpus dry-run waits for un-park (parked, out of scope).
+# ---------------------------------------------------------------------------
+
+
+# A two-question batch in the shape `_parse_response` reads. Each question
+# *omits* `category` on purpose — see the test docstring for why that omission
+# is load-bearing.
+_ENTERTAINMENT_BATCH_RESPONSE = """{
+  "questions": [
+    {
+      "id": "q_ent_1",
+      "reasoning": {"pattern_used": "open_question", "why_interesting": "x",
+        "universal_appeal": "x", "boring_check": "x"},
+      "question": "In 1999, which sci-fi film popularised the 'bullet time' effect?",
+      "type": "text",
+      "correct_answer": "The Matrix",
+      "possible_answers": null,
+      "alternative_answers": [],
+      "topic": "Film",
+      "difficulty": "medium",
+      "tags": [],
+      "language_dependent": false,
+      "age_appropriate": "all"
+    },
+    {
+      "id": "q_ent_2",
+      "reasoning": {"pattern_used": "open_question", "why_interesting": "x",
+        "universal_appeal": "x", "boring_check": "x"},
+      "question": "Which band released the 1975 album 'A Night at the Opera'?",
+      "type": "text",
+      "correct_answer": "Queen",
+      "possible_answers": null,
+      "alternative_answers": [],
+      "topic": "Music & Artists",
+      "difficulty": "medium",
+      "tags": [],
+      "language_dependent": false,
+      "age_appropriate": "all"
+    }
+  ]
+}"""
+
+
+@pytest.mark.asyncio
+async def test_entertainment_order_stamps_category_and_version_through_generate_questions() -> None:
+    """The dispatch's two observable effects must hold through the *public*
+    `generate_questions` entry, not only the internal `_build_batch_prompt` unit.
+
+    With an order of `categories=["entertainment"]` + source facts and the
+    generation LLM stubbed to a fixed batch, every returned question must carry
+    (1) `generation_metadata.prompt_version == "v3_fact_first_entertainment"`
+    — stamped unconditionally in `_finalize_questions` from the dispatched
+    version — and (2) `category == "entertainment"`.
+
+    The stub response *omits* each question's `category` field on purpose: that
+    is precisely what forces the category to come from `default_category =
+    categories[0]` (passed to `_parse_response`; `Question.from_dict` resolves it
+    as `data.get("category", default_category)`). Echoing `"entertainment"` in
+    the stub would make the assertion pass even if that order-category seam were
+    broken — omitting it pins the actual propagation mechanism the issue names.
+
+    `enable_best_of_n=False` keeps the test to the single LLM under test: the
+    best-of-N selection layer adds a critique-LLM round-trip but touches neither
+    `prompt_version` nor `category`, so the dispatch + stamping path is exercised
+    in full without stubbing a second model.
+    """
+    fake_ainvoke = AsyncMock(
+        return_value=SimpleNamespace(content=_ENTERTAINMENT_BATCH_RESPONSE)
+    )
+    gen = AdvancedQuestionGenerator(
+        generation_model="gpt-4o",
+        critique_model="gpt-4o-mini",
+        prompt_version="v3_fact_first",
+    )
+    # ChatOpenAI is a Pydantic model that rejects attribute patching; swap the
+    # whole LLM for a thin stub exposing only what `_generate_batch` reads
+    # (`.ainvoke`, `.temperature`) — the per-file convention in
+    # `test_advanced_generator.py`.
+    gen.generation_llm = SimpleNamespace(ainvoke=fake_ainvoke, temperature=0.8)
+
+    questions = await gen.generate_questions(
+        count=2,
+        difficulty="medium",
+        categories=["entertainment"],
+        source_facts=_SOURCE_FACTS,
+        enable_best_of_n=False,
+        open_count=0,
+    )
+
+    assert len(questions) == 2
+    for q in questions:
+        # (1) order category propagated to every question via default_category.
+        assert q.category == "entertainment"
+        assert q.generation_metadata is not None
+        # (2) the entertainment prompt_version was stamped end-to-end.
+        assert q.generation_metadata.prompt_version == "v3_fact_first_entertainment"
+        # The dispatch stayed *inside* the fact-first branch (C-b): the
+        # fact-first pipeline tag rode through, proving facts were injected and
+        # the generic-default arm was not taken.
+        assert q.generation_metadata.pipeline == "fact_first"
+
+    # End-to-end proof the entertainment template actually rendered to the LLM
+    # (`pop-culture` appears in neither the generic v3 nor the open template) and
+    # that the `{facts_section}` injection still ran (the source fact is present).
+    prompt_text = fake_ainvoke.await_args.args[0][0].content
+    assert "pop-culture" in prompt_text.lower()
+    assert "The Matrix" in prompt_text

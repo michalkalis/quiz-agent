@@ -68,13 +68,21 @@ struct SettingsViewOnboardingTests {
     @Test("onReplayOnboarding closure fires when provided")
     func replayClosureFires() async throws {
         var fired = false
-        let view = SettingsView(viewModel: .preview, onReplayOnboarding: { fired = true })
+        // SettingsView reads AppState from the environment (#61 account section);
+        // a mock-backed AppState satisfies it without the heavy production init.
+        let appState = AppState(
+            networkService: MockNetworkService(),
+            audioService: MockAudioService(),
+            persistenceStore: MockPersistenceStore()
+        )
+        let settings = SettingsView(viewModel: .preview, onReplayOnboarding: { fired = true })
+        let view = settings.environmentObject(appState)
 
         try await ViewHosting.host(view) {
             _ = try view.inspect()
             // Directly invoke the closure to verify the wiring contract independent
             // of ViewInspector's limited button-tap support for deep nested buttons.
-            view.onReplayOnboarding?()
+            settings.onReplayOnboarding?()
             #expect(fired, "onReplayOnboarding closure must be called by the replay row action")
         }
     }

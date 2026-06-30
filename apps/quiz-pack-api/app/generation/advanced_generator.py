@@ -37,6 +37,17 @@ except ImportError:
 GENERATION_FLOW = "fun-redesign-72"
 
 
+# Issue #76 F-3a — category→prompt-file registry for the fact-first dispatch.
+# A category listed here gets its own generation prompt (a fact-first variant of
+# v3); `_build_batch_prompt` selects the matching builder over the generic v3 one
+# for an order whose category is registered. General map, not an entertainment
+# special-case, so kids/themed register later by adding one line — no new branch
+# (decisions 3, 2d). An unregistered category falls through to v3 unchanged.
+_CATEGORY_PROMPT_FILES = {
+    "entertainment": "question_generation_entertainment.md",
+}
+
+
 # Issue #72 — per-question source attribution. Tokeniser for matching a
 # generated question back to the specific source Fact it was built from, so each
 # question cites its OWN fact's URL instead of the whole pack inheriting one
@@ -191,6 +202,21 @@ class AdvancedQuestionGenerator:
         self.open_prompt_builder = None
         if os.path.exists(open_template_path):
             self.open_prompt_builder = PromptBuilder(template_path=open_template_path)
+
+        # Issue #76 F-3a — load the per-category fact-first prompts named in
+        # _CATEGORY_PROMPT_FILES, each behind the same os.path.exists guard as the
+        # v3/open builders above. `_build_batch_prompt` dispatches to the matching
+        # builder for an order whose category is registered here; an unregistered
+        # category (or a missing prompt file) falls through to the generic v3 path.
+        self.category_prompt_builders: dict[str, PromptBuilder] = {}
+        for category, filename in _CATEGORY_PROMPT_FILES.items():
+            category_template_path = os.path.join(
+                current_dir, "..", "..", "prompts", filename
+            )
+            if os.path.exists(category_template_path):
+                self.category_prompt_builders[category] = PromptBuilder(
+                    template_path=category_template_path
+                )
 
         # Load critique prompt (prefer V2 calibrated version)
         critique_v2_path = os.path.join(

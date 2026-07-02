@@ -65,6 +65,19 @@ def veto_shadow() -> bool:
     return _truthy(os.getenv("VETO_SHADOW"))
 
 
+def expiry_classification() -> bool:
+    """Issue #76 F-3b: run the post-generation expiry classifier.
+
+    ``False`` (default) → ``GenerationStage`` gets no classifier and behaves
+    byte-identically to pre-#76 (``expires_at``/``freshness_tag`` left unset).
+    When on, one batched cheap-model call per run classifies each question's
+    temporal freshness and the stage stamps a TTL for `current`/`semi-stable`
+    questions. Kept dormant so existing tests + the order-e2e gate stay green
+    without mocking a new LLM call.
+    """
+    return _truthy(os.getenv("EXPIRY_CLASSIFICATION"))
+
+
 def mcq_critique_telemetry() -> bool:
     """Lever D (Phase 4): run the self_critique judge over the MCQ sub-batch
     questions as **telemetry** — annotate each kept question with a

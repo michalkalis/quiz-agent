@@ -14,9 +14,15 @@ from __future__ import annotations
 import hashlib
 import logging
 import uuid
+from datetime import datetime, timezone
 
 from app.generation.advanced_generator import AdvancedQuestionGenerator
 from app.generation.answer_normalizer import AnswerNormalizer
+from app.generation.expiry_classifier import (
+    CONTENT_CLASS_TTL,
+    Classification,
+    ExpiryClassifier,
+)
 from app.generation.pattern_routing import (
     PATTERNS_TO_MCQ,
     choose_question_type,
@@ -149,6 +155,7 @@ class GenerationStage:
         self,
         generator: AdvancedQuestionGenerator,
         answer_normalizer: AnswerNormalizer | None = None,
+        expiry_classifier: ExpiryClassifier | None = None,
         open_fraction: float = OPEN_SHAPE_FRACTION,
     ) -> None:
         self._generator = generator
@@ -156,6 +163,11 @@ class GenerationStage:
         # comma-tailed remainder the deterministic splitter can't recover.
         # `None` keeps the 46.A2 fail-safe behaviour (those answers drop).
         self._answer_normalizer = answer_normalizer
+        # Issue #76 F-3b — optional batched expiry classifier. `None` (default)
+        # keeps behaviour byte-identical to pre-#76: expiry left unset. When
+        # present it classifies each question's temporal freshness so the
+        # stamping loop below can set `expires_at`/`freshness_tag`.
+        self._expiry_classifier = expiry_classifier
         # Issue #46 task 46.B4c — fraction of `target_count` generated through
         # the open/lateral-puzzle prompt instead of the factual pipeline.
         self._open_fraction = open_fraction
@@ -210,6 +222,21 @@ class GenerationStage:
             None,
         )
 
+        # Issue #76 F-3b — one batched expiry classification per run. Dormant
+        # when no classifier is injected (map stays empty → nothing stamped,
+        # byte-identical to pre-#76). The classifier is fail-safe by contract:
+        # it never raises and returns `None` for any question it couldn't
+        # classify, so a classification failure leaves expiry unset, never
+        # blocking generation. Keyed by object identity because ids are
+        # normalised to UUIDs inside the loop below.
+        expiry_by_question: dict[int, Classification | None] = {}
+        if self._expiry_classifier is not None:
+            classifications = await self._expiry_classifier.classify(questions)
+            expiry_by_question = {
+                id(q): c for q, c in zip(questions, classifications)
+            }
+        now = datetime.now(timezone.utc)
+
         for q in questions:
             # AdvancedQuestionGenerator inherits the Phase 1 `q_<hex>` id
             # convention from `app/generation/storage.py`; PersistStage's
@@ -234,6 +261,18 @@ class GenerationStage:
                     q.source_excerpt = getattr(
                         fallback_fact, "excerpt", None
                     ) or getattr(fallback_fact, "text", None)
+
+            # Issue #76 F-3b — stamp expiry from the content class. `current` /
+            # `semi-stable` expire at `now + TTL` (timezone-aware UTC, which the
+            # TIMESTAMPTZ column stores directly) tagged with the class;
+            # `evergreen` (TTL None) and unclassified questions leave both
+            # `expires_at`/`freshness_tag` untouched (None).
+            classification = expiry_by_question.get(id(q))
+            if classification is not None:
+                ttl = CONTENT_CLASS_TTL[classification.content_class]
+                if ttl is not None:
+                    q.expires_at = now + ttl
+                    q.freshness_tag = classification.content_class
 
         # Issue #42 task 42.7 + #46 task 46.A2 — post-generation brevity
         # validator, now **normalize-then-drop** instead of drop-only. A

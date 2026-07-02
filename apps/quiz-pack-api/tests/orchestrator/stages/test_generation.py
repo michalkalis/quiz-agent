@@ -24,10 +24,16 @@ Why these scenarios:
 from __future__ import annotations
 
 import uuid
-from typing import Any
+from datetime import datetime, timezone
+from typing import Any, Optional, Sequence
 
 import pytest
 
+from app.generation.expiry_classifier import (
+    CONTENT_CLASS_TTL,
+    Classification,
+    ExpiryClassifier,
+)
 from app.orchestrator import OrderContext
 from app.orchestrator.stages.generation import GenerationStage, _compute_prompt_seed
 from app.sourcing.models import Fact
@@ -591,3 +597,145 @@ async def test_calls_generator_with_target_count_and_facts() -> None:
     emphasis_ctx.mcq_emphasis = True
     await stage.run(emphasis_ctx, sink=_RecordingSink())  # type: ignore[arg-type]
     assert gen.calls[1]["mcq_emphasis"] is True
+
+
+# ---------------------------------------------------------------------------
+# Expiry stamping / dormancy / fail-safe (issue #76 F-3b task 3).
+#
+# These pin the collaborator seam mirrored from `answer_normalizer`: with no
+# classifier the stage is byte-identical to pre-#76 (expiry never set); with one
+# it stamps `expires_at`/`freshness_tag` from the shared `CONTENT_CLASS_TTL` map
+# for `current`/`semi-stable` and leaves `evergreen`/unclassified untouched; and
+# a classifier failure must degrade to "expiry unset", never block generation.
+# ---------------------------------------------------------------------------
+
+
+class _FakeExpiryClassifier:
+    """Stand-in ExpiryClassifier: classifies by a question-text substring.
+
+    Returns a list aligned to the input questions (the real classifier's
+    contract); `None` for any question whose text matches no rule, so the
+    stamping loop leaves it unexpired.
+    """
+
+    def __init__(self, rules: dict[str, str]) -> None:
+        self.rules = rules  # question-substring → content_class
+        self.calls: list[int] = []
+
+    async def classify(
+        self, questions: Sequence[Question]
+    ) -> list[Optional[Classification]]:
+        self.calls.append(len(questions))
+        out: list[Optional[Classification]] = []
+        for q in questions:
+            match = next(
+                (cls for sub, cls in self.rules.items() if sub in q.question),
+                None,
+            )
+            out.append(
+                Classification(content_class=match, rationale=f"because {match}")
+                if match is not None
+                else None
+            )
+        return out
+
+
+@pytest.mark.asyncio
+async def test_stamps_expiry_from_content_class() -> None:
+    """A `current` question is stamped `expires_at ≈ now + CONTENT_CLASS_TTL
+    ["current"]` (asserted via the map, with tolerance) + a `freshness_tag`
+    equal to the class; an `evergreen` question is left with no expiry.
+
+    Reading the TTL from `CONTENT_CLASS_TTL` — not a literal 14 days — is the
+    point: retuning the map retunes this assertion, so the config stays the one
+    source of truth.
+    """
+    current_q = _stub_question(0, question="who currently holds the record")
+    evergreen_q = _stub_question(1, question="which film won in 1994")
+    gen = _FakeGenerator([current_q, evergreen_q])
+    classifier = _FakeExpiryClassifier(
+        {"currently": "current", "1994": "evergreen"}
+    )
+    stage = GenerationStage(gen, expiry_classifier=classifier)  # type: ignore[arg-type]
+    facts = [Fact(text="t", source_url="https://ex/1")]
+    ctx = _make_ctx(target_count=2, facts=facts)
+
+    before = datetime.now(timezone.utc)
+    await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert classifier.calls == [2]  # one batched call for the whole run
+    by_text = {q.question: q for q in ctx.questions}
+    stamped = by_text["who currently holds the record"]
+    ttl = CONTENT_CLASS_TTL["current"]
+    assert ttl is not None
+    assert stamped.freshness_tag == "current"
+    assert stamped.expires_at is not None
+    assert stamped.expires_at.tzinfo is not None  # timezone-aware UTC
+    assert abs((stamped.expires_at - (before + ttl)).total_seconds()) < 60
+
+    evergreen = by_text["which film won in 1994"]
+    assert evergreen.expires_at is None
+    assert evergreen.freshness_tag is None
+
+
+@pytest.mark.asyncio
+async def test_semi_stable_uses_its_own_ttl() -> None:
+    """`semi-stable` stamps the map's longer TTL (365 days today), distinct from
+    `current` — proving the class→TTL lookup, not a single blanket expiry."""
+    q = _stub_question(0, question="the current world record holder in X")
+    gen = _FakeGenerator([q])
+    classifier = _FakeExpiryClassifier({"record holder": "semi-stable"})
+    stage = GenerationStage(gen, expiry_classifier=classifier)  # type: ignore[arg-type]
+    ctx = _make_ctx(target_count=1, facts=[Fact(text="t", source_url="https://ex/1")])
+
+    before = datetime.now(timezone.utc)
+    await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    ttl = CONTENT_CLASS_TTL["semi-stable"]
+    assert ttl is not None
+    stamped = ctx.questions[0]
+    assert stamped.freshness_tag == "semi-stable"
+    assert abs((stamped.expires_at - (before + ttl)).total_seconds()) < 60
+
+
+@pytest.mark.asyncio
+async def test_dormant_without_classifier_leaves_expiry_unset() -> None:
+    """Default (no classifier) → byte-identical to pre-#76: every question keeps
+    `expires_at`/`freshness_tag` at `None`, no LLM call made."""
+    questions = [_stub_question(i) for i in range(3)]
+    gen = _FakeGenerator(questions)
+    stage = GenerationStage(gen)  # type: ignore[arg-type]
+    ctx = _make_ctx(target_count=3, facts=[Fact(text="t", source_url="https://ex/1")])
+
+    await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert all(q.expires_at is None for q in ctx.questions)
+    assert all(q.freshness_tag is None for q in ctx.questions)
+
+
+@pytest.mark.asyncio
+async def test_classifier_failure_leaves_expiry_unset_and_warns(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Fail-safe end to end: a real ExpiryClassifier whose LLM call raises must
+    not break generation — the stage still returns the questions with expiry
+    unset, and the classifier logs a warning. This exercises the actual
+    fail-safe path, not a stub that returns `None`.
+    """
+    gen = _FakeGenerator([_stub_question(0), _stub_question(1)])
+    classifier = ExpiryClassifier(api_key="test-key")
+
+    async def _raise(prompt: str) -> str:
+        raise RuntimeError("LLM down")
+
+    classifier._complete = _raise  # type: ignore[assignment]
+    stage = GenerationStage(gen, expiry_classifier=classifier)
+    ctx = _make_ctx(target_count=2, facts=[Fact(text="t", source_url="https://ex/1")])
+
+    with caplog.at_level("WARNING"):
+        result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert result.info["questions"] == 2  # generation still delivered a pack
+    assert all(q.expires_at is None for q in ctx.questions)
+    assert all(q.freshness_tag is None for q in ctx.questions)
+    assert any("ExpiryClassifier" in r.message for r in caplog.records)

@@ -14,7 +14,7 @@ from __future__ import annotations
 import logging
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Dict, Sequence
+from typing import Any, Dict
 
 from app.db.models import GenerationJob, GenerationOrder
 from app.db.session import AsyncSessionLocal
@@ -42,7 +42,11 @@ def _build_stages(ctx: Dict[str, Any]) -> list[Stage]:
     session_factory = ctx.get("session_factory") or AsyncSessionLocal
     return [
         SourcingStage(ctx["fact_sourcer"]),
-        GenerationStage(ctx["generator"], ctx.get("answer_normalizer")),
+        GenerationStage(
+            ctx["generator"],
+            ctx.get("answer_normalizer"),
+            expiry_classifier=ctx.get("expiry_classifier"),
+        ),
         VerificationStage(ctx["fact_verifier"], ctx.get("logical_verifier")),
         ScoringStage(ctx["scorer"]),
         DedupStage(ctx["question_store"], ctx.get("gold_standard_path")),

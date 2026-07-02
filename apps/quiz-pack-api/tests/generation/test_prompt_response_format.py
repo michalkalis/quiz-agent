@@ -40,3 +40,26 @@ def test_response_format_declares_correct_answer_and_explanation(prompt_file):
     block = _response_format_block((PROMPTS_DIR / prompt_file).read_text(encoding="utf-8"))
     assert '"correct_answer"' in block, f"{prompt_file}: response format missing correct_answer"
     assert '"explanation"' in block, f"{prompt_file}: response format missing explanation"
+
+
+def test_entertainment_prompt_renders_absolute_phrasing_rule():
+    """#76 F-3b — current/dated entertainment questions must be anchored to an
+    explicit year, never relative time ("the latest", "this year's"): the
+    generation LLM is blind to today's date, so a relative-time question rots
+    silently the moment it ages (research §5). The rule lives only in the
+    prompt text, so this pins that it survives PromptBuilder's `.format()`
+    render into the prompt the LLM actually sees — a tone edit can never
+    silently drop it.
+    """
+    from app.generation.prompt_builder import PromptBuilder
+
+    rendered = PromptBuilder(
+        str(PROMPTS_DIR / "question_generation_entertainment.md")
+    ).build_prompt(
+        count=10,
+        categories=["entertainment"],
+        facts_section="FACT: test fact",
+        mcq_patterns_section="",
+    )
+    assert "Absolute phrasing" in rendered
+    assert "anchor every dated fact to an explicit year" in rendered

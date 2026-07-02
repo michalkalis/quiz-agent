@@ -11,11 +11,15 @@ from .models import Fact
 class WebSearchSource:
     """Source facts via Tavily web search API."""
 
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: Optional[str] = None, news_mode: bool = False):
         self.api_key = api_key or os.getenv("TAVILY_API_KEY")
         if not self.api_key:
             raise ValueError("TAVILY_API_KEY not set")
         self.client = AsyncTavilyClient(api_key=self.api_key)
+        # #76 F-3b: recency-aware fact sourcing. When on, the get_facts search
+        # asks Tavily for fresh news (topic=news + time_range=week); default off
+        # keeps the search call byte-identical (neither param present).
+        self.news_mode = news_mode
 
     async def get_facts(
         self, count: int = 10, topics: Optional[list[str]] = None
@@ -39,11 +43,17 @@ class WebSearchSource:
 
             for query in query_templates[:queries_per_topic]:
                 try:
+                    news_kwargs = (
+                        {"topic": "news", "time_range": "week"}
+                        if self.news_mode
+                        else {}
+                    )
                     results = await self.client.search(
                         query=query,
                         max_results=5,
                         include_answer=True,
                         search_depth="advanced",
+                        **news_kwargs,
                     )
 
                     for result in results.get("results", []):

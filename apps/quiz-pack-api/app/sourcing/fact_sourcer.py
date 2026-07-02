@@ -1,6 +1,7 @@
 """Fact sourcer orchestrator — collects facts from all sources and deduplicates."""
 
 import asyncio
+import os
 from typing import Optional
 
 from .models import Fact, FactBatch
@@ -28,7 +29,15 @@ class FactSourcer:
         if enable_opentdb:
             self.sources["opentdb"] = OpenTriviaDBSource()
         if enable_web_search:
-            self.sources["web_search"] = WebSearchSource()
+            # #76 F-3b: recency-aware news sourcing, default off. Follows the
+            # inline os.getenv() truthy convention used across the gen layer.
+            news_mode = (os.getenv("ENABLE_NEWS_SOURCING") or "").strip().lower() in {
+                "1",
+                "true",
+                "yes",
+                "on",
+            }
+            self.sources["web_search"] = WebSearchSource(news_mode=news_mode)
 
     async def gather_facts(
         self,

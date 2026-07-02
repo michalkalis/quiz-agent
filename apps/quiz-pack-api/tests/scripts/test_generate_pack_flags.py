@@ -112,6 +112,38 @@ class TestOutFlag:
         assert [r.id for r in restored] == [mcq.id, plain.id]
 
 
+class TestExpiryClassifierWiring:
+    """#76 F-3b — the founder's manual replenishment pass (decision B: no new
+    command) runs through this CLI's `_build_stages`, not the worker. If only
+    the worker wired the expiry classifier, a manual current-tier pass would
+    persist questions with NO `expires_at` — stale "this week's #1" rows the
+    read-path filter could never drop. Pin both sides of the flag here.
+    """
+
+    @staticmethod
+    def _generation_stage(monkeypatch):
+        # Constructor-time env only (no network at build time): WebSearchSource
+        # raises without TAVILY_API_KEY; the LLM stacks want OPENAI_API_KEY.
+        monkeypatch.setenv("TAVILY_API_KEY", "tvly-test-placeholder")
+        monkeypatch.setenv("OPENAI_API_KEY", "sk-test-placeholder")
+        from app.orchestrator.stages import GenerationStage
+
+        stages = generate_pack._build_stages(
+            persist=False, dedup_store=generate_pack._NoopQuestionStore()
+        )
+        return next(s for s in stages if isinstance(s, GenerationStage))
+
+    def test_flag_off_leaves_classifier_dormant(self, monkeypatch):
+        monkeypatch.delenv("EXPIRY_CLASSIFICATION", raising=False)
+        stage = self._generation_stage(monkeypatch)
+        assert stage._expiry_classifier is None
+
+    def test_flag_on_wires_classifier_into_cli_pipeline(self, monkeypatch):
+        monkeypatch.setenv("EXPIRY_CLASSIFICATION", "1")
+        stage = self._generation_stage(monkeypatch)
+        assert stage._expiry_classifier is not None
+
+
 class _StubSourcingStage:
     """Records the prompt the pipeline carries and emits one fixed question.
 

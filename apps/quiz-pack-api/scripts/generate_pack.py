@@ -52,7 +52,7 @@ if _APP_DIR not in sys.path:
     sys.path.insert(0, _APP_DIR)
 
 from app.db.models import GenerationOrder
-from app.orchestrator import OrderContext, PackGenerator, ProgressSink
+from app.orchestrator import PackGenerator, ProgressSink
 from app.orchestrator.pack_generator import Stage
 from app.orchestrator.stages import (
     DedupStage,
@@ -226,6 +226,7 @@ def _build_stages(*, persist: bool, dedup_store: QuestionStore) -> list[Stage]:
     """Construct the standard pipeline. Persist is omitted in dry-run mode."""
     from app import feature_flags
     from app.generation.advanced_generator import AdvancedQuestionGenerator
+    from app.generation.expiry_classifier import ExpiryClassifier
     from app.scoring.multi_model_scorer import MultiModelScorer
     from app.sourcing.fact_sourcer import FactSourcer
     from app.sourcing.topic_pool import TopicPool
@@ -249,7 +250,16 @@ def _build_stages(*, persist: bool, dedup_store: QuestionStore) -> list[Stage]:
         # call). The worker/live path deliberately does NOT (stays byte-identical
         # until Scope B). Refresh the pool offline via scripts/refresh_topic_pool.py.
         SourcingStage(FactSourcer(), topic_pool=TopicPool()),
-        GenerationStage(generator),
+        # Issue #76 F-3b — the founder's manual replenishment pass runs through
+        # THIS path (decision B: no new command), so the expiry classifier must
+        # be wired here exactly as in the worker (`worker.py on_startup`), behind
+        # the same EXPIRY_CLASSIFICATION flag (default off → dormant, None).
+        GenerationStage(
+            generator,
+            expiry_classifier=(
+                ExpiryClassifier() if feature_flags.expiry_classification() else None
+            ),
+        ),
         VerificationStage(FactVerifier()),
         ScoringStage(MultiModelScorer()),
         DedupStage(dedup_store, gold_standard_path=None),

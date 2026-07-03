@@ -208,6 +208,7 @@ struct SilenceDetectionServiceTests {
         }
         let events = await collectSilenceEvents { service, clock in
             service.handleSpeechDetectorResult(speechDetected: true)  // idle → speechActive
+            clock.advance(0.5)                                        // real utterance (> min-speech guard, 77.11)
             service.handleSpeechDetectorResult(speechDetected: false) // → silenceAccumulating(since: t0)
             clock.advance(1.5)
             service.handleSpeechDetectorResult(speechDetected: false) // → emits + idle
@@ -234,6 +235,7 @@ struct SilenceDetectionServiceTests {
         }
         let events = await collectSilenceEvents { service, clock in
             service.handleSpeechDetectorResult(speechDetected: true)
+            clock.advance(0.5) // real utterance (> min-speech guard, 77.11)
             service.handleSpeechDetectorResult(speechDetected: false)
             clock.advance(1.6)
             service.handleSpeechDetectorResult(speechDetected: false)
@@ -261,6 +263,7 @@ struct SilenceDetectionServiceTests {
         let events = await collectSilenceEvents { service, clock in
             // Full cycle: speech → silence threshold → idle
             service.handleSpeechDetectorResult(speechDetected: true)
+            clock.advance(0.5) // real utterance (> min-speech guard, 77.11)
             service.handleSpeechDetectorResult(speechDetected: false)
             clock.advance(1.5)
             service.handleSpeechDetectorResult(speechDetected: false) // emits → idle
@@ -292,12 +295,14 @@ struct SilenceDetectionServiceTests {
         let events = await collectSilenceEvents { service, clock in
             // Cycle 1
             service.handleSpeechDetectorResult(speechDetected: true)  // .speechStarted
+            clock.advance(0.5)                                        // real utterance (> min-speech guard, 77.11)
             service.handleSpeechDetectorResult(speechDetected: false) // accumulating at t0
             clock.advance(1.5)
             service.handleSpeechDetectorResult(speechDetected: false) // .silenceAfterSpeech(~1.5) → idle
 
             // Cycle 2
             service.handleSpeechDetectorResult(speechDetected: true)  // .speechStarted
+            clock.advance(0.5)                                        // real utterance (> min-speech guard, 77.11)
             service.handleSpeechDetectorResult(speechDetected: false) // accumulating at t1
             clock.advance(2.0)
             service.handleSpeechDetectorResult(speechDetected: false) // .silenceAfterSpeech(~2.0) → idle

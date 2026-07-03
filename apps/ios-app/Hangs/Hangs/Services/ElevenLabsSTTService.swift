@@ -62,7 +62,13 @@ actor ElevenLabsSTTService: ElevenLabsSTTServiceProtocol {
             URLQueryItem(name: "model_id", value: Config.elevenLabsModel),
             URLQueryItem(name: "audio_format", value: Config.elevenLabsAudioFormat),
             URLQueryItem(name: "commit_strategy", value: "vad"),
-            URLQueryItem(name: "vad_silence_threshold_secs", value: String(Config.elevenLabsVadSilenceThresholdSecs)),
+            URLQueryItem(name: "vad_silence_threshold_secs", value: String(VADTuning.elevenLabsVadSilenceThresholdSecs)),
+            // Streaming-side blip / hangover guards (77.11). Param names + acceptance
+            // are provisional, confirmed on-device at 77.15; the WS setup already
+            // falls back to Whisper batch on any failure, so an unrecognised param
+            // cannot strand the hot path.
+            URLQueryItem(name: "min_speech_duration_ms", value: String(VADTuning.elevenLabsMinSpeechDurationMs)),
+            URLQueryItem(name: "min_silence_duration_ms", value: String(VADTuning.elevenLabsMinSilenceDurationMs)),
             URLQueryItem(name: "language_code", value: languageCode),
         ]
         guard let url = components.url else {

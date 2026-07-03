@@ -134,8 +134,9 @@ nonisolated enum Config {
     /// Interval for streaming audio chunks to ElevenLabs WebSocket (milliseconds)
     static let sttStreamingChunkIntervalMs: UInt64 = 250
 
-    /// VAD silence threshold — ElevenLabs commits transcript after this many seconds of silence
-    static let elevenLabsVadSilenceThresholdSecs: Double = 1.5
+    /// VAD silence threshold — ElevenLabs commits transcript after this many seconds of silence.
+    /// Centralised in `VADTuning` (77.11); forwarded here for back-compat.
+    static let elevenLabsVadSilenceThresholdSecs: Double = VADTuning.elevenLabsVadSilenceThresholdSecs
 
     // MARK: - Voice Commands (#77)
 

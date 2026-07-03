@@ -76,13 +76,14 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
 
     private enum State {
         case idle
-        case speechActive
-        case silenceAccumulating(since: Date)
+        /// Speech is active; `since` marks when the utterance began so the
+        /// min-speech-duration blip guard (77.11) can measure it.
+        case speechActive(since: Date)
+        /// Silence is accumulating after an utterance. `speechStart` is carried
+        /// so the blip guard knows how long the preceding speech lasted.
+        case silenceAccumulating(speechStart: Date, since: Date)
     }
     private var state: State = .idle
-
-    /// Silence duration required before emitting `silenceAfterSpeech`.
-    private static let silenceThreshold: TimeInterval = 1.5
 
     private let now: @MainActor () -> Date
 
@@ -115,10 +116,16 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
 
         state = .idle
 
-        let detector = SpeechDetector(
-            detectionOptions: .init(sensitivityLevel: .medium),
-            reportResults: true
-        )
+        // Sensitivity centralised in VADTuning (77.11): .low for road noise.
+        let detector: SpeechDetector
+        switch VADTuning.detectorSensitivity {
+        case .low:
+            detector = SpeechDetector(detectionOptions: .init(sensitivityLevel: .low), reportResults: true)
+        case .medium:
+            detector = SpeechDetector(detectionOptions: .init(sensitivityLevel: .medium), reportResults: true)
+        case .high:
+            detector = SpeechDetector(detectionOptions: .init(sensitivityLevel: .high), reportResults: true)
+        }
 
         // iOS 26.3 requires SpeechDetector to be paired with a SpeechTranscriber
         // (cannot create a SpeechDetector-only worker). We use detector.results for
@@ -303,26 +310,36 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
 
             switch state {
             case .idle:
-                state = .speechActive
+                state = .speechActive(since: now())
                 silenceContinuation.yield(.speechStarted)
                 Logger.voice.debug("🔇 Silence detection: speech started")
-            case .silenceAccumulating:
-                state = .speechActive
+            case .silenceAccumulating(let speechStart, _):
+                // Resume the SAME utterance — keep its original start so a brief
+                // mid-utterance pause doesn't reset the speech-duration clock.
+                state = .speechActive(since: speechStart)
                 Logger.voice.debug("🔇 Silence detection: speech resumed")
             case .speechActive:
                 break
             }
         } else {
             switch state {
-            case .speechActive:
-                state = .silenceAccumulating(since: now())
+            case .speechActive(let speechStart):
+                state = .silenceAccumulating(speechStart: speechStart, since: now())
                 Logger.voice.debug("🔇 Silence detection: silence started after speech")
-            case .silenceAccumulating(let since):
-                let elapsed = now().timeIntervalSince(since)
-                if elapsed >= Self.silenceThreshold {
-                    silenceContinuation.yield(.silenceAfterSpeech(duration: elapsed))
+            case .silenceAccumulating(let speechStart, let since):
+                let silenceElapsed = now().timeIntervalSince(since)
+                let speechDuration = since.timeIntervalSince(speechStart)
+                switch SilenceStopDecision.evaluate(speechDuration: speechDuration, silenceElapsed: silenceElapsed) {
+                case .wait:
+                    break
+                case .stop:
+                    silenceContinuation.yield(.silenceAfterSpeech(duration: silenceElapsed))
                     state = .idle
-                    Logger.voice.debug("🔇 Silence detection: threshold reached (\(String(format: "%.1f", elapsed), privacy: .public)s)")
+                    Logger.voice.debug("🔇 Silence detection: threshold reached (\(String(format: "%.1f", silenceElapsed), privacy: .public)s)")
+                case .rejectBlip:
+                    // Utterance too short (cough/blip/mic-pop) — drop it silently.
+                    state = .idle
+                    Logger.voice.debug("🔇 Silence detection: rejected blip (\(String(format: "%.2f", speechDuration), privacy: .public)s speech)")
                 }
             case .idle:
                 break

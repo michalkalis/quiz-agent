@@ -52,8 +52,8 @@ A timer that fires `confirmAnswer()` ~10s after the confirmation sheet appears w
 **Barge-in**
 Interrupting the question being read aloud to start answering early.
 
-**Repeat / Mute / Skip**
-Voice commands always available. "Repeat" replays the question; "Mute" silences TTS; "Skip" advances without scoring.
+**Voice commands**
+A small English-only spoken grammar layered on top of the on-screen buttons (buttons always work as the fallback). The command set is screen-scoped: "start" begins the quiz / recording, "ok" confirms, "next" advances the result, "repeat" replays the question, "skip" advances without scoring. English by design — the words are fixed English tokens, not localized, so the recognizer stays reliable in the Slovak-accented cabin.
 
 ## Question pipeline
 

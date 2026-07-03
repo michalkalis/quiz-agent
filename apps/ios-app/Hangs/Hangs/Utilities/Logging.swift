@@ -28,7 +28,8 @@ extension Logger {
     /// Network: API calls, responses, errors
     nonisolated static let network = Logger(subsystem: subsystem, category: "network")
 
-    /// Voice commands: SpeechAnalyzer, command recognition
+    /// Voice commands: SpeechAnalyzer recognition of the English-only, screen-scoped
+    /// spoken grammar (start · ok · next · repeat · skip) that layers over the buttons
     nonisolated static let voice = Logger(subsystem: subsystem, category: "voice")
 
     /// Speech-to-text: ElevenLabs streaming STT

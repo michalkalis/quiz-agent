@@ -150,8 +150,8 @@ extension QuizViewModel {
             cancelThinkingTime()
             Task { [weak self] in await self?.startRecording() }
 
-        // Question — replay the question audio + re-arm the listener (dead
-        // repeatQuestion() re-wired). playQuestionAudio re-arms after TTS.
+        // Question — replay the question audio + re-arm the listener via
+        // repeatQuestion(). playQuestionAudio re-arms after TTS.
         case (.question, .repeatQuestion):
             Task { [weak self] in await self?.repeatQuestion() }
 

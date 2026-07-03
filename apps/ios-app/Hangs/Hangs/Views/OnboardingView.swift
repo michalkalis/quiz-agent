@@ -290,9 +290,9 @@ private struct OnboardingFeature {
     static let all: [OnboardingFeature] = [
         .init(icon: "mic.fill", title: "Auto-Record", description: "Recording starts automatically after each question"),
         .init(icon: "hand.raised.fill", title: "Answer Anytime", description: "Start speaking to interrupt and answer immediately"),
-        // Only promise commands the pipeline really handles (backend parser: skip/pass/next).
-        // "repeat"/"score"/"help" are NOT implemented — repeatQuestion() has no caller yet.
-        .init(icon: "bubble.left.fill", title: "Voice Commands", description: #"Say "skip", "pass", or "next" anytime"#),
+        // English-only spoken command grammar (screen-scoped) layered on the buttons,
+        // which always work as the fallback. Set: start · ok · next · repeat · skip.
+        .init(icon: "bubble.left.fill", title: "Voice Commands", description: #"Say "start", "next", "repeat", or "skip" — buttons always work too"#),
         .init(icon: "forward.end.circle.fill", title: "Auto-Advance", description: "Results advance automatically — never tap"),
     ]
 }

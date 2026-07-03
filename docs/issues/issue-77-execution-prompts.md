@@ -1,246 +1,278 @@
 # Issue #77 — Execution plan + ready-to-paste session prompts
 
-> ## ⚠️ SUPERSEDED 2026-07-03 — do not run Sessions 2–6
-> Founder feedback (see the top of [`issue-77-voice-commands-handsfree.md`](issue-77-voice-commands-handsfree.md)) reversed the core design: **no auto-mic START after the question** (the answer timer stays), and **commands are English-only via the native iOS speech framework, not Slovak-via-ElevenLabs**. Only **Session 1 (77.1 + 77.2)** remains valid as written. Everything else awaits a re-planning pass.
+**Created:** 2026-07-03 (regenerated — the previous split assumed the superseded cycle-2 design: VAD auto-arm + Slovak ElevenLabs-transcript matching. This file is **fully regenerated** against the re-planned **native-English-command / button-START** design.) #77 is large (15 tasks across a backend guard + an iOS audio/recognizer stack + a Pencil design pass) — so it's split into session-sized, independently-committable chunks. Each chunk below has a self-contained prompt: open a fresh session, paste the fenced block, go.
 
-**Created:** 2026-07-03 — from the `/prepare-issue` Phase 6 split (recon re-verified against HEAD `864cf1a`, 2026-07-02, by one iOS Explore agent + first-hand backend/iOS spot-checks). #77 is **large** (14 tasks 77.1–77.14, incl. an audio-engine consolidation) but **class `a`** (pure iOS + one tiny backend guard from #66 — no auth / payments / DB schema / migrations). It is split into six agent-runnable, independently-committable sessions plus one final `[HUMAN]` on-device gate. Each session below has a self-contained prompt: open a fresh session, paste the fenced block, go — no access to the authoring chat needed.
+> Parent plan: [`issue-77-voice-commands-handsfree.md`](issue-77-voice-commands-handsfree.md). Research: [`../research/voice-commands-handsfree-research-2026-07-02.md`](../research/voice-commands-handsfree-research-2026-07-02.md) + delta [`../research/voice-commands-native-english-delta-2026-07-03.md`](../research/voice-commands-native-english-delta-2026-07-03.md).
 
-> Parent plan: [`issue-77-voice-commands-handsfree.md`](issue-77-voice-commands-handsfree.md). Research report (citations): [`../research/voice-commands-handsfree-research-2026-07-02.md`](../research/voice-commands-handsfree-research-2026-07-02.md).
-
-**Reversibility: class `a`.** The only backend change (77.1) is a control-flow early-return guard in `flow.py` — no schema, no migration, no auth/payments. All other tasks are pure iOS, reusing the existing `POST /api/v1/elevenlabs/token` and `POST /api/v1/sessions/{id}/input` contracts (no new server contract). So Sessions 1–6 are **Ralph-runnable headless**; only 77.14 (real-device VAD / cabin-noise / BT / interruption) carries a human gate — and it is **last and non-blocking** for the headless sessions.
+**Class `a`** (pure iOS feature + one small backend guard; no auth / payments / DB schema / migrations). Both Phase-5 gates green: `/ready-check` **READY** (0 blockers) · `/design-soundness` **SOUND 0.84**. → **`ready-for-agent`**. The only non-agent piece is the final **77.15 `[HUMAN]` on-device gate** (Session 8), which is explicit and non-blocking for the agent sessions.
 
 ---
 
 ## Recon snapshot — what the codebase already gives us
 
-**Verification shorthand** (used in every prompt below):
-`xcodebuild test` = `cd apps/ios-app/Hangs && xcodebuild test -scheme Hangs-Local -destination 'platform=iOS Simulator,name=iPhone 17 Pro'`, plus the named `-only-testing:` filter.
+*(Lifted from the issue's re-verified line anchors — HEAD-checked 2026-07-03. Minor drift is noted inline; re-grep the symbol if a line number is off by a few.)*
 
-### Backend (`apps/quiz-agent`) — only 77.1 touches this
+**Backend (`apps/quiz-agent`):**
 
-- **The submit flow:** `app/quiz/flow.py::process_answer`. After the intent-processing loop, audio-info is built at `:220` (`if include_audio and result.evaluation:`). Then, in order: **max-questions FINISHED** transition at `:226–233`; **usage-limit FINISHED** transition at `:235–254` (the `if not allowed:` block, `session.transition(to=FINISHED, …:usage_limit)` at `:241`); then session-advance — `current_question_id` at `:272`, `asked_question_ids.append` at `:273`, `record_question()` at `:277`.
-  - ⚠️ **Guard-placement (Gate-B caution, load-bearing for 77.1):** the task text says "~`:256`", but **both** the max-questions (`:226`) and usage-limit (`:241`) blocks transition to `FINISHED` *before* `:256`. A non-answer intent (`result.evaluation is None`) arriving **at the daily limit** would therefore hit the usage-limit `FINISHED` transition at `:241` — a spurious end-of-quiz — before ever reaching a guard at `:256`. So the guard must sit **right after the audio-info build (~after `:223`) and BEFORE the "Check if quiz is finished" (`:226`) and "Check usage limit" (`:235`) blocks.** See Locked decisions row **G-77.1**.
-- **Tests:** `tests/` — pytest, mock OpenAI, fixtures. Run `cd apps/quiz-agent && pytest tests/ -v`. New file for 77.1: `tests/test_flow_intent_guard.py`.
+- **Ghost-question path** — `app/quiz/flow.py`. The intent loop is followed (~`:256-302`) by the session-advance block: `current_question_id` advance `:272-273`, `record_question()` `:277`. A non-answer intent (`result.evaluation is None`) currently falls through and silently advances the session + burns a freemium question (#66). Guard = early-return before the advance block.
+- **Tests** in `apps/quiz-agent/tests/` — pytest, mock OpenAI, fixtures. New file `test_flow_intent_guard.py`. Run: `cd apps/quiz-agent && pytest tests/ -v`.
 
-### iOS (`apps/ios-app/Hangs`, Xcode project "Hangs", scheme `Hangs-Local`)
+**iOS (`apps/ios-app`, Xcode project "Hangs"):**
 
-- **Test framework: Swift Testing throughout** (`import Testing` / `@Test`, 51 files; **zero** `XCTest`). Example: `HangsTests/QuizViewModelMCQVoiceTests.swift`. Mocks are **protocol-injected via the `QuizViewModel` initializer** (`QuizViewModel.swift:307–311` service fields, `:336–346` init params); `AppState.swift:24–32` composes real-vs-mock. **`MockSilenceDetectionService` already exists** (`Hangs/Services/Mocks/MockSilenceDetectionService.swift`) — reuse it to inject `SilenceEvent`s; siblings `MockAudioService`, `MockElevenLabsSTTService`, `MockNetworkService` in the same dir.
-- **Utilities folder (new files go here, next to the sibling):** `Hangs/Utilities/` — holds `MCQTranscriptMatcher.swift`, `Config.swift`, `AppState.swift`, `Logging.swift`. `VoiceCommandLexicon.swift`, `VoiceCommandMatcher.swift`, `EarconPlayer.swift` land here. **Verified none exist today.**
-- **Sibling to mirror — `MCQTranscriptMatcher.swift`:** `enum MCQTranscriptMatcher` (`:16`), `static func match(_ transcript: String, options: [(key: String, value: String)]) -> String?` (`:30`), diacritic-fold `private static func normalize(_:)` (`:70`, `.folding(options: [.diacriticInsensitive, .caseInsensitive], …)`). `VoiceCommandMatcher` is its sibling.
-- **Command seam — `QuizViewModel+Recording.swift:173`** `func handleCommittedTranscript(_ text:) async` — the committed transcript arrives here; MCQ match runs at `:204`. New command classification goes **ahead of** the MCQ/answer branches.
-- **QuizViewModel.swift anchors:** `func skipQuestion()` at **`:675`** (⚠️ drift — the task's "~`:690`" is a `submitTextInput` call *inside* its body); `func repeatQuestion()` at `:1017` (currently dead — no caller); `silenceDetectionAvailable` at `:1087`. **Note:** `submitTextInput` is a `NetworkService` method, invoked at call sites `:614 / :659 / :690` — all voice/text submits converge on it, so one client-side gate at `handleCommittedTranscript` covers the whole surface.
-- **Audio seams:** `QuizViewModel+Audio.swift` — TTS teardown `stopSilenceDetectionListening()` `:84`, re-arm `startSilenceDetectionListening()` `:95` (never arm during TTS — the `1a19438` lesson). `QuizViewModel+Timers.swift` — `startAutoConfirmIfEnabled(duration: Int = Config.autoConfirmDelaySecs)` `:198`, `cancelAutoConfirm()` `:222`.
-- **Two `AVAudioEngine`s today (the 77.7 target — spot-checked first-hand):** `grep -rn "AVAudioEngine()"` → exactly **2** sites: `AudioService.swift:609` (streaming; tap `:652`, `self.audioEngine = engine` `:691`, `stopStreamingRecording()` `:704`) and `SilenceDetectionService.swift:125` (VAD; tap `:162`). `SilenceEvent` enum at `SilenceDetectionService.swift:27–29`; `silenceThreshold = 1.5` `:73`; `sensitivityLevel: .medium` `:102`. `ElevenLabsSTTService.swift` **owns no `AVAudioEngine`** (verified zero hits) — it only consumes PCM via `sendAudioChunk(_:)` `:103`.
-- **Interruption (77.2 target):** `AudioService.swift` `handleInterruption` `.began` at `:385–388` — today calls only the batch `stopRecording()`, never `stopStreamingRecording()` (`:704`).
-- **Config / availability:** `Config.swift` — `autoRecordDelayMs = 500` `:116`, `autoConfirmDelaySecs = 10` `:119`. `AppState.swift:53–56` — real `SilenceDetectionService()` gated by `if #available(iOS 26, *)` else `nil` (the sub-iOS-26 button-start fallback path).
-- **Doc-hygiene targets (all stale text confirmed present):** `CONTEXT.md:55–56` ("Voice commands always available. …"), `OnboardingView.swift:293–295` (`Say "skip", "pass", or "next"`), `Logging.swift:31–32` (`Logger.voice` comment).
+- **`SilenceDetectionService.swift`** — iOS 26 `SpeechAnalyzer`/`SpeechDetector` used as **model-based VAD** (1.5 s hangover). It **already instantiates a paired `SpeechTranscriber`** (declared `:108`, comment block from `:106`) to satisfy the CARQUIZ-3 forced detector↔transcriber pairing — but that transcriber's `.results` stream is **never consumed** (only `detector.results` is read at `:195`). Its own engine `:125`, tap `:162`. **This unused transcriber, re-localed to English + a `.results` consumer loop, is the cheapest command-listener seam — no new engine, same tap.**
+- **`AudioService.swift`** — ElevenLabs streaming path: engine block `~:605` (minor drift; grep `AVAudioEngine`), tap `:652`, `startStreamingRecording`, `stopStreamingRecording()` `:704`. `handleInterruption` `.began` (`:385-388`) calls the **batch** `stopRecording()` and never `stopStreamingRecording()` → stranded-recording-after-a-call bug (#67 Part A).
+- **`QuizViewModel.swift`** — the `QuizState` machine (`idle→startingQuiz→askingQuestion→recording→processing→(skipping)→showingResult→finished`+`error`) with `validTransitions`. `startRecording()` path. **Dead `repeatQuestion()` at `:1017`** (currently unwired). `QuizViewModel+Audio.swift:95` — Engine A (VAD) re-armed after TTS, never torn down before Engine B (streaming) spins up → **two concurrent `AVAudioEngine`s** (the #64 crash config that 77.7 converges).
+- **`ElevenLabsSTTService`** — owns **no audio hardware**; consumes PCM only via `sendAudioChunk`. The shared-tap fan-out feeds it; it must never spin its own engine.
+- **`MCQTranscriptMatcher.swift`** (`Utilities/`) — the shipped fuzzy transcript matcher; the new `VoiceCommandMatcher` + `VoiceCommandLexicon` are its siblings and live next to it.
+- **Doc-hygiene targets:** `CONTEXT.md:56` glossary ("voice commands always available"), `OnboardingView.swift:295` (`Say "skip", "pass", or "next" anytime`), `Logging.swift:32` (`Logger.voice` category comment).
+- **Tests** — `HangsTests/`, **Swift Testing** (`import Testing`). `AVAudioSession` is **mocked** (the CI blind spot — real audio/BT regressions are invisible; the Apple recognizer `supportedLocales` is **empty on the Simulator**, so all headless suites **mock the recognizer**). Existing `HangsTests/AudioServiceTests.swift`.
+
+**⚠️ Gotchas (design defensively):**
+- SpeechAnalyzer has broken twice under iOS point releases — CARQUIZ-1 (Swift-6 tap `@Sendable`), CARQUIZ-3 (iOS 26.3 forced detector↔transcriber pairing) — plus the iOS 26.3 `start(inputSequence:)` long-lived-streaming regression. **The defensive degrade-to-buttons wrapper is mandatory, not optional.**
+- **No `contextualStrings`/custom-vocabulary biasing** exists on the new `SpeechAnalyzer` framework (a real loss vs legacy `SFSpeechRecognizer`). Accent-robust word choice + fuzzy matching is the *entire* mitigation.
+- The recognizer is **English regardless of app language** (the app is used/tested in Slovak). The answer path stays Slovak ElevenLabs; the command listener is a **separate** English recognizer, **time-disjoint** from the answer stream (button/timer START ⇒ no command listening during the answer window).
+
+**Verification shorthand** — `xcodebuild test -only-testing:HangsTests/<Suite>` = `xcodebuild test -project apps/ios-app/Hangs/Hangs.xcodeproj -scheme Hangs -destination 'platform=iOS Simulator,name=iPhone 16' -only-testing:HangsTests/<Suite>`. Backend: `cd apps/quiz-agent && pytest tests/ -v`. On-device-only checks carry `[HUMAN]`.
 
 ---
 
 ## Locked decisions (carry into every session)
 
-Lifted verbatim by id from the issue's `## Resolved design decisions`, plus the two non-blocking Gate-B cautions folded in as **G-77.1 / G-77.7**.
+Lift **verbatim by id** from the issue's `## Resolved design decisions`. Never re-derive.
 
-| # | Decision |
-|---|---|
-| **1** | **START = automatic, VAD-triggered** after the question TTS, with ~300 ms pre-roll; **no spoken keyword.** *Coordinator-adopted default — **founder-overridable to button-only START before execution** (see Q1 override note below).* On-device Apple speech has no Slovak; a paid wake-word was rejected. |
-| **2** | **Barge-in = OUT of scope.** Strict sequencing: TTS finishes → earcon → mic arms. **No AEC / `.voiceChat` / `setPrefersEchoCancelledInput`.** Keep the current `.playAndRecord` + `.spokenAudio` + `.allowBluetoothHFP` + `.duckOthers` session. (Founder-confirmed.) |
-| **3** | **Repeat / Skip = spoken during the answer window; Confirm / Re-record = spoken on the confirmation sheet — matched client-side from the ElevenLabs transcript. No new ASR.** Glanceable buttons + the existing 10 s auto-confirm stay as fallback. Skip carries a **strict whole-utterance match + skip-confirm earcon + ~2.5 s undo window**. Repeat is idempotent (no guard, no backend). (Founder-confirmed.) |
-| **4** | **GPT-style recording-UI polish = separate follow-up issue** (out of scope; pointer only, file not created here). |
-| **Eng — where/how** | Command match is **client-side at `handleCommittedTranscript` (`QuizViewModel+Recording.swift:173`), ahead of the MCQ/answer branches** — a sibling of `MCQTranscriptMatcher`. Backend intent-classification routing was **rejected** (round-trip + walks straight into #66). |
-| **Eng — engine** | **One shared `AVAudioEngine` + one input tap** fanning PCM to (a) the `SpeechDetector` VAD (iOS 26 only) and (b) a ~300 ms pre-roll ring buffer that ElevenLabs streaming drains (pre-roll → live) on `speechStarted`. **Never two concurrent engines.** |
-| **Eng — lexicon** | Screen-scoped Slovak word lists: Repeat {zopakuj, zopakuj otázku, opakuj} · Skip {preskoč, preskočiť, ďalšia, ďalšia otázka} · Confirm {potvrď, pošli, áno, ok} · Re-record {znova, ešte raz, nahrať znova} · Undo {späť, nie, zruš}. Screen scoping disambiguates ("ešte raz" = re-record only on the sheet). A recognition lexicon (tracks STT content-language), **not** a UI-string catalog. |
-| **Eng — VAD params** | Silence hangover **~1.2–1.8 s** (keep near 1.5 s); add **min-speech-duration** (reject cough/blip false starts); **pre-roll ~300 ms**; `SpeechDetector.sensitivityLevel` **`.medium → .low`** for road noise; ElevenLabs `vadSilenceThresholdSecs` ~1.5, `minSpeechDurationMs`, `minSilenceDurationMs`. **All are starting points to validate in the car (77.14), not final constants.** |
-| **Eng — state** | One additive `@Published` **capture-phase** (`idle → armed → listening → recording → processing`) on `QuizViewModel` as the single source of truth for earcons + the deferred UI. **Do NOT add `QuizState` cases or `validTransitions` churn** (would churn the RS suite). |
-| **Eng — localization** | Earcons are **language-neutral tones** (no words). Any new user-facing string goes through the existing English-source `Localizable.xcstrings` flow (#56). |
-| **G-77.1** *(Gate-B caution, folded in)* | The `if result.evaluation is None: return result` guard for 77.1 belongs **after the audio-info build (~after `flow.py:223`) and BEFORE the max-questions `:226` and usage-limit `:235` blocks** — **not** at `~:256`. Otherwise a non-answer intent at the daily limit triggers a spurious `FINISHED` transition (`:241`) before the guard runs. |
-| **G-77.7** *(Gate-B caution, folded in)* | 77.7 (single-engine consolidation) is the **largest/riskiest** task → **its own session (Session 4)** with the **full `xcodebuild test` suite** as the gate (not just a filter) plus the `grep -c "AVAudioEngine()"` → 0 acceptance check. |
+| # | Decision | Provenance |
+|---|---|---|
+| **P1** | **No auto-mic START.** After the question TTS the app does **not** open the mic; the existing thinking-timer + mic-button flow is unchanged. Cycle-2 VAD auto-arm + pre-roll are dropped. | **Founder-locked 2026-07-03** |
+| **P2** | **Voice commands = native-English on-device (`SpeechAnalyzer`), English-only for all users** — not ElevenLabs transcript matching. `DictationTranscriber` preferred for the tiny grammar, `SpeechTranscriber` fallback (A/B on device at 77.15). | **Founder-locked 2026-07-03** |
+| **P3** | **Barge-in = OUT of scope.** Strict sequencing: TTS finishes → mic/command listener arms. No AEC / `.voiceChat` / `setPrefersEchoCancelledInput`. | **Founder-confirmed 2026-07-02** |
+| **P4a** | **Spoken "start" opens the mic on `QuestionView`** (`askingQuestion`, after TTS) — the hands-free START recovery. **Coordinator-adopted; founder-overridable** to button-only START (override disables only this wiring, behind a flag default-ON, leaving the rest of the command layer intact). | **Coordinator-adopted 2026-07-03 (founder-overridable)** |
+| **P4b** | **Command set = start · ok · next · repeat · skip** (+ optional "stop" to cancel). Screen-scoped; buttons + the 10 s auto-confirm stay as fallback. **Provisional — final word-set tuning happens at the 77.15 `[HUMAN]` accent gate; be prepared to swap words.** | **Coordinator-adopted 2026-07-03 (provisional; founder-overridable)** |
+| **P5** | **GPT-style recording-UI polish = separate follow-up issue** (out of scope). The capture-phase observable is exposed so the follow-up binds without re-plumbing. | **Founder-delegated 2026-07-02** |
+| **E-topology** | **One shared `AVAudioEngine` + one input tap** fanning PCM to (a) `SpeechDetector` VAD, (b) ElevenLabs `sendAudioChunk`, (c) the new English command transcriber. **Never two concurrent engines.** (b) and (c) are time-disjoint (button START). | Engineering (issue) |
+| **E-match** | Fuzzy/phonetic + edit-distance matcher (sibling of `MCQTranscriptMatcher`), **screen-scoped**, confidence floor, diacritic/case fold, word-boundary tokenization + **per-token accent tolerance**. Skip = **strict whole-utterance** match + skip-confirm earcon + ~2.5 s undo window. | Engineering (issue) |
+| **E-fallback** | Defensive wrapper: any transcriber/detector setup failure (CARQUIZ-3-class drift, 26.3 `start(inputSequence:)` regression, empty `supportedLocales`, <iOS 26) degrades to manual mic-button / tap control instead of crashing. **Mandatory.** | Engineering (issue) |
+| **E-state** | One additive observable **capture-phase** (`idle → armed → listening → recording → processing`) on the view-model — source of truth for earcons + the deferred UI. **Do not** add `QuizState` cases / `validTransitions`. | Engineering (issue) |
 
-**Founder Q1 override note (locked ordering).** If the founder overrides decision 1 to **button-only START** before execution: **drop Session 5 (77.8 + 77.9) entirely** — pre-roll + auto-arm glue. **Session 4 (77.7) stays regardless** (it removes a live crash surface). The spoken-command layer (Sessions 2 + 3, tasks 77.3–77.6, 77.10) is **unaffected**. Session 5 is deliberately scoped to exactly the two override-droppable tasks so the override is a clean "skip Session 5".
-
-**Commit scopes.** 77.1 commits under **#66** (`fix(backend): #66 …`); 77.2 commits under **#67** (`fix(ios): #67 … (Part A)`). Everything else commits under **#77** (`feat(ios)` / `test(ios)` / `docs`).
+**Dependencies (locked ordering):** #66 early-return guard (77.1) is a **HARD PREREQUISITE** — lands before the command layer. #67 Part A (77.2) lands **before or within** #77 and must not be regressed. (Both are their own change-set / commit scope: 77.1 under #66, 77.2 under #67.)
 
 ---
 
 ## Session breakdown
 
-| Session | Tasks | Risk | Depends on / parallel |
+| Session | Tasks | Risk | Notes / dependency markers |
 |---|---|---|---|
-| **1 — Prerequisites (#66 + #67-A)** | 77.1 (backend early-return guard) · 77.2 (iOS interruption teardown covers streaming) | Med | none. **Blocks S4** (77.7 must not regress 77.2). May run ∥ with S2. |
-| **2 — Command / phase / earcon primitives** | 77.3 (lexicon + `VoiceCommandMatcher`) · 77.4 (capture-phase observable) · 77.5 (`EarconPlayer`) | Low | none — pure new utilities + one additive `@Published`. May run ∥ with S1. **Blocks S3, S5.** |
-| **3 — Command routing (answer window + sheet)** | 77.6 (Repeat/Skip + undo) · 77.10 (confirmation-sheet Confirm/Re-record window) | Med | **S2.** Independent of S4/S5 → **may run ∥ with S4.** Blocks S6 (via 77.12). |
-| **4 — Single-engine consolidation** ⚠️ **biggest** | 77.7 (one `AVAudioEngine` + one tap) | **HIGH** | **S1** (must not regress 77.2). **Full-suite gate.** Blocks S5, S6. |
-| **5 — Pre-roll + VAD auto-arm START** | 77.8 (pre-roll ring buffer) · 77.9 (auto-arm + defensive fallback) | Med-High | **S4 + S2.** *(Dropped entirely on the Q1 button-only override.)* Blocks S6. |
-| **6 — Tuning + sim-e2e + docs/localization** | 77.11 (cabin-noise constants) · 77.12 (sim e2e assumption-gate) · 77.13 (doc + localization sweep) | Low-Med | **S3 + S4 + S5.** Last agent session. |
-| **`[HUMAN]` — on-device gate** | 77.14 (batched device pass) | — | **all above; non-blocking.** Founder-only. See below. |
+| **1 — Prerequisites** | 77.1 (#66 backend guard) + 77.2 (#67-A streaming teardown) | Low | Two independent bug-fix prerequisites (backend + iOS), carried **verbatim**. **Blocks** the command layer (#66 guard is the freemium backstop). Commit 77.1 under #66, 77.2 under #67. **⇄ parallelizable** with Session 6 (Pencil). |
+| **2 — Pure-logic core** | 77.3 (lexicon + fuzzy matcher) + 77.4 (capture-phase observable) | Low | No audio, no recognizer — pure logic + unit tests. **Delivers symbols** Sessions 3–5 import. **⇄ parallelizable** with Session 1 and 6. |
+| **3 — Audio topology** | 77.5 (windowed listener + defensive degrade) + 77.7 (single-engine convergence) + 77.6 (VAD-isolation check) | **High** | Highest-risk session. **77.7 folded in with 77.5 on purpose** (Gate-B caution 1: sequencing convergence *with* the listener re-plumb avoids doing the tap wiring twice). 77.6 verifies the English re-locale doesn't perturb the Slovak-answer VAD. **Depends on Session 2** (matcher + capture-phase). |
+| **4 — Command wiring** | 77.8 (spoken "start" + override flag) + 77.9 (confirm/result/repeat windows) | Med | Wires recognized commands to actions per screen. **Depends on Sessions 2 + 3.** |
+| **5 — Earcons + STOP tuning** | 77.10 (earcon set) + 77.11 (cabin-noise STOP constants) | Low | Language-neutral earcons off the capture-phase + STOP-on-silence tuning constants. **Depends on Sessions 2 (phase) + 3 (listener).** |
+| **6 — Pencil design** | 77.12 (`design/quiz-agent.pen` via Pencil MCP **only**) | Low | Listening indicator + per-screen command hints + reworked onboarding explainer; every voice affordance keeps a visible button twin. **Pencil MCP tools only — never Read/Grep the `.pen`.** **⇄ fully parallelizable** (no code dependency). |
+| **7 — Doc hygiene + headless harness** | 77.13 (doc/localization sweep) + 77.14 (headless verification harness, **gates the loop**) | Low | Final integration. 77.13 depends on 77.9 re-wiring `repeatQuestion()`. **77.14 depends on Sessions 2–5** (runs all command suites green + RS-05). ⚠️ **77.14's headless-suite line is contingent on 77.6 producing a real headless `VADIsolationTests`** — if 77.6 fell to the `[HUMAN]` fallback (detector path not headlessly exercisable), that isolation assertion is recorded in the 77.15 checklist instead, and 77.14 asserts only the suites that *are* headless. |
+| **8 — `[HUMAN]` on-device gate** | 77.15 (accent · cabin noise · BT · interruption; final word-set tuning) | — | **Not agent-runnable.** On the iOS 26+ device: real `SpeechTranscriber`/`DictationTranscriber` A/B, Slovak-accented English routing, final word-set lock, cabin-noise STOP tuning, BT HFP/A2DP, phone-call interruption recovery. **Last, non-blocking for the agent sessions.** |
 
-**Suggested ordering for a serial (Ralph) run:** S1 → S2 → S3 → S4 → S5 → S6 → `[HUMAN]`. Where two contexts are available, S2 ∥ S1 and S3 ∥ S4 are safe.
+**Parallelism:** Sessions **1, 2, 6** can run concurrently (no shared files). **3 → 4 → (5, 7)** is the critical path; 3 depends on 2. **8** is last.
 
 ---
 
-## `[HUMAN]` device gate — task 77.14 (last, non-blocking)
+## Human prerequisites
 
-**This is not an agent session** — it needs the founder + a real device + a car, and cannot be headless (`SpeechTranscriber.supportedLocales` is empty on the Simulator; `SpeechDetector` runs only on device). It **does not block** Sessions 1–6 landing green. Flag for the founder once Session 6 is merged.
-
-1. Trigger a TestFlight build via `/testflight` (fastlane + match) and install on the iOS 26+ device.
-2. **VAD START end-to-end (device-only):** after a question, confirm the real `SpeechDetector` arms → `speechStarted` on first speech → silence-stop fires. No crash, no clipped first word.
-3. **Cabin-noise validation (real car) of the 77.11 constants:** no clipped first syllable, no premature stop mid-answer, no false start from road noise. Adjust the hangover / `sensitivityLevel` / min-speech-duration starting points and record the tuned values back into this issue.
-4. **Bluetooth routing:** HFP + A2DP mic/output route correctly (AirPods / car).
-5. **Interruption recovery:** a phone call mid-question recovers cleanly (also closes #67's `[HUMAN]` line).
-6. **77.12 e2e fallback, if taken:** if Session 6 recorded "ElevenLabs streaming unusable on the Simulator," run the command-routing e2e here on device instead.
-
-**Done =** founder sign-off recorded in `issue-77-voice-commands-handsfree.md`.
+Class `a` — no secrets / portal / migration steps gate the agent sessions. The **only** human step is **Session 8 (77.15)**: the founder runs the recorded on-device pass on their iOS 26+ device (speaking each command in their own Slovak-accented English, tuning STOP constants in real cabin noise, checking Bluetooth routing + post-call state). It gates *final acceptance*, not the agent sessions — Sessions 1–7 reach a machine-verified done-state without it.
 
 ---
 
 ## Ready prompt — Session 1 (Prerequisites: #66 guard + #67-A teardown)
 
 ```
-Work on issue #77, Session 1 only: the two hard-prerequisite bug fixes that every later #77 session depends on — 77.1 (#66 backend ghost-question guard) + 77.2 (#67 Part A: interruption teardown covers streaming). Do NOT build any command/earcon/engine work — that's Sessions 2+. Commit the two under their OWN issue numbers (#66, #67), not #77. Stop, commit, push when both are green.
+Work on issue #77, Session 1 only: the two carried-verbatim prerequisites — 77.1 (#66 backend ghost-question guard) + 77.2 (#67 Part A streaming interruption teardown). Do NOT start any voice-command work — that's Sessions 2+. These are two independent bug-fixes; commit 77.1 under #66 and 77.2 under #67. Stop, commit, push when both are green.
 
-Read first (already mapped — do not re-map):
-- docs/issues/issue-77-execution-prompts.md → "Recon snapshot" (Backend + iOS interruption) + "Locked decisions" rows G-77.1 and commit-scopes. Follow G-77.1 exactly on guard placement.
-- apps/quiz-agent/app/quiz/flow.py → process_answer, lines ~220–277 (audio build :220, max-questions FINISHED :226, usage-limit FINISHED :235–254, session-advance :272–277).
-- apps/quiz-agent/tests/ → pytest style (mock OpenAI, fixtures); write tests/test_flow_intent_guard.py.
-- apps/ios-app/Hangs/Hangs/Services/AudioService.swift → handleInterruption .began :385–388, stopStreamingRecording() :704, self.audioEngine :691.
-- apps/ios-app/Hangs/HangsTests/AudioServiceTests.swift → Swift Testing patterns + MockElevenLabsSTTService.
+Read first (don't re-map — this is known):
+- docs/issues/issue-77-execution-prompts.md → "Recon snapshot" + "Locked decisions".
+- apps/quiz-agent/app/quiz/flow.py → the intent loop (~:256-302), current_question_id advance (:272-273), record_question() (:277).
+- apps/quiz-agent/tests/ → pytest patterns (mock OpenAI, fixtures).
+- apps/ios-app/Hangs/Hangs/Services/AudioService.swift → handleInterruption .began (:385-388) calls batch stopRecording(); stopStreamingRecording() is at :704.
+- apps/ios-app/Hangs/HangsTests/AudioServiceTests.swift → Swift Testing + AVAudioSession-mock patterns.
 
 Build:
-1) 77.1 (#66) — In flow.py process_answer, add `if result.evaluation is None: return result` IMMEDIATELY AFTER the audio-info build (after ~:223) and BEFORE the "Check if quiz is finished" (:226) AND "Check usage limit" (:235) blocks — per G-77.1, so a non-answer intent at the daily limit cannot fire a spurious FINISHED transition. Give the text /input path the same guard with a meaningful error; the voice route must surface its 400 with NO state mutation. New test tests/test_flow_intent_guard.py: a non-answer intent leaves session.current_question_id unchanged, never calls record_question(), and surfaces the error with the session still on the original question — assert this holds even when the user is at the daily usage limit (regression for G-77.1).
-2) 77.2 (#67 Part A) — In AudioService.swift handleInterruption .began (:385–388): when audioEngine != nil, call stopStreamingRecording() (:704) in addition to the existing batch stop, and notify QuizViewModel to leave .recording + reset streaming state. Extend HangsTests/AudioServiceTests.swift + a VM state assertion: a simulated interruption during active streaming → audioEngine == nil, isRecording == false, VM out of .recording.
+1) 77.1 (#66) — in app/quiz/flow.py, add `if result.evaluation is None: return result` after the intent loop and BEFORE the session-advance block (ahead of the current_question_id advance :272-273 and record_question() :277). The voice route must surface its 400 with NO state mutation; give the text /input path the same guard with a meaningful error. New test apps/quiz-agent/tests/test_flow_intent_guard.py: a non-answer intent leaves current_question_id unchanged, does NOT call record_question(), and surfaces the error. Commit under #66.
+2) 77.2 (#67-A) — in AudioService.swift handleInterruption .began (:385-388): when audioEngine != nil, call stopStreamingRecording() (:704) AND notify QuizViewModel to leave .recording and reset streaming state. Extend HangsTests/AudioServiceTests.swift + a VM state assertion: a simulated interruption during streaming yields audioEngine == nil, isRecording == false, VM out of .recording. Commit under #67.
 
-Done =
-- 77.1: `cd apps/quiz-agent && pytest tests/ -v` GREEN including test_flow_intent_guard.py; ruff clean.
-- 77.2: `cd apps/ios-app/Hangs && xcodebuild test -scheme Hangs-Local -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -only-testing:HangsTests/AudioServiceTests` GREEN.
-Commit 77.1 as `fix(backend): #66 — voice-submit ghost question early-return guard` and 77.2 as `fix(ios): #67 (Part A) — interruption teardown covers streaming path`. Push to main. Tick 77.1 + 77.2 in docs/issues/issue-77-voice-commands-handsfree.md and mark them ✅ in the Status table of issue-77-execution-prompts.md. These are correctness backstops — fail loud, no skipped tests.
+Done = `cd apps/quiz-agent && pytest tests/ -v` GREEN (incl. test_flow_intent_guard.py) AND `xcodebuild test -only-testing:HangsTests/AudioServiceTests` GREEN. Commit per fix, push to main. Tick 77.1 + 77.2 in issue-77-voice-commands-handsfree.md and update the docs/todo/TODO.md #77 line. Fail loud — no silent skips.
 ```
 
 ---
 
-## Ready prompt — Session 2 (Command / phase / earcon primitives)
+## Ready prompt — Session 2 (Pure-logic core: matcher + capture-phase)
 
 ```
-Work on issue #77, Session 2 only: the three standalone primitives every routing session imports — 77.3 (Slovak lexicon + VoiceCommandMatcher), 77.4 (capture-phase observable), 77.5 (EarconPlayer). Do NOT wire them into the recording flow yet (that's Session 3) and do NOT touch the audio engine (Session 4). Stop, commit, push when green. Independent of Session 1 — needs nothing merged first.
+Work on issue #77, Session 2 only: the pure-logic core — 77.3 (English command lexicon + fuzzy/phonetic matcher) + 77.4 (capture-phase observable). NO recognizer, NO audio, NO listener lifecycle — that's Session 3. Pure logic + unit tests only. Stop, commit, push when green.
 
-Read first (already mapped):
-- docs/issues/issue-77-execution-prompts.md → "Recon snapshot" (iOS) + "Locked decisions" (Eng — lexicon, Eng — state, Eng — localization).
-- apps/ios-app/Hangs/Hangs/Utilities/MCQTranscriptMatcher.swift → the sibling to mirror: `enum` (:16), `static func match(_:options:)` (:30), diacritic-fold `normalize(_:)` (:70). New files go in this same Utilities/ folder.
-- apps/ios-app/Hangs/Hangs/ViewModels/QuizViewModel.swift → :307–346 (service fields + init) and where @Published state lives; SilenceEvent enum in Services/SilenceDetectionService.swift:27–29.
-- apps/ios-app/Hangs/Hangs/Services/Mocks/MockSilenceDetectionService.swift → inject SilenceEvents in 77.4 tests.
-- apps/ios-app/Hangs/HangsTests/QuizViewModelMCQVoiceTests.swift → Swift Testing (@Test) idiom.
+Read first:
+- docs/issues/issue-77-execution-prompts.md → "Recon snapshot" + "Locked decisions" (esp. E-match, E-state).
+- apps/ios-app/Hangs/Hangs/Utilities/MCQTranscriptMatcher.swift → the sibling matcher style to mirror (fuzzy, diacritic/case fold).
+- apps/ios-app/Hangs/Hangs/ViewModels/QuizViewModel.swift → where the additive capture-phase @Published/@Observable goes; the QuizState machine + validTransitions (DO NOT add cases to these).
+- apps/ios-app/Hangs/HangsTests/ → Swift Testing patterns.
 
 Build:
-1) 77.3 — Hangs/Utilities/VoiceCommandLexicon.swift (screen-scoped word lists from Locked-decisions "Eng — lexicon": Repeat · Skip · Confirm · Re-record · Undo) and Hangs/Utilities/VoiceCommandMatcher.swift — diacritic-fold + tiered match, sibling of MCQTranscriptMatcher, with the STRICT WHOLE-UTTERANCE rule for Skip (the transcript must BE a skip phrase modulo filler, not merely contain "preskoč"). HangsTests/VoiceCommandMatcherTests.swift: all five groups match after diacritic-fold; "to sa nedá preskočiť" is NOT a skip; "ešte raz" = re-record only in sheet scope (never repeat in answer scope); non-commands return no match.
-2) 77.4 — an additive `@Published` capture-phase (idle → armed → listening → recording → processing) on QuizViewModel. NO new QuizState cases, NO validTransitions churn. Transition it from the existing seams (QuizViewModel+Audio.swift :84/:95, QuizViewModel+Recording.swift). HangsTests/QuizViewModelCapturePhaseTests.swift driving injected SilenceEvents (.speechStarted / .silenceAfterSpeech(duration:)) through MockSilenceDetectionService.
-3) 77.5 — Hangs/Utilities/EarconPlayer.swift: four language-neutral tones — micLive, gotIt, commandAck, skipConfirm — injectable (protocol) so tests can spy; triggered from capture-phase transitions + command events. HangsTests/EarconPlayerTests.swift: a spy asserts the phase/event → earcon mapping. Tones only, no speech.
+1) 77.3 — new apps/ios-app/Hangs/Hangs/Utilities/VoiceCommandMatcher.swift + VoiceCommandLexicon.swift (constants sibling of MCQTranscriptMatcher). Lexicon = the accent-chosen English set start · ok · next · repeat · skip (+ optional stop/cancel), each with accent-tolerant variants. match(transcript:on screen:) tokenizes on word boundaries, folds diacritics/case, scores each token against ONLY that screen's 1-2 valid commands with phonetic/edit-distance distance + a confidence floor. Skip = STRICT whole-utterance match (transcript must BE the skip word modulo filler, not merely contain it). Expose a pure UndoWindow value type (~2.5 s) that a spoken cancel word ("stop"/"no") or a tap resolves to abort-vs-commit. No recognizer, no audio.
+2) 77.4 — add ONE additive capture-phase (idle → armed → listening → recording → processing) to QuizViewModel as the single source of truth for earcons + the deferred UI. DO NOT add QuizState cases or validTransitions. Drive transitions off INJECTED lifecycle events (arm/listen/recognize/record/process).
 
-Done = `xcodebuild test` (shorthand in the execution-prompts recon) with `-only-testing:HangsTests/VoiceCommandMatcherTests -only-testing:HangsTests/QuizViewModelCapturePhaseTests -only-testing:HangsTests/EarconPlayerTests` all GREEN; build clean. Commit per primitive (`feat(ios): #77 — VoiceCommandMatcher + Slovak lexicon`, `feat(ios): #77 — capture-phase observable`, `feat(ios): #77 — EarconPlayer`). Push. Tick 77.3/77.4/77.5 in issue-77-voice-commands-handsfree.md and Status here.
+Tests:
+- HangsTests/VoiceCommandMatcherTests.swift over recorded/synthetic English transcripts: correct routing per screen; accented near-miss ("stat"→start) matches; non-command → no match; "ok"=confirm on the sheet vs =advance on the result (screen scoping); strict-skip REJECTS "let's skip this one" (contains-but-isn't skip); undo-window commit/abort timing.
+- HangsTests/CommandCapturePhaseTests.swift: injected event sequence produces the expected phase sequence; illegal transitions are rejected/no-op.
+
+Done = `xcodebuild test -only-testing:HangsTests/VoiceCommandMatcherTests` and `-only-testing:HangsTests/CommandCapturePhaseTests` both GREEN; a grep shows NO new QuizState cases / validTransitions. Commit (matcher+lexicon; capture-phase), push, tick 77.3 + 77.4.
+
+Note for later sessions: you are DELIVERING the matcher entry point `match(transcript:on:)`, the lexicon constants, the `UndoWindow` type, and the capture-phase enum + its driver — Sessions 3/4/5 import these. Record their exact signatures under Status when done.
 ```
 
 ---
 
-## Ready prompt — Session 3 (Command routing — answer window + confirmation sheet)
+## Ready prompt — Session 3 (Audio topology: listener + single-engine + VAD isolation)
 
 ```
-Work on issue #77, Session 3 only: wire the Session-2 primitives into the recording flow — 77.6 (answer-window Repeat/Skip + undo) + 77.10 (confirmation-sheet Confirm/Re-record window). Session 2 (VoiceCommandMatcher, capture-phase, EarconPlayer) must be merged first. Do NOT touch the audio engine (Session 4) or add pre-roll/auto-arm (Session 5). Stop, commit, push when green.
+Work on issue #77, Session 3 only — the highest-risk session: 77.5 (windowed native-English command listener + defensive degrade-to-buttons) + 77.7 (single shared AVAudioEngine convergence) + 77.6 (VAD-isolation check). 77.7 is folded in with 77.5 deliberately so the tap is re-plumbed ONCE, not twice. Do NOT wire command→action routing (that's Session 4) or earcons (Session 5). Session 2 (matcher + capture-phase) must be merged first. Stop, commit, push when green.
 
-Read first (already mapped):
-- docs/issues/issue-77-execution-prompts.md → "Recon snapshot" (iOS command seam + timers) + "Locked decisions" (decision 3, Eng — where/how).
-- apps/ios-app/Hangs/Hangs/ViewModels/QuizViewModel+Recording.swift → handleCommittedTranscript (:173); MCQTranscriptMatcher call (:204) — insert command classification AHEAD of the MCQ/answer branches.
-- apps/ios-app/Hangs/Hangs/ViewModels/QuizViewModel.swift → repeatQuestion() (:1017, currently DEAD — wire it), skipQuestion() (:675 — note: the ~:690 anchor is a submitTextInput call inside its body), submitTextInput call sites (:614/:659/:690).
-- apps/ios-app/Hangs/Hangs/ViewModels/QuizViewModel+Timers.swift → auto-confirm (:198) / cancelAutoConfirm (:222) — the sheet's 10 s default.
-- The Session-2 modules: VoiceCommandMatcher, VoiceCommandLexicon, EarconPlayer, capture-phase.
+Read first:
+- docs/issues/issue-77-execution-prompts.md → "Recon snapshot" + "Locked decisions" (E-topology, E-fallback), and the ⚠️ gotchas (SpeechAnalyzer fragility, empty supportedLocales on Simulator, no contextualStrings).
+- apps/ios-app/Hangs/Hangs/Services/SilenceDetectionService.swift → the paired-but-UNUSED SpeechTranscriber (declared :108, comment :106; only detector.results consumed at :195); engine :125, tap :162.
+- apps/ios-app/Hangs/Hangs/Services/AudioService.swift → streaming engine block ~:605, tap :652, startStreamingRecording, stopStreamingRecording() :704.
+- apps/ios-app/Hangs/Hangs/ViewModels/QuizViewModel+Audio.swift:95 → Engine A re-armed after TTS (the second concurrent engine to eliminate).
+- Session 2's VoiceCommandMatcher + capture-phase (import their exact signatures from the Status notes).
 
 Build:
-1) 77.6 — In handleCommittedTranscript, classify the committed transcript via VoiceCommandMatcher (answer scope) BEFORE the MCQ/answer branches. Repeat → wire the dead repeatQuestion() (:1017) to replay question audio + re-arm (pure client action, NO POST). Skip → skipConfirm earcon + a ~2.5 s undo window (spoken "späť/nie" or a tap cancels) BEFORE skipQuestion() (:675) POSTs. Non-command falls through unchanged to the existing answer path. Add the Rule-#11 one-liner comment beside the undo-window constant: the window holds the already-open ElevenLabs stream ~2.5 s longer — no new streaming sessions. HangsTests/QuizViewModelCommandRoutingTests.swift (spy on networkService.submitTextInput): "zopakuj" replays + re-arms with ZERO submits; "preskoč" POSTs skip only after the window elapses; "späť"/tap in-window cancels with ZERO network calls; a normal answer still submits.
-2) 77.10 — When AnswerConfirmationView appears, open a short listening window on the SAME ElevenLabs streaming path: Confirm lexicon → confirm; Re-record lexicon → re-record. Keep the 10 s auto-confirm (Config.autoConfirmDelaySecs) as the no-speech default and the sheet buttons as fallback. Tests: spoken confirm/re-record route correctly; with no speech the 10 s auto-confirm still fires; buttons unregressed.
+1) 77.5 — re-locale the already-instantiated-but-unused paired SpeechTranscriber in SilenceDetectionService.swift to an ENGLISH locale and add ONE async consumer loop feeding Session 2's matcher — no new engine, same tap/buffers. Add a windowed listener lifecycle: armed ONLY on Home (idle) / Question (askingQuestion, after TTS) / Confirmation (processing) / Result (showingResult); TORN DOWN during TTS and re-armed after (the 1a19438 self-trigger guard, same rule as VAD); NEVER armed during recording. Wrap transcriber/detector setup + start(inputSequence:) in a DEFENSIVE guard: any throw/failure (CARQUIZ-3 drift, 26.3 streaming regression, empty supportedLocales, <iOS 26) degrades to the manual mic-button/tap flow instead of crashing. Recognizer MOCKED in tests.
+2) 77.7 — converge onto ONE AVAudioEngine + one input tap fanning PCM to (a) SpeechDetector VAD (SilenceDetectionService engine :125 / tap :162), (b) ElevenLabs sendAudioChunk (AudioService streaming block ~:605 / tap :652), (c) the new command transcriber. startStreamingRecording must CONSUME the shared tap, never instantiate a second engine (ElevenLabsSTTService owns no audio hardware). (b) and (c) are time-disjoint (button START). Regression-guard the "no two concurrent engines" invariant.
+3) 77.6 — verify the English re-locale does NOT change SpeechDetector VAD behaviour during the Slovak answer window: detector silence-hangover / stop-on-silence timing must be identical with the transcriber localed `en` vs its prior locale.
 
-Done = `xcodebuild test -only-testing:HangsTests/QuizViewModelCommandRoutingTests` GREEN + the sheet tests GREEN + `/regression` RS-05..RS-08 GREEN (buttons unregressed). Commit (`feat(ios): #77 — answer-window Repeat/Skip command routing + undo`, `feat(ios): #77 — confirmation-sheet Confirm/Re-record window`). Push. Tick 77.6/77.10 + Status.
+Tests (recognizer mocked throughout):
+- HangsTests/CommandListenerTests.swift: listener armed/torn-down per state (assert against injected state changes); NO arming during TTS or recording; a thrown setup error leaves button-only mode, no crash, buttons functional.
+- HangsTests/AudioServiceTests.swift (or new SharedEngineTests.swift): only ONE AVAudioEngine instance across a full ask→record→confirm cycle; command-listen and answer-stream are never both live.
+- HangsTests/VADIsolationTests.swift: feed a fixed PCM/silence fixture through SilenceDetectionService; assert the detector.results stop-decision sequence + timing are byte-for-byte identical across the two transcriber-locale configs. IF the detector path cannot be exercised headlessly, DO NOT fake it: record an explicit written side-by-side detector-timing comparison step and fold it into the 77.15 [HUMAN] checklist, and note in your Status that VADIsolationTests fell to the [HUMAN] fallback (Session 7's 77.14 depends on knowing this).
+
+Done = `xcodebuild test -only-testing:HangsTests/CommandListenerTests`, `-only-testing:HangsTests/AudioServiceTests` (single-engine + time-disjoint assertions), and `-only-testing:HangsTests/VADIsolationTests` all GREEN — OR VADIsolationTests explicitly deferred to 77.15 with the comparison step recorded. Commit per task, push, tick 77.5 + 77.6 + 77.7. Record under Status whether 77.6 is headless or [HUMAN]-deferred.
 ```
 
 ---
 
-## Ready prompt — Session 4 (Single shared AVAudioEngine — the architecture pin) ⚠️ biggest/riskiest
+## Ready prompt — Session 4 (Command wiring: start / confirm / result / repeat)
 
 ```
-Work on issue #77, Session 4 only: task 77.7 — converge the two AVAudioEngines onto ONE engine + ONE input tap. This is the largest, riskiest task (Gate-B G-77.7): it gets a full-suite gate. Session 1 (77.2 interruption teardown) must be merged first, and you MUST NOT regress it. Do NOT add pre-roll or auto-arm yet — that's Session 5 (this session keeps the existing arm/stream trigger points working through the new shared tap). Stop, commit, push only when the WHOLE suite is green.
+Work on issue #77, Session 4 only: 77.8 (spoken "start" opens the mic on QuestionView, founder-overridable flag) + 77.9 (Confirmation-sheet + Result listening windows: "ok"/"again"/"next"/"repeat"). Sessions 2 (matcher/phase) + 3 (listener/engine) must be merged first. Do NOT touch earcons (Session 5) or VAD constants (Session 5). Stop, commit, push when green.
 
-Read first (already mapped):
-- docs/issues/issue-77-execution-prompts.md → "Recon snapshot" (the two-engines paragraph) + "Locked decisions" (Eng — engine, G-77.7).
-- apps/ios-app/Hangs/Hangs/Services/SilenceDetectionService.swift → AVAudioEngine (:125), tap (:162), SpeechDetector wiring, sub-iOS-26 behaviour.
-- apps/ios-app/Hangs/Hangs/Services/AudioService.swift → AVAudioEngine (:609), tap (:652), self.audioEngine (:691), startStreamingRecording, stopStreamingRecording (:704), handleInterruption .began (:385–388 — 77.2's teardown must still hold).
-- apps/ios-app/Hangs/Hangs/Services/ElevenLabsSTTService.swift → sendAudioChunk(_:) (:103); it owns NO engine — it just consumes PCM.
-- HangsTests/AudioServiceTests.swift + HangsTests/SilenceDetectionServiceTests.swift.
+Read first:
+- docs/issues/issue-77-execution-prompts.md → "Locked decisions" (P1, P4a, P4b).
+- apps/ios-app/Hangs/Hangs/ViewModels/QuizViewModel.swift → startRecording() path; the DEAD repeatQuestion() at :1017 (re-wire it); the QuizState machine.
+- Session 3's windowed listener + Session 2's matcher (import exact signatures from Status).
 
-Build (77.7): one shared AVAudioEngine + one input tap that fans PCM to (a) the SpeechDetector analyzer input (iOS 26 only — detector fan-out optional so the owner still works sub-iOS-26) and (b) a consumer feeding ElevenLabsSTTService.sendAudioChunk. startStreamingRecording MUST NO LONGER instantiate an engine — it consumes the shared tap. Preserve 77.2's interruption teardown (streaming stop + engine nil). Update SilenceDetectionServiceTests + AudioServiceTests for the shared-tap topology.
+Build:
+1) 77.8 — wire the recognized "start" command on QuestionView (askingQuestion, after TTS) to the existing startRecording() path — the hands-free START recovery. Gate it behind a single build/settings flag (default ON) so the founder can override to button-only START, which disables ONLY this wiring and leaves the rest of the command layer intact (P4a). DO NOT add auto-mic-open — the thinking-timer + mic-button flow is unchanged (P1).
+2) 77.9 — wire recognized commands on AnswerConfirmationView (processing): "ok" → confirm, "again"/"retry" → re-record, ON TOP OF the existing 10 s auto-confirm (unchanged, still the no-speech default) and the buttons; and ResultView (showingResult): "next"/"ok" → advance (auto-advance unchanged). Re-wire the dead repeatQuestion() (:1017) so "repeat" on QuestionView replays the question audio and re-arms the listener.
 
-Done =
-- Full suite: `cd apps/ios-app/Hangs && xcodebuild test -scheme Hangs-Local -destination 'platform=iOS Simulator,name=iPhone 17 Pro'` GREEN (not just a filter — the whole HangsTests suite, per G-77.7).
-- `grep -c "AVAudioEngine()" apps/ios-app/Hangs/Hangs/Services/AudioService.swift` → 0.
-- 77.2's interruption test still GREEN (no regression).
-Commit `feat(ios): #77 — single shared AVAudioEngine + one input tap (architecture pin)`. Push. Tick 77.7 + Status. This removes a live crash surface (#64) — if the full suite is not clean, do NOT commit; diagnose first.
+Tests:
+- HangsTests/StartCommandTests.swift: flag ON → recognized "start" on askingQuestion invokes startRecording(); flag OFF → it does not; "start" is inert in every other state; no auto-mic-open path exists.
+- HangsTests/ConfirmResultCommandTests.swift: "ok"/"again" route to confirm/re-record within the sheet window; the 10 s auto-confirm still fires with no speech; "next" advances on result; "repeat" invokes repeatQuestion() and re-arms.
+
+Done = `xcodebuild test -only-testing:HangsTests/StartCommandTests` and `-only-testing:HangsTests/ConfirmResultCommandTests` GREEN. Commit per task, push, tick 77.8 + 77.9.
 ```
 
 ---
 
-## Ready prompt — Session 5 (Pre-roll ring buffer + VAD auto-arm START)
+## Ready prompt — Session 5 (Earcons + cabin-noise STOP tuning)
 
 ```
-Work on issue #77, Session 5 only: the START-side glue riding on the Session-4 shared engine — 77.8 (pre-roll ring buffer) + 77.9 (VAD auto-arm START + defensive fallback). Session 4 (single shared engine) AND Session 2 (capture-phase + EarconPlayer) must be merged first. Do NOT tune VAD constants (that's 77.11 in Session 6). Stop, commit, push when green.
+Work on issue #77, Session 5 only: 77.10 (minimal language-neutral earcon set) + 77.11 (cabin-noise STOP tuning constants). Sessions 2 (capture-phase) + 3 (listener) must be merged first. Stop, commit, push when green.
 
-⚠️ FOUNDER Q1 OVERRIDE CHECK — do this FIRST: if the founder has overridden decision 1 to button-only START, SKIP THIS ENTIRE SESSION (77.8 + 77.9 are exactly the override-droppable tasks). Session 4 (77.7) already shipped and stays. If auto-VAD START is still the plan (the default), proceed.
-
-Read first (already mapped):
-- docs/issues/issue-77-execution-prompts.md → "Locked decisions" (decision 1, Eng — engine, Eng — VAD params) + "Founder Q1 override note".
-- apps/ios-app/Hangs/Hangs/ViewModels/QuizViewModel+Audio.swift → TTS teardown (:84 — NEVER arm during TTS, the 1a19438 lesson), re-arm seam (:95).
-- apps/ios-app/Hangs/Hangs/Utilities/Config.swift → autoRecordDelayMs (:116).
-- apps/ios-app/Hangs/Hangs/Utilities/AppState.swift → silenceDetectionService nil on sub-iOS-26 (:53–56); QuizViewModel.swift silenceDetectionAvailable (:1087).
-- The Session-4 shared tap + Session-2 capture-phase / EarconPlayer.
+Read first:
+- docs/issues/issue-77-execution-prompts.md → "Locked decisions" (VAD parameter starting points; earcons language-neutral).
+- Session 2's capture-phase enum + the matcher's recognize/skip events (import from Status).
+- apps/ios-app/Hangs/Hangs/Services/SilenceDetectionService.swift → where SpeechDetector.sensitivityLevel + the silence hangover live; and the ElevenLabs streaming VAD params.
 
 Build:
-1) 77.8 — a ~300 ms pre-roll ring buffer fed from the Session-4 shared tap; on speechStarted, drain pre-roll THEN live frames into ElevenLabsSTTService.sendAudioChunk. Add `preRollMs = 300` to Config.swift, commented as a starting point pending car validation (77.14). HangsTests/PreRollBufferTests.swift with injected PCM frames: the buffer retains only the window; drain order is pre-roll → live.
-2) 77.9 — arm the detector only AFTER TTS completion + a micLive earcon (re-arm seam :95; TTS teardown at :84 stays — never arm during TTS; respect Config.autoRecordDelayMs). On .speechStarted, start ElevenLabs streaming from the shared tap with pre-roll; a min-speech-duration guard CANCELS (never submits) on a cough/blip. A detector setup failure/throw (CARQUIZ-3-class drift) or silenceDetectionService == nil degrades to manual mic-button START without crashing. Extend HangsTests/QuizViewModelCapturePhaseTests.swift: no arming while TTS plays; a sub-min-speech blip returns to armed with NO submit; the fallback path reaches button-start.
+1) 77.10 — distinct tones for: mic-live (mic opens), got-it (STOP), skip-confirm (the 77.3 undo window), command-ack (a spoken command recognized). Driven off the 77.4 capture-phase + the matcher's recognize/skip events; NO words (language-neutral). Absorbs #68's record-start/stop earcon item (note in the commit that #68 should mark it delivered-by-#77). None emitted during TTS.
+2) 77.11 — centralise STOP-on-silence tuning as NAMED constants: silence hangover ~1.2-1.8 s (keep near the current 1.5 s), a min-speech-duration to reject cough/blip false starts, SpeechDetector.sensitivityLevel .medium → .low for road noise, and ElevenLabs vadSilenceThresholdSecs / minSpeechDurationMs / minSilenceDurationMs. NO pre-roll/prefix-padding (START is button/timer, P1), no new VAD engine. Values are starting points to be finalised on-device at 77.15.
 
-Done = `xcodebuild test -only-testing:HangsTests/PreRollBufferTests -only-testing:HangsTests/QuizViewModelCapturePhaseTests` GREEN; build clean. Commit (`feat(ios): #77 — pre-roll ring buffer`, `feat(ios): #77 — VAD auto-arm START + defensive fallback`). Push. Tick 77.8/77.9 + Status.
+Tests:
+- HangsTests/EarconTests.swift: each capture-phase/command event triggers EXACTLY its earcon; none is emitted during TTS.
+- HangsTests/VADConstantsTests.swift: constants are within the documented ranges and consumed by SilenceDetectionService (a min-speech-duration rejects a sub-threshold blip fixture).
+
+Done = `xcodebuild test -only-testing:HangsTests/EarconTests` and `-only-testing:HangsTests/VADConstantsTests` GREEN. Commit per task, push, tick 77.10 + 77.11.
 ```
 
 ---
 
-## Ready prompt — Session 6 (Cabin-noise tuning + sim e2e assumption-gate + docs/localization)
+## Ready prompt — Session 6 (Pencil design update — MCP tools ONLY)
 
 ```
-Work on issue #77, Session 6 only: close-out — 77.11 (cabin-noise tuning constants) + 77.12 (sim e2e command routing, assumption-gated) + 77.13 (doc hygiene + localization sweep). Sessions 3, 4, 5 must be merged first (this session tunes/verifies/documents the finished feature). Stop, commit, push when green (or with the 77.12 negative explicitly recorded — see below).
+Work on issue #77, Session 6 only: 77.12 — update the Pencil design (design/quiz-agent.pen). This session is INDEPENDENT of the code sessions (no code dependency) and can run any time.
 
-Read first (already mapped):
-- docs/issues/issue-77-execution-prompts.md → "Locked decisions" (Eng — VAD params, Eng — localization) + "Recon snapshot" (doc-hygiene targets).
-- apps/ios-app/Hangs/Hangs/Services/SilenceDetectionService.swift → silenceThreshold (:73), sensitivityLevel .medium (:102); apps/ios-app/Hangs/Hangs/Services/ElevenLabsSTTService.swift session params.
-- CONTEXT.md:55–56; apps/ios-app/Hangs/Hangs/Views/OnboardingView.swift:293–295; apps/ios-app/Hangs/Hangs/Utilities/Logging.swift:31–32; apps/ios-app/Hangs/Hangs/Localizable.xcstrings.
-- Backend token route for 77.12: POST /api/v1/elevenlabs/token (backend on :8002, `cd apps/quiz-agent && uvicorn app.main:app --reload --port 8002`).
+⚠️ HARD RULE: the .pen file is ENCRYPTED. NEVER Read or Grep design/quiz-agent.pen or any .pen file. Use ONLY the "pencil" MCP tools. Your FIRST two calls must be:
+1) get_editor_state(include_schema: true)  — you cannot use any other pencil tool without the schema.
+2) get_guidelines
+Then design against the returned schema.
+
+Read first (for the design intent only — these are markdown, safe to Read):
+- docs/issues/issue-77-execution-prompts.md → "Locked decisions" (P4a, P4b, P5).
+- docs/issues/issue-77-voice-commands-handsfree.md → the "Pencil design update (IN SCOPE — decision 6)" bullet in ## Scope.
+
+Build (via pencil MCP batch_design etc.):
+- A LISTENING INDICATOR distinct from the existing answer-recording LISTENING card, on Question / Confirmation / Result.
+- PER-SCREEN command hints: Home "Say 'start'"; Question "Say 'start' / 'repeat' / 'skip'"; Confirmation "Say 'ok' / 'again'"; Result "Say 'next'".
+- Rework the ONBOARDING voice explainer to teach the small English command set and note it is ENGLISH-ONLY by design.
+- EVERY voice affordance keeps a VISIBLE BUTTON TWIN — the design must not imply voice-only control.
+
+Validate with snapshot_layout / get_screenshot on each updated screen.
+
+Done = get_screenshot of Home/Question/Confirmation/Result each shows the listening indicator, the per-screen hint text, and a visible button twin for every voice affordance; the onboarding screen states English-only. NO .pen file was Read/Grep'd (pencil MCP only). Commit the .pen change, push, tick 77.12.
+```
+
+---
+
+## Ready prompt — Session 7 (Doc hygiene + headless verification harness)
+
+```
+Work on issue #77, Session 7 only: 77.13 (doc-hygiene + localization sweep) + 77.14 (headless verification harness — this is what gates the loop). Sessions 2-5 must be merged first (77.14 runs all their suites); 77.13 depends on Session 4 having re-wired repeatQuestion(). Stop, commit, push when green.
+
+Read first:
+- docs/issues/issue-77-execution-prompts.md → "Recon snapshot" (doc-hygiene targets) + the Session breakdown note on 77.14's 77.6 contingency.
+- CONTEXT.md:56 (glossary "voice commands always available"); apps/ios-app/Hangs/Hangs/Views/OnboardingView.swift:295 (`Say "skip", "pass", or "next" anytime`); apps/ios-app/Hangs/Hangs/Utilities/Logging.swift:32 (Logger.voice comment).
+- Session 3's Status note on whether 77.6 (VADIsolationTests) is headless or fell to the [HUMAN] fallback.
 
 Build:
-1) 77.11 — SilenceDetectionService.swift: keep silenceThreshold within the 1.2–1.8 s band, set sensitivityLevel .medium → .low, add a min-speech-duration constant; ElevenLabs params (vadSilenceThresholdSecs ~1.5, minSpeechDurationMs, minSilenceDurationMs) in ElevenLabsSTTService.swift. Comment ALL as starting points pending 77.14 car validation. Update SilenceDetectionServiceTests.
-2) 77.12 — STEP 1 (assumption check): a smoke test opens a REAL ElevenLabs streaming session on the sim (token via POST /api/v1/elevenlabs/token, backend on :8002) and receives a committed transcript from played Slovak audio. IF THIS FAILS on the sim: record the verified negative in issue-77-voice-commands-handsfree.md and MOVE the e2e to the 77.14 [HUMAN] gate — that is the defined fallback (do not force it green). STEP 2 (only if step 1 passes): an env-gated (ELEVENLABS_E2E=1) e2e — audio → ElevenLabs transcript → matcher → route (repeat, skip+undo, confirm, re-record, answer fall-through), Apple detector mocked. Keep the default suite hermetic (no streaming minutes when the flag is unset).
-3) 77.13 — Fix CONTEXT.md:55–56 ("always available" → the voice-plus-button reality), OnboardingView.swift:293–295 (new command copy as string literals so keys land in Localizable.xcstrings per #56), Logging.swift:31–32 stale Logger.voice comment; drop the "repeatQuestion() has no caller" stale comments (77.6 wired it). Confirm every new user-facing string from Sessions 2–5 has a key in Hangs/Localizable.xcstrings.
+1) 77.13 — correct the now-false "voice commands always available" copy to the new English-voice-plus-button reality: CONTEXT.md:56 glossary, OnboardingView.swift:295, Logging.swift:32 Logger.voice comment; remove/replace the dead repeatQuestion() doc reference (Session 4 re-wired it). Any NEW user-facing string routes through the English-source Localizable.xcstrings flow (#56; Slovak UI translation stays deferred). Earcons stay language-neutral (no strings).
+2) 77.14 — ensure the machine-checkable surface is green as ONE suite: capture-phase (77.4), matcher routing/strict-skip/scoping/undo (77.3), listener windowing + defensive fallback (77.5), single-engine (77.7), start/confirm/result routing (77.8-77.9), earcons (77.10), VAD constants (77.11) — Apple recognizer mocked throughout.
+   ⚠️ VADIsolationTests (77.6): include it in the suite ONLY IF Session 3 delivered it as a real headless test. If Session 3 recorded that 77.6 fell to the [HUMAN] fallback, DO NOT invent a headless version — assert only the suites that are genuinely headless and confirm the 77.6 side-by-side detector-timing comparison is recorded in the 77.15 checklist.
+   Add/extend the relevant /regression scenario if the listener windowing touches an existing RS flow (esp. RS-05 auto-confirm must still reach its terminal assertion with the sheet listener armed).
 
-Done =
-- 77.11: `xcodebuild test -only-testing:HangsTests/SilenceDetectionServiceTests` GREEN + file inspection (hangover 1.2–1.8 s, .low, min-speech constant present).
-- 77.12: the ELEVENLABS_E2E=1 run GREEN — OR the verified negative recorded in issue-77-voice-commands-handsfree.md with the e2e listed under 77.14.
-- 77.13: `grep "always available" CONTEXT.md` → no match; new keys present in Localizable.xcstrings; `xcodebuild` build GREEN.
-- Full `/regression` RS-01..RS-18 GREEN; no new QuizState cases in validTransitions (file inspection of QuizViewModel.swift).
-Commit (`feat(ios): #77 — cabin-noise tuning constants`, `test(ios): #77 — sim e2e command routing (assumption-gated)`, `docs: #77 — voice-command doc + localization sweep`). Push. Tick 77.11/77.12/77.13 + Status. Then flag the 77.14 [HUMAN] device gate to the founder (it does not block this session landing).
+Done = `xcodebuild test -only-testing:HangsTests` GREEN (all command suites) AND `cd apps/quiz-agent && pytest tests/ -v` GREEN; `/regression RS-05` reaches its terminal assertion with no REJECTED transitions. Commit per task, push, tick 77.13 + 77.14.
 ```
+
+---
+
+## Session 8 — 77.15 `[HUMAN]` on-device gate (NOT agent-runnable)
+
+**This is a founder task, run last, on the target iOS 26+ device — non-blocking for Sessions 1–7.** On the device (not the Simulator — `supportedLocales` is empty there):
+
+1. Arm the real `SpeechTranscriber` **and** `DictationTranscriber` (A/B both per delta §B1).
+2. Speak each command (**start · ok · next · repeat · skip** [+ optional **stop**]) in the **founder's own Slovak-accented English** and confirm routing. **Swap any word that mis-transcribes** — the set (P4b) is provisional until here.
+3. Tune the 77.11 STOP constants against real cabin noise (no clipping of a thinking pause).
+4. Verify Bluetooth **HFP/A2DP** mic routing.
+5. Confirm phone-call interruption recovery (77.2) leaves no stranded recording.
+6. If 77.6 (`VADIsolationTests`) fell to the `[HUMAN]` fallback: record the side-by-side detector-timing comparison here.
+
+Record results in a `docs/testing/runs/RS-*` file or the issue checklist. **#77 is explicitly NOT fully headless-closable — stated, not hidden.**
 
 ---
 
 ## Status
 
-- ✅ Recon done (this doc) — anchors re-verified against HEAD `864cf1a` (2026-07-02); iOS engine-count + matcher API + guard placement spot-checked first-hand. Class guard: **`a`** confirmed (only backend change is a `flow.py` control-flow guard; no schema/migration/auth/payments).
-- ⬜ **Session 1 — Prerequisites (77.1 #66 + 77.2 #67-A)**
-- ⬜ **Session 2 — Command/phase/earcon primitives (77.3 + 77.4 + 77.5)**
-- ⬜ **Session 3 — Command routing (77.6 + 77.10)**
-- ⬜ **Session 4 — Single shared AVAudioEngine (77.7)** ⚠️ full-suite gate
-- ⬜ **Session 5 — Pre-roll + VAD auto-arm START (77.8 + 77.9)** *(dropped on Q1 button-only override)*
-- ⬜ **Session 6 — Tuning + sim-e2e + docs/localization (77.11 + 77.12 + 77.13)**
-- ⬜ **`[HUMAN]` device gate — 77.14** (last, non-blocking; founder-only)
+- ✅ **Recon + split done (this doc, 2026-07-03).** 15 tasks → **7 agent sessions + 1 `[HUMAN]` device gate**. Class `a`, both Phase-5 gates green (READY · SOUND 0.84).
+- ⬜ **Session 1 — Prerequisites** (77.1 #66 guard + 77.2 #67-A teardown)
+- ⬜ **Session 2 — Pure-logic core** (77.3 matcher + 77.4 capture-phase) — *delivers matcher/lexicon/UndoWindow/capture-phase symbols to Sessions 3–5*
+- ⬜ **Session 3 — Audio topology** (77.5 listener + 77.7 single-engine + 77.6 VAD isolation) — *record whether 77.6 is headless or [HUMAN]-deferred*
+- ⬜ **Session 4 — Command wiring** (77.8 start-flag + 77.9 confirm/result/repeat)
+- ⬜ **Session 5 — Earcons + STOP tuning** (77.10 + 77.11)
+- ⬜ **Session 6 — Pencil design** (77.12, MCP-only) — *parallelizable*
+- ⬜ **Session 7 — Doc hygiene + headless harness** (77.13 + 77.14) — *77.14 contingent on 77.6's headless/deferred status*
+- ⬜ **Session 8 — `[HUMAN]` on-device gate** (77.15) — *last, non-blocking*
 
-When a session lands, note here any exact new symbols a later session imports (e.g. "Session 2 delivered — `VoiceCommandMatcher.match(_:scope:)` signature for Sessions 3/5") so the chain stays decoupled, as the issue-61 doc does.
+> When a session lands, add a *"Session X delivered — exact symbols for Y"* note here (as issue-61 does) so the chain stays decoupled — especially Session 2's matcher/lexicon/capture-phase signatures and Session 3's listener + shared-engine entry points.

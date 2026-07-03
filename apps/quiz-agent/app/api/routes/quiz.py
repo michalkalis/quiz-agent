@@ -205,6 +205,15 @@ async def submit_input(
         include_audio=audio,
     )
 
+    # Ghost-question guard (#66): a non-answer intent leaves the session
+    # untouched (no current_question_id advance, no question recorded). Surface
+    # it as a 400 instead of silently returning an empty response.
+    if flow_result.evaluation is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Could not understand your answer. Please try again.",
+        )
+
     if flow_result.usage_limit_error:
         raise HTTPException(status_code=429, detail=flow_result.usage_limit_error)
 

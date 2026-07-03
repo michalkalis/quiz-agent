@@ -216,6 +216,15 @@ class QuizFlowService:
                 session.category = category
                 result.feedback_received.append(f"category: {category}")
 
+        # Ghost-question guard (#66): a non-answer intent (rating, difficulty,
+        # preference, category, or an unparseable utterance) produces no evaluation.
+        # Return BEFORE the session-advance block so we never advance
+        # current_question_id or burn a freemium question on a non-answer. The
+        # callers surface this as a 400 with no state mutation.
+        if result.evaluation is None:
+            result.message = "No answer detected in input"
+            return result
+
         # Build audio info
         if include_audio and result.evaluation:
             result.audio_info = self._build_audio_info(

@@ -1,7 +1,16 @@
 # Issue #77 — Re-introduce voice commands for hands-free driving control
 
-**Triage:** enhancement · ready-for-agent
-**Status:** prep complete (`/prepare-issue` 2026-07-03) — all 6 phases done, final gates READY · SOUND 0.90; run via [`issue-77-execution-prompts.md`](issue-77-execution-prompts.md) (6 agent sessions + 1 `[HUMAN]` device gate)
+**Triage:** enhancement · **needs-replanning** (was ready-for-agent; pulled back 2026-07-03 by founder feedback below)
+**Status:** prep was complete (`/prepare-issue` 2026-07-03, gates READY · SOUND 0.90), but **founder feedback 2026-07-03 supersedes core design decisions — DO NOT run the execution sessions as written.** Re-run planning (Phase 2 onward) with the feedback below before any execution.
+
+## ⚠️ Founder feedback 2026-07-03 — supersedes parts of this plan
+
+Recorded verbatim intent; the plan below has NOT yet been reworked to match. A re-planning pass must integrate these before execution:
+
+1. **No auto-mic START after the question is read.** After the question TTS finishes, the app must NOT automatically open the microphone — the existing answer (thinking) timer stays as-is. This exercises the Q1 override in the strongest form: **drop the VAD auto-arm START entirely** (tasks 77.8 pre-roll + 77.9 auto-arm are OUT). START remains the existing button/timer flow.
+2. **Voice commands = English-only, for all users, via the native iOS speech framework — not ElevenLabs.** Simple universal words for everyone regardless of app language: e.g. "start", "stop", "restart", "ok" and similar. Recognition should use the native framework (SpeechAnalyzer/SpeechTranscriber — English IS supported on-device, unlike Slovak), not transcript-matching on the ElevenLabs answer stream. **This reverses decisions 1 & 3 and invalidates the Slovak-lexicon/ElevenLabs-matching design** (77.3, 77.6, 77.10 as specified). Founder explicitly flags this as a **large task that must be properly re-planned** — including the lessons from the original English `VoiceCommandService` removal (`c7a001c`: an English grammar used by a Slovak speaker — command words must be chosen for non-native pronunciation robustness) and the SpeechAnalyzer fragility history (CARQUIZ-1/-3).
+
+**Still valid regardless of re-plan:** 77.1 (#66 ghost-question guard) and 77.2 (#67-A streaming interruption teardown) — both are independent prerequisites/bug-fixes. 77.7 (single shared `AVAudioEngine`) likely stays load-bearing but must be re-validated against the new native-recognizer architecture (a SpeechTranscriber command listener changes the audio topology question).
 **Created:** 2026-07-02 · **Founder:** Michal
 **Reversibility:** class `a` — pure iOS feature; no auth/payments/DB schema/migrations. Backend already exposes `POST /api/v1/elevenlabs/token`, so the core needs no new server contract; the optional audio-session/AEC change is iOS-local and revertible. (The only residual risk is SpeechAnalyzer's recurring fragility across iOS point releases — a robustness concern, not an irreversibility one.)
 
@@ -236,6 +245,6 @@ Provenance (per the research's open product questions): **Q2 (barge-in) and Q3 (
 | 5 · Impl-plan review  | ✅ passed (attempt 1) | ready-check **READY** (0 blockers) · design-soundness **SOUND 0.90** (0 flaws; 2 non-blocking cautions: 77.1 guard placement before the usage-limit block at `flow.py:240`; 77.7 size note) |
 | 6 · Split             | ✅ done | **6 agent sessions + 1 `[HUMAN]` device gate** → [`issue-77-execution-prompts.md`](issue-77-execution-prompts.md). Class `a` confirmed (no hidden b/c). Both Gate-B cautions folded in (G-77.1 guard placement, G-77.7 own-session full-suite gate). |
 
-**Last updated:** 2026-07-03 · **Next:** ready-for-agent — run Session 1 (see `issue-77-execution-prompts.md`) · **Gate attempts:** P3 2/3 (passed) · P5 1/3 (passed)
+**Last updated:** 2026-07-03 (founder feedback pulled the issue back to needs-replanning — see top section) · **Next:** re-run `/prepare-issue` from Phase 2 with the 2026-07-03 founder feedback; only 77.1/77.2 may run as-is · **Gate attempts:** P3 2/3 (passed) · P5 1/3 (passed) — gates apply to the superseded design
 
 **Split summary:** Session 1 (77.1 #66 guard + 77.2 #67-A teardown) → Session 2 (77.3 matcher + 77.4 capture-phase + 77.5 earcon) → Session 3 (77.6 + 77.10 command routing) → Session 4 (77.7 single-engine, full-suite gate) → Session 5 (77.8 + 77.9 pre-roll + auto-arm START; dropped on Q1 button-only override) → Session 6 (77.11 + 77.12 + 77.13 tuning/e2e/docs) → `[HUMAN]` 77.14 device gate (last, non-blocking).

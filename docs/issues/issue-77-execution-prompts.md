@@ -1,5 +1,8 @@
 # Issue #77 — Execution plan + ready-to-paste session prompts
 
+> ## ⚠️ SUPERSEDED 2026-07-03 — do not run Sessions 2–6
+> Founder feedback (see the top of [`issue-77-voice-commands-handsfree.md`](issue-77-voice-commands-handsfree.md)) reversed the core design: **no auto-mic START after the question** (the answer timer stays), and **commands are English-only via the native iOS speech framework, not Slovak-via-ElevenLabs**. Only **Session 1 (77.1 + 77.2)** remains valid as written. Everything else awaits a re-planning pass.
+
 **Created:** 2026-07-03 — from the `/prepare-issue` Phase 6 split (recon re-verified against HEAD `864cf1a`, 2026-07-02, by one iOS Explore agent + first-hand backend/iOS spot-checks). #77 is **large** (14 tasks 77.1–77.14, incl. an audio-engine consolidation) but **class `a`** (pure iOS + one tiny backend guard from #66 — no auth / payments / DB schema / migrations). It is split into six agent-runnable, independently-committable sessions plus one final `[HUMAN]` on-device gate. Each session below has a self-contained prompt: open a fresh session, paste the fenced block, go — no access to the authoring chat needed.
 
 > Parent plan: [`issue-77-voice-commands-handsfree.md`](issue-77-voice-commands-handsfree.md). Research report (citations): [`../research/voice-commands-handsfree-research-2026-07-02.md`](../research/voice-commands-handsfree-research-2026-07-02.md).

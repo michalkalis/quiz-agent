@@ -26,6 +26,7 @@ enum TaskKey: Hashable, Sendable {
     case sttCommitWatchdog
     case bargeIn
     case commandListener
+    case skipUndo
 }
 
 /// Owns a set of `Task<Void, Never>` handles keyed by `TaskKey`. Adding a

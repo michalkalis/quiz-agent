@@ -161,10 +161,35 @@ final class QuizViewModel: ObservableObject {
     /// `applyCaptureEvent(_:)`. Deliberately NOT part of QuizState/validTransitions.
     @Published private(set) var commandCapturePhase: CommandCapturePhase = .idle
 
-    /// Session 4 wiring seam / test hook (#77, task 77.5): invoked when the
-    /// command listener recognizes a screen-scoped command. Session 3 delivers
-    /// recognition only — routing commands to actions is Session 4 (77.8–77.9).
+    /// Observation hook / test seam (#77, task 77.5): invoked when the command
+    /// listener recognizes a screen-scoped command, BEFORE it is routed to an
+    /// action. Session 3 fired it as the only behaviour; Session 4 (77.8–77.9) adds
+    /// the routing in `handleRecognizedCommand`. Kept for tests + future earcons.
     var onCommandRecognized: (@MainActor (VoiceCommand) -> Void)?
+
+    // MARK: - Voice Command Wiring (#77, tasks 77.8 / 77.9)
+
+    /// P4a founder-overridable flag: spoken "start" on QuestionView opens the mic.
+    /// Seeded from `Config.voiceStartCommandEnabled` (default ON); an instance
+    /// property so tests can flip it and a future settings UI can bind it. `false`
+    /// disables ONLY the question-screen "start"→`startRecording()` wiring — the
+    /// rest of the command layer (and Home "start") stays intact.
+    var voiceStartOnQuestionEnabled: Bool = Config.voiceStartCommandEnabled
+
+    /// Founder-overridable flag: arm the command listener on the idle Home screen so
+    /// spoken "start" begins the quiz. Seeded from `Config.voiceHomeStartEnabled`
+    /// (default ON). Consulted by `HomeView.onAppear` before arming.
+    var voiceStartOnHomeEnabled: Bool = Config.voiceHomeStartEnabled
+
+    /// Skip undo-window (#77, task 77.9 / E-match): a recognized "skip" on the
+    /// question screen opens a ~2.5 s window before the skip commits, so a tap (or,
+    /// deferred to Session 5, a spoken cancel word) can abort it. `nil` = no pending
+    /// skip. Published so the deferred UI + earcons can observe it.
+    @Published private(set) var pendingSkipWindow: UndoWindow?
+
+    /// Session 5 earcon seam (77.10): fired when the skip undo-window OPENS. The
+    /// skip-confirm earcon itself is Session 5 — Session 4 only exposes the event.
+    var onSkipUndoWindowOpened: (@MainActor () -> Void)?
 
     /// Apply an injected capture-lifecycle event. Illegal transitions are a no-op
     /// (phase unchanged) and return `false` so a caller can detect a bad sequence.
@@ -734,6 +759,42 @@ final class QuizViewModel: ObservableObject {
 
             Logger.quiz.error("❌ Error skipping question: \(error, privacy: .public)")
         }
+    }
+
+    /// Open the skip undo-window (#77, task 77.9). A recognized "skip" on the
+    /// question screen does NOT commit immediately: it opens a ~2.5 s window that a
+    /// tap can abort (`abortSkipUndoWindow`). On expiry (window unaborted) the skip
+    /// commits via `skipQuestion()`. Idempotent while a window is already open.
+    /// `duration` is injectable so tests don't wait the full 2.5 s.
+    ///
+    /// Deferred to Session 5: aborting via a spoken cancel word ("stop"/"no") — that
+    /// needs the cancel-word listener path that ships with the earcons. This method
+    /// leaves the abort seam (`abortSkipUndoWindow`) and the open-event seam
+    /// (`onSkipUndoWindowOpened`) ready for it.
+    func beginSkipUndoWindow(duration: TimeInterval = UndoWindow.defaultDuration) {
+        guard quizState == .askingQuestion, pendingSkipWindow == nil else { return }
+        cancelAnswerTimer()
+        cancelThinkingTime()
+        pendingSkipWindow = UndoWindow(duration: duration)
+        onSkipUndoWindowOpened?() // 77.10 skip-confirm earcon (Session 5)
+
+        let task = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(duration))
+            guard let self, !Task.isCancelled else { return }
+            guard self.pendingSkipWindow != nil else { return } // aborted
+            self.pendingSkipWindow = nil
+            await self.skipQuestion()
+        }
+        taskBag.add(task, key: .skipUndo)
+        Logger.voice.info("⏭️ Skip undo-window opened (\(duration, privacy: .public)s)")
+    }
+
+    /// Abort a pending skip (a tap on the undo affordance). No-op if none is open.
+    func abortSkipUndoWindow() {
+        guard pendingSkipWindow != nil else { return }
+        pendingSkipWindow = nil
+        taskBag.cancel(.skipUndo)
+        Logger.voice.info("↩️ Skip undo-window aborted")
     }
 
     /// End the current quiz session

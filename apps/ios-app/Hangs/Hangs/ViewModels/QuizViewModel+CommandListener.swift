@@ -105,12 +105,58 @@ extension QuizViewModel {
         handleRecognizedCommand(command)
     }
 
-    /// Session 3 seam: a command was recognized on the current screen. Routing to
-    /// an actual action (start / ok / next / repeat / skip) is Session 4's task
-    /// (77.8–77.9). Session 3 only logs + fires the `onCommandRecognized` hook,
-    /// which Session 4 (and the tests) bind to observe recognized commands.
+    /// A command was recognized on the current screen. Fires the `onCommandRecognized`
+    /// observation hook (tests + future earcons), then routes it to an action
+    /// (77.8–77.9). Routing is screen-scoped a second time via `routeCommand` so a
+    /// transcript that lands as the window closes can't fire the wrong action.
     func handleRecognizedCommand(_ command: VoiceCommand) {
-        Logger.voice.info("🎙️ Command recognized (unrouted — Session 3): \(command.rawValue, privacy: .public)")
+        Logger.voice.info("🎙️ Command recognized: \(command.rawValue, privacy: .public)")
         onCommandRecognized?(command)
+        routeCommand(command)
+    }
+
+    /// Map a recognized command to its per-screen action (77.8 / 77.9). Buttons + the
+    /// 10 s auto-confirm + auto-advance remain the untouched fallbacks; this is
+    /// additive. Async actions hop to a Task so the @MainActor-sync consumer path is
+    /// never blocked on network/audio.
+    func routeCommand(_ command: VoiceCommand) {
+        guard let screen = currentCommandScreen else { return }
+        switch (screen, command) {
+
+        // Home — spoken "start" begins the quiz.
+        case (.home, .start):
+            Task { [weak self] in await self?.startNewQuiz() }
+
+        // Question — hands-free START recovery (P4a, founder-overridable flag).
+        case (.question, .start):
+            guard voiceStartOnQuestionEnabled else { return }
+            cancelAnswerTimer()
+            cancelThinkingTime()
+            Task { [weak self] in await self?.startRecording() }
+
+        // Question — replay the question audio + re-arm the listener (dead
+        // repeatQuestion() re-wired). playQuestionAudio re-arms after TTS.
+        case (.question, .repeatQuestion):
+            Task { [weak self] in await self?.repeatQuestion() }
+
+        // Question — skip via the ~2.5 s undo-window (commit / abort).
+        case (.question, .skip):
+            beginSkipUndoWindow()
+
+        // Confirmation sheet — on top of the 10 s auto-confirm + buttons.
+        case (.confirmation, .ok):
+            Task { [weak self] in await self?.confirmAnswer() }
+        case (.confirmation, .again):
+            rerecordAnswer()
+        case (.confirmation, .stop):
+            cancelProcessing()
+
+        // Result — advance (on top of auto-advance + button).
+        case (.result, .next), (.result, .ok):
+            continueToNext()
+
+        default:
+            break // command not valid on this screen — inert
+        }
     }
 }

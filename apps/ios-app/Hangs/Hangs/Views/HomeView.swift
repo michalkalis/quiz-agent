@@ -61,6 +61,12 @@ struct HomeView: View {
         .onAppear {
             viewModel.refreshAudioDevices()
             Task { await viewModel.refreshUsage() }
+            // #77: arm the on-device English command listener on Home (idle) so
+            // spoken "start" begins the quiz. Founder-overridable (default ON);
+            // nothing leaves the device.
+            if viewModel.voiceStartOnHomeEnabled {
+                viewModel.refreshCommandWindow()
+            }
         }
         .sheet(isPresented: $viewModel.showingMicrophonePicker) {
             AudioDevicePickerView(viewModel: viewModel)

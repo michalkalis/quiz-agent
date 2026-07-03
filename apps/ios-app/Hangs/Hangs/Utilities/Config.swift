@@ -137,6 +137,23 @@ nonisolated enum Config {
     /// VAD silence threshold — ElevenLabs commits transcript after this many seconds of silence
     static let elevenLabsVadSilenceThresholdSecs: Double = 1.5
 
+    // MARK: - Voice Commands (#77)
+
+    /// Founder-overridable build/settings flag (P4a): spoken "start" on QuestionView
+    /// (`askingQuestion`, after TTS) opens the mic — the hands-free START recovery.
+    /// Default ON. Setting this to `false` disables ONLY that wiring and leaves the
+    /// rest of the command layer (repeat / skip / ok / again / next) intact. It does
+    /// NOT auto-open the mic — the thinking-timer + mic-button flow is unchanged (P1).
+    /// Copied into `QuizViewModel.voiceStartOnQuestionEnabled` per instance (so tests
+    /// can flip it without a global).
+    static let voiceStartCommandEnabled: Bool = true
+
+    /// Founder-overridable build/settings flag: arm the command listener on the idle
+    /// Home screen so spoken "start" begins the quiz. Default ON. On-device English
+    /// command recognition only — nothing leaves the device. Copied into
+    /// `QuizViewModel.voiceStartOnHomeEnabled` per instance.
+    static let voiceHomeStartEnabled: Bool = true
+
     // MARK: - Freemium
 
     /// StoreKit product identifier for unlimited access

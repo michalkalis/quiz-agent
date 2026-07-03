@@ -102,10 +102,12 @@ def build_attestation(
     app_id: str = APP_ID,
     aaguid: bytes = _DEV_AAGUID,
     counter: int = 0,
+    leaf_key=None,
 ):
     """Return (attestation_bytes, key_id_b64, leaf_private_key) for a key that
-    attests over `challenge`, signed by the given test root."""
-    leaf_key = ec.generate_private_key(ec.SECP256R1())
+    attests over `challenge`, signed by the given test root. Pass ``leaf_key``
+    to re-attest the SAME device key (client-retry scenarios)."""
+    leaf_key = leaf_key or ec.generate_private_key(ec.SECP256R1())
     pub = leaf_key.public_key()
     cred_id = _key_id_bytes(pub)
 

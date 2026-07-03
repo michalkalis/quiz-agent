@@ -161,6 +161,12 @@ class AppAttestService:
         )
 
         if session is not None:
+            # Re-attestation of a key we already hold (a client retry after a
+            # crash mid-bootstrap): keep the original row — its identity binding
+            # and sign counter must survive, and inserting would violate the PK.
+            existing = await session.get(AppAttestKey, key_id_b64)
+            if existing is not None:
+                return existing
             # Join the caller's transaction; they commit. flush() surfaces a
             # duplicate-key conflict here rather than at their later commit.
             session.add(key)
@@ -168,6 +174,9 @@ class AppAttestService:
             return key
 
         async with self._sessionmaker() as own_session:
+            existing = await own_session.get(AppAttestKey, key_id_b64)
+            if existing is not None:
+                return existing
             own_session.add(key)
             await own_session.commit()
             return await own_session.get(AppAttestKey, key_id_b64)

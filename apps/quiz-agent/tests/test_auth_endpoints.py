@@ -160,6 +160,41 @@ async def test_unknown_refresh_token_is_rejected(client):
     assert resp.status_code == 401
 
 
+async def test_logout_revokes_the_family_so_the_token_stops_working(client):
+    """Sign-out must kill the session server-side: a refresh token extracted
+    from the device before sign-out would otherwise stay valid for its full TTL
+    and keep minting sessions for whoever holds it."""
+    body = await _bootstrap(client)
+
+    resp = await client.post(
+        "/api/v1/auth/logout", json={"refresh_token": body["refresh_token"]}
+    )
+    assert resp.status_code == 204
+
+    # The signed-out token can no longer refresh.
+    after = await client.post(
+        "/api/v1/auth/refresh", json={"refresh_token": body["refresh_token"]}
+    )
+    assert after.status_code == 401
+
+
+async def test_logout_is_idempotent_and_silent_on_unknown_tokens(client):
+    """204 for a garbage or double-logout token — the response must never reveal
+    whether a guessed token was valid."""
+    body = await _bootstrap(client)
+
+    first = await client.post(
+        "/api/v1/auth/logout", json={"refresh_token": body["refresh_token"]}
+    )
+    second = await client.post(
+        "/api/v1/auth/logout", json={"refresh_token": body["refresh_token"]}
+    )
+    garbage = await client.post(
+        "/api/v1/auth/logout", json={"refresh_token": "not-a-real-token"}
+    )
+    assert first.status_code == second.status_code == garbage.status_code == 204
+
+
 async def test_endpoints_503_when_auth_disabled(disabled_client):
     """Without a JWT secret / DB the endpoints must fail safe (503), never mint
     tokens an unconfigured service can't verify."""
@@ -170,3 +205,8 @@ async def test_endpoints_503_when_auth_disabled(disabled_client):
         "/api/v1/auth/refresh", json={"refresh_token": "x"}
     )
     assert refresh.status_code == 503
+
+    logout = await disabled_client.post(
+        "/api/v1/auth/logout", json={"refresh_token": "x"}
+    )
+    assert logout.status_code == 503

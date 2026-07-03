@@ -300,7 +300,10 @@ async def test_happy_path_creates_account_folds_usage_and_returns_user_subject(
 
     # The anon's usage was folded into the account, and the anon is marked upgraded.
     assert await _usage_today(db_sessionmaker, str(user.id)) == 3
-    assert await _usage_today(db_sessionmaker, anon_id) is None
+    # The anon's own rows are KEPT (frozen): the device's App Attest key returns
+    # it to this subject after sign-out/delete — dropping the rows here would
+    # make that return trip a free daily-limit reset.
+    assert await _usage_today(db_sessionmaker, anon_id) == 3
     anon = await _get_anon(db_sessionmaker, anon_id)
     assert anon.upgraded_to_user_id == str(user.id)
 
@@ -362,6 +365,22 @@ async def test_sign_out_fresh_anon_sign_in_sums_usage_and_cannot_reset_limit(
     assert r2.json()["anon_id"] == user_id  # same account (keyed on apple_sub)
 
     assert await _usage_today(db_sessionmaker, user_id) == 12  # 7 + 5, summed
+
+
+async def test_sign_out_back_to_same_anon_keeps_its_counter_no_reset(
+    client, keypair, db_sessionmaker
+):
+    """Sign-out on a device returns it to the SAME anon subject (its App Attest
+    key binding never changes). If the merge dropped the anon's rows, that
+    return trip would hand out a fresh daily bucket — the counter must survive."""
+    anon_id, bearer = await _make_anon(db_sessionmaker)
+    await _seed_usage(db_sessionmaker, anon_id, 7)
+
+    r = await _call_apple(client, keypair, sub="apple.sub.keep", bearer=bearer)
+    assert r.status_code == 200, r.text
+
+    # Back as the anon after sign-out: today's count is still 7, not a reset.
+    assert await _usage_today(db_sessionmaker, anon_id) == 7
 
 
 async def test_repeat_call_with_same_anon_is_idempotent_no_double_count(

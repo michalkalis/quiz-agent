@@ -102,6 +102,32 @@ class RefreshTokenStore:
         await session.flush()
         return issued
 
+    async def revoke_family(self, raw_token: str) -> None:
+        """Revoke the presented token's whole family (sign-out).
+
+        Idempotent and silent on unknown/already-revoked tokens: logout must
+        never leak whether a guessed token was valid, and a double sign-out is
+        not an error. Unlike ``rotate`` this never mints a replacement — after
+        sign-out the client bootstraps a fresh identity instead."""
+        token_hash = _hash(raw_token)
+        async with self._sessionmaker() as session:
+            row = (
+                await session.execute(
+                    select(RefreshToken).where(RefreshToken.token_hash == token_hash)
+                )
+            ).scalar_one_or_none()
+            if row is None:
+                return
+            await session.execute(
+                update(RefreshToken)
+                .where(
+                    RefreshToken.family_id == row.family_id,
+                    RefreshToken.revoked_at.is_(None),
+                )
+                .values(revoked_at=_now())
+            )
+            await session.commit()
+
     async def rotate(self, raw_token: str) -> RotationResult:
         """Verify + rotate a presented refresh token in one atomic transaction.
 

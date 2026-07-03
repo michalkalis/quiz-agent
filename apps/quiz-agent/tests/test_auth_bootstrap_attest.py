@@ -237,6 +237,40 @@ async def _attest_bootstrap(client, store, root_key, root_cert):
     return resp.json()["anon_id"], key_id_b64, leaf_key
 
 
+async def test_reattestation_of_a_stored_key_reissues_not_remints(
+    attested_client, db_sessionmaker, root, monkeypatch
+):
+    """A client retry after a crash mid-bootstrap re-attests the SAME key. That
+    must honour the existing 1:1 binding (re-issue tokens for the bound
+    identity), not 500 on the duplicate key row and not mint a second identity
+    for one device key."""
+    monkeypatch.setenv("APP_ATTEST_REQUIRED", "true")
+    client, store = attested_client
+    root_key, root_cert, _ = root
+
+    anon_id, key_id_b64, leaf_key = await _attest_bootstrap(
+        client, store, root_key, root_cert
+    )
+    before = await _identity_count(db_sessionmaker)
+
+    challenge = await store.issue()
+    attestation, retry_key_id, _ = build_attestation(
+        challenge, root_key, root_cert, leaf_key=leaf_key
+    )
+    assert retry_key_id == key_id_b64  # same device key
+    resp = await client.post(
+        "/api/v1/auth/anon-bootstrap",
+        json={
+            "key_id": retry_key_id,
+            "attestation": _b64(attestation),
+            "challenge": challenge,
+        },
+    )
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["anon_id"] == anon_id  # same identity, not a new one
+    assert await _identity_count(db_sessionmaker) == before
+
+
 async def test_assertion_bootstrap_reissues_same_identity(
     attested_client, db_sessionmaker, root, monkeypatch
 ):

@@ -283,6 +283,46 @@ async def test_delete_erases_all_data_and_revokes_with_decrypted_token(
     assert call["client_secret"]  # the signed ES256 client_secret was sent
 
 
+async def test_delete_carries_todays_count_back_to_the_linked_anon(db_sessionmaker):
+    """Anti-abuse: the device's App Attest key returns it to its anon subject
+    right after the delete — if today's counter died with the account, every
+    delete would be a free daily-limit reset. Today's count must land on the
+    linked anon (without premium: the entitlement dies with the account)."""
+    app = _make_app(db_sessionmaker)
+    user_id, bearer = await _make_account(db_sessionmaker, apple_sub="apple.sub.carry")
+    await _seed_usage(db_sessionmaker, user_id, 11, premium=True)
+    anon_id = await _seed_anon_upgraded(db_sessionmaker, user_id)
+
+    async with _asgi(app) as c:
+        resp = await c.delete("/api/v1/auth/me", headers=_auth(bearer))
+    assert resp.status_code == 204, resp.text
+
+    rows = await _rows(db_sessionmaker, DailyUsage, DailyUsage.subject_id == anon_id)
+    assert len(rows) == 1
+    assert rows[0].usage_date == _today()
+    assert rows[0].questions_count == 11
+    assert rows[0].is_premium is False  # premium is NOT carried over
+
+
+async def test_delete_todays_carry_takes_the_greater_of_both_counters(
+    db_sessionmaker,
+):
+    """If the anon already holds a (frozen, pre-merge) count for today, the carry
+    uses GREATEST — it can only tighten the limit, never loosen or double it."""
+    app = _make_app(db_sessionmaker)
+    user_id, bearer = await _make_account(db_sessionmaker, apple_sub="apple.sub.max")
+    await _seed_usage(db_sessionmaker, user_id, 5)
+    anon_id = await _seed_anon_upgraded(db_sessionmaker, user_id)
+    await _seed_usage(db_sessionmaker, anon_id, 9)  # anon's frozen count is higher
+
+    async with _asgi(app) as c:
+        resp = await c.delete("/api/v1/auth/me", headers=_auth(bearer))
+    assert resp.status_code == 204, resp.text
+
+    rows = await _rows(db_sessionmaker, DailyUsage, DailyUsage.subject_id == anon_id)
+    assert [r.questions_count for r in rows] == [9]  # max(9, 5), not 14
+
+
 async def test_delete_succeeds_even_when_apple_revoke_fails(db_sessionmaker):
     """F4: an Apple-side revoke failure must NOT reverse or block the local delete."""
     recorder = RevokeRecorder(fail=True)

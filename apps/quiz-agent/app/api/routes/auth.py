@@ -20,7 +20,9 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
-from sqlalchemy import delete, select, update
+from sqlalchemy import delete, func, select, update
+from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..deps import (
@@ -144,7 +146,6 @@ async def _bootstrap_with_attestation(
     except Exception:
         raise HTTPException(status_code=400, detail="Malformed attestation")
 
-    anon_id = str(uuid.uuid4())
     async with sessionmaker() as session:
         try:
             key = await attest_service.verify_attestation(
@@ -153,8 +154,15 @@ async def _bootstrap_with_attestation(
         except AppAttestError:
             # Never leak which check failed (challenge/cert/nonce/env/keyId).
             raise HTTPException(status_code=401, detail="Attestation rejected")
-        key.anon_id = anon_id
-        session.add(AnonymousIdentity(anon_id=anon_id))
+        if key.anon_id is not None:
+            # The key was attested and bound before (client retry after a crash
+            # mid-bootstrap): honour the existing 1:1 binding — re-issue for the
+            # bound identity instead of minting a second one for the same key.
+            anon_id = key.anon_id
+        else:
+            anon_id = str(uuid.uuid4())
+            key.anon_id = anon_id
+            session.add(AnonymousIdentity(anon_id=anon_id))
         issued = await refresh_store.issue(session, anon_id)
         await session.commit()
 
@@ -215,7 +223,9 @@ async def attest_challenge(
 
 
 @router.post("/auth/refresh", response_model=AuthTokenResponse)
+@limiter.limit(_BOOTSTRAP_RATE, key_func=fly_client_ip)
 async def refresh(
+    request: Request,
     body: RefreshRequest,
     token_service: TokenService = Depends(get_token_service),
     refresh_store: RefreshTokenStore = Depends(get_refresh_store),
@@ -238,6 +248,26 @@ async def refresh(
         expires_in=token_service.access_ttl_seconds,
         anon_id=result.anon_id,
     )
+
+
+@router.post("/auth/logout", status_code=204)
+@limiter.limit(_BOOTSTRAP_RATE, key_func=fly_client_ip)
+async def logout(
+    request: Request,
+    body: RefreshRequest,
+    refresh_store: RefreshTokenStore = Depends(get_refresh_store),
+) -> Response:
+    """Revoke the presented refresh token's whole family (sign-out).
+
+    Without this, a client-side sign-out leaves the last refresh token valid on
+    the server for its full TTL — anyone who extracted it could keep minting
+    sessions after the user believed they signed out. Always 204: idempotent,
+    and the response never reveals whether the token was valid."""
+    if refresh_store is None:
+        raise HTTPException(status_code=503, detail="Auth unavailable")
+
+    await refresh_store.revoke_family(body.refresh_token)
+    return Response(status_code=204)
 
 
 @router.post("/auth/apple", response_model=AuthTokenResponse)
@@ -369,15 +399,25 @@ async def _upsert_apple_user(
         await session.execute(select(User).where(User.apple_sub == apple_sub))
     ).scalar_one_or_none()
     if user is None:
-        user = User(
-            apple_sub=apple_sub,
-            email=email,
-            full_name=full_name,
-            apple_refresh_token_encrypted=encrypted_refresh,
-        )
-        session.add(user)
-        await session.flush()  # populate user.id for the merge + token issue
-        return user
+        try:
+            # Savepoint: two concurrent first sign-ins for the same apple_sub can
+            # both pass the None-check and race on the UNIQUE(apple_sub) insert —
+            # the loser re-reads the winner's row (and falls through to the
+            # update-fields path below) instead of surfacing a 500.
+            async with session.begin_nested():
+                user = User(
+                    apple_sub=apple_sub,
+                    email=email,
+                    full_name=full_name,
+                    apple_refresh_token_encrypted=encrypted_refresh,
+                )
+                session.add(user)
+                await session.flush()  # populate user.id for merge + token issue
+            return user
+        except IntegrityError:
+            user = (
+                await session.execute(select(User).where(User.apple_sub == apple_sub))
+            ).scalar_one()
     if encrypted_refresh is not None:
         user.apple_refresh_token_encrypted = encrypted_refresh
     if email and not user.email:
@@ -395,11 +435,15 @@ async def _merge_anonymous_identity(
     Guarded by ``anonymous_identities.upgraded_to_user_id``: already this user →
     idempotent no-op; a different user → 409 (the anon belongs elsewhere). The
     anon's ``daily_usage`` rows (keyed on ``subject_id``) are **summed** into the
-    account's rows (``is_premium`` OR-ed) — sum, not max, so signing out and back
-    in cannot reset the freemium limit — then removed. The anon's still-live
-    refresh tokens are revoked so the upgraded identity cannot keep minting anon
-    access tokens against a separate (empty) usage bucket. Row-locked to serialise
-    concurrent sign-ins on the same anon."""
+    account's rows (``is_premium`` OR-ed) — sum, not max, so signing in cannot
+    reset the freemium limit. The anon's own rows are **kept** (frozen — nothing
+    increments them while the device holds a user-subject bearer): the device's
+    App Attest key stays bound to this anon for life, so sign-out or account
+    deletion returns the device to this subject — if its counters were dropped
+    here, that return trip would be a free daily-limit reset. The anon's
+    still-live refresh tokens are revoked so the upgraded identity cannot keep
+    minting anon access tokens against a separate usage bucket. Row-locked to
+    serialise concurrent sign-ins on the same anon."""
     anon = (
         await session.execute(
             select(AnonymousIdentity)
@@ -447,7 +491,6 @@ async def _merge_anonymous_identity(
         else:
             existing.questions_count += row.questions_count  # SUM (F3, not max)
             existing.is_premium = existing.is_premium or row.is_premium  # OR (F3)
-        await session.delete(row)
 
     await session.execute(
         update(RefreshToken)
@@ -489,6 +532,7 @@ async def delete_account(
         user_id = str(user.id)
         encrypted = user.apple_refresh_token_encrypted
 
+        await _preserve_todays_count_on_anons(session, user_id)
         await session.execute(
             delete(DailyUsage).where(DailyUsage.subject_id == user_id)
         )
@@ -554,6 +598,60 @@ async def export_account(
             for row in rows
         ],
     )
+
+
+async def _preserve_todays_count_on_anons(session: AsyncSession, user_id: str) -> None:
+    """Carry the account's *today* question count back onto its linked anonymous
+    identities before the GDPR erasure drops the account's usage rows.
+
+    Anti-abuse guard: the device's App Attest key stays bound to its anon, so
+    after the delete the very next bootstrap returns the device to that subject —
+    if today's count died with the account, delete→re-bootstrap would be a free
+    daily-limit reset, repeatable every day. Only today's counter is kept
+    (GREATEST, so it can only tighten), on ids that are random and, after the
+    de-link below, no longer connected to the person — GDPR-minimal fraud
+    prevention, not retained account data. ``is_premium`` is deliberately NOT
+    carried over: the entitlement dies with the account."""
+    today = datetime.now(timezone.utc).date()
+    today_row = (
+        await session.execute(
+            select(DailyUsage).where(
+                DailyUsage.subject_id == user_id,
+                DailyUsage.usage_date == today,
+            )
+        )
+    ).scalar_one_or_none()
+    if today_row is None or today_row.questions_count <= 0:
+        return
+    anon_ids = (
+        (
+            await session.execute(
+                select(AnonymousIdentity.anon_id).where(
+                    AnonymousIdentity.upgraded_to_user_id == user_id
+                )
+            )
+        )
+        .scalars()
+        .all()
+    )
+    for anon_id in anon_ids:
+        await session.execute(
+            pg_insert(DailyUsage)
+            .values(
+                subject_id=anon_id,
+                usage_date=today,
+                questions_count=today_row.questions_count,
+                is_premium=False,
+            )
+            .on_conflict_do_update(
+                index_elements=["subject_id", "usage_date"],
+                set_={
+                    "questions_count": func.greatest(
+                        DailyUsage.questions_count, today_row.questions_count
+                    )
+                },
+            )
+        )
 
 
 async def _resolve_account(subject: AuthSubject, session: AsyncSession) -> User:

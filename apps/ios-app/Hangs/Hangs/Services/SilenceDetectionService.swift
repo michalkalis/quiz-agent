@@ -36,6 +36,15 @@ protocol SilenceDetectionServiceProtocol: AnyObject, Sendable {
     var silenceEvents: AsyncStream<SilenceEvent> { get }
     var bargeInEvents: AsyncStream<Void> { get }
 
+    /// Finalized English transcripts from the paired command transcriber (#77,
+    /// task 77.5). The SpeechDetector VAD requires a paired SpeechTranscriber
+    /// (CARQUIZ-3); rather than leave that transcriber idle we re-locale it to
+    /// English (P2 — commands are English-only for all users) and surface its
+    /// finalized results here for the screen-scoped `VoiceCommandMatcher`. The
+    /// answer path stays Slovak ElevenLabs — this stream is command-only and is
+    /// consumed only inside a listening window (never during recording).
+    var commandTranscripts: AsyncStream<String> { get }
+
     func startListening() async
     func stopListening()
 
@@ -50,14 +59,17 @@ protocol SilenceDetectionServiceProtocol: AnyObject, Sendable {
 final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     let silenceEvents: AsyncStream<SilenceEvent>
     let bargeInEvents: AsyncStream<Void>
+    let commandTranscripts: AsyncStream<String>
 
     private let silenceContinuation: AsyncStream<SilenceEvent>.Continuation
     private let bargeInContinuation: AsyncStream<Void>.Continuation
+    private let commandContinuation: AsyncStream<String>.Continuation
 
     private var audioEngine: AVAudioEngine?
     private var analyzer: SpeechAnalyzer?
     private var analyzerTask: Task<Void, Never>?
     private var detectionTask: Task<Void, Never>?
+    private var transcriptionTask: Task<Void, Never>?
     private var inputContinuation: AsyncStream<AnalyzerInput>.Continuation?
 
     private var isTTSPlaybackActive = false
@@ -84,11 +96,16 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
         var bargeCont: AsyncStream<Void>.Continuation!
         self.bargeInEvents = AsyncStream { bargeCont = $0 }
         self.bargeInContinuation = bargeCont
+
+        var commandCont: AsyncStream<String>.Continuation!
+        self.commandTranscripts = AsyncStream { commandCont = $0 }
+        self.commandContinuation = commandCont
     }
 
     deinit {
         silenceContinuation.finish()
         bargeInContinuation.finish()
+        commandContinuation.finish()
     }
 
     // MARK: - Lifecycle
@@ -104,9 +121,14 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
         )
 
         // iOS 26.3 requires SpeechDetector to be paired with a SpeechTranscriber
-        // (cannot create a SpeechDetector-only worker). We only use detector.results.
+        // (cannot create a SpeechDetector-only worker). We use detector.results for
+        // VAD AND — since the transcriber must exist anyway — its finalized results
+        // as the English command listener (#77, task 77.5). Locale is forced to
+        // English (P2: commands are English-only for every user regardless of the
+        // Slovak answer path). `reportingOptions: []` = finalized results only, which
+        // is exactly what the screen-scoped command matcher wants.
         let transcriber = SpeechTranscriber(
-            locale: Locale.current,
+            locale: Locale(identifier: "en_US"),
             transcriptionOptions: [],
             reportingOptions: [],
             attributeOptions: []
@@ -204,6 +226,27 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
             }
         }
 
+        // Command listener (77.5): consume the paired transcriber's FINALIZED
+        // English results and hand them to the view-model's screen-scoped matcher.
+        // Defensive (E-fallback): any throw from the transcriber stream is logged
+        // and ends the loop — VAD is unaffected and the app degrades to the manual
+        // mic-button/tap flow rather than crashing.
+        transcriptionTask = Task { [weak self] in
+            do {
+                for try await result in transcriber.results {
+                    guard let self, !Task.isCancelled else { break }
+                    guard result.isFinal else { continue }
+                    let text = String(result.text.characters)
+                    guard !text.isEmpty else { continue }
+                    await MainActor.run { [weak self] in
+                        _ = self?.commandContinuation.yield(text)
+                    }
+                }
+            } catch {
+                Logger.voice.error("🎙️ Command transcriber error (degrading to buttons): \(error, privacy: .public)")
+            }
+        }
+
         // Give the analyzer task a beat to wire its internal queue up before
         // buffers start flowing from the engine tap.
         try? await Task.sleep(for: .milliseconds(50))
@@ -222,6 +265,9 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     func stopListening() {
         detectionTask?.cancel()
         detectionTask = nil
+
+        transcriptionTask?.cancel()
+        transcriptionTask = nil
 
         analyzerTask?.cancel()
         analyzerTask = nil
@@ -289,6 +335,8 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     private func cleanupAfterStartFailure() {
         detectionTask?.cancel()
         detectionTask = nil
+        transcriptionTask?.cancel()
+        transcriptionTask = nil
         analyzerTask?.cancel()
         analyzerTask = nil
         inputContinuation?.finish()

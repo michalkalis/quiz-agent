@@ -161,6 +161,11 @@ final class QuizViewModel: ObservableObject {
     /// `applyCaptureEvent(_:)`. Deliberately NOT part of QuizState/validTransitions.
     @Published private(set) var commandCapturePhase: CommandCapturePhase = .idle
 
+    /// Session 4 wiring seam / test hook (#77, task 77.5): invoked when the
+    /// command listener recognizes a screen-scoped command. Session 3 delivers
+    /// recognition only — routing commands to actions is Session 4 (77.8–77.9).
+    var onCommandRecognized: (@MainActor (VoiceCommand) -> Void)?
+
     /// Apply an injected capture-lifecycle event. Illegal transitions are a no-op
     /// (phase unchanged) and return `false` so a caller can detect a bad sequence.
     @discardableResult
@@ -314,6 +319,12 @@ final class QuizViewModel: ObservableObject {
 
     /// Whether streaming STT is active
     @Published var isStreamingSTT: Bool = false
+
+    /// Whether question TTS is currently playing. The command listener is torn
+    /// down during TTS and re-armed after (77.5 windowed lifecycle / the 1a19438
+    /// self-trigger guard) — `currentCommandScreen` returns nil while this is true
+    /// so the recognizer never hears its own playback. Internal for +Audio/+CommandListener.
+    var isPlayingQuestionTTS: Bool = false
 
     /// The option key matched by voice on an MCQ question (nil between questions).
     /// Drives the `selected` highlight in MCQOptionPicker without waiting for tap.
@@ -940,6 +951,9 @@ final class QuizViewModel: ObservableObject {
         // IMPORTANT: Show result screen BEFORE playing audio
         // This ensures ResultView is visible when audio starts playing
         transition(to: .showingResult(question: question, evaluation: evaluation))
+        // #77 (77.5): result window — re-arm the command listener for "next"/"ok"
+        // (Session 4 routes them) on top of auto-advance.
+        refreshCommandWindow()
 
         // Auto-extend session TTL to prevent timeout on long drives
         if let sessionId = currentSession?.id {

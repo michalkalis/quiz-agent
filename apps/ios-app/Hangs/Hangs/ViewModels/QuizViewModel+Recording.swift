@@ -79,6 +79,13 @@ extension QuizViewModel {
         liveTranscript = ""
         isStreamingSTT = true
 
+        // #77 (77.7 / E-topology): converge on ONE AVAudioEngine. The shared
+        // VAD/command-listener engine (SilenceDetectionService) must be torn down
+        // BEFORE the ElevenLabs streaming engine spins up — the two must never run
+        // concurrently (the #64 two-engine crash config). Command listening and the
+        // answer stream are time-disjoint; this is the enforcement point.
+        stopSilenceDetectionListening()
+
         do {
             // 1. Get single-use token from backend
             let token = try await networkService.fetchElevenLabsToken()
@@ -221,6 +228,9 @@ extension QuizViewModel {
         startAutoConfirmIfEnabled()
         // Stay in .recording → switch to a neutral state for the modal
         transition(to: .processing)
+        // #77 (77.5): confirmation window — re-arm the command listener for
+        // "ok"/"again" (Session 4 routes them) on top of the 10 s auto-confirm.
+        refreshCommandWindow()
     }
 
     // MARK: - Silence Detection

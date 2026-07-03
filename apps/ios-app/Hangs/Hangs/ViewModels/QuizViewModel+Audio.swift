@@ -28,11 +28,16 @@ extension QuizViewModel {
             }
         }
         taskBag.add(task, key: .bargeIn)
+
+        // #77 (77.5): the SAME shared engine/transcriber now also feeds the
+        // English command listener — arm its consumer whenever we listen.
+        startCommandConsumer()
     }
 
     /// Stop silence-detection listening and tear down the barge-in subscription.
     func stopSilenceDetectionListening() {
         taskBag.cancel(.bargeIn)
+        stopCommandConsumer()
         silenceDetectionService?.stopListening()
     }
 
@@ -81,6 +86,8 @@ extension QuizViewModel {
 
         // Stop silence detection before TTS to avoid AVAudioEngine + AVPlayer conflict
         // (SpeechAnalyzer's RealtimeMessenger crashes when both run simultaneously).
+        // isPlayingQuestionTTS closes the command window for the duration (77.5).
+        isPlayingQuestionTTS = true
         stopSilenceDetectionListening()
 
         do {
@@ -91,7 +98,8 @@ extension QuizViewModel {
             // Don't fail the quiz if audio doesn't play
         }
 
-        // Restart silence detection after TTS finishes
+        // Restart silence detection (+ command listener) after TTS finishes.
+        isPlayingQuestionTTS = false
         await startSilenceDetectionListening()
 
         // After TTS finishes (or was interrupted by barge-in), choose next path
@@ -125,6 +133,7 @@ extension QuizViewModel {
 
         // Stop silence detection before TTS to avoid the AVAudioEngine + AVPlayer
         // conflict (SpeechAnalyzer's RealtimeMessenger crashes if both run).
+        isPlayingQuestionTTS = true
         stopSilenceDetectionListening()
 
         do {
@@ -136,6 +145,7 @@ extension QuizViewModel {
 
         // Restart silence detection (and barge-in) after TTS finishes — but
         // deliberately NO timer re-arming, unlike playQuestionAudio's tail.
+        isPlayingQuestionTTS = false
         await startSilenceDetectionListening()
     }
 

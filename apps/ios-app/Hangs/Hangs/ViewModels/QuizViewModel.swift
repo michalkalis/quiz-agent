@@ -153,6 +153,23 @@ final class QuizViewModel: ObservableObject {
     // Minimize state
     @Published var isMinimized: Bool = false
 
+    // MARK: - Command Capture Phase (#77, task 77.4)
+
+    /// Additive capture-phase observable (E-state) — the single source of truth
+    /// for earcons (77.10) and the deferred recording UI (P5). SEPARATE axis from
+    /// `quizState`; driven off injected audio-lifecycle events via
+    /// `applyCaptureEvent(_:)`. Deliberately NOT part of QuizState/validTransitions.
+    @Published private(set) var commandCapturePhase: CommandCapturePhase = .idle
+
+    /// Apply an injected capture-lifecycle event. Illegal transitions are a no-op
+    /// (phase unchanged) and return `false` so a caller can detect a bad sequence.
+    @discardableResult
+    func applyCaptureEvent(_ event: CaptureLifecycleEvent) -> Bool {
+        guard let next = commandCapturePhase.applying(event) else { return false }
+        commandCapturePhase = next
+        return true
+    }
+
     // MARK: - Quiz Stats
 
     @Published var quizStats: QuizStats = .empty

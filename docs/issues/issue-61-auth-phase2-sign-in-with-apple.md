@@ -106,6 +106,30 @@ On `POST /auth/apple`, in **one transaction**:
 - **Subscriptions / `plan_tier`**: deferred (founder decision 2026-06-26 — not in this release, wanted later). Entitlement model designed when subscriptions are specced; `apple_sub` already provides the durable anchor. *(F8)*
 - **Plan-review items F4–F7 — now resolved** (2026-06-27, see [`issue-61-execution-prompts.md`](issue-61-execution-prompts.md) *Locked decisions*): F4 = delete local immediately + best-effort revoke (retry/queue post-MVP); F5 = store `full_name`; F6 = nonce compare against `base64url-nopad(sha256(raw))`; F7 = `/auth/apple` deliberately **not** behind App Attest (valid Apple id_token suffices). F9 (Apple server-to-server notifications) stays Phase 3; F10 are implementation notes folded into the session prompts.
 
+## Security review findings — 2026-07-03
+
+Maker≠checker review of #60 + #61 auth (2 parallel reviewers: backend + iOS; load-bearing claims verified first-hand). Crypto core (JWT, refresh rotation/reuse-detection, Apple id_token verify, App Attest, Keychain, Fernet) — **solid, no findings**.
+
+**Backend — all fixed in `a8434cb`, deployed to Fly 2026-07-03** (262 tests green, `/auth/logout` verified 204 on prod):
+- [x] **B1 HIGH** — freemium daily-limit reset via sign-out/delete closed: merge keeps the anon's `daily_usage` rows frozen; `DELETE /auth/me` carries today's count back onto linked anons (GREATEST upsert). Fixed at the merge, not by rebinding the App Attest key (rebinding would brick re-bootstrap after account delete).
+- [x] **B2** — new `POST /auth/logout` (body `{refresh_token}`, always 204 — idempotent, never reveals token validity, rate-limited) revokes the whole refresh-token family server-side.
+- [x] **B3** — `/auth/refresh` rate-limited (20/min/IP) like sibling endpoints.
+- [x] **B4** — re-attestation of an already-stored App Attest key (client crash-retry) re-issues the bound identity instead of 500-ing.
+- [x] **B5** — concurrent first Apple sign-ins racing on `UNIQUE(apple_sub)` resolved via savepoint + re-read.
+
+**iOS (`AuthService.swift` + `SettingsView.swift`) — all fixed 2026-07-03** (auth suites 16/16 green incl. 2 new I1 tests, verified first-hand):
+- [x] **I1 HIGH** — `postTokens` treated any non-2xx as token-invalid → transient 5xx during a deploy silently orphaned a signed-in Apple account (fresh anon minted). Fixed: refresh outcome classified (401 = definitive rejection → re-bootstrap + `authSignedInSessionDropped` notification when Apple-linked; 5xx/timeout/offline = transient → tokens kept, retryable nil). 2 new tests encode both paths.
+- [x] **I2 MED** — `signOut()` now calls `POST /auth/logout` (best-effort, failures ignored) before dropping to fresh anon, revoking the refresh-token family server-side.
+- [x] **I3 MED** — Keychain save on the Apple sign-in path now verified by re-read; a persistence failure surfaces as sign-in failure instead of silently losing the account linkage on next launch.
+- [x] **I4 MED** — `deleteAccount()`/`exportData()` route through a refreshing `sendAuthorized` helper (retry-once-on-401), no more routine 401 shown to user.
+- [x] **I5 MED** — `accountErrorMessage` now rendered via an `.alert` in Settings.
+- [x] **I6 LOW** — Delete-account row `.disabled(isDeletingAccount)`.
+- [x] **I7 LOW** — account section reloads on the `authSignedInSessionDropped` notification (I5–I7 verified by clean build + green suites; no SettingsView unit tests exist).
+
+**Accepted risk (documented, not fixed):** `require_auth` in `apps/quiz-agent/app/api/deps.py` returns `authenticated=False` instead of rejecting when `LEGACY_USER_ID_GRACE` is on — every current call site handles it, but the name invites misuse. Tracked in #65 (endpoint auth hardening), not churned here.
+
+**GDPR note:** only *today's* counter is carried back on delete, without premium — fraud-prevention-minimal (GREATEST, can only tighten); full-history copy would retain account data past erasure.
+
 ## Cross-refs
 
 - #58 (parent) · #60 (Phase 1 prerequisite) · #50 (IAP — `apple_sub` anchor; align schema) · #48 (security review) · #62 (Phase 3 cross-device + full binding).

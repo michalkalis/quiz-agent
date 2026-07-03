@@ -282,26 +282,52 @@ actor AuthService: AuthServiceProtocol {
         if tokens == nil {
             tokens = store.load()
         }
-        guard let refreshToken = tokens?.refreshToken else {
+        guard let current = tokens else {
             return await performBootstrap()
         }
-        let body = try? JSONSerialization.data(withJSONObject: ["refresh_token": refreshToken])
-        if let new = await postTokens(path: "/api/v1/auth/refresh", body: body) {
+        let body = try? JSONSerialization.data(withJSONObject: ["refresh_token": current.refreshToken])
+        switch await postTokensResult(path: "/api/v1/auth/refresh", body: body) {
+        case .success(let new):
             tokens = new
             store.save(new)
             Logger.network.debug("🔐 Refresh rotated token pair")
             return new
+        case .rejected:
+            // The refresh token was genuinely rejected (revoked / expired / reused).
+            if current.isSignedIn {
+                // A signed-in (Apple-linked) session was dropped — user-visible.
+                // Re-bootstrap anon, then notify UI so it can reload account state (I7).
+                Logger.network.error("🔐 Signed-in session dropped (refresh rejected) → re-bootstrapping anon")
+                let fresh = await performBootstrap()
+                NotificationCenter.default.post(name: .authSignedInSessionDropped, object: nil)
+                return fresh
+            }
+            Logger.network.info("🔐 Refresh rejected → re-bootstrapping")
+            return await performBootstrap()
+        case .transient:
+            // Transient failure (5xx during a deploy, timeout, offline). Keep the
+            // stored tokens and surface a retryable nil — never orphan the account
+            // by minting a fresh anon over a still-valid refresh token (I1).
+            Logger.network.warning("🔐 Refresh transient failure → keeping stored tokens for retry")
+            return nil
         }
-        // Refresh rejected (revoked/expired/reused) or unreachable → start a
-        // fresh identity. If the backend is merely offline, the re-bootstrap
-        // fails too (nil), so no orphan identity is minted.
-        Logger.network.info("🔐 Refresh failed → re-bootstrapping")
-        return await performBootstrap()
     }
 
-    /// POST a request to an auth endpoint and decode the token pair. Returns nil
-    /// on any non-2xx status or transport/decoding error (caller degrades).
-    private func postTokens(path: String, body: Data?) async -> AuthTokens? {
+    /// Outcome of an auth POST that distinguishes a definitive credential rejection
+    /// (HTTP 401) from transient failures (5xx, timeout, offline, decode error). The
+    /// refresh path relies on this so a transient backend blip during a deploy never
+    /// re-bootstraps a fresh anon over a signed-in user's stored tokens (I1).
+    private enum AuthPostResult {
+        case success(AuthTokens)
+        /// The server definitively rejected the credential (HTTP 401).
+        case rejected
+        /// A transient failure — keep any stored tokens and retry later.
+        case transient
+    }
+
+    /// POST a request to an auth endpoint, decode the token pair, and classify the
+    /// outcome so callers can tell a real 401 from a transient failure.
+    private func postTokensResult(path: String, body: Data?) async -> AuthPostResult {
         var request = URLRequest(url: baseURL.appendingPathComponent(path))
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -310,22 +336,34 @@ actor AuthService: AuthServiceProtocol {
 
         do {
             let (data, response) = try await session.data(for: request)
-            guard let http = response as? HTTPURLResponse,
-                  (200...299).contains(http.statusCode) else {
-                let status = (response as? HTTPURLResponse)?.statusCode ?? 0
-                Logger.network.warning("🔐 Auth \(path, privacy: .public) → HTTP \(status, privacy: .public)")
-                return nil
+            guard let http = response as? HTTPURLResponse else {
+                Logger.network.warning("🔐 Auth \(path, privacy: .public) → non-HTTP response")
+                return .transient
+            }
+            guard (200...299).contains(http.statusCode) else {
+                Logger.network.warning("🔐 Auth \(path, privacy: .public) → HTTP \(http.statusCode, privacy: .public)")
+                // Only a 401 is a definitive rejection; everything else is transient.
+                return http.statusCode == 401 ? .rejected : .transient
             }
             let decoded = try JSONDecoder().decode(TokenResponse.self, from: data)
-            return AuthTokens(
+            return .success(AuthTokens(
                 accessToken: decoded.accessToken,
                 refreshToken: decoded.refreshToken,
                 anonId: decoded.anonId
-            )
+            ))
         } catch {
             Logger.network.warning("🔐 Auth \(path, privacy: .public) error: \(error.localizedDescription, privacy: .public)")
-            return nil
+            return .transient
         }
+    }
+
+    /// Optional-returning wrapper for the bootstrap/mint callers, which treat any
+    /// non-success outcome as failure. The refresh path uses `postTokensResult`.
+    private func postTokens(path: String, body: Data?) async -> AuthTokens? {
+        if case .success(let new) = await postTokensResult(path: path, body: body) {
+            return new
+        }
+        return nil
     }
 
     /// Wire shape of the backend `AuthTokenResponse` (snake_case).
@@ -438,6 +476,13 @@ actor AuthService: AuthServiceProtocol {
             )
             tokens = newTokens
             store.save(newTokens)
+            // Verify the Keychain actually persisted the account linkage. A silent
+            // save failure would lose the account on the next launch (re-bootstrapping
+            // anon), so surface it as a sign-in failure rather than reporting success (I3).
+            guard store.load()?.appleUserId == user else {
+                Logger.network.error("🔐 Apple sign-in: token persistence failed — reporting sign-in failure")
+                return nil
+            }
             Logger.network.info("🔐 Apple sign-in succeeded: sub=\(decoded.anonId, privacy: .public)")
             return newTokens
         } catch {
@@ -490,10 +535,30 @@ actor AuthService: AuthServiceProtocol {
         }
     }
 
-    /// Sign out: clear stored account tokens and re-bootstrap a fresh anonymous identity.
+    /// Sign out: revoke the refresh-token family on the backend (best-effort), then
+    /// clear stored account tokens and re-bootstrap a fresh anonymous identity.
     func signOut() async {
         Logger.network.info("🔐 Sign out → dropping to anon")
+        // Best-effort backend logout to revoke the refresh-token family (I2).
+        // Fire-and-forget: failures are ignored so sign-out always completes.
+        if let refreshToken = (tokens ?? store.load())?.refreshToken {
+            await postLogout(refreshToken: refreshToken)
+        }
         await dropToFreshAnon()
+    }
+
+    /// Best-effort POST /auth/logout to revoke the refresh-token family server-side.
+    /// The endpoint always returns 204; the result and any error are ignored (I2).
+    private func postLogout(refreshToken: String) async {
+        guard let body = try? JSONSerialization.data(withJSONObject: ["refresh_token": refreshToken]) else {
+            return
+        }
+        var request = URLRequest(url: baseURL.appendingPathComponent("/api/v1/auth/logout"))
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = body
+        request.timeoutInterval = 15
+        _ = try? await session.data(for: request)
     }
 
     /// Delete the account on the backend (DELETE /auth/me), then clear tokens locally and
@@ -504,17 +569,11 @@ actor AuthService: AuthServiceProtocol {
     /// Throws `AuthError.notSignedIn` if there are no tokens, or `AuthError.serverError`
     /// for non-2xx responses.
     func deleteAccount() async throws {
-        // Load from cache or Keychain; no tokens at all → not signed in.
-        let current = tokens ?? store.load()
-        guard let current else {
-            throw AuthError.notSignedIn
-        }
         var request = URLRequest(url: baseURL.appendingPathComponent("/api/v1/auth/me"))
         request.httpMethod = "DELETE"
-        request.setValue("Bearer \(current.accessToken)", forHTTPHeaderField: "Authorization")
         request.timeoutInterval = 30
 
-        let (_, response) = try await session.data(for: request)
+        let (_, response) = try await sendAuthorized(request)
         guard let http = response as? HTTPURLResponse,
               (200...299).contains(http.statusCode) else {
             let status = (response as? HTTPURLResponse)?.statusCode ?? 0
@@ -530,16 +589,11 @@ actor AuthService: AuthServiceProtocol {
     /// Fetch the account's data export (GET /auth/me/export, GDPR Art. 20).
     /// Returns the raw JSON response body. Throws on non-2xx or network failure.
     func exportData() async throws -> Data {
-        let current = tokens ?? store.load()
-        guard let current else {
-            throw AuthError.notSignedIn
-        }
         var request = URLRequest(url: baseURL.appendingPathComponent("/api/v1/auth/me/export"))
         request.httpMethod = "GET"
-        request.setValue("Bearer \(current.accessToken)", forHTTPHeaderField: "Authorization")
         request.timeoutInterval = 30
 
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await sendAuthorized(request)
         guard let http = response as? HTTPURLResponse,
               (200...299).contains(http.statusCode) else {
             let status = (response as? HTTPURLResponse)?.statusCode ?? 0
@@ -549,6 +603,28 @@ actor AuthService: AuthServiceProtocol {
         return data
     }
 
+    /// Send an authorized account-management request, refreshing the access token
+    /// once on a 401 (mirrors `NetworkService.sendAuthorized`) so a routine token
+    /// expiry is retried transparently instead of surfacing a 401 to the user (I4).
+    /// Throws `AuthError.notSignedIn` when no access token is available at all.
+    private func sendAuthorized(_ request: URLRequest) async throws -> (Data, URLResponse) {
+        guard let token = await accessToken() else {
+            throw AuthError.notSignedIn
+        }
+        var req = request
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+
+        let (data, response) = try await session.data(for: req)
+        guard let http = response as? HTTPURLResponse, http.statusCode == 401 else {
+            return (data, response)
+        }
+        guard let fresh = await refreshedAccessToken(replacing: token) else {
+            return (data, response)  // refresh unavailable → surface the 401
+        }
+        req.setValue("Bearer \(fresh)", forHTTPHeaderField: "Authorization")
+        return try await session.data(for: req)
+    }
+
     /// Drop the stored tokens (anon or account), clear the in-memory cache, and
     /// re-bootstrap a fresh anonymous identity.
     private func dropToFreshAnon() async {
@@ -556,6 +632,15 @@ actor AuthService: AuthServiceProtocol {
         store.clear()
         _ = await performBootstrap()
     }
+}
+
+// MARK: - Notifications
+
+extension Notification.Name {
+    /// Posted when a signed-in (Apple-linked) session is definitively dropped — the
+    /// backend rejected the refresh token with a 401 and the service fell back to a
+    /// fresh anonymous identity. UI observes this to reload the account section (I1/I7).
+    nonisolated static let authSignedInSessionDropped = Notification.Name("authSignedInSessionDropped")
 }
 
 // MARK: - AuthError

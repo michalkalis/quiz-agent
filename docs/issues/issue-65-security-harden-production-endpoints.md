@@ -65,3 +65,4 @@ Both apps deployed by founder. `ADMIN_API_KEY` set on quiz-pack-api beforehand.
 ### Residual items (not blocking, tracked)
 - **`elevenlabs/token` is still mintable without a token while grace is on** — now bounded to 10/min/IP (drain fixed from global to per-client), but full auth lockdown only activates when grace flips off (gated on #60 iOS auth reaching TestFlight).
 - **Set the access-token signing secret on quiz-agent-api before flipping grace off** — currently unset, so any presented bearer fails to 503; harmless now (no clients send tokens), blocking once iOS auth ships.
+- **`require_auth` returns `authenticated=False` instead of rejecting while `LEGACY_USER_ID_GRACE` is on** (`apps/quiz-agent/app/api/deps.py`) — accepted risk from the 2026-07-03 auth security review (#60/#61): every current call site handles the flag, but the name invites misuse by a future call site that assumes it rejects. Address when grace flips off (rename or make it reject).

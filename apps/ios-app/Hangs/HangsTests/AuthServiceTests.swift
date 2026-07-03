@@ -210,6 +210,80 @@ struct AuthServiceTests {
         #expect(store.load()?.anonId == "anon-2")
     }
 
+    // MARK: 5b. Transient refresh failure must NOT orphan a signed-in account (I1)
+
+    /// WHY: a transient 5xx during a backend deploy previously fell through to a
+    /// fresh anon bootstrap, silently orphaning an Apple-signed-in user's account.
+    /// The stored tokens MUST be preserved and the caller must get a retryable nil.
+    @Test("transient 5xx on a signed-in refresh keeps stored tokens and does NOT bootstrap")
+    func transientRefreshFailureKeepsSignedInTokens() async throws {
+        let seeded = AuthTokens(
+            accessToken: "acc", refreshToken: "r-old", anonId: "users-1",
+            accountName: "Jane", accountEmail: "jane@example.com", appleUserId: "apple-1"
+        )
+        let store = MockTokenStore(seed: seeded)
+        let service = makeService(store: store)
+        _ = await service.accessToken()  // warm cache
+
+        let bootstrapCalled = OSAllocatedUnfairLock<Bool>(initialState: false)
+        AuthStubURLProtocol.handler = { req in
+            if req.url?.path == "/api/v1/auth/refresh" {
+                return (.make(status: 503), Data())  // transient outage during a deploy
+            }
+            if req.url?.path == "/api/v1/auth/anon-bootstrap" {
+                bootstrapCalled.withLock { $0 = true }
+            }
+            return (.make(status: 200), Data(AuthStubs.tokenJSON(access: "orphan", refresh: "x", anon: "y").utf8))
+        }
+        defer { AuthStubURLProtocol.handler = nil }
+
+        let token = await service.refreshedAccessToken(replacing: "acc")
+        #expect(token == nil, "transient failure must surface as retryable nil, not a new anon token")
+        #expect(!bootstrapCalled.withLock { $0 }, "must NOT mint a fresh anon on a transient error")
+        // The Apple-linked tokens are preserved for a later retry.
+        #expect(store.load()?.appleUserId == "apple-1")
+        #expect(store.load()?.accessToken == "acc")
+    }
+
+    // MARK: 5c. Real 401 on a signed-in refresh drops to anon and notifies UI (I1/I7)
+
+    /// WHY: a genuine refresh 401 (revoked/expired) on an Apple-linked session is a
+    /// real sign-out. It must drop to a fresh anon AND post the notification so the
+    /// UI (SettingsView) can reload its account state.
+    @Test("real 401 on a signed-in refresh drops to anon and posts the session-dropped notification")
+    func realRefreshRejectionDropsSignedInAndNotifies() async throws {
+        let seeded = AuthTokens(
+            accessToken: "acc", refreshToken: "r-revoked", anonId: "users-1",
+            accountName: "Jane", accountEmail: nil, appleUserId: "apple-1"
+        )
+        let store = MockTokenStore(seed: seeded)
+        let service = makeService(store: store)
+        _ = await service.accessToken()  // warm cache
+
+        let notified = OSAllocatedUnfairLock<Bool>(initialState: false)
+        let observer = NotificationCenter.default.addObserver(
+            forName: .authSignedInSessionDropped, object: nil, queue: nil
+        ) { _ in
+            notified.withLock { $0 = true }
+        }
+        defer { NotificationCenter.default.removeObserver(observer) }
+
+        AuthStubURLProtocol.handler = { req in
+            if req.url?.path == "/api/v1/auth/refresh" {
+                return (.make(status: 401), Data())  // refresh token genuinely rejected
+            }
+            #expect(req.url?.path == "/api/v1/auth/anon-bootstrap")
+            return (.make(status: 200), Data(AuthStubs.tokenJSON(access: "fresh-anon", refresh: "r-fresh", anon: "anon-2").utf8))
+        }
+        defer { AuthStubURLProtocol.handler = nil }
+
+        let token = await service.refreshedAccessToken(replacing: "acc")
+        #expect(token == "fresh-anon", "a genuine 401 must fall through to a fresh anon identity")
+        #expect(store.load()?.appleUserId == nil, "the dropped account linkage must be cleared")
+        #expect(store.load()?.accessToken == "fresh-anon")
+        #expect(notified.withLock { $0 }, "UI must be notified so it can reload account state (I7)")
+    }
+
     // MARK: 6. Single-flight refresh — concurrent 401s share one refresh
 
     @Test("concurrent refreshes for the same stale token fire only one refresh")

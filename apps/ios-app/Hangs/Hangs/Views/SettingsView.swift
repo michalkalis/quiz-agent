@@ -9,6 +9,7 @@
 //
 
 import AuthenticationServices
+import Combine
 import SwiftUI
 import os
 
@@ -81,6 +82,11 @@ struct SettingsView: View {
             // Load auth state from Keychain on appear.
             currentTokens = KeychainTokenStore().load()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .authSignedInSessionDropped)) { _ in
+            // A signed-in session was dropped out-of-band (refresh 401) — reload so the
+            // account section reflects the fresh anon identity (I7).
+            currentTokens = KeychainTokenStore().load()
+        }
         .alert("Reset Question History?", isPresented: $showResetConfirmation) {
             Button("Cancel", role: .cancel) {}
             Button("Reset", role: .destructive) { viewModel.resetQuestionHistory() }
@@ -94,6 +100,18 @@ struct SettingsView: View {
             }
         } message: {
             Text("This permanently removes your data, history, and premium access. This can't be undone.")
+        }
+        .alert(
+            "Something went wrong",
+            isPresented: Binding(
+                get: { accountErrorMessage != nil },
+                set: { if !$0 { accountErrorMessage = nil } }
+            ),
+            presenting: accountErrorMessage
+        ) { _ in
+            Button("OK", role: .cancel) { accountErrorMessage = nil }
+        } message: { message in
+            Text(message)
         }
         .sheet(isPresented: $viewModel.showingMicrophonePicker) {
             AudioDevicePickerView(viewModel: viewModel)
@@ -250,6 +268,7 @@ struct SettingsView: View {
                     showDeleteConfirmation = true
                 }
                 .accessibilityIdentifier("account.deleteAccount")
+                .disabled(isDeletingAccount)
             }
         }
     }

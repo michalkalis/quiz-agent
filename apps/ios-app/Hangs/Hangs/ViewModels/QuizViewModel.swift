@@ -345,6 +345,13 @@ final class QuizViewModel: ObservableObject {
         self.silenceDetectionService = silenceDetectionService
         self.sttService = sttService
 
+        // #67 Part A: recover from a phone-call/Siri interruption that tears down
+        // streaming recording — leave .recording and reset streaming STT so no
+        // recording is stranded after the call.
+        self.audioService.onInterruptionBegan = { [weak self] in
+            self?.handleAudioInterruption()
+        }
+
         // Load saved settings and stats
         settings = persistenceStore.loadSettings()
         quizStats = persistenceStore.loadStats()

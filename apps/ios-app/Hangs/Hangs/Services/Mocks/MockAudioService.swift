@@ -19,6 +19,29 @@ import os
         var shouldFailPlayback = false
         var mockRecordingData = Data("mock audio".utf8)
 
+        // #67 Part A. Mirrors the real service's streaming-engine liveness so the
+        // interruption teardown can be exercised headlessly. `startStreamingRecording`
+        // marks it live; `stopStreamingRecording` clears it (like `audioEngine = nil`).
+        private(set) var audioEngineActive = false
+        var onInterruptionBegan: (@MainActor @Sendable () -> Void)?
+
+        /// Drive a `.began` interruption through the SAME routing decision the real
+        /// AudioService uses, so this mock can never drift from production behaviour.
+        func simulateInterruptionBegan() {
+            switch AudioService.interruptionTeardown(
+                isStreaming: audioEngineActive,
+                isRecording: isRecording
+            ) {
+            case .streaming:
+                stopStreamingRecording()
+                onInterruptionBegan?()
+            case .batch:
+                isRecording = false
+            case .none:
+                break
+            }
+        }
+
         // TTS spy (RS-11 / #59.1): the real audio stack is replaced by a no-op in
         // tests, so "was TTS actually attempted" is otherwise unobservable. Every
         // playOpusAudio call increments the count and records the last payload, even
@@ -96,10 +119,12 @@ import os
                 throw AudioError.recordingFailed
             }
             isRecording = true
+            audioEngineActive = true
         }
 
         func stopStreamingRecording() {
             isRecording = false
+            audioEngineActive = false
         }
 
         func refreshAvailableDevices() {

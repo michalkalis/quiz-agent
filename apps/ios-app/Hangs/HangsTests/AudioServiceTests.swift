@@ -231,6 +231,116 @@ struct AudioSessionCategoryOptionsTests {
     }
 }
 
+// MARK: - Interruption Teardown Routing (#67 Part A / task 77.2)
+//
+// The bug: `handleInterruption(.began)` (a phone call) only ever called the
+// *batch* `stopRecording()`. When the streaming PCM path was live, the batch
+// stop never tore down its AVAudioEngine, so the recording was stranded after
+// the call. The fix routes a live streaming engine to `stopStreamingRecording()`
+// and notifies the owner (QuizViewModel) to leave `.recording`.
+//
+// The real streaming engine can't be started headlessly (empty supportedLocales /
+// 0 Hz input on the Simulator — the documented CI audio blind spot), so the
+// routing DECISION is factored into the pure `AudioService.interruptionTeardown`
+// and asserted directly; MockAudioService drives that same function for the
+// state-teardown + owner-notification contract, and a QuizViewModel test proves
+// the end-to-end recovery.
+
+@Suite("Interruption Teardown Routing")
+struct InterruptionTeardownRoutingTests {
+
+    @Test("streaming engine live routes to streaming teardown (the #67 bug case)")
+    func streamingLiveRoutesToStreaming() {
+        // Streaming path: audioEngine != nil AND isRecording. Before the fix this
+        // fell to the batch stop, which never stopped the engine.
+        #expect(AudioService.interruptionTeardown(isStreaming: true, isRecording: true) == .streaming)
+    }
+
+    @Test("batch recording (no streaming engine) routes to batch teardown")
+    func batchRoutesToBatch() {
+        #expect(AudioService.interruptionTeardown(isStreaming: false, isRecording: true) == .batch)
+    }
+
+    @Test("idle (no recording) tears down nothing")
+    func idleRoutesToNone() {
+        #expect(AudioService.interruptionTeardown(isStreaming: false, isRecording: false) == .none)
+    }
+}
+
+// MARK: - MockAudioService Interruption Contract (#67 Part A)
+
+@Suite("MockAudioService Interruption Contract")
+@MainActor
+struct MockAudioServiceInterruptionTests {
+
+    @Test("interruption during streaming stops the engine, clears isRecording, and notifies the owner")
+    func interruptionDuringStreamingTearsDownAndNotifies() throws {
+        let service = MockAudioService()
+        var notified = false
+        service.onInterruptionBegan = { notified = true }
+
+        // Enter the streaming state (engine live, recording).
+        try service.startStreamingRecording { _ in }
+        #expect(service.isRecording == true)
+        #expect(service.audioEngineActive == true)
+
+        service.simulateInterruptionBegan()
+
+        // audioEngine == nil, isRecording == false, owner notified.
+        #expect(service.audioEngineActive == false)
+        #expect(service.isRecording == false)
+        #expect(notified == true)
+    }
+
+    @Test("interruption while not recording notifies nobody and stays idle")
+    func interruptionWhileIdleIsNoOp() {
+        let service = MockAudioService()
+        var notified = false
+        service.onInterruptionBegan = { notified = true }
+
+        service.simulateInterruptionBegan()
+
+        #expect(service.isRecording == false)
+        #expect(notified == false)
+    }
+}
+
+// MARK: - QuizViewModel Interruption Recovery (#67 Part A)
+
+@Suite("QuizViewModel Interruption Recovery")
+@MainActor
+struct QuizViewModelInterruptionTests {
+
+    @Test("a phone-call interruption during streaming leaves .recording and resets streaming state")
+    func interruptionDuringStreamingLeavesRecording() throws {
+        let mockAudio = MockAudioService()
+        let viewModel = QuizViewModel(
+            networkService: Fixtures.makeFullMockNetwork(),
+            audioService: mockAudio,
+            persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: nil,
+            sttService: nil
+        )
+        viewModel.currentSession = Fixtures.makeActiveSession()
+        viewModel.currentQuestion = Fixtures.makeQuestion()
+
+        // Simulate an active streaming recording.
+        viewModel.quizState = .recording
+        viewModel.isStreamingSTT = true
+        try mockAudio.startStreamingRecording { _ in }
+        #expect(mockAudio.isRecording == true)
+
+        // Phone call arrives → AudioService fires onInterruptionBegan (wired in init).
+        mockAudio.simulateInterruptionBegan()
+
+        // VM left .recording; audio + streaming state reset — no stranded recording.
+        #expect(viewModel.quizState == .askingQuestion)
+        #expect(viewModel.isStreamingSTT == false)
+        #expect(mockAudio.isRecording == false)
+        #expect(mockAudio.audioEngineActive == false)
+    }
+}
+
 // MARK: - Integration Test Notes
 //
 // The following tests require a real device or simulator with microphone access.

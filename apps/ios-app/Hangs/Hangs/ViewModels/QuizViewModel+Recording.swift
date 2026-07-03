@@ -539,6 +539,22 @@ extension QuizViewModel {
         Logger.quiz.info("🚫 Voice submission cancelled by user")
     }
 
+    /// Recover from an audio-session interruption (e.g. an incoming phone call)
+    /// that tore down streaming recording. Leaves `.recording`, resets streaming
+    /// STT, and clears the recording timers so no recording is stranded after the
+    /// call (#67 Part A). No-op unless we were recording.
+    func handleAudioInterruption() {
+        guard quizState == .recording else { return }
+        cancelAutoStopRecordingTimer()
+        cancelSilenceDetection()
+        cleanupStreamingSTT()
+        isAutoRecording = false
+        speechDetectedDuringAutoRecord = false
+        transition(to: .askingQuestion)
+        errorMessage = String(localized: "Recording interrupted. Tap the mic to try again.", comment: "Shown when a phone call or other audio interruption stops recording")
+        Logger.audio.warning("⚠️ Recording interrupted by audio session — reset to ready state")
+    }
+
     /// Clean up streaming STT resources
     func cleanupStreamingSTT() {
         taskBag.cancel(.sttEvent)

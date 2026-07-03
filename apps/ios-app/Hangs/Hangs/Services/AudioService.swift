@@ -31,9 +31,15 @@ typealias PCMChunkHandler = @Sendable (Data) -> Void
 
 /// Protocol for audio operations
 @MainActor
-protocol AudioServiceProtocol: Sendable {
+protocol AudioServiceProtocol: AnyObject, Sendable {
     var isRecording: Bool { get }
     var isPlaying: Bool { get }
+
+    /// Invoked on the main actor when an audio-session interruption (`.began` —
+    /// e.g. an incoming phone call) tears down an active *streaming* recording.
+    /// The owner (QuizViewModel) uses it to leave `.recording` and reset streaming
+    /// STT so no recording is stranded after the call (#67 Part A).
+    var onInterruptionBegan: (@MainActor @Sendable () -> Void)? { get set }
 
     // Device management
     var availableInputDevices: [AudioDevice] { get }
@@ -65,6 +71,9 @@ protocol AudioServiceProtocol: Sendable {
 final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
     @Published private(set) var isRecording = false
     @Published private(set) var isPlaying = false
+
+    /// See `AudioServiceProtocol.onInterruptionBegan`. Set by the owner (QuizViewModel).
+    var onInterruptionBegan: (@MainActor @Sendable () -> Void)?
 
     // MARK: - Device Management
 
@@ -372,6 +381,23 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         }
     }
 
+    /// What an interruption's `.began` phase must tear down. Pure + static so the
+    /// routing decision is unit-testable without real audio hardware (the streaming
+    /// engine is never live on the Simulator). #67 Part A: the streaming PCM path
+    /// must route to `stopStreamingRecording()`, NOT the batch `stopRecording()`,
+    /// which never tears down the AVAudioEngine — the stranded-recording-after-a-call bug.
+    enum InterruptionTeardown: Equatable {
+        case streaming
+        case batch
+        case none
+    }
+
+    static func interruptionTeardown(isStreaming: Bool, isRecording: Bool) -> InterruptionTeardown {
+        if isStreaming { return .streaming }
+        if isRecording { return .batch }
+        return .none
+    }
+
     /// Handle audio session interruptions (phone calls, Siri, other apps)
     nonisolated private func handleInterruption(_ notification: Notification) {
         guard let userInfo = notification.userInfo,
@@ -383,9 +409,22 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         Task { @MainActor in
             switch type {
             case .began:
-                // Interruption started - stop any active operations to prevent corruption
-                if self.isRecording {
+                // Interruption started - stop any active operations to prevent corruption.
+                // #67 Part A: route to the correct teardown. The streaming PCM path holds an
+                // AVAudioEngine that the batch stopRecording() never stops — misrouting it
+                // strands the recording after the call. Also notify the owner so the
+                // view model leaves .recording and resets streaming STT.
+                switch AudioService.interruptionTeardown(
+                    isStreaming: self.audioEngine != nil,
+                    isRecording: self.isRecording
+                ) {
+                case .streaming:
+                    self.stopStreamingRecording()
+                    self.onInterruptionBegan?()
+                case .batch:
                     _ = try? await self.stopRecording()
+                case .none:
+                    break
                 }
                 if self.isPlaying {
                     await self.stopPlayback()

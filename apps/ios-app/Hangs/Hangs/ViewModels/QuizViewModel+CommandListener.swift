@@ -99,6 +99,21 @@ extension QuizViewModel {
     /// window closed (e.g. mid-transition into recording) is dropped.
     func handleCommandTranscript(_ transcript: String) async {
         guard let screen = currentCommandScreen else { return }
+
+        // Spoken-cancel path (77.10 carry-over): while a skip undo-window is open on
+        // the question screen, a spoken cancel word ("stop"/"no") aborts the pending
+        // skip — the spoken twin of the tap-abort. "stop" is NOT in the question
+        // screen's normal command set, so this must be checked BEFORE the matcher
+        // (which would otherwise drop it).
+        if pendingSkipWindow != nil {
+            let tokens = VoiceCommandMatcher.normalize(transcript).split(separator: " ").map(String.init)
+            if tokens.contains(where: VoiceCommandLexicon.isCancelWord) {
+                emitEarcon(.commandAck) // acknowledge the recognized cancel
+                abortSkipUndoWindow()
+                return
+            }
+        }
+
         guard let command = VoiceCommandMatcher.match(transcript: transcript, on: screen) else { return }
 
         applyCaptureEvent(.recognize) // ack (no phase change) — earcon seam for 77.10
@@ -111,6 +126,7 @@ extension QuizViewModel {
     /// transcript that lands as the window closes can't fire the wrong action.
     func handleRecognizedCommand(_ command: VoiceCommand) {
         Logger.voice.info("🎙️ Command recognized: \(command.rawValue, privacy: .public)")
+        emitEarcon(.commandAck) // 77.10 command-ack tone
         onCommandRecognized?(command)
         routeCommand(command)
     }

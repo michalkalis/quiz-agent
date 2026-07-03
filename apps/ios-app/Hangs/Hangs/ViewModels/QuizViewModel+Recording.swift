@@ -34,6 +34,7 @@ extension QuizViewModel {
         cancelAnswerTimer()
         errorMessage = nil
         transition(to: .recording)
+        emitEarcon(.micLive) // 77.10 mic-live tone — the mic just opened
 
         // Choose streaming STT or batch M4A based on feature flag
         if Config.useElevenLabsSTT, sttService != nil {
@@ -271,6 +272,7 @@ extension QuizViewModel {
         isStoppingRecording = true
         defer { isStoppingRecording = false }
 
+        emitEarcon(.gotIt) // 77.10 got-it tone — recording stopped / auto-submitted
         cancelAutoStopRecordingTimer()
         cancelSilenceDetection()
         isAutoRecording = false

@@ -200,6 +200,14 @@ final class QuizViewModel: ObservableObject {
         return true
     }
 
+    /// Single funnel for every earcon (77.10). Suppresses cues during question
+    /// TTS (`isPlayingQuestionTTS`) so a tone never plays over the spoken
+    /// question — the one hard rule for the language-neutral cue set.
+    func emitEarcon(_ earcon: Earcon) {
+        guard !isPlayingQuestionTTS else { return }
+        earconPlayer.play(earcon)
+    }
+
     // MARK: - Quiz Stats
 
     @Published var quizStats: QuizStats = .empty
@@ -362,6 +370,12 @@ final class QuizViewModel: ObservableObject {
     let persistenceStore: PersistenceStoreProtocol
     let silenceDetectionService: SilenceDetectionServiceProtocol?
     let sttService: ElevenLabsSTTServiceProtocol?
+
+    /// Language-neutral earcon player (#77, task 77.10). A settable property (not
+    /// an init param) so the ~15 existing call sites are untouched and tests can
+    /// inject a `MockEarconPlayer`. Cues route through `emitEarcon(_:)`, which
+    /// suppresses them during question TTS.
+    var earconPlayer: EarconPlaying = SystemEarconPlayer()
 
     private var cancellables = Set<AnyCancellable>()
 
@@ -776,7 +790,8 @@ final class QuizViewModel: ObservableObject {
         cancelAnswerTimer()
         cancelThinkingTime()
         pendingSkipWindow = UndoWindow(duration: duration)
-        onSkipUndoWindowOpened?() // 77.10 skip-confirm earcon (Session 5)
+        emitEarcon(.skipConfirm) // 77.10 skip-confirm tone — undo-window opened
+        onSkipUndoWindowOpened?() // observation seam (deferred UI / tests)
 
         let task = Task { [weak self] in
             try? await Task.sleep(for: .seconds(duration))

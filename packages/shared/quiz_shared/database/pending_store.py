@@ -80,6 +80,15 @@ class SQLitePendingStore:
                 "PENDING_DATABASE_URL",
                 "sqlite:///./data/pending.db",
             )
+        # SQLite won't create missing parent directories — a fresh checkout
+        # (CI, new machine) has no ./data yet and dies with "unable to open
+        # database file" at first connect.
+        if database_url.startswith("sqlite:///"):
+            db_path = database_url[len("sqlite:///") :]
+            if db_path and db_path != ":memory:":
+                parent = os.path.dirname(db_path)
+                if parent:
+                    os.makedirs(parent, exist_ok=True)
         self.engine = create_engine(database_url, echo=False)
         _Base.metadata.create_all(self.engine)
         self._SessionLocal = sessionmaker(bind=self.engine)

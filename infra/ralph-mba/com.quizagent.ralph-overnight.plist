@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  LaunchAgent: nightly Ralph overnight burndown on the agent Mac.
+
+  Runs at 00:30 daily. Must be a LaunchAgent in the GUI domain (gui/502) — like
+  com.quizagent.rc — so claude can reach the claude.ai credentials in the macOS
+  Keychain. A Daemon (system domain) cannot.
+
+  Install (as the `agent` user on mba):
+    cp scripts/ralph/com.quizagent.ralph-overnight.plist \
+       ~/Library/LaunchAgents/com.quizagent.ralph-overnight.plist
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.quizagent.ralph-overnight.plist
+    launchctl enable gui/$(id -u)/com.quizagent.ralph-overnight
+
+  Trigger now without waiting for 00:30 (for the verification step):
+    launchctl kickstart -k gui/$(id -u)/com.quizagent.ralph-overnight
+
+  Uninstall:
+    launchctl bootout gui/$(id -u)/com.quizagent.ralph-overnight
+
+  REBOOT GOTCHA (FileVault stays ON — #57 Track D founder decision): true zero-touch
+  auto-login is impossible with FileVault on (macOS sits at the pre-boot unlock screen
+  and disables automatic login), and we do NOT disable FileVault. So a reboot pauses
+  the loop until the `agent` user next logs into the GUI desktop (that login also
+  unlocks FileVault + the signing Keychain). Reboots are rare on this home Mac.
+
+  RunAtLoad is true so NO manual re-bootstrap is needed after a reboot: macOS auto-loads
+  every plist in ~/Library/LaunchAgents on GUI login, and RunAtLoad then fires one run
+  immediately to catch up the missed night. Steady-state nightly firing is driven by
+  StartCalendarInterval (00:30) while the agent stays logged in.
+
+  Side effect of RunAtLoad: a run also fires on *any* GUI login (e.g. mid-day
+  maintenance), not just after a reboot. On this dedicated agent Mac the `agent` user
+  logs in only to resume the loop, so this is the intended "resume" behavior; the
+  overnight.sh lockfile prevents it from colliding with an already-running run.
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.quizagent.ralph-overnight</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>-lc</string>
+        <string>/Users/agent/code/quiz-agent/scripts/ralph/run-scheduled.sh</string>
+    </array>
+
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>0</integer>
+        <key>Minute</key>
+        <integer>30</integer>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/agent/Library/Logs/quizagent-ralph.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/agent/Library/Logs/quizagent-ralph.log</string>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/agent/code/quiz-agent</string>
+</dict>
+</plist>

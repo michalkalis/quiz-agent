@@ -26,9 +26,15 @@ Stack-specific commands (iOS build / test / schemes, Fly.io deploy) live in the 
 
 ## Output
 
-Long outputs (>30 lines: summaries, analyses, reports, reviews, recaps) → self-contained HTML at `docs/artifacts/<slug>.html` (inline CSS, no external deps/CDN, no network). Reply `open <path>`. Not for: commits, TODO, issue plan files, short replies. **MD = persistent. HTML = throwaway.**
+**Token economy is a standing constraint (founder, 2026-07-05).** Default output = tight, scannable markdown reply: lead with the outcome, cut anything that doesn't change what the reader does next, no dev-logs, no restated context.
 
-**Visual-first, not a wall of text.** Default to actual visual structure over prose: status boards / card grids, color-coded status + priority badges, area tags, count dashboards, dependency-chain / flow diagrams (ASCII or inline SVG), collapsible `<details>` for depth, sticky TOC for long docs. Dark theme, scannable at a glance. Reference exemplar: `docs/artifacts/issues-visual-recap-2026-06-18.html`. This is our local equivalent of agent-native `/visual-recap` — no external service, opens in any browser.
+**HTML artifacts only on explicit request** (user asks for a report/dashboard/recap) or when the content is genuinely visual (status board, dependency diagram). Never hand-write the HTML shell: write the content as plain markdown, then wrap it via `uv run scripts/md2report.py <in.md> [out.html]` — dark theme, sticky TOC, tables, `<details>`, status badges (`<span class="badge ok|warn|bad|info">`) come from the template. Output lands in `docs/artifacts/<slug>.html` (gitignored); reply `open <path>`. **MD = persistent. HTML = throwaway.**
+
+**Length caps (fail loud, don't silently exceed):**
+- Issue plans `docs/issues/issue-NN-*.md` — ≤ ~300 lines; link research/artifacts instead of inlining them.
+- Handoffs — ≤ ~80 lines.
+- Reviews — report confirmed findings only (`file:line` + one-line fix); no full audit-trail/"ledger" documents.
+- If a cap genuinely can't hold, split at a clean boundary and say so.
 
 ## File Placement
 

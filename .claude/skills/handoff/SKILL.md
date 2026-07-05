@@ -33,7 +33,7 @@ If `docs/handoffs/` doesn't exist, create it. If a handoff file already exists f
 
 ## Write the handoff
 
-Use exactly this structure. Drop a section only if it genuinely doesn't apply (e.g. "Blockers: none"). Keep prose tight — bullets > paragraphs except in Recap.
+Use exactly this structure. Drop a section only if it genuinely doesn't apply (e.g. "Blockers: none"). Keep prose tight — bullets > paragraphs except in Recap. **Hard cap ~80 lines total** (CLAUDE.md Output caps, 2026-07-05): if it doesn't fit, trim Key files and Decisions first, never Next steps or Verification status.
 
 ```markdown
 # Handoff YYYY-MM-DD HH:MM

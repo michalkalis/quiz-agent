@@ -110,6 +110,16 @@
       ▿ _isMinimized: Combine.Published<Swift.Bool>
         ▿ storage: Combine.Published<Swift.Bool>.Storage.value
           - value: false
+      ▿ _commandCapturePhase: Combine.Published<Hangs.CommandCapturePhase>
+        ▿ storage: Combine.Published<Hangs.CommandCapturePhase>.Storage.value
+          - value: Hangs.CommandCapturePhase.idle
+      - onCommandRecognized: nil
+      - voiceStartOnQuestionEnabled: true
+      - voiceStartOnHomeEnabled: true
+      ▿ _pendingSkipWindow: Combine.Published<Swift.Optional<Hangs.UndoWindow>>
+        ▿ storage: Combine.Published<Swift.Optional<Hangs.UndoWindow>>.Storage.value
+          - value: nil
+      - onSkipUndoWindowOpened: nil
       ▿ _quizStats: Combine.Published<Hangs.QuizStats>
         ▿ storage: Combine.Published<Hangs.QuizStats>.Storage.value
           ▿ value: Hangs.QuizStats
@@ -176,6 +186,7 @@
       ▿ _isStreamingSTT: Combine.Published<Swift.Bool>
         ▿ storage: Combine.Published<Swift.Bool>.Storage.value
           - value: false
+      - isPlayingQuestionTTS: false
       ▿ _mcqVoiceMatchedKey: Combine.Published<Swift.Optional<Swift.String>>
         ▿ storage: Combine.Published<Swift.Optional<Swift.String>>.Storage.value
           - value: nil
@@ -189,6 +200,8 @@
         - capturedTextInputInput: nil
         - capturedStartQuizExcludedIds: nil
         - createSessionError: nil
+        - endSessionError: nil
+        - endSessionCallCount: 0
       ▿ audioService: Hangs.MockAudioService #5
         - isRecording: false
         - isPlaying: false
@@ -209,6 +222,11 @@
             - 100
             - 105
             - 111
+        - audioEngineActive: false
+        ▿ onInterruptionBegan: Optional((Function))
+          - some: (Function)
+        - playOpusCallCount: 0
+        - lastPlayedData: nil
         ▿ availableInputDevices: 2 elements
           ▿ Hangs.AudioDevice
             - id: "Built-In-Mic"
@@ -237,13 +255,14 @@
           - totalQuizzes: 0
       - silenceDetectionService: nil
       - sttService: nil
+      - earconPlayer: Hangs.SystemEarconPlayer #7
       ▿ cancellables: 1 member
-        ▿ Combine.AnyCancellable #7
+        ▿ Combine.AnyCancellable #8
           ▿ storage: Combine.AnyCancellable.Storage.cancellable
-            - cancellable: Sink #8
+            - cancellable: Sink #9
           ▿ lock: 0x<addr>
             - pointerValue: <n>
-      ▿ taskBag: Hangs.TaskBag #9
+      ▿ taskBag: Hangs.TaskBag #10
         - tasks: 0 key/value pairs
       - isRerecording: false
       - consecutiveTranscriptionFailures: 0
@@ -252,20 +271,13 @@
       - currentQuestionAudioUrl: nil
   ▿ _reduceMotion: SwiftUI.Environment<Swift.Bool>
     ▿ content: SwiftUI.Environment<Swift.Bool>.Content.keyPath
-      - keyPath: \EnvironmentValues.<computed 0x<addr> (Bool)> #10
+      - keyPath: \EnvironmentValues.<computed 0x<addr> (Bool)> #11
         - super: Swift.KeyPath<SwiftUI.EnvironmentValues, Swift.Bool>
           - super: Swift.PartialKeyPath<SwiftUI.EnvironmentValues>
             ▿ super: Swift.AnyKeyPath
               - _kvcKeyPathStringPtr: nil
   ▿ _showEndQuizConfirmation: SwiftUI.State<Swift.Bool>
     - _value: false
-    - _location: nil
-  ▿ _now: SwiftUI.State<Foundation.Date>
-    ▿ _value: <date>
-      - timeIntervalSinceReferenceDate: <n>
-    - _location: nil
-  ▿ _recordingStartedAt: SwiftUI.State<Swift.Optional<Foundation.Date>>
-    - _value: nil
     - _location: nil
   ▿ _showTextInput: SwiftUI.State<Swift.Bool>
     - _value: false
@@ -277,3 +289,4 @@
     - value: false
     - location: nil
     - resetValue: false
+  - supportRowHeight: 30.0

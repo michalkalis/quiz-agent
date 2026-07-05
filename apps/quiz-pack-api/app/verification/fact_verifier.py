@@ -20,7 +20,9 @@ from ..sourcing.web_search_source import WebSearchSource
 class VerificationResult:
     """Result of fact-checking a question-answer pair."""
 
-    verdict: str  # "verified" | "likely_correct" | "uncertain" | "likely_wrong" | "wrong"
+    verdict: (
+        str  # "verified" | "likely_correct" | "uncertain" | "likely_wrong" | "wrong"
+    )
     confidence: float  # 0.0 - 1.0
     sources: list[dict] = field(default_factory=list)  # [{url, excerpt, agrees}]
     alternative_answers: list[str] = field(default_factory=list)
@@ -34,7 +36,9 @@ _SCALE = {
     "billion": 1_000_000_000,
     "trillion": 1_000_000_000_000,
 }
-_NUM_RE = re.compile(r"(\d[\d,]*\.?\d*)\s*(thousand|million|billion|trillion)?", re.IGNORECASE)
+_NUM_RE = re.compile(
+    r"(\d[\d,]*\.?\d*)\s*(thousand|million|billion|trillion)?", re.IGNORECASE
+)
 
 
 def _numbers_in(text: str) -> list[float]:
@@ -76,7 +80,9 @@ def _answer_supported(claimed_answer: str, content_lower: str) -> bool:
     target = answer_nums[0]
     if target == 0:
         return False
-    return any(abs(n - target) <= 0.10 * abs(target) for n in _numbers_in(content_lower))
+    return any(
+        abs(n - target) <= 0.10 * abs(target) for n in _numbers_in(content_lower)
+    )
 
 
 class FactVerifier:
@@ -87,9 +93,23 @@ class FactVerifier:
         tavily_api_key: Optional[str] = None,
         gemini_api_key: Optional[str] = None,
     ):
-        self.search = WebSearchSource(api_key=tavily_api_key)
+        self._tavily_api_key = tavily_api_key
+        self._search: Optional[WebSearchSource] = None
         self.gemini_api_key = gemini_api_key or os.getenv("GOOGLE_API_KEY")
         self._client = None
+
+    @property
+    def search(self) -> WebSearchSource:
+        """Lazy — a FactVerifier is built at routes-module import, and
+        WebSearchSource raises without TAVILY_API_KEY. The key must only be
+        required when a verification actually runs, not to import the app."""
+        if self._search is None:
+            self._search = WebSearchSource(api_key=self._tavily_api_key)
+        return self._search
+
+    @search.setter
+    def search(self, value: WebSearchSource) -> None:
+        self._search = value
 
     def _available(self) -> bool:
         """Whether the LLM judge is reachable.
@@ -98,7 +118,9 @@ class FactVerifier:
         client. Under the OpenRouter gateway one key serves Gemini; in direct
         mode an explicit/ambient ``GOOGLE_API_KEY`` still marks it configured.
         """
-        return bool(self.gemini_api_key) or llm_factory.gateway() == llm_factory.OPENROUTER
+        return (
+            bool(self.gemini_api_key) or llm_factory.gateway() == llm_factory.OPENROUTER
+        )
 
     async def _complete(self, prompt: str) -> Optional[str]:
         """Single LLM boundary: raw model text, or ``None`` on any failure."""
@@ -217,7 +239,9 @@ class FactVerifier:
         # Build evidence summary for Gemini
         evidence_lines = []
         for i, src in enumerate(sources, 1):
-            agreement = "AGREES" if src["agrees_with_answer"] else "DOES NOT MENTION answer"
+            agreement = (
+                "AGREES" if src["agrees_with_answer"] else "DOES NOT MENTION answer"
+            )
             evidence_lines.append(
                 f"Source {i} ({src['url']}): {agreement}\n  Excerpt: {src['excerpt'][:200]}"
             )
@@ -292,9 +316,7 @@ Rules:
                 notes=f"Gemini analysis failed ({e}); heuristic fallback",
             )
 
-    async def verify_batch(
-        self, questions: list[dict]
-    ) -> list[dict]:
+    async def verify_batch(self, questions: list[dict]) -> list[dict]:
         """Verify a batch of question-answer pairs.
 
         Args:

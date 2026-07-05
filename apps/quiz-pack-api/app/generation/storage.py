@@ -1,13 +1,15 @@
 """Storage service for questions with duplicate detection."""
 
-from typing import List, Optional, Tuple
+from typing import TYPE_CHECKING, List, Optional, Tuple
 import uuid
 
 import os
 
 from quiz_shared.models.question import Question
-from quiz_shared.database.chroma_client import ChromaDBClient
 from quiz_shared.database.pending_store import PendingStore, SQLitePendingStore
+
+if TYPE_CHECKING:
+    from quiz_shared.database.chroma_client import ChromaDBClient
 
 
 _SIMPLE_FILTER_FIELDS = ("review_status", "difficulty", "topic", "category", "type", "source")
@@ -33,25 +35,33 @@ class QuestionStorage:
 
     def __init__(
         self,
-        chroma_client: Optional[ChromaDBClient] = None,
+        chroma_client: Optional["ChromaDBClient"] = None,
         pending_store: Optional[PendingStore] = None,
     ):
         """Initialize storage service.
 
         Args:
-            chroma_client: ChromaDB client (or create default)
+            chroma_client: ChromaDB client (or create default lazily on first
+                use — the live order pipeline is pure pgvector and must not
+                pay chromadb's ~100MB import cost; only the legacy review
+                endpoints touch Chroma)
             pending_store: PendingStore for pre-approval questions (or create
                 a default SQLite-backed one in `data/pending.db`)
         """
-        if chroma_client is None:
+        self._chroma = chroma_client
+        self.pending = pending_store if pending_store is not None else SQLitePendingStore()
+
+    @property
+    def chroma(self) -> "ChromaDBClient":
+        if self._chroma is None:
+            from quiz_shared.database.chroma_client import ChromaDBClient
+
             # Use absolute path to project root's chroma_data directory
             # This ensures all components use the same database
             project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../.."))
             chroma_path = os.path.join(project_root, "chroma_data")
-            chroma_client = ChromaDBClient(persist_directory=chroma_path)
-
-        self.chroma = chroma_client
-        self.pending = pending_store if pending_store is not None else SQLitePendingStore()
+            self._chroma = ChromaDBClient(persist_directory=chroma_path)
+        return self._chroma
 
     def check_duplicates(
         self,

@@ -40,3 +40,8 @@
 - [ ] Recording start emits an **audio** cue (not only haptic) — `[HUMAN]` real-device confirm
 - [ ] `QuestionView` renders `ImageQuestionView` when `question.type == .image`
 - [ ] RS-01..RS-18 regression scenarios pass
+
+## Founder decisions 2026-07-05 (pre-implementation UI approval)
+
+Binding record: `docs/design/ui-proposals-2026-07-decisions.md` (decision 6 + globals G1–G4). Pencil frames update first via #86 — Pencil sync of approved UI; implement only after frame review.
+- APPROVED as recommended: add 10s to thinkingTime options; Variant A menu rows; system sounds 1113/1114 now (unify in #77 earcon set later); recording-sounds toggle default ON. Image questions = Home-screen user option, DEFAULT OFF (fun, but not while driving).

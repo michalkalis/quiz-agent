@@ -37,3 +37,8 @@ Cross-refs: **#85** (replay button + mute control — also edits `QuestionView` 
 - [ ] Answer-timer pill + progress bar behave identically in both modes (verified on-sim in both)
 - [ ] Screenshot-verify: MCQ header vs open header now visually consistent (re-shoot 11 & 16)
 - [ ] Existing ViewInspector/snapshot tests updated for the unified header; RS scenarios still green
+
+## Founder decisions 2026-07-05 (pre-implementation UI approval)
+
+Binding record: `docs/design/ui-proposals-2026-07-decisions.md` (decision 4 + globals G1–G4). Pencil frames update first via #86 — Pencil sync of approved UI; implement only after frame review.
+- Variant A (muted category above question). G1 binding layout OVERRIDES the mockup: top bar = close + settings; timer at the BOTTOM near the action row; scrollable question text; modest record/skip/type buttons.

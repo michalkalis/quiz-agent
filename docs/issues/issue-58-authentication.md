@@ -80,3 +80,8 @@ Produce a design doc (`docs/product/auth-research-<date>.md` or a PRD) that cove
 ## Súvisiace issues
 [[issue-48-pre-release-review-gauntlet|#48 Pre-release review gauntlet]] · [[issue-49-daily-limit-cost-research|#49 Daily free-limit cost research]] · [[issue-50-app-store-connect-setup|#50 App Store Connect listing + ASC API setup]] · [[issue-59-quiz-flow-bug-cluster|#59 Quiz-flow bug cluster]] · [[issue-60-auth-phase1-anonymous-identity|#60 Auth Phase 1]] · [[issue-61-auth-phase2-sign-in-with-apple|#61 Auth Phase 2]] · [[issue-62-auth-phase3-cross-device-purchase-binding|#62 Auth Phase 3]]
 <!-- obsidian-links:end -->
+
+## Founder decisions 2026-07-05 (pre-implementation UI approval)
+
+Binding record: `docs/design/ui-proposals-2026-07-decisions.md` (decision 10 + globals G1–G4). Pencil frames update first via #86 — Pencil sync of approved UI; implement only after frame review.
+- Contextual sign-in prompt (SIWA sheet at moment of need, §9): APPROVED as recommended. Frame lands via #86 task 86.7.

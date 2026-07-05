@@ -44,3 +44,8 @@
 - [ ] Item 2: skip result shows neutral "skipped" treatment, no error haptic; snapshot updated
 - [ ] Item 3: all listed literals extracted into `Localizable.xcstrings`; ViewInspector tests still pass
 - [ ] Screenshot-verify run for items 2, 4, 6
+
+## Founder decisions 2026-07-05 (pre-implementation UI approval)
+
+Binding record: `docs/design/ui-proposals-2026-07-decisions.md` (decision 7 + globals G1–G4). Pencil frames update first via #86 — Pencil sync of approved UI; implement only after frame review.
+- APPROVED with corrections: correct answer belongs on the RESULT screen, not Question (mockup misplaced it — G4 warning). Skip: NO feedback element, Result screen shows as today. Home pickers OK but categories MULTI-SELECT. Call Mode footnote approved; haptics as proposed.

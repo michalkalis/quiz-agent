@@ -45,3 +45,8 @@ Cross-refs: #77 (voice commands — spoken control of the same moments), #68 (dr
 - [ ] Answer countdown pauses (or extends) while the typed-answer input is focused
 - [ ] "Stay here" hit target ≥ 44pt; touching the result screen pauses auto-advance
 - [ ] Existing RS regression scenarios pass (timer-related RS updated if semantics change)
+
+## Founder decisions 2026-07-05 (pre-implementation UI approval)
+
+Binding record: `docs/design/ui-proposals-2026-07-decisions.md` (decision 2 + globals G1–G4). Pencil frames update first via #86 — Pencil sync of approved UI; implement only after frame review.
+- APPROVED with changes: NO countdown pause while typing (would grant extra thinking time). Early-quit partial stats: record everything, display nothing extra for now.

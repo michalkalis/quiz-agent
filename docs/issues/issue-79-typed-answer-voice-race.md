@@ -49,3 +49,8 @@ Cross-refs: #67 Part A (streaming interruption teardown — same recording-teard
 - [ ] Unit test covering the interleaving (typed submit during suspended `handleCommittedTranscript`)
 - [ ] Result header and question header agree on the question counter
 - [ ] Existing RS regression scenarios pass
+
+## Founder decisions 2026-07-05 (pre-implementation UI approval)
+
+Binding record: `docs/design/ui-proposals-2026-07-decisions.md` (decision 12 + globals G1–G4). Pencil frames update first via #86 — Pencil sync of approved UI; implement only after frame review.
+- APPROVED as recommended. Added context: on the voice-answer confirmation screen, tapping the answer text opens the keyboard for manual transcript editing — the fix must preserve this flow.

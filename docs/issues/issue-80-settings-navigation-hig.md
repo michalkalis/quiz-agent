@@ -38,3 +38,8 @@ in there (one commit per screen).
 - [ ] Header/navigation remains visible when scrolled to the bottom of Settings
 - [ ] VoiceOver announces the back control as "Back"
 - [ ] Screenshot-verify step run (per iOS rules); RS scenarios pass
+
+## Founder decisions 2026-07-05 (pre-implementation UI approval)
+
+Binding record: `docs/design/ui-proposals-2026-07-decisions.md` (decision 1 + globals G1–G4). Pencil frames update first via #86 — Pencil sync of approved UI; implement only after frame review.
+- APPROVED as recommended: Variant B large-title collapse, HangsNavChip moved leading with Back a11y label, sister-screen audit inside #80, mono micro-caps bar title.

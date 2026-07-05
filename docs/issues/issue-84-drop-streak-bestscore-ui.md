@@ -40,3 +40,8 @@ Out of scope: in-round "3 correct in a row" streak (Kahoot-style) — founder di
 - [ ] `QuizStats` streak/bestStreak computation + persistence unchanged (unit test still green)
 - [ ] Snapshot/ViewInspector baselines for ResultView + HomeView updated to the reduced layout
 - [ ] Screenshot-verify: correct result, incorrect result, Home
+
+## Founder decisions 2026-07-05 (pre-implementation UI approval)
+
+Binding record: `docs/design/ui-proposals-2026-07-decisions.md` (decision 5 + globals G1–G4). Pencil frames update first via #86 — Pencil sync of approved UI; implement only after frame review.
+- Variant B confirmed: remove the whole Home stats row (scope extension founder-confirmed). Motivational sub-texts at most short phrases (copy freeze G3). Keep the current strong correct/wrong visual distinction — the mockup weakened it.

@@ -31,3 +31,8 @@ Cross-refs: **#83** (top-bar unify — also edits `QuestionView` chrome; **seque
 - [ ] Mute state persists across questions/sessions (existing `QuizSettings` persistence)
 - [ ] Screenshot-verify: quiz screen (MCQ + open) showing replay button + mute control, muted and unmuted
 - [ ] ViewInspector/snapshot baselines updated; RS scenarios still green
+
+## Founder decisions 2026-07-05 (pre-implementation UI approval)
+
+Binding record: `docs/design/ui-proposals-2026-07-decisions.md` (decision 3 + globals G1–G4). Pencil frames update first via #86 — Pencil sync of approved UI; implement only after frame review.
+- Variant B: mute in the bottom audio strip (top-right stays free for the G1 unified top bar). Replay smaller + more minimalistic than mocked — not a full-size primary button.

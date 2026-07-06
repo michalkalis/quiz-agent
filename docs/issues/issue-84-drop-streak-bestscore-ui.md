@@ -1,6 +1,6 @@
 # Issue #84 — Drop streak + best-score gamification from user-facing screens (keep the logic)
 
-**Triage:** enhancement · approved 2026-07-05 (Variant B) · blocked-on-#86
+**Triage:** enhancement · **done 2026-07-06** (Variant B implemented; design gate #86 lifted)
 
 **Created:** 2026-07-03 · **Founder:** Michal · **Source:** UI/UX review 2026-07-03 (P1 product decision, founder-approved)
 
@@ -35,11 +35,13 @@ Out of scope: in-round "3 correct in a row" streak (Kahoot-style) — founder di
 
 ## Acceptance
 
-- [ ] Per-question result screen no longer shows a streak box or "streak now N" text; **still shows correctness + score (points)**
-- [ ] Home screen no longer shows the best-streak stat
-- [ ] `QuizStats` streak/bestStreak computation + persistence unchanged (unit test still green)
-- [ ] Snapshot/ViewInspector baselines for ResultView + HomeView updated to the reduced layout
-- [ ] Screenshot-verify: correct result, incorrect result, Home
+- [x] Per-question result screen no longer shows a streak box or "streak now N" text; **still shows correctness + score (points)** — single score box; subheadlines now "+N points" / "still worth the try"
+- [x] Home screen no longer shows the best-streak stat — whole stats row removed (Variant B)
+- [x] `QuizStats` streak/bestStreak computation + persistence unchanged (`QuizViewModelStreakTests` + streak-tracking tests green; new tests assert the VM still computes while UI hides it)
+- [x] Snapshot/ViewInspector baselines: `.stableDump` baselines unchanged (no struct-level change); new `HomeViewInspectorTests` + 2 ResultView `#84` tests pin the reduced layout — 514 HangsTests green
+- [x] Screenshot-verify 2026-07-06 (sim, `--ui-test`): correct result, incorrect result, Home — all match #86 frames (X4o4l / 31AzE / rJ7dB)
+
+**Implementation note (2026-07-06):** the #83 handoff "ResultView still on old nav → #84" resolves to **no nav change** — the founder-approved #86 Result frames keep the close + brand + counter nav (`HangsQuizNav`); only the stats/streak surface changed. Stale Localizable keys (`%@ points · streak now %lld`, `streak reset · still worth the try`, `was %lld`) replaced/removed.
 
 ## Founder decisions 2026-07-05 (pre-implementation UI approval)
 

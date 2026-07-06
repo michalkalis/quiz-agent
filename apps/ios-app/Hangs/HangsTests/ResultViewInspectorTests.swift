@@ -337,6 +337,64 @@ struct ResultViewInspectorTests {
         }
     }
 
+    // MARK: - #84 — streak dropped from the result screen (logic kept)
+
+    /// #84 (founder decision 5): streak is unnecessary info — the result screen
+    /// must not surface it anywhere, while correctness + points stay. The
+    /// subheadline is always rendered (no @State gate), so it's the strongest
+    /// place to pin the regression: reintroducing "streak now N" / "streak
+    /// reset" copy fails here.
+    @Test("Correct variant subheadline shows points only — no streak echo (#84)")
+    func correctVariantSubheadlineHasNoStreakEcho() async throws {
+        let evaluation = Evaluation(
+            userAnswer: "Paris", result: .correct, points: 1.0,
+            correctAnswer: "Paris", questionId: "q_test", explanation: nil
+        )
+        let vm = makeViewModel(evaluation: evaluation)
+        vm.quizStats.recordAnswer(isCorrect: true)
+        let view = ResultView(viewModel: vm)
+
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+
+            // Points delta stays visible
+            #expect(throws: Never.self) {
+                try tree.find(text: "+1 points")
+            }
+            // No streak echo anywhere in the always-rendered tree
+            #expect(throws: (any Error).self) {
+                try tree.find(ViewType.Text.self, where: {
+                    try $0.string().localizedCaseInsensitiveContains("streak")
+                })
+            }
+            // The logic itself keeps computing (explicitly kept per #84)
+            #expect(vm.quizStats.currentStreak == 1)
+        }
+    }
+
+    @Test("Incorrect variant subheadline drops the 'streak reset' copy (#84)")
+    func incorrectVariantSubheadlineHasNoStreakReset() async throws {
+        let evaluation = Evaluation(
+            userAnswer: "London", result: .incorrect, points: 0.0,
+            correctAnswer: "Paris", questionId: "q_test", explanation: nil
+        )
+        let vm = makeViewModel(evaluation: evaluation)
+        let view = ResultView(viewModel: vm)
+
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+
+            #expect(throws: Never.self) {
+                try tree.find(text: "still worth the try")
+            }
+            #expect(throws: (any Error).self) {
+                try tree.find(ViewType.Text.self, where: {
+                    try $0.string().localizedCaseInsensitiveContains("streak")
+                })
+            }
+        }
+    }
+
     /// 54.9: the "Try this question again" button was removed — it called
     /// continueToNext() (advance to the NEXT question), so the label lied and no
     /// per-question retry exists. Neither variant should render it now.

@@ -80,7 +80,8 @@ extension HangsBrandRow where Right == EmptyView {
 /// G1 binding quiz-screen top bar (frames b8zObz / f9csl / uGhZg): close chip on the
 /// left, settings chip on the right — no brand mark, no counter (the `NN / NN` counter
 /// lives in the question meta row). Used by QuestionView for every question mode.
-/// ResultView still uses the older `HangsQuizNav` below — reconcile in #84 (Result rework).
+/// ResultView deliberately keeps the older `HangsQuizNav` below — the founder-approved
+/// #86 Result frames (X4o4l / 31AzE) retain close + brand + counter there (#84).
 struct HangsQuizTopBar: View {
     let onClose: () -> Void
     let onSettings: () -> Void

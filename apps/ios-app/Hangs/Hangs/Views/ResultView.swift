@@ -4,8 +4,9 @@
 //
 //  Pencil Result screen — correct (X4o4l) and incorrect (31AzE) variants.
 //  bg-page background, editorial Anton headline, answer comparison card,
-//  streak + score stat boxes, and a footer CTA. Auto-advance countdown bar
-//  and source web-view sheet preserved from original design.
+//  score stat box (#84 dropped the streak box — logic kept in QuizStats),
+//  and a footer CTA. Auto-advance countdown bar and source web-view sheet
+//  preserved from original design.
 //
 
 import SwiftUI
@@ -151,48 +152,18 @@ struct ResultView: View {
 
     // MARK: - Stats row
 
+    /// #84: streak box removed (founder decision 5) — only the score box remains.
+    /// Streak keeps computing in QuizStats; it's just no longer displayed.
     private var statsRow: some View {
-        HStack(spacing: 12) {
-            if isCorrect {
-                HangsStatBox(
-                    label: "streak",
-                    value: "\(viewModel.quizStats.currentStreak)",
-                    labelColor: Theme.Hangs.Colors.pink,
-                    valueColor: Theme.Hangs.Colors.ink,
-                    suffix: "+1",
-                    inlineSuffix: true,
-                    compact: true
-                )
-                HangsStatBox(
-                    label: "score",
-                    value: formattedScore,
-                    labelColor: Theme.Hangs.Colors.pink,
-                    valueColor: Theme.Hangs.Colors.ink,
-                    suffix: pointsDeltaSuffix,
-                    inlineSuffix: true,
-                    compact: true
-                )
-            } else {
-                HangsStatBox(
-                    label: "streak",
-                    value: "0",
-                    labelColor: Theme.Hangs.Colors.pink,
-                    valueColor: Theme.Hangs.Colors.ink,
-                    suffix: String(localized: "was \(previousStreakForIncorrect)", comment: "Streak stat suffix on an incorrect answer: the previous streak value"),
-                    inlineSuffix: false,
-                    compact: true
-                )
-                HangsStatBox(
-                    label: "score",
-                    value: formattedScore,
-                    labelColor: Theme.Hangs.Colors.pink,
-                    valueColor: Theme.Hangs.Colors.ink,
-                    suffix: "+0",
-                    inlineSuffix: true,
-                    compact: true
-                )
-            }
-        }
+        HangsStatBox(
+            label: "score",
+            value: formattedScore,
+            labelColor: Theme.Hangs.Colors.pink,
+            valueColor: Theme.Hangs.Colors.ink,
+            suffix: isCorrect ? pointsDeltaSuffix : "+0",
+            inlineSuffix: true,
+            compact: true
+        )
     }
 
     // MARK: - Countdown
@@ -337,19 +308,13 @@ struct ResultView: View {
         return String(format: "%.1f", score)
     }
 
-    /// On an incorrect answer `currentStreak` is already 0 — the VM captures the
-    /// streak just before it was reset (54.11).
-    private var previousStreakForIncorrect: Int {
-        max(viewModel.streakBeforeLastAnswer, 0)
-    }
-
     private var subHeadline: String {
         if isCorrect {
             // 54.12: pointsDeltaSuffix already carries the correct sign (+3 / -2 / +0);
             // the old "+ " prefix + trim produced "+ -2 points" on a negative delta.
-            return String(localized: "\(pointsDeltaSuffix) points · streak now \(viewModel.quizStats.currentStreak)", comment: "Result subheadline on a correct answer: points delta and current streak")
+            return String(localized: "\(pointsDeltaSuffix) points", comment: "Result subheadline on a correct answer: points delta")
         }
-        return String(localized: "streak reset · still worth the try", comment: "Result subheadline on an incorrect answer")
+        return String(localized: "still worth the try", comment: "Result subheadline on an incorrect answer")
     }
 
     private var resultHaptic: SensoryFeedback {

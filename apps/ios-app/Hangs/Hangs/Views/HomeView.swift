@@ -33,8 +33,6 @@ struct HomeView: View {
                         .padding(.horizontal, 20)
                         .padding(.top, 4)
 
-                    statsRow
-
                     HangsSectionLabel(text: "session", color: Theme.Hangs.Colors.pink)
                         .padding(.horizontal, 20)
                         .padding(.top, 8)
@@ -71,26 +69,6 @@ struct HomeView: View {
         .sheet(isPresented: $viewModel.showingMicrophonePicker) {
             AudioDevicePickerView(viewModel: viewModel)
         }
-    }
-
-    // MARK: - Stats
-
-    private var statsRow: some View {
-        HStack(spacing: 12) {
-            HangsStatBox(
-                label: "streak",
-                value: "\(viewModel.quizStats.currentStreak)",
-                labelColor: Theme.Hangs.Colors.pink,
-                valueColor: Theme.Hangs.Colors.ink
-            )
-            HangsStatBox(
-                label: "best",
-                value: "\(viewModel.quizStats.bestStreak)",
-                labelColor: Theme.Hangs.Colors.pink,
-                valueColor: Theme.Hangs.Colors.ink
-            )
-        }
-        .padding(.horizontal, 20)
     }
 
     // MARK: - Config card

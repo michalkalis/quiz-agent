@@ -131,13 +131,40 @@ def test_warn_prod_required_but_no_app_id_logs_error(caplog) -> None:
     assert errors and "APP_ATTEST_APP_ID" in errors[0]
 
 
-def test_warn_prod_fully_configured_is_silent(caplog) -> None:
-    """Required-on with an app id → no warning."""
+def test_warn_prod_fully_configured_is_silent(caplog, monkeypatch) -> None:
+    """Required-on with an app id and grace off → no warning."""
+    monkeypatch.setenv("LEGACY_USER_ID_GRACE", "off")
     logger = logging.getLogger("test.startup_checks")
     with caplog.at_level(logging.ERROR):
         warn_if_insecure_production(
             _settings(required=True, app_id="TEAMID.com.missinghue.hangs"),
             "production",
             logger,
+        )
+    assert _security_errors(caplog.records) == []
+
+
+def test_warn_prod_grace_on_logs_error(caplog, monkeypatch) -> None:
+    """Grace on in production → loud SECURITY error, even when App Attest is
+    fully configured (#65 follow-up, founder decision #5 2026-07-05)."""
+    monkeypatch.setenv("LEGACY_USER_ID_GRACE", "on")
+    logger = logging.getLogger("test.startup_checks")
+    with caplog.at_level(logging.ERROR):
+        warn_if_insecure_production(
+            _settings(required=True, app_id="TEAMID.com.missinghue.hangs"),
+            "production",
+            logger,
+        )
+    errors = _security_errors(caplog.records)
+    assert errors and "LEGACY_USER_ID_GRACE" in errors[0]
+
+
+def test_warn_development_grace_is_silent(caplog, monkeypatch) -> None:
+    """Grace on outside production stays silent — it is the intended dev default."""
+    monkeypatch.setenv("LEGACY_USER_ID_GRACE", "on")
+    logger = logging.getLogger("test.startup_checks")
+    with caplog.at_level(logging.ERROR):
+        warn_if_insecure_production(
+            _settings(required=True, app_id="x"), "development", logger
         )
     assert _security_errors(caplog.records) == []

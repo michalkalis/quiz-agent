@@ -93,3 +93,13 @@ def warn_if_insecure_production(
             "attestation cannot be verified. Set APP_ATTEST_APP_ID "
             "('<TeamID>.<BundleID>') to enforce App Attest (#60 Part B)."
         )
+
+    from .auth.identity import legacy_grace_enabled
+
+    if legacy_grace_enabled():
+        logger.error(
+            "SECURITY: LEGACY_USER_ID_GRACE is ON in production — requests "
+            "without a bearer token pass unauthenticated through the auth gate "
+            "(each pass is logged as 'AUTH GRACE'). Flip LEGACY_USER_ID_GRACE=off "
+            "once all live clients send bearers (#65, founder decision #5)."
+        )

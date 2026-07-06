@@ -12,7 +12,7 @@ from ..deps import (
     get_question_retriever,
     get_translation_service,
     question_to_dict_translated,
-    require_auth,
+    require_auth_or_grace,
 )
 from ...session.manager import SessionManager
 from ...retrieval.question_retriever import QuestionRetriever
@@ -29,7 +29,7 @@ async def synthesize_tts(
     request: Request,
     body: SynthesizeTTSRequest,
     tts_service: TTSService = Depends(get_tts_service),
-    _auth=Depends(require_auth),
+    _auth=Depends(require_auth_or_grace),
 ):
     """Generate speech audio from text (generic TTS)."""
     try:
@@ -58,7 +58,7 @@ async def get_question_audio(
     tts_service: TTSService = Depends(get_tts_service),
     question_retriever: QuestionRetriever = Depends(get_question_retriever),
     translation_service=Depends(get_translation_service),
-    _auth=Depends(require_auth),
+    _auth=Depends(require_auth_or_grace),
 ):
     """Get audio for current question in session (cached)."""
     session = session_manager.get_session(session_id)
@@ -153,7 +153,7 @@ async def get_session_feedback_audio(
     session_manager: SessionManager = Depends(get_session_manager),
     tts_service: TTSService = Depends(get_tts_service),
     translation_service=Depends(get_translation_service),
-    _auth=Depends(require_auth),
+    _auth=Depends(require_auth_or_grace),
 ):
     """Get feedback audio in session's language."""
     session = session_manager.get_session(session_id)

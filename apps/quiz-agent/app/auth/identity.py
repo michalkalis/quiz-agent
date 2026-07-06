@@ -117,12 +117,27 @@ async def resolve_session_subject(
         raise HTTPException(status_code=401, detail="Authentication required")
 
     # Grace window: trust the client-supplied id, registering it as legacy.
+    _log_grace_passthrough(request)
     if body_user_id:
         await _touch_identity(sessionmaker, body_user_id, is_legacy=True)
     return AuthSubject(subject_id=body_user_id, is_legacy=True, authenticated=False)
 
 
-def require_authenticated_subject(
+def _log_grace_passthrough(request: Request) -> None:
+    """Make the grace pass-through loud (#65, founder decision #5 2026-07-05).
+
+    Every unauthenticated request that grace lets through leaves a WARNING with
+    the route, so prod logs show exactly how much traffic still depends on the
+    grace window — the evidence needed to flip ``LEGACY_USER_ID_GRACE`` off."""
+    logger.warning(
+        "AUTH GRACE: unauthenticated request passed through to %s "
+        "(LEGACY_USER_ID_GRACE on). Flip the flag off once all clients send "
+        "bearers (#65).",
+        request.url.path,
+    )
+
+
+def require_bearer_or_grace(
     request: Request,
     token_service: TokenService | None,
 ) -> AuthSubject:
@@ -134,6 +149,11 @@ def require_authenticated_subject(
     401; 503 if auth is unavailable); a *missing* bearer passes only during the
     ``LEGACY_USER_ID_GRACE`` window — so shipping this gate does not break the
     pre-auth iOS build — and hard-401s once grace is flipped off post-migration.
+
+    ⚠️ This is NOT a hard auth gate while grace is on: the returned subject may
+    have ``authenticated=False``. A caller that needs a verified subject must
+    check ``subject.authenticated`` itself (see ``_resolve_account``). The name
+    says "or grace" for exactly this reason (#65 follow-up, 2026-07-06).
     """
     token = _bearer_token(request)
     if token is not None:
@@ -152,4 +172,5 @@ def require_authenticated_subject(
     # No bearer presented.
     if not legacy_grace_enabled():
         raise HTTPException(status_code=401, detail="Authentication required")
+    _log_grace_passthrough(request)
     return AuthSubject(subject_id=None, is_legacy=True, authenticated=False)

@@ -31,8 +31,14 @@ def _token_service() -> TokenService:
     )
 
 
+class _Url:
+    path = "/api/v1/sessions"
+
+
 class _Req:
-    """Minimal stand-in for starlette Request (only ``.headers`` is read)."""
+    """Minimal stand-in for starlette Request (``.headers`` + ``.url.path``)."""
+
+    url = _Url()
 
     def __init__(self, authorization: str | None = None) -> None:
         self.headers = {} if authorization is None else {"Authorization": authorization}

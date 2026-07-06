@@ -22,7 +22,7 @@ from ..auth.app_attest import AppAttestService
 from ..auth.apple import AppleIdentityVerifier
 from ..auth.apple_oauth import AppleOAuthClient
 from ..auth.apple_secrets import AppleTokenCipher
-from ..auth.identity import AuthSubject, require_authenticated_subject
+from ..auth.identity import AuthSubject, require_bearer_or_grace
 from ..quiz.flow import QuizFlowService, FlowResult
 from ..serializers import (
     question_to_dict as question_to_dict,
@@ -318,14 +318,16 @@ def get_token_service(request: Request) -> Optional[TokenService]:
     return getattr(request.app.state, "token_service", None)
 
 
-def require_auth(
+def require_auth_or_grace(
     request: Request,
     token_service: Optional[TokenService] = Depends(get_token_service),
 ) -> AuthSubject:
     """Gate high-cost AI endpoints (#65): require a valid bearer, or pass during
-    the legacy grace window. Thin FastAPI wrapper — see
-    ``auth.identity.require_authenticated_subject`` for the authority rule."""
-    return require_authenticated_subject(request, token_service)
+    the legacy grace window (loudly logged, ``authenticated=False``). NOT a hard
+    auth gate while grace is on — callers needing a verified subject must check
+    ``subject.authenticated``. Thin FastAPI wrapper — see
+    ``auth.identity.require_bearer_or_grace`` for the authority rule."""
+    return require_bearer_or_grace(request, token_service)
 
 
 def get_refresh_store(request: Request) -> Optional[RefreshTokenStore]:

@@ -2,7 +2,8 @@
 
 ## Git Workflow
 
-Solo project — commit directly to main. No feature branches or PRs needed.
+Solo project — push directly to main. No feature branches or PRs needed.
+Agent may push to `origin/main` at its own discretion in-session — no per-push approval needed. Destructive ops (force-push, reset --hard, amend, history rewrites) still require a heads-up.
 
 ### Commit Messages
 Follow Conventional Commits: `<type>(<scope>): <subject>`

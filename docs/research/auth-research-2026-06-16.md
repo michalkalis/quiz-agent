@@ -351,6 +351,28 @@ These mockups are produced as a follow-up step once this doc is approved (the fl
 
 ---
 
+## 10. Implementation Corrections (2026-06-18 re-review)
+
+Before starting #60 the plan was re-reviewed: fresh research (RFC 9700 refresh-token BCP, Apple App Attest server flow, Apple guidelines re-confirm, FastAPI/JWT) + first-hand codebase inspection. This section overrides the earlier text where they conflict; the prose above is kept for history.
+
+**Codebase facts corrected (read first-hand):**
+- **`setPremium` is NOT unauthenticated.** `POST /api/v1/usage/{user_id}/premium` (`app/api/routes/misc.py:64`) already requires `X-Admin-Key == ADMIN_API_KEY`. §1's "anyone can self-grant premium" is wrong. Residue: the iOS `setPremium()` call sends no admin key (dead path); premium will come from IAP (#50). **#60 must keep the admin-key guard — routing it through "any valid bearer" would be a downgrade.**
+- **`ElevenLabsTokenResponse` is NOT an in-house JWT-minting pattern.** It is an opaque token proxied from ElevenLabs. §2/§3's "the codebase already mints short-lived JWTs" is wrong — there is **no** JWT issuance and **no JWT library** in `apps/quiz-agent` deps. Add PyJWT.
+- **No Alembic in `apps/quiz-agent`.** It uses SQLAlchemy `create_all` + SQLite on the `/data` Fly volume for ratings, plus an async Postgres (`DATABASE_URL`, pgvector) for questions. The §6 "Alembic migration" wording assumed infra that isn't there.
+- **Legacy device id is `"dev_"+16 hex` (20-char string), not a UUID** (`PersistenceStore.swift:120`). The §6 `daily_usage(user_id UUID …)` schema would reject legacy ids during grace — **subject columns must be `TEXT`.**
+- **`UsageTracker` is in-memory `dict` keyed on `str`, UTC lazy daily reset** — confirms the wipe-on-restart problem and fixes the subject type as `str`/`TEXT`.
+- **Rate-limit keys on the Fly proxy IP** (`slowapi` `get_remote_address`), so a per-IP bootstrap limit must key on `Fly-Client-IP`.
+
+**Best-practice upgrades folded into #60:**
+- **Refresh-token rotation + reuse detection is a `MUST`** for native/public clients (RFC 9700 §2.2.2/§4.14), not optional. Tokens stored SHA-256-hashed; `family_id`; replay of a used token → revoke family. (§6 had only "exchange refresh for new access" = the weaker static pattern.)
+- **JWT:** PyJWT (python-jose unmaintained); HS256 ok now with a ≥64-char CSPRNG secret, isolated for a future ES256 swap; always verify with an explicit `algorithms` allowlist (closes `alg=none`/confusion); claims `iss/sub/aud/exp/iat/jti`.
+- **App Attest needs a server-issued one-time challenge + a one-time attestation step (store keyId→publicKey→counter) + per-request assertion** — the §4/§6 wording ("verify the assertion") omitted the whole handshake. It also **cannot run on the simulator**, so in #60 it is split into **Part B** (device-only, human-reviewed) after the loop-able Part A.
+- **Account deletion must be initiated in-app** (Apple now treats a bare external web link as a Guideline 4 risk — see §5 correction below). Canonical revoke reference is now **TN3194**.
+
+**Apple guideline re-confirm (mid-2026, all still hold):** 4.8 untriggered by an Apple-only login; 5.1.1(v) in-app deletion required; revoke on delete enforced (TN3194); `PrivacyInfo.xcprivacy` required (UserDefaults `CA92.1`); JWKS RS256, client_secret ES256 max ~6 months; App Attest floor iOS 14 + Secure Enclave, no simulator; iOS 26 `ASAuthorizationAccountCreationProvider` (passkey) confirmed for a possible Phase 3.
+
+**§5 correction (account deletion):** the earlier "a web redirect is permitted as long as it links directly to the deletion page" is now **risky** — frame deletion as an **in-app flow** initiated within the app; a bare browser hand-off can be rejected under Guideline 4. (Applies to #61.)
+
 ## Key Sources
 
 - Apple App Store Review Guidelines §4.8 and §5.1.1(v): [developer.apple.com/app-store/review/guidelines/](https://developer.apple.com/app-store/review/guidelines/) (fetched live 2026-06-16)

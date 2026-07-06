@@ -41,7 +41,7 @@ from ..deps import (
     get_challenge_store,
     get_refresh_store,
     get_token_service,
-    require_auth,
+    require_auth_or_grace,
 )
 from ...auth.app_attest import AppAttestError, AppAttestService
 from ...auth.apple import AppleIdentityVerifier, AppleVerificationError
@@ -505,7 +505,7 @@ async def _merge_anonymous_identity(
 @limiter.limit(_BOOTSTRAP_RATE, key_func=fly_client_ip)
 async def delete_account(
     request: Request,
-    subject: AuthSubject = Depends(require_auth),
+    subject: AuthSubject = Depends(require_auth_or_grace),
     sessionmaker=Depends(get_auth_sessionmaker),
     oauth_client: Optional[AppleOAuthClient] = Depends(get_apple_oauth_client),
     cipher: Optional[AppleTokenCipher] = Depends(get_apple_token_cipher),
@@ -556,7 +556,7 @@ async def delete_account(
 @limiter.limit(_BOOTSTRAP_RATE, key_func=fly_client_ip)
 async def export_account(
     request: Request,
-    subject: AuthSubject = Depends(require_auth),
+    subject: AuthSubject = Depends(require_auth_or_grace),
     sessionmaker=Depends(get_auth_sessionmaker),
 ) -> AccountExportResponse:
     """Return the caller's account data as JSON (GDPR Art. 20 portability).

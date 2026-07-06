@@ -58,7 +58,11 @@ Cross-refs: #77 (voice commands — spoken control of the same moments), #68 (dr
    confirmation is not acceptable. (Was flagged below as a future-pass observation — now a
    confirmed requirement.)
 
-Status: recorded only, per founder instruction — fix in a follow-up pass.
+Status: ✅ FIXED 2026-07-06 (`9bb91eb`). Freeze mechanism removed entirely (flag + view sync +
+timer hold loop); freeze tests inverted to keep-ticking tests. ResultView X shows the w9tOoU
+alert; its End Quiz action now calls `endQuiz()` (backend session properly ended — the old X
+only reset locally). Full HangsTests green; live sim check: countdown ran behind the settings
+sheet (auto-record fired underneath it), Result X → alert → End Quiz → Home.
 
 ## Implementation notes (2026-07-06)
 

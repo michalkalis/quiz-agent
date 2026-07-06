@@ -14,6 +14,11 @@ struct ContentView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var showOnboarding: Bool
     @State private var showOnboardingReplay = false
+    // #58 §9: contextual sign-in sheet after purchase/restore (decision 10).
+    @State private var showSignInPrompt = false
+    /// Set while the paywall is still up so the sign-in sheet presents only
+    /// after the paywall's dismissal completes (two sheets can't overlap).
+    @State private var signInPromptPending = false
 
     init(appState: AppState) {
         _viewModel = StateObject(wrappedValue: appState.makeQuizViewModel())
@@ -22,6 +27,14 @@ struct ContentView: View {
             persistenceStore: appState.persistenceStore
         ))
         _showOnboarding = State(initialValue: !appState.persistenceStore.hasCompletedOnboarding)
+        #if DEBUG
+        // `--ui-test-signin-prompt`: present the #58 §9 contextual sign-in
+        // sheet directly — it is otherwise reachable only through a real
+        // StoreKit purchase, which the sim can't perform.
+        if CommandLine.arguments.contains("--ui-test-signin-prompt") {
+            _showSignInPrompt = State(initialValue: true)
+        }
+        #endif
     }
 
     var body: some View {
@@ -104,18 +117,51 @@ struct ContentView: View {
                     if complete { showOnboardingReplay = false }
                 }
         }
-        .sheet(isPresented: $viewModel.showPaywall) {
+        .sheet(isPresented: $viewModel.showPaywall, onDismiss: {
+            if signInPromptPending {
+                signInPromptPending = false
+                showSignInPrompt = true
+            }
+        }) {
             PaywallView(
                 storeManager: appState.storeManager,
                 limitError: viewModel.dailyLimitError,
                 onDismiss: { viewModel.showPaywall = false }
             )
         }
+        .sheet(isPresented: $showSignInPrompt) {
+            ContextualSignInSheet(authService: appState.authService) {
+                showSignInPrompt = false
+            }
+            .presentationDetents([.height(520)])
+            .presentationDragIndicator(.visible)
+        }
         .onChange(of: appState.storeManager.isPurchased) { _, isPurchased in
             if isPurchased {
+                let paywallWasShowing = viewModel.showPaywall
                 viewModel.showPaywall = false
                 Task { await viewModel.notifyPremiumPurchased() }
+                maybeQueueSignInPrompt(afterPaywall: paywallWasShowing)
             }
+        }
+    }
+
+    /// #58 §9: offer the contextual sign-in sheet when Premium turns on.
+    /// StoreManager re-checks entitlements on every launch, so this fires
+    /// both at the purchase moment and on later app opens — the gate's
+    /// shown-count cap (1 prompt + 1 reminder) is what bounds it.
+    private func maybeQueueSignInPrompt(afterPaywall: Bool) {
+        let isSignedIn = KeychainTokenStore().load()?.isSignedIn ?? false
+        guard SignInPromptGate.shouldPrompt(
+            isPurchased: true,
+            isSignedIn: isSignedIn,
+            shownCount: appState.persistenceStore.signInPromptShownCount
+        ) else { return }
+        appState.persistenceStore.incrementSignInPromptShownCount()
+        if afterPaywall {
+            signInPromptPending = true
+        } else {
+            showSignInPrompt = true
         }
     }
 }

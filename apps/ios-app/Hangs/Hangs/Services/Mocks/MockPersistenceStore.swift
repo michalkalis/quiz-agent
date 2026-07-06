@@ -99,5 +99,13 @@ final class MockPersistenceStore: PersistenceStoreProtocol {
     func saveStats(_ stats: QuizStats) {
         self.stats = stats
     }
+
+    // MARK: - Contextual sign-in prompt (#58 §9)
+
+    var signInPromptShownCount: Int = 0
+
+    func incrementSignInPromptShownCount() {
+        signInPromptShownCount += 1
+    }
 }
 #endif

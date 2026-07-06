@@ -419,34 +419,21 @@ struct SettingsView: View {
     ) {
         switch result {
         case .success(let auth):
-            guard let credential = auth.credential as? ASAuthorizationAppleIDCredential else {
-                return
-            }
-            guard let idTokenData = credential.identityToken,
-                  let idToken = String(data: idTokenData, encoding: .utf8),
-                  let authCodeData = credential.authorizationCode,
-                  let authCode = String(data: authCodeData, encoding: .utf8) else {
+            guard let payload = AppleSignInPayload(authorization: auth) else {
                 Logger.network.warning("🔐 Apple sign-in: missing identity_token or authorization_code")
                 return
             }
             let rawNonce = pendingRawNonce
-            let appleUser = credential.user
-            let components = credential.fullName
-            let fullName = [components?.givenName, components?.familyName]
-                .compactMap { $0 }
-                .joined(separator: " ")
-                .nilIfEmpty
-            let email = credential.email
 
             isSigningIn = true
             Task {
                 let newTokens = await appState.authService.completeAppleSignIn(
-                    identityToken: idToken,
-                    authorizationCode: authCode,
+                    identityToken: payload.identityToken,
+                    authorizationCode: payload.authorizationCode,
                     rawNonce: rawNonce,
-                    user: appleUser,
-                    fullName: fullName,
-                    email: email
+                    user: payload.user,
+                    fullName: payload.fullName,
+                    email: payload.email
                 )
                 isSigningIn = false
                 if newTokens != nil {
@@ -592,7 +579,3 @@ struct SettingsView: View {
 
 // MARK: - Private helpers
 
-private extension String {
-    /// Returns nil when the string is empty (e.g. when Apple provides no given or family name).
-    var nilIfEmpty: String? { isEmpty ? nil : self }
-}

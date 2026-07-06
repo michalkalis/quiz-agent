@@ -88,6 +88,15 @@ protocol PersistenceStoreProtocol: Sendable {
 
     /// Save quiz statistics
     func saveStats(_ stats: QuizStats)
+
+    // MARK: - Contextual sign-in prompt (#58 §9)
+
+    /// How many times the post-purchase sign-in sheet has been presented.
+    /// Capped by SignInPromptGate (once at purchase + one reminder).
+    var signInPromptShownCount: Int { get }
+
+    /// Record one more presentation of the post-purchase sign-in sheet
+    func incrementSignInPromptShownCount()
 }
 
 /// Unified UserDefaults-based persistence storage.
@@ -106,6 +115,7 @@ final class PersistenceStore: PersistenceStoreProtocol {
     private let historyKey = "asked_question_history"
     private let maxCapacity = 500
     private let statsKey = "quiz_stats"
+    private let signInPromptCountKey = "sign_in_prompt_shown_count"
 
     init(userDefaults: UserDefaults = .standard) {
         self.userDefaults = userDefaults
@@ -266,6 +276,16 @@ final class PersistenceStore: PersistenceStoreProtocol {
         } catch {
             Logger.persistence.error("❌ PersistenceStore: Failed to encode stats: \(error, privacy: .public)")
         }
+    }
+
+    // MARK: - Contextual sign-in prompt (#58 §9)
+
+    var signInPromptShownCount: Int {
+        userDefaults.integer(forKey: signInPromptCountKey)
+    }
+
+    func incrementSignInPromptShownCount() {
+        userDefaults.set(signInPromptShownCount + 1, forKey: signInPromptCountKey)
     }
 }
 

@@ -87,11 +87,21 @@ struct HomeView: View {
         }
     }
 
+    // #82 item 4 (decision 7): every picker marks the active choice with a
+    // checkmark; categories are multi-select (toggle membership, "All
+    // Categories" clears the selection).
+
     private var languageRow: some View {
         Menu {
             ForEach(Language.supportedLanguages) { language in
-                Button(language.nativeName) {
+                Button {
                     viewModel.settings.language = language.id
+                } label: {
+                    if viewModel.settings.language == language.id {
+                        Label(language.nativeName, systemImage: "checkmark")
+                    } else {
+                        Text(language.nativeName)
+                    }
                 }
             }
         } label: {
@@ -107,8 +117,14 @@ struct HomeView: View {
     private var difficultyRow: some View {
         Menu {
             ForEach(Config.difficultyOptions, id: \.0) { id, display in
-                Button(display) {
+                Button {
                     viewModel.settings.difficulty = id
+                } label: {
+                    if viewModel.settings.difficulty == id {
+                        Label(display, systemImage: "checkmark")
+                    } else {
+                        Text(display)
+                    }
                 }
             }
         } label: {
@@ -124,8 +140,14 @@ struct HomeView: View {
     private var categoriesRow: some View {
         Menu {
             ForEach(Config.categoryOptions, id: \.id) { option in
-                Button(option.display) {
-                    viewModel.settings.category = option.id
+                Button {
+                    toggleCategory(option.id)
+                } label: {
+                    if isCategorySelected(option.id) {
+                        Label(option.display, systemImage: "checkmark")
+                    } else {
+                        Text(option.display)
+                    }
                 }
             }
         } label: {
@@ -136,6 +158,23 @@ struct HomeView: View {
             )
         }
         .accessibilityIdentifier("home-categories-menu")
+    }
+
+    private func isCategorySelected(_ id: String?) -> Bool {
+        guard let id else { return viewModel.settings.categories.isEmpty }
+        return viewModel.settings.categories.contains(id)
+    }
+
+    private func toggleCategory(_ id: String?) {
+        guard let id else {
+            viewModel.settings.categories = []
+            return
+        }
+        if let index = viewModel.settings.categories.firstIndex(of: id) {
+            viewModel.settings.categories.remove(at: index)
+        } else {
+            viewModel.settings.categories.append(id)
+        }
     }
 
     // #68: image questions are fun but unsuitable while driving — user-selectable

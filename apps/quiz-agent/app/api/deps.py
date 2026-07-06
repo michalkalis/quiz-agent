@@ -46,7 +46,15 @@ class CreateSessionRequest(BaseModel):
     )
     user_id: Optional[str] = None
     mode: str = Field(default="single", pattern="^(single|multiplayer)$")
-    category: Optional[str] = Field(default=None, description="Category filter")
+    category: Optional[str] = Field(
+        default=None,
+        description="Legacy single-category filter (pre-#82 clients); "
+        "superseded by `categories`",
+    )
+    categories: Optional[List[str]] = Field(
+        default=None,
+        description="Category filter, multi-select (#82); empty/absent = all",
+    )
     language: str = Field(
         default="en", pattern="^[a-z]{2}$", description="Language code (ISO 639-1)"
     )

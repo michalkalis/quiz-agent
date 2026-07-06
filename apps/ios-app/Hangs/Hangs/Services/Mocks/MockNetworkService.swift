@@ -38,8 +38,13 @@ final class MockNetworkService: NetworkServiceProtocol {
     /// toggle actually reaches the session request (#68).
     var capturedIncludeImages: Bool?
 
-    func createSession(maxQuestions: Int, difficulty: String, language: String, category: String?, userId: String?, includeImages: Bool) async throws -> QuizSession {
+    /// Last `categories` value passed to `createSession` — asserts the Home
+    /// multi-select actually reaches the session request (#82 item 4).
+    var capturedCategories: [String]?
+
+    func createSession(maxQuestions: Int, difficulty: String, language: String, categories: [String], userId: String?, includeImages: Bool) async throws -> QuizSession {
         capturedIncludeImages = includeImages
+        capturedCategories = categories
         if let error = createSessionError { throw error }
         if shouldFail {
             throw NetworkError.invalidResponse

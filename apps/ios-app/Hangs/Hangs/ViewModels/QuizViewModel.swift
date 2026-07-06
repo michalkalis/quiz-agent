@@ -491,7 +491,7 @@ final class QuizViewModel: ObservableObject {
                 maxQuestions: quizMaxQuestions,
                 difficulty: quizDifficulty,
                 language: quizLanguage,
-                category: settings.category,
+                categories: settings.categories,
                 userId: persistenceStore.deviceId,
                 includeImages: settings.includeImageQuestions
             )

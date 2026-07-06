@@ -257,6 +257,43 @@ struct QuizSettingsBackwardCompatTests {
         }
     }
 
+    // MARK: - Legacy single category migrates to categories (#82 item 4)
+
+    /// Regression: pre-multi-select blobs persist one `category` string. It
+    /// must migrate into a one-element `categories` list — dropping it would
+    /// silently reset the user's category filter on upgrade.
+    @Test("legacy single category migrates to a one-element categories list")
+    func legacyCategoryMigrates() throws {
+        var json = legacyMinimalJSON
+        json["category"] = "adults"
+
+        let settings = try decodeSettings(json)
+
+        #expect(settings.categories == ["adults"])
+    }
+
+    /// A blob with neither key (v1-era, no filter picked) decodes to the
+    /// empty list = All Categories.
+    @Test("missing category and categories decodes to empty list")
+    func missingCategoryKeysDefaultsEmpty() throws {
+        let settings = try decodeSettings(legacyMinimalJSON)
+
+        #expect(settings.categories.isEmpty)
+    }
+
+    /// Once a multi-select blob exists, the new `categories` key is the source
+    /// of truth — a stale legacy `category` alongside it must be ignored.
+    @Test("categories list wins over a stale legacy category key")
+    func categoriesListWinsOverLegacy() throws {
+        var json = legacyMinimalJSON
+        json["categories"] = ["kids", "disney"]
+        json["category"] = "adults"
+
+        let settings = try decodeSettings(json)
+
+        #expect(settings.categories == ["kids", "disney"])
+    }
+
     // MARK: - Missing required key still throws
 
     /// Positive control: backward-compat is targeted at *optional* new fields —

@@ -189,7 +189,7 @@
                 - language: "en"
                 - audioMode: "media"
                 - numberOfQuestions: 10
-                - category: nil
+                - categories: 0 elements
                 - ageAppropriate: nil
                 - difficulty: "medium"
                 - autoAdvanceDelay: 8
@@ -242,6 +242,7 @@
         - endSessionError: nil
         - endSessionCallCount: 0
         - capturedIncludeImages: nil
+        - capturedCategories: nil
       ▿ audioService: Hangs.MockAudioService #5
         - isRecording: false
         - isPlaying: false

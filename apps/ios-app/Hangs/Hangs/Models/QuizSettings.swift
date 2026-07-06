@@ -21,8 +21,9 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// Number of questions per quiz session
     var numberOfQuestions: Int
 
-    /// Optional category filter (nil = all categories). See `Config.categoryOptions` for valid ids.
-    var category: String?
+    /// Category filter — multi-select (#82 item 4, founder decision 7).
+    /// Empty = all categories. See `Config.categoryOptions` for valid ids.
+    var categories: [String]
 
     /// Optional age-appropriate filter. nil = no filter, otherwise one of "all" | "8+" | "12+" | "16+".
     /// Matches `Question.age_appropriate` on the backend.
@@ -72,7 +73,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
         language: String,
         audioMode: String,
         numberOfQuestions: Int,
-        category: String?,
+        categories: [String] = [],
         difficulty: String,
         autoAdvanceDelay: Int,
         answerTimeLimit: Int,
@@ -89,7 +90,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
         self.language = language
         self.audioMode = audioMode
         self.numberOfQuestions = numberOfQuestions
-        self.category = category
+        self.categories = categories
         self.difficulty = difficulty
         self.autoAdvanceDelay = autoAdvanceDelay
         self.answerTimeLimit = answerTimeLimit
@@ -111,7 +112,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
         language: "en",
         audioMode: "media",
         numberOfQuestions: 10,
-        category: nil,
+        categories: [],
         difficulty: "medium",
         autoAdvanceDelay: 8,
         answerTimeLimit: 30,
@@ -131,12 +132,23 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// breaking previously-persisted settings. Also silently ignores removed
     /// keys like `voiceCommandsEnabled` / `bargeInEnabled` from older builds —
     /// Codable drops unrecognized keys automatically, no guard needed.
+    /// Pre-multi-select persisted blobs carry a single `category` string.
+    private enum LegacyKeys: String, CodingKey {
+        case category
+    }
+
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         language = try container.decode(String.self, forKey: .language)
         audioMode = try container.decode(String.self, forKey: .audioMode)
         numberOfQuestions = try container.decode(Int.self, forKey: .numberOfQuestions)
-        category = try container.decodeIfPresent(String.self, forKey: .category)
+        if let list = try container.decodeIfPresent([String].self, forKey: .categories) {
+            categories = list
+        } else {
+            // Migrate the pre-#82 single-select blob: one category → one-element list.
+            let legacy = try decoder.container(keyedBy: LegacyKeys.self)
+            categories = (try legacy.decodeIfPresent(String.self, forKey: .category)).map { [$0] } ?? []
+        }
         difficulty = try container.decode(String.self, forKey: .difficulty)
         autoAdvanceDelay = try container.decode(Int.self, forKey: .autoAdvanceDelay)
         answerTimeLimit = try container.decode(Int.self, forKey: .answerTimeLimit)
@@ -178,11 +190,19 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// Valid age-appropriate options (nil means no filter). Mirrors `Config.ageAppropriateOptions`.
     static let ageAppropriateOptions: [String?] = [nil, "all", "8+", "12+", "16+"]
 
-    /// Display name for the active category (nil = "All Categories").
-    /// Derives from `Config.categoryOptions`, the single source of id→display
-    /// pairs, so each label lives in exactly one place for localization (#56).
+    /// Display name for the active category selection (empty = "All Categories",
+    /// one = its name, several = a count). Derives from `Config.categoryOptions`,
+    /// the single source of id→display pairs, so each label lives in exactly one
+    /// place for localization (#56).
     func categoryDisplayName() -> String {
-        Config.categoryOptions.first { $0.id == category }?.display ?? String(localized: "Unknown", comment: "Fallback category display name when the category id is unrecognized")
+        switch categories.count {
+        case 0:
+            return Config.categoryOptions.first { $0.id == nil }?.display ?? ""
+        case 1:
+            return Config.categoryOptions.first { $0.id == categories[0] }?.display ?? String(localized: "Unknown", comment: "Fallback category display name when the category id is unrecognized")
+        default:
+            return String(localized: "\(categories.count) selected", comment: "Home category picker value when several categories are selected; placeholder is the count")
+        }
     }
 
     /// Display name for the active age-appropriate filter.
@@ -211,7 +231,7 @@ extension QuizSettings {
         language: "sk",
         audioMode: "media",
         numberOfQuestions: 20,
-        category: "adults",
+        categories: ["adults"],
         difficulty: "hard",
         autoAdvanceDelay: 5,
         answerTimeLimit: 45,

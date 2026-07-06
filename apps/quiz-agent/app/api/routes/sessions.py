@@ -55,6 +55,13 @@ async def create_session(
         session.include_images = body.include_images
         if body.category:
             session.category = body.category
+        # #82: the retriever filters on preferred_categories — session.category
+        # was never read there, so the pre-#82 picker was a silent no-op. Wire
+        # both the new multi-select list and the legacy single field into it.
+        if body.categories:
+            session.preferred_categories = body.categories
+        elif body.category:
+            session.preferred_categories = [body.category]
         session_manager.update_session(session)
         return session_to_response(session)
     except Exception as e:

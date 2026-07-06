@@ -1,6 +1,6 @@
 # Issue #81 — Quiz dialogs & timing fairness: End-Quiz has no Cancel; countdown ticks while typing and behind dialogs; 7s auto-advance escape hatch too small
 
-**Triage:** bug · approved 2026-07-05 · implemented 2026-07-06 (#86 design gate lifted same day)
+**Triage:** bug · approved 2026-07-05 · implemented 2026-07-06 (#86 design gate lifted same day) · **follow-up open** (founder feedback 2026-07-06: remove modal countdown freeze + ResultView X confirmation — see section below)
 
 **Created:** 2026-07-03 · **Founder:** Michal · **Source:** UI/UX review 2026-07-03 (sim-observed) + HIG research
 
@@ -45,6 +45,20 @@ Cross-refs: #77 (voice commands — spoken control of the same moments), #68 (dr
 - [x] ~~Answer countdown pauses (or extends) while the typed-answer input is focused~~ **Superseded 2026-07-05** — no countdown pause while typing; partial-quit stats are recorded but not displayed (verified: `recordAnswer` already persists per-question regardless of early quit). Intent now encoded in a regression test (`typedAnswerDoesNotPauseCountdown`).
 - [x] "Stay here" hit target ≥ 44pt (now a full-width `HangsSecondaryButton`, height 44, below the countdown strip); touching the result screen pauses auto-advance (already shipped pre-#81 via tap/drag `simultaneousGesture` → `pauseQuiz()`)
 - [x] Existing RS regression scenarios pass (timer-related RS updated if semantics change) — no RS semantics changed; `result.stayHere` accessibility id preserved
+
+## Founder feedback 2026-07-06 (post-implementation — REOPENS two items, not yet fixed)
+
+1. **Remove the countdown freeze behind dialogs/settings.** The `isQuizModalPresented` pause
+   (acceptance item 2 above) is exploitable: a user can open the End-Quiz dialog or the settings
+   sheet to gain free thinking time. Founder: the countdown must keep running behind any
+   modal/sheet — same rationale as the no-pause-while-typing decision (2a). Users can adjust
+   settings from the Result screen; bad settings mid-quiz are their own problem.
+2. **ResultView top-bar X must show the same End-Quiz confirmation alert** as QuestionView /
+   MinimizedQuizView (frame `w9tOoU`: Continue + destructive End Quiz). Immediate quit without
+   confirmation is not acceptable. (Was flagged below as a future-pass observation — now a
+   confirmed requirement.)
+
+Status: recorded only, per founder instruction — fix in a follow-up pass.
 
 ## Implementation notes (2026-07-06)
 

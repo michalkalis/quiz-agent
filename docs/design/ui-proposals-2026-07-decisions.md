@@ -18,6 +18,8 @@ Variant B (large-title collapse), keep the brand HangsNavChip moved to the leadi
 **2. End-Quiz dialog + countdown fairness (#81 — quiz dialogs & timing fairness): APPROVED with two changes.**
 As recommended, **except**: (a) **no countdown pause while typing** an answer — pausing would grant extra thinking time; the countdown keeps running during typed input. (b) Partial scores/stats on early quit: **record everything, display nothing extra** for now — no explicit partial-summary UI, it has no user value yet.
 
+*Amended 2026-07-06 (founder, post-implementation):* (c) **no countdown pause behind dialogs/sheets either** — same abuse rationale as (a); the modal freeze shipped in #81 must be removed. Users can change settings from the Result screen; bad mid-quiz settings are their own problem. (d) **ResultView's X must show the same End-Quiz confirmation alert** as the quiz screen — no immediate quit. Both recorded in `issue-81` for a follow-up pass.
+
 **3. Replay + mute (#85 — replay button + mute control): Variant B, with a smaller replay.**
 Mute lives in the bottom audio strip (Variant B) so the top-right slot stays free for the unified top bar (G1 / item 4). Replay button must be **smaller and more minimalistic** than mocked — not a full-size primary button.
 

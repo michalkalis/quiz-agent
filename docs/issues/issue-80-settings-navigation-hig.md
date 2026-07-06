@@ -1,8 +1,8 @@
 # Issue #80 — Settings navigation: back button top-right, dead edge-swipe, header scrolls away
 
-**Triage:** bug · approved 2026-07-05 · blocked-on-#86
+**Triage:** bug · done 2026-07-06
 
-_2026-07-06: header was stale `needs-triage`; founder approval already recorded below._
+_2026-07-06: header was stale `needs-triage`; founder approval already recorded below. #86 design gate lifted 2026-07-06 → implemented same day._
 
 **Created:** 2026-07-03 · **Founder:** Michal · **Source:** founder report ("back button vpravo hore je zle; edge-swipe back nefunguje") + UI/UX review (sim-reproduced + code-verified)
 
@@ -35,11 +35,35 @@ in there (one commit per screen).
 
 ## Acceptance
 
-- [ ] Back control renders top-LEFT in a pinned (non-scrolling) top bar on Settings
-- [ ] Edge-swipe from the left edge pops back to Home
-- [ ] Header/navigation remains visible when scrolled to the bottom of Settings
-- [ ] VoiceOver announces the back control as "Back"
-- [ ] Screenshot-verify step run (per iOS rules); RS scenarios pass
+- [x] Back control renders top-LEFT in a pinned (non-scrolling) top bar on Settings
+- [x] Edge-swipe from the left edge pops back to Home
+- [x] Header/navigation remains visible when scrolled to the bottom of Settings
+- [x] VoiceOver announces the back control as "Back"
+- [x] Screenshot-verify step run (per iOS rules); RS scenarios pass (RS not re-run — Settings nav has no RS coverage; full HangsTests green)
+
+## Implementation (2026-07-06)
+
+Per frame `Jjcs5` + decision 1 (Variant B): system pinned bar restored on `SettingsView`
+(`navigationBarHidden` gone), leading `HangsBackChip` (`← hangs. •` pill, "Back" a11y label,
+same `settings-back-button` id), principal mono micro-caps `SETTINGS` title that fades in
+once the hero scrolls past 96 pt (`onScrollGeometryChange`). New `HangsNavBar.swift` holds
+the chip + `NavigationPopGestureEnabler`.
+
+**Finding — iOS 26 kills the classic edge-swipe fix.** With `navigationBarBackButtonHidden`,
+SwiftUI's NavigationStack no longer consults `interactivePopGestureRecognizer`'s delegate at
+all (verified empirically: replaced delegate stays installed but is never asked; synthetic
+edge swipes also never drive `UIScreenEdgePanGestureRecognizer`). Solution: a plain pan
+recognizer accepting only touches starting ≤30 pt from the left edge; pops via
+`popViewController` once the swipe is decisively horizontal past 60 pt; simultaneous only
+with other pans (so a swipe can't double-fire a row tap); removed on disappear so sibling
+screens (DebugLogView) keep native behavior. Pop is threshold-triggered (standard pop
+animation), not finger-tracked — SwiftUI exposes no public interactive-pop driver here.
+
+**Sister-screen audit:** Settings was the only offender. DebugLogView already uses the
+system bar/back (native gesture verified on sim); quiz screens are state swaps, not pushes.
+
+Tests: 6 new (`SettingsNavigationTests`) — chip action/a11y/content, collapse threshold
+both sides, back-control-pinned-not-scrolling integration.
 
 ## Founder decisions 2026-07-05 (pre-implementation UI approval)
 

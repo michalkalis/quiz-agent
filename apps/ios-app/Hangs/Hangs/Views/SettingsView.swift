@@ -6,6 +6,8 @@
 //  pink/blue mono section labels. Matches Pencil NEW_Screen/Settings (Jjcs5).
 //  #52 task 52.9.
 //  #61 task 61.7: account section (Sign in with Apple / signed-in state / delete account).
+//  #80: pinned HIG navigation bar — brand back chip leading, large-title collapse,
+//  mono micro-caps pinned title, edge-swipe pop restored.
 //
 
 import AuthenticationServices
@@ -42,16 +44,21 @@ struct SettingsView: View {
     // Reflects the current Keychain state; refreshed on appear + after auth events.
     @State private var currentTokens: AuthTokens? = nil
 
+    // #80: pinned-bar title fades in once the in-content hero scrolls away.
+    @State private var isHeroCollapsed = false
+
+    /// Collapse threshold for the large-title behavior (#80 Variant B): the
+    /// pinned mono title appears only after the hero headline has scrolled
+    /// under the bar (~hero title height + top padding).
+    static func heroIsCollapsed(offsetY: CGFloat) -> Bool {
+        offsetY > 96
+    }
+
     // MARK: Body
 
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
-                HangsBrandRow {
-                    HangsNavChip(icon: "arrow.left") { dismiss() }
-                        .accessibilityIdentifier("settings-back-button")
-                }
-
                 HangsHeroBlock(
                     title: "SETTINGS",
                     subtitle: "tune your experience",
@@ -76,9 +83,32 @@ struct SettingsView: View {
                 .padding(.bottom, 40)
             }
         }
+        .onScrollGeometryChange(for: Bool.self) { geometry in
+            Self.heroIsCollapsed(offsetY: geometry.contentOffset.y + geometry.contentInsets.top)
+        } action: { _, collapsed in
+            withAnimation(.easeInOut(duration: 0.15)) { isHeroCollapsed = collapsed }
+        }
         .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
+        // #80: pinned system bar (HIG) with the brand back chip leading; the
+        // custom chip hides the system back button, so NavigationPopGestureEnabler
+        // restores the left-edge swipe-to-pop.
+        .background(NavigationPopGestureEnabler())
         .navigationBarBackButtonHidden(true)
-        .navigationBarHidden(true)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                HangsBackChip { dismiss() }
+                    .accessibilityIdentifier("settings-back-button")
+            }
+            ToolbarItem(placement: .principal) {
+                Text("SETTINGS")
+                    .font(.hangsMono(13, weight: .semibold))
+                    .tracking(2)
+                    .foregroundColor(Theme.Hangs.Colors.ink)
+                    .opacity(isHeroCollapsed ? 1 : 0)
+                    .accessibilityHidden(!isHeroCollapsed)
+            }
+        }
         .task {
             // Load auth state from Keychain on appear.
             currentTokens = KeychainTokenStore().load()

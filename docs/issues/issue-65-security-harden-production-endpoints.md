@@ -1,6 +1,8 @@
 # Issue #65 — Security: authenticate production endpoints (admin UI + AI cost routes + rate-limit IP)
 
-**Triage:** security · original scope done · follow-up: silence fixed 2026-07-06, flag flip pending evidence
+**Triage:** security · done (follow-up closed 2026-07-06)
+
+> **2026-07-06 (later): `LEGACY_USER_ID_GRACE=off` FLIPPED in prod** — founder confirmed prod has no real users (only him, latest build sends bearers), so no traffic-evidence wait was needed. Verified live: header-less `POST /api/v1/elevenlabs/token` → 401, header-less `POST /api/v1/sessions` → 401, health 200. **#65 fully closed.**
 
 > **2026-07-06 re-scope (founder decisions #5 + #6, 2026-07-05).** The grace-mode pass-through is no longer *silent*: every unauthenticated pass logs a `AUTH GRACE` WARNING with the route (`app/auth/identity.py`), production boot logs a `SECURITY` error while `LEGACY_USER_ID_GRACE` is on (`startup_checks.py`), and the misuse-inviting `require_auth` dependency was renamed `require_auth_or_grace` (identity: `require_bearer_or_grace`) with the not-a-hard-gate contract documented — closes the accepted-risk item from the 2026-07-03 review. Deployed to Fly.
 >

@@ -2,7 +2,7 @@
 
 **Triage:** enhancement · closed
 
-**Note (2026-07-06):** research+design delivered; impl spun off to #60 (closed) / #61 / #62; remaining §9 Pencil auth screens — account UI designed 2026-06-29 for #61, contextual sign-in prompt approved 2026-07-05 (decision 10) and deferred to #86 Pencil sync. Nothing left in this file.
+**Note (2026-07-06):** research+design delivered; impl spun off to #60 (closed) / #61 / #62; §9 auth screens complete — account UI designed 2026-06-29 for #61, contextual sign-in prompt approved 2026-07-05 (decision 10), frame via #86, **implemented 2026-07-06 (`cad81c9`)**: post-purchase SIWA bottom sheet, 1 prompt + max 1 reminder, restore covered. Issue fully done.
 
 > **✅ Research delivered 2026-06-16:** [`docs/research/auth-research-2026-06-16.md`](../research/auth-research-2026-06-16.md)
 > — options matrix + recommendation + phased plan (impl issues **#60/#61/#62** — #59 is taken) + 7 open questions (founder-answered 2026-06-17, doc §8b).

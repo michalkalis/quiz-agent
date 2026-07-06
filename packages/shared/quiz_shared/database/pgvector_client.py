@@ -36,6 +36,7 @@ from sqlalchemy import (
     String,
     Table,
     Text,
+    delete,
     func,
     select,
 )
@@ -155,6 +156,46 @@ class PgvectorQuestionStore:
             logger.error("PgvectorQuestionStore.add failed: %s", e, exc_info=True)
             return False
 
+    async def upsert(self, question: Question) -> bool:
+        """Insert or replace by id (`ON CONFLICT DO UPDATE`).
+
+        Canonical write for the admin/feedback surface (#41 D3) — matches
+        `ChromaDBQuestionStore.upsert`: never silently no-ops on an existing
+        id, every field is overwritten from the given `Question`.
+        """
+        embedding = self._embedding_for(question)
+        row = _question_to_row_dict(question, embedding)
+        try:
+            async with self._session_factory() as session:
+                stmt = pg_insert(questions_table).values(row)
+                stmt = stmt.on_conflict_do_update(
+                    index_elements=["id"],
+                    set_={k: stmt.excluded[k] for k in row if k != "id"},
+                )
+                await session.execute(stmt)
+                await session.commit()
+            return True
+        except Exception as e:  # pragma: no cover - surface only on DB outage
+            logger.error("PgvectorQuestionStore.upsert failed: %s", e, exc_info=True)
+            return False
+
+    async def delete(self, question_id: str) -> bool:
+        """Delete by id. Idempotent like the Chroma store: deleting an absent
+        (or non-UUID, hence absent) id is a successful no-op."""
+        qid = _coerce_uuid(question_id)
+        if qid is None:
+            return True
+        try:
+            async with self._session_factory() as session:
+                await session.execute(
+                    delete(questions_table).where(questions_table.c.id == qid)
+                )
+                await session.commit()
+            return True
+        except Exception as e:  # pragma: no cover - surface only on DB outage
+            logger.error("PgvectorQuestionStore.delete failed: %s", e, exc_info=True)
+            return False
+
     # ── Reads ──────────────────────────────────────────────────────────
 
     async def get(self, question_id: str) -> Optional[Question]:
@@ -175,6 +216,11 @@ class PgvectorQuestionStore:
         async with self._session_factory() as session:
             result = await session.execute(stmt)
             return int(result.scalar_one())
+
+    async def get_all(self, limit: int = 1000) -> List[Question]:
+        async with self._session_factory() as session:
+            result = await session.execute(select(questions_table).limit(limit))
+            return [_row_to_question(row) for row in result.mappings().all()]
 
     async def search(
         self,

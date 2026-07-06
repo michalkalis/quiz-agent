@@ -64,15 +64,20 @@ class SyncPgvectorStore:
     """Sync facade over `PgvectorQuestionStore`.
 
     Exposes the read-path methods `QuestionRetriever` uses (`get`, `count`,
-    `search`) plus `find_duplicates` for `DedupStage`. Write methods (`add`,
-    `upsert`, `delete`) are not provided — neither consumer writes through
-    this facade (the voice-quiz read path does not write; quiz-pack-api
-    persists via `PersistStage`).
+    `search`), `find_duplicates` for `DedupStage`, and the write surface
+    (`upsert`, `delete`) plus `get_all` for the admin/feedback callers that
+    #41 moves off ChromaDB (D3).
     """
 
     def __init__(self, async_store: PgvectorQuestionStore) -> None:
         self._async = async_store
         self._bridge = _BackgroundLoop()
+
+    def upsert(self, question: Question) -> bool:
+        return self._bridge.run(self._async.upsert(question))
+
+    def delete(self, question_id: str) -> bool:
+        return self._bridge.run(self._async.delete(question_id))
 
     def get(self, question_id: str) -> Optional[Question]:
         return self._bridge.run(self._async.get(question_id))
@@ -97,12 +102,7 @@ class SyncPgvectorStore:
         )
 
     def get_all(self, limit: int = 1000) -> List[Question]:
-        # Not used by QuestionRetriever; provided for QuestionStore protocol
-        # conformance so future callers don't trip over AttributeError.
-        raise NotImplementedError(
-            "SyncPgvectorStore.get_all not implemented — voice-quiz read path "
-            "does not iterate the full collection."
-        )
+        return self._bridge.run(self._async.get_all(limit=limit))
 
     def find_duplicates(
         self, question_text: str, threshold: float = 0.85

@@ -288,6 +288,7 @@ async def rate_question(
         user_id=user_id,
         rating=request.rating,
         feedback_text=request.feedback_text,
+        session_id=session_id,
     )
 
     if not success:

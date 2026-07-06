@@ -1,14 +1,17 @@
 """Question database health monitor.
 
 Checks question inventory levels and alerts when thresholds are breached.
+Reads the canonical pgvector `questions` table (#41 D2); one aggregated
+GROUP BY query per health check.
 """
 
-import os
 from datetime import datetime, timezone
 from dataclasses import dataclass, field
-from typing import Optional
 
-import chromadb
+from sqlalchemy import case, func, select
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+
+from quiz_shared.database.pgvector_client import questions_table
 
 
 @dataclass
@@ -58,79 +61,52 @@ LOW_RUNWAY_DAYS = 14
 class QuestionMonitor:
     """Monitors question database health."""
 
-    def __init__(
-        self,
-        chroma_client: Optional[chromadb.ClientAPI] = None,
-        chroma_path: Optional[str] = None,
-    ):
-        if chroma_client:
-            self.chroma = chroma_client
-        else:
-            path = chroma_path or os.environ.get(
-                "CHROMA_PATH",
-                os.path.join(
-                    os.path.dirname(__file__), "..", "..", "..", "..", "chroma_data"
-                ),
-            )
-            self.chroma = chromadb.PersistentClient(path=path)
+    def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
+        self._session_factory = session_factory
 
-        try:
-            self.collection = self.chroma.get_collection("quiz_questions")
-        except Exception:
-            self.collection = None
-
-    def check_health(self) -> HealthStatus:
+    async def check_health(self) -> HealthStatus:
         """Run all health checks and return status."""
         status = HealthStatus(checked_at=datetime.now(timezone.utc).isoformat())
 
-        if not self.collection:
-            status.alerts.append(
-                "CRITICAL: No quiz_questions collection found in ChromaDB"
-            )
-            return status
+        t = questions_table
+        now = datetime.now(timezone.utc)
+        stmt = select(
+            t.c.review_status,
+            t.c.difficulty,
+            t.c.topic,
+            func.count().label("n"),
+            func.coalesce(func.sum(t.c.usage_count), 0).label("usage"),
+            func.coalesce(
+                func.sum(case((t.c.expires_at < now, 1), else_=0)),
+                0,
+            ).label("expired"),
+        ).group_by(t.c.review_status, t.c.difficulty, t.c.topic)
 
-        # Get all questions with metadata
         try:
-            result = self.collection.get(include=["metadatas"])
+            async with self._session_factory() as session:
+                rows = (await session.execute(stmt)).all()
         except Exception as e:
-            status.alerts.append(f"CRITICAL: Failed to query ChromaDB: {e}")
+            status.alerts.append(f"CRITICAL: Failed to query questions table: {e}")
             return status
 
-        metadatas = result.get("metadatas", [])
-
-        if not metadatas:
+        if not rows:
             status.alerts.append("CRITICAL: No questions in database")
             return status
 
-        # Count by status
-        for meta in metadatas:
-            review_status = meta.get("review_status", "unknown")
+        total_usage = 0
+        for review_status, difficulty, topic, n, usage, expired in rows:
+            total_usage += int(usage)
             if review_status == "approved":
-                status.total_approved += 1
-
-                # Count by difficulty
-                diff = meta.get("difficulty", "unknown")
-                status.by_difficulty[diff] = status.by_difficulty.get(diff, 0) + 1
-
-                # Count by topic
-                topic = meta.get("topic", "unknown")
-                status.by_topic[topic] = status.by_topic.get(topic, 0) + 1
-
-                # Count expired
-                expires_at = meta.get("expires_at")
-                if expires_at:
-                    try:
-                        exp_date = datetime.fromisoformat(expires_at)
-                        if exp_date < datetime.now(timezone.utc):
-                            status.total_expired += 1
-                    except (ValueError, TypeError):
-                        pass
-
+                status.total_approved += n
+                diff = difficulty or "unknown"
+                status.by_difficulty[diff] = status.by_difficulty.get(diff, 0) + n
+                top = topic or "unknown"
+                status.by_topic[top] = status.by_topic.get(top, 0) + n
+                status.total_expired += int(expired)
             elif review_status == "pending_review":
-                status.total_pending += 1
+                status.total_pending += n
 
         # Estimate usage rate (rough: assume 10 questions/user/day, estimate from usage_count)
-        total_usage = sum(meta.get("usage_count", 0) for meta in metadatas)
         # Simple estimate: total usage over ~30 days
         status.avg_daily_usage = (
             total_usage / 30 if total_usage > 0 else 5.0
@@ -169,24 +145,3 @@ class QuestionMonitor:
             )
 
         return status
-
-    def should_trigger_generation(self) -> tuple[bool, str]:
-        """Check if auto-generation should be triggered.
-
-        Returns (should_generate, reason).
-        """
-        status = self.check_health()
-
-        if status.level == "critical":
-            return True, f"Critical: {status.alerts[0]}"
-
-        # Check individual difficulty levels
-        for diff in ["easy", "medium", "hard"]:
-            count = status.by_difficulty.get(diff, 0)
-            if count < WARNING_PER_DIFFICULTY:
-                return True, f"Low {diff} questions: {count}"
-
-        if status.runway_days < LOW_RUNWAY_DAYS and status.runway_days > 0:
-            return True, f"Low runway: {status.runway_days:.0f} days"
-
-        return False, "All thresholds met"

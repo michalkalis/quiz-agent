@@ -1,6 +1,8 @@
 """User feedback and rating service.
 
-Integrates ChromaDB and SQL storage for ratings.
+Ratings persist in the SQL ratings store only (#41 D1) — the old embedded
+`user_ratings`/`usage_count`/`review_status` writes to the question store
+had zero readers and were dropped with the ChromaDB decommission.
 """
 
 import logging
@@ -9,7 +11,6 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
-from quiz_shared.database.question_store import QuestionStore
 from quiz_shared.database.sql_client import SQLClient
 from quiz_shared.models.rating import QuestionRating
 
@@ -18,7 +19,7 @@ class FeedbackService:
     """Manages user ratings and feedback.
 
     Features:
-    - Dual storage: QuestionStore (for retrieval) + SQL (for analytics)
+    - SQL storage for rating analytics
     - Rating scale: 1-5 (1=bad, 5=excellent)
     - Automatic quality tracking
     - Low-rated question flagging
@@ -26,18 +27,15 @@ class FeedbackService:
 
     def __init__(
         self,
-        question_store: QuestionStore,
         sql_client: SQLClient,
         low_rating_threshold: float = 2.5,
     ):
         """Initialize feedback service.
 
         Args:
-            question_store: QuestionStore for question read/write
             sql_client: SQL client for rating analytics
             low_rating_threshold: Threshold for flagging questions (default: 2.5)
         """
-        self.store = question_store
         self.sql = sql_client
         self.low_rating_threshold = low_rating_threshold
 
@@ -47,6 +45,7 @@ class FeedbackService:
         user_id: str,
         rating: int,
         feedback_text: Optional[str] = None,
+        session_id: Optional[str] = None,
     ) -> Tuple[bool, str]:
         """Submit a rating for a question.
 
@@ -55,12 +54,13 @@ class FeedbackService:
             user_id: User ID
             rating: Rating 1-5 (1=bad, 5=excellent)
             feedback_text: Optional text feedback
+            session_id: Quiz session the rating came from (analytics context)
 
         Returns:
             Tuple of (success, message)
 
         Example:
-            >>> service = FeedbackService(chroma, sql)
+            >>> service = FeedbackService(sql)
             >>> success, msg = await service.submit_rating(
             ...     "q_abc123",
             ...     "user_1",
@@ -73,29 +73,17 @@ class FeedbackService:
             return False, "Rating must be between 1 and 5"
 
         try:
-            # Update embedded user_ratings dict on the question (for retrieval)
-            question = self.store.get(question_id)
-            if not question:
-                return False, "Question not found in database"
-            question.user_ratings[user_id] = rating
-            question.usage_count += 1
-            if not self.store.upsert(question):
-                return False, "Failed to persist rating"
-
-            # Store detailed rating in SQL (for analytics)
             rating_obj = QuestionRating(
                 question_id=question_id,
+                session_id=session_id,
                 user_id=user_id,
                 rating=rating,
-                feedback_text=feedback_text,
+                feedback=feedback_text,
                 created_at=datetime.now(),
             )
 
-            sql_success = self.sql.add_rating(rating_obj)
-
-            if not sql_success:
-                # ChromaDB updated but SQL failed - log warning
-                logger.warning("SQL rating storage failed for %s", question_id)
+            if not self.sql.add_rating(rating_obj):
+                return False, "Failed to persist rating"
 
             return True, "Rating submitted successfully"
 
@@ -151,23 +139,12 @@ class FeedbackService:
     ) -> Tuple[bool, str]:
         """Flag a question as potentially incorrect.
 
-        Sets review_status to 'needs_revision' and stores the flag reason.
+        Logs the flag for operator follow-up. The old `review_status`
+        write-back to the question store had no reader (#41 D1) and was
+        dropped; the flag is acknowledged, not persisted per-question.
         """
-        try:
-            question = self.store.get(question_id)
-            if not question:
-                return False, "Question not found in database"
-            question.review_status = "needs_revision"
-            question.review_notes = (
-                f"Flagged by {user_id}: {reason or 'No reason given'}"
-            )
-            if not self.store.upsert(question):
-                return False, "Failed to persist flag"
-
-            logger.info("Question %s flagged by %s: %s", question_id, user_id, reason)
-            return True, "Question flagged for review"
-        except Exception as e:
-            return False, f"Failed to flag question: {str(e)}"
+        logger.info("Question %s flagged by %s: %s", question_id, user_id, reason)
+        return True, "Question flagged for review"
 
     def flag_poor_quality_questions(self) -> List[str]:
         """Flag questions that consistently receive low ratings.

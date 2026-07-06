@@ -149,25 +149,17 @@ async def lifespan(app: FastAPI):
         chroma_client = ChromaDBClient(
             collection_name="quiz_questions", persist_directory=chroma_path
         )
-        # ChromaDB stays initialized for write-path (FeedbackService) + the
-        # question health monitor. Voice-quiz reads go through pgvector
-        # since #36 task 2.20; ChromaDB is documented read-only until
-        # Phase 6 (#41) retires it.
-        chroma_question_store = chroma_client.store
-        logger.info(
-            "ChromaDB client initialized (write-path + monitor, using %s)",
-            chroma_path,
-        )
+        # ChromaDB is no longer consumed by any code path (#41 Session B) —
+        # the client stays initialized only until Session C removes this
+        # wiring and drops the dependency.
+        logger.info("ChromaDB client initialized (unconsumed, using %s)", chroma_path)
     except Exception as e:
         logger.error("Failed to initialize ChromaDB: %s", e, exc_info=True)
         raise
 
-    # Initialize pgvector store for the voice-quiz read path (#36 task 2.20).
-    # Falls back to the ChromaDB store when DATABASE_URL is unset (local dev
-    # without Postgres) so the dev server still boots.
-    # `question_store` (admin / write surface) stays on ChromaDB — admin
-    # routes still call upsert/delete/get_all/find_duplicates which the
-    # async pgvector store does not expose in Phase 2.
+    # Initialize the pgvector store — canonical for BOTH the voice-quiz read
+    # path (#36 task 2.20) and the admin/feedback write surface (#41 D3).
+    # DATABASE_URL is mandatory (#41 D6): no silent ChromaDB fallback.
     settings = get_settings()
 
     # #65: loudly flag a prod boot that ships App Attest inert (does not refuse).
@@ -175,25 +167,26 @@ async def lifespan(app: FastAPI):
 
     warn_if_insecure_production(settings, os.getenv("ENVIRONMENT"), logger)
 
-    question_store = chroma_question_store
-    if settings.database_url:
-        # Fly stores DATABASE_URL as libpq `postgres://`; the async read-path
-        # needs the explicit `postgresql+asyncpg://` driver or create_async_engine
-        # can't load the dialect and #36 voice read-path crashes at boot. The auth
-        # engine already normalizes — reuse the same helper here (#60 flip gate).
-        from .db.engine import normalize_async_url
+    if not settings.database_url:
+        raise ValueError(
+            "DATABASE_URL environment variable is not set. Postgres (pgvector) "
+            "is the canonical question store (#41 D6) — there is no fallback. "
+            "Local dev: start the colima dev-stack Postgres (#73) and set "
+            "DATABASE_URL in .env."
+        )
 
-        async_pgvector = PgvectorQuestionStore(
-            database_url=normalize_async_url(settings.database_url)
-        )
-        retrieval_store = SyncPgvectorStore(async_pgvector)
-        logger.info("Voice-quiz read path: PgvectorQuestionStore (canonical)")
-    else:
-        retrieval_store = chroma_question_store
-        logger.warning(
-            "DATABASE_URL not set — falling back to ChromaDB for voice-quiz "
-            "read path. Production must set DATABASE_URL (#36 task 2.20)."
-        )
+    # Fly stores DATABASE_URL as libpq `postgres://`; the async read-path
+    # needs the explicit `postgresql+asyncpg://` driver or create_async_engine
+    # can't load the dialect and #36 voice read-path crashes at boot. The auth
+    # engine already normalizes — reuse the same helper here (#60 flip gate).
+    from .db.engine import normalize_async_url
+
+    async_pgvector = PgvectorQuestionStore(
+        database_url=normalize_async_url(settings.database_url)
+    )
+    retrieval_store = SyncPgvectorStore(async_pgvector)
+    question_store = retrieval_store
+    logger.info("Question store: PgvectorQuestionStore (canonical, read + write)")
 
     try:
         logger.info("Initializing SQL client...")
@@ -217,11 +210,8 @@ async def lifespan(app: FastAPI):
         input_parser = InputParser()
         question_retriever = QuestionRetriever(question_store=retrieval_store)
         answer_evaluator = AnswerEvaluator()
-        # FeedbackService stays on ChromaDB for write-path (upsert/delete) —
-        # PgvectorQuestionStore exposes only the read surface in Phase 2.
-        # Full write-path cutover lives in Phase 6 (#41) per #36 plan.
+        # Ratings persist in SQL only (#41 D1) — no question-store writes.
         feedback_service = FeedbackService(
-            question_store=chroma_question_store,
             sql_client=sql_client,
             low_rating_threshold=2.5,
         )
@@ -336,8 +326,8 @@ async def lifespan(app: FastAPI):
     # Question health check on startup
     try:
         if QuestionMonitor is not None:
-            monitor = QuestionMonitor(chroma_client=chroma_client.client)
-            health = monitor.check_health()
+            monitor = QuestionMonitor(session_factory=auth_sessionmaker)
+            health = await monitor.check_health()
             if health.alerts:
                 logger.warning("Question database health alerts: %s", health.alerts)
             app.state.question_monitor = monitor
@@ -442,7 +432,7 @@ async def get_question_health():
     monitor = getattr(app.state, "question_monitor", None)
     if not monitor:
         return {"error": "Health monitor not initialized"}
-    health_status = monitor.check_health()
+    health_status = await monitor.check_health()
     return health_status.to_dict()
 
 

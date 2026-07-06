@@ -52,6 +52,7 @@ async def create_session(
             ttl_minutes=body.ttl_minutes,
         )
         session.language = body.language
+        session.include_images = body.include_images
         if body.category:
             session.category = body.category
         session_manager.update_session(session)

@@ -199,6 +199,11 @@ class QuestionRetriever:
             logger.debug("Selected random difficulty: %s", question_difficulty)
         return question_difficulty
 
+    @staticmethod
+    def _image_types(session: QuizSession) -> list[str]:
+        """Image type is served only when the session opted in (#68, default off)."""
+        return ["image"] if session.include_images else []
+
     def _build_metadata_filters(self, difficulty: str, session: QuizSession) -> dict:
         """Build metadata filters as CONSTRAINTS (not primary selection).
 
@@ -209,7 +214,7 @@ class QuestionRetriever:
         Returns:
             Metadata filters dict
         """
-        allowed_types = ["text", "text_multichoice", "image"]
+        allowed_types = ["text", "text_multichoice"] + self._image_types(session)
         filters = {
             "difficulty": difficulty,
             "type": {"$in": allowed_types},
@@ -279,6 +284,8 @@ class QuestionRetriever:
         if session.language and session.language != "en":
             lang_filter["language_dependent"] = False
 
+        fallback_types = ["text"] + self._image_types(session)
+
         # Fallback 1: Simpler semantic query (just "question")
         logger.debug("Fallback 1 - Simpler semantic query")
         simple_query = "quiz question"
@@ -286,7 +293,7 @@ class QuestionRetriever:
             query_text=simple_query,
             filters={
                 "difficulty": question_difficulty,
-                "type": {"$in": ["text", "image"]},
+                "type": {"$in": fallback_types},
                 "review_status": "approved",
                 **lang_filter,
             },
@@ -307,7 +314,7 @@ class QuestionRetriever:
                 query_text=simple_query,
                 filters={
                     "difficulty": fallback_difficulty,
-                    "type": {"$in": ["text", "image"]},
+                    "type": {"$in": fallback_types},
                     "review_status": "approved",
                     **lang_filter,
                 },
@@ -327,7 +334,7 @@ class QuestionRetriever:
         candidates = self._store.search(
             query_text="question",
             filters={
-                "type": {"$in": ["text", "image"]},
+                "type": {"$in": fallback_types},
                 "review_status": "approved",
                 **lang_filter,
             },

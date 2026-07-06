@@ -39,6 +39,13 @@ class QuizSession(BaseModel):
         None, description="Current category filter (e.g., 'music', 'movies', 'all')"
     )
     language: str = Field("en", description="Preferred language code (ISO 639-1)")
+    include_images: bool = Field(
+        False,
+        description=(
+            "Whether image-type questions may be served (#68). Default off — "
+            "images are unsuitable while driving; user opts in per session."
+        ),
+    )
     preferred_topics: List[str] = Field(
         default_factory=list, description="Preferred topics: ['science', 'history']"
     )

@@ -50,3 +50,53 @@ def test_metadata_filter_still_restricts_to_approved():
     filters = retriever._build_metadata_filters("medium", session)
 
     assert filters["review_status"] == "approved"
+
+
+def test_metadata_filter_excludes_image_by_default():
+    # #68: image questions are unsuitable while driving — a session that did
+    # not opt in must never be served an image question, or a driver gets a
+    # blank/visual-only prompt at the wheel.
+    retriever = _retriever()
+    session = QuizSession(
+        session_id="sess_test", current_difficulty="medium", language="en"
+    )
+
+    filters = retriever._build_metadata_filters("medium", session)
+
+    assert "image" not in filters["type"]["$in"]
+
+
+def test_metadata_filter_admits_image_when_opted_in():
+    # #68: the Home-screen "Image questions" toggle must actually reach
+    # selection — opting in and still never seeing an image question would
+    # make the setting a silent no-op.
+    retriever = _retriever()
+    session = QuizSession(
+        session_id="sess_test",
+        current_difficulty="medium",
+        language="en",
+        include_images=True,
+    )
+
+    filters = retriever._build_metadata_filters("medium", session)
+
+    assert "image" in filters["type"]["$in"]
+
+
+def test_fallback_retrieval_respects_image_opt_out():
+    # #68: the fallback paths query the store directly with their own type
+    # lists — if they re-admit "image" for an opted-out session, the default-
+    # off guarantee only holds until the primary search comes back empty.
+    retriever = _retriever()
+    store = retriever._store
+    store.search.return_value = []
+    session = QuizSession(
+        session_id="sess_test", current_difficulty="medium", language="en"
+    )
+
+    retriever._fallback_retrieval(session, "medium", n_candidates=5, excluded_ids=[])
+
+    assert store.search.call_count > 0
+    for call in store.search.call_args_list:
+        allowed = call.kwargs["filters"]["type"]["$in"]
+        assert "image" not in allowed

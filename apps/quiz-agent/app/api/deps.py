@@ -50,6 +50,10 @@ class CreateSessionRequest(BaseModel):
     language: str = Field(
         default="en", pattern="^[a-z]{2}$", description="Language code (ISO 639-1)"
     )
+    include_images: bool = Field(
+        default=False,
+        description="Whether image-type questions may be served (#68, default off)",
+    )
     ttl_minutes: int = Field(
         default=30, ge=10, le=120, description="Session expiry time"
     )

@@ -329,9 +329,18 @@ struct ResultView: View {
 
     private var resultHaptic: SensoryFeedback {
         guard let evaluation = viewModel.resultEvaluation else { return .impact }
-        switch evaluation.result {
+        return Self.haptic(for: evaluation.result)
+    }
+
+    /// Pure mapping so the skip-is-not-a-failure decision is testable.
+    static func haptic(for result: Evaluation.EvaluationResult) -> SensoryFeedback {
+        switch result {
         case .correct: return .success
-        case .incorrect, .skipped: return .error
+        case .incorrect: return .error
+        // #82 item 2 (decision 7): a skip is not a failure — gentle tick that
+        // confirms the voice command landed, no punishing error buzz. The
+        // visual stays the plain Result screen (founder: no skip banner).
+        case .skipped: return .selection
         case .partiallyCorrect, .partiallyIncorrect: return .warning
         }
     }

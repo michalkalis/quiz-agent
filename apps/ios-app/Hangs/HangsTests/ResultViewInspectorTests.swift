@@ -40,6 +40,7 @@
 
 import Foundation
 @testable import Hangs
+import SwiftUI
 import Testing
 import ViewInspector
 
@@ -426,5 +427,33 @@ struct ResultViewInspectorTests {
                 try tree.find(button: "Try this question again")
             }
         }
+    }
+}
+
+// MARK: - Skip Haptic (#82 item 2)
+
+@Suite("ResultView Skip Haptic Tests")
+struct ResultViewSkipHapticTests {
+
+    /// #82 item 2 (founder decision 7): a skip is not a failure. The result
+    /// haptic must be a gentle selection tick — confirming the voice command
+    /// landed eyes-free — never the punishing error buzz a wrong answer gets.
+    /// If skip is ever folded back into the incorrect case, this fails.
+    @Test("skip gets a selection tick, not the error haptic")
+    @MainActor
+    func skipHapticIsGentleTick() {
+        #expect(ResultView.haptic(for: .skipped) == .selection)
+        #expect(ResultView.haptic(for: .skipped) != ResultView.haptic(for: .incorrect))
+    }
+
+    /// The surrounding mapping stays intact: correct celebrates, incorrect
+    /// errors, partials warn.
+    @Test("non-skip results keep their existing haptics")
+    @MainActor
+    func nonSkipHapticsUnchanged() {
+        #expect(ResultView.haptic(for: .correct) == .success)
+        #expect(ResultView.haptic(for: .incorrect) == .error)
+        #expect(ResultView.haptic(for: .partiallyCorrect) == .warning)
+        #expect(ResultView.haptic(for: .partiallyIncorrect) == .warning)
     }
 }

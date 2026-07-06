@@ -279,6 +279,9 @@
   ▿ _showEndQuizConfirmation: SwiftUI.State<Swift.Bool>
     - _value: false
     - _location: nil
+  ▿ _showQuizSettings: SwiftUI.State<Swift.Bool>
+    - _value: false
+    - _location: nil
   ▿ _showTextInput: SwiftUI.State<Swift.Bool>
     - _value: false
     - _location: nil
@@ -289,4 +292,4 @@
     - value: false
     - location: nil
     - resetValue: false
-  - supportRowHeight: 30.0
+  - timerStripHeight: 30.0

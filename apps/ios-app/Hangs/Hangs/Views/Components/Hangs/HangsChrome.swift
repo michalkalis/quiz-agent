@@ -75,6 +75,43 @@ extension HangsBrandRow where Right == EmptyView {
     init() { self.init { EmptyView() } }
 }
 
+// MARK: - Unified quiz top bar (#83 / G1: close + settings only)
+
+/// G1 binding quiz-screen top bar (frames b8zObz / f9csl / uGhZg): close chip on the
+/// left, settings chip on the right — no brand mark, no counter (the `NN / NN` counter
+/// lives in the question meta row). Used by QuestionView for every question mode.
+/// ResultView still uses the older `HangsQuizNav` below — reconcile in #84 (Result rework).
+struct HangsQuizTopBar: View {
+    let onClose: () -> Void
+    let onSettings: () -> Void
+
+    var body: some View {
+        HStack {
+            chip(icon: "xmark", action: onClose)
+                .accessibilityLabel(String(localized: "Close quiz", comment: "Accessibility label for the in-quiz close button"))
+                .accessibilityIdentifier("question.closeButton")
+            Spacer()
+            chip(icon: "gearshape", action: onSettings)
+                .accessibilityLabel(String(localized: "Settings", comment: "Accessibility label for the in-quiz settings button"))
+                .accessibilityIdentifier("question.settingsButton")
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 14)
+        .padding(.bottom, 4)
+    }
+
+    private func chip(icon: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: icon)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(Theme.Hangs.Colors.ink)
+                .frame(width: 36, height: 36)
+                .background(Circle().fill(Theme.Hangs.Colors.bgCard))
+        }
+        .buttonStyle(.plain)
+    }
+}
+
 // MARK: - In-quiz nav (close + brand + progress counter)
 
 struct HangsQuizNav: View {

@@ -4,9 +4,11 @@
 //
 //  QuestionView redesigned to match Pencil frames b8zObz (MCQ), WCaT6 (TrueFalse),
 //  f9csl (Listen/ready), uGhZg (Capture/recording) — issue #52 task 52.10.
-//  MCQ: category+question-number header, AnswerOption list, ListeningPill, Skip.
-//  Voice: lowercase category, display-font question, centered waveform state block,
-//         Record/Stop | Skip action row.
+//  #83 (G1 unified quiz chrome): both modes share the same top bar (close + settings
+//  + progress bar), a muted category + counter meta row above the question, and the
+//  think/answer timer strip at the BOTTOM next to the action row.
+//  MCQ: AnswerOption list, ListeningPill, Skip. Voice: display-font question,
+//       Record/Stop | Skip action row.
 //
 
 import Combine
@@ -17,6 +19,7 @@ struct QuestionView: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var showEndQuizConfirmation = false
+    @State private var showQuizSettings = false
     @State private var showTextInput = false
     @State private var textAnswer = ""
     @FocusState private var isTextFieldFocused: Bool
@@ -62,6 +65,12 @@ struct QuestionView: View {
                 onCancel: { viewModel.cancelProcessing() }
             )
         }
+        .sheet(isPresented: $showQuizSettings) {
+            // Interim target for the G1 settings chip: the full settings screen.
+            // #68 (driving-critical defaults) replaces this with the in-quiz
+            // session-settings menu (founder decision 6, Variant A).
+            SettingsView(viewModel: viewModel)
+        }
         .confirmationDialog(
             "End Quiz?",
             isPresented: $showEndQuizConfirmation,
@@ -80,16 +89,48 @@ struct QuestionView: View {
 
     private var topChrome: some View {
         VStack(spacing: 8) {
-            HangsQuizNav(
+            HangsQuizTopBar(
                 onClose: { showEndQuizConfirmation = true },
-                counterText: counterString,
-                counterAccent: isRecording ? Theme.Hangs.Colors.pink : Theme.Hangs.Colors.muted
+                onSettings: { showQuizSettings = true }
             )
             HangsProgressBar(progress: progressValue)
             if let error = viewModel.errorMessage {
                 errorBanner(error)
             }
-            supportRow
+        }
+    }
+
+    // MARK: - Question meta row (muted category + counter)
+
+    /// Unified muted meta row above the question in BOTH modes (#83 / G1, frames
+    /// b8zObz/f9csl `metaRow`): category on the left (MCQ keeps its "· QUESTION N"
+    /// suffix, voice stays lowercase — per frames), `NN / NN` counter on the right
+    /// (moved here from the old nav bar). The counter turns pink while recording so
+    /// the active-mic state stays glanceable now that the nav has no accent slot.
+    private func metaRow(question: Question) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 12) {
+            Group {
+                if question.isMultipleChoice {
+                    // #56: interpolated literal so the compiler extracts
+                    // "%@ · QUESTION %lld"; uppercased as a display modifier.
+                    Text("\(question.category) · QUESTION \(currentQuestionNumber)")
+                        .textCase(.uppercase)
+                } else {
+                    Text(verbatim: question.category.lowercased())
+                }
+            }
+            .font(.hangsMono(11, weight: .medium))
+            .tracking(2)
+            .foregroundColor(Theme.Hangs.Colors.muted)
+            .accessibilityIdentifier("question.category")
+
+            Spacer(minLength: 12)
+
+            Text(verbatim: counterString)
+                .font(.hangsMono(11, weight: .semibold))
+                .tracking(2)
+                .foregroundColor(isRecording ? Theme.Hangs.Colors.pink : Theme.Hangs.Colors.muted)
+                .accessibilityIdentifier("question.counter")
         }
     }
 
@@ -129,22 +170,23 @@ struct QuestionView: View {
         .accessibilityIdentifier("question.errorBanner")
     }
 
-    // MARK: - Support row (think/answer timers when active)
+    // MARK: - Timer strip (think/answer timers — bottom, next to the action row)
 
-    /// Fixed height reserved for the timer-chip row throughout `askingQuestion`, so the
-    /// chips fading in when the countdown starts never push the question + pinned controls
-    /// downward (#59.2). ~timerChip height (text + 5pt vertical padding × 2 + capsule).
-    private let supportRowHeight: CGFloat = 30
+    /// Fixed height reserved for the timer-chip strip, so the chips fading in when the
+    /// countdown starts never shift the pinned action buttons (#59.2 rationale, now at
+    /// the bottom per G1/#83). ~timerChip height (text + 5pt vertical padding × 2).
+    private let timerStripHeight: CGFloat = 30
 
+    /// G1 binding layout (#83): the timer lives at the BOTTOM near the action row —
+    /// left slot of the audio strip (frames b8zObz/f9csl `audioStrip`); #85 adds
+    /// replay + mute into the remaining slots. Rendered identically by both the MCQ
+    /// and the voice body. Reserved through `recording` too so the action row doesn't
+    /// jump when the countdown hands over to the mic.
     @ViewBuilder
-    private var supportRow: some View {
-        // 59.2: reserve the slot for the *whole* askingQuestion phase rather than toggling
-        // from EmptyView → real row the instant the countdown becomes non-zero. The chips
-        // are conditionally rendered inside a constant-height frame so their appearance is a
-        // pure fade-in with zero layout shift; the slot collapses once we leave askingQuestion.
-        if viewModel.quizState == .askingQuestion {
-            let showThink = viewModel.thinkingTimeCountdown > 0
-            let showAnswer = viewModel.answerTimerCountdown > 0
+    private var timerStrip: some View {
+        if viewModel.quizState == .askingQuestion || viewModel.quizState == .recording {
+            let showThink = viewModel.quizState == .askingQuestion && viewModel.thinkingTimeCountdown > 0
+            let showAnswer = viewModel.quizState == .askingQuestion && viewModel.answerTimerCountdown > 0
             HStack(spacing: 8) {
                 if showThink {
                     timerChip(label: "THINK", seconds: viewModel.thinkingTimeCountdown, color: Theme.Hangs.Colors.blue)
@@ -154,8 +196,9 @@ struct QuestionView: View {
                 }
                 Spacer(minLength: 0)
             }
-            .padding(.horizontal, 28)
-            .frame(height: supportRowHeight, alignment: .leading)
+            .padding(.horizontal, 24)
+            .frame(height: timerStripHeight, alignment: .leading)
+            .accessibilityIdentifier("question.timerStrip")
         }
     }
 
@@ -195,7 +238,10 @@ struct QuestionView: View {
 
     private func mcqBody(question: Question) -> some View {
         VStack(spacing: 0) {
-            mcqQuestionHeader(question: question)
+            metaRow(question: question)
+                .padding(.horizontal, 28)
+                .padding(.top, 12)
+                .padding(.bottom, 6)
 
             ScrollView(.vertical, showsIndicators: false) {
                 HangsQuestionPrompt(
@@ -223,15 +269,18 @@ struct QuestionView: View {
                 .padding(.horizontal, 24)
                 .padding(.top, 12)
 
+            timerStrip
+                .padding(.top, 8)
+
             HangsSecondaryButton(title: "Skip question",
                                  icon: "play.forward.fill",
-                                 height: 54)
+                                 height: 44)
             {
                 Task { await viewModel.skipQuestion() }
             }
             .accessibilityIdentifier("question.skip")
             .padding(.horizontal, 24)
-            .padding(.top, 12)
+            .padding(.top, 4)
             .padding(.bottom, 28)
 
             #if DEBUG
@@ -243,42 +292,21 @@ struct QuestionView: View {
         .frame(maxHeight: .infinity)
     }
 
-    // "CATEGORY · QUESTION N" header for MCQ (frames b8zObz, WCaT6)
-    private func mcqQuestionHeader(question: Question) -> some View {
-        // #56: text param is LocalizedStringKey; pass the interpolated literal
-        // directly so the compiler extracts "%@ · QUESTION %lld" (category and
-        // number are runtime placeholders).
-        HangsSectionLabel(
-            text: "\(question.category) · QUESTION \(currentQuestionNumber)",
-            color: Theme.Hangs.Colors.pink
-        )
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 28)
-        .padding(.top, 12)
-        .padding(.bottom, 6)
-    }
-
     // MARK: - Voice body (frames f9csl / uGhZg)
 
     private func voiceBody(question: Question) -> some View {
         VStack(spacing: 0) {
-            // Scroll region holds only category + question, so a long Slovak
-            // question can scroll without pushing the pinned controls off-screen
-            // (54.2). minHeight keeps short questions top-aligned, not centered.
+            metaRow(question: question)
+                .padding(.horizontal, 24)
+                .padding(.top, 12)
+                .padding(.bottom, 4)
+
+            // Scroll region holds only the question, so a long Slovak question
+            // can scroll without pushing the pinned controls off-screen (54.2).
+            // minHeight keeps short questions top-aligned, not centered.
             GeometryReader { geo in
                 ScrollView(.vertical, showsIndicators: false) {
                     VStack(spacing: 0) {
-                        // Category: lowercase pink, no question number (design: f9csl)
-                        Text(question.category.lowercased())
-                            .font(.hangsMono(11, weight: .medium))
-                            .tracking(2)
-                            .foregroundColor(Theme.Hangs.Colors.pink)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal, 24)
-                            .padding(.top, 12)
-                            .padding(.bottom, 4)
-                            .accessibilityIdentifier("question.category")
-
                         // Question: Anton display, no left bar
                         Text(question.question)
                             .font(.hangsDisplay(28))
@@ -317,8 +345,9 @@ struct QuestionView: View {
                 }
             }
 
-            // Pinned controls below the scroll region — transcript (recording
-            // only), typed-answer fallback, then the Record/Skip action row.
+            // Pinned controls below the scroll region — timer strip (G1: timer at
+            // the bottom), transcript (recording only), typed-answer fallback, then
+            // the Record/Skip action row.
             VStack(spacing: 12) {
                 if isProcessing {
                     // 59.6: the typed-answer path (resubmitAnswer → .processing) stays on
@@ -327,6 +356,8 @@ struct QuestionView: View {
                     // frozen between "send" and the result. Mirrors the sheet's processingBody.
                     processingRow
                 } else {
+                    timerStrip
+
                     // Live transcript (recording + STT streaming) — static, pinned
                     // directly above the buttons so it never scrolls away.
                     if isRecording && viewModel.isStreamingSTT {
@@ -376,7 +407,9 @@ struct QuestionView: View {
                 }
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
-                .frame(height: 56)
+                // G1 (#83): action buttons deliberately modest (44pt) so long
+                // question text keeps as much room as possible.
+                .frame(height: 44)
                 .background(Capsule().fill(Theme.Hangs.Colors.pink))
                 .hangsShadow(Theme.Hangs.Shadow.cta)
             }
@@ -393,7 +426,7 @@ struct QuestionView: View {
                         .font(.hangsBody(15, weight: .medium))
                 }
                 .foregroundColor(Theme.Hangs.Colors.ink)
-                .frame(height: 56)
+                .frame(height: 44)
                 .padding(.horizontal, 20)
                 .background(Capsule().fill(Theme.Hangs.Colors.bgCard))
                 .overlay(Capsule().stroke(Theme.Hangs.Colors.hairline, lineWidth: 1))

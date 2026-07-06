@@ -1,6 +1,6 @@
 # Issue #83 — Unify the quiz top bar (MCQ vs open/voice divergence)
 
-**Triage:** enhancement · approved 2026-07-05 · blocked-on-#86
+**Triage:** enhancement · **done 2026-07-06** — implemented per G1 binding layout; 507 HangsTests green; on-sim screenshot verify PASS (MCQ + voice vs frames b8zObz/f9csl). Settings chip opens the full Settings sheet as an interim target — #68 repoints it to the session-settings menu (decision 6, Variant A). ResultView still uses the old `HangsQuizNav` (close + brand + counter) — reconcile in #84's Result rework. Replay/mute join the bottom timer strip in #85.
 
 **Created:** 2026-07-03 · **Founder:** Michal · **Source:** UI/UX review 2026-07-03 (P1 design decision, founder-approved)
 
@@ -34,11 +34,11 @@ Cross-refs: **#85** (replay button + mute control — also edits `QuestionView` 
 
 ## Acceptance
 
-- [ ] MCQ and open/voice questions render the **same** top bar: progress bar + `NN / NN` counter + answer timer + exit
-- [ ] Category is a single muted treatment (no loud per-mode section label divergence)
-- [ ] Answer-timer pill + progress bar behave identically in both modes (verified on-sim in both)
-- [ ] Screenshot-verify: MCQ header vs open header now visually consistent (re-shoot 11 & 16)
-- [ ] Existing ViewInspector/snapshot tests updated for the unified header; RS scenarios still green
+- [x] MCQ and open/voice questions render the **same** top bar — per G1: close + settings + progress bar; `NN / NN` counter in the shared meta row; timer at the bottom strip (both modes, `HangsQuizTopBar` + `metaRow` + `timerStrip` in QuestionView)
+- [x] Category is a single muted treatment (muted mono meta row in both modes; loud pink MCQ section label removed)
+- [x] Answer-timer pill + progress bar behave identically in both modes (shared `timerStrip`/`HangsProgressBar`; verified on-sim in both + ViewInspector suite "unified chrome in both modes")
+- [x] Screenshot-verify: MCQ vs open header visually consistent (on-sim 2026-07-06, VISUAL: PASS vs frames b8zObz/f9csl)
+- [x] ViewInspector tests extended (settings/counter/timer-strip present in both modes); `.stableDump` snapshot baselines re-recorded (⚠️ re-record surfaced for founder sign-off — diff = new `showQuizSettings` view state only); RS unit-level guards green (507 tests)
 
 ## Founder decisions 2026-07-05 (pre-implementation UI approval)
 

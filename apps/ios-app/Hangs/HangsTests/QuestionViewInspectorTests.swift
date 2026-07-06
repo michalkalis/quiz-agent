@@ -3,15 +3,19 @@
 //  HangsTests
 //
 //  #52 task 52.10 — QuestionView redesign (frames b8zObz/WCaT6/f9csl/uGhZg).
+//  #83 — unified quiz chrome (G1): both MCQ and voice must render the SAME top bar
+//  (close + settings), the muted category + counter meta row, and the bottom timer
+//  strip — a driver glances at one predictable HUD regardless of question type.
 //
 //  Why these tests matter:
-//  - MCQ header must include "QUESTION N" so the driver knows which question they're on
+//  - MCQ meta row must include "QUESTION N" so the driver knows which question they're on
 //    without having to look at the progress bar (design: b8zObz "GEOGRAPHY · QUESTION 3").
-//  - Voice body must show the question in lowercase category label (no question number),
-//    the Anton display question text, and the subtitle hint "Answer out loud" (design: f9csl).
+//  - Voice body must show the question in a lowercase muted category label (no question
+//    number) and the Anton display question text (design: f9csl).
 //  - Voice body must offer a Record button and a Skip button at the bottom — NOT the old
 //    chipActionRow (repeat/keyboard/mute) which the design removed.
-//  - The voice state indicator shows "Ready" in the resting state (design: f9csl center block).
+//  - The unified-chrome suite asserts settings button + counter + timer strip exist in
+//    BOTH modes — if either mode diverges again (the pre-#83 bug), these fail.
 //
 
 import Foundation
@@ -156,6 +160,65 @@ struct QuestionViewVoiceInspectorTests {
         }
     }
 
+}
+
+// MARK: - Unified quiz chrome (#83 / G1)
+
+@MainActor
+@Suite("QuestionView — unified chrome in both modes (#83 / G1)")
+struct QuestionViewUnifiedChromeTests {
+    private func makeViewModel(question: Question) -> QuizViewModel {
+        let vm = QuizViewModel(
+            networkService: MockNetworkService(),
+            audioService: MockAudioService(),
+            persistenceStore: MockPersistenceStore()
+        )
+        vm.currentQuestion = question
+        vm.quizState = .askingQuestion
+        return vm
+    }
+
+    /// G1 binding layout: the top bar is close + settings in EVERY question mode —
+    /// the settings chip must never disappear when the question type changes.
+    @Test("settings button is present in both MCQ and voice mode", arguments: [Question.previewMCQ, Question.preview])
+    func settingsButtonPresent(question: Question) async throws {
+        let vm = makeViewModel(question: question)
+        let view = QuestionView(viewModel: vm)
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: Never.self) {
+                try tree.find(viewWithAccessibilityIdentifier: "question.settingsButton")
+            }
+        }
+    }
+
+    /// The `NN / NN` counter moved from the nav bar into the meta row (#83); it must
+    /// stay visible in both modes so the driver always knows where they are.
+    @Test("question counter is present in both MCQ and voice mode", arguments: [Question.previewMCQ, Question.preview])
+    func counterPresent(question: Question) async throws {
+        let vm = makeViewModel(question: question)
+        let view = QuestionView(viewModel: vm)
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: Never.self) {
+                try tree.find(viewWithAccessibilityIdentifier: "question.counter")
+            }
+        }
+    }
+
+    /// G1: the think/answer timer lives at the bottom near the action row and must
+    /// render identically in both modes — the pre-#83 report was "MCQ has no timer".
+    @Test("timer strip is present in both MCQ and voice mode while asking", arguments: [Question.previewMCQ, Question.preview])
+    func timerStripPresent(question: Question) async throws {
+        let vm = makeViewModel(question: question)
+        let view = QuestionView(viewModel: vm)
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: Never.self) {
+                try tree.find(viewWithAccessibilityIdentifier: "question.timerStrip")
+            }
+        }
+    }
 }
 
 // MARK: - Replay availability + processing indicator (RS-14 / RS-15)

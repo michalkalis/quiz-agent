@@ -1,6 +1,6 @@
 # Issue #83 — Unify the quiz top bar (MCQ vs open/voice divergence)
 
-**Triage:** enhancement · needs-triage (founder-approved 2026-07-03 from UI/UX review)
+**Triage:** enhancement · approved 2026-07-05 · blocked-on-#86
 
 **Created:** 2026-07-03 · **Founder:** Michal · **Source:** UI/UX review 2026-07-03 (P1 design decision, founder-approved)
 
@@ -23,6 +23,8 @@ Good news: the outer chrome is already **mostly shared**, so scope is smaller th
 > Note: the review's screenshots (shots 11 vs 16) read as "MCQ has no timer/progress bar". The chrome code is shared, so any missing timer/progress in MCQ is a phase/visibility difference (e.g. MCQ not entering `.askingQuestion` the same way), not two separate bars. Confirm on-sim during work and make timer + progress behave identically in both modes.
 
 ## Recommendation
+
+⚠️ Superseded 2026-07-05 by binding decision G1 (docs/design/ui-proposals-2026-07-decisions.md): top bar = close + settings, timer at BOTTOM — the prose below is historical context only.
 
 1. Collapse the two per-mode headers into one treatment: a single muted category label (+ the shared `NN / NN` counter already in `HangsQuizNav`) — drop the loud MCQ "CATEGORY · QUESTION N" section label.
 2. Ensure progress bar + answer-timer pill render consistently in both MCQ and open modes.

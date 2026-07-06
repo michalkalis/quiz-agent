@@ -1,6 +1,6 @@
 # Issue 30: Batch-generate questions for new categories
 
-**Triage:** enhancement · ready-for-agent
+**Triage:** enhancement · deferred (blocked on #72 un-park)
 **Reversibility:** b
 **Status:** ⏸️ **DEFERRED — new-content production, OUT of scope for the pre-release quality work (founder, 2026-06-22).** Do **not** run any generation here until [[issue-72-question-fun-engagement-redesign|#72]] makes the generation flow excellent (un-park). The founder owns the trigger and will run this before release — it will not be forgotten. Targets/protocol below are preserved for that run. *(Was: Open — growing `general` → ~500 incrementally; founder decision 2026-06-09. Disney/football top-up dropped 2026-06-09.)*
 **Created:** 2026-05-02

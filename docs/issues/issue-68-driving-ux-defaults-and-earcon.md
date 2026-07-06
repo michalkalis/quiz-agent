@@ -1,6 +1,8 @@
 # Issue #68 — UX: driving-critical defaults + recording earcon + expose settings + render image questions
 
-**Triage:** enhancement · ready-for-agent
+**Triage:** enhancement · blocked-on-#86
+
+**Status (2026-07-06):** Earcon acceptance item delivered by #77 task 77.10 (ede204e). Remaining scope: `thinkingTime` default + Settings exposure + `ImageQuestionView`, per founder decisions 2026-07-05 item 6, gated behind #86 design sync.
 
 **Created:** 2026-06-21 · **Founder:** Michal · **Source:** #64 full-project review (ranks 12, 13 + image-render — verified first-hand)
 
@@ -37,7 +39,7 @@
 
 - [ ] `QuizSettings.default.thinkingTime == 10`; a unit test asserts `< 30`
 - [ ] `SettingsView` shows pickers for `numberOfQuestions`, `thinkingTime`, `autoAdvanceDelay`, `answerTimeLimit`
-- [ ] Recording start emits an **audio** cue (not only haptic) — `[HUMAN]` real-device confirm
+- [x] Recording start emits an **audio** cue (not only haptic) — delivered via #77 task 77.10 (ede204e)
 - [ ] `QuestionView` renders `ImageQuestionView` when `question.type == .image`
 - [ ] RS-01..RS-18 regression scenarios pass
 

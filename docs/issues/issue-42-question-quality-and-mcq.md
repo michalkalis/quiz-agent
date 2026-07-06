@@ -1,7 +1,9 @@
 # Issue 42: Question quality sweep + multichoice activation
 
-**Triage:** enhancement · ready-for-agent
+**Triage:** enhancement · closed — superseded
 **Reversibility:** b
+
+**Note (2026-07-06):** remaining Track F work absorbed by #72 Phase 1 (structural fixes P1.3/P1.4) and #63 Track A (MCQ yield validation); mba commits 25ca427/4847011 verified already reconciled to origin (the "unpushed" INDEX claim was false); Track E was superseded by #45 earlier.
 **Status:** Plan verified in fresh session 2026-05-28 against actual codebase (commit `ad3643c`). 6 real bugs in the preliminary plan fixed (see Changelog at bottom). Backend tracks A–D are Ralph-suitable atomic tasks; iOS Track E is human-driven (simulator required) — superseded by #45. Gated on #36 closing tasks 2.16–2.22. **2026-06-10: Track F added** (fresh MCQ batch per founder decision 2026-06-09) — Ralph launcher `scripts/ralph/launch-issue42-mcq.sh` ready; awaiting founder go. **2026-06-19: Track F PARKED batch loop superseded by `## Track F-R` (MCQ flow redesign)** — founder-requested plan review; levers pivoted to structured output + code ports, decomposed into atomic tasks 42.25-42.30 with a machine-verifiable un-park gate. See `## Track F-R` below + `docs/artifacts/issue-42-generation-review-2026-06-19.html`.
 **Created:** 2026-05-28
 **Parent / related:** #32 (umbrella). Independent of #36 (which only touches quiz-pack-api orchestrator + voice-quiz pgvector cutover).

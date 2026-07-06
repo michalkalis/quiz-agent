@@ -1,6 +1,6 @@
 # Issue 49: Daily free-limit cost research — size 20/day against backend + LLM cost
 
-**Triage:** enhancement · ready-for-agent
+**Triage:** enhancement · done
 **Reversibility:** a
 **Status:** Proposed — research-only, no code change. From launch decision #4 (`docs/product/launch-decisions-2026-06-08.md`).
 **Created:** 2026-06-09

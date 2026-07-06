@@ -1,6 +1,6 @@
 # Issue #82 — UX paper-cuts bundle from the 2026-07-03 UI/UX review
 
-**Triage:** bug · needs-triage (draft from UI/UX review 2026-07-03)
+**Triage:** bug · approved 2026-07-05 (with corrections) · blocked-on-#86
 
 **Created:** 2026-07-03 · **Founder:** Michal · **Source:** UI/UX review 2026-07-03 (each item sim-observed and/or code-verified)
 

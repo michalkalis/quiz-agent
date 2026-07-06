@@ -1,6 +1,6 @@
 # Issue 44: Mandatory screenshot-verify step — close the agent's "visual blindness" gap
 
-**Triage:** enhancement · ready-for-agent
+**Triage:** enhancement · done
 **Reversibility:** a
 **Status:** Shipped — 2026-06-11. All 5 subtasks complete; regression skill wired with mandatory screenshot-verify step. Run report template includes `VISUAL:` line; behavioral expectation added to `ios.md`.
 **Created:** 2026-06-02

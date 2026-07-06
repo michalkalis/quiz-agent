@@ -1,6 +1,6 @@
 # Issue #72 — Question generation-quality overhaul (all types)
 
-**Triage:** enhancement · ralph-runnable (autonomous build + offline gates; one founder-authorized validation run at the end)
+**Triage:** enhancement · parked (awaiting founder un-park) — Ralph loops disabled by founder 2026-07-05
 
 **Reversibility:** a · commits-only, every new behaviour behind a dormant toggle (no schema/data migration, no auth/payment, no prod deploy, no corpus writes) — overnight-loop eligible for **Phases 0–5 only**; Phase 6 is a human checkpoint Ralph must not cross.
 
@@ -291,7 +291,7 @@ resolved and baked in:
 <!-- obsidian-links:end -->
 
 
-## BLOCKER (2026-06-26) — plan-readiness pre-flight (NOT-READY)
+## BLOCKER (2026-06-26) — plan-readiness pre-flight (NOT-READY) — **RESOLVED 2026-07-06: Phase 6b passed 2026-06-27**
 
 - The readiness gate (#57 57.13) refused to start an autonomous run on this issue: ready-check produced no parseable READY_VERDICT (see /Users/agent/code/quiz-agent/scripts/ralph/logs/ready-20260626-000008.log)
 - No iteration ran; the branch was NOT pushed. Verifying the loop output cannot rescue an unready input (garbage in, garbage out).

@@ -18,6 +18,8 @@ Update `design/quiz-agent.pen` (Pencil MCP, editor must be open — local sessio
 - [ ] 86.5 Settings "Session" group + recording-sounds toggle per decision 6 (#68); Home option "image questions" (default OFF).
 - [ ] 86.6 Paper-cut visual deltas per decision 7 (#82): Home pickers with checkmarks + **multi-select categories**, Call Mode footnote. No skip feedback element.
 - [ ] 86.7 Contextual sign-in sheet per decision 10 (#58 §9).
+
+Carry-over from #54.1: dark-mode Phase 2 — deliberate dark design via asset catalog (was deferred in issue-54-01-dark-mode.md) — fold into this Pencil pass (2026-07-06).
 - [ ] 86.8 Home free-plan counter frame(s) per **G2** — coordinate with #87 (free state: remaining questions + time to reset; paid state: TBD from #87).
 - [ ] 86.9 `[HUMAN]` Founder reviews the updated frames (screenshots in-session); ⌘S save + commit `design/quiz-agent.pen`.
 

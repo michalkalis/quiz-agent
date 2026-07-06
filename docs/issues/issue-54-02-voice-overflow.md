@@ -3,6 +3,8 @@
 **Parent:** `issue-54-design-refresh-regressions.md` (§54.2) · **Priority:** P0 (founder #2) · **Status:** ✅ FIXED 2026-06-12 (Pencil-sync + snapshot re-record owed → cross-cutting plan)
 **Confidence:** high · **Type:** view-layer layout + behavioural test
 
+_2026-07-06: resolved via issue-54-pencil-snapshot-sync.md sessions 2026-06-12/13._
+
 ## Problem (one line)
 On the **voice** question screen a long question grows unbounded and shoves the Record/Skip
 action row below the screen. The MCQ body already avoids this (its prompt is in a `ScrollView`);

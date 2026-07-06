@@ -1,6 +1,8 @@
 # Issue #66 — Bug: voice submit advances the session on a non-answer intent (ghost question)
 
-**Triage:** bug · ready-for-agent
+**Triage:** bug · done
+
+**Status (2026-07-06):** Shipped via #77 task 77.1, commit 5cabfd8 (2026-07-03); guard covers voice + typed paths. No remaining scope.
 
 **Created:** 2026-06-21 · **Founder:** Michal · **Source:** #64 full-project review (rank 3 — verified first-hand)
 

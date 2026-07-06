@@ -1,6 +1,8 @@
 # Issue #80 — Settings navigation: back button top-right, dead edge-swipe, header scrolls away
 
-**Triage:** bug · needs-triage (draft from UI/UX review 2026-07-03)
+**Triage:** bug · approved 2026-07-05 · blocked-on-#86
+
+_2026-07-06: header was stale `needs-triage`; founder approval already recorded below._
 
 **Created:** 2026-07-03 · **Founder:** Michal · **Source:** founder report ("back button vpravo hore je zle; edge-swipe back nefunguje") + UI/UX review (sim-reproduced + code-verified)
 

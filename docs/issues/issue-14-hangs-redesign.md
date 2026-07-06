@@ -1,8 +1,8 @@
 # Issue #14: Hangs Redesign (Pencil → iOS)
 
-**Triage:** enhancement · ready-for-human
+**Triage:** enhancement · closed — superseded by #52/#45/#86
 
-## Status: PLANNED
+## Status: superseded (2026-07-06: its dark-only/SF-font design direction is obsolete)
 
 ## Source of truth
 - Pencil file: `design/quiz-agent.pen` (formerly `untitled.pen`)

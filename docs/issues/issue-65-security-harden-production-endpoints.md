@@ -1,6 +1,10 @@
 # Issue #65 — Security: authenticate production endpoints (admin UI + AI cost routes + rate-limit IP)
 
-**Triage:** security · ready-for-agent
+**Triage:** security · original scope done · follow-up open (grace-mode re-scope)
+
+> **2026-07-06:** Original hardening shipped + deployed; but per founder decision #5 (2026-07-05) a follow-up stays open as top priority: fix the **grace-mode silent unauthenticated pass-through** and re-scope this issue to post-remediation reality before any agent run.
+
+**Note (2026-07-06):** verified 2026-07-06: `routes.py:24` has router-wide `require_admin`, quiz-agent voice/tts/misc endpoints under `require_auth`.
 
 **Created:** 2026-06-21 · **Founder:** Michal · **Source:** #64 full-project review (rank 1, 2, 7, 9 — all verified first-hand)
 

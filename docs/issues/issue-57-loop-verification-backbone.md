@@ -1,6 +1,8 @@
 # Issue #57 — Autonomous loop hardening (enforced verification backbone)
 
-**Triage:** infra · ready-for-human
+**Triage:** infra · done
+
+**Note (2026-07-06):** autonomous loops disabled by founder 2026-07-05; the plan-readiness tooling (`/ready-check`, DoR) lives on via #75 `/prepare-issue`.
 **Status:** Plan written 2026-06-15 from the agent-loops readiness re-audit (`docs/artifacts/agent-loops-readiness-v2-2026-06-15.html`). **Founder decisions resolved 2026-06-15** (see "Resolved decisions"): D → keep local LaunchAgent, FileVault stays ON; E → defer behind A–D; + verification altitude steer (gate on flow/state/elements, not pixel/`.pen` fidelity — see "Verification altitude"). Tracks A–B are the core (the missing "something that can say no"); C–E are cheap independent follow-ups. This issue changes how *all* future autonomous work is verified, so Tracks A/B land human-reviewed, not blind-overnight. Ready to start Track A on request.
 
 ## Why this exists

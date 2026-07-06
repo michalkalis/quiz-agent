@@ -6,6 +6,8 @@
 still supports — and in one case actively *directs users to* — the removed UI. Both are
 "dead-end state" bugs: a user can reach a state with no actionable way out.
 
+_2026-07-06: resolved via issue-54-pencil-snapshot-sync.md sessions 2026-06-12/13._
+
 ---
 
 ## 54.17 — Settings "Reset question history" removed; VM error directs users to it

@@ -1,6 +1,6 @@
 # Issue #54 — Design-refresh sweep regressions (#52 fallout)
 
-**Triage:** bug · ready-for-agent (umbrella)
+**Triage:** bug · done (umbrella) — 2026-07-06: all 21 sub-tasks + child plans complete 2026-06-13, merged; INDEX was stale, TODO was right.
 **Opened:** 2026-06-12
 **Branch under review:** `ralph/overnight-20260611-2226`
 **Caused by:** #52 — iOS design-refresh sweep (Ralph overnight, commits `1997325..78d7742`)

@@ -1,6 +1,6 @@
 # Issue 52: iOS design-refresh sweep (Pencil → app)
 
-**Triage:** enhancement · ready-for-overnight
+**Triage:** enhancement · done (2026-07-06: shipped, founder-confirmed 2026-06-16; only 52.18 snapshot baselines remain deferred, folded into the #56/snapshot follow-up)
 **Status:** Planned 2026-06-11; **re-planned 2026-06-11 for one autonomous Ralph loop** (founder override of the original hybrid). Net-new design sweep covering the 16 `NEW_Screen/*` frames in `design/quiz-agent.pen`. **Depends on #45 finishing first** (shared QuestionView + AnswerOption + token foundation — see Phase 0). Founder decisions captured 2026-06-11: new issue (not folded into #45); all four net-new flows in scope (onboarding, error, quiz-complete, paywall-offline). **Execution: the entire sweep runs as a single overnight Ralph loop on `mba`** — every visual screen carries a screenshot-verify acceptance (build → sim screenshot → compare to the committed reference PNG in `docs/design/frames/` → self-correct), which is what makes unattended visual work viable. Only three genuine judgment tasks stay `- [HUMAN]` (52.16 SK copy, 52.17 fidelity sign-off, 52.18 snapshot baselines).
 **Created:** 2026-06-11
 **Design source:** `design/quiz-agent.pen` · **Related:** #45 (Question/Result redesign + MCQ voice — must land first), #44 (screenshot-verify harness), #46 (snapshot baselines).

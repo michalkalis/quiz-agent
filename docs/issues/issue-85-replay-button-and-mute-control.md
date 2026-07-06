@@ -1,6 +1,6 @@
 # Issue #85 — Replay as a full-size button + restore an on-screen mute control (quiz screen)
 
-**Triage:** enhancement · needs-triage (founder-approved 2026-07-03 from UI/UX review)
+**Triage:** enhancement · approved 2026-07-05 (Variant B) · blocked-on-#86
 
 **Created:** 2026-07-03 · **Founder:** Michal · **Source:** UI/UX review 2026-07-03 (P1 design decision, founder-approved)
 
@@ -9,7 +9,7 @@
 ## Decision (founder-approved)
 
 - **Mute:** a visible mute control **on the quiz screen** (founder: "mute určite na obrazovke kvízu").
-- **Replay:** a proper **button** (not the current tiny text link).
+- **Replay:** a proper **button** (not the current tiny text link). **Superseded 2026-07-05** — founder chose Variant B: replay smaller/more minimalistic than mocked, not a full-size primary button. See `docs/design/ui-proposals-2026-07-decisions.md` decision 3.
 - The **voice-command** side of replay ("Zopakuj") is handled separately in **#77** (ready-for-agent) — out of scope here; this issue is the on-screen visual controls only.
 
 ## Current state (code-verified)
@@ -19,14 +19,14 @@
 
 ## Recommendation
 
-1. **Replay button:** replace the text link with a full-size secondary button, ≥44pt target, present in **both** MCQ and open/voice modes; large speaker/replay iconography (Duolingo speaker precedent). Keep `accessibilityIdentifier("question.replay")` and the existing `replayQuestionAudio()` action. Disabled state driven by existing `canReplayAudio`.
+1. ~~**Replay button:** replace the text link with a full-size secondary button, ≥44pt target, present in **both** MCQ and open/voice modes; large speaker/replay iconography (Duolingo speaker precedent).~~ **Superseded 2026-07-05** — Variant B: smaller/minimalistic replay, not full-size primary. Keep `accessibilityIdentifier("question.replay")` and the existing `replayQuestionAudio()` action. Disabled state driven by existing `canReplayAudio`.
 2. **Mute control:** add a visible toggle on the quiz screen (speaker / `speaker.slash`) bound to the existing `settings.isMuted` — no new state, just an affordance over the logic that already exists. Keep the Settings toggle in sync.
 
 Cross-refs: **#83** (top-bar unify — also edits `QuestionView` chrome; **sequence these two, don't run in parallel**), **#77** (voice "Zopakuj"/hands-free — the spoken equivalent), #13 (original mute, done — lost in #52 redesign), #68 (driving audio/earcon defaults).
 
 ## Acceptance
 
-- [ ] Replay is a full-size button (≥44pt), present on **both** MCQ and open/voice questions, calling the existing replay action; disabled when `canReplayAudio` is false
+- [ ] ~~Replay is a full-size button (≥44pt)~~ **Superseded 2026-07-05** — Variant B: smaller/minimalistic replay button, present on **both** MCQ and open/voice questions, calling the existing replay action; disabled when `canReplayAudio` is false. See `docs/design/ui-proposals-2026-07-decisions.md` decision 3.
 - [ ] A mute toggle is visible on the quiz screen, bound to `settings.isMuted`; toggling it silences/enables TTS and stays in sync with the Settings toggle
 - [ ] Mute state persists across questions/sessions (existing `QuizSettings` persistence)
 - [ ] Screenshot-verify: quiz screen (MCQ + open) showing replay button + mute control, muted and unmuted

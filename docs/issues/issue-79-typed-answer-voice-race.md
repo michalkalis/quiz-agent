@@ -1,6 +1,8 @@
 # Issue #79 — Bug: typed answer during live voice capture → double submission + stale voice confirmation sheet
 
-**Triage:** bug · needs-triage (draft from UI/UX review 2026-07-03)
+**Triage:** bug · ready-for-agent (founder approved 2026-07-05, decisions item 12, preserve tap-to-edit)
+
+**Note (2026-07-06):** Line anchors may be stale — 77.2 refactored the interruption teardown into `AudioService.interruptionTeardown(...)`; re-verify anchors before implementing.
 
 **Created:** 2026-07-03 · **Founder:** Michal · **Source:** UI/UX review 2026-07-03 (reproduced on sim under `--ui-test`; race code-verified as production-reachable)
 
@@ -52,5 +54,5 @@ Cross-refs: #67 Part A (streaming interruption teardown — same recording-teard
 
 ## Founder decisions 2026-07-05 (pre-implementation UI approval)
 
-Binding record: `docs/design/ui-proposals-2026-07-decisions.md` (decision 12 + globals G1–G4). Pencil frames update first via #86 — Pencil sync of approved UI; implement only after frame review.
+Binding record: `docs/design/ui-proposals-2026-07-decisions.md` (decision 12). Not on the #86 gate list — no new UI here, not blocked on Pencil sync.
 - APPROVED as recommended. Added context: on the voice-answer confirmation screen, tapping the answer text opens the keyboard for manual transcript editing — the fix must preserve this flow.

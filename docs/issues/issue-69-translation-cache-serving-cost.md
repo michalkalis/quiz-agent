@@ -1,6 +1,8 @@
 # Issue #69 — Cost: translation runtime cache (3.5× SK serving cost)
 
-**Triage:** enhancement · ✅ SHIPPED (durable on-disk store implemented 2026-07-06; v1 in-memory `e27d562`)
+**Triage:** enhancement · shipped 2026-07-06 (durable on-disk store implemented; v1 in-memory `e27d562`)
+
+**Note (2026-07-06):** shipped — durable SQLite store live, 271 backend tests green. All acceptance boxes already checked.
 
 > **In-memory cache v1 shipped** (`e27d562`, 2026-06-29). **Durable follow-up re-prepped 2026-06-30:**
 > the founder wants the translation store to **survive restarts/redeploys** plus a **refresh mechanism**

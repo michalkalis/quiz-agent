@@ -1,6 +1,8 @@
 # Issue #71 — Process: restore Ralph scheduler, push held auth commits, refresh GitHub mirror
 
-**Triage:** chore · ready-for-human
+**Triage:** chore · reduced scope — GitHub mirror refresh only
+
+**Note (2026-07-06):** gutted to the one surviving task — run `scripts/mirror-issues.sh` to refresh the stale GitHub Issues mirror. Ralph scheduler restore is CONTRADICTED by founder decision 2026-07-05 (no autonomous loops); push audit already resolved 2026-06-22; AI-news routine disabled 2026-06-25.
 
 **Created:** 2026-06-21 · **Founder:** Michal · **Source:** #64 full-project review (rank 22 — confirmed)
 
@@ -32,10 +34,10 @@ The development-process automation (the project's strongest asset, scored 8/10) 
 
 ## Recommendation
 
-1. **[HUMAN]** SSH `mba` → `launchctl bootstrap gui/502 ~/Library/LaunchAgents/com.quizagent.ralph-overnight.plist`; confirm `state = waiting`.
-2. ~~Push the held auth commits~~ — **done** (on `origin/main`). Still pending before prod **deploy**: set `AUTH_JWT_SECRET` Fly secret + `alembic upgrade head` + `APP_ATTEST_REQUIRED=on` + `APP_ATTEST_APP_ID` (per #60/#65).
-3. Run `scripts/ralph/mirror-issues.sh` to bring the GitHub board current through #71.
-4. Remove the stale lock and confirm the cloud routine is live (`claude.ai/code/routines`).
+1. ~~**[HUMAN]** SSH `mba` → `launchctl bootstrap gui/502 ~/Library/LaunchAgents/com.quizagent.ralph-overnight.plist`; confirm `state = waiting`.~~ — CONTRADICTED by founder decision 2026-07-05 (no autonomous loops)
+2. ~~Push the held auth commits~~ — **done** (on `origin/main`, resolved 2026-06-22). Still pending before prod **deploy**: set `AUTH_JWT_SECRET` Fly secret + `alembic upgrade head` + `APP_ATTEST_REQUIRED=on` + `APP_ATTEST_APP_ID` (per #60/#65).
+3. **Surviving task:** run `scripts/mirror-issues.sh` to bring the GitHub board current through #71.
+4. ~~Remove the stale lock and confirm the cloud routine is live~~ — routine disabled 2026-06-25, moot.
 
 **Opportunity (from #64):** extend cloud Routines beyond AI-news to (a) nightly corpus-quality
 checks that auto-file issues, (b) scheduled SK corpus pre-translation (see #69), (c) a Sentry
@@ -44,8 +46,8 @@ AI-navigable) gain phone visibility without leaving the file-based system.
 
 ## Acceptance
 
-- [ ] `launchctl print gui/502/com.quizagent.ralph-overnight` returns `state = waiting` on `mba`
-- [x] `git rev-list --count origin/main..main` ≈ 0 (auth/#42 already pushed; only review-docs may be local)
-- [ ] GitHub Issues includes #59–#71
-- [ ] A new `docs/research/ai-news-YYYY-MM-DD.md` (≥ 2026-06-21) confirms the routine is live
-- [ ] Stale `.claude/scheduled_tasks.lock` removed
+- ~~[ ] `launchctl print gui/502/com.quizagent.ralph-overnight` returns `state = waiting` on `mba`~~ — CONTRADICTED by founder decision 2026-07-05 (no autonomous loops)
+- [x] `git rev-list --count origin/main..main` ≈ 0 (auth/#42 already pushed; only review-docs may be local) — resolved 2026-06-22
+- [ ] GitHub Issues includes #59–#71 — **surviving task: run `scripts/mirror-issues.sh` to refresh the stale GitHub Issues mirror**
+- ~~[ ] A new `docs/research/ai-news-YYYY-MM-DD.md` (≥ 2026-06-21) confirms the routine is live~~ — routine disabled 2026-06-25
+- ~~[ ] Stale `.claude/scheduled_tasks.lock` removed~~ — moot, routine disabled 2026-06-25

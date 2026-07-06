@@ -1,6 +1,6 @@
 # Issue #84 — Drop streak + best-score gamification from user-facing screens (keep the logic)
 
-**Triage:** enhancement · needs-triage (founder-approved 2026-07-03 from UI/UX review)
+**Triage:** enhancement · approved 2026-07-05 (Variant B) · blocked-on-#86
 
 **Created:** 2026-07-03 · **Founder:** Michal · **Source:** UI/UX review 2026-07-03 (P1 product decision, founder-approved)
 

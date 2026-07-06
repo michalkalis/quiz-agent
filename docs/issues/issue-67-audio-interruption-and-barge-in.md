@@ -1,6 +1,9 @@
 # Issue #67 — Bug: audio interruption misses the streaming path; barge-in is structurally dead
 
-**Triage:** bug · Part A ready-for-agent / Part B needs founder decision
+**Triage:** bug · Part A done / Part B deferred
+
+**Status (2026-07-06):** Part A shipped via #77 task 77.2 (ce349bd, teardown refactored into `AudioService.interruptionTeardown`). Part B barge-in deferred by founder decision 2026-07-02 (out of #77 scope).
+- [HUMAN] on-device phone-call-interruption recovery check not yet verified (sim-only tests so far).
 
 **Created:** 2026-06-21 · **Founder:** Michal · **Source:** #64 full-project review (ranks 4, 5 — verified first-hand)
 

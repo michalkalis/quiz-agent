@@ -1,6 +1,8 @@
 # Issue #70 — Backend: ARQ worker Docker-path crash + dedup store wiring (content-pipeline residuals)
 
-**Triage:** bug · ready-for-agent (code) — content un-park decision stays with #63
+**Triage:** bug · ready-for-agent (worker path crash only)
+
+**Note (2026-07-06):** the dedup/ChromaDB half is superseded by #41 findings — dedup already runs on pgvector (`find_duplicates` exists and the worker wires it); only stale ChromaDB comments remain in `dedup.py`, owned by #41. Remaining live scope in this issue = only the `worker.py` `parents[4]` Docker-path import crash.
 
 **Created:** 2026-06-21 · **Founder:** Michal · **Source:** #64 full-project review (rank 8, 18 — verified first-hand)
 

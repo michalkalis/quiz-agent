@@ -1,6 +1,8 @@
 # Issue #59 — Quiz-flow bug cluster (8 voice-screen regressions)
 
-**Triage:** bug · ready-for-agent
+**Triage:** bug · mostly done — remaining: RS sim legs + [HUMAN] device confirm
+
+**Status (2026-07-06):** All 8 bugs + 7 loop tasks fixed 2026-06-17. Remaining: sim-geometry legs RS-12/RS-15 + click-through RS-11/13/16 via `/regression`, and [HUMAN] 59.1 real-device TTS confirm.
 **Reversibility:** a · commits-only (no schema migration, no auth/payment, no prod deploy) — overnight-loop eligible
 **Status:** Founder-reported 2026-06-17 from a live device session (Slovak, real AirPods). 8 bugs on the question + result screens. Root-caused + adversarially verified by a multi-agent workflow (`wf_59921dfa-ac4`, 17 agents). **No fixes applied yet — this is the evidence + plan.** Fixes are loop-able once founder picks the order.
 

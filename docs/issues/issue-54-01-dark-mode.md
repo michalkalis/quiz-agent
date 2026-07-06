@@ -5,6 +5,8 @@
 **Founder decision:** **Phase 1 = quick legibility fix now; Phase 2 = deliberate Pencil dark
 design + asset-catalog migration later** (its own task).
 
+_2026-07-06: Phase 2 (deliberate dark design via asset catalog) carried over to #86 design sync 2026-07-06._
+
 ## Problem
 In dark mode the page background adapts but the STREAK/BEST/session cards stay bright white with
 near-invisible labels — the adaptive token system is half-applied.

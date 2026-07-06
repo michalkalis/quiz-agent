@@ -1,6 +1,8 @@
 # Issue #13: Add Repeat Question Button & Mute Toggle
 
-## Status: DONE
+## Status: superseded by #85
+
+**Note (2026-07-06):** Originally DONE, but the on-screen mute affordance was removed in the #52 redesign (regression). #85 owns on-screen mute/replay; #77 owns the voice "repeat" command.
 
 ## Context
 Repeat exists as voice command only (`VoiceCommand.repeat` in QuizViewModel line 1841). No UI button. No mute functionality exists.

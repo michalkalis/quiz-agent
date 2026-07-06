@@ -1,6 +1,8 @@
 # Issue #58 — Authentication: research + design + plan
 
-**Triage:** enhancement · researched — **plan delivered, impl issues spun off** (#60/#61/#62); only Pencil auth screens (§9) remain on this issue
+**Triage:** enhancement · closed
+
+**Note (2026-07-06):** research+design delivered; impl spun off to #60 (closed) / #61 / #62; remaining §9 Pencil auth screens — account UI designed 2026-06-29 for #61, contextual sign-in prompt approved 2026-07-05 (decision 10) and deferred to #86 Pencil sync. Nothing left in this file.
 
 > **✅ Research delivered 2026-06-16:** [`docs/research/auth-research-2026-06-16.md`](../research/auth-research-2026-06-16.md)
 > — options matrix + recommendation + phased plan (impl issues **#60/#61/#62** — #59 is taken) + 7 open questions (founder-answered 2026-06-17, doc §8b).

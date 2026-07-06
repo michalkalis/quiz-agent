@@ -1,6 +1,6 @@
 # Issue #82 — UX paper-cuts bundle from the 2026-07-03 UI/UX review
 
-**Triage:** bug · approved 2026-07-05 (with corrections) · blocked-on-#86
+**Triage:** bug · approved 2026-07-05 (with corrections) · ✅ DONE 2026-07-06 (all 6 items shipped, commits `f44976f`..`64af340`; backend deployed to Fly v60)
 
 **Created:** 2026-07-03 · **Founder:** Michal · **Source:** UI/UX review 2026-07-03 (each item sim-observed and/or code-verified)
 
@@ -40,10 +40,18 @@
 
 ## Acceptance
 
-- [ ] Each item above fixed (or explicitly founder-declined) in its own commit
-- [ ] Item 2: skip result shows neutral "skipped" treatment, no error haptic; snapshot updated
-- [ ] Item 3: all listed literals extracted into `Localizable.xcstrings`; ViewInspector tests still pass
-- [ ] Screenshot-verify run for items 2, 4, 6
+- [x] Each item above fixed (or explicitly founder-declined) in its own commit
+- [x] Item 2: per founder correction 2026-07-05 the Result VISUAL stays exactly as today (no skipped banner); only the haptic changed — error buzz → gentle selection tick (review's recommended treatment), locked by intent tests
+- [x] Item 3: all listed literals extracted into `Localizable.xcstrings`; ViewInspector tests still pass
+- [x] Screenshot-verify run for items 4 and 6 (Home pickers + light-mode ANSWER chip on sim: PASS); item 2 has no visual delta by design (haptic only — not sim-verifiable)
+
+## Implementation notes (2026-07-06)
+
+- **Item 1** = review's Variant B (decision 7 "treatment: approved"): Call Mode toggle re-exposed in the Settings voice group (`settings-call-mode-toggle`), wiring the previously dead `AudioMode`/`toggleAudioMode()`; the mic-picker footnote is now true.
+- **Item 4** shipped end-to-end and fixed a latent no-op: the retriever filters on `session.preferred_categories`, which nothing ever populated — the old single-select picker never influenced served questions. `QuizSettings.category: String?` → `categories: [String]` (legacy-blob migration), Home menus show checkmarks, multi-select toggles membership, "All Categories" clears; create-session accepts `categories` (legacy `category` still accepted, now also filters). Backend deployed to Fly (additive OpenAPI change, no migration).
+- **Item 5**: replay presents as `fullScreenCover` over the navigation stack instead of swapping the view tree — finishing the replay lands back in Settings.
+- **Item 6** measured (WCAG relative luminance): ANSWER pill 2.68:1 / THINK pill 2.96:1 in light mode → FAIL; new per-mode `pinkText` #C2185B (4.73:1) / `blueText` #0A5DC2 (5.07:1) tokens darken only the chip text, capsule tint keeps brand accents, dark mode unchanged. "Type answer instead" chip measured 4.83:1 → passes, untouched.
+- Verification: full HangsTests suite green ×2 + backend 299 green (4 new wiring tests); 5 `.stableDump` baselines re-recorded (verified model-only diff). NB: a mid-run RS-correct/RS-incorrect failure was environmental (sim left in landscape by manual driving) — reproduced on clean HEAD, gone after sim reboot; not a code regression.
 
 ## Founder decisions 2026-07-05 (pre-implementation UI approval)
 

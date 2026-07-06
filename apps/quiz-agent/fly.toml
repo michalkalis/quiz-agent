@@ -8,6 +8,12 @@ primary_region = "cdg"
   dockerfile = "Dockerfile"
   build_context = "../.."
 
+[env]
+  # Drives Sentry env labeling and the production-only startup SECURITY
+  # warnings (warn_if_insecure_production) — without it prod boots as
+  # "development" and every prod-only check is silently skipped (#65).
+  ENVIRONMENT = "production"
+
 [[services]]
   protocol = "tcp"
   internal_port = 8002

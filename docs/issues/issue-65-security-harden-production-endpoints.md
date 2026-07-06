@@ -5,6 +5,8 @@
 > **2026-07-06 re-scope (founder decisions #5 + #6, 2026-07-05).** The grace-mode pass-through is no longer *silent*: every unauthenticated pass logs a `AUTH GRACE` WARNING with the route (`app/auth/identity.py`), production boot logs a `SECURITY` error while `LEGACY_USER_ID_GRACE` is on (`startup_checks.py`), and the misuse-inviting `require_auth` dependency was renamed `require_auth_or_grace` (identity: `require_bearer_or_grace`) with the not-a-hard-gate contract documented — closes the accepted-risk item from the 2026-07-03 review. Deployed to Fly.
 >
 > **Remaining step — flip `LEGACY_USER_ID_GRACE=off`** once evidence shows no live client depends on it: watch prod logs for `AUTH GRACE` lines (now countable). Latest TestFlight build (2026-07-03, `0c8dab0`) sends bearers; older installs would break on flip. Flip = `fly secrets set LEGACY_USER_ID_GRACE=off -a quiz-agent-api`; verify header-less `POST /api/v1/elevenlabs/token` → 401.
+>
+> **Bonus finding fixed same session:** prod ran with `ENVIRONMENT` unset, so *every* production-only startup SECURITY check (incl. the original #65 App Attest warnings) was silently skipped and Sentry labeled prod "development". `fly.toml` now sets `ENVIRONMENT=production`; verified the SECURITY boot log fires live.
 
 **Note (2026-07-06):** verified 2026-07-06: `routes.py:24` has router-wide `require_admin`, quiz-agent voice/tts/misc endpoints under `require_auth`.
 

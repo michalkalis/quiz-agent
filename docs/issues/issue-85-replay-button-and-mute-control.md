@@ -1,6 +1,6 @@
 # Issue #85 — Replay as a full-size button + restore an on-screen mute control (quiz screen)
 
-**Triage:** enhancement · approved 2026-07-05 (Variant B) · blocked-on-#86
+**Triage:** enhancement · **done 2026-07-06** — Variant B implemented: replay (minimalistic link) + mute toggle live in the bottom audio strip built by #83, in BOTH question modes; 510 HangsTests green; on-sim verify PASS (asking/recording, muted/unmuted, MCQ + voice vs frames b8zObz/f9csl/uGhZg).
 
 **Created:** 2026-07-03 · **Founder:** Michal · **Source:** UI/UX review 2026-07-03 (P1 design decision, founder-approved)
 
@@ -26,11 +26,11 @@ Cross-refs: **#83** (top-bar unify — also edits `QuestionView` chrome; **seque
 
 ## Acceptance
 
-- [ ] ~~Replay is a full-size button (≥44pt)~~ **Superseded 2026-07-05** — Variant B: smaller/minimalistic replay button, present on **both** MCQ and open/voice questions, calling the existing replay action; disabled when `canReplayAudio` is false. See `docs/design/ui-proposals-2026-07-decisions.md` decision 3.
-- [ ] A mute toggle is visible on the quiz screen, bound to `settings.isMuted`; toggling it silences/enables TTS and stays in sync with the Settings toggle
-- [ ] Mute state persists across questions/sessions (existing `QuizSettings` persistence)
-- [ ] Screenshot-verify: quiz screen (MCQ + open) showing replay button + mute control, muted and unmuted
-- [ ] ViewInspector/snapshot baselines updated; RS scenarios still green
+- [x] ~~Replay is a full-size button (≥44pt)~~ **Superseded 2026-07-05** — Variant B delivered: minimalistic replay link in the bottom audio strip (`replayLink` in QuestionView), present in **both** MCQ and open/voice, calls the existing `replayQuestionAudio()`, disabled via `canReplayAudio` (verified on-sim: disables itself when muted)
+- [x] Mute toggle visible on the quiz screen (`question.mute`, speaker/speaker.slash 32pt chip in the strip), a pure toggle over `settings.isMuted` — same source of truth as the Settings "Speak scores aloud" toggle and the TTS guards
+- [x] Mute state persists across questions/sessions (existing `@Published settings` → `saveSettings` Combine sink; no new state added)
+- [x] Screenshot-verify: MCQ + voice, muted (pink slash, replay disabled) and unmuted, asking + recording states — VISUAL: PASS 2026-07-06
+- [x] ViewInspector suite "audio strip replay + mute" added (replay+mute presence ×2 modes, mute-toggles-setting); `.stableDump` baselines re-recorded (diff = strip constant rename only); 510 HangsTests green
 
 ## Founder decisions 2026-07-05 (pre-implementation UI approval)
 

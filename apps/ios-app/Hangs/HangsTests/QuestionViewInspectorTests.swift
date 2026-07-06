@@ -221,6 +221,68 @@ struct QuestionViewUnifiedChromeTests {
     }
 }
 
+// MARK: - Audio strip: replay + mute (#85, Variant B)
+
+@MainActor
+@Suite("QuestionView — audio strip replay + mute (#85)")
+struct QuestionViewAudioStripTests {
+    private func makeViewModel(question: Question) -> QuizViewModel {
+        let vm = QuizViewModel(
+            networkService: MockNetworkService(),
+            audioService: MockAudioService(),
+            persistenceStore: MockPersistenceStore()
+        )
+        vm.currentQuestion = question
+        vm.quizState = .askingQuestion
+        return vm
+    }
+
+    /// #85 acceptance: replay must exist on BOTH question modes — pre-#85 it existed
+    /// only in the voice body, leaving MCQ drivers with no way to re-hear the question.
+    @Test("replay control is present in both MCQ and voice mode", arguments: [Question.previewMCQ, Question.preview])
+    func replayPresentInBothModes(question: Question) async throws {
+        let vm = makeViewModel(question: question)
+        let view = QuestionView(viewModel: vm)
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: Never.self) {
+                try tree.find(viewWithAccessibilityIdentifier: "question.replay")
+            }
+        }
+    }
+
+    /// #85 acceptance: a visible mute affordance on the quiz screen (regressed in the
+    /// #52 redesign — mute logic existed with no on-screen control). Driving-first:
+    /// audio controls must sit on a fixed spot in every mode.
+    @Test("mute toggle is present in both MCQ and voice mode", arguments: [Question.previewMCQ, Question.preview])
+    func mutePresentInBothModes(question: Question) async throws {
+        let vm = makeViewModel(question: question)
+        let view = QuestionView(viewModel: vm)
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: Never.self) {
+                try tree.find(viewWithAccessibilityIdentifier: "question.mute")
+            }
+        }
+    }
+
+    /// The on-screen mute is a pure toggle over the persisted `settings.isMuted` —
+    /// the same source of truth the Settings "Speak scores aloud" toggle and the
+    /// TTS guards use, so flipping it here silences TTS and stays in sync everywhere.
+    @Test("tapping mute flips settings.isMuted")
+    func muteTogglesSetting() async throws {
+        let vm = makeViewModel(question: Question.preview)
+        vm.settings.isMuted = false
+        let view = QuestionView(viewModel: vm)
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            let mute = try tree.find(viewWithAccessibilityIdentifier: "question.mute")
+            try mute.button().tap()
+            #expect(vm.settings.isMuted == true)
+        }
+    }
+}
+
 // MARK: - Replay availability + processing indicator (RS-14 / RS-15)
 
 @MainActor

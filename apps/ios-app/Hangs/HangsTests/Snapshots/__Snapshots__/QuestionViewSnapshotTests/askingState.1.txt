@@ -292,4 +292,4 @@
     - value: false
     - location: nil
     - resetValue: false
-  - timerStripHeight: 30.0
+  - audioStripHeight: 32.0

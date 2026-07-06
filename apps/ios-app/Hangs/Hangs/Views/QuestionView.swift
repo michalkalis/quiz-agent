@@ -170,20 +170,20 @@ struct QuestionView: View {
         .accessibilityIdentifier("question.errorBanner")
     }
 
-    // MARK: - Timer strip (think/answer timers — bottom, next to the action row)
+    // MARK: - Audio strip (timers + replay + mute — bottom, next to the action row)
 
-    /// Fixed height reserved for the timer-chip strip, so the chips fading in when the
+    /// Fixed height reserved for the audio strip, so the timer chips fading in when the
     /// countdown starts never shift the pinned action buttons (#59.2 rationale, now at
     /// the bottom per G1/#83). ~timerChip height (text + 5pt vertical padding × 2).
-    private let timerStripHeight: CGFloat = 30
+    private let audioStripHeight: CGFloat = 32
 
-    /// G1 binding layout (#83): the timer lives at the BOTTOM near the action row —
-    /// left slot of the audio strip (frames b8zObz/f9csl `audioStrip`); #85 adds
-    /// replay + mute into the remaining slots. Rendered identically by both the MCQ
-    /// and the voice body. Reserved through `recording` too so the action row doesn't
-    /// jump when the countdown hands over to the mic.
+    /// G1 binding layout (#83 + #85, frames b8zObz/f9csl `audioStrip`): timer chips on
+    /// the left, the minimalistic replay link in the middle (Variant B — deliberately
+    /// NOT a full-size button), the mute toggle on the right. Rendered identically by
+    /// both the MCQ and the voice body, through `recording` too, so the driver finds
+    /// the audio controls on one fixed spot in every mode.
     @ViewBuilder
-    private var timerStrip: some View {
+    private var audioStrip: some View {
         if viewModel.quizState == .askingQuestion || viewModel.quizState == .recording {
             let showThink = viewModel.quizState == .askingQuestion && viewModel.thinkingTimeCountdown > 0
             let showAnswer = viewModel.quizState == .askingQuestion && viewModel.answerTimerCountdown > 0
@@ -195,11 +195,58 @@ struct QuestionView: View {
                     timerChip(label: "ANSWER", seconds: viewModel.answerTimerCountdown, color: Theme.Hangs.Colors.pink)
                 }
                 Spacer(minLength: 0)
+                replayLink
+                Spacer(minLength: 0)
+                muteButton
             }
             .padding(.horizontal, 24)
-            .frame(height: timerStripHeight, alignment: .leading)
+            .frame(height: audioStripHeight)
             .accessibilityIdentifier("question.timerStrip")
         }
+    }
+
+    /// Replay the question TTS via the timer-free audio path (Decision 2): never
+    /// restarts the auto-record/think countdown. Disabled when there's nothing to
+    /// replay (muted or no question audio URL) so it doesn't look interactive while
+    /// silently no-opping (#59.5).
+    private var replayLink: some View {
+        Button {
+            Task { await viewModel.replayQuestionAudio() }
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "play.fill")
+                    .font(.system(size: 10, weight: .semibold))
+                Text("replay question")
+                    .font(.hangsBody(13, weight: .medium))
+            }
+            .foregroundColor(Theme.Hangs.Colors.blue)
+        }
+        .buttonStyle(.plain)
+        .disabled(!viewModel.canReplayAudio)
+        .opacity(viewModel.canReplayAudio ? 1 : 0.4)
+        .accessibilityIdentifier("question.replay")
+    }
+
+    /// On-screen mute affordance (#85 — regressed in the #52 redesign, originally #13).
+    /// A pure toggle over the existing `settings.isMuted`: persistence + the Settings
+    /// "Speak scores aloud" toggle share the same source of truth, and the TTS guards
+    /// in QuizViewModel+Audio already honour it — no new audio state here.
+    private var muteButton: some View {
+        Button {
+            viewModel.settings.isMuted.toggle()
+        } label: {
+            Image(systemName: viewModel.settings.isMuted ? "speaker.slash.fill" : "speaker.wave.2")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundColor(viewModel.settings.isMuted ? Theme.Hangs.Colors.pink : Theme.Hangs.Colors.muted)
+                .frame(width: 32, height: 32)
+                .background(Circle().fill(Theme.Hangs.Colors.bgCard))
+                .overlay(Circle().stroke(Theme.Hangs.Colors.hairline, lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(viewModel.settings.isMuted
+            ? String(localized: "Unmute", comment: "Accessibility label for the quiz mute toggle while muted")
+            : String(localized: "Mute", comment: "Accessibility label for the quiz mute toggle while audible"))
+        .accessibilityIdentifier("question.mute")
     }
 
     private func timerChip(label: LocalizedStringKey, seconds: Int, color: Color) -> some View {
@@ -269,7 +316,7 @@ struct QuestionView: View {
                 .padding(.horizontal, 24)
                 .padding(.top, 12)
 
-            timerStrip
+            audioStrip
                 .padding(.top, 8)
 
             HangsSecondaryButton(title: "Skip question",
@@ -316,30 +363,6 @@ struct QuestionView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 24)
                             .accessibilityIdentifier("question.text")
-
-                        // Replay button — plays the question TTS again via a
-                        // timer-free audio path (Decision 2): never restarts the
-                        // auto-record/think countdown. Disabled when there's nothing to
-                        // replay (muted or no question audio URL) so it doesn't look
-                        // interactive while silently no-opping (#59.5).
-                        Button {
-                            Task { await viewModel.replayQuestionAudio() }
-                        } label: {
-                            HStack(spacing: 6) {
-                                Image(systemName: "play.fill")
-                                    .font(.system(size: 11, weight: .semibold))
-                                Text("replay question")
-                                    .font(.hangsBody(15, weight: .medium))
-                            }
-                            .foregroundColor(Theme.Hangs.Colors.blue)
-                        }
-                        .buttonStyle(.plain)
-                        .disabled(!viewModel.canReplayAudio)
-                        .opacity(viewModel.canReplayAudio ? 1 : 0.4)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 24)
-                        .padding(.top, 14)
-                        .accessibilityIdentifier("question.replay")
                     }
                     .frame(minHeight: geo.size.height, alignment: .top)
                 }
@@ -356,7 +379,7 @@ struct QuestionView: View {
                     // frozen between "send" and the result. Mirrors the sheet's processingBody.
                     processingRow
                 } else {
-                    timerStrip
+                    audioStrip
 
                     // Live transcript (recording + STT streaming) — static, pinned
                     // directly above the buttons so it never scrolls away.

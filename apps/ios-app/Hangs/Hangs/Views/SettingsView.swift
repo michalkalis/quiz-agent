@@ -147,6 +147,22 @@ struct SettingsView: View {
                 viewModel.showingMicrophonePicker = true
             }
             .accessibilityIdentifier("settings-microphone-row")
+
+            hairline
+
+            // #82 item 1 (decision 7, Variant B): re-expose the Call Mode
+            // switch the mic-picker footnote points at — Bluetooth mics
+            // (car, headset) need the call-mode audio session. The mode
+            // model and switch logic existed but were reachable from no
+            // screen, leaving the footnote a dangling pointer.
+            HangsToggleRow(
+                label: "Call Mode",
+                isOn: Binding(
+                    get: { viewModel.selectedAudioMode.id == "call" },
+                    set: { _ in viewModel.toggleAudioMode() }
+                )
+            )
+            .accessibilityIdentifier("settings-call-mode-toggle")
         }
     }
 

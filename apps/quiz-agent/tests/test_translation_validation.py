@@ -20,10 +20,10 @@ from app.translation.translator import TranslationService
 
 
 @pytest.fixture
-def service():
-    """Create a TranslationService with a dummy API key."""
+def service(tmp_path):
+    """Create a TranslationService with a dummy API key, isolated from ./data."""
     with patch.dict(os.environ, {"OPENAI_API_KEY": "sk-test-dummy"}):
-        return TranslationService()
+        return TranslationService(store_url=f"sqlite:///{tmp_path}/translations.db")
 
 
 ORIGINAL_QUESTION = (

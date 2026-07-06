@@ -4,8 +4,11 @@ Translates questions and feedback to user's preferred language using OpenAI.
 """
 
 import logging
+import os
 
 from quiz_shared.llm import factory as llm_factory
+
+from app.translation.store import TranslationStore
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +32,11 @@ LANGUAGE_NAMES = {
 # under this, so the guard is a soft safety valve, not a hot-path concern (#69).
 CACHE_MAX_ENTRIES = 2000
 
+# Manual refresh lever for the durable store: bump after a prompt/model improvement to
+# lazily re-translate unchanged texts (old-version rows are orphaned, never served). One
+# global stamp covers both prompts (#69 Decision #2). Read at call-time so tests can patch.
+TRANSLATION_PROMPT_VERSION = "1"
+
 
 class TranslationService:
     """Service for translating quiz content to different languages.
@@ -37,17 +45,37 @@ class TranslationService:
     quiz question meaning and difficulty.
     """
 
-    def __init__(self, model: str = "gpt-4o-mini"):
+    def __init__(self, model: str = "gpt-4o-mini", store_url: str | None = None):
         """Initialize translation service.
 
         Args:
             model: OpenAI model to use for translation
+            store_url: SQLAlchemy URL for the durable translation store; defaults to
+                TRANSLATION_CACHE_URL env var, then sqlite under ./data (→ /data in prod)
         """
         self.client = llm_factory.openai_client(async_=True)
         self.model = llm_factory.resolve_model(model)
         # Process-lifetime cache of validated translations, keyed (kind, text, target_language).
         # TranslationService is a process-wide singleton, so this survives every request/session.
         self._cache: dict[tuple[str, str, str], str] = {}
+        # Durable store: warm-load current-version rows into the dict at startup, write
+        # through on each validated success. Fail-soft is mandatory — this __init__ runs
+        # inside main.py's re-raising services block, so a bad /data/translations.db must
+        # degrade to an empty in-memory cache, never crash-loop the app (#69 Decision #1).
+        store_url = store_url or os.getenv(
+            "TRANSLATION_CACHE_URL", "sqlite:///./data/translations.db"
+        )
+        try:
+            self._store: TranslationStore | None = TranslationStore(store_url)
+            self._cache = self._store.load_version(TRANSLATION_PROMPT_VERSION)
+        except Exception as e:
+            logger.warning(
+                "Translation store unavailable (%s), degrading to in-memory cache: %s",
+                store_url,
+                e,
+            )
+            self._store = None
+            self._cache = {}
 
     def _maybe_store(self, key: tuple[str, str, str], value: str) -> None:
         """Cache a validated translation, bounded by CACHE_MAX_ENTRIES.
@@ -55,9 +83,22 @@ class TranslationService:
         Reads the module-global cap at call-time (so a test can monkeypatch it). Once full,
         new keys stop being inserted while existing hits keep serving — provably bounded, no
         eviction bookkeeping.
+
+        Single write-through point for the durable store. Dict insert comes FIRST and the
+        durable write is best-effort: this runs inside the translate try-blocks, so a disk
+        error must never propagate (it would downgrade a validated translation to the
+        English fallback and skip the in-memory cache too).
         """
         if len(self._cache) < CACHE_MAX_ENTRIES:
             self._cache[key] = value
+        if self._store is not None:
+            kind, text, lang = key
+            try:
+                self._store.upsert(kind, text, lang, TRANSLATION_PROMPT_VERSION, value)
+            except Exception as e:
+                logger.warning(
+                    "Durable translation write failed (kept in-memory): %s", e
+                )
 
     def _validate_translation(
         self, original: str, translated: str, target_language: str

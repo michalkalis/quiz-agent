@@ -1,6 +1,6 @@
 # Issue #69 — Cost: translation runtime cache (3.5× SK serving cost)
 
-**Triage:** enhancement · ✅ ready-for-agent (durable on-disk store · re-prepped 2026-06-30)
+**Triage:** enhancement · ✅ SHIPPED (durable on-disk store implemented 2026-07-06; v1 in-memory `e27d562`)
 
 > **In-memory cache v1 shipped** (`e27d562`, 2026-06-29). **Durable follow-up re-prepped 2026-06-30:**
 > the founder wants the translation store to **survive restarts/redeploys** plus a **refresh mechanism**
@@ -252,7 +252,7 @@ write-through front for the on-disk SQLite store); the v1 tasks/acceptance below
 > a strict subset of Task-2's. Matches the v1 convention ("a cache without its test isn't done", `e27d562`).
 > Class **a**: no Alembic, no prod DDL, no quiz-pack-api files.
 
-- [ ] **Durable warm-load + write-through translation store.** Layer an on-disk SQLite store behind the
+- [x] **Durable warm-load + write-through translation store.** *(shipped 2026-07-06 — all acceptance tests below implemented and green, full backend suite 271 passed)* Layer an on-disk SQLite store behind the
   shipped v1 in-memory `self._cache`, reusing the v1 hook points (short-circuit → lookup → validated-success
   store) **unchanged** — this changes *where the value durably lives*, not *when* it is read/written.
 
@@ -324,52 +324,52 @@ write-through front for the on-disk SQLite store); the v1 tasks/acceptance below
 > independent of the store class. **Run:**
 > `cd apps/quiz-agent && pytest tests/test_translation_cache.py tests/test_translation_validation.py -v`
 
-- [ ] **Durability across instances (the core new proof) — `test_durable_across_instances`.** Instance #1
+- [x] **Durability across instances (the core new proof) — `test_durable_across_instances`.** Instance #1
   (store at `tmp_path`) translates `("question", QUESTION, "sk")` → its mock `call_count == 1`. A **second**
   `TranslationService` at the **same path**, given a **fresh** AsyncMock, serves the same key: that instance's
   `call_count == 0` (no new LLM call across the instance boundary) and the result `== QUESTION_SK` (came from
   disk via warm-load, not the LLM).
-- [ ] **Warm-load — `test_warm_load_serves_from_disk`.** Pre-seed the file directly
+- [x] **Warm-load — `test_warm_load_serves_from_disk`.** Pre-seed the file directly
   (`TranslationStore(url).upsert("question", QUESTION, "sk", TRANSLATION_PROMPT_VERSION, QUESTION_SK)`), then
   construct a fresh `TranslationService` at that path → `service._cache` is **non-empty** before any call, and
   serving the seeded key makes **0** LLM calls and returns `QUESTION_SK`.
-- [ ] **Version bump forces re-translate — `test_version_bump_forces_retranslate`.** Instance #1 persists a row
+- [x] **Version bump forces re-translate — `test_version_bump_forces_retranslate`.** Instance #1 persists a row
   at version `"1"`. `monkeypatch.setattr(translator_module, "TRANSLATION_PROMPT_VERSION", "2")`, then build a
   fresh instance at the same path: its warm-loaded `_cache` does **not** contain the old key, serving it makes
   **1** new LLM call (re-translate), and the old `version="1"` row is still on disk but **never served**
   (assert on-disk now holds both a `"1"` and a `"2"` row for the key).
-- [ ] **Question error + validation fallbacks never persisted to disk — `test_question_fallbacks_not_persisted_to_disk`.**
+- [x] **Question error + validation fallbacks never persisted to disk — `test_question_fallbacks_not_persisted_to_disk`.**
   Drive `translate_question` through `Exception → garbage("suchy bodliak") → QUESTION_SK` (side_effect list);
   after the sequence, a direct `sqlite3` `SELECT * FROM translations` returns **exactly one** row — the
   validated success — proving neither the `except`-fallback nor the validation-fail-fallback was written.
-- [ ] **Feedback error fallback never persisted to disk — `test_feedback_fallback_not_persisted_to_disk`.**
+- [x] **Feedback error fallback never persisted to disk — `test_feedback_fallback_not_persisted_to_disk`.**
   Drive `translate_feedback` through `Exception → feedback_sk`; on-disk table holds **exactly one** row (the
   success), proving `translate_feedback`'s only non-success path (`except` → original) never reaches disk.
-- [ ] **No-op short-circuit not persisted — `test_noop_shortcircuit_no_disk_row`.**
+- [x] **No-op short-circuit not persisted — `test_noop_shortcircuit_no_disk_row`.**
   `translate_question(QUESTION, "en", "en")` and `translate_feedback("Correct!", "en")` → `call_count == 0`,
   `service._cache == {}`, **and** the `translations` table has **0** rows on disk (short-circuit returns
   before lookup/store, so no-op passthroughs touch neither memory nor disk).
-- [ ] **Fail-soft init (Gate B #1) — `test_fail_soft_init_degrades_to_empty_cache`.** Point the store at a
+- [x] **Fail-soft init (Gate B #1) — `test_fail_soft_init_degrades_to_empty_cache`.** Point the store at a
   **corrupt** DB file (write garbage bytes to `tmp_path/translations.db` first) → constructing
   `TranslationService` does **not** raise; `service._store is None` and `service._cache == {}`; a subsequent
   mocked `translate_question` still returns the translation (degrades to an empty in-memory cache, no crash).
   This is the test that proves the net-new guard the `ratings.db` precedent does not grant.
-- [ ] **Runtime write failure still serves the translation (Gate B #1) — `test_runtime_write_failure_still_serves_translation`.**
+- [x] **Runtime write failure still serves the translation (Gate B #1) — `test_runtime_write_failure_still_serves_translation`.**
   Build a normal instance, then force the durable write to fail (e.g. monkeypatch `service._store.upsert` to
   raise, or close/corrupt the DB after init). `translate_question(QUESTION, "sk")` (valid mock) returns
   **`QUESTION_SK`** (the translation, **not** the original English) with `call_count == 1`; a **second** call
   on the same instance serves from the in-memory cache (`call_count` stays **1**) — proving a disk-write error
   neither downgrades serving to English nor skips the in-memory cache (the swallowing guard + dict-insert-first
   hold).
-- [ ] **Upsert is idempotent on the composite PK (Gate A) — `test_upsert_overwrites_existing_row`.**
+- [x] **Upsert is idempotent on the composite PK (Gate A) — `test_upsert_overwrites_existing_row`.**
   Directly `TranslationStore(url).upsert("question", QUESTION, "sk", V, "first")` then `upsert(... , "second")`
   for the **same** `(kind, source_text, target_language, version)` → a stdlib `sqlite3` `SELECT` shows **exactly
   one** row holding `"second"`. Pins the `on_conflict_do_update` upsert (a plain `INSERT` would raise
   `IntegrityError` here) — the one disk path the in-memory short-circuit otherwise hides — and disk-level
   `kind`-isolation.
-- [ ] **Repeat = one LLM call + kind isolation (carried v1, still valid) — `test_repeat_question_one_llm_call`,
+- [x] **Repeat = one LLM call + kind isolation (carried v1, still valid) — `test_repeat_question_one_llm_call`,
   `test_repeat_feedback_one_llm_call`, `test_both_methods_cached_kind_isolates`** remain green under the
   `tmp_path`-injected `service` fixture (in-memory hit path + `kind` discriminator unchanged by the durable layer).
-- [ ] **No regression — full suite green.**
+- [x] **No regression — full suite green.**
   `cd apps/quiz-agent && pytest tests/test_translation_cache.py tests/test_translation_validation.py -v`
   passes with **0** failures/skips (all 8 v1 cache tests + the new durable tests + the validation suite).

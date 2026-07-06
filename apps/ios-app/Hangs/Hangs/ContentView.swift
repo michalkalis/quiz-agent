@@ -13,6 +13,7 @@ struct ContentView: View {
     @StateObject private var onboardingVM: OnboardingViewModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var showOnboarding: Bool
+    @State private var showOnboardingReplay = false
 
     init(appState: AppState) {
         _viewModel = StateObject(wrappedValue: appState.makeQuizViewModel())
@@ -34,9 +35,14 @@ struct ContentView: View {
         }
     }
 
+    /// #82 item 5: replay presents as a cover over the existing navigation
+    /// stack instead of swapping the whole tree — swapping tore down the
+    /// stack, so finishing the replay always dumped the user on Home rather
+    /// than back in Settings where they started it. First-launch onboarding
+    /// keeps the tree swap (there is no stack to preserve yet).
     private func replayOnboarding() {
         onboardingVM.startOnboarding()
-        showOnboarding = true
+        showOnboardingReplay = true
     }
 
     @ViewBuilder
@@ -92,6 +98,12 @@ struct ContentView: View {
             }
         }
         .animation(reduceMotion ? nil : .spring(response: 0.4, dampingFraction: 0.8), value: viewModel.isMinimized)
+        .fullScreenCover(isPresented: $showOnboardingReplay) {
+            OnboardingView(viewModel: onboardingVM)
+                .onChange(of: onboardingVM.isComplete) { _, complete in
+                    if complete { showOnboardingReplay = false }
+                }
+        }
         .sheet(isPresented: $viewModel.showPaywall) {
             PaywallView(
                 storeManager: appState.storeManager,

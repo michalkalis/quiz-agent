@@ -58,6 +58,14 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// Whether TTS audio playback is muted (questions still display visually)
     var isMuted: Bool
 
+    /// Whether recording start/stop earcons play (#68). Only gates the mic-live /
+    /// got-it cues — command-ack and skip earcons stay on (driving-safety feedback).
+    var recordingSoundsEnabled: Bool
+
+    /// Whether image questions may be served (#68). Default OFF — images are
+    /// fun but unsuitable while driving (founder decision 6, 2026-07-05).
+    var includeImageQuestions: Bool
+
     // MARK: - Memberwise Init
 
     init(
@@ -68,13 +76,15 @@ struct QuizSettings: Codable, Equatable, Sendable {
         difficulty: String,
         autoAdvanceDelay: Int,
         answerTimeLimit: Int,
-        thinkingTime: Int = 60,
+        thinkingTime: Int = 10,
         preferredInputDeviceId: String?,
         autoRecordEnabled: Bool = true,
         autoConfirmEnabled: Bool = true,
         showConfirmSheet: Bool = true,
         isMuted: Bool = false,
-        ageAppropriate: String? = nil
+        ageAppropriate: String? = nil,
+        recordingSoundsEnabled: Bool = true,
+        includeImageQuestions: Bool = false
     ) {
         self.language = language
         self.audioMode = audioMode
@@ -90,6 +100,8 @@ struct QuizSettings: Codable, Equatable, Sendable {
         self.showConfirmSheet = showConfirmSheet
         self.isMuted = isMuted
         self.ageAppropriate = ageAppropriate
+        self.recordingSoundsEnabled = recordingSoundsEnabled
+        self.includeImageQuestions = includeImageQuestions
     }
 
     // MARK: - Default Configuration
@@ -103,12 +115,14 @@ struct QuizSettings: Codable, Equatable, Sendable {
         difficulty: "medium",
         autoAdvanceDelay: 8,
         answerTimeLimit: 30,
-        thinkingTime: 60,
+        thinkingTime: 10,
         preferredInputDeviceId: nil,
         autoRecordEnabled: true,
         autoConfirmEnabled: true,
         showConfirmSheet: true,
-        isMuted: false
+        isMuted: false,
+        recordingSoundsEnabled: true,
+        includeImageQuestions: false
     )
 
     // MARK: - Backward-Compatible Decoding
@@ -126,13 +140,15 @@ struct QuizSettings: Codable, Equatable, Sendable {
         difficulty = try container.decode(String.self, forKey: .difficulty)
         autoAdvanceDelay = try container.decode(Int.self, forKey: .autoAdvanceDelay)
         answerTimeLimit = try container.decode(Int.self, forKey: .answerTimeLimit)
-        thinkingTime = try container.decodeIfPresent(Int.self, forKey: .thinkingTime) ?? 60
+        thinkingTime = try container.decodeIfPresent(Int.self, forKey: .thinkingTime) ?? 10
         preferredInputDeviceId = try container.decodeIfPresent(String.self, forKey: .preferredInputDeviceId)
         autoRecordEnabled = try container.decodeIfPresent(Bool.self, forKey: .autoRecordEnabled) ?? true
         autoConfirmEnabled = try container.decodeIfPresent(Bool.self, forKey: .autoConfirmEnabled) ?? true
         showConfirmSheet = try container.decodeIfPresent(Bool.self, forKey: .showConfirmSheet) ?? true
         isMuted = try container.decodeIfPresent(Bool.self, forKey: .isMuted) ?? false
         ageAppropriate = try container.decodeIfPresent(String.self, forKey: .ageAppropriate)
+        recordingSoundsEnabled = try container.decodeIfPresent(Bool.self, forKey: .recordingSoundsEnabled) ?? true
+        includeImageQuestions = try container.decodeIfPresent(Bool.self, forKey: .includeImageQuestions) ?? false
     }
 
     // MARK: - Validation Helpers
@@ -150,7 +166,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
     static let answerTimeLimitOptions = [0, 15, 20, 30, 45, 60]
 
     /// Valid thinking time options (seconds, 0 = immediate recording)
-    static let thinkingTimeOptions = [0, 15, 30, 45, 60, 90, 120]
+    static let thinkingTimeOptions = [0, 10, 15, 30, 45, 60, 90, 120]
 
     /// Valid category options (nil means "All Categories"). Mirrors `Config.categoryOptions`.
     static let categoryOptions: [String?] = [

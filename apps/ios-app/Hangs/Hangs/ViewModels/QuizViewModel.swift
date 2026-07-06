@@ -210,8 +210,13 @@ final class QuizViewModel: ObservableObject {
     /// Single funnel for every earcon (77.10). Suppresses cues during question
     /// TTS (`isPlayingQuestionTTS`) so a tone never plays over the spoken
     /// question — the one hard rule for the language-neutral cue set.
+    /// The "Recording sounds" setting (#68) gates only the mic-live / got-it
+    /// pair; command-ack and skip cues stay on as driving-safety feedback.
     func emitEarcon(_ earcon: Earcon) {
         guard !isPlayingQuestionTTS else { return }
+        if earcon == .micLive || earcon == .gotIt {
+            guard settings.recordingSoundsEnabled else { return }
+        }
         earconPlayer.play(earcon)
     }
 
@@ -494,7 +499,8 @@ final class QuizViewModel: ObservableObject {
                 difficulty: quizDifficulty,
                 language: quizLanguage,
                 category: settings.category,
-                userId: persistenceStore.deviceId
+                userId: persistenceStore.deviceId,
+                includeImages: settings.includeImageQuestions
             )
 
             currentSession = session

@@ -119,16 +119,17 @@ struct QuizSettingsBackwardCompatTests {
     // MARK: - Missing thinkingTime
 
     /// Regression: adding `thinkingTime` as a required `decode` call (instead of
-    /// `decodeIfPresent ?? 60`) would throw a `DecodingError` for every v1-era
-    /// blob and wipe the user's other settings on upgrade.
-    @Test("missing thinkingTime decodes with default value 60")
-    func missingThinkingTimeDefaultsSixty() throws {
+    /// `decodeIfPresent ?? 10`) would throw a `DecodingError` for every v1-era
+    /// blob and wipe the user's other settings on upgrade. The fallback tracks
+    /// the product default (10 since #68 — driving-critical defaults).
+    @Test("missing thinkingTime decodes with default value 10")
+    func missingThinkingTimeDefaultsTen() throws {
         var json = legacyMinimalJSON
         json.removeValue(forKey: "thinkingTime")
 
         let settings = try decodeSettings(json)
 
-        #expect(settings.thinkingTime == 60)
+        #expect(settings.thinkingTime == 10)
     }
 
     // MARK: - Missing autoConfirmEnabled
@@ -202,11 +203,40 @@ struct QuizSettingsBackwardCompatTests {
 
         let settings = try decodeSettings(json)
 
-        #expect(settings.thinkingTime == 60)
+        #expect(settings.thinkingTime == 10)
         #expect(settings.autoConfirmEnabled == true)
         #expect(settings.showConfirmSheet == true)
         #expect(settings.isMuted == false)
         #expect(settings.ageAppropriate == nil)
+    }
+
+    // MARK: - Missing #68 fields (recordingSoundsEnabled / includeImageQuestions)
+
+    /// Regression: both #68 fields must stay `decodeIfPresent` with their
+    /// product defaults — earcons ON (driving-safety feedback) and image
+    /// questions OFF (unsuitable while driving) — for every pre-#68 blob.
+    @Test("missing #68 fields decode with recording sounds on and image questions off")
+    func missingIssue68FieldsUseProductDefaults() throws {
+        var json = legacyMinimalJSON
+        json.removeValue(forKey: "recordingSoundsEnabled")
+        json.removeValue(forKey: "includeImageQuestions")
+
+        let settings = try decodeSettings(json)
+
+        #expect(settings.recordingSoundsEnabled == true)
+        #expect(settings.includeImageQuestions == false)
+    }
+
+    // MARK: - Driving-critical default (#68)
+
+    /// #68 acceptance: the default thinking time must stay short — a driver
+    /// can't wait a minute for auto-record to arm. Guards against the default
+    /// creeping back up without a founder decision.
+    @Test("default thinkingTime is 10 and stays under 30")
+    func defaultThinkingTimeIsDrivingShort() {
+        #expect(QuizSettings.default.thinkingTime == 10)
+        #expect(QuizSettings.default.thinkingTime < 30)
+        #expect(QuizSettings.thinkingTimeOptions.contains(10))
     }
 
     // MARK: - Unknown legacy keys are silently ignored

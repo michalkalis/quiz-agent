@@ -12,7 +12,7 @@ import Sentry
 
 /// Protocol for network operations
 protocol NetworkServiceProtocol: Sendable {
-    func createSession(maxQuestions: Int, difficulty: String, language: String, category: String?, userId: String?) async throws -> QuizSession
+    func createSession(maxQuestions: Int, difficulty: String, language: String, category: String?, userId: String?, includeImages: Bool) async throws -> QuizSession
     func startQuiz(sessionId: String, excludedQuestionIds: [String]) async throws -> QuizResponse
     func submitVoiceAnswer(sessionId: String, audioData: Data, fileName: String) async throws -> QuizResponse
     func submitTextInput(sessionId: String, input: String, audio: Bool) async throws -> QuizResponse
@@ -130,7 +130,7 @@ actor NetworkService: NetworkServiceProtocol {
 
     // MARK: - Session Management
 
-    func createSession(maxQuestions: Int = 10, difficulty: String = "medium", language: String = "en", category: String? = nil, userId: String? = nil) async throws -> QuizSession {
+    func createSession(maxQuestions: Int = 10, difficulty: String = "medium", language: String = "en", category: String? = nil, userId: String? = nil, includeImages: Bool = false) async throws -> QuizSession {
         let endpoint = baseURL.appendingPathComponent("/api/v1/sessions")
 
         let base = baseURL
@@ -145,7 +145,8 @@ actor NetworkService: NetworkServiceProtocol {
             "max_questions": maxQuestions,
             "difficulty": difficulty,
             "mode": "single",
-            "language": language
+            "language": language,
+            "include_images": includeImages
         ]
 
         // Add category if specified

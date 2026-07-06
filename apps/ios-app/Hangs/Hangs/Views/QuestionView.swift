@@ -66,9 +66,10 @@ struct QuestionView: View {
             )
         }
         .sheet(isPresented: $showQuizSettings) {
-            // Interim target for the G1 settings chip: the full settings screen.
-            // #68 (driving-critical defaults) replaces this with the in-quiz
-            // session-settings menu (founder decision 6, Variant A).
+            // #68 resolution: the chip opens the full settings screen, which now
+            // contains the Session group (decision 6 Variant A rows). The #86
+            // Pencil pass approved the session card on the Settings screen only —
+            // no separate in-quiz menu frame exists.
             SettingsView(viewModel: viewModel)
         }
         // #81 / frame w9tOoU: native alert, Continue (cancel) + destructive End Quiz,
@@ -358,7 +359,14 @@ struct QuestionView: View {
             // minHeight keeps short questions top-aligned, not centered.
             GeometryReader { geo in
                 ScrollView(.vertical, showsIndicators: false) {
-                    VStack(spacing: 0) {
+                    VStack(spacing: 16) {
+                        // #68: image-type question — image above the text, scrolls
+                        // with it. Text/TTS below stays the driving-mode fallback.
+                        if question.hasImage {
+                            ImageQuestionView(question: question)
+                                .padding(.horizontal, 24)
+                        }
+
                         // Question: Anton display, no left bar
                         Text(question.question)
                             .font(.hangsDisplay(28))

@@ -1,8 +1,11 @@
 # Issue #68 — UX: driving-critical defaults + recording earcon + expose settings + render image questions
 
-**Triage:** enhancement · blocked-on-#86
+**Triage:** enhancement · implementing 2026-07-06 (#86 design gate lifted)
 
-**Status (2026-07-06):** Earcon acceptance item delivered by #77 task 77.10 (ede204e). Remaining scope: `thinkingTime` default + Settings exposure + `ImageQuestionView`, per founder decisions 2026-07-05 item 6, gated behind #86 design sync.
+**Status (2026-07-06, implementation session):** Earcon acceptance item was delivered by #77 task 77.10 (ede204e). This session implements the rest per founder decision 6 + Pencil frames (Settings `Jjcs5` sessionWrap/audioWrap, Home `rJ7dB` configCard row4):
+- iOS: `thinkingTime` default 60→10 (+10s option, decode fallback tracks product default), Settings "session" group (4 menu rows), "Recording sounds" toggle (default ON, gates only mic-live/got-it — command/skip cues stay), Home "Image questions" toggle (default OFF) riding `include_images` on create-session, image block rendered in the voice-body hero via restyled `ImageQuestionView` (Theme.Hangs), dead duplicate options arrays removed from `Config.swift`.
+- Backend: `include_images` on `CreateSessionRequest` + shared `QuizSession` (default False), retriever admits `image` type only on opt-in (primary + all 3 fallbacks). OpenAPI verified. 295 backend tests green.
+- In-quiz settings chip resolution: keeps opening full Settings (now with the session group) — #86 approved the session card on the Settings screen only; no separate in-quiz menu frame exists.
 
 **Created:** 2026-06-21 · **Founder:** Michal · **Source:** #64 full-project review (ranks 12, 13 + image-render — verified first-hand)
 
@@ -37,11 +40,12 @@
 
 ## Acceptance
 
-- [ ] `QuizSettings.default.thinkingTime == 10`; a unit test asserts `< 30`
-- [ ] `SettingsView` shows pickers for `numberOfQuestions`, `thinkingTime`, `autoAdvanceDelay`, `answerTimeLimit`
-- [x] Recording start emits an **audio** cue (not only haptic) — delivered via #77 task 77.10 (ede204e)
-- [ ] `QuestionView` renders `ImageQuestionView` when `question.type == .image`
-- [ ] RS-01..RS-18 regression scenarios pass
+- [x] `QuizSettings.default.thinkingTime == 10`; a unit test asserts `< 30` (`defaultThinkingTimeIsDrivingShort`). Decode fallback also 10. NB: a previously-persisted settings blob keeps its stored 60 — the new Settings row is the user's lever; no silent migration of a stored value.
+- [x] `SettingsView` shows pickers for `numberOfQuestions`, `thinkingTime`, `autoAdvanceDelay`, `answerTimeLimit` — "session" group, Menu rows per frame `Jjcs5`; on-sim verified (menu opens, 10s selectable, value persists)
+- [x] Recording start emits an **audio** cue (not only haptic) — delivered via #77 task 77.10 (ede204e); this session added the "Recording sounds" toggle (default ON, gates only mic-live/got-it; command/skip cues stay — driving-safety feedback), unit-tested
+- [x] `QuestionView` renders `ImageQuestionView` when `question.type == .image` — image block in the voice-body hero (scrolls with the text), restyled to Theme.Hangs; ViewInspector tests both ways (image renders / absent for plain voice)
+- [x] Home "Image questions" toggle (decision 6), default OFF, rides `include_images` on create-session; backend retriever admits `image` only on opt-in (primary + 3 fallbacks, 5 new backend tests). ⚠ Whether approved `image`-type rows exist in prod pgvector is UNVERIFIED — opt-in may serve nothing until image questions are generated/imported.
+- [ ] RS-01..RS-18 regression scenarios pass — NOT re-run this session (529 HangsTests + on-sim visual/interaction verify done instead; all RS a11y identifiers preserved). Run `/regression` before the next TestFlight if desired.
 
 ## Founder decisions 2026-07-05 (pre-implementation UI approval)
 

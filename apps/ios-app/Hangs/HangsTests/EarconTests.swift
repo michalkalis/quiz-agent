@@ -148,4 +148,40 @@ struct EarconTests {
             #expect(earcon.played == [.commandAck], "cue must fire once TTS ends, got \(earcon.played)")
         }
     }
+
+    // MARK: - "Recording sounds" setting (#68)
+
+    /// #68: the Settings toggle must actually silence the recording pair —
+    /// otherwise the user-facing switch is a lie. Only mic-live/got-it are
+    /// gated; command-ack and skip stay on as driving-safety feedback, so a
+    /// driver still hears that a spoken command landed.
+    @Test("recording sounds off silences mic-live and got-it but not command cues")
+    func recordingSoundsToggleGatesOnlyRecordingPair() async {
+        await withMainSerialExecutor {
+            let (vm, earcon) = makeVM()
+            vm.settings.recordingSoundsEnabled = false
+
+            vm.emitEarcon(.micLive)
+            vm.emitEarcon(.gotIt)
+            vm.emitEarcon(.commandAck)
+            vm.emitEarcon(.skipConfirm)
+
+            #expect(earcon.played == [.commandAck, .skipConfirm],
+                    "with recording sounds off only command/skip cues may play, got \(earcon.played)")
+        }
+    }
+
+    /// #68: default ON — a fresh install keeps the eyes-free mic confirmation
+    /// (the original P0 gap this earcon set fixed).
+    @Test("recording sounds default on keeps the mic-live cue")
+    func recordingSoundsDefaultOn() async {
+        await withMainSerialExecutor {
+            let (vm, earcon) = makeVM()
+            #expect(vm.settings.recordingSoundsEnabled == true)
+
+            vm.emitEarcon(.micLive)
+
+            #expect(earcon.played == [.micLive])
+        }
+    }
 }

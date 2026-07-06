@@ -81,6 +81,8 @@ struct HomeView: View {
                 difficultyRow
                 HangsDivider()
                 categoriesRow
+                HangsDivider()
+                imageQuestionsRow
             }
         }
     }
@@ -134,6 +136,16 @@ struct HomeView: View {
             )
         }
         .accessibilityIdentifier("home-categories-menu")
+    }
+
+    // #68: image questions are fun but unsuitable while driving — user-selectable
+    // per session on Home, default OFF (founder decision 6, 2026-07-05).
+    private var imageQuestionsRow: some View {
+        HangsToggleRow(
+            label: "Image questions",
+            isOn: $viewModel.settings.includeImageQuestions
+        )
+        .accessibilityIdentifier("home-image-questions-toggle")
     }
 
     // MARK: - Row visual (replicates HangsConfigRow body w/o inner Button)

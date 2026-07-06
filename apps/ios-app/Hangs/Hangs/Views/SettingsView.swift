@@ -64,6 +64,7 @@ struct SettingsView: View {
                 VStack(spacing: 20) {
                     voiceGroup
                     languageGroup
+                    sessionGroup
                     audioFeedbackGroup
                     accountGroup
                     aboutGroup
@@ -168,6 +169,90 @@ struct SettingsView: View {
         }
     }
 
+    // MARK: - Session group (#68, founder decision 6 Variant A)
+    // Four menu rows exposing the driving-critical session fields that were
+    // previously code-only. Design reference: Pencil NEW_Screen/Settings (Jjcs5).
+
+    private var sessionGroup: some View {
+        groupSection(label: "session", color: Theme.Hangs.Colors.blue) {
+            sessionMenuRow(
+                label: "Thinking time",
+                options: QuizSettings.thinkingTimeOptions,
+                selection: $viewModel.settings.thinkingTime,
+                display: Self.secondsDisplay
+            )
+            .accessibilityIdentifier("settings-thinking-time-menu")
+
+            hairline
+
+            sessionMenuRow(
+                label: "Questions per session",
+                options: QuizSettings.questionCountOptions,
+                selection: $viewModel.settings.numberOfQuestions,
+                display: Self.questionCountDisplay
+            )
+            .accessibilityIdentifier("settings-question-count-menu")
+
+            hairline
+
+            sessionMenuRow(
+                label: "Auto-advance delay",
+                options: QuizSettings.autoAdvanceDelayOptions,
+                selection: $viewModel.settings.autoAdvanceDelay,
+                display: Self.secondsDisplay
+            )
+            .accessibilityIdentifier("settings-auto-advance-menu")
+
+            hairline
+
+            sessionMenuRow(
+                label: "Answer time limit",
+                options: QuizSettings.answerTimeLimitOptions,
+                selection: $viewModel.settings.answerTimeLimit,
+                display: Self.answerLimitDisplay
+            )
+            .accessibilityIdentifier("settings-answer-limit-menu")
+        }
+    }
+
+    private func sessionMenuRow(
+        label: LocalizedStringKey,
+        options: [Int],
+        selection: Binding<Int>,
+        display: @escaping (Int) -> String
+    ) -> some View {
+        Menu {
+            ForEach(options, id: \.self) { option in
+                Button(display(option)) { selection.wrappedValue = option }
+            }
+        } label: {
+            HangsConfigRow(
+                label: label,
+                value: display(selection.wrappedValue),
+                valueColor: Theme.Hangs.Colors.blue,
+                action: {}
+            )
+            .allowsHitTesting(false)
+        }
+    }
+
+    /// "10s"; 0 stays literal ("0s" = record immediately for thinking time).
+    private static func secondsDisplay(_ seconds: Int) -> String {
+        String(localized: "\(seconds)s", comment: "Seconds value in session settings, e.g. 10s")
+    }
+
+    /// "10 questions" per the approved frame.
+    private static func questionCountDisplay(_ count: Int) -> String {
+        String(localized: "\(count) questions", comment: "Questions-per-session value in session settings")
+    }
+
+    /// Answer time limit: 0 means the timer is disabled.
+    private static func answerLimitDisplay(_ seconds: Int) -> String {
+        seconds == 0
+            ? String(localized: "Off", comment: "Answer time limit disabled")
+            : secondsDisplay(seconds)
+    }
+
     private var audioFeedbackGroup: some View {
         groupSection(label: "audio feedback", color: Theme.Hangs.Colors.pink) {
             HangsToggleRow(
@@ -178,6 +263,14 @@ struct SettingsView: View {
                 )
             )
             .accessibilityIdentifier("settings-speak-scores-toggle")
+
+            hairline
+
+            HangsToggleRow(
+                label: "Recording sounds",
+                isOn: $viewModel.settings.recordingSoundsEnabled
+            )
+            .accessibilityIdentifier("settings-recording-sounds-toggle")
         }
     }
 

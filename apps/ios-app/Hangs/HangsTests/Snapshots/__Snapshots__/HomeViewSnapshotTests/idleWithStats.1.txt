@@ -147,12 +147,14 @@
                 - difficulty: "medium"
                 - autoAdvanceDelay: 8
                 - answerTimeLimit: 30
-                - thinkingTime: 60
+                - thinkingTime: 10
                 - preferredInputDeviceId: nil
                 - autoRecordEnabled: true
                 - autoConfirmEnabled: true
                 - showConfirmSheet: true
                 - isMuted: false
+                - recordingSoundsEnabled: true
+                - includeImageQuestions: false
               - upstreamSubscriptions: 0 elements
               - hasAnyDownstreamDemand: false
               - changePublisher: nil
@@ -192,6 +194,7 @@
         - createSessionError: nil
         - endSessionError: nil
         - endSessionCallCount: 0
+        - capturedIncludeImages: nil
       ▿ audioService: Hangs.MockAudioService #5
         - isRecording: false
         - isPlaying: false
@@ -233,7 +236,7 @@
         - deviceId: "dev_mock_test_1234"
         - hasCompletedOnboarding: true
         - currentSessionId: nil
-        ▿ savedSettings: Optional(Hangs.QuizSettings(language: "en", audioMode: "media", numberOfQuestions: 10, category: nil, ageAppropriate: nil, difficulty: "medium", autoAdvanceDelay: 8, answerTimeLimit: 30, thinkingTime: 60, preferredInputDeviceId: nil, autoRecordEnabled: true, autoConfirmEnabled: true, showConfirmSheet: true, isMuted: false))
+        ▿ savedSettings: Optional(Hangs.QuizSettings(language: "en", audioMode: "media", numberOfQuestions: 10, category: nil, ageAppropriate: nil, difficulty: "medium", autoAdvanceDelay: 8, answerTimeLimit: 30, thinkingTime: 10, preferredInputDeviceId: nil, autoRecordEnabled: true, autoConfirmEnabled: true, showConfirmSheet: true, isMuted: false, recordingSoundsEnabled: true, includeImageQuestions: false))
           ▿ some: Hangs.QuizSettings
             - language: "en"
             - audioMode: "media"
@@ -243,12 +246,14 @@
             - difficulty: "medium"
             - autoAdvanceDelay: 8
             - answerTimeLimit: 30
-            - thinkingTime: 60
+            - thinkingTime: 10
             - preferredInputDeviceId: nil
             - autoRecordEnabled: true
             - autoConfirmEnabled: true
             - showConfirmSheet: true
             - isMuted: false
+            - recordingSoundsEnabled: true
+            - includeImageQuestions: false
         - saveSettingsCallCount: 1
         - askedQuestionIds: 0 elements
         - maxCapacity: 500

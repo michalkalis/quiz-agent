@@ -34,7 +34,12 @@ final class MockNetworkService: NetworkServiceProtocol {
     /// attempted server-side cleanup.
     var endSessionCallCount = 0
 
-    func createSession(maxQuestions: Int, difficulty: String, language: String, category: String?, userId: String?) async throws -> QuizSession {
+    /// Last `includeImages` value passed to `createSession` — asserts the Home
+    /// toggle actually reaches the session request (#68).
+    var capturedIncludeImages: Bool?
+
+    func createSession(maxQuestions: Int, difficulty: String, language: String, category: String?, userId: String?, includeImages: Bool) async throws -> QuizSession {
+        capturedIncludeImages = includeImages
         if let error = createSessionError { throw error }
         if shouldFail {
             throw NetworkError.invalidResponse

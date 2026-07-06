@@ -197,12 +197,14 @@
                 - difficulty: "medium"
                 - autoAdvanceDelay: 8
                 - answerTimeLimit: 30
-                - thinkingTime: 60
+                - thinkingTime: 10
                 - preferredInputDeviceId: nil
                 - autoRecordEnabled: true
                 - autoConfirmEnabled: true
                 - showConfirmSheet: true
                 - isMuted: false
+                - recordingSoundsEnabled: true
+                - includeImageQuestions: false
               - upstreamSubscriptions: 0 elements
               - hasAnyDownstreamDemand: false
               - changePublisher: nil
@@ -242,6 +244,7 @@
         - createSessionError: nil
         - endSessionError: nil
         - endSessionCallCount: 0
+        - capturedIncludeImages: nil
       ▿ audioService: Hangs.MockAudioService #5
         - isRecording: false
         - isPlaying: false

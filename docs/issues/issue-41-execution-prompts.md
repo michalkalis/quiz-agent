@@ -165,8 +165,8 @@ Run ONLY after Session C is deployed and prod-verified. **Do NOT delete the `qui
 ## Status
 
 - ✅ Recon done (this doc, from #41 S1–S8). Decisions D1–D11 locked (D11 = founder live-code acceptance, 2026-07-06).
-- ⬜ **Session A — pgvector store surface** (A1, A2)
-- ⬜ **Session B — quiz-agent onto pgvector** (A3–A7)
+- ✅ **Session A — pgvector store surface** (A1, A2) — landed 9b625c2 + d1482bb. New symbols: `PgvectorQuestionStore.upsert/delete/get_all` (async) + `SyncPgvectorStore` passthroughs (`add` added in Session B for the admin import endpoint).
+- ✅ **Session B — quiz-agent onto pgvector** (A3–A7) — landed 2026-07-06 (d2ff075, b602b65, e3d129f). `question_store` = `SyncPgvectorStore`; FeedbackService is SQL-only (no `question_store` param); `QuestionMonitor(session_factory=...)` with async `check_health()`; DATABASE_URL mandatory at boot. ⚠️ Found + fixed en route: SQL rating inserts had NEVER worked (required model fields the endpoint can't supply + `feedback_text=` vs `feedback` field mismatch) — model/schema relaxed, empty legacy `question_ratings` table auto-rebuilt on init (fails loud if non-empty).
 - ⬜ **Session C — teardown + dep drop + deploy** (A8–A13)
 - ⬜ **Phase B — destructive prod tail** (B1–B4, `[HUMAN]`, after C deployed)
 

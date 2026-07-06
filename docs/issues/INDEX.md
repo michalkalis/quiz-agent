@@ -15,9 +15,9 @@ Dashboard of all `issue-NN-*.md` files. Updated by `/triage` whenever a `**Triag
 | # | Title | Triage | TODO | Notes |
 |---|---|---|---|---|
 | 87 | [Home: free-plan counter + reset countdown](issue-87-home-freeplan-counter.md) | enhancement · needs-info | `[ ]` #87 | Founder-requested 2026-07-05 (G2). Reset interval TBD; paid-state design. Uses #49 cost numbers; cross-refs #60/#86 |
-| 85 | [Replay button + on-screen mute control](issue-85-replay-button-and-mute-control.md) | enhancement · ready (design gate lifted 2026-07-06) | | Variant B: minimalistic replay, mute in bottom audio strip. Sequence with #83, not parallel. Absorbs regressed #13 |
+| 85 | [Replay button + on-screen mute control](issue-85-replay-button-and-mute-control.md) | enhancement · **done 2026-07-06** (`a52eba6`) | | Variant B shipped: minimalistic replay + mute in the bottom audio strip, both modes; absorbs regressed #13 |
 | 84 | [Drop streak/best-score from UI (keep logic)](issue-84-drop-streak-bestscore-ui.md) | enhancement · ready (design gate lifted 2026-07-06) | | Remove streak box + Home best stat; keep `QuizStats` computation |
-| 83 | [Unify quiz top bar](issue-83-unify-quiz-top-bar.md) | enhancement · ready (design gate lifted 2026-07-06) | | Binding layout = decision **G1** (close+settings top, timer bottom) — overrides the file's older Recommendation. Sequence with #85 |
+| 83 | [Unify quiz top bar](issue-83-unify-quiz-top-bar.md) | enhancement · **done 2026-07-06** (`9dab862`) | | G1 layout shipped: close+settings top bar, muted meta row, timer at bottom, both modes. Settings chip → full Settings sheet until #68's session menu; ResultView nav → #84 |
 | 82 | [UX paper-cuts bundle (2026-07-03 review)](issue-82-ux-papercuts-uiux-review.md) | bug · ready (design gate lifted 2026-07-06) | | 6 small verified items; one-sweep candidate |
 | 81 | [Quiz dialogs & timing fairness](issue-81-quiz-dialogs-timing-fairness.md) | bug · ready (design gate lifted 2026-07-06) | | Founder corrections applied: NO countdown pause while typing; partial-quit stats recorded-not-displayed |
 | 80 | [Settings navigation HIG](issue-80-settings-navigation-hig.md) | bug · ready (design gate lifted 2026-07-06) | | Standard pinned leading back button; swipe-back returns free |

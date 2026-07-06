@@ -17,6 +17,7 @@ struct ResultView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var showEvaluation = false
     @State private var showSourceWebView = false
+    @State private var showEndQuizConfirmation = false
 
     var body: some View {
         ZStack {
@@ -24,7 +25,7 @@ struct ResultView: View {
 
             VStack(spacing: 0) {
                 HangsQuizNav(
-                    onClose: { viewModel.resetToHome() },
+                    onClose: { showEndQuizConfirmation = true },
                     counterText: counterString
                 )
                 HangsProgressBar(progress: progressFraction)
@@ -64,6 +65,14 @@ struct ResultView: View {
         .sheet(isPresented: $showSourceWebView) {
             if let sourceUrl = viewModel.resultQuestion?.sourceUrl {
                 SourceWebView(url: sourceUrl, isPresented: $showSourceWebView)
+            }
+        }
+        // #81 follow-up (founder 2026-07-06): the X must confirm before quitting —
+        // same native alert as QuestionView / MinimizedQuizView (frame w9tOoU).
+        .alert("End Quiz?", isPresented: $showEndQuizConfirmation) {
+            Button("Continue", role: .cancel) {}
+            Button("End Quiz", role: .destructive) {
+                Task { await viewModel.endQuiz() }
             }
         }
     }

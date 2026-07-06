@@ -75,10 +75,8 @@ struct MinimizedQuizView: View {
                 Task { await viewModel.endQuiz() }
             }
         }
-        // #81: freeze the think/answer countdowns while the dialog is up.
-        .onChange(of: showEndQuizConfirmation) { _, newValue in
-            viewModel.isQuizModalPresented = newValue
-        }
+        // #81 follow-up (founder 2026-07-06): no countdown freeze while the
+        // dialog is up — a pause would grant free thinking time.
     }
 
     // MARK: - State row

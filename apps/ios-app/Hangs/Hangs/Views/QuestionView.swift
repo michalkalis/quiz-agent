@@ -80,15 +80,10 @@ struct QuestionView: View {
                 Task { await viewModel.endQuiz() }
             }
         }
-        // #81: freeze the think/answer countdowns while the dialog or the
-        // settings sheet covers the question — the user isn't being timed
-        // while the app has taken over the screen.
-        .onChange(of: showEndQuizConfirmation) { _, _ in syncModalFlag() }
-        .onChange(of: showQuizSettings) { _, _ in syncModalFlag() }
-    }
-
-    private func syncModalFlag() {
-        viewModel.isQuizModalPresented = showEndQuizConfirmation || showQuizSettings
+        // #81 follow-up (founder 2026-07-06): the think/answer countdowns keep
+        // running behind the dialog and the settings sheet — a pause here would
+        // let the user buy thinking time by opening a modal (same rationale as
+        // the no-pause-while-typing decision 2a).
     }
 
     // MARK: - Top chrome

@@ -144,9 +144,6 @@
       ▿ _currentQuestionPaused: Combine.Published<Swift.Bool>
         ▿ storage: Combine.Published<Swift.Bool>.Storage.value
           - value: false
-      ▿ _isQuizModalPresented: Combine.Published<Swift.Bool>
-        ▿ storage: Combine.Published<Swift.Bool>.Storage.value
-          - value: false
       ▿ _isMinimized: Combine.Published<Swift.Bool>
         ▿ storage: Combine.Published<Swift.Bool>.Storage.value
           - value: false
@@ -323,5 +320,8 @@
     - _value: false
     - _location: nil
   ▿ _showSourceWebView: SwiftUI.State<Swift.Bool>
+    - _value: false
+    - _location: nil
+  ▿ _showEndQuizConfirmation: SwiftUI.State<Swift.Bool>
     - _value: false
     - _location: nil

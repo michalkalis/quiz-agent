@@ -15,13 +15,12 @@ Dashboard of all `issue-NN-*.md` files. Updated by `/triage` whenever a `**Triag
 | # | Title | Triage | TODO | Notes |
 |---|---|---|---|---|
 | 87 | [Home: free-plan counter + reset countdown](issue-87-home-freeplan-counter.md) | enhancement · needs-info | `[ ]` #87 | Founder-requested 2026-07-05 (G2). Reset interval TBD; paid-state design. Uses #49 cost numbers; cross-refs #60/#86 |
-| 86 | [Pencil sync of approved UI proposals (2026-07)](issue-86-pencil-sync-approved-ui.md) | enhancement · ready-for-human | `[ ]` #86 | **The design-first gate** for #80/#81/#82/#83/#84/#85/#68/#58-prompt. Binding record `docs/design/ui-proposals-2026-07-decisions.md`. Carry-over: #54.1 dark-mode Phase 2 (asset catalog). Needs Pencil editor |
-| 85 | [Replay button + on-screen mute control](issue-85-replay-button-and-mute-control.md) | enhancement · approved 2026-07-05 (Variant B) · blocked-on-#86 | | Variant B: minimalistic replay, mute in bottom audio strip (supersedes the file's original full-size-button rec). Sequence with #83, not parallel. Absorbs regressed #13 |
-| 84 | [Drop streak/best-score from UI (keep logic)](issue-84-drop-streak-bestscore-ui.md) | enhancement · approved 2026-07-05 (Variant B) · blocked-on-#86 | | Remove streak box + Home best stat; keep `QuizStats` computation |
-| 83 | [Unify quiz top bar](issue-83-unify-quiz-top-bar.md) | enhancement · approved 2026-07-05 · blocked-on-#86 | | Binding layout = decision **G1** (close+settings top, timer bottom) — overrides the file's older Recommendation. Sequence with #85 |
-| 82 | [UX paper-cuts bundle (2026-07-03 review)](issue-82-ux-papercuts-uiux-review.md) | bug · approved 2026-07-05 (with corrections) · blocked-on-#86 | | 6 small verified items; one-sweep candidate |
-| 81 | [Quiz dialogs & timing fairness](issue-81-quiz-dialogs-timing-fairness.md) | bug · approved 2026-07-05 · blocked-on-#86 | | Founder corrections applied: NO countdown pause while typing; partial-quit stats recorded-not-displayed |
-| 80 | [Settings navigation HIG](issue-80-settings-navigation-hig.md) | bug · approved 2026-07-05 · blocked-on-#86 | | Standard pinned leading back button; swipe-back returns free |
+| 85 | [Replay button + on-screen mute control](issue-85-replay-button-and-mute-control.md) | enhancement · ready (design gate lifted 2026-07-06) | | Variant B: minimalistic replay, mute in bottom audio strip. Sequence with #83, not parallel. Absorbs regressed #13 |
+| 84 | [Drop streak/best-score from UI (keep logic)](issue-84-drop-streak-bestscore-ui.md) | enhancement · ready (design gate lifted 2026-07-06) | | Remove streak box + Home best stat; keep `QuizStats` computation |
+| 83 | [Unify quiz top bar](issue-83-unify-quiz-top-bar.md) | enhancement · ready (design gate lifted 2026-07-06) | | Binding layout = decision **G1** (close+settings top, timer bottom) — overrides the file's older Recommendation. Sequence with #85 |
+| 82 | [UX paper-cuts bundle (2026-07-03 review)](issue-82-ux-papercuts-uiux-review.md) | bug · ready (design gate lifted 2026-07-06) | | 6 small verified items; one-sweep candidate |
+| 81 | [Quiz dialogs & timing fairness](issue-81-quiz-dialogs-timing-fairness.md) | bug · ready (design gate lifted 2026-07-06) | | Founder corrections applied: NO countdown pause while typing; partial-quit stats recorded-not-displayed |
+| 80 | [Settings navigation HIG](issue-80-settings-navigation-hig.md) | bug · ready (design gate lifted 2026-07-06) | | Standard pinned leading back button; swipe-back returns free |
 | 79 | [Bug: typed-answer × voice race → double submission](issue-79-typed-answer-voice-race.md) | bug · ready-for-agent | | Approved 2026-07-05 (preserve tap-to-edit). NOT gated by #86 (no new UI). Re-verify line anchors (77.2 refactored teardown) |
 | 78 | [Bug: Sign in with Apple name lost after re-sign-in](issue-78-apple-signin-name-lost.md) | bug · needs-triage | | Founder-reported. Fix = return `full_name` in `/auth/apple` response + nil-safe merge on iOS. Cross-refs #61 |
 | 77 | [Voice commands for hands-free driving](issue-77-voice-commands-handsfree.md) | enhancement · agent work done — remaining `[HUMAN]` | `[ ]` #77 | All 7 agent sessions done 2026-07-03. Remaining: `[HUMAN]` 77.15 on-device gate + `.pen` ⌘S save for 77.12. Absorbed #66 (77.1), #67-A (77.2), #68 earcon (77.10) |
@@ -32,7 +31,7 @@ Dashboard of all `issue-NN-*.md` files. Updated by `/triage` whenever a `**Triag
 | 71 | [Process: GitHub mirror refresh](issue-71-restore-ralph-and-process-drift.md) | chore · reduced scope | `[ ]` #71 | Ralph-restore struck (founder 2026-07-05: no autonomous loops); push audit + AI-news moot. Survives: run `mirror-issues.sh` |
 | 70 | [Backend: ARQ worker Docker-path crash](issue-70-content-pipeline-residual-bugs.md) | bug · ready-for-agent (worker path crash only) | `[ ]` #70 | `worker.py:27 parents[4]` IndexError in Docker. Dedup half superseded by #41 (dedup already on pgvector) |
 | 65 | [Security follow-up: grace-mode unauth pass-through](issue-65-security-harden-production-endpoints.md) | security · re-scope | `[ ]` | Original hardening done + deployed (2026-06-22/07-03). **Follow-up = top priority per founder decision #5 (2026-07-05):** fix the grace-mode silent unauthenticated pass-through; re-scope the issue to post-remediation reality |
-| 68 | [UX: driving defaults + image render](issue-68-driving-ux-defaults-and-earcon.md) | enhancement · blocked-on-#86 | `[ ]` #68 | Remaining: thinkingTime default + Settings exposure + orphaned `ImageQuestionView`. Earcon delivered by #77 77.10 |
+| 68 | [UX: driving defaults + image render](issue-68-driving-ux-defaults-and-earcon.md) | enhancement · ready (design gate lifted 2026-07-06) | `[ ]` #68 | Remaining: thinkingTime default + Settings exposure + orphaned `ImageQuestionView`. Earcon delivered by #77 77.10 |
 | 67 | [Audio interruption + barge-in](issue-67-audio-interruption-and-barge-in.md) | bug · A done via #77 · B deferred | `[ ]` #67 | Part A shipped (77.2). Part B barge-in deferred by founder. Open: `[HUMAN]` on-device interruption-recovery check |
 | 64 | [Full-project review — findings ledger](issue-64-full-project-review.md) | review · umbrella | `[ ]` #64 | Spin-offs #65–#71 carry the work (#65/#69 done). Report `docs/artifacts/full-project-review-2026-06-21.html` |
 | 63 | [Question-quality review: gen audit + corpus verification](issue-63-question-quality-review.md) | enhancement · ready-for-human | `[~]` #63 | The parked "whole generation process review"; owns MCQ yield validation (ex-#42). Founder-in-the-loop |
@@ -52,6 +51,7 @@ Dashboard of all `issue-NN-*.md` files. Updated by `/triage` whenever a `**Triag
 
 | # | Title | Notes |
 |---|---|---|
+| 86 | [Pencil sync of approved UI proposals (2026-07)](issue-86-pencil-sync-approved-ui.md) | Done 2026-07-06 — all 8 items (`54c8f44`), founder frame review confirmed; design gate lifted for #80–#85/#68/#58 |
 | 73 | [mba Postgres + Redis dev env](issue-73-mba-postgres-redis-dev-env.md) | Resolved 2026-06-23 (`e3e378a`); gate green ×2 |
 | 69 | [Translation cache → durable store](issue-69-translation-cache-serving-cost.md) | Shipped 2026-07-06 — SQLite on `/data`, 271 tests green |
 | 66 | [Voice submit ghost-question](issue-66-voice-submit-ghost-question.md) | Shipped via #77 77.1 (`5cabfd8`) |

@@ -1,7 +1,7 @@
 # Issue #86 — Pencil sync of approved UI proposals (2026-07)
 
-**Triage:** enhancement · ready-for-human
-**Status:** Created 2026-07-05 from founder approval of `docs/artifacts/planned-ui-proposals-2026-07.html`. Design-first gate: all approved UI changes go into `design/quiz-agent.pen` and get founder review **before** any implementation starts in the source issues.
+**Triage:** enhancement · done
+**Status:** **DONE 2026-07-06 — founder confirmed the frame review; design gate lifted.** All 8 Pencil items applied (`54c8f44`); implementation now unblocked in source issues #80/#81/#82/#83/#84/#85/#68/#58 (sequence #83+#85 — shared QuestionView chrome). Created 2026-07-05 from founder approval of `docs/artifacts/planned-ui-proposals-2026-07.html`.
 
 ## Why
 
@@ -21,7 +21,7 @@ Update `design/quiz-agent.pen` (Pencil MCP, editor must be open — local sessio
 
 Carry-over from #54.1: dark-mode Phase 2 — deliberate dark design via asset catalog (was deferred in issue-54-01-dark-mode.md) — fold into this Pencil pass (2026-07-06).
 - [x] 86.8 Home free-plan counter frame(s) per **G2** — coordinate with #87 (free state: remaining questions + time to reset; paid state: TBD from #87).
-- [ ] 86.9 `[HUMAN]` Founder reviews the updated frames (screenshots in-session); ⌘S save + commit `design/quiz-agent.pen`.
+- [x] 86.9 `[HUMAN]` Founder reviews the updated frames (screenshots in-session); ⌘S save + commit `design/quiz-agent.pen`. ✓ confirmed 2026-07-06.
 
 Out of scope: item 8 (rejected), item 9 (quiz-from-prompt — future feature), item 11 paywall details (deferred to its own pass), any Swift/backend code.
 

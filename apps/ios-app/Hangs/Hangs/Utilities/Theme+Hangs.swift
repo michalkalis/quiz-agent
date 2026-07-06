@@ -29,6 +29,12 @@ extension Theme {
             static let greenCheck = Color(hex: "#22C55E") // accent-green
             static let greenCorrect = Color(hex: "#16A34A")
             static let successText = Color(light: "#16A34A", dark: "#4ADE80") // success-text adapts per mode
+            // #82 item 6: small chip text on the soft accent-tinted capsules
+            // fails WCAG AA in light mode with the raw accents (pink 2.68:1,
+            // blue 2.96:1) — these darker light-mode variants measure 4.73:1 /
+            // 5.07:1 on the tinted background. Dark mode keeps the brand hues.
+            static let pinkText = Color(light: "#C2185B", dark: "#FF3D8F")
+            static let blueText = Color(light: "#0A5DC2", dark: "#0A84FF")
 
             // Border tokens — alpha differs by mode, so build per-mode Colors
             // (UIColor(hex:) treats 8-digit hex as ARGB, so don't suffix alpha).

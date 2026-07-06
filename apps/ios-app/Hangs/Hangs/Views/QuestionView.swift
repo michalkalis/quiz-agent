@@ -190,10 +190,10 @@ struct QuestionView: View {
             let showAnswer = viewModel.quizState == .askingQuestion && viewModel.answerTimerCountdown > 0
             HStack(spacing: 8) {
                 if showThink {
-                    timerChip(label: "THINK", seconds: viewModel.thinkingTimeCountdown, color: Theme.Hangs.Colors.blue)
+                    timerChip(label: "THINK", seconds: viewModel.thinkingTimeCountdown, color: Theme.Hangs.Colors.blue, textColor: Theme.Hangs.Colors.blueText)
                 }
                 if showAnswer {
-                    timerChip(label: "ANSWER", seconds: viewModel.answerTimerCountdown, color: Theme.Hangs.Colors.pink)
+                    timerChip(label: "ANSWER", seconds: viewModel.answerTimerCountdown, color: Theme.Hangs.Colors.pink, textColor: Theme.Hangs.Colors.pinkText)
                 }
                 Spacer(minLength: 0)
                 replayLink
@@ -250,7 +250,10 @@ struct QuestionView: View {
         .accessibilityIdentifier("question.mute")
     }
 
-    private func timerChip(label: LocalizedStringKey, seconds: Int, color: Color) -> some View {
+    /// `textColor` is the WCAG-AA per-mode variant of `color` (#82 item 6) —
+    /// the capsule tint/stroke keep the brand accent, only the small text
+    /// darkens in light mode.
+    private func timerChip(label: LocalizedStringKey, seconds: Int, color: Color, textColor: Color) -> some View {
         HStack(spacing: 6) {
             Text(label)
                 .font(.hangsMono(10, weight: .semibold))
@@ -258,7 +261,7 @@ struct QuestionView: View {
             Text(verbatim: "\(seconds)s")
                 .font(.hangsMono(12, weight: .semibold))
         }
-        .foregroundColor(color)
+        .foregroundColor(textColor)
         .padding(.horizontal, 10)
         .padding(.vertical, 5)
         .background(Capsule().fill(color.opacity(0.12)))

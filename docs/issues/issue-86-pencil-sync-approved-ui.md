@@ -11,16 +11,16 @@ Founder reversed the workflow 2026-07-05: decisions happen on visuals **before**
 
 Update `design/quiz-agent.pen` (Pencil MCP, editor must be open — local session) for every **approved** item:
 
-- [ ] 86.1 Unified quiz screen layout per **G1** (binding): top bar = close + settings; timer bottom near action row; scrollable question text; modest record/skip/type buttons. Resolves the #83/#85 top-right conflicts. Covers decisions 3 + 4 (mute in bottom audio strip, minimal replay, Variant A category treatment).
-- [ ] 86.2 Settings navigation per decision 1 (#80): pinned leading back chip, large-title collapse, mono micro-caps bar title.
-- [ ] 86.3 End-Quiz dialog + countdown behavior states per decision 2 (#81) — no typing pause, no partial-stats UI.
-- [ ] 86.4 Home + Result without streak/best-score per decision 5 (#84), Variant B (whole stats row gone) — keep the strong correct/wrong distinction of the current app.
-- [ ] 86.5 Settings "Session" group + recording-sounds toggle per decision 6 (#68); Home option "image questions" (default OFF).
-- [ ] 86.6 Paper-cut visual deltas per decision 7 (#82): Home pickers with checkmarks + **multi-select categories**, Call Mode footnote. No skip feedback element.
-- [ ] 86.7 Contextual sign-in sheet per decision 10 (#58 §9).
+- [x] 86.1 Unified quiz screen layout per **G1** (binding): top bar = close + settings; timer bottom near action row; scrollable question text; modest record/skip/type buttons. Resolves the #83/#85 top-right conflicts. Covers decisions 3 + 4 (mute in bottom audio strip, minimal replay, Variant A category treatment).
+- [x] 86.2 Settings navigation per decision 1 (#80): pinned leading back chip, large-title collapse, mono micro-caps bar title.
+- [x] 86.3 End-Quiz dialog + countdown behavior states per decision 2 (#81) — no typing pause, no partial-stats UI.
+- [x] 86.4 Home + Result without streak/best-score per decision 5 (#84), Variant B (whole stats row gone) — keep the strong correct/wrong distinction of the current app.
+- [x] 86.5 Settings "Session" group + recording-sounds toggle per decision 6 (#68); Home option "image questions" (default OFF).
+- [x] 86.6 Paper-cut visual deltas per decision 7 (#82): Home pickers with checkmarks + **multi-select categories**, Call Mode footnote. No skip feedback element.
+- [x] 86.7 Contextual sign-in sheet per decision 10 (#58 §9).
 
 Carry-over from #54.1: dark-mode Phase 2 — deliberate dark design via asset catalog (was deferred in issue-54-01-dark-mode.md) — fold into this Pencil pass (2026-07-06).
-- [ ] 86.8 Home free-plan counter frame(s) per **G2** — coordinate with #87 (free state: remaining questions + time to reset; paid state: TBD from #87).
+- [x] 86.8 Home free-plan counter frame(s) per **G2** — coordinate with #87 (free state: remaining questions + time to reset; paid state: TBD from #87).
 - [ ] 86.9 `[HUMAN]` Founder reviews the updated frames (screenshots in-session); ⌘S save + commit `design/quiz-agent.pen`.
 
 Out of scope: item 8 (rejected), item 9 (quiz-from-prompt — future feature), item 11 paywall details (deferred to its own pass), any Swift/backend code.

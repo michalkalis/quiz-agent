@@ -71,18 +71,23 @@ struct QuestionView: View {
             // session-settings menu (founder decision 6, Variant A).
             SettingsView(viewModel: viewModel)
         }
-        .confirmationDialog(
-            "End Quiz?",
-            isPresented: $showEndQuizConfirmation,
-            titleVisibility: .visible
-        ) {
+        // #81 / frame w9tOoU: native alert, Continue (cancel) + destructive End Quiz,
+        // title only — replaces the bottom confirmationDialog.
+        .alert("End Quiz?", isPresented: $showEndQuizConfirmation) {
+            Button("Continue", role: .cancel) {}
             Button("End Quiz", role: .destructive) {
                 Task { await viewModel.endQuiz() }
             }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("Are you sure you want to end the quiz? Your progress will be saved.")
         }
+        // #81: freeze the think/answer countdowns while the dialog or the
+        // settings sheet covers the question — the user isn't being timed
+        // while the app has taken over the screen.
+        .onChange(of: showEndQuizConfirmation) { _, _ in syncModalFlag() }
+        .onChange(of: showQuizSettings) { _, _ in syncModalFlag() }
+    }
+
+    private func syncModalFlag() {
+        viewModel.isQuizModalPresented = showEndQuizConfirmation || showQuizSettings
     }
 
     // MARK: - Top chrome

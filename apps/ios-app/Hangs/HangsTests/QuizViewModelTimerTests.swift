@@ -170,6 +170,114 @@ struct QuizViewModelThinkingTimeTests {
     }
 }
 
+// MARK: - Modal Freeze Tests (#81)
+
+/// Local copy of the streaming-suite wall-clock-safe poll (see
+/// QuizViewModelStreamingTests.waitUntil for the rationale).
+@MainActor
+private func waitUntil(
+    _ predicate: @MainActor () -> Bool,
+    timeoutMillis: Int = 10_000,
+    _ comment: Comment? = nil,
+    sourceLocation: SourceLocation = #_sourceLocation
+) async {
+    let deadline = ContinuousClock.now.advanced(by: .milliseconds(timeoutMillis))
+    while ContinuousClock.now < deadline {
+        if predicate() { return }
+        await Task.yield()
+        try? await Task.sleep(for: .milliseconds(1))
+    }
+    if predicate() { return }
+    Issue.record(comment ?? "waitUntil timed out after \(timeoutMillis)ms", sourceLocation: sourceLocation)
+}
+
+@Suite("QuizViewModel Modal Freeze Tests")
+struct QuizViewModelModalFreezeTests {
+
+    /// #81 fairness: the End-Quiz dialog (or the in-quiz settings sheet) covers
+    /// the question — the user must not lose answer time while the app itself
+    /// has taken over the screen. If the freeze check is dropped from the
+    /// answer-timer loop, users get silently timed out behind the dialog.
+    @Test("answer countdown freezes while isQuizModalPresented is set")
+    @MainActor
+    func answerTimerFreezesBehindModal() async throws {
+        let viewModel = Fixtures.makeViewModelForTimerTests()
+        viewModel.settings.answerTimeLimit = 30
+        viewModel.isQuizModalPresented = true
+
+        viewModel.startAnswerTimer()
+        await Task.yield()
+        #expect(viewModel.answerTimerCountdown == 30)
+
+        // Long enough that an unfrozen loop would have decremented (1s tick).
+        try? await Task.sleep(for: .milliseconds(1_500))
+        #expect(viewModel.answerTimerCountdown == 30)
+
+        // Dismissing the modal resumes the countdown from where it froze.
+        viewModel.isQuizModalPresented = false
+        await waitUntil({ viewModel.answerTimerCountdown < 30 }, "countdown never resumed after modal dismissed")
+
+        viewModel.cancelAnswerTimer()
+    }
+
+    /// Same fairness guarantee for the thinking-time countdown — it drives
+    /// auto-record, which must never fire underneath an open dialog.
+    @Test("thinking countdown freezes while isQuizModalPresented is set")
+    @MainActor
+    func thinkingTimerFreezesBehindModal() async throws {
+        let viewModel = Fixtures.makeViewModelForTimerTests()
+        viewModel.settings.thinkingTime = 30
+        viewModel.isQuizModalPresented = true
+
+        viewModel.startThinkingTimeCountdown()
+        await waitUntil({ viewModel.thinkingTimeCountdown == 30 }, "thinking countdown never seeded")
+
+        try? await Task.sleep(for: .milliseconds(1_500))
+        #expect(viewModel.thinkingTimeCountdown == 30)
+
+        viewModel.isQuizModalPresented = false
+        await waitUntil({ viewModel.thinkingTimeCountdown < 30 }, "thinking countdown never resumed after modal dismissed")
+
+        viewModel.cancelThinkingTime()
+    }
+
+    /// Founder decision 2a (#81, superseded recommendation): typing an answer
+    /// does NOT pause the countdown — typed input grants no extra thinking
+    /// time. The typed-answer path must never touch the modal-freeze flag or
+    /// cancel the answer timer on its way in.
+    @Test("resubmitAnswer leaves the answer timer running (no typing pause)")
+    @MainActor
+    func typedAnswerDoesNotPauseCountdown() async throws {
+        let viewModel = Fixtures.makeViewModelForTimerTests()
+        viewModel.settings.answerTimeLimit = 30
+        viewModel.currentSession = Fixtures.makeActiveSession()
+
+        viewModel.startAnswerTimer()
+        await Task.yield()
+        #expect(viewModel.taskBag.contains(.answerTimer))
+
+        await viewModel.resubmitAnswer("Paris", suppressAudio: true)
+
+        // The timer task was not cancelled by the typed submission itself —
+        // it self-expires once state leaves .askingQuestion.
+        #expect(viewModel.taskBag.contains(.answerTimer))
+        #expect(viewModel.isQuizModalPresented == false)
+    }
+
+    /// resetState (End Quiz / go Home) must clear a lingering freeze flag —
+    /// otherwise the next quiz would start with its timers frozen.
+    @Test("resetToHome clears isQuizModalPresented")
+    @MainActor
+    func resetClearsModalFlag() async throws {
+        let viewModel = Fixtures.makeViewModelForTimerTests()
+        viewModel.isQuizModalPresented = true
+
+        viewModel.resetToHome()
+
+        #expect(viewModel.isQuizModalPresented == false)
+    }
+}
+
 // MARK: - Auto-Stop Recording Timer Tests
 
 @Suite("QuizViewModel Auto-Stop Recording Timer Tests")

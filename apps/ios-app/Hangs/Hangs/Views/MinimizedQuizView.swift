@@ -67,19 +67,17 @@ struct MinimizedQuizView: View {
         .onTapGesture {
             expand()
         }
-        .confirmationDialog(
-            "End Quiz?",
-            isPresented: $showEndQuizConfirmation,
-            titleVisibility: .visible
-        ) {
+        // #81 / frame w9tOoU: native alert, Continue (cancel) + destructive End Quiz,
+        // title only — matches QuestionView.
+        .alert("End Quiz?", isPresented: $showEndQuizConfirmation) {
+            Button("Continue", role: .cancel) {}
             Button("End Quiz", role: .destructive) {
-                Task {
-                    await viewModel.endQuiz()
-                }
+                Task { await viewModel.endQuiz() }
             }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("Are you sure you want to end the quiz? Your progress will be saved.")
+        }
+        // #81: freeze the think/answer countdowns while the dialog is up.
+        .onChange(of: showEndQuizConfirmation) { _, newValue in
+            viewModel.isQuizModalPresented = newValue
         }
     }
 

@@ -1,6 +1,6 @@
 # Issue #81 — Quiz dialogs & timing fairness: End-Quiz has no Cancel; countdown ticks while typing and behind dialogs; 7s auto-advance escape hatch too small
 
-**Triage:** bug · approved 2026-07-05 · blocked-on-#86
+**Triage:** bug · approved 2026-07-05 · implemented 2026-07-06 (#86 design gate lifted same day)
 
 **Created:** 2026-07-03 · **Founder:** Michal · **Source:** UI/UX review 2026-07-03 (sim-observed) + HIG research
 
@@ -40,11 +40,16 @@ Cross-refs: #77 (voice commands — spoken control of the same moments), #68 (dr
 
 ## Acceptance
 
-- [ ] End Quiz dialog shows Cancel + End Quiz; Cancel returns to the quiz with state intact
-- [ ] Answer countdown is paused while the End Quiz dialog (or any sheet) is up
-- [ ] ~~Answer countdown pauses (or extends) while the typed-answer input is focused~~ **Superseded 2026-07-05** — no countdown pause while typing; partial-quit stats are recorded but not displayed. See `docs/design/ui-proposals-2026-07-decisions.md` decision 2.
-- [ ] "Stay here" hit target ≥ 44pt; touching the result screen pauses auto-advance
-- [ ] Existing RS regression scenarios pass (timer-related RS updated if semantics change)
+- [x] End Quiz dialog shows Cancel + End Quiz; Cancel returns to the quiz with state intact — was already a Cancel+destructive `confirmationDialog` on main (landed alongside #83/#84/#85); 2026-07-06 converted to the founder-approved native **alert** (frame `w9tOoU`): "Continue" (cancel) + destructive "End Quiz", title only, in both QuestionView and MinimizedQuizView
+- [x] Answer countdown is paused while the End Quiz dialog (or any sheet) is up — new `isQuizModalPresented` flag on QuizViewModel (set by End-Quiz alert + in-quiz settings sheet); thinking + answer countdown loops freeze while set, resume where they left off; unit-tested
+- [x] ~~Answer countdown pauses (or extends) while the typed-answer input is focused~~ **Superseded 2026-07-05** — no countdown pause while typing; partial-quit stats are recorded but not displayed (verified: `recordAnswer` already persists per-question regardless of early quit). Intent now encoded in a regression test (`typedAnswerDoesNotPauseCountdown`).
+- [x] "Stay here" hit target ≥ 44pt (now a full-width `HangsSecondaryButton`, height 44, below the countdown strip); touching the result screen pauses auto-advance (already shipped pre-#81 via tap/drag `simultaneousGesture` → `pauseQuiz()`)
+- [x] Existing RS regression scenarios pass (timer-related RS updated if semantics change) — no RS semantics changed; `result.stayHere` accessibility id preserved
+
+## Implementation notes (2026-07-06)
+
+- Observation for a future pass: ResultView's top-bar X ends the quiz immediately with **no confirmation dialog** — only the question screen + minimized widget confirm. Not in this issue's acceptance; flag if it bites.
+- `recordQuizCompleted()` (totalQuizzes) still only increments on natural completion — consistent with "display nothing extra" for early quits.
 
 ## Founder decisions 2026-07-05 (pre-implementation UI approval)
 

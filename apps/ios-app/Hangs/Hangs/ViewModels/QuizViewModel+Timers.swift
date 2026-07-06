@@ -44,6 +44,11 @@ extension QuizViewModel {
                     self.thinkingTimeCountdown = 0
                     return
                 }
+                await self.waitWhileQuizModalPresented()
+                if Task.isCancelled {
+                    self.thinkingTimeCountdown = 0
+                    return
+                }
                 self.thinkingTimeCountdown = i
                 try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
             }
@@ -88,6 +93,8 @@ extension QuizViewModel {
 
             for remaining in (0...limit).reversed() {
                 if Task.isCancelled { return }
+                await self.waitWhileQuizModalPresented()
+                if Task.isCancelled { return }
                 // Direct assignment is safe: Task inherits @MainActor isolation from QuizViewModel
                 self.answerTimerCountdown = remaining
 
@@ -111,6 +118,17 @@ extension QuizViewModel {
     func cancelAnswerTimer() {
         taskBag.cancel(.answerTimer)
         answerTimerCountdown = 0
+    }
+
+    /// Freeze point for the thinking/answer countdown loops (#81): while a modal
+    /// (End-Quiz dialog, in-quiz settings sheet) covers the quiz screen, hold the
+    /// tick instead of decrementing — the user must not be timed while the app
+    /// has taken over the screen. Typed-answer input deliberately does NOT set
+    /// the flag (founder decision 2: typing grants no extra thinking time).
+    func waitWhileQuizModalPresented() async {
+        while isQuizModalPresented, !Task.isCancelled {
+            try? await Task.sleep(nanoseconds: 200_000_000)
+        }
     }
 
     // MARK: - Auto-Stop Recording Timer

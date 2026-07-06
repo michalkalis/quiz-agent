@@ -175,17 +175,11 @@ struct ResultView: View {
             && viewModel.autoAdvanceCountdown > 0
         {
             VStack(spacing: 6) {
-                HStack {
-                    Text(String(localized: "Next in \(viewModel.autoAdvanceCountdown)s", comment: "Auto-advance countdown: seconds until the next question"))
-                        .font(.hangsMono(11, weight: .medium))
-                        .tracking(1.5)
-                        .foregroundColor(Theme.Hangs.Colors.muted)
-                    Spacer()
-                    Button("Stay here") { viewModel.pauseQuiz() }
-                        .font(.hangsBody(13, weight: .semibold))
-                        .foregroundColor(Theme.Hangs.Colors.blue)
-                        .accessibilityIdentifier("result.stayHere")
-                }
+                Text(String(localized: "Next in \(viewModel.autoAdvanceCountdown)s", comment: "Auto-advance countdown: seconds until the next question"))
+                    .font(.hangsMono(11, weight: .medium))
+                    .tracking(1.5)
+                    .foregroundColor(Theme.Hangs.Colors.muted)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 GeometryReader { geo in
                     let total = max(1, viewModel.settings.autoAdvanceDelay)
                     let fraction = CGFloat(viewModel.autoAdvanceCountdown) / CGFloat(total)
@@ -197,6 +191,13 @@ struct ResultView: View {
                     }
                 }
                 .frame(height: 3)
+                // #81: full-size secondary button (44pt target) — the tiny text
+                // link was the only way to linger on a result while driving.
+                HangsSecondaryButton(title: "Stay here", height: 44) {
+                    viewModel.pauseQuiz()
+                }
+                .accessibilityIdentifier("result.stayHere")
+                .padding(.top, 4)
             }
             .padding(.horizontal, 24)
             .padding(.bottom, 10)

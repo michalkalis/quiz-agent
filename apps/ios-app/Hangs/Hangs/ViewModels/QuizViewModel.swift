@@ -150,6 +150,13 @@ final class QuizViewModel: ObservableObject {
     // Per-question pause state (resets on next question)
     @Published var currentQuestionPaused: Bool = false
 
+    // True while a modal (End-Quiz dialog, in-quiz settings sheet) covers the quiz
+    // screen. The thinking/answer countdowns freeze while set (#81) — the user
+    // must not be timed while the app itself has taken over the screen. Set by
+    // the presenting views; deliberately NOT part of QuizState (same separate-axis
+    // pattern as commandCapturePhase).
+    @Published var isQuizModalPresented: Bool = false
+
     // Minimize state
     @Published var isMinimized: Bool = false
 
@@ -1169,6 +1176,7 @@ final class QuizViewModel: ObservableObject {
         answerTimerCountdown = 0
         thinkingTimeCountdown = 0
         currentQuestionPaused = false
+        isQuizModalPresented = false
         autoAdvanceEnabled = true
         isRerecording = false
         isAutoRecording = false

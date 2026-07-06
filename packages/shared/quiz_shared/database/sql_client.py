@@ -11,6 +11,8 @@ from sqlalchemy import (
     DateTime,
     Text,
 )
+from sqlalchemy import inspect as sa_inspect
+from sqlalchemy import text as sa_text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from datetime import datetime
@@ -42,13 +44,15 @@ class RatingDB(Base):
 
     id = Column(String, primary_key=True)
     question_id = Column(String, nullable=False, index=True)
-    session_id = Column(String, nullable=False, index=True)
+    session_id = Column(String, nullable=True, index=True)
     user_id = Column(String, nullable=True)
     rating = Column(Integer, nullable=False)
     feedback = Column(Text, nullable=True)
-    was_correct = Column(Boolean, nullable=False)
-    user_answer = Column(String, nullable=False)
-    difficulty_at_time = Column(String, nullable=False)
+    # Answer context is unknown at rating time in the current API (#41 A4) —
+    # NOT NULL here made every insert fail while writes were dual-homed.
+    was_correct = Column(Boolean, nullable=True)
+    user_answer = Column(String, nullable=True)
+    difficulty_at_time = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.now, index=True)
 
 
@@ -82,8 +86,45 @@ class SQLClient:
                 - PostgreSQL: "postgresql://user:pass@localhost/dbname"
         """
         self.engine = create_engine(database_url, echo=False)
+        self._migrate_legacy_ratings_schema()
         Base.metadata.create_all(self.engine)
         self.SessionLocal = sessionmaker(bind=self.engine)
+
+    def _migrate_legacy_ratings_schema(self) -> None:
+        """Rebuild a legacy-shaped `question_ratings` table (#41 A4).
+
+        The pre-#41 schema declared NOT NULL on answer-context columns
+        (session_id/was_correct/user_answer/difficulty_at_time) that the
+        /rate endpoint never supplies — every insert failed, so the table
+        is empty in every real deployment. An empty legacy table is dropped
+        so `create_all` recreates it nullable; a non-empty one fails loud
+        rather than risking data loss.
+        """
+        insp = sa_inspect(self.engine)
+        if "question_ratings" not in insp.get_table_names():
+            return
+        cols = {c["name"]: c for c in insp.get_columns("question_ratings")}
+        legacy = any(
+            not cols[name]["nullable"]
+            for name in (
+                "session_id",
+                "was_correct",
+                "user_answer",
+                "difficulty_at_time",
+            )
+            if name in cols
+        )
+        if not legacy:
+            return
+        with self.engine.begin() as conn:
+            n = conn.execute(sa_text("SELECT count(*) FROM question_ratings")).scalar()
+            if n:
+                raise RuntimeError(
+                    f"question_ratings has the legacy NOT NULL schema and {n} "
+                    "rows — refusing to auto-drop; migrate manually (#41 A4)."
+                )
+            conn.execute(sa_text("DROP TABLE question_ratings"))
+        logger.info("Rebuilt empty legacy question_ratings table (#41 A4)")
 
     def _get_session(self) -> Session:
         """Get database session."""

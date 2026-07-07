@@ -27,14 +27,16 @@ The two sides are each individually reasonable; the gap is the missing **immedia
 
 Store the successor linkage so the immediately-previous used token can be recognised, and return the existing successor instead of revoking when it is still unused:
 
-- On replay of a used token **whose successor is still unused and unrevoked** → return that successor (idempotent re-issue), do **not** revoke the family. This is the lost-response case.
+- On replay of a used token **whose successor is still unused and unrevoked** → grant recovery, do **not** revoke the family. This is the lost-response case.
 - On replay of a used token **whose successor has already been used** (or an older token in the chain) → keep the current behaviour: revoke the whole family (genuine reuse — the chain has moved on without this holder).
 
-Bound the grace so it can't be abused: only the single most-recent used token qualifies; a short successor-age window is optional but the successor-still-unused check already scopes it tightly. Preferred implementation: add a `successor_token_hash` (or reuse `family_id` + issue order) so the lookup is a single row read under the existing `with_for_update` lock — no new round trips.
+**Correction (2026-07-07, code-verified during session-split):** "return that successor (idempotent re-issue)" is **not implementable** — raw refresh tokens are never persisted, only their SHA-256 hash (`refresh.py:26-27,76`), so the already-minted successor's raw token cannot be handed back. Correct grace action: **revoke the dangling unused successor** (it was never delivered) **and mint a fresh rotation from the presented row** (same `family_id`, same family-deadline clamp), returning the new pair.
+
+Bound the grace so it can't be abused: only the single most-recent used token qualifies, **and** only within a short window — config knob `REFRESH_RETRY_GRACE_SECONDS` (default 60) checked against `row.used_at`. Preferred lookup needs **no migration**: the successor is the same-family row with the smallest `issued_at` strictly greater than the presented row's `issued_at` (rotation stamps both with the same `now`). The `successor_token_hash` column variant would need Alembic `0005` = founder deploy heads-up — avoid. Keep the whole decision under the existing `with_for_update` lock (+ `FOR UPDATE` on the successor) so an honest retry and an attacker replay serialize. *(Folded in from the deleted draft `issue-88-refresh-rotation-retry-grace.md`.)*
 
 ## Acceptance
 
-- [ ] Replay of the immediately-previous used token whose successor is still unused → same successor returned, family **not** revoked, client recovers transparently
+- [ ] Replay of the immediately-previous used token whose successor is still unused, within the grace window → fresh token pair returned (dangling successor revoked), family **not** revoked, client recovers transparently
 - [ ] Replay of an older used token, OR a used token whose successor is already used → family revoked (theft path unchanged)
 - [ ] Unit test: lost-response scenario (rotate, discard response, re-present old token) → recovery, not sign-out
 - [ ] Unit test: genuine reuse (present token two rotations old) → family revoked

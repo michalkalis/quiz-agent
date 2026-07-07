@@ -1,6 +1,8 @@
 # Issue #70 — Backend: ARQ worker Docker-path crash + dedup store wiring (content-pipeline residuals)
 
-**Triage:** bug · ready-for-agent (worker path crash only)
+**Triage:** bug · **done 2026-07-07** — both halves resolved elsewhere; nothing left to do.
+
+**Closed (2026-07-07, verified first-hand during session-split):** the remaining `worker.py` `parents[4]` crash was already fixed by `649b1b9` (#60.P3 — commit cites #70), which replaced the fixed index with `find_in_ancestors` from `quiz_shared.paths` (`app/worker/worker.py:17,31`); the dedup half was superseded by #41 (closed 2026-07-07, dedup lives on pgvector). No code matches the described bug anymore.
 
 **Note (2026-07-06):** the dedup/ChromaDB half is superseded by #41 findings — dedup already runs on pgvector (`find_duplicates` exists and the worker wires it); only stale ChromaDB comments remain in `dedup.py`, owned by #41. Remaining live scope in this issue = only the `worker.py` `parents[4]` Docker-path import crash.
 

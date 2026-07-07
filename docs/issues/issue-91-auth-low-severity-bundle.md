@@ -21,7 +21,7 @@
 **Fix:** `hmac.compare_digest(...)` in both places.
 
 ### 4. Server-error detail leaked to client on 500s
-`app/api/routes/sessions.py:69` and `quiz.py:99, 142, 180` return `detail=f"...: {str(e)}"`. Raw exception text (can include DB/internal messages) is echoed to the client. Auth endpoints correctly avoid this; these game routes don't.
+`app/api/routes/sessions.py:69` and `quiz.py:99, 180` return `detail=f"...: {str(e)}"`. Raw exception text (can include DB/internal messages) is echoed to the client. Auth endpoints correctly avoid this; these game routes don't. *(Corrected 2026-07-07: `quiz.py:142` originally listed here is NOT a leak — it raises a constructed no-questions-match diagnostic with no exception text; leave it.)*
 **Fix:** log `str(e)`, return a generic 500 detail.
 
 ### 5. `/auth/apple` 409 after code exchange is unrecoverable

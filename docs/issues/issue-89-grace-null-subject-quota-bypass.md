@@ -4,7 +4,7 @@
 
 **Created:** 2026-07-07 · **Source:** auth security review 2026-07-07 (top-level code-verified `identity.py:116-123` → `quiz.py:60` / `flow.py:245`)
 
-**Severity:** medium — while the legacy migration grace window is on (currently the default in prod), a client can play unlimited free questions by sending no bearer and no `user_id`.
+**Severity:** ~~medium~~ **low — latent hardening, not a live bypass** *(corrected 2026-07-07: `LEGACY_USER_ID_GRACE=off` was flipped in prod and verified live on 2026-07-06 as part of #65's closure — one day before this review was written)*. While the grace window is **on**, a client can play unlimited free questions by sending no bearer and no `user_id`; with grace off the path is unreachable. Fix stays worthwhile as defence against ever re-enabling grace.
 
 ## Problem
 
@@ -17,7 +17,7 @@ In path 3, if `body_user_id` is also absent, it returns `AuthSubject(subject_id=
 
 This is simpler than the ID-spoofing the design already anticipates: an empty-body `POST /sessions` (no auth, no `user_id`) yields unlimited free questions.
 
-It is a residual of the intentional migration window (`LEGACY_USER_ID_GRACE`, default `on`, `identity.py:38`). It fully closes only when the flag is flipped off (#65 tail). But since grace is on in prod today, the bypass is live.
+It is a residual of the intentional migration window (`LEGACY_USER_ID_GRACE`, default `on`, `identity.py:38`). ~~Since grace is on in prod today, the bypass is live.~~ **Correction 2026-07-07: grace is already OFF in prod (#65 closed 2026-07-06, verified live: header-less `POST /sessions` → 401), so the bypass is latent — it matters only if grace is re-enabled or on a misconfigured deploy.**
 
 ## Evidence (code-verified 2026-07-07)
 
@@ -33,6 +33,8 @@ When the grace path passes through with **no subject at all**, do not leave `use
 - **Alternative:** reject the session (`400`/`401`) when grace is on but neither bearer nor `user_id` is supplied — legitimate legacy clients always send a `user_id`, so this only blocks the bypass.
 
 Pick the option that matches how legacy clients actually behave (they send `user_id`); the throwaway-subject option is safer if any legacy path can legitimately omit it. Keep the loud grace-passthrough warning (`identity.py:126-137`).
+
+**Decision (2026-07-07, session-split — folded in from the deleted draft `issue-89-quota-grace-window-bypass.md`):** go with **reject (401)** — legacy clients always send `user_id`, so nothing legitimate is blocked; a minted throwaway subject would add rows for no user. Belt-and-braces: also guard session creation so a `user_id=None` session can never be created (fail-loud invariant). Flipping the grace flag itself stays #65's scope, not this issue's; keep separable from #90.
 
 ## Acceptance
 

@@ -9,7 +9,7 @@
 // User-visible name lives in BUNDLE_DISPLAY_NAME (set per env) and is surfaced via
 // CFBundleDisplayName in Info.plist.
 APP_NAME = Hangs
-APP_DISPLAY_NAME = Hangs
+APP_DISPLAY_NAME = Trubbo
 PRODUCT_NAME = $(APP_NAME)
 
 // MARK: - Bundle Identifier Base

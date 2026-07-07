@@ -10,14 +10,14 @@ import SwiftUI
 
 // MARK: - Brand logo
 
-/// `hangs.` brand wordmark — blue mono text + pink dot. Inline-sized.
+/// `trubbo.` brand wordmark — blue mono text + pink dot. Inline-sized.
 struct HangsBrandMark: View {
     var size: CGFloat = 17
     var showDot: Bool = true
 
     var body: some View {
         HStack(spacing: 6) {
-            Text(verbatim: "hangs.")
+            Text(verbatim: "trubbo.")
                 .font(.hangsMono(size, weight: .semibold))
                 .foregroundColor(Theme.Hangs.Colors.blue)
             if showDot {

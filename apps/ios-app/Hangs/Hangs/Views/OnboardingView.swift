@@ -48,7 +48,7 @@ struct OnboardingView: View {
 
             headlineBlock(title: "ANSWER BY VOICE", accentColor: Theme.Hangs.Colors.pink)
 
-            subtitle("Hangs reads questions aloud and listens for your answers. No tapping needed during a quiz.")
+            subtitle("Trubbo reads questions aloud and listens for your answers. No tapping needed during a quiz.")
 
             Spacer()
             Spacer()
@@ -96,7 +96,7 @@ struct OnboardingView: View {
 
             headlineBlock(title: "MIC ACCESS", accentColor: Theme.Hangs.Colors.pink)
 
-            subtitle("Hangs needs microphone access to hear your voice answers. You can also type answers as a fallback.")
+            subtitle("Trubbo needs microphone access to hear your voice answers. You can also type answers as a fallback.")
 
             Spacer()
             Spacer()

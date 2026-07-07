@@ -23,13 +23,15 @@ User-facing name becomes **Trubbo**. Everything else was judged 2026-07-07 again
 
 ## Session 1 — iOS in-app rename (Opus)
 
-- [ ] `apps/ios-app/Hangs/Configuration/Shared.xcconfig:12` — `APP_DISPLAY_NAME = Trubbo` (Local build auto-becomes "Trubbo Local" via `Local.xcconfig`)
-- [ ] `apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsChrome.swift:20` — wordmark `Text(verbatim: "hangs.")` → `"trubbo."`
-- [ ] `apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsBlocks.swift:342` — hero `title: "HANGS"` → `"TRUBBO"`
-- [ ] `Localizable.xcstrings` — the 2 EN source keys containing "Hangs" (mic-access ~:411, "Hangs reads questions aloud…" ~:415) → "Trubbo"; **carry the sk translations over to the new keys** (changing a source key orphans the sk row — coordinate with #56 String Catalog state); fix the 3 comment mentions only if trivially adjacent
-- [ ] `OnboardingView.swift:51,:99` render those keys — verify, no code change expected
-- [ ] Re-record snapshot tests that assert the wordmark/hero (expect a handful; only re-record ones this change breaks)
-- [ ] Verify: build `Hangs-Local`, sim visual check (Home wordmark, onboarding, Settings), targeted iOS suites green
+- [x] `apps/ios-app/Hangs/Configuration/Shared.xcconfig:12` — `APP_DISPLAY_NAME = Trubbo` (Local build auto-becomes "Trubbo Local" via `Local.xcconfig`)
+- [x] `apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsChrome.swift:20` — wordmark `Text(verbatim: "hangs.")` → `"trubbo."`
+- [x] `apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsBlocks.swift:342` — hero `title: "HANGS"` → `"TRUBBO"` (DEBUG #Preview; the only HANGS hero — runtime heroes say SETTINGS/COMPLETE, unaffected)
+- [x] `Localizable.xcstrings` — the 2 EN source keys containing "Hangs" → "Trubbo" (re-sorted alphabetically); **sk-carry was moot**: main's catalog is en-only, sk lives on the unmerged #56 branch → when merging #56, re-pair its sk rows onto the new Trubbo keys; all 3 comment mentions fixed
+- [x] `OnboardingView.swift:51,:99` — correction: keys ARE the code literals, so both literals changed to "Trubbo …" (plan expected no code change)
+- [x] Re-record snapshot tests — none needed: no `.txt` snapshot contains the wordmark; updated the one ViewInspector assertion (`HangsSharedPrimitivesTests.swift:30-36` now expects `trubbo.`)
+- [x] Verify: build green; targeted suites green (brand row 2, home snapshot 1, status bar 2, onboarding 7 — 12/12 passed); sim visual check 4/4 PASS (springboard "Trubbo Local", wordmark, onboarding texts, Settings clean). NB: sim driving needed explicit `configuration=Debug-Local` — defaults resolved to Release-Prod.
+
+**Session 1 ✅ DONE 2026-07-07.**
 
 ## Session 2 — design source + living docs (Opus)
 

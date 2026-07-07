@@ -339,7 +339,7 @@ struct HangsAnswerRow: View {
     #Preview {
         ScrollView {
             VStack(spacing: 16) {
-                HangsHeroBlock(title: "HANGS", subtitle: "voice-based trivia for the road")
+                HangsHeroBlock(title: "TRUBBO", subtitle: "voice-based trivia for the road")
                 HStack(spacing: 12) {
                     HangsStatBox(label: "streak", value: "47")
                     HangsStatBox(label: "best", value: "9.5",

@@ -27,13 +27,13 @@ import ViewInspector
 @Suite("HangsBrandRow ViewInspector Tests")
 @MainActor
 struct HangsBrandRowInspectorTests {
-    @Test("Brand wordmark 'hangs.' text renders in tree")
+    @Test("Brand wordmark 'trubbo.' text renders in tree")
     func brandWordmarkRendersInTree() async throws {
         let view = HangsBrandRow()
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) {
-                try tree.find(text: "hangs.")
+                try tree.find(text: "trubbo.")
             }
         }
     }

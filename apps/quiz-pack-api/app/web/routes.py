@@ -176,7 +176,17 @@ async def submit_review(
     creativity: int = Form(...),
     review_notes: str = Form("")
 ):
-    """Submit a review for a question."""
+    """Submit a review for a question (reject/needs revision only, #41)."""
+    if status == "approved":
+        # Approval retired with the ChromaDB decommission (#41 D4); the
+        # future #42/#30 review flow promotes to pgvector.
+        return HTMLResponse(
+            content="Approval is retired (#41 ChromaDB decommission). "
+                    "The future review flow (#42/#30) writes approved questions "
+                    "to pgvector. Use Reject / Needs revision, or go back.",
+            status_code=410,
+        )
+
     question = storage.get_question(question_id)
 
     if not question:
@@ -203,11 +213,8 @@ async def submit_review(
         "creativity": creativity
     }
 
-    if status == "approved":
-        storage.approve_question(question, force=True)
-    else:
-        question.review_status = status
-        storage.update_question(question)
+    question.review_status = status
+    storage.update_question(question)
 
     if next_question:
         return RedirectResponse(url=f"/web/review/{next_question.id}", status_code=303)

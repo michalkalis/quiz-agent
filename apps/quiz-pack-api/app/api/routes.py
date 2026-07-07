@@ -1,7 +1,6 @@
 """FastAPI routes for Question Generator."""
 
 import time
-from typing import Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 from quiz_shared.models.question import Question
@@ -10,8 +9,7 @@ from quiz_shared.llm import factory as llm_factory
 from .schemas import (
     GenerateRequest, GenerateResponse, QuestionResponse,
     ImportRequest, ImportResponse,
-    ApproveRequest, ApproveResponse,
-    SearchResponse, DuplicatesResponse, DuplicateInfo,
+    SearchResponse,
     AdvancedGenerateRequest, AdvancedGenerateResponse, AdvancedQuestionResponse,
     ReviewRequest, ReviewResponse, PendingReviewResponse, ReviewStats,
     VerifyRequest, VerifyBatchRequest, VerifyResponse, VerifyBatchResponse,
@@ -180,60 +178,18 @@ async def import_questions(request: ImportRequest):
         raise HTTPException(status_code=400, detail=f"Import failed: {str(e)}")
 
 
-@router.post("/questions/approve", response_model=ApproveResponse)
-async def approve_questions(request: ApproveRequest):
-    """Approve and store questions.
+@router.post("/questions/approve")
+async def retired_questions_approve():
+    """Retired (#41 D4) — ChromaDB approval path is gone.
 
-    Checks for duplicates unless force=True.
-
-    Args:
-        request: Question IDs to approve with optional edits
-
-    Returns:
-        Approval summary
+    The future #42/#30 review flow writes approved questions to pgvector via
+    `PgvectorQuestionStore.upsert`.
     """
-    try:
-        approved_ids = []
-        failed = []
-
-        for qid in request.question_ids:
-            # Get question (from temp storage or database)
-            question = storage.get_question(qid)
-
-            if not question:
-                failed.append({"id": qid, "reason": "Question not found"})
-                continue
-
-            # Apply edits if provided
-            if request.edits and qid in request.edits:
-                edits = request.edits[qid]
-                for key, value in edits.items():
-                    if hasattr(question, key):
-                        setattr(question, key, value)
-
-            # Approve question
-            success, error, duplicates = storage.approve_question(
-                question,
-                force=request.force
-            )
-
-            if success:
-                approved_ids.append(question.id)
-            else:
-                reason = error or "Unknown error"
-                if duplicates:
-                    dup_questions = [q.question[:50] for q, _ in duplicates[:2]]
-                    reason = f"Duplicates found: {', '.join(dup_questions)}..."
-                failed.append({"id": qid, "reason": reason})
-
-        return ApproveResponse(
-            approved_count=len(approved_ids),
-            question_ids=approved_ids,
-            failed=failed if failed else None
-        )
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Approval failed: {str(e)}")
+    raise HTTPException(
+        status_code=410,
+        detail="Retired with the ChromaDB decommission (#41). The future review "
+               "flow (#42/#30) writes approved questions to pgvector.",
+    )
 
 
 @router.get("/questions/search", response_model=SearchResponse)
@@ -244,10 +200,10 @@ async def search_questions(
     difficulty: str = None,
     limit: int = 10
 ):
-    """Search questions with semantic search and filters.
+    """List pending-store questions matching scalar filters.
 
     Args:
-        query: Semantic search query
+        query: Retired (#41) — semantic search went away with ChromaDB; 410 if set
         topic: Filter by topic
         category: Filter by category
         difficulty: Filter by difficulty
@@ -256,9 +212,14 @@ async def search_questions(
     Returns:
         Matching questions
     """
+    if query is not None:
+        raise HTTPException(
+            status_code=410,
+            detail="Semantic search retired with the ChromaDB decommission (#41); "
+                   "approved questions live in pgvector. Use scalar filters only.",
+        )
     try:
         questions = storage.search_questions(
-            query=query,
             topic=topic,
             category=category,
             difficulty=difficulty,
@@ -278,45 +239,18 @@ async def search_questions(
         raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
 
 
-@router.post("/questions/duplicates", response_model=DuplicatesResponse)
-async def check_duplicates(question_text: str, threshold: float = 0.85):
-    """Check if question text is duplicate.
+@router.post("/questions/duplicates")
+async def retired_questions_duplicates():
+    """Retired (#41) — the ad-hoc duplicate check ran on ChromaDB.
 
-    Args:
-        question_text: Question to check
-        threshold: Similarity threshold
-
-    Returns:
-        List of similar questions
+    Duplicate detection lives in the order pipeline's `DedupStage` over
+    pgvector.
     """
-    try:
-        # Create temporary question
-        temp_question = Question(
-            id="temp_check",
-            question=question_text,
-            correct_answer="",
-            topic="",
-            category="",
-            difficulty=""
-        )
-
-        duplicates = storage.check_duplicates(temp_question, threshold)
-
-        duplicate_infos = [
-            DuplicateInfo(
-                question=_question_to_response(q),
-                similarity=round(score, 3)
-            )
-            for q, score in duplicates
-        ]
-
-        return DuplicatesResponse(
-            duplicates=duplicate_infos,
-            is_duplicate=len(duplicates) > 0
-        )
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Duplicate check failed: {str(e)}")
+    raise HTTPException(
+        status_code=410,
+        detail="Retired with the ChromaDB decommission (#41). Duplicate "
+               "detection runs in the generation pipeline's DedupStage over pgvector.",
+    )
 
 
 @router.delete("/questions/{question_id}")
@@ -373,14 +307,21 @@ async def list_pending_reviews(limit: int = 50, offset: int = 0):
 
 @router.post("/reviews/submit", response_model=ReviewResponse)
 async def submit_review(request: ReviewRequest):
-    """Submit a review for a question (approve/reject/needs revision).
+    """Submit a review for a question (reject/needs revision).
 
-    On approval, the question is promoted from `PendingStore` to ChromaDB.
-    On reject/revision, the question stays in `PendingStore` with its new
-    status so it never appears in semantic search.
+    The question stays in `PendingStore` with its new status. Approval is
+    retired (#41 D4) — the future #42/#30 review flow promotes to pgvector.
     """
     try:
         from datetime import datetime
+
+        if request.status == "approved":
+            raise HTTPException(
+                status_code=410,
+                detail="Approval retired with the ChromaDB decommission (#41). "
+                       "The future review flow (#42/#30) writes approved "
+                       "questions to pgvector.",
+            )
 
         question = storage.get_question(request.question_id)
 
@@ -392,16 +333,8 @@ async def submit_review(request: ReviewRequest):
         question.review_notes = request.review_notes
         question.quality_ratings = request.quality_ratings
 
-        if request.status == "approved":
-            # Promote to ChromaDB; force=True because this is an explicit
-            # reviewer decision — duplicate detection is a separate concern
-            # of /questions/approve.
-            success, error, _ = storage.approve_question(question, force=True)
-            if not success:
-                raise HTTPException(status_code=500, detail=error or "Approval failed")
-        else:
-            question.review_status = request.status
-            storage.update_question(question)
+        question.review_status = request.status
+        storage.update_question(question)
 
         return ReviewResponse(
             question_id=request.question_id,
@@ -419,11 +352,13 @@ async def submit_review(request: ReviewRequest):
 async def get_review_stats():
     """Get statistics about review workflow.
 
+    Counts cover the pending store only (#41) — approved questions live in
+    pgvector and are not aggregated here.
+
     Returns:
         Counts of questions by review status
     """
     try:
-        # Get all questions
         all_questions = storage.get_all_questions()
 
         # Count by status

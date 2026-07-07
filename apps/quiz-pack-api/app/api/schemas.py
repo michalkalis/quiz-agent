@@ -20,13 +20,6 @@ class ImportRequest(BaseModel):
     source: str = Field("chatgpt", description="Source of questions")
 
 
-class ApproveRequest(BaseModel):
-    """Request to approve questions."""
-    question_ids: List[str] = Field(..., description="Question IDs to approve")
-    edits: Optional[Dict[str, Dict[str, Any]]] = Field(None, description="Optional edits before approval")
-    force: bool = Field(False, description="Force approval even if duplicates found")
-
-
 class QuestionResponse(BaseModel):
     """Response with question data."""
     id: str
@@ -54,29 +47,10 @@ class ImportResponse(BaseModel):
     pending_review: List[str]
 
 
-class ApproveResponse(BaseModel):
-    """Response from approve endpoint."""
-    approved_count: int
-    question_ids: List[str]
-    failed: Optional[List[Dict[str, str]]] = None
-
-
 class SearchResponse(BaseModel):
     """Response from search endpoint."""
     questions: List[QuestionResponse]
     total: int
-
-
-class DuplicateInfo(BaseModel):
-    """Information about a potential duplicate."""
-    question: QuestionResponse
-    similarity: float
-
-
-class DuplicatesResponse(BaseModel):
-    """Response from duplicates check."""
-    duplicates: List[DuplicateInfo]
-    is_duplicate: bool
 
 
 # Advanced Generation Schemas

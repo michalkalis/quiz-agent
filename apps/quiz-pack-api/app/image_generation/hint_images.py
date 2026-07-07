@@ -5,7 +5,6 @@ Pipeline: LLM prompt → image generation → vision validation → retry loop.
 """
 
 import base64
-import io
 import json
 import os
 from pathlib import Path
@@ -219,7 +218,7 @@ def generate_hint_image_with_validation(
         if quality < 7:
             image_prompt += f" Improve quality: {feedback}"
 
-        print(f"  Retrying with modified prompt...")
+        print("  Retrying with modified prompt...")
 
     # All retries failed — return last attempt with warning
     print(f"  WARNING: Image did not pass validation after {MAX_RETRIES} attempts")

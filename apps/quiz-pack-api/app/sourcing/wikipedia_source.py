@@ -1,6 +1,5 @@
 """Wikipedia fact sourcing — extracts interesting facts from Wikipedia APIs."""
 
-import asyncio
 import re
 from typing import Optional
 

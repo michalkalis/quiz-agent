@@ -4,9 +4,7 @@ Two independent checks, either of which is enough to drop a question:
 
 - **Cosine similarity ≥ 0.85** against the existing question corpus, via
   `QuestionStore.find_duplicates`. Catches questions that paraphrase an
-  already-stored question (semantic dup). The 0.85 cutoff matches the
-  legacy `QuestionStorage.check_duplicates` threshold so behaviour is
-  unchanged on the inputs both code paths see.
+  already-stored question (semantic dup).
 - **Jaccard token overlap ≥ 0.80** against `gold_standard.json`. Catches
   near-verbatim copies of the curated gold-standard set we use as a
   reviewer baseline — we never want a generated pack to mirror that
@@ -15,13 +13,10 @@ Two independent checks, either of which is enough to drop a question:
 The dropped count is published via `StageResult.info["dropped"]` so SSE
 clients see the filter activity, mirroring `VerificationStage`'s shape.
 
-The constructor takes a `QuestionStore` (Protocol from `quiz_shared`),
-so today's ChromaDB-backed store and the Phase-2.19 `PgvectorQuestionStore`
-plug in interchangeably. The `pack_id` filter described in the focus
-file (`WHERE pack_id IS NULL OR pack_id = ctx.pack_id`) is a pgvector-
-specific concern — ChromaDB does not store `pack_id` today. Once 2.19
-lands the pgvector store, that filter belongs inside the store's query
-implementation, not here. See TODO(2.19) below.
+The constructor takes a `QuestionStore` (Protocol from `quiz_shared`);
+in production that is the pgvector-backed store. The `pack_id` filter
+(`WHERE pack_id IS NULL OR pack_id = ctx.pack_id`) belongs inside the
+store's query implementation, not here.
 """
 
 from __future__ import annotations
@@ -86,9 +81,6 @@ class DedupStage:
         )
 
     def _is_cosine_duplicate(self, question: Question) -> bool:
-        # TODO(2.19): once PgvectorQuestionStore lands, push the
-        # `pack_id IS NULL OR pack_id = ctx.pack_id` filter into the store
-        # query so cross-pack dedup is exact. ChromaDB has no pack_id today.
         try:
             duplicates = self._store.find_duplicates(
                 question.question, threshold=self._cosine_threshold

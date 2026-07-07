@@ -3,7 +3,7 @@
 import os
 from typing import List, Optional
 
-from .examples import EXCELLENT_EXAMPLES, OK_EXAMPLES, BAD_EXAMPLES_TEMPLATE, load_gold_standard, load_anti_patterns
+from .examples import OK_EXAMPLES, BAD_EXAMPLES_TEMPLATE, load_gold_standard, load_anti_patterns
 
 
 class PromptBuilder:

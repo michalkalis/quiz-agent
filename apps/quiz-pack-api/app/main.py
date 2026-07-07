@@ -1,7 +1,6 @@
 """Question Generator FastAPI application."""
 
 import os
-import sys
 from contextlib import asynccontextmanager
 
 # Load environment variables from .env files

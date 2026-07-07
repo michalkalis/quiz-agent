@@ -92,7 +92,7 @@ def load_gold_standard(
                 lines.append(f'A: {ex["answer"]}')
             lines.append(f'**WHY EXCELLENT:** {ex["why_excellent"]}')
         else:
-            lines.append(f'*(Answer omitted — study the question structure and pattern, not the answer.)*')
+            lines.append('*(Answer omitted — study the question structure and pattern, not the answer.)*')
         lines.append("")
 
     return "\n".join(lines)

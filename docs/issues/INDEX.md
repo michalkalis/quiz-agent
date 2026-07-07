@@ -14,6 +14,10 @@ Dashboard of all `issue-NN-*.md` files. Updated by `/triage` whenever a `**Triag
 
 | # | Title | Triage | TODO | Notes |
 |---|---|---|---|---|
+| 91 | [Auth low-severity hardening bundle](issue-91-auth-low-severity-bundle.md) | bug · ready-for-agent | `[ ]` #91 | 6 small items from 2026-07-07 auth review: nonce RNG guard, `/usage` IDOR, constant-time admin key, 500 leak, `/auth/apple` 409 recovery, row pruning. One-sweep |
+| 90 | [Freemium quota TOCTOU](issue-90-quota-toctou.md) | bug · ready-for-agent | `[ ]` #90 | Concurrent starts exceed monthly cap; enforce cap atomically in `record_question`. From 2026-07-07 auth review |
+| 89 | [Grace null-subject quota bypass](issue-89-grace-null-subject-quota-bypass.md) | bug · ready-for-agent | `[ ]` #89 | No-bearer + no `user_id` → `user_id=None` → all quota gates skipped. Mint throwaway subject or reject. From 2026-07-07 auth review; interim until #65 grace flip-off |
+| 88 | [Lost refresh response → silent sign-out](issue-88-refresh-lost-response-signout.md) | bug · ready-for-agent | `[ ]` #88 | HIGH. Dropped response mid-refresh → family revoked → SIWA user dropped to anon. Add immediate-successor reuse-grace (RFC 9700). From 2026-07-07 auth review |
 | 87 | [Home: free-plan counter + reset countdown](issue-87-home-freeplan-counter.md) | enhancement · done | `[x]` #87 | Shipped 2026-07-07. Founder decisions: monthly reset (calendar month), 100 q/month, paid = Unlimited row. Backend monthly window + Home card |
 | 85 | [Replay button + on-screen mute control](issue-85-replay-button-and-mute-control.md) | enhancement · **done 2026-07-06** (`a52eba6`) | | Variant B shipped: minimalistic replay + mute in the bottom audio strip, both modes; absorbs regressed #13 |
 | 84 | [Drop streak/best-score from UI (keep logic)](issue-84-drop-streak-bestscore-ui.md) | enhancement · **done 2026-07-06** | | Variant B shipped: result = score box only, Home stats row removed; `QuizStats` keeps computing; Result nav stays `HangsQuizNav` per #86 frames |

@@ -14,6 +14,7 @@ Dashboard of all `issue-NN-*.md` files. Updated by `/triage` whenever a `**Triag
 
 | # | Title | Triage | TODO | Notes |
 |---|---|---|---|---|
+| 92 | [Rename app: Hangs → Trubbo](issue-92-rename-trubbo.md) | enhancement · ready-for-agent | `[ ]` #92 | Display/brand rename only, identifiers stay (judged). 3 Opus sessions + 2 small `[HUMAN]` steps; ASC name save = availability gate, run first |
 | 91 | [Auth low-severity hardening bundle](issue-91-auth-low-severity-bundle.md) | bug · ready-for-agent | `[ ]` #91 | 6 small items from 2026-07-07 auth review: nonce RNG guard, `/usage` IDOR, constant-time admin key, 500 leak, `/auth/apple` 409 recovery, row pruning. One-sweep |
 | 90 | [Freemium quota TOCTOU](issue-90-quota-toctou.md) | bug · ready-for-agent | `[ ]` #90 | Concurrent starts exceed monthly cap; enforce cap atomically in `record_question`. From 2026-07-07 auth review |
 | 89 | [Grace null-subject quota bypass](issue-89-grace-null-subject-quota-bypass.md) | bug · ready-for-agent | `[ ]` #89 | **Latent** (grace already OFF in prod per #65) — hardening vs re-enablement. Fix = reject 401 + null-subject session guard. Reframed 2026-07-07 |

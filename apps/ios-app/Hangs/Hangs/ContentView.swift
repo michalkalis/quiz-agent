@@ -125,7 +125,7 @@ struct ContentView: View {
         }) {
             PaywallView(
                 storeManager: appState.storeManager,
-                limitError: viewModel.dailyLimitError,
+                limitError: viewModel.quotaLimitError,
                 onDismiss: { viewModel.showPaywall = false }
             )
         }

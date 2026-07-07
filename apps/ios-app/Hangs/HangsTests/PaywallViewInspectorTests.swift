@@ -45,8 +45,8 @@ private func makeStoreManager(
     return manager
 }
 
-private func makeLimitError(questionsLimit: Int = 10) -> DailyLimitError {
-    DailyLimitError(
+private func makeLimitError(questionsLimit: Int = 10) -> QuotaLimitError {
+    QuotaLimitError(
         error: "Daily limit reached",
         questionsUsed: questionsLimit,
         questionsLimit: questionsLimit,
@@ -142,7 +142,7 @@ struct PaywallViewNormalStructureTests {
         }
     }
 
-    @Test("limitMessage includes questionsLimit from DailyLimitError")
+    @Test("limitMessage includes questionsLimit from QuotaLimitError")
     func limitMessageIncludesCount() async throws {
         let product = PurchasableProduct(
             id: StoreProduct.unlimited,

@@ -33,6 +33,9 @@ struct HomeView: View {
                         .padding(.horizontal, 20)
                         .padding(.top, 4)
 
+                    freePlanCard
+                        .padding(.horizontal, 20)
+
                     HangsSectionLabel(text: "session", color: Theme.Hangs.Colors.pink)
                         .padding(.horizontal, 20)
                         .padding(.top, 8)
@@ -69,6 +72,90 @@ struct HomeView: View {
         .sheet(isPresented: $viewModel.showingMicrophonePicker) {
             AudioDevicePickerView(viewModel: viewModel)
         }
+    }
+
+    // MARK: - Free-plan quota card (#87)
+
+    // Free users see remaining monthly questions + reset countdown; premium
+    // users see an Unlimited row in the same slot (founder decision 2026-07-07).
+    // Hidden until /usage has loaded.
+    @ViewBuilder
+    private var freePlanCard: some View {
+        if let usage = viewModel.usageInfo {
+            HangsCard(padding: .init(top: 12, leading: 16, bottom: 12, trailing: 16)) {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        HStack(spacing: 6) {
+                            Image(systemName: "bolt.fill")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundColor(Theme.Hangs.Colors.blue)
+                                .accessibilityHidden(true)
+                            if usage.isPremium {
+                                Text("Unlimited questions")
+                                    .font(.hangsBody(13, weight: .semibold))
+                                    .foregroundColor(Theme.Hangs.Colors.ink)
+                                    .accessibilityIdentifier("home.freePlanUnlimited")
+                            } else {
+                                Text("\(usage.remaining ?? 0) of \(usage.questionsLimit ?? 0) free questions left")
+                                    .font(.hangsBody(13, weight: .semibold))
+                                    .foregroundColor(Theme.Hangs.Colors.ink)
+                                    .accessibilityIdentifier("home.freePlanCount")
+                            }
+                        }
+                        Spacer()
+                        if !usage.isPremium, let countdown = Self.resetCountdown(usage) {
+                            Text(countdown)
+                                .font(.hangsBody(12))
+                                .foregroundColor(Theme.Hangs.Colors.mutedFaint)
+                                .accessibilityIdentifier("home.freePlanReset")
+                        }
+                    }
+                    if !usage.isPremium {
+                        quotaTrack(fraction: Self.quotaFraction(usage))
+                    }
+                }
+            }
+            .accessibilityIdentifier("home.freePlanCard")
+        }
+    }
+
+    private func quotaTrack(fraction: Double) -> some View {
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                Capsule().fill(Theme.Hangs.Colors.subtleBorder)
+                Capsule()
+                    .fill(Theme.Hangs.Colors.blue)
+                    .frame(width: geo.size.width * fraction)
+            }
+        }
+        .frame(height: 4)
+        .accessibilityHidden(true)
+    }
+
+    /// Fraction of the free quota still available (drives the track fill).
+    static func quotaFraction(_ usage: UsageInfo) -> Double {
+        guard let remaining = usage.remaining, let limit = usage.questionsLimit,
+              limit > 0
+        else { return 0 }
+        return min(1, max(0, Double(remaining) / Double(limit)))
+    }
+
+    /// "resets in 3 days" — rounds up so it never promises a reset earlier
+    /// than it happens. Nil when the backend timestamp doesn't parse.
+    static func resetCountdown(_ usage: UsageInfo, now: Date = Date()) -> String? {
+        guard let reset = usage.resetDate else { return nil }
+        let seconds = reset.timeIntervalSince(now)
+        guard seconds > 3600 else {
+            return String(localized: "resets soon", comment: "Home quota card: free questions reset in under an hour")
+        }
+        if seconds >= 86400 {
+            let days = Int((seconds / 86400).rounded(.up))
+            return days == 1
+                ? String(localized: "resets in 1 day", comment: "Home quota card: one day until the free-question reset")
+                : String(localized: "resets in \(days) days", comment: "Home quota card: days until the free-question reset")
+        }
+        let hours = Int((seconds / 3600).rounded(.up))
+        return String(localized: "resets in \(hours) hours", comment: "Home quota card: hours until the free-question reset")
     }
 
     // MARK: - Config card

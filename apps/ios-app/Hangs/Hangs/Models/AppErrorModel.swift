@@ -71,10 +71,10 @@ struct AppErrorModel: Equatable, Sendable {
         // NetworkError: domain-specific failures
         if let networkError = error as? NetworkError {
             switch networkError {
-            case .dailyLimitReached:
+            case .quotaLimitReached:
                 return AppErrorModel(
-                    title: String(localized: "Daily limit reached", comment: "Error title: user hit the free daily question quota"),
-                    description: String(localized: "You've answered the maximum number of questions today. Come back tomorrow.", comment: "Error body: daily quota reached"),
+                    title: String(localized: "Free limit reached", comment: "Error title: user hit the free monthly question quota"),
+                    description: String(localized: "You've used all your free questions for this month.", comment: "Error body: monthly quota reached"),
                     retryAction: .goHome
                 )
             case .sessionNotFound:

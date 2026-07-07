@@ -62,10 +62,10 @@ struct NetworkServiceTests {
         NetworkService(baseURL: Stubs.baseURL, session: StubURLProtocol.makeSession())
     }
 
-    // MARK: 1. 429 → dailyLimitReached (valid body)
+    // MARK: 1. 429 → quotaLimitReached (valid body)
 
-    @Test("submitTextInput 429 with valid DailyLimitErrorWrapper → .dailyLimitReached")
-    func dailyLimitReachedValidBody() async throws {
+    @Test("submitTextInput 429 with valid QuotaLimitErrorWrapper → .quotaLimitReached")
+    func quotaLimitReachedValidBody() async throws {
         let service = makeService()
         StubURLProtocol.handler = { _ in
             (.make(status: 429), Data(Stubs.dailyLimitJSON.utf8))
@@ -76,13 +76,13 @@ struct NetworkServiceTests {
             _ = try await service.submitTextInput(sessionId: "s1", input: "Paris", audio: false)
             Issue.record("Expected throw, got success")
         } catch let error as NetworkError {
-            if case .dailyLimitReached(let detail) = error {
+            if case .quotaLimitReached(let detail) = error {
                 #expect(detail.error == "daily_limit_reached")
                 #expect(detail.questionsUsed == 10)
                 #expect(detail.questionsLimit == 10)
                 #expect(detail.upgradeAvailable == true)
             } else {
-                Issue.record("Expected .dailyLimitReached, got \(error)")
+                Issue.record("Expected .quotaLimitReached, got \(error)")
             }
         }
     }

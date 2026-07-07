@@ -228,8 +228,8 @@ actor NetworkService: NetworkServiceProtocol {
         // Handle 429 daily limit reached
         if httpResponse.statusCode == 429 {
             logHTTPError(endpoint: endpointPath, status: 429)
-            if let limitError = try? JSONDecoder().decode(DailyLimitErrorWrapper.self, from: data) {
-                throw NetworkError.dailyLimitReached(limitError.detail)
+            if let limitError = try? JSONDecoder().decode(QuotaLimitErrorWrapper.self, from: data) {
+                throw NetworkError.quotaLimitReached(limitError.detail)
             }
             throw NetworkError.serverError(statusCode: 429, message: "Rate limited")
         }
@@ -398,8 +398,8 @@ actor NetworkService: NetworkServiceProtocol {
         // Handle 429 daily limit reached
         if httpResponse.statusCode == 429 {
             logHTTPError(endpoint: endpointPath, status: 429)
-            if let limitError = try? JSONDecoder().decode(DailyLimitErrorWrapper.self, from: data) {
-                throw NetworkError.dailyLimitReached(limitError.detail)
+            if let limitError = try? JSONDecoder().decode(QuotaLimitErrorWrapper.self, from: data) {
+                throw NetworkError.quotaLimitReached(limitError.detail)
             }
             throw NetworkError.serverError(statusCode: 429, message: "Rate limited")
         }
@@ -461,8 +461,8 @@ actor NetworkService: NetworkServiceProtocol {
         // Handle 429 daily limit reached
         if httpResponse.statusCode == 429 {
             logHTTPError(endpoint: endpointPath, status: 429)
-            if let limitError = try? JSONDecoder().decode(DailyLimitErrorWrapper.self, from: data) {
-                throw NetworkError.dailyLimitReached(limitError.detail)
+            if let limitError = try? JSONDecoder().decode(QuotaLimitErrorWrapper.self, from: data) {
+                throw NetworkError.quotaLimitReached(limitError.detail)
             }
             throw NetworkError.serverError(statusCode: 429, message: "Rate limited")
         }
@@ -651,9 +651,9 @@ nonisolated private struct ErrorResponse: Decodable, Sendable {
     let detail: String
 }
 
-/// Backend 429 response wraps DailyLimitError in "detail" field
-nonisolated private struct DailyLimitErrorWrapper: Decodable, Sendable {
-    let detail: DailyLimitError
+/// Backend 429 response wraps QuotaLimitError in "detail" field
+nonisolated private struct QuotaLimitErrorWrapper: Decodable, Sendable {
+    let detail: QuotaLimitError
 }
 
 enum NetworkError: LocalizedError {
@@ -661,7 +661,7 @@ enum NetworkError: LocalizedError {
     case invalidURL
     case decodingError(Error)
     case serverError(statusCode: Int, message: String)
-    case dailyLimitReached(DailyLimitError)
+    case quotaLimitReached(QuotaLimitError)
     case sessionNotFound
 
     var errorDescription: String? {
@@ -675,8 +675,8 @@ enum NetworkError: LocalizedError {
         case .serverError(_, let message):
             // Server-provided message, already localized by the backend — do not wrap.
             return message
-        case .dailyLimitReached:
-            return String(localized: "Daily question limit reached", comment: "Network error: user hit the free daily question quota")
+        case .quotaLimitReached:
+            return String(localized: "Free question limit reached", comment: "Network error: user hit the free monthly question quota")
         case .sessionNotFound:
             return String(localized: "Session not found or already ended", comment: "Network error: the quiz session is no longer active")
         }

@@ -25,8 +25,8 @@
       ▿ transactionListener: Optional<Task<(), Never>>
         ▿ some: Task<(), Never>
           - _task: (Opaque Value)
-  ▿ limitError: Optional<DailyLimitError>
-    ▿ some: DailyLimitError
+  ▿ limitError: Optional<QuotaLimitError>
+    ▿ some: QuotaLimitError
       - error: "Daily limit reached"
       - questionsLimit: 5
       - questionsUsed: 5

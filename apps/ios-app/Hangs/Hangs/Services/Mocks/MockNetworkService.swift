@@ -140,10 +140,10 @@ final class MockNetworkService: NetworkServiceProtocol {
         return UsageInfo(
             userId: userId,
             isPremium: false,
-            questionsUsed: 5,
-            questionsLimit: 20,
-            remaining: 15,
-            resetsAt: ISO8601DateFormatter().string(from: Date().addingTimeInterval(86400))
+            questionsUsed: 30,
+            questionsLimit: 100,
+            remaining: 70,
+            resetsAt: ISO8601DateFormatter().string(from: Date().addingTimeInterval(12 * 86400))
         )
     }
 }

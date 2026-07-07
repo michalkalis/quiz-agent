@@ -12,7 +12,7 @@ import SwiftUI
 
 struct PaywallView: View {
     @ObservedObject var storeManager: StoreManager
-    let limitError: DailyLimitError?
+    let limitError: QuotaLimitError?
     let onDismiss: () -> Void
 
     // Offline: load attempt completed but no product returned (StoreKit unreachable).
@@ -95,9 +95,9 @@ struct PaywallView: View {
 
     private var limitMessage: String {
         if let limit = limitError {
-            return String(localized: "You've used all \(limit.questionsLimit) free questions today.", comment: "Paywall subtitle when the daily free-question limit is known")
+            return String(localized: "You've used all \(limit.questionsLimit) free questions this month.", comment: "Paywall subtitle when the monthly free-question limit is known")
         }
-        return String(localized: "You've used all your free questions today.", comment: "Paywall subtitle when the daily free-question limit is unknown")
+        return String(localized: "You've used all your free questions this month.", comment: "Paywall subtitle when the monthly free-question limit is unknown")
     }
 
     private var featureCard: some View {
@@ -113,7 +113,7 @@ struct PaywallView: View {
             HangsDivider()
             featureRow("Unlimited questions, every day")
             HangsDivider()
-            featureRow("Never wait for the daily reset")
+            featureRow("Never wait for the monthly reset")
             HangsDivider()
             featureRow("One-time unlock — not a subscription")
         }
@@ -295,17 +295,22 @@ private struct CountdownPill: View {
             timeRemaining = String(localized: "now", comment: "Countdown pill value when free questions reset imminently")
             return
         }
-        let hours = Int(remaining) / 3600
+        let days = Int(remaining) / 86400
+        let hours = (Int(remaining) % 86400) / 3600
         let minutes = (Int(remaining) % 3600) / 60
-        timeRemaining = hours > 0
-            ? String(localized: "\(hours)h \(minutes)m", comment: "Compact time remaining: hours and minutes (e.g. 3h 5m)")
-            : String(localized: "\(minutes)m", comment: "Compact time remaining: minutes only (e.g. 5m)")
+        if days > 0 {
+            timeRemaining = String(localized: "\(days)d \(hours)h", comment: "Compact time remaining: days and hours (e.g. 12d 4h)")
+        } else if hours > 0 {
+            timeRemaining = String(localized: "\(hours)h \(minutes)m", comment: "Compact time remaining: hours and minutes (e.g. 3h 5m)")
+        } else {
+            timeRemaining = String(localized: "\(minutes)m", comment: "Compact time remaining: minutes only (e.g. 5m)")
+        }
     }
 }
 
 // MARK: - Helper extension
 
-private extension DailyLimitError {
+private extension QuotaLimitError {
     var resetDate: Date? {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]

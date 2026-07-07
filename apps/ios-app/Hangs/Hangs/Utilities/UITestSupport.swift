@@ -48,8 +48,8 @@
             }
 
             if CommandLine.arguments.contains("--ui-test-paywall") {
-                network.createSessionError = NetworkError.dailyLimitReached(DailyLimitError(
-                    error: "Daily limit reached",
+                network.createSessionError = NetworkError.quotaLimitReached(QuotaLimitError(
+                    error: "quota_limit_reached",
                     questionsUsed: 5,
                     questionsLimit: 5,
                     resetsAt: "2099-01-01T08:00:00.000Z",

@@ -7,7 +7,7 @@
 //
 //  Chosen variants and rationale:
 //
-//  A. limitErrorWithCountdown — DailyLimitError supplied, product loaded ($4.99).
+//  A. limitErrorWithCountdown — QuotaLimitError supplied, product loaded ($4.99).
 //     The CountdownToReset subview (HStack with clock Image + Text) is present
 //     in the Mirror tree, and PrimaryButton carries the display-price string.
 //
@@ -47,10 +47,10 @@ private func makeStoreManager(
     return manager
 }
 
-/// Build a DailyLimitError with a reset time ~8 hours from a fixed epoch
+/// Build a QuotaLimitError with a reset time ~8 hours from a fixed epoch
 /// so the dump contains a deterministic resetsAt string (not wall-clock dependent).
-private func makeLimitError() -> DailyLimitError {
-    DailyLimitError(
+private func makeLimitError() -> QuotaLimitError {
+    QuotaLimitError(
         error: "Daily limit reached",
         questionsUsed: 5,
         questionsLimit: 5,

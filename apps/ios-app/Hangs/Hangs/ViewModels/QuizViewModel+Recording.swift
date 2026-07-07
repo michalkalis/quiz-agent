@@ -376,9 +376,9 @@ extension QuizViewModel {
                 Logger.network.error("⏱️ Voice submission timed out after 30 seconds")
             } catch let error as NetworkError {
                 // Handle daily limit reached — show paywall
-                if case let .dailyLimitReached(limitError) = error {
+                if case let .quotaLimitReached(limitError) = error {
                     await MainActor.run {
-                        self.dailyLimitError = limitError
+                        self.quotaLimitError = limitError
                         self.showPaywall = true
                         self.transition(to: .idle)
                     }

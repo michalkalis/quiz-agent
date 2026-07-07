@@ -124,7 +124,7 @@ final class QuizViewModel: ObservableObject {
 
     // Paywall state
     @Published var showPaywall: Bool = false
-    @Published var dailyLimitError: DailyLimitError?
+    @Published var quotaLimitError: QuotaLimitError?
     @Published var usageInfo: UsageInfo?
 
     // Answer confirmation modal state
@@ -535,8 +535,8 @@ final class QuizViewModel: ObservableObject {
             }
 
         } catch let error as NetworkError {
-            if case let .dailyLimitReached(limitError) = error {
-                dailyLimitError = limitError
+            if case let .quotaLimitReached(limitError) = error {
+                quotaLimitError = limitError
                 showPaywall = true
                 transition(to: .idle)
                 audioService.deactivateSession()
@@ -579,9 +579,9 @@ final class QuizViewModel: ObservableObject {
     /// Handle an error, detecting 429 daily limit and showing paywall instead of error state
     private func handleError(_ error: Error, context: ErrorContext, fallbackMessage: String) {
         if let networkError = error as? NetworkError,
-           case let .dailyLimitReached(limitError) = networkError
+           case let .quotaLimitReached(limitError) = networkError
         {
-            dailyLimitError = limitError
+            quotaLimitError = limitError
             showPaywall = true
             transition(to: .idle)
             audioService.deactivateSession()

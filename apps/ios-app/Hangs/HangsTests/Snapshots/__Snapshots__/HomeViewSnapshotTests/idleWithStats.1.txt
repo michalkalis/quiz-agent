@@ -61,8 +61,8 @@
       ▿ _showPaywall: Combine.Published<Swift.Bool>
         ▿ storage: Combine.Published<Swift.Bool>.Storage.value
           - value: false
-      ▿ _dailyLimitError: Combine.Published<Swift.Optional<Hangs.DailyLimitError>>
-        ▿ storage: Combine.Published<Swift.Optional<Hangs.DailyLimitError>>.Storage.value
+      ▿ _quotaLimitError: Combine.Published<Swift.Optional<Hangs.QuotaLimitError>>
+        ▿ storage: Combine.Published<Swift.Optional<Hangs.QuotaLimitError>>.Storage.value
           - value: nil
       ▿ _usageInfo: Combine.Published<Swift.Optional<Hangs.UsageInfo>>
         ▿ storage: Combine.Published<Swift.Optional<Hangs.UsageInfo>>.Storage.value
@@ -261,6 +261,7 @@
           - totalCorrect: 0
           - totalAnswered: 0
           - totalQuizzes: 0
+        - signInPromptShownCount: 0
       - silenceDetectionService: nil
       - sttService: nil
       - earconPlayer: Hangs.SystemEarconPlayer #7

@@ -7,7 +7,7 @@
 //  Why these tests matter:
 //  - Network connectivity / timeout failures must always produce a retryOperation CTA so
 //    the Error screen wires the retry closure to re-run the last operation.
-//  - Terminal failures (dailyLimitReached, sessionNotFound) must produce a goHome CTA —
+//  - Terminal failures (quotaLimitReached, sessionNotFound) must produce a goHome CTA —
 //    retrying is meaningless and would loop forever.
 //  - Context-driven fallbacks must produce titles that match the quiz phase,
 //    so the user gets actionable feedback (not a generic message) when the error type
@@ -51,16 +51,16 @@ struct AppErrorModelTests {
 
     // MARK: - NetworkError (terminal)
 
-    @Test("dailyLimitReached → goHome (retry meaningless after quota)")
-    func dailyLimitReached() {
-        let limitError = DailyLimitError(
+    @Test("quotaLimitReached → goHome (retry meaningless after quota)")
+    func quotaLimitReached() {
+        let limitError = QuotaLimitError(
             error: "limit_reached",
             questionsUsed: 10,
             questionsLimit: 10,
             resetsAt: "2026-06-12T00:00:00Z",
             upgradeAvailable: true
         )
-        let error = NetworkError.dailyLimitReached(limitError)
+        let error = NetworkError.quotaLimitReached(limitError)
         let model = AppErrorModel.from(error)
 
         #expect(model.retryAction == .goHome)
@@ -205,7 +205,7 @@ struct AppErrorModelTests {
 
     @Test("all mapped cases produce non-empty title and description")
     func allCasesHaveNonEmptyStrings() {
-        let limitError = DailyLimitError(
+        let limitError = QuotaLimitError(
             error: "limit_reached",
             questionsUsed: 10,
             questionsLimit: 10,
@@ -215,7 +215,7 @@ struct AppErrorModelTests {
         let cases: [Error] = [
             URLError(.notConnectedToInternet),
             URLError(.timedOut),
-            NetworkError.dailyLimitReached(limitError),
+            NetworkError.quotaLimitReached(limitError),
             NetworkError.sessionNotFound,
             NetworkError.serverError(statusCode: 500, message: "err"),
             NetworkError.serverError(statusCode: 429, message: "err"),

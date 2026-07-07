@@ -41,7 +41,7 @@ nonisolated struct UsageInfo: Codable, Sendable, Equatable {
 }
 
 /// Error detail returned by 429 response
-nonisolated struct DailyLimitError: Codable, Sendable {
+nonisolated struct QuotaLimitError: Codable, Sendable {
     let error: String
     let questionsUsed: Int
     let questionsLimit: Int

@@ -1,12 +1,38 @@
 ---
 name: regression
 description: Run iOS regression scenarios (RS-01..RS-NN) end-to-end on the simulator. Drive UI via XcodeBuildMCP + curl HTTP listener, assert state-machine correctness, write per-run report, stop on first failure.
-allowed-tools: Bash, Read, Write, Glob, Grep, mcp__XcodeBuildMCP__clean, mcp__XcodeBuildMCP__build_sim, mcp__XcodeBuildMCP__get_sim_app_path, mcp__XcodeBuildMCP__install_app_sim, mcp__XcodeBuildMCP__launch_app_sim, mcp__XcodeBuildMCP__stop_app_sim, mcp__XcodeBuildMCP__start_sim_log_cap, mcp__XcodeBuildMCP__stop_sim_log_cap, mcp__XcodeBuildMCP__snapshot_ui, mcp__XcodeBuildMCP__screenshot, mcp__XcodeBuildMCP__tap, mcp__XcodeBuildMCP__touch, mcp__XcodeBuildMCP__list_sims, mcp__XcodeBuildMCP__boot_sim, mcp__XcodeBuildMCP__open_sim, mcp__XcodeBuildMCP__session_show_defaults, mcp__XcodeBuildMCP__session_set_defaults
+allowed-tools: Agent, Read, Glob, Grep
 argument-hint: "[RS-01|RS-02|...|all] (default: all)"
-model: sonnet
+model: haiku
 ---
 
 # Run iOS Regression Scenarios
+
+## Execution model — READ FIRST (token cost)
+
+**Do not drive the simulator from this (main) context.** `snapshot_ui` returns
+the full accessibility tree and `screenshot` returns an image; the suite polls
+them continuously, so driving here would pour megabytes of tree/image payload
+into the caller's context. Instead, **delegate the whole run to the
+`ios-ui-driver` subagent** (model `sonnet`), which owns the XcodeBuildMCP tools
+and absorbs those payloads in its own isolated context.
+
+1. Validate `$ARGUMENTS` per *Argument parsing* below — if a single `RS-NN` is
+   given, confirm it exists in `docs/testing/regression-scenarios.md`; else list
+   ids and stop. (Read-only; no simulator work here.)
+2. Spawn **one** `ios-ui-driver` agent (Agent tool) with a prompt like:
+   > Run regression scenario(s) `<ARGS>` end-to-end following
+   > `.claude/skills/regression/SKILL.md` sections 0 through 1f — build once,
+   > loop in order, stop on the first FAIL, write each per-run report to
+   > `docs/testing/runs/`. Return ONLY the per-scenario summary lines
+   > (`RS-id PASS|FAIL  <report-path>  [— reason]`) — no snapshot trees, no
+   > screenshots, no step log.
+3. Print exactly the summary lines the subagent returns.
+
+**Everything below is the procedure the subagent follows** — the spec, not
+something this orchestrator runs directly.
+
+---
 
 Drive `docs/testing/regression-scenarios.md` end-to-end on the iPhone 17 Pro
 simulator. Each scenario produces `docs/testing/runs/<RS-id>-<date>.md`

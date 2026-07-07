@@ -47,6 +47,14 @@ apps/ios-app/Hangs/Hangs/
 | Build (Local) | `cd apps/ios-app/Hangs && xcodebuild -scheme Hangs-Local -destination 'platform=iOS Simulator,name=iPhone 17 Pro'` |
 | Tests | `cd apps/ios-app/Hangs && xcodebuild test -scheme Hangs-Local -destination 'platform=iOS Simulator,name=iPhone 17 Pro'` |
 
+## Simulator driving & XcodeBuildMCP token cost
+
+XcodeBuildMCP runs locally (no LLM of its own), but its `snapshot_ui` returns the **full accessibility tree as large JSON** and `screenshot` returns an **image** — every such call lands in whatever session drives it and stays there. Driving the simulator directly from the main session (Opus) is the single biggest iOS token sink. So:
+
+- **Never drive the simulator from the main session.** Any task that taps/snapshots/screenshots the running app — an ad-hoc UI check, a click-through, or a regression run — is delegated to the **`ios-ui-driver`** subagent (model `sonnet`), which absorbs the snapshot/screenshot payloads in its own context and returns only a few-line conclusion. `/regression` already routes through it.
+- **Build & unit-test via the shell `xcodebuild` commands above** (pipe `| tail`), or the `ios-tester` agent (haiku) — not MCP `build_sim`/`test_sim`, which dump the whole log into context. Use MCP `build_sim`/`clean` only inside a procedure that prescribes them (the regression skill).
+- **Screenshot only for a genuine *visual* judgement** (color, layout, clipping). For state/element-presence use the accessibility tree (`wait_for_ui`/`snapshot_ui`). Never screenshot just to "show" the founder — he checks his own simulator.
+
 ## Localization (#56)
 
 All user-facing text lives in `Localizable.xcstrings` (English = source key). When adding strings:

@@ -118,7 +118,7 @@ Order keeps the tree green after every task.
 
 Run in order. **Do NOT delete the `quiz_agent_data` volume.**
 
-- [ ] **B1 [HUMAN]** — Final prod backup (D10): run `apps/quiz-agent/scripts/backup_questions.py` against prod `/data/chroma` via `fly ssh console`; **verify the artifact** (row count ≈ 410, non-empty JSON) and commit/stash it.
+- [x] **B1 [HUMAN]** — Final prod backup (D10): done 2026-07-07 (founder-initiated, agent-run). Prod container no longer has chromadb (post-A10), so instead of `fly ssh console`: tarred prod `/data/chroma` (13MB), pulled via `fly ssh sftp`, dumped locally in a throwaway chromadb venv. **Verified: 410 rows, all `approved`, 0 empty docs/metadata**, full metadata fields incl. source/source_url/source_excerpt. Artifact committed: `docs/archive/scripts-chroma/chroma_prod_full_backup_2026-07-07.json` (raw ids+documents+metadatas, embeddings excluded per D10).
 - [ ] **B2 [HUMAN]** — Wipe: `rm -rf /data/chroma` contents on the Fly volume (mount + volume stay).
 - [ ] **B3 [HUMAN]** — Unset `CHROMA_PATH` secret (`fly secrets unset CHROMA_PATH`); redeploy; verify health green.
 - [ ] **B4 [HUMAN]** — Downsize quiz-pack-api VM to 256MB (D8); observe for OOM over normal load.

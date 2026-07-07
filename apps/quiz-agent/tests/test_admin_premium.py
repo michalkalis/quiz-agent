@@ -33,7 +33,7 @@ async def client(db_sessionmaker, monkeypatch):
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
     app.include_router(misc_routes.router, prefix="/api/v1")
-    app.state.usage_tracker = UsageTracker(db_sessionmaker, daily_limit=3)
+    app.state.usage_tracker = UsageTracker(db_sessionmaker, monthly_limit=3)
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as c:
         yield c

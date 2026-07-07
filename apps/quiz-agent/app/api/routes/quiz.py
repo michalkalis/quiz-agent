@@ -66,7 +66,7 @@ async def start_quiz(
                 raise HTTPException(
                     status_code=429,
                     detail={
-                        "error": "daily_limit_reached",
+                        "error": "quota_limit_reached",
                         "questions_used": usage["questions_used"],
                         "questions_limit": usage["questions_limit"],
                         "resets_at": usage["resets_at"],

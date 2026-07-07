@@ -1,10 +1,12 @@
 """Persistent usage tracker for freemium question limits (issue #60, task 60.5).
 
-Tracks questions-per-day per subject in the ``daily_usage`` Postgres table, so
-the count survives server restarts/deploys (the in-memory dict it replaced reset
-on every restart, handing out free buckets). One row per (subject, UTC day):
-a new day simply has no row yet, so the daily reset is implicit — no scan, no
-cron. Premium is carried forward across days so a premium subject stays premium.
+Tracks questions per subject in the ``daily_usage`` Postgres table, so the
+count survives server restarts/deploys (the in-memory dict it replaced reset
+on every restart, handing out free buckets). One row per (subject, UTC day);
+the free quota is a **calendar-month window** (#87): the limit check sums the
+subject's daily rows since the 1st of the current UTC month, and the reset is
+implicit — a new month simply sums no prior rows. No scan, no cron, and the
+per-day granularity is kept (no migration from the daily model).
 
 Public method names are unchanged from the in-memory version, but they are now
 ``async`` (they do DB I/O). Premium users bypass the limit and are not counted.
@@ -14,9 +16,9 @@ from __future__ import annotations
 
 import logging
 import os
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timezone
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
@@ -24,50 +26,52 @@ from ..db.models import DailyUsage
 
 logger = logging.getLogger(__name__)
 
-FREE_DAILY_LIMIT = int(os.getenv("FREE_DAILY_LIMIT", "20"))
+FREE_MONTHLY_LIMIT = int(os.getenv("FREE_MONTHLY_LIMIT", "100"))
 
 
 def _today() -> date:
     return datetime.now(timezone.utc).date()
 
 
+def _month_start() -> date:
+    return _today().replace(day=1)
+
+
 def _next_reset() -> datetime:
-    """Next midnight UTC."""
+    """Midnight UTC on the 1st of the next month."""
     now = datetime.now(timezone.utc)
-    return datetime(now.year, now.month, now.day, tzinfo=timezone.utc) + timedelta(
-        days=1
-    )
+    if now.month == 12:
+        return datetime(now.year + 1, 1, 1, tzinfo=timezone.utc)
+    return datetime(now.year, now.month + 1, 1, tzinfo=timezone.utc)
 
 
 class UsageTracker:
-    """Persistent per-subject daily question usage, backed by ``daily_usage``."""
+    """Persistent per-subject monthly question usage, backed by ``daily_usage``."""
 
     def __init__(
         self,
         sessionmaker: async_sessionmaker[AsyncSession],
-        daily_limit: int = FREE_DAILY_LIMIT,
+        monthly_limit: int = FREE_MONTHLY_LIMIT,
     ) -> None:
         self._sessionmaker = sessionmaker
-        self.daily_limit = daily_limit
+        self.monthly_limit = monthly_limit
 
-    async def _read_today(
+    async def _read_month(
         self, session: AsyncSession, subject_id: str
     ) -> tuple[int, bool]:
-        """Return (questions_count, is_premium) for today without creating a row.
+        """Return (questions_count, is_premium) for the current calendar month.
 
-        If there is no row for today, the count is 0 and premium is inherited
-        from the subject's most recent prior row (so premium persists across the
-        daily reset)."""
-        row = (
+        The count sums the subject's daily rows since the 1st of the month.
+        Premium comes from the subject's most recent row regardless of month,
+        so premium persists across the monthly reset."""
+        count = (
             await session.execute(
-                select(DailyUsage).where(
+                select(func.coalesce(func.sum(DailyUsage.questions_count), 0)).where(
                     DailyUsage.subject_id == subject_id,
-                    DailyUsage.usage_date == _today(),
+                    DailyUsage.usage_date >= _month_start(),
                 )
             )
-        ).scalar_one_or_none()
-        if row is not None:
-            return row.questions_count, row.is_premium
+        ).scalar_one()
 
         premium = (
             await session.execute(
@@ -77,25 +81,26 @@ class UsageTracker:
                 .limit(1)
             )
         ).scalar_one_or_none()
-        return 0, bool(premium)
+        return int(count), bool(premium)
 
     async def check_limit(self, subject_id: str) -> tuple[bool, int, datetime]:
         """Check whether ``subject_id`` may ask another question.
 
         Returns (allowed, remaining, resets_at). Premium → unlimited (-1)."""
         async with self._sessionmaker() as session:
-            count, premium = await self._read_today(session, subject_id)
+            count, premium = await self._read_month(session, subject_id)
         if premium:
             return True, -1, _next_reset()
-        remaining = max(0, self.daily_limit - count)
+        remaining = max(0, self.monthly_limit - count)
         return remaining > 0, remaining, _next_reset()
 
     async def record_question(self, subject_id: str) -> int:
-        """Record a question for ``subject_id``; returns the new daily count.
+        """Record a question for ``subject_id``; returns the new monthly count.
 
-        Premium subjects are not counted (matches the prior behavior)."""
+        Increments today's row (per-day granularity is kept); premium subjects
+        are not counted (matches the prior behavior)."""
         async with self._sessionmaker() as session:
-            count, premium = await self._read_today(session, subject_id)
+            count, premium = await self._read_month(session, subject_id)
             if premium:
                 # Keep a visible row for today, but don't increment.
                 await session.execute(
@@ -123,22 +128,22 @@ class UsageTracker:
                     index_elements=["subject_id", "usage_date"],
                     set_={"questions_count": DailyUsage.questions_count + 1},
                 )
-                .returning(DailyUsage.questions_count)
             )
-            new_count = (await session.execute(stmt)).scalar_one()
+            await session.execute(stmt)
             await session.commit()
+            new_count = count + 1
             logger.debug(
-                "Usage: subject=%s questions_today=%d limit=%d",
+                "Usage: subject=%s questions_this_month=%d limit=%d",
                 subject_id,
                 new_count,
-                self.daily_limit,
+                self.monthly_limit,
             )
             return new_count
 
     async def get_usage(self, subject_id: str) -> dict:
         """Usage stats for a subject (used by the /usage endpoint)."""
         async with self._sessionmaker() as session:
-            count, premium = await self._read_today(session, subject_id)
+            count, premium = await self._read_month(session, subject_id)
         resets_at = _next_reset()
         if premium:
             return {
@@ -153,14 +158,14 @@ class UsageTracker:
             "user_id": subject_id,
             "is_premium": False,
             "questions_used": count,
-            "questions_limit": self.daily_limit,
-            "remaining": max(0, self.daily_limit - count),
+            "questions_limit": self.monthly_limit,
+            "remaining": max(0, self.monthly_limit - count),
             "resets_at": resets_at.isoformat(),
         }
 
     async def set_premium(self, subject_id: str, is_premium: bool = True) -> None:
         """Set premium for a subject (admin-only path). Upserts today's row;
-        future days inherit it via the carry-forward in ``_read_today``."""
+        later reads inherit it via the latest-row lookup in ``_read_month``."""
         async with self._sessionmaker() as session:
             await session.execute(
                 pg_insert(DailyUsage)
@@ -180,5 +185,5 @@ class UsageTracker:
 
     async def is_premium(self, subject_id: str) -> bool:
         async with self._sessionmaker() as session:
-            _, premium = await self._read_today(session, subject_id)
+            _, premium = await self._read_month(session, subject_id)
         return premium

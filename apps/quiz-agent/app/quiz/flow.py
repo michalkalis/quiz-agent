@@ -253,7 +253,7 @@ class QuizFlowService:
                 self.session_manager.update_session(session)
                 usage = await self.usage_tracker.get_usage(session.user_id)
                 result.usage_limit_error = {
-                    "error": "daily_limit_reached",
+                    "error": "quota_limit_reached",
                     "questions_used": usage["questions_used"],
                     "questions_limit": usage["questions_limit"],
                     "resets_at": usage["resets_at"],

@@ -261,8 +261,8 @@ async def lifespan(app: FastAPI):
                     "anon-bootstrap will fail safe (503) until the app id is set."
                 )
             logger.info(
-                "Services initialized (free limit: %d questions/day, persistent)",
-                usage_tracker.daily_limit,
+                "Services initialized (free limit: %d questions/month, persistent)",
+                usage_tracker.monthly_limit,
             )
             # Auth token services (#60.4). Need the JWT secret too; without it the
             # /auth/* endpoints stay disabled (503) rather than minting tokens an

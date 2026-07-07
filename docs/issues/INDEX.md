@@ -14,7 +14,7 @@ Dashboard of all `issue-NN-*.md` files. Updated by `/triage` whenever a `**Triag
 
 | # | Title | Triage | TODO | Notes |
 |---|---|---|---|---|
-| 87 | [Home: free-plan counter + reset countdown](issue-87-home-freeplan-counter.md) | enhancement · needs-info | `[ ]` #87 | Founder-requested 2026-07-05 (G2). Reset interval TBD; paid-state design. Uses #49 cost numbers; cross-refs #60/#86 |
+| 87 | [Home: free-plan counter + reset countdown](issue-87-home-freeplan-counter.md) | enhancement · done | `[x]` #87 | Shipped 2026-07-07. Founder decisions: monthly reset (calendar month), 100 q/month, paid = Unlimited row. Backend monthly window + Home card |
 | 85 | [Replay button + on-screen mute control](issue-85-replay-button-and-mute-control.md) | enhancement · **done 2026-07-06** (`a52eba6`) | | Variant B shipped: minimalistic replay + mute in the bottom audio strip, both modes; absorbs regressed #13 |
 | 84 | [Drop streak/best-score from UI (keep logic)](issue-84-drop-streak-bestscore-ui.md) | enhancement · **done 2026-07-06** | | Variant B shipped: result = score box only, Home stats row removed; `QuizStats` keeps computing; Result nav stays `HangsQuizNav` per #86 frames |
 | 83 | [Unify quiz top bar](issue-83-unify-quiz-top-bar.md) | enhancement · **done 2026-07-06** (`9dab862`) | | G1 layout shipped: close+settings top bar, muted meta row, timer at bottom, both modes. Settings chip → full Settings sheet until #68's session menu; ResultView nav → #84 |

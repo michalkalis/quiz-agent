@@ -62,7 +62,7 @@ COPY --from=builder /build/app /app
 COPY scripts /scripts
 
 # Create data directory for persistent storage
-RUN mkdir -p /data/chroma
+RUN mkdir -p /data
 
 # Expose port
 EXPOSE 8002

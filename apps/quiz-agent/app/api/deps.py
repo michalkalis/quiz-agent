@@ -384,11 +384,6 @@ def get_question_store(request: Request) -> QuestionStore:
     return request.app.state.question_store
 
 
-def get_chroma_client(request: Request):
-    """Deprecated — prefer `get_question_store`. Kept for the question health monitor."""
-    return request.app.state.chroma_client
-
-
 def get_translation_service(request: Request):
     return request.app.state.translation_service
 

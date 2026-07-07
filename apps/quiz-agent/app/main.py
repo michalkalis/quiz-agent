@@ -56,7 +56,6 @@ if sentry_dsn:
         "Sentry initialized (env=%s)", os.environ.get("ENVIRONMENT", "development")
     )
 
-from quiz_shared.database.chroma_client import ChromaDBClient
 from quiz_shared.database.pgvector_client import PgvectorQuestionStore
 from quiz_shared.database.sql_client import SQLClient
 from quiz_shared.database.sync_pgvector_store import SyncPgvectorStore
@@ -83,7 +82,6 @@ from .rate_limit import limiter
 
 # Global service instances
 session_manager: SessionManager = None
-chroma_client: ChromaDBClient = None
 sql_client: SQLClient = None
 tts_service: TTSService = None
 translation_service: TranslationService = None
@@ -98,7 +96,7 @@ async def lifespan(app: FastAPI):
     - Start background cleanup
     - Graceful shutdown
     """
-    global session_manager, chroma_client, sql_client, tts_service, translation_service
+    global session_manager, sql_client, tts_service, translation_service
 
     logger.info("Starting Quiz Agent API...")
 
@@ -126,40 +124,9 @@ async def lifespan(app: FastAPI):
     os.makedirs(data_dir, exist_ok=True)
     logger.info("Data directory ready")
 
-    # Initialize database clients
-    try:
-        logger.info("Initializing ChromaDB client...")
-
-        # Use CHROMA_PATH env var if set (for production), otherwise use project root (for local dev)
-        chroma_path = os.getenv("CHROMA_PATH")
-        if not chroma_path:
-            # Local development: use shared ChromaDB at project root
-            project_root = os.path.abspath(
-                os.path.join(os.path.dirname(__file__), "../../..")
-            )
-            chroma_path = os.path.join(project_root, "chroma_data")
-
-        # Ensure directory exists
-        os.makedirs(chroma_path, exist_ok=True)
-
-        from .startup_checks import verify_chroma_path_on_volume
-
-        verify_chroma_path_on_volume(chroma_path)
-
-        chroma_client = ChromaDBClient(
-            collection_name="quiz_questions", persist_directory=chroma_path
-        )
-        # ChromaDB is no longer consumed by any code path (#41 Session B) —
-        # the client stays initialized only until Session C removes this
-        # wiring and drops the dependency.
-        logger.info("ChromaDB client initialized (unconsumed, using %s)", chroma_path)
-    except Exception as e:
-        logger.error("Failed to initialize ChromaDB: %s", e, exc_info=True)
-        raise
-
     # Initialize the pgvector store — canonical for BOTH the voice-quiz read
     # path (#36 task 2.20) and the admin/feedback write surface (#41 D3).
-    # DATABASE_URL is mandatory (#41 D6): no silent ChromaDB fallback.
+    # DATABASE_URL is mandatory (#41 D6): no silent fallback.
     settings = get_settings()
 
     # #65: loudly flag a prod boot that ships App Attest inert (does not refuse).
@@ -360,7 +327,6 @@ async def lifespan(app: FastAPI):
     app.state.voice_transcriber = voice_transcriber
     app.state.tts_service = tts_service
     app.state.translation_service = translation_service
-    app.state.chroma_client = chroma_client
     app.state.question_store = question_store
     app.state.usage_tracker = usage_tracker
     app.state.auth_sessionmaker = auth_sessionmaker

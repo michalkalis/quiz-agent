@@ -2,5 +2,5 @@
 
 Holds the auth Phase 1 tables (anonymous_identities, refresh_tokens,
 daily_usage) on the existing ``DATABASE_URL`` Postgres. Separate from the
-ChromaDB question store and the SQLite ratings store.
+pgvector question store and the SQLite ratings store.
 """

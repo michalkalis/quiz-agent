@@ -10,6 +10,10 @@ dependencies = [
     "openai>=1.0.0",
     "asyncpg>=0.29.0",
     "pgvector>=0.3.0",
+    # Direct import in quiz_shared/utils/embeddings.py — used to ride in
+    # transitively via chromadb; must stay declared now that chromadb is gone
+    # (#41) or prod boots crash-loop on ModuleNotFoundError.
+    "numpy>=1.26.0",
 ]
 
 [build-system]

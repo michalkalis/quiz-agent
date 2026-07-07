@@ -13,12 +13,12 @@ primary_region = "cdg"
   web = "uvicorn app.main:app --host 0.0.0.0 --port 8003"
   worker = "arq app.worker.WorkerSettings"
 
-# 256MB OOM-kills the web process at import time (chromadb/onnxruntime pulled in
-# via quiz_shared.database) — see incident 2026-07-05. Workers run 2 concurrent
-# LLM-heavy generation jobs, so they get the same headroom.
+# Back to 256MB since #41 removed the chromadb import bloat that OOM-killed
+# the web process at boot (incident 2026-07-05). If OOM recurs under load,
+# scale back to 512mb.
 [[vm]]
   processes = ["web", "worker"]
-  memory = "512mb"
+  memory = "256mb"
   cpu_kind = "shared"
   cpus = 1
 

@@ -43,7 +43,7 @@ Dashboard of all `issue-NN-*.md` files. Updated by `/triage` whenever a `**Triag
 | 50 | [App Store Connect listing + ASC API](issue-50-app-store-connect-setup.md) | enhancement · ready-for-human | `[ ]` #50 | Founder does the `[HUMAN]` steps (instructions in artifacts); agent part unblocks once ASC API key lands in `.env` |
 | 48 | [Pre-release review gauntlet](issue-48-pre-release-review-gauntlet.md) | product · ready-for-human (deferred) | `[ ]` #48 | 4-stage release review; stage 2 partly covered by #65 (done). Deferred until #45 tail lands |
 | 45 | [iOS MCQ voice + design-port redesign](issue-45-ios-mcq-voice-and-redesign.md) | enhancement · tail remaining | `[~]` #45 | 45.1–45.6, 45.8–45.10, 45.12 done. Remaining: 45.7 wire+signoff, 45.11 light/dark vs `.pen`, 45.13 snapshot re-record |
-| 41 | [ChromaDB decommission](issue-41-chromadb-decommission.md) | chore · ready-for-agent (Phase A) · Phase B [HUMAN] | `[ ]` #41 | Prep complete 2026-07-06 (dual gates green); 3 agent sessions + human tail — see issue-41-execution-prompts.md. Owns dedup/ChromaDB cleanup scope (ex-#70) |
+| 41 | [ChromaDB decommission](issue-41-chromadb-decommission.md) | chore · done 2026-07-07 | `[x]` #41 | Phase A (Sessions A–C) + Phase B (B1–B4, founder-approved) complete: chromadb deleted repo-wide, prod /data/chroma wiped, CHROMA_PATH unset, quiz-pack-api back on 256MB. Owns dedup/ChromaDB cleanup scope (ex-#70) |
 | 30 | [Batch-generate questions (grow `general` → ~500)](issue-30-batch-generate-categories.md) | enhancement · deferred (blocked on #72 un-park) | `[ ]` #30 | Generation paused; runs after un-park |
 
 ## Done / closed

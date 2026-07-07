@@ -119,9 +119,9 @@ Order keeps the tree green after every task.
 Run in order. **Do NOT delete the `quiz_agent_data` volume.**
 
 - [x] **B1 [HUMAN]** — Final prod backup (D10): done 2026-07-07 (founder-initiated, agent-run). Prod container no longer has chromadb (post-A10), so instead of `fly ssh console`: tarred prod `/data/chroma` (13MB), pulled via `fly ssh sftp`, dumped locally in a throwaway chromadb venv. **Verified: 410 rows, all `approved`, 0 empty docs/metadata**, full metadata fields incl. source/source_url/source_excerpt. Artifact committed: `docs/archive/scripts-chroma/chroma_prod_full_backup_2026-07-07.json` (raw ids+documents+metadatas, embeddings excluded per D10).
-- [ ] **B2 [HUMAN]** — Wipe: `rm -rf /data/chroma` contents on the Fly volume (mount + volume stay).
-- [ ] **B3 [HUMAN]** — Unset `CHROMA_PATH` secret (`fly secrets unset CHROMA_PATH`); redeploy; verify health green.
-- [ ] **B4 [HUMAN]** — Downsize quiz-pack-api VM to 256MB (D8); observe for OOM over normal load.
+- [x] **B2 [HUMAN]** — Wipe: done 2026-07-07 (founder-approved, agent-run). `/data/chroma` contents removed; also removed stale `/data/chroma_data/` leftover (168KB, Feb 2026). Verified `/data/ratings.db` + `/data/tts_cache/` intact; volume + mount stay. (`translations.db` not present on prod — created lazily, nothing lost.)
+- [x] **B3 [HUMAN]** — Done 2026-07-07: `CHROMA_PATH` unset (machine auto-updated = redeploy); `fly secrets list` clean; `/api/v1/health` healthy; `/api/v1/admin/health` `level: ok`, 565 approved from pgvector.
+- [x] **B4 [HUMAN]** — Done 2026-07-07: both quiz-pack-api groups (web + worker) scaled 512→256MB; boot green (`/health` 200, worker started, no OOM in logs). Watch for OOM over the next normal-load window — if it recurs, scale back to 512 and reopen the import-bloat hunt.
 
 ## Acceptance
 

@@ -168,7 +168,7 @@ class TestQuestionWithProvenance:
         assert q.generation_metadata.extra["ai_reasoning"] == "Solid historical fact."
         assert q.get_ai_score() == 8.0
 
-    def test_provenance_serialises_to_json_for_chroma_storage(self):
+    def test_provenance_serialises_to_json_for_storage(self):
         q = Question(
             **_base_question(
                 generation_metadata=GenerationProvenance(

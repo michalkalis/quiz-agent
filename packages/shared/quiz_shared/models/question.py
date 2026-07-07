@@ -58,7 +58,7 @@ class GenerationProvenance(BaseModel):
 
 
 class Question(BaseModel):
-    """Question stored in ChromaDB with semantic embeddings.
+    """Question stored in the pgvector question store with semantic embeddings.
 
     Supports multiple question types: text, text_multichoice, audio, image, video
     """

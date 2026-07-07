@@ -31,7 +31,7 @@ Do NOT use it for routing, retries, status-code handling, deterministic transfor
 
 ### Database
 - **Postgres + pgvector:** Canonical store for question embeddings + metadata. Voice quiz (`apps/quiz-agent`) reads via `PgvectorQuestionStore` (see `packages/shared/quiz_shared/database/pgvector_client.py`). quiz-pack-api writes via `PersistStage`.
-- **ChromaDB:** Read-only legacy store until Phase 6 (#41) retires it. No code path writes to ChromaDB after 2026-05-28; the Fly volume stays mounted but is frozen. Do not add new ChromaDB writers.
+- **ChromaDB:** RETIRED (#41 Phase A, 2026-07-07) — client + dep deleted repo-wide. Prod `/data/chroma` wipe + `CHROMA_PATH` secret unset are the founder-gated #41 Phase B tail. Never reintroduce a ChromaDB path.
 - **SQLite:** Ratings and persistent data.
 
 ## Local Dev

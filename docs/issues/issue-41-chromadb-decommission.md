@@ -112,7 +112,7 @@ Order keeps the tree green after every task.
 - [x] **A10 — Delete Chroma client/store + drop the dep** (D5). Remove `chroma_client.py`, `ChromaDBQuestionStore`, and `chromadb>=0.4.0` from `packages/shared/pyproject.toml:8`; update BOTH Dockerfile hand-maintained pip lists 1:1 (memory `project_dockerfile_drift`); regenerate `uv.lock`. Remove the live PEP 562 `__getattr__` chroma branch + `ChromaDBQuestionStore`/`ChromaDBClient` exports in `packages/shared/quiz_shared/database/__init__.py:12,17-20,25-26` (dead once the modules are deleted). Both suites green.
 - [x] **A11 — Retire/update chroma-referencing tests** (S7). Update or delete `test_question_storage_pending.py`, `test_question_provenance.py`, `tests/db/test_pgvector_dedup.py`, `tests/orchestrator/stages/test_dedup.py` so no test imports chromadb; suites green. **Guard (Gate B):** after A10's dep drop, confirm no surviving test module has a live `import chromadb` (a stale one breaks at collection time, not just runtime) — `grep -rn 'import chromadb' apps/quiz-agent/tests apps/quiz-pack-api/tests` must be empty. Stale comment/docstring chroma mentions in tests (e.g. `test_session_manager.py:17`) are fine — only live imports break collection.
 - [x] **A12 — Archive chroma scripts + drop local `chroma_data/`** (D9). Move the ~20 one-offs (S7) to `docs/archive/scripts-chroma/`; delete repo-root `chroma_data/`. (Keep `backup_questions.py` reachable for Phase B — archive a copy, retain the runnable path.)
-- [ ] **A13 — Retire memory note + deploy Phase A.** Remove/annotate `project_prod_chroma_mount`; deploy both apps to Fly; verify `/api/v1/admin/health` + admin endpoints against prod pgvector.
+- [x] **A13 — Retire memory note + deploy Phase A.** Remove/annotate `project_prod_chroma_mount`; deploy both apps to Fly; verify `/api/v1/admin/health` + admin endpoints against prod pgvector.
 
 ### Phase B — destructive prod tail (Class c, `[HUMAN]` / founder-gated)
 
@@ -136,12 +136,12 @@ Run in order. **Do NOT delete the `quiz_agent_data` volume.**
 - [x] New store methods tested: `pytest apps/quiz-agent/tests/db/test_pgvector_store.py -v` covers upsert/delete/get_all.
 - [x] No test module has a live `import chromadb` after the dep drop (would break at pytest collection): `grep -rn "import chromadb" apps/quiz-agent/tests apps/quiz-pack-api/tests` empty.
 - [x] quiz-agent boots with `DATABASE_URL` unset → fails loud with a clear error (no Chroma fallback); inspect startup log / run `uvicorn app.main:app` sans `DATABASE_URL`.
-- [ ] Admin endpoints work against pgvector: curl `import`, `backfill-sources`, `list`, `stats`, `delete` (admin-key-gated) return 200 with pgvector-derived data.
-- [ ] `GET /api/v1/admin/health` returns pgvector-derived counts (curl; counts match a direct `SELECT count(*) ... GROUP BY review_status` on `quiz_pack.questions`).
-- [ ] `POST /rate` and `/flag` return 200 and write only to SQLite `ratings.db` (no Chroma write; inspect code + test).
-- [ ] quiz-pack-api `POST /questions/approve` returns 404/410 (retired); `grep -n "storage.chroma\|def approve_question" apps/quiz-pack-api` empty.
+- [x] Admin endpoints work against pgvector: curl `import`, `backfill-sources`, `list`, `stats`, `delete` (admin-key-gated) return 200 with pgvector-derived data.
+- [x] `GET /api/v1/admin/health` returns pgvector-derived counts (curl; counts match a direct `SELECT count(*) ... GROUP BY review_status` on `quiz_pack.questions`).
+- [x] `POST /rate` and `/flag` return 200 and write only to SQLite `ratings.db` (no Chroma write; inspect code + test).
+- [x] quiz-pack-api `POST /questions/approve` returns 404/410 (retired); `grep -n "storage.chroma\|def approve_question" apps/quiz-pack-api` empty.
 - [x] Chroma one-off scripts live under `docs/archive/scripts-chroma/`; repo-root `chroma_data/` absent (`ls`).
-- [ ] Both apps deployed; prod health + admin endpoints verified (curl prod URLs).
+- [x] Both apps deployed; prod health + admin endpoints verified (curl prod URLs).
 
 ### Phase B ([HUMAN], founder-gated — verify after each step)
 

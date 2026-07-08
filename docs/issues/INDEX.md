@@ -14,6 +14,7 @@ Dashboard of all `issue-NN-*.md` files. Updated by `/triage` whenever a `**Triag
 
 | # | Title | Triage | TODO | Notes |
 |---|---|---|---|---|
+| 93 | [Subscription IAP + question packs + free-tier resize](issue-93-subscription-iap-packs.md) | monetization · ready-for-human | `[ ]` #93 | Prep complete (both gates SOUND). Free 100→30, sub €4.99 unlimited via RevenueCat, consumable packs +server ledger. 1 `[HUMAN]` + 5 code sessions → `issue-93-execution-prompts.md`. Class b — Ralph never |
 | 92 | [Rename app: Hangs → Trubbo](issue-92-rename-trubbo.md) | enhancement · ready-for-agent | `[ ]` #92 | Display/brand rename only, identifiers stay (judged). 3 Opus sessions + 2 small `[HUMAN]` steps; ASC name save = availability gate, run first |
 | 91 | [Auth low-severity hardening bundle](issue-91-auth-low-severity-bundle.md) | bug · ready-for-agent | `[ ]` #91 | 6 small items from 2026-07-07 auth review: nonce RNG guard, `/usage` IDOR, constant-time admin key, 500 leak, `/auth/apple` 409 recovery, row pruning. One-sweep |
 | 90 | [Freemium quota TOCTOU](issue-90-quota-toctou.md) | bug · ready-for-agent | `[ ]` #90 | Concurrent starts exceed monthly cap; enforce cap atomically in `record_question`. From 2026-07-07 auth review |

@@ -2,6 +2,8 @@
 
 **Triage:** enhancement · parked (awaiting founder un-park) — Ralph loops disabled by founder 2026-07-05
 
+> **★ 2026-07-09 founder calibration** — the missing empirical ground-truth for this issue. Founder rated 36 corpus questions live: **rubric** `docs/research/question-quality-founder-calibration-2026-07-09.md`, **execution plan** `docs/issues/issue-72-reviewer-and-craft-guards-plan.md`. Key adds beyond the diagnosis below: verified **T/F answer bias (94% "True")**, answer-leak-in-stem, unguessable-open-numeric → MCQ, cliché/over-exposure — none currently guarded. Founder rulings: fun primary but **answers ≤ a few words**; T/F + numeric-estimate → **MCQ**.
+
 **Reversibility:** a · commits-only, every new behaviour behind a dormant toggle (no schema/data migration, no auth/payment, no prod deploy, no corpus writes) — overnight-loop eligible for **Phases 0–5 only**; Phase 6 is a human checkpoint Ralph must not cross.
 
 **Created:** 2026-06-22 · **Refocused:** 2026-06-22 (founder) · **Founder:** Michal

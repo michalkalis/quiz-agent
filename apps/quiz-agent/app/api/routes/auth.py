@@ -52,8 +52,16 @@ from ...auth.identity import AuthSubject
 from ...auth.refresh import RefreshError, RefreshTokenStore
 from ...auth.tokens import TokenError, TokenService
 from ...config import get_settings
-from ...db.models import AnonymousIdentity, DailyUsage, RefreshToken, User
+from ...db.models import (
+    AnonymousIdentity,
+    CreditLedger,
+    DailyUsage,
+    RefreshToken,
+    Subscription,
+    User,
+)
 from ...rate_limit import fly_client_ip, limiter
+from ...usage.subscription_state import SubscriptionState, merge_subscription_rows
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -492,6 +500,9 @@ async def _merge_anonymous_identity(
             existing.questions_count += row.questions_count  # SUM (F3, not max)
             existing.is_premium = existing.is_premium or row.is_premium  # OR (F3)
 
+    await _fold_subscription(session, anon_id, user_id)
+    await _fold_credit_ledger(session, anon_id, user_id)
+
     await session.execute(
         update(RefreshToken)
         .where(RefreshToken.anon_id == anon_id, RefreshToken.revoked_at.is_(None))
@@ -499,6 +510,78 @@ async def _merge_anonymous_identity(
     )
 
     anon.upgraded_to_user_id = user_id
+
+
+def _sub_state(row: Subscription) -> SubscriptionState:
+    return SubscriptionState(
+        product_id=row.product_id,
+        status=row.status,
+        expires_at=row.expires_at,
+        rc_original_txn_id=row.rc_original_txn_id,
+        last_event_ts_ms=row.last_event_ts_ms,
+    )
+
+
+async def _fold_subscription(session: AsyncSession, anon_id: str, user_id: str) -> None:
+    """Re-key the anon's ``subscription`` row onto the durable user account (#93).
+
+    ``subscription.account_id`` is PK/UNIQUE, so a naive re-key UPDATE would abort
+    on the UNIQUE constraint whenever a user-keyed row already exists (sub on
+    device A while signed in + anon restore on device B → two rows for one
+    account at sign-in). The fold therefore resolves both rows **into the
+    user-keyed row via the shared ``merge_subscription_rows`` helper** — same
+    rules the webhook uses (row-wise max-wins on ``expires_at``, status
+    precedence on ties, field-max ``last_event_ts_ms``; winner taken WHOLESALE,
+    never a synthesized ``{status, expires_at}`` combo) — then deletes the anon
+    row, all inside the sign-in transaction so it can never leave two rows or
+    abort. When only the anon row exists it degrades to a plain re-key UPDATE."""
+    anon_row = (
+        await session.execute(
+            select(Subscription).where(Subscription.account_id == anon_id)
+        )
+    ).scalar_one_or_none()
+    if anon_row is None:
+        return  # nothing bought while anonymous
+
+    user_row = (
+        await session.execute(
+            select(Subscription).where(Subscription.account_id == user_id)
+        )
+    ).scalar_one_or_none()
+    if user_row is None:
+        # Common case: only the anon row exists — plain re-key.
+        anon_row.account_id = user_id
+        return
+
+    # Both rows exist — merge wholesale into the user-keyed row, drop the anon row.
+    winner = merge_subscription_rows(_sub_state(anon_row), _sub_state(user_row))
+    user_row.product_id = winner.product_id
+    user_row.status = winner.status
+    user_row.expires_at = winner.expires_at
+    user_row.rc_original_txn_id = winner.rc_original_txn_id
+    user_row.last_event_ts_ms = winner.last_event_ts_ms
+    await session.delete(anon_row)
+
+
+async def _fold_credit_ledger(
+    session: AsyncSession, anon_id: str, user_id: str
+) -> None:
+    """Bare re-key of the anon's ``credit_ledger`` rows onto the user account (#93).
+
+    Collision-free by construction: the grant/clawback unique indexes are
+    **global** on the store/event ids (not per-account) and the ledger is
+    append-only, so rewriting ``account_id`` can never violate a uniqueness
+    constraint — and a post-sign-in webhook for the same txn still no-ops on the
+    global grant index (no double-grant)."""
+    await session.execute(
+        update(CreditLedger)
+        .where(CreditLedger.account_id == anon_id)
+        .values(account_id=user_id)
+    )
+    # TODO(#93): call RC logIn/alias so RevenueCat's own history merges onto the
+    # durable user id. Deferred: no RC client wrapper exists on the backend
+    # (only the REST GET fetch_rc_subscriber), and adding a live RC call on the
+    # sign-in hot path needs a clear existing pattern.
 
 
 @router.delete("/auth/me", status_code=204)

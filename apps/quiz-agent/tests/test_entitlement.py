@@ -26,9 +26,17 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from sqlalchemy import func, select
 
+from app.api.routes.auth import _merge_anonymous_identity
 from app.db.base import utcnow
-from app.db.models import CreditLedger, DailyUsage, Product, Subscription
+from app.db.models import (
+    AnonymousIdentity,
+    CreditLedger,
+    DailyUsage,
+    Product,
+    Subscription,
+)
 from app.quiz.flow import QuizFlowService
+from app.usage import rc_service
 from app.usage.entitlement import (
     EntitlementService,
     account_credit_balance,
@@ -367,3 +375,155 @@ async def test_pre_record_retrieval_500_no_debit(db_sessionmaker):
     # The debit lives in record_question, which was never reached.
     assert await _ledger_balance(db_sessionmaker) == 5
     assert await _consume_row_count(db_sessionmaker) == 0
+
+
+# --- anon->sign-in fold (issue #93 Session D) --------------------------------
+
+_ANON = "anon_fold_subject"
+_USER = "user_fold_acct_00000000"
+_PACK_PID = "com.carquiz.pack.100"
+_FOLD_TXN = "pack_txn_fold"
+
+
+async def _sub_row(db_sessionmaker, account_id):
+    async with db_sessionmaker() as s:
+        return (
+            await s.execute(
+                select(Subscription).where(Subscription.account_id == account_id)
+            )
+        ).scalar_one_or_none()
+
+
+async def _grant_row_count(db_sessionmaker) -> int:
+    async with db_sessionmaker() as s:
+        return int(
+            (
+                await s.execute(
+                    select(func.count())
+                    .select_from(CreditLedger)
+                    .where(CreditLedger.kind == "grant")
+                )
+            ).scalar_one()
+        )
+
+
+async def _run_fold(db_sessionmaker) -> None:
+    async with db_sessionmaker() as s:
+        await _merge_anonymous_identity(s, _ANON, _USER)
+        await s.commit()
+
+
+async def test_anon_to_signin_preserves_credits(db_sessionmaker):
+    """A subscription + pack credits bought while anonymous survive sign-in: both
+    the ``credit_ledger`` grant and the ``subscription`` row re-key from the anon
+    subject to the durable user account. And a webhook grant for the SAME store
+    txn replayed AFTER the fold still no-ops on the global grant index — the
+    re-key does not open a double-grant."""
+    async with db_sessionmaker() as s:
+        s.add(AnonymousIdentity(anon_id=_ANON))
+        s.add(Product(product_id=_PRODUCT_ID, kind="subscription", tier="unlimited"))
+        s.add(
+            Product(
+                product_id=_PACK_PID, kind="consumable", tier="pack", credit_amount=100
+            )
+        )
+        s.add(
+            Subscription(
+                account_id=_ANON,
+                product_id=_PRODUCT_ID,
+                status="active",
+                expires_at=utcnow() + timedelta(days=30),
+                rc_original_txn_id="txn_orig_anon",
+                last_event_ts_ms=7,
+            )
+        )
+        s.add(
+            CreditLedger(
+                account_id=_ANON,
+                delta=100,
+                kind="grant",
+                reason="pack",
+                store_txn_id=_FOLD_TXN,
+            )
+        )
+        await s.commit()
+
+    await _run_fold(db_sessionmaker)
+
+    # Ledger + subscription moved wholesale onto the user account.
+    assert await _ledger_balance(db_sessionmaker, account_id=_USER) == 100
+    assert await _ledger_balance(db_sessionmaker, account_id=_ANON) == 0
+    assert await _sub_row(db_sessionmaker, _ANON) is None
+    user_sub = await _sub_row(db_sessionmaker, _USER)
+    assert user_sub is not None
+    assert user_sub.rc_original_txn_id == "txn_orig_anon"
+
+    # Replay the pack purchase webhook (now aliased to the user id) for the SAME
+    # store txn — the global GRANT partial index makes it a no-op, no double-grant.
+    await rc_service.handle_webhook_event(
+        db_sessionmaker,
+        {
+            "type": "NON_RENEWING_PURCHASE",
+            "id": "evt_replay",
+            "app_user_id": _USER,
+            "product_id": _PACK_PID,
+            "event_timestamp_ms": 9000,
+            "transaction_id": _FOLD_TXN,
+        },
+    )
+    assert await _ledger_balance(db_sessionmaker, account_id=_USER) == 100
+    assert await _grant_row_count(db_sessionmaker) == 1
+
+
+async def test_anon_to_signin_merges_two_sub_rows(db_sessionmaker):
+    """The realistic collision path: a user-keyed subscription row already exists
+    (subscribed on device A) AND an anon-keyed row exists (restore on a fresh anon
+    install on device B). Because ``subscription.account_id`` is PK/UNIQUE, a bare
+    re-key would abort — the fold instead MERGES both into the user-keyed row via
+    the shared helper: row-wise max-wins on ``expires_at`` (winner taken WHOLESALE,
+    keeping its own status — never a synthesized combo) with a field-max
+    ``last_event_ts_ms`` — then deletes the anon row. Exactly one row survives and
+    sign-in never aborts."""
+    anon_expires = utcnow() + timedelta(days=60)  # later -> wins wholesale
+    user_expires = utcnow() + timedelta(days=10)
+    async with db_sessionmaker() as s:
+        s.add(AnonymousIdentity(anon_id=_ANON))
+        s.add(Product(product_id=_PRODUCT_ID, kind="subscription", tier="unlimited"))
+        # Anon row wins on expires_at but carries the LOWER-precedence status
+        # (grace): a field-wise synthesis would emit {active, anon_expires} which
+        # neither row held; wholesale merge must keep grace.
+        s.add(
+            Subscription(
+                account_id=_ANON,
+                product_id=_PRODUCT_ID,
+                status="grace",
+                expires_at=anon_expires,
+                rc_original_txn_id="txn_orig_anon",
+                last_event_ts_ms=5,
+            )
+        )
+        s.add(
+            Subscription(
+                account_id=_USER,
+                product_id=_PRODUCT_ID,
+                status="active",
+                expires_at=user_expires,
+                rc_original_txn_id="txn_orig_user",
+                last_event_ts_ms=9,
+            )
+        )
+        await s.commit()
+
+    await _run_fold(db_sessionmaker)  # must not raise a UNIQUE violation
+
+    async with db_sessionmaker() as s:
+        rows = (await s.execute(select(Subscription))).scalars().all()
+    assert len(rows) == 1
+    survivor = rows[0]
+    assert survivor.account_id == _USER
+    # Winner row taken wholesale (grace + its expiry + its original txn) ...
+    assert survivor.status == "grace"
+    assert abs((survivor.expires_at - anon_expires).total_seconds()) < 1
+    assert survivor.rc_original_txn_id == "txn_orig_anon"
+    # ... only last_event_ts_ms resolved as a field-max.
+    assert survivor.last_event_ts_ms == 9

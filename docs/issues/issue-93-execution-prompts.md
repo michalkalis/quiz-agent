@@ -267,7 +267,7 @@ Reviewed = n/a (exempt — see routing note). Commit + push (main, no deploy) on
 | A-helper · `subscription_state` + tests | ✅ 2026-07-10 (19 tests green) | ✅ 2026-07-10 (adversarial opus review PASS — all 6 attack vectors defended, 8 counter-example probes) | ✅ |
 | B · Entitlement gate | ✅ 2026-07-10 (9 entitlement tests + full suite 324 green; round-1 review found a real concurrent last-credit double-spend → fixed via per-account `pg_advisory_xact_lock` + deterministic two-connection interleave regression test, red-then-green proven) | ✅ 2026-07-10 (round-2 adversarial opus review PASS) | ✅ |
 | C · Webhook + sync | ✅ 2026-07-10 (15 webhook tests + full suite 339 green; 3 review rounds — round 1 found immediate-CANCELLATION no-op + unknown-product refund 500/clobber, round 2 found the guard-read TOCTOU; all fixed red-then-green) | ✅ 2026-07-10 (round-3 adversarial opus review PASS) | ✅ |
-| D · Account keying | ⬜ | ⬜ | ⬜ |
+| D · Account keying | ✅ 2026-07-10 (2 fold tests, full suite 341 green; all 4 row-interleavings safe, one txn) | ✅ 2026-07-10 (adversarial opus review PASS, 1 advisory → Session E note below) | ✅ |
 | E · iOS | ⬜ | n/a | ⬜ |
 
 > As sessions land, note any symbol a later session imports here — e.g. *"Session A delivered `app/usage/subscription_state.py` → `apply_subscription_event`, `merge_subscription_rows` (Sessions C, D import these)."*
@@ -279,3 +279,7 @@ Reviewed = n/a (exempt — see routing note). Commit + push (main, no deploy) on
 - `classify_event_type(event_type, *, product_change_is_upgrade=None)` + `EXTEND_EVENT_TYPES`/`REVOKE_EVENT_TYPES`/status+class constants.
 - ⚠️ Session C notes from the review: (1) `BILLING_ISSUE` intentionally raises in `classify_event_type` — map it directly to a grace-status event, don't feed it through classify; (2) helper compares `expires_at` datetimes as-given — webhook/sync must always construct tz-aware datetimes (RC ms → aware UTC).
 - ORM: `Product`, `Subscription`, `CreditLedger` in `app/db/models.py`; migration `alembic/versions/0005_subscription_tables.py` (targets `alembic_version_quiz_agent` via env.py, seeds 3 product rows).
+
+**Sessions B/C/D delivered:** gate in `app/usage/tracker.py` + `app/usage/entitlement.py` (typed `UsageResponse` in `app/api/deps.py`); webhook `POST /webhooks/revenuecat` (app root) + `POST /api/v1/entitlements/sync` backed by `app/usage/rc_service.py`; anon fold extended in `app/api/routes/auth.py` (`_fold_subscription`/`_fold_credit_ledger`).
+
+⚠️ **Session E must-do (D-review advisory):** call RC `logIn`/alias on sign-in (SDK-side) so anon-keyed RC history merges, then trigger `POST /entitlements/sync` — this is the designated recovery for a webhook that landed on the anon id in the purchase↔sign-in window. Follow-up idea (Session C scope, not blocking): webhook could follow `anonymous_identity.upgraded_to_user_id` for post-upgrade anon-keyed events.

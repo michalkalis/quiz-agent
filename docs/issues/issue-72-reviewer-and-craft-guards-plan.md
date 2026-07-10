@@ -11,7 +11,7 @@
 
 The founder rated 36 corpus questions and defined *what makes a question fun*. Cross-referenced with the code, **the wanted behaviour is 70% already built in #72 but dormant, and 30% genuinely missing**. This plan (a) runs the research the founder asked for, (b) activates/tunes the dormant levers, (c) adds the missing craft guards, (d) rewrites the reviewer rubric to match founder calibration, (e) validates against a fresh + the degraded June batch. **Use `Workflow` for the research fan-out (founder asked for workflows).** Founder is the subjective judge — check in at the gates.
 
-**Status 2026-07-10:** Phase 1 research **DONE** → `docs/research/question-craft-prior-art-2026-07-10.md` (5 cited briefs + synthesis, 25-row finding→change mapping). Phase 4.1 degraded-set rating **DONE via 5-question triage sample** (founder's call) → calibration doc addendum; verdict: batch avg ≈3.8, not trash — its dominant defect is **near-duplicate flooding** (bridge 3×, stomach-acid 4× in 27 Qs), i.e. the known dedup no-op, so no further rating needed. Next: Phase 2.
+**Status 2026-07-10:** Phase 1 research **DONE** → `docs/research/question-craft-prior-art-2026-07-10.md` (5 cited briefs + synthesis, 25-row finding→change mapping). Phase 4.1 degraded-set rating **DONE via 5-question triage sample** (founder's call) → calibration doc addendum; verdict: batch avg ≈3.8, not trash — its dominant defect is **near-duplicate flooding** (bridge 3×, stomach-acid 4× in 27 Qs), i.e. the known dedup no-op, so no further rating needed. **Phase 2 code DONE** (`a4e67f4`): `app/scoring/craft_guards.py` (stem-leak + T/F-balance, shadow default, `CRAFT_GUARDS_ENFORCE` to drop), `VETO_ENFORCE` promotion, in-batch dedup (Jaccard 0.60) in `DedupStage`, founder anchors + 5 craft red flags in `SCORING_PROMPT` / `question_critique_v2.md` / score-questions skill; suite 569 green ×2. **Phase 2 validation still OPEN:** run the new reviewer over the 36 rated questions (needs a prod pull — founder re-confirm for the `fly proxy` read) and check it reproduces the low outliers before flipping any enforce flag. Next: Phase 3 (needs the 3 open product decisions below).
 
 **New findings folded in (2026-07-10 sample):**
 - **Deducible-numeric nuance (Phase 2 check 3):** the unguessable-open-answer guard must NOT catch numerics the player can actively estimate (heart-beats/day rated 5/5 — "you can count the beats"). Estimable-by-reasoning → keep open + accepted-range grading; undeducible (spider-silk class) → reject or MCQ.
@@ -96,11 +96,11 @@ Files: `prompts/question_generation_v3_fact_first.md`, `question_generation_v2_c
 
 ---
 
-## Open product decisions for the founder (surface live next session)
+## Product decisions — RESOLVED by founder 2026-07-10 (locked)
 
-- **Category taxonomy**: which categories belong in the *general-knowledge* pool vs. dedicated packs (Marvel/HP/sports niche)? Affects routing + audience fit.
-- **MCQ vs open default mix**: how aggressively to shift toward MCQ overall (founder leaned MCQ 3× but open free-text still wanted for short gradable answers).
-- **Cliché policy**: reject outright, or allow with a freshness reframe?
+- **MCQ vs open mix**: start **~50/50**; the real ask is a **per-question format-suitability judgment in the pipeline** (founder verbatim: "idealne by bolo keby to nejaky krok z pipeline sam posudi… co sa viac odhaduje je viac mcq") — estimation/guessing-shaped questions route to MCQ, short gradable factual answers stay open. Founder can't set an objective global ratio yet; revisit with data after the validation batch. → Phase 3 adds a format-suitability step/criterion, not a hard quota.
+- **Cliché policy**: **reject outright** — no reframe loop; the corpus is surprising facts only.
+- **Category taxonomy**: **general pool = universal topics only** (science, history, food, geography, language, entertainment…); fandom/niche (Marvel, HP, football…) never in surprise-me — dedicated packs only. → topic-pool + routing must respect this split.
 
 ---
 

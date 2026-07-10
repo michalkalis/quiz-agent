@@ -266,7 +266,7 @@ Reviewed = n/a (exempt — see routing note). Commit + push (main, no deploy) on
 | A-schema · ORM + migration `0005` + seed | ✅ 2026-07-10 (upgrade/downgrade/upgrade clean vs local pg; 3 product rows seeded; both partial indexes verified; full pytest 296 passed + 1 pre-existing env failure `test_pgvector_store` missing psycopg2) | n/a | ✅ |
 | A-helper · `subscription_state` + tests | ✅ 2026-07-10 (19 tests green) | ✅ 2026-07-10 (adversarial opus review PASS — all 6 attack vectors defended, 8 counter-example probes) | ✅ |
 | B · Entitlement gate | ✅ 2026-07-10 (9 entitlement tests + full suite 324 green; round-1 review found a real concurrent last-credit double-spend → fixed via per-account `pg_advisory_xact_lock` + deterministic two-connection interleave regression test, red-then-green proven) | ✅ 2026-07-10 (round-2 adversarial opus review PASS) | ✅ |
-| C · Webhook + sync | ⬜ | ⬜ | ⬜ |
+| C · Webhook + sync | ✅ 2026-07-10 (15 webhook tests + full suite 339 green; 3 review rounds — round 1 found immediate-CANCELLATION no-op + unknown-product refund 500/clobber, round 2 found the guard-read TOCTOU; all fixed red-then-green) | ✅ 2026-07-10 (round-3 adversarial opus review PASS) | ✅ |
 | D · Account keying | ⬜ | ⬜ | ⬜ |
 | E · iOS | ⬜ | n/a | ⬜ |
 

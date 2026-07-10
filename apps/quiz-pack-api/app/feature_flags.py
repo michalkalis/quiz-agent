@@ -65,6 +65,30 @@ def veto_shadow() -> bool:
     return _truthy(os.getenv("VETO_SHADOW"))
 
 
+def veto_enforce() -> bool:
+    """#72 reviewer upgrade (Phase 2): promote the Answerability/surprise veto
+    from shadow to enforcing — flagged questions are DROPPED.
+
+    ``False`` (default) → shadow behaviour only (see ``veto_shadow``). Turning
+    this on implies consultation regardless of ``VETO_SHADOW``. Stays off
+    until the veto's calibration is validated against the founder's 36-rating
+    ground truth (plan Phase 2 validation).
+    """
+    return _truthy(os.getenv("VETO_ENFORCE"))
+
+
+def craft_guards_enforce() -> bool:
+    """#72 reviewer upgrade (Phase 2): promote the deterministic craft guards
+    (stem answer-leak, T/F key-balance) from shadow to dropping.
+
+    ``False`` (default) → guards run in shadow: computed and counted in the
+    stage info, nothing dropped. The guards are lexical heuristics, so they
+    earn drop rights only after the Phase 2 validation run shows zero false
+    positives on the founder's 4-5/5 rated questions.
+    """
+    return _truthy(os.getenv("CRAFT_GUARDS_ENFORCE"))
+
+
 def expiry_classification() -> bool:
     """Issue #76 F-3b: run the post-generation expiry classifier.
 

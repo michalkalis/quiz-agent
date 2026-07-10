@@ -26,6 +26,12 @@ A question the scorer could not score at all (empty ``model_scores``) is
 KEPT — we never drop on the absence of a judgment, only on a bad one. The
 drop count is surfaced via ``StageResult.info["dropped_low_score"]``,
 mirroring ``DedupStage.info["dropped"]`` so SSE/audit clients see it.
+
+**#72 reviewer upgrade (founder calibration 2026-07-09/10):** deterministic
+craft guards (stem answer-leak, T/F key-balance — ``app.scoring.craft_guards``)
+run in shadow on every batch and drop when ``CRAFT_GUARDS_ENFORCE`` is on;
+the Answerability/surprise veto gains an enforcing mode behind ``VETO_ENFORCE``.
+Both default off until validated against the founder's 36-rating ground truth.
 """
 
 from __future__ import annotations
@@ -35,6 +41,7 @@ import logging
 from app import feature_flags
 from app.orchestrator.context import OrderContext, StageResult
 from app.orchestrator.progress_sink import ProgressSink
+from app.scoring import craft_guards
 from app.scoring.multi_model_scorer import MultiModelScorer
 
 logger = logging.getLogger(__name__)
@@ -134,10 +141,26 @@ class ScoringStage:
             if r.get("id") is not None
         }
 
-        veto_on = feature_flags.veto_shadow()
+        veto_enforce = feature_flags.veto_enforce()
+        veto_consult = veto_enforce or feature_flags.veto_shadow()
+        craft_enforce = feature_flags.craft_guards_enforce()
+
+        # Craft guards (#72 reviewer upgrade) — deterministic, computed for
+        # every batch (free); enforcement is flag-gated. T/F key balance is a
+        # batch-level property, so the excess set is resolved before the loop.
+        tf_items = []
+        for q in ctx.questions:
+            key = craft_guards.true_false_key(q.correct_answer, q.possible_answers)
+            if key is not None:
+                tf_items.append((q.id, key))
+        tf_excess = set(craft_guards.tf_imbalance_excess(tf_items))
+
         kept: list = []
         dropped = 0
         veto_flagged = 0
+        veto_dropped = 0
+        craft_flagged = 0
+        craft_dropped = 0
         for q in ctx.questions:
             model_scores = scores_by_id.get(q.id, [])
 
@@ -153,13 +176,43 @@ class ScoringStage:
                 per_model[name] = float(overall)
             ctx.scores[q.id] = per_model
 
-            # Lever C shadow veto: log what the Answerability/surprise veto WOULD
-            # drop, but never remove it here (#72 P4.1). Independent of the score
-            # gate below — a boring question can clear the lenient floor yet still
-            # be flagged as a dead-end recall question.
-            if veto_on:
+            craft_reason = craft_guards.stem_leak_reason(
+                q.question, q.correct_answer, q.possible_answers
+            )
+            if craft_reason is None and q.id in tf_excess:
+                craft_reason = "tf_key_imbalance"
+            if craft_reason is not None:
+                if craft_enforce:
+                    craft_dropped += 1
+                    logger.warning(
+                        "ScoringStage craft-guard dropped id=%s reason=%s",
+                        q.id,
+                        craft_reason,
+                    )
+                    continue
+                craft_flagged += 1
+                logger.warning(
+                    "ScoringStage craft-guard would-drop id=%s reason=%s "
+                    "(shadow mode: kept)",
+                    q.id,
+                    craft_reason,
+                )
+
+            # Lever C veto: shadow logs would-drops (#72 P4.1); VETO_ENFORCE
+            # promotes it to dropping (#72 reviewer upgrade). Independent of the
+            # score gate below — a boring question can clear the lenient floor
+            # yet still be a dead-end recall question.
+            if veto_consult:
                 veto_reason = _shadow_veto_reason(model_scores)
                 if veto_reason is not None:
+                    if veto_enforce:
+                        veto_dropped += 1
+                        logger.warning(
+                            "ScoringStage VETO dropped id=%s reason=%s",
+                            q.id,
+                            veto_reason,
+                        )
+                        continue
                     veto_flagged += 1
                     logger.warning(
                         "ScoringStage VETO_SHADOW would-drop id=%s reason=%s "
@@ -183,6 +236,9 @@ class ScoringStage:
                 "scored": len(ctx.scores),
                 "dropped_low_score": dropped,
                 "veto_shadow_flagged": veto_flagged,
+                "veto_dropped": veto_dropped,
+                "craft_flagged": craft_flagged,
+                "craft_dropped": craft_dropped,
             },
             cost_cents=0,
         )

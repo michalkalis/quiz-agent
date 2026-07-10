@@ -194,6 +194,30 @@ async def test_drops_jaccard_match_against_gold_standard(tmp_path: Path) -> None
 
 
 @pytest.mark.asyncio
+async def test_drops_in_batch_near_duplicates(empty_gold_standard: Path) -> None:
+    """#72 (2026-07-10): the corpus lookup cannot see not-yet-persisted
+    batchmates, so a batch could repeat itself (the June-18 audit batch carried
+    the same longest-bridge question 3×). First occurrence wins; near-verbatim
+    repeats within the batch drop; an unrelated question survives."""
+    store = _FakeQuestionStore({})  # corpus sees nothing — in-batch check only
+    stage = DedupStage(store, gold_standard_path=empty_gold_standard)
+
+    incoming = [
+        _stub_question(0, text="Which bridge holds the record as the longest in the world?"),
+        _stub_question(1, text="Which bridge holds the record for being the longest in the world?"),
+        _stub_question(2, text="Which bridge holds the record as the longest in the world?"),
+        _stub_question(3, text="What animal gives its name to the Canadian one dollar coin?"),
+    ]
+    ctx = _make_ctx(incoming)
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert [q.id for q in ctx.questions] == ["q_0", "q_3"]
+    assert result.info["dropped"] == 2
+    assert result.info["kept"] == 2
+
+
+@pytest.mark.asyncio
 async def test_keeps_question_when_only_self_match(empty_gold_standard: Path) -> None:
     """Re-running the orchestrator on a persisted question must be idempotent —
     the stage must not drop a question because the store's find_duplicates

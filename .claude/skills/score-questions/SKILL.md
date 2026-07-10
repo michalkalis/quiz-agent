@@ -48,6 +48,17 @@ For EACH question, evaluate on these 5 dimensions (1-10 scale):
 | **Driving Friendliness** | Safe cognitive load while driving? No visual aids needed? Reasonable mental processing? | Requires mental math, visualization, long lists, or reading | Simple to process audibly, clear answer space |
 | **Clever Framing** | Creative question structure? Avoids boring formats? | "What is...", "Who wrote...", plain factual | Narrative framing, unexpected angle, makes you think |
 
+**Craft-defect check (founder calibration 2026-07-09, see `docs/research/question-quality-founder-calibration-2026-07-09.md`):** before averaging, check each question for these defects. Each found defect caps the named dimension at 3 and must be listed in a `red_flags` array on the question:
+
+| Red flag | Detection | Caps |
+|----------|-----------|------|
+| `stem_answer_leak` | A stem word states or trivially implies the answer (incl. derivatives: British→Britain) | Clever Framing |
+| `telegraphed_tf` | True/false phrased so "True" is the obvious guess | Clever Framing |
+| `unguessable_open_answer` | Free-text answer with no reasoning/estimation path (spider-silk→jumbo-jet class). Do NOT flag estimable numerics (heart beats/day — count and multiply; those are excellent) | Surprise/Delight |
+| `overexposed_cliche` | On a thousand quizzes already (all-roads-Rome, King of Pop) | Surprise/Delight |
+| `padded_stem` | Clue-pile instead of ONE sharp hook | Driving Friendliness |
+| `ambiguous_answer` | Multi-part or arguable answer, hard to grade a spoken reply | Driving Friendliness |
+
 For each question, provide 1-2 sentences of reasoning explaining the scores.
 
 **Overall Score**: Average of all 5 dimensions, rounded to 1 decimal.
@@ -163,6 +174,7 @@ After presenting results:
 ## Important
 
 - **Be honest and critical.** Do not inflate scores. A truly average question should score 5-6, not 7-8. Calibrate: the best questions you've ever seen are 9-10, average bar trivia is 5-6.
+- **Founder-calibrated anchors:** 9-10 ≈ "Was Cleopatra closer in time to the pyramids or the Moon landings?" / mantis-shrimp cavitation flash. 1-3 ≈ "all roads lead to Rome" (cliché), a stem that hands over its own answer. The founder's rated ground truth is in `docs/research/question-quality-founder-calibration-2026-07-09.md` — its 1/5 and 2/5 examples must come out as reject here.
 - **Driving Friendliness is about cognitive load:** Long questions with multiple clauses score low. Questions requiring mental math, visualization, or lists score low. Questions with clear, short audio delivery score high.
 - **Conversation Spark rewards discussion:** Questions where people say "Wait, really?" or want to debate the answer. Not just interesting facts, but ones that invite follow-up.
 - **Missing `id` field:** Generate a temporary ID like `q_scored_001` for output.

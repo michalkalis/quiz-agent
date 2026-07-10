@@ -192,6 +192,28 @@ Check for these common problems:
 - "Interesting but unguessable" — fascinating fact that's impossible to work toward
 - Question starts with "Which [noun] [verb]..." and requires a specific obscure answer
 
+**Stem Answer-Leak** (-3 points from Clever Framing, add "stem_answer_leak" to red_flags)
+- A word in the stem states or trivially implies the answer
+- Example: asking which country's cartoonists spread the "Napoleon was short" myth while the stem already says "British wartime propaganda" → answer Britain is given away
+- Includes derivatives and adjective forms (British→Britain, French→France)
+
+**Telegraphed True/False** (-3 points from Clever Framing, add "telegraphed_tf" to red_flags)
+- A true/false statement phrased so "True" is the obvious default guess ("surprising fact... true or false?" is nearly always true)
+- Suggest in improvement_suggestions: extract the surprising number/detail and ask it directly as a multiple-choice question instead
+
+**Unguessable Open Numeric** (-3 points from Answerability, add "unguessable_open_answer" to red_flags)
+- A free-text numeric or target answer the player cannot reason, estimate, or deduce toward (e.g. "what could a pencil-thick spider-silk net stop?" → "a jumbo jet" — anything heavy fits)
+- EXCEPTION — do NOT flag: numeric answers the player can actively estimate from everyday knowledge (heart beats per day — count your pulse and multiply). Estimable-by-reasoning open numerics are excellent questions.
+- Suggest converting the unguessable ones to multiple choice or an accepted range
+
+**Overexposed Cliché** (-3 points from Surprise Factor, add "overexposed_cliche" to red_flags)
+- The fact has been on a thousand quizzes: "all roads lead to Rome", Michael Jackson "King of Pop", Monopoly's origin, Great-Wall-from-space class staples
+- Well-worded but overexposed still scores 1-3 on Surprise Factor
+
+**Padded Multi-Clue Stem** (-2 points from Clever Framing)
+- The stem stacks several clues or properties instead of one sharp hook ("a list of properties" reads badly aloud)
+- Rule: either ONE satisfactory clue, or the question doesn't make sense — reads once, lands once
+
 ---
 
 ## Evaluating Logic Questions

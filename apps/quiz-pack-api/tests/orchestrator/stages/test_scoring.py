@@ -310,6 +310,114 @@ async def test_veto_shadow_flags_starboard_class_but_keeps_it(
 
 
 @pytest.mark.asyncio
+async def test_veto_enforce_drops_flagged_question(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """#72 reviewer upgrade: VETO_ENFORCE promotes the veto from logging to
+    dropping — the starboard-class question is removed even though it clears
+    the lenient overall floor, while the good question survives. Consultation
+    is implied: VETO_SHADOW stays unset."""
+    monkeypatch.delenv("VETO_SHADOW", raising=False)
+    monkeypatch.setenv("VETO_ENFORCE", "1")
+    scores = {
+        "q_0": {"gpt-4.1-mini": 4.0},
+        "q_1": {"gpt-4.1-mini": 8.0},
+    }
+    dims = {
+        "q_0": {"surprise_delight": 2, "clever_framing": 2},
+        "q_1": {"surprise_delight": 8, "clever_framing": 9},
+    }
+    scorer = _FakeMultiModelScorer(scores, dims=dims)
+    stage = ScoringStage(scorer)  # type: ignore[arg-type]
+    ctx = _make_ctx([_stub_question(0), _stub_question(1)])
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert [q.id for q in ctx.questions] == ["q_1"]
+    assert result.info["veto_dropped"] == 1
+    assert result.info["veto_shadow_flagged"] == 0
+    # Dropped question's scores retained for audit.
+    assert "q_0" in ctx.scores
+
+
+# --- Craft guards in the stage (#72 reviewer upgrade, 2026-07-10) --------------
+#
+# Why these scenarios: the guards must be shadow-by-default (flag, keep) so the
+# pipeline stays byte-identical for output until CRAFT_GUARDS_ENFORCE flips —
+# the #72 reversibility contract — and dropping must be exactly flag-gated.
+
+
+def _leaky_question(idx: int) -> Question:
+    """Free-text question whose stem names its own answer (stem_leak)."""
+    return _stub_question(
+        idx,
+        question="Which country's propaganda made Napoleon short, per British archives?",
+        correct_answer="Britain",
+    )
+
+
+@pytest.mark.asyncio
+async def test_craft_guard_shadow_flags_but_keeps(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("CRAFT_GUARDS_ENFORCE", raising=False)
+    scores = {"q_0": {"gpt-4.1-mini": 8.0}, "q_1": {"gpt-4.1-mini": 8.0}}
+    scorer = _FakeMultiModelScorer(scores)
+    stage = ScoringStage(scorer)  # type: ignore[arg-type]
+    ctx = _make_ctx([_leaky_question(0), _stub_question(1)])
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert [q.id for q in ctx.questions] == ["q_0", "q_1"]
+    assert result.info["craft_flagged"] == 1
+    assert result.info["craft_dropped"] == 0
+
+
+@pytest.mark.asyncio
+async def test_craft_guard_enforce_drops_stem_leak(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("CRAFT_GUARDS_ENFORCE", "1")
+    scores = {"q_0": {"gpt-4.1-mini": 8.0}, "q_1": {"gpt-4.1-mini": 8.0}}
+    scorer = _FakeMultiModelScorer(scores)
+    stage = ScoringStage(scorer)  # type: ignore[arg-type]
+    ctx = _make_ctx([_leaky_question(0), _stub_question(1)])
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert [q.id for q in ctx.questions] == ["q_1"]
+    assert result.info["craft_dropped"] == 1
+    assert result.info["craft_flagged"] == 0
+
+
+@pytest.mark.asyncio
+async def test_craft_guard_enforce_rebalances_all_true_batch(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The 94%-True corpus defect, batch-level: five all-True T/F questions →
+    the excess beyond the 60% allowance (last two) drop, earlier ones and the
+    non-T/F question stay."""
+    monkeypatch.setenv("CRAFT_GUARDS_ENFORCE", "1")
+    questions = [
+        _stub_question(
+            i,
+            question=f"True or false: surprising fact number {i}?",
+            correct_answer="True",
+        )
+        for i in range(5)
+    ] + [_stub_question(5)]
+    scores = {q.id: {"gpt-4.1-mini": 8.0} for q in questions}
+    scorer = _FakeMultiModelScorer(scores)
+    stage = ScoringStage(scorer)  # type: ignore[arg-type]
+    ctx = _make_ctx(questions)
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert [q.id for q in ctx.questions] == ["q_0", "q_1", "q_2", "q_5"]
+    assert result.info["craft_dropped"] == 2
+
+
+@pytest.mark.asyncio
 async def test_veto_dormant_when_flag_off(monkeypatch: pytest.MonkeyPatch) -> None:
     """Default (flag off): the veto is not consulted at all — a starboard-class
     question produces zero flags, so the change is dormant until Phase 6."""

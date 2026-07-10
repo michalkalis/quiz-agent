@@ -119,20 +119,25 @@ def compute_distractor_quality(
 
 _DETERMINISTIC_DIMS_KEY = "deterministic"
 
-SCORING_PROMPT = """You are evaluating a trivia quiz question for quality and fun.
+SCORING_PROMPT = """You are evaluating a trivia quiz question for quality and fun. It will be read aloud once in a voice-first quiz played hands-free while driving, so it must land on a single listen and the answer must be short and gradable.
 
 QUESTION: {question}
 CORRECT ANSWER: {answer}
 DIFFICULTY: {difficulty}
 TOPIC: {topic}
 
-Rate this question on each dimension (1-10 scale):
+Rate this question on each dimension (1-10 scale). Calibration anchors come from the product owner's rated ground truth — match them:
 
 1. **Conversation Spark** - Would this generate discussion at a pub quiz table?
-2. **Surprise/Delight** - Does the answer create an "aha!" moment or a grin?
+2. **Surprise/Delight** - Does the answer create an "aha!" / "never realised that" moment?
+   - 9-10 anchor: "Was Cleopatra closer in time to the pyramids or the Moon landings?" (Moon); mantis-shrimp strike creating a light flash (cavitation).
+   - 1-3 anchor: overexposed staples — "all roads lead to Rome", Michael Jackson "King of Pop". If the fact has been on a thousand quizzes, score 1-3 here regardless of how well it is worded.
 3. **Tellability** - Would you share this with a friend later?
-4. **Driving Friendliness** - Comfortable to process while driving? (not too complex)
-5. **Clever Framing** - Avoids boring "What is..." format?
+4. **Driving Friendliness** - Comfortable to process on one listen while driving? Penalise padded multi-clue stems: a question gets ONE sharp clue, not a pile.
+5. **Clever Framing** - Avoids boring "What is..." recall AND avoids these craft defects (each caps this dimension at 3):
+   - Stem answer-leak: a word in the stem gives the answer away or trivially implies it (e.g. asking which country's cartoonists spread a myth while the stem already says "British wartime propaganda").
+   - Telegraphed true/false: a T/F statement phrased so "True" is the obvious guess.
+   - Unguessable open answer: a free-text answer the player cannot reason, estimate, or deduce toward (e.g. "what could a pencil-thick spider-silk net stop?" → "a jumbo jet"). EXCEPTION: numeric answers the player can actively estimate are GOOD (e.g. heart beats per day — you can count your pulse and multiply).
 6. **Factual Confidence** - How confident are you the answer is correct? (10 = certain)
 
 Respond in JSON only:

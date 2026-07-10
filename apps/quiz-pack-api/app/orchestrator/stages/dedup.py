@@ -9,6 +9,10 @@ Two independent checks, either of which is enough to drop a question:
   near-verbatim copies of the curated gold-standard set we use as a
   reviewer baseline — we never want a generated pack to mirror that
   list (it would pollute eval signal and look lazy to reviewers).
+- **Jaccard token overlap ≥ 0.60** against earlier questions of the SAME
+  batch (#72, 2026-07-10). The corpus lookup cannot see not-yet-persisted
+  batchmates, so without this a single batch can repeat itself; stricter
+  than the gold threshold because same-batch dupes share one quiz.
 
 The dropped count is published via `StageResult.info["dropped"]` so SSE
 clients see the filter activity, mirroring `VerificationStage`'s shape.
@@ -33,6 +37,12 @@ from quiz_shared.models.question import Question
 
 DEFAULT_COSINE_THRESHOLD = 0.85
 DEFAULT_JACCARD_THRESHOLD = 0.80
+# Stricter than the gold-standard threshold: two same-fact rewordings in ONE
+# batch land in the same quiz, and the June-18 audit variants ("record as the
+# longest" vs "record for being the longest") overlap at ~0.7 — 0.80 would
+# miss them. 0.60 still clears genuinely distinct questions that merely share
+# a topic (measured ~0.36 on same-topic pairs).
+DEFAULT_IN_BATCH_JACCARD_THRESHOLD = 0.60
 
 _TOKEN_RE = re.compile(r"[a-z0-9]+")
 
@@ -48,6 +58,7 @@ class DedupStage:
         gold_standard_path: str | Path | None,
         cosine_threshold: float = DEFAULT_COSINE_THRESHOLD,
         jaccard_threshold: float = DEFAULT_JACCARD_THRESHOLD,
+        in_batch_threshold: float = DEFAULT_IN_BATCH_JACCARD_THRESHOLD,
     ) -> None:
         self._store = question_store
         self._gold_standard_path = (
@@ -55,6 +66,7 @@ class DedupStage:
         )
         self._cosine_threshold = cosine_threshold
         self._jaccard_threshold = jaccard_threshold
+        self._in_batch_threshold = in_batch_threshold
         self._gold_tokens: list[frozenset[str]] | None = None
 
     async def run(self, ctx: OrderContext, sink: ProgressSink) -> StageResult:
@@ -64,6 +76,7 @@ class DedupStage:
         gold_tokens = self._load_gold_tokens()
 
         kept: list[Question] = []
+        kept_tokens: list[frozenset[str]] = []
         dropped = 0
         for q in ctx.questions:
             if self._is_cosine_duplicate(q):
@@ -72,7 +85,20 @@ class DedupStage:
             if self._is_jaccard_duplicate(q, gold_tokens):
                 dropped += 1
                 continue
+            # In-batch check (#72, 2026-07-10): the corpus lookup cannot see
+            # questions from the same not-yet-persisted batch, so without this
+            # a batch can carry near-verbatim repeats of itself (the June-18
+            # audit batch had the same bridge question 3×). First occurrence
+            # wins; later near-copies drop.
+            q_tokens = _tokenize(q.question)
+            if q_tokens and any(
+                _jaccard(q_tokens, k) >= self._in_batch_threshold
+                for k in kept_tokens
+            ):
+                dropped += 1
+                continue
             kept.append(q)
+            kept_tokens.append(q_tokens)
 
         ctx.questions = kept
         return StageResult(

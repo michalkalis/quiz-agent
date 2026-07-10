@@ -64,19 +64,23 @@ async def test_limit_blocks_after_quota(db_sessionmaker):
     assert not allowed and remaining == 0
 
 
-async def test_premium_bypasses_limit_and_is_not_counted(db_sessionmaker):
+async def test_premium_column_no_longer_bypasses_gate(db_sessionmaker):
+    """Issue #93 moved entitlement to the ``subscription`` table: the legacy
+    ``daily_usage.is_premium`` column is now inert for *gating* — it neither
+    lifts the limit nor suppresses the counter (that role is the subscription,
+    tested in test_entitlement.py). It is still surfaced by ``get_usage`` for
+    backward-compatible display."""
     t = _tracker(db_sessionmaker, limit=1)
     await t.set_premium(SUBJECT, True)
 
-    # Premium recording must not increment the count.
-    await t.record_question(SUBJECT)
-    allowed, remaining, _ = await t.check_limit(SUBJECT)
-    assert allowed and remaining == -1
-
+    # The column is still reported (display only)...
     usage = await t.get_usage(SUBJECT)
     assert usage["is_premium"] is True
-    assert usage["questions_used"] == 0
-    assert usage["questions_limit"] is None
+
+    # ...but it no longer bypasses the quota: recording counts, the cap applies.
+    await t.record_question(SUBJECT)
+    allowed, remaining, _ = await t.check_limit(SUBJECT)
+    assert not allowed and remaining == 0
 
 
 async def test_earlier_days_in_month_count_toward_quota(db_sessionmaker):
@@ -115,15 +119,17 @@ async def test_resets_at_is_first_of_next_month(db_sessionmaker):
     assert (resets_at.date() - _today()) <= timedelta(days=31)
 
 
-async def test_premium_carries_forward_across_days(db_sessionmaker):
-    """A subject made premium on a prior day stays premium today (premium is a
-    subscription, not a per-day flag) — even across the monthly reset."""
+async def test_premium_column_is_reported_but_does_not_gate(db_sessionmaker):
+    """The ``is_premium`` column read (used by ``/usage`` display + the admin
+    endpoint) still works across days, but issue #93 stopped ``check_limit``
+    from honouring it: a subject with no ``subscription`` gets the free
+    allotment, not an unlimited (-1) bypass."""
     await _seed_row(db_sessionmaker, _today() - timedelta(days=40), premium=True)
 
     t = _tracker(db_sessionmaker, limit=1)
-    assert await t.is_premium(SUBJECT) is True
+    assert await t.is_premium(SUBJECT) is True  # column still readable
     allowed, remaining, _ = await t.check_limit(SUBJECT)
-    assert allowed and remaining == -1
+    assert allowed and remaining == 1
 
 
 async def test_record_question_returns_new_count(db_sessionmaker):

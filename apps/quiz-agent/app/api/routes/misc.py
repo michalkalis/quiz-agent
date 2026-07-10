@@ -5,7 +5,12 @@ import logging
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Request
 
-from ..deps import ElevenLabsTokenResponse, get_usage_tracker, require_auth_or_grace
+from ..deps import (
+    ElevenLabsTokenResponse,
+    UsageResponse,
+    get_usage_tracker,
+    require_auth_or_grace,
+)
 from ...usage.tracker import UsageTracker
 from ...rate_limit import limiter
 
@@ -62,7 +67,7 @@ async def get_elevenlabs_token(
 # Usage / Freemium
 
 
-@router.get("/usage/{user_id}")
+@router.get("/usage/{user_id}", response_model=UsageResponse)
 async def get_usage(
     user_id: str,
     usage_tracker: UsageTracker = Depends(get_usage_tracker),

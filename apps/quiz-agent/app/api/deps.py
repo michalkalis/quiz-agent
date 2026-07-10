@@ -164,6 +164,35 @@ class ElevenLabsTokenResponse(BaseModel):
     )
 
 
+class UsageResponse(BaseModel):
+    """Freemium usage + entitlement snapshot for ``GET /usage/{id}`` (issue #93).
+
+    Additive over the pre-#93 raw dict: ``subscription_status`` + ``credit_balance``
+    are new; the legacy fields are unchanged so an un-updated iOS client keeps
+    working (it just sees the 30-question cap and no pack UI). ``questions_limit``
+    / ``remaining`` are ``None`` when the account is unlimited (entitled sub or
+    the legacy premium flag)."""
+
+    user_id: str
+    is_premium: bool = Field(
+        description="Legacy premium flag (daily_usage.is_premium); no longer gates"
+    )
+    questions_used: int
+    questions_limit: Optional[int] = Field(
+        description="Free monthly cap, or null when unlimited"
+    )
+    remaining: Optional[int] = Field(
+        description="Free questions left this month, or null when unlimited"
+    )
+    resets_at: str = Field(description="ISO-8601 UTC start of next month")
+    subscription_status: str = Field(
+        description="Stored subscription status (active|grace|expired) or 'none'"
+    )
+    credit_balance: int = Field(
+        description="Pack-credit balance = SUM(credit_ledger.delta)"
+    )
+
+
 class RefreshRequest(BaseModel):
     """Request to rotate a refresh token (issue #60, task 60.4)."""
 

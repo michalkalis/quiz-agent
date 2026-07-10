@@ -132,12 +132,17 @@ Rate this question on each dimension (1-10 scale). Calibration anchors come from
 2. **Surprise/Delight** - Does the answer create an "aha!" / "never realised that" moment?
    - 9-10 anchor: "Was Cleopatra closer in time to the pyramids or the Moon landings?" (Moon); mantis-shrimp strike creating a light flash (cavitation).
    - 1-3 anchor: overexposed staples — "all roads lead to Rome", Michael Jackson "King of Pop". If the fact has been on a thousand quizzes, score 1-3 here regardless of how well it is worded.
+   - 1-3 anchor: single-fact lookups with no reveal behind them — "Which element is named after the creator of the periodic table?" (Mendelevium), "Which city is known for its Opera House?" (Sydney). Naming a thing from its best-known attribute surprises no one.
 3. **Tellability** - Would you share this with a friend later?
 4. **Driving Friendliness** - Comfortable to process on one listen while driving? Penalise padded multi-clue stems: a question gets ONE sharp clue, not a pile.
 5. **Clever Framing** - Avoids boring "What is..." recall AND avoids these craft defects (each caps this dimension at 3):
    - Stem answer-leak: a word in the stem gives the answer away or trivially implies it (e.g. asking which country's cartoonists spread a myth while the stem already says "British wartime propaganda").
    - Telegraphed true/false: a T/F statement phrased so "True" is the obvious guess.
    - Unguessable open answer: a free-text answer the player cannot reason, estimate, or deduce toward (e.g. "what could a pencil-thick spider-silk net stop?" → "a jumbo jet"). EXCEPTION: numeric answers the player can actively estimate are GOOD (e.g. heart beats per day — you can count your pulse and multiply).
+   - Clue-pile stem: two or more descriptors of the same referent stacked up ("known for its ancient empire AND iconic amphitheater AND gladiators…"). One sharp hook is craft; a list of properties is not. (Distinct clues that each open a DIFFERENT deduction path are fine.)
+   - Landmark giveaway: the stem names an identifier so tied to the answer that answering is passive recognition ("Which city is known for its Opera House with a sail-like design?" → Sydney).
+   - Vague "what is special about X" stem whose answer is an explanation sentence rather than a short fact — unfalsifiable and ungradable (e.g. cocoa butter's melting point).
+   - Bare first-degree recall: "Who directed X" / "Which element is named after Y" style lookups with no hidden layer cap this dimension at 3 even when flawlessly worded.
 6. **Factual Confidence** - How confident are you the answer is correct? (10 = certain)
 
 Respond in JSON only:

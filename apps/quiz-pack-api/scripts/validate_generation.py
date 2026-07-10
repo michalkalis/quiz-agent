@@ -330,18 +330,35 @@ def build_dry_run_stages(dedup_store_name: str = "noop") -> list[object]:
     return stages
 
 
-async def run_validation_flow(prompt: str, *, target_count: int, language: str) -> list["Question"]:
-    """Run the reworked flow for one prompt and return its questions (no persist)."""
-    import scripts.generate_pack as generate_pack
-    from app.orchestrator.pack_generator import PackGenerator
-    from app.orchestrator.progress_sink import ProgressSink
+def _order_namespace(
+    prompt: str, *, target_count: int, language: str, mcq_bias: bool = False
+) -> argparse.Namespace:
+    """The exact attribute set `generate_pack._build_order` consumes.
 
-    args = argparse.Namespace(
+    Kept as one helper (and pinned by a test) so a new `_build_order` CLI
+    attribute breaks loudly here instead of failing every topic at runtime
+    (2026-07-10: `--mcq-bias` drift produced a zero-question run).
+    """
+    return argparse.Namespace(
         prompt=prompt,
         language=language,
         target_count=target_count,
         category=None,
         theme=None,
+        mcq_bias=mcq_bias,
+    )
+
+
+async def run_validation_flow(
+    prompt: str, *, target_count: int, language: str, mcq_bias: bool = False
+) -> list["Question"]:
+    """Run the reworked flow for one prompt and return its questions (no persist)."""
+    import scripts.generate_pack as generate_pack
+    from app.orchestrator.pack_generator import PackGenerator
+    from app.orchestrator.progress_sink import ProgressSink
+
+    args = _order_namespace(
+        prompt, target_count=target_count, language=language, mcq_bias=mcq_bias
     )
     order = generate_pack._build_order(args)
     stages = build_dry_run_stages()

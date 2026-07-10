@@ -121,6 +121,10 @@ class PromptBuilder:
             # via **kwargs only when the `V3_ESCAPE_HATCH` flag is on. Empty
             # default keeps flag-off output byte-identical to today.
             "escape_hatch_section": "",
+            # Issue #72 Phase 3 — empty default so the v3 prompt can carry
+            # `{craft_guards_section}` unconditionally; the caller fills it
+            # via **kwargs only when the `GEN_CRAFT_GUARDS` flag is on.
+            "craft_guards_section": "",
         }
 
         # Merge any extra template variables (e.g., facts_section for V3)

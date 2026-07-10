@@ -97,6 +97,26 @@ You MAY draw a surprising *angle, comparison, or framing* from your own general 
 When you use this, `source_excerpt` must still confirm the answer."""
 
 
+# Issue #72 Phase 3 — founder-calibrated craft guards, injected into the v3
+# prompt only when `GEN_CRAFT_GUARDS` is on (see `feature_flags.gen_craft_guards`).
+# Mirrors the reviewer's checks so defects are prevented at generation, not
+# just caught at scoring. Calibration: founder rating session 2026-07-09/10 +
+# `docs/research/question-craft-prior-art-2026-07-10.md`.
+_V3_CRAFT_GUARDS_SECTION = """
+
+---
+
+## CRAFT GUARDS (hard checks — apply to EVERY question before you keep it)
+
+1. **No stem leak.** The answer, or a word derived from it, must never appear in the question text. BAD: "The myth that Napoleon was short came from British wartime propaganda. Which country's cartoonists spread it?" → "Britain" — the stem already says it. Re-read every stem as a player: if any word hands you the answer, rewrite the stem.
+2. **One sharp hook.** A stem gets exactly ONE clue. Never stack descriptors of the same thing ("known for its ancient empire, iconic amphitheater, gladiators…"). A second clue is allowed only if it opens a genuinely different deduction path, never as a second description of the same referent.
+3. **Name the wrong assumption.** In your reasoning (`why_interesting`), state the wrong assumption the player will start from and how the answer overturns it. If you cannot name one, the question is plain recall — pick a different fact or framing.
+4. **The answer must be gettable.** The answer should be something the target player has heard of; the surprise lives in the question and the connection, not in an arcane answer. After the reveal the player must think "of course!" — never "if you say so."
+5. **True/false discipline.** Across your batch, true/false answers must be genuinely ~50/50, and a T/F statement must never telegraph its key (a long, self-justifying statement reads as "True"). When a T/F hides a surprising number, transform it instead: name the subject and ask for the number as multiple-choice (e.g. "St Andrews originally had 22 holes — true or false?" becomes "How many holes did the Old Course at St Andrews originally have?" with options).
+6. **No unguessable open numeric.** For open text questions: if the answer is a specific number or quantity the player cannot actively estimate or reason toward, do NOT emit it as open text — reframe so the estimable part is the question (give the subject, ask the magnitude), or leave the fact to a multiple-choice batch. Numerics the player CAN estimate are excellent open questions (heart beats per day: count your pulse and multiply).
+7. **Answer context payoff.** `explanation` must carry 1–2 spoken sentences of genuinely interesting context behind the answer (where it is, how big, why it is surprising) — it is read aloud after the reveal. Never leave it empty and never restate the question."""
+
+
 class MCQQuestionItem(BaseModel):
     """One structured multiple-choice question (#42 task 42.25).
 
@@ -739,6 +759,10 @@ class AdvancedQuestionGenerator:
             # byte-identical to today's hard-bound v3.
             if feature_flags.v3_escape_hatch():
                 extra_kwargs["escape_hatch_section"] = _V3_ESCAPE_HATCH_SECTION
+            # Issue #72 Phase 3 — same dormant-injection mechanism for the
+            # founder-calibrated craft guards.
+            if feature_flags.gen_craft_guards():
+                extra_kwargs["craft_guards_section"] = _V3_CRAFT_GUARDS_SECTION
 
         # Issue #42 task 42.9b — render MCQ activation rules into the prompt.
         # Empty section when no MCQ patterns are configured so the prompt
@@ -813,6 +837,7 @@ class AdvancedQuestionGenerator:
                 extra={
                     "stage": "initial_generation",
                     "escape_hatch": feature_flags.v3_escape_hatch(),
+                    "gen_craft_guards": feature_flags.gen_craft_guards(),
                 },
             )
             # Extract self-critique if present (from V2/V3 CoT prompt)

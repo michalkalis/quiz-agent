@@ -113,7 +113,7 @@ Before finalizing each question, check these red flags:
 - More than 40% of batch uses pure fact-recall patterns (1-6 only)
 - No estimation, comparison, or reasoning questions in the batch
 
-**If you hit ANY red flag, STOP and try a different pattern or pick a different fact!**
+**If you hit ANY red flag, STOP and try a different pattern or pick a different fact!**{craft_guards_section}
 
 ---
 

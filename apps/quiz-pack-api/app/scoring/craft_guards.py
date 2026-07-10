@@ -52,6 +52,12 @@ _PREFIX_LEN = 4
 _TF_MIN_COUNT = 4
 _TF_MAJORITY_ALLOWED = 0.6
 
+# Founder ruling (locked, 2026-07-09): the spoken answer must stay "a few
+# words" so the voice grader can judge it. The core answer (gloss excluded)
+# may run to this many words before the question is a format defect
+# (cocoa-butter Q35: full-sentence answer; 3-litre-jug Q9: procedure).
+_ANSWER_MAX_WORDS = 6
+
 
 def _content_tokens(text: str) -> set[str]:
     return {
@@ -61,6 +67,23 @@ def _content_tokens(text: str) -> set[str]:
     }
 
 
+# The gradable spoken answer is the part before any parenthetical gloss or
+# dash/semicolon elaboration — "Paces (steps of a Roman soldier)" is graded as
+# "Paces"; the gloss is post-answer context, not the answer. Guards judge the
+# core only (2026-07-10 validation: gloss tokens caused leak false-positives).
+_GLOSS_SPLIT_RE = re.compile(r"\s*[(\[;]|\s+[—–]\s+|\s+-\s+")
+
+# A stem that itself poses the alternatives ("…the Marvel superhero Black
+# Panther, or the Black Panther political party?") necessarily contains the
+# answer — that is the format, not a leak. Detected via the ", or " offer.
+_CHOICE_IN_STEM_RE = re.compile(r",\s+or\s+", re.IGNORECASE)
+
+
+def _core_answer(text: str) -> str:
+    core = _GLOSS_SPLIT_RE.split(text, maxsplit=1)[0].strip()
+    return core or text.strip()
+
+
 def stem_leak_reason(
     question: str,
     correct_answer: object,
@@ -68,20 +91,29 @@ def stem_leak_reason(
 ) -> str | None:
     """Reason string when the stem gives the answer away lexically, else None.
 
-    Flags when at least half of the answer's content words appear in the stem
-    (exact token, or shared 4-char prefix for words of 6+ chars). MCQ is
-    skipped: the key is a letter and option values legitimately appear
+    Flags when more than half of the core answer's content words appear in
+    the stem (exact token, or shared 4-char prefix for words of 6+ chars).
+    MCQ is skipped: the key is a letter and option values legitimately appear
     alongside the stem — `distractor_quality` owns MCQ leak shapes. T/F is
     skipped too: every T/F stem may say "true or false", which is framing,
-    not a leak — the T/F balance guard owns that format.
+    not a leak — the T/F balance guard owns that format. Choice-in-stem
+    questions (", or " alternatives) are skipped: the answer is one of the
+    offered alternatives by design.
     """
     if possible_answers:
         return None
     if true_false_key(correct_answer) is not None:
         return None
+    if _CHOICE_IN_STEM_RE.search(question):
+        return None
     if isinstance(correct_answer, list):
         correct_answer = correct_answer[0] if correct_answer else ""
-    answer_tokens = _content_tokens(str(correct_answer))
+    core = _core_answer(str(correct_answer))
+    ordered_tokens = [
+        t for t in _TOKEN_RE.findall(core.lower())
+        if len(t) >= 3 and t not in _STOPWORDS
+    ]
+    answer_tokens = set(ordered_tokens)
     if not answer_tokens:
         return None
     stem_tokens = _content_tokens(question)
@@ -97,8 +129,39 @@ def stem_leak_reason(
         ):
             leaked.add(a)
 
-    if len(leaked) / len(answer_tokens) >= 0.5:
+    coverage = len(leaked) / len(answer_tokens)
+    # A strict majority always flags. At exactly half, flag only when the
+    # answer's head token (the distinctive one in an English noun phrase —
+    # "RAZOR blade") leaked; a shared trailing token ("Mortimer MOUSE" under
+    # a stem about Mickey Mouse) is the subject, not a giveaway.
+    if coverage > 0.5 or (coverage == 0.5 and ordered_tokens[0] in leaked):
         return f"stem_leak({','.join(sorted(leaked))})"
+    return None
+
+
+def long_answer_reason(
+    correct_answer: object, possible_answers: dict | None = None
+) -> str | None:
+    """Reason string when the gradable answer is too long to speak/grade.
+
+    Judges the *core* answer (parenthetical gloss / dash elaboration
+    excluded — that is post-answer context, not what the player must say).
+    MCQ is exempt (the spoken answer is a short option) and T/F is exempt
+    (one word by construction).
+    """
+    if possible_answers:
+        return None
+    if true_false_key(correct_answer) is not None:
+        return None
+    if isinstance(correct_answer, list):
+        correct_answer = correct_answer[0] if correct_answer else ""
+    core = _core_answer(str(correct_answer))
+    # A comma elaboration ("Astronauts on the ISS, orbiting 400 km overhead")
+    # is also context, not part of the spoken answer.
+    core = core.split(",", 1)[0]
+    words = core.split()
+    if len(words) > _ANSWER_MAX_WORDS:
+        return f"long_answer({len(words)}w)"
     return None
 
 
@@ -107,9 +170,11 @@ def true_false_key(
 ) -> str | None:
     """Normalized 'true'/'false' when the question is a T/F item, else None.
 
-    Covers both shapes in the corpus: free-text with a True/False answer, and
-    an MCQ whose two option values are exactly True and False (the key letter
-    is resolved through the options).
+    Covers the corpus shapes: free-text with a True/False answer (bare, or
+    annotated like "True — he voiced Mickey for ~20 years"; a punctuation
+    separator is required so answers like "True North" stay non-T/F), and an
+    MCQ whose two option values are exactly True and False (the key letter is
+    resolved through the options).
     """
     if isinstance(correct_answer, list):
         correct_answer = correct_answer[0] if correct_answer else ""
@@ -123,7 +188,10 @@ def true_false_key(
                     for k, v in possible_answers.items()}.get(ans)
         return resolved if resolved is not None else (ans if ans in values else None)
 
-    return ans if ans in {"true", "false"} else None
+    if ans in {"true", "false"}:
+        return ans
+    m = re.match(r"^(true|false)\s*[—–:,.;-]", ans)
+    return m.group(1) if m else None
 
 
 def tf_imbalance_excess(items: list[tuple[str, str]]) -> list[str]:

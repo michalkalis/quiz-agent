@@ -56,6 +56,17 @@ def v3_escape_hatch() -> bool:
     return _truthy(os.getenv("V3_ESCAPE_HATCH"))
 
 
+def gen_craft_guards() -> bool:
+    """#72 reviewer upgrade (Phase 3): inject the founder-calibrated craft
+    guards into the live v3 generation prompt (no stem leak, one sharp hook,
+    named wrong assumption, gettable answer, T/F balance + transform-to-MCQ,
+    no unguessable open numeric, answer-context payoff).
+
+    ``False`` (default) → the prompt is byte-identical to today.
+    """
+    return _truthy(os.getenv("GEN_CRAFT_GUARDS"))
+
+
 def veto_shadow() -> bool:
     """Lever C (Phase 4): run the Answerability/surprise veto in shadow mode —
     log what *would* drop, drop nothing.

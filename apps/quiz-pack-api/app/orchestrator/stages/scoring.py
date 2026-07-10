@@ -179,6 +179,10 @@ class ScoringStage:
             craft_reason = craft_guards.stem_leak_reason(
                 q.question, q.correct_answer, q.possible_answers
             )
+            if craft_reason is None:
+                craft_reason = craft_guards.long_answer_reason(
+                    q.correct_answer, q.possible_answers
+                )
             if craft_reason is None and q.id in tf_excess:
                 craft_reason = "tf_key_imbalance"
             if craft_reason is not None:

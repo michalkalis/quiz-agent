@@ -10,6 +10,7 @@ false-positive cases are the load-bearing half of this file.
 from __future__ import annotations
 
 from app.scoring.craft_guards import (
+    long_answer_reason,
     stem_leak_reason,
     tf_imbalance_excess,
     true_false_key,
@@ -77,6 +78,74 @@ def test_multiword_answer_needs_majority_coverage() -> None:
     ) is None
 
 
+def test_gloss_words_do_not_leak() -> None:
+    """2026-07-10 validation FP (founder Q13, 5/5): the answer's parenthetical
+    gloss ('steps of a Roman soldier') shares words with the stem, but the
+    gradable answer is just 'Paces' — the guard must judge the core only."""
+    assert stem_leak_reason(
+        "The English word 'mile' has been in use for over 2,000 years — and it "
+        "carries the exact measurement of a Roman soldier. A thousand of what?",
+        "Paces (steps of a Roman soldier)",
+    ) is None
+
+
+def test_choice_in_stem_is_not_a_leak() -> None:
+    """2026-07-10 validation FPs (founder Q10/Q34): a stem that itself offers
+    the alternatives necessarily contains the answer — that is the format."""
+    assert stem_leak_reason(
+        "Which appeared first: the Marvel superhero Black Panther, or the "
+        "Black Panther political party?",
+        "The superhero",
+    ) is None
+    assert stem_leak_reason(
+        "Was Cleopatra closer in time to the construction of the pyramids, "
+        "or the Moon landings?",
+        "The Moon landings",
+    ) is None
+
+
+def test_shared_surname_half_coverage_passes() -> None:
+    """2026-07-10 validation FP: 'What was Mickey Mouse's original name?' →
+    'Mortimer Mouse'. The shared surname is the subject, not a giveaway —
+    exactly half coverage must not flag (the distinctive token is unleaked)."""
+    assert stem_leak_reason(
+        "Walt Disney's wife convinced him to change Mickey Mouse's original "
+        "name before his 1928 debut. What was it?",
+        "Mortimer Mouse",
+    ) is None
+
+
+# --- long_answer_reason ---------------------------------------------------------
+
+
+def test_flags_sentence_length_answer() -> None:
+    """Founder Q35 (2/5) / Q9: explanation-sentence answers are ungradable by
+    the voice grader — locked ruling 'answers stay a few words'."""
+    assert long_answer_reason(
+        "It melts just below human body temperature, which is why chocolate "
+        "melts in your mouth"
+    ) == "long_answer(7w)"
+
+
+def test_short_and_glossed_answers_pass() -> None:
+    """The gloss is post-answer context, not the spoken answer — 'Munitions
+    and weapons (the Royal Arsenal armaments factory)' grades as 3 words."""
+    assert long_answer_reason("Paces (steps of a Roman soldier)") is None
+    assert long_answer_reason(
+        "Munitions and weapons (the Royal Arsenal armaments factory in Woolwich)"
+    ) is None
+    assert long_answer_reason("The Moon landings") is None
+    # Founder Q22 (5/5): the comma elaboration is context, not the answer.
+    assert long_answer_reason(
+        "Astronauts on the International Space Station, orbiting about 400 km overhead"
+    ) is None
+
+
+def test_long_answer_skips_mcq_and_tf() -> None:
+    assert long_answer_reason("a", {"a": "Option one", "b": "Option two"}) is None
+    assert long_answer_reason("True — he voiced Mickey for roughly twenty years") is None
+
+
 # --- true_false_key -----------------------------------------------------------
 
 
@@ -84,6 +153,11 @@ def test_true_false_detection_free_text_and_mcq() -> None:
     assert true_false_key("True") == "true"
     assert true_false_key(" false ") == "false"
     assert true_false_key("Loon") is None
+    # Annotated T/F answers (separator required) are still T/F items…
+    assert true_false_key("True — he voiced Mickey for ~20 years") == "true"
+    assert true_false_key("False: it was never banned") == "false"
+    # …but an answer merely *starting* with the word is not (no separator).
+    assert true_false_key("True North") is None
     # MCQ shape: key letter resolved through the two T/F options.
     assert true_false_key("a", {"a": "True", "b": "False"}) == "true"
     # MCQ with non-T/F options is not a T/F question even if an option says True.

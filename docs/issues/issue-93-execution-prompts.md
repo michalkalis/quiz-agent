@@ -1,10 +1,18 @@
 # #93 — Subscription IAP + balíčky + free-tier: execution prompts
 
-**Created:** 2026-07-08 · **Why split:** large (18 atomic tasks, backend + iOS + DB) **and** sensitive (**class b — payments/monetization**, `ready-for-human`, Ralph never runs it). One human-prerequisite session + five code sessions.
+**Created:** 2026-07-08 · **Regenerated:** 2026-07-10 (re-prep — 2026-07-10 execution-model rails). **Why split:** large (backend + iOS + DB, 6 sessions) **and** sensitive (**class b — payments/monetization**). One human-prerequisite session + five code sessions.
 
-**How to use:** open a fresh session, paste one fenced ` ``` ` block below, and go. Each block is self-contained — it names the files to read first, the build steps, and an objective `Done =` check — so a session needs neither this conversation nor the others' context. Run **sequentially in one checkout** (never parallel agents in the same checkout — see project memory); the dependency markers below say what must be **merged** before a session starts. Every session lands **for human review** (class b).
+**Execution model (founder decision 2026-07-10 — supersedes the v1 "class b → ready-for-human, Ralph never").** This issue is runnable **either**:
+- **Mode (a) — autonomous loop:** repeated fresh-context sessions. Each picks the next unblocked, unticked session (deps merged), pastes its fenced block, implements, runs its `Done =` gate. On red → retry within the prompt's budget then **stop and surface** (never tick on red, never skip).
+- **Mode (b) — Fable-orchestrated:** one **Claude Fable 5** coordinator holds the plan + Status table and **spawns one subagent per session** (passing that session's fenced block + the routed model), sequencing by the dependency column, staying out of raw file contents. Never run parallel agents in one checkout (use worktrees).
 
-**Parent plan:** [`issue-93-subscription-iap-packs.md`](./issue-93-subscription-iap-packs.md) (gates: plan-review SOUND 0.78 · impl-plan-review SOUND 0.75).
+Both modes obey the same rails: **maker≠checker on payment code**, `[HUMAN]` gates preserved, **no autonomous deploy**.
+
+**Maker≠checker (payment/entitlement sessions A-helper, B, C, D).** `Done =` green is **not** sufficient to tick these. After the maker's `Done =` passes, set `Done ✅` on the Status table but leave the box unticked and **spawn a separate fresh-context adversarial reviewer (opus, a different context than the maker)** to disprove the diff against Design §1–4. Reviewer green → set `Reviewed = ✅`, **then** commit+push+tick. Reviewer finds a defect → it returns a **fix task**; feed it to a fresh maker session (keep `Reviewed = ⬜`), which fixes + re-runs `Done =`, then re-review. **Tick/push only after both `Done = ✅` and `Reviewed = ✅`.** Non-payment sessions (A-schema, E, the trivial 30-cap edit) carry `Reviewed = n/a`. **Class-b note:** the split-issue skill's blanket "payments → never autonomous" default is **superseded for this issue** by the recorded founder decision 2026-07-10 in the issue header — honor these rails, not the blanket ban.
+
+**How to use:** open a fresh session (or spawn a subagent), paste one fenced ` ``` ` block below, and go. Each block is self-contained — it names its routed model, the files to read first, the build steps, an objective `Done =` check, and (for payment sessions) its review leg — so a session needs neither this conversation nor the others' context. The dependency markers below say what must be **merged** before a session starts. Every session lands committed on `main`, **no deploy** (deploy + migration `0005` + secrets stay founder-gated).
+
+**Parent plan:** [`issue-93-subscription-iap-packs.md`](./issue-93-subscription-iap-packs.md) (gates: re-prep P3 ready-check READY · design-soundness SOUND 0.68 · P5 READY · SOUND 0.82).
 **Cost model:** [`../research/issue-93-cost-model-2026-07-08.md`](../research/issue-93-cost-model-2026-07-08.md).
 
 ---
@@ -45,36 +53,43 @@ Lifted verbatim by intent from the parent plan's `## Resolved design decisions` 
 | Founder-2 | Subscription = **UNLIMITED** questions (not metered credits). Price **€4.99/mo**, annual **€29.99/yr**. |
 | Founder-3 | Packs buyable by **free users without a sub** (+100 for ~€1.99), **never expire**. |
 | Founder-4 | **ONE paid tier in v1**; data model forward-compatible for more tiers later (no `is_premium` boolean). |
+| Founder-5 | **Execution = autonomous-loop OR Fable-orchestrated** under maker≠checker rails (2026-07-10; supersedes "class b → Ralph never"). Adversarial opus review on every payment path; migration/secret deploys founder-gated; console-provisioning + live-sandbox legs `[HUMAN]`. |
 | D-RC | **Adopt RevenueCat** (SDK on iOS + REST/webhooks on backend); backend owns credit ledger + quota gate, RC owns receipt validation + sub lifecycle. |
 | D-tables | Entitlement = **tables** (`product` + `subscription` + `credit_ledger`), not a boolean. |
 | D-ledger | Server-side **append-only credit ledger**, balance = `SUM(delta)`; no consumable restore. |
 | D-idem | **GRANT dedupe `UNIQUE(store_txn_id) WHERE kind='grant'`** (global), **CLAWBACK dedupe `UNIQUE(rc_event_id) WHERE kind='clawback'`** (disjoint partial indexes). |
 | D-bridge | **`POST /entitlements/sync`** = one-shot RC REST pull post-purchase; hot path never calls RC. |
 | D-ids | Pinned strings: entitlement **`unlimited`**; subs **`com.carquiz.unlimited.monthly`** / **`.annual`**; pack **`com.carquiz.pack.questions100`** (+100). |
-| D-order | Webhook events split **extend** (max-wins on `expires_at`) vs **revoke** (writes shorter `expires_at`/`expired`); ordered by **`last_event_ts_ms`** watermark (apply iff strictly newer); sync = full-state snapshot reconcile setting `last_event_ts_ms=request_date_ms`. |
+| D-order | Webhook events split **extend** (max-wins on `expires_at`) vs **revoke** (writes shorter `expires_at`/`expired`); ordered by **`last_event_ts_ms`** watermark (apply iff strictly newer); sync = full-state snapshot reconcile setting `last_event_ts_ms=request_date_ms` (only if `request_date_ms ≥ stored` — monotonic, never regresses). |
 | D-pk | **`subscription.account_id` PK/UNIQUE** (webhook `ON CONFLICT` target). |
 | D-merge | Anon→sign-in **subscription fold = MERGE** (row-wise winner = greater-`expires_at` row wholesale, `last_event_ts_ms`=field-max, delete anon row); **ledger fold = bare re-key** (collision-free, global indexes). |
 | D-grace | **`status ∈ {active, grace}`** counts as entitled (Apple billing-retry window). |
 | D-gate | One shared gate in the usage/entitlement layer, order **sub → free-30 → credits → deny**; **consume in `record_question`** only; **default-deny** on null account (preserves #89/#90). |
+| D-helper | **All sub-state math lives in one pure helper** (`app/usage/subscription_state.py`, Session A) — webhook (C), sync (C), and fold (D) import it, never re-embed max-wins/revoke/watermark/merge. Its `tests/test_subscription_state.py` is the producer of Session A's mode-(a) hard gate. |
 
 ---
 
 ## Session breakdown
 
-| Session | Tasks | Risk | Depends on (merged) | Notes |
-|---|---|---|---|---|
-| **0 · [HUMAN] provisioning** | Console + secrets | — (manual) | — | Gates A (seed ids), C (webhook secret + REST key), E (RC offerings). Founder-only. |
-| **A · DB layer** | ORM models, migration `0005`, seed, shared sub-state apply/merge helper + helper tests | med (schema) | 0 | Blocks B, C, D. Tables-only, no `is_premium` backfill. |
-| **B · Entitlement gate** | EntitlementService, `FREE_MONTHLY_LIMIT` 30, `check_limit`/`record_question` wiring, typed `/usage` `UsageResponse`, `test_entitlement.py` | high (hot path) | A | Reads the tables; seeds them directly in tests. |
-| **C · Webhook + sync** | `/webhooks/revenuecat`, pack handling, `/entitlements/sync`, `test_webhooks.py` | high (payments) | A (+ 0 secret) | Uses A's helper. Writes the tables B reads. |
-| **D · Account keying** | Extend #61 fold: subscription MERGE + ledger re-key + 2 fold tests | high (payments) | A | ⚠️ locate the real fold first (recon). Uses A's helper. |
-| **E · iOS** | RC SPM + SDK swap, PaywallView, `UsageInfo` Codable, post-purchase sync, `/verify-api`, live sandbox check | high | B, C (+ 0 offerings) | Sandbox purchase leg is **manual/human-verified**. |
+Dependency + parallel + model-routing markers. `Reviewed` column = the durable maker≠checker state the loop resumes from (`✅`/`⬜`/`n/a`).
+
+| Session | Tasks | Model (mode b) | Risk | Depends on (merged) | Reviewed |
+|---|---|---|---|---|---|
+| **0 · [HUMAN] provisioning** | Console + secrets | — (founder) | — (manual) | — | n/a |
+| **A-schema** | ORM models, migration `0005`, seed | **sonnet** | med (schema) | 0 | n/a |
+| **A-helper** | pure `subscription_state` helper + `test_subscription_state.py` | **opus** | high (concurrency core) | 0 | ⬜ |
+| **B · Entitlement gate** | EntitlementService, `FREE_MONTHLY_LIMIT` 30 (**haiku** one-liner), `check_limit`/`record_question` wiring, typed `/usage` `UsageResponse`, `test_entitlement.py` | **opus** | high (hot path) | A-schema, A-helper | ⬜ |
+| **C · Webhook + sync** | `/webhooks/revenuecat`, pack handling, `/entitlements/sync`, `test_webhooks.py` | **opus** | high (payments) | A-schema, A-helper (+ 0 secret) | ⬜ |
+| **D · Account keying** | Extend #61 fold: subscription MERGE + ledger re-key + 2 fold tests | **opus** | high (payments) | A-schema, A-helper | ⬜ |
+| **E · iOS** | RC SPM + SDK swap, PaywallView, `UsageInfo` Codable, post-purchase sync, `/verify-api`, live sandbox check | **sonnet** (exempt) | high | B, C (+ 0 offerings) | n/a |
+
+**A-schema and A-helper** are one merged commit in mode (a) (run as Session A below, in order); in mode (b) the coordinator spawns a **sonnet** subagent for the schema and an **opus** subagent for the helper. **A-helper is the payment-critical part → it gets the opus adversarial review; A-schema does not.** B, C, D each block on both A parts merged. B and C and D may run in parallel **only in separate worktrees** (all three depend solely on A). **E** blocks on B + C. **Session E is exempt from maker≠checker** (sonnet, no reviewer): entitlement derivation is **server-side default-deny** — an iOS bug can only *under-serve* (fail to unlock a paid user, who retries), never *over-grant*, since the server decides entitlement. That asymmetry is why E needs neither opus nor a reviewer.
 
 ---
 
-## Human prerequisites (Session 0 — founder, class b)
+## Human prerequisites (Session 0 — founder, class b, `[HUMAN]`)
 
-Do these **before** Session A's seed, Session C's webhook, and Session E's offerings. Assume zero prior knowledge; exact steps:
+Do these **before** A-schema's seed, Session C's webhook, and Session E's offerings. Assume zero prior knowledge; exact steps:
 
 1. **App Store Connect → create IAP products** (My Apps → the Trubbo/Hangs app → Monetization → In-App Purchases / Subscriptions):
    a. A **Subscription Group** (e.g. "Trubbo Unlimited"), with two auto-renewable subscriptions: product id **`com.carquiz.unlimited.monthly`** price **€4.99**, and **`com.carquiz.unlimited.annual`** price **€29.99**.
@@ -86,39 +101,49 @@ Do these **before** Session A's seed, Session C's webhook, and Session E's offer
    c. Create an **Offering** (e.g. "default") with packages for monthly, annual, and the pack.
    d. **API keys:** copy the **public SDK key** (for iOS, Session E) and a **secret REST API key** (for backend `/entitlements/sync`, Session C).
    e. **Webhook:** Integrations → Webhooks → add URL `https://<backend-host>/webhooks/revenuecat`, set an **Authorization header value** (a long random secret) — this is the shared secret Session C verifies.
-3. **Backend secrets (Fly):** `fly secrets set -a <quiz-agent-app> REVENUECAT_API_KEY=<secret REST key> REVENUECAT_WEBHOOK_SECRET=<the Authorization value from 2e>`. For local dev add both to `apps/quiz-agent/.env`.
+3. **Backend secrets (Fly, founder-gated):** `fly secrets set -a <quiz-agent-app> REVENUECAT_API_KEY=<secret REST key> REVENUECAT_WEBHOOK_SECRET=<the Authorization value from 2e>`. For local dev add both to `apps/quiz-agent/.env`.
 4. Tell the executing sessions these exist. **Reply in-session with the RevenueCat public SDK key** when Session E asks (it goes in the iOS app config, not a backend secret).
 
 ---
 
-## Ready prompt — Session A (DB layer)
+## Ready prompt — Session A (DB layer: schema + helper)
+
+> **Model routing:** mode (a) run as one fresh session (schema then helper, one commit). Mode (b): spawn a **sonnet** subagent for steps 1–2 (schema/migration) and an **opus** subagent for steps 3–4 (`subscription_state` helper). **A-helper (steps 3–4) is payment-critical → its output takes the opus adversarial review leg below; A-schema (steps 1–2) does not (`Reviewed = n/a`).**
 
 ```
-Issue #93 (subscription IAP), Session A — DB layer. Class b (payments): land for human review, do NOT deploy, do NOT run under Ralph. Work in apps/quiz-agent.
+Issue #93 (subscription IAP), Session A — DB layer (schema + subscription-state helper). Class b (payments): land committed on main, do NOT deploy, migration/secrets are founder-gated. Work in apps/quiz-agent.
 
 Scope: create the entitlement schema + a shared subscription-state helper. Do NOT touch the quota gate, webhook, iOS, or the anon fold — those are Sessions B/C/D/E. Do NOT backfill or drop `is_premium`.
 
 Read first:
-- docs/issues/issue-93-subscription-iap-packs.md → Design §1, §4, and Resolved design decisions (D-tables, D-idem, D-pk, D-order, D-merge, D-ids).
+- docs/issues/issue-93-subscription-iap-packs.md → Design §1, §4, and Resolved design decisions (D-tables, D-idem, D-pk, D-order, D-merge, D-ids, D-helper).
 - app/db/models.py:142-190 (DailyUsage + User); alembic/versions/0004_refresh_token_subject.py (head + how it targets the alembic_version_quiz_agent table — the SHARED-Postgres gotcha).
 - tests/conftest.py:36-52 (db_sessionmaker) and tests/test_usage_tracker.py (seed pattern).
 
 Build:
-1. ORM models in app/db/models.py — `Product{product_id PK, kind, tier, credit_amount}`, `Subscription{account_id PK/UNIQUE, product_id, status, expires_at, rc_original_txn_id, last_event_ts_ms BIGINT NULL, updated_at}`, `CreditLedger{id, account_id, delta, kind, reason, store_txn_id NULL, rc_event_id NULL, created_at}`.
-2. Migration alembic/versions/0005_*.py (down_revision=0004_refresh_token_subject): create the 3 tables; `subscription.account_id` PK/UNIQUE; two PARTIAL unique indexes — `UNIQUE(store_txn_id) WHERE kind='grant'` (global) and `UNIQUE(rc_event_id) WHERE kind='clawback'`; seed `product` rows for the 3 pinned ids (credit_amount=100 on the pack). Tables-only, no is_premium backfill. MUST target the alembic_version_quiz_agent table exactly like 0004.
-3. A pure helper (e.g. app/usage/subscription_state.py) `apply_subscription_event(current, event) -> new_state` and `merge_subscription_rows(a, b) -> winner` implementing D-order + D-merge: extend events max-wins on expires_at (tie → status active>grace>expired), revoke events write shorter expires_at/expired, watermark `last_event_ts_ms` (apply iff strictly newer; NULL watermark → first event applies), grace status; merge = row-wise winner by max expires_at (whole row), last_event_ts_ms = field-max. NO DB or network in this helper — pure functions over dataclasses/dicts, so C and D both import it.
-4. Unit tests tests/test_subscription_state.py for the helper: extend max-wins, revoke shortens, stale-drop, NULL-watermark-first-applies, merge row-wise (no synthesized state).
+1. [A-schema] ORM models in app/db/models.py — `Product{product_id PK, kind, tier, credit_amount}`, `Subscription{account_id PK/UNIQUE, product_id, status, expires_at, rc_original_txn_id, last_event_ts_ms BIGINT NULL, updated_at}`, `CreditLedger{id, account_id, delta, kind, reason, store_txn_id NULL, rc_event_id NULL, created_at}`.
+2. [A-schema] Migration alembic/versions/0005_*.py (down_revision=0004_refresh_token_subject): create the 3 tables; `subscription.account_id` PK/UNIQUE; two PARTIAL unique indexes — `UNIQUE(store_txn_id) WHERE kind='grant'` (global) and `UNIQUE(rc_event_id) WHERE kind='clawback'`; seed `product` rows for the 3 pinned ids (credit_amount=100 on the pack). Tables-only, no is_premium backfill. MUST target the alembic_version_quiz_agent table exactly like 0004.
+3. [A-helper] A pure helper app/usage/subscription_state.py: `apply_subscription_event(current, event) -> new_state` and `merge_subscription_rows(a, b) -> winner` implementing D-order + D-merge: extend events (INITIAL_PURCHASE/RENEWAL/upgrade PRODUCT_CHANGE/UNCANCELLATION) max-wins on expires_at (tie → status precedence active>grace>expired), revoke events (REFUND/CHARGEBACK/immediate CANCELLATION/downgrade PRODUCT_CHANGE/EXPIRATION) write shorter expires_at/expired, watermark `last_event_ts_ms` (apply iff strictly newer; NULL watermark → first event applies), grace status; merge = ROW-WISE winner by max expires_at (whole row taken as one unit, keeping its status), last_event_ts_ms = field-max (never synthesizes a {status, expires_at} combo neither source held). NO DB or network in this helper — pure functions over dataclasses/dicts, so C and D both import it.
+4. [A-helper] Unit tests tests/test_subscription_state.py for the helper: extend max-wins, revoke moves expiry backward / flips expired, status precedence on ties, stale-event dropped, NULL-watermark-first-applies, merge row-wise (no synthesized state).
 
 Done =
 - `cd apps/quiz-agent && TEST_DATABASE_URL=<local test pg> alembic upgrade head && alembic downgrade -1` both clean; after upgrade `SELECT count(*) FROM product` = 3 and both partial indexes exist (`\d+ credit_ledger`).
 - `cd apps/quiz-agent && pytest tests/test_subscription_state.py -v` green (tests RUN, not skipped).
-Commit + push (main, no deploy). Tick Session A in docs/issues/issue-93-execution-prompts.md ## Status and the DB/helper task lines in the parent issue.
+- `ruff` clean on touched files.
+
+Then (A-helper only — payment path, maker≠checker):
+- On Done green, set A-helper `Done ✅` in ## Status but leave the box unticked. Spawn a SEPARATE fresh-context adversarial reviewer (opus, a different context than the maker) tasked ONLY to disprove app/usage/subscription_state.py + its tests against Design §1 (D-order/D-merge): can a revoke fail to move expiry backward? can max-wins swallow a real revoke? does the NULL-first watermark apply? can the merge synthesize a {status, expires_at} combo neither row held? If the reviewer finds a defect it returns a fix task → a fresh maker session fixes + re-runs Done, then re-review. Only when the reviewer is green set A-helper `Reviewed = ✅`.
+- A-schema is `Reviewed = n/a` (no reviewer).
+
+Commit + push (main, no deploy) once A-schema is green AND A-helper is Reviewed ✅. Tick Session A rows in docs/issues/issue-93-execution-prompts.md ## Status and the DB/helper task lines in the parent issue.
 ```
 
 ## Ready prompt — Session B (Entitlement gate)
 
+> **Model routing:** **opus** (hot-path quota concurrency; must preserve #89/#90). The `FREE_MONTHLY_LIMIT` 100→30 one-liner is trivial (**haiku**-class) — do it inline. **Payment-critical → takes the opus adversarial review leg.**
+
 ```
-Issue #93, Session B — entitlement gate + free-tier 30. Class b: land for human review, no deploy, no Ralph. Requires Session A merged. Work in apps/quiz-agent.
+Issue #93, Session B — entitlement gate + free-tier 30. Class b (payments): land committed on main, no deploy. Requires Session A merged (schema + subscription_state helper). Work in apps/quiz-agent.
 
 Scope: make the quota gate read the new tables and enforce sub→free-30→credits→deny, and type the /usage response. Do NOT write the webhook or sync endpoint (Session C), the anon fold (Session D), or iOS (Session E). Keep the check(non-mutating)→record(mutating) split intact.
 
@@ -137,56 +162,75 @@ Build:
 5. Introduce a typed `UsageResponse` response_model (in packages/shared or app/api) for GET /usage that ADDS `subscription_status` + `credit_balance` (additive only; keep is_premium etc.), and set it as the endpoint's response_model so OpenAPI types it.
 6. tests/test_entitlement.py: test_free_cap_is_30 (429 at 30, ok at 29); test_active_sub_unlimited; test_grace_sub_unlimited; test_credit_debit_once_per_served; test_pre_record_retrieval_500_no_debit (INTEGRATION-level — drive flow.process_answer/`/start` with the retriever mocked to raise AFTER check_limit, BEFORE record_question; assert credit_ledger SUM(delta) unchanged — NOT a tracker unit test); test_null_account_denied; test_no_double_spend.
 
-Done = `cd apps/quiz-agent && pytest tests/test_entitlement.py -v` green (RUN, not skipped). Commit + push (main, no deploy). Tick Session B in ## Status + the parent Entitlement/quota + /usage task lines.
+Done = `cd apps/quiz-agent && pytest tests/test_entitlement.py -v` green (RUN, not skipped); `ruff` clean on touched files.
+
+Then (payment path, maker≠checker): on Done green, set B `Done ✅` in ## Status, leave box unticked, spawn a SEPARATE fresh-context adversarial reviewer (opus) to disprove the diff against Design §3: does the entitlement read default-deny on a null account (no #89 bypass)? is consume a single atomic guarded write, and does record_question re-derive the path independently so a check→record race can't double-spend (#90 TOCTOU)? is exactly one effect applied per served question, symmetric across sub/free/credit? Defect → fix task → fresh maker fixes + re-runs Done → re-review. Reviewer green → set B `Reviewed = ✅`.
+
+Commit + push (main, no deploy) only after Done ✅ AND Reviewed ✅. Tick Session B in ## Status + the parent Entitlement/quota + /usage task lines.
 ```
 
 ## Ready prompt — Session C (Webhook + sync bridge)
 
-```
-Issue #93, Session C — RevenueCat webhook + /entitlements/sync. Class b (payments): land for human review, no deploy, no Ralph. Requires Session A merged; needs Session 0's REVENUECAT_WEBHOOK_SECRET + REVENUECAT_API_KEY (fall back to reading them from env/.env). Work in apps/quiz-agent.
+> **Model routing:** **opus** (payment-critical; out-of-order/replay/revoke reasoning). **Takes the opus adversarial review leg.**
 
-Scope: build the two RC-facing endpoints and their ledger/subscription writes. Do NOT change the gate (Session B) or the anon fold (Session D) or iOS (Session E). Reuse Session A's app/usage/subscription_state.py helper for ALL subscription-state math — don't re-implement max-wins/revoke.
+```
+Issue #93, Session C — RevenueCat webhook + /entitlements/sync. Class b (payments): land committed on main, no deploy. Requires Session A merged; needs Session 0's REVENUECAT_WEBHOOK_SECRET + REVENUECAT_API_KEY (fall back to reading them from env/.env). Work in apps/quiz-agent.
+
+Scope: build the two RC-facing endpoints and their ledger/subscription writes. Do NOT change the gate (Session B) or the anon fold (Session D) or iOS (Session E). Reuse Session A's app/usage/subscription_state.py helper for ALL subscription-state math — don't re-implement max-wins/revoke/watermark.
 
 Read first:
-- docs/issues/issue-93-subscription-iap-packs.md → Design §2, §4 + decisions D-idem, D-bridge, D-order, D-pk, D-grace.
+- docs/issues/issue-93-subscription-iap-packs.md → Design §2, §4 + decisions D-idem, D-bridge, D-order, D-pk, D-grace, D-helper.
 - app/usage/subscription_state.py (Session A helper) and app/db/models.py (Subscription/CreditLedger).
 - app/api/routes/misc.py (router mounting pattern) + tests/test_admin_premium.py (ASGITransport HTTP-test pattern) + tests/test_mcq_evaluator.py (AsyncMock external-call pattern).
 
 Build:
-1. POST /webhooks/revenuecat (new app/api/routes/webhooks.py): verify the shared-secret `Authorization` header (constant-time compare) BEFORE parsing the body → 401 else. Upsert subscription with ON CONFLICT(account_id). Gate SUBSCRIPTION events on event_timestamp_ms > last_event_ts_ms (NULL watermark → apply); extend (INITIAL_PURCHASE/RENEWAL/upgrade PRODUCT_CHANGE/UNCANCELLATION) via the helper's max-wins; revoke (REFUND/CHARGEBACK/immediate CANCELLATION/downgrade PRODUCT_CHANGE) writes shorter expires_at/expired; EXPIRATION→expired; BILLING_ISSUE→grace (grace_period_expiration_at_ms).
-2. Pack events in the same endpoint: NON_RENEWING_PURCHASE → +credit_amount grant (store_txn_id=transaction_id, rc_event_id=event id), deduped by the GRANT partial index — NOT gated by the subscription watermark. REFUND/CANCELLATION of a pack → clawback (−credit_amount, rc_event_id=refund event id, store_txn_id=original). CONSUMPTION_REQUEST → report balance to RC.
-3. POST /entitlements/sync (authenticated; webhooks.py or new entitlements.py): one-shot RC REST GET /subscribers/{app_user_id}. Subscription = FULL-STATE overwrite of status/expires_at from subscriptions[pid], set last_event_ts_ms=request_date_ms. Packs from non_subscriptions[pid][] → grants keyed on store_transaction_id, deduped on store_txn_id.
+1. POST /webhooks/revenuecat (new app/api/routes/webhooks.py): verify the shared-secret `Authorization` header (constant-time compare) BEFORE parsing the body → 401 else. Upsert subscription with ON CONFLICT(account_id). Gate SUBSCRIPTION events on event_timestamp_ms > last_event_ts_ms (NULL watermark → apply); extend (INITIAL_PURCHASE/RENEWAL/upgrade PRODUCT_CHANGE/UNCANCELLATION) via the helper's max-wins; revoke (REFUND/CHARGEBACK/immediate CANCELLATION/downgrade PRODUCT_CHANGE) writes shorter expires_at/expired; EXPIRATION→expired; BILLING_ISSUE→grace (grace_period_expiration_at_ms). Watermark scoped to SUBSCRIPTION state only.
+2. Pack events in the same endpoint: NON_RENEWING_PURCHASE → +credit_amount grant (store_txn_id=transaction_id, rc_event_id=event id), deduped by the GRANT partial index — NOT gated by the subscription watermark (impl note ii). REFUND/CANCELLATION of a pack → clawback (−credit_amount, rc_event_id=refund event id, store_txn_id=original). CONSUMPTION_REQUEST → report balance to RC.
+3. POST /entitlements/sync (authenticated; webhooks.py or new entitlements.py): one-shot RC REST GET /subscribers/{app_user_id}. Subscription = FULL-STATE overwrite of status/expires_at from subscriptions[pid], set last_event_ts_ms=request_date_ms — but ONLY if request_date_ms ≥ stored last_event_ts_ms (monotonic; a stale older snapshot no-ops, never regresses status/expiry/watermark). Packs from non_subscriptions[pid][] → grants keyed on store_transaction_id, deduped on store_txn_id.
 4. tests/test_webhooks.py (mock the RC REST call with AsyncMock): test_grant_idempotent_sync_then_webhook; test_refund_revokes_active_sub; test_stale_renewal_after_refund_noop; test_newer_webhook_after_sync_applies (sync sets watermark=request_date_ms, then RENEWAL with ts>request_date_ms MUST apply); test_first_event_null_watermark_applies; test_pack_grant_not_gated_by_sub_watermark; test_clawback_once; test_webhook_auth_rejects_bad_secret (401 before body parse).
 
-Done = `cd apps/quiz-agent && pytest tests/test_webhooks.py -v` green (RUN, not skipped). Commit + push (main, no deploy). Tick Session C in ## Status + the parent webhook/sync task lines.
+Done = `cd apps/quiz-agent && pytest tests/test_webhooks.py -v` green (RUN, not skipped); `ruff` clean on touched files.
+
+Then (payment path, maker≠checker): on Done green, set C `Done ✅` in ## Status, leave box unticked, spawn a SEPARATE fresh-context adversarial reviewer (opus) to disprove the diff against Design §2: is the auth check constant-time and BEFORE body parse? does the ordering guard defeat stale replay in BOTH directions (an old RENEWAL after a refund no-ops; a genuine newer REFUND revokes)? does sync converge with webhooks (never resurrect a refunded sub) yet a strictly-newer webhook still apply? are grant/clawback exactly-once across sync+webhook (split idempotency, disjoint by kind)? is the pack grant NOT gated by the sub watermark? Defect → fix task → fresh maker fixes + re-runs Done → re-review. Reviewer green → set C `Reviewed = ✅`.
+
+Commit + push (main, no deploy) only after Done ✅ AND Reviewed ✅. Tick Session C in ## Status + the parent webhook/sync task lines.
 ```
 
 ## Ready prompt — Session D (Account keying / anon→sign-in fold)
 
+> **Model routing:** **opus** (payment-critical merge under a UNIQUE constraint). **Takes the opus adversarial review leg.**
+
 ```
-Issue #93, Session D — extend the anon→sign-in fold for subscription + credits. Class b (payments): land for human review, no deploy, no Ralph. Requires Session A merged (uses its merge helper). Work in apps/quiz-agent.
+Issue #93, Session D — extend the anon→sign-in fold for subscription + credits. Class b (payments): land committed on main, no deploy. Requires Session A merged (uses its merge helper). Work in apps/quiz-agent.
 
 Scope: ONLY the account-keying fold. Do NOT touch the gate, webhook, or iOS. Reuse app/usage/subscription_state.py merge_subscription_rows — don't re-implement the merge rule.
 
 Read first:
-- docs/issues/issue-93-subscription-iap-packs.md → Design §1 "Account keying" + "Subscription fold = MERGE" + decisions D-merge, D-pk.
+- docs/issues/issue-93-subscription-iap-packs.md → Design §1 "Account keying" + "Subscription fold = MERGE" + decisions D-merge, D-pk, D-helper.
 - app/db/models.py:158-190 (User docstring describes the fold) — ⚠️ the fold LOGIC is NOT here. FIRST run `grep -rn "upgraded_to_user_id" apps/quiz-agent` and read tests/test_refresh_subject_migration.py to locate the actual fold function (an auth/migration route). Extend THAT function, inside its existing transaction.
 
 Build:
 1. In the located fold: after the existing daily_usage fold, add —
    - subscription: if BOTH an anon-keyed and a user-keyed subscription row exist for the account → merge_subscription_rows(anon,user) into the user-keyed row, DELETE the anon row; if only the anon row exists → plain re-key UPDATE account_id→user_id. All inside the same fold transaction (so a UNIQUE(account_id) collision can never abort sign-in).
    - credit_ledger: bare re-key UPDATE account_id (anon→user) — collision-free (global grant/clawback indexes, append-only).
+   - Call RC logIn/alias so RC history merges (if the RC client wrapper exists; else leave a TODO — do not block the fold on it).
 2. tests (in tests/test_entitlement.py, matching Session B's file):
    - test_anon_to_signin_preserves_credits — ledger + subscription re-keyed, no double-grant on a replayed webhook.
    - test_anon_to_signin_merges_two_sub_rows — seed BOTH an anon- and user-keyed subscription row with DIFFERENT expires_at → run fold → assert exactly ONE surviving user-keyed row with max-wins expires_at + winning status + larger last_event_ts_ms, and NO UNIQUE-violation/abort.
 
-Done = `cd apps/quiz-agent && pytest tests/test_entitlement.py -k "anon_to_signin" -v` green (RUN, not skipped); full `pytest tests/ -v` still green. Commit + push (main, no deploy). Tick Session D in ## Status + the parent Account-keying task line.
+Done = `cd apps/quiz-agent && pytest tests/test_entitlement.py -k "anon_to_signin" -v` green (RUN, not skipped); full `cd apps/quiz-agent && pytest tests/ -v` still green; `ruff` clean on touched files.
+
+Then (payment path, maker≠checker): on Done green, set D `Done ✅` in ## Status, leave box unticked, spawn a SEPARATE fresh-context adversarial reviewer (opus) to disprove the diff against Design §1 (fold): can a plain re-key abort on the UNIQUE(account_id) when a user-keyed row exists (i.e. is the MERGE path actually taken)? does the merge use the helper's row-wise rule (no synthesized {status,expires_at})? is the whole fold atomic (one transaction, can't leave two rows)? is the ledger re-key genuinely collision-free? Defect → fix task → fresh maker fixes + re-runs Done → re-review. Reviewer green → set D `Reviewed = ✅`.
+
+Commit + push (main, no deploy) only after Done ✅ AND Reviewed ✅. Tick Session D in ## Status + the parent Account-keying task line.
 ```
 
 ## Ready prompt — Session E (iOS RevenueCat + paywall)
 
+> **Model routing:** **sonnet, EXEMPT from maker≠checker** (no adversarial reviewer, `Reviewed = n/a`). Rationale: entitlement derivation is **server-side default-deny** — an iOS-side bug can only *under-serve* (fail to unlock a paid user, who retries), never *over-grant*, since the server (not the client) decides entitlement. That asymmetry is why E needs neither opus nor a reviewer. The **live-sandbox purchase leg is `[HUMAN]`** (StoreKit sandbox can't be driven headless).
+
 ```
-Issue #93, Session E — iOS RevenueCat SDK + paywall + entitlement sync. Class b: land for human review, no deploy, no Ralph. Requires Sessions B + C merged (needs the extended /usage fields + the /entitlements/sync endpoint), and Session 0's RevenueCat public SDK key + configured Offering. ASK the founder in-session for the RC public SDK key. Work in apps/ios-app/Hangs.
+Issue #93, Session E — iOS RevenueCat SDK + paywall + entitlement sync. Class b: land committed on main, no deploy. Requires Sessions B + C merged (needs the extended /usage fields + the /entitlements/sync endpoint), and Session 0's RevenueCat public SDK key + configured Offering. ASK the founder in-session for the RC public SDK key. Work in apps/ios-app/Hangs.
 
 Scope: swap the iOS purchase stack to RevenueCat, render offerings, sync entitlement post-purchase, keep the Codable in sync. Do NOT change backend.
 
@@ -205,21 +249,25 @@ Build:
 Done =
 - Backend running locally: `/verify-api` GREEN (OpenAPI /usage ↔ UsageInfo Codable in sync).
 - `xcodebuild build -scheme Hangs-Local -destination 'platform=iOS Simulator,name=iPhone 17 Pro'` clean (use ios-tester agent).
-- Manual/human-verified leg (StoreKit sandbox can't be driven headless): via ios-ui-driver, purchase the sub in RC sandbox → the immediate next question is served with no 429 after /entitlements/sync. Record the result; if a real RS-NN is assigned, run it.
-Commit + push (main, no deploy). Tick Session E in ## Status + the parent iOS task lines. Report the manual sandbox result explicitly (pass/fail), never silently.
+- [HUMAN] live-sandbox leg (StoreKit sandbox can't be driven headless): via ios-ui-driver + founder, purchase the sub in RC sandbox → the immediate next question is served with no 429 after /entitlements/sync. Record the result pass/fail explicitly; if a real RS-NN is assigned, run it. The autonomous loop must HALT here and hand this leg to the founder — never fake-tick it.
+
+Reviewed = n/a (exempt — see routing note). Commit + push (main, no deploy) once /verify-api + build are green. Tick Session E in ## Status + the parent iOS task lines. Report the [HUMAN] sandbox result explicitly (pass/fail), never silently.
 ```
 
 ---
 
 ## Status
 
-| Session | State |
-|---|---|
-| 0 · [HUMAN] provisioning | ⬜ |
-| A · DB layer | ⬜ |
-| B · Entitlement gate | ⬜ |
-| C · Webhook + sync | ⬜ |
-| D · Account keying | ⬜ |
-| E · iOS | ⬜ |
+`Done` = the session's `Done =` gate passed. `Reviewed` = maker≠checker adversarial review (`✅` passed · `⬜` pending · `n/a` non-payment/exempt). **A payment session's box may be ticked only when `Done = ✅` AND `Reviewed = ✅`.** A fresh context that reads `Done ✅ / Reviewed ⬜` knows the maker finished but the review has not passed — it must run the review, not treat the session as shippable.
+
+| Session | Done | Reviewed | Box |
+|---|---|---|---|
+| 0 · [HUMAN] provisioning | ⬜ | n/a | ⬜ |
+| A-schema · ORM + migration `0005` + seed | ⬜ | n/a | ⬜ |
+| A-helper · `subscription_state` + tests | ⬜ | ⬜ | ⬜ |
+| B · Entitlement gate | ⬜ | ⬜ | ⬜ |
+| C · Webhook + sync | ⬜ | ⬜ | ⬜ |
+| D · Account keying | ⬜ | ⬜ | ⬜ |
+| E · iOS | ⬜ | n/a | ⬜ |
 
 > As sessions land, note any symbol a later session imports here — e.g. *"Session A delivered `app/usage/subscription_state.py` → `apply_subscription_event`, `merge_subscription_rows` (Sessions C, D import these)."*

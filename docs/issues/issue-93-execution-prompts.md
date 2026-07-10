@@ -263,11 +263,19 @@ Reviewed = n/a (exempt — see routing note). Commit + push (main, no deploy) on
 | Session | Done | Reviewed | Box |
 |---|---|---|---|
 | 0 · [HUMAN] provisioning | 🔶 ASC done 2026-07-10 (agent via ASC API; all 3 products READY_TO_SUBMIT, prices €4.99/€29.99/€1.99 verified, review screenshot = Pencil mock `NEW_Screen/Paywall-Subscription`); RevenueCat + Fly secrets PENDING founder (no RC account/key exists) | n/a | ⬜ |
-| A-schema · ORM + migration `0005` + seed | ⬜ | n/a | ⬜ |
-| A-helper · `subscription_state` + tests | ⬜ | ⬜ | ⬜ |
+| A-schema · ORM + migration `0005` + seed | ✅ 2026-07-10 (upgrade/downgrade/upgrade clean vs local pg; 3 product rows seeded; both partial indexes verified; full pytest 296 passed + 1 pre-existing env failure `test_pgvector_store` missing psycopg2) | n/a | ✅ |
+| A-helper · `subscription_state` + tests | ✅ 2026-07-10 (19 tests green) | ✅ 2026-07-10 (adversarial opus review PASS — all 6 attack vectors defended, 8 counter-example probes) | ✅ |
 | B · Entitlement gate | ⬜ | ⬜ | ⬜ |
 | C · Webhook + sync | ⬜ | ⬜ | ⬜ |
 | D · Account keying | ⬜ | ⬜ | ⬜ |
 | E · iOS | ⬜ | n/a | ⬜ |
 
 > As sessions land, note any symbol a later session imports here — e.g. *"Session A delivered `app/usage/subscription_state.py` → `apply_subscription_event`, `merge_subscription_rows` (Sessions C, D import these)."*
+
+**Session A delivered** (`app.usage.subscription_state` — note: `app/usage/`, per D-helper; the parent plan's older `app/entitlements/` mention is superseded):
+- `SubscriptionState` / `SubscriptionEvent` frozen dataclasses (`status ∈ {active,grace,expired}`; event has `event_class ∈ {extend,revoke}` + `event_ts_ms`).
+- `apply_subscription_event(current, event)` — strict-newer watermark (None → first applies), extend max-wins (tie → active>grace>expired), revoke writes verbatim.
+- `merge_subscription_rows(a, b)` — row-wise winner by `expires_at`, `last_event_ts_ms` field-max, None-safe.
+- `classify_event_type(event_type, *, product_change_is_upgrade=None)` + `EXTEND_EVENT_TYPES`/`REVOKE_EVENT_TYPES`/status+class constants.
+- ⚠️ Session C notes from the review: (1) `BILLING_ISSUE` intentionally raises in `classify_event_type` — map it directly to a grace-status event, don't feed it through classify; (2) helper compares `expires_at` datetimes as-given — webhook/sync must always construct tz-aware datetimes (RC ms → aware UTC).
+- ORM: `Product`, `Subscription`, `CreditLedger` in `app/db/models.py`; migration `alembic/versions/0005_subscription_tables.py` (targets `alembic_version_quiz_agent` via env.py, seeds 3 product rows).

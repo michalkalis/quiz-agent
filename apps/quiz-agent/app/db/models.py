@@ -11,10 +11,12 @@ import uuid
 from datetime import date, datetime
 
 from sqlalchemy import (
+    BigInteger,
     Boolean,
     Date,
     DateTime,
     ForeignKey,
+    Index,
     Integer,
     LargeBinary,
     Text,
@@ -185,6 +187,90 @@ class User(Base):
     apple_refresh_token_encrypted: Mapped[bytes | None] = mapped_column(
         LargeBinary, nullable=True
     )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+
+
+class Product(Base):
+    """Catalog row per RevenueCat product/entitlement id (issue #93 Design §1).
+
+    Seeded, read-only at runtime. ``tier`` is the forward-compat seam for
+    multiple paid tiers later — a new tier is a new row, never a code branch.
+    """
+
+    __tablename__ = "product"
+
+    product_id: Mapped[str] = mapped_column(Text, primary_key=True)
+    kind: Mapped[str] = mapped_column(Text, nullable=False)  # subscription|consumable
+    tier: Mapped[str] = mapped_column(Text, nullable=False)  # e.g. "unlimited"
+    credit_amount: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
+
+class Subscription(Base):
+    """One active-sub projection per durable account (issue #93 Design §1).
+
+    ``account_id`` is PK/UNIQUE on purpose: it is both the webhook upsert's
+    ``ON CONFLICT`` target and the account the anon->sign-in fold re-keys to,
+    so max-wins/revoke can never fork into duplicate ambiguous rows.
+    ``last_event_ts_ms`` is the per-event ordering watermark (RC
+    ``event_timestamp_ms``); NULL until the first webhook/sync applies.
+    """
+
+    __tablename__ = "subscription"
+
+    account_id: Mapped[str] = mapped_column(Text, primary_key=True)
+    product_id: Mapped[str] = mapped_column(
+        ForeignKey("product.product_id"), nullable=False
+    )
+    status: Mapped[str] = mapped_column(Text, nullable=False)  # active|grace|expired
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    rc_original_txn_id: Mapped[str] = mapped_column(Text, nullable=False)
+    last_event_ts_ms: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False
+    )
+
+
+class CreditLedger(Base):
+    """Append-only server-side credit ledger (issue #93 Design §1/§4).
+
+    Apple offers no restore/Family Sharing for consumables, so the balance
+    (``SUM(delta)``) must live server-side keyed to account. Split idempotency
+    (flaw fix 1): a GRANT dedupes on the store transaction id (present in both
+    the webhook and the REST sync payload); a CLAWBACK dedupes on the RC event
+    id (event-driven, always supplied on refund). The two partial unique
+    indexes are disjoint by ``kind`` so a grant and its clawback — which share
+    the same ``store_txn_id`` — never collide.
+    """
+
+    __tablename__ = "credit_ledger"
+    __table_args__ = (
+        Index(
+            "ix_credit_ledger_grant_store_txn_id",
+            "store_txn_id",
+            unique=True,
+            postgresql_where="kind = 'grant'",
+        ),
+        Index(
+            "ix_credit_ledger_clawback_rc_event_id",
+            "rc_event_id",
+            unique=True,
+            postgresql_where="kind = 'clawback'",
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    account_id: Mapped[str] = mapped_column(Text, nullable=False, index=True)
+    delta: Mapped[int] = mapped_column(Integer, nullable=False)
+    kind: Mapped[str] = mapped_column(Text, nullable=False)  # grant|consume|clawback
+    reason: Mapped[str] = mapped_column(Text, nullable=False)
+    store_txn_id: Mapped[str | None] = mapped_column(Text, nullable=True)
+    rc_event_id: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, nullable=False
     )

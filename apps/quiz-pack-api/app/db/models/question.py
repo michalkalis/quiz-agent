@@ -32,7 +32,7 @@ from quiz_shared.models.question import GenerationProvenance, Question
 from ..base import Base, UUIDPrimaryKeyMixin
 
 EMBEDDING_DIM = 1536
-REVIEW_STATUSES = ("pending_review", "approved", "rejected", "needs_revision")
+REVIEW_STATUSES = ("pending_review", "approved", "rejected", "needs_revision", "archived")
 
 
 class QuestionRow(Base, UUIDPrimaryKeyMixin):
@@ -109,7 +109,7 @@ class QuestionRow(Base, UUIDPrimaryKeyMixin):
 
     __table_args__ = (
         CheckConstraint(
-            "review_status IN ('pending_review','approved','rejected','needs_revision')",
+            "review_status IN ('pending_review','approved','rejected','needs_revision','archived')",
             name="ck_questions_review_status",
         ),
         Index(

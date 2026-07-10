@@ -11,6 +11,13 @@
 
 The founder rated 36 corpus questions and defined *what makes a question fun*. Cross-referenced with the code, **the wanted behaviour is 70% already built in #72 but dormant, and 30% genuinely missing**. This plan (a) runs the research the founder asked for, (b) activates/tunes the dormant levers, (c) adds the missing craft guards, (d) rewrites the reviewer rubric to match founder calibration, (e) validates against a fresh + the degraded June batch. **Use `Workflow` for the research fan-out (founder asked for workflows).** Founder is the subjective judge — check in at the gates.
 
+**Status 2026-07-10:** Phase 1 research **DONE** → `docs/research/question-craft-prior-art-2026-07-10.md` (5 cited briefs + synthesis, 25-row finding→change mapping). Phase 4.1 degraded-set rating **DONE via 5-question triage sample** (founder's call) → calibration doc addendum; verdict: batch avg ≈3.8, not trash — its dominant defect is **near-duplicate flooding** (bridge 3×, stomach-acid 4× in 27 Qs), i.e. the known dedup no-op, so no further rating needed. Next: Phase 2.
+
+**New findings folded in (2026-07-10 sample):**
+- **Deducible-numeric nuance (Phase 2 check 3):** the unguessable-open-answer guard must NOT catch numerics the player can actively estimate (heart-beats/day rated 5/5 — "you can count the beats"). Estimable-by-reasoning → keep open + accepted-range grading; undeducible (spider-silk class) → reject or MCQ.
+- **NEW scope — post-answer context payoff (Phase 3, new item 5):** founder asked that answers carry 1–2 sentences of spoken context ("how long the bridge is, where it's located… what is interesting about the river"). Generation-side: new prompt output + model field (check `headline_answer` semantics before adding a field). Serving/iOS playback is its own follow-up task — out of this plan's scope, log it in TODO when Phase 3 lands.
+- **Dedup guard belongs in scope:** the June batch shows dedup no-op producing 3–4 copies per fact within ONE batch of 27. Phase 2/3 must include at least an in-batch near-duplicate check (cross-corpus dedup stays #42's port task).
+
 **Locked founder decisions (do not re-litigate):**
 - Fun/creativity is **primary**, but **answers must stay ≤ a few words** and gradable.
 - **True/false and numeric-"estimate" questions → MCQ** (options or accepted range).

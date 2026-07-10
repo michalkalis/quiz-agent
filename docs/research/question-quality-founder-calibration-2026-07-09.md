@@ -135,3 +135,24 @@ Ratings scale 1–5 (5 = best). Round 1 feedback in Slovak, round 2 in English (
 **Verified finding:** T/F answer bias — of 34 true/false questions in the corpus, **32 are TRUE, 2 FALSE (94%)**. Founder spotted this from 2 samples (Q26). → high-priority pipeline fix.
 
 **Wave averages (rated only):** wave1 3.00 · wave2 3.00 · wave3 (v2_cot) **4.50** · wave4 4.36 · wave5 (newest) 4.20. Quality peaked at the March v2_cot wave.
+
+---
+
+## Addendum 2026-07-10 — June-18 degraded-set sample (5 of 27)
+
+Founder chose a 5-question triage sample ("tie snáď budú stačiť na posúdenie či vyhodiť celú várku alebo pokračovať v hodnotení") from `apps/quiz-pack-api/data/audit-2026-06-18/{a-open,b-mcq,c-lateral}.json`, stratified across the 3 files.
+
+| # | File | Question (answer) | Rating | Verbatim founder reason |
+|---|------|-------------------|--------|-------------------------|
+| D1 | a-open | insect with 97% hunting success rate? (Dragonfly) | 3.5/5 | "interesting. but it would probably be more interesting if it was formatted the other way - that the question mentions dragonfly and users guess the number from a multichoice answer. otherwise 3,5/5" |
+| D2 | a-open | river flowing beneath the Amazon? (Hamza River) | 3.5–4/5 | "quite ok. 3,5/5 or even 4 if it's not just some random river" |
+| D3 | b-mcq | longest bridge in the world? (Danyang) — appears 3× in the batch | 4/5 | "interesting and good to know. even though it's a typical quiz question, it's still interesting" |
+| D4 | c-lateral | heart beats per day on average? (100,000) | 5/5 | "because it's interesting and you can count the beats and make an estimate" |
+| D5 | c-lateral | Vatican church interior by Michelangelo & Bernini? (St. Peter's Basilica) | 3/5 | "nothing special but at least it's not so common. 3/5" |
+
+**Sample average ≈ 3.8** — the June-18 batch is NOT trash-tier fact-wise; no 1–2/5 in the sample. The batch's dominant defect is **near-duplicate flooding**: longest-bridge 3×, stomach-acid 4×, heart-beats 2× within 27 questions (dedup is a known no-op — pipeline defect, not a fact-quality problem). Verdict: no need to rate the remaining 22; low-end anchors stay Rome 1/5 / King-of-Pop 2/5 / chocolate 2/5 from the main session.
+
+**New signals from this sample:**
+1. **Invert-to-MCQ transform reaffirmed** (D1): when the stem contains the surprising number, flip it — name the subject, ask the number as MCQ. Same as the Golf/22-holes ruling (Q36).
+2. **Deducible numeric ≠ unguessable numeric** (D4): an open numeric answer is GOOD when the user can actively estimate it (count pulse × minutes = active-thinking driver). The unguessable-numeric guard must distinguish *estimable-by-reasoning* (keep open, grade with accepted range) from *undeducible* (spider-silk class → force MCQ). Matches the research brief's warning that a guessability probe must not punish deduction-by-design.
+3. **NEW product ask — post-answer context payoff:** founder verbatim: "it would be great to give users more context in the answers e.g. how long the bridge is, where it's located and such. or that hamza river - what is interesting about the river (if there's anything)?" → generation should produce a 1–2 sentence spoken context blurb delivered after the answer.

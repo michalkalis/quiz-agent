@@ -281,3 +281,26 @@ def test_build_dry_run_stages_shape_is_persist_free():
     assert stages[0].name == "sourcing", "PackGenerator requires sourcing first"
     assert all(not vg._is_persister(s) for s in stages)
     vg.assert_no_corpus_write(stages)  # redundant belt-and-suspenders
+
+
+# --------------------------------------------------------------------------- #
+# order-namespace ↔ generate_pack._build_order contract
+# --------------------------------------------------------------------------- #
+
+
+def test_order_namespace_satisfies_build_order():
+    """Regression (2026-07-10): `generate_pack._build_order` grew an
+    `mcq_bias` attribute the harness's Namespace didn't carry, so every
+    validation topic failed at runtime with AttributeError and the run
+    produced zero questions. This pins the contract offline: the harness's
+    namespace must build a real order, with and without the MCQ bias."""
+    import scripts.generate_pack as generate_pack
+
+    for mcq_bias in (False, True):
+        order = generate_pack._build_order(
+            vg._order_namespace(
+                "dev topic", target_count=5, language="en", mcq_bias=mcq_bias
+            )
+        )
+        assert order.target_count == 5
+        assert ("MULTIPLE-CHOICE EMPHASIS" in order.prompt) is mcq_bias

@@ -262,7 +262,7 @@ Reviewed = n/a (exempt — see routing note). Commit + push (main, no deploy) on
 
 | Session | Done | Reviewed | Box |
 |---|---|---|---|
-| 0 · [HUMAN] provisioning | ⬜ | n/a | ⬜ |
+| 0 · [HUMAN] provisioning | 🔶 ASC done 2026-07-10 (agent via ASC API; all 3 products READY_TO_SUBMIT, prices €4.99/€29.99/€1.99 verified, review screenshot = Pencil mock `NEW_Screen/Paywall-Subscription`); RevenueCat + Fly secrets PENDING founder (no RC account/key exists) | n/a | ⬜ |
 | A-schema · ORM + migration `0005` + seed | ⬜ | n/a | ⬜ |
 | A-helper · `subscription_state` + tests | ⬜ | ⬜ | ⬜ |
 | B · Entitlement gate | ⬜ | ⬜ | ⬜ |

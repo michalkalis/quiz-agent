@@ -151,6 +151,11 @@ nonisolated enum Config {
     /// StoreKit product identifier for unlimited access
     static let unlimitedProductId = "com.carquiz.unlimited"
 
+    /// RevenueCat public Apple SDK key (project "CarQuiz", fe489552). Public by
+    /// design — safe to embed in the client; entitlement is still resolved
+    /// server-side via the backend's RevenueCat secret key + webhook mirror.
+    static let revenueCatPublicSDKKey = "appl_zaNZviocTQkXpIoNzpqJehlnLwm"
+
     /// Free tier daily question limit (display only — enforced by backend)
     static let freeDailyQuestionLimit = 20
 

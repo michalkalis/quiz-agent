@@ -23,6 +23,11 @@ protocol NetworkServiceProtocol: Sendable {
     func flagQuestion(sessionId: String, reason: String?) async throws
     func fetchElevenLabsToken() async throws -> String
     func getUsage(userId: String) async throws -> UsageInfo
+    /// Purchase→webhook propagation bridge (issue #93): one-shot RC REST pull,
+    /// called immediately after a successful SDK purchase, before re-fetching
+    /// `/usage` — otherwise a just-paid user can still hit the 429 gate until
+    /// the webhook mirror catches up.
+    func syncEntitlements() async throws
 }
 
 /// Thread-safe network service using Swift 6 actor
@@ -604,6 +609,23 @@ actor NetworkService: NetworkServiceProtocol {
 
         let decoder = JSONDecoder()
         return try decoder.decode(UsageInfo.self, from: data)
+    }
+
+    func syncEntitlements() async throws {
+        let endpoint = baseURL.appendingPathComponent("/api/v1/entitlements/sync")
+
+        var request = URLRequest(url: endpoint)
+        request.httpMethod = "POST"
+        request.timeoutInterval = 15
+
+        Logger.network.debug("🌐 POST \(endpoint, privacy: .public)")
+
+        let (_, response) = try await sendAuthorized(request)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw NetworkError.invalidResponse
+        }
     }
 
     // MARK: - Helper Methods

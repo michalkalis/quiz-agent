@@ -42,6 +42,12 @@ final class MockNetworkService: NetworkServiceProtocol {
     /// multi-select actually reaches the session request (#82 item 4).
     var capturedCategories: [String]?
 
+    /// Number of times `syncEntitlements` was invoked — asserts the post-purchase
+    /// bridge (issue #93) actually fires before the usage refresh.
+    var syncEntitlementsCallCount = 0
+    /// When set, `syncEntitlements` throws this error instead of succeeding.
+    var syncEntitlementsError: Error?
+
     func createSession(maxQuestions: Int, difficulty: String, language: String, categories: [String], userId: String?, includeImages: Bool) async throws -> QuizSession {
         capturedIncludeImages = includeImages
         capturedCategories = categories
@@ -143,8 +149,20 @@ final class MockNetworkService: NetworkServiceProtocol {
             questionsUsed: 30,
             questionsLimit: 100,
             remaining: 70,
-            resetsAt: ISO8601DateFormatter().string(from: Date().addingTimeInterval(12 * 86400))
+            resetsAt: ISO8601DateFormatter().string(from: Date().addingTimeInterval(12 * 86400)),
+            subscriptionStatus: "none",
+            creditBalance: 0
         )
+    }
+
+    func syncEntitlements() async throws {
+        syncEntitlementsCallCount += 1
+        if let syncEntitlementsError {
+            throw syncEntitlementsError
+        }
+        if shouldFail {
+            throw NetworkError.invalidResponse
+        }
     }
 }
 #endif

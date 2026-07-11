@@ -124,6 +124,17 @@ actor AuthService: AuthServiceProtocol {
     /// identities, and concurrent 401s don't fire two refreshes.
     private var bootstrapTask: Task<AuthTokens?, Never>?
     private var refreshTask: Task<AuthTokens?, Never>?
+    /// Set once by AppState (issue #93 Session E must-do): called with the new
+    /// durable account id right after a successful sign-in, so RC's anon-keyed
+    /// purchase history aliases into the signed-in account (RC `logIn`) and the
+    /// server-side subscription mirror re-syncs — the designated recovery for a
+    /// webhook that landed on the anon id during the purchase↔sign-in window.
+    private var onAccountLinked: (@Sendable (String) async -> Void)?
+
+    /// Registers the account-linked handler. Called once by AppState at launch.
+    func setAccountLinkedHandler(_ handler: @escaping @Sendable (String) async -> Void) {
+        onAccountLinked = handler
+    }
 
     init(
         baseURL: String = Config.apiBaseURL,
@@ -484,6 +495,9 @@ actor AuthService: AuthServiceProtocol {
                 return nil
             }
             Logger.network.info("🔐 Apple sign-in succeeded: sub=\(decoded.anonId, privacy: .public)")
+            if let onAccountLinked {
+                await onAccountLinked(decoded.anonId)
+            }
             return newTokens
         } catch {
             Logger.network.warning("🔐 Apple sign-in error: \(error.localizedDescription, privacy: .public)")

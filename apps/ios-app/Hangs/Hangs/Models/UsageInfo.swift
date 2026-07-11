@@ -15,6 +15,10 @@ nonisolated struct UsageInfo: Codable, Sendable, Equatable {
     let questionsLimit: Int?
     let remaining: Int?
     let resetsAt: String
+    /// Stored subscription status (`active`|`grace`|`expired`) or `"none"` (issue #93).
+    let subscriptionStatus: String
+    /// Pack-credit balance = SUM(credit_ledger.delta) (issue #93).
+    let creditBalance: Int
 
     enum CodingKeys: String, CodingKey {
         case userId = "user_id"
@@ -23,6 +27,8 @@ nonisolated struct UsageInfo: Codable, Sendable, Equatable {
         case questionsLimit = "questions_limit"
         case remaining
         case resetsAt = "resets_at"
+        case subscriptionStatus = "subscription_status"
+        case creditBalance = "credit_balance"
     }
 
     /// Parsed reset time

@@ -27,20 +27,20 @@ import ViewInspector
 
 @MainActor
 private func makeStoreManager(
-    product: PurchasableProduct? = nil,
+    offerings: PurchasableOfferings? = nil,
     hasAttemptedLoad: Bool = false
 ) async -> StoreManager {
     let mock = MockPurchaseService()
-    mock.stubbedProduct = product
+    mock.stubbedOfferings = offerings
     mock.stubbedIsEntitled = false
     let manager = StoreManager(purchaseService: mock)
     // Drain init Tasks so async state settles.
     await Task.yield()
     await Task.yield()
-    // Override hasAttemptedProductLoad for test scenarios by triggering loadProduct
-    // only when the test needs the "attempted but failed" state.
+    // Override hasAttemptedOfferingsLoad for test scenarios by triggering
+    // loadOfferings only when the test needs the "attempted but failed" state.
     if hasAttemptedLoad {
-        await manager.loadProduct()
+        await manager.loadOfferings()
     }
     return manager
 }
@@ -88,20 +88,20 @@ struct PaywallViewOfflineTokenTests {
 struct PaywallViewOfflineStateTests {
     @Test("isOffline false when product loaded")
     func notOfflineWhenProductLoaded() async {
-        let product = PurchasableProduct(
-            id: StoreProduct.unlimited,
-            displayPrice: "€4.99",
-            displayName: "Hangs Unlimited"
+        let offerings = PurchasableOfferings(
+            monthly: PurchasableProduct(id: StoreProduct.monthlySubId, displayPrice: "€4.99", displayName: "Hangs Unlimited"),
+            annual: nil,
+            pack: nil
         )
-        let manager = await makeStoreManager(product: product, hasAttemptedLoad: true)
+        let manager = await makeStoreManager(offerings: offerings, hasAttemptedLoad: true)
         let view = PaywallView(storeManager: manager, limitError: nil, onDismiss: {})
         #expect(!view.isOffline, "product loaded → normal paywall, not offline variant")
     }
 
     @Test("isOffline true when load attempted but product nil")
     func offlineAfterFailedLoad() async {
-        // MockPurchaseService returns nil by default; calling loadProduct sets hasAttemptedProductLoad.
-        let manager = await makeStoreManager(product: nil, hasAttemptedLoad: true)
+        // MockPurchaseService returns nil by default; calling loadOfferings sets hasAttemptedOfferingsLoad.
+        let manager = await makeStoreManager(offerings: nil, hasAttemptedLoad: true)
         let view = PaywallView(storeManager: manager, limitError: nil, onDismiss: {})
         #expect(view.isOffline, "load attempted + product nil → PouwN offline variant")
     }
@@ -114,12 +114,12 @@ struct PaywallViewOfflineStateTests {
 struct PaywallViewNormalStructureTests {
     @Test("'OUT OF QUESTIONS' headline renders")
     func outOfQuestionsHeadline() async throws {
-        let product = PurchasableProduct(
-            id: StoreProduct.unlimited,
-            displayPrice: "€4.99",
-            displayName: "Hangs Unlimited"
+        let offerings = PurchasableOfferings(
+            monthly: PurchasableProduct(id: StoreProduct.monthlySubId, displayPrice: "€4.99", displayName: "Hangs Unlimited"),
+            annual: nil,
+            pack: nil
         )
-        let manager = await makeStoreManager(product: product, hasAttemptedLoad: true)
+        let manager = await makeStoreManager(offerings: offerings, hasAttemptedLoad: true)
         let view = PaywallView(storeManager: manager, limitError: nil, onDismiss: {})
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
@@ -129,12 +129,12 @@ struct PaywallViewNormalStructureTests {
 
     @Test("Feature card 'unlimited' label renders")
     func featureCardLabelRenders() async throws {
-        let product = PurchasableProduct(
-            id: StoreProduct.unlimited,
-            displayPrice: "€4.99",
-            displayName: "Hangs Unlimited"
+        let offerings = PurchasableOfferings(
+            monthly: PurchasableProduct(id: StoreProduct.monthlySubId, displayPrice: "€4.99", displayName: "Hangs Unlimited"),
+            annual: nil,
+            pack: nil
         )
-        let manager = await makeStoreManager(product: product, hasAttemptedLoad: true)
+        let manager = await makeStoreManager(offerings: offerings, hasAttemptedLoad: true)
         let view = PaywallView(storeManager: manager, limitError: nil, onDismiss: {})
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
@@ -144,12 +144,12 @@ struct PaywallViewNormalStructureTests {
 
     @Test("limitMessage includes questionsLimit from QuotaLimitError")
     func limitMessageIncludesCount() async throws {
-        let product = PurchasableProduct(
-            id: StoreProduct.unlimited,
-            displayPrice: "€4.99",
-            displayName: "Hangs Unlimited"
+        let offerings = PurchasableOfferings(
+            monthly: PurchasableProduct(id: StoreProduct.monthlySubId, displayPrice: "€4.99", displayName: "Hangs Unlimited"),
+            annual: nil,
+            pack: nil
         )
-        let manager = await makeStoreManager(product: product, hasAttemptedLoad: true)
+        let manager = await makeStoreManager(offerings: offerings, hasAttemptedLoad: true)
         let limitError = makeLimitError(questionsLimit: 10)
         let view = PaywallView(storeManager: manager, limitError: limitError, onDismiss: {})
         try await ViewHosting.host(view) {
@@ -162,12 +162,12 @@ struct PaywallViewNormalStructureTests {
 
     @Test("Countdown pill renders when limitError has a resetDate")
     func countdownPillRenders() async throws {
-        let product = PurchasableProduct(
-            id: StoreProduct.unlimited,
-            displayPrice: "€4.99",
-            displayName: "Hangs Unlimited"
+        let offerings = PurchasableOfferings(
+            monthly: PurchasableProduct(id: StoreProduct.monthlySubId, displayPrice: "€4.99", displayName: "Hangs Unlimited"),
+            annual: nil,
+            pack: nil
         )
-        let manager = await makeStoreManager(product: product, hasAttemptedLoad: true)
+        let manager = await makeStoreManager(offerings: offerings, hasAttemptedLoad: true)
         let limitError = makeLimitError()
         let view = PaywallView(storeManager: manager, limitError: limitError, onDismiss: {})
         try await ViewHosting.host(view) {
@@ -189,7 +189,7 @@ struct PaywallViewNormalStructureTests {
 struct PaywallViewOfflineStructureTests {
     @Test("'CAN'T REACH THE STORE' headline renders in offline variant")
     func offlineHeadlineRenders() async throws {
-        let manager = await makeStoreManager(product: nil, hasAttemptedLoad: true)
+        let manager = await makeStoreManager(offerings: nil, hasAttemptedLoad: true)
         let view = PaywallView(storeManager: manager, limitError: nil, onDismiss: {})
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
@@ -199,7 +199,7 @@ struct PaywallViewOfflineStructureTests {
 
     @Test("'Try Again' CTA renders in offline variant")
     func tryAgainCTARenders() async throws {
-        let manager = await makeStoreManager(product: nil, hasAttemptedLoad: true)
+        let manager = await makeStoreManager(offerings: nil, hasAttemptedLoad: true)
         let view = PaywallView(storeManager: manager, limitError: nil, onDismiss: {})
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
@@ -209,7 +209,7 @@ struct PaywallViewOfflineStructureTests {
 
     @Test("'OUT OF QUESTIONS' headline absent in offline variant")
     func paywallHeadlineAbsentWhenOffline() async throws {
-        let manager = await makeStoreManager(product: nil, hasAttemptedLoad: true)
+        let manager = await makeStoreManager(offerings: nil, hasAttemptedLoad: true)
         let view = PaywallView(storeManager: manager, limitError: nil, onDismiss: {})
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
@@ -219,7 +219,7 @@ struct PaywallViewOfflineStructureTests {
 
     @Test("Feature card absent in offline variant")
     func featureCardAbsentWhenOffline() async throws {
-        let manager = await makeStoreManager(product: nil, hasAttemptedLoad: true)
+        let manager = await makeStoreManager(offerings: nil, hasAttemptedLoad: true)
         let view = PaywallView(storeManager: manager, limitError: nil, onDismiss: {})
         try await ViewHosting.host(view) {
             let tree = try view.inspect()

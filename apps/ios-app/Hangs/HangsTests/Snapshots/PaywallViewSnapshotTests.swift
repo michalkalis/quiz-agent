@@ -36,10 +36,10 @@ import Testing
 /// state is consistent before snapshot capture.
 @MainActor
 private func makeStoreManager(
-    product: PurchasableProduct? = nil
+    offerings: PurchasableOfferings? = nil
 ) async -> StoreManager {
     let mock = MockPurchaseService()
-    mock.stubbedProduct = product
+    mock.stubbedOfferings = offerings
     mock.stubbedIsEntitled = false
     let manager = StoreManager(purchaseService: mock)
     await Task.yield()
@@ -72,12 +72,12 @@ struct PaywallViewSnapshotTests {
     ///   • StoreManager.product set → PrimaryButton carries "Unlock Unlimited — $4.99"
     @Test("Snapshot: limit-error with countdown and product loaded")
     func limitErrorWithCountdown() async {
-        let product = PurchasableProduct(
-            id: StoreProduct.unlimited,
-            displayPrice: "$4.99",
-            displayName: "Hangs Unlimited"
+        let offerings = PurchasableOfferings(
+            monthly: PurchasableProduct(id: StoreProduct.monthlySubId, displayPrice: "$4.99", displayName: "Hangs Unlimited"),
+            annual: nil,
+            pack: nil
         )
-        let manager = await makeStoreManager(product: product)
+        let manager = await makeStoreManager(offerings: offerings)
         let limitError = makeLimitError()
 
         let view = PaywallView(
@@ -94,10 +94,10 @@ struct PaywallViewSnapshotTests {
     /// PaywallView with:
     ///   • limitError nil → CountdownToReset entirely absent from dump
     ///   • StoreManager.product nil → PrimaryButton uses loading branch (isLoading: true,
-    ///     no price string) — the `else` branch of `if let product = storeManager.product`
+    ///     no price string) — the `else` branch of `if let monthly = storeManager.offerings?.monthly`
     @Test("Snapshot: no limit-error, product loading")
     func noLimitErrorProductLoading() async {
-        let manager = await makeStoreManager(product: nil)
+        let manager = await makeStoreManager(offerings: nil)
 
         let view = PaywallView(
             storeManager: manager,

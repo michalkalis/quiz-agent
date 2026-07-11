@@ -37,7 +37,9 @@ struct HomeFreePlanCardTests {
             questionsUsed: premium ? 0 : (limit ?? 0) - (remaining ?? 0),
             questionsLimit: premium ? nil : limit,
             remaining: premium ? nil : remaining,
-            resetsAt: ISO8601DateFormatter().string(from: Date().addingTimeInterval(resetsIn))
+            resetsAt: ISO8601DateFormatter().string(from: Date().addingTimeInterval(resetsIn)),
+            subscriptionStatus: premium ? "active" : "none",
+            creditBalance: 0
         )
     }
 
@@ -105,7 +107,8 @@ struct HomeFreePlanCardTests {
             let info = UsageInfo(
                 userId: "t", isPremium: false, questionsUsed: 0,
                 questionsLimit: 100, remaining: 100,
-                resetsAt: ISO8601DateFormatter().string(from: now.addingTimeInterval(seconds))
+                resetsAt: ISO8601DateFormatter().string(from: now.addingTimeInterval(seconds)),
+                subscriptionStatus: "none", creditBalance: 0
             )
             return HomeView.resetCountdown(info, now: now)
         }

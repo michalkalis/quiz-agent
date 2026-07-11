@@ -629,10 +629,20 @@ final class QuizViewModel: ObservableObject {
         }
     }
 
-    /// Refresh usage after a premium purchase. Premium is granted server-side
-    /// via IAP (#50) — the client no longer self-grants (the old `setPremium`
-    /// call sent no admin key and always 401'd, #60). Just refresh the display.
+    /// Refresh usage after a purchase (subscription or pack). Entitlement is
+    /// granted server-side via RC webhooks (#93) — the client never self-grants
+    /// (the old `setPremium` call sent no admin key and always 401'd, #60).
+    /// RC webhooks land seconds-to-minutes after purchase, so sync once via the
+    /// purchase→webhook propagation bridge (`POST /entitlements/sync`) BEFORE
+    /// re-fetching `/usage` — otherwise a just-paid user can still hit the 429
+    /// gate until the mirror catches up. Sync failure is non-fatal: the webhook
+    /// will still land on its own; just refresh with whatever `/usage` has now.
     func notifyPremiumPurchased() async {
+        do {
+            try await networkService.syncEntitlements()
+        } catch {
+            Logger.network.warning("⚠️ entitlements/sync failed (webhook will still catch up): \(error, privacy: .public)")
+        }
         await refreshUsage()
     }
 

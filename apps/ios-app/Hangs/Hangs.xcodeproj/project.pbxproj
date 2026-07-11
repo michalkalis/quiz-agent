@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		12809A90D9684CE9A3A60E9E /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 244A1B53144D4362B6C47909 /* Sentry */; };
+		AA11BB22CC33DD44EE55FF66 /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = BB22CC33DD44EE55FF6600AA /* RevenueCat */; };
 		503020B22F8E706400A567CA /* (null) in Frameworks */ = {isa = PBXBuildFile; };
 		503020B32F8E706400A567CA /* (null) in Frameworks */ = {isa = PBXBuildFile; };
 		7A3AC3E24618F03076634783 /* Hangs.storekit in Resources */ = {isa = PBXBuildFile; fileRef = D8A0CF7B2B228C1D9BFB87D4 /* Hangs.storekit */; };
@@ -87,6 +88,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				12809A90D9684CE9A3A60E9E /* Sentry in Frameworks */,
+				AA11BB22CC33DD44EE55FF66 /* RevenueCat in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -172,6 +174,7 @@
 			name = Hangs;
 			packageProductDependencies = (
 				244A1B53144D4362B6C47909 /* Sentry */,
+				BB22CC33DD44EE55FF6600AA /* RevenueCat */,
 			);
 			productName = Hangs;
 			productReference = 5004B49A2EF874800068C8D1 /* Hangs.app */;
@@ -261,6 +264,7 @@
 				A1B2C3D4E5F6A7B8C9D0E1F2 /* XCRemoteSwiftPackageReference "swift-concurrency-extras" */,
 				B2C3D4E5F6A7B8C9D0E1F2A3 /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */,
 				C3D4E5F6A7B8C9D0E1F2A3B4 /* XCRemoteSwiftPackageReference "ViewInspector" */,
+				CC33DD44EE55FF6600AA11BB /* XCRemoteSwiftPackageReference "purchases-ios" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 5004B49B2EF874800068C8D1 /* Products */;
@@ -864,6 +868,14 @@
 				minimumVersion = 8.0.0;
 			};
 		};
+		CC33DD44EE55FF6600AA11BB /* XCRemoteSwiftPackageReference "purchases-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/RevenueCat/purchases-ios";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -871,6 +883,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = D836EF69338645ED82615379 /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
 			productName = Sentry;
+		};
+		BB22CC33DD44EE55FF6600AA /* RevenueCat */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CC33DD44EE55FF6600AA11BB /* XCRemoteSwiftPackageReference "purchases-ios" */;
+			productName = RevenueCat;
 		};
 		D4E5F6A7B8C9D0E1F2A3B4C5 /* ConcurrencyExtras */ = {
 			isa = XCSwiftPackageProductDependency;

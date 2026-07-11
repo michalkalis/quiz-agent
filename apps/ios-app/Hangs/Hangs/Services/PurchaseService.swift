@@ -2,29 +2,39 @@
 //  PurchaseService.swift
 //  Hangs
 //
-//  Domain types and protocol for StoreKit operations.
-//  LivePurchaseService wraps StoreKit 2 APIs; MockPurchaseService enables
-//  daemon-free unit tests.
+//  Domain types and protocol for in-app purchases.
+//  LivePurchaseService wraps the RevenueCat SDK (issue #93); MockPurchaseService
+//  enables daemon-free unit tests.
 //
-//  Background: SKTestSession on iOS 26 simulator hits a confirmed Apple-side
-//  regression (SKInternalErrorDomain Code=3; Flutter #184678; Apple Developer
-//  Forum thread/808030, May 2026). This protocol abstraction pushes all daemon-
-//  dependent work into LivePurchaseService so StoreManager logic can be tested
-//  without a live StoreKit daemon.
+//  RevenueCat replaces the hand-rolled StoreKit 2 stack: it owns receipt/JWS
+//  validation and subscription lifecycle, while the backend owns the credit
+//  ledger + quota gate (server-side entitlement, never client-trusted).
 //
 
 import Foundation
-import StoreKit
+import RevenueCat
 import os
 
 // MARK: - Domain Types
 
-/// A product available for purchase — daemon-free alternative to StoreKit's
-/// `Product`, which has no public initializer and cannot be created in tests.
+/// A single purchasable package (subscription or consumable) — daemon-free
+/// alternative to RevenueCat's `Package`/`StoreProduct`, which can't be
+/// constructed directly in tests.
 struct PurchasableProduct: Sendable, Equatable {
     let id: String
     let displayPrice: String
     let displayName: String
+}
+
+/// The current RC `Offering`, split into the three pinned package roles
+/// (issue #93 D-ids). Any of the three may be nil if not yet configured or
+/// unreachable — callers must handle partial availability.
+struct PurchasableOfferings: Sendable, Equatable {
+    let monthly: PurchasableProduct?
+    let annual: PurchasableProduct?
+    let pack: PurchasableProduct?
+
+    static let empty = PurchasableOfferings(monthly: nil, annual: nil, pack: nil)
 }
 
 /// The outcome of a purchase attempt.
@@ -34,50 +44,66 @@ enum PurchaseOutcome: Sendable {
     case pending
 }
 
-/// A single entitlement-update event emitted by the transaction listener.
+/// A single entitlement-update event emitted by the customer-info listener.
 struct EntitlementUpdate: Sendable {
-    let productID: String
-    let isVerified: Bool
+    let entitlementId: String
+    let isActive: Bool
 }
 
 // MARK: - Protocol
 
-/// Abstracts StoreKit 2 operations behind a testable interface.
+/// Abstracts RevenueCat operations behind a testable interface.
 /// All methods are @MainActor — StoreManager is @MainActor and drives calls.
 @MainActor
 protocol PurchaseService: AnyObject, Sendable {
-    /// Fetches the product for the given identifier and returns a domain type.
-    func loadProduct(id: String) async -> PurchasableProduct?
+    /// Fetches the current offering and splits it into the pinned package roles.
+    func loadOfferings() async -> PurchasableOfferings?
 
-    /// Attempts to purchase the product identified by `productID`.
-    /// - Throws: `StoreError` on verification failure, or any StoreKit error.
+    /// Attempts to purchase the package identified by `productID` (must be one
+    /// of the ids surfaced by `loadOfferings()`).
+    /// - Throws: `StoreError` on verification failure, or any SDK error.
     func purchase(productID: String) async throws -> PurchaseOutcome
 
-    /// Syncs the App Store receipt — used for restore purchases.
+    /// Restores subscription purchases (consumable packs are never restored —
+    /// their balance lives server-side in the credit ledger, issue #93 D-tables).
     func restore() async throws
 
-    /// Returns `true` if the user currently holds a verified entitlement
-    /// for `productID`.
-    func currentlyEntitled(productID: String) async -> Bool
+    /// Returns `true` if the customer currently holds an active entitlement
+    /// for `entitlementId`.
+    func currentlyEntitled(entitlementId: String) async -> Bool
 
-    /// Long-lived stream of entitlement updates from `Transaction.updates`.
+    /// Aliases the RC identity to the durable account id (anon or signed-in
+    /// user), so purchase history made under the anon id merges on sign-in
+    /// (issue #93 §2, Session E must-do).
+    func logIn(appUserID: String) async
+
+    /// Long-lived stream of entitlement updates from `Purchases.customerInfoStream`.
     var entitlementUpdates: AsyncStream<EntitlementUpdate> { get }
 }
 
 // MARK: - LivePurchaseService
 
-/// Production implementation — delegates to StoreKit 2 APIs.
+/// Production implementation — delegates to the RevenueCat SDK.
 @MainActor
 final class LivePurchaseService: PurchaseService {
 
-    // Cache the real StoreKit Product so purchase() can call product.purchase().
-    private var cachedProduct: Product?
+    /// Configures the RC SDK once per process. Safe to call multiple times —
+    /// a no-op after the first successful configure. Call as early as
+    /// possible at app launch, before any `Purchases.shared` access.
+    static func configure(appUserID: String?) {
+        guard !Purchases.isConfigured else { return }
+        Purchases.logLevel = Config.isDebug ? .warn : .error
+        Purchases.configure(withAPIKey: Config.revenueCatPublicSDKKey, appUserID: appUserID)
+    }
+
+    // Cache the current RC Offering so purchase() can resolve a package by id.
+    private var cachedOffering: RevenueCat.Offering?
 
     // Backing storage for the AsyncStream continuation.
     private let continuation: AsyncStream<EntitlementUpdate>.Continuation
     let entitlementUpdates: AsyncStream<EntitlementUpdate>
 
-    // Background task that forwards Transaction.updates into the stream.
+    // Background task that forwards customerInfoStream into the domain stream.
     private var listenerTask: Task<Void, Never>?
 
     init() {
@@ -86,17 +112,11 @@ final class LivePurchaseService: PurchaseService {
         self.continuation = cont
 
         listenerTask = Task(priority: .background) { @MainActor [weak self] in
-            for await result in Transaction.updates {
-                if case .verified(let tx) = result {
-                    await tx.finish()
-                    self?.continuation.yield(
-                        EntitlementUpdate(productID: tx.productID, isVerified: true)
-                    )
-                } else if case .unverified(let tx, _) = result {
-                    self?.continuation.yield(
-                        EntitlementUpdate(productID: tx.productID, isVerified: false)
-                    )
-                }
+            for await customerInfo in Purchases.shared.customerInfoStream {
+                let isActive = customerInfo.entitlements[StoreProduct.entitlementId]?.isActive == true
+                self?.continuation.yield(
+                    EntitlementUpdate(entitlementId: StoreProduct.entitlementId, isActive: isActive)
+                )
             }
         }
     }
@@ -106,72 +126,65 @@ final class LivePurchaseService: PurchaseService {
         continuation.finish()
     }
 
-    func loadProduct(id: String) async -> PurchasableProduct? {
+    func loadOfferings() async -> PurchasableOfferings? {
         do {
-            let products = try await Product.products(for: [id])
-            if let p = products.first {
-                cachedProduct = p
-                return PurchasableProduct(
-                    id: p.id,
-                    displayPrice: p.displayPrice,
-                    displayName: p.displayName
-                )
+            let offerings = try await Purchases.shared.offerings()
+            guard let current = offerings.current else {
+                Logger.quiz.error("❌ LivePurchaseService: no current offering configured")
+                return nil
             }
+            cachedOffering = current
+            return PurchasableOfferings(
+                monthly: makeProduct(current.monthly),
+                annual: makeProduct(current.annual),
+                pack: makeProduct(current.package(identifier: StoreProduct.packPackageIdentifier))
+            )
         } catch {
-            Logger.quiz.error("❌ LivePurchaseService: loadProduct failed: \(error, privacy: .public)")
+            Logger.quiz.error("❌ LivePurchaseService: loadOfferings failed: \(error, privacy: .public)")
+            return nil
         }
-        return nil
+    }
+
+    private func makeProduct(_ package: RevenueCat.Package?) -> PurchasableProduct? {
+        guard let package else { return nil }
+        return PurchasableProduct(
+            id: package.storeProduct.productIdentifier,
+            displayPrice: package.storeProduct.localizedPriceString,
+            displayName: package.storeProduct.localizedTitle
+        )
     }
 
     func purchase(productID: String) async throws -> PurchaseOutcome {
-        // Re-use cached product or fetch fresh.
-        if cachedProduct?.id != productID {
-            cachedProduct = nil
-        }
-        if cachedProduct == nil {
-            let products = try await Product.products(for: [productID])
-            cachedProduct = products.first
-        }
-        guard let product = cachedProduct else {
+        guard let package = cachedOffering?.availablePackages.first(where: { $0.storeProduct.productIdentifier == productID }) else {
             throw StoreError.failedVerification
         }
 
-        let result = try await product.purchase()
-        switch result {
-        case .success(let verification):
-            let transaction = try checkVerified(verification)
-            await transaction.finish()
-            return .success
-        case .userCancelled:
-            return .userCancelled
-        case .pending:
-            return .pending
-        @unknown default:
-            return .userCancelled
-        }
+        let result = try await Purchases.shared.purchase(package: package)
+        return result.userCancelled ? .userCancelled : .success
     }
 
     func restore() async throws {
-        try await AppStore.sync()
+        _ = try await Purchases.shared.restorePurchases()
     }
 
-    func currentlyEntitled(productID: String) async -> Bool {
-        for await result in Transaction.currentEntitlements {
-            if case .verified(let tx) = result, tx.productID == productID {
-                return true
-            }
-        }
-        return false
+    func currentlyEntitled(entitlementId: String) async -> Bool {
+        guard let info = try? await Purchases.shared.customerInfo() else { return false }
+        return info.entitlements[entitlementId]?.isActive == true
     }
 
-    // MARK: - Helpers
-
-    private func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
-        switch result {
-        case .unverified:
-            throw StoreError.failedVerification
-        case .verified(let safe):
-            return safe
+    func logIn(appUserID: String) async {
+        do {
+            _ = try await Purchases.shared.logIn(appUserID)
+        } catch {
+            Logger.quiz.error("❌ LivePurchaseService: RC logIn failed: \(error, privacy: .public)")
         }
+    }
+}
+
+enum StoreError: LocalizedError {
+    case failedVerification
+
+    var errorDescription: String? {
+        "Purchase verification failed"
     }
 }

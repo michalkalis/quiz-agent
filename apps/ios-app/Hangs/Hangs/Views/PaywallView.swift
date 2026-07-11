@@ -2,10 +2,15 @@
 //  PaywallView.swift
 //  Hangs
 //
-//  Two variants driven by StoreKit availability:
-//    u2ySy — normal paywall ("OUT OF QUESTIONS") shown when product loaded.
-//    PouwN — offline paywall ("CAN'T REACH THE STORE") shown when product
-//            unavailable after a completed load attempt.
+//  Two variants driven by RevenueCat offering availability (issue #93):
+//    u2ySy — normal paywall ("OUT OF QUESTIONS") shown when the offering loaded.
+//    PouwN — offline paywall ("CAN'T REACH THE STORE") shown when the offering
+//            is unavailable after a completed load attempt.
+//
+//  Renders RC Offerings: subscribe (monthly primary, annual secondary) plus a
+//  "buy pack" path for free users who don't want to subscribe. "Restore
+//  purchase" is subscription-only — the consumable pack has no StoreKit
+//  restore; its balance lives server-side in the credit ledger.
 //
 
 import SwiftUI
@@ -15,9 +20,9 @@ struct PaywallView: View {
     let limitError: QuotaLimitError?
     let onDismiss: () -> Void
 
-    // Offline: load attempt completed but no product returned (StoreKit unreachable).
+    // Offline: load attempt completed but no offering returned (store unreachable).
     var isOffline: Bool {
-        storeManager.hasAttemptedProductLoad && storeManager.product == nil
+        storeManager.hasAttemptedOfferingsLoad && storeManager.offerings == nil
     }
 
     var body: some View {
@@ -115,7 +120,7 @@ struct PaywallView: View {
             HangsDivider()
             featureRow("Never wait for the monthly reset")
             HangsDivider()
-            featureRow("One-time unlock — not a subscription")
+            featureRow("Cancel anytime")
         }
         .background(
             RoundedRectangle(cornerRadius: Theme.Hangs.Radius.card, style: .continuous)
@@ -142,18 +147,28 @@ struct PaywallView: View {
 
     private var paywallCTAStack: some View {
         VStack(spacing: Theme.Hangs.Spacing.xs) {
-            if let product = storeManager.product {
+            if let monthly = storeManager.offerings?.monthly {
                 // #56: title param is LocalizedStringKey; pass the interpolated
                 // literal directly so the compiler extracts "Unlock Unlimited — %@"
                 // (the displayPrice is a runtime placeholder, not translatable).
                 HangsPrimaryButton(
-                    title: "Unlock Unlimited — \(product.displayPrice)",
+                    title: "Unlock Unlimited — \(monthly.displayPrice)/mo",
                     icon: "lock.open.fill",
                     isLoading: storeManager.isLoading
                 ) {
-                    Task { await storeManager.purchase() }
+                    Task { await storeManager.purchase(productID: monthly.id) }
                 }
                 .accessibilityIdentifier("paywall-purchase-button")
+
+                if let annual = storeManager.offerings?.annual {
+                    HangsGhostButton(
+                        title: "Save more — \(annual.displayPrice)/yr",
+                        color: Theme.Hangs.Colors.blue
+                    ) {
+                        Task { await storeManager.purchase(productID: annual.id) }
+                    }
+                    .accessibilityIdentifier("paywall-purchase-annual-button")
+                }
             } else {
                 HangsPrimaryButton(
                     title: "Unlock Unlimited",
@@ -161,6 +176,16 @@ struct PaywallView: View {
                     isLoading: true
                 ) {}
                     .accessibilityIdentifier("paywall-purchase-button")
+            }
+
+            if let pack = storeManager.offerings?.pack {
+                HangsGhostButton(
+                    title: "Buy +100 Questions — \(pack.displayPrice)",
+                    color: Theme.Hangs.Colors.muted
+                ) {
+                    Task { await storeManager.purchase(productID: pack.id) }
+                }
+                .accessibilityIdentifier("paywall-purchase-pack-button")
             }
 
             HangsGhostButton(title: "Restore purchase", color: Theme.Hangs.Colors.blue) {
@@ -245,7 +270,7 @@ struct PaywallView: View {
     private var offlineCTAStack: some View {
         VStack(spacing: Theme.Hangs.Spacing.xs) {
             HangsPrimaryButton(title: "Try Again", icon: "arrow.clockwise") {
-                Task { await storeManager.loadProduct() }
+                Task { await storeManager.loadOfferings() }
             }
             .accessibilityIdentifier("paywall-offline-retry-button")
 

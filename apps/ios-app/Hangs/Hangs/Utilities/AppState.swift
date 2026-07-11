@@ -30,13 +30,19 @@ final class AppState: ObservableObject {
             self.persistenceStore = mocks.persistence
             self.silenceDetectionService = mocks.silence
             self.sttService = mocks.stt
-            self.storeManager = StoreManager()
+            self.storeManager = StoreManager(purchaseService: MockPurchaseService())
             self.authService = AuthService(baseURL: Config.apiBaseURL)
             UITestSupport.startTestListener()
             Logger.quiz.info("🧪 AppState initialized in UI-test mode")
             return
         }
         #endif
+
+        // RevenueCat (#93): configure once, as early as possible, with whatever
+        // durable account id is already on-device (nil on first-ever launch —
+        // RC then mints its own anon id; a later sign-in re-aliases it via
+        // StoreManager.logIn, see AuthService.completeAppleSignIn call sites).
+        LivePurchaseService.configure(appUserID: KeychainTokenStore().load()?.anonId)
 
         // Production dependencies — NetworkService carries the server-trusted
         // anonymous bearer minted by AuthService (#60/#61); first launch bootstraps
@@ -71,6 +77,18 @@ final class AppState: ObservableObject {
         // drops to a fresh anon identity transparently.
         Task {
             await authService.setupAppleCredentialObservation()
+        }
+
+        // RevenueCat account linking on sign-in (issue #93 Session E must-do):
+        // alias RC's identity to the new durable account id, then re-sync the
+        // server-side subscription mirror for the purchase↔sign-in race window.
+        let storeManager = self.storeManager
+        let networkService = self.networkService
+        Task {
+            await authService.setAccountLinkedHandler { accountId in
+                await storeManager.logIn(accountId: accountId)
+                try? await networkService.syncEntitlements()
+            }
         }
 
         Logger.quiz.info("🚀 AppState initialized")

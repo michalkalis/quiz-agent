@@ -14,11 +14,11 @@ final class MockPurchaseService: PurchaseService {
 
     // MARK: - Configuration
 
-    /// Return value for `loadProduct`. Defaults to a sample product.
-    var stubbedProduct: PurchasableProduct? = PurchasableProduct(
-        id: StoreProduct.unlimited,
-        displayPrice: "$4.99",
-        displayName: "Hangs Unlimited"
+    /// Return value for `loadOfferings`. Defaults to all three pinned packages.
+    var stubbedOfferings: PurchasableOfferings? = PurchasableOfferings(
+        monthly: PurchasableProduct(id: StoreProduct.monthlySubId, displayPrice: "$4.99", displayName: "Hangs Unlimited (Monthly)"),
+        annual: PurchasableProduct(id: StoreProduct.annualSubId, displayPrice: "$29.99", displayName: "Hangs Unlimited (Annual)"),
+        pack: PurchasableProduct(id: StoreProduct.packId, displayPrice: "$1.99", displayName: "+100 Questions")
     )
 
     /// Return value for `purchase`. Defaults to `.success`.
@@ -35,10 +35,12 @@ final class MockPurchaseService: PurchaseService {
 
     // MARK: - Call Tracking
 
-    var loadProductCallCount: Int = 0
+    var loadOfferingsCallCount: Int = 0
     var purchaseCallCount: Int = 0
     var restoreCallCount: Int = 0
     var currentlyEntitledCallCount: Int = 0
+    var logInCallCount: Int = 0
+    var lastLogInAppUserID: String?
 
     // MARK: - Entitlement Stream
 
@@ -58,9 +60,9 @@ final class MockPurchaseService: PurchaseService {
 
     // MARK: - PurchaseService
 
-    func loadProduct(id: String) async -> PurchasableProduct? {
-        loadProductCallCount += 1
-        return stubbedProduct
+    func loadOfferings() async -> PurchasableOfferings? {
+        loadOfferingsCallCount += 1
+        return stubbedOfferings
     }
 
     func purchase(productID: String) async throws -> PurchaseOutcome {
@@ -78,16 +80,21 @@ final class MockPurchaseService: PurchaseService {
         }
     }
 
-    func currentlyEntitled(productID: String) async -> Bool {
+    func currentlyEntitled(entitlementId: String) async -> Bool {
         currentlyEntitledCallCount += 1
         return stubbedIsEntitled
+    }
+
+    func logIn(appUserID: String) async {
+        logInCallCount += 1
+        lastLogInAppUserID = appUserID
     }
 }
 
 // Stable `Mirror` output so snapshot tests (`.dump`) that transitively reflect
 // a StoreManager don't pick up the AsyncStream continuation's opaque internals,
 // which vary across runs depending on observer registration timing. Variants
-// remain distinguishable via StoreManager._product and PaywallView.limitError.
+// remain distinguishable via StoreManager._offerings and PaywallView.limitError.
 extension MockPurchaseService: CustomReflectable {
     nonisolated var customMirror: Mirror {
         Mirror(self, children: [])

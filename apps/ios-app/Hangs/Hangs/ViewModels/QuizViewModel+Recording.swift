@@ -31,6 +31,15 @@ extension QuizViewModel {
     /// Handles audio preparation, state transitions, and error rollback
     /// Routes to streaming STT (ElevenLabs) or batch M4A (Whisper) based on feature flag
     func startRecording() async {
+        // Backgrounded → never open the mic. Auto-record's thinking-time
+        // countdown can fire after question TTS finishes in the background
+        // (UIBackgroundModes audio keeps us running); stay on the question
+        // instead — the user taps the mic or says "start" once foregrounded.
+        guard isAppForeground else {
+            Logger.audio.info("🎙️ startRecording suppressed — app is backgrounded")
+            return
+        }
+
         cancelAnswerTimer()
         errorMessage = nil
         transition(to: .recording)

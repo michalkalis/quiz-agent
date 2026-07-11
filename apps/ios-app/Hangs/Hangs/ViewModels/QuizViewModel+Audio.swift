@@ -30,6 +30,12 @@ extension QuizViewModel {
     func startSilenceDetectionListening() async {
         guard let service = silenceDetectionService else { return }
 
+        // Backgrounded → never arm the input tap. This is the choke point for
+        // every direct caller (e.g. the post-TTS tail of playQuestionAudio,
+        // which fires after background TTS finishes); `.active` re-arms via
+        // syncCommandListenerWindow (mic-in-background fix).
+        guard isAppForeground else { return }
+
         await service.startListening()
 
         // Barge-in: if the user starts speaking during TTS on an external audio

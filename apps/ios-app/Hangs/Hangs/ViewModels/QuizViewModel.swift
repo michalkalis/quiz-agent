@@ -368,6 +368,14 @@ final class QuizViewModel: ObservableObject {
     /// Drives the `selected` highlight in MCQOptionPicker without waiting for tap.
     @Published var mcqVoiceMatchedKey: String?
 
+    /// Whether the app scene is foreground-active. Flipped synchronously by
+    /// `handleScenePhase(_:)` BEFORE any teardown so a racing
+    /// `refreshCommandWindow()` or a post-TTS `startSilenceDetectionListening()`
+    /// can never re-arm the mic mid-transition to background (mic-in-background
+    /// fix). `currentCommandScreen` returns nil while this is false.
+    /// Internal for +CommandListener/+Audio/+Recording/+ScenePhase.
+    var isAppForeground: Bool = true
+
     // MARK: - Dependencies
 
     let networkService: NetworkServiceProtocol

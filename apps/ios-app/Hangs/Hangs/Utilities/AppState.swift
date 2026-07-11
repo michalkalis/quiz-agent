@@ -21,6 +21,11 @@ final class AppState: ObservableObject {
     /// The auth service, exposed so SettingsView can drive Apple sign-in, sign-out, and account actions.
     let authService: AuthService
 
+    /// The live QuizViewModel, registered by `makeQuizViewModel()` (weak — the
+    /// owner is ContentView's `@StateObject`). HangsApp routes scene-phase
+    /// changes through it so the mic input is torn down in the background.
+    private(set) weak var quizViewModel: QuizViewModel?
+
     init() {
         #if DEBUG
         if UITestSupport.isUITesting {
@@ -167,6 +172,7 @@ final class AppState: ObservableObject {
         }
         #endif
 
+        quizViewModel = viewModel
         return viewModel
     }
 }

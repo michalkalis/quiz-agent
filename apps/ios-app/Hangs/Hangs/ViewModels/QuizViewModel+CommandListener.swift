@@ -31,6 +31,11 @@ extension QuizViewModel {
     /// states all map to `nil` (windowed lifecycle, 77.5). This is the single
     /// source of truth for both arming and for scoping the matcher.
     var currentCommandScreen: VoiceCommandScreen? {
+        // Backgrounded → no window: the mic input must never be (re-)armed
+        // while the app is in the background, even by a refreshCommandWindow()
+        // racing the scene-phase teardown (mic-in-background fix).
+        if !isAppForeground { return nil }
+
         // Torn down during TTS (the recognizer must never transcribe its own
         // question playback) and during any recording (the answer window is the
         // Slovak ElevenLabs stream — time-disjoint from command listening).

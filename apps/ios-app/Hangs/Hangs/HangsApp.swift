@@ -12,6 +12,7 @@ import SwiftUI
 @main
 struct HangsApp: App {
     @StateObject private var appState = AppState()
+    @Environment(\.scenePhase) private var scenePhase
 
     init() {
         // Skip Sentry on simulator — only real-device debug + release builds report.
@@ -59,6 +60,13 @@ struct HangsApp: App {
                         await UITestSupport.handleTestURL(url)
                     }
                     #endif
+                }
+                // Mic-in-background fix: UIBackgroundModes audio keeps TTS
+                // playing while driving, but the mic INPUT must never survive
+                // backgrounding. Route phase changes to the quiz view model,
+                // which tears down input on .background and re-arms on .active.
+                .onChange(of: scenePhase) { _, newPhase in
+                    appState.quizViewModel?.handleScenePhase(newPhase)
                 }
         }
     }

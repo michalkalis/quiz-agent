@@ -58,8 +58,12 @@ import os
             // Mock implementation
         }
 
+        /// Counts deactivations so the scene-phase teardown tests can assert the
+        /// session is released only when idle (never under in-flight TTS).
+        var deactivateSessionCallCount = 0
+
         func deactivateSession() {
-            // Mock implementation
+            deactivateSessionCallCount += 1
         }
 
         func switchAudioMode(_: AudioMode) async throws {

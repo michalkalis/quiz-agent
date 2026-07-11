@@ -1,8 +1,10 @@
 # Issue #90 — Bug: freemium monthly quota is TOCTOU — concurrent starts can exceed the limit
 
-**Triage:** bug · ready-for-agent
+**Triage:** bug · done (2026-07-11 — subsumed by #93 Session B, no separate work needed)
 
 **Created:** 2026-07-07 · **Source:** auth quality review 2026-07-07 (`quiz.py:60-75, 147-148`)
+
+> **CLOSED 2026-07-11, verified first-hand:** #93's entitlement gate rewrote the consume path exactly as this issue's recommendation asked — `record_question` re-derives the serving path independently of `check_limit` (`app/usage/tracker.py:130-132`), the free-path increment is a single atomic `on_conflict_do_update` upsert (`tracker.py:162-174`), and the credit debit is serialized under `pg_advisory_xact_lock` with a balance guard (`tracker.py:210-225`). Concurrency acceptance is covered by `tests/test_entitlement.py:240` (`test_no_double_spend_concurrent` — two tasks race the last unit, exactly one wins). All four Acceptance boxes below are satisfied by that code + tests; leaving them unticked as historical record of the original plan.
 
 **Severity:** medium — under-enforces the paywall (a few questions over the cap), never locks a user out. Low blast radius.
 

@@ -1,5 +1,7 @@
 # Execution queue — Opus session prompts (2026-07-07)
 
+> **⚠️ 2026-07-11 — superseded as the entry point by [`release-orchestration-2026-07.md`](release-orchestration-2026-07.md)** (Fable-orchestrated release run; model routing + deploy freeze + [HUMAN] gates live there). The Q-prompts below remain the payload for the R-sessions that reference them. Deltas: **Q2 struck** (#90 fully subsumed by #93 Session B — atomic gate + advisory-lock debit + concurrent test, verified 2026-07-11); **Q1/Q4/Q5 anchors re-verified, hold**; **Q3 anchor drift** (see the runbook §What changed); **Q6 replaced** by the runbook's R18 (75.6 live run on the playback issue); ⚠️ **deploy freeze** — ignore the "fly deploy" step in Q1/Q3/Q4 until the F2 deploy event (main carries the undeployed #93 gate + migration 0005).
+
 **Created:** 2026-07-07 by the backlog session-split pass (14-agent workflow: every open agent-runnable issue verified against today's code, sanity-checked, and cut into single-session tasks). **How to use:** open a fresh Claude Code session on **Opus**, paste one fenced block, go. One session at a time, always in this checkout — **never run two sessions in parallel** (see `project_concurrent_sessions_same_checkout`).
 
 > Sanity-check outcomes folded in: **#70 CLOSED** (already fixed by `649b1b9`), **#89 downgraded to latent** (grace already off in prod), **#88's plan mechanism corrected** (hash-only storage), **#51 blocked on a 5-min founder gate**, four duplicate issue drafts deleted. Details in each issue file.
@@ -304,7 +306,7 @@ Done = script exits 0 with logged counts; board reflects current INDEX. Commit d
 | Session | State |
 |---|---|
 | Q1 #88 | ⬜ |
-| Q2 #90 | ⬜ |
+| Q2 #90 | ✂️ struck 2026-07-11 — subsumed by #93 Session B |
 | Q3 #91 | ⬜ |
 | Q4 #89 | ⬜ |
 | Q5 #79 | ⬜ |

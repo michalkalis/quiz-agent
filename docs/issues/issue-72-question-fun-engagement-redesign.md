@@ -131,7 +131,7 @@ the live OpenRouter catalog (IDs/pricing shift, and some slugs use `.` vs `-`) b
 
 | Step | Recommended | $/1M (in/out) | Why | Status |
 |------|-------------|---------------|-----|--------|
-| **Creative generation** (the primary fix) | **`claude-opus-4-8`** | $5 / $25 | Top creative-writing tier; "transform, don't rephrase" and lateral angles are exactly where it beats GPT-4o. ~$1–2 per 100 questions. | **grounded** |
+| **Creative generation** (the primary fix) | **`claude-opus-4-8`** | $5 / $25 | Top creative-writing tier; "transform, don't rephrase" and lateral angles are exactly where it beats GPT-4o. ~~$1–2 per 100 questions~~ **measured 2026-07-11: ~$4–5 per 100 accepted all-in** (7K-token uncached prompts, 3× over-gen, reasoning-heavy output). | **grounded** |
 | Cheap rewrite / normalize | `claude-haiku-4-5` (200K) | $1 / $5 | Best structured-JSON adherence per cost; the OpenTDB-fact and answer-normalize rewrites need reliability, not creativity. (`gpt-4o-mini` $0.15/$0.60 stays a valid cheaper option.) | **grounded** |
 | Scoring / veto judge | `claude-sonnet-4-6` (already the 2nd scorer) | $3 / $15 | Opus-tier judgment at lower cost; nuanced rubric + reliable score JSON. | **grounded** |
 | Fact verification | Gemini 2.5 (Flash in use; Pro if accuracy needed) | $0.30/$2.50 · $1.25/$10 | Top FACTS-benchmark accuracy; read-heavy, short-out step. | verify-live |
@@ -186,6 +186,7 @@ brevity. Guard so it can **never** write to the corpus. *Gate:* harness unit-tes
 
 **Phase 6 — The ONE run = founder-authorized validation (the only spend).** *Ralph stops here and requests
 authorization.* Budget ~$5 (plan 2–3× for an escape-hatch fix + rerun; keep it toggle-revertible).
+  *(Cost-of-record correction 2026-07-11: real Opus all-in rate ≈ $4–5 per 100 accepted questions — budget future runs from this, not the $1–2 estimate above.)*
 - **6a — flow-validation run:** one small **mixed batch across all types** (text + MCQ + true_false, ~20–30)
   through the reworked pipeline with `claude-opus-4-8` enabled. Throwaway output — **this validates the flow,
   it is not corpus content and is not new-gen for release.** Confirm every Phase-5 proxy holds on real output,

@@ -61,6 +61,9 @@ _REMAP_OPENROUTER = {
     # against the OpenRouter catalog on 2026-06-26.
     "gemini-3.1-pro-preview": "google/gemini-3.1-pro-preview",
     "kimi-k2.6": "moonshotai/kimi-k2.6",
+    # Third cheap-tier pilot candidate (2026-07-11 cost investigation); slug
+    # verified live against the OpenRouter catalog on 2026-07-11.
+    "glm-5.2": "z-ai/glm-5.2",
     "gemini-2.5-flash": "google/gemini-2.5-flash",
     "text-embedding-3-small": "text-embedding-3-small",
 }

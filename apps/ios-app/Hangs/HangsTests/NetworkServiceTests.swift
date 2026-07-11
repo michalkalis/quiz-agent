@@ -44,7 +44,9 @@ private nonisolated enum Stubs {
       "questions_used": 3,
       "questions_limit": 10,
       "remaining": 7,
-      "resets_at": "2026-05-08T00:00:00Z"
+      "resets_at": "2026-05-08T00:00:00Z",
+      "subscription_status": "none",
+      "credit_balance": 0
     }
     """#
 }
@@ -320,6 +322,59 @@ struct NetworkServiceTests {
         _ = try await service.getUsage(userId: "user_abc")
         let request = try #require(captured.withLock { $0 })
         #expect(request.value(forHTTPHeaderField: "Authorization") == nil)
+    }
+
+    // MARK: 13. downloadAudio carries the bearer
+    //
+    // Regression guard for the silent question-TTS outage: the audio routes are
+    // auth-gated (require_auth_or_grace) and hard-401 with the grace flag off,
+    // so a bearer-less download means no question audio ever plays. downloadAudio
+    // must go through the same authorized path as every other endpoint.
+
+    @Test("downloadAudio attaches Authorization bearer")
+    func downloadAudioAttachesBearer() async throws {
+        let auth = StubAuthService(initialToken: "tok", refreshedToken: "fresh")
+        let service = NetworkService(
+            baseURL: Stubs.baseURL,
+            session: StubURLProtocol.makeSession(),
+            authService: auth
+        )
+        let captured = OSAllocatedUnfairLock<URLRequest?>(initialState: nil)
+        StubURLProtocol.handler = { req in
+            captured.withLock { $0 = req }
+            return (.make(status: 200), Data("fake-audio-bytes".utf8))
+        }
+        defer { StubURLProtocol.handler = nil }
+
+        _ = try await service.downloadAudio(from: "/api/v1/sessions/s1/question/audio")
+
+        let request = try #require(captured.withLock { $0 })
+        #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer tok")
+    }
+
+    // MARK: 14. downloadAudio 401 → refresh → retry (same seam as other endpoints)
+
+    @Test("downloadAudio 401 → refresh → retry carries new bearer and succeeds")
+    func downloadAudioRefreshesOn401() async throws {
+        let auth = StubAuthService(initialToken: "stale", refreshedToken: "fresh")
+        let service = NetworkService(
+            baseURL: Stubs.baseURL,
+            session: StubURLProtocol.makeSession(),
+            authService: auth
+        )
+        let expectedData = Data("fake-audio-bytes".utf8)
+        StubURLProtocol.handler = { req in
+            if req.value(forHTTPHeaderField: "Authorization") == "Bearer fresh" {
+                return (.make(status: 200), expectedData)
+            }
+            return (.make(status: 401), Data())
+        }
+        defer { StubURLProtocol.handler = nil }
+
+        let result = try await service.downloadAudio(from: "/api/v1/sessions/s1/question/audio")
+        #expect(result == expectedData)
+        let refreshes = await auth.refreshCallCount()
+        #expect(refreshes == 1)
     }
 }
 

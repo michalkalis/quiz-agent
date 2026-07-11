@@ -40,9 +40,6 @@ actor NetworkService: NetworkServiceProtocol {
     /// request still goes out unauthenticated (legacy `user_id` grace path).
     private let authService: AuthServiceProtocol?
 
-    // Task registry for cancellation support
-    private var activeTasks: [UUID: URLSessionDataTask] = [:]
-
     init(baseURL: String = Config.apiBaseURL, session: URLSession? = nil, authService: AuthServiceProtocol? = nil) {
         guard let url = URL(string: baseURL) else {
             fatalError("NetworkService: invalid baseURL '\(baseURL)' — check Config.apiBaseURL")
@@ -89,23 +86,6 @@ actor NetworkService: NetworkServiceProtocol {
         }
         req.setValue("Bearer \(fresh)", forHTTPHeaderField: "Authorization")
         return try await session.data(for: req)
-    }
-
-    // MARK: - Task Registry
-
-    private func registerTask(_ id: UUID, task: URLSessionDataTask) {
-        activeTasks[id] = task
-    }
-
-    private func unregisterTask(_ id: UUID) {
-        activeTasks.removeValue(forKey: id)
-    }
-
-    private func cancelTask(_ id: UUID) {
-        activeTasks[id]?.cancel()
-        activeTasks.removeValue(forKey: id)
-
-        Logger.network.debug("🌐 Cancelled task: \(id, privacy: .public)")
     }
 
     // MARK: - Sentry Breadcrumb Helpers (metadata only — no request/response bodies)
@@ -483,8 +463,6 @@ actor NetworkService: NetworkServiceProtocol {
     // MARK: - Audio Download
 
     func downloadAudio(from urlString: String) async throws -> Data {
-        let taskId = UUID()
-
         // Handle relative vs absolute URLs
         let url: URL
         if urlString.hasPrefix("http") {
@@ -504,58 +482,35 @@ actor NetworkService: NetworkServiceProtocol {
         request.cachePolicy = .reloadIgnoringLocalCacheData
         request.timeoutInterval = 10  // Audio downloads should not block the quiz flow
 
-        // Use withTaskCancellationHandler for proper cleanup
-        return try await withTaskCancellationHandler {
-            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Data, Error>) in
-                let task = session.dataTask(with: request) { [weak self] data, response, error in
-                    Task {
-                        await self?.unregisterTask(taskId)
+        // Audio routes are auth-gated (require_auth_or_grace) — the request must
+        // carry the bearer like every other endpoint, incl. the single-flight
+        // 401-refresh-retry. Task cancellation propagates natively through
+        // `session.data(for:)` (throws URLError(.cancelled)).
+        let (data, response) = try await sendAuthorized(request)
 
-                        // Handle cancellation gracefully
-                        if let error = error as? URLError, error.code == .cancelled {
-                            continuation.resume(throwing: CancellationError())
-                            return
-                        }
-
-                        if let error = error {
-                            continuation.resume(throwing: error)
-                            return
-                        }
-
-                        guard let httpResponse = response as? HTTPURLResponse,
-                              (200...299).contains(httpResponse.statusCode),
-                              let data = data else {
-                            continuation.resume(throwing: NetworkError.invalidResponse)
-                            return
-                        }
-
-                        // Verify download integrity by checking Content-Length
-                        if let expectedLength = httpResponse.value(forHTTPHeaderField: "Content-Length"),
-                           let expectedBytes = Int64(expectedLength),
-                           expectedBytes > 0 {
-                            let actualBytes = Int64(data.count)
-
-                            if actualBytes != expectedBytes {
-                                Logger.network.warning("⚠️ Download size mismatch: expected \(expectedBytes, privacy: .public) bytes, got \(actualBytes, privacy: .public) bytes")
-                                continuation.resume(throwing: NetworkError.invalidResponse)
-                                return
-                            }
-
-                            Logger.network.debug("✓ Download integrity verified: \(actualBytes, privacy: .public) bytes")
-                        }
-
-                        continuation.resume(returning: data)
-                    }
-                }
-
-                registerTask(taskId, task: task)
-                task.resume()
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            if let status = (response as? HTTPURLResponse)?.statusCode {
+                logHTTPError(endpoint: "audio-download", status: status)
             }
-        } onCancel: {
-            Task {
-                await self.cancelTask(taskId)
-            }
+            throw NetworkError.invalidResponse
         }
+
+        // Verify download integrity by checking Content-Length
+        if let expectedLength = httpResponse.value(forHTTPHeaderField: "Content-Length"),
+           let expectedBytes = Int64(expectedLength),
+           expectedBytes > 0 {
+            let actualBytes = Int64(data.count)
+
+            if actualBytes != expectedBytes {
+                Logger.network.warning("⚠️ Download size mismatch: expected \(expectedBytes, privacy: .public) bytes, got \(actualBytes, privacy: .public) bytes")
+                throw NetworkError.invalidResponse
+            }
+
+            Logger.network.debug("✓ Download integrity verified: \(actualBytes, privacy: .public) bytes")
+        }
+
+        return data
     }
 
     // MARK: - ElevenLabs Token

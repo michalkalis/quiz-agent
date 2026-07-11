@@ -12,6 +12,19 @@ import os
 
 extension QuizViewModel {
 
+    /// Fail-loud reporter for TTS audio failures: the quiz deliberately keeps
+    /// going without audio, which makes regressions (e.g. the missing bearer on
+    /// audio downloads → hard 401) silent. Mirror every real failure to Sentry
+    /// so /check-crashes surfaces the next one. Cancellation (barge-in, stop)
+    /// is expected flow, not an error.
+    nonisolated static func reportAudioFailure(_ error: Error, kind: String) {
+        if error is CancellationError || (error as? URLError)?.code == .cancelled { return }
+        SentryLog.error("TTS audio failed", category: .audio, attributes: [
+            "kind": kind,
+            "error": String(describing: error)
+        ])
+    }
+
     /// Start listening for silence events and barge-in during question playback.
     /// Safe to call multiple times (the service itself no-ops if already listening).
     func startSilenceDetectionListening() async {
@@ -95,7 +108,8 @@ extension QuizViewModel {
             _ = try await audioService.playOpusAudio(audioData)
         } catch {
             Logger.audio.warning("⚠️ Failed to play question audio: \(error, privacy: .public)")
-            // Don't fail the quiz if audio doesn't play
+            // Don't fail the quiz if audio doesn't play — but fail loud to Sentry.
+            Self.reportAudioFailure(error, kind: "question")
         }
 
         // Restart silence detection (+ command listener) after TTS finishes.
@@ -141,6 +155,7 @@ extension QuizViewModel {
             _ = try await audioService.playOpusAudio(audioData)
         } catch {
             Logger.audio.warning("⚠️ Failed to replay question audio: \(error, privacy: .public)")
+            Self.reportAudioFailure(error, kind: "question-replay")
         }
 
         // Restart silence detection (and barge-in) after TTS finishes — but
@@ -157,6 +172,7 @@ extension QuizViewModel {
             return duration
         } catch {
             Logger.audio.warning("⚠️ Failed to play feedback audio: \(error, privacy: .public)")
+            Self.reportAudioFailure(error, kind: "feedback")
             return 3.0  // Default fallback duration
         }
     }

@@ -98,6 +98,54 @@ struct HomeFreePlanCardTests {
         }
     }
 
+    // MARK: - Proactive paywall entry (#93 subscription IAP)
+    // The card is the Home upgrade entry point: paywall was previously
+    // reachable only via the 429 quota handlers.
+
+    @Test("Free card shows Upgrade affordance; tap presents paywall and clears stale 429 error")
+    func freeCardTapPresentsPaywall() async throws {
+        let vm = makeViewModel()
+        vm.usageInfo = usage()
+        // Simulate a stale quota error from an earlier 429 — proactive entry
+        // must clear it so PaywallView shows upgrade copy, not "limit reached".
+        vm.quotaLimitError = QuotaLimitError(
+            error: "Monthly limit reached",
+            questionsUsed: 30,
+            questionsLimit: 30,
+            resetsAt: "2099-01-01T08:00:00.000Z",
+            upgradeAvailable: true
+        )
+        let view = HomeView(viewModel: vm)
+
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: Never.self) {
+                try tree.find(viewWithAccessibilityIdentifier: "home.freePlanUpgrade")
+            }
+            try tree.find(viewWithAccessibilityIdentifier: "home.freePlanUpgradeButton")
+                .button().tap()
+            #expect(vm.showPaywall)
+            #expect(vm.quotaLimitError == nil)
+        }
+    }
+
+    @Test("Premium card is not tappable and shows no Upgrade affordance")
+    func premiumCardHasNoUpgradeEntry() async throws {
+        let vm = makeViewModel()
+        vm.usageInfo = usage(premium: true)
+        let view = HomeView(viewModel: vm)
+
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: (any Error).self) {
+                try tree.find(viewWithAccessibilityIdentifier: "home.freePlanUpgrade")
+            }
+            #expect(throws: (any Error).self) {
+                try tree.find(viewWithAccessibilityIdentifier: "home.freePlanUpgradeButton")
+            }
+        }
+    }
+
     // MARK: - Countdown wording (pure helpers)
 
     @Test("Countdown rounds up and never promises an early reset")

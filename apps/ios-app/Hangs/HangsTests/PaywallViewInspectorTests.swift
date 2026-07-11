@@ -112,8 +112,26 @@ struct PaywallViewOfflineStateTests {
 @MainActor
 @Suite("PaywallView — normal paywall structure (u2ySy)")
 struct PaywallViewNormalStructureTests {
-    @Test("'OUT OF QUESTIONS' headline renders")
+    @Test("'OUT OF QUESTIONS' headline renders when the quota was hit")
     func outOfQuestionsHeadline() async throws {
+        let offerings = PurchasableOfferings(
+            monthly: PurchasableProduct(id: StoreProduct.monthlySubId, displayPrice: "€4.99", displayName: "Hangs Unlimited"),
+            annual: nil,
+            pack: nil
+        )
+        let manager = await makeStoreManager(offerings: offerings, hasAttemptedLoad: true)
+        let view = PaywallView(storeManager: manager, limitError: makeLimitError(), onDismiss: {})
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: Never.self) { try tree.find(text: "OUT OF\nQUESTIONS") }
+        }
+    }
+
+    // #93 subscription IAP: proactive entry (Home card / Settings row) presents
+    // with limitError nil — the paywall must pitch the upgrade, not falsely
+    // claim the user ran out of questions.
+    @Test("Proactive mode (limitError nil) shows upgrade pitch, not limit-reached copy")
+    func proactiveModeShowsUpgradePitch() async throws {
         let offerings = PurchasableOfferings(
             monthly: PurchasableProduct(id: StoreProduct.monthlySubId, displayPrice: "€4.99", displayName: "Hangs Unlimited"),
             annual: nil,
@@ -123,7 +141,8 @@ struct PaywallViewNormalStructureTests {
         let view = PaywallView(storeManager: manager, limitError: nil, onDismiss: {})
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) { try tree.find(text: "OUT OF\nQUESTIONS") }
+            #expect(throws: Never.self) { try tree.find(text: "GO\nUNLIMITED") }
+            #expect(throws: (any Error).self) { try tree.find(text: "OUT OF\nQUESTIONS") }
         }
     }
 
@@ -155,7 +174,7 @@ struct PaywallViewNormalStructureTests {
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) {
-                try tree.find(text: "You've used all 10 free questions today.")
+                try tree.find(text: "You've used all 10 free questions this month.")
             }
         }
     }

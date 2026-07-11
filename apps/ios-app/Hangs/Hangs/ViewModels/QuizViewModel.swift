@@ -627,6 +627,15 @@ final class QuizViewModel: ObservableObject {
         }
     #endif
 
+    /// Proactive paywall entry (#93 subscription IAP — paywall was reachable
+    /// only via the 429 quota handlers). Called from the Home free-plan card
+    /// and the Settings subscription row. Clears any stale quota error first
+    /// so PaywallView shows the upgrade pitch, not leftover "limit reached" copy.
+    func presentPaywall() {
+        quotaLimitError = nil
+        showPaywall = true
+    }
+
     /// Fetch current usage info from backend (for displaying remaining questions)
     func refreshUsage() async {
         let userId = persistenceStore.deviceId

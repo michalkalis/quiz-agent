@@ -79,44 +79,69 @@ struct HomeView: View {
     // Free users see remaining monthly questions + reset countdown; premium
     // users see an Unlimited row in the same slot (founder decision 2026-07-07).
     // Hidden until /usage has loaded.
+    // #93 subscription IAP: for free users the whole card is a proactive
+    // paywall entry point (Upgrade affordance + tap → presentPaywall()).
     @ViewBuilder
     private var freePlanCard: some View {
         if let usage = viewModel.usageInfo {
-            HangsCard(padding: .init(top: 12, leading: 16, bottom: 12, trailing: 16)) {
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        HStack(spacing: 6) {
-                            Image(systemName: "bolt.fill")
-                                .font(.system(size: 13, weight: .semibold))
-                                .foregroundColor(Theme.Hangs.Colors.blue)
-                                .accessibilityHidden(true)
-                            if usage.isPremium {
-                                Text("Unlimited questions")
-                                    .font(.hangsBody(13, weight: .semibold))
-                                    .foregroundColor(Theme.Hangs.Colors.ink)
-                                    .accessibilityIdentifier("home.freePlanUnlimited")
-                            } else {
-                                Text("\(usage.remaining ?? 0) of \(usage.questionsLimit ?? 0) free questions left")
-                                    .font(.hangsBody(13, weight: .semibold))
-                                    .foregroundColor(Theme.Hangs.Colors.ink)
-                                    .accessibilityIdentifier("home.freePlanCount")
-                            }
-                        }
-                        Spacer()
-                        if !usage.isPremium, let countdown = Self.resetCountdown(usage) {
-                            Text(countdown)
-                                .font(.hangsBody(12))
-                                .foregroundColor(Theme.Hangs.Colors.mutedFaint)
-                                .accessibilityIdentifier("home.freePlanReset")
+            if usage.isPremium {
+                freePlanCardBody(usage)
+            } else {
+                Button {
+                    viewModel.presentPaywall()
+                } label: {
+                    freePlanCardBody(usage)
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("home.freePlanUpgradeButton")
+            }
+        }
+    }
+
+    private func freePlanCardBody(_ usage: UsageInfo) -> some View {
+        HangsCard(padding: .init(top: 12, leading: 16, bottom: 12, trailing: 16)) {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    HStack(spacing: 6) {
+                        Image(systemName: "bolt.fill")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(Theme.Hangs.Colors.blue)
+                            .accessibilityHidden(true)
+                        if usage.isPremium {
+                            Text("Unlimited questions")
+                                .font(.hangsBody(13, weight: .semibold))
+                                .foregroundColor(Theme.Hangs.Colors.ink)
+                                .accessibilityIdentifier("home.freePlanUnlimited")
+                        } else {
+                            Text("\(usage.remaining ?? 0) of \(usage.questionsLimit ?? 0) free questions left")
+                                .font(.hangsBody(13, weight: .semibold))
+                                .foregroundColor(Theme.Hangs.Colors.ink)
+                                .accessibilityIdentifier("home.freePlanCount")
                         }
                     }
-                    if !usage.isPremium {
-                        quotaTrack(fraction: Self.quotaFraction(usage))
+                    Spacer()
+                    if !usage.isPremium, let countdown = Self.resetCountdown(usage) {
+                        Text(countdown)
+                            .font(.hangsBody(12))
+                            .foregroundColor(Theme.Hangs.Colors.mutedFaint)
+                            .accessibilityIdentifier("home.freePlanReset")
                     }
                 }
+                if !usage.isPremium {
+                    quotaTrack(fraction: Self.quotaFraction(usage))
+                    HStack(spacing: 4) {
+                        Text("Upgrade")
+                            .font(.hangsBody(13, weight: .semibold))
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 11, weight: .semibold))
+                            .accessibilityHidden(true)
+                    }
+                    .foregroundColor(Theme.Hangs.Colors.pink)
+                    .accessibilityIdentifier("home.freePlanUpgrade")
+                }
             }
-            .accessibilityIdentifier("home.freePlanCard")
         }
+        .accessibilityIdentifier("home.freePlanCard")
     }
 
     private func quotaTrack(fraction: Double) -> some View {

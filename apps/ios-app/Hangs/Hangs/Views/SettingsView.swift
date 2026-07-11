@@ -74,6 +74,7 @@ struct SettingsView: View {
                     sessionGroup
                     audioFeedbackGroup
                     accountGroup
+                    subscriptionGroup
                     aboutGroup
                     #if DEBUG
                         developerGroup
@@ -482,6 +483,40 @@ struct SettingsView: View {
         } catch {
             Logger.network.warning("🔐 Export data failed: \(error.localizedDescription, privacy: .public)")
         }
+    }
+
+    // MARK: - Subscription group (#93 subscription IAP)
+    // Proactive, discoverable paywall entry: shows the current plan state and
+    // opens the existing paywall sheet (ContentView owns presentation via
+    // viewModel.showPaywall). Restore purchase lives on the paywall itself,
+    // so this row is also its discoverable home — no duplicated restore logic.
+    // Reads viewModel.usageInfo (refreshed on Home appear); no extra network call.
+
+    private var subscriptionGroup: some View {
+        groupSection(label: "subscription", color: Theme.Hangs.Colors.pink) {
+            HangsConfigRow(
+                label: "Plan",
+                value: subscriptionPlanDisplay,
+                valueColor: Theme.Hangs.Colors.pink,
+                showsChevron: true
+            ) {
+                viewModel.presentPaywall()
+            }
+            .accessibilityIdentifier("settings.subscription")
+        }
+    }
+
+    private var subscriptionPlanDisplay: String {
+        guard let usage = viewModel.usageInfo else {
+            return String(localized: "Free", comment: "Settings subscription row value before usage has loaded")
+        }
+        if usage.isPremium {
+            return String(localized: "Unlimited", comment: "Settings subscription row value for premium users")
+        }
+        if usage.creditBalance > 0 {
+            return String(localized: "Free · \(usage.creditBalance) credits", comment: "Settings subscription row value: free plan with pack credits remaining")
+        }
+        return String(localized: "Free · \(usage.remaining ?? 0) of \(usage.questionsLimit ?? 0) left", comment: "Settings subscription row value: free plan with remaining monthly questions")
     }
 
     private var aboutGroup: some View {

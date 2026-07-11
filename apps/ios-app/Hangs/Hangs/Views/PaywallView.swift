@@ -75,9 +75,19 @@ struct PaywallView: View {
         .accessibilityIdentifier("paywall.icon")
     }
 
+    // Proactive entry (#93 subscription IAP): limitError nil means the user
+    // opened the paywall from Home/Settings, not by hitting the 429 quota —
+    // pitch the upgrade instead of claiming they ran out.
+    private var headline: String {
+        if limitError == nil {
+            return String(localized: "GO\nUNLIMITED", comment: "Paywall headline when opened proactively from Home/Settings (quota not hit)")
+        }
+        return String(localized: "OUT OF\nQUESTIONS", comment: "Paywall headline when the monthly free-question limit was hit")
+    }
+
     private var paywallHeroBlock: some View {
         VStack(spacing: 8) {
-            Text("OUT OF\nQUESTIONS")
+            Text(headline)
                 .font(.hangsDisplayMD)
                 .foregroundColor(Theme.Hangs.Colors.ink)
                 .multilineTextAlignment(.center)
@@ -102,7 +112,7 @@ struct PaywallView: View {
         if let limit = limitError {
             return String(localized: "You've used all \(limit.questionsLimit) free questions this month.", comment: "Paywall subtitle when the monthly free-question limit is known")
         }
-        return String(localized: "You've used all your free questions this month.", comment: "Paywall subtitle when the monthly free-question limit is unknown")
+        return String(localized: "Unlimited questions for every drive, no monthly cap.", comment: "Paywall subtitle when opened proactively from Home/Settings (quota not hit)")
     }
 
     private var featureCard: some View {

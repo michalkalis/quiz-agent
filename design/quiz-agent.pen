@@ -425,7 +425,7 @@
                           "id": "ODL5j",
                           "name": "fpCount",
                           "fill": "$text-primary",
-                          "content": "7 of 10 free questions left",
+                          "content": "70 of 100 free questions left",
                           "fontFamily": "Inter",
                           "fontSize": 13,
                           "fontWeight": "600"
@@ -437,7 +437,7 @@
                       "id": "G3RAD6",
                       "name": "fpReset",
                       "fill": "$text-tertiary",
-                      "content": "resets in 3 days",
+                      "content": "resets in 12 days",
                       "fontFamily": "Inter",
                       "fontSize": 12,
                       "fontWeight": "normal"
@@ -7197,7 +7197,7 @@
               "fill": "$text-secondary",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "You've used all 10 free questions today.",
+              "content": "You've used all 100 free questions this month.",
               "textAlign": "center",
               "fontFamily": "Inter",
               "fontSize": 15,
@@ -7247,7 +7247,7 @@
                   "id": "gs296",
                   "name": "pillTxt",
                   "fill": "$text-secondary",
-                  "content": "Free questions reset in 7h 20m",
+                  "content": "Free questions reset in 12d 4h",
                   "fontFamily": "IBM Plex Mono",
                   "fontSize": 11,
                   "fontWeight": "500",
@@ -7395,7 +7395,7 @@
                       "fill": "$text-primary",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
-                      "content": "Never wait for the daily reset",
+                      "content": "Never wait for the monthly reset",
                       "fontFamily": "Inter",
                       "fontSize": 15,
                       "fontWeight": "500"
@@ -15993,6 +15993,744 @@
       "width": 220,
       "height": 0,
       "content": "Home free-plan counter (86.8 / #87): free state shown. Paid-user state: TBD in #87 — intentionally not designed yet. Reset interval placeholder ('days'), final interval TBD #87."
+    },
+    {
+      "type": "frame",
+      "id": "UTtGL",
+      "x": 50,
+      "y": 5504,
+      "name": "NEW_Screen/Home — Free-plan card, premium state (annotation)",
+      "theme": {
+        "mode": "light"
+      },
+      "width": 390,
+      "layout": "vertical",
+      "gap": 8,
+      "children": [
+        {
+          "type": "text",
+          "id": "EWM2a",
+          "name": "annLbl",
+          "fill": "$text-secondary",
+          "content": "PREMIUM STATE - UNLIMITED ROW, NO TRACK",
+          "fontFamily": "IBM Plex Mono",
+          "fontSize": 11,
+          "fontWeight": "500",
+          "letterSpacing": 2
+        },
+        {
+          "type": "frame",
+          "id": "hRXRB",
+          "name": "freePlanWrap",
+          "width": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            0,
+            20,
+            4,
+            20
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "r6g7o",
+              "name": "freePlanCard",
+              "width": "fill_container",
+              "fill": "$bg-card",
+              "cornerRadius": 14,
+              "stroke": "$border-subtle",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": 8,
+              "padding": [
+                12,
+                16
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "VkqqO",
+                  "name": "fpRow",
+                  "width": "fill_container",
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "yg5od",
+                      "name": "fpLeft",
+                      "gap": 6,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "EUVpm",
+                          "name": "fpIcon",
+                          "width": 13,
+                          "height": 13,
+                          "icon": "zap",
+                          "library": "lucide",
+                          "fill": "$accent-blue"
+                        },
+                        {
+                          "type": "text",
+                          "id": "OCIkt",
+                          "name": "fpCount",
+                          "fill": "$text-primary",
+                          "content": "Unlimited questions",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "agOUU",
+                      "x": 223,
+                      "y": 0.5,
+                      "name": "fpReset",
+                      "enabled": false,
+                      "fill": "$text-tertiary",
+                      "content": "resets in 12 days",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Ux4lN",
+                  "x": 16,
+                  "y": 36,
+                  "name": "fpTrack",
+                  "enabled": false,
+                  "clip": true,
+                  "width": "fill_container(318)",
+                  "height": 4,
+                  "fill": "$border-subtle",
+                  "cornerRadius": 2,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Y4uHw",
+                      "name": "fpFill",
+                      "width": 222,
+                      "height": 4,
+                      "fill": "$accent-blue",
+                      "cornerRadius": 2
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "z8TS6",
+      "x": 1780,
+      "y": 8687,
+      "name": "NEW_Screen/Paywall-Subscription",
+      "clip": true,
+      "width": 390,
+      "height": 844,
+      "fill": "$bg-page",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "WcUEf",
+          "name": "statusBar",
+          "width": "fill_container",
+          "height": 44,
+          "fill": "$bg-page",
+          "layout": "none",
+          "children": [
+            {
+              "type": "text",
+              "id": "rFvDk",
+              "x": 20,
+              "y": 14,
+              "name": "time",
+              "fill": "$text-primary",
+              "content": "9:41",
+              "fontFamily": "Inter",
+              "fontSize": 15,
+              "fontWeight": "600"
+            },
+            {
+              "type": "frame",
+              "id": "n76G7",
+              "x": 330,
+              "y": 12,
+              "name": "sRight",
+              "gap": 6,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "nYW7j",
+                  "name": "sbSig",
+                  "width": 16,
+                  "height": 12,
+                  "icon": "signal-high",
+                  "library": "lucide",
+                  "fill": "$text-primary"
+                },
+                {
+                  "type": "icon",
+                  "id": "G9MQS",
+                  "name": "sbWifi",
+                  "width": 16,
+                  "height": 12,
+                  "icon": "wifi",
+                  "library": "lucide",
+                  "fill": "$text-primary"
+                },
+                {
+                  "type": "icon",
+                  "id": "p15Hp",
+                  "name": "sbBat",
+                  "width": 22,
+                  "height": 12,
+                  "icon": "battery-full",
+                  "library": "lucide",
+                  "fill": "$text-primary"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "c7Hwa",
+          "name": "brandRow",
+          "width": "fill_container",
+          "padding": [
+            8,
+            20
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "Kwwjg",
+              "name": "brandLeft",
+              "gap": 1,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "jiQYO",
+                  "name": "brandName",
+                  "fill": "$text-primary",
+                  "content": "trubbo",
+                  "fontFamily": "Inter",
+                  "fontSize": 20,
+                  "fontWeight": "800",
+                  "letterSpacing": -0.5
+                },
+                {
+                  "type": "text",
+                  "id": "c3wBhE",
+                  "name": "brandDot",
+                  "fill": "$accent-pink",
+                  "content": ".",
+                  "fontFamily": "Inter",
+                  "fontSize": 20,
+                  "fontWeight": "800"
+                }
+              ]
+            },
+            {
+              "type": "icon",
+              "id": "QN3Ht",
+              "name": "closeIcon",
+              "width": 22,
+              "height": 22,
+              "icon": "x",
+              "library": "lucide",
+              "fill": "$text-secondary"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "rgCXl",
+          "name": "iconWrap",
+          "width": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            32,
+            20,
+            0,
+            20
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "UNTvo",
+              "name": "iconBg",
+              "width": 104,
+              "height": 104,
+              "fill": "#FF3D8F1F",
+              "cornerRadius": 52,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "NdNjr",
+                  "name": "iconMain",
+                  "width": 48,
+                  "height": 48,
+                  "icon": "infinity",
+                  "library": "lucide",
+                  "fill": "$accent-pink"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "eVcjn",
+          "name": "hero",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 8,
+          "padding": [
+            20,
+            20,
+            8,
+            20
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "YRniY",
+              "name": "title",
+              "fill": "$text-primary",
+              "content": "GO UNLIMITED",
+              "textAlign": "center",
+              "fontFamily": "$font-display",
+              "fontSize": 40
+            },
+            {
+              "type": "text",
+              "id": "EVi3n",
+              "name": "subtitle",
+              "fill": "$text-secondary",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "You’ve used all 30 free questions this month.",
+              "textAlign": "center",
+              "fontFamily": "Inter",
+              "fontSize": 15
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "gz8Mq",
+          "name": "pillWrap",
+          "width": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            8,
+            20,
+            0,
+            20
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "duQAw",
+              "name": "resetPill",
+              "fill": "#0E1A2B",
+              "cornerRadius": "$radius-pill",
+              "gap": 6,
+              "padding": [
+                6,
+                14
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "iCP0I",
+                  "name": "pillText",
+                  "fill": "#FFFFFF",
+                  "content": "FREE QUESTIONS RESET IN 21 DAYS",
+                  "fontFamily": "IBM Plex Mono",
+                  "fontSize": 10,
+                  "fontWeight": "500",
+                  "letterSpacing": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "SiOlk",
+          "name": "planWrap",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            16,
+            20,
+            0,
+            20
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "EfelY",
+              "name": "planAnnual",
+              "width": "fill_container",
+              "fill": "$bg-card",
+              "cornerRadius": 16,
+              "stroke": "$accent-pink",
+              "strokeWidth": 2,
+              "strokeAlignment": "inner",
+              "padding": [
+                14,
+                16
+              ],
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "htO94",
+                  "name": "annualLeft",
+                  "layout": "vertical",
+                  "gap": 3,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "N1whi1",
+                      "name": "annualTitleRow",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "hs3eC",
+                          "name": "annualTitle",
+                          "fill": "$text-primary",
+                          "content": "Annual",
+                          "fontFamily": "Inter",
+                          "fontSize": 16,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "CA7D6",
+                          "name": "saveBadge",
+                          "fill": "$accent-pink",
+                          "cornerRadius": "$radius-pill",
+                          "padding": [
+                            3,
+                            8
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "MOKf9",
+                              "name": "saveTxt",
+                              "fill": "#FFFFFF",
+                              "content": "SAVE 50%",
+                              "fontFamily": "Inter",
+                              "fontSize": 10,
+                              "fontWeight": "700",
+                              "letterSpacing": 0.5
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "u57JzU",
+                      "name": "annualPrice",
+                      "fill": "$text-secondary",
+                      "content": "€29.99 / year",
+                      "fontFamily": "Inter",
+                      "fontSize": 13
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "v7wgp",
+                  "name": "radioOn",
+                  "width": 24,
+                  "height": 24,
+                  "fill": "$accent-pink",
+                  "cornerRadius": 12,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "hseYx",
+                      "name": "chk",
+                      "width": 14,
+                      "height": 14,
+                      "icon": "check",
+                      "library": "lucide",
+                      "fill": "#FFFFFF"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "sGQuh",
+              "name": "planMonthly",
+              "width": "fill_container",
+              "fill": "$bg-card",
+              "cornerRadius": 16,
+              "stroke": "$border-standard",
+              "strokeWidth": 1.5,
+              "strokeAlignment": "inner",
+              "padding": [
+                14,
+                16
+              ],
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "ZEBGd",
+                  "name": "monthlyLeft",
+                  "layout": "vertical",
+                  "gap": 3,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "M3HOB",
+                      "name": "monthlyTitle",
+                      "fill": "$text-primary",
+                      "content": "Monthly",
+                      "fontFamily": "Inter",
+                      "fontSize": 16,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "Dv794",
+                      "name": "monthlyPrice",
+                      "fill": "$text-secondary",
+                      "content": "€4.99 / month",
+                      "fontFamily": "Inter",
+                      "fontSize": 13
+                    }
+                  ]
+                },
+                {
+                  "type": "ellipse",
+                  "id": "F7Wolv",
+                  "name": "radioOff",
+                  "fill": "$bg-card",
+                  "width": 24,
+                  "height": 24,
+                  "stroke": "$border-standard",
+                  "strokeWidth": 1.5
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "l3eeqQ",
+              "name": "orRow",
+              "width": "fill_container",
+              "padding": [
+                6,
+                0,
+                0,
+                0
+              ],
+              "justifyContent": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "q4QIW",
+                  "name": "orTxt",
+                  "fill": "$text-tertiary",
+                  "content": "or top up without subscribing",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Zg2fL",
+              "name": "packCard",
+              "width": "fill_container",
+              "fill": "$bg-card",
+              "cornerRadius": 16,
+              "stroke": "$border-standard",
+              "strokeWidth": 1.5,
+              "strokeAlignment": "inner",
+              "padding": [
+                14,
+                16
+              ],
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "dGt9p",
+                  "name": "packLeft",
+                  "layout": "vertical",
+                  "gap": 3,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "smqnz",
+                      "name": "packTitle",
+                      "fill": "$text-primary",
+                      "content": "100 Question Pack",
+                      "fontFamily": "Inter",
+                      "fontSize": 15,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "lduTI",
+                      "name": "packSub",
+                      "fill": "$text-secondary",
+                      "content": "One-time purchase · never expires",
+                      "fontFamily": "Inter",
+                      "fontSize": 12
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "s3IYt2",
+                  "name": "packPricePill",
+                  "fill": "$accent-primary-soft",
+                  "cornerRadius": "$radius-pill",
+                  "padding": [
+                    8,
+                    14
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "saf5i",
+                      "name": "packPrice",
+                      "fill": "$accent-primary",
+                      "content": "€1.99",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "700"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "M9AZna",
+          "name": "btnsWrap",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 12,
+          "padding": [
+            18,
+            20,
+            30,
+            20
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "DWO6t",
+              "name": "ctaBtn",
+              "width": "fill_container",
+              "height": 52,
+              "fill": "$accent-pink",
+              "cornerRadius": 28,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#FF3D8F33",
+                "offset": {
+                  "x": 0,
+                  "y": 6
+                },
+                "blur": 16
+              },
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "cixKE",
+                  "name": "ctaTxt",
+                  "fill": "#FFFFFF",
+                  "content": "Subscribe — €29.99 / year",
+                  "fontFamily": "Inter",
+                  "fontSize": 16,
+                  "fontWeight": "700"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "Z3O1Lb",
+              "name": "restore",
+              "fill": "$accent-blue",
+              "content": "Restore purchases",
+              "fontFamily": "Inter",
+              "fontSize": 14,
+              "fontWeight": "600"
+            },
+            {
+              "type": "text",
+              "id": "cYTbR",
+              "name": "maybe",
+              "fill": "$text-tertiary",
+              "content": "Maybe tomorrow",
+              "fontFamily": "Inter",
+              "fontSize": 14,
+              "fontWeight": "500"
+            },
+            {
+              "type": "text",
+              "id": "wC5Hf",
+              "name": "legal",
+              "fill": "$text-tertiary",
+              "content": "Auto-renews until cancelled. Cancel anytime in Settings.",
+              "textAlign": "center",
+              "fontFamily": "Inter",
+              "fontSize": 11
+            }
+          ]
+        }
+      ]
     }
   ],
   "themes": {

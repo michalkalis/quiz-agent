@@ -425,7 +425,7 @@
                           "id": "ODL5j",
                           "name": "fpCount",
                           "fill": "$text-primary",
-                          "content": "70 of 100 free questions left",
+                          "content": "21 of 30 free questions left",
                           "fontFamily": "Inter",
                           "fontSize": 13,
                           "fontWeight": "600"
@@ -7197,7 +7197,7 @@
               "fill": "$text-secondary",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "You've used all 100 free questions this month.",
+              "content": "You've used all 30 free questions this month.",
               "textAlign": "center",
               "fontFamily": "Inter",
               "fontSize": 15,
@@ -10094,7 +10094,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "You've used today's free questions. Sign in to keep playing — and save your streak across devices.",
+                  "content": "You've used this month's free questions. Sign in to keep playing — and save your streak across devices.",
                   "lineHeight": 1.4,
                   "textAlign": "center",
                   "fontFamily": "Inter",
@@ -15992,7 +15992,7 @@
       "name": "note-87-paid-state",
       "width": 220,
       "height": 0,
-      "content": "Home free-plan counter (86.8 / #87): free state shown. Paid-user state: TBD in #87 — intentionally not designed yet. Reset interval placeholder ('days'), final interval TBD #87."
+      "content": "Home free-plan counter (86.8 / #87): free state shown. Paid-user state: TBD in #87 — intentionally not designed yet. Reset interval: calendar month (#93)."
     },
     {
       "type": "frame",

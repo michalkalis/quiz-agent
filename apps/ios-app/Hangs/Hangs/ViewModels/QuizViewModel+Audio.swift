@@ -142,32 +142,63 @@ extension QuizViewModel {
         !settings.isMuted && currentQuestionAudioUrl != nil
     }
 
-    /// Replay the current question's TTS on demand WITHOUT re-arming the
+    /// Replay/restart the current question's TTS on demand WITHOUT re-arming the
     /// think/answer countdown or auto-record (Decision 2 of the voice-answer
     /// screen fix). Unlike `playQuestionAudio(from:)`, this plays audio only —
     /// it never calls `startThinkingTimeCountdown()` / `startAnswerTimer()`, so
     /// a running countdown is left untouched and no new one is armed. Harmless
     /// no-op when muted (no audio to replay) or when no question URL is known.
+    ///
+    /// Tap-anywhere-on-question (founder, 2026-07-11): a tap DURING question TTS
+    /// (the initial read or an earlier replay) restarts playback from the top.
+    /// `isPlayingQuestionTTS` flags the in-flight TTS to stop; the playback run
+    /// is registered in the task bag so a newer tap cancels the older run before
+    /// stopping its audio — otherwise the interrupted run's tail would clear the
+    /// flag and re-arm the SpeechAnalyzer engine while the new AVPlayer playback
+    /// is still going (the engine + player conflict documented above).
     func replayQuestionAudio() async {
         guard !settings.isMuted, let urlString = currentQuestionAudioUrl else { return }
 
-        // Stop silence detection before TTS to avoid the AVAudioEngine + AVPlayer
-        // conflict (SpeechAnalyzer's RealtimeMessenger crashes if both run).
-        isPlayingQuestionTTS = true
-        stopSilenceDetectionListening()
-
-        do {
-            let audioData = try await networkService.downloadAudio(from: urlString)
-            _ = try await audioService.playOpusAudio(audioData)
-        } catch {
-            Logger.audio.warning("⚠️ Failed to replay question audio: \(error, privacy: .public)")
-            Self.reportAudioFailure(error, kind: "question-replay")
+        // Re-entrancy: neutralise any previous replay run FIRST so its tail
+        // can't interleave with this one, then stop the in-flight TTS so this
+        // tap restarts the question cleanly instead of layering playback.
+        taskBag.cancel(.questionReplay)
+        if isPlayingQuestionTTS {
+            await stopAnyPlayingAudio()
         }
 
-        // Restart silence detection (and barge-in) after TTS finishes — but
-        // deliberately NO timer re-arming, unlike playQuestionAudio's tail.
-        isPlayingQuestionTTS = false
-        await startSilenceDetectionListening()
+        let run = Task { [weak self] in
+            guard let self else { return }
+
+            // Stop silence detection before TTS to avoid the AVAudioEngine + AVPlayer
+            // conflict (SpeechAnalyzer's RealtimeMessenger crashes if both run).
+            isPlayingQuestionTTS = true
+            stopSilenceDetectionListening()
+
+            do {
+                let audioData = try await networkService.downloadAudio(from: urlString)
+                _ = try await audioService.playOpusAudio(audioData)
+            } catch {
+                Logger.audio.warning("⚠️ Failed to replay question audio: \(error, privacy: .public)")
+                Self.reportAudioFailure(error, kind: "question-replay")
+            }
+
+            // Cancelled = a newer tap (or teardown) took over: it owns the
+            // silence-detection restart, so only clear the flag — it must not
+            // leak `true` past the run, but re-arming the engine here would
+            // race the newer run's playback.
+            guard !Task.isCancelled else {
+                isPlayingQuestionTTS = false
+                return
+            }
+
+            // Restart silence detection (and barge-in) after TTS finishes — but
+            // deliberately NO timer re-arming, unlike playQuestionAudio's tail.
+            isPlayingQuestionTTS = false
+            await startSilenceDetectionListening()
+        }
+        taskBag.add(run, key: .questionReplay)
+        await run.value
     }
 
     /// Play feedback audio from URL, returning the playback duration

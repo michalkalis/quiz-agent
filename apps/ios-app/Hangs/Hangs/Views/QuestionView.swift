@@ -171,7 +171,7 @@ struct QuestionView: View {
         .accessibilityIdentifier("question.errorBanner")
     }
 
-    // MARK: - Audio strip (timers + replay + mute — bottom, next to the action row)
+    // MARK: - Audio strip (timers + mute — bottom, next to the action row)
 
     /// Fixed height reserved for the audio strip, so the timer chips fading in when the
     /// countdown starts never shift the pinned action buttons (#59.2 rationale, now at
@@ -179,10 +179,11 @@ struct QuestionView: View {
     private let audioStripHeight: CGFloat = 32
 
     /// G1 binding layout (#83 + #85, frames b8zObz/f9csl `audioStrip`): timer chips on
-    /// the left, the minimalistic replay link in the middle (Variant B — deliberately
-    /// NOT a full-size button), the mute toggle on the right. Rendered identically by
-    /// both the MCQ and the voice body, through `recording` too, so the driver finds
-    /// the audio controls on one fixed spot in every mode.
+    /// the left, the mute toggle on the right. Rendered identically by both the MCQ
+    /// and the voice body, through `recording` too, so the driver finds the audio
+    /// controls on one fixed spot in every mode. The replay link that used to sit in
+    /// the middle (#85 Variant B) became the tap-anywhere-on-question target
+    /// (`questionReplayTapTarget`) — founder decision, 2026-07-11.
     @ViewBuilder
     private var audioStrip: some View {
         if viewModel.quizState == .askingQuestion || viewModel.quizState == .recording {
@@ -196,8 +197,6 @@ struct QuestionView: View {
                     timerChip(label: "ANSWER", seconds: viewModel.answerTimerCountdown, color: Theme.Hangs.Colors.pink, textColor: Theme.Hangs.Colors.pinkText)
                 }
                 Spacer(minLength: 0)
-                replayLink
-                Spacer(minLength: 0)
                 muteButton
             }
             .padding(.horizontal, 24)
@@ -206,26 +205,36 @@ struct QuestionView: View {
         }
     }
 
-    /// Replay the question TTS via the timer-free audio path (Decision 2): never
-    /// restarts the auto-record/think countdown. Disabled when there's nothing to
-    /// replay (muted or no question audio URL) so it doesn't look interactive while
-    /// silently no-opping (#59.5).
-    private var replayLink: some View {
+    // MARK: - Tap-to-replay question block
+
+    /// Tap-anywhere-on-question replay (founder, 2026-07-11 — replaces the audio
+    /// strip's replay link, #85 Variant B): the whole question block is the replay
+    /// control. It calls the timer-free `replayQuestionAudio()` (Decision 2) — never
+    /// re-arms the think/answer countdown, and a tap during playback restarts the
+    /// question TTS from the top. Disabled when there's nothing to replay (muted or
+    /// no question audio URL, #59.5); the question must stay fully readable, so only
+    /// the speaker glyph fades, never the text.
+    private func questionReplayTapTarget(@ViewBuilder content: () -> some View) -> some View {
         Button {
             Task { await viewModel.replayQuestionAudio() }
         } label: {
-            HStack(spacing: 6) {
-                Image(systemName: "play.fill")
-                    .font(.system(size: 10, weight: .semibold))
-                Text("replay question")
-                    .font(.hangsBody(13, weight: .medium))
-            }
-            .foregroundColor(Theme.Hangs.Colors.blue)
+            content()
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .disabled(!viewModel.canReplayAudio)
-        .opacity(viewModel.canReplayAudio ? 1 : 0.4)
+        .accessibilityHint("Replays the question")
         .accessibilityIdentifier("question.replay")
+    }
+
+    /// Discoverability affordance for the tappable question block: a small muted
+    /// speaker glyph under the question, fading when replay is unavailable.
+    private var replaySpeakerGlyph: some View {
+        Image(systemName: "speaker.wave.2.fill")
+            .font(.system(size: 12, weight: .semibold))
+            .foregroundColor(Theme.Hangs.Colors.muted)
+            .opacity(viewModel.canReplayAudio ? 1 : 0.4)
+            .accessibilityHidden(true)
     }
 
     /// On-screen mute affordance (#85 — regressed in the #52 redesign, originally #13).
@@ -295,15 +304,20 @@ struct QuestionView: View {
                 .padding(.bottom, 6)
 
             ScrollView(.vertical, showsIndicators: false) {
-                HangsQuestionPrompt(
-                    text: question.question,
-                    barColor: Theme.Hangs.Colors.blue,
-                    textFont: .hangsQuestion
-                )
-                .accessibilityIdentifier("question.text")
-                .padding(.horizontal, 28)
-                .padding(.vertical, 12)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                questionReplayTapTarget {
+                    VStack(alignment: .leading, spacing: 10) {
+                        HangsQuestionPrompt(
+                            text: question.question,
+                            barColor: Theme.Hangs.Colors.blue,
+                            textFont: .hangsQuestion
+                        )
+                        .accessibilityIdentifier("question.text")
+                        replaySpeakerGlyph
+                    }
+                    .padding(.horizontal, 28)
+                    .padding(.vertical, 12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
             }
 
             MCQOptionPicker(
@@ -365,15 +379,21 @@ struct QuestionView: View {
                                 .padding(.horizontal, 24)
                         }
 
-                        // Question: Anton display, no left bar
-                        Text(question.question)
-                            .font(.hangsDisplay(28))
-                            .foregroundColor(Theme.Hangs.Colors.ink)
-                            .minimumScaleFactor(0.7)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                        // Question: Anton display, no left bar. The whole block is
+                        // the tap-to-replay target (see questionReplayTapTarget).
+                        questionReplayTapTarget {
+                            VStack(alignment: .leading, spacing: 10) {
+                                Text(question.question)
+                                    .font(.hangsDisplay(28))
+                                    .foregroundColor(Theme.Hangs.Colors.ink)
+                                    .minimumScaleFactor(0.7)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .accessibilityIdentifier("question.text")
+                                replaySpeakerGlyph
+                            }
                             .padding(.horizontal, 24)
-                            .accessibilityIdentifier("question.text")
+                        }
                     }
                     .frame(minHeight: geo.size.height, alignment: .top)
                 }

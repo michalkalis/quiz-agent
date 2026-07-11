@@ -75,4 +75,39 @@ struct QuizViewModelReplayContractTests {
         #expect(mockAudio.playOpusCallCount == 0)
         #expect(viewModel.autoAdvanceCountdown == 6)
     }
+
+    /// Tap-anywhere-on-question (founder, 2026-07-11): a second tap while the
+    /// question TTS is still playing must STOP the in-flight playback and start
+    /// it again from the top — not layer a second playback, and (the standing
+    /// Decision 2 contract) still never re-arm the think/answer timers. The
+    /// interrupted run is cancelled, so its tail must neither restore state over
+    /// the newer run nor leak `isPlayingQuestionTTS == true` past the restart.
+    @Test("tap during playback stops the in-flight TTS and restarts it, timers untouched")
+    func replayRestartsDuringPlayback() async {
+        let (viewModel, mockAudio) = makeResultScreenViewModel()
+        viewModel.currentQuestionAudioUrl = "https://example.com/q.mp3"
+        viewModel.autoAdvanceCountdown = 6
+
+        // First tap: kick off a replay and wait until it is genuinely mid-playback
+        // (the mock's playOpusAudio sleeps 0.1s while isPlayingQuestionTTS is true).
+        let firstTap = Task { await viewModel.replayQuestionAudio() }
+        var spins = 0
+        while mockAudio.playOpusCallCount == 0, spins < 10_000 {
+            await Task.yield()
+            spins += 1
+        }
+        #expect(mockAudio.playOpusCallCount == 1)
+        #expect(viewModel.isPlayingQuestionTTS)
+
+        // Second tap mid-playback: restart.
+        await viewModel.replayQuestionAudio()
+        await firstTap.value
+
+        #expect(mockAudio.stopPlaybackCallCount >= 1) // the in-flight TTS was stopped first
+        #expect(mockAudio.playOpusCallCount == 2) // ...and playback restarted from the top
+        #expect(viewModel.isPlayingQuestionTTS == false) // no leaked flag from the cancelled run
+        #expect(viewModel.autoAdvanceCountdown == 6) // timers never re-armed or cancelled
+        #expect(viewModel.thinkingTimeCountdown == 0)
+        #expect(viewModel.answerTimerCountdown == 0)
+    }
 }

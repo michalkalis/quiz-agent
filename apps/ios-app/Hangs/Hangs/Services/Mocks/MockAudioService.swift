@@ -49,6 +49,11 @@ import os
         var playOpusCallCount = 0
         var lastPlayedData: Data?
 
+        /// Stop spy (tap-to-replay restart contract): proves an in-flight TTS was
+        /// actually stopped before the restarted playback, which is otherwise
+        /// unobservable with the no-op audio stack.
+        var stopPlaybackCallCount = 0
+
         // Device management
         var availableInputDevices: [AudioDevice] = [.previewBuiltIn, .previewBluetooth]
         var currentInputDevice: AudioDevice?
@@ -115,6 +120,7 @@ import os
         }
 
         func stopPlayback() async {
+            stopPlaybackCallCount += 1
             isPlaying = false
         }
 

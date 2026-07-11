@@ -27,6 +27,7 @@ enum TaskKey: Hashable, Sendable {
     case bargeIn
     case commandListener
     case skipUndo
+    case questionReplay
 }
 
 /// Owns a set of `Task<Void, Never>` handles keyed by `TaskKey`. Adding a

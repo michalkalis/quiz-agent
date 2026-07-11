@@ -221,10 +221,10 @@ struct QuestionViewUnifiedChromeTests {
     }
 }
 
-// MARK: - Audio strip: replay + mute (#85, Variant B)
+// MARK: - Tap-to-replay question block + mute (#85 → tap-anywhere, founder 2026-07-11)
 
 @MainActor
-@Suite("QuestionView — audio strip replay + mute (#85)")
+@Suite("QuestionView — tap-to-replay question + mute (#85)")
 struct QuestionViewAudioStripTests {
     private func makeViewModel(question: Question) -> QuizViewModel {
         let vm = QuizViewModel(
@@ -237,8 +237,10 @@ struct QuestionViewAudioStripTests {
         return vm
     }
 
-    /// #85 acceptance: replay must exist on BOTH question modes — pre-#85 it existed
-    /// only in the voice body, leaving MCQ drivers with no way to re-hear the question.
+    /// #85 acceptance, carried over to the tap-anywhere design (founder, 2026-07-11):
+    /// a replay control must exist on BOTH question modes — pre-#85 it existed only in
+    /// the voice body, leaving MCQ drivers with no way to re-hear the question. The
+    /// control is now the tappable question block itself, not an audio-strip link.
     @Test("replay control is present in both MCQ and voice mode", arguments: [Question.previewMCQ, Question.preview])
     func replayPresentInBothModes(question: Question) async throws {
         let vm = makeViewModel(question: question)
@@ -247,6 +249,22 @@ struct QuestionViewAudioStripTests {
             let tree = try view.inspect()
             #expect(throws: Never.self) {
                 try tree.find(viewWithAccessibilityIdentifier: "question.replay")
+            }
+        }
+    }
+
+    /// Tap-anywhere-on-question: the replay control IS the question block — the
+    /// question text must sit inside the tap target in both modes, so tapping the
+    /// question (re)starts its TTS. If the id drifts back to a separate link this fails.
+    @Test("question text is inside the replay tap target", arguments: [Question.previewMCQ, Question.preview])
+    func questionTextInsideReplayTapTarget(question: Question) async throws {
+        let vm = makeViewModel(question: question)
+        let view = QuestionView(viewModel: vm)
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            let replay = try tree.find(viewWithAccessibilityIdentifier: "question.replay")
+            #expect(throws: Never.self) {
+                try replay.find(viewWithAccessibilityIdentifier: "question.text")
             }
         }
     }
@@ -299,8 +317,9 @@ struct QuestionViewReplayProcessingInspectorTests {
         return vm
     }
 
-    /// 59.5 (RS-14): the replay control must reflect capability — when no question audio
-    /// is available it must be disabled, never look interactive while silently no-opping.
+    /// 59.5 (RS-14): the replay control (now the tappable question block, founder
+    /// 2026-07-11) must reflect capability — when no question audio is available it
+    /// must be disabled, never look interactive while silently no-opping.
     @Test("replay button is disabled when no question audio URL is available (RS-14)")
     func replayDisabledWhenNoAudio() async throws {
         let vm = makeVoiceViewModel()

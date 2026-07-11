@@ -36,6 +36,12 @@ struct CompletionView: View {
                     breakdownCard
                         .padding(.horizontal, 20)
                         .padding(.top, 14)
+
+                    if let remaining = upsellRemaining {
+                        upsellCard(remaining: remaining)
+                            .padding(.horizontal, 20)
+                            .padding(.top, 14)
+                    }
                 }
                 .padding(.bottom, 12)
             }
@@ -45,6 +51,7 @@ struct CompletionView: View {
             ctaStack
         }
         .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
+        .task { await viewModel.refreshUsage() }
     }
 
     // MARK: - Final score card
@@ -114,6 +121,48 @@ struct CompletionView: View {
         }
         .padding(.horizontal, 18)
         .padding(.vertical, 14)
+    }
+
+    // MARK: - Upsell card (#94 third paywall touchpoint)
+
+    /// Soft upsell shown at the highest-intent moment (just finished a quiz)
+    /// when the free quota is nearly exhausted. Hidden for premium users and
+    /// whenever quota data is missing. Internal (like `summary`) so tests can
+    /// pin the visibility rule directly.
+    var upsellRemaining: Int? {
+        guard let usage = viewModel.usageInfo,
+              !usage.isPremium,
+              let remaining = usage.remaining,
+              remaining <= 5 else { return nil }
+        return remaining
+    }
+
+    private func upsellCard(remaining: Int) -> some View {
+        Button {
+            viewModel.presentPaywall()
+        } label: {
+            HangsCard(padding: EdgeInsets(top: 14, leading: 18, bottom: 14, trailing: 18)) {
+                HStack(spacing: Theme.Hangs.Spacing.sm) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("Running low on free questions")
+                            .font(.hangsBody(15, weight: .semibold))
+                            .foregroundColor(Theme.Hangs.Colors.ink)
+                        Text("^[\(remaining) free questions](inflect: true) left this month.")
+                            .font(.hangsBody(12))
+                            .foregroundColor(Theme.Hangs.Colors.muted)
+                    }
+                    Spacer()
+                    Text("Go Unlimited")
+                        .font(.hangsBody(13, weight: .bold))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(Capsule().fill(Theme.Hangs.Colors.pink))
+                }
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("completion.upsell")
     }
 
     // MARK: - CTA stack

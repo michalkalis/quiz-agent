@@ -121,3 +121,74 @@ struct CompletionViewBreakdownTests {
         }
     }
 }
+
+// MARK: - Soft upsell (#94 third paywall touchpoint)
+
+// Why these tests matter: the upsell must fire only at the "almost out" moment
+// for free users — showing it to premium users (or with healthy quota) would
+// nag paying customers; hiding it entirely loses the highest-intent conversion
+// touchpoint the founder approved 2026-07-11.
+@MainActor
+@Suite("CompletionView — free-quota upsell (#94)")
+struct CompletionViewUpsellTests {
+    private func makeUsage(isPremium: Bool, remaining: Int?) -> UsageInfo {
+        UsageInfo(
+            userId: "test-user",
+            isPremium: isPremium,
+            questionsUsed: 25,
+            questionsLimit: 30,
+            remaining: remaining,
+            resetsAt: "2099-01-01T08:00:00.000Z",
+            subscriptionStatus: isPremium ? "active" : "none",
+            creditBalance: 0
+        )
+    }
+
+    private func makeViewModel(usage: UsageInfo?) -> QuizViewModel {
+        let network = MockNetworkService()
+        network.stubbedUsage = usage
+        let vm = QuizViewModel(
+            networkService: network,
+            audioService: MockAudioService(),
+            persistenceStore: MockPersistenceStore()
+        )
+        vm.usageInfo = usage
+        vm.quizState = .finished
+        return vm
+    }
+
+    @Test("Upsell shows for a free user at 5 or fewer remaining questions")
+    func upsellVisibleAtThreshold() {
+        for remaining in [5, 3, 0] {
+            let view = CompletionView(viewModel: makeViewModel(usage: makeUsage(isPremium: false, remaining: remaining)))
+            #expect(view.upsellRemaining == remaining, "remaining=\(remaining) must show the upsell")
+        }
+    }
+
+    @Test("Upsell hidden above the threshold, for premium, and without quota data")
+    func upsellHiddenOutsideThreshold() {
+        #expect(CompletionView(viewModel: makeViewModel(usage: makeUsage(isPremium: false, remaining: 6))).upsellRemaining == nil)
+        #expect(CompletionView(viewModel: makeViewModel(usage: makeUsage(isPremium: true, remaining: 2))).upsellRemaining == nil)
+        #expect(CompletionView(viewModel: makeViewModel(usage: makeUsage(isPremium: false, remaining: nil))).upsellRemaining == nil)
+        #expect(CompletionView(viewModel: makeViewModel(usage: nil)).upsellRemaining == nil)
+    }
+
+    @Test("Upsell card renders 'Go Unlimited' in the hosted tree")
+    func upsellCardRenders() async throws {
+        let view = CompletionView(viewModel: makeViewModel(usage: makeUsage(isPremium: false, remaining: 3)))
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: Never.self) { try tree.find(text: "Go Unlimited") }
+            #expect(throws: Never.self) { try tree.find(text: "Running low on free questions") }
+        }
+    }
+
+    @Test("Upsell card absent from the hosted tree when quota is healthy")
+    func upsellCardAbsentWhenHealthy() async throws {
+        let view = CompletionView(viewModel: makeViewModel(usage: makeUsage(isPremium: false, remaining: 25)))
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: (any Error).self) { try tree.find(text: "Go Unlimited") }
+        }
+    }
+}

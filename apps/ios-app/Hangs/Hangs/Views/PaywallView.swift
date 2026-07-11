@@ -3,22 +3,44 @@
 //  Hangs
 //
 //  Two variants driven by RevenueCat offering availability (issue #93):
-//    u2ySy — normal paywall ("OUT OF QUESTIONS") shown when the offering loaded.
+//    z8TS6 — subscription paywall with plan picker (issue #94): Annual card
+//            pre-selected + Monthly card, one-time pack card, single CTA that
+//            purchases whichever plan is selected.
 //    PouwN — offline paywall ("CAN'T REACH THE STORE") shown when the offering
 //            is unavailable after a completed load attempt.
 //
-//  Renders RC Offerings: subscribe (monthly primary, annual secondary) plus a
-//  "buy pack" path for free users who don't want to subscribe. "Restore
-//  purchase" is subscription-only — the consumable pack has no StoreKit
-//  restore; its balance lives server-side in the credit ledger.
+//  Prices always come from RC `displayPrice` (locale-formatted) — never
+//  hardcoded (founder decision 2026-07-11). "Restore purchases" is
+//  subscription-only — the consumable pack has no StoreKit restore; its
+//  balance lives server-side in the credit ledger.
 //
 
 import SwiftUI
+
+/// The subscription plan highlighted in the z8TS6 plan picker.
+enum PaywallPlan {
+    case annual
+    case monthly
+}
 
 struct PaywallView: View {
     @ObservedObject var storeManager: StoreManager
     let limitError: QuotaLimitError?
     let onDismiss: () -> Void
+
+    @State private var selectedPlan: PaywallPlan
+
+    init(
+        storeManager: StoreManager,
+        limitError: QuotaLimitError?,
+        onDismiss: @escaping () -> Void,
+        initialPlan: PaywallPlan = .annual
+    ) {
+        self.storeManager = storeManager
+        self.limitError = limitError
+        self.onDismiss = onDismiss
+        _selectedPlan = State(initialValue: initialPlan)
+    }
 
     // Offline: load attempt completed but no offering returned (store unreachable).
     var isOffline: Bool {
@@ -27,11 +49,11 @@ struct PaywallView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HangsBrandRow()
-
             if isOffline {
+                HangsBrandRow()
                 offlineBody
             } else {
+                HangsBrandRow { closeButton }
                 paywallBody
             }
         }
@@ -39,13 +61,25 @@ struct PaywallView: View {
         .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
     }
 
-    // MARK: - u2ySy — Out of Questions
+    private var closeButton: some View {
+        Button(action: onDismiss) {
+            Image(systemName: "xmark")
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundColor(Theme.Hangs.Colors.muted)
+                .frame(width: 32, height: 32)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(String(localized: "Close", comment: "Accessibility label for the paywall close (X) button"))
+        .accessibilityIdentifier("paywall-close-x-button")
+    }
+
+    // MARK: - z8TS6 — Subscription paywall (plan picker)
 
     private var paywallBody: some View {
         ScrollView {
             VStack(spacing: Theme.Hangs.Spacing.xl) {
                 paywallIconCircle
-                    .padding(.top, Theme.Hangs.Spacing.xl)
+                    .padding(.top, Theme.Hangs.Spacing.lg)
 
                 paywallHeroBlock
 
@@ -53,7 +87,7 @@ struct PaywallView: View {
                     CountdownPill(resetDate: resetDate)
                 }
 
-                featureCard
+                planPicker
 
                 paywallCTAStack
             }
@@ -66,28 +100,18 @@ struct PaywallView: View {
         ZStack {
             Circle()
                 .fill(Theme.Hangs.Colors.pinkSoft)
-                .frame(width: 120, height: 120)
+                .frame(width: 104, height: 104)
             Image(systemName: "infinity")
-                .font(.system(size: 48, weight: .medium))
+                .font(.system(size: 44, weight: .medium))
                 .foregroundColor(Theme.Hangs.Colors.pink)
         }
         .accessibilityHidden(true)
         .accessibilityIdentifier("paywall.icon")
     }
 
-    // Proactive entry (#93 subscription IAP): limitError nil means the user
-    // opened the paywall from Home/Settings, not by hitting the 429 quota —
-    // pitch the upgrade instead of claiming they ran out.
-    private var headline: String {
-        if limitError == nil {
-            return String(localized: "GO\nUNLIMITED", comment: "Paywall headline when opened proactively from Home/Settings (quota not hit)")
-        }
-        return String(localized: "OUT OF\nQUESTIONS", comment: "Paywall headline when the monthly free-question limit was hit")
-    }
-
     private var paywallHeroBlock: some View {
         VStack(spacing: 8) {
-            Text(headline)
+            Text("GO\nUNLIMITED")
                 .font(.hangsDisplayMD)
                 .foregroundColor(Theme.Hangs.Colors.ink)
                 .multilineTextAlignment(.center)
@@ -108,6 +132,9 @@ struct PaywallView: View {
         }
     }
 
+    // Proactive entry (#93 subscription IAP): limitError nil means the user
+    // opened the paywall from Home/Settings, not by hitting the 429 quota —
+    // pitch the upgrade instead of claiming they ran out.
     private var limitMessage: String {
         if let limit = limitError {
             return String(localized: "You've used all \(limit.questionsLimit) free questions this month.", comment: "Paywall subtitle when the monthly free-question limit is known")
@@ -115,90 +142,209 @@ struct PaywallView: View {
         return String(localized: "Unlimited questions for every drive, no monthly cap.", comment: "Paywall subtitle when opened proactively from Home/Settings (quota not hit)")
     }
 
-    private var featureCard: some View {
-        VStack(spacing: 0) {
-            Text("unlimited")
-                .font(.hangsMono(11, weight: .medium))
-                .foregroundColor(Theme.Hangs.Colors.pink)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, Theme.Hangs.Spacing.md)
-                .padding(.vertical, Theme.Hangs.Spacing.sm)
-                .accessibilityIdentifier("paywall.featureCard.label")
+    // MARK: - Plan picker
 
-            HangsDivider()
-            featureRow("Unlimited questions, every day")
-            HangsDivider()
-            featureRow("Never wait for the monthly reset")
-            HangsDivider()
-            featureRow("Cancel anytime")
+    /// Selection resilient to partial offerings: if the selected plan's product
+    /// is missing, fall back to the other one (callers must handle partial
+    /// availability — see PurchasableOfferings).
+    var effectivePlan: PaywallPlan {
+        switch selectedPlan {
+        case .annual:
+            return storeManager.offerings?.annual != nil ? .annual : .monthly
+        case .monthly:
+            return storeManager.offerings?.monthly != nil ? .monthly : .annual
         }
-        .background(
-            RoundedRectangle(cornerRadius: Theme.Hangs.Radius.card, style: .continuous)
-                .fill(Theme.Hangs.Colors.bgCard)
-        )
-        .hangsShadow(Theme.Hangs.Shadow.card)
-        .accessibilityIdentifier("paywall.featureCard")
     }
 
-    private func featureRow(_ text: LocalizedStringKey) -> some View {
-        HStack(spacing: Theme.Hangs.Spacing.sm) {
-            Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 20))
-                .foregroundColor(Theme.Hangs.Colors.greenCheck)
-                .accessibilityHidden(true)
-            Text(text)
-                .font(.hangsBody(15))
-                .foregroundColor(Theme.Hangs.Colors.ink)
-            Spacer()
+    private var selectedProduct: PurchasableProduct? {
+        switch effectivePlan {
+        case .annual: return storeManager.offerings?.annual
+        case .monthly: return storeManager.offerings?.monthly
         }
-        .padding(.horizontal, Theme.Hangs.Spacing.md)
-        .padding(.vertical, Theme.Hangs.Spacing.sm)
     }
+
+    private var planPicker: some View {
+        VStack(spacing: 10) {
+            if let annual = storeManager.offerings?.annual {
+                planCard(
+                    title: "Annual",
+                    price: "\(annual.displayPrice) / year",
+                    badge: "SAVE 50%",
+                    isSelected: effectivePlan == .annual
+                ) {
+                    selectedPlan = .annual
+                }
+                .accessibilityIdentifier("paywall-plan-annual")
+            }
+
+            if let monthly = storeManager.offerings?.monthly {
+                planCard(
+                    title: "Monthly",
+                    price: "\(monthly.displayPrice) / month",
+                    badge: nil,
+                    isSelected: effectivePlan == .monthly
+                ) {
+                    selectedPlan = .monthly
+                }
+                .accessibilityIdentifier("paywall-plan-monthly")
+            }
+
+            if let pack = storeManager.offerings?.pack {
+                Text("or top up without subscribing")
+                    .font(.hangsBody(12, weight: .medium))
+                    .foregroundColor(Theme.Hangs.Colors.mutedFaint)
+                    .padding(.top, 2)
+
+                packCard(pack)
+            }
+        }
+    }
+
+    private func planCard(
+        title: LocalizedStringKey,
+        price: LocalizedStringKey,
+        badge: LocalizedStringKey?,
+        isSelected: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: Theme.Hangs.Spacing.sm) {
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack(spacing: 8) {
+                        Text(title)
+                            .font(.hangsBody(16, weight: .bold))
+                            .foregroundColor(Theme.Hangs.Colors.ink)
+                        if let badge {
+                            Text(badge)
+                                .font(.hangsBody(10, weight: .bold))
+                                .kerning(0.5)
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 3)
+                                .background(Capsule().fill(Theme.Hangs.Colors.pink))
+                        }
+                    }
+                    Text(price)
+                        .font(.hangsBody(13))
+                        .foregroundColor(Theme.Hangs.Colors.muted)
+                }
+                Spacer()
+                planRadio(isSelected: isSelected)
+            }
+            .padding(.horizontal, Theme.Hangs.Spacing.md)
+            .padding(.vertical, 14)
+            .background(
+                RoundedRectangle(cornerRadius: Theme.Hangs.Radius.cardInner, style: .continuous)
+                    .fill(Theme.Hangs.Colors.bgCard)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: Theme.Hangs.Radius.cardInner, style: .continuous)
+                    .strokeBorder(
+                        isSelected ? Theme.Hangs.Colors.pink : Theme.Hangs.Colors.subtleBorder,
+                        lineWidth: isSelected ? 2 : 1.5
+                    )
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+
+    private func planRadio(isSelected: Bool) -> some View {
+        ZStack {
+            if isSelected {
+                Circle()
+                    .fill(Theme.Hangs.Colors.pink)
+                Image(systemName: "checkmark")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(.white)
+            } else {
+                Circle()
+                    .strokeBorder(Theme.Hangs.Colors.subtleBorder, lineWidth: 1.5)
+            }
+        }
+        .frame(width: 24, height: 24)
+        .accessibilityHidden(true)
+    }
+
+    /// One-time consumable pack — tapping the card purchases directly (the
+    /// primary CTA is subscription-only per z8TS6).
+    private func packCard(_ pack: PurchasableProduct) -> some View {
+        Button {
+            Task { await storeManager.purchase(productID: pack.id) }
+        } label: {
+            HStack(spacing: Theme.Hangs.Spacing.sm) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("100 Question Pack")
+                        .font(.hangsBody(15, weight: .semibold))
+                        .foregroundColor(Theme.Hangs.Colors.ink)
+                    Text("One-time purchase · never expires")
+                        .font(.hangsBody(12))
+                        .foregroundColor(Theme.Hangs.Colors.muted)
+                }
+                Spacer()
+                Text(verbatim: pack.displayPrice)
+                    .font(.hangsBody(14, weight: .bold))
+                    .foregroundColor(Theme.Hangs.Colors.accentPrimary)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background(Capsule().fill(Theme.Hangs.Colors.accentPrimarySoft))
+            }
+            .padding(.horizontal, Theme.Hangs.Spacing.md)
+            .padding(.vertical, 14)
+            .background(
+                RoundedRectangle(cornerRadius: Theme.Hangs.Radius.cardInner, style: .continuous)
+                    .fill(Theme.Hangs.Colors.bgCard)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: Theme.Hangs.Radius.cardInner, style: .continuous)
+                    .strokeBorder(Theme.Hangs.Colors.subtleBorder, lineWidth: 1.5)
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("paywall-purchase-pack-button")
+    }
+
+    // MARK: - CTA stack
 
     private var paywallCTAStack: some View {
         VStack(spacing: Theme.Hangs.Spacing.xs) {
-            if let monthly = storeManager.offerings?.monthly {
+            if let product = selectedProduct {
                 // #56: title param is LocalizedStringKey; pass the interpolated
-                // literal directly so the compiler extracts "Unlock Unlimited — %@"
+                // literal directly so the compiler extracts "Subscribe — %@ / year"
                 // (the displayPrice is a runtime placeholder, not translatable).
-                HangsPrimaryButton(
-                    title: "Unlock Unlimited — \(monthly.displayPrice)/mo",
-                    icon: "lock.open.fill",
-                    isLoading: storeManager.isLoading
-                ) {
-                    Task { await storeManager.purchase(productID: monthly.id) }
-                }
-                .accessibilityIdentifier("paywall-purchase-button")
-
-                if let annual = storeManager.offerings?.annual {
-                    HangsGhostButton(
-                        title: "Save more — \(annual.displayPrice)/yr",
-                        color: Theme.Hangs.Colors.blue
+                if effectivePlan == .annual {
+                    HangsPrimaryButton(
+                        title: "Subscribe — \(product.displayPrice) / year",
+                        isLoading: storeManager.isLoading,
+                        height: 52
                     ) {
-                        Task { await storeManager.purchase(productID: annual.id) }
+                        Task { await storeManager.purchase(productID: product.id) }
                     }
-                    .accessibilityIdentifier("paywall-purchase-annual-button")
+                    .accessibilityIdentifier("paywall-purchase-button")
+                } else {
+                    HangsPrimaryButton(
+                        title: "Subscribe — \(product.displayPrice) / month",
+                        isLoading: storeManager.isLoading,
+                        height: 52
+                    ) {
+                        Task { await storeManager.purchase(productID: product.id) }
+                    }
+                    .accessibilityIdentifier("paywall-purchase-button")
                 }
             } else {
                 HangsPrimaryButton(
-                    title: "Unlock Unlimited",
-                    icon: "lock.open.fill",
-                    isLoading: true
+                    title: "Subscribe",
+                    isLoading: true,
+                    height: 52
                 ) {}
                     .accessibilityIdentifier("paywall-purchase-button")
             }
 
-            if let pack = storeManager.offerings?.pack {
-                HangsGhostButton(
-                    title: "Buy +100 Questions — \(pack.displayPrice)",
-                    color: Theme.Hangs.Colors.muted
-                ) {
-                    Task { await storeManager.purchase(productID: pack.id) }
-                }
-                .accessibilityIdentifier("paywall-purchase-pack-button")
-            }
-
-            HangsGhostButton(title: "Restore purchase", color: Theme.Hangs.Colors.blue) {
+            HangsGhostButton(
+                title: "Restore purchases",
+                color: Theme.Hangs.Colors.blue,
+                font: .hangsBody(14, weight: .semibold)
+            ) {
                 Task { await storeManager.restorePurchases() }
             }
             .accessibilityIdentifier("paywall-restore-button")
@@ -218,6 +364,14 @@ struct PaywallView: View {
                     .foregroundColor(Theme.Hangs.Colors.error)
                     .multilineTextAlignment(.center)
             }
+
+            // App Store review requirement: auto-renew disclosure (z8TS6 legal).
+            Text("Auto-renews until cancelled. Cancel anytime in Settings.")
+                .font(.hangsBody(11))
+                .foregroundColor(Theme.Hangs.Colors.mutedFaint)
+                .multilineTextAlignment(.center)
+                .padding(.top, 2)
+                .accessibilityIdentifier("paywall.legal")
         }
     }
 
@@ -300,21 +454,17 @@ private struct CountdownPill: View {
     @State private var timer: Timer?
 
     var body: some View {
-        HStack(spacing: 6) {
-            Image(systemName: "clock")
-                .font(.system(size: 13, weight: .medium))
-                .accessibilityHidden(true)
-            Text(String(localized: "Free questions reset in \(timeRemaining)", comment: "Countdown pill: time until free questions reset"))
-                .font(.hangsBody(13, weight: .medium))
-        }
-        .foregroundColor(Theme.Hangs.Colors.muted)
-        .padding(.horizontal, 14)
-        .padding(.vertical, 8)
-        .background(Capsule().fill(Theme.Hangs.Colors.bgCard))
-        .overlay(Capsule().stroke(Theme.Hangs.Colors.subtleBorder, lineWidth: 1))
-        .onAppear { startTimer() }
-        .onDisappear { timer?.invalidate() }
-        .accessibilityIdentifier("paywall.countdownPill")
+        Text(String(localized: "Free questions reset in \(timeRemaining)", comment: "Countdown pill: time until free questions reset"))
+            .font(.hangsMono(10, weight: .medium))
+            .kerning(1)
+            .textCase(.uppercase)
+            .foregroundColor(Theme.Hangs.Colors.bg)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 6)
+            .background(Capsule().fill(Theme.Hangs.Colors.ink))
+            .onAppear { startTimer() }
+            .onDisappear { timer?.invalidate() }
+            .accessibilityIdentifier("paywall.countdownPill")
     }
 
     private func startTimer() {

@@ -8,8 +8,8 @@
 //  Chosen variants and rationale:
 //
 //  A. limitErrorWithCountdown — QuotaLimitError supplied, product loaded ($4.99).
-//     The CountdownToReset subview (HStack with clock Image + Text) is present
-//     in the Mirror tree, and PrimaryButton carries the display-price string.
+//     The CountdownPill subview is present in the Mirror tree, and the CTA
+//     PrimaryButton carries the display-price string ("Subscribe — $4.99 / month").
 //
 //  B. noLimitErrorProductLoading — limitError nil, product nil (isLoading: true).
 //     CountdownToReset is entirely absent from the dump, and PrimaryButton uses
@@ -68,8 +68,8 @@ struct PaywallViewSnapshotTests {
     // MARK: - Variant A: limitError present, product loaded
 
     /// PaywallView with:
-    ///   • limitError supplied → CountdownToReset HStack present in dump
-    ///   • StoreManager.product set → PrimaryButton carries "Unlock Unlimited — $4.99"
+    ///   • limitError supplied → CountdownPill present in dump
+    ///   • StoreManager offering set (monthly only) → CTA carries "Subscribe — $4.99 / month"
     @Test("Snapshot: limit-error with countdown and product loaded")
     func limitErrorWithCountdown() async {
         let offerings = PurchasableOfferings(

@@ -1,6 +1,6 @@
 # Issue #94 — Paywall: sync PaywallView to z8TS6 design (plan picker)
 
-**Triage:** enhancement · ready-for-agent (1 session)
+**Triage:** enhancement · done 2026-07-11 (see Resolution below)
 
 **Created:** 2026-07-11 · **Source:** founder report "implementacia neni v syncu s pencil designom" → diagnosis workflow 2026-07-11
 
@@ -33,6 +33,14 @@ The z8TS6 design:
 
 1. RC `displayPrice` is locale-formatted and may differ from the €-hardcoded design prices — accept localized prices? (Recommended: yes, RC price is the truth.)
 2. Ship a third paywall touchpoint — CompletionView soft upsell when ≤5 free questions remain (highest-intent moment)?
+
+## Resolution (2026-07-11)
+
+- `paywallBody` rebuilt to z8TS6: `PaywallPlan` selection state (annual pre-selected), Annual/Monthly tappable cards (pink stroke + check radio vs grey + hollow), "SAVE 50%" badge, "or top up without subscribing" + pack card (purple price pill, tap = direct purchase), single CTA "Subscribe — {RC displayPrice} / year|month", auto-renew legal line, close X in brand row. Headline unified to "GO UNLIMITED" (z8TS6); quota-hit vs proactive still differ via subtitle + reset pill (restyled to dark mono capsule). Feature card ("unlimited" checklist) dropped — not in z8TS6. Offline PouwN variant untouched.
+- Open Q1 answered: **localized RC prices accepted** (founder, in-session). Q2 answered: **yes** — CompletionView soft upsell shipped (free user, ≤5 remaining → "Running low…" card + Go Unlimited → presentPaywall; `refreshUsage()` on completion appear; `MockNetworkService.stubbedUsage` added for tests).
+- Pencil: stale frame nidTF (Quiz-EndConfirm) deleted via MCP; **[HUMAN]** founder ⌘S-save pending.
+- Tests: PaywallViewInspectorTests rewritten for z8TS6 (plan cards, CTA suffix per selection incl. `initialPlan` injection + partial-offerings fallback, legal line, offline exclusions); CompletionView upsell suite added; 29/29 targeted green; 2 paywall `.dump` snapshot baselines re-recorded (intentional redesign).
+- Note: new UI strings enter `Localizable.xcstrings` on next Xcode IDE build (CLI doesn't write back — #56 known caveat).
 
 ## References
 

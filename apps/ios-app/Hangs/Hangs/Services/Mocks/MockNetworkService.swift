@@ -19,6 +19,9 @@ final class MockNetworkService: NetworkServiceProtocol {
     var mockTextInputResponse: QuizResponse?
     var mockAudioData: Data?
     var shouldFail = false
+    /// When set, `getUsage` returns this instead of the default fixture — lets
+    /// tests pin the quota state (e.g. the ≤5-remaining completion upsell, #94).
+    var stubbedUsage: UsageInfo?
 
     // Capture properties for unit-test assertions (additive — no behaviour change)
     var capturedTextInputAudio: Bool?
@@ -142,6 +145,9 @@ final class MockNetworkService: NetworkServiceProtocol {
     func getUsage(userId: String) async throws -> UsageInfo {
         if shouldFail {
             throw NetworkError.invalidResponse
+        }
+        if let stubbedUsage {
+            return stubbedUsage
         }
         return UsageInfo(
             userId: userId,

@@ -338,3 +338,70 @@ struct SilenceDetectionServiceTests {
         }
     }
 }
+
+// MARK: - VoiceCommandAvailabilityTests (#77 device fix — fail-loud plumbing)
+
+/// WHY: on device, voice commands silently never worked — every setup failure
+/// (missing model assets, analyzer.start throw, nil format) was swallowed.
+/// These tests pin the fail-loud contract: the flag starts `.unknown`, every
+/// failure path routes through `markCommandsUnavailable` and becomes visible,
+/// and the launch-time `prepareAssets()` always resolves to a terminal state.
+/// Real recognition is NOT testable on the simulator (supportedLocales is
+/// empty there) — device verification is gate 77.15.
+@Suite("SilenceDetectionService — command availability (fail-loud)")
+@MainActor
+struct VoiceCommandAvailabilityTests {
+
+    @Test("availability starts .unknown before prepareAssets resolves")
+    func initialAvailabilityIsUnknown() {
+        guard #available(iOS 26, *) else {
+            withKnownIssue("SilenceDetectionService requires iOS 26+") {}
+            return
+        }
+        let service = SilenceDetectionService()
+        #expect(service.commandAvailability == .unknown)
+    }
+
+    @Test("markCommandsUnavailable (the seam every failure path uses) flips the flag with its reason")
+    func markUnavailableSetsFlagWithReason() {
+        guard #available(iOS 26, *) else {
+            withKnownIssue("SilenceDetectionService requires iOS 26+") {}
+            return
+        }
+        let service = SilenceDetectionService()
+        service.markCommandsUnavailable(reason: "SpeechAnalyzer start failed: boom")
+        #expect(service.commandAvailability == .unavailable(reason: "SpeechAnalyzer start failed: boom"))
+    }
+
+    @Test("prepareAssets resolves to a terminal state — never left .unknown")
+    func prepareAssetsResolvesTerminalState() async {
+        guard #available(iOS 26, *) else {
+            withKnownIssue("SilenceDetectionService requires iOS 26+") {}
+            return
+        }
+        let service = SilenceDetectionService()
+        await service.prepareAssets()
+        // On the simulator supportedLocales is empty → .unavailable; on a device
+        // with assets it would be .ready. Either way it must not stay .unknown —
+        // a hung/unset flag would reproduce the silent-failure bug.
+        #expect(service.commandAvailability != .unknown)
+    }
+
+    @Test("prepareAssets does not overwrite an already-resolved unavailable state (one-time semantics)")
+    func prepareAssetsIsOneTime() async {
+        guard #available(iOS 26, *) else {
+            withKnownIssue("SilenceDetectionService requires iOS 26+") {}
+            return
+        }
+        let service = SilenceDetectionService()
+        service.markCommandsUnavailable(reason: "already resolved")
+        await service.prepareAssets()
+        #expect(service.commandAvailability == .unavailable(reason: "already resolved"))
+    }
+
+    @Test("mock defaults to .ready so command-listener tests exercise the armed path")
+    func mockDefaultsToReady() {
+        let mock = MockSilenceDetectionService()
+        #expect(mock.commandAvailability == .ready)
+    }
+}

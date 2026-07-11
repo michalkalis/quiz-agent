@@ -29,6 +29,21 @@ enum SilenceEvent: Sendable, Equatable {
     case silenceAfterSpeech(duration: TimeInterval)
 }
 
+/// Fail-loud availability of the on-device English voice-command transcriber
+/// (#77 device fix). Every failure that used to be swallowed (missing model
+/// assets, `analyzer.start` throw, nil audio format, transcriber stream error)
+/// now lands here so the UI/diagnostics can see WHY the app degraded to buttons.
+enum VoiceCommandAvailability: Sendable, Equatable {
+    /// Not yet determined (prepareAssets hasn't finished).
+    case unknown
+    /// en-US model assets are being downloaded/installed.
+    case installingAssets
+    /// Recognizer assets installed — commands can work.
+    case ready
+    /// Commands cannot work; the app is button-only. Reason is human-readable.
+    case unavailable(reason: String)
+}
+
 // MARK: - Protocol
 
 @MainActor
@@ -44,6 +59,10 @@ protocol SilenceDetectionServiceProtocol: AnyObject, Sendable {
     /// answer path stays Slovak ElevenLabs — this stream is command-only and is
     /// consumed only inside a listening window (never during recording).
     var commandTranscripts: AsyncStream<String> { get }
+
+    /// Current availability of the voice-command recognizer (fail-loud, #77).
+    /// `.unavailable` means the app has degraded to the manual button flow.
+    var commandAvailability: VoiceCommandAvailability { get }
 
     func startListening() async
     func stopListening()
@@ -73,6 +92,10 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     private var inputContinuation: AsyncStream<AnalyzerInput>.Continuation?
 
     private var isTTSPlaybackActive = false
+
+    /// Fail-loud command availability (#77). Written by `prepareAssets()` and by
+    /// every failure path that previously swallowed its error silently.
+    private(set) var commandAvailability: VoiceCommandAvailability = .unknown
 
     private enum State {
         case idle
@@ -107,6 +130,58 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
         silenceContinuation.finish()
         bargeInContinuation.finish()
         commandContinuation.finish()
+    }
+
+    // MARK: - Asset preparation (#77 device fix)
+
+    /// One-time launch check/install of the on-device en-US SpeechTranscriber
+    /// model assets. Without installed assets the transcriber never produces a
+    /// result on a real device — the root cause of "commands never worked".
+    /// Called once from AppState at launch (NOT from startListening, which runs
+    /// per listening window); safe to re-enter (no-op after the first resolution).
+    func prepareAssets() async {
+        guard case .unknown = commandAvailability else { return }
+
+        let locale = Locale(identifier: "en-US")
+        let supported = await SpeechTranscriber.supportedLocales
+        guard supported.contains(where: { $0.identifier(.bcp47) == locale.identifier(.bcp47) }) else {
+            markCommandsUnavailable(
+                reason: "en-US not in SpeechTranscriber.supportedLocales (\(supported.count) supported)"
+            )
+            return
+        }
+
+        let installed = await SpeechTranscriber.installedLocales
+        if installed.contains(where: { $0.identifier(.bcp47) == locale.identifier(.bcp47) }) {
+            commandAvailability = .ready
+            Logger.voice.info("🎙️ Voice commands: en-US assets already installed")
+            return
+        }
+
+        commandAvailability = .installingAssets
+        Logger.voice.info("🎙️ Voice commands: en-US assets missing — downloading")
+        let transcriber = SpeechTranscriber(
+            locale: locale,
+            transcriptionOptions: [],
+            reportingOptions: [],
+            attributeOptions: []
+        )
+        do {
+            if let request = try await AssetInventory.assetInstallationRequest(supporting: [transcriber]) {
+                try await request.downloadAndInstall()
+            }
+            commandAvailability = .ready
+            Logger.voice.info("🎙️ Voice commands: en-US assets installed")
+        } catch {
+            markCommandsUnavailable(reason: "Asset install failed: \(error.localizedDescription)")
+        }
+    }
+
+    /// Fail-loud seam shared by all failure paths: flips the flag the UI reads
+    /// and logs at error level so degrading to buttons is never silent.
+    func markCommandsUnavailable(reason: String) {
+        commandAvailability = .unavailable(reason: reason)
+        Logger.voice.error("🎙️ Voice commands UNAVAILABLE (degrading to buttons): \(reason, privacy: .public)")
     }
 
     // MARK: - Lifecycle
@@ -147,7 +222,7 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
         guard let analyzerFormat = await SpeechAnalyzer.bestAvailableAudioFormat(
             compatibleWith: [transcriber, detector]
         ) else {
-            Logger.voice.error("🔇 SilenceDetection: no compatible audio format")
+            markCommandsUnavailable(reason: "No compatible audio format for SpeechAnalyzer")
             return
         }
 
@@ -213,8 +288,17 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
             }
         }
 
-        analyzerTask = Task {
-            try? await analyzer.start(inputSequence: inputSequence)
+        // Fail loud (#77): a swallowed throw here was the silent death of both
+        // VAD and voice commands on device. Cancellation (normal teardown via
+        // stopListening) is not a failure.
+        analyzerTask = Task { [weak self] in
+            do {
+                try await analyzer.start(inputSequence: inputSequence)
+            } catch is CancellationError {
+                // normal stopListening() teardown
+            } catch {
+                self?.markCommandsUnavailable(reason: "SpeechAnalyzer start failed: \(error.localizedDescription)")
+            }
         }
 
         // NOTE: SpeechDetector delivers results on its own queue; route back to
@@ -235,9 +319,10 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
 
         // Command listener (77.5): consume the paired transcriber's FINALIZED
         // English results and hand them to the view-model's screen-scoped matcher.
-        // Defensive (E-fallback): any throw from the transcriber stream is logged
-        // and ends the loop — VAD is unaffected and the app degrades to the manual
-        // mic-button/tap flow rather than crashing.
+        // Defensive (E-fallback): any throw from the transcriber stream flips
+        // `commandAvailability` (fail-loud, #77) and ends the loop — VAD is
+        // unaffected and the app degrades to the manual mic-button/tap flow
+        // rather than crashing.
         transcriptionTask = Task { [weak self] in
             do {
                 for try await result in transcriber.results {
@@ -249,8 +334,12 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
                         _ = self?.commandContinuation.yield(text)
                     }
                 }
+            } catch is CancellationError {
+                // normal stopListening() teardown
             } catch {
-                Logger.voice.error("🎙️ Command transcriber error (degrading to buttons): \(error, privacy: .public)")
+                await MainActor.run { [weak self] in
+                    self?.markCommandsUnavailable(reason: "Command transcriber failed: \(error.localizedDescription)")
+                }
             }
         }
 

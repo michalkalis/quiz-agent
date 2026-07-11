@@ -531,6 +531,26 @@ struct SettingsView: View {
                     )
                     .allowsHitTesting(false)
                 }
+
+                hairline
+
+                // #77 diagnostic: recognizer/asset status of the on-device
+                // voice-command transcriber (fail-loud flag, debug-only).
+                HangsValueRow(label: "Voice commands", value: voiceCommandsDiagnostic)
+                    .accessibilityIdentifier("settings-voice-commands-status")
+            }
+        }
+
+        /// Debug-only readout of `SilenceDetectionService.commandAvailability`.
+        private var voiceCommandsDiagnostic: String {
+            guard let service = appState.silenceDetectionService else {
+                return "unavailable (requires iOS 26+)"
+            }
+            switch service.commandAvailability {
+            case .unknown: return "checking…"
+            case .installingAssets: return "installing assets…"
+            case .ready: return "ready"
+            case .unavailable(let reason): return "unavailable — \(reason)"
             }
         }
     #endif

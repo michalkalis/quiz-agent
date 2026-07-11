@@ -19,6 +19,10 @@ final class MockSilenceDetectionService: SilenceDetectionServiceProtocol {
     private let bargeInContinuation: AsyncStream<Void>.Continuation
     private let commandContinuation: AsyncStream<String>.Continuation
 
+    /// Defaults to `.ready` so command-listener tests exercise the armed path;
+    /// settable so #77 fail-loud tests can drive the unavailable state.
+    var commandAvailability: VoiceCommandAvailability = .ready
+
     var isListening = false
     var ttsPlaybackActive = false
     var startListeningCallCount = 0

@@ -57,7 +57,13 @@ final class AppState: ObservableObject {
 
         // Silence detection / barge-in require iOS 26+ SpeechDetector
         if #available(iOS 26, *) {
-            self.silenceDetectionService = SilenceDetectionService()
+            let silenceService = SilenceDetectionService()
+            self.silenceDetectionService = silenceService
+            // One-time launch prepare (#77 device fix): check/download the
+            // on-device en-US SpeechTranscriber model assets. Without them the
+            // command transcriber never yields a result on a real device.
+            // Non-blocking; any failure flips `commandAvailability` (fail loud).
+            Task { await silenceService.prepareAssets() }
         } else {
             self.silenceDetectionService = nil
         }

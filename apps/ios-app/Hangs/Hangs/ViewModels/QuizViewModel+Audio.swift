@@ -225,6 +225,17 @@ extension QuizViewModel {
         }
     }
 
+    /// Toggle mute and make it take effect immediately: the `isMuted` guards in
+    /// the play paths only gate *starting* playback, so muting mid-read must also
+    /// stop the in-flight TTS (founder bug 2026-07-11). The interrupted play run's
+    /// tail (silence-detection restart + timer arming) proceeds as after barge-in.
+    func toggleMute() async {
+        settings.isMuted.toggle()
+        if settings.isMuted, isPlayingQuestionTTS {
+            await stopAnyPlayingAudio()
+        }
+    }
+
     /// Stop any currently playing audio (cleanup during state transitions)
     func stopAnyPlayingAudio() async {
         await audioService.stopPlayback()

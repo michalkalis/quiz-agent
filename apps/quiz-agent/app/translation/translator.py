@@ -112,8 +112,11 @@ class TranslationService:
 
         translated = translated.strip()
 
-        # Minimum length check — no valid quiz question is under 15 chars
-        if len(translated) < 15:
+        # Minimum length check — but only when the original is itself long enough
+        # that a sub-15-char translation is suspicious. Short questions (e.g. T/F
+        # prompts) can legitimately translate compactly; the absolute floor was
+        # silently discarding valid Slovak translations and leaking English.
+        if len(translated) < 15 and len(original) >= 30:
             logger.warning(
                 "Translation too short (%d chars) for '%s' → %s: '%s'",
                 len(translated),
@@ -161,46 +164,56 @@ class TranslationService:
 
         target_lang_name = LANGUAGE_NAMES.get(target_language, target_language)
 
-        try:
-            response = await self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": f"You are a professional translator. Translate quiz questions to {target_lang_name}. Preserve the meaning and difficulty. Return ONLY the translated question, nothing else. The output must be a complete question sentence. Do NOT answer the question, only translate it.",
-                    },
-                    {
-                        "role": "user",
-                        "content": f"Translate this quiz question to {target_lang_name}:\n\n{question}",
-                    },
-                ],
-                temperature=0.3,  # Low temperature for consistent translations
-                max_tokens=300,
-            )
-
-            translated = response.choices[0].message.content.strip()
-
-            # Remove quotes if LLM added them
-            if translated.startswith('"') and translated.endswith('"'):
-                translated = translated[1:-1]
-            if translated.startswith("'") and translated.endswith("'"):
-                translated = translated[1:-1]
-
-            validated = self._validate_translation(
-                question, translated, target_language
-            )
-            if validated is None:
-                logger.warning(
-                    "Translation validation failed, falling back to original: '%s'",
-                    question[:50],
+        # One retry before falling back to English: a transient API error or a
+        # stochastic bad completion should not leak an untranslated question to
+        # the client mid-session (fallbacks are deliberately not cached).
+        for attempt in range(2):
+            try:
+                response = await self.client.chat.completions.create(
+                    model=self.model,
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": f"You are a professional translator. Translate quiz questions to {target_lang_name}. Preserve the meaning and difficulty. Return ONLY the translated question, nothing else. The output must be a complete question sentence. Do NOT answer the question, only translate it.",
+                        },
+                        {
+                            "role": "user",
+                            "content": f"Translate this quiz question to {target_lang_name}:\n\n{question}",
+                        },
+                    ],
+                    temperature=0.3,  # Low temperature for consistent translations
+                    max_tokens=300,
                 )
-                return question  # Fallback to original English (not cached)
-            self._maybe_store(cache_key, validated)
-            return validated
 
-        except Exception as e:
-            logger.warning("Translation failed, using original: %s", e)
-            return question  # Fallback to original on error
+                translated = response.choices[0].message.content.strip()
+
+                # Remove quotes if LLM added them
+                if translated.startswith('"') and translated.endswith('"'):
+                    translated = translated[1:-1]
+                if translated.startswith("'") and translated.endswith("'"):
+                    translated = translated[1:-1]
+
+                validated = self._validate_translation(
+                    question, translated, target_language
+                )
+                if validated is None:
+                    logger.warning(
+                        "Translation validation failed (attempt %d) for '%s'",
+                        attempt + 1,
+                        question[:50],
+                    )
+                    continue
+                self._maybe_store(cache_key, validated)
+                return validated
+
+            except Exception as e:
+                logger.warning("Translation failed (attempt %d): %s", attempt + 1, e)
+
+        logger.warning(
+            "Translation exhausted retries, falling back to original: '%s'",
+            question[:50],
+        )
+        return question  # Fallback to original English (not cached)
 
     async def translate_feedback(self, feedback: str, target_language: str) -> str:
         """Translate feedback message to target language.

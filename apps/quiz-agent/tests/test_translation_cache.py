@@ -111,31 +111,47 @@ def test_both_methods_cached_kind_isolates(service):
     assert service.client.chat.completions.create.call_count == 2
 
 
-def test_error_then_success_recomputes(service):
-    """A transient error fallback must NOT poison the cache — a later success still calls."""
+def test_error_retries_within_call(service):
+    """A transient error must retry in-call — the user never sees English mid-session
+    for a one-off API hiccup (founder bug 2026-07-11)."""
     service.client.chat.completions.create = AsyncMock(
         side_effect=[Exception("rate limit"), mock_response(QUESTION_SK)]
     )
 
     first = asyncio.run(service.translate_question(QUESTION, "sk"))
-    second = asyncio.run(service.translate_question(QUESTION, "sk"))
 
-    assert first == QUESTION  # error fell back to original (not cached)
-    assert second == QUESTION_SK  # later success recomputed
+    assert first == QUESTION_SK  # retry recovered within the same call
     assert service.client.chat.completions.create.call_count == 2
 
 
-def test_validation_fail_then_success_recomputes(service):
-    """A validation-rejected fallback must NOT be cached — a later success still calls."""
+def test_exhausted_retries_fall_back_uncached(service):
+    """When every attempt fails, fall back to English but do NOT cache it —
+    a later call must recompute and can still succeed."""
     service.client.chat.completions.create = AsyncMock(
-        side_effect=[mock_response("suchy bodliak"), mock_response(QUESTION_SK)]
+        side_effect=[
+            Exception("rate limit"),
+            Exception("rate limit"),
+            mock_response(QUESTION_SK),
+        ]
     )
 
     first = asyncio.run(service.translate_question(QUESTION, "sk"))
     second = asyncio.run(service.translate_question(QUESTION, "sk"))
 
-    assert first == QUESTION  # garbage rejected → original (not cached)
-    assert second == QUESTION_SK
+    assert first == QUESTION  # both attempts failed → original (not cached)
+    assert second == QUESTION_SK  # later success recomputed
+    assert service.client.chat.completions.create.call_count == 3
+
+
+def test_validation_fail_retries_within_call(service):
+    """A validation-rejected completion must retry in-call, not leak English."""
+    service.client.chat.completions.create = AsyncMock(
+        side_effect=[mock_response("suchy bodliak"), mock_response(QUESTION_SK)]
+    )
+
+    first = asyncio.run(service.translate_question(QUESTION, "sk"))
+
+    assert first == QUESTION_SK  # garbage rejected, retry succeeded
     assert service.client.chat.completions.create.call_count == 2
 
 
@@ -365,3 +381,18 @@ def test_upsert_overwrites_existing_row(store_url, tmp_path):
     rows = disk_rows(tmp_path)
     assert len(rows) == 1
     assert rows[0][4] == "second"
+
+
+def test_short_question_short_translation_validates(service):
+    """A legitimately compact translation of a short question must NOT be rejected
+    by the absolute length floor — that was silently leaking English questions
+    into Slovak sessions (founder bug 2026-07-11)."""
+    short_q = "Is ice cold?"  # < 30 chars
+    short_sk = "Je ľad studený?"  # < 15 chars would trip old floor via similar cases
+    service.client.chat.completions.create = AsyncMock(
+        return_value=mock_response(short_sk)
+    )
+
+    result = asyncio.run(service.translate_question(short_q, "sk"))
+
+    assert result == short_sk

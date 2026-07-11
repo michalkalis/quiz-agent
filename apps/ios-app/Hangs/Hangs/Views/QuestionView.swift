@@ -238,12 +238,11 @@ struct QuestionView: View {
     }
 
     /// On-screen mute affordance (#85 — regressed in the #52 redesign, originally #13).
-    /// A pure toggle over the existing `settings.isMuted`: persistence + the Settings
-    /// "Speak scores aloud" toggle share the same source of truth, and the TTS guards
-    /// in QuizViewModel+Audio already honour it — no new audio state here.
+    /// Routes through `toggleMute()` so muting mid-read also stops the in-flight TTS —
+    /// the guards in QuizViewModel+Audio only gate *starting* playback.
     private var muteButton: some View {
         Button {
-            viewModel.settings.isMuted.toggle()
+            Task { await viewModel.toggleMute() }
         } label: {
             Image(systemName: viewModel.settings.isMuted ? "speaker.slash.fill" : "speaker.wave.2")
                 .font(.system(size: 13, weight: .semibold))

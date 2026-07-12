@@ -88,6 +88,7 @@ class AnswerEvaluator:
             user_answer=user_answer,
             correct_answer=str(scoring_answer),
             question_text=question_text or question.question,
+            alternative_answers=question.alternative_answers,
         )
 
         # Map result to score delta
@@ -144,7 +145,11 @@ class AnswerEvaluator:
         return ("correct", 1.0) if selected_key == correct_key else ("incorrect", 0.0)
 
     async def _llm_evaluate(
-        self, user_answer: str, correct_answer: str, question_text: str
+        self,
+        user_answer: str,
+        correct_answer: str,
+        question_text: str,
+        alternative_answers: list[str] | None = None,
     ) -> str:
         """Use LLM for nuanced answer evaluation.
 
@@ -152,18 +157,27 @@ class AnswerEvaluator:
             user_answer: User's answer
             correct_answer: Correct answer
             question_text: Question text
+            alternative_answers: Accepted alternative phrasings of the answer
 
         Returns:
             Result: correct | partially_correct | partially_incorrect | incorrect
         """
+        alternatives_line = ""
+        if alternative_answers:
+            alternatives_line = (
+                "Also Accepted Answers: " + " | ".join(alternative_answers) + "\n"
+            )
+
         eval_prompt = f"""You are a fair quiz answer evaluator. Compare the user's answer to the correct answer.
 
 Question: {question_text}
 Correct Answer: {correct_answer}
-User's Answer: {user_answer}
+{alternatives_line}User's Answer: {user_answer}
 
 Rules:
 - "correct": The answer captures the key concept correctly. Accept:
+  - Valid paraphrases that express the same fact in different words (e.g., "his parachute didn't open" for "His parachute failed to open", "it goes faster than sound" for "It breaks the sound barrier")
+  - Anything matching one of the Also Accepted Answers, if listed
   - Shorter forms that contain the essential element (e.g., "sequoia" for "giant sequoia", "carbon" for "carbon dioxide")
   - Common abbreviations (NYC for New York City, WW2 for World War II)
   - Minor spelling errors that don't change the meaning

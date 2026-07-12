@@ -219,6 +219,42 @@ struct QuestionViewUnifiedChromeTests {
             }
         }
     }
+
+    /// Founder batch 2026-07-12: the quiz chrome must render the moment the quiz
+    /// starts — before the first question payload arrives — so the top bar is never
+    /// perceived as "appearing after a delay". QuestionView with a nil question in
+    /// `.startingQuiz` must still show the top bar (close + settings).
+    @Test("top bar renders in .startingQuiz before the first question loads")
+    func topBarRendersWhileStarting() async throws {
+        let vm = QuizViewModel(
+            networkService: MockNetworkService(),
+            audioService: MockAudioService(),
+            persistenceStore: MockPersistenceStore()
+        )
+        vm.quizState = .startingQuiz
+        let view = QuestionView(viewModel: vm)
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: Never.self) {
+                try tree.find(viewWithAccessibilityIdentifier: "question.settingsButton")
+            }
+        }
+    }
+
+    /// Founder batch 2026-07-12: the typed-answer link belongs INSIDE the bottom
+    /// strip (one horizontal row with the timer chip and mute), not on its own row.
+    @Test("typed-answer toggle sits inside the timer strip in voice mode")
+    func typeToggleInsideTimerStrip() async throws {
+        let vm = makeViewModel(question: Question.preview)
+        let view = QuestionView(viewModel: vm)
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            let strip = try tree.find(viewWithAccessibilityIdentifier: "question.timerStrip")
+            #expect(throws: Never.self) {
+                try strip.find(viewWithAccessibilityIdentifier: "question.textInputToggle")
+            }
+        }
+    }
 }
 
 // MARK: - Tap-to-replay question block + mute (#85 → tap-anywhere, founder 2026-07-11)
@@ -296,6 +332,10 @@ struct QuestionViewAudioStripTests {
             let tree = try view.inspect()
             let mute = try tree.find(viewWithAccessibilityIdentifier: "question.mute")
             try mute.button().tap()
+            // toggleMute() became async when mute learned to stop in-flight TTS
+            // (8a01675) — the flip happens inside a Task, so drain the main actor
+            // instead of asserting synchronously (this test was red on main).
+            for _ in 0..<50 where !vm.settings.isMuted { await Task.yield() }
             #expect(vm.settings.isMuted == true)
         }
     }

@@ -17,7 +17,6 @@ import os
 
 struct SettingsView: View {
     @ObservedObject var viewModel: QuizViewModel
-    @Environment(\.dismiss) private var dismiss
     /// AppState is always present in the environment (set in ContentView). SettingsView
     /// uses it to access `authService` for Sign in with Apple, sign-out, and account
     /// actions. Marked `optional` via `@EnvironmentObject` — nil only in raw Xcode previews
@@ -90,17 +89,11 @@ struct SettingsView: View {
             withAnimation(.easeInOut(duration: 0.15)) { isHeroCollapsed = collapsed }
         }
         .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
-        // #80: pinned system bar (HIG) with the brand back chip leading; the
-        // custom chip hides the system back button, so NavigationPopGestureEnabler
-        // restores the left-edge swipe-to-pop.
-        .background(NavigationPopGestureEnabler())
-        .navigationBarBackButtonHidden(true)
+        // Founder batch 2026-07-12 (replaces #80's brand chip + custom edge-pan):
+        // the system back button and native swipe-to-pop stay untouched — custom
+        // navigation gestures proved fragile across iOS versions.
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                HangsBackChip { dismiss() }
-                    .accessibilityIdentifier("settings-back-button")
-            }
             ToolbarItem(placement: .principal) {
                 Text("SETTINGS")
                     .font(.hangsMono(13, weight: .semibold))
@@ -188,6 +181,10 @@ struct SettingsView: View {
             // screen, leaving the footnote a dangling pointer.
             HangsToggleRow(
                 label: "Call Mode",
+                // Same catalog key as AudioMode.callMode's description — one
+                // translation serves both (founder batch 2026-07-12: the bare
+                // toggle didn't explain what Call Mode does).
+                subtitle: "Uses Bluetooth microphone (may show as phone call in car)",
                 isOn: Binding(
                     get: { viewModel.selectedAudioMode.id == "call" },
                     set: { _ in viewModel.toggleAudioMode() }
@@ -205,7 +202,9 @@ struct SettingsView: View {
                 }
             } label: {
                 HangsConfigRow(
-                    label: "Current language",
+                    // "Current language" read as the APP language — this is the
+                    // quiz content/voice language (founder batch 2026-07-12).
+                    label: "Quiz language",
                     value: Language.forCode(viewModel.settings.language)?.nativeName ?? "English",
                     valueColor: Theme.Hangs.Colors.pink,
                     action: {}

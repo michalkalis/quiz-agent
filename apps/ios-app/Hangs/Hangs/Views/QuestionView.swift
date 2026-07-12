@@ -183,9 +183,11 @@ struct QuestionView: View {
     /// and the voice body, through `recording` too, so the driver finds the audio
     /// controls on one fixed spot in every mode. The replay link that used to sit in
     /// the middle (#85 Variant B) became the tap-anywhere-on-question target
-    /// (`questionReplayTapTarget`) — founder decision, 2026-07-11.
+    /// (`questionReplayTapTarget`) — founder decision, 2026-07-11. The voice body
+    /// passes `withTypeToggle: true` so the typed-answer link sits in the strip's
+    /// middle slot (founder batch 2026-07-12: one horizontal row, not stacked).
     @ViewBuilder
-    private var audioStrip: some View {
+    private func audioStrip(withTypeToggle: Bool = false) -> some View {
         if viewModel.quizState == .askingQuestion || viewModel.quizState == .recording {
             let showThink = viewModel.quizState == .askingQuestion && viewModel.thinkingTimeCountdown > 0
             let showAnswer = viewModel.quizState == .askingQuestion && viewModel.answerTimerCountdown > 0
@@ -197,10 +199,14 @@ struct QuestionView: View {
                     timerChip(label: "ANSWER", seconds: viewModel.answerTimerCountdown, color: Theme.Hangs.Colors.pink, textColor: Theme.Hangs.Colors.pinkText)
                 }
                 Spacer(minLength: 0)
+                if withTypeToggle && !showTextInput {
+                    textInputToggle
+                    Spacer(minLength: 0)
+                }
                 muteButton
             }
             .padding(.horizontal, 24)
-            .frame(height: audioStripHeight)
+            .frame(minHeight: audioStripHeight)
             .accessibilityIdentifier("question.timerStrip")
         }
     }
@@ -333,7 +339,7 @@ struct QuestionView: View {
                 .padding(.horizontal, 24)
                 .padding(.top, 12)
 
-            audioStrip
+            audioStrip()
                 .padding(.top, 8)
 
             HangsSecondaryButton(title: "Skip question",
@@ -409,7 +415,9 @@ struct QuestionView: View {
                     // frozen between "send" and the result. Mirrors the sheet's processingBody.
                     processingRow
                 } else {
-                    audioStrip
+                    // Typed-answer fallback toggle (#54 task 54.18) lives inside the
+                    // strip's middle slot — one horizontal row (founder, 2026-07-12).
+                    audioStrip(withTypeToggle: true)
 
                     // Live transcript (recording + STT streaming) — static, pinned
                     // directly above the buttons so it never scrolls away.
@@ -417,12 +425,8 @@ struct QuestionView: View {
                         transcriptCard
                     }
 
-                    // Typed-answer fallback — onboarding promises a keyboard path
-                    // for mic-denied users (#54 task 54.18).
                     if showTextInput {
                         textInputRow
-                    } else {
-                        textInputToggle
                     }
 
                     voiceActionRow

@@ -165,16 +165,27 @@ struct HangsConfigRow: View {
     }
 }
 
-/// Toggle row for settings (Voice commands, Speak scores aloud).
+/// Toggle row for settings (Voice commands, Speak scores aloud). An optional
+/// subtitle renders muted under the label for toggles whose effect isn't
+/// self-evident (Call Mode — founder batch 2026-07-12, pen Jjcs5 `arow3`).
 struct HangsToggleRow: View {
     let label: LocalizedStringKey
+    var subtitle: LocalizedStringKey? = nil
     @Binding var isOn: Bool
 
     var body: some View {
-        HStack {
-            Text(label)
-                .font(.hangsBody(16, weight: .semibold))
-                .foregroundColor(Theme.Hangs.Colors.ink)
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(label)
+                    .font(.hangsBody(16, weight: .semibold))
+                    .foregroundColor(Theme.Hangs.Colors.ink)
+                if let subtitle {
+                    Text(subtitle)
+                        .font(.hangsBody(12))
+                        .foregroundColor(Theme.Hangs.Colors.muted)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
             Spacer()
             Toggle("", isOn: $isOn)
                 .labelsHidden()

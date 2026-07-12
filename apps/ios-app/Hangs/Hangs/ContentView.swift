@@ -65,10 +65,14 @@ struct ContentView: View {
             NavigationStack {
                 Group {
                     switch viewModel.quizState {
-                    case .idle, .startingQuiz:
+                    case .idle:
                         HomeView(viewModel: viewModel, onReplayOnboarding: replayOnboarding)
 
-                    case .askingQuestion, .recording, .processing, .skipping:
+                    // .startingQuiz mounts QuestionView immediately (founder batch
+                    // 2026-07-12): the top bar + progress render at launch — the
+                    // total count is already known from settings — while the body
+                    // shows the built-in spinner until the first question arrives.
+                    case .startingQuiz, .askingQuestion, .recording, .processing, .skipping:
                         // Show HomeView when minimized, otherwise QuestionView
                         if viewModel.isMinimized {
                             HomeView(viewModel: viewModel)

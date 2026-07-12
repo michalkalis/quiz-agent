@@ -131,4 +131,7 @@ async def test_true_false_pattern_surfaces_as_text_multichoice() -> None:
     assert q.type == "text_multichoice"
     assert q.possible_answers is not None
     assert set(q.possible_answers.keys()) == {"a", "b"}
-    assert q.correct_answer in ("a", "b")
+    # Pilot 2026-07-11 hardening: the stage normalizes a key-letter
+    # `correct_answer` to the full option text so the stored answer is
+    # self-contained (TTS reveal, review renders, evaluator value-match).
+    assert q.correct_answer in ("True", "False")

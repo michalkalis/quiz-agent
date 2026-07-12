@@ -568,6 +568,69 @@ async def test_tags_mcq_type_and_drops_when_options_missing() -> None:
 
 
 @pytest.mark.asyncio
+async def test_mcq_guard_covers_self_tagged_type_and_malformed_options() -> None:
+    """Pilot 2026-07-11 hardening — the founder review received MCQs whose
+    `correct_answer` was a bare option letter with no option text. Two holes:
+    (1) the guard keyed only on `choose_question_type(reasoning_pattern)`, so
+    a question the model self-tagged `text_multichoice` under an off-list
+    pattern label bypassed it entirely; (2) `if q.possible_answers:` accepted
+    a dict of blank strings. The guard must judge every MCQ (required OR
+    self-tagged), reject blank options / unresolvable answers, and normalize
+    a key-letter `correct_answer` to the full option text so the stored
+    answer is self-contained for the TTS reveal and review renders.
+    """
+    questions = [
+        _stub_question(
+            0,
+            type="text_multichoice",
+            correct_answer="c",
+            possible_answers={},
+            generation_metadata=GenerationProvenance(reasoning_pattern="standard_mcq"),
+        ),  # gemini shape: self-tagged, off-list pattern, no options → drop
+        _stub_question(
+            1,
+            type="text_multichoice",
+            correct_answer="Bruce Springsteen",
+            possible_answers={"a": "", "b": "", "c": "", "d": ""},
+            generation_metadata=GenerationProvenance(reasoning_pattern="hidden_property"),
+        ),  # kimi shape: blank option texts → drop
+        _stub_question(
+            2,
+            correct_answer="c",
+            possible_answers={"a": "Axwell", "b": "Steve Angello", "c": "Alesso"},
+            generation_metadata=GenerationProvenance(reasoning_pattern="odd_one_out"),
+        ),  # key-letter answer → kept, normalized to option text
+        _stub_question(
+            3,
+            type="text_multichoice",
+            correct_answer="The Beatles",
+            possible_answers={"a": "The Rolling Stones", "b": "The Beatles"},
+            generation_metadata=GenerationProvenance(reasoning_pattern="surprising_connection"),
+        ),  # value-form answer, self-tagged off-list pattern → kept verbatim
+        _stub_question(
+            4,
+            type="text_multichoice",
+            correct_answer="Nirvana",
+            possible_answers={"a": "The Rolling Stones", "b": "The Beatles"},
+            generation_metadata=GenerationProvenance(reasoning_pattern="standard_mcq"),
+        ),  # answer resolves to no option → drop
+    ]
+    gen = _FakeGenerator(questions)
+    stage = GenerationStage(gen)  # type: ignore[arg-type]
+    facts = [Fact(text="t", source_url="https://ex/1")]
+    ctx = _make_ctx(target_count=5, facts=facts)
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    by_text = {q.question: q for q in ctx.questions}
+    assert set(by_text) == {"stub question 2", "stub question 3"}
+    assert by_text["stub question 2"].type == "text_multichoice"
+    assert by_text["stub question 2"].correct_answer == "Alesso"
+    assert by_text["stub question 3"].correct_answer == "The Beatles"
+    assert result.info["dropped_mcq_missing_options"] == 3
+
+
+@pytest.mark.asyncio
 async def test_calls_generator_with_target_count_and_facts() -> None:
     questions = [_stub_question(i) for i in range(5)]
     gen = _FakeGenerator(questions)

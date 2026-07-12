@@ -60,6 +60,35 @@ def _is_uuid(value: str) -> bool:
         return False
 
 
+def _resolve_mcq_answer(
+    possible_answers: dict | None, correct_answer: object
+) -> str | None:
+    """Full option text for a well-formed MCQ, else None (= drop).
+
+    Well-formed: ≥2 options, every option text non-blank, and
+    `correct_answer` resolves to an option — either as its key letter
+    ("c", the prompt contract) or as its full text. Pilot 2026-07-11
+    shipped bare-letter answers and blank-text options to founder review
+    across all three candidate models; storing the resolved text keeps
+    `correct_answer` self-contained for the TTS reveal, review renders
+    and the evaluator regardless of which form the model emitted.
+    """
+    if isinstance(correct_answer, list):
+        correct_answer = correct_answer[0] if correct_answer else None
+    if not possible_answers or len(possible_answers) < 2 or not correct_answer:
+        return None
+    if any(not str(v).strip() for v in possible_answers.values()):
+        return None
+    wanted = str(correct_answer).strip().lower()
+    for key, value in possible_answers.items():
+        if str(key).strip().lower() == wanted:
+            return str(value)
+    for value in possible_answers.values():
+        if str(value).strip().lower() == wanted:
+            return str(value)
+    return None
+
+
 def _violates_answer_brevity(answer: object) -> str | None:
     """Return a reason string if the answer breaks 42.5/42.7 brevity rules.
 
@@ -350,10 +379,16 @@ class GenerationStage:
         # provenance as `reasoning_pattern`); if that pattern is in the MCQ
         # set, the question must surface as `text_multichoice` so the iOS
         # `MCQOptionPicker` activates and the evaluator's fast-path routes
-        # by `possible_answers`. Drop fail-loud when a pattern requires MCQ
-        # but the generator didn't emit options — a half-built MCQ is worse
+        # by `possible_answers`. Drop fail-loud when a question requires MCQ
+        # but the options aren't well-formed — a half-built MCQ is worse
         # than no MCQ (evaluator would silently degrade to free-text and the
         # iOS UI would have nothing to show).
+        # Pilot 2026-07-11 hardening: the guard must also cover MCQs the
+        # model self-tagged under an off-list `reasoning_pattern` label
+        # (`choose_question_type` fail-safes those to "text", which used to
+        # bypass the check entirely) and must reject blank option texts or
+        # an answer that resolves to no option — both shipped bare-letter
+        # answers to founder review.
         tagged: list[Question] = []
         dropped_mcq_missing_options = 0
         for q in kept:
@@ -363,19 +398,24 @@ class GenerationStage:
                 else None
             )
             desired_type = choose_question_type(pattern)
-            if desired_type == "text_multichoice":
-                if q.possible_answers:
-                    q.type = "text_multichoice"
-                    tagged.append(q)
-                else:
+            if desired_type == "text_multichoice" or q.type == "text_multichoice":
+                resolved_answer = _resolve_mcq_answer(
+                    q.possible_answers, q.correct_answer
+                )
+                if resolved_answer is None:
                     dropped_mcq_missing_options += 1
                     logger.warning(
                         "GenerationStage dropped question id=%s reason=mcq_missing_options "
-                        "pattern=%s",
+                        "pattern=%s answer=%r options=%r",
                         q.id,
                         pattern,
+                        q.correct_answer,
+                        q.possible_answers,
                     )
                     continue
+                q.type = "text_multichoice"
+                q.correct_answer = resolved_answer
+                tagged.append(q)
             else:
                 tagged.append(q)
 

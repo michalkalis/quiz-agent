@@ -23,6 +23,15 @@ Personalized/AI-generated quiz *creation* is priced much higher, but as B2B/pros
 - Per-pack COGS: 30 q ≈ $1.50–2.40 · 50 q ≈ $2.50–4.00 · 10 q ≈ $0.50–0.80 (but fixed prompt overhead makes small packs least efficient per question).
 - No measured spend exists for the #72 run (46 topics) — cost capture is a to-do for the first real pack.
 
+#### Addendum 2026-07-12 — first measured datapoints (from the #72 corpus-swap resume run)
+
+Method: OpenRouter account-usage snapshots bracketing the tail of the live run (`data/generation-2026-07-10/run_remaining_54.log`); Tavily billed separately, not included. Caveat: account-wide deltas — assumes no concurrent traffic on the key (idle Saturday evening, founder-only prod).
+
+- **glm-5.2, clean single-topic bracket** (part11, 18:56→19:01, 8 accepted q): **$0.053/topic → ~$0.007/accepted q** all-in LLM (generation + critique + scoring judges + verification + embeddings). A 30 q pack on glm-5.2 ≈ **$0.20 LLM-side**.
+- **Opus 4.8, partial bracket** (part08 late stages only ≈ $0.25 after subtracting 2× glm topics from the 18:30→18:56 window): full topic ≥ $0.25 for 9 q → **≥ $0.028/accepted q**, consistent with the ~$0.04–0.05/q sticker estimate above. A 30 q pack on Opus ≈ **$0.9–1.5 LLM-side** — the planning band stands.
+- Tavily still unmeasured here; the per-question verification searches (~1 advanced call = 2 credits = 1.6¢ per candidate question) may rival the glm LLM cost. #95 Session 1 instrumented exact per-order capture (`llm_cost_usd` + `search_cost_cents` on `generation_orders`), so the **first founder order yields the definitive all-in number**.
+- Margin read: at €3.99 per 30 q pack, even the worst case (Opus + heavy Tavily ≈ $2.3) clears ~35% margin after Apple's 15–30%; glm-5.2 would clear >80%. No pricing change warranted.
+
 ### 3. Session length: 30 questions fits one drive
 EU average commute ~25 min, 61% under 30 min ([Eurostat](https://ec.europa.eu/eurostat/web/products-eurostat-news/-/ddn-20201021-2)); broader European averages ~38 min ([Euronews](https://www.euronews.com/next/2024/09/25/these-are-europes-longest-and-shortest-commutes-to-work-how-does-your-country-compare)). Trivia design guidance: rounds of 10–20 questions, short rounds (≤5 in high-fatigue settings), ~2 min/q ceiling before fatigue ([cheaptrivia](https://cheaptrivia.com/blogs/trivia-talk/how-long-does-trivia-night-last-tips-for-planning-your-event), [typito](https://typito.com/blog/how-to-run-trivia-for-a-large-group-20-200-people-formats-rules-and-timing-that-actually-work-2026-latest/)). At our voice cadence (~30–45 s/q), 30 q ≈ 15–25 min = one commute; 50 q spans ~2 sessions (fine as a road-trip tier, unnecessary for v1).
 

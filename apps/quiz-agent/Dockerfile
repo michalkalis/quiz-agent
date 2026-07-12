@@ -42,7 +42,8 @@ RUN pip install --no-cache-dir \
     alembic>=1.13.0 \
     "pyjwt[crypto]>=2.8.0" \
     pyattest>=1.0.4 \
-    cbor2>=5.6.0
+    cbor2>=5.6.0 \
+    num2words>=0.5.14
 
 # Production stage
 FROM python:3.11-slim

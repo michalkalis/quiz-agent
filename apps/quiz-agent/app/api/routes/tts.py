@@ -16,6 +16,7 @@ from ..deps import (
 )
 from ...session.manager import SessionManager
 from ...retrieval.question_retriever import QuestionRetriever
+from ...tts.number_normalization import normalize_numbers_for_tts
 from ...tts.service import TTSService
 from ...rate_limit import limiter
 
@@ -86,7 +87,12 @@ async def get_question_audio(
             session.current_question_text = question_text
             session_manager.update_session(session)
 
-        audio_data = await tts_service.synthesize_question(question_text=question_text)
+        # Founder bug 2026-07-12: tts-1 reads embedded digits with English
+        # pronunciation in Slovak text — spell them out for the TTS input only
+        # (the cached display text keeps its numerals).
+        tts_text = normalize_numbers_for_tts(question_text, session.language)
+
+        audio_data = await tts_service.synthesize_question(question_text=tts_text)
 
         return Response(
             content=audio_data,

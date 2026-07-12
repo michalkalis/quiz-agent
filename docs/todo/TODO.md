@@ -104,3 +104,13 @@ States: `[ ]` todo · `[~]` wip · `[x]` done. Numbers continue the `docs/issues
 - [ ] Doc refresh — align PRD/READMEs/backend rules with shipped reality (auth exists); **remove web-ui** from monorepo layout + CI (founder decision #11, 2026-07-05)
 - [ ] Debt fixes (typed question API contract + /verify-api repair · Dockerfile deps from pyproject · CHROMA_PATH deploy check) — agent judgment, **verify each surface is actually used before fixing** (founder decision #10, 2026-07-05)
 - [ ] Prepare step-by-step [HUMAN] guides for founder: 77.15 in-car voice-command test · #61 Apple sign-in device verification (SK) + privacy nutrition label · #50 ASC steps refresher (founder available in coming days)
+- [~] Founder-reported iOS bug/UX batch (2026-07-12) — worked 2026-07-12 PM session:
+  - [x] "Call Mode" toggle subtitle — pen `Jjcs5` arow3 + `HangsToggleRow` subtitle param; reuses the existing AudioMode description string ("Uses Bluetooth microphone (may show as phone call in car)") — **founder may still tweak wording**
+  - [x] "Current language" → "Quiz language" (pen + `SettingsView`) — **founder may still tweak wording**
+  - [x] Native back button + native swipe in Settings — deleted `HangsNavBar.swift` (`HangsBackChip` + `NavigationPopGestureEnabler`, the #80 custom gesture); pen back chip replaced with native-style back
+  - [x] TTS Slovak numbers — root cause: translated text keeps digits, OpenAI tts-1 has no locale lever → deterministic digit→words normalization (`num2words` sk/cs) on the TTS input only (`app/tts/number_normalization.py`), display text unchanged; 9 unit tests
+  - [ ] Voice commands "start"/"stop"/"skip" — diagnosed, NOT a code fix yet: commands are English-only by design, armed only in narrow windows (never during TTS playback or answer recording), and "stop" is only a confirmation/undo-skip word — founder usage note delivered in session report. Open follow-ups: 77.15 on-device accent gate still unrun; no Sentry mirroring of recognizer health; no visible "listening" indicator (77.12 CmdListenBar unshipped)
+  - [x] Quiz top bar renders at launch — `.startingQuiz` now mounts QuestionView (ContentView routing) so chrome shows during load
+  - [x] Bottom controls one horizontal row (THINK chip · type-answer link · mute) — `audioStrip(withTypeToggle:)` + pen f9csl/uGhZg/w8s5Mj
+  - [x] Image question — NOT a bug: defaults are off end-to-end; the Home-screen "Image questions" toggle is sticky per device and is most likely ON on founder's phone (left from #68 testing) — founder to check
+  - Pen changes (Settings + 3 question frames) still gated on founder ⌘S save in Pencil; bonus: fixed pre-existing red `muteTogglesSetting` test (async race since 8a01675)

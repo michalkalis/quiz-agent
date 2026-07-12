@@ -84,6 +84,10 @@ def test_craft_guards_present_when_flag_on(monkeypatch: pytest.MonkeyPatch) -> N
     assert "True/false discipline" in prompt
     assert "No unguessable open numeric" in prompt
     assert "Answer context payoff" in prompt
+    # Pilot 2026-07-11 R2-Q10: an incidental exact year ("In 1834, …") read
+    # unnatural to the founder — decade/era phrasing is the rule, exact year
+    # only when the year itself is the question.
+    assert "No needless year precision" in prompt
 
 
 def test_craft_guards_keep_founder_exceptions(monkeypatch: pytest.MonkeyPatch) -> None:

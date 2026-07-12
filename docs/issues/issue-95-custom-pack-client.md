@@ -1,6 +1,6 @@
 # Issue #95 — Custom quiz-pack ordering: client half ("Phase 4a lite")
 
-**Triage:** feature · needs-founder-decisions → then ready-for-agent (3 sessions + 1 deferred)
+**Triage:** feature · ready-for-agent (3 sessions + 1 deferred) — founder decisions locked 2026-07-12, see below
 
 **Created:** 2026-07-11 · **Source:** founder report "nevidim nikde ui, kde by sa dal kupit balicek podla mojho zadania" → diagnosis workflow 2026-07-11
 
@@ -19,27 +19,29 @@ The custom-pack backend (#33 Phase 1 order API + #36 Phase 2 real PackGenerator 
 ### Session 1 — backend reachability (quiz-pack-api)
 - Config-gated founder/dev order path: admin-key header accepted in place of X-StoreKit-JWS (reuse the existing `require_admin` dependency pattern).
 - Account linkage: `account_id`/subject on `GenerationOrder`; `GET /v1/orders?mine=1` authenticated with the **same quiz-agent JWT/App-Attest identity from #61/#93** (reuse, don't fork, or orders stay orphaned). Also closes the Phase-1 unauthenticated-GET hole.
+- Cost capture per order: persist total OpenRouter + Tavily spend on the `GenerationOrder` (decision #5 below) so the first founder pack yields a measured all-in $/question.
 - Ops note: prod machines auto-suspend; first order after idle is slow — acceptable, document it.
 
 ### Session 2 — iOS order flow
 - Entry point OUTSIDE PaywallView (Home or Settings: "Create your own quiz pack").
-- `OrderPackView`: prompt field (10–1000 chars, validated), optional category/theme, language picker en/sk/cs, tier picker.
+- `OrderPackView`: prompt field (10–1000 chars, validated), optional category/theme, language picker en/sk/cs. No tier picker in v1 — fixed 30-question pack.
 - Submit → `POST /v1/orders` → `OrderProgressView` polling `GET /v1/orders/{id}` at 1 Hz (skip SSE in v1 — the R4 polling fallback is already sanctioned in the #33 plan and is far less iOS work).
 
 ### Session 3 — play the pack
 - quiz-agent session-start accepts optional `pack_id`; retriever filters on the existing pgvector `pack_id` column — deterministic filter, **no new LLM calls on the hot path**.
 - iOS "My packs" list (from `GET /v1/orders?mine=1`) with "Start quiz" per delivered pack.
-- Custom packs bypass the 30/mo free quota when played (recommended — paid content; confirm below).
+- Custom packs bypass the 30/mo free quota when played (decided — paid content).
 
 ### Session 4 — payments (DEFERRED until real users)
-- App Store Connect / RevenueCat consumable products for the tiers (align naming, e.g. `com.carquiz.pack.custom.NN`; update `_PRODUCT_TIERS`), send `Transaction.jwsRepresentation` as X-StoreKit-JWS.
+- App Store Connect consumable `com.carquiz.pack.custom.30` @ €3.99 (update `_PRODUCT_TIERS`), send `Transaction.jwsRepresentation` as X-StoreKit-JWS. Prereq: measured cost-per-pack from Session 1's cost capture confirms margin.
 
-## Open product questions (founder, before Session 1)
+## Founder decisions (locked 2026-07-12)
 
-1. Tier set: keep pack_10/20/30/50 or simplify (e.g. single 20-question tier for v1)?
-2. Custom packs bypass the 30/mo free quota when played? (Recommended: yes.)
-3. Admin-gated founder path stays founder-only, or becomes a subscription perk later?
-4. Question generation is globally PAUSED pending the #72 quality review — OK to generate custom packs on the current pipeline, or wait for the quality bar? (First founder pack should be spot-checked either way.)
+1. **Tier set: single tier — 30 questions @ €3.99** (v1 has no tier picker; keep `_PRODUCT_TIERS` extensible, `pack_50` @ €5.99 is the planned later "road trip" upsell; drop pack_10/20). Research: `docs/research/custom-pack-size-pricing-2026-07-12.md` (session-length fit, ~$1.50–2.40 COGS/pack, margin at Apple price points). Session 4 product ID: `com.carquiz.pack.custom.30`.
+2. **Custom packs bypass the 30/mo free quota** when played — paid content.
+3. **Admin-gated order path stays founder-only** for now; subscription-perk question deferred until real users.
+4. **Generate on the current pipeline now** despite the global #72 pause — founder-only risk; founder spot-checks the first pack.
+5. Addendum (from research): **instrument cost capture** on the first founder order (total OpenRouter + Tavily spend per pack) — closes the #72 gap where no actual $/question was ever recorded; validates margin before Session 4 payments.
 
 ## References
 

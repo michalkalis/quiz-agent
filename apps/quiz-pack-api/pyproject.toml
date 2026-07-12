@@ -20,6 +20,10 @@ dependencies = [
     "jinja2>=3.1.0",
     "python-multipart>=0.0.6",
     "slowapi>=0.1.9",
+    # app/cost_tracking.py (#95) — OpenRouter credits API; also a transitive
+    # dep of openai/langchain-openai, pinned here because the worker imports
+    # it directly at boot.
+    "httpx>=0.27.0",
     # Phase 1 (issue #33) — must stay 1:1 with Dockerfile pip install list per
     # memory project_dockerfile_drift.
     "sqlalchemy[asyncio]>=2.0.30",

@@ -3,142 +3,24 @@
 Uses httpx.AsyncClient against a minimal test app that mounts only the
 v1/orders router — avoids triggering module-level service instantiation in the
 legacy `app.api.routes` router (which requires OPENAI_API_KEY at import time).
-
-Overrides:
-- DB session → test-database (TEST_DATABASE_URL).
-- JWS verifier → in-memory test cert chain (no Apple cert file required).
-- ARQ pool → MagicMock (no real Redis required).
+Fixtures (test app, DB, JWS chain overrides) live in tests/api/conftest.py.
 
 Bring up the local test DB first: `make dev-db` from apps/quiz-pack-api/.
 """
 
 from __future__ import annotations
 
-import os
-import subprocess
-import sys
 import uuid
-from pathlib import Path
-from typing import AsyncIterator
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 import pytest
-import pytest_asyncio
 import httpx
-from fastapi import FastAPI
-from sqlalchemy import select, text
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_arq_pool, get_jws_verifier
-from app.api.v1.orders import router as orders_router
-from app.db.engine import build_engine, normalize_async_url
-from app.db.models.job import GenerationJob
 from app.db.models.order import GenerationOrder
-from app.db.session import get_session
-from app.storekit import AppleJWSVerifier
-from tests.storekit._chain_fixtures import JWSFactory, TestChain
-
-APP_ROOT = Path(__file__).resolve().parents[2]
-
-
-# ---------------------------------------------------------------------------
-# Fixtures
-# ---------------------------------------------------------------------------
-
-
-@pytest.fixture(scope="module", autouse=True)
-def _alembic_head() -> None:
-    """Bring the test DB to head once per module so tables exist.
-
-    Mirrors tests/db and tests/worker: these API tests live in tests/api/, which
-    pytest collects before tests/db/, so without this they would run against an
-    unmigrated DB on a fresh host (issue #73). Idempotent — a no-op once at head.
-    """
-    raw = os.environ.get("TEST_DATABASE_URL") or os.environ.get("DATABASE_URL")
-    if not raw:
-        pytest.skip("TEST_DATABASE_URL / DATABASE_URL not set")
-    env = os.environ.copy()
-    env["DATABASE_URL"] = raw
-    subprocess.run(
-        [sys.executable, "-m", "alembic", "upgrade", "head"],
-        cwd=APP_ROOT,
-        env=env,
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-
-
-@pytest_asyncio.fixture
-async def test_engine() -> AsyncIterator[AsyncEngine]:
-    raw = os.environ.get("TEST_DATABASE_URL") or os.environ.get("DATABASE_URL")
-    if not raw:
-        pytest.skip("TEST_DATABASE_URL not set — skipping DB-backed tests")
-    eng = build_engine(normalize_async_url(raw))
-    yield eng
-    await eng.dispose()
-
-
-@pytest_asyncio.fixture
-async def test_session(test_engine: AsyncEngine) -> AsyncIterator[AsyncSession]:
-    factory = async_sessionmaker(test_engine, class_=AsyncSession, expire_on_commit=False)
-    async with factory() as s:
-        yield s
-
-
-@pytest_asyncio.fixture(autouse=True)
-async def _clean_orders(test_session: AsyncSession) -> AsyncIterator[None]:
-    """Start each test from an empty orders/jobs slate.
-
-    These tests POST with fixed transaction_ids, and the orders endpoint is
-    idempotent on transaction_id (returns 200 for an existing tx). Against the
-    persistent test DB, rows left by a prior gate run would turn the expected
-    202 into 200 — so the suite must be re-runnable, not just pass once. Other
-    DB-test modules clean up per-id; this module truncates because order_ids are
-    server-generated and not all surface to the test. CASCADE clears any
-    dependent pack/question rows too.
-    """
-    await test_session.execute(
-        text("TRUNCATE generation_orders, generation_jobs RESTART IDENTITY CASCADE")
-    )
-    await test_session.commit()
-    yield
-
-
-@pytest.fixture
-def arq_mock() -> MagicMock:
-    pool = MagicMock()
-    pool.enqueue_job = AsyncMock(return_value=None)
-    return pool
-
-
-@pytest_asyncio.fixture
-async def client(
-    test_session: AsyncSession,
-    test_chain: TestChain,
-    arq_mock: MagicMock,
-) -> AsyncIterator[httpx.AsyncClient]:
-    """Async HTTP client wired against a minimal test app."""
-    verifier = AppleJWSVerifier(
-        test_chain.root_cert,
-        "com.missinghue.hangs",
-        "Sandbox",
-    )
-
-    async def _override_session() -> AsyncIterator[AsyncSession]:
-        yield test_session
-
-    test_app = FastAPI()
-    test_app.include_router(orders_router)
-    test_app.dependency_overrides[get_session] = _override_session
-    test_app.dependency_overrides[get_jws_verifier] = lambda: verifier
-    test_app.dependency_overrides[get_arq_pool] = lambda: arq_mock
-
-    async with httpx.AsyncClient(
-        transport=httpx.ASGITransport(app=test_app),
-        base_url="http://test",
-    ) as ac:
-        yield ac
+from tests.api.conftest import TEST_ADMIN_KEY
+from tests.storekit._chain_fixtures import JWSFactory
 
 
 # ---------------------------------------------------------------------------
@@ -284,8 +166,10 @@ async def test_create_order_missing_header_401(
 async def test_get_order_not_found_404(
     client: httpx.AsyncClient,
 ) -> None:
-    """GET with a random UUID → 404."""
-    resp = await client.get(f"/v1/orders/{uuid.uuid4()}")
+    """GET with a random UUID → 404 (as admin — auth is checked first, #95)."""
+    resp = await client.get(
+        f"/v1/orders/{uuid.uuid4()}", headers={"X-Admin-Key": TEST_ADMIN_KEY}
+    )
     assert resp.status_code == 404
 
 
@@ -294,8 +178,9 @@ async def test_get_order_happy(
     client: httpx.AsyncClient,
     make_jws: JWSFactory,
 ) -> None:
-    """After a successful POST, GET returns the order with job snapshot
-    (status='queued', progress=0).
+    """After a successful POST, GET (admin) returns the order with job snapshot
+    (status='queued', progress=0). Admin credential needed since #95 closed the
+    Phase-1 unauthenticated read.
     """
     tx_id = "tx-get-happy"
     jws = make_jws(payload_overrides={"transactionId": tx_id})
@@ -305,7 +190,9 @@ async def test_get_order_happy(
     assert post_resp.status_code == 202, post_resp.text
     order_id = post_resp.json()["order_id"]
 
-    get_resp = await client.get(f"/v1/orders/{order_id}")
+    get_resp = await client.get(
+        f"/v1/orders/{order_id}", headers={"X-Admin-Key": TEST_ADMIN_KEY}
+    )
     assert get_resp.status_code == 200, get_resp.text
 
     data = get_resp.json()
@@ -314,6 +201,9 @@ async def test_get_order_happy(
     assert data["product_id"] == "pack_20"
     assert data["target_count"] == 20
     assert data["language"] == "en"
+    # Cost capture (#95): no spend recorded yet on a fresh order.
+    assert data["llm_cost_usd"] is None
+    assert data["search_cost_cents"] == 0
 
     job = data["job"]
     assert job is not None

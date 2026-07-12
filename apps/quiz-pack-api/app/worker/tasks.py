@@ -14,8 +14,10 @@ from __future__ import annotations
 import logging
 import uuid
 from datetime import datetime, timezone
+from decimal import Decimal
 from typing import Any, Dict
 
+from app import cost_tracking
 from app.db.models import GenerationJob, GenerationOrder
 from app.db.session import AsyncSessionLocal
 from app.orchestrator import PackGenerator
@@ -98,11 +100,28 @@ async def process_order(ctx: Dict[str, Any], order_id: str) -> None:
             order_snapshot = order  # detached enough for read-only stage access
             session.expunge(order_snapshot)
 
-        pack = await generator.run(order_snapshot)
+        # Cost capture (#95 decision 5): Tavily calls report into the tracker
+        # as they happen; the OpenRouter account-usage snapshots bracket the
+        # run so their delta is the measured all-in LLM spend for this order
+        # (see app.cost_tracking for the shared-account caveat).
+        tracker, tracker_token = cost_tracking.activate()
+        usage_before = await cost_tracking.fetch_openrouter_usage()
+        try:
+            pack = await generator.run(order_snapshot)
+        finally:
+            cost_tracking.deactivate(tracker_token)
         if pack is None:
             raise RuntimeError("PackGenerator returned no pack — PersistStage missing")
 
-        cost_cents = generator.last_ctx.cost_cents if generator.last_ctx else 0
+        usage_after = await cost_tracking.fetch_openrouter_usage()
+        llm_cost_usd: Decimal | None = None
+        if usage_before is not None and usage_after is not None:
+            llm_cost_usd = round(Decimal(str(max(usage_after - usage_before, 0.0))), 6)
+
+        search_cost_cents = tracker.search_cost_cents
+        stage_cost_cents = generator.last_ctx.cost_cents if generator.last_ctx else 0
+        llm_cost_cents = int(round(llm_cost_usd * 100)) if llm_cost_usd is not None else 0
+        cost_cents = stage_cost_cents + search_cost_cents + llm_cost_cents
 
         async with session_factory() as session:
             order = await session.get(GenerationOrder, order_uuid)
@@ -112,6 +131,8 @@ async def process_order(ctx: Dict[str, Any], order_id: str) -> None:
             order.status = "delivered"
             order.pack_id = pack.id
             order.delivered_at = _now()
+            order.llm_cost_usd = llm_cost_usd
+            order.search_cost_cents = search_cost_cents
             job.status = "done"
             job.progress = 100
             job.total_cost_cents = cost_cents

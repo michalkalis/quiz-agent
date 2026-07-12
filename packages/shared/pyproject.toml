@@ -14,6 +14,8 @@ dependencies = [
     # transitively via chromadb; must stay declared now that chromadb is gone
     # (#41) or prod boots crash-loop on ModuleNotFoundError.
     "numpy>=1.26.0",
+    # quiz_shared/auth/tokens.py (#95) — shared JWT sign/verify.
+    "pyjwt>=2.8.0",
 ]
 
 [build-system]

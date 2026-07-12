@@ -16,11 +16,12 @@ The custom-pack backend (#33 Phase 1 order API + #36 Phase 2 real PackGenerator 
 
 ## Plan (founder-first: prod is founder-only, payments last)
 
-### Session 1 — backend reachability (quiz-pack-api)
-- Config-gated founder/dev order path: admin-key header accepted in place of X-StoreKit-JWS (reuse the existing `require_admin` dependency pattern).
-- Account linkage: `account_id`/subject on `GenerationOrder`; `GET /v1/orders?mine=1` authenticated with the **same quiz-agent JWT/App-Attest identity from #61/#93** (reuse, don't fork, or orders stay orphaned). Also closes the Phase-1 unauthenticated-GET hole.
-- Cost capture per order: persist total OpenRouter + Tavily spend on the `GenerationOrder` (decision #5 below) so the first founder pack yields a measured all-in $/question.
-- Ops note: prod machines auto-suspend; first order after idle is slow — acceptable, document it.
+### Session 1 — backend reachability (quiz-pack-api) — **DONE 2026-07-12 (code + tests; deploy pending founder OK)**
+- ✅ Founder/dev order path: `X-Admin-Key` accepted in place of X-StoreKit-JWS on POST /v1/orders and /retry; admin transaction ids must be `admin-`-prefixed (can't squat a future real Apple tx id).
+- ✅ Account linkage: order `user_id` set from an optional quiz-agent bearer JWT; `TokenService` promoted to `quiz_shared.auth` (quiz-agent re-exports — no fork); new `GET /v1/orders` (bearer-scoped "my orders", newest first). Phase-1 unauthenticated `GET /{id}` closed: admin key or owner bearer required (401 before 404 — no id probing).
+- ✅ Cost capture (decision 5): `generation_orders.llm_cost_usd` (OpenRouter account-usage delta bracketing the run; NULL when unmeasurable — never a fabricated 0) + `search_cost_cents` (actual Tavily calls × credits; replaces the flat 1¢ estimate that missed ~30 per-question verification searches). Migration `4d8e2b7c1f0a`. Caveat: delta is account-wide for the window — fine founder-only, revisit before real users.
+- ✅ Ops note documented in the orders router docstring (auto-suspend → first order after idle starts slow).
+- **Deploy tail (founder-gated):** migration `4d8e2b7c1f0a` on prod DB + new Fly secret `AUTH_JWT_SECRET` on quiz-pack-api (same value as quiz-agent's); for measured LLM cost the pack-api worker needs `LLM_GATEWAY=openrouter` + `OPENROUTER_API_KEY` at order time.
 
 ### Session 2 — iOS order flow
 - Entry point OUTSIDE PaywallView (Home or Settings: "Create your own quiz pack").

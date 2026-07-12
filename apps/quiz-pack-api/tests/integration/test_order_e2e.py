@@ -40,6 +40,10 @@ from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from app.api.deps import get_arq_pool, get_jws_verifier, get_redis_url
+from app.config import Settings, get_settings
+
+# GET /v1/orders/{id} requires auth since #95; the poll helper presents this.
+_E2E_ADMIN_KEY = "e2e-admin-key"
 from app.api.v1.orders import router as orders_router
 from app.db.engine import build_engine, normalize_async_url
 from app.db.models.job import GenerationJob
@@ -166,6 +170,9 @@ async def test_app(
     app.dependency_overrides[get_jws_verifier] = lambda: verifier
     app.dependency_overrides[get_arq_pool] = lambda: arq_pool
     app.dependency_overrides[get_redis_url] = lambda: _REDIS_URL
+    app.dependency_overrides[get_settings] = lambda: Settings(
+        admin_api_key=_E2E_ADMIN_KEY
+    )
 
     # Also patch AsyncSessionLocal used directly inside the SSE bridge / stream route
     # and the in-process ARQ worker. Pass `engine` (AsyncEngine) directly;
@@ -275,7 +282,9 @@ async def _poll_order(
     while asyncio.get_event_loop().time() < deadline:
         if db_session is not None:
             db_session.expire_all()
-        resp = await client.get(f"/v1/orders/{order_id}")
+        resp = await client.get(
+            f"/v1/orders/{order_id}", headers={"X-Admin-Key": _E2E_ADMIN_KEY}
+        )
         assert resp.status_code == 200, f"poll failed: {resp.text}"
         data = resp.json()
         if data["status"] in terminal:

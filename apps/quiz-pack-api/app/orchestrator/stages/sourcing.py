@@ -22,8 +22,6 @@ from app.orchestrator.progress_sink import ProgressSink
 from app.sourcing.fact_sourcer import FactSourcer
 from app.sourcing.topic_pool import TopicPool
 
-TAVILY_CENTS_PER_CALL = 1
-
 # #42 task 42.28 — at most this many salient tokens are mined from the free-text
 # prompt to steer sourcing toward what the order actually asked about.
 MAX_PROMPT_TOPIC_TOKENS = 3
@@ -101,9 +99,10 @@ class SourcingStage:
         batch.score_surprise_heuristic()
         ctx.facts = batch.top_by_surprise(len(batch.facts))
 
-        tavily_calls = 1 if "web_search" in batch.sources_used else 0
-        cost_cents = tavily_calls * TAVILY_CENTS_PER_CALL
-
+        # Tavily spend is no longer estimated here (#95): every actual search
+        # call reports its credits to app.cost_tracking, and the worker
+        # persists the measured total. The old flat 1¢/order estimate missed
+        # the per-question verification searches entirely.
         return StageResult(
             info={
                 "facts": len(ctx.facts),
@@ -112,7 +111,7 @@ class SourcingStage:
                 # heuristic path) so a no-category run is auditable end-to-end.
                 "auto_topics": ctx.auto_topics,
             },
-            cost_cents=cost_cents,
+            cost_cents=0,
         )
 
     @staticmethod

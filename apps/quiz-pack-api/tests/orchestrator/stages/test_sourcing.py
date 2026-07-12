@@ -29,7 +29,7 @@ import pytest
 from app.db.models import GenerationOrder
 from app.orchestrator import OrderContext, PackGenerator
 from app.orchestrator.progress_sink import ProgressSink
-from app.orchestrator.stages.sourcing import TAVILY_CENTS_PER_CALL, SourcingStage
+from app.orchestrator.stages.sourcing import SourcingStage
 from app.sourcing.models import Fact, FactBatch
 
 
@@ -324,20 +324,11 @@ async def test_no_pool_keeps_legacy_none_topics() -> None:
 
 
 @pytest.mark.asyncio
-async def test_tavily_call_counts_cost() -> None:
+async def test_stage_reports_no_flat_cost_estimate() -> None:
+    """#95: Tavily spend is measured per actual search call in
+    app.cost_tracking, so the stage must not double-count with an estimate —
+    even when web_search was used."""
     batch = FactBatch(facts=_make_facts(5), sources_used=["wikipedia", "web_search"])
-    sourcer = _FakeFactSourcer(batch)
-    stage = SourcingStage(sourcer)  # type: ignore[arg-type]
-    ctx = _make_ctx(target_count=3)
-
-    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
-
-    assert result.cost_cents == TAVILY_CENTS_PER_CALL
-
-
-@pytest.mark.asyncio
-async def test_no_cost_when_web_search_not_used() -> None:
-    batch = FactBatch(facts=_make_facts(5), sources_used=["wikipedia", "opentdb"])
     sourcer = _FakeFactSourcer(batch)
     stage = SourcingStage(sourcer)  # type: ignore[arg-type]
     ctx = _make_ctx(target_count=3)

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from decimal import Decimal
 from typing import Optional
 
 from sqlalchemy import (
@@ -17,6 +18,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Integer,
+    Numeric,
     String,
     Text,
     text,
@@ -73,6 +75,17 @@ class GenerationOrder(Base, UUIDPrimaryKeyMixin):
     )
     refund_eligible: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default=text("false")
+    )
+    # Cost capture (#95 decision 5): measured all-in spend for this order.
+    # llm_cost_usd = OpenRouter account-usage delta across the generation run
+    # (NULL when the gateway is direct or the credits API was unreachable);
+    # search_cost_cents = Tavily spend estimated from the actual per-order
+    # search-call count (credits × PAYG rate).
+    llm_cost_usd: Mapped[Optional[Decimal]] = mapped_column(
+        Numeric(12, 6), nullable=True
+    )
+    search_cost_cents: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default=text("0")
     )
 
     __table_args__ = (

@@ -43,6 +43,14 @@ class Settings(BaseSettings):
     storekit_environment: str = "Sandbox"
     storekit_root_cert_path: Path = _BUNDLED_APPLE_ROOT
 
+    # Bearer identity (#95). Verify-only mirror of quiz-agent's JWT config —
+    # AUTH_JWT_SECRET must be set to the SAME value as the quiz-agent Fly
+    # secret or `GET /v1/orders` (mine) rejects every token. Unset → bearer
+    # routes fail closed with 503.
+    auth_jwt_secret: Optional[str] = None
+    auth_jwt_issuer: str = "quiz-agent"
+    auth_jwt_audience: str = "quiz-agent-clients"
+
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:

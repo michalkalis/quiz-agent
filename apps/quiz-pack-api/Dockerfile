@@ -36,6 +36,7 @@ RUN pip install --no-cache-dir \
     jinja2>=3.1.0 \
     python-multipart>=0.0.6 \
     slowapi>=0.1.9 \
+    httpx>=0.27.0 \
     "sqlalchemy[asyncio]>=2.0.30" \
     alembic>=1.13.0 \
     asyncpg>=0.29.0 \

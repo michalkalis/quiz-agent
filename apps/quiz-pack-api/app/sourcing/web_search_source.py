@@ -5,6 +5,8 @@ from typing import Optional
 
 from tavily import AsyncTavilyClient
 
+from app.cost_tracking import TAVILY_ADVANCED_SEARCH_CREDITS, add_tavily_credits
+
 from .models import Fact
 
 
@@ -55,6 +57,7 @@ class WebSearchSource:
                         search_depth="advanced",
                         **news_kwargs,
                     )
+                    add_tavily_credits(TAVILY_ADVANCED_SEARCH_CREDITS)
 
                     for result in results.get("results", []):
                         content = result.get("content", "").strip()
@@ -95,6 +98,7 @@ class WebSearchSource:
                 include_answer=True,
                 search_depth="advanced",
             )
+            add_tavily_credits(TAVILY_ADVANCED_SEARCH_CREDITS)
             return {
                 "answer": results.get("answer"),
                 "results": [

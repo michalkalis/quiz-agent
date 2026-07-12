@@ -111,7 +111,20 @@ class ProxyResult:
 
 def _pattern_of(q: "Question") -> str | None:
     meta = getattr(q, "generation_metadata", None)
-    return getattr(meta, "reasoning_pattern", None) if meta else None
+    raw = getattr(meta, "reasoning_pattern", None) if meta else None
+    if raw is None:
+        return None
+    # Models emit Pattern Library titles ("The Reverse Engineer") as often as
+    # canonical snake_case keys — the same label drift the 42.20 router fix
+    # normalizes in `choose_question_type`; without it the pattern proxies
+    # false-fail on batches whose patterns are all title-form (seen on the
+    # 2026-07-12 100-question assemble).
+    from app.generation.pattern_routing import _normalize_pattern
+
+    normalized = _normalize_pattern(raw)
+    if normalized.startswith("the_"):
+        normalized = normalized[len("the_") :]
+    return normalized
 
 
 def _norm_text(text: str) -> str:
@@ -227,10 +240,19 @@ def proxy_mcq_valid(questions: Sequence["Question"]) -> ProxyResult:
         if len(set(values)) != len(values):
             violations.append(f"{label!r}: duplicate option values")
         correct = getattr(q, "correct_answer", None)
-        keys = correct if isinstance(correct, list) else [correct]
-        missing = [k for k in keys if k not in options]
+        answers = correct if isinstance(correct, list) else [correct]
+        # GenerationStage normalizes `correct_answer` to the full option text
+        # (pilot 2026-07-11 hardening); older corpora store the key letter.
+        # Either form must resolve to an option.
+        missing = [
+            a
+            for a in answers
+            if a not in options and str(a).strip() not in values
+        ]
         if missing:
-            violations.append(f"{label!r}: correct key(s) {missing!r} not in options {sorted(options)}")
+            violations.append(
+                f"{label!r}: correct answer(s) {missing!r} match no option key or value"
+            )
     return ProxyResult(
         name="mcq_valid",
         passed=not violations,

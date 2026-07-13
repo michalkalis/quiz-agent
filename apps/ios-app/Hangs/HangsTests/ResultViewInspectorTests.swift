@@ -96,7 +96,7 @@ struct ResultViewInspectorTests {
 
             // Hero: "NAILED\nIT." text — presence confirms the correct branch rendered
             #expect(throws: Never.self) {
-                try tree.find(text: "NAILED\nIT.")
+                try tree.find(text: "NAILED IT.")
             }
 
             // HangsResultBanner label: "correct" for isCorrect == true
@@ -141,7 +141,7 @@ struct ResultViewInspectorTests {
 
             // Hero: "MISSED\nIT." — presence confirms the incorrect branch rendered
             #expect(throws: Never.self) {
-                try tree.find(text: "MISSED\nIT.")
+                try tree.find(text: "MISSED IT.")
             }
 
             // HangsResultBanner label: "not quite" for isCorrect == false
@@ -158,7 +158,7 @@ struct ResultViewInspectorTests {
 
             // "NAILED\nIT." must NOT appear in incorrect variant
             #expect(throws: (any Error).self) {
-                try tree.find(text: "NAILED\nIT.")
+                try tree.find(text: "NAILED IT.")
             }
 
             // Model-level: viewModel confirms the result is incorrect
@@ -194,7 +194,7 @@ struct ResultViewInspectorTests {
 
             // isCorrect == false for partial → incorrect visual branch
             #expect(throws: Never.self) {
-                try tree.find(text: "MISSED\nIT.")
+                try tree.find(text: "MISSED IT.")
             }
             #expect(throws: Never.self) {
                 try tree.find(text: "not quite")

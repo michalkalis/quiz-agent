@@ -87,11 +87,14 @@ struct ResultView: View {
                 Spacer()
                 readAloudButton
             }
-            Text(isCorrect ? "NAILED\nIT." : "MISSED\nIT.")
+            // #96 P3 (founder no-wrap): one line — was the stacked "NAILED\nIT."
+            // / "MISSED\nIT."; scales down instead of wrapping.
+            Text(isCorrect ? "NAILED IT." : "MISSED IT.")
                 .font(.hangsDisplay(52))
                 .tracking(-2)
                 .foregroundColor(Theme.Hangs.Colors.ink)
-                .fixedSize(horizontal: false, vertical: true)
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
             Text(subHeadline)
                 .font(.hangsBody(14, weight: .medium))
                 .foregroundColor(Theme.Hangs.Colors.muted)

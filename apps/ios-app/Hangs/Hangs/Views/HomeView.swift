@@ -202,8 +202,13 @@ struct HomeView: View {
                 difficultyRow
                 HangsDivider()
                 categoriesRow
-                HangsDivider()
-                imageQuestionsRow
+                // #96 P3: the "Image questions" toggle is hidden until image
+                // content ships (founder, 2026-07-12). Wiring stays; only the UI
+                // is gated behind a Config flag, so re-enabling is a one-line flip.
+                if Config.imageQuestionsToggleVisible {
+                    HangsDivider()
+                    imageQuestionsRow
+                }
             }
         }
     }

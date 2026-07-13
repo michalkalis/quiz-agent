@@ -100,6 +100,9 @@
       ▿ _commandCapturePhase: Combine.Published<Hangs.CommandCapturePhase>
         ▿ storage: Combine.Published<Hangs.CommandCapturePhase>.Storage.value
           - value: Hangs.CommandCapturePhase.idle
+      ▿ _lastRecognizedCommand: Combine.Published<Swift.Optional<Hangs.VoiceCommand>>
+        ▿ storage: Combine.Published<Swift.Optional<Hangs.VoiceCommand>>.Storage.value
+          - value: nil
       - onCommandRecognized: nil
       - voiceStartOnQuestionEnabled: true
       - voiceStartOnHomeEnabled: true
@@ -152,6 +155,7 @@
                 - isMuted: false
                 - recordingSoundsEnabled: true
                 - includeImageQuestions: false
+                - voiceCommandsEnabled: true
               - upstreamSubscriptions: 0 elements
               - hasAnyDownstreamDemand: false
               - changePublisher: nil
@@ -179,12 +183,14 @@
       ▿ _mcqVoiceMatchedKey: Combine.Published<Swift.Optional<Swift.String>>
         ▿ storage: Combine.Published<Swift.Optional<Swift.String>>.Storage.value
           - value: nil
+      - isAppForeground: true
       ▿ networkService: Hangs.MockNetworkService #4
         - mockSession: nil
         - mockResponse: nil
         - mockTextInputResponse: nil
         - mockAudioData: nil
         - shouldFail: false
+        - stubbedUsage: nil
         - capturedTextInputAudio: nil
         - capturedTextInputInput: nil
         - capturedStartQuizExcludedIds: nil
@@ -193,6 +199,8 @@
         - endSessionCallCount: 0
         - capturedIncludeImages: nil
         - capturedCategories: nil
+        - syncEntitlementsCallCount: 0
+        - syncEntitlementsError: nil
       ▿ audioService: Hangs.MockAudioService #5
         - isRecording: false
         - isPlaying: false
@@ -218,6 +226,7 @@
           - some: (Function)
         - playOpusCallCount: 0
         - lastPlayedData: nil
+        - stopPlaybackCallCount: 0
         ▿ availableInputDevices: 2 elements
           ▿ Hangs.AudioDevice
             - id: "Built-In-Mic"
@@ -229,12 +238,13 @@
             - portType: "BluetoothHFP"
         - currentInputDevice: nil
         - currentOutputDeviceName: "iPhone"
+        - deactivateSessionCallCount: 0
         - micPermissionResult: true
       ▿ persistenceStore: Hangs.MockPersistenceStore #6
         - deviceId: "dev_mock_test_1234"
         - hasCompletedOnboarding: true
         - currentSessionId: nil
-        ▿ savedSettings: Optional(Hangs.QuizSettings(language: "en", audioMode: "media", numberOfQuestions: 10, categories: [], ageAppropriate: nil, difficulty: "medium", autoAdvanceDelay: 8, answerTimeLimit: 30, thinkingTime: 10, preferredInputDeviceId: nil, autoRecordEnabled: true, autoConfirmEnabled: true, showConfirmSheet: true, isMuted: false, recordingSoundsEnabled: true, includeImageQuestions: false))
+        ▿ savedSettings: Optional(Hangs.QuizSettings(language: "en", audioMode: "media", numberOfQuestions: 10, categories: [], ageAppropriate: nil, difficulty: "medium", autoAdvanceDelay: 8, answerTimeLimit: 30, thinkingTime: 10, preferredInputDeviceId: nil, autoRecordEnabled: true, autoConfirmEnabled: true, showConfirmSheet: true, isMuted: false, recordingSoundsEnabled: true, includeImageQuestions: false, voiceCommandsEnabled: true))
           ▿ some: Hangs.QuizSettings
             - language: "en"
             - audioMode: "media"
@@ -252,6 +262,7 @@
             - isMuted: false
             - recordingSoundsEnabled: true
             - includeImageQuestions: false
+            - voiceCommandsEnabled: true
         - saveSettingsCallCount: 1
         - askedQuestionIds: 0 elements
         - maxCapacity: 500

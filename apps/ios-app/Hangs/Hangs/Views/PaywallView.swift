@@ -169,9 +169,13 @@ struct PaywallView: View {
 
     private var paywallHeroBlock: some View {
         VStack(spacing: 8) {
-            Text("GO\nUNLIMITED")
+            // #96 P3 (founder no-wrap): single line, never the old "GO\nUNLIMITED"
+            // two-line break — scales down before it would wrap.
+            Text("GO UNLIMITED")
                 .font(.hangsDisplayMD)
                 .foregroundColor(Theme.Hangs.Colors.ink)
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
                 .multilineTextAlignment(.center)
                 .accessibilityAddTraits(.isHeader)
                 .accessibilityIdentifier("paywall.headline")

@@ -347,7 +347,7 @@ struct QuestionView: View {
             // window (repeat / skip). Shown only while armed.
             if let hint = viewModel.commandListenerHint {
                 CmdListenBar(hint: hint)
-                    .padding(.horizontal, 24)
+                    .padding(.horizontal, 20)
                     .padding(.top, 8)
                     .transition(.opacity)
             }
@@ -359,9 +359,10 @@ struct QuestionView: View {
                 Task { await viewModel.skipQuestion() }
             }
             .accessibilityIdentifier("question.skip")
-            .padding(.horizontal, 24)
+            // #96 P3 (founder): tighter side padding + lower footprint (was h24 / bottom 28).
+            .padding(.horizontal, 20)
             .padding(.top, 4)
-            .padding(.bottom, 28)
+            .padding(.bottom, 16)
 
             #if DEBUG
                 Text(quizStateName)
@@ -444,15 +445,17 @@ struct QuestionView: View {
                     // TTS, not while recording). Hidden during recording/typing.
                     if let hint = viewModel.commandListenerHint {
                         CmdListenBar(hint: hint)
-                            .padding(.horizontal, 24)
+                            .padding(.horizontal, 20)
                             .transition(.opacity)
                     }
 
                     voiceActionRow
-                        .padding(.horizontal, 24)
+                        .padding(.horizontal, 20)
                 }
             }
-            .padding(.bottom, 28)
+            // #96 P3 (founder): tighter side padding + lower footprint so the
+            // action row doesn't sit needlessly high (was h24 / bottom 28).
+            .padding(.bottom, 16)
 
             #if DEBUG
                 Text(quizStateName)

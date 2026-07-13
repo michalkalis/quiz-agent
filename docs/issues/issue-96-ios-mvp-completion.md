@@ -63,6 +63,8 @@ Respect memory `project-voice-commands-diagnosis` — EN-only vocab + narrow arm
 Acceptance: indicator shows in sim during armed windows; diagnostics row present in TestFlight builds; Sentry events wired; toggle + onboarding card in; P7 checklist gets a 5-line usage cheat-sheet (which words, in which moments).
 
 ### P3 — Founder UI corrections (iOS)
+**✅ DONE 2026-07-13.** Hidden the Home "Image questions" toggle behind `Config.imageQuestionsToggleVisible=false` (setting + create-session wiring intact); single-lined the 3 named hero texts (removed the hardcoded `\n`: "GO UNLIMITED", "NAILED IT.", "MISSED IT." + `lineLimit(1)`/`minimumScaleFactor(0.5)`); reduced quiz bottom-control padding (voice + MCQ: horizontal 24→20, bottom 28→16). Audit of other `hangsDisplay` sites: the offline-paywall "CAN'T REACH\nTHE STORE" hero + scrollable body texts (question, transcript) are intentionally multi-line → left untouched (guard #6). Tests updated (Paywall/Result inspector strings, image-toggle-hidden test); 14 logic tests green; 7 `.stableDump` baselines re-recorded (also caught up pending P1/P2 model fields); sim visual PASS (Home card = 3 rows, quiz buttons tighter). Screenshots for founder captured on-sim.
+
 - Hide Home "Image questions" toggle (keep wiring; UI hidden until image content ships).
 - Single-line hero texts: `lineLimit(1)` + `minimumScaleFactor` on the Anton display call-sites — "GO UNLIMITED" (paywall — NOTE: currently hardcoded two-line "GO\nUNLIMITED", PaywallView.swift:114), "NAILED IT"/"MISSED IT" (result) + audit all `hangsDisplay*` usages; no copy rewrites.
 - Quiz bottom controls: reduce horizontal padding / vertical footprint; before/after screenshots for founder.

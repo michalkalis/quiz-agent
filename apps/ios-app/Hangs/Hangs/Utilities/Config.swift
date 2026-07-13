@@ -95,6 +95,12 @@ nonisolated enum Config {
         ("16+", "16+")
     ]
 
+    /// Whether the Home "Image questions" toggle is shown (#96 P3). OFF until
+    /// image question content ships (founder, 2026-07-12) — the setting and its
+    /// wiring (`QuizSettings.includeImageQuestions`, honored in QuestionView)
+    /// stay intact; only the toggle UI is hidden. Flip to `true` to re-expose.
+    static let imageQuestionsToggleVisible = false
+
     /// Duration for auto-stop recording — hard safety limit (seconds)
     /// Increased from 4s to 15s for Phase 2 silence detection (users may speak longer answers)
     static let autoRecordingDuration: TimeInterval = 15.0

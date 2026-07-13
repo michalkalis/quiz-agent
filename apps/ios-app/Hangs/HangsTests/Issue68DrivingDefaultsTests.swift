@@ -70,8 +70,8 @@ struct SettingsViewSessionGroupTests {
 @MainActor
 @Suite("HomeView — image questions toggle (#68)")
 struct HomeImageQuestionsToggleTests {
-    @Test("Home renders the 'Image questions' toggle, default off")
-    func imageQuestionsToggleRendersDefaultOff() async throws {
+    @Test("Home hides the 'Image questions' toggle until image content ships (#96 P3)")
+    func imageQuestionsToggleHiddenUntilContentShips() async throws {
         let vm = QuizViewModel(
             networkService: MockNetworkService(),
             audioService: MockAudioService(),
@@ -80,11 +80,15 @@ struct HomeImageQuestionsToggleTests {
         let view = HomeView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) {
+            // #96 P3: the toggle is gated behind Config.imageQuestionsToggleVisible
+            // (OFF until image content ships). The setting + its create-session
+            // wiring stay intact — see ImageOptInRequestTests — only the Home UI hides.
+            #expect(Config.imageQuestionsToggleVisible == false, "hidden in this build")
+            #expect(throws: (any Error).self) {
                 try tree.find(text: "Image questions")
             }
             #expect(vm.settings.includeImageQuestions == false,
-                    "image questions must default OFF — unsuitable while driving")
+                    "image questions still default OFF — unsuitable while driving")
         }
     }
 }

@@ -138,7 +138,7 @@ struct PaywallViewNormalStructureTests {
             let view = PaywallView(storeManager: manager, limitError: limitError, onDismiss: {})
             try await ViewHosting.host(view) {
                 let tree = try view.inspect()
-                #expect(throws: Never.self) { try tree.find(text: "GO\nUNLIMITED") }
+                #expect(throws: Never.self) { try tree.find(text: "GO UNLIMITED") }
             }
         }
     }
@@ -295,7 +295,7 @@ struct PaywallViewOfflineStructureTests {
         let view = PaywallView(storeManager: manager, limitError: nil, onDismiss: {})
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: (any Error).self) { try tree.find(text: "GO\nUNLIMITED") }
+            #expect(throws: (any Error).self) { try tree.find(text: "GO UNLIMITED") }
         }
     }
 

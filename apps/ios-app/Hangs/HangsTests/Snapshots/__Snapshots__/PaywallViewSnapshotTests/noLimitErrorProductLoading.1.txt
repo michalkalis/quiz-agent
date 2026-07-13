@@ -20,6 +20,10 @@
       ▿ _purchaseError: Published<Optional<String>>
         ▿ storage: Storage
           - value: Optional<String>.none
+      ▿ _purchaseState: Published<PurchaseState>
+        ▿ storage: Storage
+          - value: PurchaseState.idle
+      - onPurchaseSuccess: Optional<@MainActor @Sendable () async -> ()>.none
       - purchaseService: Hangs.MockPurchaseService
       ▿ transactionListener: Optional<Task<(), Never>>
         ▿ some: Task<(), Never>

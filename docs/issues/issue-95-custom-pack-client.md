@@ -23,14 +23,14 @@ The custom-pack backend (#33 Phase 1 order API + #36 Phase 2 real PackGenerator 
 - ✅ Ops note documented in the orders router docstring (auto-suspend → first order after idle starts slow).
 - ✅ **Deployed 2026-07-12 (founder approved "Nasaď všetko"):** migration `4d8e2b7c1f0a` applied + verified on prod DB; Fly secrets on quiz-pack-api: `AUTH_JWT_SECRET` (copied machine-to-machine from quiz-agent-api, value never left Fly), `OPENROUTER_API_KEY`, `LLM_GATEWAY=openrouter` (also un-degrades prod verification/scoring, cf. #53 note). Smoke-verified: /health 200, unauth GET 401, invalid bearer → 401 "Invalid bearer token" (proves the secret is set — unset would 503). Deploy command that works: `fly deploy -c apps/quiz-pack-api/fly.toml` **from repo root** (cwd = build context).
 
-### Session 2 — iOS order flow
+### Session 2 — iOS order flow — ✅ DONE 2026-07-13 (`59e10bb`)
 - Entry point OUTSIDE PaywallView (Home or Settings: "Create your own quiz pack").
 - `OrderPackView`: prompt field (10–1000 chars, validated), optional category/theme, language picker en/sk/cs. No tier picker in v1 — fixed 30-question pack.
 - Submit → `POST /v1/orders` → `OrderProgressView` polling `GET /v1/orders/{id}` at 1 Hz (skip SSE in v1 — the R4 polling fallback is already sanctioned in the #33 plan and is far less iOS work).
 
 ### Session 3 — play the pack
 - ✅ **Backend half DONE 2026-07-13 (`89d73f2`, deployed):** quiz-agent session-start accepts optional `pack_id`; retriever scopes to that pack (deterministic pgvector `pack_id` filter, **no hot-path LLM**) — drops the approved/difficulty/language constraints since delivered pack Qs stay `pending_review`; a normal session now filters `pack_id IS NULL` (no private-pack leak); custom-pack sessions bypass the 30/mo quota (paid content). 374 backend green + real-Postgres isolation proof.
-- iOS "My packs" list (from `GET /v1/orders`, bearer-scoped) with "Start quiz" per delivered pack. **(iOS half — remaining.)**
+- iOS "My packs" list (from `GET /v1/orders`, bearer-scoped) with "Start quiz" per delivered pack. **✅ DONE 2026-07-13 (`59e10bb`)** — built via a dynamic workflow (build → 5-lens adversarial verify → fix). Wiring lens caught that "Start quiz" wouldn't reach the question screen (pushed Settings stack covered it) → fixed by resetting the root NavigationStack identity on a `.packQuizStarted` notification. 624 iOS unit tests green (9 OrderPackViewModel + 7 Codable-contract) + on-sim visual pass (gating / form / validation / offline My-packs). **Entry KEPT visible** — flow sound to the paid boundary; the real order→deliver→play e2e (paid generation) is the founder's P7 on-device step, not run autonomously.
 
 ### Session 4 — payments (DEFERRED until real users)
 - App Store Connect consumable `com.carquiz.pack.custom.30` @ €3.99 (update `_PRODUCT_TIERS`), send `Transaction.jwsRepresentation` as X-StoreKit-JWS. Prereq: measured cost-per-pack from Session 1's cost capture confirms margin.

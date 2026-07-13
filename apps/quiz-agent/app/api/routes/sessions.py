@@ -43,6 +43,12 @@ async def create_session(
     subject = await resolve_session_subject(
         request, body.user_id, token_service, auth_sessionmaker
     )
+    if subject.subject_id is None:
+        # #89 fail-loud invariant: never create a session without a quota
+        # subject — a user_id=None session short-circuits every quota gate.
+        # resolve_session_subject already rejects the no-identity path; this
+        # backstops any future caller that might not.
+        raise HTTPException(status_code=401, detail="Authentication required")
     try:
         session = session_manager.create_session(
             max_questions=body.max_questions,

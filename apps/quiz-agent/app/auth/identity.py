@@ -116,10 +116,23 @@ async def resolve_session_subject(
     if not legacy_grace_enabled():
         raise HTTPException(status_code=401, detail="Authentication required")
 
-    # Grace window: trust the client-supplied id, registering it as legacy.
+    # Grace window.
+    if not body_user_id:
+        # #89: no bearer AND no user_id would yield subject_id=None → a
+        # user_id=None session, which every quota gate short-circuits
+        # (`if … and session.user_id`), handing out unlimited free questions.
+        # Legacy clients always send a user_id, so reject the empty-identity
+        # bypass. Logged distinctly from a real pass-through so it does not
+        # inflate the #65 flip-off metric (this request did NOT pass through).
+        logger.warning(
+            "AUTH GRACE: rejected no-identity request to %s (no bearer, no "
+            "user_id) — would bypass the quota (#89).",
+            request.url.path,
+        )
+        raise HTTPException(status_code=401, detail="Authentication required")
+    # Actual legacy pass-through: trust the client-supplied id, registering it as legacy.
     _log_grace_passthrough(request)
-    if body_user_id:
-        await _touch_identity(sessionmaker, body_user_id, is_legacy=True)
+    await _touch_identity(sessionmaker, body_user_id, is_legacy=True)
     return AuthSubject(subject_id=body_user_id, is_legacy=True, authenticated=False)
 
 

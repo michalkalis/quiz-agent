@@ -103,3 +103,19 @@ async def test_no_bearer_grace_off_rejects(db_sessionmaker, monkeypatch):
             req, "dev_legacy_id", _token_service(), db_sessionmaker
         )
     assert exc.value.status_code == 401
+
+
+async def test_no_bearer_grace_on_no_user_id_rejects(
+    db_sessionmaker, monkeypatch, caplog
+):
+    """#89: grace on but NEITHER bearer NOR user_id → reject. A None subject
+    would create a ``user_id=None`` session that every quota gate short-circuits
+    (`if … and session.user_id`), handing out unmetered free questions. The loud
+    grace-passthrough WARNING must still fire (the #65 flip-off evidence)."""
+    monkeypatch.setenv("LEGACY_USER_ID_GRACE", "on")
+    req = _Req(None)
+    with caplog.at_level("WARNING"):
+        with pytest.raises(HTTPException) as exc:
+            await resolve_session_subject(req, None, _token_service(), db_sessionmaker)
+    assert exc.value.status_code == 401
+    assert "AUTH GRACE" in caplog.text  # loud passthrough log preserved

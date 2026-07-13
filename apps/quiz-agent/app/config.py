@@ -43,6 +43,11 @@ class Settings:
     # Refresh tokens: sliding per-token window, capped by an absolute family age.
     refresh_token_ttl_days: int = 30
     refresh_family_max_days: int = 60
+    # #88: lost-response reuse-grace. A used refresh token replayed within this
+    # window, whose immediate successor is still unused, is treated as a dropped
+    # rotation response (the cellular-blip-while-driving case) and recovered
+    # instead of revoking the family. 0 disables it (strict RFC 9700 detection).
+    refresh_retry_grace_seconds: int = 60
     # App Attest (#60 Part B). `app_attest_required` is the prod-on/dev-off gate;
     # `app_attest_app_id` is "<TeamID>.<BundleID>" (the rpId the device attests
     # over). `app_attest_environment` selects which aaguid environment(s) the
@@ -79,6 +84,9 @@ class Settings:
             access_token_ttl_seconds=int(os.getenv("ACCESS_TOKEN_TTL_SECONDS", "900")),
             refresh_token_ttl_days=int(os.getenv("REFRESH_TOKEN_TTL_DAYS", "30")),
             refresh_family_max_days=int(os.getenv("REFRESH_FAMILY_MAX_DAYS", "60")),
+            refresh_retry_grace_seconds=int(
+                os.getenv("REFRESH_RETRY_GRACE_SECONDS", "60")
+            ),
             attest_challenge_ttl_seconds=int(
                 os.getenv("ATTEST_CHALLENGE_TTL_SECONDS", "300")
             ),

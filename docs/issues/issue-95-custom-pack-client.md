@@ -29,12 +29,33 @@ The custom-pack backend (#33 Phase 1 order API + #36 Phase 2 real PackGenerator 
 - Submit → `POST /v1/orders` → `OrderProgressView` polling `GET /v1/orders/{id}` at 1 Hz (skip SSE in v1 — the R4 polling fallback is already sanctioned in the #33 plan and is far less iOS work).
 
 ### Session 3 — play the pack
-- quiz-agent session-start accepts optional `pack_id`; retriever filters on the existing pgvector `pack_id` column — deterministic filter, **no new LLM calls on the hot path**.
-- iOS "My packs" list (from `GET /v1/orders?mine=1`) with "Start quiz" per delivered pack.
-- Custom packs bypass the 30/mo free quota when played (decided — paid content).
+- ✅ **Backend half DONE 2026-07-13 (`89d73f2`, deployed):** quiz-agent session-start accepts optional `pack_id`; retriever scopes to that pack (deterministic pgvector `pack_id` filter, **no hot-path LLM**) — drops the approved/difficulty/language constraints since delivered pack Qs stay `pending_review`; a normal session now filters `pack_id IS NULL` (no private-pack leak); custom-pack sessions bypass the 30/mo quota (paid content). 374 backend green + real-Postgres isolation proof.
+- iOS "My packs" list (from `GET /v1/orders`, bearer-scoped) with "Start quiz" per delivered pack. **(iOS half — remaining.)**
 
 ### Session 4 — payments (DEFERRED until real users)
 - App Store Connect consumable `com.carquiz.pack.custom.30` @ €3.99 (update `_PRODUCT_TIERS`), send `Transaction.jwsRepresentation` as X-StoreKit-JWS. Prereq: measured cost-per-pack from Session 1's cost capture confirms margin.
+
+## Session 2+3 iOS client — execution recon (2026-07-13, 3-agent map; for the next session)
+
+**Backend is DONE + deployed** (above). Remaining = the iOS client. Research is already done — the below IS the spec; **execute via a dynamic workflow** (fan out build + adversarial verify; keep raw file reads out of the main context).
+
+**quiz-pack-api order contract** (host `quiz-pack-api.fly.dev` — a SEPARATE Fly app from quiz-agent-api):
+- `POST /v1/orders` → 202 `{order_id, status, created_at}` (200 on idempotent replay, same shape). Headers: `X-Admin-Key` (founder path) **and** `Authorization: Bearer <jwt>` (links the order so it lists under "mine"). Body: `{transaction_id:"admin-<uuid>", product_id:"pack_30", prompt (10–1000 chars), language ("en"|"sk"|"cs"), target_count:30, category?, theme?}`. transaction_id MUST start `admin-`; product must be a `_PRODUCT_TIERS` key.
+- `GET /v1/orders` → 200 `{orders:[OrderSnapshot]}` newest-first. **Bearer required, no admin-key alt** → send the signed-in bearer.
+- `GET /v1/orders/{id}` → 200 `OrderSnapshot`. Bearer(owner) **or** `X-Admin-Key`. Poll 1 Hz until `status=="delivered"`, then play via `pack_id`.
+- `OrderSnapshot` = `{order_id:uuid, status, product_id, target_count, language, category?, theme?, created_at, delivered_at?, pack_id:uuid?, llm_cost_usd?(str), search_cost_cents:int, job?}`. Order status ∈ pending|in_progress|delivered|failed|refunded; `pack_id` null until delivered. Errors are `{detail:"..."}`.
+
+**iOS insertion points** (`apps/ios-app/Hangs/Hangs`, Swift 6 / Swift Testing / MVVM+service; NEVER `@Observable` — always `@MainActor final class : ObservableObject` + `@Published`, protocol-injected service with default+test inits):
+- New files: `Services/PackOrderService.swift` (actor mirroring `NetworkService.swift:39-63`; own `baseURL` from a new `Config.packApiBaseURL`, inject `AuthServiceProtocol` for the bearer) + `Services/Mocks/MockPackOrderService.swift`; `Models/PackOrder.swift` (Codable, snake_case `CodingKeys` per `Session.swift:23-34`); `ViewModels/OrderPackViewModel.swift` (state enum per `StoreManager.swift:45-56`); `Views/OrderPackView.swift` / `OrderProgressView.swift` / `MyPacksView.swift`; `HangsTests/OrderPackViewModelTests.swift` (mirror `OnboardingViewModelTests.swift`).
+- `Config.swift:14-19` + `Info.plist` + `Local.xcconfig`/`Prod.xcconfig` (after line 14): add `packApiBaseURL` / key `PACK_API_BASE_URL` = `http://localhost:8003` / `https://quiz-pack-api.fly.dev`.
+- Admin key: mirror `KeychainTokenStore` (`AuthService.swift:708-762`) with a distinct account `"admin_key"`. Entry points visible only when a key is stored (`@State hasAdminKey`, loaded like `SettingsView.swift:44,106-109`).
+- `SettingsView.swift:76` (between subscription/about groups), gated `if hasAdminKey`: admin-key field + `NavigationLink`s to OrderPackView + MyPacksView. **Entry OUTSIDE PaywallView** (concept-collision guard).
+- Play the pack: `NetworkService.swift:15` (protocol) + `:123-153` (impl) add `packId: String?` → conditional `body["pack_id"]`; `QuizViewModel.swift:463-467` + `:511-518` add `packId` to `startNewQuiz` → `createSession`. `startQuiz` unchanged. MyPacksView "Start quiz" → `startNewQuiz(packId:)`.
+- `AppState.swift:15-22` + both inits (`:59-64`, `:150-158`): add `packOrderService` (construct with `authService`).
+
+**Auth model:** admin key in Keychain (no key in binary → works in TestFlight; visible entry only when stored). Bearer = `AuthService.accessToken` (same JWT is valid on quiz-pack-api — it shares `AUTH_JWT_SECRET`; subject matches). Send bearer on POST (linkage) + every GET; admin key on POST + GET-by-id.
+
+**Fallback (founder call):** if the order→progress→delivered→play e2e doesn't pass cleanly, **hide the entry button, fail loud in the report, ship the rest** — do NOT block P4/P7.
 
 ## Founder decisions (locked 2026-07-12)
 

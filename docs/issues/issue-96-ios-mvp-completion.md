@@ -82,6 +82,7 @@ End `[HUMAN]` (the run's only human touchpoint): ping founder for ⌘S → commi
 Acceptance: pen matches shipped app for all B/C rows; screenshot-diff shows no other frames touched.
 
 ### P5 — #95 client half (iOS order flow + play the pack)
+**◑ Backend half DONE 2026-07-13 (`89d73f2`, deployed):** quiz-agent plays a pack via `POST /sessions {pack_id}` — pack-scoped retrieval (drops approved/difficulty/language; pack Qs are `pending_review`), `pack_id IS NULL` leak-guard on normal sessions, 30/mo quota bypassed; 374 backend green + real-Postgres proof. **iOS client half REMAINS** — full execution recon (contract + insertion points) now lives in issue-95 §"Session 2+3 iOS client — execution recon"; **run it via a dynamic workflow.**
 Execute issue-95 **Sessions 2 + 3 exactly as planned there** (entry point OUTSIDE PaywallView; OrderPackView 10–1000-char prompt + language picker; OrderProgressView polling 1 Hz; quiz-agent session-start `pack_id` filter — deterministic, no hot-path LLM; My-packs list from `GET /v1/orders`; delivered pack playable; custom packs bypass the 30/mo quota).
 Admin auth (resolved default, founder informed 2026-07-13): **Settings-entered admin key stored in device Keychain** — no key in the binary, works in TestFlight builds; entry point visible only when a key is stored.
 **Fallback (founder call 2026-07-13):** if the e2e doesn't pass cleanly within this phase, hide the entry button, fail loud in the report, and ship the rest — do not block P6/P7.

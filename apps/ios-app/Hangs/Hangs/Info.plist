@@ -82,6 +82,8 @@
 	<false/>
 	<key>API_BASE_URL</key>
 	<string>$(API_BASE_URL)</string>
+	<key>PACK_API_BASE_URL</key>
+	<string>$(PACK_API_BASE_URL)</string>
 	<key>API_VERSION</key>
 	<string>$(API_VERSION)</string>
 	<key>ENVIRONMENT_NAME</key>

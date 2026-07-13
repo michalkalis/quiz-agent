@@ -20,6 +20,8 @@ final class AppState: ObservableObject {
     let storeManager: StoreManager
     /// The auth service, exposed so SettingsView can drive Apple sign-in, sign-out, and account actions.
     let authService: AuthService
+    /// Custom-pack ordering client (issue #95), targeting the quiz-pack-api host.
+    let packOrderService: PackOrderServiceProtocol
 
     /// The live QuizViewModel, registered by `makeQuizViewModel()` (weak — the
     /// owner is ContentView's `@StateObject`). HangsApp routes scene-phase
@@ -37,6 +39,7 @@ final class AppState: ObservableObject {
             self.sttService = mocks.stt
             self.storeManager = StoreManager(purchaseService: MockPurchaseService())
             self.authService = AuthService(baseURL: Config.apiBaseURL)
+            self.packOrderService = MockPackOrderService()
             storeManager.onPurchaseSuccess = { [weak self] in
                 await self?.quizViewModel?.notifyPremiumPurchased()
             }
@@ -62,6 +65,7 @@ final class AppState: ObservableObject {
         self.audioService = AudioService()
         self.persistenceStore = PersistenceStore()
         self.storeManager = StoreManager()
+        self.packOrderService = PackOrderService(authService: authService)
 
         // Silence detection / barge-in require iOS 26+ SpeechDetector.
         var silence: SilenceDetectionServiceProtocol? = nil
@@ -146,7 +150,8 @@ final class AppState: ObservableObject {
         silenceDetectionService: SilenceDetectionServiceProtocol? = nil,
         sttService: ElevenLabsSTTServiceProtocol? = nil,
         storeManager: StoreManager? = nil,
-        authService: AuthService? = nil
+        authService: AuthService? = nil,
+        packOrderService: PackOrderServiceProtocol = MockPackOrderService()
     ) {
         self.networkService = networkService
         self.audioService = audioService
@@ -155,6 +160,7 @@ final class AppState: ObservableObject {
         self.sttService = sttService
         self.storeManager = storeManager ?? StoreManager()
         self.authService = authService ?? AuthService(baseURL: Config.apiBaseURL)
+        self.packOrderService = packOrderService
     }
 
     /// Create a new QuizViewModel with injected dependencies

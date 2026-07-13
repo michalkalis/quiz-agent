@@ -43,6 +43,11 @@ struct SettingsView: View {
     // Reflects the current Keychain state; refreshed on appear + after auth events.
     @State private var currentTokens: AuthTokens? = nil
 
+    // Custom packs (#95): admin-gated entry. `hasAdminKey` reflects whether a key
+    // is stored; the order/list links only appear once one is saved.
+    @State private var adminKeyInput: String = ""
+    @State private var hasAdminKey: Bool = false
+
     // #80: pinned-bar title fades in once the in-content hero scrolls away.
     @State private var isHeroCollapsed = false
 
@@ -75,6 +80,7 @@ struct SettingsView: View {
                     accountGroup
                     subscriptionGroup
                     aboutGroup
+                    packsGroup
                     #if DEBUG
                         developerGroup
                     #endif
@@ -106,6 +112,7 @@ struct SettingsView: View {
         .task {
             // Load auth state from Keychain on appear.
             currentTokens = KeychainTokenStore().load()
+            hasAdminKey = AdminKeyStore().load() != nil
         }
         .onReceive(NotificationCenter.default.publisher(for: .authSignedInSessionDropped)) { _ in
             // A signed-in session was dropped out-of-band (refresh 401) — reload so the
@@ -572,6 +579,73 @@ struct SettingsView: View {
             }
             .accessibilityIdentifier("settings.resetHistory")
         }
+    }
+
+    // MARK: - Custom packs group (#95)
+    // Admin-gated: paste the quiz-pack-api admin key once (stored in the
+    // Keychain, never in the binary — works in TestFlight). Once a key is
+    // stored, the order + list links appear. This lives OUTSIDE the paywall
+    // by design — custom packs are a distinct concept from #93 credit packs.
+
+    private var packsGroup: some View {
+        groupSection(label: "custom packs", color: Theme.Hangs.Colors.accentTeal) {
+            VStack(spacing: 0) {
+                HStack(spacing: 10) {
+                    SecureField("Admin key", text: $adminKeyInput)
+                        .font(.hangsBody(15))
+                        .foregroundColor(Theme.Hangs.Colors.ink)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .accessibilityIdentifier("packs.adminKeyField")
+                    Button("Save") {
+                        let trimmed = adminKeyInput.trimmingCharacters(in: .whitespacesAndNewlines)
+                        guard !trimmed.isEmpty else { return }
+                        AdminKeyStore().save(trimmed)
+                        adminKeyInput = ""
+                        hasAdminKey = true
+                    }
+                    .font(.hangsBody(15, weight: .semibold))
+                    .foregroundColor(Theme.Hangs.Colors.pink)
+                    .accessibilityIdentifier("packs.saveAdminKey")
+                }
+                .padding(.horizontal, 18)
+                .padding(.vertical, 14)
+
+                if hasAdminKey {
+                    hairline
+
+                    NavigationLink {
+                        OrderPackView(service: appState.packOrderService, onPlayPack: playPack)
+                    } label: {
+                        HangsConfigRow(label: "Create a pack", value: "", valueColor: Theme.Hangs.Colors.muted, showsChevron: true, action: {})
+                            .allowsHitTesting(false)
+                    }
+                    .accessibilityIdentifier("packs.createPack")
+
+                    hairline
+
+                    NavigationLink {
+                        MyPacksView(service: appState.packOrderService, onPlayPack: playPack)
+                    } label: {
+                        HangsConfigRow(label: "My packs", value: "", valueColor: Theme.Hangs.Colors.muted, showsChevron: true, action: {})
+                            .allowsHitTesting(false)
+                    }
+                    .accessibilityIdentifier("packs.myPacks")
+                }
+            }
+        }
+    }
+
+    /// Start a quiz that plays the delivered custom pack. Flipping the quiz state
+    /// swaps the root NavigationStack content to QuestionView, but the pushed
+    /// Settings → OrderPack → OrderProgress (or MyPacks) chain lives on the same
+    /// NavigationStack and would otherwise stay on top, hiding QuestionView. So we
+    /// post `.packQuizStarted`, which ContentView observes to reset the root
+    /// NavigationStack's identity — popping the whole pushed chain — before the
+    /// quiz renders (#95 nav fix).
+    private func playPack(_ packId: String) {
+        NotificationCenter.default.post(name: .packQuizStarted, object: nil)
+        Task { await viewModel.startNewQuiz(packId: packId) }
     }
 
     /// Release-visible readout of the voice-command recognizer state (#96 P2):

@@ -12,7 +12,7 @@ import Sentry
 
 /// Protocol for network operations
 protocol NetworkServiceProtocol: Sendable {
-    func createSession(maxQuestions: Int, difficulty: String, language: String, categories: [String], userId: String?, includeImages: Bool) async throws -> QuizSession
+    func createSession(maxQuestions: Int, difficulty: String, language: String, categories: [String], userId: String?, includeImages: Bool, packId: String?) async throws -> QuizSession
     func startQuiz(sessionId: String, excludedQuestionIds: [String]) async throws -> QuizResponse
     func submitVoiceAnswer(sessionId: String, audioData: Data, fileName: String) async throws -> QuizResponse
     func submitTextInput(sessionId: String, input: String, audio: Bool) async throws -> QuizResponse
@@ -120,7 +120,7 @@ actor NetworkService: NetworkServiceProtocol {
 
     // MARK: - Session Management
 
-    func createSession(maxQuestions: Int = 10, difficulty: String = "medium", language: String = "en", categories: [String] = [], userId: String? = nil, includeImages: Bool = false) async throws -> QuizSession {
+    func createSession(maxQuestions: Int = 10, difficulty: String = "medium", language: String = "en", categories: [String] = [], userId: String? = nil, includeImages: Bool = false, packId: String? = nil) async throws -> QuizSession {
         let endpoint = baseURL.appendingPathComponent("/api/v1/sessions")
 
         let base = baseURL
@@ -148,6 +148,12 @@ actor NetworkService: NetworkServiceProtocol {
         // Add user_id for usage tracking (freemium)
         if let userId = userId {
             body["user_id"] = userId
+        }
+
+        // Custom pack (#95): play a specific generated pack by id. The backend
+        // sources questions from this pack and bypasses the free quota.
+        if let packId {
+            body["pack_id"] = packId
         }
 
         request.httpBody = try JSONSerialization.data(withJSONObject: body)

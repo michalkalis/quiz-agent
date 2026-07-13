@@ -463,7 +463,8 @@ final class QuizViewModel: ObservableObject {
     func startNewQuiz(
         maxQuestions: Int? = nil,
         difficulty: String? = nil,
-        language: String? = nil
+        language: String? = nil,
+        packId: String? = nil
     ) async {
         transition(to: .startingQuiz)
         errorMessage = nil
@@ -514,7 +515,8 @@ final class QuizViewModel: ObservableObject {
                 language: quizLanguage,
                 categories: settings.categories,
                 userId: persistenceStore.deviceId,
-                includeImages: settings.includeImageQuestions
+                includeImages: settings.includeImageQuestions,
+                packId: packId
             )
 
             currentSession = session

@@ -12,6 +12,7 @@ ENVIRONMENT_NAME = Production
 // MARK: - API
 // `$()` escape breaks the `//` token so xcconfig doesn't treat the rest as a comment.
 API_BASE_URL = https:/$()/quiz-agent-api.fly.dev
+PACK_API_BASE_URL = https:/$()/quiz-pack-api.fly.dev
 
 // MARK: - Sentry
 SENTRY_DSN = https:/$()/c5440340d41535b4862af9385d9bc38c@o4511195958738944.ingest.de.sentry.io/4511196118188112

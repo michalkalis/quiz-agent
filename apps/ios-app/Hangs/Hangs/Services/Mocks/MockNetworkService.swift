@@ -51,7 +51,7 @@ final class MockNetworkService: NetworkServiceProtocol {
     /// When set, `syncEntitlements` throws this error instead of succeeding.
     var syncEntitlementsError: Error?
 
-    func createSession(maxQuestions: Int, difficulty: String, language: String, categories: [String], userId: String?, includeImages: Bool) async throws -> QuizSession {
+    func createSession(maxQuestions: Int, difficulty: String, language: String, categories: [String], userId: String?, includeImages: Bool, packId: String?) async throws -> QuizSession {
         capturedIncludeImages = includeImages
         capturedCategories = categories
         if let error = createSessionError { throw error }

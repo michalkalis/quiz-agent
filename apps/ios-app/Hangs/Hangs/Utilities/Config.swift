@@ -18,6 +18,15 @@ nonisolated enum Config {
         return url
     }
 
+    /// Base URL for the quiz-pack-api (custom-pack ordering, issue #95). Distinct
+    /// host from `apiBaseURL` — populated from Info.plist via xcconfig.
+    static var packApiBaseURL: String {
+        guard let url = Bundle.main.object(forInfoDictionaryKey: "PACK_API_BASE_URL") as? String else {
+            fatalError("PACK_API_BASE_URL not found in Info.plist. Ensure xcconfig files are properly configured.")
+        }
+        return url
+    }
+
     /// API version prefix
     ///
     /// Read from Info.plist which gets populated from xcconfig files

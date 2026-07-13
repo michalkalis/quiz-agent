@@ -20,6 +20,14 @@ struct ContentView: View {
     /// Set while the paywall is still up so the sign-in sheet presents only
     /// after the paywall's dismissal completes (two sheets can't overlap).
     @State private var signInPromptPending = false
+    /// Identity of the root NavigationStack. Bumped when a custom pack's
+    /// "Start quiz" fires (#95): the pack flow pushes Settings → OrderPack →
+    /// OrderProgress onto this same stack, and flipping `quizState` only swaps
+    /// the stack's *root* content — the pushed chain would stay on top and hide
+    /// QuestionView. Recreating the stack drops the pushed chain; QuestionView
+    /// then mounts as the fresh root. Safe because quiz state lives in
+    /// `viewModel` (a @StateObject above the stack), not in the recreated views.
+    @State private var navStackID = UUID()
 
     init(appState: AppState) {
         _viewModel = StateObject(wrappedValue: appState.makeQuizViewModel())
@@ -104,6 +112,7 @@ struct ContentView: View {
                 }
                 .animation(reduceMotion ? nil : .easeInOut, value: viewModel.quizState)
             }
+            .id(navStackID)
 
             // Floating minimized quiz view overlay
             if viewModel.isMinimized {
@@ -152,6 +161,12 @@ struct ContentView: View {
         .onReceive(appState.storeManager.$isPurchased.removeDuplicates()) { isPurchased in
             guard isPurchased else { return }
             maybeQueueSignInPrompt(afterPaywall: viewModel.showPaywall)
+        }
+        // #95: a custom pack's "Start quiz" was tapped inside the pushed pack
+        // flow. Recreate the root NavigationStack so that pushed chain is torn
+        // down and the freshly started QuestionView is the visible root.
+        .onReceive(NotificationCenter.default.publisher(for: .packQuizStarted)) { _ in
+            navStackID = UUID()
         }
     }
 
@@ -291,6 +306,14 @@ struct ErrorView: View {
         .padding(.horizontal, 20)
         .padding(.bottom, 20)
     }
+}
+
+extension Notification.Name {
+    /// Posted by the custom-pack "Start quiz" action (SettingsView.playPack) so
+    /// ContentView resets the root NavigationStack's identity — dropping the
+    /// pushed Settings → OrderPack → OrderProgress (or MyPacks) chain that would
+    /// otherwise cover the freshly started QuestionView (#95).
+    nonisolated static let packQuizStarted = Notification.Name("packQuizStarted")
 }
 
 #Preview {

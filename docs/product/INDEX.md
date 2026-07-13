@@ -11,7 +11,7 @@ Dashboard of all PRDs and user-story sets. Updated by `/to-prd` and during `/tri
 
 | Title | File | Status | Implementation |
 |---|---|---|---|
-| Hangs MVP Launch | [mvp-launch.md](prds/mvp-launch.md) | Draft (2026-03-18) | Tracked across many issues — see `docs/issues/INDEX.md` |
+| Trubbo MVP Launch | [mvp-launch.md](prds/mvp-launch.md) | Draft (2026-03-18) | Tracked across many issues — see `docs/issues/INDEX.md` |
 
 ## User Stories
 

@@ -8,6 +8,8 @@ date: 2026-04-17
 
 **Dátum:** 2026-04-17 · **Aktuálny pracovný názov:** `CarQuiz`
 
+**Addendum (2026-07-07):** App renamed to Trubbo (founder decision); this document is preserved as historical research.
+
 ---
 
 ## Executive summary

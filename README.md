@@ -9,7 +9,7 @@ Voice-first AI quiz platform for hands-free trivia while driving.
 | `apps/quiz-agent` | FastAPI backend (quiz session engine, :8002) |
 | `apps/quiz-pack-api` | Quiz-pack order/generation service (:8003, issue #33) |
 | `apps/web-ui` | Web UI |
-| `apps/ios-app` | SwiftUI iOS app (`Hangs`) |
+| `apps/ios-app` | SwiftUI iOS app (`Trubbo`) |
 | `packages/shared` | Shared Pydantic models / utilities |
 | `infra/` | Standalone infra (e.g. quiz-pack DB) |
 | `design/` | Live Pencil design source (`quiz-agent.pen`) |

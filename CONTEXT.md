@@ -6,12 +6,15 @@ This file is consulted by `/to-prd`, `/zoom-out`, `/diagnose`, `/improve-codebas
 
 ## Product
 
+**Trubbo**
+Current product name. The iOS app and the App Store / TestFlight identity. Renamed from Hangs on 2026-07-07 (founder decision).
+_Avoid_: Hangs (legacy), CarQuiz (legacy), the app, our trivia app.
+
 **Hangs**
-Current product name. The iOS app and the App Store / TestFlight identity. Renamed from CarQuiz on 2026-04-19.
-_Avoid_: CarQuiz (legacy), the app, our trivia app.
+Legacy product name (2026-04-19 – 2026-07-07), renamed to Trubbo. Still appears in: bundle ID `com.missinghue.hangs`, URL scheme `hangs-test://`, logger subsystem, Fly app names, and internal-only Xcode target/module/scheme/folder names (`Hangs*`, `Theme.Hangs` component namespace). Do **not** rename any of those — stable identifiers. Everywhere else, use Trubbo.
 
 **CarQuiz**
-Legacy product name. Still appears in: Sentry org/project slug (`missinghue/carquiz`) and StoreKit product IDs. Do **not** rename either of those — they are stable identifiers. Everywhere else, use Hangs.
+Legacy product name. Still appears in: Sentry org/project slug (`missinghue/carquiz`) and StoreKit product IDs. Do **not** rename either of those — they are stable identifiers. Everywhere else, use Trubbo.
 
 **quiz-agent**
 The monorepo and the FastAPI backend service inside it. Always lowercase, hyphenated. Backend deploys to `quiz-agent-api.fly.dev`.
@@ -133,6 +136,6 @@ For any architecture conversation, use the deepening vocabulary in `.claude/skil
 
 ## Flagged ambiguities
 
-- "CarQuiz" is still the legal identity in Sentry slug + StoreKit IDs. Renaming those would break alert routing and break in-flight purchases. Resolution: those two stay; everything else is Hangs.
+- "CarQuiz" is still the legal identity in Sentry slug + StoreKit IDs; "Hangs" is still the legal identity in the bundle ID, URL scheme, logger subsystem, and Fly app names. Renaming any of those would break alert routing, in-flight purchases, or TestFlight/CI continuity. Resolution: those identifiers stay; everything user-facing is Trubbo.
 - "Issue tracker" in mattpocock-skills documentation refers to GitHub Issues. **This repo has no GitHub Issues.** State lives in `docs/issues/issue-NN-*.md` files (`**Triage:**` line) and `docs/todo/TODO.md`. The `/triage` skill is adapted for that.
 - "AppState" vs "QuizState" — `AppState` is the iOS app-level singleton; `QuizState` is the per-question UI state machine. Don't conflate.

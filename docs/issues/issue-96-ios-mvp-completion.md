@@ -72,6 +72,8 @@ Acceptance: indicator shows in sim during armed windows; diagnostics row present
 Acceptance: targeted suites green + on-sim visual pass light+dark on touched screens; screenshots saved for the final report.
 
 ### P4 — Pencil sync + #92 S2 (design side; baseline d507d3e already committed)
+**✅ DONE 2026-07-13 (`99ca8fb`).** Two-round Pencil sync (founder ⌘S-saved): Trubbo wordmark across 13 frames + subtitles; copy (Quiz language / YOU SAID / +1 points); removed rejected-A elements (question echo/counter/mute, "Try again" link) + wake-word rows; archived 5 superseded frames (`ARCHIVED_*`); added shipped functional-parity rows to Settings ×3 (subscription "Plan", Auto-record/Auto-confirm/Mic picker, Call Mode toggle) + Home "Upgrade" entry. #92 S2 living-docs (README, product PRD/stories titles, CONTEXT rename authority) committed `a9ec437`. **Deferred (decision #1 — functional+copy, no pixel-perfection): dynamic state-level details** (quiz timer chip/speaker variants, Answer-Confirm edit/progress/processing, Result auto-advance controls, Quiz-Complete upsell card, Auth-sheet failed/progress states) — founder to confirm whether to sync. Flag: ~124 "Hangs" mentions remain in other internal docs (research/design/skills) outside #92's locked 6-file scope — optional follow-up sweep.
+
 In the editor (pencil MCP), against the gap table below:
 - **B-list:** pen ← shipped app state for all B rows (quiz audio strip, Home free-plan card, Settings rows, Answer-Confirm extras, Result auto-advance, Completion upsell, sign-in sheet states, Offline-paywall wordmark) + P2/P3 outcomes (CmdListenBar placements stay as designed; quiz bottom paddings; onboarding card only if copy changed direction).
 - **Rejected-A rows** (decision 7): update pen to app state — remove Answer-Confirm question-echo/counter/mute, remove "Try this question again" link.
@@ -96,6 +98,8 @@ Per [issue-88](issue-88-refresh-lost-response-signout.md) + [issue-89](issue-89-
 Acceptance: #88 — dropped-response replay of the just-used refresh token re-issues the unused successor, does NOT revoke the family (test-covered); #89 — null-subject sessions rejected or counted, quota gates un-skippable; both deployed.
 
 ### P7 — Verify + TestFlight as Trubbo (#92 S3)
+**✅ DONE 2026-07-13.** Gate green: backend 374 (quiz-agent) + 595 (quiz-pack-api), iOS 624, API contract clean (packId↔pack_id + all 33 order fields), prod healthy (596 Q, runway 119d). **TestFlight build SUCCESS + uploaded as Trubbo** (run 29255778835). RS smoke: build launches clean/no-crash/graceful-error, but sim+prod can't exercise the quiz path (prod requires App Attest #60/#65; sim compiles it out — by design) → real quiz e2e = founder on-device (App Attest works there). **Remaining = founder on-device checklist** (below).
+
 Full HangsTests + both backend suites; RS smoke; /verify-api if models changed; then /testflight.
 Post-build founder checklist (on-device): sandbox sub + pack purchase (P1) · voice commands with indicator + cheat-sheet + Settings toggle (P2) · image toggle hidden, single-line texts, quiz paddings (P3) · custom pack order→play e2e, or confirm entry hidden if P5 fell back (P5) · re-checks from the 2026-07-11 batch (silent switch, background mic).
 

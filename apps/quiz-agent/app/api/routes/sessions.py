@@ -68,6 +68,10 @@ async def create_session(
             session.preferred_categories = body.categories
         elif body.category:
             session.preferred_categories = [body.category]
+        # #95: a pack id scopes the whole session to that custom pack (see the
+        # retriever + quota bypass). Set last so it is authoritative.
+        if body.pack_id:
+            session.pack_id = body.pack_id
         session_manager.update_session(session)
         return session_to_response(session)
     except Exception as e:

@@ -241,8 +241,9 @@ class QuizFlowService:
             result.message = "Quiz completed!"
             return result
 
-        # Check usage limit
-        if self.usage_tracker and session.user_id:
+        # Check usage limit. #95: custom-pack sessions bypass the free monthly
+        # quota (paid, curated content).
+        if self.usage_tracker and session.user_id and not session.pack_id:
             allowed, remaining, resets_at = await self.usage_tracker.check_limit(
                 session.user_id
             )
@@ -281,8 +282,8 @@ class QuizFlowService:
         session.current_question_id = next_question.id
         session.asked_question_ids.append(next_question.id)
 
-        # Record usage
-        if self.usage_tracker and session.user_id:
+        # Record usage (#95: skipped for custom-pack sessions — see check above)
+        if self.usage_tracker and session.user_id and not session.pack_id:
             await self.usage_tracker.record_question(session.user_id)
 
         # Cache translated question text

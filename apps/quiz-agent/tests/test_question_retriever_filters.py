@@ -100,3 +100,69 @@ def test_fallback_retrieval_respects_image_opt_out():
     for call in store.search.call_args_list:
         allowed = call.kwargs["filters"]["type"]["$in"]
         assert "image" not in allowed
+
+
+def test_pack_session_scopes_to_pack_id_only():
+    # #95: playing a custom pack must serve EXACTLY that pack's questions — the
+    # pack is the curation boundary, so pack_id scoping replaces the global
+    # constraints. Crucially it must drop review_status: delivered pack questions
+    # stay `pending_review` (they are never promoted into the shared corpus), so
+    # if the "approved" gate survived here every pack would play as an EMPTY quiz.
+    retriever = _retriever()
+    session = QuizSession(
+        session_id="sess_pack",
+        current_difficulty="hard",
+        language="sk",  # non-en would normally add a language_dependent filter
+        pack_id="e5b8c1a2-0000-4000-8000-000000000abc",
+        preferred_categories=["music"],  # would normally add a category filter
+    )
+
+    filters = retriever._build_metadata_filters("hard", session)
+
+    assert filters["pack_id"] == "e5b8c1a2-0000-4000-8000-000000000abc"
+    assert "review_status" not in filters  # pending_review pack Qs must be servable
+    assert (
+        "difficulty" not in filters
+    )  # a pack is a fixed bundle, not difficulty-scoped
+    assert "category" not in filters  # pack scoping overrides the category picker
+    assert "language_dependent" not in filters
+    # The image-safety opt-out is the one constraint that still applies.
+    assert "image" not in filters["type"]["$in"]
+
+
+def test_normal_session_never_serves_pack_questions():
+    # #95: a custom pack is private, user-scoped paid content. The shared free
+    # quiz must never surface it — `pack_id IS NULL` keeps normal sessions on the
+    # curated global corpus. Without this guard, one approve-click on a pack
+    # question would leak someone's private pack into strangers' quizzes.
+    retriever = _retriever()
+    session = QuizSession(
+        session_id="sess_normal", current_difficulty="medium", language="en"
+    )
+
+    filters = retriever._build_metadata_filters("medium", session)
+
+    assert "pack_id" in filters
+    assert filters["pack_id"] is None
+
+
+def test_pack_session_fallback_never_hits_global_library():
+    # #95: a pack is a closed set. If the primary search comes back empty (pack
+    # exhausted), the fallback must NOT reach into the shared corpus — that would
+    # leak global questions into a paid pack AND bypass quota on them. It returns
+    # empty so the quiz ends cleanly instead of silently continuing off-pack.
+    retriever = _retriever()
+    store = retriever._store
+    session = QuizSession(
+        session_id="sess_pack",
+        current_difficulty="medium",
+        language="en",
+        pack_id="e5b8c1a2-0000-4000-8000-000000000abc",
+    )
+
+    result = retriever._fallback_retrieval(
+        session, "medium", n_candidates=5, excluded_ids=[]
+    )
+
+    assert result == []
+    store.search.assert_not_called()

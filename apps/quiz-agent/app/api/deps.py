@@ -62,6 +62,14 @@ class CreateSessionRequest(BaseModel):
         default=False,
         description="Whether image-type questions may be served (#68, default off)",
     )
+    pack_id: Optional[str] = Field(
+        default=None,
+        description=(
+            "Play a delivered custom quiz pack (#95): scopes the whole session to "
+            "this pack's questions and bypasses the free monthly quota. Omit for a "
+            "normal quiz from the shared corpus."
+        ),
+    )
     ttl_minutes: int = Field(
         default=30, ge=10, le=120, description="Session expiry time"
     )

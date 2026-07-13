@@ -62,6 +62,14 @@ class QuizSession(BaseModel):
     excluded_categories: List[str] = Field(
         default_factory=list, description="Excluded categories: ['children']"
     )
+    pack_id: Optional[str] = Field(
+        None,
+        description=(
+            "Custom quiz-pack id (#95). When set, the session plays ONLY that "
+            "pack's questions (retriever scopes on questions.pack_id) and bypasses "
+            "the free monthly quota — a pack is paid, curated content."
+        ),
+    )
 
     # Progress (single-player or aggregate)
     question_number: int = Field(0, description="Current question number (0-indexed)")

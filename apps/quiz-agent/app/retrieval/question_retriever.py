@@ -215,10 +215,25 @@ class QuestionRetriever:
             Metadata filters dict
         """
         allowed_types = ["text", "text_multichoice"] + self._image_types(session)
+
+        # #95 custom-pack session: the pack IS the curated set the user ordered
+        # and paid for, so pack_id scoping replaces the global constraints. We
+        # drop difficulty / review_status / language_dependent / category: a pack
+        # is a fixed bundle in its ordered language, and its questions stay
+        # `pending_review` (they are never promoted into the shared corpus), so
+        # requiring "approved" here would serve zero. Only the image-safety
+        # opt-out (type) is kept — no visual prompts at the wheel unless opted in.
+        if session.pack_id:
+            return {"pack_id": session.pack_id, "type": {"$in": allowed_types}}
+
         filters = {
             "difficulty": difficulty,
             "type": {"$in": allowed_types},
             "review_status": "approved",  # ONLY use human-reviewed approved questions
+            # A normal quiz never serves custom-pack questions — those are private,
+            # user-scoped paid content. pack_id IS NULL keeps the shared free quiz
+            # to the curated global corpus (#95).
+            "pack_id": None,
         }
 
         # Exclude language-dependent questions for non-English sessions
@@ -278,6 +293,13 @@ class QuestionRetriever:
         Returns:
             List of candidate questions
         """
+
+        # #95: a custom-pack session is a closed set — never fall back to the
+        # global library (that would leak shared-corpus questions into a pack and
+        # bypass quota on them). When the pack's questions are exhausted the
+        # primary search returns empty; returning empty here ends the quiz cleanly.
+        if session.pack_id:
+            return []
 
         # Build language filter for non-English sessions
         lang_filter = {}

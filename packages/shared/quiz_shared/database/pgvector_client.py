@@ -110,6 +110,11 @@ def _build_where(filters: Dict[str, Any]) -> List[Any]:
             clauses.append(col.in_(value["$in"]))
         elif isinstance(value, dict) and "$ne" in value:
             clauses.append(col != value["$ne"])
+        elif value is not None and isinstance(col.type, PGUUID):
+            # UUID columns (pack_id, #95): asyncpg binds a uuid.UUID, not a raw
+            # str — coerce like every other UUID-column touch point (delete/
+            # excluded_ids). A None value falls through to the IS NULL branch.
+            clauses.append(col == _coerce_uuid(value))
         else:
             clauses.append(col == value)
     return clauses

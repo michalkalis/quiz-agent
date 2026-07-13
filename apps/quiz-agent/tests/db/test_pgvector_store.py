@@ -153,6 +153,89 @@ async def test_get_all_returns_rows_and_honours_limit(pg_store) -> None:
         await _cleanup(factory, ids)
 
 
+async def _seed_pack(factory) -> tuple[uuid.UUID, uuid.UUID]:
+    """Insert the minimal generation_orders + question_packs parents a question's
+    ``pack_id`` FK requires. Returns (pack_id, order_id); delete the order to
+    cascade the pack away."""
+    order_id, pack_id = uuid.uuid4(), uuid.uuid4()
+    async with factory() as session:
+        await session.execute(
+            text(
+                "INSERT INTO generation_orders "
+                "(id, transaction_id, product_id, prompt, target_count, language) "
+                "VALUES (:oid, :txn, 'pack_30', 'packtest', 30, 'en')"
+            ),
+            {"oid": order_id, "txn": f"admin-packtest-{uuid.uuid4().hex[:10]}"},
+        )
+        await session.execute(
+            text(
+                "INSERT INTO question_packs "
+                "(id, order_id, prompt, language, target_count) "
+                "VALUES (:pid, :oid, 'packtest', 'en', 30)"
+            ),
+            {"pid": pack_id, "oid": order_id},
+        )
+        await session.commit()
+    return pack_id, order_id
+
+
+async def _cleanup_orders(factory, order_ids: list[uuid.UUID]) -> None:
+    async with factory() as session:
+        # ON DELETE CASCADE removes the pack; questions.pack_id is SET NULL.
+        await session.execute(
+            text("DELETE FROM generation_orders WHERE id = ANY(:ids)"),
+            {"ids": order_ids},
+        )
+        await session.commit()
+
+
+@pytest.mark.asyncio
+async def test_search_pack_id_filter_isolates_pack_and_excludes_null(pg_store) -> None:
+    """#95: the retriever scopes a custom-pack session on ``pack_id`` and a
+    normal session on ``pack_id IS NULL``. This pins the real SQL both ways
+    against Postgres/asyncpg — a str pack_id must bind against the UUID column
+    (the ``_build_where`` coercion), equality must isolate one pack from
+    another, and the IS NULL branch must still exclude pack rows even when every
+    other field matches (the private-pack leak guard). A unique category scopes
+    the assertions away from the persistent shared corpus."""
+    store, factory = pg_store
+    cat = f"__packtest_{uuid.uuid4().hex[:8]}__"
+    pack_a, order_a = await _seed_pack(factory)
+    pack_b, order_b = await _seed_pack(factory)
+    q_a, q_b, q_global = uuid.uuid4(), uuid.uuid4(), uuid.uuid4()
+    try:
+        await store.upsert(
+            _make_question(q_a, "Pack A question?", category=cat, pack_id=str(pack_a))
+        )
+        await store.upsert(
+            _make_question(q_b, "Pack B question?", category=cat, pack_id=str(pack_b))
+        )
+        await store.upsert(
+            _make_question(q_global, "Global question?", category=cat, pack_id=None)
+        )
+
+        # Pack scoping: a *string* pack_id binds against the UUID column and
+        # returns ONLY that pack's row — not pack B, not the global row.
+        a_rows = await store.search(
+            filters={"pack_id": str(pack_a), "category": cat}, n_results=100
+        )
+        assert {q.id for q in a_rows} == {str(q_a)}
+
+        # Normal session (IS NULL): excludes BOTH pack rows despite the shared
+        # category — the exclusion is the pack filter, not incidental.
+        null_rows = await store.search(
+            filters={"pack_id": None, "category": cat}, n_results=100
+        )
+        assert {q.id for q in null_rows} == {str(q_global)}
+
+        # Sanity: with no pack filter, all three rows share the category.
+        all_rows = await store.search(filters={"category": cat}, n_results=100)
+        assert {str(q_a), str(q_b), str(q_global)} <= {q.id for q in all_rows}
+    finally:
+        await _cleanup(factory, [q_a, q_b, q_global])
+        await _cleanup_orders(factory, [order_a, order_b])
+
+
 def test_sync_facade_write_roundtrip() -> None:
     """SyncPgvectorStore is the surface quiz-agent's sync consumers (admin,
     feedback) will actually call after Session B — the new writes must work

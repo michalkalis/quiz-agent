@@ -1,9 +1,9 @@
 # Issue #96 — iOS MVP completion: founder-feedback batch + design parity + TestFlight
 
-**Triage:** umbrella (bug+enhancement) · ready-for-agent (ONE autonomous session, phases P1–P6)
-**Status:** Planned 2026-07-12; **S0 parity audit executed 2026-07-12/13 with founder in-session** (gap table below, all founder gates resolved). Restructured 2026-07-13 from 8 sessions to one autonomous session at founder request. Execution of P1–P6 NOT started.
+**Triage:** umbrella (bug+enhancement) · ready-for-agent (ONE autonomous session, phases P1–P7)
+**Status:** Planned 2026-07-12; **S0 parity audit executed 2026-07-12/13 with founder in-session** (gap table below, all founder gates resolved). Restructured 2026-07-13 from 8 sessions to one autonomous session at founder request. Execution of P1–P7 NOT started.
 
-**How to run:** paste into a fresh session: *"Vykonaj autonómnu session z docs/issues/issue-96-ios-mvp-completion.md (fázy P1–P6)"*. One checkout, never parallel agents (memory project_concurrent_sessions_same_checkout). Use /workflows fan-out for the analysis-heavy IAP diagnosis (P1). Commit + push at every phase boundary (durable checkpoints — a fresh context must be able to resume from the TODO/issue state). The ONLY human touchpoint mid-run is the ⌘S save in P4; if the founder is unavailable, finish the pen edits, ping, and continue with P5 — the .pen commit can trail.
+**How to run:** paste into a fresh session: *"Vykonaj autonómnu session z docs/issues/issue-96-ios-mvp-completion.md (fázy P1–P7)"*. One checkout, never parallel agents (memory project_concurrent_sessions_same_checkout). Use /workflows fan-out for the analysis-heavy IAP diagnosis (P1). Commit + push at every phase boundary (durable checkpoints — a fresh context must be able to resume from the TODO/issue state). The ONLY human touchpoint mid-run is the ⌘S save in P4; if the founder is unavailable, finish the pen edits, ping, and continue with P5 — the .pen commit can trail.
 
 ## Goal
 
@@ -24,7 +24,7 @@ Bring the iOS app to the founder's MVP bar and ship a TestFlight build as **Trub
 | # | Decision |
 |---|---|
 | 1 | Parity depth = **functional differences + copy only**; no pixel-perfection sweep |
-| 2 | ~~#95 client half in scope (S5)~~ **REVERSED 2026-07-13:** founder wants custom packs as a proper end-user feature (not admin-key-gated founder tooling) → **#95 client = post-MVP, OUT of this round**, to be re-planned for regular users (payments via IAP), developed on a separate branch |
+| 2 | #95 client half: **IN MVP (founder re-confirmed 2026-07-13** after a brief post-MVP detour the same day). Build issue-95 Sessions 2+3 as phase P5; **fallback if the e2e doesn't pass cleanly: hide the entry button and ship without it** (founder's explicit call). Proper end-user version (IAP-priced, no admin key) stays a later follow-up |
 | 3 | Auth **#88 + #89 in scope** (backend); #91 stays out |
 | 4 | Post-answer context playback (#72 follow-up) **OUT** of this round |
 | 5 | Ship as **Trubbo** — #92 S2 (.pen + docs) + S3 (TestFlight) in scope; **ASC name already saved by founder** (availability gate cleared 2026-07-12) |
@@ -42,14 +42,14 @@ Bring the iOS app to the founder's MVP bar and ship a TestFlight build as **Trub
 - **.pen git state:** modified on disk, uncommitted; some editor saves were founder-gated (⌘S pending from #94 + bug batch). S4 must reconcile FIRST: founder ⌘S → commit baseline → then edit.
 - **IAP context:** #93 backend live in prod (webhook smoke-tested 2026-07-11); PaywallView synced to z8TS6 (#94: plan picker, pack card, dynamic CTA); RevenueCat adopted; ASC products READY_TO_SUBMIT. The founder's sandbox purchase = the one #93 leg that was never verified — and it failed (feedback #1).
 
-## The autonomous session (phases P1–P6, sequential; S0 already done)
+## The autonomous session (phases P1–P7, sequential; S0 already done)
 
-Standing rules for the whole run: commit+push at each phase boundary; update the TODO `[~]` marker per phase; a failed phase does NOT block later independent phases (P5 is independent of P1–P4) — fail loud in the final report instead. Order rationale: P4 (pen sync) runs AFTER P2/P3 so the pen captures the final app state.
+Standing rules for the whole run: commit+push at each phase boundary; update the TODO `[~]` marker per phase; a failed phase does NOT block later independent phases (P5 and P6 are independent of P1–P4) — fail loud in the final report instead. Order rationale: P4 (pen sync) runs AFTER P2/P3 so the pen captures the final app state.
 
 ### P1 — IAP purchase flow: review + root-cause fix (P0; payment path ⇒ #93 maker≠checker rail)
 Symptoms: see feedback #1. Diagnose first (workflow, multi-lens): (a) iOS purchase completion path — StoreManager/PurchaseService → RevenueCat purchase call → entitlement refresh → AppState premium flag; (b) RevenueCat dashboard events + TestFlight-sandbox specifics for the founder's 2026-07-12 attempts; (c) backend webhook → server entitlement → `/usage` response; (d) UI observation — PaywallView dismiss/refresh on entitlement change. Pull Sentry via /check-crashes.
 Fix the root cause (no patches — feedback_proper_solutions), add regression tests per #93 conventions, run an adversarial review leg on every payment-path change, deploy backend if touched (auto-deploy OK; migrations/secrets need founder).
-Acceptance: sim StoreKit-config e2e green for BOTH products (subscribe → entitlement active → paywall dismisses → Home shows Unlimited; pack → credits added); regression tests in; founder re-tests sandbox on the P6 build.
+Acceptance: sim StoreKit-config e2e green for BOTH products (subscribe → entitlement active → paywall dismisses → Home shows Unlimited; pack → credits added); regression tests in; founder re-tests sandbox on the P7 build.
 
 ### P2 — Voice commands: make them observable, then fix what's real
 Respect memory `project-voice-commands-diagnosis` — EN-only vocab + narrow arming windows are BY DESIGN; do NOT re-diagnose from scratch. Escalation path (already agreed in that memory):
@@ -58,7 +58,7 @@ Respect memory `project-voice-commands-diagnosis` — EN-only vocab + narrow arm
 3. Verify the 2026-07-11 launch-time AssetInventory install actually completed on the founder's device (Sentry breadcrumb/event).
 4. Only if evidence shows a real defect → root-cause fix.
 5. Approved A-list additions (decision 7): Settings "Voice commands" master toggle (pen `gEPhB`, wired to the existing Config default); Onboarding-2 features card adopts the pen `hTdkE` command-education content (Say "start" / five simple words / English, always / Buttons always work).
-Acceptance: indicator shows in sim during armed windows; diagnostics row present in TestFlight builds; Sentry events wired; toggle + onboarding card in; P6 checklist gets a 5-line usage cheat-sheet (which words, in which moments).
+Acceptance: indicator shows in sim during armed windows; diagnostics row present in TestFlight builds; Sentry events wired; toggle + onboarding card in; P7 checklist gets a 5-line usage cheat-sheet (which words, in which moments).
 
 ### P3 — Founder UI corrections (iOS)
 - Hide Home "Image questions" toggle (keep wiring; UI hidden until image content ships).
@@ -77,16 +77,19 @@ In the editor (pencil MCP), against the gap table below:
 End `[HUMAN]` (the run's only human touchpoint): ping founder for ⌘S → commit .pen + docs. If unavailable, proceed to P5 and leave the commit flagged in the report.
 Acceptance: pen matches shipped app for all B/C rows; screenshot-diff shows no other frames touched.
 
-### P5 — Auth fixes #88 + #89 (backend)
+### P5 — #95 client half (iOS order flow + play the pack)
+Execute issue-95 **Sessions 2 + 3 exactly as planned there** (entry point OUTSIDE PaywallView; OrderPackView 10–1000-char prompt + language picker; OrderProgressView polling 1 Hz; quiz-agent session-start `pack_id` filter — deterministic, no hot-path LLM; My-packs list from `GET /v1/orders`; delivered pack playable; custom packs bypass the 30/mo quota).
+Admin auth (resolved default, founder informed 2026-07-13): **Settings-entered admin key stored in device Keychain** — no key in the binary, works in TestFlight builds; entry point visible only when a key is stored.
+**Fallback (founder call 2026-07-13):** if the e2e doesn't pass cleanly within this phase, hide the entry button, fail loud in the report, and ship the rest — do not block P6/P7.
+Acceptance: order → progress → delivered → play the full pack e2e against prod, founder-only visibility; OR entry point hidden + failure reported.
+
+### P6 — Auth fixes #88 + #89 (backend)
 Per [issue-88](issue-88-refresh-lost-response-signout.md) + [issue-89](issue-89-grace-null-subject-quota-bypass.md). Autonomous fix + deploy per standing delegation (memory feedback-auth-security-autonomy). Backend suite green ×2, /deploy with smoke checks.
 Acceptance: #88 — dropped-response replay of the just-used refresh token re-issues the unused successor, does NOT revoke the family (test-covered); #89 — null-subject sessions rejected or counted, quota gates un-skippable; both deployed.
 
-### P6 — Verify + TestFlight as Trubbo (#92 S3)
+### P7 — Verify + TestFlight as Trubbo (#92 S3)
 Full HangsTests + both backend suites; RS smoke; /verify-api if models changed; then /testflight.
-Post-build founder checklist (on-device): sandbox sub + pack purchase (P1) · voice commands with indicator + cheat-sheet + Settings toggle (P2) · image toggle hidden, single-line texts, quiz paddings (P3) · re-checks from the 2026-07-11 batch (silent switch, background mic).
-
-### Dropped from this round
-- **#95 client half** (decision 2): post-MVP, re-plan as an end-user feature (IAP-priced orders, no admin key in the flow) on a separate branch; issue-95 Sessions 2+3 plan stays as raw material.
+Post-build founder checklist (on-device): sandbox sub + pack purchase (P1) · voice commands with indicator + cheat-sheet + Settings toggle (P2) · image toggle hidden, single-line texts, quiz paddings (P3) · custom pack order→play e2e, or confirm entry hidden if P5 fell back (P5) · re-checks from the 2026-07-11 batch (silent switch, background mic).
 
 ## S0 gap table (audit 2026-07-12, 5-agent workflow, all 27 screen frames covered)
 

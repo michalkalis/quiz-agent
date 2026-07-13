@@ -1,6 +1,6 @@
 # Issue #95 — Custom quiz-pack ordering: client half ("Phase 4a lite")
 
-**Triage:** feature · **POST-MVP, needs re-plan (founder decision 2026-07-13)** — founder wants custom packs as a proper end-user feature (IAP-priced orders for regular users), not admin-key founder tooling; removed from #96 scope, to be re-planned and developed on a separate branch. Session 1 (backend) stays live in prod; Sessions 2+3 below = raw material for the re-plan, do NOT execute as-is
+**Triage:** feature · ready-for-agent — **IN MVP via #96 phase P5 (founder re-confirmed 2026-07-13** after a brief same-day post-MVP detour). Sessions 2+3 execute as planned below; admin auth = Settings-entered key in Keychain (no key in binary); **fallback: if the e2e doesn't pass cleanly, hide the entry button and ship without it** (founder call). Proper end-user version (IAP-priced, regular users) = later follow-up; Session 4 payments stays deferred
 
 **Created:** 2026-07-11 · **Source:** founder report "nevidim nikde ui, kde by sa dal kupit balicek podla mojho zadania" → diagnosis workflow 2026-07-11
 

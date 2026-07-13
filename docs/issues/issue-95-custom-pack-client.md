@@ -1,6 +1,6 @@
 # Issue #95 — Custom quiz-pack ordering: client half ("Phase 4a lite")
 
-**Triage:** feature · ready-for-agent (3 sessions + 1 deferred) — founder decisions locked 2026-07-12, see below
+**Triage:** feature · **POST-MVP, needs re-plan (founder decision 2026-07-13)** — founder wants custom packs as a proper end-user feature (IAP-priced orders for regular users), not admin-key founder tooling; removed from #96 scope, to be re-planned and developed on a separate branch. Session 1 (backend) stays live in prod; Sessions 2+3 below = raw material for the re-plan, do NOT execute as-is
 
 **Created:** 2026-07-11 · **Source:** founder report "nevidim nikde ui, kde by sa dal kupit balicek podla mojho zadania" → diagnosis workflow 2026-07-11
 

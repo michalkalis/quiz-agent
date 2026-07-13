@@ -21,8 +21,9 @@ final class MockPurchaseService: PurchaseService {
         pack: PurchasableProduct(id: StoreProduct.packId, displayPrice: "$1.99", displayName: "+100 Questions")
     )
 
-    /// Return value for `purchase`. Defaults to `.success`.
-    var stubbedPurchaseOutcome: PurchaseOutcome = .success
+    /// Return value for `purchase`. Defaults to `.success` with the
+    /// entitlement active (the happy subscription path).
+    var stubbedPurchaseOutcome: PurchaseOutcome = .success(unlimitedActive: true)
 
     /// If non-nil, `purchase` throws this error instead of returning an outcome.
     var stubbedPurchaseError: Error? = nil

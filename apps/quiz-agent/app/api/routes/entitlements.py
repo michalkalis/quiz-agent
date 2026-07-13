@@ -45,6 +45,16 @@ async def sync_entitlements(
         raise HTTPException(status_code=503, detail="Usage persistence unavailable")
 
     account_id = subject.subject_id
-    snapshot = await rc_service.fetch_rc_subscriber(account_id, api_key=api_key)
-    await rc_service.apply_sync_snapshot(sessionmaker, account_id, snapshot)
+    try:
+        snapshot = await rc_service.fetch_rc_subscriber(account_id, api_key=api_key)
+        await rc_service.apply_sync_snapshot(sessionmaker, account_id, snapshot)
+    except HTTPException:
+        raise
+    except Exception:
+        # RC REST or DB failure must not surface as a bare 500 (the client
+        # treats sync as best-effort — the webhook still lands on its own).
+        # A founder-device sync hit exactly this as an unhandled 500 on
+        # 2026-07-11 (Sentry CARQUIZ-4, #96 P1).
+        logger.exception("entitlements/sync failed for account %s", account_id)
+        raise HTTPException(status_code=502, detail="Entitlement sync failed")
     return {"status": "ok"}

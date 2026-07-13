@@ -37,6 +37,9 @@ final class AppState: ObservableObject {
             self.sttService = mocks.stt
             self.storeManager = StoreManager(purchaseService: MockPurchaseService())
             self.authService = AuthService(baseURL: Config.apiBaseURL)
+            storeManager.onPurchaseSuccess = { [weak self] in
+                await self?.quizViewModel?.notifyPremiumPurchased()
+            }
             UITestSupport.startTestListener()
             Logger.quiz.info("🧪 AppState initialized in UI-test mode")
             return
@@ -90,15 +93,31 @@ final class AppState: ObservableObject {
             await authService.setupAppleCredentialObservation()
         }
 
-        // RevenueCat account linking on sign-in (issue #93 Session E must-do):
-        // alias RC's identity to the new durable account id, then re-sync the
-        // server-side subscription mirror for the purchase↔sign-in race window.
+        // RevenueCat account linking (issue #93 Session E must-do, widened in
+        // #96 P1): alias RC's identity to the durable account id on EVERY
+        // identity mint — anon bootstrap and refresh-failure re-mints, not
+        // just Apple sign-in — then re-sync the server-side subscription
+        // mirror. Without the bootstrap leg, a purchase on a fresh install
+        // lands under an unmappable $RCAnonymousID.
         let storeManager = self.storeManager
         let networkService = self.networkService
         Task {
             await authService.setAccountLinkedHandler { accountId in
                 await storeManager.logIn(accountId: accountId)
                 try? await networkService.syncEntitlements()
+            }
+        }
+
+        // Post-purchase continuation (#96 P1): entitlement sync + usage
+        // refresh on ANY successful purchase or entitled restore — keyed on
+        // the purchase *outcome*, not the subscription entitlement state,
+        // so consumable packs complete too.
+        storeManager.onPurchaseSuccess = { [weak self] in
+            guard let self else { return }
+            if let viewModel = self.quizViewModel {
+                await viewModel.notifyPremiumPurchased()
+            } else {
+                try? await self.networkService.syncEntitlements()
             }
         }
 

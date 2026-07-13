@@ -48,7 +48,7 @@ private extension PurchasableOfferings {
 private func makeManager(
     offerings: PurchasableOfferings? = .sample,
     isEntitled: Bool = false,
-    purchaseOutcome: PurchaseOutcome = .success,
+    purchaseOutcome: PurchaseOutcome = .success(unlimitedActive: true),
     purchaseError: Error? = nil,
     restoreShouldFail: Bool = false
 ) async -> (StoreManager, MockPurchaseService) {
@@ -96,7 +96,7 @@ struct StoreManagerTests {
 
     @Test("purchase monthly success sets isPurchased true")
     func purchaseMonthlySuccessSetsIsPurchased() async {
-        let (manager, _) = await makeManager(offerings: .sample, isEntitled: true, purchaseOutcome: .success)
+        let (manager, _) = await makeManager(offerings: .sample, isEntitled: true, purchaseOutcome: .success(unlimitedActive: true))
         await manager.purchase(productID: StoreProduct.monthlySubId)
 
         #expect(manager.isPurchased == true)
@@ -108,7 +108,7 @@ struct StoreManagerTests {
 
     @Test("purchase pack success does not set isPurchased")
     func purchasePackSuccessDoesNotSetIsPurchased() async {
-        let (manager, _) = await makeManager(offerings: .sample, isEntitled: false, purchaseOutcome: .success)
+        let (manager, _) = await makeManager(offerings: .sample, isEntitled: false, purchaseOutcome: .success(unlimitedActive: false))
         await manager.purchase(productID: StoreProduct.packId)
 
         #expect(manager.isPurchased == false)
@@ -236,5 +236,122 @@ struct StoreManagerTests {
         #expect(mock.logInCallCount == 1)
         #expect(mock.lastLogInAppUserID == "user-123")
         #expect(manager.isPurchased == true)
+    }
+
+    // MARK: 13. Purchase outcome is a first-class event (#96 P1)
+    //
+    // The founder's device bug: a pack purchase succeeded end-to-end
+    // (Apple + RC + webhook + credits granted) but the app gave zero feedback,
+    // because ALL post-purchase behaviour hung off the subscription-only
+    // `isPurchased` flag. These pin the outcome-keyed contract: purchaseState
+    // reflects every outcome, and onPurchaseSuccess (the entitlement-sync +
+    // usage-refresh bridge) fires for ANY successful purchase — pack included.
+
+    @Test("pack purchase success publishes success state and fires onPurchaseSuccess")
+    func packPurchaseSuccessFiresBridge() async {
+        let (manager, _) = await makeManager(isEntitled: false, purchaseOutcome: .success(unlimitedActive: false))
+        var bridgeFired = false
+        manager.onPurchaseSuccess = { bridgeFired = true }
+
+        await manager.purchase(productID: StoreProduct.packId)
+
+        #expect(manager.purchaseState == .success(productID: StoreProduct.packId))
+        #expect(bridgeFired == true)
+        #expect(manager.isPurchased == false)  // consumable never flips the sub flag
+    }
+
+    @Test("subscription purchase success fires onPurchaseSuccess")
+    func subscriptionPurchaseSuccessFiresBridge() async {
+        let (manager, _) = await makeManager(isEntitled: true, purchaseOutcome: .success(unlimitedActive: true))
+        var bridgeFired = false
+        manager.onPurchaseSuccess = { bridgeFired = true }
+
+        await manager.purchase(productID: StoreProduct.annualSubId)
+
+        #expect(manager.purchaseState == .success(productID: StoreProduct.annualSubId))
+        #expect(bridgeFired == true)
+    }
+
+    @Test("subscription success without entitlement fails loud, no bridge")
+    func subscriptionSuccessWithoutEntitlementFailsLoud() async {
+        // The store sheet completed but RC returned no active entitlement —
+        // silent success here was the founder's password re-prompt loop.
+        let (manager, _) = await makeManager(isEntitled: false, purchaseOutcome: .success(unlimitedActive: false))
+        var bridgeFired = false
+        manager.onPurchaseSuccess = { bridgeFired = true }
+
+        await manager.purchase(productID: StoreProduct.monthlySubId)
+
+        guard case .failed = manager.purchaseState else {
+            Issue.record("expected .failed, got \(manager.purchaseState)")
+            return
+        }
+        #expect(manager.purchaseError != nil)
+        #expect(bridgeFired == false)
+    }
+
+    @Test("cancelled and pending purchases publish their states, no bridge")
+    func cancelledAndPendingPublishStates() async {
+        let (manager, _) = await makeManager(purchaseOutcome: .userCancelled)
+        var bridgeFired = false
+        manager.onPurchaseSuccess = { bridgeFired = true }
+
+        await manager.purchase(productID: StoreProduct.monthlySubId)
+        #expect(manager.purchaseState == .cancelled)
+
+        let (pendingManager, _) = await makeManager(purchaseOutcome: .pending)
+        pendingManager.onPurchaseSuccess = { bridgeFired = true }
+        await pendingManager.purchase(productID: StoreProduct.monthlySubId)
+        #expect(pendingManager.purchaseState == .pending)
+        #expect(bridgeFired == false)
+    }
+
+    @Test("thrown purchase error publishes failed state")
+    func thrownErrorPublishesFailedState() async {
+        let (manager, _) = await makeManager(purchaseError: StoreError.failedVerification)
+        await manager.purchase(productID: StoreProduct.monthlySubId)
+
+        guard case .failed = manager.purchaseState else {
+            Issue.record("expected .failed, got \(manager.purchaseState)")
+            return
+        }
+    }
+
+    @Test("entitled restore publishes success and fires onPurchaseSuccess")
+    func entitledRestoreFiresBridge() async {
+        let (manager, _) = await makeManager(isEntitled: true)
+        var bridgeFired = false
+        manager.onPurchaseSuccess = { bridgeFired = true }
+
+        await manager.restorePurchases()
+
+        #expect(manager.purchaseState == .success(productID: nil))
+        #expect(bridgeFired == true)
+    }
+
+    @Test("un-entitled restore reports nothing-to-restore and does not fire the bridge")
+    func unentitledRestoreDoesNotFireBridge() async {
+        let (manager, _) = await makeManager(isEntitled: false)
+        var bridgeFired = false
+        manager.onPurchaseSuccess = { bridgeFired = true }
+
+        await manager.restorePurchases()
+
+        // Must be visible — a silent no-op restore is the same "no response"
+        // defect class this issue fixes.
+        #expect(manager.purchaseState == .nothingToRestore)
+        #expect(bridgeFired == false)
+    }
+
+    @Test("resetPurchaseState clears a finished attempt back to idle")
+    func resetPurchaseStateClearsFinishedAttempt() async {
+        let (manager, _) = await makeManager(purchaseOutcome: .userCancelled)
+        await manager.purchase(productID: StoreProduct.monthlySubId)
+        #expect(manager.purchaseState == .cancelled)
+
+        manager.resetPurchaseState()
+
+        #expect(manager.purchaseState == .idle)
+        #expect(manager.purchaseError == nil)
     }
 }

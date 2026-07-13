@@ -78,21 +78,79 @@ struct PaywallView: View {
     private var paywallBody: some View {
         ScrollView {
             VStack(spacing: Theme.Hangs.Spacing.xl) {
-                paywallIconCircle
-                    .padding(.top, Theme.Hangs.Spacing.lg)
+                if case .success(let productID) = storeManager.purchaseState {
+                    purchaseSuccessBlock(productID: productID)
+                        .padding(.top, Theme.Hangs.Spacing.xxl)
+                } else {
+                    paywallIconCircle
+                        .padding(.top, Theme.Hangs.Spacing.lg)
 
-                paywallHeroBlock
+                    paywallHeroBlock
 
-                if let resetDate = limitError?.resetDate {
-                    CountdownPill(resetDate: resetDate)
+                    if let resetDate = limitError?.resetDate {
+                        CountdownPill(resetDate: resetDate)
+                    }
+
+                    planPicker
+
+                    paywallCTAStack
                 }
-
-                planPicker
-
-                paywallCTAStack
             }
             .padding(.horizontal, Theme.Hangs.Spacing.lg)
             .padding(.bottom, Theme.Hangs.Spacing.xl)
+        }
+        .onAppear { storeManager.resetPurchaseState() }
+        // Show the confirmation beat, then close — the paywall owns its own
+        // dismissal on success (#96 P1: previously nothing did). `.task(id:)`
+        // (not an unstructured Task) so SwiftUI cancels the delay on
+        // disappear/state change — a stale timer must never close a paywall
+        // the user reopened.
+        .task(id: storeManager.purchaseState) {
+            guard case .success = storeManager.purchaseState else { return }
+            try? await Task.sleep(for: .seconds(1.5))
+            guard !Task.isCancelled else { return }
+            onDismiss()
+        }
+    }
+
+    // MARK: - Purchase success
+
+    /// Post-purchase confirmation (#96 P1 — "no response" was the founder's
+    /// core complaint): distinct copy per product class, auto-dismisses.
+    private func purchaseSuccessBlock(productID: String?) -> some View {
+        VStack(spacing: Theme.Hangs.Spacing.xl) {
+            ZStack {
+                Circle()
+                    .fill(Theme.Hangs.Colors.greenSoft)
+                    .frame(width: 104, height: 104)
+                Image(systemName: "checkmark")
+                    .font(.system(size: 44, weight: .semibold))
+                    .foregroundColor(Theme.Hangs.Colors.greenCheck)
+            }
+            .accessibilityHidden(true)
+
+            VStack(spacing: 8) {
+                Text(productID == StoreProduct.packId ? "PACK ADDED" : "YOU'RE ALL SET")
+                    .font(.hangsDisplayMD)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                    .foregroundColor(Theme.Hangs.Colors.ink)
+                    .accessibilityAddTraits(.isHeader)
+                    .accessibilityIdentifier("paywall.success.headline")
+
+                Capsule()
+                    .fill(Theme.Hangs.Colors.greenCheck)
+                    .frame(width: 40, height: 3)
+                    .accessibilityHidden(true)
+
+                Text(productID == StoreProduct.packId
+                     ? "100 questions were added to your account."
+                     : "Unlimited questions are now active.")
+                    .font(.hangsBody(15))
+                    .foregroundColor(Theme.Hangs.Colors.muted)
+                    .multilineTextAlignment(.center)
+                    .accessibilityIdentifier("paywall.success.subtitle")
+            }
         }
     }
 
@@ -282,12 +340,19 @@ struct PaywallView: View {
                         .foregroundColor(Theme.Hangs.Colors.muted)
                 }
                 Spacer()
-                Text(verbatim: pack.displayPrice)
-                    .font(.hangsBody(14, weight: .bold))
-                    .foregroundColor(Theme.Hangs.Colors.accentPrimary)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 8)
-                    .background(Capsule().fill(Theme.Hangs.Colors.accentPrimarySoft))
+                Group {
+                    if storeManager.purchaseState == .purchasing(productID: pack.id) {
+                        ProgressView()
+                            .tint(Theme.Hangs.Colors.accentPrimary)
+                    } else {
+                        Text(verbatim: pack.displayPrice)
+                            .font(.hangsBody(14, weight: .bold))
+                            .foregroundColor(Theme.Hangs.Colors.accentPrimary)
+                    }
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .background(Capsule().fill(Theme.Hangs.Colors.accentPrimarySoft))
             }
             .padding(.horizontal, Theme.Hangs.Spacing.md)
             .padding(.vertical, 14)
@@ -301,6 +366,7 @@ struct PaywallView: View {
             )
         }
         .buttonStyle(.plain)
+        .disabled(storeManager.isLoading)
         .accessibilityIdentifier("paywall-purchase-pack-button")
     }
 
@@ -363,6 +429,23 @@ struct PaywallView: View {
                     .font(.hangsBody(13))
                     .foregroundColor(Theme.Hangs.Colors.error)
                     .multilineTextAlignment(.center)
+                    .accessibilityIdentifier("paywall.purchaseError")
+            }
+
+            if storeManager.purchaseState == .pending {
+                Text("Purchase is awaiting approval. You'll get access as soon as it's approved.")
+                    .font(.hangsBody(13))
+                    .foregroundColor(Theme.Hangs.Colors.muted)
+                    .multilineTextAlignment(.center)
+                    .accessibilityIdentifier("paywall.pendingNotice")
+            }
+
+            if storeManager.purchaseState == .nothingToRestore {
+                Text("No previous purchase found for this Apple Account.")
+                    .font(.hangsBody(13))
+                    .foregroundColor(Theme.Hangs.Colors.muted)
+                    .multilineTextAlignment(.center)
+                    .accessibilityIdentifier("paywall.nothingToRestore")
             }
 
             // App Store review requirement: auto-renew disclosure (z8TS6 legal).

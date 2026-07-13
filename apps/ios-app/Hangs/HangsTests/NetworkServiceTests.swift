@@ -244,10 +244,19 @@ struct NetworkServiceTests {
     @Test("getUsage 200 with valid JSON → returns decoded UsageInfo")
     func getUsageHappyPath() async throws {
         let service = makeService()
-        StubURLProtocol.handler = { _ in (.make(status: 200), Data(Stubs.usageInfoJSON.utf8)) }
+        let captured = OSAllocatedUnfairLock<URLRequest?>(initialState: nil)
+        StubURLProtocol.handler = { req in
+            captured.withLock { $0 = req }
+            return (.make(status: 200), Data(Stubs.usageInfoJSON.utf8))
+        }
         defer { StubURLProtocol.handler = nil }
 
-        let usage = try await service.getUsage(userId: "user_abc")
+        let usage = try await service.getUsage()
+        // Identity must be bearer-derived server-side — the client-suppliable
+        // /usage/{id} path read a different account than purchases landed on
+        // (#96 P1), so the path itself is the regression surface.
+        let request = try #require(captured.withLock { $0 })
+        #expect(request.url?.path.hasSuffix("/usage/me") == true)
         #expect(usage.userId == "user_abc")
         #expect(usage.questionsUsed == 3)
         #expect(usage.questionsLimit == 10)
@@ -266,7 +275,7 @@ struct NetworkServiceTests {
         // getUsage propagates JSONDecoder errors directly as DecodingError,
         // NOT wrapped in NetworkError.decodingError.
         await #expect(throws: (any Error).self) {
-            _ = try await service.getUsage(userId: "user_abc")
+            _ = try await service.getUsage()
         }
     }
 
@@ -298,7 +307,7 @@ struct NetworkServiceTests {
         }
         defer { StubURLProtocol.handler = nil }
 
-        let usage = try await service.getUsage(userId: "user_abc")
+        let usage = try await service.getUsage()
         #expect(usage.userId == "user_abc")
 
         let bearers = seen.withLock { $0 }
@@ -319,7 +328,7 @@ struct NetworkServiceTests {
         }
         defer { StubURLProtocol.handler = nil }
 
-        _ = try await service.getUsage(userId: "user_abc")
+        _ = try await service.getUsage()
         let request = try #require(captured.withLock { $0 })
         #expect(request.value(forHTTPHeaderField: "Authorization") == nil)
     }

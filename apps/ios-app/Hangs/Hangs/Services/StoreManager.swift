@@ -39,6 +39,22 @@ enum StoreProduct {
     /// static let unlimited = "com.carquiz.unlimited"
 }
 
+/// The lifecycle of the most recent purchase/restore attempt, published so the
+/// paywall can render every outcome — silent success/failure was the founder's
+/// "no response" re-prompt loop (#96 P1).
+enum PurchaseState: Equatable {
+    case idle
+    case purchasing(productID: String)
+    /// `productID` is nil for a restore (the restored product isn't known).
+    case success(productID: String?)
+    case cancelled
+    case pending
+    /// Restore completed but no active entitlement was found — informational,
+    /// not a failure, but it must still be visible (#96 P1: no silent ends).
+    case nothingToRestore
+    case failed(message: String)
+}
+
 /// Manages in-app purchases via RevenueCat
 @MainActor
 final class StoreManager: ObservableObject {
@@ -49,6 +65,17 @@ final class StoreManager: ObservableObject {
     @Published private(set) var isLoading: Bool = false
     @Published private(set) var hasAttemptedOfferingsLoad: Bool = false
     @Published var purchaseError: String?
+    /// Outcome of the in-flight/last purchase attempt. The paywall renders
+    /// this exhaustively; post-purchase side effects hang off it too (they
+    /// used to hang off the `isPurchased` *state*, which a consumable pack
+    /// by design never flips — the P1 dead end).
+    @Published private(set) var purchaseState: PurchaseState = .idle
+
+    /// Post-purchase continuation — set once by AppState. Runs after ANY
+    /// successful purchase or entitled restore (subscription or pack):
+    /// `POST /entitlements/sync` + `/usage` refresh, so the server mirror and
+    /// the visible quota react without waiting for the RC webhook.
+    var onPurchaseSuccess: (@MainActor () async -> Void)?
 
     private let purchaseService: PurchaseService
     private var transactionListener: Task<Void, Never>?
@@ -93,30 +120,61 @@ final class StoreManager: ObservableObject {
     func purchase(productID: String) async {
         isLoading = true
         purchaseError = nil
+        purchaseState = .purchasing(productID: productID)
+        SentryLog.info("purchase started", category: .quiz, attributes: ["product": productID])
 
         do {
             let outcome = try await purchaseService.purchase(productID: productID)
 
             switch outcome {
-            case .success:
-                Logger.quiz.info("✅ StoreManager: Purchase successful")
-                // Re-derive from the SDK rather than assuming — a pack purchase
-                // must not flip isPurchased, and this also catches an already-
-                // entitled subscriber buying the other billing period.
-                await checkPurchaseStatus()
+            case .success(let unlimitedActive):
+                let isSubscription = productID == StoreProduct.monthlySubId
+                    || productID == StoreProduct.annualSubId
+                if isSubscription && !unlimitedActive {
+                    // The store sheet completed but the entitlement did NOT
+                    // activate (RC product↔entitlement mapping or store-side
+                    // failure). Silent success here was the founder's
+                    // re-prompt loop — fail loud instead (#96 P1).
+                    let message = String(localized: "The purchase went through but didn't activate. Try Restore purchases — if that doesn't help, contact support.", comment: "Paywall error when a subscription purchase completes without activating the entitlement")
+                    purchaseError = message
+                    purchaseState = .failed(message: message)
+                    SentryLog.error("purchase success without entitlement", category: .quiz, attributes: ["product": productID])
+                } else {
+                    Logger.quiz.info("✅ StoreManager: Purchase successful")
+                    SentryLog.info("purchase success", category: .quiz, attributes: ["product": productID])
+                    // Re-derive from the SDK rather than assuming — a pack purchase
+                    // must not flip isPurchased, and this also catches an already-
+                    // entitled subscriber buying the other billing period.
+                    await checkPurchaseStatus()
+                    purchaseState = .success(productID: productID)
+                    await onPurchaseSuccess?()
+                }
 
             case .userCancelled:
                 Logger.quiz.info("🚫 StoreManager: User cancelled purchase")
+                purchaseState = .cancelled
 
             case .pending:
                 Logger.quiz.info("⏳ StoreManager: Purchase pending (Ask to Buy?)")
+                purchaseState = .pending
             }
         } catch {
             purchaseError = error.localizedDescription
+            purchaseState = .failed(message: error.localizedDescription)
+            SentryLog.error("purchase failed", category: .quiz, attributes: ["product": productID, "error": String(describing: error)])
             Logger.quiz.error("❌ StoreManager: Purchase failed: \(error, privacy: .public)")
         }
 
         isLoading = false
+    }
+
+    /// Clears a finished purchase attempt back to `.idle` — the paywall calls
+    /// this on appear so a previous attempt's outcome doesn't leak into a new
+    /// presentation. No-op mid-purchase.
+    func resetPurchaseState() {
+        if case .purchasing = purchaseState { return }
+        purchaseState = .idle
+        purchaseError = nil
     }
 
     // MARK: - Restore Purchases
@@ -130,8 +188,19 @@ final class StoreManager: ObservableObject {
         do {
             try await purchaseService.restore()
             await checkPurchaseStatus()
+            if isPurchased {
+                // A restore that re-activated the entitlement completes the
+                // same way a purchase does: server sync + usage refresh +
+                // visible success (#96 P1).
+                purchaseState = .success(productID: nil)
+                await onPurchaseSuccess?()
+            } else {
+                purchaseState = .nothingToRestore
+            }
         } catch {
-            purchaseError = String(localized: "Failed to restore purchases", comment: "Paywall error shown when restoring previous purchases failed")
+            let message = String(localized: "Failed to restore purchases", comment: "Paywall error shown when restoring previous purchases failed")
+            purchaseError = message
+            purchaseState = .failed(message: message)
         }
 
         isLoading = false

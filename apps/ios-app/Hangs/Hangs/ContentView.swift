@@ -5,6 +5,7 @@
 //  Main navigation and state management
 //
 
+import Combine
 import SwiftUI
 
 struct ContentView: View {
@@ -140,13 +141,17 @@ struct ContentView: View {
             .presentationDetents([.height(520)])
             .presentationDragIndicator(.visible)
         }
-        .onChange(of: appState.storeManager.isPurchased) { _, isPurchased in
-            if isPurchased {
-                let paywallWasShowing = viewModel.showPaywall
-                viewModel.showPaywall = false
-                Task { await viewModel.notifyPremiumPurchased() }
-                maybeQueueSignInPrompt(afterPaywall: paywallWasShowing)
-            }
+        // `.onReceive` subscribes to the publisher directly — the old
+        // `.onChange(of: appState.storeManager.isPurchased)` never fired
+        // because ContentView doesn't observe StoreManager (AppState has no
+        // @Published members), so value-diffing had nothing to re-evaluate
+        // against (#96 P1). Post-purchase side effects (entitlement sync,
+        // usage refresh, paywall dismissal) live on the purchase outcome in
+        // StoreManager/PaywallView now; this bridge only offers the #58
+        // contextual sign-in prompt when Premium turns on.
+        .onReceive(appState.storeManager.$isPurchased.removeDuplicates()) { isPurchased in
+            guard isPurchased else { return }
+            maybeQueueSignInPrompt(afterPaywall: viewModel.showPaywall)
         }
     }
 

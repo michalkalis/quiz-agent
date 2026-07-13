@@ -533,3 +533,18 @@ async def test_stale_sync_does_not_regress(client, db_sessionmaker, monkeypatch)
     row = await _sub_row(db_sessionmaker)
     assert row.status == "active"  # NOT regressed to expired
     assert row.last_event_ts_ms == 5000  # watermark not moved backward
+
+
+async def test_sync_upstream_failure_returns_502_not_500(client, monkeypatch):
+    """An RC REST failure inside sync must surface as a handled 502, never an
+    unhandled 500 (a founder-device sync hit exactly that on 2026-07-11 —
+    Sentry CARQUIZ-4, #96 P1). The client treats sync as best-effort, so a
+    clean upstream-error status is the contract."""
+    monkeypatch.setattr(
+        rc_service,
+        "fetch_rc_subscriber",
+        AsyncMock(side_effect=RuntimeError("RC REST down")),
+    )
+    resp = await client.post("/api/v1/entitlements/sync")
+    assert resp.status_code == 502
+    assert resp.json()["detail"] == "Entitlement sync failed"

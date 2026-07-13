@@ -38,8 +38,13 @@ struct PurchasableOfferings: Sendable, Equatable {
 }
 
 /// The outcome of a purchase attempt.
-enum PurchaseOutcome: Sendable {
-    case success
+///
+/// `success` carries whether the `unlimited` entitlement is active in the
+/// CustomerInfo returned by the purchase itself — a subscription purchase
+/// whose sheet completed but whose entitlement did NOT activate must fail
+/// loud instead of silently re-offering the paywall (#96 P1).
+enum PurchaseOutcome: Sendable, Equatable {
+    case success(unlimitedActive: Bool)
     case userCancelled
     case pending
 }
@@ -160,7 +165,12 @@ final class LivePurchaseService: PurchaseService {
         }
 
         let result = try await Purchases.shared.purchase(package: package)
-        return result.userCancelled ? .userCancelled : .success
+        if result.userCancelled {
+            return .userCancelled
+        }
+        let unlimitedActive =
+            result.customerInfo.entitlements[StoreProduct.entitlementId]?.isActive == true
+        return .success(unlimitedActive: unlimitedActive)
     }
 
     func restore() async throws {

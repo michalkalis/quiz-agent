@@ -130,10 +130,21 @@ actor AuthService: AuthServiceProtocol {
     /// server-side subscription mirror re-syncs — the designated recovery for a
     /// webhook that landed on the anon id during the purchase↔sign-in window.
     private var onAccountLinked: (@Sendable (String) async -> Void)?
+    /// Account id minted before the handler was registered (AppState sets the
+    /// handler via a fire-and-forget Task, so an early bootstrap — e.g. via
+    /// credential-revocation → dropToFreshAnon — can beat it). Replayed on
+    /// registration so the RC alias is never silently skipped (#96 P1).
+    private var pendingAccountLink: String?
 
     /// Registers the account-linked handler. Called once by AppState at launch.
-    func setAccountLinkedHandler(_ handler: @escaping @Sendable (String) async -> Void) {
+    /// If an identity was already minted before registration, the handler is
+    /// replayed with it immediately — closing the mint-before-handler race.
+    func setAccountLinkedHandler(_ handler: @escaping @Sendable (String) async -> Void) async {
         onAccountLinked = handler
+        if let pending = pendingAccountLink {
+            pendingAccountLink = nil
+            await handler(pending)
+        }
     }
 
     init(
@@ -204,10 +215,26 @@ actor AuthService: AuthServiceProtocol {
     }
 
     private func performBootstrap() async -> AuthTokens? {
+        let minted: AuthTokens?
         if let attestor, attestor.isSupported {
-            return await performAttestedBootstrap(attestor)
+            minted = await performAttestedBootstrap(attestor)
+        } else {
+            minted = await mintPlain()
         }
-        return await mintPlain()
+        // Every freshly minted durable identity must be re-aliased into
+        // RevenueCat (#96 P1): RC is configured once at launch from a keychain
+        // snapshot (nil on first launch → RC mints $RCAnonymousID), so a
+        // purchase made before this link lands under an id the backend can't
+        // map to an account. Apple sign-in has its own call site. A mint that
+        // beats handler registration is parked and replayed on registration.
+        if let minted {
+            if let onAccountLinked {
+                await onAccountLinked(minted.anonId)
+            } else {
+                pendingAccountLink = minted.anonId
+            }
+        }
+        return minted
     }
 
     /// App Attest path (#60 Part B). Re-bootstrap with the existing key first;

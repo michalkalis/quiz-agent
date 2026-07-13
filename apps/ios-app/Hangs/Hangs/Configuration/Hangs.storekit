@@ -3,19 +3,19 @@
   "nonRenewingSubscriptions" : [],
   "products" : [
     {
-      "displayPrice" : "4.99",
+      "displayPrice" : "1.99",
       "familyShareable" : false,
-      "internalID" : "D4C523B5-0500-4F6D-A7D3-936D13F31A8C",
+      "internalID" : "8B1F3C2A-91D4-4E6B-A2C7-5D0E9F41B3AA",
       "localizations" : [
         {
-          "description" : "Unlimited quiz questions per day",
-          "displayName" : "Hangs Unlimited",
+          "description" : "100 extra questions, never expire",
+          "displayName" : "100 Question Pack",
           "locale" : "en_US"
         }
       ],
-      "productID" : "com.carquiz.unlimited",
-      "referenceName" : "Hangs Unlimited",
-      "type" : "NonConsumable"
+      "productID" : "com.carquiz.pack.questions100",
+      "referenceName" : "100 Question Pack",
+      "type" : "Consumable"
     }
   ],
   "settings" : {
@@ -23,7 +23,59 @@
     "_developerTeamID" : "0",
     "_lastSynchronizedDate" : 0
   },
-  "subscriptionGroups" : [],
+  "subscriptionGroups" : [
+    {
+      "id" : "21532888",
+      "localizations" : [],
+      "name" : "unlimited",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "4.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "C7A2E5D1-3F48-4B9C-8E01-6A5B2D4F7C11",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Unlimited quiz questions",
+              "displayName" : "Unlimited (Monthly)",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.carquiz.unlimited.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Unlimited Monthly",
+          "subscriptionGroupID" : "21532888",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : []
+        },
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "29.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "E9D4B7A3-6C15-4F2E-B8A0-1D3C5E7F9B22",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Unlimited quiz questions, billed yearly",
+              "displayName" : "Unlimited (Annual)",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.carquiz.unlimited.annual",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Unlimited Annual",
+          "subscriptionGroupID" : "21532888",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : []
+        }
+      ]
+    }
+  ],
   "version" : {
     "major" : 4,
     "minor" : 0

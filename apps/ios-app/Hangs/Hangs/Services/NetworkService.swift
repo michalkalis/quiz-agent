@@ -22,7 +22,12 @@ protocol NetworkServiceProtocol: Sendable {
     func rateQuestion(sessionId: String, rating: Int) async throws
     func flagQuestion(sessionId: String, reason: String?) async throws
     func fetchElevenLabsToken() async throws -> String
-    func getUsage(userId: String) async throws -> UsageInfo
+    /// `GET /usage/me` — the backend derives the subject from the bearer, the
+    /// same identity every write path (sessions, RC webhook grants, sync) is
+    /// keyed on. Never pass a client-side id here: reading usage under the
+    /// local deviceId while purchases land under the auth subject is exactly
+    /// how paid state could never show up (#96 P1).
+    func getUsage() async throws -> UsageInfo
     /// Purchase→webhook propagation bridge (issue #93): one-shot RC REST pull,
     /// called immediately after a successful SDK purchase, before re-fetching
     /// `/usage` — otherwise a just-paid user can still hit the 429 gate until
@@ -546,8 +551,8 @@ actor NetworkService: NetworkServiceProtocol {
 
     // MARK: - Usage / Freemium
 
-    func getUsage(userId: String) async throws -> UsageInfo {
-        let endpoint = baseURL.appendingPathComponent("/api/v1/usage/\(userId)")
+    func getUsage() async throws -> UsageInfo {
+        let endpoint = baseURL.appendingPathComponent("/api/v1/usage/me")
 
         var request = URLRequest(url: endpoint)
         request.httpMethod = "GET"

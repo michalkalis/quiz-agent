@@ -58,6 +58,7 @@ async def test_premium_granted_with_correct_admin_key(client):
     assert resp.status_code == 200
     assert resp.json() == {"user_id": _SUBJECT, "is_premium": True}
 
-    # And it actually took effect.
-    usage = await client.get(f"/api/v1/usage/{_SUBJECT}")
-    assert usage.json()["is_premium"] is True
+    # And it actually took effect (checked via the tracker — the HTTP read
+    # path is /usage/me, which derives its subject from a bearer, #96 P1).
+    usage = await client._transport.app.state.usage_tracker.get_usage(_SUBJECT)  # noqa: SLF001
+    assert usage["is_premium"] is True

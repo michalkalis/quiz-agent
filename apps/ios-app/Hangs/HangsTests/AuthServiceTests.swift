@@ -131,6 +131,52 @@ struct AuthServiceTests {
         #expect(store.load()?.anonId == "anon-1")
     }
 
+    // MARK: 1b. Bootstrap ↔ account-linked handler ordering (#96 P1)
+    //
+    // Every fresh identity mint must reach the RC-alias handler even when the
+    // mint happens BEFORE AppState's fire-and-forget handler registration —
+    // otherwise a first-launch purchase lands under an unmappable
+    // $RCAnonymousID and the backend can never credit it.
+
+    @Test("bootstrap after handler registration fires onAccountLinked with the minted id")
+    func bootstrapFiresAccountLinkedHandler() async throws {
+        let store = MockTokenStore()
+        let service = makeService(store: store)
+        AuthStubURLProtocol.handler = { _ in
+            (.make(status: 200), Data(AuthStubs.tokenJSON(access: "a1", refresh: "r1", anon: "anon-1").utf8))
+        }
+        defer { AuthStubURLProtocol.handler = nil }
+
+        let linked = OSAllocatedUnfairLock<[String]>(initialState: [])
+        await service.setAccountLinkedHandler { id in
+            linked.withLock { $0.append(id) }
+        }
+
+        _ = await service.accessToken()
+
+        #expect(linked.withLock { $0 } == ["anon-1"])
+    }
+
+    @Test("mint before handler registration is replayed on registration")
+    func earlyMintReplaysOnHandlerRegistration() async throws {
+        let store = MockTokenStore()
+        let service = makeService(store: store)
+        AuthStubURLProtocol.handler = { _ in
+            (.make(status: 200), Data(AuthStubs.tokenJSON(access: "a1", refresh: "r1", anon: "anon-early").utf8))
+        }
+        defer { AuthStubURLProtocol.handler = nil }
+
+        // Mint first — no handler registered yet (the AppState race).
+        _ = await service.accessToken()
+
+        let linked = OSAllocatedUnfairLock<[String]>(initialState: [])
+        await service.setAccountLinkedHandler { id in
+            linked.withLock { $0.append(id) }
+        }
+
+        #expect(linked.withLock { $0 } == ["anon-early"])
+    }
+
     // MARK: 2. Stored token is reused without a network call
 
     @Test("existing stored token is returned without bootstrapping")

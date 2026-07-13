@@ -636,11 +636,12 @@ final class QuizViewModel: ObservableObject {
         showPaywall = true
     }
 
-    /// Fetch current usage info from backend (for displaying remaining questions)
+    /// Fetch current usage info from backend (for displaying remaining
+    /// questions). Identity is the bearer subject, derived server-side —
+    /// the same account purchases land on (#96 P1).
     func refreshUsage() async {
-        let userId = persistenceStore.deviceId
         do {
-            usageInfo = try await networkService.getUsage(userId: userId)
+            usageInfo = try await networkService.getUsage()
         } catch {
             Logger.network.warning("⚠️ Failed to fetch usage info: \(error, privacy: .public)")
         }

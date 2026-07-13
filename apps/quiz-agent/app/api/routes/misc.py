@@ -5,6 +5,7 @@ import logging
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Request
 
+from ...auth.identity import AuthSubject
 from ..deps import (
     ElevenLabsTokenResponse,
     UsageResponse,
@@ -67,15 +68,24 @@ async def get_elevenlabs_token(
 # Usage / Freemium
 
 
-@router.get("/usage/{user_id}", response_model=UsageResponse)
+@router.get("/usage/me", response_model=UsageResponse)
 async def get_usage(
-    user_id: str,
+    subject: AuthSubject = Depends(require_auth_or_grace),
     usage_tracker: UsageTracker = Depends(get_usage_tracker),
 ):
-    """Get usage stats for a user (questions used today, limit, reset time)."""
+    """Usage stats for the bearer subject (questions used, limit, reset time).
+
+    The subject is derived server-side from the bearer token — the same
+    identity every write path (session create, RC webhook grants,
+    ``/entitlements/sync``) is keyed on. The retired ``/usage/{user_id}``
+    variant read whatever id the client put in the path, so the app displayed
+    a different account than the one purchases landed on (#96 P1).
+    """
     if usage_tracker is None:
         raise HTTPException(status_code=503, detail="Usage tracking unavailable")
-    return await usage_tracker.get_usage(user_id)
+    if not subject.subject_id:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    return await usage_tracker.get_usage(subject.subject_id)
 
 
 @router.post("/usage/{user_id}/premium")

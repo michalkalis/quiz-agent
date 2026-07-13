@@ -142,7 +142,7 @@ final class MockNetworkService: NetworkServiceProtocol {
         return "mock-elevenlabs-token"
     }
 
-    func getUsage(userId: String) async throws -> UsageInfo {
+    func getUsage() async throws -> UsageInfo {
         if shouldFail {
             throw NetworkError.invalidResponse
         }
@@ -150,7 +150,7 @@ final class MockNetworkService: NetworkServiceProtocol {
             return stubbedUsage
         }
         return UsageInfo(
-            userId: userId,
+            userId: "mock-subject",
             isPremium: false,
             questionsUsed: 30,
             questionsLimit: 100,

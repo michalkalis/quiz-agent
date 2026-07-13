@@ -48,6 +48,12 @@ When changing API models:
 - **iOS:** Unit test ViewModels with mocked services
 - Test commands in CLAUDE.md quick reference table
 
+## Model Routing (token economy)
+
+Advisor/orchestrator pattern via native `Agent`/Workflow `model` only — no third-party plugins or hooks.
+Bulk work (reads, searches, mechanical edits, tests) → Sonnet/Haiku subagents. Frontier (Opus/Fable) only at decision points: planning, architecture, security, verify-before-done, or after 2+ failed attempts. For multi-file work let frontier plan, cheap workers execute.
+Session driver model is a per-session `/model` choice (not file-set); cheapest = Sonnet driver + frontier advisor subagents.
+
 ## Config & Infrastructure
 
 Prefer local and project-scoped config. Before recommending a cloud service or global config change, check whether existing local hardware or project-scoped config already covers the need.

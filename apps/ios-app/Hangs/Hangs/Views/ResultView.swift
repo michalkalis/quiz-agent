@@ -217,6 +217,13 @@ struct ResultView: View {
 
     private var footerBar: some View {
         VStack(spacing: 10) {
+            // #77/#96 P2: listening indicator (pen `s49sd`) — result command
+            // window ("next"). Shown only while armed.
+            if let hint = viewModel.commandListenerHint {
+                CmdListenBar(hint: hint)
+                    .transition(.opacity)
+            }
+
             HangsPrimaryButton(
                 title: "Next question",
                 icon: nil,

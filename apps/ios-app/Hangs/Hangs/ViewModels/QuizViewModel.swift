@@ -161,6 +161,12 @@ final class QuizViewModel: ObservableObject {
     /// `applyCaptureEvent(_:)`. Deliberately NOT part of QuizState/validTransitions.
     @Published private(set) var commandCapturePhase: CommandCapturePhase = .idle
 
+    /// Most recent screen-scoped command the listener recognized this session
+    /// (#96 P2). Powers the release-visible Settings diagnostics row so the
+    /// founder can confirm on-device that recognition is firing. `nil` until the
+    /// first command is heard.
+    @Published private(set) var lastRecognizedCommand: VoiceCommand?
+
     /// Observation hook / test seam (#77, task 77.5): invoked when the command
     /// listener recognizes a screen-scoped command, BEFORE it is routed to an
     /// action. Session 3 fired it as the only behaviour; Session 4 (77.8–77.9) adds
@@ -198,6 +204,13 @@ final class QuizViewModel: ObservableObject {
         guard let next = commandCapturePhase.applying(event) else { return false }
         commandCapturePhase = next
         return true
+    }
+
+    /// Record the most recently recognized command for the release diagnostics
+    /// row (#96 P2). Lives in the main file so `lastRecognizedCommand`'s private
+    /// setter is honored (the CommandListener extension is a separate file).
+    func noteRecognizedCommand(_ command: VoiceCommand) {
+        lastRecognizedCommand = command
     }
 
     /// Single funnel for every earcon (77.10). Suppresses cues during question

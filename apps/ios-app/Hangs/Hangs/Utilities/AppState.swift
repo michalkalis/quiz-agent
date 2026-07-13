@@ -63,18 +63,27 @@ final class AppState: ObservableObject {
         self.persistenceStore = PersistenceStore()
         self.storeManager = StoreManager()
 
-        // Silence detection / barge-in require iOS 26+ SpeechDetector
-        if #available(iOS 26, *) {
+        // Silence detection / barge-in require iOS 26+ SpeechDetector.
+        var silence: SilenceDetectionServiceProtocol? = nil
+        #if DEBUG
+        // `--ui-test-voice-ready`: inject a ready mock recognizer so the on-screen
+        // "LISTENING FOR COMMANDS" indicator (#96 P2) can be screenshot-verified on
+        // the Simulator, where the real SpeechAnalyzer has no installed locales and
+        // reports `.unavailable` (which correctly suppresses the cue).
+        if CommandLine.arguments.contains("--ui-test-voice-ready") {
+            silence = MockSilenceDetectionService()
+        }
+        #endif
+        if silence == nil, #available(iOS 26, *) {
             let silenceService = SilenceDetectionService()
-            self.silenceDetectionService = silenceService
+            silence = silenceService
             // One-time launch prepare (#77 device fix): check/download the
             // on-device en-US SpeechTranscriber model assets. Without them the
             // command transcriber never yields a result on a real device.
             // Non-blocking; any failure flips `commandAvailability` (fail loud).
             Task { await silenceService.prepareAssets() }
-        } else {
-            self.silenceDetectionService = nil
         }
+        self.silenceDetectionService = silence
 
         // ElevenLabs streaming STT (controlled by feature flag)
         if Config.useElevenLabsSTT {

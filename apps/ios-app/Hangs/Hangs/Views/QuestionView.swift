@@ -62,7 +62,8 @@ struct QuestionView: View {
                 onReRecord: { viewModel.rerecordAnswer() },
                 onEditingBegan: { viewModel.beginEditingTranscript() },
                 onCancelEditing: { viewModel.cancelEditingTranscript() },
-                onCancel: { viewModel.cancelProcessing() }
+                onCancel: { viewModel.cancelProcessing() },
+                commandHint: viewModel.commandListenerHint
             )
         }
         .sheet(isPresented: $showQuizSettings) {
@@ -342,6 +343,15 @@ struct QuestionView: View {
             audioStrip()
                 .padding(.top, 8)
 
+            // #77/#96 P2: listening indicator (pen `s49sd`) — MCQ command
+            // window (repeat / skip). Shown only while armed.
+            if let hint = viewModel.commandListenerHint {
+                CmdListenBar(hint: hint)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 8)
+                    .transition(.opacity)
+            }
+
             HangsSecondaryButton(title: "Skip question",
                                  icon: "play.forward.fill",
                                  height: 44)
@@ -427,6 +437,15 @@ struct QuestionView: View {
 
                     if showTextInput {
                         textInputRow
+                    }
+
+                    // #77/#96 P2: listening indicator (pen `s49sd`) — shows
+                    // exactly while the question command window is armed (after
+                    // TTS, not while recording). Hidden during recording/typing.
+                    if let hint = viewModel.commandListenerHint {
+                        CmdListenBar(hint: hint)
+                            .padding(.horizontal, 24)
+                            .transition(.opacity)
                     }
 
                     voiceActionRow

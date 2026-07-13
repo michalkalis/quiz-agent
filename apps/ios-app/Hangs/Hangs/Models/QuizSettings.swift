@@ -67,6 +67,12 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// fun but unsuitable while driving (founder decision 6, 2026-07-05).
     var includeImageQuestions: Bool
 
+    /// Master switch for the hands-free English voice-command listener (#77 /
+    /// #96 P2). Default ON. When OFF, the screen-scoped command window never arms
+    /// (`QuizViewModel.currentCommandScreen` returns nil) and the on-screen
+    /// listening indicator is suppressed — buttons remain the untouched fallback.
+    var voiceCommandsEnabled: Bool
+
     // MARK: - Memberwise Init
 
     init(
@@ -85,7 +91,8 @@ struct QuizSettings: Codable, Equatable, Sendable {
         isMuted: Bool = false,
         ageAppropriate: String? = nil,
         recordingSoundsEnabled: Bool = true,
-        includeImageQuestions: Bool = false
+        includeImageQuestions: Bool = false,
+        voiceCommandsEnabled: Bool = true
     ) {
         self.language = language
         self.audioMode = audioMode
@@ -103,6 +110,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
         self.ageAppropriate = ageAppropriate
         self.recordingSoundsEnabled = recordingSoundsEnabled
         self.includeImageQuestions = includeImageQuestions
+        self.voiceCommandsEnabled = voiceCommandsEnabled
     }
 
     // MARK: - Default Configuration
@@ -123,15 +131,17 @@ struct QuizSettings: Codable, Equatable, Sendable {
         showConfirmSheet: true,
         isMuted: false,
         recordingSoundsEnabled: true,
-        includeImageQuestions: false
+        includeImageQuestions: false,
+        voiceCommandsEnabled: true
     )
 
     // MARK: - Backward-Compatible Decoding
 
     /// Custom decoder tolerates missing keys so new fields can be added without
     /// breaking previously-persisted settings. Also silently ignores removed
-    /// keys like `voiceCommandsEnabled` / `bargeInEnabled` from older builds —
-    /// Codable drops unrecognized keys automatically, no guard needed.
+    /// keys like `bargeInEnabled` from older builds — Codable drops unrecognized
+    /// keys automatically, no guard needed. (`voiceCommandsEnabled` was dropped
+    /// once and is re-introduced in #96 P2 as the master command toggle.)
     /// Pre-multi-select persisted blobs carry a single `category` string.
     private enum LegacyKeys: String, CodingKey {
         case category
@@ -161,6 +171,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
         ageAppropriate = try container.decodeIfPresent(String.self, forKey: .ageAppropriate)
         recordingSoundsEnabled = try container.decodeIfPresent(Bool.self, forKey: .recordingSoundsEnabled) ?? true
         includeImageQuestions = try container.decodeIfPresent(Bool.self, forKey: .includeImageQuestions) ?? false
+        voiceCommandsEnabled = try container.decodeIfPresent(Bool.self, forKey: .voiceCommandsEnabled) ?? true
     }
 
     // MARK: - Validation Helpers

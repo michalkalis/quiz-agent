@@ -31,6 +31,11 @@ extension QuizViewModel {
     /// states all map to `nil` (windowed lifecycle, 77.5). This is the single
     /// source of truth for both arming and for scoping the matcher.
     var currentCommandScreen: VoiceCommandScreen? {
+        // Master switch (#96 P2): the founder-facing Settings toggle. OFF → the
+        // command window never arms on any screen and the listening indicator is
+        // suppressed; buttons stay the untouched fallback.
+        if !settings.voiceCommandsEnabled { return nil }
+
         // Backgrounded → no window: the mic input must never be (re-)armed
         // while the app is in the background, even by a refreshCommandWindow()
         // racing the scene-phase teardown (mic-in-background fix).
@@ -53,6 +58,20 @@ extension QuizViewModel {
     /// Whether an answer recording (batch or streaming) is live. The command
     /// listener is NEVER armed while this is true.
     var isRecordingActive: Bool { quizState == .recording }
+
+    /// Hint for the on-screen "LISTENING FOR COMMANDS" indicator (77.12, pen
+    /// `s49sd`), or `nil` when the cue must be hidden. A view shows `CmdListenBar`
+    /// iff this is non-nil, so it appears exactly during an armed window and names
+    /// the valid word(s) for the current screen. Gated on the recognizer being
+    /// `.ready`: if the on-device assets failed to install (the founder's past
+    /// symptom) the cue must NOT claim to be listening — the buttons take over and
+    /// the Settings diagnostics row reports why.
+    var commandListenerHint: String? {
+        guard commandCapturePhase == .listening,
+              let screen = currentCommandScreen,
+              silenceDetectionService?.commandAvailability == .ready else { return nil }
+        return VoiceCommandLexicon.hint(on: screen)
+    }
 
     /// Arm or tear down the command/VAD listener to match the current window.
     /// Idempotent (the underlying `start/stopListening` are). A `nil` service
@@ -131,6 +150,7 @@ extension QuizViewModel {
     /// transcript that lands as the window closes can't fire the wrong action.
     func handleRecognizedCommand(_ command: VoiceCommand) {
         Logger.voice.info("🎙️ Command recognized: \(command.rawValue, privacy: .public)")
+        noteRecognizedCommand(command) // release diagnostics (#96 P2)
         emitEarcon(.commandAck) // 77.10 command-ack tone
         onCommandRecognized?(command)
         routeCommand(command)

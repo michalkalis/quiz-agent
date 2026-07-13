@@ -76,6 +76,34 @@ enum VoiceCommandLexicon {
         "please", "just", "well", "so", "like", "yeah", "then",
     ]
 
+    /// Canonical spoken spelling of a command, for display (diagnostics + the
+    /// listening indicator). NOT the matcher input — matching uses `variants`.
+    static func spokenWord(_ command: VoiceCommand) -> String {
+        switch command {
+        case .start: return "start"
+        case .ok: return "ok"
+        case .next: return "next"
+        case .again: return "again"
+        case .repeatQuestion: return "repeat"
+        case .skip: return "skip"
+        case .stop: return "stop"
+        }
+    }
+
+    /// Curated hint for the on-screen "LISTENING FOR COMMANDS" indicator (77.12,
+    /// pen `s49sd`). A concise, driver-facing subset of each screen's routable
+    /// commands — e.g. the question screen omits the hands-free "start" recovery
+    /// (auto-record is the primary answer path) to keep the cue to a glance.
+    /// English by design (the command grammar is English-only for all users).
+    static func hint(on screen: VoiceCommandScreen) -> String {
+        switch screen {
+        case .home: return #"Say "start""#
+        case .question: return #"Say "repeat" or "skip""#
+        case .confirmation: return #"Say "ok", "again" or "stop""#
+        case .result: return #"Say "next""#
+        }
+    }
+
     /// The cancel/undo words that abort an open `UndoWindow` (spoken form of a tap).
     static let cancelWords: [VoiceCommand] = [.stop]
 

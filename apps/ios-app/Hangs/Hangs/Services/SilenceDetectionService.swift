@@ -154,12 +154,15 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
         let installed = await SpeechTranscriber.installedLocales
         if installed.contains(where: { $0.identifier(.bcp47) == locale.identifier(.bcp47) }) {
             commandAvailability = .ready
-            Logger.voice.info("🎙️ Voice commands: en-US assets already installed")
+            // Mirror to Sentry (#96 P2.3) so the founder's device confirms the
+            // recognizer assets are present at launch — the pre-condition for
+            // commands working at all.
+            SentryLog.info("Voice command assets ready", category: .voice, attributes: ["source": "already-installed"])
             return
         }
 
         commandAvailability = .installingAssets
-        Logger.voice.info("🎙️ Voice commands: en-US assets missing — downloading")
+        SentryLog.info("Voice command assets installing", category: .voice, attributes: ["locale": "en-US"])
         let transcriber = SpeechTranscriber(
             locale: locale,
             transcriptionOptions: [],
@@ -171,7 +174,7 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
                 try await request.downloadAndInstall()
             }
             commandAvailability = .ready
-            Logger.voice.info("🎙️ Voice commands: en-US assets installed")
+            SentryLog.info("Voice command assets ready", category: .voice, attributes: ["source": "installed"])
         } catch {
             markCommandsUnavailable(reason: "Asset install failed: \(error.localizedDescription)")
         }
@@ -181,7 +184,9 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     /// and logs at error level so degrading to buttons is never silent.
     func markCommandsUnavailable(reason: String) {
         commandAvailability = .unavailable(reason: reason)
-        Logger.voice.error("🎙️ Voice commands UNAVAILABLE (degrading to buttons): \(reason, privacy: .public)")
+        // Mirror to Sentry (#96 P2) so a device that silently degrades to
+        // buttons — the founder's exact symptom — surfaces in /check-crashes.
+        SentryLog.error("Voice commands unavailable", category: .voice, attributes: ["reason": reason])
     }
 
     // MARK: - Lifecycle

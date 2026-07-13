@@ -21,6 +21,9 @@ struct AnswerConfirmationView: View {
     var onEditingBegan: (() -> Void)? = nil
     var onCancelEditing: (() -> Void)? = nil
     var onCancel: (() -> Void)? = nil
+    /// #77/#96 P2: the "LISTENING FOR COMMANDS" hint (pen `s49sd`), or nil when
+    /// the confirmation command window isn't armed. Supplied by the presenter.
+    var commandHint: String? = nil
 
     @State private var isEditing = false
     @FocusState private var editFocused: Bool
@@ -106,6 +109,12 @@ struct AnswerConfirmationView: View {
             if autoConfirmEnabled && autoConfirmCountdown > 0 && !isEditing {
                 countdownBar
                     .padding(.top, 12)
+            }
+
+            if let commandHint, !isEditing {
+                CmdListenBar(hint: commandHint)
+                    .padding(.top, 12)
+                    .transition(.opacity)
             }
 
             HStack(spacing: 10) {

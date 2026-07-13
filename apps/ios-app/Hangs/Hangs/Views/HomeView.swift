@@ -47,6 +47,15 @@ struct HomeView: View {
                 .padding(.bottom, 24)
             }
 
+            // #77/#96 P2: listening indicator (pen `s49sd`) above the primary
+            // action — visible only while the Home command window is armed.
+            if let hint = viewModel.commandListenerHint {
+                CmdListenBar(hint: hint)
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 10)
+                    .transition(.opacity)
+            }
+
             HangsPrimaryButton(
                 title: "Start Quiz",
                 icon: "play.fill",

@@ -147,6 +147,29 @@ struct SettingsView: View {
 
     private var voiceGroup: some View {
         groupSection(label: "voice", color: Theme.Hangs.Colors.pink) {
+            // Master command toggle (#96 P2, pen `gEPhB`). Governs the whole
+            // screen-scoped command listener; default ON. Refreshes the window
+            // immediately so flipping it off tears the listener down at once.
+            HangsToggleRow(
+                label: "Voice commands",
+                subtitle: "Hands-free spoken commands while driving",
+                isOn: $viewModel.settings.voiceCommandsEnabled
+            )
+            .accessibilityIdentifier("settings.voiceCommands")
+            .onChange(of: viewModel.settings.voiceCommandsEnabled) { _, _ in
+                viewModel.refreshCommandWindow()
+            }
+
+            hairline
+
+            // Release-visible recognizer diagnostics (#96 P2): asset state + the
+            // last command heard, so the founder can confirm on-device that
+            // recognition is armed and firing. Full failure reason → Sentry.
+            HangsValueRow(label: "Status", value: voiceCommandsDiagnostic)
+                .accessibilityIdentifier("settings-voice-commands-status")
+
+            hairline
+
             HangsToggleRow(
                 label: "Auto-record answers",
                 isOn: $viewModel.settings.autoRecordEnabled
@@ -551,6 +574,28 @@ struct SettingsView: View {
         }
     }
 
+    /// Release-visible readout of the voice-command recognizer state (#96 P2):
+    /// master-toggle state, on-device asset availability, and the last command
+    /// heard. Kept short for the row; the full failure reason goes to Sentry via
+    /// `SilenceDetectionService.markCommandsUnavailable`.
+    private var voiceCommandsDiagnostic: String {
+        if !viewModel.settings.voiceCommandsEnabled { return "Off" }
+        guard let service = appState.silenceDetectionService else {
+            return "Needs iOS 26"
+        }
+        let base: String
+        switch service.commandAvailability {
+        case .unknown: base = "Checking…"
+        case .installingAssets: base = "Installing…"
+        case .ready: base = "Ready"
+        case .unavailable: base = "Unavailable"
+        }
+        if let last = viewModel.lastRecognizedCommand {
+            return "\(base) · heard \"\(VoiceCommandLexicon.spokenWord(last))\""
+        }
+        return base
+    }
+
     #if DEBUG
         private var developerGroup: some View {
             groupSection(label: "developer", color: Theme.Hangs.Colors.blue) {
@@ -565,26 +610,6 @@ struct SettingsView: View {
                     )
                     .allowsHitTesting(false)
                 }
-
-                hairline
-
-                // #77 diagnostic: recognizer/asset status of the on-device
-                // voice-command transcriber (fail-loud flag, debug-only).
-                HangsValueRow(label: "Voice commands", value: voiceCommandsDiagnostic)
-                    .accessibilityIdentifier("settings-voice-commands-status")
-            }
-        }
-
-        /// Debug-only readout of `SilenceDetectionService.commandAvailability`.
-        private var voiceCommandsDiagnostic: String {
-            guard let service = appState.silenceDetectionService else {
-                return "unavailable (requires iOS 26+)"
-            }
-            switch service.commandAvailability {
-            case .unknown: return "checking…"
-            case .installingAssets: return "installing assets…"
-            case .ready: return "ready"
-            case .unavailable(let reason): return "unavailable — \(reason)"
             }
         }
     #endif

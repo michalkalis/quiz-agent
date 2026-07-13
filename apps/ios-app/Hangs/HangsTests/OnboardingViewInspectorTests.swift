@@ -86,8 +86,11 @@ struct OnboardingViewStructureTests {
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) { try tree.find(text: "HANDS-FREE") }
-            #expect(throws: Never.self) { try tree.find(text: "Auto-Record") }
-            #expect(throws: Never.self) { try tree.find(text: "Auto-Advance") }
+            // #96 P2: the features card now teaches the command grammar (adopted
+            // from pen `hTdkE`) — the founder's discoverability fix.
+            #expect(throws: Never.self) { try tree.find(text: "Five simple words") }
+            #expect(throws: Never.self) { try tree.find(text: "English, always") }
+            #expect(throws: Never.self) { try tree.find(text: "Buttons always work") }
         }
     }
 

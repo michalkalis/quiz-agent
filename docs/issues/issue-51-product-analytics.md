@@ -66,9 +66,10 @@ Map the PRD metrics to concrete events with properties:
       **Acceptance**: each of the 3 PRD metrics (completion rate, voice reliability, wrong-answer rate) traces to ≥ 1 event AND every event traces to a metric (or to the #49 cost model); every trigger names a real, grep-verified call site.
       **Done 2026-06-11**: `docs/product/analytics-events.md` written. 9 events covering 3 PRD metrics. All trigger line numbers grep-verified. Sentry mechanism: `capture_event`/`SentrySDK.capture(event:)` (custom events, both SDK versions confirmed). 51.2 (founder gate) must be `[x]` before 51.3/51.4 start.
 
-- [HUMAN] **51.2 Founder skim of the taxonomy** (~5 min). Confirm the event list + properties; check nothing conflicts with the privacy labels planned in #50. Edit inline, flip to `[x]`.
+- [x] **51.2 Founder skim of the taxonomy** (~5 min). Confirm the event list + properties; check nothing conflicts with the privacy labels planned in #50. Edit inline, flip to `[x]`.
+      **Done 2026-07-14**: founder-approved 2026-07-14 — 10 events incl. `quota_hit` (G2, interactive in-chat).
 
-- [ ] **51.3 Backend instrumentation.** *(Gated on 51.2.)* Emit the backend-truth events from the taxonomy (answer correctness with category + question type; transcription failures) via the existing `sentry_sdk` init (`apps/quiz-agent/app/main.py:50`). Mock Sentry in tests.
+- [ ] **51.3 Backend instrumentation.** *(Gated on 51.2.)* Emit the backend-truth events from the taxonomy (answer correctness with category + question type; transcription failures; quota hit) via the existing `sentry_sdk` init (`apps/quiz-agent/app/main.py:50`). Mock Sentry in tests.
       **Acceptance**: `pytest tests/ -v` green; each emit covered by a unit test asserting event name + properties; zero events not in the taxonomy doc.
 
 - [ ] **51.4 iOS instrumentation — code + unit tests.** *(Gated on 51.2.)* Small `AnalyticsClient` seam (protocol + Sentry-backed impl, mock in tests); hook the existing `QuizViewModel` phase transitions per the taxonomy — no parallel state source (scope guard). Sentry SDK is already initialised in `HangsApp.swift`.

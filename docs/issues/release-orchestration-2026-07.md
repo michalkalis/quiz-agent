@@ -27,7 +27,7 @@ You are the release orchestrator. Read docs/issues/release-orchestration-2026-07
 3. **Model routing:** opus = code implementation + adversarial reviews · sonnet = docs, metadata, Pencil, sim verification, instrumentation, scripted ops · haiku = trivial hygiene. Fable takes no session itself.
 4. **maker≠checker** on rows with `review: opus` (auth/payment surface): after the maker's gate is green, a fresh-context opus reviewer tries to disprove the diff. Tick only on Done ✅ + Reviewed ✅.
 5. **Durable state:** update ## Status here after every session (+ the source issue's own tracking). Never tick on red; retry within budget, then stop and surface. On a founder gate: halt that wave, continue unblocked waves, surface the gate in the report.
-6. **Interactive founder gates run in the MAIN session.** G2 (51.2 analytics approval) is asked by the orchestrator live in-chat (question prompt, full context — the 9 events summarized) BEFORE dispatching R16; workers never ask the founder. Founder decision 2026-07-14: interactive in-chat beats "go read a doc and tick it".
+6. **Interactive founder gates run in the MAIN session.** G2 (51.2 analytics approval) is asked by the orchestrator live in-chat (question prompt, full context — the 10 events summarized) BEFORE dispatching R16; workers never ask the founder. Founder decision 2026-07-14: interactive in-chat beats "go read a doc and tick it".
 7. **Deploys:** backend sessions deploy to Fly autonomously on green (standing delegation); new migrations or secrets = stop and ask. N3 mutates prod DATA — its GO is already granted, but it must still stop on any surprise (counts mismatch, unexpected schema state).
 8. **Fail loud, report at product level.** The founder reads done/blocked, not dev-logs.
 
@@ -100,7 +100,7 @@ Issue #50 agent leg (ASC API key wired — apps/ios-app/Hangs/fastlane/.env; app
 ### R16 — 51.3 backend analytics (G2 asked in-chat first)
 
 ```
-Issue #51 task 51.3. PRECONDITION: the orchestrator has just obtained the founder's interactive in-chat approval of the 9-event taxonomy (G2) and ticked 51.2 in issue-51 — verify the tick exists; if not, STOP. Read docs/issues/issue-51-product-analytics.md + docs/product/analytics-events.md (its iOS anchors are stale — use the runbook's R16/R17 delta block; backend anchors verified 2026-07-14). Implement backend-truth events via the existing sentry_sdk init (apps/quiz-agent/app/main.py) as structured events/breadcrumbs: answer evaluated (correctness, category, question type), transcription failure, quota hit. No new SDK, no PII beyond the taxonomy, emitter patched in tests (not sentry). Tests: one per event proving trigger + payload shape. Done = cd apps/quiz-agent && uv run --no-sync pytest tests/ -v green. Commit, push, deploy (rail 7). Tick 51.3.
+Issue #51 task 51.3. PRECONDITION: the orchestrator has just obtained the founder's interactive in-chat approval of the 10-event taxonomy (G2) and ticked 51.2 in issue-51 — verify the tick exists; if not, STOP. Read docs/issues/issue-51-product-analytics.md + docs/product/analytics-events.md (its iOS anchors are stale — use the runbook's R16/R17 delta block; backend anchors verified 2026-07-14). Implement backend-truth events via the existing sentry_sdk init (apps/quiz-agent/app/main.py) as structured events/breadcrumbs: answer evaluated (correctness, category, question type), transcription failure, quota_hit. No new SDK, no PII beyond the taxonomy, emitter patched in tests (not sentry). Tests: one per event proving trigger + payload shape. Done = cd apps/quiz-agent && uv run --no-sync pytest tests/ -v green. Commit, push, deploy (rail 7). Tick 51.3.
 ```
 
 ### R17 — 51.4 iOS analytics + 51.5 verify (delta-corrected)
@@ -170,7 +170,7 @@ Issue #48 Stage 2 — security review (report-only; feeds the go/no-go). Spawn s
 | Gate | What | When |
 |---|---|---|
 | **G1** | On-device #96 P7 checklist on the **N1 build (#22, run `29334191671`)**: sandbox sub + pack purchase retest, voice commands in practice, custom-pack order→play e2e | after N1 ✅ ready |
-| **G2** | 51.2 — interactive in-chat approval of the 9 analytics events (orchestrator asks you; ~2 min) | before R16 |
+| **G2** | 51.2 — interactive in-chat approval of the 10 analytics events (incl. `quota_hit`, founder-approved 2026-07-14) (orchestrator asks you; ~2 min) | before R16 |
 | **G3** | Blind-rate the ~10-question sample (5 Opus / 5 glm) → default generation model | after N2 |
 | **G4** | #50 tail: ASC agreements + availability + enter privacy label (R14's draft; R0 writes the steps) | after R14 |
 | **G5** | Pencil ⌘S after N4's `.pen` edits | after N4 |

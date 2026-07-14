@@ -20,6 +20,7 @@
 | `transcription_failed` | Backend `apps/quiz-agent/app/api/routes/voice.py:190` — `transcribe_and_submit()` except block, after `RuntimeError` from `app/voice/transcriber.py:249` | `session_id` (from request query param), `error_type` (exception class name) | Voice reliability — failure path (counts against first-try capture rate) | Backend |
 | `answer_correct` | Backend `apps/quiz-agent/app/quiz/flow.py:140` — `process_answer()` after `answer_evaluator.evaluate()` returns `"correct"` | `session_id`, `question_id`, `category`, `question_type`, `difficulty` | Wrong-answer rate — correct count | Backend |
 | `answer_incorrect` | Backend `apps/quiz-agent/app/quiz/flow.py:140` — `process_answer()` after `answer_evaluator.evaluate()` returns `"incorrect"` | `session_id`, `question_id`, `category`, `question_type`, `difficulty` | Wrong-answer rate — incorrect count | Backend |
+| `quota_hit` | Backend `apps/quiz-agent/app/quiz/flow.py:250` — `process_answer()`, after `usage_tracker.check_limit()` (called `:247`) returns `allowed=False` (mid-quiz gate); same rejection shape also raised at `apps/quiz-agent/app/api/routes/quiz.py:65` — `start_quiz()`, after `check_limit()` (called `:62`) returns `allowed=False` (new-session gate) | `session_id`, `questions_used`, `questions_limit` | #49 cost model — quota/limit tuning signal; upgrade-funnel volume (#93 monetization) | Backend |
 
 ---
 
@@ -48,12 +49,14 @@
 | `is_retry` | bool: true when emitting from `resubmitAnswer()` path | n/a | Sentry tag |
 | `error_type` | n/a | `type(e).__name__` from caught exception | Sentry tag — backend only |
 | `question_index` | `questionsAnswered` at time of `transition(to: .askingQuestion)` | n/a | Sentry extra |
+| `questions_used` | n/a | `usage["questions_used"]` (`tracker.py:252`/`:262`, from `get_usage()`) | Sentry extra — backend only |
+| `questions_limit` | n/a | `usage["questions_limit"]` (`tracker.py:263`; free-tier constant, currently `30`) | Sentry tag — backend only, low-cardinality |
 
 ---
 
 ## Scope guards (from issue #51)
 
-- These 9 events are the complete set — no additional events without a named PRD metric or #49/#50 link.
+- These 10 events are the complete set (6 iOS, 4 backend) — no additional events without a named PRD metric or #49/#50 link.
 - No transcript text, no audio blobs, no user identifiers in any property.
 - Privacy labels (#50) and this table must agree before 51.3/51.4 ship.
 - Do not add a parallel state source; hook the existing transitions listed above.

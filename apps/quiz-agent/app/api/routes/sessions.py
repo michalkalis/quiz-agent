@@ -1,7 +1,10 @@
 """Session management and multiplayer endpoints."""
 
 import logging
+import uuid
+
 from fastapi import APIRouter, Depends, HTTPException, Request, status
+from sqlalchemy import text
 
 from ..deps import (
     CreateSessionRequest,
@@ -20,6 +23,50 @@ from ...rate_limit import limiter
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+
+async def _require_pack_ownership(pack_id, subject_id, auth_sessionmaker) -> None:
+    """Reject unless ``subject_id`` owns the delivered custom pack ``pack_id``.
+
+    Scoping a session to a ``pack_id`` both serves that pack's private, paid
+    questions and bypasses the free monthly quota, so a client-supplied id must be
+    authorized before it is trusted. Without this an authenticated caller could
+    replay any pack id — their own (unmetered play) or a guessed/leaked one to read
+    another user's paid pack: an IDOR plus a monetization bypass (#96 review).
+
+    A ``question_packs`` row exists only after successful delivery and carries the
+    ordering subject's id (the same JWT ``sub`` space as ``subject_id``), so a row
+    matching ``(id, user_id)`` is exactly the ownership predicate. Every failure —
+    a malformed id, an un-verifiable (no-DB) environment, or simply no such owned
+    pack — answers 404 (never 403) so a caller can neither probe which pack ids
+    exist nor distinguish "not yours" from "absent"; the real reason is logged.
+    """
+    if auth_sessionmaker is None:
+        # No auth DB → ownership is un-verifiable. Pack content lives in that same
+        # Postgres, so this only happens in a DB-less dev/test env; fail closed.
+        logger.warning(
+            "Pack ownership unverifiable (no auth DB); denying pack=%s", pack_id
+        )
+        raise HTTPException(status_code=404, detail="Pack not found")
+    try:
+        pid = uuid.UUID(str(pack_id))
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=404, detail="Pack not found")
+    async with auth_sessionmaker() as db:
+        result = await db.execute(
+            text(
+                "SELECT 1 FROM question_packs "
+                "WHERE id = :pid AND user_id = :uid LIMIT 1"
+            ),
+            {"pid": pid, "uid": subject_id},
+        )
+        if result.first() is None:
+            logger.warning(
+                "Pack ownership denied: subject=%s pack=%s (absent or not owned)",
+                subject_id,
+                pack_id,
+            )
+            raise HTTPException(status_code=404, detail="Pack not found")
 
 
 @router.post(
@@ -49,6 +96,14 @@ async def create_session(
         # resolve_session_subject already rejects the no-identity path; this
         # backstops any future caller that might not.
         raise HTTPException(status_code=401, detail="Authentication required")
+    # #96 review — broken-access-control fix: a pack_id both unlocks private paid
+    # content and bypasses the free quota, so verify the authenticated subject owns
+    # it BEFORE creating the session — and outside the try below, whose broad
+    # ``except`` would otherwise turn the 404 into a 500.
+    if body.pack_id:
+        await _require_pack_ownership(
+            body.pack_id, subject.subject_id, auth_sessionmaker
+        )
     try:
         session = session_manager.create_session(
             max_questions=body.max_questions,

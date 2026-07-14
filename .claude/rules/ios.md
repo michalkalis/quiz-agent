@@ -13,27 +13,6 @@ paths: ["apps/ios-app/**"]
 Passive reference docs in `.claude/knowledge/ios/`:
 swift-concurrency/, ios-mvvm/, ios-networking/, ios-audio/, ios-debugging/
 
-## Project Structure
-
-```
-apps/ios-app/Hangs/Hangs/
-├── Services/
-│   ├── NetworkService.swift      # Actor - backend API
-│   ├── AudioService.swift        # @MainActor - recording/playback
-│   └── PersistenceStore.swift    # Unified persistence
-├── ViewModels/
-│   └── QuizViewModel.swift       # @MainActor - quiz state (decomposed into extensions)
-├── Views/
-│   ├── HomeView.swift
-│   ├── QuestionView.swift
-│   └── ResultView.swift
-├── Models/
-│   ├── Question.swift, QuizSession.swift, Evaluation.swift
-└── Utilities/
-    ├── Config.swift              # API URL from xcconfig
-    └── Logging.swift             # os.Logger categories
-```
-
 ## Schemes & Commands
 
 | Scheme | API URL |
@@ -95,10 +74,3 @@ Tests — and the autonomous loop's gate — verify **the right flow and correct
 
 Any change that can affect the UI (layout, colors, visibility, spacing) requires a screenshot-verify step before the task is considered done — see `docs/testing/screenshot-verify-procedure.md`. This enforces CLAUDE.md rule #2 "Fail loud": '"tests pass" is wrong if … UI wasn't verified'. Per **Verification Altitude** above, this screenshot-verify is a non-gating human/on-demand check — it does not block the autonomous merge gate.
 
-## Info.plist
-
-Background audio mode enabled. Microphone usage description required.
-
-## Mock Implementations
-
-MockNetworkService, MockAudioService, MockPersistenceStore available for testing.

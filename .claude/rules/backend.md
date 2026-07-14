@@ -34,13 +34,6 @@ Do NOT use it for routing, retries, status-code handling, deterministic transfor
 - **ChromaDB:** RETIRED (#41 Phase A, 2026-07-07) — client + dep deleted repo-wide. Prod `/data/chroma` wipe + `CHROMA_PATH` secret unset are the founder-gated #41 Phase B tail. Never reintroduce a ChromaDB path.
 - **SQLite:** Ratings and persistent data.
 
-## Local Dev
-
-| Service | Start command |
-|---------|---------------|
-| quiz-agent (`:8002`) | `cd apps/quiz-agent && uvicorn app.main:app --reload --port 8002` |
-| quiz-pack-api (`:8003`) | `cd apps/quiz-pack-api && uvicorn app.main:app --reload --port 8003` |
-
 ## API Design
 
 - **Timestamps:** ISO 8601 with timezone (required for mobile)
@@ -56,13 +49,6 @@ All services import from `packages/shared`:
 - `quiz_shared.models.participant` — Participant
 
 When updating shared models, verify iOS still builds (`/verify-api`).
-
-## Lint/Format
-
-```bash
-ruff check apps/quiz-agent/
-ruff format apps/quiz-agent/
-```
 
 ## Mobile Client Compatibility
 

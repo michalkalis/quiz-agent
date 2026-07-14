@@ -107,6 +107,8 @@ Acceptance: #88 — dropped-response replay of the just-used refresh token re-is
 ### P7 — Verify + TestFlight as Trubbo (#92 S3)
 **✅ DONE 2026-07-13.** Gate green: backend 374 (quiz-agent) + 595 (quiz-pack-api), iOS 624, API contract clean (packId↔pack_id + all 33 order fields), prod healthy (596 Q, runway 119d). **TestFlight build SUCCESS + uploaded as Trubbo** (run 29255778835). RS smoke: build launches clean/no-crash/graceful-error, but sim+prod can't exercise the quiz path (prod requires App Attest #60/#65; sim compiles it out — by design) → real quiz e2e = founder on-device (App Attest works there). **Remaining = founder on-device checklist** (below).
 
+**🔄 N1 fresh build 2026-07-14 (release runbook):** re-shipped from `main` HEAD `248d63d` → **TestFlight build 22, run 29334191671, SUCCESS + uploaded** (upload confirmed "Successfully uploaded the new binary to App Store Connect"; Apple-side processing then ~5–10 min, CI can't observe). **Supersedes run 29255778835 (pre-`1808036`)** — carries the iOS review fixes (voice-command-indicator reactivity + order-poll resilience) the founder retests. Export compliance baked in (`ITSAppUsesNonExemptEncryption=false` → "Ready to Submit"). **Run the on-device checklist below against build 22, not the old build.**
+
 Full HangsTests + both backend suites; RS smoke; /verify-api if models changed; then /testflight.
 Post-build founder checklist (on-device): sandbox sub + pack purchase (P1) · voice commands with indicator + cheat-sheet + Settings toggle (P2) · image toggle hidden, single-line texts, quiz paddings (P3) · custom pack order→play e2e, or confirm entry hidden if P5 fell back (P5) · re-checks from the 2026-07-11 batch (silent switch, background mic).
 

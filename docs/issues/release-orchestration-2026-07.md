@@ -169,7 +169,7 @@ Issue #48 Stage 2 — security review (report-only; feeds the go/no-go). Spawn s
 
 | Gate | What | When |
 |---|---|---|
-| **G1** | On-device #96 P7 checklist on the **N1 build**: sandbox sub + pack purchase retest, voice commands in practice, custom-pack order→play e2e | after N1 |
+| **G1** | On-device #96 P7 checklist on the **N1 build (#22, run `29334191671`)**: sandbox sub + pack purchase retest, voice commands in practice, custom-pack order→play e2e | after N1 ✅ ready |
 | **G2** | 51.2 — interactive in-chat approval of the 9 analytics events (orchestrator asks you; ~2 min) | before R16 |
 | **G3** | Blind-rate the ~10-question sample (5 Opus / 5 glm) → default generation model | after N2 |
 | **G4** | #50 tail: ASC agreements + availability + enter privacy label (R14's draft; R0 writes the steps) | after R14 |
@@ -189,7 +189,7 @@ Retired gates: F1/F2/F3 done (see §Completed) · F5 → G2 (interactive) · F6 
 
 | # | Session | Done | Reviewed | Box |
 |---|---|---|---|---|
-| N1 | TestFlight refresh | ⬜ | n/a | ⬜ |
+| N1 | TestFlight refresh | ✅ | n/a | ✅ |
 | R0 | founder guides | ⬜ | n/a | ⬜ |
 | R3 | #91 sweep (5 items) | ⬜ | ⬜ | ⬜ |
 | R6 | #79 race | ⬜ | n/a | ⬜ |

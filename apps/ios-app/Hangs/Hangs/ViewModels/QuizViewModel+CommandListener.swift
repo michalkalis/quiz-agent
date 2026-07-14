@@ -69,7 +69,7 @@ extension QuizViewModel {
     var commandListenerHint: String? {
         guard commandCapturePhase == .listening,
               let screen = currentCommandScreen,
-              silenceDetectionService?.commandAvailability == .ready else { return nil }
+              commandAvailability == .ready else { return nil }
         return VoiceCommandLexicon.hint(on: screen)
     }
 

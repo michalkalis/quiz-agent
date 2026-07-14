@@ -64,6 +64,15 @@ protocol SilenceDetectionServiceProtocol: AnyObject, Sendable {
     /// `.unavailable` means the app has degraded to the manual button flow.
     var commandAvailability: VoiceCommandAvailability { get }
 
+    /// Availability changes, pushed on EVERY `commandAvailability` mutation.
+    /// `commandAvailability` is a plain (non-observable) property, but the en-US
+    /// model can finish installing asynchronously long after launch and flip it to
+    /// `.ready`; with no signal the "LISTENING FOR COMMANDS" indicator never
+    /// appears on the idle Home screen even though commands now work (the "voice
+    /// commands don't work" discoverability symptom). The view-model mirrors this
+    /// stream into an observable `@Published` so SwiftUI re-renders on every change.
+    var commandAvailabilityUpdates: AsyncStream<VoiceCommandAvailability> { get }
+
     func startListening() async
     func stopListening()
 
@@ -79,10 +88,12 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     let silenceEvents: AsyncStream<SilenceEvent>
     let bargeInEvents: AsyncStream<Void>
     let commandTranscripts: AsyncStream<String>
+    let commandAvailabilityUpdates: AsyncStream<VoiceCommandAvailability>
 
     private let silenceContinuation: AsyncStream<SilenceEvent>.Continuation
     private let bargeInContinuation: AsyncStream<Void>.Continuation
     private let commandContinuation: AsyncStream<String>.Continuation
+    private let commandAvailabilityContinuation: AsyncStream<VoiceCommandAvailability>.Continuation
 
     private var audioEngine: AVAudioEngine?
     private var analyzer: SpeechAnalyzer?
@@ -94,8 +105,13 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     private var isTTSPlaybackActive = false
 
     /// Fail-loud command availability (#77). Written by `prepareAssets()` and by
-    /// every failure path that previously swallowed its error silently.
-    private(set) var commandAvailability: VoiceCommandAvailability = .unknown
+    /// every failure path that previously swallowed its error silently. Each
+    /// mutation is pushed to `commandAvailabilityUpdates` so an observer (the
+    /// view-model's `@Published` mirror) re-renders reactively (#96 S2). `didSet`
+    /// does not fire for the initializer's value — observers see changes only.
+    private(set) var commandAvailability: VoiceCommandAvailability = .unknown {
+        didSet { commandAvailabilityContinuation.yield(commandAvailability) }
+    }
 
     private enum State {
         case idle
@@ -124,12 +140,17 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
         var commandCont: AsyncStream<String>.Continuation!
         self.commandTranscripts = AsyncStream { commandCont = $0 }
         self.commandContinuation = commandCont
+
+        var availabilityCont: AsyncStream<VoiceCommandAvailability>.Continuation!
+        self.commandAvailabilityUpdates = AsyncStream { availabilityCont = $0 }
+        self.commandAvailabilityContinuation = availabilityCont
     }
 
     deinit {
         silenceContinuation.finish()
         bargeInContinuation.finish()
         commandContinuation.finish()
+        commandAvailabilityContinuation.finish()
     }
 
     // MARK: - Asset preparation (#77 device fix)

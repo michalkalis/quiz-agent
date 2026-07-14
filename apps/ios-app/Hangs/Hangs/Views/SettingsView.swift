@@ -654,11 +654,14 @@ struct SettingsView: View {
     /// `SilenceDetectionService.markCommandsUnavailable`.
     private var voiceCommandsDiagnostic: String {
         if !viewModel.settings.voiceCommandsEnabled { return "Off" }
-        guard let service = appState.silenceDetectionService else {
+        guard appState.silenceDetectionService != nil else {
             return "Needs iOS 26"
         }
+        // Read the view-model's observable mirror (not the service's plain
+        // property) so this row live-updates when the recognizer flips to
+        // `.ready` after the model finishes installing (#96 S2).
         let base: String
-        switch service.commandAvailability {
+        switch viewModel.commandAvailability {
         case .unknown: base = "Checking…"
         case .installingAssets: base = "Installing…"
         case .ready: base = "Ready"

@@ -167,6 +167,16 @@ final class QuizViewModel: ObservableObject {
     /// first command is heard.
     @Published private(set) var lastRecognizedCommand: VoiceCommand?
 
+    /// Observable mirror of the recognizer's command availability (#96 S2). The
+    /// service's `commandAvailability` is a plain (non-`@Published`) property; on a
+    /// fresh install the en-US model installs asynchronously and flips it to
+    /// `.ready` well after Home has armed the listener — with no observable signal,
+    /// SwiftUI never re-renders and the "LISTENING FOR COMMANDS" bar stays hidden
+    /// even though commands now work. We seed this from the service on start and
+    /// keep it in sync via `commandAvailabilityUpdates`, so `commandListenerHint`
+    /// (and the Settings status row) react to availability changes live.
+    @Published private(set) var commandAvailability: VoiceCommandAvailability = .unknown
+
     /// Observation hook / test seam (#77, task 77.5): invoked when the command
     /// listener recognizes a screen-scoped command, BEFORE it is routed to an
     /// action. Session 3 fired it as the only behaviour; Session 4 (77.8–77.9) adds
@@ -405,6 +415,12 @@ final class QuizViewModel: ObservableObject {
 
     private var cancellables = Set<AnyCancellable>()
 
+    /// Long-lived observer of `silenceDetectionService.commandAvailabilityUpdates`,
+    /// mirroring each change into `commandAvailability`. Deliberately NOT in
+    /// `taskBag` (which is quiz-scoped and cleared by `resetState`) — availability
+    /// changes span the whole app lifetime. Cancelled in `deinit`.
+    private var commandAvailabilityTask: Task<Void, Never>?
+
     /// Single owner for every long-lived `Task` this view model spawns.
     /// Each call site stores its task under a `TaskKey`; `resetState()` calls
     /// `cancelAll()` instead of duplicating ten cancel-and-nil lines.
@@ -438,6 +454,21 @@ final class QuizViewModel: ObservableObject {
         self.silenceDetectionService = silenceDetectionService
         self.sttService = sttService
 
+        // Seed + observe the recognizer availability so the "LISTENING FOR
+        // COMMANDS" indicator is reactive (see `commandAvailability`). Seeding
+        // catches whatever the service resolved before this view-model existed;
+        // the stream then keeps it in sync — including the async `.ready` flip
+        // when the en-US model finishes installing after launch.
+        commandAvailability = silenceDetectionService?.commandAvailability ?? .unknown
+        if let silence = silenceDetectionService {
+            commandAvailabilityTask = Task { [weak self] in
+                for await availability in silence.commandAvailabilityUpdates {
+                    guard let self, !Task.isCancelled else { break }
+                    self.commandAvailability = availability
+                }
+            }
+        }
+
         // #67 Part A: recover from a phone-call/Siri interruption that tears down
         // streaming recording — leave .recording and reset streaming STT so no
         // recording is stranded after the call.
@@ -455,6 +486,11 @@ final class QuizViewModel: ObservableObject {
             .removeDuplicates() // Only persist actual changes (QuizSettings is Equatable)
             .sink { [persistenceStore] in persistenceStore.saveSettings($0) }
             .store(in: &cancellables)
+    }
+
+    deinit {
+        // Availability observer lives outside `taskBag`; end it explicitly.
+        commandAvailabilityTask?.cancel()
     }
 
     // MARK: - Quiz Flow

@@ -28,6 +28,25 @@ final class OrderPackViewModel: ObservableObject {
     static let minPromptLength = 10
     static let maxPromptLength = 1000
 
+    /// Consecutive `getOrder` failures tolerated before the poll gives up with
+    /// `.failed`. A transient network/timeout blip on cellular must NOT dead-end a
+    /// paid order that is still generating server-side — a false failure strands
+    /// the user and invites a re-order / double charge. Only a run of errors longer
+    /// than this is treated as a real, fatal failure.
+    static let maxConsecutivePollErrors = 5
+
+    /// Wall-clock budget for the foreground delivery poll, in seconds. Generation
+    /// can outlive this (a suspended prod worker waking on the first order after
+    /// idle, a dropped job); once the budget is spent we stop spinning and send the
+    /// user to My packs rather than poll forever. Instance-settable so tests can
+    /// exercise the timeout without waiting the full three minutes.
+    var pollTimeoutSeconds: TimeInterval = 180
+
+    /// Delay between poll iterations (and between retries after a transient error),
+    /// in seconds — the ~1 Hz cadence. Instance-settable so timing tests don't wait
+    /// on real time.
+    var pollIntervalSeconds: TimeInterval = 1
+
     // MARK: Form fields
 
     @Published var prompt: String = ""
@@ -106,13 +125,35 @@ final class OrderPackViewModel: ObservableObject {
     }
 
     private func poll(orderId: String) async {
+        let deadline = Date().addingTimeInterval(pollTimeoutSeconds)
+        var consecutiveErrors = 0
+
         while !Task.isCancelled {
+            // Overall timeout: an order wedged in in_progress — a suspended worker
+            // that never woke, a dropped job — would otherwise poll at 1 Hz forever
+            // and never resolve the "Building your pack…" spinner. Stop and hand the
+            // user off to My packs; any generation still runs server-side.
+            if Date() >= deadline {
+                state = .failed(String(localized: "Still working — check My packs later.", comment: "Shown when the foreground poll for a custom-pack order runs past its time budget; generation continues server-side and the pack appears in My packs when done"))
+                return
+            }
+
             let snapshot: OrderSnapshot
             do {
                 snapshot = try await service.getOrder(id: orderId)
+                consecutiveErrors = 0 // any success clears the transient-error run
             } catch {
-                state = .failed(Self.message(for: error))
-                return
+                // Transient-error tolerance: a single network/timeout blip on
+                // cellular must NOT mark a paid, still-generating order as failed
+                // (that dead-ends the flow and invites a re-order / double charge).
+                // Retry a few times; only a sustained run of errors is fatal.
+                consecutiveErrors += 1
+                if consecutiveErrors > Self.maxConsecutivePollErrors {
+                    state = .failed(Self.message(for: error))
+                    return
+                }
+                try? await Task.sleep(for: .seconds(pollIntervalSeconds))
+                continue
             }
 
             if snapshot.isDelivered {
@@ -120,13 +161,14 @@ final class OrderPackViewModel: ObservableObject {
                 return
             }
             if snapshot.isFailure {
+                // A real terminal failure status — surface immediately, never retry.
                 state = .failed(String(localized: "Pack generation failed. Please try again.", comment: "Shown when a custom-pack order ends in a failed/refunded state"))
                 return
             }
             state = .polling(snapshot)
 
             do {
-                try await Task.sleep(for: .seconds(1))
+                try await Task.sleep(for: .seconds(pollIntervalSeconds))
             } catch {
                 return // cancelled
             }

@@ -12,8 +12,10 @@
 //  real 1 Hz cadence. Pass `getSequence` to instead hand back a different
 //  snapshot per `getOrder` call (e.g. pending → delivered), which lets a test
 //  drive the VM through the intermediate `.polling` state and prove the loop
-//  actually iterates rather than short-circuiting on call #1. The per-call
-//  cursor is guarded by a lock (no `nonisolated(unsafe)`).
+//  actually iterates rather than short-circuiting on call #1. Pass `getResults`
+//  for a per-call sequence that can also THROW (e.g. a transient error then a
+//  delivered snapshot), so a test can prove the poll retries past a blip. The
+//  per-call cursor is guarded by a lock (no `nonisolated(unsafe)`).
 //
 
 import Foundation
@@ -26,6 +28,10 @@ final class MockPackOrderService: PackOrderServiceProtocol, Sendable {
     /// When non-empty, `getOrder` returns `getSequence[callIndex]`, clamping to
     /// the last element once exhausted. Empty → fall back to `getResult`.
     private let getSequence: [OrderSnapshot]
+    /// When non-empty, `getOrder` returns/throws `getResults[callIndex]` (clamping
+    /// to the last element) — a per-call sequence that can inject a transient error
+    /// then a success. Takes precedence over `getSequence`/`getResult`.
+    private let getResults: [Result<OrderSnapshot, PackFailure>]
     private let getCallIndex = OSAllocatedUnfairLock(initialState: 0)
 
     /// Boxed error so the whole config stays value-typed / Sendable.
@@ -38,12 +44,14 @@ final class MockPackOrderService: PackOrderServiceProtocol, Sendable {
         createResult: Result<OrderCreatedResponse, PackFailure> = .success(.mockCreated),
         getResult: Result<OrderSnapshot, PackFailure> = .success(.mockDelivered),
         listResult: Result<[OrderSnapshot], PackFailure> = .success([.mockDelivered, .mockPending]),
-        getSequence: [OrderSnapshot] = []
+        getSequence: [OrderSnapshot] = [],
+        getResults: [Result<OrderSnapshot, PackFailure>] = []
     ) {
         self.createResult = createResult
         self.getResult = getResult
         self.listResult = listResult
         self.getSequence = getSequence
+        self.getResults = getResults
     }
 
     func createOrder(prompt: String, language: String, category: String?, theme: String?) async throws -> OrderCreatedResponse {
@@ -55,6 +63,15 @@ final class MockPackOrderService: PackOrderServiceProtocol, Sendable {
     }
 
     func getOrder(id: String) async throws -> OrderSnapshot {
+        // Per-call Result sequence (throw-then-succeed etc.) wins so a test can
+        // inject a transient error mid-poll; clamps to the last element.
+        if !getResults.isEmpty {
+            return try getCallIndex.withLock { index in
+                let result = getResults[min(index, getResults.count - 1)]
+                index += 1
+                return try result.get()
+            }
+        }
         guard !getSequence.isEmpty else { return try getResult.get() }
         return getCallIndex.withLock { index in
             let snapshot = getSequence[min(index, getSequence.count - 1)]

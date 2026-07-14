@@ -100,11 +100,45 @@ struct VoiceCommandObservabilityTests {
         let (vm, silence, _) = makeVM()
         let mock = try! #require(silence)
         mock.commandAvailability = .unavailable(reason: "assets missing")
+        // Availability now mirrors through an async stream — wait for the VM to
+        // observe it before asserting on the derived hint.
+        await waitUntil({ vm.commandAvailability == .unavailable(reason: "assets missing") },
+                        "availability mirror did not pick up the unavailable state")
 
         vm.quizState = .idle
         await vm.startSilenceDetectionListening()
         #expect(vm.commandCapturePhase == .listening, "the consumer still arms")
         #expect(vm.commandListenerHint == nil, "but the cue must not claim to be listening")
+    }
+
+    // The bug this fixes: on a fresh install the en-US model installs
+    // asynchronously; Home arms the listener while availability is still
+    // `.installingAssets`, so the indicator is (correctly) hidden. When the
+    // install completes the service flips to `.ready` — but that was a plain,
+    // non-observable property, so SwiftUI never re-rendered and the
+    // "LISTENING FOR COMMANDS" bar stayed hidden even though commands then
+    // worked. The observable mirror must pick up the mid-session flip so the
+    // hint (nil → shown) reacts live.
+    @Test("a mid-session .ready flip updates the observed availability and reveals the hint")
+    func availabilityReadyFlipRevealsHint() async {
+        let (vm, silence, _) = makeVM()
+        let mock = try! #require(silence)
+
+        // Fresh-install: still installing → listener arms, indicator hidden.
+        mock.commandAvailability = .installingAssets
+        await waitUntil({ vm.commandAvailability == .installingAssets },
+                        "mirror did not observe the installing state")
+
+        vm.quizState = .idle
+        await vm.startSilenceDetectionListening()
+        #expect(vm.commandCapturePhase == .listening)
+        #expect(vm.commandListenerHint == nil, "installing → the cue must not claim to be listening yet")
+
+        // Model install completes asynchronously → service flips to .ready.
+        mock.commandAvailability = .ready
+        await waitUntil({ vm.commandAvailability == .ready },
+                        "the observable mirror did not pick up the .ready flip")
+        #expect(vm.commandListenerHint == #"Say "start""#, "ready → the Home hint must now appear")
     }
 
     // MARK: - Master toggle

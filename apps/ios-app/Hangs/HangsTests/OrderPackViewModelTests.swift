@@ -9,8 +9,13 @@
 //    strands the user on a spinner with a paid order in flight.
 //  - A failed order and a network error must both surface as `.failed` (visible),
 //    never crash the poll loop.
+//  - A *transient* poll error must be retried, not treated as fatal: a paid order
+//    is still generating server-side and a false `.failed` invites a double charge.
+//  - The poll must not spin forever on a stuck in_progress order — an overall
+//    deadline surfaces a soft `.failed` that points the user at My packs.
 //
 
+import Foundation
 @testable import Hangs
 import Testing
 
@@ -144,20 +149,66 @@ struct OrderPackViewModelTests {
         }
     }
 
-    // Distinct from submitNetworkError (which fails createOrder): here the order
-    // is created but a `getOrder` throws mid-poll. The poll leg's own catch must
-    // surface `.failed`, not crash or spin the loop forever.
-    @Test("a network error DURING polling surfaces as .failed — the poll-leg catch")
-    func pollNetworkError() async {
+    // A single transient blip (dropped packet on cellular, worker still waking)
+    // must NOT dead-end a paid order that is still generating server-side — the
+    // old code failed on the first throw, which invited a re-order / double
+    // charge. Here getOrder throws once, then delivers: the poll must retry
+    // through the blip and still reach `.delivered`.
+    @Test("a single transient getOrder error is retried, not fatal — the poll still reaches .delivered")
+    func transientPollErrorRetriesToDelivered() async {
+        let service = MockPackOrderService(getResults: [.failure(.init("blip")), .success(.mockDelivered)])
+        let vm = makeOrderPackViewModel(service: service)
+        vm.pollIntervalSeconds = 0 // don't wait the real 1 Hz cadence for the retry
+        vm.prompt = "History of the Roman Empire in ten questions"
+
+        await vm.submit()
+
+        guard case .delivered(let snapshot) = vm.state else {
+            Issue.record("expected .delivered after retrying a transient error, got \(vm.state)")
+            return
+        }
+        #expect(snapshot.packId != nil)
+    }
+
+    // Distinct from submitNetworkError (which fails createOrder) and from a single
+    // blip (retried above): here the order is created but EVERY `getOrder` throws.
+    // A sustained run of errors past the tolerance must still surface `.failed`
+    // rather than retry forever — bounded retry, not an infinite loop.
+    @Test("a sustained run of getOrder errors past the tolerance surfaces .failed")
+    func sustainedPollErrorsFail() async {
         let service = MockPackOrderService(getResult: .failure(.init("boom")))
         let vm = makeOrderPackViewModel(service: service)
+        vm.pollIntervalSeconds = 0 // fast-forward the retries
         vm.prompt = "History of the Roman Empire in ten questions"
 
         await vm.submit()
 
         guard case .failed = vm.state else {
-            Issue.record("expected .failed, got \(vm.state)")
+            Issue.record("expected .failed after sustained errors, got \(vm.state)")
             return
         }
+    }
+
+    // An order stuck in in_progress (suspended worker, dropped job) would poll at
+    // 1 Hz forever and never resolve the "Building your pack…" spinner. The overall
+    // deadline must surface a soft `.failed` — the copy points the user at My packs
+    // because generation may still be running server-side (not a hard failure).
+    @Test("the poll deadline surfaces a soft .failed instead of spinning forever on a stuck order")
+    func pollDeadlineSurfacesFailure() async {
+        let service = MockPackOrderService(getResult: .success(.mockPending)) // never terminal
+        let vm = makeOrderPackViewModel(service: service)
+        vm.pollTimeoutSeconds = 0.05 // exhaust the budget almost immediately
+        vm.pollIntervalSeconds = 0.01 // …after a few real poll iterations
+        vm.prompt = "History of the Roman Empire in ten questions"
+
+        await vm.submit()
+
+        guard case .failed(let message) = vm.state else {
+            Issue.record("expected .failed from the deadline, got \(vm.state)")
+            return
+        }
+        // Assert it's the deadline's soft copy, not a generic error — the message
+        // is what tells the user the pack is still coming.
+        #expect(message == String(localized: "Still working — check My packs later."))
     }
 }

@@ -15,13 +15,20 @@ final class MockSilenceDetectionService: SilenceDetectionServiceProtocol {
     let silenceEvents: AsyncStream<SilenceEvent>
     let bargeInEvents: AsyncStream<Void>
     let commandTranscripts: AsyncStream<String>
+    let commandAvailabilityUpdates: AsyncStream<VoiceCommandAvailability>
     private let silenceContinuation: AsyncStream<SilenceEvent>.Continuation
     private let bargeInContinuation: AsyncStream<Void>.Continuation
     private let commandContinuation: AsyncStream<String>.Continuation
+    private let commandAvailabilityContinuation: AsyncStream<VoiceCommandAvailability>.Continuation
 
     /// Defaults to `.ready` so command-listener tests exercise the armed path;
-    /// settable so #77 fail-loud tests can drive the unavailable state.
-    var commandAvailability: VoiceCommandAvailability = .ready
+    /// settable so #77 fail-loud tests can drive the unavailable state. Each
+    /// assignment pushes to `commandAvailabilityUpdates` (mirrors the real
+    /// service), so a test that flips this mid-session drives the view-model's
+    /// observable mirror. `didSet` does not fire for the initial `.ready` value.
+    var commandAvailability: VoiceCommandAvailability = .ready {
+        didSet { commandAvailabilityContinuation.yield(commandAvailability) }
+    }
 
     var isListening = false
     var ttsPlaybackActive = false
@@ -45,6 +52,10 @@ final class MockSilenceDetectionService: SilenceDetectionServiceProtocol {
         var commandCont: AsyncStream<String>.Continuation!
         self.commandTranscripts = AsyncStream { commandCont = $0 }
         self.commandContinuation = commandCont
+
+        var availabilityCont: AsyncStream<VoiceCommandAvailability>.Continuation!
+        self.commandAvailabilityUpdates = AsyncStream { availabilityCont = $0 }
+        self.commandAvailabilityContinuation = availabilityCont
     }
 
     func startListening() async {
@@ -88,6 +99,10 @@ final class MockSilenceDetectionService: SilenceDetectionServiceProtocol {
 
     func finishBargeInEvents() {
         bargeInContinuation.finish()
+    }
+
+    func finishCommandAvailabilityUpdates() {
+        commandAvailabilityContinuation.finish()
     }
 }
 #endif

@@ -14,6 +14,7 @@ Dashboard of all `issue-NN-*.md` files. Updated by `/triage` whenever a `**Triag
 
 | # | Title | Triage | TODO | Notes |
 |---|---|---|---|---|
+| 97 | [CarPlay support](issue-97-carplay-support.md) | enhancement · needs-triage | `[ ]` #97 | Captured 2026-07-15 (founder, HIGH priority). Hands-free quiz on the car head unit — core driving use case. Not yet planned; run `/prepare-issue` to scope entitlement + template family + voice/TTS session mapping |
 | 96 | [iOS MVP completion: founder-feedback batch + design parity + TestFlight](issue-96-ios-mvp-completion.md) | umbrella · ready-for-agent | `[ ]` #96 | Planned 2026-07-12 from founder device test: IAP purchase flow broken (P0), voice commands, UI corrections, bidirectional Pencil parity, #95 S2+S3, #88/#89, #92 S2+S3 → TestFlight as Trubbo. 8 sequential sessions S0–S7, scope founder-locked |
 | 95 | [Custom quiz-pack ordering: client half](issue-95-custom-pack-client.md) | feature · ready-for-agent (S2+S3 via #96 S5) | `[~]` #95 | Decisions locked 2026-07-12; Session 1 (backend reachability + cost capture) DONE + deployed to prod 2026-07-12. Sessions 2 (iOS order flow) + 3 (play the pack) scheduled via #96 S5; Session 4 payments deferred |
 | 94 | [Paywall: sync PaywallView to z8TS6 design](issue-94-paywall-z8ts6-sync.md) | enhancement · ready-for-agent | `[ ]` #94 | Only real design drift found in 2026-07-11 audit; plan picker + auto-renew legal line (ASC review req). Entry points shipped separately 1ed5f0c; 2 product Qs in-session |

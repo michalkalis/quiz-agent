@@ -190,7 +190,7 @@ Retired gates: F1/F2/F3 done (see §Completed) · F5 → G2 (interactive) · F6 
 | # | Session | Done | Reviewed | Box |
 |---|---|---|---|---|
 | N1 | TestFlight refresh | ✅ | n/a | ✅ |
-| R0 | founder guides | ⬜ | n/a | ⬜ |
+| R0 | founder guides | ✅ | n/a | ✅ |
 | R3 | #91 sweep (5 items) | ⬜ | ⬜ | ⬜ |
 | R6 | #79 race | ⬜ | n/a | ⬜ |
 | R7 | #78 name loss | ⬜ | n/a | ⬜ |

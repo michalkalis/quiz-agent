@@ -118,7 +118,7 @@ Prepare the founder's model-pick blind test at reduced scope. From apps/quiz-pac
 ### N3 — corpus prod import (ex-R19 steps 4–5; founder GO granted in-session 2026-07-14)
 
 ```
-Finish the #72 corpus swap in prod. Steps 1–3 (resume note, 100/100 generation, local validation) are DONE (07de4c1, 8f5e0d2) — do NOT redo. Input = apps/quiz-pack-api/data/generation-2026-07-10/batch.json (100 q, assembled 2026-07-12; NOT parts01-05). Read docs/handoffs/handoff-2026-07-12-1330.md + memory project_quiz_pack_prod_state first. Steps: (1) check prod's CURRENT alembic revision first-hand — migration 7a2c91d40b1e is very likely already applied (it is the parent of #95's deployed 4d8e2b7c1f0a); never blind-apply; (2) archive_questions.py dry-run → include the summary in your report; (3) --execute archive (old corpus archived, never deleted), then import_questions_json.py from batch.json; (4) verify counts + fetch a served sample first-hand via the API; (5) update TODO #72-swap line + write a short handoff. GO is granted, but STOP at any surprise: unexpected revision, count mismatch, serving errors. Prod data mutation only — no code, no LLM spend.
+Finish the #72 corpus swap in prod. Steps 1–3 (resume note, 100/100 generation, local validation) are DONE (07de4c1, 8f5e0d2) — do NOT redo. Input = apps/quiz-pack-api/data/generation-2026-07-10/batch.json (100 q, assembled 2026-07-12; NOT parts01-05). Read docs/handoffs/handoff-2026-07-12-1330.md + memory project_quiz_pack_prod_state first. Steps: (1) check prod's CURRENT alembic revision first-hand — migration 7a2c91d40b1e is very likely already applied (it is the parent of #95's deployed 4d8e2b7c1f0a); never blind-apply; (2) archive_questions.py dry-run → include the summary in your report; (3) --execute archive (old corpus archived, never deleted), then import_questions_json.py from batch.json; (4) verify counts + fetch a served sample first-hand via the API; (5) update TODO #72-swap line + write a short handoff. GO is granted, but STOP at any surprise: unexpected revision, count mismatch, serving errors, or near-duplicate facts in the import source (N2 flagged 2026-07-15 that resumed parts06-12 re-generated facts already present in parts01-05 — cheese-shoplifting, ketchup-as-medicine, KitKat-flavor-count each appear twice; verify batch.json for near-duplicate facts BEFORE --execute, and surface for a founder dedup call if present). Prod data mutation only — no code, no LLM spend.
 ```
 
 ### R18 — post-answer context playback prep (held; 1-line delta)
@@ -202,7 +202,7 @@ Retired gates: F1/F2/F3 done (see §Completed) · F5 → G2 (interactive) · F6 
 | R14 | #50 metadata | ⬜ | n/a | ⬜ |
 | R16 | 51.3 backend (after G2) | ⬜ | n/a | ⬜ |
 | R17 | 51.4/51.5 iOS | ⬜ | n/a | ⬜ |
-| N2 | blind-rating prep | ⬜ | n/a | ⬜ |
+| N2 | blind-rating prep | ✅ | n/a | ✅ |
 | N3 | corpus prod import | ⬜ | n/a | ⬜ |
 | R18 | playback prep | ⬜ | n/a | ⬜ |
 | N4 | pen dynamic sync | ⬜ | n/a | ⬜ |

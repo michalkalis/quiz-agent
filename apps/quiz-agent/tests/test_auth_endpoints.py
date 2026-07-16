@@ -9,6 +9,8 @@ endpoints fail safe with 503 when auth is unconfigured.
 
 from __future__ import annotations
 
+import uuid
+
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
@@ -20,7 +22,7 @@ from sqlalchemy import select
 from app.api.routes import auth as auth_routes
 from app.auth.refresh import RefreshTokenStore
 from app.auth.tokens import TokenService
-from app.db.models import AnonymousIdentity
+from app.db.models import AnonymousIdentity, User
 from app.rate_limit import limiter
 
 pytestmark = pytest.mark.asyncio
@@ -120,6 +122,53 @@ async def test_refresh_rotates_to_a_new_pair(client):
     assert rotated["refresh_token"] != body["refresh_token"]  # rotated
     assert rotated["access_token"]  # fresh access token
     assert rotated["anon_id"] == body["anon_id"]  # same subject
+
+
+async def test_refresh_round_trips_full_name_and_email_for_an_apple_account(
+    client, db_sessionmaker
+):
+    """#78: an Apple-upgraded account's subject is users.id (not an anon id) —
+    the refresh response must carry its stored full_name/email, or a signed-in
+    user's displayed name silently disappears every ~900s (the access-token
+    TTL, config.py) as the client re-decodes the response, not just on the
+    sign-out/re-sign-in path #78 originally reported."""
+    user_id = uuid.uuid4()
+    async with db_sessionmaker() as s:
+        s.add(
+            User(
+                id=user_id,
+                apple_sub="apple.sub.refresh-name",
+                full_name="Petra Horvathova",
+                email="petra@example.com",
+            )
+        )
+        await s.commit()
+
+    store = RefreshTokenStore(db_sessionmaker, ttl_days=30, family_max_days=60)
+    async with db_sessionmaker() as s:
+        issued = await store.issue(s, str(user_id))
+        await s.commit()
+
+    resp = await client.post(
+        "/api/v1/auth/refresh", json={"refresh_token": issued.raw_token}
+    )
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["full_name"] == "Petra Horvathova"
+    assert body["email"] == "petra@example.com"
+
+
+async def test_refresh_leaves_full_name_and_email_null_for_anonymous_subject(client):
+    """An anon subject is never a users.id — refresh must not error trying to
+    look one up (non-UUID or no matching row), and both fields stay None."""
+    body = await _bootstrap(client)
+    resp = await client.post(
+        "/api/v1/auth/refresh", json={"refresh_token": body["refresh_token"]}
+    )
+    assert resp.status_code == 200, resp.text
+    rotated = resp.json()
+    assert rotated["full_name"] is None
+    assert rotated["email"] is None
 
 
 async def test_replayed_refresh_token_is_rejected(client):

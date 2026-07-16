@@ -262,6 +262,14 @@ class AuthTokenResponse(BaseModel):
     token_type: str = Field(default="bearer")
     expires_in: int = Field(description="Access-token lifetime in seconds")
     anon_id: str = Field(description="The server-assigned subject id (JWT sub)")
+    full_name: Optional[str] = Field(
+        default=None,
+        description="Account display name (Apple sign-in only; null for anonymous or if Apple never shared one)",
+    )
+    email: Optional[str] = Field(
+        default=None,
+        description="Account email (Apple sign-in only; null for anonymous)",
+    )
 
 
 class AppleSignInUser(BaseModel):

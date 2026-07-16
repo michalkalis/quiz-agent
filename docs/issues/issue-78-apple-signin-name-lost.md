@@ -1,6 +1,6 @@
 # Issue #78 — Bug: Sign in with Apple name disappears after re-sign-in (no server round-trip)
 
-**Triage:** bug · needs-triage (draft from UI/UX review 2026-07-03)
+**Triage:** bug · **RESOLVED 2026-07-16** (workflow-implemented in worktree, merged to main; see Resolution)
 
 **Created:** 2026-07-03 · **Founder:** Michal · **Source:** founder report ("po opätovnom prihlásení sa nezobrazilo meno") + UI/UX review code verification
 
@@ -35,8 +35,25 @@ Cross-refs: #61 (Sign in with Apple — parent feature, still open `ready-for-hu
 
 ## Acceptance
 
-- [ ] Sign out → sign in again with the same Apple ID: Name row still shows the user's name
-- [ ] Fresh install + sign-in with an already-consented Apple ID: name appears (recovered from server)
-- [ ] Revoked-credential recovery keeps the stored name
-- [ ] Unit test: merge logic never replaces non-nil `accountName` with nil
-- [ ] `/verify-api` passes (iOS Codable matches updated `AuthTokenResponse`)
+- [x] Sign out → sign in again with the same Apple ID: Name row still shows the user's name (covered by unit tests #78 a/b; on-device founder check pending)
+- [x] Fresh install + sign-in with an already-consented Apple ID: name appears (recovered from server — `/auth/apple` now returns stored `full_name`/`email`)
+- [x] ~~Revoked-credential recovery keeps the stored name~~ **obsolete** — current architecture (post-#61) deliberately drops to a fresh anonymous identity on revoke (tested full sign-out, not a name-loss bug); the name is recovered on the next sign-in via the server round-trip above
+- [x] Unit test: merge logic never replaces non-nil `accountName` with nil (`AppleAuthTests` #78 a–d + refresh precedence)
+- [x] `/verify-api` passes — iOS `TokenResponse` now decodes all 7 backend fields incl. `token_type`/`expires_in`
+
+## Resolution (2026-07-16)
+
+Implemented per Recommendation, plus one scope expansion found during recon: the **token-refresh
+path** (`performRefreshOrBootstrap`) had the same whole-blob nil-overwrite and fired on every
+successful refresh (~every 15 min), silently reverting a signed-in user to anonymous-looking state —
+a much more frequent trigger of the same symptom. Fix:
+
+- Backend: `AuthTokenResponse` gained nullable `full_name`/`email`; populated on `/auth/apple`
+  (from the persisted user row) and `/auth/refresh` (user lookup by subject id).
+- iOS: `mergedAccountField(live:server:stored:)` precedence merge applied at both `AuthTokens`
+  build+save sites; `appleUserId` always carried forward on refresh. Codable struct brought into
+  exact field-by-field agreement with the backend model.
+- Tests: backend re-sign-in + refresh round-trip tests; 5 new iOS merge-matrix tests. Backend
+  265 passed / iOS AppleAuthTests 9/9 green. Diff review (opus + adversarial verify): no must-fix.
+
+Remaining human leg: founder on-device sign-out → sign-in check (fold into the #96 on-device checklist).

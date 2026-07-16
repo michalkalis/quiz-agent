@@ -325,7 +325,19 @@ actor AuthService: AuthServiceProtocol {
         }
         let body = try? JSONSerialization.data(withJSONObject: ["refresh_token": current.refreshToken])
         switch await postTokensResult(path: "/api/v1/auth/refresh", body: body) {
-        case .success(let new):
+        case .success(let decoded):
+            // #78: a routine refresh must never drop the signed-in account fields.
+            // The backend never re-sends `appleUserId` on refresh, so it is always
+            // carried forward from the current tokens; name/email prefer the
+            // server's freshly decoded value but fall back to what was stored.
+            let new = AuthTokens(
+                accessToken: decoded.accessToken,
+                refreshToken: decoded.refreshToken,
+                anonId: decoded.anonId,
+                accountName: mergedAccountField(live: nil, server: decoded.fullName, stored: current.accountName),
+                accountEmail: mergedAccountField(live: nil, server: decoded.email, stored: current.accountEmail),
+                appleUserId: current.appleUserId
+            )
             tokens = new
             store.save(new)
             Logger.network.debug("🔐 Refresh rotated token pair")
@@ -355,8 +367,13 @@ actor AuthService: AuthServiceProtocol {
     /// (HTTP 401) from transient failures (5xx, timeout, offline, decode error). The
     /// refresh path relies on this so a transient backend blip during a deploy never
     /// re-bootstraps a fresh anon over a signed-in user's stored tokens (I1).
+    ///
+    /// `.success` carries the raw decoded `TokenResponse` (not `AuthTokens`) so callers
+    /// that need the server-decoded `fullName`/`email` for account-field merging (#78 —
+    /// `performRefreshOrBootstrap`) can see them; callers that don't (anon-bootstrap/mint
+    /// via `postTokens`) simply ignore those fields.
     private enum AuthPostResult {
-        case success(AuthTokens)
+        case success(TokenResponse)
         /// The server definitively rejected the credential (HTTP 401).
         case rejected
         /// A transient failure — keep any stored tokens and retry later.
@@ -384,11 +401,7 @@ actor AuthService: AuthServiceProtocol {
                 return http.statusCode == 401 ? .rejected : .transient
             }
             let decoded = try JSONDecoder().decode(TokenResponse.self, from: data)
-            return .success(AuthTokens(
-                accessToken: decoded.accessToken,
-                refreshToken: decoded.refreshToken,
-                anonId: decoded.anonId
-            ))
+            return .success(decoded)
         } catch {
             Logger.network.warning("🔐 Auth \(path, privacy: .public) error: \(error.localizedDescription, privacy: .public)")
             return .transient
@@ -396,25 +409,58 @@ actor AuthService: AuthServiceProtocol {
     }
 
     /// Optional-returning wrapper for the bootstrap/mint callers, which treat any
-    /// non-success outcome as failure. The refresh path uses `postTokensResult`.
+    /// non-success outcome as failure. Anon-bootstrap never carries account fields
+    /// (a fresh/plain identity has no name/email to merge), so this always builds
+    /// the bare 3-field `AuthTokens`. The refresh path uses `postTokensResult`
+    /// directly so it can merge `fullName`/`email` (#78).
     private func postTokens(path: String, body: Data?) async -> AuthTokens? {
-        if case .success(let new) = await postTokensResult(path: path, body: body) {
-            return new
+        if case .success(let decoded) = await postTokensResult(path: path, body: body) {
+            return AuthTokens(
+                accessToken: decoded.accessToken,
+                refreshToken: decoded.refreshToken,
+                anonId: decoded.anonId
+            )
         }
         return nil
     }
 
-    /// Wire shape of the backend `AuthTokenResponse` (snake_case).
+    /// Wire shape of the backend `AuthTokenResponse` (snake_case). `fullName`/`email`
+    /// are only ever populated for a signed-in (Apple-linked) subject — anon-bootstrap
+    /// responses always decode them as nil (#78).
+    ///
+    /// `tokenType`/`expiresIn` are decoded purely to keep this struct in exact
+    /// field-by-field agreement with the backend `AuthTokenResponse` (so `/verify-api`
+    /// passes). The client itself ignores them: it uses reactive 401-driven refresh
+    /// (`refreshedAccessToken(replacing:)`), not proactive expiry scheduling, and the
+    /// scheme is always "bearer".
     private struct TokenResponse: Decodable {
         let accessToken: String
         let refreshToken: String
+        let tokenType: String
+        let expiresIn: Int
         let anonId: String
+        let fullName: String?
+        let email: String?
 
         enum CodingKeys: String, CodingKey {
             case accessToken = "access_token"
             case refreshToken = "refresh_token"
+            case tokenType = "token_type"
+            case expiresIn = "expires_in"
             case anonId = "anon_id"
+            case fullName = "full_name"
+            case email = "email"
         }
+    }
+
+    /// Merge precedence for an account field (name/email) when building a fresh
+    /// `AuthTokens`: a live value just supplied by Apple wins, then a value the
+    /// server just decoded, then whatever was already stored. Never lets a nil
+    /// (Apple only sends fullName/email on the first authorization; refresh
+    /// responses may or may not carry them) silently clobber a non-nil stored
+    /// value — that whole-blob overwrite was the #78 bug.
+    private func mergedAccountField(live: String?, server: String?, stored: String?) -> String? {
+        live ?? server ?? stored
     }
 
     // MARK: - Apple Sign In (issue #61, task 61.6)
@@ -474,8 +520,11 @@ actor AuthService: AuthServiceProtocol {
         fullName: String?,
         email: String?
     ) async -> AuthTokens? {
-        // Send the current anon bearer so the backend can merge usage (F3).
-        let bearer = tokens?.accessToken ?? store.load()?.accessToken
+        // Send the current anon bearer so the backend can merge usage (F3). Also kept
+        // as the #78 merge fallback: if this is a re-sign-in, `existing` may already
+        // carry the account's name/email from a prior sign-in.
+        let existing = tokens ?? store.load()
+        let bearer = existing?.accessToken
 
         var body: [String: Any] = [
             "identity_token": identityToken,
@@ -511,12 +560,17 @@ actor AuthService: AuthServiceProtocol {
                 return nil
             }
             let decoded = try JSONDecoder().decode(TokenResponse.self, from: data)
+            // #78: Apple only supplies fullName/email on the FIRST authorization —
+            // every subsequent sign-in (sign-out/back-in, reinstall, revoke-recovery)
+            // gets nil from Apple. Merge: live credential value (this authorization)
+            // wins, else the server's durable value, else whatever was already
+            // stored — so a re-sign-in never overwrites a known name/email with nil.
             let newTokens = AuthTokens(
                 accessToken: decoded.accessToken,
                 refreshToken: decoded.refreshToken,
                 anonId: decoded.anonId,     // now users.id, not the anon id
-                accountName: fullName,
-                accountEmail: email,
+                accountName: mergedAccountField(live: fullName, server: decoded.fullName, stored: existing?.accountName),
+                accountEmail: mergedAccountField(live: email, server: decoded.email, stored: existing?.accountEmail),
                 appleUserId: user
             )
             tokens = newTokens

@@ -485,6 +485,16 @@ extension QuizViewModel {
         transcriptWasEdited = false
         preEditTranscript = nil
 
+        // #100.2 capture-then-clear on ENTRY (before any await, both paths):
+        // a concurrent or stray-late second call must find pendingResponse AND
+        // transcribedAnswer already consumed. Clearing only in the streaming
+        // tail left the Whisper path open — the first call consumes
+        // pendingResponse and suspends in handleQuizResponse; the second falls
+        // through to the streaming tail, still sees the stale transcript, and
+        // resubmits it against whatever question is current by then.
+        let answer = transcribedAnswer
+        transcribedAnswer = ""
+
         // If we have a pending Whisper response, use it directly
         if let response = pendingResponse {
             pendingResponse = nil
@@ -493,9 +503,7 @@ extension QuizViewModel {
         }
 
         // Streaming STT path: submit the transcribed text via /sessions/{id}/input
-        guard !transcribedAnswer.isEmpty else { return }
-        let answer = transcribedAnswer
-        transcribedAnswer = ""
+        guard !answer.isEmpty else { return }
         await resubmitAnswer(answer, suppressAudio: silent)
     }
 

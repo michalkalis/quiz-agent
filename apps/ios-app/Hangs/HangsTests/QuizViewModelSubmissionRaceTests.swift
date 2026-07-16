@@ -284,4 +284,61 @@ struct QuizViewModelSubmissionRaceTests {
             #expect(mockNetwork.submitTextInputCallCount == 1) // still one, not two
         }
     }
+
+    // MARK: - (g) confirmAnswer() double-submit on the Whisper path (#100.2 follow-up)
+
+    /// Seeds the Whisper (non-streaming) confirmation state exactly as
+    /// submitRecordedAnswer leaves it (iOS 18–25, or an iOS 26 STT-init
+    /// failure): cached pendingResponse, transcript shown, sheet up.
+    private func seedWhisperConfirmation(
+        _ viewModel: QuizViewModel, _ mockNetwork: MockNetworkService
+    ) throws {
+        viewModel.quizState = .processing
+        viewModel.pendingResponse = try #require(mockNetwork.mockResponse)
+        viewModel.transcribedAnswer = "Paris"
+        viewModel.showAnswerConfirmation = true
+    }
+
+    /// #100.2 follow-up: on the Whisper path the winner consumes
+    /// pendingResponse and suspends in handleQuizResponse; the loser sees
+    /// pendingResponse == nil and falls through to the streaming tail. Pre-fix
+    /// (clear only in the tail) it still found the stale transcript there and
+    /// POSTed it — scored against the next question. Capture-then-clear on
+    /// entry makes the loser a no-op: zero /input submissions.
+    @Test("Whisper path: concurrent confirmAnswer calls never resubmit the stale transcript")
+    func doubleConfirmAnswerOnWhisperPathDoesNotResubmit() async throws {
+        try await withMainSerialExecutor {
+            let (viewModel, mockNetwork, _, _) = makeViewModelWithSTT()
+            try seedWhisperConfirmation(viewModel, mockNetwork)
+
+            async let first: Void = viewModel.confirmAnswer()
+            async let second: Void = viewModel.confirmAnswer()
+            _ = await (first, second)
+            await drainHops()
+
+            await waitUntil({ viewModel.quizState.isShowingResult }, "Whisper response never resolved")
+            // The cached Whisper response resolves locally — no /input POST ever.
+            #expect(mockNetwork.submitTextInputCallCount == 0)
+        }
+    }
+
+    /// #100.2 follow-up, stray-late variant: after the Whisper confirm fully
+    /// resolved, a delayed confirmAnswer() must not resubmit the transcript
+    /// (showingResult → processing is a legal transition, so only the cleared
+    /// transcript stops it).
+    @Test("Whisper path: a stray confirmAnswer after resolution does not resubmit the stale transcript")
+    func staleConfirmAnswerOnWhisperPathDoesNotResubmit() async throws {
+        try await withMainSerialExecutor {
+            let (viewModel, mockNetwork, _, _) = makeViewModelWithSTT()
+            try seedWhisperConfirmation(viewModel, mockNetwork)
+
+            await viewModel.confirmAnswer()
+            await waitUntil({ viewModel.quizState.isShowingResult }, "Whisper response never resolved")
+
+            await viewModel.confirmAnswer() // stray/delayed second call
+            await drainHops()
+
+            #expect(mockNetwork.submitTextInputCallCount == 0)
+        }
+    }
 }

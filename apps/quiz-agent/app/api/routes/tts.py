@@ -45,9 +45,12 @@ async def synthesize_tts(
             },
         )
     except ValueError as e:
+        # Constructed validation text ("Text cannot be empty") — client-safe.
+        logger.warning("TTS synthesis rejected: %s", e)
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"TTS synthesis failed: {str(e)}")
+        logger.error("TTS synthesis failed: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail="TTS synthesis failed")
 
 
 @router.get("/sessions/{session_id}/question/audio")
@@ -102,10 +105,13 @@ async def get_question_audio(
                 "Cache-Control": "public, max-age=3600",
             },
         )
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Audio generation failed: {str(e)}"
+        logger.error(
+            "Audio generation failed for session %s: %s", session_id, e, exc_info=True
         )
+        raise HTTPException(status_code=500, detail="Audio generation failed")
 
 
 @router.get("/tts/feedback/{result}")
@@ -147,9 +153,10 @@ async def get_feedback_audio(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to retrieve feedback audio: {str(e)}"
+        logger.error(
+            "Failed to retrieve feedback audio for '%s': %s", result, e, exc_info=True
         )
+        raise HTTPException(status_code=500, detail="Failed to retrieve feedback audio")
 
 
 @router.get("/sessions/{session_id}/feedback/{result}/audio")
@@ -194,6 +201,10 @@ async def get_session_feedback_audio(
             },
         )
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to generate feedback audio: {str(e)}"
+        logger.error(
+            "Failed to generate feedback audio for session %s: %s",
+            session_id,
+            e,
+            exc_info=True,
         )
+        raise HTTPException(status_code=500, detail="Failed to generate feedback audio")

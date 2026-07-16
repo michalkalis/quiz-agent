@@ -57,12 +57,15 @@ async def transcribe_audio(
                 "is_valid": result.is_valid(),
             },
         }
+    except HTTPException:
+        raise
     except ValueError as e:
+        # Constructed validation text (format/size) — client-safe by design.
+        logger.warning("Transcription rejected: %s", e)
         raise HTTPException(status_code=400, detail=str(e))
-    except RuntimeError as e:
-        raise HTTPException(status_code=500, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Transcription failed: {str(e)}")
+        logger.error("Transcription failed: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail="Transcription failed")
 
 
 @router.post("/voice/submit/{session_id}", response_model=InputResponse)
@@ -185,10 +188,14 @@ async def transcribe_and_submit(
     except HTTPException:
         raise
     except ValueError as e:
+        # Constructed validation text (format/size) — client-safe by design.
+        logger.warning("Voice submission rejected for session %s: %s", session_id, e)
         raise HTTPException(status_code=400, detail=str(e))
-    except RuntimeError as e:
-        raise HTTPException(status_code=500, detail=str(e))
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Voice submission failed: {str(e)}"
+        logger.error(
+            "Voice submission failed for session %s: %s",
+            session_id,
+            e,
+            exc_info=True,
         )
+        raise HTTPException(status_code=500, detail="Voice submission failed")

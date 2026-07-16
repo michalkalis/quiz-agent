@@ -55,14 +55,20 @@ async def get_elevenlabs_token(
         return ElevenLabsTokenResponse(token=data["token"])
 
     except httpx.HTTPStatusError as e:
+        logger.error(
+            "ElevenLabs token mint failed: upstream %s: %s",
+            e.response.status_code,
+            e.response.text,
+        )
         raise HTTPException(
             status_code=502,
             detail=f"ElevenLabs API error: {e.response.status_code}",
         )
     except Exception as e:
+        logger.error("Failed to get ElevenLabs token: %s", e, exc_info=True)
         raise HTTPException(
             status_code=502,
-            detail=f"Failed to get ElevenLabs token: {str(e)}",
+            detail="Failed to get ElevenLabs token",
         )
 
 

@@ -47,5 +47,6 @@
 Cross-refs #61 (Sign in with Apple), #65 (endpoint auth), #60 (App Attest / anonymous identity). Prod has no real users yet, so none of these is urgent — do as one sweep before the paid launch.
 
 **Follow-up surfaced by the item-4 sweep (out of this bundle's scope, same defect class, WORSE — zero server-side logging):** `voice.py:61/63/65/188/190/193`, `tts.py:48/50/107/151/198`, `misc.py:64` all echo `str(e)` into the HTTP detail with no `logger` call. Fixing detail-only would silently drop the diagnostics, so they need the same log-then-generic treatment as item 4 — file as a small standalone sweep.
+**→ DONE 2026-07-16:** all 500/502 sites now log `exc_info` and return generic detail; deliberately constructed validation 400s (unsupported format / file too large / empty text) keep their client-safe messages, now logged at warning. Bonus fix from the same sweep: `voice/transcribe` and `question/audio` no longer swallow their own in-`try` HTTPExceptions (explicit 400/404 used to be converted to 500 by the bare `except Exception`). Pinned by `test_route_error_detail_leaks.py`.
 
 **iOS UX follow-up (optional):** the client shows the same generic "try again" banner for a 409 (deterministic — retry can never succeed) as for a transient 502; a 409-aware message ("already linked to another account") would stop pointless retries.

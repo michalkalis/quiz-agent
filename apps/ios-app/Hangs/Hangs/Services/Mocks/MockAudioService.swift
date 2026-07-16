@@ -28,6 +28,9 @@ import os
         /// Drive a `.began` interruption through the SAME routing decision the real
         /// AudioService uses, so this mock can never drift from production behaviour.
         func simulateInterruptionBegan() {
+            // A real interruption has the system deactivate the audio session
+            // underneath the app — mirror that so `.ended` has something to recover.
+            sessionActive = false
             switch AudioService.interruptionTeardown(
                 isStreaming: audioEngineActive,
                 isRecording: isRecording
@@ -39,6 +42,20 @@ import os
                 isRecording = false
             case .none:
                 break
+            }
+        }
+
+        // #100.3. Mirrors whether the real AVAudioSession is active, so the
+        // "mic doesn't recover after a call" regression is observable headlessly:
+        // `startRecording`/`startStreamingRecording` fail while the session is
+        // inactive, exactly like the real `engine.start()`/`record()` do.
+        private(set) var sessionActive = true
+
+        /// Drive a `.ended` interruption through the SAME decision the real
+        /// AudioService uses, so this mock can never drift from production behaviour.
+        func simulateInterruptionEnded(options: AVAudioSession.InterruptionOptions) {
+            if AudioService.shouldResumeSession(options: options) {
+                sessionActive = true
             }
         }
 
@@ -86,7 +103,7 @@ import os
         }
 
         func startRecording() throws {
-            if shouldFailRecording {
+            if shouldFailRecording || !sessionActive {
                 throw AudioError.recordingFailed
             }
             isRecording = true
@@ -125,7 +142,7 @@ import os
         }
 
         func startStreamingRecording(onChunk _: @escaping PCMChunkHandler) throws {
-            if shouldFailRecording {
+            if shouldFailRecording || !sessionActive {
                 throw AudioError.recordingFailed
             }
             isRecording = true

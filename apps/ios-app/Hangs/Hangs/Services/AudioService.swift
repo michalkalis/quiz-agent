@@ -398,6 +398,16 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         return .none
     }
 
+    /// Whether an interruption's `.ended` phase should reactivate the audio session.
+    /// Pure so the decision is unit-testable without a live `AVAudioSession` (mirrors
+    /// `interruptionTeardown` above). #100.3: previously `.ended` only logged and never
+    /// reactivated, so a mic tap on the same question afterward ran against a session
+    /// iOS had deactivated and failed with "Recording failed" — repeatable until a TTS
+    /// replay happened to reactivate the session.
+    nonisolated static func shouldResumeSession(options: AVAudioSession.InterruptionOptions) -> Bool {
+        options.contains(.shouldResume)
+    }
+
     /// Handle audio session interruptions (phone calls, Siri, other apps)
     nonisolated private func handleInterruption(_ notification: Notification) {
         guard let userInfo = notification.userInfo,
@@ -405,6 +415,9 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
               let type = AVAudioSession.InterruptionType(rawValue: typeValue) else {
             return
         }
+        // Extracted here (not inside the Task) because `userInfo` ([AnyHashable: Any])
+        // is not Sendable and can't be captured across the actor-isolation boundary.
+        let optionsRawValue = (userInfo[AVAudioSessionInterruptionOptionKey] as? UInt) ?? 0
 
         Task { @MainActor in
             switch type {
@@ -431,8 +444,25 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
                 }
                 Logger.audio.warning("⚠️ Audio session interrupted")
             case .ended:
-                // Interruption ended - log but don't auto-resume (let user restart)
-                Logger.audio.info("✅ Audio session interruption ended")
+                // Interruption ended (e.g. a phone call hung up). If the system says
+                // it's safe to resume, reactivate the session now — otherwise a mic
+                // tap on the same question runs against a session iOS deactivated and
+                // fails with "Recording failed" until a TTS replay reactivates it (#100.3).
+                let options = AVAudioSession.InterruptionOptions(rawValue: optionsRawValue)
+                if AudioService.shouldResumeSession(options: options) {
+                    do {
+                        try AVAudioSession.sharedInstance().setActive(true)
+                        Logger.audio.info("✅ Audio session interruption ended, reactivated (.shouldResume)")
+                    } catch {
+                        Logger.audio.error("❌ Failed to reactivate audio session after interruption: \(error.localizedDescription, privacy: .public)")
+                        let crumb = Breadcrumb(level: .error, category: "audio.session_reactivate")
+                        crumb.message = "setActive(true) failed after interruption ended"
+                        crumb.data = ["error": error.localizedDescription]
+                        SentryBreadcrumb.add(crumb)
+                    }
+                } else {
+                    Logger.audio.info("✅ Audio session interruption ended (no resume option)")
+                }
             @unknown default:
                 break
             }

@@ -267,6 +267,33 @@ struct InterruptionTeardownRoutingTests {
     }
 }
 
+// MARK: - Interruption Resume Routing (#100.3)
+//
+// The bug: `handleInterruption(.ended)` only logged ("don't auto-resume") and
+// never reactivated the audio session. After a phone call / Siri interruption
+// ended, a mic tap on the same question ran against a session iOS had
+// deactivated, and `engine.start()`/`record()` failed with "Recording failed" —
+// repeatable until a TTS replay happened to reactivate the session. The fix
+// reactivates on `.ended` when the system reports `.shouldResume`. The decision
+// is factored into the pure `AudioService.shouldResumeSession` (asserted
+// directly, mirroring `interruptionTeardown` above); MockAudioService drives
+// that same function to prove the state-machine effect: a mic tap fails while
+// the session is inactive and succeeds again only after a resumable `.ended`.
+
+@Suite("Interruption Resume Routing")
+struct InterruptionResumeRoutingTests {
+
+    @Test(".shouldResume present resumes the session")
+    func shouldResumePresentResumes() {
+        #expect(AudioService.shouldResumeSession(options: [.shouldResume]) == true)
+    }
+
+    @Test("no .shouldResume option does not resume")
+    func noShouldResumeDoesNotResume() {
+        #expect(AudioService.shouldResumeSession(options: []) == false)
+    }
+}
+
 // MARK: - MockAudioService Interruption Contract (#67 Part A)
 
 @Suite("MockAudioService Interruption Contract")
@@ -302,6 +329,48 @@ struct MockAudioServiceInterruptionTests {
 
         #expect(service.isRecording == false)
         #expect(notified == false)
+    }
+
+    // #100.3: the actual "mic does not recover" regression. Without the fix,
+    // `.ended` never reactivates the session, so `startStreamingRecording`
+    // keeps failing on the same question until something else (a TTS replay)
+    // reactivates it — the loop dead-ends on "Recording failed".
+    @Test("a resumable .ended reactivates the session so the next mic tap succeeds")
+    func resumableEndedReactivatesSessionForNextRecording() throws {
+        let service = MockAudioService()
+
+        // Phone call arrives mid-recording: system deactivates the session,
+        // streaming teardown fires.
+        try service.startStreamingRecording { _ in }
+        service.simulateInterruptionBegan()
+        #expect(service.isRecording == false)
+
+        // A mic tap in the gap between call-ends and session-reactivation must
+        // fail loud, not silently misbehave.
+        #expect(throws: AudioError.recordingFailed) {
+            try service.startStreamingRecording { _ in }
+        }
+
+        // Call ends with .shouldResume (the common case for phone calls).
+        service.simulateInterruptionEnded(options: [.shouldResume])
+
+        // Next mic tap on the same question now succeeds — no TTS replay needed.
+        try service.startStreamingRecording { _ in }
+        #expect(service.isRecording == true)
+    }
+
+    @Test("an .ended without .shouldResume leaves the session inactive")
+    func endedWithoutShouldResumeStaysInactive() throws {
+        let service = MockAudioService()
+
+        try service.startStreamingRecording { _ in }
+        service.simulateInterruptionBegan()
+
+        service.simulateInterruptionEnded(options: [])
+
+        #expect(throws: AudioError.recordingFailed) {
+            try service.startStreamingRecording { _ in }
+        }
     }
 }
 

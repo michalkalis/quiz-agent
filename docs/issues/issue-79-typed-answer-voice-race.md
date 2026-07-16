@@ -1,6 +1,6 @@
 # Issue #79 — Bug: typed answer during live voice capture → double submission + stale voice confirmation sheet
 
-**Triage:** bug · ready-for-agent (founder approved 2026-07-05, decisions item 12, preserve tap-to-edit)
+**Triage:** bug · fixed 2026-07-16 — branch `worktree-issue-79-typed-voice-race` (`4254fdb`), merge to main pending; see Resolution
 
 **Note (2026-07-06):** Line anchors may be stale — 77.2 refactored the interruption teardown into `AudioService.interruptionTeardown(...)`; re-verify anchors before implementing.
 
@@ -45,12 +45,20 @@ Cross-refs: #67 Part A (streaming interruption teardown — same recording-teard
 
 ## Acceptance
 
-- [ ] Typed submit while recording/transcript-commit in flight → exactly **one** backend submission
-- [ ] Confirmation sheet never appears with the voice transcript after a typed submit (and is dismissed if already up)
-- [ ] Rejected state transitions abort the caller path (no proceed-after-reject)
-- [ ] Unit test covering the interleaving (typed submit during suspended `handleCommittedTranscript`)
-- [ ] Result header and question header agree on the question counter
-- [ ] Existing RS regression scenarios pass
+- [x] Typed submit while recording/transcript-commit in flight → exactly **one** backend submission (race tests a+b, verified failing pre-fix)
+- [x] Confirmation sheet never appears with the voice transcript after a typed submit (and is dismissed if already up) (tests a+c)
+- [x] Rejected state transitions abort the caller path — on the submission paths (`submitMCQAnswer`, `resubmitAnswer`); other transition call sites unchanged, out of scope
+- [x] Unit test covering the interleaving (4 tests in `QuizViewModelSubmissionRaceTests`, gated suspendable mock `disconnect()`)
+- [x] Result header and question header agree on the question counter — verified they **already agree** (pre/post-increment phases); documented with cross-referencing comments, no logic change; the sim mismatch is the mock fixture pinning `answeredCount: 1`
+- [~] Existing RS regression scenarios pass — covered here by targeted suites (23/23) + sim smoke (typed / MCQ / next-question); **full RS run deferred to the #48 pre-release gauntlet**
+
+## Resolution (2026-07-16)
+
+Fixed on branch `worktree-issue-79-typed-voice-race` (`4254fdb`); merge to main pending (#91 session had the main checkout busy). Recon re-verified all anchors first (plan's were stale; the 77.2 teardown refactor turned out unrelated to this race).
+
+Mechanism: monotonic `submissionEpoch` on `QuizViewModel`, bumped before the first `await` of every submission path (`resubmitAnswer` / `submitMCQAnswer` / `skipQuestion`). `handleCommittedTranscript` snapshots it after its `.recording` entry guard and aborts after its only pre-branch suspension point (`await sttService?.disconnect()`) if it moved — both the MCQ direct-submit branch and the free-text confirmation tail become unreachable once superseded. `resubmitAnswer` additionally (pre-await): dismisses the sheet, cancels auto-confirm + `.sttEvent`, tears down streaming STT regardless of `quizState`, and dedupes double-fire entry (`isSubmittingAnswer`); rejected `.processing` transitions abort (confirmAnswer's already-`.processing` dual-entry preserved). Tap-to-edit flow untouched and re-verified.
+
+Verification: 23/23 targeted tests (new `QuizViewModelSubmissionRaceTests` ×4 + resubmit + streaming + MCQ voice); both new race tests reproduce the bug on unfixed code (double submission with voice answer winning / stale sheet with clobbered transcript). Adversarial reviews (race-correctness, regression/conventions): ship, no blockers. Sim smoke: typed, MCQ and next-question flows PASS; counter consistent.
 
 ## Founder decisions 2026-07-05 (pre-implementation UI approval)
 

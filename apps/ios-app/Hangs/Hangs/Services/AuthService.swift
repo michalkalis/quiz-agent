@@ -427,7 +427,14 @@ actor AuthService: AuthServiceProtocol {
     /// same input (the hex string's UTF-8 bytes), which `hashedNonce(for:)` enforces.
     nonisolated func generateRawNonce() -> String {
         var bytes = [UInt8](repeating: 0, count: 32)
-        _ = SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes)
+        let status = SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes)
+        guard status == errSecSuccess else {
+            // A failed CSPRNG would silently yield an all-zero, predictable nonce —
+            // the SIWA replay defence. The call sites (SignInWithAppleButton's
+            // synchronous onRequest closure) have no error channel, so abort hard
+            // rather than proceed with a forgeable sign-in (#91 item 1).
+            fatalError("SecRandomCopyBytes failed (OSStatus \(status)) — cannot generate a secure SIWA nonce")
+        }
         return bytes.map { String(format: "%02hhx", $0) }.joined()
     }
 

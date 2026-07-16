@@ -72,6 +72,42 @@ async def test_consume_expired_challenge_is_rejected(db_sessionmaker):
         await store.consume(challenge)
 
 
+async def test_issue_prunes_long_expired_challenges(db_sessionmaker):
+    """#91 item 6: expired rows must not accumulate forever. Issuing sweeps
+    challenges expired past the grace window; a recently-expired row survives
+    so ``consume`` can still answer "expired" rather than "unknown" for it."""
+    from datetime import datetime, timedelta, timezone
+
+    now = datetime.now(timezone.utc)
+    async with db_sessionmaker() as s:
+        s.add(
+            AttestChallenge(
+                challenge="long-dead",
+                created_at=now - timedelta(days=3),
+                expires_at=now - timedelta(days=2),
+            )
+        )
+        s.add(
+            AttestChallenge(
+                challenge="freshly-expired",
+                created_at=now - timedelta(hours=2),
+                expires_at=now - timedelta(hours=1),
+            )
+        )
+        await s.commit()
+
+    store = ChallengeStore(db_sessionmaker, ttl_seconds=300)
+    fresh = await store.issue()
+
+    async with db_sessionmaker() as s:
+        rows = {
+            r.challenge for r in (await s.execute(select(AttestChallenge))).scalars()
+        }
+    assert "long-dead" not in rows  # swept
+    assert "freshly-expired" in rows  # inside the grace window — kept
+    assert fresh in rows
+
+
 # ── HTTP: the endpoint contract ──────────────────────────────────────────────
 
 

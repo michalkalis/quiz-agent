@@ -173,7 +173,7 @@ class ElevenLabsTokenResponse(BaseModel):
 
 
 class UsageResponse(BaseModel):
-    """Freemium usage + entitlement snapshot for ``GET /usage/{id}`` (issue #93).
+    """Freemium usage + entitlement snapshot for ``GET /usage/me`` (issue #93).
 
     Additive over the pre-#93 raw dict: ``subscription_status`` + ``credit_balance``
     are new; the legacy fields are unchanged so an un-updated iOS client keeps

@@ -417,6 +417,49 @@ async def test_anon_already_upgraded_to_another_account_is_rejected_409(
     assert await _get_user(db_sessionmaker, "apple.sub.B") is None  # rolled back
 
 
+async def test_conflict_409_fires_before_the_code_exchange(db_sessionmaker, keypair):
+    """#91 item 5: the merge conflict is deterministic — retrying can never
+    succeed — so it must be detected BEFORE ``exchange_authorization_code``
+    consumes Apple's single-use code. Pin that ordering: the 409 attempt makes
+    zero calls to Apple's token endpoint."""
+    limiter.reset()
+    exchange_calls: list[httpx.Request] = []
+
+    def counting_handler(req: httpx.Request) -> httpx.Response:
+        exchange_calls.append(req)
+        return httpx.Response(
+            200,
+            json={
+                "access_token": "a",
+                "token_type": "Bearer",
+                "expires_in": 3600,
+                "refresh_token": APPLE_REFRESH,
+            },
+        )
+
+    app = _make_app(db_sessionmaker, keypair.public_key())
+    app.state.apple_oauth_client = AppleOAuthClient(
+        team_id=TEAM_ID,
+        client_id=AUDIENCE,
+        key_id=KEY_ID,
+        private_key=_P8,
+        http_client=httpx.AsyncClient(transport=httpx.MockTransport(counting_handler)),
+    )
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as c:
+        anon_id, bearer = await _make_anon(db_sessionmaker)
+        r1 = await _call_apple(c, keypair, sub="apple.sub.pre.A", bearer=bearer)
+        assert r1.status_code == 200, r1.text
+        calls_after_first = len(exchange_calls)
+        assert calls_after_first == 1
+
+        r2 = await _call_apple(c, keypair, sub="apple.sub.pre.B", bearer=bearer)
+        assert r2.status_code == 409
+        assert len(exchange_calls) == calls_after_first  # no code burned
+        assert await _get_user(db_sessionmaker, "apple.sub.pre.B") is None
+
+
 async def test_invalid_identity_token_is_rejected_401_and_creates_no_account(
     client, keypair, db_sessionmaker
 ):

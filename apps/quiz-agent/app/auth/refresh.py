@@ -17,10 +17,15 @@ import uuid
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import func, select, update
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from ..db.models import RefreshToken
+
+# Cleanup-on-write bound (#91 item 6): rotate/revoke sweep a capped batch of
+# rows from families already past their absolute age cap, so used/revoked rows
+# cannot accumulate forever and no scheduler is needed.
+_PRUNE_BATCH = 500
 
 
 def _hash(raw: str) -> str:
@@ -105,6 +110,26 @@ class RefreshTokenStore:
         ).scalar_one()
         return family_start + self._family_max
 
+    async def _prune_dead_family_rows(
+        self, session: AsyncSession, now: datetime
+    ) -> None:
+        """Delete a bounded batch of rows whose whole family is past its cap.
+
+        Keyed on ``issued_at < now - family_max``: such a row's family started
+        at or before that instant, so the family deadline (first ``issued_at``
+        + ``family_max``) has passed and no token in it can ever rotate again.
+        Live families are never touched, which keeps ``_family_deadline``'s
+        ``min(issued_at)`` exact and used rows available for reuse detection."""
+        cutoff = now - self._family_max
+        doomed = (
+            select(RefreshToken.token_hash)
+            .where(RefreshToken.issued_at < cutoff)
+            .limit(_PRUNE_BATCH)
+        )
+        await session.execute(
+            delete(RefreshToken).where(RefreshToken.token_hash.in_(doomed))
+        )
+
     async def issue(self, session: AsyncSession, anon_id: str) -> IssuedRefresh:
         """Mint the first refresh token of a new family for ``anon_id``.
 
@@ -136,14 +161,16 @@ class RefreshTokenStore:
             ).scalar_one_or_none()
             if row is None:
                 return
+            now = _now()
             await session.execute(
                 update(RefreshToken)
                 .where(
                     RefreshToken.family_id == row.family_id,
                     RefreshToken.revoked_at.is_(None),
                 )
-                .values(revoked_at=_now())
+                .values(revoked_at=now)
             )
+            await self._prune_dead_family_rows(session, now)
             await session.commit()
 
     async def rotate(self, raw_token: str) -> RotationResult:
@@ -222,7 +249,16 @@ class RefreshTokenStore:
                         family_deadline = await self._family_deadline(
                             session, row.family_id
                         )
-                        if live is not None and now < family_deadline:
+                        # Also clamp to the live token's own expiry: it was
+                        # minted against the ORIGINAL family deadline, so this
+                        # keeps the absolute age cap exact even if a concurrent
+                        # prune removed the family's founding row and inflated
+                        # the recomputed min(issued_at) deadline (#91 item 6).
+                        if (
+                            live is not None
+                            and now < family_deadline
+                            and now < live.expires_at
+                        ):
                             live.revoked_at = now  # never delivered — retire it
                             new_row, issued = self._new_token_row(
                                 row.anon_id, row.family_id, now, family_deadline
@@ -256,6 +292,7 @@ class RefreshTokenStore:
                 row.anon_id, row.family_id, now, family_deadline
             )
             session.add(new_row)
+            await self._prune_dead_family_rows(session, now)
             await session.commit()
             return RotationResult(refresh=issued, anon_id=row.anon_id)
 

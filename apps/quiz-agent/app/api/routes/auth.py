@@ -322,7 +322,22 @@ async def apple_sign_in(
     if not apple_sub:
         raise HTTPException(status_code=401, detail="Invalid Apple identity token")
 
-    # 2) Exchange the authorization code immediately — Apple voids it after ~5 min
+    # The anon to fold in is named by the *current* bearer's subject (stale-but-ours
+    # still counts — see TokenService.subject_from_token). The Apple token, not this
+    # bearer, authorizes the call (F7), so a missing/foreign bearer is not fatal —
+    # there is simply nothing to merge.
+    anon_id = _anon_subject_for_merge(request, token_service)
+
+    # 2) Pre-check the merge conflict BEFORE the code exchange (#91 item 5): the
+    #    409 below in _merge_anonymous_identity is deterministic — no retry can
+    #    ever succeed — so raising it only after the exchange burns a single-use
+    #    Apple code per attempt for a guaranteed failure. Everything the check
+    #    needs (anon row + apple_sub) is already available here.
+    if anon_id is not None:
+        async with sessionmaker() as session:
+            await _precheck_merge_conflict(session, anon_id, apple_sub)
+
+    # 3) Exchange the authorization code immediately — Apple voids it after ~5 min
     #    (F10). Capture Apple's refresh token (it is not always present).
     try:
         exchange = await oauth_client.exchange_authorization_code(
@@ -330,12 +345,6 @@ async def apple_sign_in(
         )
     except AppleOAuthError:
         raise HTTPException(status_code=502, detail="Apple token exchange failed")
-
-    # The anon to fold in is named by the *current* bearer's subject (stale-but-ours
-    # still counts — see TokenService.subject_from_token). The Apple token, not this
-    # bearer, authorizes the call (F7), so a missing/foreign bearer is not fatal —
-    # there is simply nothing to merge.
-    anon_id = _anon_subject_for_merge(request, token_service)
 
     # email: trust the verified id_token claim over the client-supplied body.
     email = claims.get("email") or (body.user.email if body.user else None)
@@ -388,6 +397,35 @@ def _anon_subject_for_merge(
         return token_service.subject_from_token(token.strip(), allow_expired=True)
     except TokenError:
         return None
+
+
+async def _precheck_merge_conflict(
+    session: AsyncSession, anon_id: str, apple_sub: str
+) -> None:
+    """Raise the merge 409 before Apple's single-use code is exchanged (#91 item 5).
+
+    An unlocked read answering the same question as _merge_anonymous_identity's
+    guard, from data available before the exchange: the anon is already upgraded
+    to some account, and this apple_sub is not it (a first-time apple_sub can
+    never match a pre-existing upgrade). The locked check downstream stays
+    authoritative — a race between this read and the transaction is still caught
+    there, at the same one-time-code cost as today."""
+    anon = (
+        await session.execute(
+            select(AnonymousIdentity).where(AnonymousIdentity.anon_id == anon_id)
+        )
+    ).scalar_one_or_none()
+    if anon is None or anon.upgraded_to_user_id is None:
+        return
+    user = (
+        await session.execute(select(User).where(User.apple_sub == apple_sub))
+    ).scalar_one_or_none()
+    if user is not None and str(user.id) == str(anon.upgraded_to_user_id):
+        return  # already folded into this same account — the idempotent path
+    raise HTTPException(
+        status_code=409,
+        detail="This anonymous identity already belongs to another account",
+    )
 
 
 async def _upsert_apple_user(

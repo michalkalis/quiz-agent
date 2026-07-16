@@ -7,7 +7,7 @@
 
 import Foundation
 
-/// Usage information returned by GET /api/v1/usage/{user_id}
+/// Usage information returned by GET /api/v1/usage/me
 nonisolated struct UsageInfo: Codable, Sendable, Equatable {
     let userId: String
     let isPremium: Bool

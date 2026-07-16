@@ -130,9 +130,8 @@ async def create_session(
         session_manager.update_session(session)
         return session_to_response(session)
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to create session: {str(e)}"
-        )
+        logger.error("Failed to create session: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to create session")
 
 
 @router.get("/sessions/{session_id}", response_model=SessionResponse)

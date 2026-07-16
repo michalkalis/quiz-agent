@@ -1,5 +1,6 @@
 """Miscellaneous endpoints: ElevenLabs tokens, usage/freemium, health."""
 
+import hmac
 import os
 import logging
 from datetime import datetime
@@ -99,7 +100,13 @@ async def set_premium(
     """Set premium status for a user. Requires admin key."""
     admin_key = request.headers.get("X-Admin-Key")
     expected_key = os.getenv("ADMIN_API_KEY")
-    if not expected_key or admin_key != expected_key:
+    # Compare as bytes: compare_digest raises TypeError on non-ASCII str (a
+    # client header is latin-1-decoded, so an attacker could trigger a 500).
+    if (
+        not expected_key
+        or not admin_key
+        or not hmac.compare_digest(admin_key.encode(), expected_key.encode())
+    ):
         raise HTTPException(status_code=401, detail="Invalid admin key")
 
     if usage_tracker is None:

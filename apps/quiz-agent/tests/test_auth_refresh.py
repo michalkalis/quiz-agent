@@ -252,3 +252,44 @@ async def test_grace_recovers_repeated_lost_response(db_sessionmaker):
 
     assert r2.refresh.raw_token not in {first.raw_token, r1.refresh.raw_token}
     assert await store.rotate(r2.refresh.raw_token)  # family still alive
+
+
+async def test_rotate_prunes_rows_from_families_past_their_age_cap(db_sessionmaker):
+    """#91 item 6: used/revoked rows must not accumulate forever. A rotation
+    sweeps rows whose whole family is past its absolute age cap, while the
+    live family's own rows (needed for reuse detection and the family
+    deadline) are untouched."""
+    import uuid as _uuid
+
+    await _seed_identity(db_sessionmaker)
+    store = _store(db_sessionmaker, family_max_days=60)
+
+    # A dead family: its only row was issued far past the 60-day cap.
+    now = _now()
+    async with db_sessionmaker() as s:
+        s.add(
+            RefreshToken(
+                token_hash="dead-family-hash",
+                family_id=_uuid.uuid4(),
+                anon_id="anon-long-gone",
+                issued_at=now - timedelta(days=200),
+                expires_at=now - timedelta(days=170),
+                used_at=now - timedelta(days=190),
+            )
+        )
+        await s.commit()
+
+    first = await _issue_first(store, db_sessionmaker)
+    result = await store.rotate(first.raw_token)
+
+    async with db_sessionmaker() as s:
+        hashes = {
+            r.token_hash for r in (await s.execute(select(RefreshToken))).scalars()
+        }
+    assert "dead-family-hash" not in hashes  # swept
+    # The live family still holds both its rows: the just-used one (reuse
+    # detection needs it) and the freshly minted successor.
+    assert hashes == {
+        hashlib.sha256(first.raw_token.encode("utf-8")).hexdigest(),
+        hashlib.sha256(result.refresh.raw_token.encode("utf-8")).hexdigest(),
+    }

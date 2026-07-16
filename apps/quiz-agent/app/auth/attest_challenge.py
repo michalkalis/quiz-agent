@@ -15,10 +15,17 @@ from __future__ import annotations
 import secrets
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from ..db.models import AttestChallenge
+
+# Cleanup-on-write bounds (#91 item 6): each issue() sweeps a capped batch of
+# long-expired rows in its own transaction, so the table cannot grow without
+# bound and no scheduler is needed. The grace period keeps recently-expired
+# rows around so consume() still answers "expired" (not "unknown") for them.
+_PRUNE_BATCH = 500
+_PRUNE_GRACE = timedelta(days=1)
 
 
 def _now() -> datetime:
@@ -46,6 +53,14 @@ class ChallengeStore:
         raw = secrets.token_urlsafe(32)
         now = _now()
         async with self._sessionmaker() as session:
+            doomed = (
+                select(AttestChallenge.challenge)
+                .where(AttestChallenge.expires_at < now - _PRUNE_GRACE)
+                .limit(_PRUNE_BATCH)
+            )
+            await session.execute(
+                delete(AttestChallenge).where(AttestChallenge.challenge.in_(doomed))
+            )
             session.add(
                 AttestChallenge(
                     challenge=raw,

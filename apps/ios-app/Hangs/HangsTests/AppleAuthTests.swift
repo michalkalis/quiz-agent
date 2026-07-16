@@ -110,6 +110,24 @@ private nonisolated enum AppleAuthStubs {
 @Suite("Apple Auth — nonce + credential flow", .serialized)
 struct AppleAuthTests {
 
+    // MARK: - 0. Raw nonce generation (#91 item 1)
+
+    /// generateRawNonce must yield a fresh 64-char lowercase-hex string every call.
+    /// The RNG-failure branch (SecRandomCopyBytes != errSecSuccess) aborts via
+    /// fatalError and is not unit-testable without wrapping the syscall — this
+    /// sanity test pins the success contract the SIWA flow depends on instead.
+    @Test("raw nonce is 64-char lowercase hex and unique per call")
+    func rawNonceIsFreshHex() {
+        let service = makeService(store: AppleTestTokenStore())
+        let a = service.generateRawNonce()
+        let b = service.generateRawNonce()
+
+        #expect(a.count == 64, "32 random bytes hex-encode to 64 chars")
+        #expect(a.allSatisfy { "0123456789abcdef".contains($0) }, "lowercase hex only")
+        #expect(a != b, "two calls must never repeat")
+        #expect(a != String(repeating: "0", count: 64), "all-zero output means the RNG guard failed")
+    }
+
     // MARK: - 1. Nonce encoding (F6)
 
     /// The nonce sent to Apple MUST be base64url-nopad(SHA256(rawNonce.utf8)).

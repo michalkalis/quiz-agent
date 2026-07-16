@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Header, Request, status
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 from datetime import datetime
+import hmac
 import os
 
 logger = logging.getLogger(__name__)
@@ -42,7 +43,9 @@ def verify_admin_key(
             detail="Admin API key not configured on server. Set ADMIN_API_KEY environment variable.",
         )
 
-    if x_admin_key != admin_key:
+    # Compare as bytes: compare_digest raises TypeError on non-ASCII str (a
+    # client header is latin-1-decoded, so an attacker could trigger a 500).
+    if not hmac.compare_digest(x_admin_key.encode(), admin_key.encode()):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid admin API key"
         )

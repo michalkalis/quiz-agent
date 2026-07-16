@@ -1,6 +1,6 @@
 # Issue #91 — Auth low-severity hardening bundle (2026-07-07 review)
 
-**Triage:** bug · ready-for-agent
+**Triage:** bug · done (2026-07-16)
 
 **Created:** 2026-07-07 · **Source:** auth security + quality review 2026-07-07
 
@@ -34,14 +34,18 @@
 
 ## Acceptance
 
-- [ ] Item 1: nonce generation aborts sign-in on RNG failure (no all-zero buffer)
-- [ ] Item 2: `/usage` no longer discloses arbitrary subjects (bearer-derived or auth+rate-limited)
-- [ ] Item 3: both admin-key checks use constant-time compare
-- [ ] Item 4: game-route 500s return generic detail, real error only in logs
-- [ ] Item 5: `/auth/apple` conflict is recoverable (no permanently-dead single-use code)
-- [ ] Item 6: expired attest challenges and used/revoked refresh tokens are pruned
-- [ ] Backend suite + targeted iOS auth tests green
+- [x] Item 1: nonce generation aborts sign-in on RNG failure (no all-zero buffer) — guard on `errSecSuccess`, `fatalError` on CSPRNG failure (call sites are `SignInWithAppleButton.onRequest`, a sync closure with no error channel; proceeding with a forgeable nonce is worse than crashing); + sanity unit test (64-char hex, unique per call)
+- [x] Item 2: **already shipped before this sweep** — `/usage/{user_id}` was replaced by bearer-derived `/usage/me` in #96 P1 (`bd0f4e7`, deployed 2026-07-13; guard test `test_usage_me.py`). This sweep only fixed two stale doc-comments still naming the old path
+- [x] Item 3: both admin-key checks use `hmac.compare_digest` on **bytes** (str compare raises TypeError on a non-ASCII header → client-triggerable 500); + new `test_admin_key_verify.py` pinning the second gate incl. the non-ASCII case
+- [x] Item 4: game-route 500s return generic detail, real error only in logs (`sessions.py` gained the missing `logger.error`)
+- [x] Item 5: merge-conflict 409 pre-checked BEFORE `exchange_authorization_code`, so the deterministic conflict no longer burns Apple's single-use code; locked in-transaction check kept as the authoritative race guard; + test pinning "zero exchange calls on 409"
+- [x] Item 6: cleanup-on-write pruning — attest challenges expired >1 day swept on `issue()`, refresh-token rows from families past their absolute age cap swept on `rotate()`/`revoke_family()` (bounded batches of 500, no scheduler, no migration); grace re-issue additionally clamped to the live token's own expiry so a concurrent prune can never resurrect a family past its cap; + prune tests
+- [x] Backend suite green (385 passed) + targeted iOS auth tests green (AppleAuthTests 5/5)
 
 ## Notes
 
 Cross-refs #61 (Sign in with Apple), #65 (endpoint auth), #60 (App Attest / anonymous identity). Prod has no real users yet, so none of these is urgent — do as one sweep before the paid launch.
+
+**Follow-up surfaced by the item-4 sweep (out of this bundle's scope, same defect class, WORSE — zero server-side logging):** `voice.py:61/63/65/188/190/193`, `tts.py:48/50/107/151/198`, `misc.py:64` all echo `str(e)` into the HTTP detail with no `logger` call. Fixing detail-only would silently drop the diagnostics, so they need the same log-then-generic treatment as item 4 — file as a small standalone sweep.
+
+**iOS UX follow-up (optional):** the client shows the same generic "try again" banner for a 409 (deterministic — retry can never succeed) as for a transient 502; a 409-aware message ("already linked to another account") would stop pointless retries.

@@ -96,9 +96,7 @@ async def start_quiz(
             )
         except Exception as e:
             logger.error("Exception in get_next_question: %s", e, exc_info=True)
-            raise HTTPException(
-                status_code=500, detail=f"Failed to retrieve question: {str(e)}"
-            )
+            raise HTTPException(status_code=500, detail="Failed to retrieve question")
 
         if not question:
             logger.error("get_next_question returned None for session %s", session_id)
@@ -178,7 +176,7 @@ async def start_quiz(
         raise
     except Exception as e:
         logger.error("Unexpected exception in start_quiz: %s", e, exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to start quiz: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to start quiz")
 
 
 @router.post("/sessions/{session_id}/input", response_model=InputResponse)

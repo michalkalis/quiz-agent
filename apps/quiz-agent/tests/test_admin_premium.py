@@ -51,6 +51,18 @@ async def test_premium_rejected_with_wrong_admin_key(client):
     assert resp.status_code == 401
 
 
+async def test_premium_rejected_with_non_ascii_admin_key(client):
+    """A non-ASCII header value must answer 401, not a compare_digest
+    TypeError → 500 (#91 item 3 — headers reach the app latin-1-decoded)."""
+    resp = await client.post(
+        f"/api/v1/usage/{_SUBJECT}/premium",
+        # bytes: httpx refuses non-ASCII str headers, but a raw client can send
+        # any byte — Starlette then hands the route a latin-1-decoded str.
+        headers={b"X-Admin-Key": "wröng-\xff".encode("latin-1")},
+    )
+    assert resp.status_code == 401
+
+
 async def test_premium_granted_with_correct_admin_key(client):
     resp = await client.post(
         f"/api/v1/usage/{_SUBJECT}/premium", headers={"X-Admin-Key": _ADMIN_KEY}

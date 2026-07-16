@@ -296,6 +296,11 @@ struct ResultView: View {
     }
 
     private var counterString: String {
+        // #79: shows the 1-based index of the question just answered. Raw
+        // `questionsAnswered` (no +1) is correct HERE because handleQuizResponse
+        // already incremented it before transitioning to .showingResult — this
+        // renders the SAME number QuestionView showed for the same question
+        // (there it is pre-increment, so it adds +1). Keep the two in lockstep.
         String(format: "%02d / %02d", viewModel.questionsAnswered, totalQuestions)
     }
 

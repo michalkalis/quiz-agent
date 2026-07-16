@@ -362,6 +362,21 @@ final class QuizViewModel: ObservableObject {
     /// Safe because this class is @MainActor — all access is serialized on the main thread.
     var isProcessingResponse = false
 
+    /// Monotonic submission generation (#79). Bumped at the start of EVERY
+    /// submission-initiating path — `resubmitAnswer`, `submitMCQAnswer`,
+    /// `skipQuestion` — before its first `await`. A committed-voice-transcript
+    /// handler that is suspended mid-flight captures the epoch on entry and, after
+    /// each await, aborts if it moved: so a typed answer submitted during that
+    /// window can't trigger a second concurrent submission or resurrect the stale
+    /// voice confirmation sheet. Internal for the +Recording extension / tests.
+    var submissionEpoch = 0
+
+    /// Single-flight guard for `resubmitAnswer` (#79): the typed-answer TextField's
+    /// `.onSubmit` and its send button can both fire, and both call `resubmitAnswer`.
+    /// Held for the whole submission via `defer` so exactly one proceeds. Does not
+    /// gate the `confirmAnswer` voice entry (still a single call site).
+    var isSubmittingAnswer = false
+
     /// Prevents concurrent stopRecordingAndSubmit calls (silence detection + user tap can race)
     var isStoppingRecording = false // internal for QuizViewModel+Recording
 
@@ -764,9 +779,13 @@ final class QuizViewModel: ObservableObject {
             return
         }
 
+        submissionEpoch &+= 1 // #79: supersede any suspended voice-transcript handler
         cancelAnswerTimer()
         cancelAutoStopRecordingTimer()
-        transition(to: .processing)
+        // #79: a rejected transition means another submission already claimed
+        // .processing (e.g. a double-tapped option) — bail instead of firing a
+        // second concurrent submit.
+        guard transition(to: .processing) else { return }
         errorMessage = nil
 
         do {
@@ -783,10 +802,26 @@ final class QuizViewModel: ObservableObject {
 
     /// Resubmit an edited text answer
     func resubmitAnswer(_ newAnswer: String, suppressAudio: Bool = false) async {
+        // #79: single-flight — .onSubmit and the send button can both fire.
+        // Held across the whole submission so exactly one proceeds.
+        guard !isSubmittingAnswer else { return }
+        isSubmittingAnswer = true
+        defer { isSubmittingAnswer = false }
+
         guard let sessionId = currentSession?.id else {
             errorMessage = String(localized: "No active session", comment: "Inline error: no quiz session is currently active")
             return
         }
+
+        submissionEpoch &+= 1 // #79: supersede any suspended voice-transcript handler
+
+        // #79: a committed-voice-transcript handler may be suspended mid-flight
+        // (inside its STT disconnect) with the confirmation sheet about to appear.
+        // Dismiss the sheet + auto-confirm and drop the STT event listener up front
+        // so the typed answer wins and no stale voice sheet resurfaces.
+        showAnswerConfirmation = false
+        cancelAutoConfirm()
+        taskBag.cancel(.sttEvent)
 
         // Stop any in-flight voice machinery so the typed answer wins the race
         // against a silent auto-stop submission. Answer/thinking timers are left
@@ -794,21 +829,25 @@ final class QuizViewModel: ObservableObject {
         taskBag.cancel(.voiceSubmission)
         cancelAutoStopRecordingTimer()
         cancelSilenceDetection()
-        if quizState == .recording {
-            isAutoRecording = false
-            speechDetectedDuringAutoRecord = false
-            if isStreamingSTT {
-                cleanupStreamingSTT()
-            } else {
-                _ = try? await audioService.stopRecording()
-            }
+        isAutoRecording = false
+        speechDetectedDuringAutoRecord = false
+        // Streaming STT can still be live even after the committed-transcript
+        // handler left .recording (it suspends in disconnect() before flipping
+        // state), so tear it down regardless of quizState. Batch recording is
+        // only ever live while .recording.
+        if isStreamingSTT {
+            cleanupStreamingSTT()
+        } else if quizState == .recording {
+            _ = try? await audioService.stopRecording()
         }
 
         // The confirmation modal already moved us to .processing in
         // handleCommittedTranscript; only transition when called from a
-        // pre-modal state (e.g., still .recording on the batch path).
+        // pre-modal state (e.g., still .recording on the batch path). A rejected
+        // transition (#79) means the state can't legally reach .processing — bail
+        // rather than submit from a bad state.
         if quizState != .processing {
-            transition(to: .processing)
+            guard transition(to: .processing) else { return }
         }
         errorMessage = nil
 
@@ -834,6 +873,7 @@ final class QuizViewModel: ObservableObject {
     func skipQuestion() async {
         guard let sessionId = currentSession?.id else { return }
 
+        submissionEpoch &+= 1 // #79: supersede any suspended voice-transcript handler
         cancelAnswerTimer()
         cancelThinkingTime()
 

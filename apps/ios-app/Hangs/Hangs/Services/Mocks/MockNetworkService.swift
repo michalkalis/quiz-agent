@@ -26,6 +26,9 @@ final class MockNetworkService: NetworkServiceProtocol {
     // Capture properties for unit-test assertions (additive — no behaviour change)
     var capturedTextInputAudio: Bool?
     var capturedTextInputInput: String?
+    /// Number of times `submitTextInput` was invoked — the #79 typed↔voice race
+    /// tests assert exactly ONE submission survives an interleaving.
+    var submitTextInputCallCount = 0
     var capturedStartQuizExcludedIds: [String]?
     /// When set, `createSession` throws this error instead of the default behaviour.
     var createSessionError: Error?
@@ -86,6 +89,7 @@ final class MockNetworkService: NetworkServiceProtocol {
     }
 
     func submitTextInput(sessionId: String, input: String, audio: Bool) async throws -> QuizResponse {
+        submitTextInputCallCount += 1
         capturedTextInputAudio = audio
         capturedTextInputInput = input
         // Mirror URLSession semantics: a cancelled enclosing Task throws

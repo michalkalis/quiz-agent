@@ -190,6 +190,12 @@ extension QuizViewModel {
     func handleCommittedTranscript(_ text: String) async {
         guard quizState == .recording else { return }
 
+        // #79: snapshot the submission epoch. If a typed answer (or a skip / MCQ
+        // tap) supersedes this transcript while we are suspended below, the epoch
+        // moves and we must abort silently rather than fire a second submission or
+        // resurrect the confirmation sheet with stale voice text.
+        let epoch = submissionEpoch
+
         // Stop streaming recording
         cancelAutoStopRecordingTimer()
         taskBag.cancel(.sttCommitWatchdog)
@@ -202,6 +208,15 @@ extension QuizViewModel {
         taskBag.cancel(.sttEvent)
         await sttService?.disconnect()
         isStreamingSTT = false
+
+        // #79: the only suspension point before we branch is disconnect() above —
+        // re-check the epoch now. A typed submission that raced in during that
+        // await already tore down and submitted; both the MCQ branch and the
+        // free-text confirmation tail below must be unreachable.
+        guard submissionEpoch == epoch else {
+            Logger.stt.debug("🎙️ Committed transcript superseded (epoch moved) — ignoring")
+            return
+        }
 
         Logger.stt.info("🎙️ Committed transcript: \(text, privacy: .public)")
 

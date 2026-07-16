@@ -494,7 +494,9 @@ extension QuizViewModel {
 
         // Streaming STT path: submit the transcribed text via /sessions/{id}/input
         guard !transcribedAnswer.isEmpty else { return }
-        await resubmitAnswer(transcribedAnswer, suppressAudio: silent)
+        let answer = transcribedAnswer
+        transcribedAnswer = ""
+        await resubmitAnswer(answer, suppressAudio: silent)
     }
 
     /// User tapped the pencil to edit the transcribed answer. Cancels the

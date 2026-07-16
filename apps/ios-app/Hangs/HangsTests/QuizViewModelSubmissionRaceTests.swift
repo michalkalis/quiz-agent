@@ -227,4 +227,61 @@ struct QuizViewModelSubmissionRaceTests {
             #expect(mockNetwork.submitTextInputCallCount == 0)
         }
     }
+
+    // MARK: - (e) confirmAnswer() double-submit (#100.2)
+
+    /// #100.2 regression guard: auto-confirm timer and a tap both calling
+    /// confirmAnswer() at the same instant must still yield exactly one submit.
+    /// #79's isSubmittingAnswer single-flight flag already closes true
+    /// simultaneity — this should already pass — but it's the sibling case to
+    /// (f) below and worth pinning down explicitly.
+    @Test("two concurrent confirmAnswer calls (auto-confirm + tap) yield exactly one submit")
+    func doubleConfirmAnswerYieldsOneSubmit() async throws {
+        await withMainSerialExecutor {
+            let (viewModel, mockNetwork, _, mockSTT) = makeViewModelWithSTT()
+            await viewModel.startRecording()
+            await waitUntil({ viewModel.isStreamingSTT }, "streaming never started")
+            await mockSTT.injectEvent(.committedTranscript("Paris"))
+            await waitUntil({ viewModel.showAnswerConfirmation }, "confirmation sheet never appeared")
+
+            async let first: Void = viewModel.confirmAnswer()
+            async let second: Void = viewModel.confirmAnswer()
+            _ = await (first, second)
+
+            await waitUntil({ viewModel.quizState.isShowingResult }, "submission never completed")
+            #expect(mockNetwork.submitTextInputCallCount == 1)
+            #expect(mockNetwork.capturedTextInputInput == "Paris")
+        }
+    }
+
+    /// #100.2 actual regression target: a stray/late confirmAnswer() call
+    /// *after* the first has fully resolved (isSubmittingAnswer already reset
+    /// via defer) must not resubmit the stale transcribedAnswer against
+    /// whatever question/session is now current. Fails on pre-fix code
+    /// (transcribedAnswer was never cleared, so the guard at the top of the
+    /// streaming-path tail still sees non-empty text and resubmits "Paris" a
+    /// second time) — passes once confirmAnswer() captures-then-clears
+    /// transcribedAnswer before the await.
+    @Test("a stray confirmAnswer after the sheet already resolved does not resubmit the stale transcript")
+    func staleConfirmAnswerAfterResolutionDoesNotResubmit() async throws {
+        await withMainSerialExecutor {
+            let (viewModel, mockNetwork, _, mockSTT) = makeViewModelWithSTT()
+            await viewModel.startRecording()
+            await waitUntil({ viewModel.isStreamingSTT }, "streaming never started")
+            await mockSTT.injectEvent(.committedTranscript("Paris"))
+            await waitUntil({ viewModel.showAnswerConfirmation }, "confirmation sheet never appeared")
+
+            // First confirm (e.g. auto-confirm timer) resolves fully.
+            await viewModel.confirmAnswer()
+            await waitUntil({ viewModel.quizState.isShowingResult }, "first submit never completed")
+            #expect(mockNetwork.submitTextInputCallCount == 1)
+
+            // Stray/delayed second call (e.g. a button tap recognized as the sheet
+            // dismissed) — must be a no-op now that transcribedAnswer was cleared.
+            await viewModel.confirmAnswer()
+            await drainHops()
+
+            #expect(mockNetwork.submitTextInputCallCount == 1) // still one, not two
+        }
+    }
 }

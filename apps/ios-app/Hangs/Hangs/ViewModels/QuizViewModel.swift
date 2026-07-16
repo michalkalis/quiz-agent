@@ -362,6 +362,10 @@ final class QuizViewModel: ObservableObject {
     /// Safe because this class is @MainActor — all access is serialized on the main thread.
     var isProcessingResponse = false
 
+    /// Simple Bool flag to prevent concurrent proceedToNextQuestion calls (#100).
+    /// Safe because this class is @MainActor — all access is serialized on the main thread.
+    private var isAdvancing = false
+
     /// Monotonic submission generation (#79). Bumped at the start of EVERY
     /// submission-initiating path — `resubmitAnswer`, `submitMCQAnswer`,
     /// `skipQuestion` — before its first `await`. A committed-voice-transcript
@@ -1197,6 +1201,17 @@ final class QuizViewModel: ObservableObject {
     /// Proceed to next question or finish quiz
     /// Can be called manually via button or automatically via timer
     func proceedToNextQuestion() async {
+        // Guard against concurrent calls (safe: @MainActor serializes access).
+        // Checked-and-set before any `await` so a second concurrent call
+        // (double-tap Next, or Next racing auto-advance) is a silent no-op
+        // instead of clobbering state the first call already advanced (#100).
+        guard !isAdvancing else {
+            Logger.quiz.warning("⚠️ proceedToNextQuestion already in progress, ignoring duplicate call")
+            return
+        }
+        isAdvancing = true
+        defer { isAdvancing = false }
+
         // Cancel any pending auto-advance
         taskBag.cancel(.autoAdvance)
 
@@ -1276,6 +1291,7 @@ final class QuizViewModel: ObservableObject {
         // Note: audio stop must be awaited by async callers (endQuiz) before resetState().
         // resetToHome() fires an untracked Task separately — brief audio overlap is acceptable.
         isProcessingResponse = false
+        isAdvancing = false
         transition(to: .idle)
         // Release audio session so Spotify/podcasts resume full volume after
         // the quiz is torn down (resetToHome / endQuiz / paywall reset).

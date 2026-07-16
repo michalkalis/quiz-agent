@@ -373,6 +373,16 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
         // buffers start flowing from the engine tap.
         try? await Task.sleep(for: .milliseconds(50))
 
+        // #100.4: a stopListening() (or a superseding startListening()) racing this
+        // sleep nils/replaces self.audioEngine. Starting the stale local `engine`
+        // anyway would orphan a running engine stopListening() can never reach
+        // again — the #64 two-engine crash config. stopListening() already tore
+        // down this engine's tap/state if it ran, so bailing here is enough.
+        guard Self.shouldStartEngine(engine, tracking: self.audioEngine) else {
+            Logger.voice.warning("🔇 SilenceDetection: startListening superseded during startup settle window, not starting engine")
+            return
+        }
+
         do {
             try engine.start()
         } catch {
@@ -382,6 +392,17 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
         }
 
         Logger.voice.info("🔇 SilenceDetection: listening started")
+    }
+
+    /// Whether the engine we're about to `.start()` (after the analyzer-queue
+    /// settle sleep above) is still the one `self.audioEngine` tracks. Pure
+    /// identity check — no engine object is touched — so it's unit-testable
+    /// without a live SpeechAnalyzer/AVAudioEngine pipeline (real engines "can't
+    /// run headlessly", see SharedEngineTests). #100.4: production code passes
+    /// `self.audioEngine` as `current`; this stays a free function of its inputs
+    /// so tests can drive the exact race (nil / same / different engine) directly.
+    nonisolated static func shouldStartEngine(_ engine: AVAudioEngine, tracking current: AVAudioEngine?) -> Bool {
+        current === engine
     }
 
     func stopListening() {

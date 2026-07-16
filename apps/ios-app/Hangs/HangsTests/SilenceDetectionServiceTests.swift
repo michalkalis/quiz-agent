@@ -32,6 +32,7 @@
 //    SpeechAnalyzer. Out of scope for this task.
 //
 
+import AVFoundation
 import Foundation
 import Testing
 @testable import Hangs
@@ -403,5 +404,62 @@ struct VoiceCommandAvailabilityTests {
     func mockDefaultsToReady() {
         let mock = MockSilenceDetectionService()
         #expect(mock.commandAvailability == .ready)
+    }
+}
+
+// MARK: - EngineStartGenerationCheckTests (#100.4 — two-engine crash config)
+
+/// WHY: `startListening()` assigns `self.audioEngine = engine` well before its
+/// 50ms settle sleep, then (pre-fix) called `engine.start()` unconditionally
+/// once the sleep returned. A `stopListening()` racing that sleep nils
+/// `self.audioEngine`; the resumed `start()` then orphans a *running* engine
+/// nobody tracks — the codebase's own "#64 two-engine crash config" — and a
+/// superseding `startListening()` can spin a second, tracked engine alongside
+/// it. `shouldStartEngine(_:tracking:)` is the generation-token guard the fix
+/// adds: it must be a strict identity check, not merely "is still non-nil" —
+/// these tests would catch either a missing guard (pre-fix: always starts) or
+/// a too-weak one (accepts a *different* tracked engine).
+///
+/// Real AVAudioEngine/SpeechAnalyzer "can't run headlessly" (see
+/// SharedEngineTests), so the guard is exercised as the pure identity function
+/// production code calls through — no engine is ever started here.
+@Suite("SilenceDetectionService — engine-start generation check (#100.4)")
+@MainActor
+struct EngineStartGenerationCheckTests {
+
+    @Test("self.audioEngine still IS the engine we're about to start → proceed")
+    func sameEngineShouldStart() {
+        guard #available(iOS 26, *) else {
+            withKnownIssue("SilenceDetectionService requires iOS 26+") {}
+            return
+        }
+        let engine = AVAudioEngine()
+        #expect(SilenceDetectionService.shouldStartEngine(engine, tracking: engine))
+    }
+
+    @Test("a stopListening() ran during the settle sleep (self.audioEngine is nil) → must not start")
+    func stoppedDuringSettleMustNotStart() {
+        guard #available(iOS 26, *) else {
+            withKnownIssue("SilenceDetectionService requires iOS 26+") {}
+            return
+        }
+        let engine = AVAudioEngine()
+        // Pre-fix there was no guard at all: engine.start() ran unconditionally
+        // here, orphaning `engine` as a running-but-untracked instance.
+        #expect(!SilenceDetectionService.shouldStartEngine(engine, tracking: nil))
+    }
+
+    @Test("a superseding startListening() replaced self.audioEngine with a new engine → must not start the stale one")
+    func supersededByNewEngineMustNotStart() {
+        guard #available(iOS 26, *) else {
+            withKnownIssue("SilenceDetectionService requires iOS 26+") {}
+            return
+        }
+        let staleEngine = AVAudioEngine()
+        let newEngine = AVAudioEngine()
+        // A weaker "just check non-nil" guard would wrongly pass here — self.audioEngine
+        // IS non-nil, just pointing at a different (newer) engine. The identity check
+        // must catch this too, or the stale engine still gets started alongside the new one.
+        #expect(!SilenceDetectionService.shouldStartEngine(staleEngine, tracking: newEngine))
     }
 }

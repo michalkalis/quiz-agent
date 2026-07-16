@@ -153,6 +153,9 @@
       ▿ _lastRecognizedCommand: Combine.Published<Swift.Optional<Hangs.VoiceCommand>>
         ▿ storage: Combine.Published<Swift.Optional<Hangs.VoiceCommand>>.Storage.value
           - value: nil
+      ▿ _commandAvailability: Combine.Published<Hangs.VoiceCommandAvailability>
+        ▿ storage: Combine.Published<Hangs.VoiceCommandAvailability>.Storage.value
+          - value: Hangs.VoiceCommandAvailability.unknown
       - onCommandRecognized: nil
       - voiceStartOnQuestionEnabled: true
       - voiceStartOnHomeEnabled: true
@@ -314,6 +317,7 @@
             - cancellable: Sink #9
           ▿ lock: 0x<addr>
             - pointerValue: <n>
+      - commandAvailabilityTask: nil
       ▿ taskBag: Hangs.TaskBag #10
         - tasks: 0 key/value pairs
       - isRerecording: false

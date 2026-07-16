@@ -127,19 +127,20 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
     private var playbackStartedAt: Date?
 
     // Session-level NotificationCenter observer tokens.
-    // nonisolated(unsafe): NSObjectProtocol is not Sendable in Swift 6, but these tokens
-    // are set once on @MainActor (setupAudioSession) and released in deinit.
-    // AudioService is @MainActor so deinit runs on the main thread in practice.
-    // These are NOT crash sources — only playback continuations were.
-    nonisolated(unsafe) private var routeChangeObserver: NSObjectProtocol?
-    nonisolated(unsafe) private var interruptionObserver: NSObjectProtocol?
+    // NSObjectProtocol is not Sendable in Swift 6, and `deinit` runs nonisolated even
+    // on a @MainActor class — boxed in OSAllocatedUnfairLock (same pattern as the
+    // streaming PCM accumulator below) so deinit can read them without
+    // `nonisolated(unsafe)`. Set once on @MainActor (setupAudioSession), read once
+    // in deinit — always uncontended.
+    private let routeChangeObserver = OSAllocatedUnfairLock<NSObjectProtocol?>(initialState: nil)
+    private let interruptionObserver = OSAllocatedUnfairLock<NSObjectProtocol?>(initialState: nil)
 
     deinit {
         // Clean up observers
-        if let observer = routeChangeObserver {
+        if let observer = routeChangeObserver.withLock({ $0 }) {
             NotificationCenter.default.removeObserver(observer)
         }
-        if let observer = interruptionObserver {
+        if let observer = interruptionObserver.withLock({ $0 }) {
             NotificationCenter.default.removeObserver(observer)
         }
     }
@@ -217,7 +218,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         try session.setActive(true)
 
         // Observe audio route changes (Bluetooth connect/disconnect)
-        routeChangeObserver = NotificationCenter.default.addObserver(
+        let routeObserver = NotificationCenter.default.addObserver(
             forName: AVAudioSession.routeChangeNotification,
             object: nil,
             queue: .main
@@ -225,15 +226,17 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
             // Already on main queue, can call directly
             self?.handleRouteChange(notification)
         }
+        routeChangeObserver.withLock { $0 = routeObserver }
 
         // Observe audio session interruptions (phone calls, Siri, other apps)
-        interruptionObserver = NotificationCenter.default.addObserver(
+        let interruptObserver = NotificationCenter.default.addObserver(
             forName: AVAudioSession.interruptionNotification,
             object: AVAudioSession.sharedInstance(),
             queue: .main
         ) { [weak self] notification in
             self?.handleInterruption(notification)
         }
+        interruptionObserver.withLock { $0 = interruptObserver }
 
         Logger.audio.info("🎤 Audio session configured for background playback and recording")
     }

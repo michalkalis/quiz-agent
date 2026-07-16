@@ -19,6 +19,15 @@ actor MockElevenLabsSTTService: ElevenLabsSTTServiceProtocol {
     /// Test seam (54.4): simulate ElevenLabs never answering a forced commit.
     var commitEmitsNothing = false
 
+    /// Test seam (#79): when enabled, `disconnect()` suspends until
+    /// `releaseDisconnect()` is called, so a test can park the committed-transcript
+    /// handler mid-teardown and interleave a typed submission. Default off keeps
+    /// the original synchronous no-op, so every existing test stays green.
+    private var gateDisconnect = false
+    private var disconnectContinuations: [CheckedContinuation<Void, Never>] = []
+    /// Poll this to know the handler has reached (and is parked at) disconnect().
+    var isSuspendedInDisconnect: Bool { !disconnectContinuations.isEmpty }
+
     init() {
         var continuation: AsyncStream<STTEvent>.Continuation!
         self.events = AsyncStream { continuation = $0 }
@@ -42,11 +51,31 @@ actor MockElevenLabsSTTService: ElevenLabsSTTServiceProtocol {
         eventContinuation?.yield(.committedTranscript(mockCommittedText))
     }
 
-    func disconnect() async {}
+    func disconnect() async {
+        guard gateDisconnect else { return }
+        // Multiple disconnects can be in flight (the handler's own + the typed
+        // path's cleanupStreamingSTT); park them all and resume together.
+        await withCheckedContinuation { disconnectContinuations.append($0) }
+    }
 
     /// Actor-isolated setter for the test seam above.
     func setCommitEmitsNothing(_ value: Bool) {
         commitEmitsNothing = value
+    }
+
+    /// #79 test seam: arm/disarm the `disconnect()` suspension gate.
+    func setGateDisconnect(_ value: Bool) {
+        gateDisconnect = value
+    }
+
+    /// #79 test seam: disarm the gate and release every parked `disconnect()`.
+    /// Disarming first ensures a late disconnect (e.g. the typed path's
+    /// cleanupStreamingSTT fires its own) no-ops instead of re-parking forever.
+    func releaseDisconnect() {
+        gateDisconnect = false
+        let continuations = disconnectContinuations
+        disconnectContinuations.removeAll()
+        for continuation in continuations { continuation.resume() }
     }
 
     /// Drive an arbitrary STTEvent into the stream from outside (UI test seam).

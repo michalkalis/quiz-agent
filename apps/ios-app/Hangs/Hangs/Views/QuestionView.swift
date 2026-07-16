@@ -137,6 +137,10 @@ struct QuestionView: View {
     }
 
     private var counterString: String {
+        // #79: 1-based index of the question on screen. `+1` because this renders
+        // BEFORE handleQuizResponse increments questionsAnswered — so it matches
+        // ResultView.counterString, which renders post-increment with no +1. Keep
+        // the two in lockstep.
         let total = viewModel.currentSession?.maxQuestions ?? viewModel.settings.numberOfQuestions
         let current = min(viewModel.questionsAnswered + 1, max(total, 1))
         return String(format: "%02d / %02d", current, total)

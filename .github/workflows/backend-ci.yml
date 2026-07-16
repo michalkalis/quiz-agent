@@ -166,6 +166,23 @@ jobs:
     name: Verify OpenAPI Spec Generation
     runs-on: ubuntu-latest
 
+    # Startup requires DATABASE_URL (#41 D6, no fallback) — an empty pgvector
+    # instance is enough: all startup DB touches degrade to warnings.
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: quiz
+          POSTGRES_PASSWORD: quiz
+          POSTGRES_DB: quiz_agent_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U quiz -d quiz_agent_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -188,6 +205,7 @@ jobs:
       - name: Start backend server
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY || 'sk-test-key' }}
+          DATABASE_URL: postgresql+asyncpg://quiz:quiz@localhost:5432/quiz_agent_ci
           # Skip live OpenAI TTS pre-generation: this job only verifies the
           # OpenAPI spec, and a cold CI cache would otherwise block startup.
           TTS_PREGENERATE: "0"

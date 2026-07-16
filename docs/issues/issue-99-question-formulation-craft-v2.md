@@ -1,7 +1,7 @@
 # #99 — Question-formulation craft v2 (G3 blind-rating fixes)
 
-**Triage:** enhancement · ready-for-agent
-**Status:** Planned 2026-07-16 from the founder's G3 blind-rating (2026-07-15, [`corpus-blind-sample-2026-07.md`](../testing/runs/corpus-blind-sample-2026-07.md)). Generation stays **PARKED** — this ships prompt/rubric/guard changes + tests only, no generation run, no corpus writes. Execute before any future volume gen (#30 / #95 packs).
+**Triage:** enhancement · agent-phases-done
+**Status:** Phases 1–3 **DONE 2026-07-16** (prompt rules 9–12 + scorer caps + `units_reason`/`undated_record_reason` guards + proxies + tests; regression results in §6). Remaining = **Phase 4 founder gate at un-park** (blind-rate a fresh batch with the new rules; settles `GENERATION_MODEL` — parity → glm-5.2). Generation stays **PARKED**; no generation run, no corpus writes happened.
 
 ## 1. Why — what the G3 ratings showed
 
@@ -68,9 +68,22 @@ At the next generation run (volume gen for #30/#95 — founder triggers):
 
 ## 5. Done =
 
-- [ ] 4 new rules in `_V3_CRAFT_GUARDS_SECTION` + audience line, with G3-verbatim examples
-- [ ] Scorer caps (D1/D2/D4) + `units_reason` enforce-capable + `undated_record_reason` shadow
-- [ ] Critique v2 anchors updated (text path)
-- [ ] G3-anchor regression: 4 negatives flagged, Q1 + 2026-07-10 5/5 set clean
-- [ ] Suite green ×2, lock-in test extended (2026-05-20-class strip protection covers the new rules)
-- [ ] TODO + INDEX updated; Phase-4 gate recorded as the un-park step
+- [x] 4 new rules in `_V3_CRAFT_GUARDS_SECTION` + audience line, with G3-verbatim examples (rules 9–12; audience line = Constitutional Principle 2 in `prompts/question_generation_v3_fact_first.md` — prompts live in `prompts/`, not `app/scoring/`)
+- [x] Scorer caps (D1/D2/D4) + `units_reason` enforce-capable + `undated_record_reason` shadow (shadow-by-contract: separate `undated_shadow_flagged` counter, never routed through `CRAFT_GUARDS_ENFORCE`) + metrics proxies `metric_units` / `undated_records` in `scripts/validate_generation.py`
+- [x] Critique v2 anchors updated (text path): Clarity calibration anchors + 3 new red flags (`deductive_giveaway`, `unanchored_referent`, `convoluted_stem`)
+- [x] G3-anchor regression **2026-07-16** — see §6 results below
+- [x] Suite green ×2 (606 passed, `LLM_GATEWAY=direct`), lock-in test extended (4 new rule asserts + rule-10/11 carve-out asserts)
+- [x] TODO + INDEX updated; Phase-4 gate recorded as the un-park step
+
+## 6. Phase-3 regression results (2026-07-16)
+
+Deterministic (guards over the anchor sets):
+- **Q7 → `imperial_units(degrees fahrenheit)`, Q9 → `imperial_units(six miles)`** — both enforce-capable, as planned. Q1 and all other G3 questions: no deterministic flag.
+- FP fence (validation-2026-07-10, 31 q): 1 hit — `imperial_units(an inch)` on the growth-facts MCQ ("Hair grows about half an inch a month"). Inspected: **true positive of the new D3 rule** (imperial-only figure in an option), not a lexical false alarm — pre-#99 units weren't a defect class, so the question passed then.
+- Corpus telemetry (generation-2026-07-10 `batch.json`, 100 q): **4 imperial-unit questions** (Mercury °F, Michigan six-miles = Q9, England °F = Q7, Cuba 90-miles). ⚠ These ride the pending #72 prod import (runbook N3) — flagged for the founder; fixing the corpus is outside #99 scope.
+- `undated_record` shadow: 0 hits on both sets (Q7's own `explanation` carries the date, per spec stem+explanation).
+
+LLM caps (updated `SCORING_PROMPT`, both judges via OpenRouter; sonnet is the discriminating judge, gpt-4.1-mini stays lenient):
+- **Q2 cf=3, Q6 cf=2, Q8 cf=2, Q9 cf=2, Q7 cf=2 → capped ✓.**
+- **Q10: old prompt cf=7 (3/3 runs) → new prompt cf=3,3,4** — the new bullets genuinely moved it; ≤3 in 2/3 runs (judge stochasticity at the 3/4 boundary), treated as pass.
+- **Q1 nuance (fail-loud):** sonnet cf 4→3 (stable 3/3). The cap is the *pre-existing* telegraphed-T/F rule (Q1 is literally "True or false: <surprising claim>" → True), only nudged by #99. Pipeline-operatively Q1 stays clean: no guard flag, overall avg ≈6.7 ≫ 3.0 gate, surprise 6–8 → no veto; the cf cap is advisory. No prompt weakening done — un-capping Q1 would mean diluting telegraphed-T/F and inviting the 94 %-True defect back. Founder can overrule at the Phase-4 gate.

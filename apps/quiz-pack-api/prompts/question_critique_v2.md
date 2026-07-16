@@ -114,13 +114,18 @@ Rate the question on these dimensions (1-10 scale):
 - 1-2: No educational value, arbitrary fact
 
 ### 5. Clarity (1-10)
-**Is the question clear and unambiguous?**
+**Is the question clear and unambiguous? It is heard ONCE, by a non-native English listener, while driving.**
 
 - 9-10: Crystal clear, no ambiguity
 - 7-8: Clear with minor potential confusion
 - 5-6: Somewhat unclear or imprecise
 - 3-4: Ambiguous wording, multiple interpretations
 - 1-2: Confusing or poorly worded
+
+**Calibration anchors (founder-rated, 2026-07-15):**
+- 3-4 clarity: "You're never more than six miles from a body of water in this U.S. state" (double condition — needs a second listen)
+- 3-4 clarity: "a citizen called a 'hippeus' was defined by owning which animal" (term never glossed — the solver has no foothold)
+- 3-4 clarity: "The Sun and Moon appear almost exactly the same size" with no vantage point (from where? for whom?)
 
 ### 6. Factual Accuracy (1-10)
 **Is the stated correct answer actually correct? Are the facts in the question accurate?**
@@ -213,6 +218,20 @@ Check for these common problems:
 **Padded Multi-Clue Stem** (-2 points from Clever Framing)
 - The stem stacks several clues or properties instead of one sharp hook ("a list of properties" reads badly aloud)
 - Rule: either ONE satisfactory clue, or the question doesn't make sense — reads once, lands once
+
+**Deductive Giveaway** (-3 points from Clever Framing, add "deductive_giveaway" to red_flags)
+- The stem's framing lets a player with ZERO knowledge of the fact derive the answer — a stereotype, a famous-person pattern, or elimination
+- Examples (founder-rated, 2026-07-15): a British tank's built-in boiling vessel "makes what beverage?" → tea (British = tea, no knowledge needed); "the only U.S. state made up of two peninsulas" → Michigan (the frame is a lookup key); "a Renaissance genius sketched a diving suit… who designed it?" → Leonardo da Vinci (famous-inventor reputation)
+- Distinct from Stem Answer-Leak: no answer word appears in the stem — the framing itself answers
+- Suggest in improvement_suggestions: ask about the surprising detail instead of the identity the frame gives away, or convert to multiple choice with the giveaway hint removed
+
+**Unanchored Referent** (-3 points from Clarity, add "unanchored_referent" to red_flags)
+- A term, claim, or comparison the player has no foothold for: an unglossed rare term ("a 'hippeus' was defined by owning which animal" — hippeus never explained), a record/first/milestone with no date (a temperature record with no year, decade, or era), a perceptual claim with no vantage point ("appear the same size" — from where, for whom?)
+- The fix belongs in the stem as a neutral anchor (gloss, date, vantage) — never as a category hint that gives the answer away
+
+**Convoluted Stem** (-2 points from Clarity, add "convoluted_stem" to red_flags)
+- Phrasing that needs a second pass when heard once: nested negation, double conditions ("you're never more than six miles from a body of water"), figures in units the listener must convert, numbers not written the way people say them
+- The question is heard once, by a non-native English listener, while driving
 
 ---
 

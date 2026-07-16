@@ -418,6 +418,61 @@ async def test_craft_guard_enforce_rebalances_all_true_batch(
 
 
 @pytest.mark.asyncio
+async def test_craft_guard_enforce_drops_imperial_units(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """#99 D3 (G3 Q7): the units guard rides the same CRAFT_GUARDS_ENFORCE
+    gate as the other craft guards — an imperial-only figure drops."""
+    monkeypatch.setenv("CRAFT_GUARDS_ENFORCE", "1")
+    questions = [
+        _stub_question(
+            0,
+            question="England recorded what temperature milestone in 2022?",
+            correct_answer="100 degrees Fahrenheit",
+        ),
+        _stub_question(1),
+    ]
+    scores = {q.id: {"gpt-4.1-mini": 8.0} for q in questions}
+    scorer = _FakeMultiModelScorer(scores)
+    stage = ScoringStage(scorer)  # type: ignore[arg-type]
+    ctx = _make_ctx(questions)
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert [q.id for q in ctx.questions] == ["q_1"]
+    assert result.info["craft_dropped"] == 1
+
+
+@pytest.mark.asyncio
+async def test_undated_record_is_shadow_only_even_under_enforce(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """#99 D2-subset contract: the undated-record heuristic counts and logs
+    but must NEVER drop — not even under CRAFT_GUARDS_ENFORCE — until it is
+    validated on a founder-rated batch (it has known FP shapes)."""
+    monkeypatch.setenv("CRAFT_GUARDS_ENFORCE", "1")
+    questions = [
+        _stub_question(
+            0,
+            question="For the first time ever, which country banned "
+            "commercial whaling outright?",
+            correct_answer="Norway",
+        ),
+        _stub_question(1),
+    ]
+    scores = {q.id: {"gpt-4.1-mini": 8.0} for q in questions}
+    scorer = _FakeMultiModelScorer(scores)
+    stage = ScoringStage(scorer)  # type: ignore[arg-type]
+    ctx = _make_ctx(questions)
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert [q.id for q in ctx.questions] == ["q_0", "q_1"]
+    assert result.info["undated_shadow_flagged"] == 1
+    assert result.info["craft_dropped"] == 0
+
+
+@pytest.mark.asyncio
 async def test_veto_dormant_when_flag_off(monkeypatch: pytest.MonkeyPatch) -> None:
     """Default (flag off): the veto is not consulted at all — a starboard-class
     question produces zero flags, so the change is dormant until Phase 6."""

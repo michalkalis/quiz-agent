@@ -161,6 +161,7 @@ class ScoringStage:
         veto_dropped = 0
         craft_flagged = 0
         craft_dropped = 0
+        undated_flagged = 0
         for q in ctx.questions:
             model_scores = scores_by_id.get(q.id, [])
 
@@ -176,12 +177,31 @@ class ScoringStage:
                 per_model[name] = float(overall)
             ctx.scores[q.id] = per_model
 
+            # #99 D2-subset telemetry — shadow-only BY CONTRACT (see
+            # craft_guards.undated_record_reason): counted and logged for
+            # every question, never a drop, even under CRAFT_GUARDS_ENFORCE.
+            undated_reason = craft_guards.undated_record_reason(
+                q.question, q.explanation
+            )
+            if undated_reason is not None:
+                undated_flagged += 1
+                logger.warning(
+                    "ScoringStage undated-record flagged id=%s reason=%s "
+                    "(shadow-only telemetry: kept)",
+                    q.id,
+                    undated_reason,
+                )
+
             craft_reason = craft_guards.stem_leak_reason(
                 q.question, q.correct_answer, q.possible_answers
             )
             if craft_reason is None:
                 craft_reason = craft_guards.long_answer_reason(
                     q.correct_answer, q.possible_answers
+                )
+            if craft_reason is None:
+                craft_reason = craft_guards.units_reason(
+                    q.question, q.correct_answer, q.possible_answers
                 )
             if craft_reason is None and q.id in tf_excess:
                 craft_reason = "tf_key_imbalance"
@@ -243,6 +263,7 @@ class ScoringStage:
                 "veto_dropped": veto_dropped,
                 "craft_flagged": craft_flagged,
                 "craft_dropped": craft_dropped,
+                "undated_shadow_flagged": undated_flagged,
             },
             cost_cents=0,
         )

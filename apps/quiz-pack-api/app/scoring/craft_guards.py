@@ -58,6 +58,46 @@ _TF_MAJORITY_ALLOWED = 0.6
 # (cocoa-butter Q35: full-sentence answer; 3-litre-jug Q9: procedure).
 _ANSWER_MAX_WORDS = 6
 
+# Units guard (#99 D3, G3 Q7 2026-07-15): the target player is a non-US,
+# non-native English speaker who cannot convert imperial mid-quiz. Fahrenheit
+# and mph are imperial by name and flag on their own; length/weight/volume
+# units flag only next to a quantity (digits or a spelled number), which keeps
+# proper nouns ("Miles Davis"), body-part feet and unit-less idioms out.
+_IMPERIAL_ALWAYS_RE = re.compile(
+    r"(?i)(?:°\s*F\b|\bdegrees?\s+fahrenheit\b|\bfahrenheit\b|\bmph\b)"
+)
+_NUMBER_WORD = (
+    r"(?:\d[\d,.]*|a|an|one|two|three|four|five|six|seven|eight|nine|ten|"
+    r"eleven|twelve|dozen|twenty|thirty|forty|fifty|sixty|seventy|eighty|"
+    r"ninety|hundred|thousand|million|few|several)"
+)
+_IMPERIAL_QUANTIFIED_RE = re.compile(
+    rf"(?i)\b{_NUMBER_WORD}(?:[\s-]+\w+)?[\s-]+"
+    r"(?:miles?|feet|foot|inch(?:es)?|pounds?|lbs?|ounces?|gallons?|"
+    r"yards?|acres?)\b"
+)
+# Any metric marker in the same text means the imperial figure is the
+# parenthetical companion ("100 °F (38 °C)") — the sanctioned shape.
+_METRIC_RE = re.compile(
+    r"(?i)(?:°\s*C\b|\bdegrees?\s+celsius\b|\bcelsius\b|\bkilomet|\bkm\b|"
+    r"\bmetres?\b|\bmeters?\b|\bcentimet|\bmillimet|\bcm\b|\bmm\b|"
+    r"\bkilograms?\b|\bkg\b|\bgrams?\b|\blitres?\b|\bliters?\b|\btonnes?\b)"
+)
+
+# Undated-record guard (#99 D2 subset, G3 Q7): a record/first/milestone claim
+# with no temporal anchor floats free — the founder asked "when?". Marker and
+# anchor lists are heuristics ("record" also matches vinyl records), so this
+# guard is shadow-only by contract: it must never be routed through the
+# enforce gate until validated on a rated batch.
+_RECORD_MARKER_RE = re.compile(
+    r"(?i)\b(?:for the first time|first time|first ever|never before|"
+    r"records?|record-breaking|milestones?)\b"
+)
+_DATE_ANCHOR_RE = re.compile(
+    r"(?i)\b(?:1\d{3}|20\d{2}|\d{2,4}0s|centur(?:y|ies)|ancient|medieval|"
+    r"victorian|renaissance|middle ages|bce?|ad|ce|world war)\b"
+)
+
 
 def _content_tokens(text: str) -> set[str]:
     return {
@@ -163,6 +203,58 @@ def long_answer_reason(
     if len(words) > _ANSWER_MAX_WORDS:
         return f"long_answer({len(words)}w)"
     return None
+
+
+def units_reason(
+    question: str,
+    correct_answer: object,
+    possible_answers: dict | None = None,
+) -> str | None:
+    """Reason string when a figure is imperial-only, else None.
+
+    #99 D3 (G3 Q7, founder 2026-07-15): "100 degrees Fahrenheit" — a Slovak
+    player cannot convert imperial mid-quiz; metric must lead, imperial at
+    most in parentheses for an iconic source figure ("100 °F (38 °C)").
+    Checks stem + option values + answer as one text: any metric marker
+    present passes; otherwise a Fahrenheit/mph mention or a quantified
+    length/weight/volume unit flags.
+    """
+    parts = [question or ""]
+    if possible_answers:
+        parts.extend(str(v) for v in possible_answers.values())
+    if isinstance(correct_answer, list):
+        parts.extend(str(a) for a in correct_answer)
+    elif correct_answer is not None:
+        parts.append(str(correct_answer))
+    text = " ".join(parts)
+    if _METRIC_RE.search(text):
+        return None
+    m = _IMPERIAL_ALWAYS_RE.search(text) or _IMPERIAL_QUANTIFIED_RE.search(text)
+    if m:
+        marker = " ".join(m.group(0).split()).lower()
+        return f"imperial_units({marker})"
+    return None
+
+
+def undated_record_reason(
+    question: str, explanation: str | None = None
+) -> str | None:
+    """Reason string when a record/first/milestone claim has no date, else None.
+
+    #99 D2 subset (G3 Q7): "for the first time in over 300 years … recorded
+    what temperature milestone" — without a year, decade or era the record
+    floats free. SHADOW-ONLY BY CONTRACT: the marker heuristic has known
+    false-positive shapes ("vinyl record"), so callers must count and log
+    this reason but never drop on it, regardless of ``CRAFT_GUARDS_ENFORCE``,
+    until it is validated on a founder-rated batch (#99 Phase 4).
+    """
+    text = f"{question or ''} {explanation or ''}"
+    m = _RECORD_MARKER_RE.search(text)
+    if m is None:
+        return None
+    if _DATE_ANCHOR_RE.search(text):
+        return None
+    return f"undated_record({m.group(0).lower()})"
 
 
 def true_false_key(

@@ -119,7 +119,7 @@ def compute_distractor_quality(
 
 _DETERMINISTIC_DIMS_KEY = "deterministic"
 
-SCORING_PROMPT = """You are evaluating a trivia quiz question for quality and fun. It will be read aloud once in a voice-first quiz played hands-free while driving, so it must land on a single listen and the answer must be short and gradable.
+SCORING_PROMPT = """You are evaluating a trivia quiz question for quality and fun. It will be read aloud once in a voice-first quiz played hands-free while driving, so it must land on a single listen and the answer must be short and gradable. The target player is a non-native English speaker — judge obscurity and difficulty through that lens (a term natives find easy may be genuinely fresh to them, and vice versa).
 
 QUESTION: {question}
 CORRECT ANSWER: {answer}
@@ -143,6 +143,9 @@ Rate this question on each dimension (1-10 scale). Calibration anchors come from
    - Landmark giveaway: the stem names an identifier so tied to the answer that answering is passive recognition ("Which city is known for its Opera House with a sail-like design?" → Sydney).
    - Vague "what is special about X" stem whose answer is an explanation sentence rather than a short fact — unfalsifiable and ungradable (e.g. cocoa butter's melting point).
    - Bare first-degree recall: "Who directed X" / "Which element is named after Y" style lookups with no hidden layer cap this dimension at 3 even when flawlessly worded.
+   - Deductive giveaway: the stem's framing lets a player with ZERO knowledge of the fact derive the answer — a stereotype, a famous-person pattern, or elimination (e.g. a British tank's built-in boiling vessel "makes what beverage?" → tea; "the only U.S. state made up of two peninsulas" → Michigan; "a Renaissance genius sketched a diving suit… who?" → Leonardo da Vinci). Distinct from a lexical stem-leak: no answer word appears — the FRAME answers for you.
+   - Unanchored referent: a term, claim, or comparison the player has no foothold for — an unglossed rare term ("a citizen called a 'hippeus' owned which animal?" with hippeus never explained), a record/first/milestone with no date (a temperature record with no year or era), or a perceptual claim with no vantage point ("appear the same size" — from where, for whom?).
+   - Convoluted stem: phrasing that needs a second pass when heard once — nested negation or double conditions ("you're never more than six miles from a body of water"), or figures in units the player must convert (imperial-only for a non-US player). The question is heard ONCE, by a non-native listener, while driving.
 6. **Factual Confidence** - How confident are you the answer is correct? (10 = certain)
 
 Respond in JSON only:

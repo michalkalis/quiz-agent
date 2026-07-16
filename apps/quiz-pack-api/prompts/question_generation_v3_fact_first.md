@@ -122,7 +122,7 @@ Before finalizing each question, check these red flags:
 Every question must align with these principles:
 
 1. **Delight over Memorization** — Joy, surprise, wonder. Not rote memory.
-2. **Universal over Niche** — International audience. No US-specific, no English wordplay.
+2. **Universal over Niche** — International audience: the target player is a non-native English speaker, so what natives find trivially easy may be genuinely fresh to them (the name of "&") and native-only trivia is a dead end for them. No US-specific, no English wordplay.
 3. **Narrative over Facts** — Tell a story. Not isolated facts.
 4. **Clever over Straightforward** — Creative framing. Never "What is..." or "Who wrote...".
 5. **Engagement Path over Dead End** — The player should be able to reason, estimate, or deduce toward the answer. Not just search memory for a specific fact. High engagement: "Which is heavier: all ants or all humans?" (player estimates). Low engagement: "Which animal has human-like fingerprints?" (no reasoning path).

@@ -14,6 +14,8 @@ from app.scoring.craft_guards import (
     stem_leak_reason,
     tf_imbalance_excess,
     true_false_key,
+    undated_record_reason,
+    units_reason,
 )
 
 # --- stem_leak_reason ---------------------------------------------------------
@@ -144,6 +146,107 @@ def test_short_and_glossed_answers_pass() -> None:
 def test_long_answer_skips_mcq_and_tf() -> None:
     assert long_answer_reason("a", {"a": "Option one", "b": "Option two"}) is None
     assert long_answer_reason("True — he voiced Mickey for roughly twenty years") is None
+
+
+# --- units_reason (#99 D3) ----------------------------------------------------
+
+
+def test_flags_fahrenheit_answer_g3_q7() -> None:
+    """G3 Q7 (founder 2026-07-15): '100 degrees Fahrenheit' — a Slovak player
+    cannot convert imperial mid-quiz; °C must lead or accompany."""
+    assert units_reason(
+        "For the first time in over 300 years of weather observations, England "
+        "recorded what round-number temperature milestone during a heat wave?",
+        "100 degrees Fahrenheit",
+    ) == "imperial_units(degrees fahrenheit)"
+
+
+def test_flags_quantified_miles_g3_q9() -> None:
+    """G3 Q9: 'never more than six miles from a body of water' — the same
+    unusable-imperial defect, in the stem rather than the answer."""
+    assert units_reason(
+        "You're never more than six miles from a body of water in this U.S. "
+        "state, which is also the only one made up of two peninsulas. Name it.",
+        "Michigan",
+    ) == "imperial_units(six miles)"
+
+
+def test_iconic_figure_with_metric_companion_passes() -> None:
+    """Rule 11's sanctioned shape: iconic source figure, metric alongside."""
+    assert units_reason(
+        "England's hottest day on record hit 40 °C (104 °F). True or false: "
+        "that reading came in 2022?",
+        "True",
+    ) is None
+
+
+def test_flags_imperial_in_mcq_options() -> None:
+    """The guard reads option values too — an imperial-only option set is the
+    same defect as an imperial-only answer."""
+    assert units_reason(
+        "Roughly how far can a dragonfly travel in a single hour?",
+        "b",
+        possible_answers={"a": "10 miles", "b": "30 miles", "c": "90 miles"},
+    ) is not None
+
+
+def test_unquantified_unit_words_do_not_flag() -> None:
+    """Proper nouns and unit-less idioms must never fire: 'Miles' the name and
+    body-part 'feet' carry no figure the player would have to convert."""
+    assert units_reason(
+        "Which jazz trumpeter recorded the album 'Kind of Blue'?",
+        "Miles Davis",
+    ) is None
+    assert units_reason(
+        "How many feet does a garden snail use to move around?",
+        "One",
+    ) is None
+
+
+def test_metric_only_figures_pass() -> None:
+    """The desired end state flags nothing."""
+    assert units_reason(
+        "A teaspoon of neutron star material weighs about a billion tonnes. "
+        "True or false?",
+        "True",
+    ) is None
+    assert units_reason(
+        "Roughly how many kilometres of blood vessels are in a human body?",
+        "About 100,000 km",
+    ) is None
+
+
+# --- undated_record_reason (#99 D2 subset, shadow-only) -------------------------
+
+
+def test_flags_undated_record_g3_q7() -> None:
+    """G3 Q7: a 'first time in over 300 years' milestone with no year/era —
+    the founder's note was literally 'missing the measurement date'."""
+    assert undated_record_reason(
+        "For the first time in over 300 years of weather observations, England "
+        "recorded what round-number temperature milestone during a heat wave?",
+    ) == "undated_record(for the first time)"
+
+
+def test_dated_record_passes() -> None:
+    """A year anywhere in stem+explanation anchors the record."""
+    assert undated_record_reason(
+        "For the first time in over 300 years, England recorded a temperature "
+        "milestone. What was it?",
+        explanation="The 40 °C reading came during the July 2022 heat wave.",
+    ) is None
+    # Era words anchor too (rule 8 pushes exact years out of the stem).
+    assert undated_record_reason(
+        "In Victorian times, which record did the Great Eastern hold?",
+    ) is None
+
+
+def test_no_record_marker_is_silent() -> None:
+    """No record/first/milestone claim → nothing to date."""
+    assert undated_record_reason(
+        "An octopus's beak is made of the same material as your fingernails. "
+        "True or false?",
+    ) is None
 
 
 # --- true_false_key -----------------------------------------------------------

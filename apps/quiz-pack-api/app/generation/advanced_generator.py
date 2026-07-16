@@ -102,6 +102,9 @@ When you use this, `source_excerpt` must still confirm the answer."""
 # Mirrors the reviewer's checks so defects are prevented at generation, not
 # just caught at scoring. Calibration: founder rating session 2026-07-09/10 +
 # `docs/research/question-craft-prior-art-2026-07-10.md`.
+# Rules 9-12: issue #99 (G3 blind-rating 2026-07-15,
+# `docs/testing/runs/corpus-blind-sample-2026-07.md`) — formulation-craft
+# defects shared by both generation models; examples verbatim from G3.
 _V3_CRAFT_GUARDS_SECTION = """
 
 ---
@@ -115,7 +118,11 @@ _V3_CRAFT_GUARDS_SECTION = """
 5. **True/false discipline.** Across your batch, true/false answers must be genuinely ~50/50, and a T/F statement must never telegraph its key (a long, self-justifying statement reads as "True"). When a T/F hides a surprising number, transform it instead: name the subject and ask for the number as multiple-choice (e.g. "St Andrews originally had 22 holes — true or false?" becomes "How many holes did the Old Course at St Andrews originally have?" with options).
 6. **No unguessable open numeric.** For open text questions: if the answer is a specific number or quantity the player cannot actively estimate or reason toward, do NOT emit it as open text — reframe so the estimable part is the question (give the subject, ask the magnitude), or leave the fact to a multiple-choice batch. Numerics the player CAN estimate are excellent open questions (heart beats per day: count your pulse and multiply).
 7. **Answer context payoff.** `explanation` must carry 1–2 spoken sentences of genuinely interesting context behind the answer (where it is, how big, why it is surprising) — it is read aloud after the reveal. Never leave it empty and never restate the question.
-8. **No needless year precision.** Name an exact year in the stem only when the year itself is the point of the question (e.g. a year-guess). Otherwise use the decade or era — "in the 1830s", "in Victorian times" — an exact year for an incidental fact ("In 1834, doctors prescribed…") reads unnatural and fake-precise. The precise year may still live in `explanation`."""
+8. **No needless year precision.** Name an exact year in the stem only when the year itself is the point of the question (e.g. a year-guess). Otherwise use the decade or era — "in the 1830s", "in Victorian times" — an exact year for an incidental fact ("In 1834, doctors prescribed…") reads unnatural and fake-precise. The precise year may still live in `explanation`.
+9. **No deductive giveaway.** Self-test: could a player with ZERO knowledge of the fact still derive the answer from the stem's framing alone — a stereotype, a famous-person pattern, or elimination? BAD: "every British tank has a built-in boiling vessel — what beverage is it designed to make?" → Tea (British + beverage: the stereotype answers for you). BAD: "the only U.S. state made up of two distinct peninsulas" → Michigan (the frame is a lookup key any American already holds). BAD: "a Renaissance genius sketched a diving suit… who designed it?" → Leonardo da Vinci (famous-inventor reputation). Fix: ask about the surprising detail instead of the identity the frame gives away (for the tank: what the built-in vessel is for, without naming the drink category), or flip to multiple-choice with the giveaway hint removed.
+10. **Anchor every referent.** The player needs a foothold for every term, claim, and comparison. An unfamiliar term gets a gloss right in the stem ("a 'hippeus', an ancient Greek citizen class"); a record, first, or milestone gets a date (year, decade, or era); a perceptual claim gets a vantage point ("in Earth's sky"). Context evicted from the answer by the answer word-cap lands in the stem as a NEUTRAL anchor — never as a category hint (that breaks rule 9), and never dropped entirely.
+11. **Metric-first units.** Figures use °C, kilometres, kilograms as the primary unit; imperial appears only in parentheses when the source figure is iconic ("100 °F (38 °C)"). The target player cannot convert Fahrenheit or miles mid-quiz. Applies to the stem, every option, and `explanation`.
+12. **Read-aloud clarity.** One idea per sentence. No nested negation and no double-condition phrasing ("never more than six miles from a body of water" forces a second listen). Say numbers the way a person would speak them. Keep the 10-second read-aloud self-test — and if a non-native English listener would need a second pass, rewrite."""
 
 
 class MCQQuestionItem(BaseModel):

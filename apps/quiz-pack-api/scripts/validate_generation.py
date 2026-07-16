@@ -277,6 +277,50 @@ def proxy_answer_brevity(questions: Sequence["Question"]) -> ProxyResult:
     )
 
 
+def proxy_metric_units(questions: Sequence["Question"]) -> ProxyResult:
+    """No imperial-only figures (#99 D3): the target player can't convert °F/miles."""
+    from app.scoring.craft_guards import units_reason
+
+    violations: list[str] = []
+    for q in questions:
+        reason = units_reason(
+            getattr(q, "question", "") or "",
+            getattr(q, "correct_answer", None),
+            getattr(q, "possible_answers", None),
+        )
+        if reason:
+            violations.append(f"{reason}: {(getattr(q, 'question', '') or '')[:60]!r}")
+    return ProxyResult(
+        name="metric_units",
+        passed=not violations,
+        detail=f"{len(violations)}/{len(questions)} imperial-only figure(s)",
+        violations=violations,
+    )
+
+
+def proxy_undated_records(questions: Sequence["Question"]) -> ProxyResult:
+    """Record/first/milestone claims missing a date anchor (#99 D2 subset).
+
+    Report-only: the marker heuristic has known false-positive shapes, so this
+    proxy never fails the batch — it surfaces the rate for the founder gate.
+    """
+    from app.scoring.craft_guards import undated_record_reason
+
+    hits: list[str] = []
+    for q in questions:
+        reason = undated_record_reason(
+            getattr(q, "question", "") or "", getattr(q, "explanation", None)
+        )
+        if reason:
+            hits.append(f"{reason}: {(getattr(q, 'question', '') or '')[:60]!r}")
+    return ProxyResult(
+        name="undated_records",
+        passed=True,
+        detail=f"{len(hits)}/{len(questions)} undated record claim(s) — report-only",
+        violations=hits,
+    )
+
+
 ALL_PROXIES = (
     proxy_non_empty,
     proxy_non_recall_per_type,
@@ -285,6 +329,8 @@ ALL_PROXIES = (
     proxy_which_opener_fraction,
     proxy_mcq_valid,
     proxy_answer_brevity,
+    proxy_metric_units,
+    proxy_undated_records,
 )
 
 

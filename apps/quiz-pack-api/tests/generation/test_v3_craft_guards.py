@@ -88,6 +88,13 @@ def test_craft_guards_present_when_flag_on(monkeypatch: pytest.MonkeyPatch) -> N
     # unnatural to the founder — decade/era phrasing is the rule, exact year
     # only when the year itself is the question.
     assert "No needless year precision" in prompt
+    # Rules 9-12: issue #99, G3 blind-rating 2026-07-15 — both models shared
+    # the same four formulation defects (deductive giveaway Q6/Q9/Q8,
+    # unanchored referent Q2/Q7/Q10, imperial units Q7, convoluted stem Q9).
+    assert "No deductive giveaway" in prompt
+    assert "Anchor every referent" in prompt
+    assert "Metric-first units" in prompt
+    assert "Read-aloud clarity" in prompt
 
 
 def test_craft_guards_keep_founder_exceptions(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -98,6 +105,11 @@ def test_craft_guards_keep_founder_exceptions(monkeypatch: pytest.MonkeyPatch) -
     prompt = _build_v3_prompt()
     assert "count your pulse and multiply" in prompt
     assert "How many holes did the Old Course at St Andrews originally have?" in prompt
+    # #99 carve-outs: an iconic source figure may keep imperial in parentheses
+    # (rule 11), and the answer-cap's evicted context has a sanctioned home in
+    # the stem as a neutral anchor (rule 10) — not a blanket ban on context.
+    assert "100 °F (38 °C)" in prompt
+    assert "NEUTRAL anchor" in prompt
 
 
 def test_flag_off_prompt_is_byte_identical_minus_the_guards() -> None:

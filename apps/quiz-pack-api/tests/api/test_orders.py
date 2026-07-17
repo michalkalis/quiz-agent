@@ -163,6 +163,34 @@ async def test_create_order_missing_header_401(
 
 
 @pytest.mark.asyncio
+async def test_create_order_enqueue_failure_marks_failed_503(
+    client: httpx.AsyncClient,
+    make_jws: JWSFactory,
+    test_session: AsyncSession,
+    arq_mock: MagicMock,
+) -> None:
+    """A Redis blip during enqueue must not strand the order 'pending'
+    forever (#103 F4a) — it should come back failed+refund_eligible so the
+    client sees a clear error and can retry, instead of a stuck order the
+    old code left behind (commit-then-enqueue with no rollback on failure).
+    """
+    arq_mock.enqueue_job.side_effect = ConnectionError("redis unreachable (simulated)")
+    tx_id = "tx-enqueue-fail"
+    jws = make_jws(payload_overrides={"transactionId": tx_id})
+    resp = await client.post(
+        "/v1/orders", json=_valid_body(tx_id=tx_id), headers={"X-StoreKit-JWS": jws}
+    )
+    assert resp.status_code == 503, resp.text
+
+    test_session.expire_all()
+    stmt = select(GenerationOrder).where(GenerationOrder.transaction_id == tx_id)
+    order = (await test_session.execute(stmt)).scalars().first()
+    assert order is not None
+    assert order.status == "failed"  # NOT stuck 'pending'
+    assert order.refund_eligible is True
+
+
+@pytest.mark.asyncio
 async def test_get_order_not_found_404(
     client: httpx.AsyncClient,
 ) -> None:
@@ -204,6 +232,9 @@ async def test_get_order_happy(
     # Cost capture (#95): no spend recorded yet on a fresh order.
     assert data["llm_cost_usd"] is None
     assert data["search_cost_cents"] == 0
+    # #103 F4c: refund_eligible now surfaces on the snapshot (False on a
+    # healthy order; the field previously had zero readers anywhere).
+    assert data["refund_eligible"] is False
 
     job = data["job"]
     assert job is not None

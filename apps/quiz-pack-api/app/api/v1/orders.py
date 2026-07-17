@@ -121,6 +121,9 @@ class OrderSnapshotResponse(BaseModel):
     # founder-only — hide behind the admin key before real users.
     llm_cost_usd: Optional[Decimal]
     search_cost_cents: int
+    # #103 F4c: set on terminal failure (_handle_failure / the sweep) so a
+    # client/admin can actually see it — previously written but never read.
+    refund_eligible: bool
     job: Optional[JobSnapshotResponse]
 
 
@@ -245,8 +248,28 @@ async def create_order(
 
     await session.commit()
 
-    # 7. Enqueue ARQ — after commit so the worker can read the row
-    await arq_pool.enqueue_job("process_order", str(order.id))
+    # 7. Enqueue ARQ — after commit so the worker can read the row.
+    # #103 F4a: a Redis blip here used to leave the order 'pending' forever
+    # (replay just returns it, and retry needs 'failed' — a 409). Mark it
+    # failed+refund_eligible immediately instead so the client sees a clear
+    # error and can retry via POST /v1/orders/{id}/retry rather than polling
+    # a silently stuck order. The periodic sweep (app.worker.sweep) is the
+    # remaining safety net for orders that slip past this point.
+    try:
+        await arq_pool.enqueue_job("process_order", str(order.id))
+    except Exception as exc:
+        job.status = "failed"
+        job.error = f"enqueue failed: {exc!r}"
+        order.status = "failed"
+        order.refund_eligible = True
+        await session.commit()
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "failed to enqueue generation job; order marked failed — "
+                "retry via POST /v1/orders/{order_id}/retry"
+            ),
+        ) from exc
 
     # 8. Transition to in_progress
     order.status = "in_progress"
@@ -285,6 +308,7 @@ def _order_snapshot(
         pack_id=order.pack_id,
         llm_cost_usd=order.llm_cost_usd,
         search_cost_cents=order.search_cost_cents,
+        refund_eligible=order.refund_eligible,
         job=_job_snapshot(job),
     )
 

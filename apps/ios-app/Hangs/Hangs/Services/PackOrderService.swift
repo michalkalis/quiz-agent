@@ -14,8 +14,12 @@ import os
 
 /// Protocol for custom-pack order operations.
 protocol PackOrderServiceProtocol: Sendable {
-    /// `POST /v1/orders` — create (or idempotently replay) an order.
-    func createOrder(prompt: String, language: String, category: String?, theme: String?) async throws -> OrderCreatedResponse
+    /// `POST /v1/orders` — create (or idempotently replay) an order for the
+    /// given intent. Calling this twice with the SAME `intent` (same
+    /// `idempotencyKey`) sends the same `transaction_id` both times, so a
+    /// client-side retry replays the original order instead of minting a new
+    /// paid one (issue #103 finding 6).
+    func createOrder(intent: PackOrderIntent) async throws -> OrderCreatedResponse
     /// `GET /v1/orders` — the caller's orders, newest-first. Bearer required.
     func listOrders() async throws -> [OrderSnapshot]
     /// `GET /v1/orders/{id}` — single order snapshot (poll target).
@@ -32,6 +36,12 @@ actor PackOrderService: PackOrderServiceProtocol {
     private let session: URLSession
     private let authService: AuthServiceProtocol?
     private let adminKeyStore: AdminKeyStore
+
+    /// In-flight create calls keyed by `idempotencyKey`. A second `createOrder`
+    /// for the SAME intent while one is still pending awaits the existing task
+    /// instead of firing a second network request — the in-flight guard from
+    /// issue #103 finding 6b.
+    private var inFlightOrders: [String: Task<OrderCreatedResponse, Error>] = [:]
 
     init(
         baseURL: String = Config.packApiBaseURL,
@@ -50,19 +60,33 @@ actor PackOrderService: PackOrderServiceProtocol {
 
     // MARK: - Requests
 
-    func createOrder(prompt: String, language: String, category: String?, theme: String?) async throws -> OrderCreatedResponse {
+    func createOrder(intent: PackOrderIntent) async throws -> OrderCreatedResponse {
+        // In-flight guard: a second submit of the SAME intent while the first
+        // is still pending is a no-op that awaits the original task's result
+        // rather than sending a duplicate request.
+        if let pending = inFlightOrders[intent.idempotencyKey] {
+            return try await pending.value
+        }
+
+        let task = Task { try await self.performCreateOrder(intent: intent) }
+        inFlightOrders[intent.idempotencyKey] = task
+        defer { inFlightOrders[intent.idempotencyKey] = nil }
+        return try await task.value
+    }
+
+    private func performCreateOrder(intent: PackOrderIntent) async throws -> OrderCreatedResponse {
         let url = baseURL.appendingPathComponent("/v1/orders")
         var request = await makeRequest(url: url, method: "POST", includeAdminKey: true)
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
         let payload = CreateOrderRequest(
-            transactionId: "admin-\(UUID().uuidString)",
+            transactionId: intent.idempotencyKey,
             productId: Self.productId,
-            prompt: prompt,
-            language: language,
+            prompt: intent.prompt,
+            language: intent.language,
             targetCount: Self.targetCount,
-            category: category,
-            theme: theme
+            category: intent.category,
+            theme: intent.theme
         )
         request.httpBody = try JSONEncoder().encode(payload)
 

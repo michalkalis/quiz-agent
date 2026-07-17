@@ -165,12 +165,17 @@ final class AppState: ObservableObject {
 
     /// Create a new QuizViewModel with injected dependencies
     func makeQuizViewModel() -> QuizViewModel {
+        // #102 finding 1: lets the paywall's pre-429 reconciliation check RC's
+        // local entitlement cache without QuizViewModel depending on the
+        // concrete StoreManager type.
+        let storeManager = self.storeManager
         let viewModel = QuizViewModel(
             networkService: networkService,
             audioService: audioService,
             persistenceStore: persistenceStore,
             silenceDetectionService: silenceDetectionService,
-            sttService: sttService
+            sttService: sttService,
+            isLocallyEntitled: { storeManager.isPurchased }
         )
 
         #if DEBUG

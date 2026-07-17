@@ -401,6 +401,11 @@ extension QuizViewModel {
             } catch let error as NetworkError {
                 // Handle daily limit reached — show paywall
                 if case let .quotaLimitReached(limitError) = error {
+                    // #102 finding 1: give the server mirror a short bounded
+                    // window to catch up first if RC's local cache already
+                    // says the customer is entitled (purchase/restore sync
+                    // failed or the webhook is still lagging).
+                    await self.resyncBeforePaywallIfLocallyEntitled()
                     await MainActor.run {
                         self.quotaLimitError = limitError
                         self.showPaywall = true

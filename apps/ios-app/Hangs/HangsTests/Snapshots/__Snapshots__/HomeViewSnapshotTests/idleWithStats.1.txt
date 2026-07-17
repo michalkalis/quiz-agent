@@ -208,6 +208,8 @@
         - capturedCategories: nil
         - syncEntitlementsCallCount: 0
         - syncEntitlementsError: nil
+        - syncEntitlementsFailuresBeforeSuccess: 0
+        - syncEntitlementsGate: nil
       ▿ audioService: Hangs.MockAudioService #5
         - isRecording: false
         - isPlaying: false
@@ -283,6 +285,7 @@
         - signInPromptShownCount: 0
       - silenceDetectionService: nil
       - sttService: nil
+      - isLocallyEntitled: (Function)
       - earconPlayer: Hangs.SystemEarconPlayer #7
       ▿ cancellables: 1 member
         ▿ Combine.AnyCancellable #8
@@ -291,6 +294,7 @@
           ▿ lock: 0x<addr>
             - pointerValue: <n>
       - commandAvailabilityTask: nil
+      - entitlementReconcileTask: nil
       ▿ taskBag: Hangs.TaskBag #10
         - tasks: 0 key/value pairs
       - isRerecording: false

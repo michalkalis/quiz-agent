@@ -197,6 +197,7 @@
         - mockAudioData: nil
         - shouldFail: false
         - stubbedUsage: nil
+        - getUsageCallCount: 0
         - capturedTextInputAudio: nil
         - capturedTextInputInput: nil
         - submitTextInputCallCount: 0

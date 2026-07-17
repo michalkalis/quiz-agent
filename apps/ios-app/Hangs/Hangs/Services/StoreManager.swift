@@ -47,6 +47,15 @@ enum PurchaseState: Equatable {
     case purchasing(productID: String)
     /// `productID` is nil for a restore (the restored product isn't known).
     case success(productID: String?)
+    /// RC confirmed the purchase (receipt is real, `checkPurchaseStatus()` ran)
+    /// but the post-purchase reconciliation bridge did not observe the server
+    /// `/usage` mirror confirming premium/credits within its bounded retry —
+    /// the money moved but the server gate may still deny a quiz start for a
+    /// few more seconds. Distinct from `.success` so the paywall shows a
+    /// "finishing activation" presentation instead of claiming the entitlement
+    /// is fully live (issue #102 finding 4). Resolves on its own via the next
+    /// launch/foreground reconcile or the pre-paywall resync — no polling here.
+    case activating(productID: String?)
     case cancelled
     case pending
     /// Restore completed but no active entitlement was found — informational,
@@ -149,8 +158,16 @@ final class StoreManager: ObservableObject {
                     // must not flip isPurchased, and this also catches an already-
                     // entitled subscriber buying the other billing period.
                     await checkPurchaseStatus()
-                    purchaseState = .success(productID: productID)
-                    _ = await onPurchaseSuccess?()
+                    // The bridge (bounded sync retry + usage refresh) is the only
+                    // signal that reflects the SERVER gate — RC's receipt alone
+                    // (checkPurchaseStatus above) is not enough to call this
+                    // "success" (#102 finding 4). If it doesn't confirm within its
+                    // bounded retry, land in `.activating` rather than claiming the
+                    // entitlement is fully live.
+                    let serverConfirmed = await onPurchaseSuccess?() ?? false
+                    purchaseState = serverConfirmed
+                        ? .success(productID: productID)
+                        : .activating(productID: productID)
                 }
 
             case .userCancelled:

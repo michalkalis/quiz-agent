@@ -81,6 +81,15 @@ struct PaywallView: View {
                 if case .success(let productID) = storeManager.purchaseState {
                     purchaseSuccessBlock(productID: productID)
                         .padding(.top, Theme.Hangs.Spacing.xxl)
+                } else if case .activating = storeManager.purchaseState {
+                    // #102 finding 4: RC confirmed the purchase but the server
+                    // `/usage` mirror hasn't caught up yet — show "finishing
+                    // activation" instead of claiming the entitlement is fully
+                    // live. Does not auto-dismiss (unlike `.success` below);
+                    // the user can close manually, and later reconcile passes
+                    // (launch/foreground, next paywall open) catch it up.
+                    activatingBlock
+                        .padding(.top, Theme.Hangs.Spacing.xxl)
                 } else {
                     paywallIconCircle
                         .padding(.top, Theme.Hangs.Spacing.lg)
@@ -150,6 +159,46 @@ struct PaywallView: View {
                     .foregroundColor(Theme.Hangs.Colors.muted)
                     .multilineTextAlignment(.center)
                     .accessibilityIdentifier("paywall.success.subtitle")
+            }
+        }
+    }
+
+    // MARK: - Finishing activation (#102 finding 4)
+
+    /// Shown when RC confirmed the purchase but the server usage mirror
+    /// hasn't yet — never claims "unlimited questions are now active" before
+    /// the server gate would actually allow it.
+    private var activatingBlock: some View {
+        VStack(spacing: Theme.Hangs.Spacing.xl) {
+            ZStack {
+                Circle()
+                    .fill(Theme.Hangs.Colors.pinkSoft)
+                    .frame(width: 104, height: 104)
+                ProgressView()
+                    .tint(Theme.Hangs.Colors.pink)
+                    .scaleEffect(1.4)
+            }
+            .accessibilityHidden(true)
+
+            VStack(spacing: 8) {
+                Text("FINISHING UP")
+                    .font(.hangsDisplayMD)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                    .foregroundColor(Theme.Hangs.Colors.ink)
+                    .accessibilityAddTraits(.isHeader)
+                    .accessibilityIdentifier("paywall.activating.headline")
+
+                Capsule()
+                    .fill(Theme.Hangs.Colors.pink)
+                    .frame(width: 40, height: 3)
+                    .accessibilityHidden(true)
+
+                Text("Your purchase went through. We're confirming it now, which can take a few seconds.")
+                    .font(.hangsBody(15))
+                    .foregroundColor(Theme.Hangs.Colors.muted)
+                    .multilineTextAlignment(.center)
+                    .accessibilityIdentifier("paywall.activating.subtitle")
             }
         }
     }

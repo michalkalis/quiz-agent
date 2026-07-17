@@ -754,23 +754,23 @@ final class QuizViewModel: ObservableObject {
     /// Entitlement is granted server-side via RC webhooks (#93) — the client
     /// never self-grants (the old `setPremium` call sent no admin key and
     /// always 401'd, #60). RC webhooks land seconds-to-minutes after purchase,
-    /// so sync once via the purchase→webhook propagation bridge
-    /// (`POST /entitlements/sync`) BEFORE re-fetching `/usage` — otherwise a
-    /// just-paid user can still hit the 429 gate until the mirror catches up.
-    /// Sync failure is non-fatal: the webhook will still land on its own; just
-    /// refresh with whatever `/usage` has now.
+    /// so sync via the purchase→webhook propagation bridge
+    /// (`POST /entitlements/sync`, bounded retry+backoff — same helper the
+    /// launch/foreground reconcile uses, #102 finding 1) BEFORE re-fetching
+    /// `/usage` — otherwise a just-paid user can still hit the 429 gate until
+    /// the mirror catches up. A short bounded re-check here (not a new polling
+    /// loop) gives `StoreManager.purchase()` a real chance to land on
+    /// `.success` instead of the transient `.activating` state (#102 finding
+    /// 4) before the caller has to fall back to later convergence points.
     ///
     /// Returns whether the refreshed usage shows an active entitlement
     /// (premium OR a non-zero pack credit balance) — `StoreManager.
     /// restorePurchases()` uses this to detect a pack-only recovery, since
-    /// `isPurchased` never reflects consumable packs (#102 finding 3).
+    /// `isPurchased` never reflects consumable packs (#102 finding 3); `.purchase()`
+    /// uses it to decide between `.success` and `.activating` (#102 finding 4).
     @discardableResult
     func notifyPremiumPurchased() async -> Bool {
-        do {
-            try await networkService.syncEntitlements()
-        } catch {
-            Logger.network.warning("⚠️ entitlements/sync failed (webhook will still catch up): \(error, privacy: .public)")
-        }
+        await syncEntitlementsWithRetry()
         await refreshUsage()
         return (usageInfo?.isPremium ?? false) || (usageInfo?.creditBalance ?? 0) > 0
     }

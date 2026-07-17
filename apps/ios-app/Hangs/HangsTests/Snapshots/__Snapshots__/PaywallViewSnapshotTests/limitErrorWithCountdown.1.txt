@@ -31,7 +31,7 @@
       ▿ _purchaseState: Published<PurchaseState>
         ▿ storage: Storage
           - value: PurchaseState.idle
-      - onPurchaseSuccess: Optional<@MainActor @Sendable () async -> ()>.none
+      - onPurchaseSuccess: Optional<@MainActor @Sendable () async -> Bool>.none
       - purchaseService: Hangs.MockPurchaseService
       ▿ transactionListener: Optional<Task<(), Never>>
         ▿ some: Task<(), Never>

@@ -20,7 +20,8 @@ extension QuizViewModel {
     /// stops, an in-flight recording aborts via the existing #67 interruption
     /// path, and the audio session is released only when fully idle — never
     /// while TTS is playing. `.active` re-arms the listener via the existing
-    /// window sync. `.inactive` is transient (app switcher, incoming call UI)
+    /// window sync and reconciles entitlements + usage (#102 findings 1+2).
+    /// `.inactive` is transient (app switcher, incoming call UI)
     /// — no teardown, the #67 interruption path covers real interruptions.
     func handleScenePhase(_ phase: ScenePhase) {
         switch phase {
@@ -56,6 +57,15 @@ extension QuizViewModel {
         case .active:
             isAppForeground = true
             refreshCommandWindow() // re-arm via the existing window sync
+
+            // Foreground reconciliation (#102 findings 1+2): a webhook that
+            // landed while backgrounded (or a purchase sync that failed
+            // offline) otherwise only self-heals on the next identity-mint
+            // event or purchase. Single-flight + retry/backoff live in
+            // `reconcileEntitlements()`.
+            Task { [weak self] in
+                await self?.reconcileEntitlements()
+            }
 
         default:
             break

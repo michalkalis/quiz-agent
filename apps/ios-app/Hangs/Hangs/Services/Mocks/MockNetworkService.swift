@@ -22,6 +22,10 @@ final class MockNetworkService: NetworkServiceProtocol {
     /// When set, `getUsage` returns this instead of the default fixture — lets
     /// tests pin the quota state (e.g. the ≤5-remaining completion upsell, #94).
     var stubbedUsage: UsageInfo?
+    /// Number of times `getUsage` was invoked — asserts the post-restore
+    /// reconciliation bridge (#102 finding 3) actually refreshes usage, not
+    /// just entitlements.
+    var getUsageCallCount = 0
 
     // Capture properties for unit-test assertions (additive — no behaviour change)
     var capturedTextInputAudio: Bool?
@@ -53,6 +57,17 @@ final class MockNetworkService: NetworkServiceProtocol {
     var syncEntitlementsCallCount = 0
     /// When set, `syncEntitlements` throws this error instead of succeeding.
     var syncEntitlementsError: Error?
+    /// When > 0, `syncEntitlements` throws (`syncEntitlementsError` or a
+    /// generic error) this many times before succeeding, decrementing on each
+    /// call — lets tests assert the #102 bounded-retry-with-backoff behavior
+    /// (fails N times, then recovers).
+    var syncEntitlementsFailuresBeforeSuccess = 0
+    /// Optional hook awaited right after incrementing the call count, before
+    /// `syncEntitlements` returns/throws — lets a test deterministically hold
+    /// a call in flight (no wall-clock race) to assert the #102 single-flight
+    /// dedup (launch + an immediate scene `.active` must not fire two
+    /// concurrent syncs).
+    var syncEntitlementsGate: (@Sendable () async -> Void)?
 
     func createSession(maxQuestions: Int, difficulty: String, language: String, categories: [String], userId: String?, includeImages: Bool, packId: String?) async throws -> QuizSession {
         capturedIncludeImages = includeImages
@@ -147,6 +162,7 @@ final class MockNetworkService: NetworkServiceProtocol {
     }
 
     func getUsage() async throws -> UsageInfo {
+        getUsageCallCount += 1
         if shouldFail {
             throw NetworkError.invalidResponse
         }
@@ -167,6 +183,11 @@ final class MockNetworkService: NetworkServiceProtocol {
 
     func syncEntitlements() async throws {
         syncEntitlementsCallCount += 1
+        await syncEntitlementsGate?()
+        if syncEntitlementsFailuresBeforeSuccess > 0 {
+            syncEntitlementsFailuresBeforeSuccess -= 1
+            throw syncEntitlementsError ?? NetworkError.invalidResponse
+        }
         if let syncEntitlementsError {
             throw syncEntitlementsError
         }

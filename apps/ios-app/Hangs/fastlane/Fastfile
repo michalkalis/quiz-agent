@@ -81,7 +81,14 @@ platform :ios do
     # build settings have the highest precedence (above xcconfig and target
     # settings), so this reliably wins even with GENERATE_INFOPLIST_FILE=YES,
     # which derives CFBundleVersion from CURRENT_PROJECT_VERSION.
+    #
+    # TestFlight = staging (#101 env separation): scheme/configuration are pinned
+    # explicitly here — env-critical settings never ride Gymfile ambient defaults
+    # (Gymfile keeps Hangs-Prod for a future `release` lane). Staging builds hit
+    # the *-staging Fly apps, so tester sandbox purchases never touch prod data.
     build_app(
+      scheme: "Hangs-Staging",
+      configuration: "Release-Staging",
       export_options: {
         method: "app-store",
         provisioningProfiles: {

@@ -26,6 +26,7 @@ from datetime import datetime
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from ..config import get_settings
 from ..db.base import utcnow
 from ..db.models import CreditLedger, Subscription
 from .subscription_state import STATUS_ACTIVE, STATUS_GRACE
@@ -40,21 +41,30 @@ async def account_is_entitled(
     """True iff ``account_id`` has an active/grace subscription not yet expired.
 
     NON-MUTATING. DEFAULT-DENY: a falsy ``account_id`` is never entitled.
+
+    Environment read gate (#101 §3.3): only rows whose ``environment`` equals
+    this deployment's ``RC_ALLOWED_ENVIRONMENT`` count — a NULL row (pre-#101 /
+    unaudited) or an unset setting (fail closed) is never entitled.
     """
     if not account_id:
+        return False
+    allowed = get_settings().rc_allowed_environment
+    if allowed is None:
         return False
     now = now or utcnow()
     row = (
         await session.execute(
-            select(Subscription.status, Subscription.expires_at).where(
-                Subscription.account_id == account_id
-            )
+            select(
+                Subscription.status,
+                Subscription.expires_at,
+                Subscription.environment,
+            ).where(Subscription.account_id == account_id)
         )
     ).first()
     if row is None:
         return False
-    status, expires_at = row
-    return status in _ENTITLED_STATUSES and expires_at > now
+    status, expires_at, environment = row
+    return environment == allowed and status in _ENTITLED_STATUSES and expires_at > now
 
 
 async def account_credit_balance(session: AsyncSession, account_id: str | None) -> int:

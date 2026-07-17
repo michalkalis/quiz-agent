@@ -229,6 +229,9 @@ class Subscription(Base):
     )
     rc_original_txn_id: Mapped[str] = mapped_column(Text, nullable=False)
     last_event_ts_ms: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    # #101: store environment the row came from (PRODUCTION|SANDBOX). NULL only
+    # on pre-#101 rows; the entitlement read gate treats NULL as NOT entitled.
+    environment: Mapped[str | None] = mapped_column(Text, nullable=True)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False
     )
@@ -271,6 +274,9 @@ class CreditLedger(Base):
     reason: Mapped[str] = mapped_column(Text, nullable=False)
     store_txn_id: Mapped[str | None] = mapped_column(Text, nullable=True)
     rc_event_id: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # #101: store environment for RC-origin rows (PRODUCTION|SANDBOX); NULL on
+    # pre-#101 rows and on non-RC kinds (e.g. consume) — audit column only.
+    environment: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, nullable=False
     )

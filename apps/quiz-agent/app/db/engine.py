@@ -22,12 +22,31 @@ def normalize_async_url(url: str) -> str:
 
     Fly stores ``DATABASE_URL`` as libpq so ``fly ssh console`` + ``psql`` keep
     working; SQLAlchemy + asyncpg requires the explicit driver in the scheme.
+    ``fly postgres attach`` also appends the libpq-only ``?sslmode=disable``
+    param, which asyncpg's ``connect()`` rejects with a TypeError. asyncpg
+    takes the same sslmode VALUES under its ``ssl`` argument, so rename the
+    key and keep the value — dropping it instead is wrong: asyncpg then
+    defaults to ``prefer`` and the flycast LB hard-resets the TLS handshake
+    (ConnectionResetError) instead of refusing politely. ``channel_binding``
+    has no asyncpg equivalent and is dropped.
     """
     if url.startswith("postgres://"):
-        return "postgresql+asyncpg://" + url[len("postgres://") :]
-    if url.startswith("postgresql://") and "+asyncpg" not in url.split("://", 1)[0]:
-        return "postgresql+asyncpg://" + url[len("postgresql://") :]
-    return url
+        url = "postgresql+asyncpg://" + url[len("postgres://") :]
+    elif url.startswith("postgresql://") and "+asyncpg" not in url.split("://", 1)[0]:
+        url = "postgresql+asyncpg://" + url[len("postgresql://") :]
+    if "?" not in url:
+        return url
+    base, query = url.split("?", 1)
+    params = []
+    for pair in query.split("&"):
+        key, _, value = pair.partition("=")
+        if key == "channel_binding":
+            continue
+        if key == "sslmode":
+            params.append(f"ssl={value}")
+            continue
+        params.append(pair)
+    return base + ("?" + "&".join(params) if params else "")
 
 
 _engine: AsyncEngine | None = None

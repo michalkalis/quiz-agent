@@ -1,0 +1,16 @@
+//
+// Debug-Staging.xcconfig
+// Composition for the Debug-Staging build configuration (debugging against the staging API).
+// Include order: build-type first, env second — env values win on conflicts.
+//
+
+#include "Debug.xcconfig"
+#include "Staging.xcconfig"
+
+// MARK: - Signing (on-device Run/Debug against staging API)
+// Automatic signing with the PixelApps team (KAGWHPZZFQ) — same rationale as
+// Debug-Prod: a distribution profile cannot be installed via Xcode Run.
+CODE_SIGN_STYLE = Automatic
+DEVELOPMENT_TEAM = KAGWHPZZFQ
+CODE_SIGN_IDENTITY = Apple Development
+PROVISIONING_PROFILE_SPECIFIER =

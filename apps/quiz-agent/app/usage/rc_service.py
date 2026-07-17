@@ -32,10 +32,12 @@ import logging
 from datetime import datetime, timezone
 
 import httpx
+import sentry_sdk
 from sqlalchemy import func, select, text
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from ..config import get_settings
 from ..db.base import utcnow
 from ..db.models import CreditLedger, Product, Subscription
 from .subscription_state import (
@@ -63,6 +65,32 @@ _SUB_EXTEND_TYPES = frozenset(
 )
 # Refund-family types: immediate revocation for a sub, clawback for a pack.
 _REFUND_TYPES = frozenset({"REFUND", "CHARGEBACK"})
+
+
+# --- environment gate (#101 prod/sandbox separation) --------------------------
+
+_ENVIRONMENTS = frozenset({"PRODUCTION", "SANDBOX"})
+
+
+def normalize_rc_environment(entry: dict) -> str | None:
+    """Normalize an RC payload's store environment to ``PRODUCTION``/``SANDBOX``.
+
+    Handles both RC surfaces (#101 §3.3): a **webhook event** carries
+    ``environment: "SANDBOX"|"PRODUCTION"`` (optional — e.g. TRANSFER events);
+    a **REST v1** subscription / non-subscription entry carries the boolean
+    ``is_sandbox``. Returns ``None`` when the environment cannot be determined
+    — callers must treat that as a reject, never assume PRODUCTION.
+    """
+    if "is_sandbox" in entry:
+        is_sandbox = entry["is_sandbox"]
+        # A present-but-null (or non-bool) value is *unknown*, not production.
+        if not isinstance(is_sandbox, bool):
+            return None
+        return "SANDBOX" if is_sandbox else "PRODUCTION"
+    env = entry.get("environment")
+    if isinstance(env, str) and env.strip().upper() in _ENVIRONMENTS:
+        return env.strip().upper()
+    return None
 
 
 # --- timestamp helpers -------------------------------------------------------
@@ -129,7 +157,10 @@ async def _advisory_lock(session: AsyncSession, account_id: str) -> None:
 
 
 async def _upsert_subscription(
-    session: AsyncSession, account_id: str, state: SubscriptionState
+    session: AsyncSession,
+    account_id: str,
+    state: SubscriptionState,
+    environment: str | None = None,
 ) -> None:
     stmt = pg_insert(Subscription).values(
         account_id=account_id,
@@ -138,6 +169,7 @@ async def _upsert_subscription(
         expires_at=state.expires_at,
         rc_original_txn_id=state.rc_original_txn_id,
         last_event_ts_ms=state.last_event_ts_ms,
+        environment=environment,
         updated_at=utcnow(),
     )
     stmt = stmt.on_conflict_do_update(
@@ -148,6 +180,7 @@ async def _upsert_subscription(
             "expires_at": stmt.excluded.expires_at,
             "rc_original_txn_id": stmt.excluded.rc_original_txn_id,
             "last_event_ts_ms": stmt.excluded.last_event_ts_ms,
+            "environment": stmt.excluded.environment,
             "updated_at": utcnow(),
         },
     )
@@ -221,6 +254,7 @@ async def _write_sub_event(
     account_id: str,
     current_row: Subscription | None,
     event: SubscriptionEvent,
+    environment: str,
 ) -> None:
     """Fold ``event`` into ``current_row`` and persist the result, in the caller's
     (already advisory-locked) session/transaction. The caller commits.
@@ -235,13 +269,14 @@ async def _write_sub_event(
     # only write when the state actually moved.
     if current is not None and new_state == current:
         return
-    await _upsert_subscription(session, account_id, new_state)
+    await _upsert_subscription(session, account_id, new_state, environment)
 
 
 async def _apply_sub_event(
     sessionmaker: async_sessionmaker[AsyncSession],
     account_id: str,
     event: SubscriptionEvent,
+    environment: str,
 ) -> None:
     async with sessionmaker() as session:
         await _advisory_lock(session, account_id)
@@ -250,7 +285,7 @@ async def _apply_sub_event(
                 select(Subscription).where(Subscription.account_id == account_id)
             )
         ).scalar_one_or_none()
-        await _write_sub_event(session, account_id, row, event)
+        await _write_sub_event(session, account_id, row, event, environment)
         await session.commit()  # commit always runs (releases the advisory lock)
 
 
@@ -258,7 +293,7 @@ async def _apply_sub_event(
 
 
 async def _grant_pack(
-    sessionmaker: async_sessionmaker[AsyncSession], event: dict
+    sessionmaker: async_sessionmaker[AsyncSession], event: dict, environment: str
 ) -> None:
     account_id = event["app_user_id"]
     product_id = event.get("product_id")
@@ -279,6 +314,7 @@ async def _grant_pack(
             reason="pack",
             store_txn_id=store_txn_id,
             rc_event_id=rc_event_id,
+            environment=environment,
         )
         # Dedupe on the store txn id (global partial index) — exactly-once
         # whether the grant arrives first via /entitlements/sync or the webhook.
@@ -289,7 +325,7 @@ async def _grant_pack(
         await session.commit()
 
 
-async def _clawback_pack(session: AsyncSession, event: dict) -> None:
+async def _clawback_pack(session: AsyncSession, event: dict, environment: str) -> None:
     """Insert the pack clawback ledger row in the caller's session (the caller
     commits). Runs inside the refund branch's advisory-locked transaction so the
     whole refund handling is one atomic unit."""
@@ -313,6 +349,7 @@ async def _clawback_pack(session: AsyncSession, event: dict) -> None:
         reason="refund",
         store_txn_id=store_txn_id,
         rc_event_id=rc_event_id,
+        environment=environment,
     )
     stmt = stmt.on_conflict_do_nothing(
         index_elements=["rc_event_id"], index_where=text("kind = 'clawback'")
@@ -352,11 +389,30 @@ async def _report_consumption(
 async def handle_webhook_event(
     sessionmaker: async_sessionmaker[AsyncSession], event: dict
 ) -> None:
-    """Route one RC webhook event to the right subscription/pack write."""
+    """Route one RC webhook event to the right subscription/pack write.
+
+    Environment gate first (#101 §3.3): the event's store environment must
+    equal this deployment's ``RC_ALLOWED_ENVIRONMENT``. A mismatch, a missing
+    environment field (optional on TRANSFER — never assumed PRODUCTION), or an
+    unset setting (fail closed) drops the event with **no DB write of any
+    kind**; the route still answers 200 so RC does not retry-storm.
+    """
     etype = event.get("type")
 
+    allowed = get_settings().rc_allowed_environment
+    environment = normalize_rc_environment(event)
+    if allowed is None or environment != allowed:
+        message = (
+            "RevenueCat webhook dropped by environment gate (#101): "
+            f"event type={etype!r} environment={environment!r} "
+            f"allowed={allowed!r} — no write"
+        )
+        logger.warning(message)
+        sentry_sdk.capture_message(message, level="warning")
+        return
+
     if etype == "NON_RENEWING_PURCHASE":
-        await _grant_pack(sessionmaker, event)
+        await _grant_pack(sessionmaker, event, environment)
         return
     if etype == "CONSUMPTION_REQUEST":
         await _report_consumption(sessionmaker, event)
@@ -376,7 +432,7 @@ async def handle_webhook_event(
             kind = await _product_kind(session, product_id)
 
             if kind == "consumable":
-                await _clawback_pack(session, event)
+                await _clawback_pack(session, event, environment)
                 await session.commit()
                 return
 
@@ -428,13 +484,17 @@ async def handle_webhook_event(
 
             sub_event = _normalize_sub_event(event)
             if sub_event is not None:
-                await _write_sub_event(session, account_id, current_row, sub_event)
+                await _write_sub_event(
+                    session, account_id, current_row, sub_event, environment
+                )
             await session.commit()
         return
 
     sub_event = _normalize_sub_event(event)
     if sub_event is not None:
-        await _apply_sub_event(sessionmaker, event["app_user_id"], sub_event)
+        await _apply_sub_event(
+            sessionmaker, event["app_user_id"], sub_event, environment
+        )
 
 
 # --- sync (REST full-state reconcile) ----------------------------------------
@@ -497,11 +557,32 @@ async def apply_sync_snapshot(
 
     Subscription = full-state overwrite (monotonic on ``request_date_ms``);
     packs = grants keyed on ``store_transaction_id`` (not watermark-gated).
+
+    Environment gate (#101 §3.3): every ``subscriptions`` / ``non_subscriptions``
+    entry is filtered on RC v1's per-entry ``is_sandbox`` before folding — a
+    mismatched (or environment-less) entry never touches state. Unset
+    ``RC_ALLOWED_ENVIRONMENT`` → the whole reconcile refuses (fail closed).
     """
+    allowed = get_settings().rc_allowed_environment
+    if allowed is None:
+        logger.warning(
+            "RevenueCat sync for %s refused: RC_ALLOWED_ENVIRONMENT unset "
+            "(#101 fail closed) — no reconcile",
+            account_id,
+        )
+        return
+
     request_date_ms = int(snapshot["request_date_ms"])
     subscriber = snapshot.get("subscriber") or {}
-    subscriptions = subscriber.get("subscriptions") or {}
-    non_subscriptions = subscriber.get("non_subscriptions") or {}
+    subscriptions = {
+        pid: sub
+        for pid, sub in (subscriber.get("subscriptions") or {}).items()
+        if normalize_rc_environment(sub) == allowed
+    }
+    non_subscriptions = {
+        pid: [p for p in purchases if normalize_rc_environment(p) == allowed]
+        for pid, purchases in (subscriber.get("non_subscriptions") or {}).items()
+    }
 
     async with sessionmaker() as session:
         await _advisory_lock(session, account_id)
@@ -528,6 +609,7 @@ async def apply_sync_snapshot(
                         rc_original_txn_id=orig,
                         last_event_ts_ms=request_date_ms,
                     ),
+                    allowed,
                 )
             elif row is not None:
                 # RC reports no subscription -> expire the existing local row
@@ -542,6 +624,7 @@ async def apply_sync_snapshot(
                         rc_original_txn_id=row.rc_original_txn_id,
                         last_event_ts_ms=request_date_ms,
                     ),
+                    allowed,
                 )
 
         # --- packs: grants keyed on store_transaction_id (not gated) ---------
@@ -562,6 +645,7 @@ async def apply_sync_snapshot(
                     reason="pack",
                     store_txn_id=store_txn_id,
                     rc_event_id=None,
+                    environment=allowed,
                 )
                 stmt = stmt.on_conflict_do_nothing(
                     index_elements=["store_txn_id"],

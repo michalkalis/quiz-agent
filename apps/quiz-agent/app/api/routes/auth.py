@@ -587,6 +587,7 @@ def _sub_state(row: Subscription) -> SubscriptionState:
         expires_at=row.expires_at,
         rc_original_txn_id=row.rc_original_txn_id,
         last_event_ts_ms=row.last_event_ts_ms,
+        environment=row.environment,
     )
 
 
@@ -628,6 +629,9 @@ async def _fold_subscription(session: AsyncSession, anon_id: str, user_id: str) 
     user_row.expires_at = winner.expires_at
     user_row.rc_original_txn_id = winner.rc_original_txn_id
     user_row.last_event_ts_ms = winner.last_event_ts_ms
+    # #101: the environment stamp is part of the wholesale winner row — leaving
+    # the loser's stamp would let a stale/NULL row defeat the entitlement gate.
+    user_row.environment = winner.environment
     await session.delete(anon_row)
 
 

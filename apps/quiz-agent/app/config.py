@@ -27,6 +27,19 @@ def _attest_environment(raw: str) -> str:
     return "development"
 
 
+def _rc_environment(raw: Optional[str]) -> Optional[str]:
+    """Normalize ``RC_ALLOWED_ENVIRONMENT`` to ``PRODUCTION``/``SANDBOX``.
+
+    Unset or unrecognized → ``None``, and the RC ingest **fails closed** (#101):
+    no webhook/sync processing and no entitlement is honored until the deploy
+    declares which store environment it serves.
+    """
+    if raw is None:
+        return None
+    value = raw.strip().upper()
+    return value if value in {"PRODUCTION", "SANDBOX"} else None
+
+
 @dataclass(frozen=True)
 class Settings:
     """Subset of env vars the quiz-agent app reads at startup."""
@@ -66,6 +79,10 @@ class Settings:
     # `…_team_id` form the client_secret header.kid / issuer. `apple_token_enc_key`
     # is a Fernet key (one `Fernet.generate_key()`) for encrypting Apple's refresh
     # token at rest (F1/F2).
+    # #101 prod/sandbox separation: which RevenueCat purchase environment this
+    # deployment ingests + honors ("PRODUCTION" on prod, "SANDBOX" on staging).
+    # None (unset/invalid) = fail closed — RC ingest refuses to process.
+    rc_allowed_environment: Optional[str] = None
     apple_signin_client_id: Optional[str] = None
     apple_signin_key_id: Optional[str] = None
     apple_signin_team_id: Optional[str] = None
@@ -96,6 +113,7 @@ class Settings:
             app_attest_environment=_attest_environment(
                 os.getenv("APP_ATTEST_PRODUCTION", "false")
             ),
+            rc_allowed_environment=_rc_environment(os.getenv("RC_ALLOWED_ENVIRONMENT")),
             apple_signin_client_id=os.getenv("APPLE_SIGNIN_CLIENT_ID"),
             apple_signin_key_id=os.getenv("APPLE_SIGNIN_KEY_ID"),
             apple_signin_team_id=os.getenv("APPLE_SIGNIN_TEAM_ID"),

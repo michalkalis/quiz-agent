@@ -1,0 +1,45 @@
+# Fly.io configuration for Quiz Agent API — STAGING (issue #101 §3.2).
+# Separate app so a TestFlight sandbox purchase never touches prod entitlement
+# data. Deploy command: cd ../../ && fly deploy -c apps/quiz-agent/fly.staging.toml
+app = "quiz-agent-api-staging"
+primary_region = "cdg"
+
+# Build from repository root to access monorepo packages
+[build]
+  dockerfile = "Dockerfile"
+  build_context = "../.."
+
+[env]
+  # RC_ALLOWED_ENVIRONMENT=SANDBOX is set as a Fly secret alongside
+  # DATABASE_URL/REVENUECAT_* (issue #101 §3.5) — not duplicated here since
+  # those are per-deploy secrets, not build-time config.
+  ENVIRONMENT = "staging"
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8002
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+    force_https = true
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+
+  # Health check configuration
+  # App takes ~8 seconds to start, so give it longer grace period
+  [[services.http_checks]]
+    grace_period = "30s"
+    interval = "30s"
+    timeout = "10s"
+    method = "GET"
+    path = "/api/v1/health"
+
+[[mounts]]
+  source = "quiz_agent_data_staging"
+  destination = "/data"

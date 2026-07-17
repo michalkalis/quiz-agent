@@ -38,9 +38,13 @@ Do not duplicate #104's fix — track the category-flapping fix there. This issu
 
 ## Acceptance
 
-- [ ] After #104's fix lands, an `AudioServiceTests` cycle test (already required by #104 acceptance) confirms zero category switches between session setup and the *first* `playOpusAudio` call — i.e. the first play no longer double-negotiates.
-- [ ] `AudioService` first-activation path is inspected to confirm whether it now waits on/derives from a stable route before returning from `setupAudioSession`, or whether it still fires-and-forgets (state check, no live BT needed).
-- [ ] **[HUMAN] on-device (real car, BT), after #104's fix ships:** run several fresh quiz starts; confirm question 1's TTS is audible every time, not just questions 2+.
+- [x] *(amended per #104's mode-aware fix)* The Q1 double-negotiation mechanism is gone in both modes: **Call Mode** performs zero category switches after setup (`shouldSwapCategoryForTTS` bypass, asserted in `AudioSessionCategoryOptionsTests`) — SCO opens once at setup and holds; **Media Mode** never requests HFP in either category, so its per-TTS `.playback` swap cannot renegotiate the Bluetooth profile (A2DP is the output on both sides of the swap) — the SCO↔A2DP contention this issue described cannot occur.
+- [x] First-activation path inspected (2026-07-17, first-hand): `setupAudioSession` still fires-and-forgets (no route-wait) — **deliberately kept**: (a) the session first activates at app launch (`AppState`), so the car's A2DP link settles long before the first quiz TTS; (b) a genuinely stuck first play now fails LOUD via the existing 5s AVPlayer stall timer → `playbackFailed`, not silently; (c) the issue itself defers the wait-how-long/what-if-no-BT tradeoff to a founder decision after the on-device retest — unchanged.
+- [ ] **[HUMAN] on-device (real car, BT), after #104's fix ships:** run several fresh quiz starts; confirm question 1's TTS is audible every time, not just questions 2+. If Q1 is still ever silent, the next lever is a bounded route-wait on first activation (founder timing/UX call).
+
+## Outcome — 2026-07-17
+
+Verified on top of #104 (`f78a207`) — expected-fixed confirmed at the mechanism level, not assumed: both cited mechanisms (cold-link SCO/A2DP contention on Q1, per-utterance renegotiation) are structurally eliminated; no separate fix built here per the "don't duplicate #104" scope. Remaining risk is the inherent cold-A2DP latency of the very first activation, which is mitigated by launch-time activation and now fails loud instead of silent — final word is the founder's on-device leg above.
 
 ## Cross-refs
 

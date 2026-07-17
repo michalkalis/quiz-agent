@@ -35,6 +35,7 @@ from app.auth.identity import AuthSubject
 from app.db.base import utcnow
 from app.db.models import CreditLedger, Product, Subscription
 from app.usage import rc_service
+from app.usage.entitlement import account_is_entitled
 
 pytestmark = pytest.mark.asyncio
 
@@ -100,7 +101,14 @@ async def _sub_row(db_sessionmaker, account_id=_ACCOUNT) -> Subscription | None:
         ).scalar_one_or_none()
 
 
-def _sub_event(etype: str, *, ts_ms: int, expires_ms: int | None = None, **extra):
+def _sub_event(
+    etype: str,
+    *,
+    ts_ms: int,
+    expires_ms: int | None = None,
+    environment: str | None = "PRODUCTION",
+    **extra,
+):
     event = {
         "type": etype,
         "id": f"evt_{etype}_{ts_ms}",
@@ -108,6 +116,9 @@ def _sub_event(etype: str, *, ts_ms: int, expires_ms: int | None = None, **extra
         "product_id": _SUB_PID,
         "event_timestamp_ms": ts_ms,
     }
+    # environment=None simulates the field being absent (optional on TRANSFER).
+    if environment is not None:
+        event["environment"] = environment
     if expires_ms is not None:
         event["expiration_at_ms"] = expires_ms
     event.update(extra)
@@ -116,6 +127,13 @@ def _sub_event(etype: str, *, ts_ms: int, expires_ms: int | None = None, **extra
 
 def _ms(days_from_now: int) -> int:
     return int((utcnow() + timedelta(days=days_from_now)).timestamp() * 1000)
+
+
+@pytest.fixture(autouse=True)
+def _rc_allowed_environment(monkeypatch):
+    """#101: the ingest gate fails closed without RC_ALLOWED_ENVIRONMENT — every
+    pre-#101 invariant in this file assumes a PRODUCTION deployment."""
+    monkeypatch.setenv("RC_ALLOWED_ENVIRONMENT", "PRODUCTION")
 
 
 @pytest_asyncio.fixture
@@ -223,11 +241,20 @@ async def test_stale_renewal_after_refund_noop(client, db_sessionmaker):
 
 
 def _snapshot(*, request_date_ms: int, subscriptions=None, non_subscriptions=None):
+    # RC REST v1 tags every entry with is_sandbox; default the builder to the
+    # allowed (production) side so per-test overrides are explicit.
+    subscriptions = subscriptions or {}
+    non_subscriptions = non_subscriptions or {}
+    for sub in subscriptions.values():
+        sub.setdefault("is_sandbox", False)
+    for purchases in non_subscriptions.values():
+        for purchase in purchases:
+            purchase.setdefault("is_sandbox", False)
     return {
         "request_date_ms": request_date_ms,
         "subscriber": {
-            "subscriptions": subscriptions or {},
-            "non_subscriptions": non_subscriptions or {},
+            "subscriptions": subscriptions,
+            "non_subscriptions": non_subscriptions,
         },
     }
 
@@ -273,8 +300,15 @@ async def test_newer_webhook_after_sync_applies(client, db_sessionmaker, monkeyp
 # --- pack grants + clawback --------------------------------------------------
 
 
-def _pack_event(etype: str, *, ts_ms: int, txn_id: str, event_id: str):
-    return {
+def _pack_event(
+    etype: str,
+    *,
+    ts_ms: int,
+    txn_id: str,
+    event_id: str,
+    environment: str | None = "PRODUCTION",
+):
+    event = {
         "type": etype,
         "id": event_id,
         "app_user_id": _ACCOUNT,
@@ -282,6 +316,9 @@ def _pack_event(etype: str, *, ts_ms: int, txn_id: str, event_id: str):
         "event_timestamp_ms": ts_ms,
         "transaction_id": txn_id,
     }
+    if environment is not None:
+        event["environment"] = environment
+    return event
 
 
 async def test_grant_idempotent_sync_then_webhook(client, db_sessionmaker, monkeypatch):
@@ -548,3 +585,292 @@ async def test_sync_upstream_failure_returns_502_not_500(client, monkeypatch):
     resp = await client.post("/api/v1/entitlements/sync")
     assert resp.status_code == 502
     assert resp.json()["detail"] == "Entitlement sync failed"
+
+
+# --- #101 environment gate (prod/sandbox separation) --------------------------
+#
+# A prod deployment (RC_ALLOWED_ENVIRONMENT=PRODUCTION — the autouse fixture)
+# must never let a sandbox/TestFlight purchase mint entitlement or credits:
+# that would silently disable the paywall for every tester and pollute prod
+# money rows (the exact 2026-07-12 failure #101 exists to close).
+
+
+async def _ledger_row_total(db_sessionmaker) -> int:
+    async with db_sessionmaker() as s:
+        return int(
+            (
+                await s.execute(
+                    select(func.count())
+                    .select_from(CreditLedger)
+                    .where(CreditLedger.account_id == _ACCOUNT)
+                )
+            ).scalar_one()
+        )
+
+
+async def test_sandbox_sub_event_writes_nothing(client, db_sessionmaker):
+    """A SANDBOX subscription purchase on a PRODUCTION backend is dropped with
+    HTTP 200 (no RC retry storm) and ZERO writes — no subscription row."""
+    resp = await _post_webhook(
+        client,
+        _sub_event(
+            "INITIAL_PURCHASE", ts_ms=1000, expires_ms=_ms(30), environment="SANDBOX"
+        ),
+    )
+    assert resp.status_code == 200
+    assert await _sub_row(db_sessionmaker) is None
+
+
+async def test_sandbox_pack_grant_writes_nothing(client, db_sessionmaker):
+    """A SANDBOX pack purchase grants no credits — no ledger row of any kind."""
+    resp = await _post_webhook(
+        client,
+        _pack_event(
+            "NON_RENEWING_PURCHASE",
+            ts_ms=1000,
+            txn_id="sbx_pack",
+            event_id="evt_sbx",
+            environment="SANDBOX",
+        ),
+    )
+    assert resp.status_code == 200
+    assert await _balance(db_sessionmaker) == 0
+    assert await _ledger_row_total(db_sessionmaker) == 0
+
+
+async def test_sandbox_refund_writes_no_clawback(client, db_sessionmaker):
+    """The gate covers the refund path too: a SANDBOX refund must not claw back
+    a production grant (it never reaches the refund branch)."""
+    await _post_webhook(
+        client,
+        _pack_event(
+            "NON_RENEWING_PURCHASE", ts_ms=1000, txn_id="pack_1", event_id="evt_buy"
+        ),
+    )
+    assert await _balance(db_sessionmaker) == 100
+
+    resp = await _post_webhook(
+        client,
+        _pack_event(
+            "CANCELLATION",
+            ts_ms=2000,
+            txn_id="pack_1",
+            event_id="evt_refund",
+            environment="SANDBOX",
+        ),
+    )
+    assert resp.status_code == 200
+    assert await _balance(db_sessionmaker) == 100
+    assert await _row_count(db_sessionmaker, "clawback") == 0
+
+
+async def test_missing_environment_event_dropped(client, db_sessionmaker):
+    """The environment field is OPTIONAL on some RC events (TRANSFER): a missing
+    field must be rejected, never assumed PRODUCTION — that would be the leak."""
+    resp = await _post_webhook(
+        client,
+        _sub_event(
+            "INITIAL_PURCHASE", ts_ms=1000, expires_ms=_ms(30), environment=None
+        ),
+    )
+    assert resp.status_code == 200
+    assert await _sub_row(db_sessionmaker) is None
+
+
+async def test_sync_sandbox_entries_not_folded(client, db_sessionmaker, monkeypatch):
+    """REST v1 sync filters per-entry on is_sandbox: sandbox subscription and
+    pack entries in the snapshot never touch subscription state or the ledger."""
+    snapshot = _snapshot(
+        request_date_ms=5000,
+        subscriptions={
+            _SUB_PID: {
+                "expires_date": (utcnow() + timedelta(days=30)).strftime(
+                    "%Y-%m-%dT%H:%M:%SZ"
+                ),
+                "grace_period_expires_date": None,
+                "billing_issues_detected_at": None,
+                "original_transaction_id": "orig_sbx",
+                "is_sandbox": True,
+            }
+        },
+        non_subscriptions={
+            _PACK_PID: [
+                {
+                    "id": "rc_ns_sbx",
+                    "store_transaction_id": "sbx_txn",
+                    "is_sandbox": True,
+                }
+            ]
+        },
+    )
+    monkeypatch.setattr(
+        rc_service, "fetch_rc_subscriber", AsyncMock(return_value=snapshot)
+    )
+    resp = await client.post("/api/v1/entitlements/sync")
+    assert resp.status_code == 200
+    assert await _sub_row(db_sessionmaker) is None
+    assert await _balance(db_sessionmaker) == 0
+
+
+async def test_sync_null_is_sandbox_not_folded(client, db_sessionmaker, monkeypatch):
+    """A present-but-null ``is_sandbox`` is *unknown*, not production: treating
+    it as PRODUCTION would fail open the moment RC (or a proxy) ever emits a
+    null — the entry must be rejected like a missing environment (#101 §3.3)."""
+    snapshot = _snapshot(
+        request_date_ms=5000,
+        subscriptions={
+            _SUB_PID: {
+                "expires_date": (utcnow() + timedelta(days=30)).strftime(
+                    "%Y-%m-%dT%H:%M:%SZ"
+                ),
+                "grace_period_expires_date": None,
+                "billing_issues_detected_at": None,
+                "original_transaction_id": "orig_null_env",
+                "is_sandbox": None,
+            }
+        },
+        non_subscriptions={
+            _PACK_PID: [
+                {
+                    "id": "rc_ns_null",
+                    "store_transaction_id": "null_env_txn",
+                    "is_sandbox": None,
+                }
+            ]
+        },
+    )
+    monkeypatch.setattr(
+        rc_service, "fetch_rc_subscriber", AsyncMock(return_value=snapshot)
+    )
+    resp = await client.post("/api/v1/entitlements/sync")
+    assert resp.status_code == 200
+    assert await _sub_row(db_sessionmaker) is None
+    assert await _balance(db_sessionmaker) == 0
+
+
+async def test_matching_env_writes_and_stamps_column(
+    client, db_sessionmaker, monkeypatch
+):
+    """The allowed environment still writes — and every RC write path stamps the
+    normalized environment on the row (the #101 audit column): webhook sub
+    upsert, webhook pack grant, and the sync pack grant."""
+    await _post_webhook(
+        client, _sub_event("INITIAL_PURCHASE", ts_ms=1000, expires_ms=_ms(30))
+    )
+    row = await _sub_row(db_sessionmaker)
+    assert row is not None
+    assert row.environment == "PRODUCTION"
+
+    await _post_webhook(
+        client,
+        _pack_event(
+            "NON_RENEWING_PURCHASE", ts_ms=2000, txn_id="pack_wh", event_id="evt_wh"
+        ),
+    )
+    snapshot = _snapshot(
+        request_date_ms=3000,
+        non_subscriptions={
+            _PACK_PID: [{"id": "rc_ns_1", "store_transaction_id": "pack_sync"}]
+        },
+    )
+    monkeypatch.setattr(
+        rc_service, "fetch_rc_subscriber", AsyncMock(return_value=snapshot)
+    )
+    resp = await client.post("/api/v1/entitlements/sync")
+    assert resp.status_code == 200
+
+    async with db_sessionmaker() as s:
+        grants = (
+            (
+                await s.execute(
+                    select(CreditLedger).where(
+                        CreditLedger.account_id == _ACCOUNT,
+                        CreditLedger.kind == "grant",
+                    )
+                )
+            )
+            .scalars()
+            .all()
+        )
+    assert len(grants) == 2  # webhook + sync grant
+    assert all(g.environment == "PRODUCTION" for g in grants)
+
+
+async def test_unset_allowed_environment_fails_closed(
+    client, db_sessionmaker, monkeypatch
+):
+    """Unset RC_ALLOWED_ENVIRONMENT = the deploy never declared its environment:
+    BOTH ingest surfaces refuse to process — even a PRODUCTION-tagged event/
+    snapshot writes nothing (fail closed, mirrors the webhook-secret 503)."""
+    monkeypatch.delenv("RC_ALLOWED_ENVIRONMENT", raising=False)
+
+    resp = await _post_webhook(
+        client, _sub_event("INITIAL_PURCHASE", ts_ms=1000, expires_ms=_ms(30))
+    )
+    assert resp.status_code == 200
+    assert await _sub_row(db_sessionmaker) is None
+
+    snapshot = _snapshot(
+        request_date_ms=2000,
+        non_subscriptions={
+            _PACK_PID: [{"id": "rc_ns_1", "store_transaction_id": "txn_prod"}]
+        },
+    )
+    monkeypatch.setattr(
+        rc_service, "fetch_rc_subscriber", AsyncMock(return_value=snapshot)
+    )
+    resp = await client.post("/api/v1/entitlements/sync")
+    assert resp.status_code == 200
+    assert await _balance(db_sessionmaker) == 0
+
+
+@pytest.mark.parametrize(
+    ("row_environment", "entitled"),
+    [("PRODUCTION", True), ("SANDBOX", False), (None, False)],
+)
+async def test_entitlement_read_gate_honors_environment(
+    db_sessionmaker, row_environment, entitled
+):
+    """The read gate only honors subscription rows stamped with the allowed
+    environment: a SANDBOX row (leaked pre-gate or cross-env) and a NULL row
+    (pre-#101, unaudited) must NOT entitle on a PRODUCTION backend."""
+    await _seed_products(db_sessionmaker)
+    async with db_sessionmaker() as s:
+        s.add(
+            Subscription(
+                account_id=_ACCOUNT,
+                product_id=_SUB_PID,
+                status="active",
+                expires_at=utcnow() + timedelta(days=30),
+                rc_original_txn_id="txn_env_gate",
+                last_event_ts_ms=1,
+                environment=row_environment,
+            )
+        )
+        await s.commit()
+    async with db_sessionmaker() as s:
+        assert await account_is_entitled(s, _ACCOUNT) is entitled
+
+
+async def test_entitlement_read_gate_fails_closed_when_unset(
+    db_sessionmaker, monkeypatch
+):
+    """Unset RC_ALLOWED_ENVIRONMENT denies even a correctly-stamped PRODUCTION
+    row — the read side fails closed exactly like the ingest side."""
+    await _seed_products(db_sessionmaker)
+    async with db_sessionmaker() as s:
+        s.add(
+            Subscription(
+                account_id=_ACCOUNT,
+                product_id=_SUB_PID,
+                status="active",
+                expires_at=utcnow() + timedelta(days=30),
+                rc_original_txn_id="txn_env_unset",
+                last_event_ts_ms=1,
+                environment="PRODUCTION",
+            )
+        )
+        await s.commit()
+    monkeypatch.delenv("RC_ALLOWED_ENVIRONMENT", raising=False)
+    async with db_sessionmaker() as s:
+        assert await account_is_entitled(s, _ACCOUNT) is False

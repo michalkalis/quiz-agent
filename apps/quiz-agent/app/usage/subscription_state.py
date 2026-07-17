@@ -95,6 +95,11 @@ class SubscriptionState:
     expires_at: datetime
     rc_original_txn_id: str
     last_event_ts_ms: int | None = None
+    # #101: store environment stamp (PRODUCTION/SANDBOX, None = pre-#101 row).
+    # Rides wholesale with the winning row in merge_subscription_rows; the
+    # webhook/sync writers thread their own normalized value instead (they gate
+    # on it before ever building a state).
+    environment: str | None = None
 
 
 @dataclass(frozen=True)

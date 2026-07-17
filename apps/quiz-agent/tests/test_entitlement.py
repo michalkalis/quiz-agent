@@ -53,6 +53,13 @@ SUBJECT = "acct_entitlement_subject"
 _PRODUCT_ID = "com.carquiz.unlimited.monthly"
 
 
+@pytest.fixture(autouse=True)
+def _rc_allowed_environment(monkeypatch):
+    """#101: the entitlement read gate fails closed without
+    RC_ALLOWED_ENVIRONMENT — this suite pins the PRODUCTION-deployment gate."""
+    monkeypatch.setenv("RC_ALLOWED_ENVIRONMENT", "PRODUCTION")
+
+
 # --- seeding helpers ---------------------------------------------------------
 
 
@@ -79,6 +86,7 @@ async def _seed_subscription(db_sessionmaker, status: str, *, expires_at) -> Non
                 expires_at=expires_at,
                 rc_original_txn_id="txn_orig_1",
                 last_event_ts_ms=1,
+                environment="PRODUCTION",  # #101: NULL rows are never entitled
             )
         )
         await s.commit()
@@ -469,6 +477,7 @@ async def test_anon_to_signin_preserves_credits(db_sessionmaker):
             "product_id": _PACK_PID,
             "event_timestamp_ms": 9000,
             "transaction_id": _FOLD_TXN,
+            "environment": "PRODUCTION",  # #101: env-less events are dropped
         },
     )
     assert await _ledger_balance(db_sessionmaker, account_id=_USER) == 100
@@ -491,7 +500,10 @@ async def test_anon_to_signin_merges_two_sub_rows(db_sessionmaker):
         s.add(Product(product_id=_PRODUCT_ID, kind="subscription", tier="unlimited"))
         # Anon row wins on expires_at but carries the LOWER-precedence status
         # (grace): a field-wise synthesis would emit {active, anon_expires} which
-        # neither row held; wholesale merge must keep grace.
+        # neither row held; wholesale merge must keep grace. #101: it also
+        # carries the gate-passing environment stamp, while the user row is a
+        # stale pre-#101 NULL — the stamp must travel with the winner or the
+        # merged row loses a legitimate entitlement.
         s.add(
             Subscription(
                 account_id=_ANON,
@@ -500,6 +512,7 @@ async def test_anon_to_signin_merges_two_sub_rows(db_sessionmaker):
                 expires_at=anon_expires,
                 rc_original_txn_id="txn_orig_anon",
                 last_event_ts_ms=5,
+                environment="PRODUCTION",
             )
         )
         s.add(
@@ -510,6 +523,7 @@ async def test_anon_to_signin_merges_two_sub_rows(db_sessionmaker):
                 expires_at=user_expires,
                 rc_original_txn_id="txn_orig_user",
                 last_event_ts_ms=9,
+                environment=None,
             )
         )
         await s.commit()
@@ -527,3 +541,55 @@ async def test_anon_to_signin_merges_two_sub_rows(db_sessionmaker):
     assert survivor.rc_original_txn_id == "txn_orig_anon"
     # ... only last_event_ts_ms resolved as a field-max.
     assert survivor.last_event_ts_ms == 9
+    # #101: the environment stamp is part of the wholesale winner row, so the
+    # legitimately-stamped (grace, in-window) sub stays entitled after sign-in.
+    assert survivor.environment == "PRODUCTION"
+    async with db_sessionmaker() as s:
+        assert await account_is_entitled(s, _USER) is True
+
+
+async def test_anon_to_signin_merge_null_env_winner_stays_gated(db_sessionmaker):
+    """#101 fail-closed direction of the fold merge: when the WINNING row is a
+    stale NULL-environment one (pre-#101 / unaudited), the merged row must NOT
+    inherit the losing row's gate-passing ``PRODUCTION`` stamp — otherwise the
+    sign-in fold would launder an unaudited row past ``account_is_entitled``."""
+    anon_expires = utcnow() + timedelta(days=60)  # later -> wins wholesale
+    user_expires = utcnow() + timedelta(days=10)
+    async with db_sessionmaker() as s:
+        s.add(AnonymousIdentity(anon_id=_ANON))
+        s.add(Product(product_id=_PRODUCT_ID, kind="subscription", tier="unlimited"))
+        s.add(
+            Subscription(
+                account_id=_ANON,
+                product_id=_PRODUCT_ID,
+                status="active",
+                expires_at=anon_expires,
+                rc_original_txn_id="txn_orig_anon",
+                last_event_ts_ms=5,
+                environment=None,
+            )
+        )
+        s.add(
+            Subscription(
+                account_id=_USER,
+                product_id=_PRODUCT_ID,
+                status="active",
+                expires_at=user_expires,
+                rc_original_txn_id="txn_orig_user",
+                last_event_ts_ms=9,
+                environment="PRODUCTION",
+            )
+        )
+        await s.commit()
+
+    await _run_fold(db_sessionmaker)
+
+    async with db_sessionmaker() as s:
+        rows = (await s.execute(select(Subscription))).scalars().all()
+    assert len(rows) == 1
+    survivor = rows[0]
+    assert survivor.account_id == _USER
+    assert survivor.rc_original_txn_id == "txn_orig_anon"
+    assert survivor.environment is None
+    async with db_sessionmaker() as s:
+        assert await account_is_entitled(s, _USER) is False

@@ -45,6 +45,39 @@ nonisolated struct CreateOrderRequest: Encodable, Sendable {
     }
 }
 
+// MARK: - Create order intent
+
+/// The draft order parameters PLUS a STABLE idempotency key, minted ONCE when
+/// the intent is formed (issue #103 finding 6). Reusing the SAME intent across
+/// a retry (client timeout, resubmit after a failed attempt) sends the same
+/// `transaction_id` both times, so the server's dedup (quiz-pack-api
+/// `orders.py`) replays the original order instead of creating — and
+/// billing — a duplicate. `idempotencyKey` is admin-path only today
+/// (defaults to `"admin-<uuid>"`); once packs carry a real StoreKit
+/// transaction, that id slots into `idempotencyKey` unchanged — no signature
+/// change needed.
+nonisolated struct PackOrderIntent: Equatable, Sendable {
+    let idempotencyKey: String
+    let prompt: String
+    let language: String
+    let category: String?
+    let theme: String?
+
+    init(
+        prompt: String,
+        language: String,
+        category: String?,
+        theme: String?,
+        idempotencyKey: String = "admin-\(UUID().uuidString)"
+    ) {
+        self.idempotencyKey = idempotencyKey
+        self.prompt = prompt
+        self.language = language
+        self.category = category
+        self.theme = theme
+    }
+}
+
 // MARK: - Create order response
 
 /// `202` (created) / `200` (idempotent replay) response of `POST /v1/orders`.

@@ -59,6 +59,13 @@ final class OrderPackViewModel: ObservableObject {
     private let service: PackOrderServiceProtocol
     private var pollTask: Task<Void, Never>?
 
+    /// The intent behind the order currently being submitted (or last failed).
+    /// Kept alive across a retry of the SAME form content so `createOrder`
+    /// reuses the same idempotency key rather than minting a new one on every
+    /// call (issue #103 finding 6a) — cleared once the create succeeds, since
+    /// a later submit with the same content is then a genuinely new order.
+    private var pendingIntent: PackOrderIntent?
+
     init(service: PackOrderServiceProtocol) {
         self.service = service
     }
@@ -107,19 +114,39 @@ final class OrderPackViewModel: ObservableObject {
         let trimmedPrompt = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedCategory = category.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedTheme = theme.trimmingCharacters(in: .whitespacesAndNewlines)
+        let resolvedCategory = trimmedCategory.isEmpty ? nil : trimmedCategory
+        let resolvedTheme = trimmedTheme.isEmpty ? nil : trimmedTheme
+
+        // Reuse the pending intent (and its idempotency key) when the form
+        // content is unchanged from the last attempt — a retry after a failed
+        // submit (e.g. "Back" then "Create pack" again with the same fields).
+        // Any change to the fields is a genuinely new intent, so it mints a
+        // fresh key rather than reusing a stale one.
+        let intent: PackOrderIntent
+        if let pending = pendingIntent,
+           pending.prompt == trimmedPrompt,
+           pending.language == language,
+           pending.category == resolvedCategory,
+           pending.theme == resolvedTheme {
+            intent = pending
+        } else {
+            intent = PackOrderIntent(
+                prompt: trimmedPrompt,
+                language: language,
+                category: resolvedCategory,
+                theme: resolvedTheme
+            )
+        }
+        pendingIntent = intent
 
         let created: OrderCreatedResponse
         do {
-            created = try await service.createOrder(
-                prompt: trimmedPrompt,
-                language: language,
-                category: trimmedCategory.isEmpty ? nil : trimmedCategory,
-                theme: trimmedTheme.isEmpty ? nil : trimmedTheme
-            )
+            created = try await service.createOrder(intent: intent)
         } catch {
             state = .failed(Self.message(for: error))
             return
         }
+        pendingIntent = nil // order created — a future submit is a new order
 
         await poll(orderId: created.orderId)
     }

@@ -54,7 +54,7 @@ final class MockPackOrderService: PackOrderServiceProtocol, Sendable {
         self.getResults = getResults
     }
 
-    func createOrder(prompt: String, language: String, category: String?, theme: String?) async throws -> OrderCreatedResponse {
+    func createOrder(intent: PackOrderIntent) async throws -> OrderCreatedResponse {
         try createResult.get()
     }
 

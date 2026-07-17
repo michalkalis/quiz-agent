@@ -1,7 +1,7 @@
 # #102 — iOS post-purchase entitlement recovery (residual of the sandbox-purchase bug)
 
-**Triage:** bug · ready-for-agent
-**Status:** Planned 2026-07-16 from the pre-MVP review. The `#96 P1` fix stopped the *happy-path* silent re-prompt, but the review found the **recovery paths** are still missing: if the post-purchase sync fails (offline in a tunnel) and the RC webhook lags/is lost, the client never reconciles and the paywall loop can resurface. This is the residual of the 2026-07-12 device failure.
+**Triage:** bug · done
+**Status:** ✓ DONE 2026-07-17 — all 4 findings fixed + opus-reviewed (merged `e1481ee`: `7975bbe` launch/foreground re-sync, `03df51e` pack restore, `7016959` activation gate, `96499b1` pre-paywall resync outcome honored at all 3 429 sites). HangsTests 661/661 green. Remaining `[HUMAN]`: acceptance bullet 4 on-device (next TestFlight, against #101 staging). Planned 2026-07-16 from the pre-MVP review. The `#96 P1` fix stopped the *happy-path* silent re-prompt, but the review found the **recovery paths** are still missing: if the post-purchase sync fails (offline in a tunnel) and the RC webhook lags/is lost, the client never reconciles and the paywall loop can resurface. This is the residual of the 2026-07-12 device failure.
 
 ## 1. Why
 

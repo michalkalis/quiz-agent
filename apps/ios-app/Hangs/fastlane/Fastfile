@@ -26,8 +26,22 @@ platform :ios do
   #   Create `fastlane/.env` from `.env.example` for local runs. The file is
   #   gitignored. CI does not rely on this — it uses GitHub Secrets directly.
 
-  desc "Build a release IPA and upload to TestFlight."
+  desc "Build the STAGING IPA and upload to TestFlight (env → *-staging Fly apps; sandbox purchases land in staging)."
   lane :beta do
+    testflight_build(scheme: "Hangs-Staging", configuration: "Release-Staging")
+  end
+
+  desc "Build the PRODUCTION IPA and upload to TestFlight (env → prod Fly apps). Note: TestFlight " \
+       "purchases are ALWAYS StoreKit sandbox, so the prod backend gate drops them by design — " \
+       "this lane validates the prod app surface, not the money path."
+  lane :release do
+    testflight_build(scheme: "Hangs-Prod", configuration: "Release-Prod")
+  end
+
+  private_lane :testflight_build do |options|
+    scheme = options[:scheme]
+    configuration = options[:configuration]
+
     ensure_env_vars(
       env_vars: %w[
         ASC_API_KEY_ID
@@ -82,13 +96,12 @@ platform :ios do
     # settings), so this reliably wins even with GENERATE_INFOPLIST_FILE=YES,
     # which derives CFBundleVersion from CURRENT_PROJECT_VERSION.
     #
-    # TestFlight = staging (#101 env separation): scheme/configuration are pinned
-    # explicitly here — env-critical settings never ride Gymfile ambient defaults
-    # (Gymfile keeps Hangs-Prod for a future `release` lane). Staging builds hit
-    # the *-staging Fly apps, so tester sandbox purchases never touch prod data.
+    # Env separation (#101): scheme/configuration always arrive explicitly from the
+    # calling lane (`beta` = staging, `release` = prod) — env-critical settings never
+    # ride Gymfile ambient defaults.
     build_app(
-      scheme: "Hangs-Staging",
-      configuration: "Release-Staging",
+      scheme: scheme,
+      configuration: configuration,
       export_options: {
         method: "app-store",
         provisioningProfiles: {
@@ -107,7 +120,7 @@ platform :ios do
       skip_submission: true
     )
 
-    UI.success("Uploaded build #{next_build} to TestFlight.")
+    UI.success("Uploaded #{configuration} build #{next_build} to TestFlight.")
   end
 
   desc "Set export compliance (uses_non_exempt_encryption = false) for the latest TestFlight build."

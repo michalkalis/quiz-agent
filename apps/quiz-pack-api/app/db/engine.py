@@ -14,12 +14,15 @@ def normalize_async_url(url: str) -> str:
     keep working; SQLAlchemy + asyncpg requires the explicit driver in the scheme.
     """
     if url.startswith("postgres://"):
-        url = "postgresql+asyncpg://" + url[len("postgres://"):]
+        url = "postgresql+asyncpg://" + url[len("postgres://") :]
     elif url.startswith("postgresql://") and "+asyncpg" not in url.split("://", 1)[0]:
-        url = "postgresql+asyncpg://" + url[len("postgresql://"):]
-    # `fly postgres attach` appends libpq-only query params (#101 staging:
-    # `?sslmode=disable`) that asyncpg's connect() rejects with a TypeError —
-    # translate `sslmode` to asyncpg's `ssl` and drop `channel_binding`.
+        url = "postgresql+asyncpg://" + url[len("postgresql://") :]
+    # `fly postgres attach` appends the libpq-only `?sslmode=disable` param,
+    # which asyncpg's connect() rejects with a TypeError. asyncpg takes the
+    # same sslmode VALUES under its `ssl` argument, so rename the key and keep
+    # the value — dropping it instead makes asyncpg default to `prefer` and
+    # the flycast LB hard-resets the TLS handshake (ConnectionResetError).
+    # `channel_binding` has no asyncpg equivalent and is dropped.
     if "?" not in url:
         return url
     base, query = url.split("?", 1)
@@ -29,9 +32,8 @@ def normalize_async_url(url: str) -> str:
         if key == "channel_binding":
             continue
         if key == "sslmode":
-            if value in {"require", "verify-ca", "verify-full"}:
-                params.append("ssl=true")
-            continue  # disable/prefer/allow -> asyncpg default (no TLS arg)
+            params.append(f"ssl={value}")
+            continue
         params.append(pair)
     return base + ("?" + "&".join(params) if params else "")
 

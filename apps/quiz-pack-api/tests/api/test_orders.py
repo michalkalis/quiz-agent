@@ -273,6 +273,8 @@ async def test_get_order_happy(
     # #103 F4c: refund_eligible now surfaces on the snapshot (False on a
     # healthy order; the field previously had zero readers anywhere).
     assert data["refund_eligible"] is False
+    # #103 F5: actual_count is None until a pack is persisted.
+    assert data["actual_count"] is None
 
     job = data["job"]
     assert job is not None

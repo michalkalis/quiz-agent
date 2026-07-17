@@ -3,7 +3,9 @@
 Why these tests exist: the custom-pack client plan hinges on three auth
 guarantees the Phase-1 API didn't have —
 
-1. the founder can create orders with the admin key alone (payments deferred),
+1. the founder can create orders with the admin key (payments deferred) plus
+   a bearer JWT (#103 F3: bearer is mandatory — admin-key-alone orphans the
+   pack via a NULL user_id),
 2. orders link to the quiz-agent account (bearer JWT) so "My packs" works,
 3. reads are no longer anonymous (any-order enumeration was the Phase-1 hole).
 

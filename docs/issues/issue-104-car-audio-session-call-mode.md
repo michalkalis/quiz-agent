@@ -47,12 +47,22 @@ Conceptual, minimal-footprint:
 
 ## Acceptance
 
-- [ ] `AudioService.categoryOptions(for: media)` does NOT contain `.allowBluetoothHFP` (or the chosen route-type gate excludes a car HFP port) — asserted in `HangsTests/AudioServiceTests.swift` (pure `categoryOptions` seam, no live session).
-- [ ] Toggling Call Mode ↔ Media Mode produces two *distinct* option sets — asserted in `AudioServiceTests` / `SettingsViewCallModeTests`.
-- [ ] TTS→record→next-question no longer swaps the session category per utterance — verified by inspecting the `withPlaybackCategory` call sites / an `AudioServiceTests` count assertion on category switches over a mock cycle.
-- [ ] A transient invalid (0 Hz) hardware format retries instead of throwing `recordingFailed` on first occurrence — unit test on the streaming-start guard path.
-- [ ] Settings offers a microphone input picker (sources from `AVAudioSession.availableInputs`, applies via `setPreferredInput`), with copy noting that a Bluetooth (car) mic implies the call UI — asserted via a service-seam/ViewModel unit test (no live session).
-- [ ] **[HUMAN] on-device (real car, BT):** in Media Mode the car does NOT show a phone call and does NOT flap, audio plays through the car speakers, the iPhone mic captures the spoken answer and it is transcribed; no "Recording failed" banner. Call Mode still works via the car mic.
+- [x] `AudioService.categoryOptions(for: media)` does NOT contain `.allowBluetoothHFP` — asserted in `HangsTests/AudioServiceTests.swift` (pure `categoryOptions` seam, no live session). *Route-type gate variant rejected: a car head unit and AirPods are both plain `.bluetoothHFP` ports, not reliably distinguishable; the founder-locked two-mode contract covers the need.*
+- [x] Toggling Call Mode ↔ Media Mode produces two *distinct* option sets — asserted in `AudioSessionCategoryOptionsTests`.
+- [x] *(amended, see Outcome)* No SCO-affecting category swap per utterance: **Call Mode** holds `.playAndRecord` for the whole quiz (zero category switches — the car shows one steady call, no flapping); **Media Mode** keeps the per-TTS `.playback` swap deliberately — with HFP absent it cannot touch the Bluetooth profile (A2DP stays the output in both categories) and it preserves the 331c47c ~6dB TTS-loudness fix for speaker/A2DP users. Gate = pure seam `shouldSwapCategoryForTTS(options:)`, asserted both ways in `AudioSessionCategoryOptionsTests`.
+- [x] A transient invalid (0 Hz) hardware format retries (~150ms poll, ~2s cap) instead of throwing `recordingFailed` on first occurrence — `StreamingHardwareFormatSettleWaitTests` (injectable reader/sleep, settle + timeout cases).
+- [x] Settings microphone picker: already existed (`AudioDevicePickerView` + `setPreferredInput`); delta = footer hint now shows in Media Mode unconditionally with call-UI copy ("With a Bluetooth microphone the car treats the quiz as a phone call."), + new `AudioDevicePickerTests` (footer renders; `setPreferredInputDevice` persists/clears `preferredInputDeviceId`).
+- [ ] **[HUMAN] on-device (real car, BT):** in Media Mode the car does NOT show a phone call and does NOT flap, audio plays through the car speakers, the iPhone mic captures the spoken answer and it is transcribed; no "Recording failed" banner. Call Mode: car shows ONE steady call for the whole quiz (this is the accepted trade-off; TTS plays over the call link at call volume), car mic works. AirPods: mic reachable in Call Mode; in Media Mode input intentionally falls back to the iPhone mic.
+
+## Outcome — 2026-07-17 (agent run, workflows)
+
+Root-cause fix landed on `main`; all sim-verifiable acceptance green (33 tests / 7 suites targeted; full HangsTests 668/670 — the 2 fails are the pre-existing `PackOrderServiceTests` full-suite-order flake, reproduced identically on unmodified baseline).
+
+- `categoryOptions(for:)`: media = `[.defaultToSpeaker, .allowBluetoothA2DP]` + ducking (HFP removed — supersedes #59.3's blanket-HFP; AirPods-mic-in-media intentionally traded for the founder-locked "no call UI" contract). Call/default unchanged.
+- `withPlaybackCategory`: new pure gate `shouldSwapCategoryForTTS` — bypasses the swap when HFP is in the options (Call Mode = one stable SCO session; a defensive `setActive(true)` guards the known post-mic-engine AVPlayer stall), keeps it otherwise (Media Mode loudness).
+- `startStreamingRecording` is now `async throws`: settle-wait for a valid input format (fresh probe `AVAudioEngine` per read — the engine caches formats), Sentry breadcrumb when settling took >1 attempt, then the real engine starts. **Review-found race fixed:** a teardown during the settle wait bumps `streamingGeneration` (even with no live engine) and the start bails with `CancellationError`; `QuizViewModel+Recording` catches it explicitly and does NOT fall back to batch — the mic can no longer come up hot after a scene-phase/background teardown. Adversarial review: correctness lens CLEAN; regression lens 1 major (this race) → fixed + regression test.
+- Observer hygiene: `setupAudioSession` now removes previously-registered route/interruption observers before re-registering (duplicate-handler accumulation on every `switchAudioMode`/recovery re-setup — latent bug found during recon).
+- Not verifiable on sim (listed above as [HUMAN]): real HFP/SCO car behavior, call-UI stability, A2DP loudness in the car, cold-BT first-question timing (#106 leg).
 
 ## Cross-refs
 

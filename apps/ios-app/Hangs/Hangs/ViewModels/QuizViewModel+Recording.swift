@@ -110,7 +110,7 @@ extension QuizViewModel {
             // 4. Start PCM recording and stream chunks to WebSocket
             await audioService.prepareForRecording()
             let sttRef = sttService
-            try audioService.startStreamingRecording { pcmData in
+            try await audioService.startStreamingRecording { pcmData in
                 Task {
                     try? await sttRef.sendAudioChunk(pcmData)
                 }
@@ -121,6 +121,13 @@ extension QuizViewModel {
 
             Logger.stt.info("🎙️ Streaming STT recording started")
 
+        } catch is CancellationError {
+            // A teardown (scene-phase background, stop command) raced the streaming
+            // start's settle wait — recording must stay stopped, so no batch fallback.
+            isStreamingSTT = false
+            liveTranscript = ""
+            await sttService.disconnect()
+            Logger.stt.info("🎙️ Streaming STT start cancelled by teardown — no fallback")
         } catch {
             // Fallback to batch recording on any setup failure
             isStreamingSTT = false

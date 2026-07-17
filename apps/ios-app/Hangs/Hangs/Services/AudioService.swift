@@ -50,15 +50,15 @@ protocol AudioServiceProtocol: AnyObject, Sendable {
     func deactivateSession()
     func switchAudioMode(_ mode: AudioMode) async throws
     func requestMicrophonePermission() async -> Bool
-    func prepareForRecording() async  // Stops playback and waits for hardware settle
+    func prepareForRecording() async // Stops playback and waits for hardware settle
     func startRecording() throws
     func stopRecording() async throws -> Data
     func playOpusAudio(_ data: Data) async throws -> TimeInterval
     func playOpusAudioFromBase64(_ base64: String) async throws -> TimeInterval
-    func stopPlayback() async  // Now async for proper cleanup
+    func stopPlayback() async // Now async for proper cleanup
 
     // Streaming PCM recording (for ElevenLabs STT)
-    func startStreamingRecording(onChunk: @escaping PCMChunkHandler) throws
+    func startStreamingRecording(onChunk: @escaping PCMChunkHandler) async throws
     func stopStreamingRecording()
 
     // Device selection
@@ -106,7 +106,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         }
 
         var playbackId: UUID? {
-            if case .playing(let id) = self { return id }
+            if case let .playing(id) = self { return id }
             return nil
         }
     }
@@ -120,7 +120,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
     private var audioRecorder: AVAudioRecorder?
     private var audioPlayer: AVPlayer?
-    private var currentAudioMode: AudioMode = AudioMode.default
+    private var currentAudioMode: AudioMode = .default
 
     // Timestamps for Sentry breadcrumb durations (metadata only — no audio bytes).
     private var recordingStartedAt: Date?
@@ -155,10 +155,17 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
     /// `setupAudioSession` calls `setActive(true)`, which is the suspected cause of the
     /// HangsTests hang on the sim.
     ///
-    /// `.allowBluetoothHFP` MUST stay in **every** branch: A2DP is output-only, so
-    /// without HFP the Bluetooth (AirPods) microphone is never an available input and
-    /// recording silently misroutes to the built-in mic. Media mode keeps A2DP too so
-    /// playback stays high-quality and the car "phone-call UI" stays off.
+    /// #104 founder decision (car Bluetooth audio bugs) — the two modes now carry
+    /// deliberately different Bluetooth contracts:
+    /// - **Media Mode**: A2DP output only, no `.allowBluetoothHFP`. The car never
+    ///   negotiates a Bluetooth SCO link, so it never shows a "phone call" UI. Input
+    ///   falls back to the iPhone's built-in mic (A2DP is output-only) — users who
+    ///   want the Bluetooth/AirPods mic should switch to Call Mode instead. This
+    ///   intentionally supersedes the #59.3 blanket-HFP fix that put HFP in every
+    ///   mode.
+    /// - **Call Mode**: `.allowBluetoothHFP` + `.allowBluetoothA2DP`. The car/BT mic
+    ///   is reachable via HFP and the car shows a "phone call" UI, which the user
+    ///   accepts by design.
     nonisolated static func categoryOptions(for mode: AudioMode) -> AVAudioSession.CategoryOptions {
         // Duck background audio (Spotify/podcasts) while the quiz is active.
         // .duckOthers lowers music; .interruptSpokenAudioAndMixWithOthers pauses
@@ -166,16 +173,19 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         // this combination for apps with spoken-audio prompts.
         let duckingOptions: AVAudioSession.CategoryOptions = [
             .duckOthers,
-            .interruptSpokenAudioAndMixWithOthers
+            .interruptSpokenAudioAndMixWithOthers,
         ]
 
         var options: AVAudioSession.CategoryOptions
         switch mode.id {
         case "media":
-            // Media Mode: A2DP (high-quality playback) + HFP (Bluetooth mic reachable).
-            options = [.defaultToSpeaker, .allowBluetoothA2DP, .allowBluetoothHFP]
+            // Media Mode: A2DP output only. No HFP — the car never opens a Bluetooth
+            // SCO link, so no "phone call" UI. Input is the iPhone's built-in mic;
+            // AirPods-mic users should use Call Mode instead (#104 founder decision).
+            options = [.defaultToSpeaker, .allowBluetoothA2DP]
         case "call":
-            // Call Mode: HFP + A2DP (Bluetooth mic enabled; may show "phone call" in car).
+            // Call Mode: HFP + A2DP (Bluetooth mic enabled; shows "phone call" in car,
+            // accepted by design).
             options = [.defaultToSpeaker, .allowBluetoothHFP, .allowBluetoothA2DP]
         default:
             // Fallback to call mode.
@@ -196,7 +206,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
         switch mode.id {
         case "media":
-            Logger.audio.info("🎤 Audio session: Media Mode (A2DP + HFP mic)")
+            Logger.audio.info("🎤 Audio session: Media Mode (A2DP output, built-in mic, no HFP)")
         case "call":
             Logger.audio.info("🎤 Audio session: Call Mode (HFP + A2DP)")
         default:
@@ -217,7 +227,13 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
         try session.setActive(true)
 
-        // Observe audio route changes (Bluetooth connect/disconnect)
+        // Observe audio route changes (Bluetooth connect/disconnect).
+        // setupAudioSession is called repeatedly (switchAudioMode, the
+        // withPlaybackCategory recovery path) — remove the previous observer first
+        // or duplicate registrations pile up and every handler fires N times.
+        if let existingRouteObserver = routeChangeObserver.withLock({ $0 }) {
+            NotificationCenter.default.removeObserver(existingRouteObserver)
+        }
         let routeObserver = NotificationCenter.default.addObserver(
             forName: AVAudioSession.routeChangeNotification,
             object: nil,
@@ -228,7 +244,11 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         }
         routeChangeObserver.withLock { $0 = routeObserver }
 
-        // Observe audio session interruptions (phone calls, Siri, other apps)
+        // Observe audio session interruptions (phone calls, Siri, other apps) —
+        // same duplicate-registration guard as the route observer above.
+        if let existingInterruptionObserver = interruptionObserver.withLock({ $0 }) {
+            NotificationCenter.default.removeObserver(existingInterruptionObserver)
+        }
         let interruptObserver = NotificationCenter.default.addObserver(
             forName: AVAudioSession.interruptionNotification,
             object: AVAudioSession.sharedInstance(),
@@ -258,14 +278,36 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         }
     }
 
+    /// Whether `withPlaybackCategory` should swap to `.playback` for a TTS utterance.
+    ///
+    /// When `.allowBluetoothHFP` is in the option set (Call Mode), the session must
+    /// HOLD `.playAndRecord` for the whole quiz so the SCO link stays up stably — the
+    /// car shows one steady call with no flapping, and TTS plays over that call link.
+    /// Swapping categories per-utterance would open/close the Bluetooth SCO link on
+    /// every question and make the car call UI flap on/off.
+    ///
+    /// When HFP is absent (Media Mode), the swap cannot touch the Bluetooth profile —
+    /// A2DP stays the output in both `.playAndRecord` and `.playback` — so swapping
+    /// is safe and buys back the ~6dB `.playAndRecord` output attenuation (commit
+    /// 331c47c).
+    nonisolated static func shouldSwapCategoryForTTS(options: AVAudioSession.CategoryOptions) -> Bool {
+        !options.contains(.allowBluetoothHFP)
+    }
+
     /// Run a block with the session temporarily switched to `.playback + .spokenAudio`
-    /// (with ducking) and restore the previous category on exit.
+    /// (with ducking) and restore the previous category on exit — Media Mode only
+    /// (see `shouldSwapCategoryForTTS`).
     ///
     /// `.playAndRecord` attenuates output by ~6dB even when no recording is active,
     /// which made TTS inaudible over music. Switching to `.playback` for the
     /// duration of TTS gives full output volume. The restore in `defer` runs on
     /// every exit path (return, throw, cancellation), so the recording phase is
     /// unaffected.
+    ///
+    /// In Call Mode (HFP present) the swap is skipped entirely — swapping category
+    /// per-utterance would open/close the Bluetooth SCO link on every question and
+    /// make the car call UI flap; the session instead holds `.playAndRecord` for the
+    /// whole quiz and TTS plays over the stable call link.
     ///
     /// Early-returns when the session is already in `.playback` (e.g. nested calls
     /// or a unit-test environment that pre-set the category).
@@ -275,13 +317,22 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
             return try await body()
         }
 
+        if !Self.shouldSwapCategoryForTTS(options: session.categoryOptions) {
+            // Call Mode: no category change, so no SCO renegotiation. Still guards
+            // the same post-mic-engine AVPlayer stall the swap path guards below —
+            // without reactivating, AVPlayer can stall in .waitingToPlayAtSpecifiedRate
+            // and the 5s stall timer fires AudioError.playbackFailed.
+            try session.setActive(true)
+            return try await body()
+        }
+
         let previousCategory = session.category
         let previousMode = session.mode
         let previousOptions = session.categoryOptions
 
         let ttsOptions: AVAudioSession.CategoryOptions = [
             .duckOthers,
-            .interruptSpokenAudioAndMixWithOthers
+            .interruptSpokenAudioAndMixWithOthers,
         ]
 
         try session.setCategory(.playback, mode: .spokenAudio, options: ttsOptions)
@@ -295,7 +346,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         switchCrumb.message = "Switched to .playback for TTS"
         switchCrumb.data = [
             "from": previousCategory.rawValue,
-            "to": AVAudioSession.Category.playback.rawValue
+            "to": AVAudioSession.Category.playback.rawValue,
         ]
         SentryBreadcrumb.add(switchCrumb)
 
@@ -314,7 +365,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
                 crumb.message = "setCategory restore failed"
                 crumb.data = [
                     "target": previousCategory.rawValue,
-                    "error": error.localizedDescription
+                    "error": error.localizedDescription,
                 ]
                 SentryBreadcrumb.add(crumb)
                 // Recovery: a failed restore can strand the session in .playback (no mic).
@@ -344,7 +395,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
             _ = try? await stopRecording()
         }
         if isPlaying {
-            await stopPlayback()  // Now async
+            await stopPlayback() // Now async
         }
 
         // Deactivate current session
@@ -356,10 +407,11 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         Logger.audio.info("🔄 Audio mode switched to: \(mode.name, privacy: .public)")
     }
 
-    nonisolated private func handleRouteChange(_ notification: Notification) {
+    private nonisolated func handleRouteChange(_ notification: Notification) {
         guard let userInfo = notification.userInfo,
               let reasonValue = userInfo[AVAudioSessionRouteChangeReasonKey] as? UInt,
-              let reason = AVAudioSession.RouteChangeReason(rawValue: reasonValue) else {
+              let reason = AVAudioSession.RouteChangeReason(rawValue: reasonValue)
+        else {
             return
         }
 
@@ -412,10 +464,11 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
     }
 
     /// Handle audio session interruptions (phone calls, Siri, other apps)
-    nonisolated private func handleInterruption(_ notification: Notification) {
+    private nonisolated func handleInterruption(_ notification: Notification) {
         guard let userInfo = notification.userInfo,
               let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
-              let type = AVAudioSession.InterruptionType(rawValue: typeValue) else {
+              let type = AVAudioSession.InterruptionType(rawValue: typeValue)
+        else {
             return
         }
         // Extracted here (not inside the Task) because `userInfo` ([AnyHashable: Any])
@@ -486,7 +539,11 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
         availableInputDevices = inputs.map { AudioDevice.from(port: $0) }
 
-        Logger.audio.debug("🎤 Available input devices: \(self.availableInputDevices.map { $0.name }, privacy: .public)")
+        // Local var (not `self.availableInputDevices` inline) — the os.Logger string
+        // interpolation builder is an autoclosure context, where SwiftFormat's
+        // redundantSelf rule strips the required explicit `self.` on every reformat.
+        let deviceNames = availableInputDevices.map { $0.name }
+        Logger.audio.debug("🎤 Available input devices: \(deviceNames, privacy: .public)")
 
         // Update current device state
         updateCurrentInputDevice()
@@ -503,7 +560,9 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
             currentInputDevice = nil
         }
 
-        Logger.audio.debug("🎤 Current input device: \(self.currentInputDevice?.name ?? "Automatic", privacy: .public)")
+        // Local var — see the deviceNames comment above (autoclosure + redundantSelf).
+        let deviceName = currentInputDevice?.name ?? "Automatic"
+        Logger.audio.debug("🎤 Current input device: \(deviceName, privacy: .public)")
     }
 
     /// Set preferred input device
@@ -514,7 +573,8 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         if let device = device, !device.isAutomatic {
             // Find matching AVAudioSessionPortDescription
             guard let inputs = session.availableInputs,
-                  let port = inputs.first(where: { $0.uid == device.id }) else {
+                  let port = inputs.first(where: { $0.uid == device.id })
+            else {
                 throw AudioError.deviceNotFound
             }
 
@@ -555,7 +615,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         // Hardware settle time - AVAudioSession needs time to release playback resources
         // and transition to recording mode. Without this delay, recording may start
         // before hardware is ready, resulting in empty/corrupt recordings (28 bytes)
-        try? await Task.sleep(nanoseconds: 200_000_000)  // 200ms
+        try? await Task.sleep(nanoseconds: 200_000_000) // 200ms
 
         Logger.audio.debug("🎤 Audio system ready for recording")
     }
@@ -571,10 +631,10 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         // Benefits: ~2.75x smaller files, faster upload, faster Whisper processing
         let settings: [String: Any] = [
             AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
-            AVSampleRateKey: 16000.0,  // Voice-optimized (was 44100)
-            AVNumberOfChannelsKey: 1,  // Mono for voice
+            AVSampleRateKey: 16000.0, // Voice-optimized (was 44100)
+            AVNumberOfChannelsKey: 1, // Mono for voice
             AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue,
-            AVEncoderBitRateKey: 32000  // 32kbps sufficient for 16kHz voice
+            AVEncoderBitRateKey: 32000, // 32kbps sufficient for 16kHz voice
         ]
 
         audioRecorder = try AVAudioRecorder(url: fileURL, settings: settings)
@@ -663,7 +723,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         crumb.message = "Batch M4A recording stopped"
         crumb.data = [
             "duration_ms": Int(duration * 1000),
-            "bytes": data.count
+            "bytes": data.count,
         ]
         SentryBreadcrumb.add(crumb)
 
@@ -674,13 +734,64 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
     private var audioEngine: AVAudioEngine?
 
+    /// Monotonic token invalidating in-flight streaming starts. `startStreamingRecording`
+    /// suspends for up to ~2s in the settle wait with `audioEngine` still nil; a
+    /// teardown arriving in that window (scene-phase background, stop command) would
+    /// otherwise be a no-op and the engine would start *after* it, leaving the mic
+    /// hot. `stopStreamingRecording` bumps this even when no engine is live, and the
+    /// start bails after the wait when the generation moved.
+    private(set) var streamingGeneration = 0
+
+    /// Pure hardware-format validity check. The format can read 0 Hz / 0 ch
+    /// transiently right after an audio route change (Bluetooth connect/disconnect,
+    /// a category switch) while the route settles. Unit-testable without live
+    /// hardware.
+    nonisolated static func isValidHardwareFormat(sampleRate: Double, channelCount: AVAudioChannelCount) -> Bool {
+        sampleRate > 0 && channelCount > 0
+    }
+
+    /// Outcome of `waitForValidHardwareFormat`: how many reads it took to settle, or
+    /// that it never settled within the timeout.
+    enum HardwareFormatWaitOutcome: Equatable {
+        case success(attempts: Int)
+        case timeout
+    }
+
+    /// Bounded settle-wait: calls `readFormat` immediately, then again roughly every
+    /// `intervalMs` until `isValidHardwareFormat` passes or `timeoutMs` total has
+    /// elapsed. Extracted from `startStreamingRecording` so the retry policy is
+    /// unit-testable with a scripted reader — no live `AVAudioEngine`/`AVAudioSession`
+    /// required.
+    nonisolated static func waitForValidHardwareFormat(
+        intervalMs: UInt64 = 150,
+        timeoutMs: UInt64 = 2000,
+        readFormat: () -> (sampleRate: Double, channelCount: AVAudioChannelCount),
+        sleep: (UInt64) async throws -> Void = { try await Task.sleep(nanoseconds: $0 * 1_000_000) }
+    ) async throws -> HardwareFormatWaitOutcome {
+        var attempts = 0
+        var elapsedMs: UInt64 = 0
+        while true {
+            attempts += 1
+            let format = readFormat()
+            if isValidHardwareFormat(sampleRate: format.sampleRate, channelCount: format.channelCount) {
+                return .success(attempts: attempts)
+            }
+            elapsedMs += intervalMs
+            guard elapsedMs <= timeoutMs else {
+                return .timeout
+            }
+            try await sleep(intervalMs)
+        }
+    }
+
     /// Start streaming PCM recording via AVAudioEngine.
     /// Calls `onChunk` with raw 16kHz 16-bit mono PCM data at regular intervals.
     /// Use `stopStreamingRecording()` to stop.
-    func startStreamingRecording(onChunk: @escaping PCMChunkHandler) throws {
-        let engine = AVAudioEngine()
-        let inputNode = engine.inputNode
-
+    ///
+    /// The hardware input format can read 0 Hz / 0 ch transiently while an audio
+    /// route settles (e.g. right after a Bluetooth connect/disconnect or a category
+    /// switch) — `waitForValidHardwareFormat` retries for up to ~2s before giving up.
+    func startStreamingRecording(onChunk: @escaping PCMChunkHandler) async throws {
         // Target format: 16kHz, 16-bit, mono (matching ElevenLabs pcm_16000)
         guard let targetFormat = AVAudioFormat(
             commonFormat: .pcmFormatInt16,
@@ -691,12 +802,54 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
             throw AudioError.recordingFailed
         }
 
-        // Get the hardware input format
-        let hardwareFormat = inputNode.outputFormat(forBus: 0)
+        // Capture the generation before suspending; a stopStreamingRecording() during
+        // the settle wait bumps it, and the check below aborts the start.
+        let startedGeneration = streamingGeneration
 
-        // Validate hardware format — can be 0 Hz on device after audio route changes
-        guard hardwareFormat.sampleRate > 0, hardwareFormat.channelCount > 0 else {
-            Logger.audio.error("🎤 Streaming: invalid hardware format: \(hardwareFormat.sampleRate, privacy: .public)Hz, \(hardwareFormat.channelCount, privacy: .public)ch")
+        // AVAudioEngine caches the input format from when it was instantiated, so a
+        // fresh read requires a fresh engine — each probe below creates and discards
+        // its own engine rather than re-querying a single inputNode.
+        let waitStart = Date()
+        let outcome = try await Self.waitForValidHardwareFormat(
+            readFormat: {
+                let probeFormat = AVAudioEngine().inputNode.outputFormat(forBus: 0)
+                return (probeFormat.sampleRate, probeFormat.channelCount)
+            }
+        )
+
+        switch outcome {
+        case let .success(attempts) where attempts > 1:
+            let elapsedMs = Int(Date().timeIntervalSince(waitStart) * 1000)
+            Logger.audio.info("🎤 Streaming: hardware format settled after \(attempts, privacy: .public) attempts (\(elapsedMs, privacy: .public)ms)")
+            let settleCrumb = Breadcrumb(level: .info, category: "audio.record_start")
+            settleCrumb.message = "input format settled after \(elapsedMs)ms"
+            settleCrumb.data = ["attempts": attempts, "elapsed_ms": elapsedMs]
+            SentryBreadcrumb.add(settleCrumb)
+        case .success:
+            break
+        case .timeout:
+            let probeFormat = AVAudioEngine().inputNode.outputFormat(forBus: 0)
+            Logger.audio.error("🎤 Streaming: invalid hardware format: \(probeFormat.sampleRate, privacy: .public)Hz, \(probeFormat.channelCount, privacy: .public)ch")
+            throw AudioError.recordingFailed
+        }
+
+        // A teardown raced the settle wait — recording must stay stopped, and the
+        // caller must NOT fall back to batch recording (see the CancellationError
+        // handling in QuizViewModel+Recording).
+        guard startedGeneration == streamingGeneration else {
+            Logger.audio.info("🎤 Streaming: start cancelled by teardown during settle wait")
+            throw CancellationError()
+        }
+
+        // Real engine used for the recording itself — created fresh (mirrors the
+        // probes above) after the format has settled.
+        let engine = AVAudioEngine()
+        let inputNode = engine.inputNode
+        let hardwareFormat = inputNode.outputFormat(forBus: 0)
+        guard Self.isValidHardwareFormat(sampleRate: hardwareFormat.sampleRate, channelCount: hardwareFormat.channelCount) else {
+            // Rare race: the route flipped invalid again right after the wait
+            // succeeded. Fail loud rather than start a converter on a bad format.
+            Logger.audio.error("🎤 Streaming: hardware format went invalid again after settling: \(hardwareFormat.sampleRate, privacy: .public)Hz, \(hardwareFormat.channelCount, privacy: .public)ch")
             throw AudioError.recordingFailed
         }
 
@@ -760,7 +913,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         engine.prepare()
         try engine.start()
 
-        self.audioEngine = engine
+        audioEngine = engine
         isRecording = true
         recordingStartedAt = Date()
 
@@ -772,13 +925,17 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         SentryBreadcrumb.add(crumb)
     }
 
-    /// Stop streaming PCM recording
+    /// Stop streaming PCM recording. Also invalidates any in-flight
+    /// `startStreamingRecording` that is still inside its settle wait — the bump
+    /// must happen even when no engine is live yet, or that start would come up
+    /// after this teardown and leave the mic recording.
     func stopStreamingRecording() {
+        streamingGeneration += 1
         guard let engine = audioEngine else { return }
 
         engine.inputNode.removeTap(onBus: 0)
         engine.stop()
-        self.audioEngine = nil
+        audioEngine = nil
         isRecording = false
 
         Logger.audio.info("🎤 Streaming PCM recording stopped")
@@ -847,7 +1004,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         let playerItem = AVPlayerItem(url: tempURL)
 
         // Configure buffering for smoother playback
-        playerItem.preferredForwardBufferDuration = 5.0  // Buffer 5 seconds ahead
+        playerItem.preferredForwardBufferDuration = 5.0 // Buffer 5 seconds ahead
 
         audioPlayer = AVPlayer(playerItem: playerItem)
 
@@ -952,7 +1109,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         startCrumb.message = "AVPlayer playback started"
         startCrumb.data = [
             "bytes": data.count,
-            "duration_s": Int(durationSeconds)
+            "duration_s": Int(durationSeconds),
         ]
         SentryBreadcrumb.add(startCrumb)
 
@@ -975,7 +1132,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
     /// Cleans up playback resources for a specific operation (called from Task cancellation handler).
     /// Finishing the stream causes the awaiting `for try await` to exit; subsequent finish() calls are no-ops.
     private func cleanupPlayback(operationId: UUID) async {
-        guard case .playing(let activeId) = playbackState, activeId == operationId else { return }
+        guard case let .playing(activeId) = playbackState, activeId == operationId else { return }
 
         playbackStreamContinuation?.finish(throwing: CancellationError())
         playbackStreamContinuation = nil
@@ -1027,23 +1184,22 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         crumb.message = "AVPlayer playback \(reason)"
         crumb.data = [
             "duration_ms": Int(duration * 1000),
-            "reason": reason
+            "reason": reason,
         ]
         SentryBreadcrumb.add(crumb)
     }
-
 }
 
 // MARK: - AVAudioRecorderDelegate
 
 extension AudioService: AVAudioRecorderDelegate {
-    nonisolated func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
+    nonisolated func audioRecorderDidFinishRecording(_: AVAudioRecorder, successfully _: Bool) {
         Task { @MainActor in
             isRecording = false
         }
     }
 
-    nonisolated func audioRecorderEncodeErrorDidOccur(_ recorder: AVAudioRecorder, error: Error?) {
+    nonisolated func audioRecorderEncodeErrorDidOccur(_: AVAudioRecorder, error: Error?) {
         Task { @MainActor in
             isRecording = false
             Logger.audio.error("❌ Recording error: \(error?.localizedDescription ?? "unknown", privacy: .public)")
@@ -1088,4 +1244,3 @@ private extension Data.SubSequence {
     /// Convert Data.SubSequence back to Data
     var asData: Data { Data(self) }
 }
-

@@ -18,9 +18,9 @@
 
 import ConcurrencyExtras
 import Foundation
+@testable import Hangs
 import SwiftUI
 import Testing
-@testable import Hangs
 
 @MainActor
 private func makeScenePhaseVM(
@@ -43,7 +43,7 @@ private func makeScenePhaseVM(
 @MainActor
 private func waitUntil(
     _ predicate: @MainActor () -> Bool,
-    timeoutMillis: Int = 5_000,
+    timeoutMillis: Int = 5000,
     _ comment: Comment? = nil,
     sourceLocation: SourceLocation = #_sourceLocation
 ) async {
@@ -60,7 +60,6 @@ private func waitUntil(
 @Suite("Scene-phase mic teardown — background kills input, never playback")
 @MainActor
 struct ScenePhaseTeardownTests {
-
     // MARK: - .background on non-recording screens
 
     @Test("background on idle Home stops the listener AND releases the audio session")
@@ -109,12 +108,12 @@ struct ScenePhaseTeardownTests {
     // MARK: - .background during recording → #67 interruption path
 
     @Test("background during STREAMING recording aborts via the #67 interruption path")
-    func backgroundDuringStreamingRecordingAborts() throws {
+    func backgroundDuringStreamingRecordingAborts() async throws {
         let (vm, _, audio) = makeScenePhaseVM()
 
         vm.quizState = .recording
         vm.isStreamingSTT = true
-        try audio.startStreamingRecording { _ in }
+        try await audio.startStreamingRecording { _ in }
         #expect(audio.isRecording == true)
 
         vm.handleScenePhase(.background)

@@ -141,7 +141,7 @@ import os
             isPlaying = false
         }
 
-        func startStreamingRecording(onChunk _: @escaping PCMChunkHandler) throws {
+        func startStreamingRecording(onChunk _: @escaping PCMChunkHandler) async throws {
             if shouldFailRecording || !sessionActive {
                 throw AudioError.recordingFailed
             }

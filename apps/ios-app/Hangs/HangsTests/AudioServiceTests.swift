@@ -8,14 +8,13 @@
 
 import AVFoundation
 import Foundation
-import Testing
 @testable import Hangs
+import Testing
 
 // MARK: - AudioError Tests
 
 @Suite("AudioError Tests")
 struct AudioErrorTests {
-
     @Test("recordingTooShort error has correct description")
     func recordingTooShortErrorDescription() {
         let error = AudioError.recordingTooShort
@@ -31,7 +30,7 @@ struct AudioErrorTests {
             .playbackFailed,
             .permissionDenied,
             .invalidBase64,
-            .deviceNotFound
+            .deviceNotFound,
         ]
 
         for error in errors {
@@ -45,7 +44,6 @@ struct AudioErrorTests {
 @Suite("MockAudioService Contract Tests")
 @MainActor
 struct MockAudioServiceContractTests {
-
     @Test("prepareForRecording stops playback")
     func prepareForRecordingStopsPlayback() async {
         let service = MockAudioService()
@@ -152,7 +150,6 @@ struct MockAudioServiceContractTests {
 
 @Suite("PlaybackState Tests")
 struct PlaybackStateTests {
-
     @Test("idle state has no playback id")
     func idleStateNoPlaybackId() {
         let state = AudioService.PlaybackState.idle
@@ -180,36 +177,39 @@ struct PlaybackStateTests {
     }
 }
 
-// MARK: - Audio Session Category Options (RS-18 / #59.3)
+// MARK: - Audio Session Category Options (#104 founder decision)
+
 //
 // Reads back the option set that `setupAudioSession` applies, via the pure
 // `AudioService.categoryOptions(for:)` helper. This deliberately does NOT
 // instantiate a live session or call `setActive`/permission — that path is the
-// suspected cause of the HangsTests hang on the simulator. The guard fails the
-// instant anyone strips `.allowBluetoothHFP`, which is what silently broke the
-// AirPods mic in Media Mode (A2DP is output-only; the BT mic needs HFP).
+// suspected cause of the HangsTests hang on the simulator. Media Mode must NOT
+// carry `.allowBluetoothHFP` — the car negotiates a Bluetooth SCO link the instant
+// HFP is offered, which is what made the car flap into "phone call" mode on every
+// question. This intentionally REPLACES the #59.3/RS-18 guard that asserted HFP in
+// media (AirPods-mic users are routed to Call Mode instead — see the doc comment
+// on `categoryOptions`).
 
 @Suite("AudioSession Category Options")
 struct AudioSessionCategoryOptionsTests {
-
-    @Test("media mode includes allowBluetoothHFP so the Bluetooth mic is reachable")
-    func mediaModeIncludesHFP() throws {
+    @Test("media mode excludes allowBluetoothHFP so the car never shows a call UI")
+    func mediaModeExcludesHFP() throws {
         let media = try #require(AudioMode.forId("media"))
         let options = AudioService.categoryOptions(for: media)
 
-        // The bug: media mode shipped with A2DP only. A2DP is output-only, so the
-        // AirPods mic was never an available input. HFP MUST stay for recording.
-        #expect(options.contains(.allowBluetoothHFP))
-        // A2DP must remain too — output stays high-quality and no car "call UI".
+        // #104: HFP in media was the bug — it made the car negotiate a Bluetooth SCO
+        // link and show a "phone call" UI. Media Mode falls back to the built-in mic.
+        #expect(!options.contains(.allowBluetoothHFP))
+        // A2DP stays — output remains high-quality Bluetooth playback.
         #expect(options.contains(.allowBluetoothA2DP))
     }
 
-    @Test("default mode is media — and it carries HFP")
-    func defaultModeIsMediaWithHFP() {
-        // AudioMode.default is index 1 (media). If the default ever flips back to a
-        // mode without HFP, recording regresses on AirPods — pin it here.
+    @Test("default mode is media — and it excludes HFP")
+    func defaultModeIsMediaWithoutHFP() {
+        // AudioMode.default is index 1 (media). If the default ever gains HFP again,
+        // the car call-UI flap regresses — pin it here.
         #expect(AudioMode.default.id == "media")
-        #expect(AudioService.categoryOptions(for: .default).contains(.allowBluetoothHFP))
+        #expect(!AudioService.categoryOptions(for: .default).contains(.allowBluetoothHFP))
     }
 
     @Test("call mode includes both HFP and A2DP")
@@ -221,6 +221,14 @@ struct AudioSessionCategoryOptionsTests {
         #expect(options.contains(.allowBluetoothA2DP))
     }
 
+    @Test("media and call carry distinct Bluetooth option sets")
+    func mediaAndCallOptionsAreDistinct() throws {
+        let media = try #require(AudioMode.forId("media"))
+        let call = try #require(AudioMode.forId("call"))
+
+        #expect(AudioService.categoryOptions(for: media) != AudioService.categoryOptions(for: call))
+    }
+
     @Test("every mode ducks background audio")
     func everyModeDucksBackgroundAudio() {
         for mode in AudioMode.supportedModes {
@@ -229,9 +237,89 @@ struct AudioSessionCategoryOptionsTests {
             #expect(options.contains(.defaultToSpeaker), "\(mode.id) should default to speaker")
         }
     }
+
+    @Test("shouldSwapCategoryForTTS swaps in media (no HFP) and holds in call (HFP present)")
+    func shouldSwapCategoryForTTSFollowsHFP() throws {
+        let media = try #require(AudioMode.forId("media"))
+        let call = try #require(AudioMode.forId("call"))
+
+        // Media: no HFP to protect, so swapping to .playback per-utterance is safe
+        // and buys back the ~6dB .playAndRecord attenuation.
+        #expect(AudioService.shouldSwapCategoryForTTS(options: AudioService.categoryOptions(for: media)) == true)
+        // Call: HFP must stay up for the whole quiz — swapping would flap the car's
+        // Bluetooth SCO link on/off around every question.
+        #expect(AudioService.shouldSwapCategoryForTTS(options: AudioService.categoryOptions(for: call)) == false)
+    }
+}
+
+// MARK: - Streaming Start: Hardware-Format Settle Wait (#104)
+
+//
+// `startStreamingRecording` used to fail immediately when the hardware input
+// format read 0 Hz / 0 ch — a transient state while an audio route settles (e.g.
+// right after a Bluetooth connect/disconnect or a category switch). The retry
+// policy (validity check + bounded poll) is factored into pure/injectable seams so
+// it's testable without a live AVAudioEngine/AVAudioSession.
+
+@Suite("Streaming Start Hardware Format Settle Wait")
+struct StreamingHardwareFormatSettleWaitTests {
+    @Test("a positive sample rate and channel count is valid")
+    func validFormatPasses() {
+        #expect(AudioService.isValidHardwareFormat(sampleRate: 48000, channelCount: 1))
+    }
+
+    @Test("zero sample rate or zero channel count is invalid")
+    func zeroFormatFails() {
+        #expect(!AudioService.isValidHardwareFormat(sampleRate: 0, channelCount: 1))
+        #expect(!AudioService.isValidHardwareFormat(sampleRate: 48000, channelCount: 0))
+    }
+
+    @Test("settles on the 3rd read: invalid, invalid, valid")
+    func settlesOnThirdRead() async throws {
+        var reads: [(sampleRate: Double, channelCount: AVAudioChannelCount)] = [
+            (0, 0), (0, 0), (48000, 1),
+        ]
+
+        let outcome = try await AudioService.waitForValidHardwareFormat(
+            readFormat: { reads.removeFirst() },
+            sleep: { _ in } // no real delay in tests
+        )
+
+        #expect(outcome == .success(attempts: 3))
+    }
+
+    @Test("never settling times out rather than retrying forever")
+    func neverSettlesTimesOut() async throws {
+        let outcome = try await AudioService.waitForValidHardwareFormat(
+            intervalMs: 150,
+            timeoutMs: 300,
+            readFormat: { (0, 0) },
+            sleep: { _ in }
+        )
+
+        #expect(outcome == .timeout)
+    }
+
+    // The settle wait suspends with `audioEngine` still nil, so a teardown in that
+    // window must invalidate the in-flight start (or the engine would come up AFTER
+    // the stop and leave the mic hot in the background). The start compares
+    // `streamingGeneration` after the wait; the stop must therefore bump it even
+    // when no engine is live. Instantiating AudioService touches no AVAudioSession
+    // (observers register in setupAudioSession, which this test never calls).
+    @Test("stopStreamingRecording invalidates an in-flight start even with no live engine")
+    @MainActor
+    func stopWithoutEngineBumpsGeneration() {
+        let service = AudioService()
+        let generationBefore = service.streamingGeneration
+
+        service.stopStreamingRecording()
+
+        #expect(service.streamingGeneration == generationBefore + 1)
+    }
 }
 
 // MARK: - Interruption Teardown Routing (#67 Part A / task 77.2)
+
 //
 // The bug: `handleInterruption(.began)` (a phone call) only ever called the
 // *batch* `stopRecording()`. When the streaming PCM path was live, the batch
@@ -248,7 +336,6 @@ struct AudioSessionCategoryOptionsTests {
 
 @Suite("Interruption Teardown Routing")
 struct InterruptionTeardownRoutingTests {
-
     @Test("streaming engine live routes to streaming teardown (the #67 bug case)")
     func streamingLiveRoutesToStreaming() {
         // Streaming path: audioEngine != nil AND isRecording. Before the fix this
@@ -268,6 +355,7 @@ struct InterruptionTeardownRoutingTests {
 }
 
 // MARK: - Interruption Resume Routing (#100.3)
+
 //
 // The bug: `handleInterruption(.ended)` only logged ("don't auto-resume") and
 // never reactivated the audio session. After a phone call / Siri interruption
@@ -282,7 +370,6 @@ struct InterruptionTeardownRoutingTests {
 
 @Suite("Interruption Resume Routing")
 struct InterruptionResumeRoutingTests {
-
     @Test(".shouldResume present resumes the session")
     func shouldResumePresentResumes() {
         #expect(AudioService.shouldResumeSession(options: [.shouldResume]) == true)
@@ -299,15 +386,14 @@ struct InterruptionResumeRoutingTests {
 @Suite("MockAudioService Interruption Contract")
 @MainActor
 struct MockAudioServiceInterruptionTests {
-
     @Test("interruption during streaming stops the engine, clears isRecording, and notifies the owner")
-    func interruptionDuringStreamingTearsDownAndNotifies() throws {
+    func interruptionDuringStreamingTearsDownAndNotifies() async throws {
         let service = MockAudioService()
         var notified = false
         service.onInterruptionBegan = { notified = true }
 
         // Enter the streaming state (engine live, recording).
-        try service.startStreamingRecording { _ in }
+        try await service.startStreamingRecording { _ in }
         #expect(service.isRecording == true)
         #expect(service.audioEngineActive == true)
 
@@ -336,40 +422,40 @@ struct MockAudioServiceInterruptionTests {
     // keeps failing on the same question until something else (a TTS replay)
     // reactivates it — the loop dead-ends on "Recording failed".
     @Test("a resumable .ended reactivates the session so the next mic tap succeeds")
-    func resumableEndedReactivatesSessionForNextRecording() throws {
+    func resumableEndedReactivatesSessionForNextRecording() async throws {
         let service = MockAudioService()
 
         // Phone call arrives mid-recording: system deactivates the session,
         // streaming teardown fires.
-        try service.startStreamingRecording { _ in }
+        try await service.startStreamingRecording { _ in }
         service.simulateInterruptionBegan()
         #expect(service.isRecording == false)
 
         // A mic tap in the gap between call-ends and session-reactivation must
         // fail loud, not silently misbehave.
-        #expect(throws: AudioError.recordingFailed) {
-            try service.startStreamingRecording { _ in }
+        await #expect(throws: AudioError.recordingFailed) {
+            try await service.startStreamingRecording { _ in }
         }
 
         // Call ends with .shouldResume (the common case for phone calls).
         service.simulateInterruptionEnded(options: [.shouldResume])
 
         // Next mic tap on the same question now succeeds — no TTS replay needed.
-        try service.startStreamingRecording { _ in }
+        try await service.startStreamingRecording { _ in }
         #expect(service.isRecording == true)
     }
 
     @Test("an .ended without .shouldResume leaves the session inactive")
-    func endedWithoutShouldResumeStaysInactive() throws {
+    func endedWithoutShouldResumeStaysInactive() async throws {
         let service = MockAudioService()
 
-        try service.startStreamingRecording { _ in }
+        try await service.startStreamingRecording { _ in }
         service.simulateInterruptionBegan()
 
         service.simulateInterruptionEnded(options: [])
 
-        #expect(throws: AudioError.recordingFailed) {
-            try service.startStreamingRecording { _ in }
+        await #expect(throws: AudioError.recordingFailed) {
+            try await service.startStreamingRecording { _ in }
         }
     }
 }
@@ -379,9 +465,8 @@ struct MockAudioServiceInterruptionTests {
 @Suite("QuizViewModel Interruption Recovery")
 @MainActor
 struct QuizViewModelInterruptionTests {
-
     @Test("a phone-call interruption during streaming leaves .recording and resets streaming state")
-    func interruptionDuringStreamingLeavesRecording() throws {
+    func interruptionDuringStreamingLeavesRecording() async throws {
         let mockAudio = MockAudioService()
         let viewModel = QuizViewModel(
             networkService: Fixtures.makeFullMockNetwork(),
@@ -396,7 +481,7 @@ struct QuizViewModelInterruptionTests {
         // Simulate an active streaming recording.
         viewModel.quizState = .recording
         viewModel.isStreamingSTT = true
-        try mockAudio.startStreamingRecording { _ in }
+        try await mockAudio.startStreamingRecording { _ in }
         #expect(mockAudio.isRecording == true)
 
         // Phone call arrives → AudioService fires onInterruptionBegan (wired in init).
@@ -411,6 +496,7 @@ struct QuizViewModelInterruptionTests {
 }
 
 // MARK: - Integration Test Notes
+
 //
 // The following tests require a real device or simulator with microphone access.
 // They are marked as requiring explicit running since they need hardware.

@@ -32,8 +32,8 @@ struct AudioDevicePickerView: View {
                             .font(.labelSM)
                             .foregroundColor(Theme.Colors.textSecondary)
                     } footer: {
-                        if viewModel.selectedAudioMode.id == "media" && viewModel.availableInputDevices.contains(where: { $0.isHFP }) {
-                            Text("Switch to Call Mode in settings to use Bluetooth microphones.")
+                        if viewModel.selectedAudioMode.id == "media" {
+                            Text("Switch to Call Mode to use Bluetooth microphones. With a Bluetooth microphone the car treats the quiz as a phone call.")
                                 .font(.textXS)
                                 .foregroundColor(Theme.Colors.textSecondary)
                         }
@@ -117,7 +117,7 @@ struct AudioDevicePickerView: View {
 }
 
 #if DEBUG
-#Preview {
-    AudioDevicePickerView(viewModel: QuizViewModel.preview)
-}
+    #Preview {
+        AudioDevicePickerView(viewModel: QuizViewModel.preview)
+    }
 #endif

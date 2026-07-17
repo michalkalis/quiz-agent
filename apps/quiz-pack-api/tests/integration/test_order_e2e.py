@@ -50,9 +50,21 @@ from app.db.models.job import GenerationJob
 from app.db.models.order import GenerationOrder
 from app.db.session import AsyncSessionLocal, get_session
 from app.storekit import AppleJWSVerifier
+from quiz_shared.auth.tokens import TokenService
 from tests.fixtures.storekit.jws_minter import JWSMinter
 
 pytestmark = pytest.mark.integration
+
+# #103 F3: order creation now requires a bearer alongside the StoreKit JWS.
+_E2E_JWT_SECRET = "order-e2e-test-jwt-secret-" + "x" * 64
+_BEARER = {
+    "Authorization": (
+        "Bearer "
+        + TokenService(
+            secret=_E2E_JWT_SECRET, issuer="quiz-agent", audience="quiz-agent-clients"
+        ).create_access_token("e2e-test-account")
+    )
+}
 
 # ---------------------------------------------------------------------------
 # Skip guard — all tests in this module need Postgres + Redis
@@ -171,7 +183,7 @@ async def test_app(
     app.dependency_overrides[get_arq_pool] = lambda: arq_pool
     app.dependency_overrides[get_redis_url] = lambda: _REDIS_URL
     app.dependency_overrides[get_settings] = lambda: Settings(
-        admin_api_key=_E2E_ADMIN_KEY
+        admin_api_key=_E2E_ADMIN_KEY, auth_jwt_secret=_E2E_JWT_SECRET
     )
 
     # Also patch AsyncSessionLocal used directly inside the SSE bridge / stream route
@@ -356,7 +368,7 @@ async def test_order_e2e_full(
     resp = await client.post(
         "/v1/orders",
         json=_order_body(tx_id=tx_id),
-        headers={"X-StoreKit-JWS": jws},
+        headers={"X-StoreKit-JWS": jws, **_BEARER},
     )
     assert resp.status_code == 202, resp.text
     order_id = resp.json()["order_id"]
@@ -442,7 +454,7 @@ async def test_order_sse_reconnect(
     resp = await client.post(
         "/v1/orders",
         json=_order_body(tx_id=tx_id),
-        headers={"X-StoreKit-JWS": jws},
+        headers={"X-StoreKit-JWS": jws, **_BEARER},
     )
     assert resp.status_code == 202, resp.text
     order_id = resp.json()["order_id"]

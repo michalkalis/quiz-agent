@@ -19,8 +19,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models.order import GenerationOrder
-from tests.api.conftest import TEST_ADMIN_KEY
+from tests.api.conftest import TEST_ADMIN_KEY, _bearer
 from tests.storekit._chain_fixtures import JWSFactory
+
+# #103 F3: order creation now requires a bearer alongside the StoreKit JWS —
+# every JWS-authenticated create in this module needs one too.
+BEARER = _bearer("jws-account-1")
 
 
 # ---------------------------------------------------------------------------
@@ -55,7 +59,9 @@ async def test_create_order_happy_path_202(
     enqueue_job was called once with ('process_order', <order_id>).
     """
     jws = make_jws()  # default: transactionId=1000000123456789, productId=pack_20
-    resp = await client.post("/v1/orders", json=_valid_body(), headers={"X-StoreKit-JWS": jws})
+    resp = await client.post(
+        "/v1/orders", json=_valid_body(), headers={"X-StoreKit-JWS": jws, **BEARER}
+    )
     assert resp.status_code == 202, resp.text
 
     body = resp.json()
@@ -88,11 +94,15 @@ async def test_create_order_idempotent_200(
     jws = make_jws(payload_overrides={"transactionId": "idempotent-tx-1"})
     body = _valid_body(tx_id="idempotent-tx-1")
 
-    resp1 = await client.post("/v1/orders", json=body, headers={"X-StoreKit-JWS": jws})
+    resp1 = await client.post(
+        "/v1/orders", json=body, headers={"X-StoreKit-JWS": jws, **BEARER}
+    )
     assert resp1.status_code == 202, resp1.text
     order_id_1 = resp1.json()["order_id"]
 
-    resp2 = await client.post("/v1/orders", json=body, headers={"X-StoreKit-JWS": jws})
+    resp2 = await client.post(
+        "/v1/orders", json=body, headers={"X-StoreKit-JWS": jws, **BEARER}
+    )
     assert resp2.status_code == 200, resp2.text
     assert resp2.json()["order_id"] == order_id_1
 
@@ -108,7 +118,9 @@ async def test_create_order_body_mismatch_400(
     """Body transaction_id differs from JWS payload → 400."""
     jws = make_jws(payload_overrides={"transactionId": "jws-tx-id"})
     body = _valid_body(tx_id="different-tx-id")  # mismatch
-    resp = await client.post("/v1/orders", json=body, headers={"X-StoreKit-JWS": jws})
+    resp = await client.post(
+        "/v1/orders", json=body, headers={"X-StoreKit-JWS": jws, **BEARER}
+    )
     assert resp.status_code == 400
     assert "JWS payload does not match body" in resp.json()["detail"]
 
@@ -122,7 +134,9 @@ async def test_create_order_unknown_product_400(
     tx_id = "tx-unknown-product"
     jws = make_jws(payload_overrides={"transactionId": tx_id, "productId": "pack_99"})
     body = _valid_body(tx_id=tx_id, product_id="pack_99")
-    resp = await client.post("/v1/orders", json=body, headers={"X-StoreKit-JWS": jws})
+    resp = await client.post(
+        "/v1/orders", json=body, headers={"X-StoreKit-JWS": jws, **BEARER}
+    )
     assert resp.status_code == 400
     assert "unknown product_id" in resp.json()["detail"]
 
@@ -135,7 +149,9 @@ async def test_create_order_bad_language_422(
     """Unsupported language code → 422."""
     jws = make_jws(payload_overrides={"transactionId": "tx-bad-lang"})
     body = {**_valid_body(tx_id="tx-bad-lang"), "language": "de"}
-    resp = await client.post("/v1/orders", json=body, headers={"X-StoreKit-JWS": jws})
+    resp = await client.post(
+        "/v1/orders", json=body, headers={"X-StoreKit-JWS": jws, **BEARER}
+    )
     assert resp.status_code == 422
     assert "language" in resp.json()["detail"]
 
@@ -148,7 +164,9 @@ async def test_create_order_prompt_too_short_422(
     """Prompt under 10 chars → 422."""
     jws = make_jws(payload_overrides={"transactionId": "tx-short-prompt"})
     body = {**_valid_body(tx_id="tx-short-prompt"), "prompt": "hi"}
-    resp = await client.post("/v1/orders", json=body, headers={"X-StoreKit-JWS": jws})
+    resp = await client.post(
+        "/v1/orders", json=body, headers={"X-StoreKit-JWS": jws, **BEARER}
+    )
     assert resp.status_code == 422
     assert "prompt" in resp.json()["detail"]
 
@@ -157,8 +175,24 @@ async def test_create_order_prompt_too_short_422(
 async def test_create_order_missing_header_401(
     client: httpx.AsyncClient,
 ) -> None:
-    """No X-StoreKit-JWS header → 401."""
+    """No auth at all (no JWS, no admin key, no bearer) → 401."""
     resp = await client.post("/v1/orders", json=_valid_body())
+    assert resp.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_create_order_missing_bearer_401(
+    client: httpx.AsyncClient,
+    make_jws: JWSFactory,
+) -> None:
+    """A valid JWS alone is no longer enough (#103 F3) — without the bearer
+    the order would write user_id=NULL and orphan the generated pack."""
+    jws = make_jws(payload_overrides={"transactionId": "tx-no-bearer"})
+    resp = await client.post(
+        "/v1/orders",
+        json=_valid_body(tx_id="tx-no-bearer"),
+        headers={"X-StoreKit-JWS": jws},  # no bearer
+    )
     assert resp.status_code == 401
 
 
@@ -178,7 +212,9 @@ async def test_create_order_enqueue_failure_marks_failed_503(
     tx_id = "tx-enqueue-fail"
     jws = make_jws(payload_overrides={"transactionId": tx_id})
     resp = await client.post(
-        "/v1/orders", json=_valid_body(tx_id=tx_id), headers={"X-StoreKit-JWS": jws}
+        "/v1/orders",
+        json=_valid_body(tx_id=tx_id),
+        headers={"X-StoreKit-JWS": jws, **BEARER},
     )
     assert resp.status_code == 503, resp.text
 
@@ -213,7 +249,9 @@ async def test_get_order_happy(
     tx_id = "tx-get-happy"
     jws = make_jws(payload_overrides={"transactionId": tx_id})
     post_resp = await client.post(
-        "/v1/orders", json=_valid_body(tx_id=tx_id), headers={"X-StoreKit-JWS": jws}
+        "/v1/orders",
+        json=_valid_body(tx_id=tx_id),
+        headers={"X-StoreKit-JWS": jws, **BEARER},
     )
     assert post_resp.status_code == 202, post_resp.text
     order_id = post_resp.json()["order_id"]

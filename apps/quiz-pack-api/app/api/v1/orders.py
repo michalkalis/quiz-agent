@@ -2,9 +2,14 @@
 
 `POST /v1/orders` authenticates via a StoreKit JWS in the `X-StoreKit-JWS`
 header, **or** (#95 founder path, payments deferred) via the `X-Admin-Key`
-header, and creates (or idempotently returns) a generation order + job. When
-the request also carries a quiz-agent bearer JWT, the order is linked to that
-account (`user_id`).
+header, and creates (or idempotently returns) a generation order + job. A
+quiz-agent bearer JWT is also REQUIRED (#103 F3) alongside either of those —
+a bearer-less order writes `user_id=NULL`, which orphans the generated pack:
+the quiz-agent ownership check requires `user_id = :subject_id` (NULL never
+matches → 404) and it never appears in `GET /v1/orders`, so the pack is paid
+for, generated (LLM cost spent), and then permanently unplayable/unlistable.
+
+`GET /v1/orders` lists the caller's own orders (bearer JWT required).
 
 `GET /v1/orders` lists the caller's own orders (bearer JWT required).
 
@@ -163,15 +168,19 @@ async def create_order(
     arq_pool: Annotated[ArqRedis, Depends(get_arq_pool)],
     verifier: Annotated[AppleJWSVerifier, Depends(get_jws_verifier)],
     settings: Annotated[Settings, Depends(get_settings)],
-    user_id: Annotated[Optional[str], Depends(optional_user)],
+    user_id: Annotated[str, Depends(require_user)],
     x_storekit_jws: Annotated[Optional[str], Header()] = None,
 ) -> OrderCreatedResponse:
     """Create a generation order from a verified StoreKit JWS or admin key.
 
     The admin-key path (#95, payments deferred) skips StoreKit entirely: the
     founder build sends `X-Admin-Key` plus a self-generated
-    `admin-{uuid}` transaction id. A quiz-agent bearer JWT, when present,
-    links the order to that account so it shows up in `GET /v1/orders`.
+    `admin-{uuid}` transaction id. A quiz-agent bearer JWT is REQUIRED
+    alongside either path (#103 F3) — it links the order to that account so
+    it shows up in `GET /v1/orders` and so the generated pack is ever
+    playable (the quiz-agent ownership check needs a real `user_id`; NULL
+    never matches). `require_user` raises 401 before this body runs when the
+    bearer is missing or invalid, and 503 if bearer auth isn't configured.
 
     Returns 202 on creation and 200 on idempotent replay (same transaction_id).
     """

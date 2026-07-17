@@ -37,6 +37,7 @@ from app.config import Settings, get_settings
 from app.db.engine import build_engine, normalize_async_url
 from app.db.session import get_session
 from app.storekit import AppleJWSVerifier
+from quiz_shared.auth.tokens import TokenService
 from tests.storekit._chain_fixtures import TestChain
 
 APP_ROOT = Path(__file__).resolve().parents[2]
@@ -45,6 +46,21 @@ APP_ROOT = Path(__file__).resolve().parents[2]
 # secret regardless of what the developer's .env carries.
 TEST_ADMIN_KEY = "test-admin-key"
 TEST_JWT_SECRET = "unit-test-jwt-secret-" + "x" * 64
+
+
+def _bearer(subject: str) -> dict[str, str]:
+    """Mint a real quiz-agent-shaped access token for `subject`.
+
+    #103 F3: order creation now requires this on every call — moved here
+    (from tests/api/test_orders_access.py) so tests/api/test_orders.py can
+    use it too instead of duplicating the minting logic.
+    """
+    service = TokenService(
+        secret=TEST_JWT_SECRET,
+        issuer="quiz-agent",
+        audience="quiz-agent-clients",
+    )
+    return {"Authorization": f"Bearer {service.create_access_token(subject)}"}
 
 
 @pytest.fixture(scope="module")

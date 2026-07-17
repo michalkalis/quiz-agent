@@ -27,17 +27,31 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from app.api.deps import get_arq_pool, get_jws_verifier, get_redis_url
 from app.api.v1.orders import router as orders_router
+from app.config import Settings, get_settings
 from app.db.engine import build_engine, normalize_async_url
 from app.db.models.job import GenerationJob
 from app.db.models.order import GenerationOrder
 from app.db.session import get_session
 from app.storekit import AppleJWSVerifier
+from quiz_shared.auth.tokens import TokenService
 from tests.storekit._chain_fixtures import JWSFactory, TestChain
 
 pytestmark = pytest.mark.integration
 
 _DB_URL = os.environ.get("TEST_DATABASE_URL") or os.environ.get("DATABASE_URL")
 _REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
+
+# #103 F3: order creation now requires a bearer. This module doesn't override
+# `get_settings` elsewhere, so a known JWT secret is set here for the test app.
+_JWT_SECRET = "order-retry-test-jwt-secret-" + "x" * 64
+_BEARER = {
+    "Authorization": (
+        "Bearer "
+        + TokenService(
+            secret=_JWT_SECRET, issuer="quiz-agent", audience="quiz-agent-clients"
+        ).create_access_token("retry-test-account")
+    )
+}
 
 
 def _check_services() -> Optional[str]:
@@ -124,6 +138,7 @@ async def client(
     app.dependency_overrides[get_jws_verifier] = lambda: verifier
     app.dependency_overrides[get_arq_pool] = lambda: arq_mock
     app.dependency_overrides[get_redis_url] = lambda: _REDIS_URL
+    app.dependency_overrides[get_settings] = lambda: Settings(auth_jwt_secret=_JWT_SECRET)
 
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app),
@@ -154,7 +169,9 @@ async def _post_order(
         payload_overrides={"transactionId": tx_id, "productId": "pack_10"}
     )
     resp = await client.post(
-        "/v1/orders", json=_order_body(tx_id), headers={"X-StoreKit-JWS": jws}
+        "/v1/orders",
+        json=_order_body(tx_id),
+        headers={"X-StoreKit-JWS": jws, **_BEARER},
     )
     assert resp.status_code == 202, resp.text
     return resp.json()["order_id"]

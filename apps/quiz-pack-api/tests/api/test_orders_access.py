@@ -19,23 +19,11 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from quiz_shared.auth.tokens import TokenService
-
 from app.db.models.order import GenerationOrder
-from tests.api.conftest import TEST_ADMIN_KEY, TEST_JWT_SECRET
+from tests.api.conftest import TEST_ADMIN_KEY, _bearer
 from tests.api.test_orders import _valid_body
 
 ADMIN = {"X-Admin-Key": TEST_ADMIN_KEY}
-
-
-def _bearer(subject: str) -> dict[str, str]:
-    """Mint a real quiz-agent-shaped access token for `subject`."""
-    service = TokenService(
-        secret=TEST_JWT_SECRET,
-        issuer="quiz-agent",
-        audience="quiz-agent-clients",
-    )
-    return {"Authorization": f"Bearer {service.create_access_token(subject)}"}
 
 
 def _admin_body(tx_suffix: str = "1", product_id: str = "pack_30") -> dict:
@@ -48,11 +36,26 @@ def _admin_body(tx_suffix: str = "1", product_id: str = "pack_30") -> dict:
 
 
 @pytest.mark.asyncio
-async def test_admin_create_202_no_jws(
+async def test_admin_create_without_bearer_401(client: httpx.AsyncClient) -> None:
+    """#103 F3: the admin key alone is no longer enough — a bearer-less order
+    would write user_id=NULL, orphaning the generated pack (unplayable via
+    quiz-agent's ownership check, unlistable in `GET /v1/orders`, LLM cost
+    already spent). The bearer is now mandatory alongside the admin key."""
+    resp = await client.post("/v1/orders", json=_admin_body(), headers=ADMIN)
+    assert resp.status_code == 401, resp.text
+
+
+@pytest.mark.asyncio
+async def test_admin_create_with_bearer_202(
     client: httpx.AsyncClient, test_session: AsyncSession
 ) -> None:
-    """Admin key alone creates an order — the founder path needs no StoreKit."""
-    resp = await client.post("/v1/orders", json=_admin_body(), headers=ADMIN)
+    """Admin key + bearer creates an order — the founder path needs no
+    StoreKit, but still needs an account to own the pack (#103 F3)."""
+    resp = await client.post(
+        "/v1/orders",
+        json=_admin_body(),
+        headers={**ADMIN, **_bearer("founder-1")},
+    )
     assert resp.status_code == 202, resp.text
 
     test_session.expire_all()
@@ -64,7 +67,7 @@ async def test_admin_create_202_no_jws(
     ).scalars().first()
     assert order is not None
     assert order.target_count == 30  # server-derived for pack_30
-    assert order.user_id is None  # no bearer sent
+    assert order.user_id == "founder-1"
 
 
 @pytest.mark.asyncio
@@ -92,8 +95,12 @@ async def test_admin_create_links_bearer_account(
 
 @pytest.mark.asyncio
 async def test_admin_create_wrong_key_401(client: httpx.AsyncClient) -> None:
+    """Bearer present so the 401 is genuinely the wrong-admin-key check, not
+    the (also-401) missing-bearer gate (#103 F3)."""
     resp = await client.post(
-        "/v1/orders", json=_admin_body(), headers={"X-Admin-Key": "wrong"}
+        "/v1/orders",
+        json=_admin_body(),
+        headers={"X-Admin-Key": "wrong", **_bearer("acct-1")},
     )
     assert resp.status_code == 401
 
@@ -104,9 +111,12 @@ async def test_admin_create_requires_admin_tx_prefix_400(
 ) -> None:
     """Admin orders must not claim Apple-shaped transaction ids — a founder
     order squatting a numeric tx id would block a future real purchase's
-    idempotency slot."""
+    idempotency slot. Bearer included (#103 F3 mandatory) so this 400 isn't
+    masked by the earlier missing-bearer 401."""
     resp = await client.post(
-        "/v1/orders", json=_valid_body(tx_id="1000000999999999"), headers=ADMIN
+        "/v1/orders",
+        json=_valid_body(tx_id="1000000999999999"),
+        headers={**ADMIN, **_bearer("acct-1")},
     )
     assert resp.status_code == 400
     assert "admin-" in resp.json()["detail"]

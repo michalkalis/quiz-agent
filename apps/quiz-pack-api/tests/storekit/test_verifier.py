@@ -9,6 +9,7 @@ chain logic without depending on Apple's bundled root.
 from __future__ import annotations
 
 import base64
+import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -16,6 +17,7 @@ import pytest
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives.asymmetric.utils import decode_dss_signature
 from cryptography.x509.oid import NameOID
 
 from app.storekit import (
@@ -23,6 +25,10 @@ from app.storekit import (
     JWSInvalid,
     JWSWrongBundle,
     SignedTransaction,
+)
+from app.storekit.verifier import (
+    APPLE_INTERMEDIATE_MARKER_OID,
+    APPLE_LEAF_MARKER_OID,
 )
 
 
@@ -259,6 +265,140 @@ def test_payload_missing_required_field_raises(verifier, test_chain):
     jws = f"{h_b64}.{p_b64}.{s_b64}"
     with pytest.raises(JWSInvalid, match="missing required fields"):
         verifier.verify(jws)
+
+
+def _mint_custom_chain(
+    *,
+    intermediate_is_ca: bool = True,
+    intermediate_has_marker: bool = True,
+    leaf_has_marker: bool = True,
+) -> tuple[x509.Certificate, str]:
+    """Mint a root → intermediate → leaf chain + a leaf-signed JWS.
+
+    Returns ``(root_cert, jws)`` so a test can pin a verifier to the minted root
+    and exercise the RFC 5280 / Apple-marker checks in isolation. Every knob
+    defaults to the legitimate Apple shape; a test flips exactly one to prove
+    which check rejects — so the negative cases can only fail for the reason
+    under test, not an unrelated chain defect.
+    """
+    now = datetime.now(timezone.utc)
+    not_before, not_after = now - timedelta(days=1), now + timedelta(days=3650)
+
+    def _cert(subject, issuer_name, pubkey, signing_key, *, is_ca, marker):
+        b = (
+            x509.CertificateBuilder()
+            .subject_name(subject)
+            .issuer_name(issuer_name)
+            .public_key(pubkey)
+            .serial_number(x509.random_serial_number())
+            .not_valid_before(not_before)
+            .not_valid_after(not_after)
+            .add_extension(x509.BasicConstraints(ca=is_ca, path_length=None), critical=True)
+        )
+        if marker is not None:
+            b = b.add_extension(x509.UnrecognizedExtension(marker, b""), critical=False)
+        return b.sign(private_key=signing_key, algorithm=hashes.SHA256())
+
+    root_key = ec.generate_private_key(ec.SECP256R1())
+    root_name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "Custom Test Root")])
+    root_cert = _cert(root_name, root_name, root_key.public_key(), root_key, is_ca=True, marker=None)
+
+    int_key = ec.generate_private_key(ec.SECP256R1())
+    int_name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "Custom Intermediate")])
+    int_cert = _cert(
+        int_name,
+        root_name,
+        int_key.public_key(),
+        root_key,
+        is_ca=intermediate_is_ca,
+        marker=APPLE_INTERMEDIATE_MARKER_OID if intermediate_has_marker else None,
+    )
+
+    leaf_key = ec.generate_private_key(ec.SECP256R1())
+    leaf_name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "Custom Leaf")])
+    leaf_cert = _cert(
+        leaf_name,
+        int_name,
+        leaf_key.public_key(),
+        int_key,
+        is_ca=False,
+        marker=APPLE_LEAF_MARKER_OID if leaf_has_marker else None,
+    )
+
+    chain_b64 = [
+        base64.b64encode(c.public_bytes(serialization.Encoding.DER)).decode("ascii")
+        for c in (leaf_cert, int_cert, root_cert)
+    ]
+    payload = {
+        "transactionId": "1000000123456789",
+        "originalTransactionId": "1000000123456789",
+        "productId": "pack_20",
+        "bundleId": "com.missinghue.hangs",
+        "purchaseDate": int(datetime(2026, 5, 12, tzinfo=timezone.utc).timestamp() * 1000),
+        "environment": "Sandbox",
+    }
+    header = {"alg": "ES256", "x5c": chain_b64}
+
+    def _b64u(data: bytes) -> str:
+        return base64.urlsafe_b64encode(data).rstrip(b"=").decode("ascii")
+
+    h_b64 = _b64u(json.dumps(header, separators=(",", ":")).encode())
+    p_b64 = _b64u(json.dumps(payload, separators=(",", ":")).encode())
+    der_sig = leaf_key.sign(f"{h_b64}.{p_b64}".encode("ascii"), ec.ECDSA(hashes.SHA256()))
+    r, s = decode_dss_signature(der_sig)
+    sig_b64 = _b64u(r.to_bytes(32, "big") + s.to_bytes(32, "big"))
+    return root_cert, f"{h_b64}.{p_b64}.{sig_b64}"
+
+
+def _verifier_for(root_cert: x509.Certificate) -> AppleJWSVerifier:
+    return AppleJWSVerifier(root_cert, "com.missinghue.hangs", "Sandbox")
+
+
+def test_intermediate_without_ca_true_rejected():
+    """A leaf-signed leaf must be rejected (issue #103 finding 2).
+
+    Signature + issuer-name chaining alone would accept any cert whose key an
+    attacker controls (e.g. a $99 developer leaf) as an "intermediate", letting
+    them mint forged StoreKit JWSs that chain to Apple's root. RFC 5280 requires
+    an issuing cert to carry BasicConstraints CA:TRUE — an intermediate with
+    CA:FALSE is not a CA and must be refused, or the pack anti-forgery control
+    is worthless. The positive control below shares every other property, so
+    this can only fail because of the CA flag.
+    """
+    root_cert, jws = _mint_custom_chain(intermediate_is_ca=False)
+    with pytest.raises(JWSInvalid, match="not a CA"):
+        _verifier_for(root_cert).verify(jws)
+
+
+def test_legitimate_shape_custom_chain_verifies():
+    """Positive control: the same hand-built chain with CA:TRUE verifies.
+
+    Proves the rejection in `test_intermediate_without_ca_true_rejected` is
+    caused specifically by the missing CA flag, not an incidental defect in the
+    hand-minted chain.
+    """
+    root_cert, jws = _mint_custom_chain(intermediate_is_ca=True)
+    tx = _verifier_for(root_cert).verify(jws)
+    assert isinstance(tx, SignedTransaction)
+    assert tx.product_id == "pack_20"
+
+
+def test_intermediate_missing_apple_marker_oid_rejected():
+    """The WWDR intermediate must carry Apple marker OID 6.2.1.
+
+    Defense in depth alongside the CA check: pins the chain to Apple's real
+    App-Store-signing intermediate rather than any CA that chains to the root.
+    """
+    root_cert, jws = _mint_custom_chain(intermediate_has_marker=False)
+    with pytest.raises(JWSInvalid, match=r"6\.2\.1"):
+        _verifier_for(root_cert).verify(jws)
+
+
+def test_leaf_missing_apple_marker_oid_rejected():
+    """The signing leaf must carry Apple marker OID 6.11.1."""
+    root_cert, jws = _mint_custom_chain(leaf_has_marker=False)
+    with pytest.raises(JWSInvalid, match=r"6\.11\.1"):
+        _verifier_for(root_cert).verify(jws)
 
 
 @pytest.mark.skipif(

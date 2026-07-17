@@ -11,6 +11,9 @@
 //      account tokens.
 //   3. deleteAccount — calls DELETE /auth/me and clears stored tokens, then re-bootstraps anon.
 //   4. credentialRevokedNotification — drops to a fresh anon when the notification fires.
+//   5. #78 account-field merge matrix — live credential / server-decoded / stored precedence,
+//      on both completeAppleSignIn and the routine refresh path; a non-nil stored name/email
+//      must never be clobbered with nil.
 //
 //  Real SIWA sheet cannot run in unit tests (requires a device + entitlement) — we test the
 //  AuthService logic with mock data, not the system sign-in sheet.
@@ -92,13 +95,24 @@ private nonisolated enum AppleAuthStubs {
     static let baseURL = "http://apple-auth-test.invalid"
 
     static func tokenJSON(access: String, refresh: String, anon: String) -> String {
-        #"""
+        tokenJSON(access: access, refresh: refresh, anon: anon, fullName: nil, email: nil)
+    }
+
+    /// #78: `fullName`/`email` are the new server-decoded account fields
+    /// `/auth/apple` and `/auth/refresh` may now include. Optional so existing
+    /// call sites (anon-bootstrap, all pre-#78 tests) are unaffected.
+    static func tokenJSON(access: String, refresh: String, anon: String, fullName: String?, email: String?) -> String {
+        let fullNameField = fullName.map { "\"\($0)\"" } ?? "null"
+        let emailField = email.map { "\"\($0)\"" } ?? "null"
+        return #"""
         {
           "access_token": "\#(access)",
           "refresh_token": "\#(refresh)",
           "token_type": "bearer",
           "expires_in": 900,
-          "anon_id": "\#(anon)"
+          "anon_id": "\#(anon)",
+          "full_name": \#(fullNameField),
+          "email": \#(emailField)
         }
         """#
     }
@@ -301,6 +315,162 @@ struct AppleAuthTests {
         let stored = store.load()
         #expect(stored?.appleUserId == nil, "appleUserId must be cleared after revocation")
         #expect(stored?.accessToken == "fresh-anon-after-revoke", "Fresh anon tokens must replace account tokens")
+    }
+
+    // MARK: - 5. #78 account-field merge matrix
+    //
+    // Apple only supplies fullName/email on the FIRST authorization of an Apple ID
+    // with the app — every later sign-in (and every token refresh) gets nil from
+    // Apple, and the backend may or may not echo the durable value back. Before
+    // #78 the client rebuilt AuthTokens straight from whatever arrived, so any nil
+    // silently clobbered the stored name/email (and, via the refresh path, did so
+    // on every ~900s token refresh — not just on explicit re-sign-in). These tests
+    // pin the merge precedence: live Apple value > server-decoded value > stored value,
+    // and assert a non-nil stored value is NEVER replaced with nil.
+
+    /// (a) First sign-in: the live Apple-supplied name/email must win over any
+    /// (implausible but possible) server-decoded value — Apple's own authorization
+    /// is the freshest source of truth.
+    @Test("completeAppleSignIn: live Apple name/email wins over server-decoded value (#78 a)")
+    func mergePrefersLiveCredentialOverServerValue() async throws {
+        let store = AppleTestTokenStore()  // fresh anon, nothing stored yet
+        let service = makeService(store: store)
+        _ = await service.accessToken()  // warm cache
+
+        AppleStubURLProtocol.handler = { req in
+            (
+                .make(status: 200),
+                Data(
+                    AppleAuthStubs.tokenJSON(
+                        access: "account-access", refresh: "account-refresh", anon: "users-id-1",
+                        fullName: "Server Name", email: "server@example.com"
+                    ).utf8
+                )
+            )
+        }
+        defer { AppleStubURLProtocol.handler = nil }
+
+        let result = await service.completeAppleSignIn(
+            identityToken: "mock-id-token", authorizationCode: "mock-auth-code",
+            rawNonce: "test-raw-nonce", user: "apple-user-1",
+            fullName: "Live Name", email: "live@example.com"
+        )
+
+        #expect(result?.accountName == "Live Name", "Live Apple credential value must win")
+        #expect(result?.accountEmail == "live@example.com", "Live Apple credential value must win")
+    }
+
+    /// (b) Fresh install + re-sign-in with an already-consented Apple ID: Apple
+    /// supplies nil (only sends it once, ever), but the backend still has the
+    /// durable name from the original sign-in — the server-decoded value must
+    /// recover it. This is Acceptance criterion #2.
+    @Test("completeAppleSignIn: nil live name + server name → name recovered from server (#78 b)")
+    func mergeRecoversNameFromServerWhenLiveIsNil() async throws {
+        let store = AppleTestTokenStore()  // fresh install: nothing stored locally
+        let service = makeService(store: store)
+        _ = await service.accessToken()  // warm cache (mints anon)
+
+        AppleStubURLProtocol.handler = { req in
+            if req.url?.path == "/api/v1/auth/apple" {
+                return (
+                    .make(status: 200),
+                    Data(
+                        AppleAuthStubs.tokenJSON(
+                            access: "account-access", refresh: "account-refresh", anon: "users-id-1",
+                            fullName: "Recovered Name", email: "recovered@example.com"
+                        ).utf8
+                    )
+                )
+            }
+            return (.make(status: 500), Data())
+        }
+        defer { AppleStubURLProtocol.handler = nil }
+
+        let result = await service.completeAppleSignIn(
+            identityToken: "mock-id-token", authorizationCode: "mock-auth-code",
+            rawNonce: "test-raw-nonce", user: "apple-user-1",
+            fullName: nil, email: nil  // Apple sends nothing on a repeat authorization
+        )
+
+        #expect(result?.accountName == "Recovered Name", "Server-decoded value must recover the name Apple no longer sends")
+        #expect(result?.accountEmail == "recovered@example.com")
+    }
+
+    /// (c)+(d) The actual #78 regression: a routine, successful token refresh
+    /// (fires every ~900s for any signed-in user per config.access_token_ttl_seconds)
+    /// must NEVER clobber the stored account name/email/appleUserId with nil just
+    /// because this particular refresh response didn't carry them. Without this fix,
+    /// a signed-in user's Settings screen could silently revert to "not signed in"
+    /// roughly every 15 minutes of app use.
+    @Test("performRefreshOrBootstrap: nil server fields never clobber a stored signed-in account (#78 c/d)")
+    func refreshNeverClobbersStoredAccountFieldsWithNil() async throws {
+        let seed = AuthTokens(
+            accessToken: "old-access", refreshToken: "old-refresh", anonId: "users-id-1",
+            accountName: "Stored Name", accountEmail: "stored@example.com", appleUserId: "apple-user-1"
+        )
+        let store = AppleTestTokenStore(seed: seed)
+        let service = makeService(store: store)
+        _ = await service.accessToken()  // warm cache with the seeded signed-in tokens
+
+        AppleStubURLProtocol.handler = { req in
+            if req.url?.path == "/api/v1/auth/refresh" {
+                // Simulate a refresh response with no account fields (nil), as if
+                // the backend didn't look them up or the anon_id didn't resolve.
+                return (
+                    .make(status: 200),
+                    Data(AppleAuthStubs.tokenJSON(access: "new-access", refresh: "new-refresh", anon: "users-id-1").utf8)
+                )
+            }
+            return (.make(status: 500), Data())
+        }
+        defer { AppleStubURLProtocol.handler = nil }
+
+        let refreshed = await service.refreshedAccessToken(replacing: "old-access")
+
+        #expect(refreshed == "new-access", "Refresh must still rotate the access token")
+        let stored = store.load()
+        #expect(stored?.accountName == "Stored Name", "A nil server field must NEVER clobber a stored non-nil name")
+        #expect(stored?.accountEmail == "stored@example.com", "A nil server field must NEVER clobber a stored non-nil email")
+        #expect(stored?.appleUserId == "apple-user-1", "appleUserId is never sent by the backend — must always carry forward")
+        #expect(stored?.isSignedIn == true, "The signed-in state itself must survive a routine refresh")
+    }
+
+    /// Precedence complement to the previous test: when the server DOES decode a
+    /// fresh value on refresh (no live source exists during a background refresh),
+    /// that server value should still be adopted rather than sticking to a stale
+    /// stored one — the merge is "prefer newest available", not "stored always wins".
+    @Test("performRefreshOrBootstrap: server-decoded name on refresh overrides a stale stored value (#78 precedence)")
+    func refreshAdoptsFreshServerValueOverStaleStored() async throws {
+        let seed = AuthTokens(
+            accessToken: "old-access", refreshToken: "old-refresh", anonId: "users-id-1",
+            accountName: "Stale Name", accountEmail: "stale@example.com", appleUserId: "apple-user-1"
+        )
+        let store = AppleTestTokenStore(seed: seed)
+        let service = makeService(store: store)
+        _ = await service.accessToken()
+
+        AppleStubURLProtocol.handler = { req in
+            if req.url?.path == "/api/v1/auth/refresh" {
+                return (
+                    .make(status: 200),
+                    Data(
+                        AppleAuthStubs.tokenJSON(
+                            access: "new-access", refresh: "new-refresh", anon: "users-id-1",
+                            fullName: "Updated Name", email: "updated@example.com"
+                        ).utf8
+                    )
+                )
+            }
+            return (.make(status: 500), Data())
+        }
+        defer { AppleStubURLProtocol.handler = nil }
+
+        _ = await service.refreshedAccessToken(replacing: "old-access")
+
+        let stored = store.load()
+        #expect(stored?.accountName == "Updated Name", "A fresh server value should be adopted, not shadowed by the stale stored one")
+        #expect(stored?.accountEmail == "updated@example.com")
+        #expect(stored?.appleUserId == "apple-user-1", "appleUserId still carries forward — the backend never sends it")
     }
 
     // MARK: - Helpers

@@ -237,9 +237,10 @@ async def refresh(
     body: RefreshRequest,
     token_service: TokenService = Depends(get_token_service),
     refresh_store: RefreshTokenStore = Depends(get_refresh_store),
+    sessionmaker=Depends(get_auth_sessionmaker),
 ) -> AuthTokenResponse:
     """Rotate a refresh token, returning a new access + refresh pair."""
-    if token_service is None or refresh_store is None:
+    if token_service is None or refresh_store is None or sessionmaker is None:
         raise HTTPException(status_code=503, detail="Auth unavailable")
 
     try:
@@ -250,11 +251,35 @@ async def refresh(
         raise HTTPException(status_code=401, detail="Invalid refresh token")
 
     access_token = token_service.create_access_token(result.anon_id)
+
+    # #78: an Apple-upgraded account's subject is users.id — round-trip its
+    # full_name/email here too, or a signed-in user's stored name silently
+    # disappears client-side on every routine refresh (~900s), not just on
+    # sign-out/re-sign-in. Plain anon subjects are also UUIDs, so the lookup
+    # runs for them too and simply finds no row; the parse guard only filters
+    # legacy non-UUID device ids.
+    full_name: Optional[str] = None
+    email: Optional[str] = None
+    try:
+        user_uuid = uuid.UUID(result.anon_id)
+    except ValueError:
+        user_uuid = None
+    if user_uuid is not None:
+        async with sessionmaker() as session:
+            user = (
+                await session.execute(select(User).where(User.id == user_uuid))
+            ).scalar_one_or_none()
+        if user is not None:
+            full_name = user.full_name
+            email = user.email
+
     return AuthTokenResponse(
         access_token=access_token,
         refresh_token=result.refresh.raw_token,
         expires_in=token_service.access_ttl_seconds,
         anon_id=result.anon_id,
+        full_name=full_name,
+        email=email,
     )
 
 
@@ -374,6 +399,11 @@ async def apple_sign_in(
         refresh_token=issued.raw_token,
         expires_in=token_service.access_ttl_seconds,
         anon_id=user_id,  # subject is now users.id (field name is legacy)
+        # #78: read from the persisted user row, not the local full_name/email
+        # request variables — a re-sign-in's body carries no name (Apple only
+        # sends it once), but the row still holds it from the first sign-in.
+        full_name=user.full_name,
+        email=user.email,
     )
 
 

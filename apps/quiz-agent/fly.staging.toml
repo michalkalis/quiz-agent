@@ -43,3 +43,8 @@ primary_region = "cdg"
 [[mounts]]
   source = "quiz_agent_data_staging"
   destination = "/data"
+
+# Prod runs 512MB (set via `fly scale`, not its toml); 256MB default fails the
+# boot health check — pin it here so redeploys keep parity.
+[[vm]]
+  memory = "512mb"

@@ -182,6 +182,9 @@
         ▿ storage: Combine.Published<Swift.Bool>.Storage.value
           - value: false
       - isProcessingResponse: false
+      - isAdvancing: false
+      - submissionEpoch: 0
+      - isSubmittingAnswer: false
       - isStoppingRecording: false
       ▿ _isAutoRecording: Combine.Published<Swift.Bool>
         ▿ storage: Combine.Published<Swift.Bool>.Storage.value
@@ -209,6 +212,7 @@
         - stubbedUsage: nil
         - capturedTextInputAudio: nil
         - capturedTextInputInput: nil
+        - submitTextInputCallCount: 0
         - capturedStartQuizExcludedIds: nil
         - createSessionError: nil
         - endSessionError: nil
@@ -240,6 +244,7 @@
         - audioEngineActive: false
         ▿ onInterruptionBegan: Optional((Function))
           - some: (Function)
+        - sessionActive: true
         - playOpusCallCount: 0
         - lastPlayedData: nil
         - stopPlaybackCallCount: 0

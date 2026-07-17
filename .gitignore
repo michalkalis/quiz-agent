@@ -132,3 +132,6 @@ node_modules/
 .DS_Store
 .AppleDouble
 .LSOverride
+
+# Obsidian vault config (machine-local editor state)
+docs/.obsidian/

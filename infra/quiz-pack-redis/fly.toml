@@ -1,0 +1,25 @@
+# Fly.io configuration for quiz-pack-redis — self-hosted Redis replacing
+# Upstash (free-tier 500k req/month quota exhausted 2026-07-17, ARQ polling
+# from two envs). Deploy from repository root:
+#   fly deploy -c infra/quiz-pack-redis/fly.toml
+#
+# Private-network only (no [[services]]): reachable as
+# quiz-pack-redis.internal:6379 from apps in the same org. No public IP.
+# Shared by both envs — prod uses logical DB 0, staging DB 1.
+# No auto-stop: apps without services keep their machine running 24/7,
+# which is what a queue backend needs.
+
+app = "quiz-pack-redis"
+primary_region = "cdg"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[mounts]
+  source = "quiz_pack_redis_data"
+  destination = "/data"
+
+[[vm]]
+  memory = "256mb"
+  cpu_kind = "shared"
+  cpus = 1

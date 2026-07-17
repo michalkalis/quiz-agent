@@ -1,11 +1,16 @@
 # Python
+# (dockerignore patterns are root-relative; **/ prefixes make them match nested
+# copies too — apps/quiz-pack-api/.venv alone added ~800 MB to the build context)
 __pycache__/
+**/__pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
 .venv/
+**/.venv/
 venv/
+**/venv/
 ENV/
 env/
 pip-log.txt
@@ -30,6 +35,7 @@ build/
 
 # Data directories (will be mounted as volumes)
 data/
+**/data/
 chroma_data/
 *.db
 *.sqlite

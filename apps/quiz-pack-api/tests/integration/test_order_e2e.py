@@ -28,6 +28,7 @@ live events — see comments below.
 from __future__ import annotations
 
 import asyncio
+import json
 import os
 import uuid
 from typing import AsyncIterator, Optional
@@ -50,9 +51,29 @@ from app.db.models.job import GenerationJob
 from app.db.models.order import GenerationOrder
 from app.db.session import AsyncSessionLocal, get_session
 from app.storekit import AppleJWSVerifier
+from quiz_shared.auth.tokens import TokenService
 from tests.fixtures.storekit.jws_minter import JWSMinter
+from tests.integration.conftest import (
+    _ANTHROPIC_MESSAGES_RESPONSE,
+    _CRITIQUE_PAYLOAD,
+    _SCORING_PAYLOAD,
+    _TAVILY_VERIFY_RESPONSE,
+    _chat_completion_envelope,
+    register_sourcing_mocks,
+)
 
 pytestmark = pytest.mark.integration
+
+# #103 F3: order creation now requires a bearer alongside the StoreKit JWS.
+_E2E_JWT_SECRET = "order-e2e-test-jwt-secret-" + "x" * 64
+_BEARER = {
+    "Authorization": (
+        "Bearer "
+        + TokenService(
+            secret=_E2E_JWT_SECRET, issuer="quiz-agent", audience="quiz-agent-clients"
+        ).create_access_token("e2e-test-account")
+    )
+}
 
 # ---------------------------------------------------------------------------
 # Skip guard — all tests in this module need Postgres + Redis
@@ -171,7 +192,7 @@ async def test_app(
     app.dependency_overrides[get_arq_pool] = lambda: arq_pool
     app.dependency_overrides[get_redis_url] = lambda: _REDIS_URL
     app.dependency_overrides[get_settings] = lambda: Settings(
-        admin_api_key=_E2E_ADMIN_KEY
+        admin_api_key=_E2E_ADMIN_KEY, auth_jwt_secret=_E2E_JWT_SECRET
     )
 
     # Also patch AsyncSessionLocal used directly inside the SSE bridge / stream route
@@ -205,6 +226,102 @@ async def client(test_app: FastAPI) -> AsyncIterator[httpx.AsyncClient]:
         base_url="http://test",
     ) as ac:
         yield ac
+
+
+# ---------------------------------------------------------------------------
+# Full-pack generation mock (#103 F5) — the shared `e2e_http_mocks` fixture
+# (tests/integration/conftest.py) returns 3 near-duplicate question variants
+# per call, which is fine for its other consumers (they only assert "≥1
+# survivor") but means DedupStage's in-batch Jaccard check always collapses
+# them to ~1 real question. A pack_10 order (target_count=10) then trips the
+# new TopUpStage floor (80% of 10) every time — not a regression, but this
+# fixture was never asked to deliver a realistic full pack. 10 GENUINELY
+# distinct phrasings of the SAME easy-to-verify fact (all answer "three",
+# which the shared `_TAVILY_VERIFY_RESPONSE` already supports) let the first
+# generation pass alone satisfy target_count, so TopUpStage does 0 rounds —
+# this is the intended happy path, not a workaround around the floor.
+# ---------------------------------------------------------------------------
+
+_TOPUP_FRIENDLY_QUESTIONS = [
+    ("How many hearts does an octopus have?", "https://example.com/octopus-hearts-1"),
+    ("An octopus's circulatory system relies on how many separate hearts?", "https://example.com/octopus-hearts-2"),
+    ("Marine biologists count how many hearts inside a live octopus?", "https://example.com/octopus-hearts-3"),
+    ("A healthy octopus pumps blood using how many hearts?", "https://example.com/octopus-hearts-4"),
+    ("Zoology textbooks list how many hearts for the common octopus?", "https://example.com/octopus-hearts-5"),
+    ("What number of hearts keeps an octopus's blue blood flowing?", "https://example.com/octopus-hearts-6"),
+    ("How many pumping hearts does the octopus species carry?", "https://example.com/octopus-hearts-7"),
+    ("Aquarium guides say an octopus has how many hearts?", "https://example.com/octopus-hearts-8"),
+    ("Cephalopod anatomy books describe how many hearts in an octopus?", "https://example.com/octopus-hearts-9"),
+    ("How many separate hearts circulate blood in an octopus's body?", "https://example.com/octopus-hearts-10"),
+]
+
+
+def _topup_friendly_generation_payload() -> dict:
+    questions = [
+        {
+            "reasoning": {
+                "source_fact": "Octopuses possess three hearts and copper-based hemocyanin",
+                "pattern_used": "Surprising biology",
+                "why_interesting": "Most people assume one heart",
+                "universal_appeal": "Anatomy is universally relatable",
+                "boring_check": "Pinned to verified zoological fact",
+            },
+            "question": text,
+            "type": "text",
+            "correct_answer": "three",
+            "possible_answers": None,
+            "alternative_answers": ["3"],
+            "topic": "Biology",
+            "category": "science",
+            "difficulty": "medium",
+            "tags": ["zoology", "anatomy"],
+            "language_dependent": False,
+            "age_appropriate": "all",
+            "source_url": url,
+            "source_excerpt": "Octopuses have three hearts.",
+            "self_critique": {
+                "surprise_factor": 8,
+                "universal_appeal": 9,
+                "clever_framing": 7,
+                "educational_value": 9,
+                "answerability": 9,
+                "overall_score": 8.4,
+                "reasoning": "Strong universal appeal",
+            },
+        }
+        for text, url in _TOPUP_FRIENDLY_QUESTIONS
+    ]
+    return {"questions": questions}
+
+
+def _topup_friendly_openai_dispatch(request: httpx.Request) -> httpx.Response:
+    body = json.loads(request.content)
+    model = body.get("model", "")
+    if "gpt-4o-mini" in model:
+        content = json.dumps(_CRITIQUE_PAYLOAD)
+    elif "gpt-4o" in model:
+        content = json.dumps(_topup_friendly_generation_payload())
+    else:
+        content = json.dumps(_SCORING_PAYLOAD)
+    return httpx.Response(200, json=_chat_completion_envelope(content, model))
+
+
+@pytest.fixture
+def e2e_http_mocks_full(_block_external_http):
+    """Like `e2e_http_mocks`, but the generation mock returns enough
+    genuinely distinct questions for a real pack_10 order to clear
+    TopUpStage's floor on the first pass (see module docstring above)."""
+    register_sourcing_mocks(_block_external_http)
+    _block_external_http.post("https://api.tavily.com/search").mock(
+        return_value=httpx.Response(200, json=_TAVILY_VERIFY_RESPONSE)
+    )
+    _block_external_http.post("https://api.openai.com/v1/chat/completions").mock(
+        side_effect=_topup_friendly_openai_dispatch
+    )
+    _block_external_http.post("https://api.anthropic.com/v1/messages").mock(
+        return_value=httpx.Response(200, json=_ANTHROPIC_MESSAGES_RESPONSE)
+    )
+    return _block_external_http
 
 
 # ---------------------------------------------------------------------------
@@ -337,7 +454,7 @@ async def test_order_e2e_full(
     client: httpx.AsyncClient,
     db_session: AsyncSession,
     minter: JWSMinter,
-    e2e_http_mocks,
+    e2e_http_mocks_full,
 ) -> None:
     """POST /v1/orders → worker → SSE stream delivers ~7 events ending with 'done'.
 
@@ -356,7 +473,7 @@ async def test_order_e2e_full(
     resp = await client.post(
         "/v1/orders",
         json=_order_body(tx_id=tx_id),
-        headers={"X-StoreKit-JWS": jws},
+        headers={"X-StoreKit-JWS": jws, **_BEARER},
     )
     assert resp.status_code == 202, resp.text
     order_id = resp.json()["order_id"]
@@ -408,8 +525,13 @@ async def test_order_e2e_full(
     # Replay events come from step_log; progress defaults to 0 there (1.11 note).
     # Verify step names include the expected pipeline stages. Phase 2 stages
     # per app/orchestrator/stages/*.name + the worker's terminal "done" event;
-    # critique runs inside GenerationStage so no separate event.
-    expected_steps = {"sourcing", "generating", "verifying", "scoring", "dedup", "persisting", "done"}
+    # critique runs inside GenerationStage so no separate event. "topup"
+    # (#103 F5) always runs — a no-op (0 rounds) when nothing was dropped,
+    # which is the case here since the mocked collaborators never drop.
+    expected_steps = {
+        "sourcing", "generating", "verifying", "scoring", "dedup", "topup",
+        "persisting", "done",
+    }
     received_steps = set(step_names)
     assert received_steps == expected_steps, (
         f"step mismatch. expected={sorted(expected_steps)}, got={sorted(received_steps)}"
@@ -426,7 +548,7 @@ async def test_order_sse_reconnect(
     client: httpx.AsyncClient,
     db_session: AsyncSession,
     minter: JWSMinter,
-    e2e_http_mocks,
+    e2e_http_mocks_full,
 ) -> None:
     """Reconnecting with Last-Event-ID resumes at next event; no duplicates.
 
@@ -442,7 +564,7 @@ async def test_order_sse_reconnect(
     resp = await client.post(
         "/v1/orders",
         json=_order_body(tx_id=tx_id),
-        headers={"X-StoreKit-JWS": jws},
+        headers={"X-StoreKit-JWS": jws, **_BEARER},
     )
     assert resp.status_code == 202, resp.text
     order_id = resp.json()["order_id"]

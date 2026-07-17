@@ -2,8 +2,8 @@
 
 Issue #36 task 2.10 replaced the Phase-1 stub with a real orchestrator
 walk. The stages (sourcing → generating → verifying → scoring → dedup →
-persisting) live in ``app/orchestrator/stages``; this module wires them
-to the ARQ ``ctx`` collaborators built in ``app.worker.worker.on_startup``
+top-up → persisting) live in ``app/orchestrator/stages``; this module wires
+them to the ARQ ``ctx`` collaborators built in ``app.worker.worker.on_startup``
 and handles the worker-layer concerns the orchestrator deliberately
 omits: order/job row updates, cost-cents accounting, retry semantics,
 and the final ``done`` event SSE clients expect.
@@ -29,6 +29,7 @@ from app.orchestrator.stages import (
     PersistStage,
     ScoringStage,
     SourcingStage,
+    TopUpStage,
     VerificationStage,
 )
 
@@ -40,18 +41,29 @@ def _now() -> datetime:
 
 
 def _build_stages(ctx: Dict[str, Any]) -> list[Stage]:
-    """Compose the six Phase-2 stages from collaborators on ARQ ctx."""
+    """Compose the Phase-2 stages from collaborators on ARQ ctx.
+
+    #103 F5: TopUpStage reuses the SAME generation/verification/scoring/dedup
+    stage instances for its backfill rounds (not fresh copies) — same
+    collaborators, same config, so a top-up round behaves identically to the
+    initial pass.
+    """
     session_factory = ctx.get("session_factory") or AsyncSessionLocal
+    generation = GenerationStage(
+        ctx["generator"],
+        ctx.get("answer_normalizer"),
+        expiry_classifier=ctx.get("expiry_classifier"),
+    )
+    verification = VerificationStage(ctx["fact_verifier"], ctx.get("logical_verifier"))
+    scoring = ScoringStage(ctx["scorer"])
+    dedup = DedupStage(ctx["question_store"], ctx.get("gold_standard_path"))
     return [
         SourcingStage(ctx["fact_sourcer"]),
-        GenerationStage(
-            ctx["generator"],
-            ctx.get("answer_normalizer"),
-            expiry_classifier=ctx.get("expiry_classifier"),
-        ),
-        VerificationStage(ctx["fact_verifier"], ctx.get("logical_verifier")),
-        ScoringStage(ctx["scorer"]),
-        DedupStage(ctx["question_store"], ctx.get("gold_standard_path")),
+        generation,
+        verification,
+        scoring,
+        dedup,
+        TopUpStage(generation, verification, scoring, dedup),
         PersistStage(session_factory),
     ]
 

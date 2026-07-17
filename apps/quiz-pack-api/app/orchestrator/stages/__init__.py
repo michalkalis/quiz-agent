@@ -10,6 +10,7 @@ from app.orchestrator.stages.generation import GenerationStage
 from app.orchestrator.stages.persist import PersistStage
 from app.orchestrator.stages.scoring import ScoringStage
 from app.orchestrator.stages.sourcing import SourcingStage
+from app.orchestrator.stages.topup import TopUpStage
 from app.orchestrator.stages.verification import VerificationStage
 
 __all__ = [
@@ -18,5 +19,6 @@ __all__ = [
     "PersistStage",
     "ScoringStage",
     "SourcingStage",
+    "TopUpStage",
     "VerificationStage",
 ]

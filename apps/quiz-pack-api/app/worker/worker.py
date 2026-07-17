@@ -14,10 +14,12 @@ from pathlib import Path
 from typing import Any, Dict
 
 from arq.connections import RedisSettings
+from arq.cron import cron
 from quiz_shared.paths import find_in_ancestors
 
 from app.config import get_settings
 
+from .sweep import sweep_stuck_orders
 from .tasks import process_order
 
 logger = logging.getLogger(__name__)
@@ -93,6 +95,13 @@ class WorkerSettings:
 
     redis_settings: RedisSettings = RedisSettings.from_dsn(get_settings().redis_url)
     functions = [process_order]
+    # #103 F4 — periodic recovery for orders stuck in 'pending'/'in_progress'
+    # (dead worker, Redis blip between commit and enqueue). `run_at_startup`
+    # is on so a freshly (re)started worker immediately recovers anything a
+    # previous, killed worker left stuck, rather than waiting up to 5 min.
+    cron_jobs = [
+        cron(sweep_stuck_orders, minute=set(range(0, 60, 5)), run_at_startup=True)
+    ]
     on_startup = on_startup
     max_jobs: int = 2
     max_tries: int = 3

@@ -2,9 +2,14 @@
 
 `POST /v1/orders` authenticates via a StoreKit JWS in the `X-StoreKit-JWS`
 header, **or** (#95 founder path, payments deferred) via the `X-Admin-Key`
-header, and creates (or idempotently returns) a generation order + job. When
-the request also carries a quiz-agent bearer JWT, the order is linked to that
-account (`user_id`).
+header, and creates (or idempotently returns) a generation order + job. A
+quiz-agent bearer JWT is also REQUIRED (#103 F3) alongside either of those —
+a bearer-less order writes `user_id=NULL`, which orphans the generated pack:
+the quiz-agent ownership check requires `user_id = :subject_id` (NULL never
+matches → 404) and it never appears in `GET /v1/orders`, so the pack is paid
+for, generated (LLM cost spent), and then permanently unplayable/unlistable.
+
+`GET /v1/orders` lists the caller's own orders (bearer JWT required).
 
 `GET /v1/orders` lists the caller's own orders (bearer JWT required).
 
@@ -37,6 +42,7 @@ from arq.connections import ArqRedis
 from ...config import Settings, get_settings
 from ...db.models.job import GenerationJob
 from ...db.models.order import GenerationOrder
+from ...db.models.pack import QuestionPack
 from ...db.session import AsyncSessionLocal, get_session
 from ...sse import event_stream
 from ...sse.jws_cache import verify_jws_cached
@@ -117,10 +123,18 @@ class OrderSnapshotResponse(BaseModel):
     created_at: datetime
     delivered_at: Optional[datetime]
     pack_id: Optional[uuid.UUID]
+    # #103 F5: how many questions actually survived generation vs. how many
+    # were paid for — additive so a client can detect+surface a shortfall
+    # instead of silently receiving fewer questions than target_count.
+    # None until the pack is persisted (no pack_id yet).
+    actual_count: Optional[int]
     # Measured spend (#95 decision 5); fine to expose while prod is
     # founder-only — hide behind the admin key before real users.
     llm_cost_usd: Optional[Decimal]
     search_cost_cents: int
+    # #103 F4c: set on terminal failure (_handle_failure / the sweep) so a
+    # client/admin can actually see it — previously written but never read.
+    refund_eligible: bool
     job: Optional[JobSnapshotResponse]
 
 
@@ -160,15 +174,19 @@ async def create_order(
     arq_pool: Annotated[ArqRedis, Depends(get_arq_pool)],
     verifier: Annotated[AppleJWSVerifier, Depends(get_jws_verifier)],
     settings: Annotated[Settings, Depends(get_settings)],
-    user_id: Annotated[Optional[str], Depends(optional_user)],
+    user_id: Annotated[str, Depends(require_user)],
     x_storekit_jws: Annotated[Optional[str], Header()] = None,
 ) -> OrderCreatedResponse:
     """Create a generation order from a verified StoreKit JWS or admin key.
 
     The admin-key path (#95, payments deferred) skips StoreKit entirely: the
     founder build sends `X-Admin-Key` plus a self-generated
-    `admin-{uuid}` transaction id. A quiz-agent bearer JWT, when present,
-    links the order to that account so it shows up in `GET /v1/orders`.
+    `admin-{uuid}` transaction id. A quiz-agent bearer JWT is REQUIRED
+    alongside either path (#103 F3) — it links the order to that account so
+    it shows up in `GET /v1/orders` and so the generated pack is ever
+    playable (the quiz-agent ownership check needs a real `user_id`; NULL
+    never matches). `require_user` raises 401 before this body runs when the
+    bearer is missing or invalid, and 503 if bearer auth isn't configured.
 
     Returns 202 on creation and 200 on idempotent replay (same transaction_id).
     """
@@ -245,8 +263,28 @@ async def create_order(
 
     await session.commit()
 
-    # 7. Enqueue ARQ — after commit so the worker can read the row
-    await arq_pool.enqueue_job("process_order", str(order.id))
+    # 7. Enqueue ARQ — after commit so the worker can read the row.
+    # #103 F4a: a Redis blip here used to leave the order 'pending' forever
+    # (replay just returns it, and retry needs 'failed' — a 409). Mark it
+    # failed+refund_eligible immediately instead so the client sees a clear
+    # error and can retry via POST /v1/orders/{id}/retry rather than polling
+    # a silently stuck order. The periodic sweep (app.worker.sweep) is the
+    # remaining safety net for orders that slip past this point.
+    try:
+        await arq_pool.enqueue_job("process_order", str(order.id))
+    except Exception as exc:
+        job.status = "failed"
+        job.error = f"enqueue failed: {exc!r}"
+        order.status = "failed"
+        order.refund_eligible = True
+        await session.commit()
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "failed to enqueue generation job; order marked failed — "
+                "retry via POST /v1/orders/{order_id}/retry"
+            ),
+        ) from exc
 
     # 8. Transition to in_progress
     order.status = "in_progress"
@@ -270,7 +308,9 @@ def _job_snapshot(job: Optional[GenerationJob]) -> Optional[JobSnapshotResponse]
 
 
 def _order_snapshot(
-    order: GenerationOrder, job: Optional[GenerationJob]
+    order: GenerationOrder,
+    job: Optional[GenerationJob],
+    actual_count: Optional[int] = None,
 ) -> OrderSnapshotResponse:
     return OrderSnapshotResponse(
         order_id=order.id,
@@ -283,8 +323,10 @@ def _order_snapshot(
         created_at=order.created_at,
         delivered_at=order.delivered_at,
         pack_id=order.pack_id,
+        actual_count=actual_count,
         llm_cost_usd=order.llm_cost_usd,
         search_cost_cents=order.search_cost_cents,
+        refund_eligible=order.refund_eligible,
         job=_job_snapshot(job),
     )
 
@@ -315,8 +357,24 @@ async def list_orders(
             j.id: j for j in (await session.execute(job_stmt)).scalars().all()
         }
 
+    # #103 F5: actual_count lives on question_packs, not generation_orders.
+    actual_counts_by_pack: dict[uuid.UUID, Optional[int]] = {}
+    pack_ids = [o.pack_id for o in orders if o.pack_id is not None]
+    if pack_ids:
+        pack_stmt = select(QuestionPack.id, QuestionPack.actual_count).where(
+            QuestionPack.id.in_(pack_ids)
+        )
+        actual_counts_by_pack = {
+            row.id: row.actual_count for row in (await session.execute(pack_stmt)).all()
+        }
+
     return OrderListResponse(
-        orders=[_order_snapshot(o, jobs_by_id.get(o.job_id)) for o in orders]
+        orders=[
+            _order_snapshot(
+                o, jobs_by_id.get(o.job_id), actual_counts_by_pack.get(o.pack_id)
+            )
+            for o in orders
+        ]
     )
 
 
@@ -358,7 +416,14 @@ async def get_order(
         job_stmt = select(GenerationJob).where(GenerationJob.id == order.job_id)
         job = (await session.execute(job_stmt)).scalars().first()
 
-    return _order_snapshot(order, job)
+    actual_count: Optional[int] = None
+    if order.pack_id is not None:
+        pack_stmt = select(QuestionPack.actual_count).where(
+            QuestionPack.id == order.pack_id
+        )
+        actual_count = (await session.execute(pack_stmt)).scalar_one_or_none()
+
+    return _order_snapshot(order, job, actual_count)
 
 
 @router.post("/{order_id}/retry", status_code=202, response_model=OrderCreatedResponse)
@@ -381,11 +446,15 @@ async def retry_order(
 
     Flow:
         409 if ``order.status != 'failed'``.
-        422 if ``job.retry_count >= 3``.
+        422 if ``job.manual_retry_count >= 3`` (#103 F1: the manual-retry
+        budget, separate from ``retry_count`` — the ARQ auto-attempt counter
+        that is always 3 on a terminal failure, which used to make this
+        endpoint permanently 422 for every real failure).
         Otherwise: ``SELECT ... FOR UPDATE`` row-locks order + job (R14 —
         prevents double-enqueue under concurrent retries), resets job to
-        ``queued``/``progress=0``/``error=NULL``, increments ``retry_count``,
-        flips order to ``pending`` → commit → ARQ enqueue → ``in_progress``.
+        ``queued``/``progress=0``/``error=NULL``/``retry_count=0`` (fresh ARQ
+        attempt sequence), increments ``manual_retry_count``, flips order to
+        ``pending`` → commit → ARQ enqueue → ``in_progress``.
     """
     tx = None
     if x_storekit_jws:
@@ -440,16 +509,20 @@ async def retry_order(
     if job is None:
         raise HTTPException(status_code=409, detail="order has no job to retry")
 
-    if job.retry_count >= 3:
+    if job.manual_retry_count >= 3:
         raise HTTPException(
             status_code=422,
-            detail=f"retry cap reached (retry_count={job.retry_count}, max=3)",
+            detail=(
+                f"retry cap reached (manual_retry_count={job.manual_retry_count}, "
+                "max=3)"
+            ),
         )
 
     job.status = "queued"
     job.progress = 0
     job.error = None
-    job.retry_count = job.retry_count + 1
+    job.retry_count = 0
+    job.manual_retry_count = job.manual_retry_count + 1
     order.status = "pending"
     await session.commit()
 

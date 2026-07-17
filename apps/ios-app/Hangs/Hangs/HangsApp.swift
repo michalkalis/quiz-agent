@@ -61,6 +61,12 @@ struct HangsApp: App {
                     }
                     #endif
                 }
+                // Wake the auto-stopped Fly machine while the user is still on
+                // the start screen, so the first quiz request doesn't eat the
+                // ~10s cold start (min_machines_running stays 0 = no fixed cost).
+                .task {
+                    await Self.warmUpBackend()
+                }
                 // Mic-in-background fix: UIBackgroundModes audio keeps TTS
                 // playing while driving, but the mic INPUT must never survive
                 // backgrounding. Route phase changes to the quiz view model,
@@ -69,6 +75,14 @@ struct HangsApp: App {
                     appState.quizViewModel?.handleScenePhase(newPhase)
                 }
         }
+    }
+
+    /// Fire-and-forget health ping; result is irrelevant, the side effect (machine boot) is the point.
+    private static func warmUpBackend() async {
+        guard let url = URL(string: Config.apiBaseURLWithVersion + "/health") else { return }
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 30
+        _ = try? await URLSession.shared.data(for: request)
     }
 
     /// Release identifier in `<bundle-id>@<version>+<build>` form, matching `sentry-cli releases` dSYM upload format.

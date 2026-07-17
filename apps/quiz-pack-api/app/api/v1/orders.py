@@ -381,11 +381,15 @@ async def retry_order(
 
     Flow:
         409 if ``order.status != 'failed'``.
-        422 if ``job.retry_count >= 3``.
+        422 if ``job.manual_retry_count >= 3`` (#103 F1: the manual-retry
+        budget, separate from ``retry_count`` — the ARQ auto-attempt counter
+        that is always 3 on a terminal failure, which used to make this
+        endpoint permanently 422 for every real failure).
         Otherwise: ``SELECT ... FOR UPDATE`` row-locks order + job (R14 —
         prevents double-enqueue under concurrent retries), resets job to
-        ``queued``/``progress=0``/``error=NULL``, increments ``retry_count``,
-        flips order to ``pending`` → commit → ARQ enqueue → ``in_progress``.
+        ``queued``/``progress=0``/``error=NULL``/``retry_count=0`` (fresh ARQ
+        attempt sequence), increments ``manual_retry_count``, flips order to
+        ``pending`` → commit → ARQ enqueue → ``in_progress``.
     """
     tx = None
     if x_storekit_jws:
@@ -440,16 +444,20 @@ async def retry_order(
     if job is None:
         raise HTTPException(status_code=409, detail="order has no job to retry")
 
-    if job.retry_count >= 3:
+    if job.manual_retry_count >= 3:
         raise HTTPException(
             status_code=422,
-            detail=f"retry cap reached (retry_count={job.retry_count}, max=3)",
+            detail=(
+                f"retry cap reached (manual_retry_count={job.manual_retry_count}, "
+                "max=3)"
+            ),
         )
 
     job.status = "queued"
     job.progress = 0
     job.error = None
-    job.retry_count = job.retry_count + 1
+    job.retry_count = 0
+    job.manual_retry_count = job.manual_retry_count + 1
     order.status = "pending"
     await session.commit()
 

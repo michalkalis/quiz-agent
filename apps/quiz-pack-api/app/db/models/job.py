@@ -66,6 +66,14 @@ class GenerationJob(Base, UUIDPrimaryKeyMixin):
     retry_count: Mapped[int] = mapped_column(
         Integer, nullable=False, default=0, server_default=text("0")
     )
+    # #103 F1: the manual-retry budget the `/retry` endpoint gates on.
+    # Independent of `retry_count` (set to the ARQ `job_try` on every
+    # automatic failure, so a terminal 'failed' order always has
+    # `retry_count == max_tries` — gating the manual endpoint on that field
+    # made it un-retryable for every real failure).
+    manual_retry_count: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default=text("0")
+    )
     error: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=text("now()")

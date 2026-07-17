@@ -25,6 +25,11 @@ from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric.utils import decode_dss_signature
 from cryptography.x509.oid import NameOID
 
+from app.storekit.verifier import (
+    APPLE_INTERMEDIATE_MARKER_OID,
+    APPLE_LEAF_MARKER_OID,
+)
+
 ONE_DAY = timedelta(days=1)
 TEN_YEARS = timedelta(days=3650)
 
@@ -42,6 +47,7 @@ def _make_cert(
     is_ca: bool,
     not_before: datetime,
     not_after: datetime,
+    marker_oid: Optional[x509.ObjectIdentifier] = None,
 ) -> x509.Certificate:
     builder = (
         x509.CertificateBuilder()
@@ -53,6 +59,13 @@ def _make_cert(
         .not_valid_after(not_after)
         .add_extension(x509.BasicConstraints(ca=is_ca, path_length=None), critical=True)
     )
+    if marker_oid is not None:
+        # Apple App Store JWS certs carry a marker extension (empty value) whose
+        # OID identifies the cert's role in the chain. The verifier only checks
+        # the OID is present, so an empty DER value mirrors the real shape.
+        builder = builder.add_extension(
+            x509.UnrecognizedExtension(marker_oid, b""), critical=False
+        )
     return builder.sign(private_key=issuer_private_key, algorithm=hashes.SHA256())
 
 
@@ -99,6 +112,7 @@ def test_chain(tmp_path_factory) -> TestChain:
         is_ca=True,
         not_before=now - ONE_DAY,
         not_after=now + TEN_YEARS,
+        marker_oid=APPLE_INTERMEDIATE_MARKER_OID,
     )
 
     leaf_key = ec.generate_private_key(ec.SECP256R1())
@@ -111,6 +125,7 @@ def test_chain(tmp_path_factory) -> TestChain:
         is_ca=False,
         not_before=now - ONE_DAY,
         not_after=now + TEN_YEARS,
+        marker_oid=APPLE_LEAF_MARKER_OID,
     )
 
     chain_b64 = [

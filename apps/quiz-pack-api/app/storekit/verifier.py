@@ -45,6 +45,14 @@ from .models import SignedTransaction
 
 _MAX_CHAIN_LEN = 4
 
+# Apple-specific marker OIDs present in App Store JWS x5c chains. Apple's own
+# verification (app-store-server-library) asserts these as a shape check on top
+# of the RFC 5280 walk: the WWDR intermediate carries 6.2.1, the signing leaf
+# carries 6.11.1. Requiring them stops a chain built from non-App-Store certs
+# (e.g. a $99 developer leaf) from being substituted for the real intermediate.
+APPLE_INTERMEDIATE_MARKER_OID = x509.ObjectIdentifier("1.2.840.113635.100.6.2.1")
+APPLE_LEAF_MARKER_OID = x509.ObjectIdentifier("1.2.840.113635.100.6.11.1")
+
 
 def _b64url_decode(segment: str) -> bytes:
     pad = "=" * (-len(segment) % 4)
@@ -52,6 +60,14 @@ def _b64url_decode(segment: str) -> bytes:
         return base64.urlsafe_b64decode(segment + pad)
     except (ValueError, TypeError) as exc:
         raise JWSInvalid(f"invalid base64url segment: {exc}") from exc
+
+
+def _has_extension(cert: x509.Certificate, oid: x509.ObjectIdentifier) -> bool:
+    try:
+        cert.extensions.get_extension_for_oid(oid)
+        return True
+    except x509.ExtensionNotFound:
+        return False
 
 
 class AppleJWSVerifier:
@@ -180,6 +196,70 @@ class AppleJWSVerifier:
 
         if self._root.not_valid_before_utc > now or self._root.not_valid_after_utc < now:
             raise JWSInvalid("configured trust anchor is not currently valid")
+
+        self._verify_ca_constraints(chain)
+        self._verify_apple_markers(chain)
+
+    @staticmethod
+    def _verify_ca_constraints(chain: list[x509.Certificate]) -> None:
+        """Enforce RFC 5280 Basic Constraints on every issuing cert.
+
+        Chaining by signature + issuer-name alone is not enough: any cert whose
+        private key an attacker controls (e.g. a $99 developer leaf that itself
+        chains to Apple's root) could otherwise sign a forged leaf the verifier
+        accepts. RFC 5280 §4.2.1.9 says a cert may only act as an issuer if it
+        carries Basic Constraints with CA:TRUE; a missing extension means "not a
+        CA". Every cert above the leaf (``chain[1:]``) issues the one below it,
+        so each must be a CA, and its pathLenConstraint must allow the number of
+        intermediate CAs sitting beneath it.
+        """
+        for i in range(1, len(chain)):
+            issuer = chain[i]
+            subject = issuer.subject.rfc4514_string()
+            try:
+                constraints = issuer.extensions.get_extension_for_class(
+                    x509.BasicConstraints
+                ).value
+            except x509.ExtensionNotFound:
+                raise JWSInvalid(
+                    f"issuer cert lacks BasicConstraints, cannot act as CA: {subject}"
+                ) from None
+            if not constraints.ca:
+                raise JWSInvalid(
+                    f"issuer cert is not a CA (BasicConstraints CA:FALSE): {subject}"
+                )
+            intermediates_below = i - 1
+            if (
+                constraints.path_length is not None
+                and constraints.path_length < intermediates_below
+            ):
+                raise JWSInvalid(
+                    f"path length constraint violated at {subject}: "
+                    f"pathLen={constraints.path_length} < {intermediates_below}"
+                )
+
+    @staticmethod
+    def _verify_apple_markers(chain: list[x509.Certificate]) -> None:
+        """Assert the Apple marker OIDs that App Store JWS chains always carry.
+
+        Mirrors app-store-server-library: the signing leaf must carry 6.11.1 and
+        its issuing WWDR intermediate must carry 6.2.1. This pins the chain to
+        Apple's real App-Store-signing certs rather than any arbitrary cert that
+        happens to chain to the root, closing the substitution path even where a
+        CA flag alone would not.
+        """
+        leaf = chain[0]
+        if not _has_extension(leaf, APPLE_LEAF_MARKER_OID):
+            raise JWSInvalid(
+                "leaf cert missing Apple marker OID 1.2.840.113635.100.6.11.1"
+            )
+        if len(chain) < 2:
+            raise JWSInvalid("chain missing Apple WWDR intermediate cert")
+        intermediate = chain[1]
+        if not _has_extension(intermediate, APPLE_INTERMEDIATE_MARKER_OID):
+            raise JWSInvalid(
+                "intermediate cert missing Apple marker OID 1.2.840.113635.100.6.2.1"
+            )
 
     @staticmethod
     def _verify_signed_by(cert: x509.Certificate, issuer: x509.Certificate) -> None:

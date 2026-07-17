@@ -22,6 +22,10 @@ final class MockNetworkService: NetworkServiceProtocol {
     /// When set, `getUsage` returns this instead of the default fixture — lets
     /// tests pin the quota state (e.g. the ≤5-remaining completion upsell, #94).
     var stubbedUsage: UsageInfo?
+    /// Number of times `getUsage` was invoked — asserts the post-restore
+    /// reconciliation bridge (#102 finding 3) actually refreshes usage, not
+    /// just entitlements.
+    var getUsageCallCount = 0
 
     // Capture properties for unit-test assertions (additive — no behaviour change)
     var capturedTextInputAudio: Bool?
@@ -158,6 +162,7 @@ final class MockNetworkService: NetworkServiceProtocol {
     }
 
     func getUsage() async throws -> UsageInfo {
+        getUsageCallCount += 1
         if shouldFail {
             throw NetworkError.invalidResponse
         }

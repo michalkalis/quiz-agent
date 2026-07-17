@@ -41,7 +41,7 @@ final class AppState: ObservableObject {
             self.authService = AuthService(baseURL: Config.apiBaseURL)
             self.packOrderService = MockPackOrderService()
             storeManager.onPurchaseSuccess = { [weak self] in
-                await self?.quizViewModel?.notifyPremiumPurchased()
+                await self?.quizViewModel?.notifyPremiumPurchased() ?? false
             }
             UITestSupport.startTestListener()
             Logger.quiz.info("🧪 AppState initialized in UI-test mode")
@@ -122,15 +122,20 @@ final class AppState: ObservableObject {
         }
 
         // Post-purchase continuation (#96 P1): entitlement sync + usage
-        // refresh on ANY successful purchase or entitled restore — keyed on
-        // the purchase *outcome*, not the subscription entitlement state,
-        // so consumable packs complete too.
+        // refresh on ANY successful purchase or restore attempt — keyed on
+        // the purchase *outcome*, not the subscription entitlement state, so
+        // consumable packs complete too. Returns whether the server mirror
+        // now shows an active entitlement (subscription or pack credits) —
+        // `StoreManager.restorePurchases()` needs this to detect a pack-only
+        // recovery, since `isPurchased` never reflects packs (#102 finding 3).
         storeManager.onPurchaseSuccess = { [weak self] in
-            guard let self else { return }
+            guard let self else { return false }
             if let viewModel = self.quizViewModel {
-                await viewModel.notifyPremiumPurchased()
+                return await viewModel.notifyPremiumPurchased()
             } else {
                 try? await self.networkService.syncEntitlements()
+                let usage = try? await self.networkService.getUsage()
+                return (usage?.isPremium ?? false) || (usage?.creditBalance ?? 0) > 0
             }
         }
 

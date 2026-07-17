@@ -251,7 +251,7 @@ struct StoreManagerTests {
     func packPurchaseSuccessFiresBridge() async {
         let (manager, _) = await makeManager(isEntitled: false, purchaseOutcome: .success(unlimitedActive: false))
         var bridgeFired = false
-        manager.onPurchaseSuccess = { bridgeFired = true }
+        manager.onPurchaseSuccess = { bridgeFired = true; return true }
 
         await manager.purchase(productID: StoreProduct.packId)
 
@@ -264,7 +264,7 @@ struct StoreManagerTests {
     func subscriptionPurchaseSuccessFiresBridge() async {
         let (manager, _) = await makeManager(isEntitled: true, purchaseOutcome: .success(unlimitedActive: true))
         var bridgeFired = false
-        manager.onPurchaseSuccess = { bridgeFired = true }
+        manager.onPurchaseSuccess = { bridgeFired = true; return true }
 
         await manager.purchase(productID: StoreProduct.annualSubId)
 
@@ -278,7 +278,7 @@ struct StoreManagerTests {
         // silent success here was the founder's password re-prompt loop.
         let (manager, _) = await makeManager(isEntitled: false, purchaseOutcome: .success(unlimitedActive: false))
         var bridgeFired = false
-        manager.onPurchaseSuccess = { bridgeFired = true }
+        manager.onPurchaseSuccess = { bridgeFired = true; return true }
 
         await manager.purchase(productID: StoreProduct.monthlySubId)
 
@@ -294,13 +294,13 @@ struct StoreManagerTests {
     func cancelledAndPendingPublishStates() async {
         let (manager, _) = await makeManager(purchaseOutcome: .userCancelled)
         var bridgeFired = false
-        manager.onPurchaseSuccess = { bridgeFired = true }
+        manager.onPurchaseSuccess = { bridgeFired = true; return true }
 
         await manager.purchase(productID: StoreProduct.monthlySubId)
         #expect(manager.purchaseState == .cancelled)
 
         let (pendingManager, _) = await makeManager(purchaseOutcome: .pending)
-        pendingManager.onPurchaseSuccess = { bridgeFired = true }
+        pendingManager.onPurchaseSuccess = { bridgeFired = true; return true }
         await pendingManager.purchase(productID: StoreProduct.monthlySubId)
         #expect(pendingManager.purchaseState == .pending)
         #expect(bridgeFired == false)
@@ -321,7 +321,7 @@ struct StoreManagerTests {
     func entitledRestoreFiresBridge() async {
         let (manager, _) = await makeManager(isEntitled: true)
         var bridgeFired = false
-        manager.onPurchaseSuccess = { bridgeFired = true }
+        manager.onPurchaseSuccess = { bridgeFired = true; return true }
 
         await manager.restorePurchases()
 
@@ -329,18 +329,69 @@ struct StoreManagerTests {
         #expect(bridgeFired == true)
     }
 
-    @Test("un-entitled restore reports nothing-to-restore and does not fire the bridge")
-    func unentitledRestoreDoesNotFireBridge() async {
+    // MARK: 14. Pack-only recovery via restore (#102 finding 3)
+    //
+    // StoreKit has no restore mechanism for consumables — a pack buyer's
+    // credits only come back through the server re-deriving them from RC's
+    // history (`POST /entitlements/sync`). Before this fix, `restorePurchases()`
+    // gated that call on `isPurchased`, which a pack purchase never sets — so
+    // a pack-only buyer was told "nothing to restore" even though the server
+    // could have recovered their credits. These pin: the bridge always fires
+    // (regardless of subscription entitlement), and the outcome is keyed on
+    // what the bridge reports came back, not on `isPurchased` alone.
+
+    @Test("restore reconciles with the server even when RC reports no subscription entitlement")
+    func restoreAlwaysReconcilesRegardlessOfEntitlement() async {
+        let (manager, _) = await makeManager(isEntitled: false)
+        let network = MockNetworkService()
+        network.stubbedUsage = UsageInfo(
+            userId: "mock-subject", isPremium: false, questionsUsed: 30,
+            questionsLimit: 100, remaining: 70,
+            resetsAt: ISO8601DateFormatter().string(from: Date()),
+            subscriptionStatus: "none", creditBalance: 0
+        )
+        manager.onPurchaseSuccess = {
+            try? await network.syncEntitlements()
+            let usage = try? await network.getUsage()
+            return (usage?.isPremium ?? false) || (usage?.creditBalance ?? 0) > 0
+        }
+
+        await manager.restorePurchases()
+
+        // Sync + usage refresh both ran, unconditionally on the subscription state.
+        #expect(network.syncEntitlementsCallCount == 1)
+        #expect(network.getUsageCallCount == 1)
+    }
+
+    @Test("un-entitled restore with pack credits recovered via server reconciliation reports success")
+    func unentitledRestoreWithRecoveredCreditsReportsSuccess() async {
         let (manager, _) = await makeManager(isEntitled: false)
         var bridgeFired = false
-        manager.onPurchaseSuccess = { bridgeFired = true }
+        // Simulates the server reconciliation surfacing a non-zero pack
+        // credit balance — `isPurchased` stays false the whole time.
+        manager.onPurchaseSuccess = { bridgeFired = true; return true }
+
+        await manager.restorePurchases()
+
+        #expect(manager.purchaseState == .success(productID: nil))
+        #expect(bridgeFired == true)
+        #expect(manager.isPurchased == false)
+    }
+
+    @Test("un-entitled restore with nothing recovered reports nothing-to-restore, not success")
+    func unentitledRestoreWithNothingRecoveredReportsNothingToRestore() async {
+        let (manager, _) = await makeManager(isEntitled: false)
+        var bridgeFired = false
+        // Server reconciliation ran but found no subscription and no credits.
+        manager.onPurchaseSuccess = { bridgeFired = true; return false }
 
         await manager.restorePurchases()
 
         // Must be visible — a silent no-op restore is the same "no response"
-        // defect class this issue fixes.
+        // defect class this issue fixes — but it must not claim success when
+        // nothing actually changed.
         #expect(manager.purchaseState == .nothingToRestore)
-        #expect(bridgeFired == false)
+        #expect(bridgeFired == true)
     }
 
     @Test("resetPurchaseState clears a finished attempt back to idle")

@@ -72,10 +72,13 @@ final class StoreManager: ObservableObject {
     @Published private(set) var purchaseState: PurchaseState = .idle
 
     /// Post-purchase continuation — set once by AppState. Runs after ANY
-    /// successful purchase or entitled restore (subscription or pack):
-    /// `POST /entitlements/sync` + `/usage` refresh, so the server mirror and
-    /// the visible quota react without waiting for the RC webhook.
-    var onPurchaseSuccess: (@MainActor () async -> Void)?
+    /// successful purchase or restore attempt: `POST /entitlements/sync` +
+    /// `/usage` refresh, so the server mirror and the visible quota react
+    /// without waiting for the RC webhook. Returns whether the server mirror
+    /// now shows an active entitlement (subscription OR pack credits) —
+    /// `restorePurchases()` uses this to detect a pack-only recovery, since
+    /// consumable packs never flip `isPurchased` (issue #102 finding 3).
+    var onPurchaseSuccess: (@MainActor () async -> Bool)?
 
     private let purchaseService: PurchaseService
     private var transactionListener: Task<Void, Never>?
@@ -147,7 +150,7 @@ final class StoreManager: ObservableObject {
                     // entitled subscriber buying the other billing period.
                     await checkPurchaseStatus()
                     purchaseState = .success(productID: productID)
-                    await onPurchaseSuccess?()
+                    _ = await onPurchaseSuccess?()
                 }
 
             case .userCancelled:
@@ -179,8 +182,14 @@ final class StoreManager: ObservableObject {
 
     // MARK: - Restore Purchases
 
-    /// Restores the subscription only — consumable packs have no StoreKit
-    /// restore; their balance lives server-side in the credit ledger.
+    /// Restores the RC-tracked subscription via StoreKit, then ALWAYS
+    /// reconciles with the server — consumable packs have no StoreKit
+    /// restore, so a pack buyer's only path back to their credits is the
+    /// server re-deriving both subscription state and pack credits from
+    /// RevenueCat's history (`POST /entitlements/sync`, issue #102 finding
+    /// 3). Gating that call on `isPurchased` (as before) meant a pack-only
+    /// buyer was silently told "nothing to restore" even though the server
+    /// could have recovered their credits.
     func restorePurchases() async {
         isLoading = true
         purchaseError = nil
@@ -188,12 +197,16 @@ final class StoreManager: ObservableObject {
         do {
             try await purchaseService.restore()
             await checkPurchaseStatus()
-            if isPurchased {
-                // A restore that re-activated the entitlement completes the
-                // same way a purchase does: server sync + usage refresh +
-                // visible success (#96 P1).
+            // The bridge reports whether the server mirror now shows an
+            // active entitlement (subscription OR credits) — the only signal
+            // that can see pack credits, since `isPurchased` never reflects them.
+            let recoveredViaServer = await onPurchaseSuccess?() ?? false
+            if isPurchased || recoveredViaServer {
+                // Either the subscription itself came back, or the server
+                // reconciliation surfaced something (pack credits, or a
+                // subscription webhook that landed after the SDK check) —
+                // either way this is a real recovery, not a no-op (#96 P1).
                 purchaseState = .success(productID: nil)
-                await onPurchaseSuccess?()
             } else {
                 purchaseState = .nothingToRestore
             }

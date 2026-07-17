@@ -196,4 +196,27 @@ struct EntitlementReconcileTests {
         #expect(vm.showPaywall == true)
         #expect(mock.syncEntitlementsCallCount == countBefore429, "not locally entitled → no resync attempt, paywall shows immediately")
     }
+
+    @Test("429 with RC locally entitled skips the paywall when the resync confirms entitlement")
+    func paywall429SkippedWhenResyncConfirmsEntitlement() async {
+        let mock = Fixtures.makeFullMockNetwork()
+        let vm = makeVM(network: mock, isLocallyEntitled: { true })
+
+        await waitUntil({ vm.usageInfo != nil }, "launch reconcile never settled")
+
+        // The server mirror was lagging when the 429 hit, but the pre-paywall
+        // resync (#102 review follow-up) lands successfully and the
+        // subsequent usage refresh now shows the customer entitled.
+        mock.stubbedUsage = makeUsage(remaining: 100, premium: true)
+        mock.createSessionError = NetworkError.quotaLimitReached(makeQuotaLimitError())
+        await vm.startNewQuiz()
+
+        #expect(vm.showPaywall == false, "resync confirmed entitlement → must not strand a paying user behind the paywall")
+        #expect(vm.quotaLimitError == nil, "no quota error should be surfaced once entitlement is confirmed")
+        if case .error = vm.quizState {
+            // Expected: a retryable error asking the user to try again, not the paywall.
+        } else {
+            Issue.record("expected an .error state prompting retry, got \(vm.quizState)")
+        }
+    }
 }

@@ -645,11 +645,22 @@ final class QuizViewModel: ObservableObject {
 
         } catch let error as NetworkError {
             if case let .quotaLimitReached(limitError) = error {
-                await resyncBeforePaywallIfLocallyEntitled()
-                quotaLimitError = limitError
-                showPaywall = true
-                transition(to: .idle)
+                let entitlementConfirmed = await resyncBeforePaywallIfLocallyEntitled()
                 audioService.deactivateSession()
+                if entitlementConfirmed {
+                    // #102 review follow-up: the resync just made the server agree
+                    // the user is entitled — don't strand them behind the paywall
+                    // for this cycle, ask them to retry instead. (setError transitions
+                    // to .error directly; quizState is still .startingQuiz here.)
+                    setError(
+                        message: String(localized: "Your subscription just synced — please try starting the quiz again.", comment: "Shown after a 429 quota error self-resolves via entitlement resync; user should retry starting the quiz"),
+                        context: .initialization
+                    )
+                } else {
+                    quotaLimitError = limitError
+                    showPaywall = true
+                    transition(to: .idle)
+                }
             } else {
                 setError(
                     message: String(localized: "Failed to start quiz: \(error.localizedDescription)", comment: "Quiz could not be started; placeholder is the underlying error"),
@@ -691,11 +702,21 @@ final class QuizViewModel: ObservableObject {
         if let networkError = error as? NetworkError,
            case let .quotaLimitReached(limitError) = networkError
         {
-            await resyncBeforePaywallIfLocallyEntitled()
-            quotaLimitError = limitError
-            showPaywall = true
-            transition(to: .idle)
+            let entitlementConfirmed = await resyncBeforePaywallIfLocallyEntitled()
             audioService.deactivateSession()
+            if entitlementConfirmed {
+                // #102 review follow-up: skip the paywall when the resync just
+                // confirmed the user is entitled — ask them to retry instead.
+                // (setError transitions to .error directly from the in-flight state.)
+                setError(
+                    message: String(localized: "Your subscription just synced — please try again.", comment: "Shown after a 429 quota error self-resolves via entitlement resync; user should retry their last action"),
+                    context: context
+                )
+            } else {
+                quotaLimitError = limitError
+                showPaywall = true
+                transition(to: .idle)
+            }
         } else {
             setError(message: "\(fallbackMessage): \(error.localizedDescription)", context: context, error: error)
         }
@@ -832,8 +853,15 @@ final class QuizViewModel: ObservableObject {
     /// making the UI hang for the full launch/foreground retry loop. If it
     /// doesn't land in time, show the paywall anyway — the next
     /// launch/foreground reconcile (or the webhook) will still catch it up.
-    func resyncBeforePaywallIfLocallyEntitled() async { // internal for QuizViewModel+Recording
-        guard isLocallyEntitled() else { return }
+    ///
+    /// Returns whether the just-refreshed usage now confirms an active
+    /// entitlement (premium OR a non-zero pack credit) — callers use this to
+    /// skip presenting the paywall for the cycle that just resynced, instead
+    /// of showing it unconditionally regardless of outcome (#102 review
+    /// follow-up).
+    @discardableResult
+    func resyncBeforePaywallIfLocallyEntitled() async -> Bool { // internal for QuizViewModel+Recording
+        guard isLocallyEntitled() else { return false }
         let networkService = self.networkService
         await withTaskGroup(of: Void.self) { group in
             group.addTask { try? await networkService.syncEntitlements() }
@@ -841,6 +869,8 @@ final class QuizViewModel: ObservableObject {
             await group.next()
             group.cancelAll()
         }
+        await refreshUsage()
+        return (usageInfo?.isPremium ?? false) || (usageInfo?.creditBalance ?? 0) > 0
     }
 
     /// Whether to retry with a new session (for initialization errors)

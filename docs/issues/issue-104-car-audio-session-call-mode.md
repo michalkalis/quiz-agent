@@ -1,8 +1,8 @@
 # Issue 104: Car audio never captures voice + Bluetooth "phone call" mode flaps on/off (HFP routing)
 
-**Triage:** bug · needs-triage
+**Triage:** bug · ready-for-agent
 **Reversibility:** a
-**Status:** New — from founder car-test feedback 2026-07-16; investigated via /triage 2026-07-17
+**Status:** From founder car-test feedback 2026-07-16; investigated via /triage 2026-07-17; product decision locked 2026-07-17 (two modes + Settings mic picker) → ready-for-agent
 **Created:** 2026-07-17
 
 ## Symptom (founder car test, 2026-07-16)
@@ -27,9 +27,19 @@ Real car, iPhone on iOS 26.x over Bluetooth car audio, TestFlight build 22 (comm
 
 **Not fixed on current main (unshipped).** `categoryOptions` bytes in build 22 (`248d63d`) are identical to current `main`. #100 only added interruption `.ended` reactivation (`a669e39`) and observer-token concurrency (`63b0c2a`) — neither touches HFP routing or the per-question category flapping. This cluster is present in build 22 *and* on unshipped main.
 
+## Founder decision — 2026-07-17
+
+> *Recorded by AI during triage; decision is the founder's.*
+
+Keep **two modes**, with the meanings restored to their labels:
+
+- **Call Mode** — as today: car's Bluetooth mic via HFP; the car shows a phone call (accepted trade-off).
+- **Media Mode** — car is the **speaker only** (A2DP output), the **iPhone's built-in mic** captures input; no HFP, no call UI, no flapping.
+- **Additionally, if feasible: a microphone picker in Settings** so the input can be changed explicitly. Feasibility confirmed: `AVAudioSession.availableInputs` + `setPreferredInput(_:)` supports this. Design note: the picker is the finer-grained control and the two modes act as presets; picking the car's BT mic inherently implies HFP → call UI (state this in the picker UI copy). Keep it a secondary sub-task — the mode-contract fix (items 1–3 below) lands first.
+
 ## Proposed fix direction
 
-Conceptual, minimal-footprint. **Contains a product decision — decide with founder before agent work (see Cross-refs / open question):**
+Conceptual, minimal-footprint:
 
 1. **Restore the Media Mode contract.** Media Mode should route output via A2DP and *not* force HFP, accepting the built-in iPhone mic for input — car stays in media mode, no call UI. Call Mode keeps HFP for users who want the car's BT mic and accept the call UI. This makes the toggle meaningful again. The #59.3 AirPods case is a *different* route class (AirPods should get HFP, a car should not) — distinguish by route/port type instead of a blanket HFP flag.
 2. **Stop the per-question flapping.** Don't drop to `.playback` and back for every TTS. Either hold one category for the whole quiz, or solve the ~6dB `.playAndRecord` attenuation without a category swap (e.g. `overrideOutputAudioPort`).
@@ -41,7 +51,8 @@ Conceptual, minimal-footprint. **Contains a product decision — decide with fou
 - [ ] Toggling Call Mode ↔ Media Mode produces two *distinct* option sets — asserted in `AudioServiceTests` / `SettingsViewCallModeTests`.
 - [ ] TTS→record→next-question no longer swaps the session category per utterance — verified by inspecting the `withPlaybackCategory` call sites / an `AudioServiceTests` count assertion on category switches over a mock cycle.
 - [ ] A transient invalid (0 Hz) hardware format retries instead of throwing `recordingFailed` on first occurrence — unit test on the streaming-start guard path.
-- [ ] **[HUMAN] on-device (real car, BT):** in Media Mode the car does NOT show a phone call and does NOT flap; the founder's spoken answer is captured and transcribed; no "Recording failed" banner.
+- [ ] Settings offers a microphone input picker (sources from `AVAudioSession.availableInputs`, applies via `setPreferredInput`), with copy noting that a Bluetooth (car) mic implies the call UI — asserted via a service-seam/ViewModel unit test (no live session).
+- [ ] **[HUMAN] on-device (real car, BT):** in Media Mode the car does NOT show a phone call and does NOT flap, audio plays through the car speakers, the iPhone mic captures the spoken answer and it is transcribed; no "Recording failed" banner. Call Mode still works via the car mic.
 
 ## Cross-refs
 
@@ -51,4 +62,4 @@ Conceptual, minimal-footprint. **Contains a product decision — decide with fou
 - #67 — audio interruption & barge-in (interruption teardown choreography)
 - #82 — UX papercuts (item 1 re-exposed the Call Mode toggle)
 
-**Open product question (surface live to founder):** should Media Mode use the built-in iPhone mic in the car (no call UI, but mic quality depends on phone placement), or is capturing via the car's HFP mic worth the call UI? This choice drives fix #1.
+~~Open product question~~ — **resolved 2026-07-17, see "Founder decision" above** (two modes + Settings mic picker).

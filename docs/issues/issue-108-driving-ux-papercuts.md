@@ -1,11 +1,17 @@
 # Issue 108: Driving UX papercuts (re-record, timer-in-button, idle-timer)
 
-**Triage:** enhancement · needs-triage
+**Triage:** enhancement · ready-for-agent
 **Reversibility:** a
-**Status:** New — from founder car-test feedback 2026-07-16; investigated via /triage 2026-07-17
+**Status:** From founder car-test feedback 2026-07-16; investigated via /triage 2026-07-17; B design direction locked 2026-07-17 (design-first, simple, Waze-like) → ready-for-agent
 **Created:** 2026-07-17
 
-**Per-item readiness:** A and C are CONFIRMED root cause, commits-only, machine-evaluable — agent-executable now. B is a new component + likely `.pen` design change — needs a founder decision on visual spec before implementation; overall file stays `needs-triage` until B is scoped or split out.
+**Per-item readiness:** A and C are CONFIRMED root cause, commits-only, machine-evaluable — agent-executable now. B is design-first per founder decision (below): draft the `.pen` frame, get founder sign-off in-session, then implement.
+
+## Founder decision — 2026-07-17 (item B)
+
+> *Recorded by AI during triage; decision is the founder's.*
+
+**Design first, definitely — but simple, like in Waze.** Waze-style reference: the countdown lives as a plain fill draining inside the existing button shape (no new chrome, no separate bar). So: agent drafts the Pencil frame update (`design/quiz-agent.pen`) as the first step of B, founder approves interactively (⌘S save is the founder's step), then implementation follows the approved frame.
 
 ## Symptom (founder car test, 2026-07-16)
 
@@ -39,7 +45,7 @@ No in-button progress bar exists anywhere. Current pattern is a **separate** bar
 
 **A.** In `rerecordAnswer()`, replace the countdown-then-record path with the same immediate-start used by the manual button (`cancelAnswerTimer()` + `await startRecording()`, mirroring `toggleRecording()`'s `.askingQuestion` branch, `QuizViewModel+Recording.swift:16-21`). Keep (or drop, founder call if it comes up) the "+10s bonus" framing — it becomes moot once recording starts immediately instead of after a countdown.
 
-**B.** New component: a variant of `HangsPrimaryButton` (or a wrapper) that layers a right-to-left-draining fill/progress behind the label, driven by the same countdown values already computed (`autoConfirmCountdown`/`autoConfirmTotal` in the confirmation sheet, the result-screen equivalent). Replaces the separate `countdownBar` usages. **Flag for founder:** this is a visual redesign — a Pencil frame update in `design/quiz-agent.pen` is likely wanted before/alongside implementation; don't build the visual spec blind.
+**B.** New component: a variant of `HangsPrimaryButton` (or a wrapper) that layers a right-to-left-draining fill/progress behind the label, driven by the same countdown values already computed (`autoConfirmCountdown`/`autoConfirmTotal` in the confirmation sheet, the result-screen equivalent). Replaces the separate `countdownBar` usages. **Sequence locked by founder decision above:** Pencil frame draft → founder sign-off → implementation. Keep the visual minimal (Waze-like fill inside the current pill shape).
 
 **C.** Add a small idle-timer controller (e.g. a `.onChange(of: viewModel.quizState)` / computed-state modifier in `ContentView.swift`) that sets `UIApplication.shared.isIdleTimerDisabled = true` while state ∉ {`.idle`, `.finished`} and not minimized, and `false` otherwise — including on `.onDisappear` of `ContentView` (app teardown safety net) so the flag never leaks true past an active session.
 

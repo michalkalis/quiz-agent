@@ -24,7 +24,9 @@
 //  guard with `#available` inside each test body and return early via
 //  `withKnownIssue` when running on iOS < 26.
 //
+
 //  MARK: - Out of scope
+
 //  • Barge-in path (`setTTSPlaybackActive` + `isExternalAudioRoute`) —
 //    depends on `AVAudioSession.sharedInstance()` which is not stubbable
 //    without a full audio session mock. Coverage deferred.
@@ -34,8 +36,9 @@
 
 import AVFoundation
 import Foundation
-import Testing
 @testable import Hangs
+import Speech
+import Testing
 
 // MARK: - FakeClock
 
@@ -44,7 +47,7 @@ private final class FakeClock {
     var now: Date
 
     init(start: Date = Date(timeIntervalSince1970: 0)) {
-        self.now = start
+        now = start
     }
 
     func advance(_ seconds: TimeInterval) {
@@ -101,7 +104,6 @@ private func collectSilenceEvents(
 @Suite("SilenceDetectionService — state machine")
 @MainActor
 struct SilenceDetectionServiceTests {
-
     // MARK: 1. Initial state is idle
 
     @Test("silence while idle emits no event")
@@ -139,9 +141,9 @@ struct SilenceDetectionServiceTests {
             return
         }
         let events = await collectSilenceEvents { service, _ in
-            service.handleSpeechDetectorResult(speechDetected: true)  // idle → speechActive
-            service.handleSpeechDetectorResult(speechDetected: true)  // no-op
-            service.handleSpeechDetectorResult(speechDetected: true)  // no-op
+            service.handleSpeechDetectorResult(speechDetected: true) // idle → speechActive
+            service.handleSpeechDetectorResult(speechDetected: true) // no-op
+            service.handleSpeechDetectorResult(speechDetected: true) // no-op
         }
         #expect(events == [.speechStarted])
     }
@@ -155,7 +157,7 @@ struct SilenceDetectionServiceTests {
             return
         }
         let events = await collectSilenceEvents { service, _ in
-            service.handleSpeechDetectorResult(speechDetected: true)  // idle → speechActive (.speechStarted)
+            service.handleSpeechDetectorResult(speechDetected: true) // idle → speechActive (.speechStarted)
             service.handleSpeechDetectorResult(speechDetected: false) // speechActive → silenceAccumulating (no event)
         }
         // Only the initial .speechStarted — no event for entering silenceAccumulating
@@ -171,9 +173,9 @@ struct SilenceDetectionServiceTests {
             return
         }
         let events = await collectSilenceEvents { service, _ in
-            service.handleSpeechDetectorResult(speechDetected: true)  // idle → speechActive
+            service.handleSpeechDetectorResult(speechDetected: true) // idle → speechActive
             service.handleSpeechDetectorResult(speechDetected: false) // speechActive → silenceAccumulating
-            service.handleSpeechDetectorResult(speechDetected: true)  // silenceAccumulating → speechActive
+            service.handleSpeechDetectorResult(speechDetected: true) // silenceAccumulating → speechActive
         }
         // Only the original .speechStarted — no second one on resuming from silenceAccumulating
         #expect(events == [.speechStarted])
@@ -188,7 +190,7 @@ struct SilenceDetectionServiceTests {
             return
         }
         let events = await collectSilenceEvents { service, clock in
-            service.handleSpeechDetectorResult(speechDetected: true)  // idle → speechActive
+            service.handleSpeechDetectorResult(speechDetected: true) // idle → speechActive
             service.handleSpeechDetectorResult(speechDetected: false) // speechActive → silenceAccumulating(since: t0)
             clock.advance(1.4)
             service.handleSpeechDetectorResult(speechDetected: false) // still below threshold
@@ -208,14 +210,14 @@ struct SilenceDetectionServiceTests {
             return
         }
         let events = await collectSilenceEvents { service, clock in
-            service.handleSpeechDetectorResult(speechDetected: true)  // idle → speechActive
-            clock.advance(0.5)                                        // real utterance (> min-speech guard, 77.11)
+            service.handleSpeechDetectorResult(speechDetected: true) // idle → speechActive
+            clock.advance(0.5) // real utterance (> min-speech guard, 77.11)
             service.handleSpeechDetectorResult(speechDetected: false) // → silenceAccumulating(since: t0)
             clock.advance(1.5)
             service.handleSpeechDetectorResult(speechDetected: false) // → emits + idle
         }
         let durations = events.compactMap { event -> TimeInterval? in
-            if case .silenceAfterSpeech(let d) = event { return d }; return nil
+            if case let .silenceAfterSpeech(d) = event { return d }; return nil
         }
         guard let duration = durations.first else {
             Issue.record("Expected .silenceAfterSpeech event, got \(events)")
@@ -242,7 +244,7 @@ struct SilenceDetectionServiceTests {
             service.handleSpeechDetectorResult(speechDetected: false)
         }
         let durations = events.compactMap { event -> TimeInterval? in
-            if case .silenceAfterSpeech(let d) = event { return d }; return nil
+            if case let .silenceAfterSpeech(d) = event { return d }; return nil
         }
         guard let duration = durations.first else {
             Issue.record("Expected .silenceAfterSpeech event, got \(events)")
@@ -295,15 +297,15 @@ struct SilenceDetectionServiceTests {
         }
         let events = await collectSilenceEvents { service, clock in
             // Cycle 1
-            service.handleSpeechDetectorResult(speechDetected: true)  // .speechStarted
-            clock.advance(0.5)                                        // real utterance (> min-speech guard, 77.11)
+            service.handleSpeechDetectorResult(speechDetected: true) // .speechStarted
+            clock.advance(0.5) // real utterance (> min-speech guard, 77.11)
             service.handleSpeechDetectorResult(speechDetected: false) // accumulating at t0
             clock.advance(1.5)
             service.handleSpeechDetectorResult(speechDetected: false) // .silenceAfterSpeech(~1.5) → idle
 
             // Cycle 2
-            service.handleSpeechDetectorResult(speechDetected: true)  // .speechStarted
-            clock.advance(0.5)                                        // real utterance (> min-speech guard, 77.11)
+            service.handleSpeechDetectorResult(speechDetected: true) // .speechStarted
+            clock.advance(0.5) // real utterance (> min-speech guard, 77.11)
             service.handleSpeechDetectorResult(speechDetected: false) // accumulating at t1
             clock.advance(2.0)
             service.handleSpeechDetectorResult(speechDetected: false) // .silenceAfterSpeech(~2.0) → idle
@@ -311,7 +313,7 @@ struct SilenceDetectionServiceTests {
 
         let speechStartedCount = events.filter { $0 == .speechStarted }.count
         let durations = events.compactMap { event -> TimeInterval? in
-            if case .silenceAfterSpeech(let d) = event { return d }; return nil
+            if case let .silenceAfterSpeech(d) = event { return d }; return nil
         }
 
         #expect(speechStartedCount == 2, "Expected 2 .speechStarted events, got \(speechStartedCount)")
@@ -352,7 +354,6 @@ struct SilenceDetectionServiceTests {
 @Suite("SilenceDetectionService — command availability (fail-loud)")
 @MainActor
 struct VoiceCommandAvailabilityTests {
-
     @Test("availability starts .unknown before prepareAssets resolves")
     func initialAvailabilityIsUnknown() {
         guard #available(iOS 26, *) else {
@@ -407,6 +408,103 @@ struct VoiceCommandAvailabilityTests {
     }
 }
 
+// MARK: - SpeechAuthorizationTests (#105 — the app never requested permission)
+
+/// WHY: grep-confirmed the app declared `NSSpeechRecognitionUsageDescription`
+/// but never called `SFSpeechRecognizer.requestAuthorization` anywhere, so a
+/// never-asked/denied permission silently stranded the command listener. These
+/// tests pin the status→decision mapping (pure, no system dialog) and the
+/// launch orchestrator that wires it into the existing `markCommandsUnavailable`
+/// / `prepareAssets` seams via an injected `authorizationProvider` stub.
+@Suite("SilenceDetectionService — speech authorization (#105)")
+@MainActor
+struct SpeechAuthorizationTests {
+    @Test("authorized maps to .proceed")
+    func authorizedProceeds() {
+        guard #available(iOS 26, *) else {
+            withKnownIssue("SilenceDetectionService requires iOS 26+") {}
+            return
+        }
+        #expect(SilenceDetectionService.authorizationDecision(for: .authorized) == .proceed)
+    }
+
+    @Test("notDetermined maps to .proceed (requestAuthorization already resolved it before this runs)")
+    func notDeterminedProceeds() {
+        guard #available(iOS 26, *) else {
+            withKnownIssue("SilenceDetectionService requires iOS 26+") {}
+            return
+        }
+        #expect(SilenceDetectionService.authorizationDecision(for: .notDetermined) == .proceed)
+    }
+
+    @Test("denied maps to .unavailable with a reason that points at iOS Settings")
+    func deniedMapsToUnavailableWithSettingsReason() {
+        guard #available(iOS 26, *) else {
+            withKnownIssue("SilenceDetectionService requires iOS 26+") {}
+            return
+        }
+        guard case let .unavailable(reason) = SilenceDetectionService.authorizationDecision(for: .denied) else {
+            Issue.record("Expected .unavailable for .denied")
+            return
+        }
+        #expect(reason.contains("Settings"))
+        #expect(reason.contains("Speech Recognition"))
+    }
+
+    @Test("restricted maps to .unavailable with a reason that points at iOS Settings")
+    func restrictedMapsToUnavailableWithSettingsReason() {
+        guard #available(iOS 26, *) else {
+            withKnownIssue("SilenceDetectionService requires iOS 26+") {}
+            return
+        }
+        guard case let .unavailable(reason) = SilenceDetectionService.authorizationDecision(for: .restricted) else {
+            Issue.record("Expected .unavailable for .restricted")
+            return
+        }
+        #expect(reason.contains("Settings"))
+        #expect(reason.contains("Speech Recognition"))
+    }
+
+    @Test("launch orchestrator: denied authorization flips commandAvailability to .unavailable and never calls prepareAssets")
+    func deniedAuthorizationSkipsAssetPrepare() async {
+        guard #available(iOS 26, *) else {
+            withKnownIssue("SilenceDetectionService requires iOS 26+") {}
+            return
+        }
+        let service = SilenceDetectionService(authorizationProvider: { .denied })
+        await service.requestAuthorizationAndPrepareAssets()
+
+        guard case let .unavailable(reason) = service.commandAvailability else {
+            Issue.record("Expected .unavailable, got \(service.commandAvailability)")
+            return
+        }
+        // Distinguishes this from prepareAssets' own failure reasons (e.g.
+        // "en-US not in SpeechTranscriber.supportedLocales") — proves the
+        // orchestrator short-circuited BEFORE reaching asset prepare.
+        #expect(reason.contains("permission denied"))
+        #expect(reason.contains("Settings"))
+    }
+
+    @Test("launch orchestrator: authorized status proceeds into prepareAssets (resolves to a terminal, non-.unknown state)")
+    func authorizedProceedsIntoAssetPrepare() async {
+        guard #available(iOS 26, *) else {
+            withKnownIssue("SilenceDetectionService requires iOS 26+") {}
+            return
+        }
+        let service = SilenceDetectionService(authorizationProvider: { .authorized })
+        await service.requestAuthorizationAndPrepareAssets()
+
+        // On the simulator supportedLocales is empty → resolves .unavailable via
+        // prepareAssets' OWN reason, never .unknown, and never the permission
+        // reason (proving requestAuthorizationAndPrepareAssets actually called
+        // through to prepareAssets rather than short-circuiting).
+        #expect(service.commandAvailability != .unknown)
+        if case let .unavailable(reason) = service.commandAvailability {
+            #expect(!reason.contains("permission denied"))
+        }
+    }
+}
+
 // MARK: - EngineStartGenerationCheckTests (#100.4 — two-engine crash config)
 
 /// WHY: `startListening()` assigns `self.audioEngine = engine` well before its
@@ -426,7 +524,6 @@ struct VoiceCommandAvailabilityTests {
 @Suite("SilenceDetectionService — engine-start generation check (#100.4)")
 @MainActor
 struct EngineStartGenerationCheckTests {
-
     @Test("self.audioEngine still IS the engine we're about to start → proceed")
     func sameEngineShouldStart() {
         guard #available(iOS 26, *) else {

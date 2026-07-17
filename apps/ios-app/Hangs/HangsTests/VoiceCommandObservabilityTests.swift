@@ -12,10 +12,10 @@
 //  as in CommandListenerTests — these assert the view-model + lexicon logic.
 //
 
-import Foundation
-import Testing
 import ConcurrencyExtras
+import Foundation
 @testable import Hangs
+import Testing
 
 @MainActor
 private func makeVM(
@@ -48,7 +48,7 @@ private func makeResultState() -> QuizState {
 @MainActor
 private func waitUntil(
     _ predicate: @MainActor () -> Bool,
-    timeoutMillis: Int = 5_000,
+    timeoutMillis: Int = 5000,
     _ comment: Comment? = nil,
     sourceLocation: SourceLocation = #_sourceLocation
 ) async {
@@ -65,13 +65,12 @@ private func waitUntil(
 @Suite("Voice command observability (#96 P2)")
 @MainActor
 struct VoiceCommandObservabilityTests {
-
     // MARK: - Indicator hint copy
 
     @Test("lexicon hint names the valid words for each screen")
     func lexiconHints() {
         #expect(VoiceCommandLexicon.hint(on: .home) == #"Say "start""#)
-        #expect(VoiceCommandLexicon.hint(on: .question) == #"Say "repeat" or "skip""#)
+        #expect(VoiceCommandLexicon.hint(on: .question) == #"Say "start" or "skip""#)
         #expect(VoiceCommandLexicon.hint(on: .confirmation) == #"Say "ok", "again" or "stop""#)
         #expect(VoiceCommandLexicon.hint(on: .result) == #"Say "next""#)
     }

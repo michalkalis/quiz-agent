@@ -34,10 +34,19 @@
 
 ## Acceptance
 
-- [ ] Question-screen CmdListenBar reads `Say "start" or "skip"` — assert via `VoiceCommandLexiconTests`/snapshot (`__Snapshots__/QuestionViewSnapshotTests/askingState`) and by inspecting `VoiceCommandLexicon.hint(on: .question)`.
-- [ ] `AppState` (or `SilenceDetectionService`) issues a speech-recognition authorization request exactly once at launch; a `denied` result flips `commandAvailability` to `.unavailable(reason:)` — assert via a unit test on the availability path (mock authorization status) + verify the Settings status row string.
-- [ ] Sentry (`/check-crashes`, `.voice` category) is inspected for the build-22 device; the actual failing branch (auth vs assets vs engine) is named in this issue before the fix is called done.
-- [ ] **[HUMAN] on-device:** on the founder's Slovak iPhone (iOS 26.x), granting the permission, spoken "start" begins a quiz from Home and begins recording on the question screen, and the CmdListenBar shows during the armed window — in quiet AND over Bluetooth car audio.
+- [x] Question-screen CmdListenBar reads `Say "start" or "skip"` — `VoiceCommandLexicon.hint(on: .question)` changed + asserted in `VoiceCommandObservabilityTests.lexiconHints`; no snapshot embeds the hint (grep-verified, nothing to re-record). "repeat" stays routable.
+- [x] `SilenceDetectionService.requestAuthorizationAndPrepareAssets()` issues the speech-recognition authorization request exactly once at launch (wired from `AppState`, non-blocking Task); `denied`/`restricted` flips `commandAvailability` to `.unavailable(reason:)` via `markCommandsUnavailable` (Settings row + Sentry) — pure `authorizationDecision(for:)` seam + injected-provider tests in `SilenceDetectionServiceTests`. *Settings Status row shows the literal "Unavailable" (does not format reasons today) — unchanged, noted, not silently skipped.*
+- [x] Sentry inspected 2026-07-17 (14d window, complete dataset): **H2 (assets never installed) REFUTED** — `Voice command assets ready` fired via the "already-installed" fast path in all 3 build-22 sessions inside the car-test window; availability reached `.ready`. **H1 (authorization never requested) remains the leading cause, not directly provable from Sentry by construction**: no auth request existed anywhere in the target (grep-confirmed), a silent zero-result SpeechTranscriber produces no signal, and two failure branches (`invalid input format` / `engine start failed`) logged console-only. All three blind spots are now instrumented — the founder's next on-device run names the branch definitively.
+- [ ] **[HUMAN] on-device:** on the founder's Slovak iPhone (iOS 26.x): expect the speech-recognition permission dialog on first launch of the new build; after granting, spoken "start" begins a quiz from Home and begins recording on the question screen, and the CmdListenBar shows during the armed window — in quiet AND over Bluetooth car audio. If commands are STILL dead, read Settings → Voice commands → Status + Sentry `.voice` events — the failing branch will now be named there.
+
+## Outcome — 2026-07-17 (agent run, workflows)
+
+Implemented per fix direction; targeted suites green (26 tests / 3 suites final run + 45/6 during impl; #104 canary passing alongside).
+
+- Launch-time speech authorization: injectable provider (default `SFSpeechRecognizer.requestAuthorization` bridged via continuation — SDK-verified: the iOS 26 SpeechAnalyzer stack exposes NO authorization API of its own), pure `authorizationDecision` mapping, denied → fail-loud unavailable reason naming the iOS Settings path.
+- Fail-loud: both formerly console-only failure branches now route through `markCommandsUnavailable`/Sentry; recovery semantics untouched.
+- **Adversarial review caught a launch-crash blocker before ship:** the TCC completion closure inherited `@MainActor` isolation and the Swift 6 runtime isolation check trapped at launch (reproduced: 2 `.ips` crash reports, `_dispatch_assert_queue_fail` in `requestSystemAuthorization`). Fixed with `nonisolated static` + `@Sendable` completion (the established CARQUIZ-1 pattern) + `@preconcurrency import Speech`; re-run clean, no runner crash.
+- Uncertainty kept open (honest): whether missing authorization is THE cause of "dead everywhere" is confirmed only refutation-wise (assets exonerated) — if it wasn't, the new instrumentation surfaces the real branch on the founder's next run instead of another blind rediscovery.
 
 ## Cross-refs
 

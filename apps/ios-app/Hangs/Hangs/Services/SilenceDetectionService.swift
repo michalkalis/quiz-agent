@@ -19,7 +19,11 @@
 @preconcurrency import AVFoundation
 import Foundation
 import os
-import Speech
+
+// @preconcurrency: same crash class as AVFoundation above — the legacy
+// SFSpeechRecognizer.requestAuthorization completion fires on a TCC background
+// queue; without this the inferred @MainActor isolation check traps at launch.
+@preconcurrency import Speech
 
 // MARK: - Events
 
@@ -122,28 +126,38 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
         /// so the blip guard knows how long the preceding speech lasted.
         case silenceAccumulating(speechStart: Date, since: Date)
     }
+
     private var state: State = .idle
 
     private let now: @MainActor () -> Date
 
-    init(now: @escaping @MainActor () -> Date = { Date() }) {
+    /// Requests speech-recognition authorization and returns the resulting
+    /// status. Defaults to the real `SFSpeechRecognizer` dialog; tests inject
+    /// a stub so the decision logic can run without the system prompt (#105).
+    private let authorizationProvider: () async -> SFSpeechRecognizerAuthorizationStatus
+
+    init(
+        now: @escaping @MainActor () -> Date = { Date() },
+        authorizationProvider: (() async -> SFSpeechRecognizerAuthorizationStatus)? = nil
+    ) {
         self.now = now
+        self.authorizationProvider = authorizationProvider ?? Self.requestSystemAuthorization
 
         var silenceCont: AsyncStream<SilenceEvent>.Continuation!
-        self.silenceEvents = AsyncStream { silenceCont = $0 }
-        self.silenceContinuation = silenceCont
+        silenceEvents = AsyncStream { silenceCont = $0 }
+        silenceContinuation = silenceCont
 
         var bargeCont: AsyncStream<Void>.Continuation!
-        self.bargeInEvents = AsyncStream { bargeCont = $0 }
-        self.bargeInContinuation = bargeCont
+        bargeInEvents = AsyncStream { bargeCont = $0 }
+        bargeInContinuation = bargeCont
 
         var commandCont: AsyncStream<String>.Continuation!
-        self.commandTranscripts = AsyncStream { commandCont = $0 }
-        self.commandContinuation = commandCont
+        commandTranscripts = AsyncStream { commandCont = $0 }
+        commandContinuation = commandCont
 
         var availabilityCont: AsyncStream<VoiceCommandAvailability>.Continuation!
-        self.commandAvailabilityUpdates = AsyncStream { availabilityCont = $0 }
-        self.commandAvailabilityContinuation = availabilityCont
+        commandAvailabilityUpdates = AsyncStream { availabilityCont = $0 }
+        commandAvailabilityContinuation = availabilityCont
     }
 
     deinit {
@@ -151,6 +165,65 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
         bargeInContinuation.finish()
         commandContinuation.finish()
         commandAvailabilityContinuation.finish()
+    }
+
+    // MARK: - Authorization (#105)
+
+    /// Requests the OS speech-recognition permission and then, if granted,
+    /// proceeds into the existing asset-prepare flow. #105: the app declared
+    /// `NSSpeechRecognitionUsageDescription` but never actually called
+    /// `SFSpeechRecognizer.requestAuthorization` anywhere — a denied/never-asked
+    /// permission silently strands the command listener with `.unknown`
+    /// availability forever. Called once from AppState at launch, exactly like
+    /// `prepareAssets()` used to be called alone; safe to re-enter (guarded by
+    /// the same `.unknown` check inside `prepareAssets()`).
+    func requestAuthorizationAndPrepareAssets() async {
+        let status = await authorizationProvider()
+        switch Self.authorizationDecision(for: status) {
+        case .proceed:
+            await prepareAssets()
+        case let .unavailable(reason):
+            markCommandsUnavailable(reason: reason)
+        }
+    }
+
+    /// Pure status → decision mapping (#105), kept separate from the async
+    /// system call so the decision logic is unit-testable without triggering
+    /// the real permission dialog.
+    enum AuthorizationDecision: Sendable, Equatable {
+        case proceed
+        case unavailable(reason: String)
+    }
+
+    nonisolated static func authorizationDecision(for status: SFSpeechRecognizerAuthorizationStatus) -> AuthorizationDecision {
+        switch status {
+        case .authorized, .notDetermined:
+            return .proceed
+        case .denied, .restricted:
+            return .unavailable(
+                reason: "Speech recognition permission denied — enable in iOS Settings > Privacy & Security > Speech Recognition"
+            )
+        @unknown default:
+            return .unavailable(
+                reason: "Speech recognition permission denied — enable in iOS Settings > Privacy & Security > Speech Recognition"
+            )
+        }
+    }
+
+    /// The real system dialog, bridged to async. `SFSpeechRecognizer` is the
+    /// only authorization API for this stack — the iOS 26 SpeechAnalyzer/
+    /// SpeechTranscriber/AssetInventory types expose no authorization API of
+    /// their own (verified against the SDK headers/.swiftinterface, #105).
+    /// `nonisolated` + `@Sendable` completion: the TCC callback fires on a
+    /// background XPC queue; without both, the closure inherits @MainActor
+    /// isolation from the enclosing class and the Swift 6 runtime isolation
+    /// check traps at launch (same crash class as the AVAudio tap, CARQUIZ-1).
+    private nonisolated static func requestSystemAuthorization() async -> SFSpeechRecognizerAuthorizationStatus {
+        await withCheckedContinuation { continuation in
+            SFSpeechRecognizer.requestAuthorization { @Sendable status in
+                continuation.resume(returning: status)
+            }
+        }
     }
 
     // MARK: - Asset preparation (#77 device fix)
@@ -253,7 +326,7 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
         }
 
         let engine = AVAudioEngine()
-        self.audioEngine = engine
+        audioEngine = engine
 
         let inputNode = engine.inputNode
         var inputFormat = inputNode.outputFormat(forBus: 0)
@@ -261,7 +334,7 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
         // Real devices (esp. Bluetooth) can return 0 Hz / 0 channels right after
         // AVPlayer playback — retry briefly to let the hardware settle.
         if inputFormat.sampleRate <= 0 || inputFormat.channelCount <= 0 {
-            for attempt in 1...3 {
+            for attempt in 1 ... 3 {
                 try? await Task.sleep(for: .milliseconds(200))
                 try? AVAudioSession.sharedInstance().setActive(true)
                 inputFormat = inputNode.outputFormat(forBus: 0)
@@ -269,7 +342,10 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
                 Logger.voice.warning("🔇 SilenceDetection: format retry \(attempt, privacy: .public) — still \(inputFormat.sampleRate, privacy: .public)Hz, \(inputFormat.channelCount, privacy: .public)ch")
             }
             guard inputFormat.sampleRate > 0, inputFormat.channelCount > 0 else {
-                Logger.voice.error("🔇 SilenceDetection: invalid input format, disabling")
+                // #105: was console-only (Logger.voice.error), invisible to
+                // Sentry and the Settings Status row — fail loud like the
+                // other command-listener failure branches.
+                markCommandsUnavailable(reason: "Command listener: invalid input format")
                 cleanupAfterStartFailure()
                 return
             }
@@ -283,7 +359,7 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
         }
 
         let (inputSequence, continuation) = AsyncStream<AnalyzerInput>.makeStream()
-        self.inputContinuation = continuation
+        inputContinuation = continuation
 
         let tapFormat = inputFormat
         let tapAnalyzerFormat = analyzerFormat
@@ -378,7 +454,7 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
         // anyway would orphan a running engine stopListening() can never reach
         // again — the #64 two-engine crash config. stopListening() already tore
         // down this engine's tap/state if it ran, so bailing here is enough.
-        guard Self.shouldStartEngine(engine, tracking: self.audioEngine) else {
+        guard Self.shouldStartEngine(engine, tracking: audioEngine) else {
             Logger.voice.warning("🔇 SilenceDetection: startListening superseded during startup settle window, not starting engine")
             return
         }
@@ -386,7 +462,10 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
         do {
             try engine.start()
         } catch {
-            Logger.voice.error("🔇 SilenceDetection: engine start failed: \(error, privacy: .public)")
+            // #105: was console-only (Logger.voice.error), invisible to
+            // Sentry and the Settings Status row — fail loud like the other
+            // command-listener failure branches.
+            markCommandsUnavailable(reason: "Command listener: engine start failed")
             cleanupAfterStartFailure()
             return
         }
@@ -449,7 +528,7 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
                 state = .speechActive(since: now())
                 silenceContinuation.yield(.speechStarted)
                 Logger.voice.debug("🔇 Silence detection: speech started")
-            case .silenceAccumulating(let speechStart, _):
+            case let .silenceAccumulating(speechStart, _):
                 // Resume the SAME utterance — keep its original start so a brief
                 // mid-utterance pause doesn't reset the speech-duration clock.
                 state = .speechActive(since: speechStart)
@@ -459,10 +538,10 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
             }
         } else {
             switch state {
-            case .speechActive(let speechStart):
+            case let .speechActive(speechStart):
                 state = .silenceAccumulating(speechStart: speechStart, since: now())
                 Logger.voice.debug("🔇 Silence detection: silence started after speech")
-            case .silenceAccumulating(let speechStart, let since):
+            case let .silenceAccumulating(speechStart, since):
                 let silenceElapsed = now().timeIntervalSince(since)
                 let speechDuration = since.timeIntervalSince(speechStart)
                 switch SilenceStopDecision.evaluate(speechDuration: speechDuration, silenceElapsed: silenceElapsed) {
@@ -508,4 +587,3 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
         return outputs.contains { externalPorts.contains($0.portType) }
     }
 }
-

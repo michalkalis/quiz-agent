@@ -92,13 +92,15 @@ enum VoiceCommandLexicon {
 
     /// Curated hint for the on-screen "LISTENING FOR COMMANDS" indicator (77.12,
     /// pen `s49sd`). A concise, driver-facing subset of each screen's routable
-    /// commands — e.g. the question screen omits the hands-free "start" recovery
-    /// (auto-record is the primary answer path) to keep the cue to a glance.
+    /// commands. #105: the question screen previously omitted "start" on the
+    /// theory that auto-record was the primary answer path — but "start" is
+    /// what begins answer recording and its omission left the hint claiming
+    /// commands that don't advertise how to actually answer; it must be shown.
     /// English by design (the command grammar is English-only for all users).
     static func hint(on screen: VoiceCommandScreen) -> String {
         switch screen {
         case .home: return #"Say "start""#
-        case .question: return #"Say "repeat" or "skip""#
+        case .question: return #"Say "start" or "skip""#
         case .confirmation: return #"Say "ok", "again" or "stop""#
         case .result: return #"Say "next""#
         }

@@ -30,23 +30,23 @@ final class AppState: ObservableObject {
 
     init() {
         #if DEBUG
-        if UITestSupport.isUITesting {
-            let mocks = UITestSupport.makeMockServices()
-            self.networkService = mocks.network
-            self.audioService = mocks.audio
-            self.persistenceStore = mocks.persistence
-            self.silenceDetectionService = mocks.silence
-            self.sttService = mocks.stt
-            self.storeManager = StoreManager(purchaseService: MockPurchaseService())
-            self.authService = AuthService(baseURL: Config.apiBaseURL)
-            self.packOrderService = MockPackOrderService()
-            storeManager.onPurchaseSuccess = { [weak self] in
-                await self?.quizViewModel?.notifyPremiumPurchased() ?? false
+            if UITestSupport.isUITesting {
+                let mocks = UITestSupport.makeMockServices()
+                self.networkService = mocks.network
+                audioService = mocks.audio
+                persistenceStore = mocks.persistence
+                silenceDetectionService = mocks.silence
+                sttService = mocks.stt
+                self.storeManager = StoreManager(purchaseService: MockPurchaseService())
+                self.authService = AuthService(baseURL: Config.apiBaseURL)
+                packOrderService = MockPackOrderService()
+                storeManager.onPurchaseSuccess = { [weak self] in
+                    await self?.quizViewModel?.notifyPremiumPurchased() ?? false
+                }
+                UITestSupport.startTestListener()
+                Logger.quiz.info("🧪 AppState initialized in UI-test mode")
+                return
             }
-            UITestSupport.startTestListener()
-            Logger.quiz.info("🧪 AppState initialized in UI-test mode")
-            return
-        }
         #endif
 
         // RevenueCat (#93): configure once, as early as possible, with whatever
@@ -62,38 +62,40 @@ final class AppState: ObservableObject {
         let authService = AuthService(baseURL: Config.apiBaseURL, attestor: AppAttestor())
         self.authService = authService
         self.networkService = NetworkService(baseURL: Config.apiBaseURL, authService: authService)
-        self.audioService = AudioService()
-        self.persistenceStore = PersistenceStore()
+        audioService = AudioService()
+        persistenceStore = PersistenceStore()
         self.storeManager = StoreManager()
-        self.packOrderService = PackOrderService(authService: authService)
+        packOrderService = PackOrderService(authService: authService)
 
         // Silence detection / barge-in require iOS 26+ SpeechDetector.
         var silence: SilenceDetectionServiceProtocol? = nil
         #if DEBUG
-        // `--ui-test-voice-ready`: inject a ready mock recognizer so the on-screen
-        // "LISTENING FOR COMMANDS" indicator (#96 P2) can be screenshot-verified on
-        // the Simulator, where the real SpeechAnalyzer has no installed locales and
-        // reports `.unavailable` (which correctly suppresses the cue).
-        if CommandLine.arguments.contains("--ui-test-voice-ready") {
-            silence = MockSilenceDetectionService()
-        }
+            // `--ui-test-voice-ready`: inject a ready mock recognizer so the on-screen
+            // "LISTENING FOR COMMANDS" indicator (#96 P2) can be screenshot-verified on
+            // the Simulator, where the real SpeechAnalyzer has no installed locales and
+            // reports `.unavailable` (which correctly suppresses the cue).
+            if CommandLine.arguments.contains("--ui-test-voice-ready") {
+                silence = MockSilenceDetectionService()
+            }
         #endif
         if silence == nil, #available(iOS 26, *) {
             let silenceService = SilenceDetectionService()
             silence = silenceService
-            // One-time launch prepare (#77 device fix): check/download the
-            // on-device en-US SpeechTranscriber model assets. Without them the
-            // command transcriber never yields a result on a real device.
-            // Non-blocking; any failure flips `commandAvailability` (fail loud).
-            Task { await silenceService.prepareAssets() }
+            // One-time launch authorization + prepare (#77 device fix, #105 auth
+            // gap): request speech-recognition permission, then — if granted —
+            // check/download the on-device en-US SpeechTranscriber model assets.
+            // Without them the command transcriber never yields a result on a
+            // real device. Non-blocking; any failure flips `commandAvailability`
+            // (fail loud).
+            Task { await silenceService.requestAuthorizationAndPrepareAssets() }
         }
-        self.silenceDetectionService = silence
+        silenceDetectionService = silence
 
         // ElevenLabs streaming STT (controlled by feature flag)
         if Config.useElevenLabsSTT {
-            self.sttService = ElevenLabsSTTService()
+            sttService = ElevenLabsSTTService()
         } else {
-            self.sttService = nil
+            sttService = nil
         }
 
         // Setup audio session with default mode
@@ -141,9 +143,9 @@ final class AppState: ObservableObject {
 
         Logger.quiz.info("🚀 AppState initialized")
         Logger.quiz.info("📍 API Base URL: \(Config.apiBaseURL, privacy: .public)")
-        let silenceAvailable = self.silenceDetectionService != nil ? "available" : "unavailable (requires iOS 26+)"
+        let silenceAvailable = silenceDetectionService != nil ? "available" : "unavailable (requires iOS 26+)"
         Logger.quiz.info("🔇 Silence detection: \(silenceAvailable)")
-        let sttEnabled = self.sttService != nil ? "enabled (ElevenLabs)" : "disabled (using Whisper)"
+        let sttEnabled = sttService != nil ? "enabled (ElevenLabs)" : "disabled (using Whisper)"
         Logger.quiz.info("🎙️ Streaming STT: \(sttEnabled)")
     }
 
@@ -184,36 +186,36 @@ final class AppState: ObservableObject {
         )
 
         #if DEBUG
-        // `--ui-test-error`: land directly on a voice QuestionView with the
-        // recording-error banner shown, so the error state can be screenshot-
-        // verified without driving the full record→disconnect flow. Mirrors the
-        // "Connection lost" copy set by QuizViewModel+Recording on STT drop.
-        if CommandLine.arguments.contains("--ui-test-error") {
-            viewModel.currentQuestion = Question.preview
-            viewModel.quizState = .askingQuestion
-            viewModel.errorMessage = "Connection lost. Tap Record to try again."
-        }
-        // `--ui-test-voice`: land on a voice QuestionView in the resting (Ready)
-        // state so the rewritten voiceBody layout can be screenshot-verified.
-        if CommandLine.arguments.contains("--ui-test-voice") {
-            viewModel.currentQuestion = Question.preview
-            viewModel.quizState = .askingQuestion
-        }
-        // `--ui-test-voice-sk`: voice QuestionView (Ready) seeded with a long
-        // Slovak question covering every caron (č š ž ľ ť), to verify the
-        // full-Unicode fonts render diacritics in-face (step 7 diacritics pass).
-        if CommandLine.arguments.contains("--ui-test-voice-sk") {
-            viewModel.currentQuestion = Question.previewSlovak
-            viewModel.quizState = .askingQuestion
-        }
-        // `--ui-test-recording`: voice QuestionView mid-recording with a live
-        // transcript, to verify the transcript card pins above the action row.
-        if CommandLine.arguments.contains("--ui-test-recording") {
-            viewModel.currentQuestion = Question.preview
-            viewModel.quizState = .recording
-            viewModel.liveTranscript = "Paris is the capital of France"
-            viewModel.isStreamingSTT = true
-        }
+            // `--ui-test-error`: land directly on a voice QuestionView with the
+            // recording-error banner shown, so the error state can be screenshot-
+            // verified without driving the full record→disconnect flow. Mirrors the
+            // "Connection lost" copy set by QuizViewModel+Recording on STT drop.
+            if CommandLine.arguments.contains("--ui-test-error") {
+                viewModel.currentQuestion = Question.preview
+                viewModel.quizState = .askingQuestion
+                viewModel.errorMessage = "Connection lost. Tap Record to try again."
+            }
+            // `--ui-test-voice`: land on a voice QuestionView in the resting (Ready)
+            // state so the rewritten voiceBody layout can be screenshot-verified.
+            if CommandLine.arguments.contains("--ui-test-voice") {
+                viewModel.currentQuestion = Question.preview
+                viewModel.quizState = .askingQuestion
+            }
+            // `--ui-test-voice-sk`: voice QuestionView (Ready) seeded with a long
+            // Slovak question covering every caron (č š ž ľ ť), to verify the
+            // full-Unicode fonts render diacritics in-face (step 7 diacritics pass).
+            if CommandLine.arguments.contains("--ui-test-voice-sk") {
+                viewModel.currentQuestion = Question.previewSlovak
+                viewModel.quizState = .askingQuestion
+            }
+            // `--ui-test-recording`: voice QuestionView mid-recording with a live
+            // transcript, to verify the transcript card pins above the action row.
+            if CommandLine.arguments.contains("--ui-test-recording") {
+                viewModel.currentQuestion = Question.preview
+                viewModel.quizState = .recording
+                viewModel.liveTranscript = "Paris is the capital of France"
+                viewModel.isStreamingSTT = true
+            }
         #endif
 
         quizViewModel = viewModel

@@ -13,10 +13,10 @@
 //    • Question: "skip" opens the ~2.5 s undo-window (commit / abort seam).
 //
 
-import Foundation
-import Testing
 import ConcurrencyExtras
+import Foundation
 @testable import Hangs
+import Testing
 
 @MainActor
 private func makeVM() -> (QuizViewModel, MockSilenceDetectionService, MockAudioService) {
@@ -64,7 +64,7 @@ private func makeResultState() -> QuizState {
 @MainActor
 private func waitUntil(
     _ predicate: @MainActor () -> Bool,
-    timeoutMillis: Int = 6_000,
+    timeoutMillis: Int = 6000,
     _ comment: Comment? = nil,
     sourceLocation: SourceLocation = #_sourceLocation
 ) async {
@@ -81,7 +81,6 @@ private func waitUntil(
 @Suite("Confirm / Result / Repeat / Skip command wiring (77.9)")
 @MainActor
 struct ConfirmResultCommandTests {
-
     // MARK: - Confirmation sheet
 
     @Test("'ok' on the confirmation sheet confirms the answer")
@@ -100,20 +99,25 @@ struct ConfirmResultCommandTests {
         }
     }
 
-    @Test("'again' on the confirmation sheet re-records")
+    @Test("'again' on the confirmation sheet re-records immediately (#108A)")
     func againReRecords() async {
         await withMainSerialExecutor {
-            let (vm, _, _) = makeVM()
+            let (vm, _, audio) = makeVM()
             vm.quizState = .processing
             vm.showAnswerConfirmation = true
             vm.pendingResponse = makePendingResponse()
 
             vm.handleRecognizedCommand(.again)
 
-            for _ in 0..<40 { await Task.yield() }
+            for _ in 0 ..< 40 {
+                await Task.yield()
+            }
             #expect(vm.showAnswerConfirmation == false)
             #expect(vm.isRerecording == true)
-            #expect(vm.quizState == .askingQuestion, "re-record returns to ready-to-record")
+            // Founder-rejected the old countdown-then-record behavior: "again"
+            // must open the mic right away, not park on askingQuestion.
+            #expect(vm.quizState == .recording, "re-record must start recording immediately")
+            #expect(audio.isRecording == true)
         }
     }
 
@@ -126,7 +130,9 @@ struct ConfirmResultCommandTests {
 
             vm.handleRecognizedCommand(.stop)
 
-            for _ in 0..<40 { await Task.yield() }
+            for _ in 0 ..< 40 {
+                await Task.yield()
+            }
             #expect(vm.showAnswerConfirmation == false)
             #expect(vm.quizState == .askingQuestion)
         }

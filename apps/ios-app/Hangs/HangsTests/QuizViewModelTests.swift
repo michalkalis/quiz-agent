@@ -5,10 +5,10 @@
 //  Tests for QuizViewModel state machine and quiz flow.
 //
 
-import Foundation
-import Testing
 import ConcurrencyExtras
+import Foundation
 @testable import Hangs
+import Testing
 
 // MARK: - Test Fixtures
 
@@ -44,7 +44,7 @@ private func makeQuizResponse(
                     isHost: true,
                     isReady: true,
                     joinedAt: Date()
-                )
+                ),
             ],
             expiresAt: Date().addingTimeInterval(30 * 60),
             createdAt: Date()
@@ -86,7 +86,6 @@ private func makeQuestion(id: String, source: String) -> Question {
 
 @Suite("QuizViewModel Result State Tests")
 struct QuizViewModelResultStateTests {
-
     @Test("resultQuestion and resultEvaluation are bundled in showingResult state")
     @MainActor
     func resultDataBundledInState() async throws {
@@ -275,7 +274,6 @@ struct QuizViewModelResultStateTests {
 
 @Suite("QuizViewModel Loading State Tests")
 struct QuizViewModelLoadingStateTests {
-
     @Test("submitVoiceAnswer sets quizState to processing then resolves")
     @MainActor
     func submitVoiceAnswerSetsProcessing() async throws {
@@ -410,7 +408,7 @@ struct QuizViewModelLoadingStateTests {
             createdAt: Date()
         )
         viewModel.currentQuestion = makeQuestion(id: "q_001", source: "Test")
-        viewModel.quizState = .processing  // Already processing
+        viewModel.quizState = .processing // Already processing
 
         // Call skipQuestion while already processing
         await viewModel.skipQuestion()
@@ -426,7 +424,6 @@ struct QuizViewModelLoadingStateTests {
 
 @Suite("QuizViewModel Answer Confirmation Dismiss Tests")
 struct QuizViewModelAnswerConfirmationDismissTests {
-
     /// Put ViewModel into post-voice-submission state (pendingResponse set, confirmation sheet showing)
     @MainActor
     private func putIntoConfirmationState(_ viewModel: QuizViewModel) async {
@@ -509,18 +506,22 @@ struct QuizViewModelAnswerConfirmationDismissTests {
         })
         await putIntoConfirmationState(viewModel)
 
-        // User taps Re-record — this clears pendingResponse and returns to askingQuestion
+        // User taps Re-record — this clears pendingResponse immediately and kicks
+        // off a new recording attempt (#108A: no intermediate countdown, so the
+        // exact quizState here is a timing detail — askingQuestion transiently,
+        // then recording once the spawned Task runs).
         viewModel.rerecordAnswer()
 
-        // Verify rerecordAnswer transitioned to askingQuestion
-        #expect(viewModel.quizState == .askingQuestion)
         #expect(viewModel.showAnswerConfirmation == false)
+        #expect(viewModel.pendingResponse == nil, "rerecordAnswer must consume the pending response")
+        let stateBeforeDismiss = viewModel.quizState
 
         // Now if onDismiss fires, it should be a no-op (pendingResponse already nil)
         viewModel.handleAnswerConfirmationDismissed()
 
-        // State should remain .askingQuestion (unchanged, not re-set)
-        #expect(viewModel.quizState == .askingQuestion)
+        // handleAnswerConfirmationDismissed must not touch state once pendingResponse
+        // is already nil, whatever state rerecordAnswer left it at.
+        #expect(viewModel.quizState == stateBeforeDismiss)
     }
 }
 
@@ -528,7 +529,6 @@ struct QuizViewModelAnswerConfirmationDismissTests {
 
 @Suite("QuizViewModel Recording Tests")
 struct QuizViewModelRecordingTests {
-
     @Test("toggleRecording from askingQuestion starts recording")
     @MainActor
     func toggleRecordingFromAskingQuestionStartsRecording() async throws {
@@ -654,7 +654,6 @@ struct QuizViewModelRecordingTests {
 
 @Suite("QuizViewModel Error State Tests")
 struct QuizViewModelErrorStateTests {
-
     @Test("error state carries message and context")
     @MainActor
     func errorStateCarriesData() async throws {
@@ -688,7 +687,6 @@ struct QuizViewModelErrorStateTests {
 
 @Suite("QuizViewModel Settings Persistence Tests")
 struct QuizViewModelSettingsPersistenceTests {
-
     @Test("settings auto-persist when a property changes")
     @MainActor
     func settingsAutoPersistOnChange() async throws {
@@ -744,7 +742,6 @@ struct QuizViewModelSettingsPersistenceTests {
 
 @Suite("QuizStats Tests")
 struct QuizStatsTests {
-
     @Test("recordAnswer correct increments totalCorrect, totalAnswered, and currentStreak")
     func recordAnswerCorrect() {
         var stats = QuizStats.empty
@@ -827,7 +824,6 @@ struct QuizStatsTests {
 
 @Suite("QuizViewModel MCQ Submission Tests")
 struct QuizViewModelMCQSubmissionTests {
-
     /// Shared MCQ question for all tests in this suite.
     private let mcqQuestion = Question(
         id: "q_mcq_001",
@@ -926,10 +922,9 @@ struct QuizViewModelMCQSubmissionTests {
 
 @Suite("QuizViewModel State Transition Tests")
 struct QuizViewModelStateTransitionTests {
-
     @Test("valid transition from idle to startingQuiz")
     @MainActor
-    func testValidTransitionFromIdleToStartingQuiz() async throws {
+    func validTransitionFromIdleToStartingQuiz() async throws {
         let viewModel = Fixtures.makeViewModel()
         #expect(viewModel.quizState == .idle)
 
@@ -940,7 +935,7 @@ struct QuizViewModelStateTransitionTests {
 
     @Test("valid transition from askingQuestion to recording")
     @MainActor
-    func testValidTransitionFromAskingQuestionToRecording() async throws {
+    func validTransitionFromAskingQuestionToRecording() async throws {
         let viewModel = Fixtures.makeViewModel()
         viewModel.quizState = .askingQuestion
 
@@ -951,7 +946,7 @@ struct QuizViewModelStateTransitionTests {
 
     @Test("transition to error from askingQuestion, recording, and processing")
     @MainActor
-    func testTransitionToErrorFromAnyState() async throws {
+    func transitionToErrorFromAnyState() async throws {
         let viewModel = Fixtures.makeViewModel()
 
         // From askingQuestion
@@ -972,7 +967,7 @@ struct QuizViewModelStateTransitionTests {
 
     @Test("transition from error to idle")
     @MainActor
-    func testTransitionFromErrorToIdle() async throws {
+    func transitionFromErrorToIdle() async throws {
         let viewModel = Fixtures.makeViewModel()
         viewModel.quizState = .error(message: "Something broke", context: .submission)
 
@@ -983,7 +978,7 @@ struct QuizViewModelStateTransitionTests {
 
     @Test("transition from error to askingQuestion (retry)")
     @MainActor
-    func testTransitionFromErrorToAskingQuestion() async throws {
+    func transitionFromErrorToAskingQuestion() async throws {
         let viewModel = Fixtures.makeViewModel()
         viewModel.quizState = .error(message: "Recording error", context: .recording)
 
@@ -994,7 +989,7 @@ struct QuizViewModelStateTransitionTests {
 
     @Test("state labels match expected strings")
     @MainActor
-    func testStateLabel() async throws {
+    func stateLabel() async throws {
         #expect(QuizState.idle.label == "idle")
         #expect(QuizState.startingQuiz.label == "startingQuiz")
         #expect(QuizState.askingQuestion.label == "askingQuestion")
@@ -1014,7 +1009,7 @@ struct QuizViewModelStateTransitionTests {
 
     @Test("validTransitions sets contain expected successor states")
     @MainActor
-    func testValidTransitionsSet() async throws {
+    func validTransitionsSet() async throws {
         #expect(QuizState.idle.validTransitions.contains("startingQuiz"))
 
         #expect(QuizState.startingQuiz.validTransitions.contains("askingQuestion"))
@@ -1059,10 +1054,9 @@ struct QuizViewModelStateTransitionTests {
 
 @Suite("QuizViewModel Double-Stop Guard Tests")
 struct QuizViewModelDoubleStopTests {
-
     @Test("isStoppingRecording prevents double stopRecordingAndSubmit call")
     @MainActor
-    func testIsStoppingRecordingPreventsDoubleCall() async throws {
+    func isStoppingRecordingPreventsDoubleCall() async throws {
         let (viewModel, _) = Fixtures.makeViewModelWithNetwork()
         viewModel.currentSession = QuizSession(
             id: "test_session_123",
@@ -1089,7 +1083,6 @@ struct QuizViewModelDoubleStopTests {
 
 @Suite("QuizViewModel End Quiz Tests")
 struct QuizViewModelEndQuizTests {
-
     /// 54.6 (founder #1): ending the quiz from the minimized floating widget
     /// must also dismiss the widget — resetState() left isMinimized true, so a
     /// stale "01/10" card floated over Home after the session was gone.
@@ -1163,7 +1156,6 @@ struct QuizViewModelEndQuizTests {
 
 @Suite("QuizViewModel Resume Auto-Advance Tests")
 struct QuizViewModelResumeAutoAdvanceTests {
-
     /// 59.8 (RS-17): "Resume auto-advance" must re-arm the countdown and KEEP the user on
     /// the result screen — it is a different action from "Next question" (`continueToNext()`,
     /// which advances immediately). Before the fix the button wired to `continueToNext()`, so
@@ -1193,7 +1185,7 @@ struct QuizViewModelResumeAutoAdvanceTests {
 
         // resumeAutoAdvance arms the countdown via a fire-and-forget Task — let it run.
         var waited = 0
-        while viewModel.autoAdvanceCountdown == 0 && waited < 50 {
+        while viewModel.autoAdvanceCountdown == 0, waited < 50 {
             await Task.yield()
             waited += 1
         }

@@ -569,20 +569,31 @@ extension QuizViewModel {
         errorMessage = nil
     }
 
-    /// Reject the transcribed answer and return to ready-to-record state.
-    /// Restarts the answer countdown with a 10-second bonus so the user gets
-    /// a fair retry window — the previous attempt may have failed because the
-    /// app misheard them, not because they ran out of time.
+    /// Reject the transcribed answer and start a new recording attempt immediately
+    /// (#108A — founder-confirmed: no intermediate countdown, mirrors the manual
+    /// mic button's `.askingQuestion` → `.recording` path in `toggleRecording()`).
+    /// `isRerecording` stays set so the brief `.askingQuestion` bridge state
+    /// below can't be hijacked by a stale in-flight TTS-completion callback
+    /// starting its own auto-record/thinking-time countdown on top of this one.
     func rerecordAnswer() {
+        // Single-flight: the sheet is only up while .processing; the first call
+        // synchronously flips to .askingQuestion, so a double-tap or a tap racing
+        // the "again" voice command becomes a no-op instead of spawning a second
+        // startRecording() Task (two-engine crash class, #64/#77).
+        guard quizState == .processing else { return }
         cancelAutoConfirm()
         showAnswerConfirmation = false
         pendingResponse = nil
         transcriptWasEdited = false
         preEditTranscript = nil
         isRerecording = true
-        transition(to: .askingQuestion) // Return to ready state, not recording
+        cancelAnswerTimer()
+        cancelThinkingTime()
+        transition(to: .askingQuestion) // Transient bridge state before recording starts
         errorMessage = nil
-        startAnswerTimer(extraSeconds: 10, bypassRerecord: true)
+        Task { [weak self] in
+            await self?.startRecording()
+        }
     }
 
     /// Cancel the processing operation and return to question state

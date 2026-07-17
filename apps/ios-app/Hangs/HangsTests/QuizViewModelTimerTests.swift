@@ -8,8 +8,8 @@
 //
 
 import Foundation
-import Testing
 @testable import Hangs
+import Testing
 
 // MARK: - Local helpers
 
@@ -44,7 +44,6 @@ private func makeNextQuestionResponse(
 
 @Suite("QuizViewModel Answer Timer Tests")
 struct QuizViewModelAnswerTimerTests {
-
     @Test("countdown resets to 0 when user taps mic")
     @MainActor
     func countdownResetsOnMicTap() async throws {
@@ -107,22 +106,33 @@ struct QuizViewModelAnswerTimerTests {
         #expect(viewModel.answerTimerCountdown == 0)
     }
 
-    @Test("rerecordAnswer restarts answer timer with bonus")
+    /// #108A (founder-rejected the old countdown-then-record behavior): tapping
+    /// Re-record must open the mic immediately, mirroring the manual mic button —
+    /// not restart another countdown. No answer countdown may be running once the
+    /// mic is live.
+    @Test("rerecordAnswer starts recording immediately with no answer countdown")
     @MainActor
-    func rerecordRestartsTimerWithBonus() async throws {
-        let viewModel = Fixtures.makeViewModelForTimerTests()
-        let previousCountdown = viewModel.answerTimerCountdown
+    func rerecordStartsRecordingImmediately() async throws {
+        let mockAudio = MockAudioService()
+        let viewModel = QuizViewModel(
+            networkService: MockNetworkService(),
+            audioService: mockAudio,
+            persistenceStore: MockPersistenceStore()
+        )
+        viewModel.currentQuestion = Fixtures.makeQuestion(id: "q_001", source: "Test")
+        viewModel.quizState = .processing // the real call site: the confirmation sheet
+        viewModel.answerTimerCountdown = 15 // stale value from a prior countdown
 
-        // Simulate re-record action
         viewModel.rerecordAnswer()
 
-        #expect(viewModel.quizState == .askingQuestion)
-        // Timer must keep ticking after re-record (the previous attempt may have
-        // failed because the app misheard the user, not because of timeout).
-        // Don't pin to the exact +10 literal — the policy may evolve; what matters
-        // is the user gets *more* time than they had a moment ago.
-        #expect(viewModel.answerTimerCountdown > previousCountdown)
-        #expect(viewModel.answerTimerCountdown >= viewModel.settings.answerTimeLimit)
+        // Synchronously: the countdown is cancelled right away, before recording
+        // has had a chance to actually start on the spawned Task.
+        #expect(viewModel.answerTimerCountdown == 0)
+
+        await waitUntil({ viewModel.quizState == .recording }, "re-record never reached .recording")
+
+        #expect(mockAudio.isRecording == true, "the mic must actually open, not just flip state")
+        #expect(viewModel.answerTimerCountdown == 0, "no answer countdown should be running after re-record")
     }
 }
 
@@ -130,7 +140,6 @@ struct QuizViewModelAnswerTimerTests {
 
 @Suite("QuizViewModel Thinking Time Tests")
 struct QuizViewModelThinkingTimeTests {
-
     @Test("startThinkingTimeCountdown sets initial countdown to settings.thinkingTime")
     @MainActor
     func thinkingTimeStartsAtConfiguredValue() async throws {
@@ -177,7 +186,7 @@ struct QuizViewModelThinkingTimeTests {
 @MainActor
 private func waitUntil(
     _ predicate: @MainActor () -> Bool,
-    timeoutMillis: Int = 10_000,
+    timeoutMillis: Int = 10000,
     _ comment: Comment? = nil,
     sourceLocation: SourceLocation = #_sourceLocation
 ) async {
@@ -193,7 +202,6 @@ private func waitUntil(
 
 @Suite("QuizViewModel No Modal Freeze Tests")
 struct QuizViewModelNoModalFreezeTests {
-
     /// #81 follow-up (founder 2026-07-06): the answer countdown must keep
     /// running behind any modal (End-Quiz dialog, settings sheet) — a freeze
     /// is exploitable: opening a dialog would buy free thinking time. Same
@@ -264,7 +272,6 @@ struct QuizViewModelNoModalFreezeTests {
 
 @Suite("QuizViewModel Auto-Stop Recording Timer Tests")
 struct QuizViewModelAutoStopRecordingTests {
-
     /// Regression: `Config.autoRecordingDuration = 15` is the safety net that
     /// guarantees a recording session can't run indefinitely if silence
     /// detection misses the trailing silence event. Removing the
@@ -308,7 +315,6 @@ struct QuizViewModelAutoStopRecordingTests {
 
 @Suite("QuizViewModel Auto-Advance Countdown Tests")
 struct QuizViewModelAutoAdvanceTests {
-
     @Test("startAutoAdvanceCountdown seeds the published countdown and registers a task")
     @MainActor
     func autoAdvanceHappyPathRegistersTask() async throws {
@@ -336,7 +342,7 @@ struct QuizViewModelAutoAdvanceTests {
     func autoAdvanceSkippedWhenDisabled() async throws {
         let viewModel = Fixtures.makeViewModelForTimerTests()
         viewModel.autoAdvanceEnabled = false
-        viewModel.autoAdvanceCountdown = 99  // pretend a previous countdown lingered
+        viewModel.autoAdvanceCountdown = 99 // pretend a previous countdown lingered
 
         await viewModel.startAutoAdvanceCountdown(duration: 7, audioDuration: 2.0)
 
@@ -365,13 +371,13 @@ struct QuizViewModelAutoAdvanceTests {
 
 @Suite("QuizViewModel Barge-In Tests")
 struct QuizViewModelBargeInTests {
-
     /// Returns a ViewModel wired with a mock silence-detection service so
     /// `handleBargeIn` exercises the full path (stop TTS, clear ttsPlaybackActive,
     /// transition to recording).
     @MainActor
     private func makeBargeInViewModel()
-        -> (QuizViewModel, MockAudioService, MockSilenceDetectionService) {
+        -> (QuizViewModel, MockAudioService, MockSilenceDetectionService)
+    {
         let mockAudio = MockAudioService()
         let mockSilence = MockSilenceDetectionService()
         let viewModel = QuizViewModel(
@@ -403,7 +409,7 @@ struct QuizViewModelBargeInTests {
         #expect(mockSilence.ttsPlaybackActive == false)
         #expect(viewModel.quizState == .recording)
         #expect(viewModel.isAutoRecording == true)
-        #expect(viewModel.answerTimerCountdown == 0)  // cancelAnswerTimer was called
+        #expect(viewModel.answerTimerCountdown == 0) // cancelAnswerTimer was called
     }
 
     /// Regression: barge-in must not fire from a non-asking state. If the

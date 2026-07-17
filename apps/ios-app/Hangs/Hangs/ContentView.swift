@@ -28,6 +28,9 @@ struct ContentView: View {
     /// then mounts as the fresh root. Safe because quiz state lives in
     /// `viewModel` (a @StateObject above the stack), not in the recreated views.
     @State private var navStackID = UUID()
+    // #108C: keeps the screen awake for the duration of an active quiz.
+    // Injectable so tests assert against a spy, never the real UIApplication.
+    @State private var screenAwakeWriter = ScreenAwakeWriter()
 
     init(appState: AppState) {
         _viewModel = StateObject(wrappedValue: appState.makeQuizViewModel())
@@ -37,12 +40,12 @@ struct ContentView: View {
         ))
         _showOnboarding = State(initialValue: !appState.persistenceStore.hasCompletedOnboarding)
         #if DEBUG
-        // `--ui-test-signin-prompt`: present the #58 §9 contextual sign-in
-        // sheet directly — it is otherwise reachable only through a real
-        // StoreKit purchase, which the sim can't perform.
-        if CommandLine.arguments.contains("--ui-test-signin-prompt") {
-            _showSignInPrompt = State(initialValue: true)
-        }
+            // `--ui-test-signin-prompt`: present the #58 §9 contextual sign-in
+            // sheet directly — it is otherwise reachable only through a real
+            // StoreKit purchase, which the sim can't perform.
+            if CommandLine.arguments.contains("--ui-test-signin-prompt") {
+                _showSignInPrompt = State(initialValue: true)
+            }
         #endif
     }
 
@@ -125,6 +128,21 @@ struct ContentView: View {
             }
         }
         .animation(reduceMotion ? nil : .spring(response: 0.4, dampingFraction: 0.8), value: viewModel.isMinimized)
+        // #108C: keep the screen awake for the duration of an active quiz —
+        // both the state and the minimized flag affect the answer, and the
+        // flag must never outlive this view (onDisappear force-resets it).
+        .onAppear {
+            screenAwakeWriter.apply(state: viewModel.quizState, isMinimized: viewModel.isMinimized)
+        }
+        .onDisappear {
+            screenAwakeWriter.reset()
+        }
+        .onChange(of: viewModel.quizState) { _, newState in
+            screenAwakeWriter.apply(state: newState, isMinimized: viewModel.isMinimized)
+        }
+        .onChange(of: viewModel.isMinimized) { _, isMinimized in
+            screenAwakeWriter.apply(state: viewModel.quizState, isMinimized: isMinimized)
+        }
         .fullScreenCover(isPresented: $showOnboardingReplay) {
             OnboardingView(viewModel: onboardingVM)
                 .onChange(of: onboardingVM.isComplete) { _, complete in

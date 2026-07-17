@@ -51,9 +51,13 @@ No in-button progress bar exists anywhere. Current pattern is a **separate** bar
 
 ## Acceptance
 
-- [ ] **A:** `HangsUITests`/`HangsTests` scenario: from the confirmation sheet, tap "Re-record" and assert `viewModel.quizState == .recording` (or equivalent audio-service "recording active" state) immediately, with no intervening countdown — new/updated test in `QuizViewModelTests.swift` or `ConfirmResultCommandTests.swift`. `[HUMAN]` on-device: confirm in the car that re-record starts listening instantly.
-- [ ] **B:** New `HangsPrimaryButton` variant renders with a progress layer bound to a countdown value in a ViewInspector/snapshot test; confirmation-sheet and result-screen call sites switch to it. `[HUMAN]`: founder signs off on the Pencil frame update before/after implementation.
-- [ ] **C:** Unit/UI test asserts `UIApplication.shared.isIdleTimerDisabled == true` while `quizState` is in an active-play state and `false` in `.idle`/`.finished`/minimized/on view teardown (inspect via a testable wrapper, not the raw singleton, per existing test patterns). `[HUMAN]` on-device: play a full quiz + view a result screen in the car with default auto-lock settings and confirm the screen never dims.
+- [x] **A (agent side):** `rerecordAnswer()` cancels the timers and starts recording immediately (mirrors the manual mic path); `rerecordStartsRecordingImmediately` in `QuizViewModelTimerTests.swift` asserts `.recording` + mock recording active + no countdown; `ConfirmResultCommandTests.againReRecords` updated to `.recording`. Review-found blocker fixed: single-flight guard (`quizState == .processing`) so a double-tap / tap racing the "again" voice command can't spawn two recordings (two-engine crash class #64/#77). The old +10s countdown path removed (`startAnswerTimer` back to zero-arg); `isRerecording` kept — still load-bearing against a stale TTS-completion auto-record double-start. `[HUMAN]` on-device: confirm re-record starts listening instantly in the car.
+- [ ] **B:** EXCLUDED from the 2026-07-17 agent run (founder-locked: design-first, Waze-like `.pen` draft → in-session sign-off → implement). Untouched.
+- [x] **C (agent side):** new `ScreenAwakeController` — pure `shouldKeepScreenAwake(state:isMinimized:)` (active = not `.idle`/`.finished`/minimized; `.showingResult` counts active per founder report) + `ScreenAwakeWriter` injectable wrapper as the single `isIdleTimerDisabled` write path; ContentView applies on appear/state-change/minimize-change and force-resets `false` on disappear. `ScreenAwakeControllerTests` cover every `QuizState` × minimized + teardown-reset. `[HUMAN]` on-device: full quiz + result screen with default auto-lock, screen never dims.
+
+## Outcome — 2026-07-17/18 (agent run, A+C only)
+
+Both parts landed on `main`; touched suites green (45 tests/9 suites impl run + re-verification after the review fix). Adversarial review: 1 blocker (re-record reentrancy) + 1 major (same root) → fixed with the state guard + re-tested; no other findings. Part B untouched, waiting on the founder design session.
 
 ## Cross-refs
 

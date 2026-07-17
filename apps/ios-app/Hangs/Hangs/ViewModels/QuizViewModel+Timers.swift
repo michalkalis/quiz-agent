@@ -11,7 +11,6 @@ import os
 // MARK: - Timer Management
 
 extension QuizViewModel {
-
     // MARK: - Thinking Time Countdown
 
     /// Countdown before auto-recording starts, giving user time to think.
@@ -70,15 +69,11 @@ extension QuizViewModel {
     // MARK: - Answer Timer
 
     /// Start countdown timer that auto-starts recording when it expires.
-    ///
-    /// - Parameters:
-    ///   - extraSeconds: Bonus time added on top of `settings.answerTimeLimit`
-    ///     (used by re-record to give the user a fair retry window).
-    ///   - bypassRerecord: Allow the timer to run even when `isRerecording` is
-    ///     true. Re-record explicitly wants the countdown to keep ticking.
-    func startAnswerTimer(extraSeconds: Int = 0, bypassRerecord: Bool = false) {
-        let limit = settings.answerTimeLimit + extraSeconds
-        guard limit > 0, bypassRerecord || !isRerecording else { return }
+    /// Skipped while `isRerecording` is true — re-record starts its own
+    /// recording immediately (#108A) instead of going through this countdown.
+    func startAnswerTimer() {
+        let limit = settings.answerTimeLimit
+        guard limit > 0, !isRerecording else { return }
 
         cancelAnswerTimer()
         answerTimerCountdown = limit
@@ -86,7 +81,7 @@ extension QuizViewModel {
         let task = Task { [weak self] in
             guard let self else { return }
 
-            for remaining in (0...limit).reversed() {
+            for remaining in (0 ... limit).reversed() {
                 if Task.isCancelled { return }
                 // Direct assignment is safe: Task inherits @MainActor isolation from QuizViewModel
                 self.answerTimerCountdown = remaining
@@ -100,8 +95,6 @@ extension QuizViewModel {
 
             // Auto-start recording when timer expires
             guard self.quizState == .askingQuestion else { return }
-            // Clear re-record flag so the auto-stop timer fires normally for this attempt
-            self.isRerecording = false
             await self.startRecording()
         }
         taskBag.add(task, key: .answerTimer)
@@ -146,7 +139,7 @@ extension QuizViewModel {
     /// Starts the auto-advance countdown loop with real-time UI updates
     func startAutoAdvanceCountdown(duration: Int, audioDuration: TimeInterval) async {
         // Skip auto-advance if disabled globally OR if current question is paused
-        guard autoAdvanceEnabled && !currentQuestionPaused else {
+        guard autoAdvanceEnabled, !currentQuestionPaused else {
             let reason = !autoAdvanceEnabled ? "disabled globally" : "paused for current question"
             Logger.quiz.debug("⏱️ Auto-advance skipped (\(reason, privacy: .public))")
             autoAdvanceCountdown = 0
@@ -163,7 +156,7 @@ extension QuizViewModel {
             guard let self else { return }
 
             // Countdown loop
-            for remaining in (0...duration).reversed() {
+            for remaining in (0 ... duration).reversed() {
                 // Check for cancellation
                 if Task.isCancelled {
                     Logger.quiz.debug("⏱️ Auto-advance countdown cancelled")
@@ -173,7 +166,7 @@ extension QuizViewModel {
                 self.autoAdvanceCountdown = remaining
 
                 if remaining > 0 {
-                    try? await Task.sleep(nanoseconds: 1_000_000_000)  // 1 second
+                    try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
                 }
             }
 

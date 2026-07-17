@@ -83,7 +83,10 @@ async def get_question_audio(
                 )
 
             translated_dict = await question_to_dict_translated(
-                current_question, session.language, translation_service
+                current_question,
+                session.language,
+                translation_service,
+                session_id=session_id,
             )
             question_text = translated_dict["question"]
 

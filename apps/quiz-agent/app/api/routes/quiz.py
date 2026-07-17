@@ -147,7 +147,7 @@ async def start_quiz(
             await usage_tracker.record_question(session.user_id)
 
         translated_question_dict = await question_to_dict_translated(
-            question, session.language, translation_service
+            question, session.language, translation_service, session_id=session_id
         )
         session.current_question_text = translated_question_dict["question"]
         session.transition(to=SessionPhase.ASKING, caller="routes.start_quiz")
@@ -246,7 +246,7 @@ async def get_current_question(
         if not question:
             raise HTTPException(status_code=500, detail="Question not found")
         translated_question = await question_to_dict_translated(
-            question, session.language, translation_service
+            question, session.language, translation_service, session_id=session_id
         )
 
     return {

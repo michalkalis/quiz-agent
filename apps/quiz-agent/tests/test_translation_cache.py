@@ -125,10 +125,11 @@ def test_error_retries_within_call(service):
 
 
 def test_exhausted_retries_fall_back_uncached(service):
-    """When every attempt fails, fall back to English but do NOT cache it —
-    a later call must recompute and can still succeed."""
+    """When every attempt (now TRANSLATION_MAX_ATTEMPTS=3, #107) fails, fall back to
+    English but do NOT cache it — a later call must recompute and can still succeed."""
     service.client.chat.completions.create = AsyncMock(
         side_effect=[
+            Exception("rate limit"),
             Exception("rate limit"),
             Exception("rate limit"),
             mock_response(QUESTION_SK),
@@ -138,9 +139,9 @@ def test_exhausted_retries_fall_back_uncached(service):
     first = asyncio.run(service.translate_question(QUESTION, "sk"))
     second = asyncio.run(service.translate_question(QUESTION, "sk"))
 
-    assert first == QUESTION  # both attempts failed → original (not cached)
+    assert first == QUESTION  # all 3 attempts failed → original (not cached)
     assert second == QUESTION_SK  # later success recomputed
-    assert service.client.chat.completions.create.call_count == 3
+    assert service.client.chat.completions.create.call_count == 4
 
 
 def test_validation_fail_retries_within_call(service):
@@ -289,11 +290,17 @@ def test_version_bump_forces_retranslate(service, store_url, tmp_path, monkeypat
 
 
 def test_question_fallbacks_not_persisted_to_disk(service, tmp_path):
-    """Neither the except-fallback nor the validation-fail fallback may poison the disk."""
+    """Neither the except-fallback nor the validation-fail fallback may poison the disk.
+
+    First call exhausts all 3 attempts (an exception, then a validation-rejected
+    completion, then another exception) and must not write a row; the second call's
+    fresh success is the only row on disk.
+    """
     service.client.chat.completions.create = AsyncMock(
         side_effect=[
             Exception("rate limit"),
             mock_response("suchy bodliak"),
+            Exception("rate limit"),
             mock_response(QUESTION_SK),
         ]
     )

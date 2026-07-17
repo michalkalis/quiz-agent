@@ -84,17 +84,40 @@ without matching Fly logs to his session timestamp — that evidence isn't avail
 
 ## Acceptance
 
-- [ ] A new backend test in `apps/quiz-agent/tests/test_translation_cache.py` (or
-      `test_translation_validation.py`) forces `translate_question` through exhausted-retries (mock
-      `client.chat.completions.create` to always raise, or always return a too-short string) and
-      asserts a Sentry capture (`sentry_sdk.capture_message` or `capture_exception`) fires with the
-      session/language context — run via `cd apps/quiz-agent && pytest tests/test_translation_cache.py tests/test_translation_validation.py -v`.
-- [ ] Same test file adds a case proving the retry count increase (3 attempts before fallback) via
-      `call_count` assertions on the mocked client.
-- [ ] Full backend suite stays green: `cd apps/quiz-agent && pytest tests/ -v`.
-- [ ] [HUMAN] on-device: after deploy, monitor Sentry (`missinghue`/`carquiz`) for the new fail-open
-      event over the founder's next few Slovak driving sessions to establish real-world frequency —
-      this is the data point that was missing from this triage.
+- [x] New `tests/test_translation_fallback.py`: exhausted-retries (always-raise AND always-invalid
+      variants) → returns original English, `sentry_sdk.capture_message` fires exactly once with
+      language/failure-kind/lengths/session context; mock patched at the real import path
+      (`app.translation.translator.sentry_sdk`).
+- [x] Retry bump proven: `call_count == 3` (`TRANSLATION_MAX_ATTEMPTS = 3` module constant);
+      3rd-attempt-recovery case asserts no capture + result cached; fallback-still-uncached
+      (retryable) case kept.
+- [x] Full backend suite green: **416 passed** (was 411 — +5 new, none lost); ruff clean.
+      Adversarial review verdict CLEAN (incl. empirical check that `capture_message` without an
+      initialized client is a no-op — fallback can never raise).
+- [ ] [HUMAN] after deploy: monitor Sentry for the new `(#107)` fallback events over the next few
+      Slovak driving sessions to establish real-world frequency. **⚠ BLOCKED on a founder step:
+      the backend has NO `SENTRY_DSN` in either Fly environment (discovered during this run — Sentry
+      was never initialized in deployed backends at all; `carquiz` is the iOS project). Steps:**
+      1. sentry.io → org `missinghue` → **Create Project** → platform *FastAPI (Python)* → name e.g. `quiz-agent-api`.
+      2. Copy the **DSN** it shows (starts `https://…ingest…sentry.io/…`).
+      3. Terminal: `fly secrets set SENTRY_DSN="<dsn>" -a quiz-agent-api-staging`
+      4. Terminal: `fly secrets set SENTRY_DSN="<dsn>" -a quiz-agent-api` (each command restarts the app itself).
+      Or paste the DSN to the agent and it will run steps 3–4. Until then the new capture calls are
+      silent no-ops in deployed envs (code-side everything is ready).
+
+## Outcome — 2026-07-17 (agent run)
+
+Implemented per fix direction 1+2 (visibility + 3rd attempt); deployed staging → verified → prod
+(see TODO/handoff for deploy record). Decisions made during the run:
+
+- **Validation thresholds intentionally untouched** (fix direction 2's "loosen heuristics" part):
+  no EN→SK corpus exists locally to calibrate against (verified — the #69 durable store only exists
+  in prod's volume). Instead, every fallback event now carries `original_len`/`translated_len`/ratio,
+  so the Sentry stream becomes the calibration dataset; revisit thresholds once real events accrue.
+- `translate_feedback` kept its single attempt (structurally different from the question path) but
+  gained the same fail-loud capture; `session_id` threaded as optional keyword through
+  `question_to_dict_translated` and the quiz/flow/tts call sites.
+- Cache/store invariant (#69) preserved: fallbacks never cached — re-asserted by tests.
 
 ## Cross-refs
 

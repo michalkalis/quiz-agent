@@ -41,7 +41,11 @@ def question_to_dict(question: Question) -> Dict[str, Any]:
 
 
 async def question_to_dict_translated(
-    question: Question, language: str, translation_service=None
+    question: Question,
+    language: str,
+    translation_service=None,
+    *,
+    session_id: str | None = None,
 ) -> Dict[str, Any]:
     """Convert Question to dict with translated question text.
 
@@ -52,7 +56,9 @@ async def question_to_dict_translated(
     if translation_service and language != "en":
         try:
             translated_text = await translation_service.translate_question(
-                question=question.question, target_language=language
+                question=question.question,
+                target_language=language,
+                session_id=session_id,
             )
             question_dict["question"] = translated_text
         except Exception as e:

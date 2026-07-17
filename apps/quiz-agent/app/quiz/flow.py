@@ -144,7 +144,9 @@ class QuizFlowService:
                 )
 
                 translated_correct = await self._translate_correct_answer(
-                    str(current_question.correct_answer), session.language
+                    str(current_question.correct_answer),
+                    session.language,
+                    session_id=session.session_id,
                 )
 
                 result.evaluation = {
@@ -173,7 +175,9 @@ class QuizFlowService:
 
             elif intent_type == "skip":
                 translated_correct = await self._translate_correct_answer(
-                    str(current_question.correct_answer), session.language
+                    str(current_question.correct_answer),
+                    session.language,
+                    session_id=session.session_id,
                 )
                 result.evaluation = {
                     "user_answer": "skipped",
@@ -288,7 +292,10 @@ class QuizFlowService:
 
         # Cache translated question text
         translated_q_dict = await question_to_dict_translated(
-            next_question, session.language, self.translation_service
+            next_question,
+            session.language,
+            self.translation_service,
+            session_id=session.session_id,
         )
         session.current_question_text = translated_q_dict["question"]
         self.session_manager.update_session(session)
@@ -359,13 +366,15 @@ class QuizFlowService:
             logger.warning("Failed to generate enhanced feedback: %s", e)
             return None
 
-    async def _translate_correct_answer(self, answer: str, language: str) -> str:
+    async def _translate_correct_answer(
+        self, answer: str, language: str, session_id: str | None = None
+    ) -> str:
         """Translate correct answer to target language."""
         if language == "en" or not self.translation_service:
             return answer
         try:
             return await self.translation_service.translate_feedback(
-                feedback=answer, target_language=language
+                feedback=answer, target_language=language, session_id=session_id
             )
         except Exception as e:
             logger.warning("Failed to translate correct answer to %s: %s", language, e)

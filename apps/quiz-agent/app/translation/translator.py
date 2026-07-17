@@ -6,6 +6,7 @@ Translates questions and feedback to user's preferred language using OpenAI.
 import logging
 import os
 
+import sentry_sdk
 from quiz_shared.llm import factory as llm_factory
 
 from app.translation.store import TranslationStore
@@ -36,6 +37,11 @@ CACHE_MAX_ENTRIES = 2000
 # lazily re-translate unchanged texts (old-version rows are orphaned, never served). One
 # global stamp covers both prompts (#69 Decision #2). Read at call-time so tests can patch.
 TRANSLATION_PROMPT_VERSION = "1"
+
+# Attempts before falling back to the original English (#107). Was 2 — bumped to 3 after
+# a founder-reported live session still leaked an untranslated question through the old
+# budget.
+TRANSLATION_MAX_ATTEMPTS = 3
 
 
 class TranslationService:
@@ -141,7 +147,12 @@ class TranslationService:
         return translated
 
     async def translate_question(
-        self, question: str, target_language: str, source_language: str = "en"
+        self,
+        question: str,
+        target_language: str,
+        source_language: str = "en",
+        *,
+        session_id: str | None = None,
     ) -> str:
         """Translate a quiz question to target language.
 
@@ -149,6 +160,7 @@ class TranslationService:
             question: Question text in source language
             target_language: ISO 639-1 code (e.g., "sk", "cs")
             source_language: ISO 639-1 code (default: "en")
+            session_id: Quiz session id, used only for the fail-loud fallback message
 
         Returns:
             Translated question text
@@ -164,10 +176,11 @@ class TranslationService:
 
         target_lang_name = LANGUAGE_NAMES.get(target_language, target_language)
 
-        # One retry before falling back to English: a transient API error or a
+        # Retry before falling back to English: a transient API error or a
         # stochastic bad completion should not leak an untranslated question to
         # the client mid-session (fallbacks are deliberately not cached).
-        for attempt in range(2):
+        last_failure: dict[str, object] = {}
+        for attempt in range(TRANSLATION_MAX_ATTEMPTS):
             try:
                 response = await self.client.chat.completions.create(
                     model=self.model,
@@ -202,25 +215,58 @@ class TranslationService:
                         attempt + 1,
                         question[:50],
                     )
+                    last_failure = {
+                        "kind": "validation_reject",
+                        "translated_len": len(translated),
+                    }
                     continue
                 self._maybe_store(cache_key, validated)
                 return validated
 
             except Exception as e:
                 logger.warning("Translation failed (attempt %d): %s", attempt + 1, e)
+                last_failure = {"kind": "api_error", "exception": type(e).__name__}
 
-        logger.warning(
-            "Translation exhausted retries, falling back to original: '%s'",
-            question[:50],
+        # Exhausted every attempt — fail loud into Sentry, not just a log line. There is
+        # no local EN→SK translation corpus to calibrate the validation thresholds in
+        # _validate_translation (short-length floor, 0.3 length ratio) against, so these
+        # events double as the missing calibration dataset.
+        original_len = len(question)
+        detail_parts = [
+            f"target_language={target_language!r}",
+            f"kind={last_failure.get('kind')!r}",
+        ]
+        if last_failure.get("kind") == "api_error":
+            detail_parts.append(f"exception={last_failure.get('exception')!r}")
+        elif last_failure.get("kind") == "validation_reject":
+            translated_len = last_failure.get("translated_len", 0)
+            ratio = translated_len / original_len if original_len else 0
+            detail_parts.append(f"translated_len={translated_len}")
+            detail_parts.append(f"ratio={ratio:.2f}")
+        detail_parts.append(f"original_len={original_len}")
+        if session_id is not None:
+            detail_parts.append(f"session_id={session_id!r}")
+        message = (
+            "Translation exhausted retries, falling back to original English "
+            f"question (#107): {', '.join(detail_parts)}"
         )
+        logger.warning(message)
+        sentry_sdk.capture_message(message, level="warning")
         return question  # Fallback to original English (not cached)
 
-    async def translate_feedback(self, feedback: str, target_language: str) -> str:
+    async def translate_feedback(
+        self,
+        feedback: str,
+        target_language: str,
+        *,
+        session_id: str | None = None,
+    ) -> str:
         """Translate feedback message to target language.
 
         Args:
             feedback: Feedback text (e.g., "Correct!", "Incorrect")
             target_language: ISO 639-1 code
+            session_id: Quiz session id, used only for the fail-loud fallback message
 
         Returns:
             Translated feedback
@@ -265,5 +311,17 @@ class TranslationService:
             return translated
 
         except Exception as e:
-            logger.warning("Translation failed, using original: %s", e)
+            detail_parts = [
+                f"target_language={target_language!r}",
+                f"exception={type(e).__name__!r}",
+                f"feedback_len={len(feedback)}",
+            ]
+            if session_id is not None:
+                detail_parts.append(f"session_id={session_id!r}")
+            message = (
+                "Feedback translation failed, falling back to original (#107): "
+                f"{', '.join(detail_parts)}"
+            )
+            logger.warning(message)
+            sentry_sdk.capture_message(message, level="warning")
             return feedback  # Fallback to original (not cached)

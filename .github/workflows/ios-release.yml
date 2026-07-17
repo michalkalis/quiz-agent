@@ -5,6 +5,14 @@ name: iOS Release (TestFlight)
 on:
   workflow_dispatch:
     inputs:
+      environment:
+        description: "Target environment: staging (fastlane beta, *-staging APIs, sandbox purchases) or production (fastlane release, prod APIs)"
+        type: choice
+        options:
+          - staging
+          - production
+        required: true
+        default: staging
       notes:
         description: "Release notes / tester message (optional)"
         required: false
@@ -123,13 +131,14 @@ jobs:
           security list-keychains -d user -s "$KC" $(security list-keychains -d user | tr -d '"')
           echo "KEYCHAIN_PATH=$KC" >> "$GITHUB_ENV"
 
-      - name: Run fastlane beta (build + TestFlight upload)
+      - name: Run fastlane (build + TestFlight upload)
         working-directory: apps/ios-app/Hangs
         env:
           # Override Matchfile to point at the isolated keychain on disk.
           MATCH_KEYCHAIN_NAME: ${{ env.KEYCHAIN_PATH }}
           BUILD_NUMBER_FLOOR: ${{ inputs.build_number_floor }}
-        run: bundle exec fastlane ios beta
+        # environment input picks the lane: staging → beta (Hangs-Staging), production → release (Hangs-Prod).
+        run: bundle exec fastlane ios ${{ inputs.environment == 'production' && 'release' || 'beta' }}
 
       - name: Upload build artifacts
         # IPA + dSYM only — the dSYM is needed for Sentry symbolication.

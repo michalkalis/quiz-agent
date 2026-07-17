@@ -1,0 +1,33 @@
+//
+// Staging.xcconfig
+// Environment-only settings for the staging build (API → *-staging Fly.io apps).
+// TestFlight builds use this env so sandbox purchases land in staging, never prod
+// (#101 — prod vs sandbox environment separation).
+// Include Shared here so any xcconfig that wants just Staging can pull the base too.
+//
+
+#include "Shared.xcconfig"
+
+// MARK: - Environment
+ENVIRONMENT_NAME = Staging
+
+// MARK: - API
+// `$()` escape breaks the `//` token so xcconfig doesn't treat the rest as a comment.
+API_BASE_URL = https:/$()/quiz-agent-api-staging.fly.dev
+PACK_API_BASE_URL = https:/$()/quiz-pack-api-staging.fly.dev
+
+// MARK: - Sentry
+// Same DSN as Prod — events tagged with environment:staging for filtering in Sentry UI.
+SENTRY_DSN = https:/$()/c5440340d41535b4862af9385d9bc38c@o4511195958738944.ingest.de.sentry.io/4511196118188112
+
+// MARK: - Identity
+// Same bundle id + display name as Prod (#101 §3.4): TestFlight reuses the existing
+// ASC app record, match AppStore profile, and single RevenueCat SDK key.
+PRODUCT_BUNDLE_IDENTIFIER = $(BUNDLE_ID_BASE)
+BUNDLE_DISPLAY_NAME = $(APP_DISPLAY_NAME)
+
+// MARK: - Capabilities
+// Same capabilities/signing as Prod — reuse its entitlements file.
+CODE_SIGN_ENTITLEMENTS = Hangs/Hangs-Prod.entitlements
+
+// Signing lives in the build-type × env composition files (Debug-Staging / Release-Staging).

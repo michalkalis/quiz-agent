@@ -95,15 +95,14 @@ without matching Fly logs to his session timestamp — that evidence isn't avail
       Adversarial review verdict CLEAN (incl. empirical check that `capture_message` without an
       initialized client is a no-op — fallback can never raise).
 - [ ] [HUMAN] after deploy: monitor Sentry for the new `(#107)` fallback events over the next few
-      Slovak driving sessions to establish real-world frequency. **⚠ BLOCKED on a founder step:
-      the backend has NO `SENTRY_DSN` in either Fly environment (discovered during this run — Sentry
-      was never initialized in deployed backends at all; `carquiz` is the iOS project). Steps:**
-      1. sentry.io → org `missinghue` → **Create Project** → platform *FastAPI (Python)* → name e.g. `quiz-agent-api`.
-      2. Copy the **DSN** it shows (starts `https://…ingest…sentry.io/…`).
-      3. Terminal: `fly secrets set SENTRY_DSN="<dsn>" -a quiz-agent-api-staging`
-      4. Terminal: `fly secrets set SENTRY_DSN="<dsn>" -a quiz-agent-api` (each command restarts the app itself).
-      Or paste the DSN to the agent and it will run steps 3–4. Until then the new capture calls are
-      silent no-ops in deployed envs (code-side everything is ready).
+      Slovak driving sessions to establish real-world frequency.
+      **UNBLOCKED 2026-07-18 (agent):** `SENTRY_DSN` set on BOTH Fly apps (staging + prod), machines
+      restarted, health 200. Token couldn't create a new Sentry project (org disallows for members),
+      so backend uses a dedicated key named `backend` in the existing `carquiz` project — backend
+      events distinguishable by `platform:python` + `environment:staging|production`. Verified
+      end-to-end: staging logged "Sentry initialized (env=staging)"; a test event through the
+      backend DSN arrived in Sentry (then resolved). Watch: sentry.io → `carquiz` → filter
+      `environment:production`.
 
 ## Outcome — 2026-07-17 (agent run)
 

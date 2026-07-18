@@ -10,6 +10,8 @@
 import SwiftUI
 
 /// Primary CTA — pink filled pill. Label + optional leading / trailing SF symbol.
+/// #108B: optional Waze-like countdown — bright pink = remaining time draining
+/// right→left over a darker base, plus a mono "Ns" chip (pen annotation `sYSN7`).
 struct HangsPrimaryButton: View {
     let title: LocalizedStringKey
     var icon: String? = nil
@@ -17,7 +19,22 @@ struct HangsPrimaryButton: View {
     var isLoading: Bool = false
     var height: CGFloat = 64
     var isDestructive: Bool = false
+    /// Seconds left on an active countdown; nil = plain button.
+    var countdownSecondsRemaining: Int? = nil
+    /// Full countdown duration the fill fraction is computed against.
+    var countdownTotal: Int = 0
     let action: () -> Void
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var isCountingDown: Bool {
+        (countdownSecondsRemaining ?? 0) > 0 && countdownTotal > 0
+    }
+
+    private var countdownFraction: CGFloat {
+        guard isCountingDown, let remaining = countdownSecondsRemaining else { return 0 }
+        return min(1, max(0, CGFloat(remaining) / CGFloat(max(1, countdownTotal))))
+    }
 
     var body: some View {
         Button(action: action) {
@@ -34,12 +51,34 @@ struct HangsPrimaryButton: View {
                     Image(systemName: trailingIcon)
                         .font(.system(size: 15, weight: .semibold))
                 }
+                if isCountingDown, let remaining = countdownSecondsRemaining {
+                    Text(verbatim: "\(remaining)s")
+                        .font(.hangsMono(12, weight: .medium))
+                        .padding(.vertical, 3)
+                        .padding(.horizontal, 8)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                .fill(Color.black.opacity(0.22))
+                        )
+                        .accessibilityHidden(true)
+                }
             }
             .foregroundColor(.white)
             .frame(maxWidth: .infinity)
             .frame(height: height)
             .background(
-                Capsule().fill(Theme.Hangs.Colors.pink)
+                ZStack(alignment: .leading) {
+                    Capsule().fill(isCountingDown ? Theme.Hangs.Colors.pinkDeep : Theme.Hangs.Colors.pink)
+                    if isCountingDown {
+                        GeometryReader { geo in
+                            Rectangle()
+                                .fill(Theme.Hangs.Colors.pink)
+                                .frame(width: geo.size.width * countdownFraction)
+                        }
+                        .clipShape(Capsule())
+                        .animation(reduceMotion ? nil : .linear(duration: 1), value: countdownFraction)
+                    }
+                }
             )
             .hangsShadow(isDestructive ? Theme.Hangs.Shadow.ctaStrong : Theme.Hangs.Shadow.cta)
         }
@@ -112,6 +151,7 @@ struct HangsGhostButton: View {
     VStack(spacing: 12) {
         HangsPrimaryButton(title: "Start Quiz", icon: "play.fill") {}
         HangsPrimaryButton(title: "Next question", trailingIcon: "arrow.right") {}
+        HangsPrimaryButton(title: "Confirm", icon: "checkmark", countdownSecondsRemaining: 3, countdownTotal: 10) {}
         HangsSecondaryButton(title: "Home", icon: "house.fill") {}
         HangsGhostButton(title: "Why is this correct?", icon: "book.closed") {}
     }

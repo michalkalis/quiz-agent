@@ -457,3 +457,67 @@ struct ResultViewSkipHapticTests {
         #expect(ResultView.haptic(for: .partiallyIncorrect) == .warning)
     }
 }
+
+// MARK: - CTA countdown (#108B)
+
+/// #108B (founder car test 2026-07-16, variant D): the auto-advance countdown
+/// lives INSIDE the "Next question" CTA — a draining fill plus a mono "Ns"
+/// chip — replacing the separate "Next in Ns" bar. Why it matters: while
+/// driving, the remaining time must be readable in the same glance as the
+/// button itself. These tests gate on element presence at the flow level,
+/// not pixel fidelity (Verification Altitude, #57).
+@Suite("ResultView CTA Countdown Tests")
+@MainActor
+struct ResultViewCTACountdownTests {
+    private func makeCountdownViewModel(countdown: Int) -> QuizViewModel {
+        let vm = Fixtures.makeViewModel()
+        vm.currentSession = Fixtures.makeActiveSession()
+        vm.quizState = .showingResult(
+            question: Fixtures.makeQuestion(),
+            evaluation: Evaluation(
+                userAnswer: "Paris",
+                result: .correct,
+                points: 1.0,
+                correctAnswer: "Paris",
+                questionId: "q_test",
+                explanation: nil
+            )
+        )
+        vm.autoAdvanceEnabled = true
+        vm.currentQuestionPaused = false
+        vm.autoAdvanceCountdown = countdown
+        vm.settings.autoAdvanceDelay = 10
+        return vm
+    }
+
+    @Test("Active auto-advance shows the seconds chip in the CTA and the Stay here escape")
+    func activeCountdownShowsChipAndStayHere() async throws {
+        let vm = makeCountdownViewModel(countdown: 7)
+        let view = ResultView(viewModel: vm)
+
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            // Seconds chip inside the CTA — the driver's glanceable remaining time
+            #expect(throws: Never.self) { try tree.find(text: "7s") }
+            // The old separate "Next in Ns" bar must be gone
+            #expect(throws: (any Error).self) { try tree.find(text: "Next in 7s") }
+            // #81 escape hatch stays reachable while the countdown runs
+            #expect(throws: Never.self) { try tree.find(text: "Stay here") }
+        }
+    }
+
+    @Test("Paused countdown hides the chip and Stay here")
+    func pausedCountdownHidesChipAndStayHere() async throws {
+        let vm = makeCountdownViewModel(countdown: 7)
+        vm.currentQuestionPaused = true
+        let view = ResultView(viewModel: vm)
+
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: (any Error).self) { try tree.find(text: "7s") }
+            #expect(throws: (any Error).self) { try tree.find(text: "Stay here") }
+            // The CTA itself must survive without the countdown
+            #expect(throws: Never.self) { try tree.find(text: "Next question") }
+        }
+    }
+}

@@ -4,8 +4,9 @@
 //
 //  Modal sheet for confirming or re-recording a voice answer. Editorial
 //  Hangs styling: cream bg, pink mono caps label, pink vertical rule + big
-//  display typography for the transcript, Hangs pill CTAs, and a pink auto-
-//  confirm progress bar mirroring the auto-advance pattern on ResultView.
+//  display typography for the transcript, and Hangs pill CTAs. The auto-
+//  confirm countdown drains inside the Confirm button itself (#108B),
+//  mirroring the auto-advance pattern on ResultView.
 //
 
 import SwiftUI
@@ -106,11 +107,6 @@ struct AnswerConfirmationView: View {
             }
             .frame(maxHeight: .infinity)
 
-            if autoConfirmEnabled && autoConfirmCountdown > 0 && !isEditing {
-                countdownBar
-                    .padding(.top, 12)
-            }
-
             if let commandHint, !isEditing {
                 CmdListenBar(hint: commandHint)
                     .padding(.top, 12)
@@ -126,10 +122,15 @@ struct AnswerConfirmationView: View {
                 .disabled(autoConfirmEnabled && autoConfirmCountdown == 0 && !isEditing)
                 .opacity(autoConfirmEnabled && autoConfirmCountdown == 0 && !isEditing ? 0.45 : 1)
 
+                // #108B: countdown lives inside the CTA (Waze-like drain + "Ns"
+                // chip, pen `R5JfD`) — replaces the old separate countdown bar.
                 HangsPrimaryButton(
                     title: "Confirm",
                     icon: "checkmark",
-                    height: 54
+                    height: 54,
+                    countdownSecondsRemaining: autoConfirmEnabled && !isEditing && autoConfirmCountdown > 0
+                        ? autoConfirmCountdown : nil,
+                    countdownTotal: autoConfirmTotal
                 ) {
                     editFocused = false
                     onConfirm()
@@ -184,30 +185,6 @@ struct AnswerConfirmationView: View {
         editFocused = false
         isEditing = false
         onCancelEditing?()
-    }
-
-    private var countdownBar: some View {
-        VStack(spacing: 6) {
-            HStack {
-                Text(String(localized: "Auto-confirming in \(autoConfirmCountdown)s", comment: "Auto-confirm countdown label: seconds until the answer is confirmed"))
-                    .font(.hangsMono(11, weight: .medium))
-                    .tracking(1.5)
-                    .foregroundColor(Theme.Hangs.Colors.muted)
-                Spacer()
-            }
-            GeometryReader { geo in
-                let total = max(1, autoConfirmTotal)
-                let fraction = CGFloat(autoConfirmCountdown) / CGFloat(total)
-                ZStack(alignment: .leading) {
-                    Capsule().fill(Theme.Hangs.Colors.mutedBorder)
-                    Capsule()
-                        .fill(Theme.Hangs.Colors.pink)
-                        .frame(width: geo.size.width * min(1, max(0, fraction)))
-                }
-            }
-            .frame(height: 3)
-        }
-        .accessibilityHidden(true)
     }
 
     // MARK: - Processing state

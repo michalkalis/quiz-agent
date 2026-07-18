@@ -5,8 +5,8 @@
 //  Pencil Result screen — correct (X4o4l) and incorrect (31AzE) variants.
 //  bg-page background, editorial Anton headline, answer comparison card,
 //  score stat box (#84 dropped the streak box — logic kept in QuizStats),
-//  and a footer CTA. Auto-advance countdown bar and source web-view sheet
-//  preserved from original design.
+//  and a footer CTA carrying the auto-advance countdown inside it (#108B).
+//  Source web-view sheet preserved from original design.
 //
 
 import SwiftUI
@@ -48,7 +48,6 @@ struct ResultView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-                countdownBar
                 footerBar
             }
         }
@@ -178,45 +177,16 @@ struct ResultView: View {
         )
     }
 
-    // MARK: - Countdown
+    // MARK: - Footer
 
-    @ViewBuilder
-    private var countdownBar: some View {
-        if viewModel.autoAdvanceEnabled
+    /// #108B: auto-advance countdown lives inside the "Next question" CTA
+    /// (Waze-like drain + "Ns" chip, pen `ilWTA`/`4EBgp`) — the separate
+    /// "Next in Ns" bar is gone.
+    private var autoAdvanceActive: Bool {
+        viewModel.autoAdvanceEnabled
             && !viewModel.currentQuestionPaused
             && viewModel.autoAdvanceCountdown > 0
-        {
-            VStack(spacing: 6) {
-                Text(String(localized: "Next in \(viewModel.autoAdvanceCountdown)s", comment: "Auto-advance countdown: seconds until the next question"))
-                    .font(.hangsMono(11, weight: .medium))
-                    .tracking(1.5)
-                    .foregroundColor(Theme.Hangs.Colors.muted)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                GeometryReader { geo in
-                    let total = max(1, viewModel.settings.autoAdvanceDelay)
-                    let fraction = CGFloat(viewModel.autoAdvanceCountdown) / CGFloat(total)
-                    ZStack(alignment: .leading) {
-                        Capsule().fill(Theme.Hangs.Colors.mutedBorder)
-                        Capsule()
-                            .fill(Theme.Hangs.Colors.pink)
-                            .frame(width: geo.size.width * fraction)
-                    }
-                }
-                .frame(height: 3)
-                // #81: full-size secondary button (44pt target) — the tiny text
-                // link was the only way to linger on a result while driving.
-                HangsSecondaryButton(title: "Stay here", height: 44) {
-                    viewModel.pauseQuiz()
-                }
-                .accessibilityIdentifier("result.stayHere")
-                .padding(.top, 4)
-            }
-            .padding(.horizontal, 24)
-            .padding(.bottom, 10)
-        }
     }
-
-    // MARK: - Footer
 
     private var footerBar: some View {
         VStack(spacing: 10) {
@@ -231,11 +201,25 @@ struct ResultView: View {
                 title: "Next question",
                 icon: nil,
                 trailingIcon: "arrow.right",
-                height: 64
+                height: 64,
+                countdownSecondsRemaining: autoAdvanceActive ? viewModel.autoAdvanceCountdown : nil,
+                countdownTotal: viewModel.settings.autoAdvanceDelay
             ) {
                 viewModel.continueToNext()
             }
+            .accessibilityLabel(autoAdvanceActive
+                ? String(localized: "Next question, auto-advancing in \(viewModel.autoAdvanceCountdown) seconds", comment: "Accessibility label for the next-question button while auto-advance counts down")
+                : String(localized: "Next question", comment: "Accessibility label for the next-question button"))
             .accessibilityIdentifier("result.continue")
+
+            if autoAdvanceActive {
+                // #81: full-size secondary button (44pt target) — the tiny text
+                // link was the only way to linger on a result while driving.
+                HangsSecondaryButton(title: "Stay here", height: 44) {
+                    viewModel.pauseQuiz()
+                }
+                .accessibilityIdentifier("result.stayHere")
+            }
 
             if isCorrect, viewModel.resultQuestion?.sourceUrl != nil {
                 HangsGhostButton(

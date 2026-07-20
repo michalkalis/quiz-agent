@@ -71,7 +71,7 @@ struct EarconTests {
             vm.quizState = .recording
             vm.isStreamingSTT = false // batch path — no STT service in this VM
 
-            await vm.stopRecordingAndSubmit()
+            await vm.recordingCoordinator.stopRecordingAndSubmit()
 
             #expect(earcon.played.first == .gotIt, "stop must play got-it first, got \(earcon.played)")
             #expect(earcon.played == [.gotIt], "stop must play exactly got-it, got \(earcon.played)")

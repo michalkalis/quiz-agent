@@ -289,7 +289,7 @@ struct QuizViewModelLoadingStateTests {
         viewModel.currentQuestion = makeQuestion(id: "q_001", source: "Test")
         viewModel.quizState = .askingQuestion
 
-        await viewModel.submitVoiceAnswer(audioData: Data("mock audio".utf8))
+        await viewModel.recordingCoordinator.submitVoiceAnswer(audioData: Data("mock audio".utf8))
 
         // After completion, state should not be .processing (moved to showingResult via confirmation)
         // The answer confirmation sheet should be shown
@@ -511,7 +511,7 @@ struct QuizViewModelAnswerConfirmationDismissTests {
         viewModel.quizState = .askingQuestion
 
         // submitVoiceAnswer sets pendingResponse and showAnswerConfirmation
-        await viewModel.submitVoiceAnswer(audioData: Data("mock audio".utf8))
+        await viewModel.recordingCoordinator.submitVoiceAnswer(audioData: Data("mock audio".utf8))
     }
 
     @Test("handleAnswerConfirmationDismissed resets state when pendingResponse exists")
@@ -1177,10 +1177,10 @@ struct QuizViewModelDoubleStopTests {
         viewModel.quizState = .recording
 
         // Simulate the guard being set (as if a stop is already in progress)
-        viewModel.isStoppingRecording = true
+        viewModel.recordingCoordinator.isStoppingRecording = true
 
         // Call stopRecordingAndSubmit — should return early without changing state
-        await viewModel.stopRecordingAndSubmit()
+        await viewModel.recordingCoordinator.stopRecordingAndSubmit()
 
         // State should remain .recording because the guard prevented the call
         #expect(viewModel.quizState == .recording)

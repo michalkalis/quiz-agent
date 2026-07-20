@@ -142,13 +142,35 @@ final class QuizViewModel: ObservableObject {
         set { entitlementReconciler.usageInfo = newValue }
     }
 
-    // Answer confirmation modal state
-    @Published var showAnswerConfirmation = false
-    @Published var transcribedAnswer = ""
+    // MARK: - Answer Confirmation — forwarded to RecordingCoordinator (#113 T5)
+
+    // Confirmation-modal slice — owned by RecordingCoordinator. Permanent
+    // forwarding accessors (decision 2) so views/tests keep binding
+    // QuizViewModel; change notifications ride the re-published child
+    // `objectWillChange` wired in `init`. Settable: QuestionView binds the
+    // sheet + transcript (`$viewModel.…`) and the façade itself writes them
+    // (resubmitAnswer, resetState).
+    var showAnswerConfirmation: Bool {
+        get { recordingCoordinator.showAnswerConfirmation }
+        set { recordingCoordinator.showAnswerConfirmation = newValue }
+    }
+
+    var transcribedAnswer: String {
+        get { recordingCoordinator.transcribedAnswer }
+        set { recordingCoordinator.transcribedAnswer = newValue }
+    }
+
+    /// Pending Whisper response awaiting user confirmation — see
+    /// `RecordingCoordinator.pendingResponse` (`resetState` clears it; tests seed it).
+    var pendingResponse: QuizResponse? {
+        get { recordingCoordinator.pendingResponse }
+        set { recordingCoordinator.pendingResponse = newValue }
+    }
+
+    /// Auto-confirm countdown (confirmation-semantic — folds into
+    /// `ConfirmationState` in S6b): stays façade-resident for now, ticked by
+    /// QuizTimersController via its injected write closure.
     @Published var autoConfirmCountdown: Int = 0
-    var pendingResponse: QuizResponse? = nil // internal for QuizViewModel+Recording
-    var transcriptWasEdited = false // internal — suppress TTS on edited confirmations
-    var preEditTranscript: String? = nil // internal — snapshot for cancelEditingTranscript()
 
     // MARK: - Timers — forwarded to QuizTimersController (#113 T4)
 
@@ -196,8 +218,8 @@ final class QuizViewModel: ObservableObject {
 
     /// Timer start/cancel choke points — see the same-named methods on
     /// `QuizTimersController`. Kept on the façade (decision 2) for the
-    /// MAIN/+Recording/AudioDeviceState/VoiceCommandCoordinator callers
-    /// and the timer test surface.
+    /// MAIN/AudioDeviceState/VoiceCommandCoordinator callers and the timer
+    /// test surface (RecordingCoordinator reaches them via injected closures).
     func startThinkingTimeCountdown() { quizTimersController.startThinkingTimeCountdown() }
     func cancelThinkingTime() { quizTimersController.cancelThinkingTime() }
     func startAnswerTimer() { quizTimersController.startAnswerTimer() }
@@ -244,7 +266,8 @@ final class QuizViewModel: ObservableObject {
     var commandListenerHint: String? { voiceCommandCoordinator.commandListenerHint }
 
     /// Fire-and-forget command-window sync for synchronous call sites
-    /// (MAIN / +ScenePhase / +Recording / SettingsView / HomeView) — see
+    /// (MAIN / +ScenePhase / SettingsView / HomeView; RecordingCoordinator
+    /// reaches it via an injected closure) — see
     /// `VoiceCommandCoordinator.refreshCommandWindow`.
     func refreshCommandWindow() {
         voiceCommandCoordinator.refreshCommandWindow()
@@ -397,7 +420,8 @@ final class QuizViewModel: ObservableObject {
     /// handler that is suspended mid-flight captures the epoch on entry and, after
     /// each await, aborts if it moved: so a typed answer submitted during that
     /// window can't trigger a second concurrent submission or resurrect the stale
-    /// voice confirmation sheet. Internal for the +Recording extension / tests.
+    /// voice confirmation sheet. Read by RecordingCoordinator via an injected
+    /// closure; internal for tests.
     var submissionEpoch = 0
 
     /// Single-flight guard for `resubmitAnswer` (#79): the typed-answer TextField's
@@ -411,24 +435,36 @@ final class QuizViewModel: ObservableObject {
     /// flow via `defer` so exactly one session is created, mirroring `isSubmittingAnswer`.
     var isStarting = false
 
-    /// Prevents concurrent stopRecordingAndSubmit calls (silence detection + user tap can race)
-    var isStoppingRecording = false // internal for QuizViewModel+Recording
-
     // MARK: - Auto-Record State
 
-    /// Whether auto-record is active for the current recording (for UI hints)
+    /// Whether auto-record is active for the current recording (for UI hints).
+    /// Multi-writer cross-cluster flag (Recording *and* Timers write) — stays
+    /// façade-resident (decision 4); children reach it via injected closures.
     @Published var isAutoRecording: Bool = false
 
-    /// Whether speech has been detected during auto-record (for UI hints)
-    @Published var speechDetectedDuringAutoRecord: Bool = false
+    /// Whether speech has been detected during auto-record (for UI hints) —
+    /// see `RecordingCoordinator.speechDetectedDuringAutoRecord`. Settable:
+    /// the façade writes it (resubmitAnswer, resetState) and tests seed it.
+    var speechDetectedDuringAutoRecord: Bool {
+        get { recordingCoordinator.speechDetectedDuringAutoRecord }
+        set { recordingCoordinator.speechDetectedDuringAutoRecord = newValue }
+    }
 
-    // MARK: - Streaming STT State
+    // MARK: - Streaming STT — forwarded to RecordingCoordinator (#113 T5)
 
-    /// Live transcript from ElevenLabs (updates as user speaks)
-    @Published var liveTranscript: String = ""
+    /// Live transcript from ElevenLabs (updates as user speaks) — see
+    /// `RecordingCoordinator.liveTranscript`. Settable: the DEBUG UI-test
+    /// seed (AppState) and `resetState` write it.
+    var liveTranscript: String {
+        get { recordingCoordinator.liveTranscript }
+        set { recordingCoordinator.liveTranscript = newValue }
+    }
 
-    /// Whether streaming STT is active
-    @Published var isStreamingSTT: Bool = false
+    /// Whether streaming STT is active — see `RecordingCoordinator.isStreamingSTT`.
+    var isStreamingSTT: Bool {
+        get { recordingCoordinator.isStreamingSTT }
+        set { recordingCoordinator.isStreamingSTT = newValue }
+    }
 
     /// Whether question TTS is currently playing. The command listener is torn
     /// down during TTS and re-armed after (77.5 windowed lifecycle / the 1a19438
@@ -446,7 +482,7 @@ final class QuizViewModel: ObservableObject {
     /// `refreshCommandWindow()` or a post-TTS `startSilenceDetectionListening()`
     /// can never re-arm the mic mid-transition to background (mic-in-background
     /// fix). `currentCommandScreen` returns nil while this is false.
-    /// Internal for +CommandListener/+Audio/+Recording/+ScenePhase.
+    /// Internal for +ScenePhase; the child sub-objects read it via injected closures.
     var isAppForeground: Bool = true
 
     // MARK: - Dependencies
@@ -496,26 +532,44 @@ final class QuizViewModel: ObservableObject {
     /// first touch (the `init` re-publish sink).
     private(set) lazy var quizTimersController: QuizTimersController = makeQuizTimersController()
 
+    /// Recording + confirmation slice owner (#113 T5): capture lifecycle,
+    /// streaming STT, submission, and answer confirmation. The façade owns
+    /// the child, re-publishes its `objectWillChange`, and re-exposes the
+    /// slice via the forwarding accessors above (decision 2). `lazy` so the
+    /// injected closures can capture `self` weakly — built by
+    /// `makeRecordingCoordinator()` on first touch (the `init` re-publish sink).
+    private(set) lazy var recordingCoordinator: RecordingCoordinator = makeRecordingCoordinator()
+
     /// Single owner for every long-lived `Task` this view model spawns.
     /// Each call site stores its task under a `TaskKey`; `resetState()` calls
     /// `cancelAll()` instead of duplicating ten cancel-and-nil lines.
-    let taskBag = TaskBag() // internal for QuizViewModel+Recording; shared with AudioDeviceState/QuizTimersController
+    let taskBag = TaskBag() // shared with the child sub-objects as their decision-4 register/cancel handle
 
     // Whether the current recording is a re-record (bypasses all timers) —
-    // read by QuizTimersController/AudioDeviceState via injected closures
+    // multi-writer cross-cluster flag (decision 4): written by
+    // RecordingCoordinator, read by QuizTimersController/AudioDeviceState,
+    // all via injected closures
     var isRerecording: Bool = false
 
-    // Consecutive transcription failures for 3-tier error escalation
-    var consecutiveTranscriptionFailures: Int = 0 // internal for QuizViewModel+Recording
+    /// Consecutive transcription failures (3-tier escalation) — see
+    /// `RecordingCoordinator.consecutiveTranscriptionFailures`. Settable: the
+    /// façade resets it on quiz start / successful response; tests seed it.
+    var consecutiveTranscriptionFailures: Int {
+        get { recordingCoordinator.consecutiveTranscriptionFailures }
+        set { recordingCoordinator.consecutiveTranscriptionFailures = newValue }
+    }
 
     // Next question data (from response, displayed after showing results)
     private var nextQuestionAudioUrl: String?
     private var nextQuestion: Question?
 
-    // Current question audio URL for "repeat" command — written by
-    // AudioDeviceState via injected closures (#113 T2, decision 4); moves to
-    // RecordingCoordinator in S5.
-    var currentQuestionAudioUrl: String?
+    /// Current question audio URL for the "repeat" command — see
+    /// `RecordingCoordinator.currentQuestionAudioUrl` (AudioDeviceState writes
+    /// it via injected closures; `repeatQuestion`/`resetState` read/clear it here).
+    var currentQuestionAudioUrl: String? {
+        get { recordingCoordinator.currentQuestionAudioUrl }
+        set { recordingCoordinator.currentQuestionAudioUrl = newValue }
+    }
 
     // MARK: - Initialization
 
@@ -572,6 +626,9 @@ final class QuizViewModel: ObservableObject {
         quizTimersController.objectWillChange
             .sink { [weak self] in self?.objectWillChange.send() }
             .store(in: &cancellables)
+        recordingCoordinator.objectWillChange
+            .sink { [weak self] in self?.objectWillChange.send() }
+            .store(in: &cancellables)
     }
 
     /// #113 T2: builds the audio child. Every closure captures the façade
@@ -593,8 +650,8 @@ final class QuizViewModel: ObservableObject {
             isRerecording: { [weak self] in self?.isRerecording ?? false },
             isPlayingQuestionTTS: { [weak self] in self?.isPlayingQuestionTTS ?? false },
             setPlayingQuestionTTS: { [weak self] in self?.isPlayingQuestionTTS = $0 },
-            currentQuestionAudioUrl: { [weak self] in self?.currentQuestionAudioUrl },
-            setCurrentQuestionAudioUrl: { [weak self] in self?.currentQuestionAudioUrl = $0 },
+            currentQuestionAudioUrl: { [weak self] in self?.recordingCoordinator.currentQuestionAudioUrl },
+            setCurrentQuestionAudioUrl: { [weak self] in self?.recordingCoordinator.currentQuestionAudioUrl = $0 },
             setErrorMessage: { [weak self] in self?.errorMessage = $0 },
             onBargeIn: { [weak self] in await self?.handleBargeIn() },
             startCommandConsumer: { [weak self] in self?.voiceCommandCoordinator.startCommandConsumer() },
@@ -608,8 +665,8 @@ final class QuizViewModel: ObservableObject {
     /// façade weakly — the child is façade-owned so `self` outlives it; `weak`
     /// just breaks the ownership cycle (façade → child → closure → façade).
     /// Each closure is the minimal scoped read/write of decision 4 — never a
-    /// vm ref. The recording fan-out targets still live in the +Recording
-    /// extension; its extract (S5) re-points these.
+    /// vm ref. The recording fan-out targets point at RecordingCoordinator
+    /// per the cross-child-via-façade pattern (#113 T5).
     private func makeVoiceCommandCoordinator() -> VoiceCommandCoordinator {
         VoiceCommandCoordinator(
             silenceDetectionService: silenceDetectionService,
@@ -622,12 +679,12 @@ final class QuizViewModel: ObservableObject {
             stopSilenceDetectionListening: { [weak self] in self?.audioDeviceState.stopSilenceDetectionListening() },
             emitEarcon: { [weak self] in self?.emitEarcon($0) },
             startNewQuiz: { [weak self] in await self?.startNewQuiz() },
-            startRecording: { [weak self] in await self?.startRecording() },
+            startRecording: { [weak self] in await self?.recordingCoordinator.startRecording() },
             repeatQuestion: { [weak self] in await self?.repeatQuestion() },
             skipQuestion: { [weak self] in await self?.skipQuestion() },
-            confirmAnswer: { [weak self] in await self?.confirmAnswer() },
-            rerecordAnswer: { [weak self] in self?.rerecordAnswer() },
-            cancelProcessing: { [weak self] in self?.cancelProcessing() },
+            confirmAnswer: { [weak self] in await self?.recordingCoordinator.confirmAnswer() },
+            rerecordAnswer: { [weak self] in self?.recordingCoordinator.rerecordAnswer() },
+            cancelProcessing: { [weak self] in self?.recordingCoordinator.cancelProcessing() },
             continueToNext: { [weak self] in self?.continueToNext() },
             cancelAnswerTimer: { [weak self] in self?.quizTimersController.cancelAnswerTimer() },
             cancelThinkingTime: { [weak self] in self?.quizTimersController.cancelThinkingTime() }
@@ -638,8 +695,8 @@ final class QuizViewModel: ObservableObject {
     /// weakly — the child is façade-owned so `self` outlives it; `weak` just
     /// breaks the ownership cycle (façade → child → closure → façade). Each
     /// closure is the minimal scoped read/write of decision 4 — never a vm
-    /// ref. The recording fan-out targets still live in the +Recording
-    /// extension; its extract (S5) re-points these.
+    /// ref. The recording fan-out targets point at RecordingCoordinator
+    /// per the cross-child-via-façade pattern (#113 T5).
     private func makeQuizTimersController() -> QuizTimersController {
         QuizTimersController(
             taskBag: taskBag,
@@ -647,12 +704,58 @@ final class QuizViewModel: ObservableObject {
             quizState: { [weak self] in self?.quizState ?? .idle },
             isRerecording: { [weak self] in self?.isRerecording ?? false },
             setIsAutoRecording: { [weak self] in self?.isAutoRecording = $0 },
-            showAnswerConfirmation: { [weak self] in self?.showAnswerConfirmation ?? false },
+            showAnswerConfirmation: { [weak self] in self?.recordingCoordinator.showAnswerConfirmation ?? false },
             setAutoConfirmCountdown: { [weak self] in self?.autoConfirmCountdown = $0 },
-            startRecording: { [weak self] in await self?.startRecording() },
-            stopRecordingAndSubmit: { [weak self] in await self?.stopRecordingAndSubmit() },
-            confirmAnswer: { [weak self] in await self?.confirmAnswer() },
+            startRecording: { [weak self] in await self?.recordingCoordinator.startRecording() },
+            stopRecordingAndSubmit: { [weak self] in await self?.recordingCoordinator.stopRecordingAndSubmit() },
+            confirmAnswer: { [weak self] in await self?.recordingCoordinator.confirmAnswer() },
             proceedToNextQuestion: { [weak self] in await self?.proceedToNextQuestion() }
+        )
+    }
+
+    /// #113 T5: builds the recording child. Every closure captures the façade
+    /// weakly — the child is façade-owned so `self` outlives it; `weak` just
+    /// breaks the ownership cycle (façade → child → closure → façade). Each
+    /// closure is the minimal scoped read/write of decision 4 — never a vm ref.
+    private func makeRecordingCoordinator() -> RecordingCoordinator {
+        RecordingCoordinator(
+            audioService: audioService,
+            networkService: networkService,
+            silenceDetectionService: silenceDetectionService,
+            sttService: sttService,
+            taskBag: taskBag,
+            settings: { [weak self] in self?.settings ?? .default },
+            quizState: { [weak self] in self?.quizState ?? .idle },
+            isAppForeground: { [weak self] in self?.isAppForeground ?? false },
+            currentQuestion: { [weak self] in self?.currentQuestion },
+            currentSession: { [weak self] in self?.currentSession },
+            submissionEpoch: { [weak self] in self?.submissionEpoch ?? 0 },
+            isAutoRecording: { [weak self] in self?.isAutoRecording ?? false },
+            setIsAutoRecording: { [weak self] in self?.isAutoRecording = $0 },
+            setIsRerecording: { [weak self] in self?.isRerecording = $0 },
+            setErrorMessage: { [weak self] in self?.errorMessage = $0 },
+            setMcqVoiceMatchedKey: { [weak self] in self?.mcqVoiceMatchedKey = $0 },
+            transition: { [weak self] state, caller in self?.transition(to: state, caller: caller) ?? false },
+            setError: { [weak self] message, context, error in
+                self?.setError(message: message, context: context, error: error)
+            },
+            handleError: { [weak self] error, context, fallback in
+                await self?.handleError(error, context: context, fallbackMessage: fallback)
+            },
+            handleQuizResponse: { [weak self] in await self?.handleQuizResponse($0) },
+            submitMCQAnswer: { [weak self] key, value in await self?.submitMCQAnswer(key: key, value: value) },
+            resubmitAnswer: { [weak self] answer, suppress in await self?.resubmitAnswer(answer, suppressAudio: suppress) },
+            skipQuestion: { [weak self] in await self?.skipQuestion() },
+            emitEarcon: { [weak self] in self?.emitEarcon($0) },
+            refreshCommandWindow: { [weak self] in self?.voiceCommandCoordinator.refreshCommandWindow() },
+            abortSkipUndoWindow: { [weak self] in self?.voiceCommandCoordinator.abortSkipUndoWindow() },
+            startAutoConfirmIfEnabled: { [weak self] in self?.quizTimersController.startAutoConfirmIfEnabled() },
+            cancelAutoConfirm: { [weak self] in self?.quizTimersController.cancelAutoConfirm() },
+            cancelAnswerTimer: { [weak self] in self?.quizTimersController.cancelAnswerTimer() },
+            cancelThinkingTime: { [weak self] in self?.quizTimersController.cancelThinkingTime() },
+            startAutoStopRecordingTimer: { [weak self] in self?.quizTimersController.startAutoStopRecordingTimer() },
+            cancelAutoStopRecordingTimer: { [weak self] in self?.quizTimersController.cancelAutoStopRecordingTimer() },
+            stopSilenceDetectionListening: { [weak self] in self?.audioDeviceState.stopSilenceDetectionListening() }
         )
     }
 
@@ -778,7 +881,7 @@ final class QuizViewModel: ObservableObject {
     /// so `DebugErrorDetailsView` can show the full chain without parsing log files.
     /// `model` overrides the derived display model for failures whose copy/CTA
     /// can't be inferred from the error or context (e.g. history at capacity).
-    func setError(message: String, context: ErrorContext, error: Error? = nil, model: AppErrorModel? = nil) { // internal for QuizViewModel+Recording
+    func setError(message: String, context: ErrorContext, error: Error? = nil, model: AppErrorModel? = nil) { // internal for tests; RecordingCoordinator reaches it via an injected closure
         #if DEBUG
             lastErrorDebugInfo = error.map { Self.formatDebugError($0, displayMessage: message) }
         #endif
@@ -789,7 +892,7 @@ final class QuizViewModel: ObservableObject {
     }
 
     /// Handle an error, detecting 429 daily limit and showing paywall instead of error state
-    func handleError(_ error: Error, context: ErrorContext, fallbackMessage: String) async { // internal for QuizViewModel+Recording
+    func handleError(_ error: Error, context: ErrorContext, fallbackMessage: String) async { // internal for tests; RecordingCoordinator reaches it via an injected closure
         if let networkError = error as? NetworkError,
            case let .quotaLimitReached(limitError) = networkError
         {
@@ -930,6 +1033,68 @@ final class QuizViewModel: ObservableObject {
     /// See `AudioDeviceState.setPreferredInputDevice(_:)`.
     func setPreferredInputDevice(_ device: AudioDevice?) {
         audioDeviceState.setPreferredInputDevice(device)
+    }
+
+    // MARK: - Recording — forwarded to RecordingCoordinator (#113 T5)
+
+    // Permanent decision-2 forwards: every one has production callers today
+    // (QuestionView, +ScenePhase, the AudioService interruption hook, or the
+    // façade's own quiz flow).
+
+    /// Mic-button entry — see `RecordingCoordinator.toggleRecording`.
+    func toggleRecording() async {
+        await recordingCoordinator.toggleRecording()
+    }
+
+    /// See `RecordingCoordinator.startRecording` (`handleBargeIn` calls it).
+    func startRecording() async {
+        await recordingCoordinator.startRecording()
+    }
+
+    /// See `RecordingCoordinator.confirmAnswer`.
+    func confirmAnswer() async {
+        await recordingCoordinator.confirmAnswer()
+    }
+
+    /// See `RecordingCoordinator.beginEditingTranscript`.
+    func beginEditingTranscript() {
+        recordingCoordinator.beginEditingTranscript()
+    }
+
+    /// See `RecordingCoordinator.cancelEditingTranscript`.
+    func cancelEditingTranscript() {
+        recordingCoordinator.cancelEditingTranscript()
+    }
+
+    /// See `RecordingCoordinator.handleAnswerConfirmationDismissed`.
+    func handleAnswerConfirmationDismissed() {
+        recordingCoordinator.handleAnswerConfirmationDismissed()
+    }
+
+    /// See `RecordingCoordinator.rerecordAnswer` (#108A).
+    func rerecordAnswer() {
+        recordingCoordinator.rerecordAnswer()
+    }
+
+    /// See `RecordingCoordinator.cancelProcessing`.
+    func cancelProcessing() {
+        recordingCoordinator.cancelProcessing()
+    }
+
+    /// See `RecordingCoordinator.handleAudioInterruption` (#67 Part A —
+    /// `+ScenePhase` and the AudioService interruption hook call it).
+    func handleAudioInterruption() {
+        recordingCoordinator.handleAudioInterruption()
+    }
+
+    /// See `RecordingCoordinator.cleanupStreamingSTT` (`resubmitAnswer`/`resetState`).
+    func cleanupStreamingSTT() {
+        recordingCoordinator.cleanupStreamingSTT()
+    }
+
+    /// See `RecordingCoordinator.cancelSilenceDetection` (`resubmitAnswer`).
+    func cancelSilenceDetection() {
+        recordingCoordinator.cancelSilenceDetection()
     }
 
     /// Handle barge-in: user spoke during TTS playback on external audio route.
@@ -1272,7 +1437,7 @@ final class QuizViewModel: ObservableObject {
         }
     }
 
-    func handleQuizResponse(_ response: QuizResponse) async { // internal for QuizViewModel+Recording
+    func handleQuizResponse(_ response: QuizResponse) async { // internal for tests; RecordingCoordinator reaches it via an injected closure
         // Guard against concurrent calls (safe: @MainActor serializes access)
         guard !isProcessingResponse else {
             Logger.quiz.warning("⚠️ handleQuizResponse already in progress, ignoring duplicate call")

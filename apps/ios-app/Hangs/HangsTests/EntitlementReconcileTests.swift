@@ -235,7 +235,7 @@ struct EntitlementReconcileTests {
         let deactivateCountBeforeSubmit = audio.deactivateSessionCallCount
 
         mock.submitVoiceAnswerError = NetworkError.quotaLimitReached(makeQuotaLimitError())
-        await vm.submitVoiceAnswer(audioData: Data("mock audio".utf8))
+        await vm.recordingCoordinator.submitVoiceAnswer(audioData: Data("mock audio".utf8))
 
         #expect(audio.deactivateSessionCallCount - deactivateCountBeforeSubmit == 1, "a quota block mid-voice-submit must release the audio session before the paywall — it was left live behind the paywall pre-fix")
         #expect(vm.showPaywall == true)
@@ -257,7 +257,7 @@ struct EntitlementReconcileTests {
         // test alone leaves unconstrained.
         mock.stubbedUsage = makeUsage(remaining: 100, premium: true)
         mock.submitVoiceAnswerError = NetworkError.quotaLimitReached(makeQuotaLimitError())
-        await vm.submitVoiceAnswer(audioData: Data("mock audio".utf8))
+        await vm.recordingCoordinator.submitVoiceAnswer(audioData: Data("mock audio".utf8))
 
         #expect(vm.showPaywall == false, "resync confirmed entitlement → must not strand a paying user behind the paywall mid-answer")
         #expect(vm.quotaLimitError == nil, "no quota error should be surfaced once entitlement is confirmed")

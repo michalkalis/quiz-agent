@@ -14,7 +14,7 @@ import os
 /// decision 1 — the de-facto 5th sub-object): input-device management
 /// (AudioDevicePickerView), audio-mode switching, and the
 /// `start`/`stopSilenceDetectionListening` choke points every consumer
-/// (+Recording/+CommandListener/+ScenePhase) funnels through — pulled out
+/// (RecordingCoordinator/VoiceCommandCoordinator/+ScenePhase) funnels through — pulled out
 /// before those consumers so later extracts inject them (decision 3).
 ///
 /// The façade (QuizViewModel) owns this child, re-publishes its

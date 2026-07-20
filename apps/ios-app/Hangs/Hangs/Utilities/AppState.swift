@@ -201,7 +201,7 @@ final class AppState: ObservableObject {
             // `--ui-test-error`: land directly on a voice QuestionView with the
             // recording-error banner shown, so the error state can be screenshot-
             // verified without driving the full record→disconnect flow. Mirrors the
-            // "Connection lost" copy set by QuizViewModel+Recording on STT drop.
+            // "Connection lost" copy set by RecordingCoordinator+Streaming on STT drop.
             if CommandLine.arguments.contains("--ui-test-error") {
                 viewModel.currentQuestion = Question.preview
                 viewModel.quizState = .askingQuestion

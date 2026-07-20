@@ -10,7 +10,7 @@
 //  fall back to the modal so the driver can re-record rather than submit a guess.
 //
 //  Branches under test:
-//    QuizViewModel+Recording.swift handleCommittedTranscript(_:) — MCQ routing
+//    RecordingCoordinator+Streaming.swift handleCommittedTranscript(_:) — MCQ routing
 //    QuizViewModel.swift submitMCQAnswer(key:value:)            — value submit
 //    QuizViewModel.swift startRecordingOrTimer()                — guard removed
 //
@@ -66,7 +66,7 @@ struct QuizViewModelMCQVoiceTests {
     func valueMatchSubmitsValue() async throws {
         let (viewModel, mockNetwork) = makeViewModelRecordingMCQ()
 
-        await viewModel.handleCommittedTranscript("Jupiter")
+        await viewModel.recordingCoordinator.handleCommittedTranscript("Jupiter")
 
         #expect(mockNetwork.capturedTextInputInput == "Jupiter")
         // submitMCQAnswer transitions .recording → .processing → (network) result.
@@ -83,7 +83,7 @@ struct QuizViewModelMCQVoiceTests {
     func letterMatchSubmitsValue() async throws {
         let (viewModel, mockNetwork) = makeViewModelRecordingMCQ()
 
-        await viewModel.handleCommittedTranscript("béčko")
+        await viewModel.recordingCoordinator.handleCommittedTranscript("béčko")
 
         #expect(mockNetwork.capturedTextInputInput == "Jupiter")
         #expect(viewModel.quizState.isShowingResult)
@@ -97,7 +97,7 @@ struct QuizViewModelMCQVoiceTests {
     func noMatchFallsBackToModal() async throws {
         let (viewModel, mockNetwork) = makeViewModelRecordingMCQ()
 
-        await viewModel.handleCommittedTranscript("something entirely unrelated zzz")
+        await viewModel.recordingCoordinator.handleCommittedTranscript("something entirely unrelated zzz")
 
         #expect(mockNetwork.capturedTextInputInput == nil)
         #expect(viewModel.showAnswerConfirmation == true)
@@ -113,7 +113,7 @@ struct QuizViewModelMCQVoiceTests {
     func voiceMatchSetsHighlightKeyAndSubmits() async throws {
         let (viewModel, mockNetwork) = makeViewModelRecordingMCQ()
 
-        await viewModel.handleCommittedTranscript("Jupiter")
+        await viewModel.recordingCoordinator.handleCommittedTranscript("Jupiter")
 
         #expect(viewModel.mcqVoiceMatchedKey == "b")
         #expect(mockNetwork.capturedTextInputInput == "Jupiter")

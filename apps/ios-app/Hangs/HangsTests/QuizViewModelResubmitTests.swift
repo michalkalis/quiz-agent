@@ -8,11 +8,11 @@
 //  QuizViewModelTests.swift was already 1188 lines (audit A2-6).
 //
 //  Branch under test:
-//    QuizViewModel+Recording.swift:401-418  – confirmAnswer() snapshots
+//    RecordingCoordinator+Confirmation.swift – confirmAnswer() snapshots
 //      `silent = transcriptWasEdited` then calls resubmitAnswer(suppressAudio:)
 //    QuizViewModel.swift:598-644            – resubmitAnswer passes
 //      `audio: !suppressAudio && settings.audioMode != "off"`
-//    QuizViewModel+Recording.swift:429-434  – beginEditingTranscript() sets
+//    RecordingCoordinator+Confirmation.swift – beginEditingTranscript() sets
 //      transcriptWasEdited = true
 //
 
@@ -110,7 +110,7 @@ struct QuizViewModelResubmitTests {
 
         // User taps the pencil — this is the entry point for the "edited" branch.
         viewModel.beginEditingTranscript()
-        #expect(viewModel.transcriptWasEdited == true)
+        #expect(viewModel.recordingCoordinator.transcriptWasEdited == true)
 
         // User taps Confirm (without changing text — we're testing the flag, not editing).
         await viewModel.confirmAnswer()
@@ -118,7 +118,7 @@ struct QuizViewModelResubmitTests {
         // The captured audio flag must be false (silent = transcriptWasEdited was true).
         #expect(mockNetwork.capturedTextInputAudio == false)
         // transcriptWasEdited must be reset so the next round starts clean.
-        #expect(viewModel.transcriptWasEdited == false)
+        #expect(viewModel.recordingCoordinator.transcriptWasEdited == false)
     }
 
     // MARK: - Test 5: Auto-confirm must not cancel its own submit (54.5)

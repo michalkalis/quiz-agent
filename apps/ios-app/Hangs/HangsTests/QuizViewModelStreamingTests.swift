@@ -212,11 +212,11 @@ struct QuizViewModelStreamingTests {
             await viewModel.startRecording()
             await waitUntil({ viewModel.isStreamingSTT }, "streaming never started")
 
-            await viewModel.stopRecordingAndSubmit()
+            await viewModel.recordingCoordinator.stopRecordingAndSubmit()
             #expect(viewModel.taskBag.contains(.sttCommitWatchdog), "watchdog not armed after commit")
 
             // Re-arm with a near-zero timeout instead of waiting the production 5 s.
-            viewModel.startCommitWatchdog(seconds: 0.01)
+            viewModel.recordingCoordinator.startCommitWatchdog(seconds: 0.01)
             await waitUntil({ viewModel.quizState == .askingQuestion }, "watchdog never rescued the stuck state")
 
             #expect(viewModel.errorMessage != nil)

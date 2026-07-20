@@ -23,6 +23,14 @@ final nonisolated class RegressionTests: XCTestCase {
     override func setUp() {
         super.setUp()
         continueAfterFailure = false
+        // Order-independence: the template launch tests
+        // (runsForEachTargetApplicationUIConfiguration) rotate the simulator to
+        // landscape and the orientation persists across app launches. In
+        // landscape the OrderPack submit button lays out below the 402pt-high
+        // window, so its tap lands on nothing and the order is never created
+        // (testRSPackNavStart then times out waiting for .delivered). Every RS
+        // scenario assumes portrait — force it before each launch.
+        XCUIDevice.shared.orientation = .portrait
     }
 
     // MARK: - RS-start

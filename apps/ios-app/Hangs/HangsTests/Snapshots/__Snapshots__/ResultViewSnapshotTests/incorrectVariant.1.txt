@@ -222,6 +222,7 @@
       - isAdvancing: false
       - submissionEpoch: 0
       - isSubmittingAnswer: false
+      - isStarting: false
       - isStoppingRecording: false
       ▿ _isAutoRecording: Combine.Published<Swift.Bool>
         ▿ storage: Combine.Published<Swift.Bool>.Storage.value
@@ -253,6 +254,8 @@
         - submitTextInputCallCount: 0
         - capturedStartQuizExcludedIds: nil
         - createSessionError: nil
+        - createSessionCallCount: 0
+        - onCreateSession: nil
         - endSessionError: nil
         - endSessionCallCount: 0
         - capturedIncludeImages: nil

@@ -118,7 +118,7 @@ struct ContentView: View {
             .id(navStackID)
 
             // Floating minimized quiz view overlay
-            if viewModel.isMinimized {
+            if viewModel.isMinimized && viewModel.canMinimize {
                 VStack {
                     Spacer()
                     MinimizedQuizView(viewModel: viewModel)

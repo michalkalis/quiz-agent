@@ -1165,6 +1165,30 @@ struct QuizViewModelEndQuizTests {
         #expect(viewModel.currentSession == nil)
     }
 
+    /// #110 Bug 3: `.finished` never cleared `isMinimized`, so a stale
+    /// MinimizedQuizView floated over CompletionView with no one watching.
+    @Test("entering .finished resets isMinimized")
+    @MainActor
+    func finishedResetsMinimized() async throws {
+        let viewModel = Fixtures.makeViewModel()
+        viewModel.quizState = .showingResult(
+            question: Fixtures.makeQuestion(),
+            evaluation: Evaluation(
+                userAnswer: "Paris",
+                result: .correct,
+                points: 1.0,
+                correctAnswer: "Paris",
+                questionId: "q_001",
+                explanation: nil
+            )
+        )
+        viewModel.isMinimized = true
+
+        viewModel.transition(to: .finished)
+
+        #expect(viewModel.isMinimized == false)
+    }
+
     /// 59.4 (RS-13): a backend 404 (`sessionNotFound`) on endSession is *correct* backend
     /// behaviour for an already-expired or restart-lost session. The end-quiz invariant is
     /// "tapping X always returns Home" — the user must never be stranded on the question

@@ -331,6 +331,9 @@ final class QuizViewModel: ObservableObject {
         Logger.quiz.info("State: \(from) → \(to) [\(caller, privacy: .public)]")
         quizState = newState
         if case .askingQuestion = newState { mcqVoiceMatchedKey = nil }
+        // #110 Bug 3: .finished never cleared isMinimized, so a stale
+        // MinimizedQuizView floated over CompletionView with nothing to dismiss it.
+        if case .finished = newState { isMinimized = false }
 
         // Sentry: tag + context + breadcrumb (metadata only — no transcripts/PII)
         let questionId = currentQuestion?.id

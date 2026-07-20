@@ -68,10 +68,10 @@ Gaps: no in-app screenshot renderer (Sentry's auto-attach is Sentry-only) · `Lo
 
 - [ ] Shake on any screen → sheet opens with a screenshot of *that* screen; Settings row opens the same sheet; Sentry's own shake/screenshot forms no longer appear.
 - [ ] Dictating shows a live transcript (same feel as answers), transcript is editable, typing works without mic.
-- [ ] Send → one `feedback` row containing message + screenshot + WAV audio + log tail + metadata; visible via admin GET; Sentry `feedback.received` event fires.
+- [~] Send → one `feedback` row containing message + screenshot + WAV audio + log tail + metadata; visible via admin GET; Sentry `feedback.received` event fires. — *Agent-verified 2026-07-20 on staging: POST (grace mode) → 201; admin list + `GET /{id}` return the row with message + screenshot (43 B) + logs + metadata. Not yet exercised agent-side: WAV audio attachment + Sentry `feedback.received` event (needs the on-device/device-build path).*
 - [ ] Logs attach in a TestFlight (release-config) build — i.e. `LogStore` promotion verified, not just in DEBUG.
-- [ ] Quiz answer flow untouched: targeted recording/STT suites green; no second audio engine ever instantiated.
-- [ ] Backend suite green incl. new tests; staging deployed; prod deploy after founder heads-up (migration).
+- [x] Quiz answer flow untouched: targeted recording/STT suites green; no second audio engine ever instantiated. — *Agent-verified 2026-07-20: `AudioServiceTests` (incl. "shared AudioService refuses a second concurrent streaming start"), `ElevenLabsSTTServiceTests`, `QuizViewModelStreamingTests`, `FeedbackViewModelTests`, `FeedbackDictationTests` — 36 tests / 4 suites, all green (Hangs-Local, iPhone 17 / iOS 26.5).*
+- [~] Backend suite green incl. new tests; staging deployed; prod deploy after founder heads-up (migration). — *Agent-verified 2026-07-20: backend suite 437 passed (0 failed) with a live test Postgres; staging (`quiz-agent-api-staging`) deployed from `479e472`, migration at head `0007_feedback_table`, health 200. Prod deploy still owed (carries migration → founder heads-up first).*
 - [ ] `[HUMAN]` on-device: founder shakes on the quiz screen, dictates Slovak feedback, agent reads it back from the inbox (transcript + audio present).
 
 ## Cross-refs

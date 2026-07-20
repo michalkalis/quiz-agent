@@ -49,6 +49,8 @@ import os
         /// Lets one test exercise the 404-only end-quiz path (#59.4) without making
         /// every other network call fail via `shouldFail`.
         var endSessionError: Error?
+        /// When set, `submitVoiceAnswer` throws this error instead of the default behaviour.
+        var submitVoiceAnswerError: Error?
         /// Number of times `endSession` was invoked — for assertions that X actually
         /// attempted server-side cleanup.
         var endSessionCallCount = 0
@@ -105,6 +107,7 @@ import os
         }
 
         func submitVoiceAnswer(sessionId _: String, audioData _: Data, fileName _: String) async throws -> QuizResponse {
+            if let error = submitVoiceAnswerError { throw error }
             if shouldFail {
                 throw NetworkError.invalidResponse
             }

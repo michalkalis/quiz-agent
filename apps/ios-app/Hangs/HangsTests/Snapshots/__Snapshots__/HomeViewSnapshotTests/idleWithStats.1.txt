@@ -207,6 +207,7 @@
         - createSessionCallCount: 0
         - onCreateSession: nil
         - endSessionError: nil
+        - submitVoiceAnswerError: nil
         - endSessionCallCount: 0
         - capturedIncludeImages: nil
         - capturedCategories: nil

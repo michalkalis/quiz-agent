@@ -183,9 +183,9 @@ Done (Global acceptance, at this commit) = `find . -name "QuizViewModel+*.swift"
 
 ## Status
 
-- ✅ Recon + split done (this doc, 2026-07-20). Decisions 1–8 locked; 8 sessions (S1–S5, S6a, S6b, S7), strictly sequential. **Gated on #115 → #112 → #110 landing first.**
-- ⬜ **S1 — T1 EntitlementReconciler** — blocked on prerequisites. (Records the post-prereq sum-of-six baseline here on landing.)
-- ⬜ **S2 — T2 AudioDeviceState** — blocked on S1.
+- ✅ Recon + split done (this doc, 2026-07-20). Decisions 1–8 locked; 8 sessions (S1–S5, S6a, S6b, S7), strictly sequential. Prereq gate **satisfied 2026-07-20**: #115, #112, #110 (+#111) all landed on `arch-review-ios`.
+- ✅ **S1 — T1 EntitlementReconciler** — DONE 2026-07-20, commit `59d318c`. **Sum-of-six baseline (post-prereq, recorded by S1): 2996. After S1: 2903** — S2 gates against 2903. Child = `ViewModels/EntitlementReconciler.swift` (209 lines, 0 back-pointers, `reset()` per T7 table). Gates: EntitlementReconcileTests 9/9 + PurchaseActivationTests + HomeFreePlanCardTests + CompletionView{Summary,Breakdown,Upsell}Tests green, 0 skipped; 3-lens adversarial verify passed. **Deviations vs this prompt (verified — no locked decision violated; do NOT "fix" back):** no `transition(to:)` closure (429 branch stays in façade `handleError` post-#112 — would be dead code) and no `taskBag` handle (the reconcile task must survive `resetState`'s `cancelAll`, as on HEAD — child deinit-cancels it). 0 TRANSITION-SHIM markers — every forward is a permanent decision-2 slice accessor with production callers. Expected `.stableDump` drift (S7 re-records): HomeView idleWithStats, QuestionView askingState+recordingState, ResultView correctVariant+incorrectVariant. ⚠ Gate-command note for later sessions: `CompletionViewInspectorTests` is a FILE with 3 suites (CompletionViewSummary/Breakdown/UpsellTests) — `-only-testing` silently no-ops on the file name; target the real suite names.
+- ⬜ **S2 — T2 AudioDeviceState** — ready (S1 landed); gate sum < 2903.
 - ⬜ **S3 — T3 VoiceCommandCoordinator (+ CommandCapturePhase file move)** — blocked on S2.
 - ⬜ **S4 — T4 QuizTimersController** — blocked on S3.
 - ⬜ **S5 — T5 RecordingCoordinator (forced internal split)** — blocked on S4; heaviest.

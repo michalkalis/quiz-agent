@@ -18,7 +18,11 @@ primary_region = "cdg"
 
 [[vm]]
   processes = ["web", "worker"]
-  memory = "256mb"
+  # 256mb (#41 B4 cost hygiene) OOM-killed the arq worker and pushed web boot
+  # past the health-check grace once Sentry + the boot-time migration head
+  # check landed (2026-07-18 arch-review remediation). Revisit after the
+  # legacy import-bloat cleanup slims module import.
+  memory = "512mb"
   cpu_kind = "shared"
   cpus = 1
 

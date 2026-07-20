@@ -25,6 +25,13 @@
         /// uses this to inject events into the running ViewModel.
         private static var mockSTT: MockElevenLabsSTTService?
 
+        /// Live command sink registered by `AppState.makeQuizViewModel()` when
+        /// `--ui-test` is active (issue #111 T3). Routes a transcript straight into
+        /// `QuizViewModel.handleCommandTranscript` — the real `handleRecognizedCommand`
+        /// → `routeCommand` pipeline — so voice-driven navigation is UI-testable even
+        /// though the recognizer itself is `nil` under `--ui-test`.
+        private static var commandSink: (@MainActor (String) async -> Void)?
+
         /// Strong reference to the loopback HTTP listener (kept alive for the app lifetime).
         private static var listener: NWListener?
 
@@ -100,6 +107,25 @@
             return true
         }
 
+        /// Register the live command sink. Called by `AppState.makeQuizViewModel()`
+        /// once the real `QuizViewModel` exists. A later registration replaces the
+        /// former (idempotent).
+        static func registerCommandSink(_ sink: @escaping @MainActor (String) async -> Void) {
+            commandSink = sink
+        }
+
+        /// Route an arbitrary transcript to the registered command sink.
+        /// Returns false if no sink has been registered (e.g., not in UI test mode).
+        @discardableResult
+        static func handleCommand(_ text: String) async -> Bool {
+            guard let commandSink else {
+                Logger.quiz.error("🧪 UITestSupport: handleCommand called but no command sink is registered")
+                return false
+            }
+            await commandSink(text)
+            return true
+        }
+
         /// Route a `hangs-test://` URL to the appropriate mock action.
         ///
         /// Supported URLs:
@@ -107,6 +133,9 @@
         /// - `hangs-test://stt/committed?text=foo` → `STTEvent.committedTranscript("foo")`
         /// - `hangs-test://stt/connected`          → `STTEvent.connected`
         /// - `hangs-test://stt/disconnect?msg=x`   → `STTEvent.disconnected(error)`
+        /// - `hangs-test://command/send?text=start` → registered command sink("start"),
+        ///   driving the real `handleCommandTranscript` → `routeCommand` pipeline
+        ///   (issue #111 T3 — voice-command test seam).
         static func handleTestURL(_ url: URL) async {
             guard url.scheme == "hangs-test" else { return }
 
@@ -128,6 +157,8 @@
                 let msg = queryItems.first(where: { $0.name == "msg" })?.value
                 let err: Error? = msg.map { ElevenLabsSTTError.serverError($0) }
                 await injectSTTEvent(.disconnected(err))
+            case ("command", "/send"):
+                await handleCommand(text)
             default:
                 Logger.quiz.error("🧪 UITestSupport: unrecognized URL \(url.absoluteString, privacy: .public)")
             }

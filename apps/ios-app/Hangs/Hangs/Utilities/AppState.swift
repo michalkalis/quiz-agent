@@ -43,6 +43,10 @@ final class AppState: ObservableObject {
                 storeManager.onPurchaseSuccess = { [weak self] in
                     await self?.quizViewModel?.notifyPremiumPurchased() ?? false
                 }
+                // Issue #111 T3: seed a fake admin key so `SettingsView.hasAdminKey`
+                // is true under UI test — the `packs.createPack` / `packs.myPacks`
+                // entries render without a real key.
+                AdminKeyStore().save("ui-test")
                 UITestSupport.startTestListener()
                 Logger.quiz.info("🧪 AppState initialized in UI-test mode")
                 return
@@ -219,6 +223,20 @@ final class AppState: ObservableObject {
         #endif
 
         quizViewModel = viewModel
+
+        #if DEBUG
+            // Issue #111 T3: register the live command sink so the `:9999` HTTP
+            // listener can drive real voice commands (e.g. "start") through the
+            // actual `handleRecognizedCommand` → `routeCommand` pipeline — the
+            // recognizer itself is `nil` under `--ui-test`, so this is otherwise
+            // undrivable in UI tests.
+            if UITestSupport.isUITesting {
+                UITestSupport.registerCommandSink { [weak self] text in
+                    await self?.quizViewModel?.handleCommandTranscript(text)
+                }
+            }
+        #endif
+
         return viewModel
     }
 }

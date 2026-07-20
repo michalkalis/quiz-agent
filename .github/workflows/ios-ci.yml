@@ -47,18 +47,22 @@ jobs:
       - name: Show build environment
         run: |
           xcodebuild -version
+          # #115: deployment target is 26.0 — fail loud if the Xcode_26.3
+          # selector silently fell back to an older Xcode without the iOS 26 SDK.
+          xcodebuild -showsdks | grep -q iphoneos26 || exit 1
           xcrun simctl list devices available | grep iPhone
 
       - name: Build and test
         run: |
           set -o pipefail
           cd apps/ios-app/Hangs
+          # #115: no CODE_SIGNING_ALLOWED=NO here — a fully unsigned sim app has
+          # no entitlements, so every Keychain call fails with -34018 and the
+          # UI-test admin-key seed (RS-pack-nav-start, #111) breaks. Simulator
+          # builds need no cert; the default ad-hoc signing keeps Keychain alive.
           xcodebuild test \
             -scheme Hangs-Local \
             -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=latest' \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
             -enableCodeCoverage YES \
             -resultBundlePath TestResults.xcresult \
             | xcpretty

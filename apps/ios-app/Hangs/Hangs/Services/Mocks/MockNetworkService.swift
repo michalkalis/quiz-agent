@@ -40,6 +40,11 @@ import os
         /// single-flight test asserts exactly ONE session is created from a
         /// concurrent Try-Again/Play-Again double-tap.
         var createSessionCallCount = 0
+        /// Called at `createSession` entry — lets the #110 Try-Again test observe
+        /// `quizState` DURING session creation. The pre-fix bug left the state
+        /// `.error` while the flow ran on, and the end state alone cannot
+        /// distinguish that (error → askingQuestion was already legal).
+        var onCreateSession: (() -> Void)?
         /// When set, `endSession` throws this error instead of the default behaviour.
         /// Lets one test exercise the 404-only end-quiz path (#59.4) without making
         /// every other network call fail via `shouldFail`.
@@ -75,6 +80,7 @@ import os
 
         func createSession(maxQuestions _: Int, difficulty _: String, language _: String, categories: [String], userId _: String?, includeImages: Bool, packId _: String?) async throws -> QuizSession {
             createSessionCallCount += 1
+            onCreateSession?()
             capturedIncludeImages = includeImages
             capturedCategories = categories
             if let error = createSessionError { throw error }

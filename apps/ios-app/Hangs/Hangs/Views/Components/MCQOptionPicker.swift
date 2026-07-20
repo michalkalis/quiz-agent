@@ -94,7 +94,11 @@ struct MCQOptionPicker: View {
             // key, this fires on the tap's own echo too. Only cancel on an
             // other-source supersede (a different key arriving — e.g. a voice
             // match overriding a pending tap); never on the tap's own echo, and
-            // never on nil (the VM clears this key on a new question).
+            // never on nil (the VM clears this key on a new question). A voice
+            // match on the SAME key as a pending tap never fires this at all
+            // (no value change) — that duplicate is absorbed by the entry guard
+            // in `submitMCQAnswer` (answers are legal only from
+            // .askingQuestion/.recording), not here.
             guard let newValue else { return }
             guard newValue != pendingSubmit.pendingKey else { return }
             pendingSubmit.cancel()

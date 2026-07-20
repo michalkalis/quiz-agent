@@ -934,6 +934,14 @@ final class QuizViewModel: ObservableObject {
     /// The backend MCQ fast-path matches both keys and values, so this works
     /// regardless of whether the evaluator checks by key or value.
     func submitMCQAnswer(key _: String, value: String) async {
+        // #110 Bug 4: a fresh MCQ answer is legal only while the question is open
+        // (.askingQuestion) or being voice-answered (.recording). A delayed tap
+        // submit can fire after its same-key voice twin already submitted and
+        // moved the state on — and .showingResult → .processing is a legal
+        // transition (owned by resubmitAnswer), so the transition guard below
+        // cannot absorb that late duplicate by itself.
+        guard quizState == .askingQuestion || quizState == .recording else { return }
+
         // #110 Bug 2: starting an answer (voice or tap) supersedes any pending skip.
         abortSkipUndoWindow()
 

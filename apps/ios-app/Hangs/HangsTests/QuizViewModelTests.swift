@@ -367,8 +367,17 @@ struct QuizViewModelLoadingStateTests {
         let (viewModel, mockNetwork) = Fixtures.makeViewModelWithNetwork()
         viewModel.quizState = .error(message: "boom", context: .initialization)
 
+        // Pin the transition itself, not just the end state: pre-#110 the
+        // rejected error → startingQuiz transition was silently dropped and the
+        // flow ran on while quizState stayed .error — the end state
+        // (.askingQuestion) was reachable anyway because error → askingQuestion
+        // was already legal, so it alone cannot detect a revert.
+        var stateDuringCreateSession: QuizState?
+        mockNetwork.onCreateSession = { stateDuringCreateSession = viewModel.quizState }
+
         await viewModel.startNewQuiz()
 
+        #expect(stateDuringCreateSession == .startingQuiz)
         #expect(viewModel.quizState == .askingQuestion)
         #expect(mockNetwork.createSessionCallCount == 1)
     }
@@ -905,6 +914,37 @@ struct QuizViewModelMCQSubmissionTests {
         generatedBy: nil
     )
 
+    @Test("late MCQ submit after the state advanced is a no-op (#110 same-key tap/voice race)")
+    @MainActor
+    func lateMCQSubmitAfterStateAdvancedIsNoOp() async throws {
+        let (viewModel, mockNetwork) = Fixtures.makeViewModelWithNetwork(configure: { mock in
+            mock.mockResponse = makeQuizResponse(
+                evaluationFor: "q_mcq_001",
+                userAnswer: "Paris",
+                isCorrect: true,
+                nextQuestion: makeQuestion(id: "q_002", source: "Next")
+            )
+        })
+        viewModel.currentSession = mockNetwork.mockSession
+        viewModel.currentQuestion = mcqQuestion
+        viewModel.quizState = .askingQuestion
+
+        // First submission (the voice twin of a same-key tap) wins and advances
+        // the state to .showingResult.
+        await viewModel.submitMCQAnswer(key: "a", value: "Paris")
+        #expect(viewModel.quizState.isShowingResult)
+        #expect(mockNetwork.submitTextInputCallCount == 1)
+
+        // The tap's 500 ms delayed submit fires late, from .showingResult. The
+        // entry guard must make it a no-op — .showingResult → .processing is a
+        // legal transition (resubmitAnswer owns it), so without the guard this
+        // would re-submit the same answer.
+        await viewModel.submitMCQAnswer(key: "a", value: "Paris")
+
+        #expect(viewModel.quizState.isShowingResult)
+        #expect(mockNetwork.submitTextInputCallCount == 1)
+    }
+
     @Test("MCQ submission transitions to showingResult on success")
     @MainActor
     func mcqSubmissionSuccess() async throws {
@@ -975,6 +1015,10 @@ struct QuizViewModelMCQSubmissionTests {
         })
         viewModel.currentQuestion = mcqQuestion
         viewModel.currentSession = nil
+        // #110: submitMCQAnswer is a no-op outside .askingQuestion/.recording,
+        // so the no-session error path must be exercised from a legal
+        // answering state (the default .idle would short-circuit earlier).
+        viewModel.quizState = .askingQuestion
 
         await viewModel.submitMCQAnswer(key: "a", value: "Paris")
 

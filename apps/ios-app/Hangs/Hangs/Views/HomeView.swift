@@ -10,7 +10,6 @@ import SwiftUI
 
 struct HomeView: View {
     @ObservedObject var viewModel: QuizViewModel
-    var onReplayOnboarding: (() -> Void)? = nil
 
     var body: some View {
         VStack(spacing: 0) {

@@ -45,8 +45,13 @@ final class AppState: ObservableObject {
                 }
                 // Issue #111 T3: seed a fake admin key so `SettingsView.hasAdminKey`
                 // is true under UI test — the `packs.createPack` / `packs.myPacks`
-                // entries render without a real key.
-                AdminKeyStore().save("ui-test")
+                // entries render without a real key. Seed ONLY when the Keychain
+                // slot is empty: the store is the sim's persistent Keychain, and
+                // an unconditional save would silently clobber a real admin key
+                // pasted for manual #95 order testing on the same simulator.
+                if AdminKeyStore().load() == nil {
+                    AdminKeyStore().save("ui-test")
+                }
                 UITestSupport.startTestListener()
                 Logger.quiz.info("🧪 AppState initialized in UI-test mode")
                 return

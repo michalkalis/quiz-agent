@@ -30,7 +30,7 @@ enum AppRoute: Hashable {
 }
 
 /// Owns the navigation surface for ContentView's root stack: the pushed
-/// `NavigationPath` and the belt-and-braces `isPresented` binding for the
+/// route path and the belt-and-braces `isPresented` binding for the
 /// OrderPack→OrderProgress child (issue-111 gate note 2). Both are cleared
 /// atomically the moment `quizState` enters `.startingQuiz`, so a quiz start
 /// from anywhere — voice "start" over a pushed stack, error-retry, or a
@@ -38,13 +38,26 @@ enum AppRoute: Hashable {
 /// to forget.
 @MainActor
 final class NavigationModel: ObservableObject {
-    @Published var path = NavigationPath()
+    /// Typed (not `NavigationPath`) so the model can see *which* routes are
+    /// mounted: `orderProgressPresented` must never outlive the OrderPack
+    /// screen it belongs to. SwiftUI's write-back of an `isPresented` binding
+    /// is not guaranteed when a multi-level pop removes the whole subtree at
+    /// once (back-button long-press menu), which would leave a stale `true`
+    /// that auto-pushes a ghost OrderProgress on the next Create-pack visit.
+    @Published var path: [AppRoute] = [] {
+        didSet {
+            if orderProgressPresented, !path.contains(.orderPack) {
+                orderProgressPresented = false
+            }
+        }
+    }
+
     @Published var orderProgressPresented = false
 
     /// Resets the whole nav surface — path + the OrderProgress `isPresented`
     /// child — in one step, so no in-between state is ever observable.
     func clearAll() {
-        path = NavigationPath()
+        path = []
         orderProgressPresented = false
     }
 

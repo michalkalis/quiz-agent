@@ -80,4 +80,24 @@ struct NavigationModelTests {
         #expect(nav.path.isEmpty)
         #expect(nav.orderProgressPresented == false)
     }
+
+    // WHY: `orderProgressPresented` lives on the app-lifetime NavigationModel,
+    // not per-mount view @State — if a multi-level pop (back-button long-press
+    // menu) removes OrderPack without SwiftUI writing the isPresented binding
+    // back, a stale `true` would auto-push a ghost OrderProgress on the next
+    // Create-pack visit. The model itself must drop the flag the moment
+    // `.orderPack` leaves the path, and keep it while OrderPack stays mounted.
+    @Test("popping OrderPack out of the path resets orderProgressPresented")
+    func poppingOrderPackResetsOrderProgressPresented() {
+        let nav = NavigationModel()
+        nav.path = [.settings, .orderPack]
+        nav.orderProgressPresented = true
+
+        nav.path = [.settings, .orderPack]
+        #expect(nav.orderProgressPresented, "flag must survive while OrderPack stays mounted")
+
+        nav.path = [.settings]
+        #expect(nav.orderProgressPresented == false)
+        #expect(nav.path == [.settings], "the pop itself must not be disturbed")
+    }
 }

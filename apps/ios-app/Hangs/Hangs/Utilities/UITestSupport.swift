@@ -136,8 +136,13 @@
         /// - `hangs-test://command/send?text=start` → registered command sink("start"),
         ///   driving the real `handleCommandTranscript` → `routeCommand` pipeline
         ///   (issue #111 T3 — voice-command test seam).
-        static func handleTestURL(_ url: URL) async {
-            guard url.scheme == "hangs-test" else { return }
+        /// Returns `false` when the request was NOT actually handled (unknown
+        /// route, or `/command/send` with no sink registered) so the HTTP
+        /// listener can answer non-200 and the XCUITest client fails at the
+        /// seam — not 15s later at some downstream UI assertion.
+        @discardableResult
+        static func handleTestURL(_ url: URL) async -> Bool {
+            guard url.scheme == "hangs-test" else { return false }
 
             let host = url.host ?? ""
             let path = url.path
@@ -149,18 +154,23 @@
             switch (host, path) {
             case ("stt", "/partial"):
                 await injectSTTEvent(.partialTranscript(text))
+                return true
             case ("stt", "/committed"):
                 await injectSTTEvent(.committedTranscript(text))
+                return true
             case ("stt", "/connected"):
                 await injectSTTEvent(.connected)
+                return true
             case ("stt", "/disconnect"):
                 let msg = queryItems.first(where: { $0.name == "msg" })?.value
                 let err: Error? = msg.map { ElevenLabsSTTError.serverError($0) }
                 await injectSTTEvent(.disconnected(err))
+                return true
             case ("command", "/send"):
-                await handleCommand(text)
+                return await handleCommand(text)
             default:
                 Logger.quiz.error("🧪 UITestSupport: unrecognized URL \(url.absoluteString, privacy: .public)")
+                return false
             }
         }
 
@@ -194,15 +204,15 @@
         }
 
         /// Read one HTTP request, log + dispatch it via `handleTestURL`, write a
-        /// minimal 200 response, then close the connection. Runs on the listener's
-        /// dispatch queue; hops to MainActor for the actual mock injection.
+        /// status response that reflects whether the request was actually
+        /// handled (200 / 404 / 400), then close the connection. Runs on the
+        /// listener's dispatch queue; hops to MainActor for the mock injection.
         private nonisolated static func handleConnection(_ connection: NWConnection) {
             connection.start(queue: .global(qos: .userInitiated))
             connection.receive(minimumIncompleteLength: 1, maximumLength: 4096) { data, _, _, _ in
-                defer {
-                    let response = "HTTP/1.1 200 OK\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
-                    let bytes = Data(response.utf8)
-                    connection.send(content: bytes, completion: .contentProcessed { _ in
+                let respond: @Sendable (String) -> Void = { status in
+                    let response = "HTTP/1.1 \(status)\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
+                    connection.send(content: Data(response.utf8), completion: .contentProcessed { _ in
                         connection.cancel()
                     })
                 }
@@ -211,23 +221,36 @@
                     let data,
                     let requestText = String(data: data, encoding: .utf8),
                     let firstLine = requestText.split(separator: "\r\n", maxSplits: 1).first
-                else { return }
+                else {
+                    respond("400 Bad Request")
+                    return
+                }
 
                 let parts = firstLine.split(separator: " ", maxSplits: 2)
-                guard parts.count >= 2 else { return }
+                guard parts.count >= 2 else {
+                    respond("400 Bad Request")
+                    return
+                }
                 let method = String(parts[0])
                 let pathAndQuery = String(parts[1])
-                guard pathAndQuery.hasPrefix("/") else { return }
+                guard pathAndQuery.hasPrefix("/") else {
+                    respond("400 Bad Request")
+                    return
+                }
 
                 // pathAndQuery is e.g. "/stt/committed?text=Paris" — drop the
                 // leading "/" and prepend "hangs-test://" to reuse handleTestURL.
                 let urlString = "hangs-test://" + pathAndQuery.dropFirst()
-                guard let url = URL(string: urlString) else { return }
+                guard let url = URL(string: urlString) else {
+                    respond("400 Bad Request")
+                    return
+                }
 
                 Logger.quiz.info("🧪 HTTP: \(method, privacy: .public) \(pathAndQuery, privacy: .public)")
 
                 Task { @MainActor in
-                    await UITestSupport.handleTestURL(url)
+                    let handled = await UITestSupport.handleTestURL(url)
+                    respond(handled ? "200 OK" : "404 Not Found")
                 }
             }
         }

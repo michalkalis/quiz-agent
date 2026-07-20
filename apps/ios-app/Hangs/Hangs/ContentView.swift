@@ -84,7 +84,7 @@ struct ContentView: View {
                 Group {
                     switch viewModel.quizState {
                     case .idle:
-                        HomeView(viewModel: viewModel, onReplayOnboarding: replayOnboarding)
+                        HomeView(viewModel: viewModel)
 
                     // .startingQuiz mounts QuestionView immediately (founder batch
                     // 2026-07-12): the top bar + progress render at launch — the

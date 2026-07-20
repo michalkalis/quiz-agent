@@ -140,6 +140,10 @@ nonisolated enum Config {
     /// Interval for streaming audio chunks to ElevenLabs WebSocket (milliseconds)
     static let sttStreamingChunkIntervalMs: UInt64 = 250
 
+    /// Hard cap on a single in-app feedback dictation (#109). ~120 s of 16 kHz
+    /// 16-bit mono PCM ≈ 3.8 MB WAV, under the backend's 10 MB audio guideline.
+    static let feedbackDictationCapSecs: TimeInterval = 120
+
     /// VAD silence threshold — ElevenLabs commits transcript after this many seconds of silence.
     /// Centralised in `VADTuning` (77.11); forwarded here for back-compat.
     static let elevenLabsVadSilenceThresholdSecs: Double = VADTuning.elevenLabsVadSilenceThresholdSecs

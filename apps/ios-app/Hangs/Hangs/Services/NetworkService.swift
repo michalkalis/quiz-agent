@@ -17,9 +17,11 @@ protocol NetworkServiceProtocol: Sendable {
     func submitVoiceAnswer(sessionId: String, audioData: Data, fileName: String) async throws -> QuizResponse
     func submitTextInput(sessionId: String, input: String, audio: Bool) async throws -> QuizResponse
     /// In-app beta feedback (#109): multipart POST to `/feedback`. `message` is
-    /// required; `metadataJSON`, `appVersion`, `screenshotPNG`, and `logsText`
-    /// are optional attachments. Auth = same bearer as every other write path.
-    func submitFeedback(message: String, metadataJSON: String?, appVersion: String?, screenshotPNG: Data?, logsText: String?) async throws
+    /// required; `metadataJSON`, `appVersion`, `screenshotPNG`, `audioWAV`, and
+    /// `logsText` are optional attachments. `audioWAV` is the dictation recording
+    /// (16 kHz mono PCM WAV) kept as a fallback when the transcript is wrong. Auth
+    /// = same bearer as every other write path.
+    func submitFeedback(message: String, metadataJSON: String?, appVersion: String?, screenshotPNG: Data?, audioWAV: Data?, logsText: String?) async throws
     func downloadAudio(from urlString: String) async throws -> Data
     func endSession(sessionId: String) async throws
     func extendSession(sessionId: String, minutes: Int) async throws
@@ -477,7 +479,7 @@ actor NetworkService: NetworkServiceProtocol {
 
     // MARK: - Feedback (#109)
 
-    func submitFeedback(message: String, metadataJSON: String?, appVersion: String?, screenshotPNG: Data?, logsText: String?) async throws {
+    func submitFeedback(message: String, metadataJSON: String?, appVersion: String?, screenshotPNG: Data?, audioWAV: Data?, logsText: String?) async throws {
         let endpoint = baseURL.appendingPathComponent("/api/v1/feedback")
 
         let boundary = UUID().uuidString
@@ -507,6 +509,9 @@ actor NetworkService: NetworkServiceProtocol {
         if let metadataJSON { appendField("metadata", metadataJSON) }
         if let appVersion { appendField("app_version", appVersion) }
         if let screenshotPNG { appendFile("screenshot", filename: "screenshot.png", contentType: "image/png", data: screenshotPNG) }
+        if let audioWAV, !audioWAV.isEmpty {
+            appendFile("audio", filename: "feedback.wav", contentType: "audio/wav", data: audioWAV)
+        }
         if let logsText, !logsText.isEmpty {
             appendFile("logs", filename: "hangs-logs.txt", contentType: "text/plain", data: Data(logsText.utf8))
         }

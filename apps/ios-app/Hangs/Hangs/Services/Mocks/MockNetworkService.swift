@@ -113,14 +113,16 @@ final class MockNetworkService: NetworkServiceProtocol {
     var capturedFeedbackMetadataJSON: String?
     var capturedFeedbackAppVersion: String?
     var capturedFeedbackScreenshot: Data?
+    var capturedFeedbackAudio: Data?
     var capturedFeedbackLogs: String?
 
-    func submitFeedback(message: String, metadataJSON: String?, appVersion: String?, screenshotPNG: Data?, logsText: String?) async throws {
+    func submitFeedback(message: String, metadataJSON: String?, appVersion: String?, screenshotPNG: Data?, audioWAV: Data?, logsText: String?) async throws {
         submitFeedbackCallCount += 1
         capturedFeedbackMessage = message
         capturedFeedbackMetadataJSON = metadataJSON
         capturedFeedbackAppVersion = appVersion
         capturedFeedbackScreenshot = screenshotPNG
+        capturedFeedbackAudio = audioWAV
         capturedFeedbackLogs = logsText
         if let feedbackError { throw feedbackError }
         if shouldFail { throw NetworkError.invalidResponse }

@@ -63,6 +63,12 @@ actor MockElevenLabsSTTService: ElevenLabsSTTServiceProtocol {
         commitEmitsNothing = value
     }
 
+    /// Actor-isolated setter for the forced-commit transcript (#109 feedback
+    /// dictation tests set this to "" so a stop doesn't append surprise text).
+    func setMockCommittedText(_ value: String) {
+        mockCommittedText = value
+    }
+
     /// #79 test seam: arm/disarm the `disconnect()` suspension gate.
     func setGateDisconnect(_ value: Bool) {
         gateDisconnect = value

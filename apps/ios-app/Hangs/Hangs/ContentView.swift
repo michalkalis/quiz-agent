@@ -199,7 +199,8 @@ struct ContentView: View {
                 viewModel: FeedbackViewModel(
                     networkService: appState.networkService,
                     context: FeedbackContext.capture(from: viewModel),
-                    screenshot: screenshot
+                    screenshot: screenshot,
+                    voice: appState.makeFeedbackVoice(for: viewModel)
                 )
             )
         }

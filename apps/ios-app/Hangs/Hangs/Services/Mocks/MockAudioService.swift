@@ -141,17 +141,31 @@ import os
             isPlaying = false
         }
 
-        func startStreamingRecording(onChunk _: @escaping PCMChunkHandler) async throws {
+        /// The real service invokes this on an audio thread with each PCM chunk.
+        /// The mock never runs a live engine, so it stores the handler and lets a
+        /// test pump chunks through `emitStreamingChunk` — needed to exercise the
+        /// #109 feedback WAV-tee headlessly.
+        private(set) var streamingChunkHandler: PCMChunkHandler?
+
+        func startStreamingRecording(onChunk: @escaping PCMChunkHandler) async throws {
             if shouldFailRecording || !sessionActive {
                 throw AudioError.recordingFailed
             }
             isRecording = true
             audioEngineActive = true
+            streamingChunkHandler = onChunk
         }
 
         func stopStreamingRecording() {
             isRecording = false
             audioEngineActive = false
+            streamingChunkHandler = nil
+        }
+
+        /// Test seam (#109): drive a PCM chunk through the streaming handler, as the
+        /// real AVAudioEngine tap would, so the feedback WAV-tee can be verified.
+        func emitStreamingChunk(_ data: Data) {
+            streamingChunkHandler?(data)
         }
 
         func refreshAvailableDevices() {

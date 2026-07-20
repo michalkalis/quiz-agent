@@ -100,7 +100,13 @@ struct FeedbackView: View {
 
     private var messageEditor: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HangsSectionLabel(text: "your feedback", color: Theme.Hangs.Colors.pink)
+            HStack {
+                HangsSectionLabel(text: "your feedback", color: Theme.Hangs.Colors.pink)
+                Spacer()
+                if viewModel.voiceAvailable {
+                    micButton
+                }
+            }
             HangsCard(padding: EdgeInsets(top: 6, leading: 10, bottom: 6, trailing: 10)) {
                 TextEditor(text: $viewModel.message)
                     .font(.hangsBody(16))
@@ -111,7 +117,7 @@ struct FeedbackView: View {
                     .accessibilityIdentifier("feedback.message")
                     .overlay(alignment: .topLeading) {
                         if viewModel.message.isEmpty {
-                            Text("What went well or wrong? Anything confusing while driving?")
+                            Text("What went well or wrong? Say it or type it.")
                                 .font(.hangsBody(16))
                                 .foregroundColor(Theme.Hangs.Colors.muted)
                                 .padding(.horizontal, 5)
@@ -120,11 +126,62 @@ struct FeedbackView: View {
                         }
                     }
             }
+
+            if !viewModel.partialTranscript.isEmpty {
+                Text(viewModel.partialTranscript)
+                    .font(.hangsBody(14))
+                    .foregroundColor(Theme.Hangs.Colors.muted)
+                    .italic()
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("feedback.partialTranscript")
+            }
+
+            if let hint = micHint {
+                Text(hint)
+                    .font(.hangsBody(12))
+                    .foregroundColor(Theme.Hangs.Colors.muted)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("feedback.micHint")
+            }
         }
     }
 
+    @ViewBuilder
+    private var micButton: some View {
+        Button {
+            Task { await viewModel.toggleDictation() }
+        } label: {
+            if viewModel.isDictating {
+                Label("Stop", systemImage: "stop.circle.fill")
+                    .font(.hangsBody(14, weight: .semibold))
+                    .foregroundColor(Theme.Hangs.Colors.error)
+            } else {
+                Label("Dictate", systemImage: "mic.fill")
+                    .font(.hangsBody(14, weight: .semibold))
+                    .foregroundColor(Theme.Hangs.Colors.blue)
+            }
+        }
+        .disabled(viewModel.micButtonDisabled)
+        .opacity(viewModel.micButtonDisabled ? 0.4 : 1)
+        .accessibilityIdentifier("feedback.mic")
+    }
+
+    /// Explains a disabled/denied mic so the tester isn't left tapping a dead button.
+    private var micHint: String? {
+        if viewModel.isBlockedByQuizRecording {
+            return String(localized: "Finish the quiz recording to dictate feedback.", comment: "Feedback sheet: mic disabled because the quiz is currently recording")
+        }
+        if viewModel.micState == .denied {
+            return String(localized: "Microphone access is off — you can still type. Enable it in Settings to dictate.", comment: "Feedback sheet: mic disabled because permission was denied")
+        }
+        if viewModel.didHitDictationCap {
+            return String(localized: "Reached the 2-minute dictation limit. Tap Dictate to add more.", comment: "Feedback sheet: dictation auto-stopped at the 120-second cap")
+        }
+        return nil
+    }
+
     private var whatGetsSentCaption: some View {
-        Text("Sent with your note: a screenshot, recent app logs, and device info. No audio in this build.")
+        Text("Sent with your note: a screenshot, recent app logs, your voice recording, and device info.")
             .font(.hangsBody(13))
             .foregroundColor(Theme.Hangs.Colors.muted)
             .fixedSize(horizontal: false, vertical: true)

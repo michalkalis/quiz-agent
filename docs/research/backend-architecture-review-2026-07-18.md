@@ -150,6 +150,8 @@ Run: dynamic workflow `wf_b215d380-fb3` (11 agents: baseline → 6 file-disjoint
 
 **New constraints for future work:** local pack-api boots (API, worker, and its integration tests) now require a reachable, migrated Postgres (boot head check; deploy discipline = migrate before deploy) · autogenerate never proposes `drop_table` — dropping an app's own table needs a hand-written migration.
 
+**Deployed 2026-07-20 (staging then prod, all four apps):** health/mounts/worker verified live — DB-probing health 200, `/api/v1/orders` + `/v1/orders` answering identically, "Migrations at head — OK" from both pack processes, Sentry `env=production`/`staging` with JSON logs. Two deploy-surfaced fixes: pack VMs 256→512 MB (the #41 B4 cost-hygiene size OOM-killed the arq worker once Sentry + the boot head check landed; revisit after the legacy import-bloat cleanup) and `ENVIRONMENT=production` added to pack prod fly.toml (Sentry events were tagged "development"). CI green on `2da8c5e` — the DB-backed money/auth suites now gate merges for real (first push needed co-tenant pack migrations + a migrate-before-uvicorn step in the workflow). Deployed from the worktree at the remediation commit: main concurrently received #109 — beta voice feedback backend (unreleased migration 0007), which ships in its own deploy with its own migration step.
+
 ## Top 5 recommended actions
 
 1. **Set `STOREKIT_ENVIRONMENT=Production` on prod quiz-pack-api** (one `fly secrets set`; also make the code default fail-closed like `RC_ALLOWED_ENVIRONMENT`). Payoff: removes the one bug that would make every real pack purchase fail at launch.

@@ -1,8 +1,8 @@
 # Issue 114: MVVM conformance — AccountViewModel, PaywallViewModel, DI seams, auth Sentry logging
 
-**Triage:** refactor · needs-triage
+**Triage:** refactor · ready-for-human (class-b-adjacent: SIWA + purchase surfaces; founder may flip to ready-for-agent with the mandatory T7 maker≠checker adversarial leg, per the #93 — subscription IAP precedent)
 **Reversibility:** a (code-only; touches SIWA + purchase-orchestration surfaces → maker≠checker review leg mandatory; pipeline decides ready-for-agent vs ready-for-human per the class-b guard)
-**Status:** Created by /prepare-issue 2026-07-20 from the iOS architecture review 2026-07-18 — Top 10 items 4, 8, 10. Prep pipeline running on branch `arch-review-ios`.
+**Status:** Prep complete 2026-07-20 — all six /prepare-issue phases passed (P5 impl-plan gate cycle 2: ready-check READY · design-soundness SOUND 0.85), split into 2 build sessions (account T1–T3 · paywall+rest T4–T6) plus a mandatory maker≠checker review gate (T7), paste-in prompts in `issue-114-execution-prompts.md`, landing ready-for-human on branch `arch-review-ios`.
 **Created:** 2026-07-20
 
 **Source:** [iOS architecture review 2026-07-18](../research/ios-architecture-review-2026-07-18.md) — Top 10 items 4, 8, 10 + dimensions 1, 2, 9. Link, don't restate.
@@ -48,46 +48,49 @@ Adjacent (same rule, small): `MyPacksView.swift:14` calls PackOrderService direc
 
 ## Tasks (atomic)
 
-*Ordered; each independently committable and buildable. Paths relative to `apps/ios-app/Hangs/Hangs/` (tests under `apps/ios-app/Hangs/HangsTests/`). New VMs mirror the OrderPackViewModel shape (`@MainActor final class … ObservableObject`, `init(<protocol deps>)`, `@StateObject` at the owner). New tests use Swift Testing (`@Test`/`#expect`).*
+*Ordered; each independently committable and buildable. Paths relative to `apps/ios-app/Hangs/Hangs/` (tests under `apps/ios-app/Hangs/HangsTests/`). New VMs mirror the OrderPackViewModel shape (`@MainActor final class … ObservableObject`, `init(<protocol deps>)`, `@StateObject` at the owner). New tests use Swift Testing (`@Test`/`#expect`). **Session split (Phase 6):** T1–T3 = Session A (account) · T4–T6 = Session B (paywall + MyPacks + Sentry) · T7 = the maker≠checker review gate — paste-in prompts + shared recon in [`issue-114-execution-prompts.md`](issue-114-execution-prompts.md).*
 
-**T1 — AccountServiceProtocol + AdminKeyStore seam + ContentView migration (foundation).**
-- New `AccountServiceProtocol` (declared next to `AuthServiceProtocol` in `Services/AuthService.swift:99`) carries the account surface the VM binds: `isSignedIn` + `currentAccount` (both **`async`**, derived from the actor's in-memory `tokens` mirror — no new Keychain read; `currentAccount` returns a non-secret descriptor only, never a raw token), plus the **6** account actions the VM calls (`generateRawNonce`, `hashedNonce(for:)`, `completeAppleSignIn`, `signOut`, `deleteAccount`, `exportData`). The **existing `AuthService` actor conforms to BOTH** `AuthServiceProtocol` and `AccountServiceProtocol` (one instance, two role-scoped seams). **`AuthServiceProtocol` is left untouched — exactly its 2 methods** (`accessToken()`/`refreshedAccessToken(replacing:)`), so its consumers (NetworkService, `PackOrderService.swift:151`) and its sole mock `StubAuthService` (`NetworkServiceTests.swift:394`) take **zero** churn. `AppState.authService` stays the concrete `AuthService`; add a protocol-typed accessor `var accountService: AccountServiceProtocol { authService }` (same instance) that AccountViewModel + ContentView depend on.
-- New `AdminKeyStoreProtocol` (load/save, mirroring the `TokenStore` seam at `AuthService.swift:91`); `AdminKeyStore` conforms; expose on AppState (`let adminKeyStore: AdminKeyStoreProtocol`).
-- Migrate `ContentView.swift:196` `KeychainTokenStore().load()` → read `appState.accountService.isSignedIn` inside an async `.task` (gate note: ContentView reads via `appState.accountService`).
-- Done-when: builds; ContentView shows no `KeychainTokenStore(`; `AccountServiceProtocol` + AdminKeyStore seam compile with `AuthService`/`AdminKeyStore` conforming; `AuthServiceProtocol` + `StubAuthService` unchanged (`git diff HangsTests/NetworkServiceTests.swift` = none).
+- [ ] **T1 — AccountServiceProtocol + AdminKeyStore seam + ContentView migration (foundation).**
+  - New `AccountServiceProtocol` (declared next to `AuthServiceProtocol` in `Services/AuthService.swift:99`) carries the account surface the VM binds: `isSignedIn` + `currentAccount` (both **`async`**, derived from the actor's in-memory `tokens` mirror — no new Keychain read; `currentAccount` returns a non-secret descriptor only, never a raw token), plus the **6** account actions the VM calls (`generateRawNonce`, `hashedNonce(for:)`, `completeAppleSignIn`, `signOut`, `deleteAccount`, `exportData`). The **existing `AuthService` actor conforms to BOTH** `AuthServiceProtocol` and `AccountServiceProtocol` (one instance, two role-scoped seams). **`AuthServiceProtocol` is left untouched — exactly its 2 methods** (`accessToken()`/`refreshedAccessToken(replacing:)`), so its consumers (NetworkService, `PackOrderService.swift:151`) and its sole mock `StubAuthService` (`NetworkServiceTests.swift:394`) take **zero** churn. `AppState.authService` stays the concrete `AuthService`; add a protocol-typed accessor `var accountService: AccountServiceProtocol { authService }` (same instance) that AccountViewModel + ContentView depend on.
+  - New `AdminKeyStoreProtocol` (load/save, mirroring the `TokenStore` seam at `AuthService.swift:91`); `AdminKeyStore` conforms; expose on AppState (`let adminKeyStore: AdminKeyStoreProtocol`).
+  - Migrate `ContentView.swift:196` `KeychainTokenStore().load()` → read `appState.accountService.isSignedIn` inside an async `.task` (gate note: ContentView reads via `appState.accountService`).
+  - **Async-gate timing (Gate B soft note).** The old gate is a *synchronous* Keychain read; making it an `async` actor read must not let first render slip past the sign-in-prompt gate — the prompt gating (`SignInPromptGate` / `signInPromptShownCount`) must still evaluate **before** first present. Carry a small test or explicit check on `signInPromptShownCount` timing into T2's `AccountViewModelTests`.
+  - Done-when: builds; ContentView shows no `KeychainTokenStore(`; `AccountServiceProtocol` + AdminKeyStore seam compile with `AuthService`/`AdminKeyStore` conforming; `AuthServiceProtocol` + `StubAuthService` unchanged (`git diff HangsTests/NetworkServiceTests.swift` = none).
 
-**T2 — AccountViewModel + SettingsView migration.**
-- New `AccountViewModel(account: AccountServiceProtocol, adminKeyStore: AdminKeyStoreProtocol)`, `@StateObject` in SettingsView. Owns Apple sign-in (`handleAppleSignInResult`), sign-out, delete-account, export-data, token/sign-in presentation state, and `accountErrorMessage`.
-- Fail-loud canonical (decision b): every non-`.canceled` failure sets `accountErrorMessage`; `.canceled` is a silent normal exit.
-- Founder-default (Phase 2): Settings' Apple sign-in failures surface via the existing `accountErrorMessage` alert channel (`SettingsView.swift:490`, previously wired only to `performDeleteAccount`).
-- Delete the 5 `KeychainTokenStore()` reads (`SettingsView.swift:114/120/470/481/488`) — read sign-in state/account via the VM's protocol accessors. Replace the 2 `AdminKeyStore()` direct sites (`:115` load, `:603` save) with the injected `adminKeyStore` seam.
-- Done-when: builds; SettingsView shows no `KeychainTokenStore(` and no `AdminKeyStore(`; sign-in/out/delete/export drive the VM.
+- [ ] **T2 — AccountViewModel + SettingsView migration.**
+  - New `AccountViewModel(account: AccountServiceProtocol, adminKeyStore: AdminKeyStoreProtocol)`, `@StateObject` in SettingsView. Owns Apple sign-in (`handleAppleSignInResult`), sign-out, delete-account, export-data, token/sign-in presentation state, and `accountErrorMessage`.
+  - Fail-loud canonical (decision b): every non-`.canceled` failure sets `accountErrorMessage`; `.canceled` is a silent normal exit.
+  - Founder-default (Phase 2): Settings' Apple sign-in failures surface via the existing `accountErrorMessage` alert channel (`SettingsView.swift:490`, previously wired only to `performDeleteAccount`).
+  - Delete the 5 `KeychainTokenStore()` reads (`SettingsView.swift:114/120/470/481/488`) — read sign-in state/account via the VM's protocol accessors. Replace the 2 `AdminKeyStore()` direct sites (`:115` load, `:603` save) with the injected `adminKeyStore` seam.
+  - **Async-gate timing test (Gate B soft note, from T1).** Add an `AccountViewModelTests` assertion that the async `isSignedIn` read resolves the sign-in-prompt gating before first present — the `signInPromptShownCount` timing must match the old synchronous gate (prompt not shown/suppressed spuriously by the await hop).
+  - Done-when: builds; SettingsView shows no `KeychainTokenStore(` and no `AdminKeyStore(`; sign-in/out/delete/export drive the VM.
 
-**T3 — ContextualSignInSheet migration to the VM/protocol.**
-- ContextualSignInSheet binds `AccountViewModel` (protocol-backed) instead of the concrete `AuthService` (`:28`) — decision (c). `handleAppleSignInResult` (`:201`) delegates to the shared VM; preserve the per-phase structure, fail-loud in all 3 failure paths, the `.canceled`-silent exit, and success → `onDismiss()`.
-- `ContextualSignInSheetTests`: construction-only migration allowed (gate note) — an init/type change is not a behavior regression; the behavior `#expect` assertions stay unchanged and green.
-- Done-when: builds; sheet holds no concrete `AuthService`; ContextualSignInSheetTests green (any diff construction-only).
+- [ ] **T3 — ContextualSignInSheet migration to the VM/protocol.**
+  - ContextualSignInSheet binds `AccountViewModel` (protocol-backed) instead of the concrete `AuthService` (`:28`) — decision (c). `handleAppleSignInResult` (`:201`) delegates to the shared VM; preserve the per-phase structure, fail-loud in all 3 failure paths, the `.canceled`-silent exit, and success → `onDismiss()`.
+  - `ContextualSignInSheetTests`: construction-only migration allowed (gate note) — an init/type change is not a behavior regression; the behavior `#expect` assertions stay unchanged and green.
+  - Done-when: builds; sheet holds no concrete `AuthService`; ContextualSignInSheetTests green (any diff construction-only).
 
-**T4 — PaywallViewModel wrapping StoreManager.**
-- New `PaywallViewModel(storeManager: StoreManager, limitError:…)`, `@StateObject` in PaywallView. PaywallView drops `@ObservedObject var storeManager` (`:27`) and binds only the VM; PaywallView's `init` keeps a `storeManager:` param forwarded into `PaywallViewModel(storeManager:)` (so `PaywallViewInspectorTests` stays constructible).
-- Change-forwarding mechanism (gate note; decision d — wrap, never mirror): in `init`, subscribe to `storeManager.objectWillChange` and re-emit `self.objectWillChange.send()` (stored `AnyCancellable`). Expose `purchaseState`, `offerings`, `isLoading`, `purchaseError`, `effectivePlan` (`:261` fallback), `selectedPlan`, and the purchase / `resetPurchaseState` intents as VM passthroughs — **no** purchase state copied into a `@Published` on the VM. The `.task(id: vm.purchaseState)` auto-dismiss re-fires because the View re-renders on the forwarded `objectWillChange`.
-- Preserve #102 exactly: `.activating` renders distinctly and does **not** auto-dismiss; only `.success` auto-dismisses at 1.5 s (`:117`); the #96 P1 success-without-entitlement fail-loud (`:145`) survives; `resetPurchaseState` on appear (`:111`) and purchase triggers (`:384/440/449`) intact.
-- Done-when: builds; PaywallView binds no StoreManager directly; #102 behavior preserved.
+- [ ] **T4 — PaywallViewModel wrapping StoreManager.**
+  - New `PaywallViewModel(storeManager: StoreManager, limitError:…)`, `@StateObject` in PaywallView. PaywallView drops `@ObservedObject var storeManager` (`:27`) and binds only the VM; PaywallView's `init` keeps a `storeManager:` param forwarded into `PaywallViewModel(storeManager:)` (so `PaywallViewInspectorTests` stays constructible).
+  - Change-forwarding mechanism (gate note; decision d — wrap, never mirror): in `init`, subscribe to `storeManager.objectWillChange` and re-emit `self.objectWillChange.send()` (stored `AnyCancellable`). Expose `purchaseState`, `offerings`, `isLoading`, `purchaseError`, `effectivePlan` (`:261` fallback), `selectedPlan`, and the purchase / `resetPurchaseState` intents as VM passthroughs — **no** purchase state copied into a `@Published` on the VM. The `.task(id: vm.purchaseState)` auto-dismiss re-fires because the View re-renders on the forwarded `objectWillChange`.
+  - Preserve #102 exactly: `.activating` renders distinctly and does **not** auto-dismiss; only `.success` auto-dismisses at 1.5 s (`:117`); the #96 P1 success-without-entitlement fail-loud (`:145`) survives; `resetPurchaseState` on appear (`:111`) and purchase triggers (`:384/440/449`) intact.
+  - Done-when: builds; PaywallView binds no StoreManager directly; #102 behavior preserved.
 
-**T5 — MyPacksViewModel.**
-- New `MyPacksViewModel(service: PackOrderServiceProtocol)` (decision e) — fold `listOrders()` (`MyPacksView.swift:106`) + `orders / isLoading / loadFailed` (`:14`) out of the View; `@StateObject` at the owner, mirroring OrderPackViewModel's `init(service:)`.
-- Done-when: builds; MyPacksView holds no service call and no order-loading `@State`.
+- [ ] **T5 — MyPacksViewModel.**
+  - New `MyPacksViewModel(service: PackOrderServiceProtocol)` (decision e) — fold `listOrders()` (`MyPacksView.swift:106`) + `orders / isLoading / loadFailed` (`:14`) out of the View; `@StateObject` at the owner, mirroring OrderPackViewModel's `init(service:)`.
+  - Done-when: builds; MyPacksView holds no service call and no order-loading `@State`.
 
-**T6 — AuthService warning/error events → SentryLog + PII-safe test seam.**
-- Route AuthService warning/error events through `SentryLog.warn/.error(_, category: .network)` (`Utilities/Logging.swift:74`), starting with the `signed-in session dropped` event (`AuthService.swift:350`); keep the existing `Logger.network` calls alongside (decision f). No PII: messages/attributes describe the failure class only — never token values, Apple identity payloads, or account identifiers.
-- Test seam: `SentryLog` is today a static enum with **no** spy/protocol → add the minimal seam to make it assertable — a pure event-builder for message/attributes (asserted directly for PII-safety) + a test-only recorder/sink on `SentryLog` confirming the event fired. (Flagged for Phase 5: this touches shared `Utilities/Logging.swift`.)
-- Done-when: builds; the dropped-session path emits a `.network` warning/error verified by a test; the builder payload carries no token/PII.
+- [ ] **T6 — AuthService warning/error events → SentryLog + PII-safe test seam.**
+  - Route AuthService warning/error events through `SentryLog.warn/.error(_, category: .network)` (`Utilities/Logging.swift:74`), starting with the `signed-in session dropped` event (`AuthService.swift:350`); keep the existing `Logger.network` calls alongside (decision f). No PII: messages/attributes describe the failure class only — never token values, Apple identity payloads, or account identifiers.
+  - Test seam: `SentryLog` is today a static enum with **no** spy/protocol → add the minimal seam to make it assertable — a pure event-builder for message/attributes (asserted directly for PII-safety) + a test-only recorder/sink on `SentryLog` confirming the event fired. (Flagged for Phase 5: this touches shared `Utilities/Logging.swift`.)
+  - Done-when: builds; the dropped-session path emits a `.network` warning/error verified by a test; the builder payload carries no token/PII.
 
-**T7 — Verification + maker≠checker adversarial review leg (MANDATORY, final).**
-- Suites green: `AppleAuthTests`, `ContextualSignInSheetTests` (behavior assertions), `PurchaseActivationTests`, `StoreManagerTests`, plus new `AccountViewModelTests`, `PaywallViewModelTests`, `MyPacksViewModelTests`.
-- Re-record the 2 `PaywallViewSnapshotTests` baselines (`limitErrorWithCountdown`, `noLimitErrorProductLoading`, in `HangsTests/Snapshots/`); confirm the diff is **model-only** (no rendered-pixel change) — non-gating, human sign-off.
-- Adversarial review leg by a reviewer **≠** implementer (class-b-adjacent, mandatory), signing off the 6 coverage points (Research §Class assessment): (1) SIWA error-handling parity — no path silently swallows a sign-in failure, `.canceled` still silent, Settings gained the error surface; (2) token-swap + `onAccountLinked`/RC-alias path untouched, no view-side Keychain read remains; (3) purchase orchestration — `.activating`≠`.success`, activating no-auto-dismiss, success auto-dismisses at 1.5 s, `effectivePlan` fallback identical, #96 P1 fail-loud intact, `resetPurchaseState` on appear intact; (4) `PurchaseActivationTests` green end-to-end; (5) new protocol accessor exposes only `isSignedIn`/`currentAccount`, not raw tokens; (6) snapshot re-records human-reviewed. Any forced change in a behavior-preservation suite is recorded as a flag, not a green light.
-- Done-when: all named suites green; snapshot diff confirmed model-only; 6-point review signed off with reviewer ≠ implementer.
+- [ ] **T7 — Verification + maker≠checker adversarial review leg (MANDATORY, final).**
+  - Suites green: `AppleAuthTests`, `ContextualSignInSheetTests` (behavior assertions), `PurchaseActivationTests`, `StoreManagerTests`, plus new `AccountViewModelTests`, `PaywallViewModelTests`, `MyPacksViewModelTests`.
+  - Re-record the 2 `PaywallViewSnapshotTests` baselines (`limitErrorWithCountdown`, `noLimitErrorProductLoading`, in `HangsTests/Snapshots/`); confirm the diff is **model-only** (no rendered-pixel change) — non-gating, human sign-off.
+  - **Sim eyeball (Gate B soft note).** On the simulator, confirm end-to-end that the `.task(id: vm.purchaseState)` auto-dismiss actually **re-fires** through the forwarded `objectWillChange` after the `@ObservedObject`→wrapped-passthrough change: one manual/inspector check that `.success` dismisses at ~1.5 s and `.activating` does **not** (the re-fire is the easiest thing to silently lose in this refactor).
+  - Adversarial review leg by a reviewer **≠** implementer (class-b-adjacent, mandatory), signing off the 6 coverage points (Research §Class assessment): (1) SIWA error-handling parity — no path silently swallows a sign-in failure, `.canceled` still silent, Settings gained the error surface; (2) token-swap + `onAccountLinked`/RC-alias path untouched, no view-side Keychain read remains; (3) purchase orchestration — `.activating`≠`.success`, activating no-auto-dismiss, success auto-dismisses at 1.5 s, `effectivePlan` fallback identical, #96 P1 fail-loud intact, `resetPurchaseState` on appear intact; (4) `PurchaseActivationTests` green end-to-end; (5) new protocol accessor exposes only `isSignedIn`/`currentAccount`, not raw tokens; (6) snapshot re-records human-reviewed. Any forced change in a behavior-preservation suite is recorded as a flag, not a green light.
+  - Done-when: all named suites green; snapshot diff confirmed model-only; 6-point review signed off with reviewer ≠ implementer.
 
 ## Acceptance
 
@@ -163,7 +166,7 @@ Adjacent (same rule, small): `MyPacksView.swift:14` calls PackOrderService direc
 | 2 · Plan              | ✅ done | — |
 | 3 · Plan review       | ✅ done | ready-check READY · design-soundness SOUND 0.83 |
 | 4 · Impl-plan         | ✅ done | — |
-| 5 · Impl-plan review  | 🔄 in review | cycle 1: ready-check READY · design-soundness UNSOUND 0.72 (1: protocol split) — fixed, re-gate |
-| 6 · Split             | ⬜ pending | — |
+| 5 · Impl-plan review  | ✅ done | cycle 2: ready-check READY · design-soundness SOUND 0.85 |
+| 6 · Split             | ✅ done | multi-session: 2 build (account T1–T3 · paywall+rest T4–T6) + review gate (T7); `issue-114-execution-prompts.md` written |
 
-**Last updated:** 2026-07-20 · **Next:** Phase 5 re-gate (cycle 2) · **Gate attempts:** P3 0/3 (passed) · P5 1/3
+**Last updated:** 2026-07-20 · **Prep complete** (all six phases ✅). · **Gate attempts:** P3 0/3 (passed) · P5 2/3 (passed cycle 2)

@@ -14,11 +14,12 @@
 //
 
 import Foundation
+@testable import Hangs
 import os
 import Testing
-@testable import Hangs
 
 // MARK: - JSON fixtures
+
 // Placed in a nonisolated enum so they can be referenced from @Sendable
 // URLProtocol handler closures without actor-isolation warnings.
 
@@ -34,6 +35,12 @@ private nonisolated enum Stubs {
         "resets_at": "2026-05-08T00:00:00Z",
         "upgrade_available": true
       }
+    }
+    """#
+
+    static let rateLimitJSON = #"""
+    {
+      "error": "Rate limit exceeded: 10 per 1 minute"
     }
     """#
 
@@ -57,7 +64,6 @@ private nonisolated enum Stubs {
 // StubURLProtocol.handler is a process-wide static.
 @Suite("NetworkService — URLProtocol stubs", .serialized)
 struct NetworkServiceTests {
-
     // MARK: Helpers
 
     private func makeService() -> NetworkService {
@@ -78,7 +84,7 @@ struct NetworkServiceTests {
             _ = try await service.submitTextInput(sessionId: "s1", input: "Paris", audio: false)
             Issue.record("Expected throw, got success")
         } catch let error as NetworkError {
-            if case .quotaLimitReached(let detail) = error {
+            if case let .quotaLimitReached(detail) = error {
                 #expect(detail.error == "daily_limit_reached")
                 #expect(detail.questionsUsed == 10)
                 #expect(detail.questionsLimit == 10)
@@ -103,7 +109,7 @@ struct NetworkServiceTests {
             _ = try await service.submitTextInput(sessionId: "s1", input: "Paris", audio: false)
             Issue.record("Expected throw, got success")
         } catch let error as NetworkError {
-            if case .serverError(let code, _) = error {
+            if case let .serverError(code, _) = error {
                 #expect(code == 429)
             } else {
                 Issue.record("Expected .serverError(429, …), got \(error)")
@@ -117,7 +123,7 @@ struct NetworkServiceTests {
     func downloadAudioContentLengthMismatch() async throws {
         let service = makeService()
         let body = Data(repeating: 0xAA, count: 100)
-        let mismatchedLength = body.count + 10  // 110
+        let mismatchedLength = body.count + 10 // 110
         StubURLProtocol.handler = { _ in
             (.make(status: 200, headers: ["Content-Length": "\(mismatchedLength)"]), body)
         }
@@ -158,6 +164,7 @@ struct NetworkServiceTests {
     }
 
     // MARK: 6. extendSession 5xx → .invalidResponse
+
     //
     // extendSession has a single guard over the 2xx range and throws
     // .invalidResponse for all non-2xx, including 5xx. The handoff spec
@@ -280,6 +287,7 @@ struct NetworkServiceTests {
     }
 
     // MARK: 11. Bearer attached + 401 → single-flight refresh → retry (#60.8)
+
     //
     // With an AuthService wired, every request carries `Authorization: Bearer
     // <access>`. A 401 must trigger exactly one refresh and one retry that
@@ -320,7 +328,7 @@ struct NetworkServiceTests {
 
     @Test("no authService → request carries no Authorization header")
     func noAuthServiceSendsNoBearer() async throws {
-        let service = makeService()  // built without authService
+        let service = makeService() // built without authService
         let captured = OSAllocatedUnfairLock<URLRequest?>(initialState: nil)
         StubURLProtocol.handler = { req in
             captured.withLock { $0 = req }
@@ -334,6 +342,7 @@ struct NetworkServiceTests {
     }
 
     // MARK: 13. downloadAudio carries the bearer
+
     //
     // Regression guard for the silent question-TTS outage: the audio routes are
     // auth-gated (require_auth_or_grace) and hard-401 with the grace flag off,
@@ -385,6 +394,63 @@ struct NetworkServiceTests {
         let refreshes = await auth.refreshCallCount()
         #expect(refreshes == 1)
     }
+
+    // MARK: 15. createSession 429 + quota body → .quotaLimitReached
+
+    //
+    // createSession previously had NO 429 handling at all — a real 429 there
+    // threw .invalidResponse unconditionally. #112 decision 2: routing it
+    // through the generic gives it the same body-discriminated parse as
+    // startQuiz/submitTextInput/submitVoiceAnswer. Pins that a quota-shaped
+    // 429 body now correctly maps to the paywall path here too.
+
+    @Test("createSession 429 with valid QuotaLimitErrorWrapper → .quotaLimitReached")
+    func createSessionQuotaLimitReached() async throws {
+        let service = makeService()
+        StubURLProtocol.handler = { _ in
+            (.make(status: 429), Data(Stubs.dailyLimitJSON.utf8))
+        }
+        defer { StubURLProtocol.handler = nil }
+
+        do {
+            _ = try await service.createSession()
+            Issue.record("Expected throw, got success")
+        } catch let error as NetworkError {
+            guard case .quotaLimitReached = error else {
+                Issue.record("Expected .quotaLimitReached, got \(error)")
+                return
+            }
+        }
+    }
+
+    // MARK: 16. createSession 429 + non-quota rate-limit body → .serverError(429, …), NOT .quotaLimitReached
+
+    //
+    // createSession's only real-world 429 is the @limiter.limit("10/minute")
+    // request rate-limit (sessions.py:75) — its body never carries a
+    // QuotaLimitError wrapper. Guards against a false-positive paywall
+    // trigger: a plain rate-limit body must fall through to .serverError,
+    // never .quotaLimitReached.
+
+    @Test("createSession 429 with non-quota rate-limit body → .serverError(429, …), not .quotaLimitReached")
+    func createSessionRateLimitDoesNotFalseTriggerPaywall() async throws {
+        let service = makeService()
+        StubURLProtocol.handler = { _ in
+            (.make(status: 429), Data(Stubs.rateLimitJSON.utf8))
+        }
+        defer { StubURLProtocol.handler = nil }
+
+        do {
+            _ = try await service.createSession()
+            Issue.record("Expected throw, got success")
+        } catch let error as NetworkError {
+            if case let .serverError(code, _) = error {
+                #expect(code == 429)
+            } else {
+                Issue.record("Expected .serverError(429, …), got \(error)")
+            }
+        }
+    }
 }
 
 // MARK: - StubAuthService
@@ -403,7 +469,7 @@ private actor StubAuthService: AuthServiceProtocol {
 
     func accessToken() async -> String? { initialToken }
 
-    func refreshedAccessToken(replacing staleToken: String) async -> String? {
+    func refreshedAccessToken(replacing _: String) async -> String? {
         refreshes += 1
         return refreshedToken
     }

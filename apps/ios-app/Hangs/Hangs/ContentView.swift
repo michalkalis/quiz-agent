@@ -12,6 +12,9 @@ struct ContentView: View {
     @EnvironmentObject var appState: AppState
     @StateObject private var viewModel: QuizViewModel
     @StateObject private var onboardingVM: OnboardingViewModel
+    // #111: owns the pushed-stack path for the root NavigationStack, replacing
+    // the old broadcast-notification + identity-reset teardown bridge.
+    @StateObject private var navModel = NavigationModel()
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var showOnboarding: Bool
     @State private var showOnboardingReplay = false
@@ -20,14 +23,6 @@ struct ContentView: View {
     /// Set while the paywall is still up so the sign-in sheet presents only
     /// after the paywall's dismissal completes (two sheets can't overlap).
     @State private var signInPromptPending = false
-    /// Identity of the root NavigationStack. Bumped when a custom pack's
-    /// "Start quiz" fires (#95): the pack flow pushes Settings → OrderPack →
-    /// OrderProgress onto this same stack, and flipping `quizState` only swaps
-    /// the stack's *root* content — the pushed chain would stay on top and hide
-    /// QuestionView. Recreating the stack drops the pushed chain; QuestionView
-    /// then mounts as the fresh root. Safe because quiz state lives in
-    /// `viewModel` (a @StateObject above the stack), not in the recreated views.
-    @State private var navStackID = UUID()
     // #108C: keeps the screen awake for the duration of an active quiz.
     // Injectable so tests assert against a spy, never the real UIApplication.
     @State private var screenAwakeWriter = ScreenAwakeWriter()
@@ -70,11 +65,22 @@ struct ContentView: View {
         showOnboardingReplay = true
     }
 
+    /// Start a quiz that plays the delivered custom pack (#95). Moved here
+    /// from SettingsView (#111): OrderPack/MyPacks are now built inside this
+    /// view's single route-destination closure below, and the
+    /// teardown that used to require a broadcast notification is now
+    /// automatic — flipping `quizState` to `.startingQuiz` clears the pushed
+    /// stack via `navModel.handleQuizStateChange` (the single `.onReceive`
+    /// teardown below), so this closure needs no notification post of its own.
+    private func playPack(_ packId: String) {
+        Task { await viewModel.startNewQuiz(packId: packId) }
+    }
+
     @ViewBuilder
     private var mainContent: some View {
         ZStack {
             // Main navigation content
-            NavigationStack {
+            NavigationStack(path: $navModel.path) {
                 Group {
                     switch viewModel.quizState {
                     case .idle:
@@ -114,11 +120,26 @@ struct ContentView: View {
                     }
                 }
                 .animation(reduceMotion ? nil : .easeInOut, value: viewModel.quizState)
+                // #111: single route table for the root stack's push chain —
+                // replaces the 4 imperative NavigationLink destinations.
+                .navigationDestination(for: AppRoute.self) { route in
+                    switch route {
+                    case .settings:
+                        SettingsView(viewModel: viewModel, onReplayOnboarding: replayOnboarding)
+                    case .orderPack:
+                        OrderPackView(service: appState.packOrderService, onPlayPack: playPack)
+                    case .myPacks:
+                        MyPacksView(service: appState.packOrderService, onPlayPack: playPack)
+                    #if DEBUG
+                        case .debugLog:
+                            DebugLogView()
+                    #endif
+                    }
+                }
             }
-            .id(navStackID)
 
             // Floating minimized quiz view overlay
-            if viewModel.isMinimized && viewModel.canMinimize {
+            if viewModel.isMinimized, viewModel.canMinimize {
                 VStack {
                     Spacer()
                     MinimizedQuizView(viewModel: viewModel)
@@ -180,12 +201,24 @@ struct ContentView: View {
             guard isPurchased else { return }
             maybeQueueSignInPrompt(afterPaywall: viewModel.showPaywall)
         }
-        // #95: a custom pack's "Start quiz" was tapped inside the pushed pack
-        // flow. Recreate the root NavigationStack so that pushed chain is torn
-        // down and the freshly started QuestionView is the visible root.
-        .onReceive(NotificationCenter.default.publisher(for: .packQuizStarted)) { _ in
-            navStackID = UUID()
+        // #111: the sole teardown path — entering `.startingQuiz` (from
+        // `.idle`, or `.error` once #110's retry transition lands) clears the
+        // pushed nav stack + the OrderProgress `isPresented` child in one
+        // step, structurally covering every `startNewQuiz` call site
+        // (voice "start", error-retry, and the button paths alike).
+        // `.onReceive` (not `.onChange`) for the same reason as the
+        // `isPurchased` bridge above: with mocked services `startNewQuiz`
+        // can race `.idle → .startingQuiz → .askingQuestion` inside a single
+        // SwiftUI render pass, and `.onChange` only diffs old/new value
+        // *across* render passes — it silently skips the transient
+        // `.startingQuiz` value and the teardown never runs. `.onReceive`
+        // subscribes to the `@Published` pipeline directly, so every
+        // intermediate value is delivered regardless of render coalescing
+        // (found via RS-pack-nav-start, #111 T4).
+        .onReceive(viewModel.$quizState) { newState in
+            navModel.handleQuizStateChange(newState)
         }
+        .environmentObject(navModel)
     }
 
     /// #58 §9: offer the contextual sign-in sheet when Premium turns on.
@@ -324,14 +357,6 @@ struct ErrorView: View {
         .padding(.horizontal, 20)
         .padding(.bottom, 20)
     }
-}
-
-extension Notification.Name {
-    /// Posted by the custom-pack "Start quiz" action (SettingsView.playPack) so
-    /// ContentView resets the root NavigationStack's identity — dropping the
-    /// pushed Settings → OrderPack → OrderProgress (or MyPacks) chain that would
-    /// otherwise cover the freshly started QuestionView (#95).
-    nonisolated static let packQuizStarted = Notification.Name("packQuizStarted")
 }
 
 #Preview {

@@ -14,7 +14,14 @@ struct OrderPackView: View {
     /// Play the delivered pack (packId). Threaded through to OrderProgressView.
     private let onPlayPack: (String) -> Void
 
-    @State private var showProgress = false
+    /// Belt-and-braces isPresented (#111 gate note 2): OrderProgress observes
+    /// this reference-typed OrderPackViewModel directly, so it can't live in
+    /// the Hashable `AppRoute` enum and stays a local `navigationDestination
+    /// (isPresented:)` push. Driving the flag from `NavigationModel` (instead
+    /// of a local `@State`) means the same teardown step that clears `path`
+    /// also collapses this child — no reliance on SwiftUI's transitive pop
+    /// when mixing `isPresented` with `NavigationStack(path:)`.
+    @EnvironmentObject var navModel: NavigationModel
 
     /// Supported order languages (wire values en/sk/cs).
     private static let languages: [(code: String, name: LocalizedStringKey)] = [
@@ -39,7 +46,7 @@ struct OrderPackView: View {
                     title: "Create pack",
                     icon: "sparkles"
                 ) {
-                    showProgress = true
+                    navModel.orderProgressPresented = true
                     Task { await viewModel.submit() }
                 }
                 .disabled(!viewModel.isValid)
@@ -52,7 +59,7 @@ struct OrderPackView: View {
         .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
         .navigationTitle("Create pack")
         .navigationBarTitleDisplayMode(.inline)
-        .navigationDestination(isPresented: $showProgress) {
+        .navigationDestination(isPresented: $navModel.orderProgressPresented) {
             OrderProgressView(viewModel: viewModel, onPlayPack: onPlayPack)
         }
     }
@@ -70,7 +77,7 @@ struct OrderPackView: View {
                         text: $viewModel.prompt,
                         axis: .vertical
                     )
-                    .lineLimit(3...8)
+                    .lineLimit(3 ... 8)
                     .font(.hangsBody(16))
                     .foregroundColor(Theme.Hangs.Colors.ink)
                     .accessibilityIdentifier("orderPack.prompt")
@@ -141,5 +148,6 @@ struct OrderPackView: View {
         NavigationStack {
             OrderPackView(service: MockPackOrderService(), onPlayPack: { _ in })
         }
+        .environmentObject(NavigationModel())
     }
 #endif

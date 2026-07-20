@@ -12,8 +12,8 @@
 
 import AuthenticationServices
 import Combine
-import SwiftUI
 import os
+import SwiftUI
 
 struct SettingsView: View {
     @ObservedObject var viewModel: QuizViewModel
@@ -246,6 +246,7 @@ struct SettingsView: View {
     }
 
     // MARK: - Session group (#68, founder decision 6 Variant A)
+
     // Four menu rows exposing the driving-critical session fields that were
     // previously code-only. Design reference: Pencil NEW_Screen/Settings (Jjcs5).
 
@@ -351,6 +352,7 @@ struct SettingsView: View {
     }
 
     // MARK: - Account group (#61 task 61.7)
+
     // Placed after audio-feedback, before about — founder decision 2026-06-29.
     // Design reference: Pencil NEW_Screen/Settings-SignedOut (taml6), Settings-SignedIn (JB9Oi),
     // Settings-DeleteConfirm (PmJ3A).
@@ -448,7 +450,7 @@ struct SettingsView: View {
         _ result: Result<ASAuthorization, Error>
     ) {
         switch result {
-        case .success(let auth):
+        case let .success(auth):
             guard let payload = AppleSignInPayload(authorization: auth) else {
                 Logger.network.warning("🔐 Apple sign-in: missing identity_token or authorization_code")
                 return
@@ -470,7 +472,7 @@ struct SettingsView: View {
                     currentTokens = KeychainTokenStore().load()
                 }
             }
-        case .failure(let error):
+        case let .failure(error):
             // User cancelled or system error — not an app error; ASAuthorizationError.canceled is common.
             Logger.network.info("🔐 Apple sign-in cancelled/failed: \(error.localizedDescription, privacy: .public)")
         }
@@ -505,7 +507,8 @@ struct SettingsView: View {
                     applicationActivities: nil
                 )
                 if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                   let root = windowScene.windows.first?.rootViewController {
+                   let root = windowScene.windows.first?.rootViewController
+                {
                     root.present(activityVC, animated: true)
                 }
             }
@@ -515,6 +518,7 @@ struct SettingsView: View {
     }
 
     // MARK: - Subscription group (#93 subscription IAP)
+
     // Proactive, discoverable paywall entry: shows the current plan state and
     // opens the existing paywall sheet (ContentView owns presentation via
     // viewModel.showPaywall). Restore purchase lives on the paywall itself,
@@ -582,6 +586,7 @@ struct SettingsView: View {
     }
 
     // MARK: - Custom packs group (#95)
+
     // Admin-gated: paste the quiz-pack-api admin key once (stored in the
     // Keychain, never in the binary — works in TestFlight). Once a key is
     // stored, the order + list links appear. This lives OUTSIDE the paywall
@@ -614,9 +619,7 @@ struct SettingsView: View {
                 if hasAdminKey {
                     hairline
 
-                    NavigationLink {
-                        OrderPackView(service: appState.packOrderService, onPlayPack: playPack)
-                    } label: {
+                    NavigationLink(value: AppRoute.orderPack) {
                         HangsConfigRow(label: "Create a pack", value: "", valueColor: Theme.Hangs.Colors.muted, showsChevron: true, action: {})
                             .allowsHitTesting(false)
                     }
@@ -624,9 +627,7 @@ struct SettingsView: View {
 
                     hairline
 
-                    NavigationLink {
-                        MyPacksView(service: appState.packOrderService, onPlayPack: playPack)
-                    } label: {
+                    NavigationLink(value: AppRoute.myPacks) {
                         HangsConfigRow(label: "My packs", value: "", valueColor: Theme.Hangs.Colors.muted, showsChevron: true, action: {})
                             .allowsHitTesting(false)
                     }
@@ -634,18 +635,6 @@ struct SettingsView: View {
                 }
             }
         }
-    }
-
-    /// Start a quiz that plays the delivered custom pack. Flipping the quiz state
-    /// swaps the root NavigationStack content to QuestionView, but the pushed
-    /// Settings → OrderPack → OrderProgress (or MyPacks) chain lives on the same
-    /// NavigationStack and would otherwise stay on top, hiding QuestionView. So we
-    /// post `.packQuizStarted`, which ContentView observes to reset the root
-    /// NavigationStack's identity — popping the whole pushed chain — before the
-    /// quiz renders (#95 nav fix).
-    private func playPack(_ packId: String) {
-        NotificationCenter.default.post(name: .packQuizStarted, object: nil)
-        Task { await viewModel.startNewQuiz(packId: packId) }
     }
 
     /// Release-visible readout of the voice-command recognizer state (#96 P2):
@@ -676,9 +665,7 @@ struct SettingsView: View {
     #if DEBUG
         private var developerGroup: some View {
             groupSection(label: "developer", color: Theme.Hangs.Colors.blue) {
-                NavigationLink {
-                    DebugLogView()
-                } label: {
+                NavigationLink(value: AppRoute.debugLog) {
                     HangsConfigRow(
                         label: "View Logs",
                         value: "OSLogStore",
@@ -734,4 +721,3 @@ struct SettingsView: View {
 #endif
 
 // MARK: - Private helpers
-

@@ -65,6 +65,12 @@ Consequences: (a) the €4.99 paywall is effectively **off** during TestFlight �
 ### 3.6 Sandbox-row audit / quarantine (prod)
 No local column exists, so classification is an out-of-band RC cross-reference: one-off script iterates prod `subscription` + RC-origin `credit_ledger` rows (`rc_event_id`/`store_txn_id` non-null), calls RC v1 `GET /subscribers/{app_user_id}` per `account_id`, matches on `rc_original_txn_id`/`original_transaction_id`, classifies via `is_sandbox`. Prod is founder-only, so the expected outcome is **all rows sandbox** → dry-run report → `pg_dump` backup → delete sandbox-origin subscription rows + their ledger grants/clawbacks → stamp any survivors `environment='PRODUCTION'`. Agent-autonomous per the auth/monetization delegation; dry-run output goes in the run report.
 
+**Quarantine executed 2026-07-20 (founder approved in-session).** Prod audit result: `subscription` = 0 rows; `credit_ledger` = 1 row total, the sandbox pack grant below — deleted. Full pre-delete backup (restorable by re-INSERT):
+
+```
+credit_ledger: id=645b3352-e89b-4abb-915c-e2e225434ce8 · account_id=ce689596-dca2-411c-a0b0-435ea0102d0d · delta=100 · kind=grant · reason=pack · store_txn_id=2000001203709008 · rc_event_id=EA0550A7-1A20-4F8C-B802-3A0716EF9FD7 · environment=NULL · created_at=2026-07-12 19:58:20.346971+00
+```
+
 ### 3.7 RC dashboard checklist — ✅ DONE 2026-07-17 (agent-driven via Playwright + founder login)
 1. ✅ Webhooks accessible (plan OK).
 2. ✅ Existing webhook "quiz-agent backend" → **Production only** (persisted, verified after reload).
@@ -107,7 +113,7 @@ Order matters: task 1 alone closes the prod bypass/pollution immediately (the §
 
 - A `SANDBOX` RC event (webhook and REST-sync) does **not** grant entitlement or credits on the prod backend — covered by a test that feeds a sandbox-tagged event and asserts no prod write.
 - The staging backend + DB accept sandbox purchases and gate correctly, so the founder can validate the real purchase→entitlement flow end-to-end from a TestFlight build without touching prod data.
-- Prod `subscription`/`credit_ledger` audited clean of sandbox rows.
+- ✅ Prod `subscription`/`credit_ledger` audited clean of sandbox rows — 2026-07-20: `subscription` 0 rows, `credit_ledger` 0 rows after the founder-approved delete of the single sandbox grant (backup in §3.6).
 
 ## 6. Notes
 

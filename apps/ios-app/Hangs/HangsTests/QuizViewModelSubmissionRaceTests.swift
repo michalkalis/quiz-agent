@@ -34,7 +34,7 @@ private func makeViewModelWithSTT()
         networkService: mockNetwork,
         audioService: mockAudio,
         persistenceStore: mockPersistence,
-        silenceDetectionService: nil,
+        silenceDetectionService: MockSilenceDetectionService(),
         sttService: mockSTT
     )
     viewModel.currentSession = Fixtures.makeActiveSession()

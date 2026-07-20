@@ -62,9 +62,9 @@ extension QuizViewModel {
             await audioService.prepareForRecording()
             try audioService.startRecording()
 
-            if isAutoRecording, let service = silenceDetectionService {
+            if isAutoRecording {
                 speechDetectedDuringAutoRecord = false
-                startSilenceDetection(service: service)
+                startSilenceDetection(service: silenceDetectionService)
             }
 
             startAutoStopRecordingTimer()

@@ -63,13 +63,22 @@ extension Snapshotting where Value: Any, Format == String {
                 options: .regularExpression
             )
 
-            // 6. Truncate at the clockTimer section which dumps the live RunLoop
+            // 6. Private-type metadata contexts carry an ASLR-dependent address:
+            //    "(unknown context at $109915fa4)" — e.g. SilenceDetectionService's
+            //    private State enum, dumped since #115 made the service non-optional.
+            let noCtx = noTI.replacingOccurrences(
+                of: #"\(unknown context at \$[0-9a-fA-F]+\)"#,
+                with: "(unknown context at $<addr>)",
+                options: .regularExpression
+            )
+
+            // 7. Truncate at the clockTimer section which dumps the live RunLoop
             //    (CFBasicHash / CFRunLoopSource entries with non-deterministic ordering
             //    and mach port numbers). Everything meaningful for structural assertions
             //    appears before this section.
-            let lines = noTI.components(separatedBy: "\n")
+            let lines = noCtx.components(separatedBy: "\n")
             let cutIndex = lines.firstIndex(where: { $0.contains("clockTimer") })
-            let trimmed = cutIndex.map { lines[..<$0].joined(separator: "\n") } ?? noTI
+            let trimmed = cutIndex.map { lines[..<$0].joined(separator: "\n") } ?? noCtx
 
             return trimmed
         }

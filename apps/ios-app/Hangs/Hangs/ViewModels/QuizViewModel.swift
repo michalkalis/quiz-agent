@@ -431,7 +431,7 @@ final class QuizViewModel: ObservableObject {
     let networkService: NetworkServiceProtocol
     let audioService: AudioServiceProtocol
     let persistenceStore: PersistenceStoreProtocol
-    let silenceDetectionService: SilenceDetectionServiceProtocol?
+    let silenceDetectionService: SilenceDetectionServiceProtocol
     let sttService: ElevenLabsSTTServiceProtocol?
 
     /// Reads RevenueCat's local cache for whether the customer holds the
@@ -489,7 +489,7 @@ final class QuizViewModel: ObservableObject {
         networkService: NetworkServiceProtocol,
         audioService: AudioServiceProtocol,
         persistenceStore: PersistenceStoreProtocol,
-        silenceDetectionService: SilenceDetectionServiceProtocol? = nil,
+        silenceDetectionService: SilenceDetectionServiceProtocol = SilenceDetectionService(),
         sttService: ElevenLabsSTTServiceProtocol? = nil,
         isLocallyEntitled: @escaping @MainActor () -> Bool = { false }
     ) {
@@ -505,13 +505,11 @@ final class QuizViewModel: ObservableObject {
         // catches whatever the service resolved before this view-model existed;
         // the stream then keeps it in sync — including the async `.ready` flip
         // when the en-US model finishes installing after launch.
-        commandAvailability = silenceDetectionService?.commandAvailability ?? .unknown
-        if let silence = silenceDetectionService {
-            commandAvailabilityTask = Task { [weak self] in
-                for await availability in silence.commandAvailabilityUpdates {
-                    guard let self, !Task.isCancelled else { break }
-                    self.commandAvailability = availability
-                }
+        commandAvailability = silenceDetectionService.commandAvailability
+        commandAvailabilityTask = Task { [weak self, silence = silenceDetectionService] in
+            for await availability in silence.commandAvailabilityUpdates {
+                guard let self, !Task.isCancelled else { break }
+                self.commandAvailability = availability
             }
         }
 
@@ -1240,7 +1238,7 @@ final class QuizViewModel: ObservableObject {
     func startRecordingOrTimer() {
         guard quizState == .askingQuestion else { return }
 
-        if settings.autoRecordEnabled && silenceDetectionService != nil && !isRerecording {
+        if settings.autoRecordEnabled && !isRerecording {
             // Auto-record path: thinking time countdown → auto-start recording
             startThinkingTimeCountdown()
         } else {
@@ -1512,11 +1510,6 @@ final class QuizViewModel: ObservableObject {
         persistenceStore.clearHistory()
 
         Logger.persistence.info("🗑️ Question history reset by user")
-    }
-
-    /// Whether on-device silence detection / auto-record is available (iOS 26+).
-    var silenceDetectionAvailable: Bool {
-        silenceDetectionService != nil
     }
 }
 

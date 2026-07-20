@@ -11,7 +11,6 @@ import os
 // MARK: - Audio Playback & Silence Detection
 
 extension QuizViewModel {
-
     /// Fail-loud reporter for TTS audio failures: the quiz deliberately keeps
     /// going without audio, which makes regressions (e.g. the missing bearer on
     /// audio downloads → hard 401) silent. Mirror every real failure to Sentry
@@ -21,14 +20,14 @@ extension QuizViewModel {
         if error is CancellationError || (error as? URLError)?.code == .cancelled { return }
         SentryLog.error("TTS audio failed", category: .audio, attributes: [
             "kind": kind,
-            "error": String(describing: error)
+            "error": String(describing: error),
         ])
     }
 
     /// Start listening for silence events and barge-in during question playback.
     /// Safe to call multiple times (the service itself no-ops if already listening).
     func startSilenceDetectionListening() async {
-        guard let service = silenceDetectionService else { return }
+        let service = silenceDetectionService
 
         // Backgrounded → never arm the input tap. This is the choke point for
         // every direct caller (e.g. the post-TTS tail of playQuestionAudio,
@@ -57,7 +56,7 @@ extension QuizViewModel {
     func stopSilenceDetectionListening() {
         taskBag.cancel(.bargeIn)
         stopCommandConsumer()
-        silenceDetectionService?.stopListening()
+        silenceDetectionService.stopListening()
     }
 
     /// Handle barge-in: user spoke during TTS playback on external audio route.
@@ -71,7 +70,7 @@ extension QuizViewModel {
 
         // 2. Clear barge-in activation so a re-fire isn't triggered by the
         //    teardown tail of TTS audio.
-        silenceDetectionService?.setTTSPlaybackActive(false)
+        silenceDetectionService.setTTSPlaybackActive(false)
 
         // 3. Wait for audio hardware to settle
         try? await Task.sleep(nanoseconds: 500_000_000)
@@ -95,7 +94,7 @@ extension QuizViewModel {
             await startSilenceDetectionListening()
             guard quizState == .askingQuestion else { return }
 
-            if settings.autoRecordEnabled && silenceDetectionService != nil && !isRerecording {
+            if settings.autoRecordEnabled, !isRerecording {
                 startThinkingTimeCountdown()
             } else {
                 startAnswerTimer()
@@ -125,7 +124,7 @@ extension QuizViewModel {
         // After TTS finishes (or was interrupted by barge-in), choose next path
         guard quizState == .askingQuestion else { return }
 
-        if settings.autoRecordEnabled && silenceDetectionService != nil && !isRerecording {
+        if settings.autoRecordEnabled, !isRerecording {
             // Auto-record path: thinking time countdown → auto-start recording
             startThinkingTimeCountdown()
         } else {
@@ -210,7 +209,7 @@ extension QuizViewModel {
         } catch {
             Logger.audio.warning("⚠️ Failed to play feedback audio: \(error, privacy: .public)")
             Self.reportAudioFailure(error, kind: "feedback")
-            return 3.0  // Default fallback duration
+            return 3.0 // Default fallback duration
         }
     }
 
@@ -221,7 +220,7 @@ extension QuizViewModel {
             return duration
         } catch {
             Logger.audio.warning("⚠️ Failed to play base64 feedback audio: \(error, privacy: .public)")
-            return 3.0  // Default fallback duration
+            return 3.0 // Default fallback duration
         }
     }
 

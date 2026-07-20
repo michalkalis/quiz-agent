@@ -41,7 +41,7 @@
             network: NetworkServiceProtocol,
             audio: AudioServiceProtocol,
             persistence: PersistenceStoreProtocol,
-            silence: SilenceDetectionServiceProtocol?,
+            silence: SilenceDetectionServiceProtocol,
             stt: ElevenLabsSTTServiceProtocol?
         ) {
             let network = MockNetworkService()
@@ -82,6 +82,12 @@
 
             var seededSettings = QuizSettings.default
             seededSettings.autoConfirmEnabled = false
+            // #115: the silence service is non-optional now, so the auto-record
+            // gate `autoRecordEnabled && service != nil` would flip ON under UI
+            // test (it was OFF before purely because the service was nil).
+            // Disable it explicitly — UI tests drive recording via the answer
+            // timer + injected STT events, exactly as before the de-opt.
+            seededSettings.autoRecordEnabled = false
             // Short answer timer so recording auto-starts within ~1s (no mic button in redesigned UI).
             if CommandLine.arguments.contains("--ui-test-mcq") {
                 seededSettings.answerTimeLimit = 1
@@ -91,8 +97,15 @@
             let stt = MockElevenLabsSTTService()
             mockSTT = stt
 
+            // Silence mock seeded `.unavailable`: keeps the command-listener hint
+            // (and CmdListenBar) hidden exactly as the old `nil` service did — a
+            // default `.ready` mock would arm the listener window and render the
+            // bar across every `--ui-test` scenario.
+            let silence = MockSilenceDetectionService()
+            silence.commandAvailability = .unavailable(reason: "UI-test mock")
+
             Logger.quiz.info("🧪 UITestSupport: mock services wired (autoConfirmEnabled=false)")
-            return (network, audio, persistence, nil, stt)
+            return (network, audio, persistence, silence, stt)
         }
 
         /// Inject an arbitrary STT event into the live mock STT.

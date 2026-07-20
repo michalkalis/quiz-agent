@@ -15,7 +15,7 @@ final class AppState: ObservableObject {
     let networkService: NetworkServiceProtocol
     let audioService: AudioServiceProtocol
     let persistenceStore: PersistenceStoreProtocol
-    let silenceDetectionService: SilenceDetectionServiceProtocol?
+    let silenceDetectionService: SilenceDetectionServiceProtocol
     let sttService: ElevenLabsSTTServiceProtocol?
     let storeManager: StoreManager
     /// The auth service, exposed so SettingsView can drive Apple sign-in, sign-out, and account actions.
@@ -76,29 +76,33 @@ final class AppState: ObservableObject {
         self.storeManager = StoreManager()
         packOrderService = PackOrderService(authService: authService)
 
-        // Silence detection / barge-in require iOS 26+ SpeechDetector.
-        var silence: SilenceDetectionServiceProtocol? = nil
+        // Silence detection / barge-in (iOS 26 SpeechDetector; min target is 26.0).
+        let resolved: SilenceDetectionServiceProtocol
         #if DEBUG
             // `--ui-test-voice-ready`: inject a ready mock recognizer so the on-screen
             // "LISTENING FOR COMMANDS" indicator (#96 P2) can be screenshot-verified on
             // the Simulator, where the real SpeechAnalyzer has no installed locales and
             // reports `.unavailable` (which correctly suppresses the cue).
             if CommandLine.arguments.contains("--ui-test-voice-ready") {
-                silence = MockSilenceDetectionService()
+                resolved = MockSilenceDetectionService()
+            } else {
+                let silenceService = SilenceDetectionService()
+                // One-time launch authorization + prepare (#77 device fix, #105 auth
+                // gap): request speech-recognition permission, then — if granted —
+                // check/download the on-device en-US SpeechTranscriber model assets.
+                // Without them the command transcriber never yields a result on a
+                // real device. Non-blocking; any failure flips `commandAvailability`
+                // (fail loud).
+                Task { await silenceService.requestAuthorizationAndPrepareAssets() }
+                resolved = silenceService
             }
-        #endif
-        if silence == nil, #available(iOS 26, *) {
+        #else
             let silenceService = SilenceDetectionService()
-            silence = silenceService
-            // One-time launch authorization + prepare (#77 device fix, #105 auth
-            // gap): request speech-recognition permission, then — if granted —
-            // check/download the on-device en-US SpeechTranscriber model assets.
-            // Without them the command transcriber never yields a result on a
-            // real device. Non-blocking; any failure flips `commandAvailability`
-            // (fail loud).
+            // One-time launch authorization + prepare (#77 / #105) — see DEBUG branch.
             Task { await silenceService.requestAuthorizationAndPrepareAssets() }
-        }
-        silenceDetectionService = silence
+            resolved = silenceService
+        #endif
+        silenceDetectionService = resolved
 
         // ElevenLabs streaming STT (controlled by feature flag)
         if Config.useElevenLabsSTT {
@@ -152,8 +156,7 @@ final class AppState: ObservableObject {
 
         Logger.quiz.info("🚀 AppState initialized")
         Logger.quiz.info("📍 API Base URL: \(Config.apiBaseURL, privacy: .public)")
-        let silenceAvailable = silenceDetectionService != nil ? "available" : "unavailable (requires iOS 26+)"
-        Logger.quiz.info("🔇 Silence detection: \(silenceAvailable)")
+        Logger.quiz.info("🔇 Silence detection: available")
         let sttEnabled = sttService != nil ? "enabled (ElevenLabs)" : "disabled (using Whisper)"
         Logger.quiz.info("🎙️ Streaming STT: \(sttEnabled)")
     }
@@ -163,7 +166,7 @@ final class AppState: ObservableObject {
         networkService: NetworkServiceProtocol,
         audioService: AudioServiceProtocol,
         persistenceStore: PersistenceStoreProtocol,
-        silenceDetectionService: SilenceDetectionServiceProtocol? = nil,
+        silenceDetectionService: SilenceDetectionServiceProtocol = SilenceDetectionService(),
         sttService: ElevenLabsSTTServiceProtocol? = nil,
         storeManager: StoreManager? = nil,
         authService: AuthService? = nil,

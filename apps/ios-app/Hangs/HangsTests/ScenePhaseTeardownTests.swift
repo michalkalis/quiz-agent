@@ -24,8 +24,8 @@ import Testing
 
 @MainActor
 private func makeScenePhaseVM(
-    silence: MockSilenceDetectionService? = MockSilenceDetectionService()
-) -> (QuizViewModel, MockSilenceDetectionService?, MockAudioService) {
+    silence: MockSilenceDetectionService = MockSilenceDetectionService()
+) -> (QuizViewModel, MockSilenceDetectionService, MockAudioService) {
     let audio = MockAudioService()
     let vm = QuizViewModel(
         networkService: Fixtures.makeFullMockNetwork(),
@@ -65,7 +65,7 @@ struct ScenePhaseTeardownTests {
     @Test("background on idle Home stops the listener AND releases the audio session")
     func backgroundOnIdleStopsListenerAndDeactivates() async {
         let (vm, silence, audio) = makeScenePhaseVM()
-        let mock = try! #require(silence)
+        let mock = silence
 
         vm.quizState = .idle
         await vm.startSilenceDetectionListening() // Home window armed
@@ -80,7 +80,7 @@ struct ScenePhaseTeardownTests {
     @Test("background mid-question stops the listener but keeps the session (quiz not idle)")
     func backgroundMidQuestionKeepsSession() async {
         let (vm, silence, audio) = makeScenePhaseVM()
-        let mock = try! #require(silence)
+        let mock = silence
 
         vm.quizState = .askingQuestion
         await vm.startSilenceDetectionListening()
@@ -148,7 +148,7 @@ struct ScenePhaseTeardownTests {
     func activeReArmsListener() async {
         await withMainSerialExecutor {
             let (vm, silence, _) = makeScenePhaseVM()
-            let mock = try! #require(silence)
+            let mock = silence
 
             vm.quizState = .askingQuestion
             await vm.startSilenceDetectionListening()
@@ -165,7 +165,7 @@ struct ScenePhaseTeardownTests {
     @Test("backgrounded: the command window is nil and no arming path can re-open the mic")
     func backgroundBlocksReArm() async {
         let (vm, silence, _) = makeScenePhaseVM()
-        let mock = try! #require(silence)
+        let mock = silence
 
         vm.quizState = .askingQuestion
         vm.handleScenePhase(.background)

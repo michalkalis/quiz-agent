@@ -1,0 +1,9 @@
+//
+// Tests-Debug.xcconfig
+// Base config for the test targets (HangsTests / HangsUITests), Debug builds.
+// Shared carries Swift 6 + deployment target (single source of truth);
+// Debug carries build-mode settings (ENABLE_TESTABILITY, -Onone).
+//
+
+#include "Shared.xcconfig"
+#include "Debug.xcconfig"

@@ -23,7 +23,6 @@ import Foundation
 import os
 
 extension QuizViewModel {
-
     // MARK: - Window
 
     /// The command screen active for the current quiz state, or `nil` when the
@@ -74,10 +73,8 @@ extension QuizViewModel {
     }
 
     /// Arm or tear down the command/VAD listener to match the current window.
-    /// Idempotent (the underlying `start/stopListening` are). A `nil` service
-    /// (pre-iOS-26 / no recognizer) is a no-op — the app stays button-only.
+    /// Idempotent (the underlying `start/stopListening` are).
     func syncCommandListenerWindow() async {
-        guard silenceDetectionService != nil else { return } // degrade to buttons
         if currentCommandScreen != nil {
             await startSilenceDetectionListening()
         } else {
@@ -99,7 +96,7 @@ extension QuizViewModel {
     /// under the same TaskKey cancels the previous consumer). Drives the capture
     /// phase to `.armed → .listening`.
     func startCommandConsumer() {
-        guard let service = silenceDetectionService else { return }
+        let service = silenceDetectionService
         applyCaptureEvent(.arm)
         applyCaptureEvent(.listen)
 
@@ -163,7 +160,6 @@ extension QuizViewModel {
     func routeCommand(_ command: VoiceCommand) {
         guard let screen = currentCommandScreen else { return }
         switch (screen, command) {
-
         // Home — spoken "start" begins the quiz.
         case (.home, .start):
             Task { [weak self] in await self?.startNewQuiz() }
@@ -187,8 +183,10 @@ extension QuizViewModel {
         // Confirmation sheet — on top of the 10 s auto-confirm + buttons.
         case (.confirmation, .ok):
             Task { [weak self] in await self?.confirmAnswer() }
+
         case (.confirmation, .again):
             rerecordAnswer()
+
         case (.confirmation, .stop):
             cancelProcessing()
 

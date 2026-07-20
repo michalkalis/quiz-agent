@@ -472,7 +472,7 @@ struct QuizViewModelInterruptionTests {
             networkService: Fixtures.makeFullMockNetwork(),
             audioService: mockAudio,
             persistenceStore: MockPersistenceStore(),
-            silenceDetectionService: nil,
+            silenceDetectionService: MockSilenceDetectionService(),
             sttService: nil
         )
         viewModel.currentSession = Fixtures.makeActiveSession()

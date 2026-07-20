@@ -51,6 +51,8 @@
 		D90E51253B87EF7A09FAB916 /* Release-Prod.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Release-Prod.xcconfig"; path = "Configuration/Release-Prod.xcconfig"; sourceTree = "<group>"; };
 		F6DEB98440799D43D19E4E03 /* Debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Configuration/Debug.xcconfig; sourceTree = "<group>"; };
 		F988A1A2EBD7DC5DFBCF64BA /* Staging.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Staging.xcconfig; path = Configuration/Staging.xcconfig; sourceTree = "<group>"; };
+		A115C0DE00000000000000D1 /* Tests-Debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Tests-Debug.xcconfig"; path = "Configuration/Tests-Debug.xcconfig"; sourceTree = "<group>"; };
+		A115C0DE00000000000000E1 /* Tests-Release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Tests-Release.xcconfig"; path = "Configuration/Tests-Release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -154,6 +156,8 @@
 				D90E51253B87EF7A09FAB916 /* Release-Prod.xcconfig */,
 				09E8127AE5281D6FC0AA99B3 /* Debug-Staging.xcconfig */,
 				287BF2FBC5D7927FE17D0B69 /* Release-Staging.xcconfig */,
+				A115C0DE00000000000000D1 /* Tests-Debug.xcconfig */,
+				A115C0DE00000000000000E1 /* Tests-Release.xcconfig */,
 			);
 			name = Configuration;
 			sourceTree = "<group>";
@@ -410,13 +414,12 @@
 		};
 		5090EC612EFB1A4F004DB170 /* Debug-Local */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = F6DEB98440799D43D19E4E03 /* Debug.xcconfig */;
+			baseConfigurationReference = A115C0DE00000000000000D1 /* Tests-Debug.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.missinghue.hangsTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -424,7 +427,6 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Hangs.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Hangs";
 			};
@@ -432,13 +434,12 @@
 		};
 		5090EC622EFB1A4F004DB170 /* Release-Local */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = D7DFEF43B679028CE5922C00 /* Release.xcconfig */;
+			baseConfigurationReference = A115C0DE00000000000000E1 /* Tests-Release.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.missinghue.hangsTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -446,7 +447,6 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Hangs.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Hangs";
 			};
@@ -454,13 +454,12 @@
 		};
 		5090EC632EFB1A4F004DB170 /* Debug-Prod */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = F6DEB98440799D43D19E4E03 /* Debug.xcconfig */;
+			baseConfigurationReference = A115C0DE00000000000000D1 /* Tests-Debug.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.missinghue.hangsTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -468,7 +467,6 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Hangs.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Hangs";
 			};
@@ -476,13 +474,12 @@
 		};
 		5090EC642EFB1A4F004DB170 /* Release-Prod */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = D7DFEF43B679028CE5922C00 /* Release.xcconfig */;
+			baseConfigurationReference = A115C0DE00000000000000E1 /* Tests-Release.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.missinghue.hangsTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -490,7 +487,6 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Hangs.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Hangs";
 			};
@@ -498,13 +494,12 @@
 		};
 		35B898FA85F6BABCF2E3FC1C /* Debug-Staging */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = F6DEB98440799D43D19E4E03 /* Debug.xcconfig */;
+			baseConfigurationReference = A115C0DE00000000000000D1 /* Tests-Debug.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.missinghue.hangsTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -512,7 +507,6 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Hangs.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Hangs";
 			};
@@ -520,13 +514,12 @@
 		};
 		65C2B1FF87E90E684587FA91 /* Release-Staging */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = D7DFEF43B679028CE5922C00 /* Release.xcconfig */;
+			baseConfigurationReference = A115C0DE00000000000000E1 /* Tests-Release.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.missinghue.hangsTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -534,7 +527,6 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Hangs.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Hangs";
 			};
@@ -542,12 +534,11 @@
 		};
 		5090EC652EFB1A4F004DB170 /* Debug-Local */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = F6DEB98440799D43D19E4E03 /* Debug.xcconfig */;
+			baseConfigurationReference = A115C0DE00000000000000D1 /* Tests-Debug.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.missinghue.hangsUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -555,7 +546,6 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = Hangs;
 			};
@@ -563,12 +553,11 @@
 		};
 		5090EC662EFB1A4F004DB170 /* Release-Local */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = D7DFEF43B679028CE5922C00 /* Release.xcconfig */;
+			baseConfigurationReference = A115C0DE00000000000000E1 /* Tests-Release.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.missinghue.hangsUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -576,7 +565,6 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = Hangs;
 			};
@@ -584,12 +572,11 @@
 		};
 		5090EC672EFB1A4F004DB170 /* Debug-Prod */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = F6DEB98440799D43D19E4E03 /* Debug.xcconfig */;
+			baseConfigurationReference = A115C0DE00000000000000D1 /* Tests-Debug.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.missinghue.hangsUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -597,7 +584,6 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = Hangs;
 			};
@@ -605,12 +591,11 @@
 		};
 		5090EC682EFB1A4F004DB170 /* Release-Prod */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = D7DFEF43B679028CE5922C00 /* Release.xcconfig */;
+			baseConfigurationReference = A115C0DE00000000000000E1 /* Tests-Release.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.missinghue.hangsUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -618,7 +603,6 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = Hangs;
 			};
@@ -626,12 +610,11 @@
 		};
 		2331779A1C5B6E4C5E74EDE4 /* Debug-Staging */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = F6DEB98440799D43D19E4E03 /* Debug.xcconfig */;
+			baseConfigurationReference = A115C0DE00000000000000D1 /* Tests-Debug.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.missinghue.hangsUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -639,7 +622,6 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = Hangs;
 			};
@@ -647,12 +629,11 @@
 		};
 		D496A1610C5D4CAD124444C8 /* Release-Staging */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = D7DFEF43B679028CE5922C00 /* Release.xcconfig */;
+			baseConfigurationReference = A115C0DE00000000000000E1 /* Tests-Release.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.missinghue.hangsUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -660,7 +641,6 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = Hangs;
 			};

@@ -18,16 +18,16 @@
 //      manual mic-button flow working, no crash.
 //
 
-import Foundation
-import Testing
 import ConcurrencyExtras
+import Foundation
 @testable import Hangs
+import Testing
 
 @MainActor
 private func makeCommandVM(
-    silence: MockSilenceDetectionService? = MockSilenceDetectionService(),
+    silence: MockSilenceDetectionService = MockSilenceDetectionService(),
     stt: MockElevenLabsSTTService? = nil
-) -> (QuizViewModel, MockSilenceDetectionService?, MockAudioService) {
+) -> (QuizViewModel, MockSilenceDetectionService, MockAudioService) {
     let audio = MockAudioService()
     let vm = QuizViewModel(
         networkService: Fixtures.makeFullMockNetwork(),
@@ -46,7 +46,7 @@ private func makeCommandVM(
 @MainActor
 private func waitUntil(
     _ predicate: @MainActor () -> Bool,
-    timeoutMillis: Int = 5_000,
+    timeoutMillis: Int = 5000,
     _ comment: Comment? = nil,
     sourceLocation: SourceLocation = #_sourceLocation
 ) async {
@@ -74,7 +74,6 @@ private func makeResultState() -> QuizState {
 @Suite("Command listener — window + consumer + defensive fallback")
 @MainActor
 struct CommandListenerTests {
-
     // MARK: - Window mapping
 
     @Test("currentCommandScreen maps each listening state, nil elsewhere")
@@ -120,7 +119,7 @@ struct CommandListenerTests {
     @Test("syncCommandListenerWindow arms on a listening screen and tears down otherwise")
     func syncArmsAndTearsDown() async {
         let (vm, silence, _) = makeCommandVM()
-        let mock = try! #require(silence)
+        let mock = silence
 
         vm.quizState = .askingQuestion
         await vm.syncCommandListenerWindow()
@@ -140,7 +139,7 @@ struct CommandListenerTests {
     @Test("syncCommandListenerWindow does NOT arm during TTS")
     func noArmDuringTTS() async {
         let (vm, silence, _) = makeCommandVM()
-        let mock = try! #require(silence)
+        let mock = silence
 
         vm.quizState = .askingQuestion
         vm.isPlayingQuestionTTS = true
@@ -151,7 +150,7 @@ struct CommandListenerTests {
     @Test("entering .recording tears down the listener (never both mic-command + answer)")
     func recordingTearsDownListener() async {
         let (vm, silence, _) = makeCommandVM()
-        let mock = try! #require(silence)
+        let mock = silence
 
         vm.quizState = .askingQuestion
         await vm.startSilenceDetectionListening()
@@ -169,7 +168,7 @@ struct CommandListenerTests {
     func consumerRoutesRecognizedCommand() async {
         await withMainSerialExecutor {
             let (vm, silence, _) = makeCommandVM()
-            let mock = try! #require(silence)
+            let mock = silence
 
             var recognized: [VoiceCommand] = []
             vm.onCommandRecognized = { recognized.append($0) }
@@ -188,7 +187,7 @@ struct CommandListenerTests {
     func consumerScreenScoping() async {
         await withMainSerialExecutor {
             let (vm, silence, _) = makeCommandVM()
-            let mock = try! #require(silence)
+            let mock = silence
 
             var recognized: [VoiceCommand] = []
             vm.onCommandRecognized = { recognized.append($0) }
@@ -198,7 +197,9 @@ struct CommandListenerTests {
             await vm.startSilenceDetectionListening()
             mock.simulateCommandTranscript("next")
             // Give the consumer a chance to (not) fire.
-            for _ in 0..<20 { await Task.yield() }
+            for _ in 0 ..< 20 {
+                await Task.yield()
+            }
             #expect(recognized.isEmpty, "‘next’ must not match on the question screen")
 
             // On the result screen, "next" matches.
@@ -213,7 +214,7 @@ struct CommandListenerTests {
     func consumerIgnoresNonCommand() async {
         await withMainSerialExecutor {
             let (vm, silence, _) = makeCommandVM()
-            let mock = try! #require(silence)
+            let mock = silence
 
             var recognized: [VoiceCommand] = []
             vm.onCommandRecognized = { recognized.append($0) }
@@ -221,7 +222,9 @@ struct CommandListenerTests {
             vm.quizState = .askingQuestion
             await vm.startSilenceDetectionListening()
             mock.simulateCommandTranscript("what is the capital of france")
-            for _ in 0..<20 { await Task.yield() }
+            for _ in 0 ..< 20 {
+                await Task.yield()
+            }
             #expect(recognized.isEmpty)
         }
     }
@@ -244,7 +247,7 @@ struct CommandListenerTests {
     @Test("a failed recognizer setup leaves button-only mode: no crash, buttons work")
     func failedSetupDegradesToButtons() async {
         let (vm, silence, audio) = makeCommandVM()
-        let mock = try! #require(silence)
+        let mock = silence
         mock.shouldFailSetup = true
 
         vm.quizState = .askingQuestion
@@ -254,19 +257,6 @@ struct CommandListenerTests {
         #expect(mock.startListeningCallCount >= 1, "setup was attempted")
 
         // The manual mic button still works (batch path — no STT service).
-        await vm.startRecording()
-        #expect(vm.quizState == .recording)
-        #expect(audio.isRecording == true)
-    }
-
-    @Test("a nil recognizer service is a no-op; the manual mic button still works")
-    func nilServiceIsButtonOnly() async {
-        let (vm, _, audio) = makeCommandVM(silence: nil)
-
-        vm.quizState = .askingQuestion
-        await vm.syncCommandListenerWindow() // must not crash
-        #expect(vm.currentCommandScreen == .question) // window logic still computes
-
         await vm.startRecording()
         #expect(vm.quizState == .recording)
         #expect(audio.isRecording == true)

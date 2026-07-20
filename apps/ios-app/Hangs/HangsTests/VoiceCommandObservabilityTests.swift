@@ -19,8 +19,8 @@ import Testing
 
 @MainActor
 private func makeVM(
-    silence: MockSilenceDetectionService? = MockSilenceDetectionService()
-) -> (QuizViewModel, MockSilenceDetectionService?, MockAudioService) {
+    silence: MockSilenceDetectionService = MockSilenceDetectionService()
+) -> (QuizViewModel, MockSilenceDetectionService, MockAudioService) {
     let audio = MockAudioService()
     let vm = QuizViewModel(
         networkService: Fixtures.makeFullMockNetwork(),
@@ -97,7 +97,7 @@ struct VoiceCommandObservabilityTests {
     @Test("indicator stays hidden when the recognizer is unavailable (never lies)")
     func hintHiddenWhenRecognizerUnavailable() async {
         let (vm, silence, _) = makeVM()
-        let mock = try! #require(silence)
+        let mock = silence
         mock.commandAvailability = .unavailable(reason: "assets missing")
         // Availability now mirrors through an async stream — wait for the VM to
         // observe it before asserting on the derived hint.
@@ -121,7 +121,7 @@ struct VoiceCommandObservabilityTests {
     @Test("a mid-session .ready flip updates the observed availability and reveals the hint")
     func availabilityReadyFlipRevealsHint() async {
         let (vm, silence, _) = makeVM()
-        let mock = try! #require(silence)
+        let mock = silence
 
         // Fresh-install: still installing → listener arms, indicator hidden.
         mock.commandAvailability = .installingAssets
@@ -159,7 +159,7 @@ struct VoiceCommandObservabilityTests {
     @Test("disabling the toggle tears down an already-armed listener")
     func toggleTearsDownArmed() async {
         let (vm, silence, _) = makeVM()
-        let mock = try! #require(silence)
+        let mock = silence
 
         vm.quizState = .askingQuestion
         await vm.syncCommandListenerWindow()
@@ -187,7 +187,7 @@ struct VoiceCommandObservabilityTests {
     func lastRecognizedCommandRecorded() async {
         await withMainSerialExecutor {
             let (vm, silence, _) = makeVM()
-            let mock = try! #require(silence)
+            let mock = silence
             #expect(vm.lastRecognizedCommand == nil)
 
             vm.quizState = .idle // Home — spoken "start" is valid

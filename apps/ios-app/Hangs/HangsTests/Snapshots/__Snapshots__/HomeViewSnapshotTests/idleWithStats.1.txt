@@ -287,23 +287,87 @@
           - totalAnswered: 0
           - totalQuizzes: 0
         - signInPromptShownCount: 0
-      - silenceDetectionService: nil
+      ▿ silenceDetectionService: Hangs.SilenceDetectionService #7
+        ▿ silenceEvents: Swift.AsyncStream<Hangs.SilenceEvent>
+          ▿ context: Swift.AsyncStream<Hangs.SilenceEvent>._Context #8
+            ▿ storage: Optional(Swift.AsyncStream<Hangs.SilenceEvent>._Storage)
+              ▿ some: Swift.AsyncStream<Hangs.SilenceEvent>._Storage #9
+                ▿ state: Swift.AsyncStream<Hangs.SilenceEvent>._Storage.State
+                  - continuations: 0 elements
+                  - pending: 0 elements
+                  - limit: Swift.AsyncStream<Hangs.SilenceEvent>.Continuation.BufferingPolicy.unbounded
+                  - onTermination: nil
+                  - terminal: false
+            - produce: (Function)
+        ▿ bargeInEvents: Swift.AsyncStream<()>
+          ▿ context: Swift.AsyncStream<()>._Context #10
+            ▿ storage: Optional(Swift.AsyncStream<()>._Storage)
+              ▿ some: Swift.AsyncStream<()>._Storage #11
+                ▿ state: Swift.AsyncStream<()>._Storage.State
+                  - continuations: 0 elements
+                  - pending: 0 elements
+                  - limit: Swift.AsyncStream<()>.Continuation.BufferingPolicy.unbounded
+                  - onTermination: nil
+                  - terminal: false
+            - produce: (Function)
+        ▿ commandTranscripts: Swift.AsyncStream<Swift.String>
+          ▿ context: Swift.AsyncStream<Swift.String>._Context #12
+            ▿ storage: Optional(Swift.AsyncStream<Swift.String>._Storage)
+              ▿ some: Swift.AsyncStream<Swift.String>._Storage #13
+                ▿ state: Swift.AsyncStream<Swift.String>._Storage.State
+                  - continuations: 0 elements
+                  - pending: 0 elements
+                  - limit: Swift.AsyncStream<Swift.String>.Continuation.BufferingPolicy.unbounded
+                  - onTermination: nil
+                  - terminal: false
+            - produce: (Function)
+        ▿ commandAvailabilityUpdates: Swift.AsyncStream<Hangs.VoiceCommandAvailability>
+          ▿ context: Swift.AsyncStream<Hangs.VoiceCommandAvailability>._Context #14
+            ▿ storage: Optional(Swift.AsyncStream<Hangs.VoiceCommandAvailability>._Storage)
+              ▿ some: Swift.AsyncStream<Hangs.VoiceCommandAvailability>._Storage #15
+                ▿ state: Swift.AsyncStream<Hangs.VoiceCommandAvailability>._Storage.State
+                  - continuations: 0 elements
+                  - pending: 0 elements
+                  - limit: Swift.AsyncStream<Hangs.VoiceCommandAvailability>.Continuation.BufferingPolicy.unbounded
+                  - onTermination: nil
+                  - terminal: false
+            - produce: (Function)
+        ▿ silenceContinuation: Swift.AsyncStream<Hangs.SilenceEvent>.Continuation
+          ▿ storage: Swift.AsyncStream<Hangs.SilenceEvent>._Storage #9
+        ▿ bargeInContinuation: Swift.AsyncStream<()>.Continuation
+          ▿ storage: Swift.AsyncStream<()>._Storage #11
+        ▿ commandContinuation: Swift.AsyncStream<Swift.String>.Continuation
+          ▿ storage: Swift.AsyncStream<Swift.String>._Storage #13
+        ▿ commandAvailabilityContinuation: Swift.AsyncStream<Hangs.VoiceCommandAvailability>.Continuation
+          ▿ storage: Swift.AsyncStream<Hangs.VoiceCommandAvailability>._Storage #15
+        - audioEngine: nil
+        - analyzer: nil
+        - analyzerTask: nil
+        - detectionTask: nil
+        - transcriptionTask: nil
+        - inputContinuation: nil
+        - isTTSPlaybackActive: false
+        - commandAvailability: Hangs.VoiceCommandAvailability.unknown
+        - state: Hangs.SilenceDetectionService.(unknown context at $<addr>).State.idle
+        - now: (Function)
+        - authorizationProvider: (Function)
       - sttService: nil
       - isLocallyEntitled: (Function)
-      - earconPlayer: Hangs.SystemEarconPlayer #7
+      - earconPlayer: Hangs.SystemEarconPlayer #16
       ▿ cancellables: 1 member
-        ▿ Combine.AnyCancellable #8
+        ▿ Combine.AnyCancellable #17
           ▿ storage: Combine.AnyCancellable.Storage.cancellable
-            - cancellable: Sink #9
+            - cancellable: Sink #18
           ▿ lock: 0x<addr>
             - pointerValue: <n>
-      - commandAvailabilityTask: nil
+      ▿ commandAvailabilityTask: Optional(Swift.Task<(), Swift.Never>(_task: (Opaque Value)))
+        ▿ some: Swift.Task<(), Swift.Never>
+          - _task: (Opaque Value)
       - entitlementReconcileTask: nil
-      ▿ taskBag: Hangs.TaskBag #10
+      ▿ taskBag: Hangs.TaskBag #19
         - tasks: 0 key/value pairs
       - isRerecording: false
       - consecutiveTranscriptionFailures: 0
       - nextQuestionAudioUrl: nil
       - nextQuestion: nil
       - currentQuestionAudioUrl: nil
-  - onReplayOnboarding: nil

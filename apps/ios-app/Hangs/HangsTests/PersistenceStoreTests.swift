@@ -6,15 +6,15 @@
 //
 
 import Foundation
-import Testing
 @testable import Hangs
+import Testing
 
 // MARK: - IsolatedDefaults
 
 /// Holds a unique UserDefaults suite for the duration of one test.
 /// `deinit` removes the suite — Swift Testing creates a fresh struct per
 /// test, so the helper goes out of scope when the test returns.
-final class IsolatedDefaults {
+final nonisolated class IsolatedDefaults {
     let suiteName: String
     let defaults: UserDefaults
 
@@ -27,6 +27,7 @@ final class IsolatedDefaults {
         defaults.removePersistentDomain(forName: suiteName)
     }
 
+    @MainActor
     func makeStore() -> PersistenceStore {
         PersistenceStore(userDefaults: defaults)
     }
@@ -37,7 +38,6 @@ final class IsolatedDefaults {
 @Suite("PersistenceStore Session Tests")
 @MainActor
 struct PersistenceStoreSessionTests {
-
     /// Creates a PersistenceStore backed by a unique, auto-cleaned UserDefaults suite.
     private func makeStore() -> (PersistenceStore, IsolatedDefaults) {
         let isolated = IsolatedDefaults()
@@ -145,7 +145,6 @@ struct PersistenceStoreSessionTests {
 @Suite("PersistenceStore Question History Tests")
 @MainActor
 struct PersistenceStoreQuestionHistoryTests {
-
     /// Creates a PersistenceStore backed by a unique, auto-cleaned UserDefaults suite.
     private func makeStore() -> (PersistenceStore, IsolatedDefaults) {
         let isolated = IsolatedDefaults()
@@ -214,7 +213,7 @@ struct PersistenceStoreQuestionHistoryTests {
         let (store, isolated) = makeStore()
         _ = isolated
 
-        for i in 0..<500 {
+        for i in 0 ..< 500 {
             try store.addQuestionId("q_\(i)")
         }
 
@@ -226,7 +225,7 @@ struct PersistenceStoreQuestionHistoryTests {
         let (store, isolated) = makeStore()
         _ = isolated
 
-        for i in 0..<500 {
+        for i in 0 ..< 500 {
             try store.addQuestionId("q_\(i)")
         }
 
@@ -256,7 +255,7 @@ struct PersistenceStoreQuestionHistoryTests {
         _ = isolated
 
         // Fill to 499
-        for i in 0..<499 {
+        for i in 0 ..< 499 {
             try store.addQuestionId("q_\(i)")
         }
 

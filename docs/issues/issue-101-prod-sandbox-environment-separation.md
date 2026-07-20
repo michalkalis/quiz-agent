@@ -55,8 +55,12 @@ Consequences: (a) the €4.99 paywall is effectively **off** during TestFlight �
 | `LEGACY_USER_ID_GRACE` | mirror prod |
 | `OPENAI/ELEVENLABS/TAVILY/OPENROUTER/LLM_GATEWAY/REDIS_URL` | reuse prod keys (voice loop must work on staging; cost-sensitive, no second vendor accounts) |
 | `ADMIN_API_KEY`, `ADMIN_KEY`, `CORS_ORIGINS`, `LOG_LEVEL` | new admin keys; rest mirror prod |
+| `APPLE_SIGNIN_CLIENT_ID/_KEY_ID/_TEAM_ID/_PRIVATE_KEY` | mirror prod (same bundle id + Apple .p8 — SIWA has no sandbox variant; without these the beta build's /auth/apple 503s on staging) |
+| `APPLE_TOKEN_ENC_KEY` | **new value** (fresh `Fernet.generate_key()`; staging must not decrypt prod's at-rest Apple refresh tokens — same isolation logic as `AUTH_JWT_SECRET`) |
 | pack-api `storekit_environment` | `Sandbox` (fulfills the existing config comment) |
 | Alembic | run both apps' migrations to head via `fly ssh console -a <staging-app>` (deploy ≠ migrate today; keep the manual pattern) |
+
+> **Parity gap (backend arch review 2026-07-18, MED):** the two `APPLE_*` rows above were missing from this table, and live staging had **none** of `APPLE_SIGNIN_*`, `APPLE_TOKEN_ENC_KEY`, `CORS_ORIGINS` (verified via flyctl). `CORS_ORIGINS` **set on staging 2026-07-20** (staging-host value, mirroring prod's own-host pattern). **Still owed — founder step (the .p8 key is founder-held, not readable back from Fly):** `fly secrets set -a quiz-agent-api-staging APPLE_SIGNIN_CLIENT_ID=com.missinghue.hangs APPLE_SIGNIN_KEY_ID=<prod value> APPLE_SIGNIN_TEAM_ID=<prod value> APPLE_SIGNIN_PRIVATE_KEY=<prod .p8> APPLE_TOKEN_ENC_KEY=<fresh Fernet key>`. Until set, staging /auth/apple stays gracefully disabled (503) by design.
 
 ### 3.6 Sandbox-row audit / quarantine (prod)
 No local column exists, so classification is an out-of-band RC cross-reference: one-off script iterates prod `subscription` + RC-origin `credit_ledger` rows (`rc_event_id`/`store_txn_id` non-null), calls RC v1 `GET /subscribers/{app_user_id}` per `account_id`, matches on `rc_original_txn_id`/`original_transaction_id`, classifies via `is_sandbox`. Prod is founder-only, so the expected outcome is **all rows sandbox** → dry-run report → `pg_dump` backup → delete sandbox-origin subscription rows + their ledger grants/clawbacks → stamp any survivors `environment='PRODUCTION'`. Agent-autonomous per the auth/monetization delegation; dry-run output goes in the run report.

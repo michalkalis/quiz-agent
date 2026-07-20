@@ -1,5 +1,9 @@
 """JWS verify cache backed by Redis (issue #33 Task 1.11).
 
+Lives in `app.storekit` (moved from `app.sse` — backend arch review
+2026-07-18): caching a StoreKit chain-verify is a StoreKit concern, not an
+SSE one.
+
 Caches the result of a full ECDSA chain-verify in Redis for 60s.
 
 Cache key: ``jws:verified:{sha256_hex(jws)[:16]}``
@@ -18,7 +22,8 @@ from typing import Any
 
 from redis.asyncio import Redis
 
-from ..storekit import AppleJWSVerifier, SignedTransaction
+from .models import SignedTransaction
+from .verifier import AppleJWSVerifier
 
 
 def _jws_cache_key(jws: str) -> str:

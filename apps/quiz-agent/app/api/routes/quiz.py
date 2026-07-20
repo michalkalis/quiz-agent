@@ -7,6 +7,7 @@ from ..deps import (
     StartQuizRequest,
     SubmitInputRequest,
     InputResponse,
+    CurrentQuestionResponse,
     RateQuestionRequest,
     FlagQuestionRequest,
     get_session_manager,
@@ -219,7 +220,7 @@ async def submit_input(
     return flow_to_response(flow_result, session)
 
 
-@router.get("/sessions/{session_id}/question")
+@router.get("/sessions/{session_id}/question", response_model=CurrentQuestionResponse)
 async def get_current_question(
     session_id: str,
     session_manager: SessionManager = Depends(get_session_manager),

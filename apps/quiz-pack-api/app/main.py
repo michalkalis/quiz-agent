@@ -1,4 +1,11 @@
-"""Question Generator FastAPI application."""
+"""Quiz Pack API FastAPI application.
+
+Order-driven quiz pack generation (issue #33): StoreKit JWS-verified orders,
+ARQ worker pipeline, SSE progress — plus the legacy admin question
+generation/curation tool.
+
+Run with: uvicorn app.main:app --reload --port 8003
+"""
 
 import os
 from contextlib import asynccontextmanager
@@ -20,6 +27,17 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
+
+# Structured logging + Sentry before the route modules import (backend arch
+# review 2026-07-18). Mirrors quiz-agent's main.py: JSON logs in production,
+# DSN-gated Sentry (unset SENTRY_DSN → clean no-op). The arq worker is a
+# separate process and runs the same init in worker.on_startup.
+from .config import get_settings
+from .logging_config import init_sentry, setup_logging
+
+setup_logging()
+init_sentry(get_settings().sentry_dsn)
+
 from .api.routes import router
 from .api.v1.orders import router as orders_v1_router
 from .web.routes import router as web_router
@@ -38,10 +56,18 @@ async def lifespan(app: FastAPI):
 
     from arq import create_pool
     from arq.connections import RedisSettings
-    from .config import get_settings
+
+    from .db.migration_check import assert_migrations_at_head
 
     log = logging.getLogger(__name__)
     settings = get_settings()
+
+    # Backend arch review 2026-07-18: migrations are manual (migrate-before-
+    # deploy) — refuse to serve against a schema behind this build's alembic
+    # head; the raise fails Fly's health gate and the deploy rolls back. Same
+    # check the arq worker runs in worker.on_startup (separate process).
+    await assert_migrations_at_head(settings.database_url, log)
+
     app.state.arq_pool = None
     try:
         app.state.arq_pool = await create_pool(RedisSettings.from_dsn(settings.redis_url))
@@ -54,11 +80,17 @@ async def lifespan(app: FastAPI):
             await app.state.arq_pool.close()
 
 
-# Create FastAPI app
+# Create FastAPI app. Version convention unified with quiz-agent's FastAPI
+# app (service API version "1.0.0"), not the package version in pyproject.
 app = FastAPI(
-    title="Quiz Question Generator",
-    description="Admin tool for generating and curating quiz questions with RAG-based duplicate detection",
-    version="0.1.0",
+    title="Quiz Pack API",
+    description=(
+        "On-demand quiz pack generation service: StoreKit JWS-verified orders, "
+        "ARQ worker pipeline, SSE progress. Also hosts the legacy admin tool "
+        "for generating and curating quiz questions with RAG-based duplicate "
+        "detection."
+    ),
+    version="1.0.0",
     lifespan=lifespan,
 )
 
@@ -79,7 +111,13 @@ app.add_middleware(
 
 # Include API routes
 app.include_router(router)
-app.include_router(orders_v1_router)
+# Orders (#95 custom packs): the canonical mount is /api/v1/orders — same
+# prefix family as the rest of the API. The bare /v1/orders mount is
+# DEPRECATED but kept serving identically: deployed TestFlight iOS clients
+# hard-code it (followup: switch iOS to /api/v1/orders, then retire this
+# alias). Hidden from OpenAPI so the spec advertises only the canonical path.
+app.include_router(orders_v1_router, prefix="/api")
+app.include_router(orders_v1_router, include_in_schema=False)
 app.include_router(web_router)
 
 
@@ -87,11 +125,16 @@ app.include_router(web_router)
 async def root():
     """Root endpoint."""
     return {
-        "name": "Quiz Question Generator API",
-        "version": "0.1.0",
-        "web_ui": "http://localhost:8001/web",
+        "name": "Quiz Pack API",
+        "version": "1.0.0",
+        "web_ui": "http://localhost:8003/web",
         "endpoints": {
-            "web_ui": "GET /web - Question management web interface",
+            "order_create": "POST /api/v1/orders",
+            "order_list_mine": "GET /api/v1/orders",
+            "order_status": "GET /api/v1/orders/{order_id}",
+            "order_retry": "POST /api/v1/orders/{order_id}/retry",
+            "order_stream": "GET /api/v1/orders/{order_id}/stream",
+            "web_ui": "GET /web - Admin question management web interface",
             "generate": "POST /api/v1/generate",
             "generate_advanced": "POST /api/v1/generate/advanced",
             "import": "POST /api/v1/import",
@@ -114,4 +157,4 @@ async def health():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+    uvicorn.run(app, host="0.0.0.0", port=8003)

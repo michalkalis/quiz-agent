@@ -28,7 +28,6 @@ import httpx
 import pytest
 import pytest_asyncio
 from fastapi import FastAPI
-from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from app.api.deps import get_arq_pool, get_jws_verifier
@@ -38,6 +37,7 @@ from app.db.engine import build_engine, normalize_async_url
 from app.db.session import get_session
 from app.storekit import AppleJWSVerifier
 from quiz_shared.auth.tokens import TokenService
+from tests._isolation import truncate_order_graph
 from tests.storekit._chain_fixtures import TestChain
 
 APP_ROOT = Path(__file__).resolve().parents[2]
@@ -115,10 +115,7 @@ async def _clean_orders(test_session: AsyncSession) -> AsyncIterator[None]:
     server-generated and not all surface to the test. CASCADE clears any
     dependent pack/question rows too.
     """
-    await test_session.execute(
-        text("TRUNCATE generation_orders, generation_jobs RESTART IDENTITY CASCADE")
-    )
-    await test_session.commit()
+    await truncate_order_graph(test_session)
     yield
 
 

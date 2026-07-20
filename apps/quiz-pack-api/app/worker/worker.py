@@ -38,6 +38,21 @@ _GOLD_STANDARD_PATH = find_in_ancestors(
 async def on_startup(ctx: Dict[str, Any]) -> None:
     """Build the per-worker singletons stashed on ARQ ctx."""
     from app import feature_flags
+    from app.logging_config import init_sentry, setup_logging
+
+    # The worker is a separate process from the API — structured logging and
+    # the DSN-gated Sentry init (backend arch review 2026-07-18) must run here
+    # too, or refund-eligible pipeline failures report nowhere.
+    setup_logging()
+    init_sentry(get_settings().sentry_dsn)
+
+    # Same migrate-before-deploy boot gate as app/main.py, separate process:
+    # a worker that boots against a behind-head schema would otherwise start
+    # pulling paid orders off the queue and crash mid-pipeline.
+    from app.db.migration_check import assert_migrations_at_head
+
+    await assert_migrations_at_head(get_settings().database_url, logger)
+
     from app.db.session import AsyncSessionLocal
     from app.generation.advanced_generator import AdvancedQuestionGenerator
     from app.generation.answer_normalizer import AnswerNormalizer

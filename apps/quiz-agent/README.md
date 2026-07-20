@@ -511,6 +511,19 @@ Quiz Agent API
 └── Feedback Service (dual storage: ChromaDB + SQL)
 ```
 
+## Scaling constraint
+
+Session state lives in an in-memory dict backed by a per-machine SQLite volume
+(`app/session/manager.py`). A second Fly machine has its own memory and its
+own volume, so a session started on one machine 404s on the other mid-quiz.
+Sessions must move to Postgres or Redis before running >1 machine.
+
+The slowapi rate limiter (`app/rate_limit.py`) has the same ceiling: its
+in-memory store is per-machine, so a second machine gives each attacker a
+fresh bucket per instance instead of a shared limit. It guards unauthenticated
+identity minting (routes/auth.py) — fine at today's single-machine scale, but
+revisit alongside the session-state move above before scaling out.
+
 ## Related Services
 
 - **Question Generator** (port 8001): Admin tool for generating questions

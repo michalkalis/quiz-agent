@@ -36,7 +36,7 @@ _arq_pool_lock = asyncio.Lock()
 def _build_verifier(
     root_cert_path: str,
     app_bundle_id: str,
-    storekit_environment: str,
+    storekit_environment: str | None,
 ) -> AppleJWSVerifier:
     return AppleJWSVerifier.from_path(root_cert_path, app_bundle_id, storekit_environment)
 

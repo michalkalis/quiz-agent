@@ -7,6 +7,7 @@ from fastapi import Depends, Request
 
 from quiz_shared.models.session import QuizSession
 from quiz_shared.models.participant import Participant
+from quiz_shared.models.question import PublicQuestion
 from quiz_shared.database.question_store import QuestionStore
 
 from ..session.manager import SessionManager
@@ -112,7 +113,7 @@ class InputResponse(BaseModel):
     success: bool
     message: str
     session: SessionResponse
-    current_question: Optional[Dict[str, Any]] = None
+    current_question: Optional[PublicQuestion] = None
     evaluation: Optional[Dict[str, Any]] = None
     feedback_received: List[str] = Field(
         default_factory=list, description="Parsed intents"
@@ -120,6 +121,21 @@ class InputResponse(BaseModel):
     audio: Optional[Dict[str, Any]] = Field(
         default=None, description="Audio URLs when audio=true"
     )
+
+
+class QuestionProgress(BaseModel):
+    """Question counter for ``GET /sessions/{id}/question``."""
+
+    current: int = Field(description="Questions asked so far (1-based)")
+    total: int = Field(description="Total questions in the session")
+
+
+class CurrentQuestionResponse(BaseModel):
+    """Response for ``GET /sessions/{id}/question`` (typed question payload —
+    backend arch review 2026-07-18, untyped-dict finding)."""
+
+    question: PublicQuestion
+    progress: QuestionProgress
 
 
 class RateQuestionRequest(BaseModel):

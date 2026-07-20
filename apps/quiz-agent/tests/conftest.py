@@ -38,6 +38,11 @@ async def db_sessionmaker() -> AsyncIterator[async_sessionmaker[AsyncSession]]:
     """Fresh schema per test (drop+create) on the test Postgres, then dispose."""
     url = _test_db_url()
     if not url:
+        if os.environ.get("REQUIRE_DB_TESTS") == "1":
+            pytest.fail(
+                "TEST_DATABASE_URL not set and REQUIRE_DB_TESTS=1 — "
+                "DB-backed tests must run, not skip"
+            )
         pytest.skip("TEST_DATABASE_URL not set — skipping DB-backed test")
 
     engine = build_engine(url)

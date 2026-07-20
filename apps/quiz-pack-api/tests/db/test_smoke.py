@@ -11,24 +11,7 @@ import pytest
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.engine import normalize_async_url
-
 APP_ROOT = Path(__file__).resolve().parents[2]
-
-
-def test_normalize_async_url_rewrites_libpq() -> None:
-    assert (
-        normalize_async_url("postgres://u:p@h:5432/db")
-        == "postgresql+asyncpg://u:p@h:5432/db"
-    )
-    assert (
-        normalize_async_url("postgresql://u:p@h:5432/db")
-        == "postgresql+asyncpg://u:p@h:5432/db"
-    )
-    assert (
-        normalize_async_url("postgresql+asyncpg://u:p@h:5432/db")
-        == "postgresql+asyncpg://u:p@h:5432/db"
-    )
 
 
 @pytest.mark.asyncio

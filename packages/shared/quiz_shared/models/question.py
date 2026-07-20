@@ -3,7 +3,15 @@
 import uuid
 from datetime import datetime
 from typing import Dict, List, Literal, Optional, Union, Any
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from typing_extensions import NotRequired, TypedDict
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    field_validator,
+    model_serializer,
+    model_validator,
+)
 
 
 QuestionType = Literal["text", "text_multichoice", "audio", "image", "video"]
@@ -392,3 +400,112 @@ class Question(BaseModel):
                 "user_ratings": {"user_1": 5, "user_2": 4},
             }
         }
+
+
+class PublicQuestionWire(TypedDict):
+    """Exact JSON wire shape of a question sent to clients (iOS hand-mirrors it).
+
+    Required keys are always present (some as JSON null); ``NotRequired`` keys
+    are *omitted* when unset — iOS distinguishes by key absence, not null.
+    Used as the ``PublicQuestion`` serializer return type so the OpenAPI
+    serialization schema shows the true wire contract.
+    """
+
+    id: str
+    question: str
+    type: str
+    possible_answers: Optional[Dict[str, str]]
+    difficulty: str
+    topic: str
+    category: str
+    source_url: Optional[str]
+    source_excerpt: Optional[str]
+    media_url: NotRequired[str]
+    image_subtype: NotRequired[str]
+    explanation: NotRequired[str]
+    age_appropriate: NotRequired[str]
+    headline_answer: NotRequired[str]
+    generated_by: NotRequired[str]
+
+
+class PublicQuestion(BaseModel):
+    """Client-facing projection of ``Question`` — the typed question payload.
+
+    Deliberately has **no field** for ``correct_answer`` (or any other
+    internal-only data: review workflow, embeddings, ratings, provenance
+    beyond ``generated_by``), so the answer cannot leak into a serialized
+    response. Wire-compatible with the legacy hand-built dict from
+    ``app.serializers.question_to_dict``: every dump goes through the custom
+    serializer below, which reproduces that dict's exact keys and optionality
+    (see ``PublicQuestionWire``).
+    """
+
+    id: str
+    question: str
+    type: str
+    possible_answers: Optional[Dict[str, str]] = None
+    difficulty: str
+    topic: str
+    category: str
+    source_url: Optional[str] = None
+    source_excerpt: Optional[str] = None
+    media_url: Optional[str] = None
+    image_subtype: Optional[str] = None
+    explanation: Optional[str] = None
+    age_appropriate: Optional[str] = None
+    headline_answer: Optional[str] = None
+    generated_by: Optional[str] = None
+
+    @classmethod
+    def from_question(cls, question: Question) -> "PublicQuestion":
+        """Project a full ``Question`` onto the public contract."""
+        return cls(
+            id=question.id,
+            question=question.question,
+            type=question.type,
+            possible_answers=question.possible_answers,
+            difficulty=question.difficulty,
+            topic=question.topic,
+            category=question.category,
+            source_url=question.source_url,
+            source_excerpt=question.source_excerpt,
+            media_url=question.media_url,
+            image_subtype=question.image_subtype,
+            explanation=question.explanation,
+            age_appropriate=question.age_appropriate,
+            headline_answer=question.headline_answer,
+            generated_by=(
+                question.generation_metadata.model
+                if question.generation_metadata
+                else None
+            ),
+        )
+
+    @model_serializer(mode="plain")
+    def _serialize_wire(self) -> PublicQuestionWire:
+        """Reproduce the legacy dict exactly: fixed keys always present (null
+        allowed), optional keys omitted when falsy — never emitted as null."""
+        wire: PublicQuestionWire = {
+            "id": self.id,
+            "question": self.question,
+            "type": self.type,
+            "possible_answers": self.possible_answers,
+            "difficulty": self.difficulty,
+            "topic": self.topic,
+            "category": self.category,
+            "source_url": self.source_url,
+            "source_excerpt": self.source_excerpt,
+        }
+        if self.media_url:
+            wire["media_url"] = self.media_url
+        if self.image_subtype:
+            wire["image_subtype"] = self.image_subtype
+        if self.explanation:
+            wire["explanation"] = self.explanation
+        if self.age_appropriate:
+            wire["age_appropriate"] = self.age_appropriate
+        if self.headline_answer:
+            wire["headline_answer"] = self.headline_answer
+        if self.generated_by:
+            wire["generated_by"] = self.generated_by
+        return wire

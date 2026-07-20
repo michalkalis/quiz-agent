@@ -1,15 +1,17 @@
 """Miscellaneous endpoints: ElevenLabs tokens, usage/freemium, health."""
 
-import hmac
+import asyncio
 import os
 import logging
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Request
+from sqlalchemy import text
 
 from ...auth.identity import AuthSubject
 from ..deps import (
     ElevenLabsTokenResponse,
     UsageResponse,
+    get_auth_sessionmaker,
     get_usage_tracker,
     require_auth_or_grace,
 )
@@ -95,38 +97,27 @@ async def get_usage(
     return await usage_tracker.get_usage(subject.subject_id)
 
 
-@router.post("/usage/{user_id}/premium")
-@limiter.limit("5/minute")
-async def set_premium(
-    request: Request,
-    user_id: str,
-    usage_tracker: UsageTracker = Depends(get_usage_tracker),
-    is_premium: bool = True,
-):
-    """Set premium status for a user. Requires admin key."""
-    admin_key = request.headers.get("X-Admin-Key")
-    expected_key = os.getenv("ADMIN_API_KEY")
-    # Compare as bytes: compare_digest raises TypeError on non-ASCII str (a
-    # client header is latin-1-decoded, so an attacker could trigger a 500).
-    if (
-        not expected_key
-        or not admin_key
-        or not hmac.compare_digest(admin_key.encode(), expected_key.encode())
-    ):
-        raise HTTPException(status_code=401, detail="Invalid admin key")
-
-    if usage_tracker is None:
-        raise HTTPException(status_code=503, detail="Usage tracking unavailable")
-    await usage_tracker.set_premium(user_id, is_premium)
-    return {"user_id": user_id, "is_premium": is_premium}
-
-
 # Health
 
 
 @router.get("/health")
-async def health_check():
-    """Health check endpoint."""
+async def health_check(sessionmaker=Depends(get_auth_sessionmaker)):
+    """Health check endpoint — gates Fly's rollback, so it must actually probe
+    the DB (previously a static dict, so a deploy against an unreachable
+    Postgres passed the gate). Cheap ``SELECT 1`` with a short timeout; 503
+    fail-loud on error/timeout, same auth sessionmaker the rest of the app
+    already depends on (no separate DB-probing logic to maintain)."""
+    if sessionmaker is not None:
+        try:
+            async with sessionmaker() as session:
+                await asyncio.wait_for(session.execute(text("SELECT 1")), timeout=3.0)
+        except Exception as e:
+            logger.error("Health check DB probe failed: %s", e)
+            raise HTTPException(
+                status_code=503,
+                detail=f"Database unreachable: {e}",
+            )
+
     return {
         "status": "healthy",
         "service": "quiz-agent",

@@ -78,14 +78,26 @@ class FeedbackDetail(BaseModel):
     audio_content_type: str | None
 
 
+_READ_CHUNK_BYTES = 64 * 1024
+
+
 async def _read_capped(upload: UploadFile, *, max_bytes: int, field: str) -> bytes:
-    data = await upload.read()
-    if len(data) > max_bytes:
-        raise HTTPException(
-            status_code=413,
-            detail=f"{field} exceeds the {max_bytes} byte limit",
-        )
-    return data
+    """Read ``upload`` in bounded chunks, aborting as soon as ``max_bytes`` is
+    exceeded so an oversized attachment is never fully materialized in RAM."""
+    chunks: list[bytes] = []
+    total = 0
+    while True:
+        chunk = await upload.read(_READ_CHUNK_BYTES)
+        if not chunk:
+            break
+        total += len(chunk)
+        if total > max_bytes:
+            raise HTTPException(
+                status_code=413,
+                detail=f"{field} exceeds the {max_bytes} byte limit",
+            )
+        chunks.append(chunk)
+    return b"".join(chunks)
 
 
 @router.post("/feedback", response_model=FeedbackSubmitResponse, status_code=201)
@@ -119,6 +131,10 @@ async def submit_feedback(
             metadata_dict = json.loads(metadata)
         except json.JSONDecodeError:
             raise HTTPException(status_code=400, detail="metadata must be valid JSON")
+        if not isinstance(metadata_dict, dict):
+            raise HTTPException(
+                status_code=400, detail="metadata must be a JSON object"
+            )
 
     screenshot_bytes = None
     screenshot_content_type = None

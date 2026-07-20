@@ -29,7 +29,8 @@
         /// `--ui-test` is active (issue #111 T3). Routes a transcript straight into
         /// `QuizViewModel.handleCommandTranscript` — the real `handleRecognizedCommand`
         /// → `routeCommand` pipeline — so voice-driven navigation is UI-testable even
-        /// though the recognizer itself is `nil` under `--ui-test`.
+        /// though the recognizer under `--ui-test` is an `.unavailable` mock
+        /// that never yields transcripts.
         private static var commandSink: (@MainActor (String) async -> Void)?
 
         /// Strong reference to the loopback HTTP listener (kept alive for the app lifetime).

@@ -236,7 +236,8 @@ final class AppState: ObservableObject {
             // Issue #111 T3: register the live command sink so the `:9999` HTTP
             // listener can drive real voice commands (e.g. "start") through the
             // actual `handleRecognizedCommand` → `routeCommand` pipeline — the
-            // recognizer itself is `nil` under `--ui-test`, so this is otherwise
+            // recognizer under `--ui-test` is an `.unavailable` mock that never
+            // yields transcripts, so this is otherwise
             // undrivable in UI tests.
             if UITestSupport.isUITesting {
                 UITestSupport.registerCommandSink { [weak self] text in

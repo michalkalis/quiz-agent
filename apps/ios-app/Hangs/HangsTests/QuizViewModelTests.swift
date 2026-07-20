@@ -358,6 +358,70 @@ struct QuizViewModelLoadingStateTests {
         #expect(viewModel.quizState.isError)
     }
 
+    /// #110 Bug 1: "Try Again" (ErrorView) fires startNewQuiz from `.error` — the
+    /// table must admit `error → startingQuiz` or the whole flow runs while
+    /// quizState stays stuck on `.error`.
+    @Test("startNewQuiz from .error (Try Again) reaches askingQuestion")
+    @MainActor
+    func startNewQuizFromErrorReachesAskingQuestion() async throws {
+        let (viewModel, mockNetwork) = Fixtures.makeViewModelWithNetwork()
+        viewModel.quizState = .error(message: "boom", context: .initialization)
+
+        await viewModel.startNewQuiz()
+
+        #expect(viewModel.quizState == .askingQuestion)
+        #expect(mockNetwork.createSessionCallCount == 1)
+    }
+
+    /// #110 Bug 1: "Play Again" (CompletionView) fires startNewQuiz from
+    /// `.finished` — before the fix `finished → startingQuiz` was rejected, so
+    /// the CTA silently spun up a background session while the UI stayed frozen
+    /// on CompletionView.
+    @Test("startNewQuiz from .finished (Play Again) reaches askingQuestion")
+    @MainActor
+    func startNewQuizFromFinishedReachesAskingQuestion() async throws {
+        let (viewModel, mockNetwork) = Fixtures.makeViewModelWithNetwork()
+        viewModel.quizState = .finished
+
+        await viewModel.startNewQuiz()
+
+        #expect(viewModel.quizState == .askingQuestion)
+        #expect(mockNetwork.createSessionCallCount == 1)
+    }
+
+    /// #110 Bug 1: a double-tap on "Play Again"/"Try Again" before the first
+    /// `createSession` resolves must not clobber `currentSession` with a second
+    /// concurrent session — the `isStarting` single-flight guard closes this.
+    @Test("startNewQuiz double-tap creates exactly one session")
+    @MainActor
+    func startNewQuizDoubleTapCreatesOneSession() async throws {
+        await withMainSerialExecutor {
+            let (viewModel, mockNetwork) = Fixtures.makeViewModelWithNetwork()
+            viewModel.quizState = .finished
+
+            async let first: Void = viewModel.startNewQuiz()
+            async let second: Void = viewModel.startNewQuiz()
+            _ = await (first, second)
+
+            #expect(mockNetwork.createSessionCallCount == 1)
+        }
+    }
+
+    /// #110 Bug 1: an accidental "Start Quiz" tap on the minimized-background
+    /// HomeView while a quiz is actively mid-flight (e.g. `.recording`) must be a
+    /// logged no-op, not a clobbered live session.
+    @Test("startNewQuiz from .recording is a no-op")
+    @MainActor
+    func startNewQuizFromRecordingIsNoOp() async throws {
+        let (viewModel, mockNetwork) = Fixtures.makeViewModelWithNetwork()
+        viewModel.quizState = .recording
+
+        await viewModel.startNewQuiz()
+
+        #expect(viewModel.quizState == .recording)
+        #expect(mockNetwork.createSessionCallCount == 0)
+    }
+
     @Test("resetToHome resets to idle cleanly")
     @MainActor
     func resetToHomeResetsToIdle() async throws {

@@ -89,8 +89,8 @@ extension QuizState {
         case .processing: return ["showingResult", "skipping", "askingQuestion", "error", "idle"]
         case .skipping: return ["showingResult", "askingQuestion", "error", "idle"]
         case .showingResult: return ["askingQuestion", "processing", "finished", "idle"]
-        case .finished: return ["idle"]
-        case .error: return ["idle", "askingQuestion"]
+        case .finished: return ["idle", "startingQuiz"]
+        case .error: return ["idle", "askingQuestion", "startingQuiz"]
         }
     }
 }
@@ -381,6 +381,11 @@ final class QuizViewModel: ObservableObject {
     /// gate the `confirmAnswer` voice entry (still a single call site).
     var isSubmittingAnswer = false
 
+    /// Single-flight guard for `startNewQuiz` (#110): "Try Again"/"Play Again" can be
+    /// double-tapped before the first `createSession` resolves. Held for the whole
+    /// flow via `defer` so exactly one session is created, mirroring `isSubmittingAnswer`.
+    var isStarting = false
+
     /// Prevents concurrent stopRecordingAndSubmit calls (silence detection + user tap can race)
     var isStoppingRecording = false // internal for QuizViewModel+Recording
 
@@ -552,7 +557,16 @@ final class QuizViewModel: ObservableObject {
         language: String? = nil,
         packId: String? = nil
     ) async {
-        transition(to: .startingQuiz)
+        // #110: startNewQuiz is legal only from {.idle, .error, .finished} (cold
+        // start, Try Again, Play Again). Check single-flight BEFORE the transition
+        // attempt so a double-tap short-circuits without logging a spurious
+        // rejected transition, then hold isStarting for the whole flow via defer,
+        // mirroring isSubmittingAnswer (#79).
+        guard !isStarting else { return }
+        isStarting = true
+        defer { isStarting = false }
+
+        guard transition(to: .startingQuiz) else { return }
         errorMessage = nil
         #if DEBUG
             lastErrorDebugInfo = nil
@@ -825,7 +839,7 @@ final class QuizViewModel: ObservableObject {
     /// (Sentry breadcrumb via `SentryLog`) — the webhook still lands on its
     /// own; the client never grants anything itself.
     private func syncEntitlementsWithRetry(maxAttempts: Int = 3) async {
-        for attempt in 1...maxAttempts {
+        for attempt in 1 ... maxAttempts {
             guard !Task.isCancelled else { return }
             do {
                 try await networkService.syncEntitlements()

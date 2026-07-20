@@ -1,8 +1,8 @@
 # Issue 110: Quiz state-machine enforcement (driving-loop correctness bugs)
 
-**Triage:** bug · ready-for-agent
+**Triage:** bug · done
 **Reversibility:** a
-**Status:** Prep complete 2026-07-20 — all 6 prep phases ✅, both final gates green (impl-plan ready-check READY · design-soundness SOUND 0.90), class `a`, `bug · ready-for-agent`; **P1, top priority of the arch-review batch** (real driving-loop correctness bugs + the already-broken "Play Again" CTA).
+**Status:** **DONE 2026-07-20** — all four fixes + pinning tests landed on `arch-review-ios` (T1–T4 commits `3b1a745`/`39933c3`/`1bfe6cb`/`a890f55`, verify-pass remediation `01edb33`, snapshot re-record `d024bbb`). Adversarial verify (5 refuters) found 2 blockers, both remediated and independently re-verified HOLDS. Full unit bundle 696 tests green except 2 env-flaky network suites (fail identically on pre-#110 baseline — see Execution). See § Execution & verification.
 **Created:** 2026-07-20
 
 **Source:** [iOS architecture review 2026-07-18](../research/ios-architecture-review-2026-07-18.md) — Top 10 item 1 + dimension 3 (state management). Link, don't restate.
@@ -49,7 +49,7 @@ These are four **driving-loop correctness bugs**. The founder drives with the sc
 >
 > **Single session — no execution-prompts file** (split-issue step 2): four small class-`a` bug fixes + one verification tail = one cohesive iOS layer, a handful of files, one build/test run — under a single context budget. Per the skill's criterion this does **not** warrant an `issue-110-execution-prompts.md`; the atomic list below is the unit an autonomous session consumes.
 
-- [ ] **T1 — Bug 1: terminal-origin whitelist + entry guard + `isStarting` single-flight** (decision 1)
+- [x] **T1 — Bug 1: terminal-origin whitelist + entry guard + `isStarting` single-flight** (decision 1)
   - Table: add `"startingQuiz"` to `.finished`'s successors (`:92` → `["idle","startingQuiz"]`) **and** `.error`'s (`:93` → `["idle","askingQuestion","startingQuiz"]`).
   - Guard: at `startNewQuiz` entry (`:549`) replace the result-dropping `transition(to: .startingQuiz)` (`:555`) with `guard transition(to: .startingQuiz) else { return }`.
   - Single-flight: add plain `var isStarting`; `guard !isStarting else { return }` **before** the transition attempt (so a double-tap short-circuits without logging a spurious rejected-transition), then set true + reset in `defer` — cloning `isSubmittingAnswer` shape (`:950/:993`).
@@ -57,23 +57,23 @@ These are four **driving-loop correctness bugs**. The founder drives with the sc
   - Tests → `QuizViewModelTests` (see Acceptance for the four origin cases).
   - *Accepted test thinness (Gate B note 1):* the double-tap test asserts `createSessionCallCount == 1` but does **not** also assert the second tap emits no rejected-transition log. A rejected transition is `Logger.quiz.error` (OSLog) only — there is **no** Sentry breadcrumb on the reject path (breadcrumb fires only after a *successful* transition, `:335`) — and HangsTests has no log-capture seam. Adding one would be a new observability hook (a goalpost move) for zero extra behavioral coverage: `createSessionCallCount == 1` already proves single-flight, and the `!isStarting`-before-`transition` ordering that avoids the spurious log is pinned by construction (decision 1). Accepted as-is.
 
-- [ ] **T2 — Bug 2: pin skip-commit to `.askingQuestion` (primary) + cancel on answer entry (cleanup)** (decision 2)
+- [x] **T2 — Bug 2: pin skip-commit to `.askingQuestion` (primary) + cancel on answer entry (cleanup)** (decision 2)
   - Primary invariant: guard the undo-window expiry closure (`:1064-1070`; the recheck at `:1067`) on `quizState == .askingQuestion` before it calls `skipQuestion()`.
   - Cleanup: cancel the `.skipUndo` task + clear `pendingSkipWindow` at the top of **both** `startRecording` (+Recording `:33`) and `submitMCQAnswer`.
   - Tests → `SkipCancelWordTests` (expiry seam `:99`).
 
-- [ ] **T3 — Bug 3: reset `isMinimized` on entering `.finished`** (decision 3)
+- [x] **T3 — Bug 3: reset `isMinimized` on entering `.finished`** (decision 3)
   - Primary: set `isMinimized = false` at the `transition(to: .finished)` site (`:1379`), matching the `endQuiz`/`resetState` precedent (`:1463`).
   - Optional (only if trivial): also gate ContentView's floating overlay (`:121`) on `isMinimized && canMinimize` — defense-in-depth, not the fix.
   - Test → `QuizViewModelTests`, mirroring `endQuizResetsMinimized` (`:1095`).
 
-- [ ] **T4 — Bug 4: single VM owner for MCQ selection + self-echo/supersede cancel rework** (decision 4)
+- [x] **T4 — Bug 4: single VM owner for MCQ selection + self-echo/supersede cancel rework** (decision 4)
   - Drop `MCQOptionPicker`'s `@State selectedKey` (`:44`); make `externalSelectedKey` a `Binding`; the tap path writes the VM key the voice path submits from (`mcqVoiceMatchedKey`, +Recording `:246/:253`; fed via QuestionView `:338`).
   - Cancel-semantics: rework `onChange(of: externalSelectedKey)` (`:70-72`) to cancel `pendingSubmit` only on an *other-source supersede* (incoming key ≠ the tap's own in-flight target), never on the tap's *self echo*.
   - Tests → `MCQOptionPickerRaceTests` + hosted-picker wiring.
   - *Kept despite partial redundancy (Gate B note 2):* the supersede-cancel path in `tapThenVoiceMatchSubmitsAndHighlightsSameKey` is partly backstopped by #79's `submitMCQAnswer` transition-guard (a superseded submit is also rejected at `guard transition(to: .processing)`). Keep the test anyway — it's cheap and pins the *view-layer* single-owner convergence (highlight == submitted key) that the #79 guard never observes.
 
-- [ ] **T5 — Verification tail**
+- [x] **T5 — Verification tail**
   - Run the five targeted suites, then full `HangsTests` once (cross-cutting; pre-#113 rebase safety). Exact idioms in Acceptance.
 
 ## Acceptance
@@ -108,10 +108,33 @@ These are four **driving-loop correctness bugs**. The founder drives with the sc
 - Grep: `@State ... selectedKey` no longer in `MCQOptionPicker.swift`; `externalSelectedKey` is declared `@Binding`.
 
 **Suite run (T5)** — from `apps/ios-app/Hangs`:
-- Targeted: `xcodebuild test -scheme Hangs-Local -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -only-testing:HangsTests/QuizViewModelTests -only-testing:HangsTests/QuizViewModelSubmissionRaceTests -only-testing:HangsTests/SkipCancelWordTests -only-testing:HangsTests/MCQOptionPickerRaceTests -only-testing:HangsTests/ScreenAwakeControllerTests | tail`
+- ⚠️ **Corrected during execution (false-green trap):** the original command targeted `-only-testing:HangsTests/QuizViewModelTests` and `…/MCQOptionPickerRaceTests` — but those are *file* names, not suite types; `xcodebuild` silently runs **zero** tests for an unmatched `-only-testing` id and still exits 0, so the literal command skipped all T1/T3/T4 pinning tests while reporting success. Targeted runs must name the real `@Suite` struct types:
+- Targeted: `xcodebuild test -scheme Hangs-Local -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -only-testing:HangsTests/QuizViewModelLoadingStateTests -only-testing:HangsTests/QuizViewModelEndQuizTests -only-testing:HangsTests/QuizViewModelMCQSubmissionTests -only-testing:HangsTests/QuizViewModelStateTransitionTests -only-testing:HangsTests/QuizViewModelSubmissionRaceTests -only-testing:HangsTests/SkipCancelWordTests -only-testing:HangsTests/MCQOptionPickerSingleOwnerTests -only-testing:HangsTests/MCQOptionPickerRaceTests -only-testing:HangsTests/MCQDelayedSubmitTests -only-testing:HangsTests/ScreenAwakeControllerTests | tail`
 - Full once: `xcodebuild test -scheme Hangs-Local -destination 'platform=iOS Simulator,name=iPhone 17 Pro' | tail` → all green.
 
 **Snapshot baselines:** no `.stableDump`/`.dump` re-record required — no task adds a `@Published` (`isStarting` is a plain `var`; `isMinimized` pre-exists). If a `@Published` were added the dumps would change and need human re-record (ios rules), but none is planned.
+
+## Execution & verification (2026-07-20)
+
+**Workflow:** 2 parallel impl agents (T1–T3 VM-side · T4 picker) → build/test gate → adversarial verify (4 per-bug refuters + regression lens, all Opus) → remediation → independent re-verify. Founder-requested multi-agent orchestration honored end-to-end.
+
+**Commits (arch-review-ios):** T1 `3b1a745` · T2 `39933c3` · T3 `1bfe6cb` · T4 `a890f55` · remediation `01edb33` · snapshot re-record `d024bbb` (+ docs).
+
+**Deviations from plan (all surfaced, none silent):**
+1. **T3 fix site:** reset lives INSIDE `transition(to:)` (on-enter-`.finished`, mirroring the `:333` `mcqVoiceMatchedKey` precedent), not at the single `:1379` call site — the task text and the acceptance test contradicted each other (the test calls `transition` directly); inside-transition satisfies both and covers future paths.
+2. **Verify blocker → remediated:** `startNewQuizFromErrorReachesAskingQuestion` as specced was hollow (end state reachable pre-fix too — `error→askingQuestion` was already legal). Now pins `quizState == .startingQuiz` DURING `createSession` via a new `onCreateSession` mock hook.
+3. **Verify blocker → remediated:** T4's value-based self-echo/supersede cannot see a voice match on the SAME key as a pending tap (no value change → no `onChange`), re-opening a same-key double-submit (`.showingResult→.processing` is legal via `resubmitAnswer`). Root fix: **entry guard in `submitMCQAnswer`** — a fresh MCQ answer is legal only from `.askingQuestion`/`.recording`. Pinned by `lateMCQSubmitAfterStateAdvancedIsNoOp`; `mcqSubmissionNoSession` now starts from `.askingQuestion`. Independent re-verify: **HOLDS** (all callers legal; no test broken; revert traces fail as required).
+4. **Snapshot re-record (5 baselines, `d024bbb`):** the plan's premise "no new `@Published` → no re-record" was wrong — `.stableDump` Mirror-dumps EVERY stored property. `isStarting` + 2 mock members drifted all 5 dumps by exactly the same 3 lines (15 insertions, 0 deletions, per-test xcresult diffs verified before re-recording; zero UI change). Re-recorded from current code; suites green. Founder can review/revert `d024bbb` in isolation.
+5. **Acceptance command was false-green** — original `-only-testing` ids were file names, not suite types; xcodebuild runs 0 tests for unmatched ids and exits 0. Corrected inline in Acceptance (real `@Suite` struct names).
+
+**Test results (fail-loud):**
+- All 11 new pinning tests green; targeted suites green (35 tests across affected suites, isolated confirmation run).
+- Full unit bundle: 696 tests / 138 suites — green except **2 env-flaky failures in `NetworkServiceTests` + `PackOrderServiceTests`** (URLProtocol-stub suites, zero dependency on changed code). Proven pre-existing: same suites fail on a pre-#110 baseline worktree in the same environment (varying test identity per run, timeout-style under parallel load, instant stub errors in isolation after sim restart). Candidate follow-up: harden those stubs (out of #110 scope).
+- HangsUITests (incl. RS regression scenarios): passed in the full run (16:39).
+
+**Residual findings (documented, out of scope):**
+- *(minor, pre-existing)* Manual Skip button doesn't abort an armed undo window: voice-"skip" arms 2.5 s window → tap Skip commits directly → next question re-enters `.askingQuestion` before expiry → stale window skips Q2. Guard checks phase, not question identity. Fix needs care (expiry path calls `skipQuestion` itself — naive `abortSkipUndoWindow()` at `skipQuestion` entry would self-cancel the committing task). → fold into #113 — QuizViewModel decomposition, or a small follow-up.
+- *(unreachable)* ContentView body's minimized-background switch includes `.startingQuiz` while the overlay gate excludes it; `isMinimized` can't be true there in any real flow.
 
 ## Research (Phase 1, 2026-07-20)
 

@@ -270,37 +270,32 @@ final class QuizViewModel: ObservableObject {
         Language.forCode(settings.language) ?? Language.default
     }
 
-    var selectedAudioMode: AudioMode {
-        AudioMode.forId(settings.audioMode) ?? AudioMode.default
-    }
+    // MARK: - Audio Device State — forwarded to AudioDeviceState (#113 T2)
 
-    // MARK: - Audio Device State
+    // Audio device slice — owned by AudioDeviceState. Permanent forwarding
+    // accessors (decision 2) so views/tests keep binding QuizViewModel;
+    // change notifications ride the re-published child `objectWillChange`
+    // wired in `init`.
+    var selectedAudioMode: AudioMode { audioDeviceState.selectedAudioMode }
 
     /// Available input devices from AudioService
-    var availableInputDevices: [AudioDevice] {
-        audioService.availableInputDevices
-    }
+    var availableInputDevices: [AudioDevice] { audioDeviceState.availableInputDevices }
 
     /// Currently selected input device (nil = automatic)
-    var selectedInputDevice: AudioDevice? {
-        audioService.currentInputDevice
-    }
+    var selectedInputDevice: AudioDevice? { audioDeviceState.selectedInputDevice }
 
     /// Current output device name for display
-    var currentOutputDeviceName: String {
-        audioService.currentOutputDeviceName
-    }
+    var currentOutputDeviceName: String { audioDeviceState.currentOutputDeviceName }
 
     /// Display name for current input device
-    var currentInputDeviceName: String {
-        if let device = audioService.currentInputDevice {
-            return device.name
-        }
-        return String(localized: "Automatic", comment: "Fallback name when no audio input device is selected (iOS picks the best mic)")
-    }
+    var currentInputDeviceName: String { audioDeviceState.currentInputDeviceName }
 
-    /// Sheet presentation state for microphone picker
-    @Published var showingMicrophonePicker = false
+    /// Sheet presentation state for microphone picker. Settable because
+    /// SettingsView/HomeView present the sheet via `$viewModel.showingMicrophonePicker`.
+    var showingMicrophonePicker: Bool {
+        get { audioDeviceState.showingMicrophonePicker }
+        set { audioDeviceState.showingMicrophonePicker = newValue }
+    }
 
     /// Whether minimize is allowed in current state
     /// Enabled during active quiz states (question, recording, processing, results)
@@ -426,7 +421,8 @@ final class QuizViewModel: ObservableObject {
     /// Whether question TTS is currently playing. The command listener is torn
     /// down during TTS and re-armed after (77.5 windowed lifecycle / the 1a19438
     /// self-trigger guard) — `currentCommandScreen` returns nil while this is true
-    /// so the recognizer never hears its own playback. Internal for +Audio/+CommandListener.
+    /// so the recognizer never hears its own playback. Internal for +CommandListener;
+    /// AudioDeviceState writes it via injected closures (#113 T2, decision 4).
     var isPlayingQuestionTTS: Bool = false
 
     /// The option key matched by voice on an MCQ question (nil between questions).
@@ -469,10 +465,18 @@ final class QuizViewModel: ObservableObject {
     /// directly.
     let entitlementReconciler: EntitlementReconciler
 
+    /// Audio slice owner (#113 T2): device management, audio-mode switching,
+    /// the silence-detection choke points, and TTS/feedback playback. The
+    /// façade owns the child, re-publishes its `objectWillChange`, and
+    /// re-exposes the slice via the forwarding accessors above (decision 2).
+    /// `lazy` so the injected closures can capture `self` weakly — built by
+    /// `makeAudioDeviceState()` on first touch (the `init` re-publish sink).
+    private(set) lazy var audioDeviceState: AudioDeviceState = makeAudioDeviceState()
+
     /// Single owner for every long-lived `Task` this view model spawns.
     /// Each call site stores its task under a `TaskKey`; `resetState()` calls
     /// `cancelAll()` instead of duplicating ten cancel-and-nil lines.
-    let taskBag = TaskBag() // internal for QuizViewModel+Timers/+Recording/+Audio
+    let taskBag = TaskBag() // internal for QuizViewModel+Timers/+Recording; shared with AudioDeviceState
 
     // Whether the current recording is a re-record (bypasses all timers) (internal for QuizViewModel+Timers)
     var isRerecording: Bool = false
@@ -484,8 +488,10 @@ final class QuizViewModel: ObservableObject {
     private var nextQuestionAudioUrl: String?
     private var nextQuestion: Question?
 
-    // Current question audio URL for "repeat" command
-    var currentQuestionAudioUrl: String? // internal for QuizViewModel+Audio
+    // Current question audio URL for "repeat" command — written by
+    // AudioDeviceState via injected closures (#113 T2, decision 4); moves to
+    // RecordingCoordinator in S5.
+    var currentQuestionAudioUrl: String?
 
     // MARK: - Initialization
 
@@ -546,6 +552,39 @@ final class QuizViewModel: ObservableObject {
         entitlementReconciler.objectWillChange
             .sink { [weak self] in self?.objectWillChange.send() }
             .store(in: &cancellables)
+        audioDeviceState.objectWillChange
+            .sink { [weak self] in self?.objectWillChange.send() }
+            .store(in: &cancellables)
+    }
+
+    /// #113 T2: builds the audio child. Every closure captures the façade
+    /// weakly — the child is façade-owned so `self` outlives it; `weak` just
+    /// breaks the ownership cycle (façade → child → closure → façade). Each
+    /// closure is the minimal scoped read/write of decision 4 — never a vm ref.
+    private func makeAudioDeviceState() -> AudioDeviceState {
+        AudioDeviceState(
+            audioService: audioService,
+            networkService: networkService,
+            silenceDetectionService: silenceDetectionService,
+            taskBag: taskBag,
+            settings: { [weak self] in self?.settings ?? .default },
+            setAudioMode: { [weak self] in self?.settings.audioMode = $0 },
+            setPreferredInputDeviceId: { [weak self] in self?.settings.preferredInputDeviceId = $0 },
+            setMuted: { [weak self] in self?.settings.isMuted = $0 },
+            isAppForeground: { [weak self] in self?.isAppForeground ?? false },
+            isAskingQuestion: { [weak self] in self?.quizState == .askingQuestion },
+            isRerecording: { [weak self] in self?.isRerecording ?? false },
+            isPlayingQuestionTTS: { [weak self] in self?.isPlayingQuestionTTS ?? false },
+            setPlayingQuestionTTS: { [weak self] in self?.isPlayingQuestionTTS = $0 },
+            currentQuestionAudioUrl: { [weak self] in self?.currentQuestionAudioUrl },
+            setCurrentQuestionAudioUrl: { [weak self] in self?.currentQuestionAudioUrl = $0 },
+            setErrorMessage: { [weak self] in self?.errorMessage = $0 },
+            onBargeIn: { [weak self] in await self?.handleBargeIn() },
+            startCommandConsumer: { [weak self] in self?.startCommandConsumer() },
+            stopCommandConsumer: { [weak self] in self?.stopCommandConsumer() },
+            startThinkingTimeCountdown: { [weak self] in self?.startThinkingTimeCountdown() },
+            startAnswerTimer: { [weak self] in self?.startAnswerTimer() }
+        )
     }
 
     deinit {
@@ -762,6 +801,99 @@ final class QuizViewModel: ObservableObject {
     /// `handleScenePhase(.active)`; the launch kick fires in the child's `init`.
     func reconcileEntitlements() async {
         await entitlementReconciler.reconcileEntitlements()
+    }
+
+    // MARK: - Audio — forwarded to AudioDeviceState (#113 T2)
+
+    // Permanent decision-2 forwards: every one has production callers today
+    // (views, MAIN quiz flow, or the +Recording/+CommandListener/+ScenePhase
+    // extensions whose extracts will inject the child's primitives instead —
+    // S3/S5 re-point them).
+
+    /// Shared silence-detection choke point — see `AudioDeviceState.startSilenceDetectionListening`.
+    func startSilenceDetectionListening() async {
+        await audioDeviceState.startSilenceDetectionListening()
+    }
+
+    /// Shared silence-detection choke point — see `AudioDeviceState.stopSilenceDetectionListening`.
+    func stopSilenceDetectionListening() {
+        audioDeviceState.stopSilenceDetectionListening()
+    }
+
+    /// Question TTS + post-TTS timer/recording arming — see `AudioDeviceState.playQuestionAudio`.
+    func playQuestionAudio(from urlString: String) async {
+        await audioDeviceState.playQuestionAudio(from: urlString)
+    }
+
+    /// See `AudioDeviceState.canReplayAudio` (#59.5).
+    var canReplayAudio: Bool { audioDeviceState.canReplayAudio }
+
+    /// On-demand question replay — see `AudioDeviceState.replayQuestionAudio`.
+    func replayQuestionAudio() async {
+        await audioDeviceState.replayQuestionAudio()
+    }
+
+    /// See `AudioDeviceState.playFeedbackAudio(from:)`.
+    func playFeedbackAudio(from urlString: String) async -> TimeInterval {
+        await audioDeviceState.playFeedbackAudio(from: urlString)
+    }
+
+    /// See `AudioDeviceState.playFeedbackAudioBase64(_:)`.
+    func playFeedbackAudioBase64(_ base64: String) async -> TimeInterval {
+        await audioDeviceState.playFeedbackAudioBase64(base64)
+    }
+
+    /// See `AudioDeviceState.toggleMute` (founder bug 2026-07-11).
+    func toggleMute() async {
+        await audioDeviceState.toggleMute()
+    }
+
+    /// See `AudioDeviceState.stopAnyPlayingAudio`.
+    func stopAnyPlayingAudio() async {
+        await audioDeviceState.stopAnyPlayingAudio()
+    }
+
+    /// See `AudioDeviceState.toggleAudioMode`.
+    func toggleAudioMode() {
+        audioDeviceState.toggleAudioMode()
+    }
+
+    /// See `AudioDeviceState.refreshAudioDevices`.
+    func refreshAudioDevices() {
+        audioDeviceState.refreshAudioDevices()
+    }
+
+    /// See `AudioDeviceState.setPreferredInputDevice(_:)`.
+    func setPreferredInputDevice(_ device: AudioDevice?) {
+        audioDeviceState.setPreferredInputDevice(device)
+    }
+
+    /// Handle barge-in: user spoke during TTS playback on external audio route.
+    /// Stays façade-resident (not in AudioDeviceState) — it fans out into the
+    /// recording + timer clusters; the child reaches it via the injected
+    /// `onBargeIn` closure (decision 4).
+    func handleBargeIn() async {
+        guard quizState == .askingQuestion else { return }
+
+        Logger.voice.info("🗣️ Barge-in triggered — stopping TTS and starting recording")
+
+        // 1. Stop TTS immediately
+        await stopAnyPlayingAudio()
+
+        // 2. Clear barge-in activation so a re-fire isn't triggered by the
+        //    teardown tail of TTS audio.
+        silenceDetectionService.setTTSPlaybackActive(false)
+
+        // 3. Wait for audio hardware to settle
+        try? await Task.sleep(nanoseconds: 500_000_000)
+
+        // 4. Guard again — state may have changed during sleep
+        guard quizState == .askingQuestion else { return }
+
+        // 5. Auto-start recording (same as post-TTS flow)
+        cancelAnswerTimer()
+        isAutoRecording = true
+        await startRecording()
     }
 
     /// Whether to retry with a new session (for initialization errors)

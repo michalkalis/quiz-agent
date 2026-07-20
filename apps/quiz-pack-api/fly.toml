@@ -9,6 +9,9 @@ primary_region = "cdg"
 
 # Task 1.10 wired the ARQ worker process group. Both web and worker run as
 # separate Fly process groups sharing the same image.
+[env]
+  ENVIRONMENT = "production"
+
 [processes]
   web = "uvicorn app.main:app --host 0.0.0.0 --port 8003"
   worker = "arq app.worker.WorkerSettings"

@@ -13,10 +13,10 @@
 //  handled in `handleCommandTranscript` BEFORE the screen-scoped matcher.
 //
 
-import Foundation
-import Testing
 import ConcurrencyExtras
+import Foundation
 @testable import Hangs
+import Testing
 
 @MainActor
 private func makeVM() -> QuizViewModel {
@@ -36,7 +36,7 @@ private func makeVM() -> QuizViewModel {
 @MainActor
 private func waitUntil(
     _ predicate: @MainActor () -> Bool,
-    timeoutMillis: Int = 6_000,
+    timeoutMillis: Int = 6000,
     _ comment: Comment? = nil,
     sourceLocation: SourceLocation = #_sourceLocation
 ) async {
@@ -53,7 +53,6 @@ private func waitUntil(
 @Suite("Spoken cancel word aborts the skip undo-window (77.10 carry-over)")
 @MainActor
 struct SkipCancelWordTests {
-
     @Test("'stop' during an open undo-window aborts the pending skip")
     func stopAbortsOpenWindow() async {
         await withMainSerialExecutor {
@@ -110,6 +109,53 @@ struct SkipCancelWordTests {
             // A cancel word now has no window to abort — it must be a harmless no-op.
             await vm.handleCommandTranscript("stop")
             #expect(vm.pendingSkipWindow == nil)
+        }
+    }
+
+    /// #110 Bug 2: the expiry closure used to recheck only `pendingSkipWindow`,
+    /// never `quizState` — so speaking/tapping during the window let expiry
+    /// commit `skipQuestion()` mid-recording, leaving the streaming mic live
+    /// into the result. Pinning the commit to `.askingQuestion` closes this.
+    @Test("skip expiry during a recording in progress does not commit")
+    func skipExpiryDuringRecordingDoesNotCommit() async {
+        await withMainSerialExecutor {
+            let vm = makeVM()
+            vm.quizState = .askingQuestion
+            vm.beginSkipUndoWindow(duration: 0.05) // short window → expires quickly
+            vm.quizState = .recording // user started answering during the window
+
+            await waitUntil({ vm.pendingSkipWindow == nil }, "expiry never fired")
+            #expect(vm.quizState == .recording, "expiry must not commit skipQuestion mid-recording")
+        }
+    }
+
+    /// #110 Bug 2 (cleanup): starting a voice answer supersedes any pending skip.
+    @Test("startRecording cancels a pending skip window")
+    func startRecordingCancelsPendingSkipWindow() async {
+        await withMainSerialExecutor {
+            let vm = makeVM()
+            vm.quizState = .askingQuestion
+            vm.beginSkipUndoWindow(duration: 10) // long window — must not expire on its own
+            #expect(vm.pendingSkipWindow != nil)
+
+            await vm.startRecording()
+
+            #expect(vm.pendingSkipWindow == nil, "starting to answer must supersede a pending skip")
+        }
+    }
+
+    /// #110 Bug 2 (cleanup): submitting an MCQ tap answer supersedes any pending skip.
+    @Test("submitMCQAnswer cancels a pending skip window")
+    func submitMCQCancelsPendingSkipWindow() async {
+        await withMainSerialExecutor {
+            let vm = makeVM()
+            vm.quizState = .askingQuestion
+            vm.beginSkipUndoWindow(duration: 10) // long window — must not expire on its own
+            #expect(vm.pendingSkipWindow != nil)
+
+            await vm.submitMCQAnswer(key: "a", value: "Test Answer")
+
+            #expect(vm.pendingSkipWindow == nil, "submitting an MCQ answer must supersede a pending skip")
         }
     }
 }

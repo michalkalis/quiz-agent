@@ -931,6 +931,9 @@ final class QuizViewModel: ObservableObject {
     /// The backend MCQ fast-path matches both keys and values, so this works
     /// regardless of whether the evaluator checks by key or value.
     func submitMCQAnswer(key _: String, value: String) async {
+        // #110 Bug 2: starting an answer (voice or tap) supersedes any pending skip.
+        abortSkipUndoWindow()
+
         guard let sessionId = currentSession?.id else {
             errorMessage = String(localized: "No active session", comment: "Inline error: no quiz session is currently active")
             return
@@ -1079,6 +1082,15 @@ final class QuizViewModel: ObservableObject {
             try? await Task.sleep(for: .seconds(duration))
             guard let self, !Task.isCancelled else { return }
             guard self.pendingSkipWindow != nil else { return } // aborted
+            // #110 Bug 2: a pending skip is only ever committed while the quiz is
+            // still asking the question — starting an answer (voice or tap)
+            // supersedes it. Without this recheck, speaking/tapping during the
+            // window let expiry commit skipQuestion() mid-recording, leaving the
+            // streaming mic live into the result.
+            guard self.quizState == .askingQuestion else {
+                self.pendingSkipWindow = nil
+                return
+            }
             self.pendingSkipWindow = nil
             await self.skipQuestion()
         }

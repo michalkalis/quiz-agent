@@ -3,8 +3,9 @@
 //  HangsTests
 //
 //  Split from QuizViewModelTests.swift (issue #31 task 3.2). Covers timer
-//  primitives in QuizViewModel+Timers.swift plus the barge-in path in
-//  QuizViewModel+Audio.swift that auto-starts recording during TTS.
+//  primitives in QuizTimersController.swift (#113 T4, via the façade
+//  forwards) plus the barge-in path — QuizViewModel.handleBargeIn — that
+//  auto-starts recording during TTS.
 //
 
 import Foundation

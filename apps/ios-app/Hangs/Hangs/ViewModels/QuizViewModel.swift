@@ -150,20 +150,72 @@ final class QuizViewModel: ObservableObject {
     var transcriptWasEdited = false // internal — suppress TTS on edited confirmations
     var preEditTranscript: String? = nil // internal — snapshot for cancelEditingTranscript()
 
-    // Auto-advance countdown for ResultView binding (single source of truth)
-    @Published var autoAdvanceCountdown: Int = 0
+    // MARK: - Timers — forwarded to QuizTimersController (#113 T4)
 
-    // Answer timer countdown (visible on QuestionView)
-    @Published var answerTimerCountdown: Int = 0
+    // Timer slice — owned by QuizTimersController. Permanent forwarding
+    // accessors (decision 2) so views/tests keep binding QuizViewModel;
+    // change notifications ride the re-published child `objectWillChange`
+    // wired in `init`. Settable: the façade writes them (resetState,
+    // pauseQuiz/resumeAutoAdvance/continueToNext/proceedToNextQuestion,
+    // startNewQuiz) and tests seed them directly.
 
-    // Thinking time countdown (visible on QuestionView before auto-recording)
-    @Published var thinkingTimeCountdown: Int = 0
+    /// Auto-advance countdown for ResultView binding (single source of truth)
+    /// — see `QuizTimersController.autoAdvanceCountdown`.
+    var autoAdvanceCountdown: Int {
+        get { quizTimersController.autoAdvanceCountdown }
+        set { quizTimersController.autoAdvanceCountdown = newValue }
+    }
 
-    // Auto-advance enabled state (global setting toggle)
-    @Published var autoAdvanceEnabled: Bool = true
+    /// Answer timer countdown (visible on QuestionView) — see
+    /// `QuizTimersController.answerTimerCountdown`.
+    var answerTimerCountdown: Int {
+        get { quizTimersController.answerTimerCountdown }
+        set { quizTimersController.answerTimerCountdown = newValue }
+    }
 
-    // Per-question pause state (resets on next question)
-    @Published var currentQuestionPaused: Bool = false
+    /// Thinking time countdown (visible on QuestionView before auto-recording)
+    /// — see `QuizTimersController.thinkingTimeCountdown`.
+    var thinkingTimeCountdown: Int {
+        get { quizTimersController.thinkingTimeCountdown }
+        set { quizTimersController.thinkingTimeCountdown = newValue }
+    }
+
+    /// Auto-advance enabled state (global setting toggle; dead axis, dies in
+    /// S6a) — see `QuizTimersController.autoAdvanceEnabled`.
+    var autoAdvanceEnabled: Bool {
+        get { quizTimersController.autoAdvanceEnabled }
+        set { quizTimersController.autoAdvanceEnabled = newValue }
+    }
+
+    /// Per-question pause state (resets on next question) — see
+    /// `QuizTimersController.currentQuestionPaused`.
+    var currentQuestionPaused: Bool {
+        get { quizTimersController.currentQuestionPaused }
+        set { quizTimersController.currentQuestionPaused = newValue }
+    }
+
+    /// Timer start/cancel choke points — see the same-named methods on
+    /// `QuizTimersController`. Kept on the façade (decision 2) for the
+    /// MAIN/+Recording/AudioDeviceState/VoiceCommandCoordinator callers
+    /// and the timer test surface.
+    func startThinkingTimeCountdown() { quizTimersController.startThinkingTimeCountdown() }
+    func cancelThinkingTime() { quizTimersController.cancelThinkingTime() }
+    func startAnswerTimer() { quizTimersController.startAnswerTimer() }
+    func cancelAnswerTimer() { quizTimersController.cancelAnswerTimer() }
+    func startAutoStopRecordingTimer(duration: TimeInterval = Config.autoRecordingDuration) {
+        quizTimersController.startAutoStopRecordingTimer(duration: duration)
+    }
+
+    func cancelAutoStopRecordingTimer() { quizTimersController.cancelAutoStopRecordingTimer() }
+    func startAutoAdvanceCountdown(duration: Int, audioDuration: TimeInterval) async {
+        await quizTimersController.startAutoAdvanceCountdown(duration: duration, audioDuration: audioDuration)
+    }
+
+    func startAutoConfirmIfEnabled(duration: Int = Config.autoConfirmDelaySecs) {
+        quizTimersController.startAutoConfirmIfEnabled(duration: duration)
+    }
+
+    func cancelAutoConfirm() { quizTimersController.cancelAutoConfirm() }
 
     // Minimize state
     @Published var isMinimized: Bool = false
@@ -436,12 +488,21 @@ final class QuizViewModel: ObservableObject {
     /// `makeVoiceCommandCoordinator()` on first touch (the `init` re-publish sink).
     private(set) lazy var voiceCommandCoordinator: VoiceCommandCoordinator = makeVoiceCommandCoordinator()
 
+    /// Timer slice owner (#113 T4): the countdown/pause state + every timer
+    /// start/cancel. The façade owns the child, re-publishes its
+    /// `objectWillChange`, and re-exposes the slice via the forwarding
+    /// accessors above (decision 2). `lazy` so the injected closures can
+    /// capture `self` weakly — built by `makeQuizTimersController()` on
+    /// first touch (the `init` re-publish sink).
+    private(set) lazy var quizTimersController: QuizTimersController = makeQuizTimersController()
+
     /// Single owner for every long-lived `Task` this view model spawns.
     /// Each call site stores its task under a `TaskKey`; `resetState()` calls
     /// `cancelAll()` instead of duplicating ten cancel-and-nil lines.
-    let taskBag = TaskBag() // internal for QuizViewModel+Timers/+Recording; shared with AudioDeviceState
+    let taskBag = TaskBag() // internal for QuizViewModel+Recording; shared with AudioDeviceState/QuizTimersController
 
-    // Whether the current recording is a re-record (bypasses all timers) (internal for QuizViewModel+Timers)
+    // Whether the current recording is a re-record (bypasses all timers) —
+    // read by QuizTimersController/AudioDeviceState via injected closures
     var isRerecording: Bool = false
 
     // Consecutive transcription failures for 3-tier error escalation
@@ -508,6 +569,9 @@ final class QuizViewModel: ObservableObject {
         voiceCommandCoordinator.objectWillChange
             .sink { [weak self] in self?.objectWillChange.send() }
             .store(in: &cancellables)
+        quizTimersController.objectWillChange
+            .sink { [weak self] in self?.objectWillChange.send() }
+            .store(in: &cancellables)
     }
 
     /// #113 T2: builds the audio child. Every closure captures the façade
@@ -535,8 +599,8 @@ final class QuizViewModel: ObservableObject {
             onBargeIn: { [weak self] in await self?.handleBargeIn() },
             startCommandConsumer: { [weak self] in self?.voiceCommandCoordinator.startCommandConsumer() },
             stopCommandConsumer: { [weak self] in self?.voiceCommandCoordinator.stopCommandConsumer() },
-            startThinkingTimeCountdown: { [weak self] in self?.startThinkingTimeCountdown() },
-            startAnswerTimer: { [weak self] in self?.startAnswerTimer() }
+            startThinkingTimeCountdown: { [weak self] in self?.quizTimersController.startThinkingTimeCountdown() },
+            startAnswerTimer: { [weak self] in self?.quizTimersController.startAnswerTimer() }
         )
     }
 
@@ -544,8 +608,8 @@ final class QuizViewModel: ObservableObject {
     /// façade weakly — the child is façade-owned so `self` outlives it; `weak`
     /// just breaks the ownership cycle (façade → child → closure → façade).
     /// Each closure is the minimal scoped read/write of decision 4 — never a
-    /// vm ref. The recording/timer fan-out targets still live in the
-    /// +Recording/+Timers extensions; their extracts (S4/S5) re-point these.
+    /// vm ref. The recording fan-out targets still live in the +Recording
+    /// extension; its extract (S5) re-points these.
     private func makeVoiceCommandCoordinator() -> VoiceCommandCoordinator {
         VoiceCommandCoordinator(
             silenceDetectionService: silenceDetectionService,
@@ -565,8 +629,30 @@ final class QuizViewModel: ObservableObject {
             rerecordAnswer: { [weak self] in self?.rerecordAnswer() },
             cancelProcessing: { [weak self] in self?.cancelProcessing() },
             continueToNext: { [weak self] in self?.continueToNext() },
-            cancelAnswerTimer: { [weak self] in self?.cancelAnswerTimer() },
-            cancelThinkingTime: { [weak self] in self?.cancelThinkingTime() }
+            cancelAnswerTimer: { [weak self] in self?.quizTimersController.cancelAnswerTimer() },
+            cancelThinkingTime: { [weak self] in self?.quizTimersController.cancelThinkingTime() }
+        )
+    }
+
+    /// #113 T4: builds the timer child. Every closure captures the façade
+    /// weakly — the child is façade-owned so `self` outlives it; `weak` just
+    /// breaks the ownership cycle (façade → child → closure → façade). Each
+    /// closure is the minimal scoped read/write of decision 4 — never a vm
+    /// ref. The recording fan-out targets still live in the +Recording
+    /// extension; its extract (S5) re-points these.
+    private func makeQuizTimersController() -> QuizTimersController {
+        QuizTimersController(
+            taskBag: taskBag,
+            settings: { [weak self] in self?.settings ?? .default },
+            quizState: { [weak self] in self?.quizState ?? .idle },
+            isRerecording: { [weak self] in self?.isRerecording ?? false },
+            setIsAutoRecording: { [weak self] in self?.isAutoRecording = $0 },
+            showAnswerConfirmation: { [weak self] in self?.showAnswerConfirmation ?? false },
+            setAutoConfirmCountdown: { [weak self] in self?.autoConfirmCountdown = $0 },
+            startRecording: { [weak self] in await self?.startRecording() },
+            stopRecordingAndSubmit: { [weak self] in await self?.stopRecordingAndSubmit() },
+            confirmAnswer: { [weak self] in await self?.confirmAnswer() },
+            proceedToNextQuestion: { [weak self] in await self?.proceedToNextQuestion() }
         )
     }
 

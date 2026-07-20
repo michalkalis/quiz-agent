@@ -138,9 +138,7 @@ def test_feedback_raising_reports_once(service):
 
     with patch("app.translation.translator.sentry_sdk") as mock_sentry:
         result = asyncio.run(
-            service.translate_feedback(
-                "Correct!", "sk", session_id="sess-xyz"
-            )
+            service.translate_feedback("Correct!", "sk", session_id="sess-xyz")
         )
 
     assert result == "Correct!"

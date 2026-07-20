@@ -7,10 +7,12 @@
 //
 //  Deviations from the handoff spec (issue-31-handoff.md Task 2.4):
 //  - "audioIntegrity" case does not exist; Content-Length mismatch throws
-//    NetworkError.invalidResponse (confirmed in NetworkService.swift:495-498).
-//  - extendSession 5xx throws NetworkError.invalidResponse (not .serverError),
-//    because extendSession has a single guard that collapses all non-2xx cases
-//    (NetworkService.swift:272-275).
+//    NetworkError.invalidResponse (confirmed in the bespoke downloadAudio).
+//  - Since #112 — error-path dedup, every JSON/Void endpoint runs through the
+//    one performRequestData pipeline: non-2xx always throws .serverError with
+//    the real status code (decoded backend detail when the body carries one,
+//    "HTTP <n>" otherwise). The pre-#112 per-endpoint .invalidResponse
+//    fallbacks are gone.
 //
 
 import Foundation
@@ -163,14 +165,15 @@ struct NetworkServiceTests {
         try await service.extendSession(sessionId: "s1", minutes: 30)
     }
 
-    // MARK: 6. extendSession 5xx → .invalidResponse
+    // MARK: 6. extendSession 5xx → .serverError(500)
 
     //
-    // extendSession has a single guard over the 2xx range and throws
-    // .invalidResponse for all non-2xx, including 5xx. The handoff spec
-    // incorrectly stated .serverError — see NetworkService.swift:272-275.
+    // Since #112 — error-path dedup, all non-2xx responses surface as
+    // .serverError carrying the real status code (uniform performRequestData
+    // pipeline), so a 500 must map to the "Server error" copy — not the
+    // pre-#112 endpoint-local .invalidResponse collapse.
 
-    @Test("extendSession 500 → .invalidResponse")
+    @Test("extendSession 500 → .serverError(500)")
     func extendSessionServerError() async throws {
         let service = makeService()
         StubURLProtocol.handler = { _ in (.make(status: 500), Data()) }
@@ -180,8 +183,34 @@ struct NetworkServiceTests {
             try await service.extendSession(sessionId: "s1", minutes: 30)
             Issue.record("Expected throw, got success")
         } catch let error as NetworkError {
-            guard case .invalidResponse = error else {
-                Issue.record("Expected .invalidResponse, got \(error)"); return
+            guard case let .serverError(statusCode, _) = error, statusCode == 500 else {
+                Issue.record("Expected .serverError(500), got \(error)"); return
+            }
+        }
+    }
+
+    // MARK: 6b. endSession bodiless 404 → .sessionNotFound
+
+    //
+    // The 404 → sessionNotFound remap must hold for ANY 404 — including an
+    // edge-proxy / empty-body one that does not decode as ErrorResponse.
+    // Pre-#112 endSession checked the raw status before any body decode; the
+    // shared pipeline must preserve that unconditional guarantee, otherwise a
+    // stale session's end-quiz strands the user on a "Failed to end quiz"
+    // banner instead of returning Home (#59.4 semantics).
+
+    @Test("endSession 404 with empty body → .sessionNotFound")
+    func endSessionBodiless404() async throws {
+        let service = makeService()
+        StubURLProtocol.handler = { _ in (.make(status: 404), Data()) }
+        defer { StubURLProtocol.handler = nil }
+
+        do {
+            try await service.endSession(sessionId: "s1")
+            Issue.record("Expected throw, got success")
+        } catch let error as NetworkError {
+            guard case .sessionNotFound = error else {
+                Issue.record("Expected .sessionNotFound, got \(error)"); return
             }
         }
     }

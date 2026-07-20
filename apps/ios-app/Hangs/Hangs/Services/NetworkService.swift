@@ -163,20 +163,14 @@ actor NetworkService: NetworkServiceProtocol {
                 throw NetworkError.serverError(statusCode: statusCode, message: errorResponse.detail)
             }
 
-            throw NetworkError.invalidResponse
+            // Non-decodable body (edge-proxy error page, empty body): keep the
+            // status code on the thrown error — callers hook on it (endSession's
+            // 404 → sessionNotFound must hold for ANY 404, not only ones whose
+            // body decodes as ErrorResponse).
+            throw NetworkError.serverError(statusCode: statusCode, message: "HTTP \(statusCode)")
         }
 
         return data
-    }
-
-    /// Decode variant, layered on `performRequestData` — the seam future
-    /// endpoints (#97 CarPlay, #95 pack play) reuse for auth + 429-parse +
-    /// breadcrumbs without re-pasting the guard. None of the 6 current decode
-    /// endpoints call this directly (decision 4: they decode caller-side to
-    /// preserve MainActor iso8601 / off-MainActor decode exactly as today).
-    private func performRequest<T: Decodable>(_ request: URLRequest, endpointPath: String) async throws -> T {
-        let data = try await performRequestData(request, endpointPath: endpointPath)
-        return try JSONDecoder().decode(T.self, from: data)
     }
 
     /// Void variant for endpoints with no response body to decode.
@@ -271,9 +265,9 @@ actor NetworkService: NetworkServiceProtocol {
 
         Logger.network.debug("🌐 DELETE \(endpoint, privacy: .public)")
 
-        // 404 → sessionNotFound is a caller-side hook: the generic surfaces a
-        // decoded-detail .serverError(404, …) for a real backend 404 body, and
-        // this remaps it — every other status/error passes through unchanged.
+        // 404 → sessionNotFound is a caller-side hook: the generic surfaces
+        // .serverError(404, …) for EVERY 404 (decoded backend detail or not),
+        // and this remaps it — every other status/error passes through unchanged.
         do {
             try await performRequest(request, endpointPath: "/api/v1/sessions/{id}")
         } catch let NetworkError.serverError(statusCode, _) where statusCode == 404 {

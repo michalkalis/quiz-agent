@@ -59,8 +59,19 @@ jobs:
       - name: Install dependencies
         run: |
           uv pip install --system -e apps/quiz-agent
+          uv pip install --system -e apps/quiz-pack-api
           uv pip install --system -e packages/shared
           uv pip install --system pytest pytest-cov pytest-asyncio httpx
+
+      # The shared test DB mirrors prod co-tenancy: quiz-agent's pgvector/pack
+      # suites read `questions`/`generation_orders`, which are quiz-pack-api's
+      # alembic-managed tables (quiz-agent's conftest create_all only builds its
+      # own Base). Without this the DB suites fail on UndefinedTable.
+      - name: Apply quiz-pack-api migrations (co-tenant tables)
+        working-directory: apps/quiz-pack-api
+        env:
+          DATABASE_URL: postgresql://quiz:quiz@localhost:5432/quiz_pack_test
+        run: alembic upgrade head
 
       - name: Run backend tests
         env:
@@ -183,8 +194,9 @@ jobs:
     name: Verify OpenAPI Spec Generation
     runs-on: ubuntu-latest
 
-    # Startup requires DATABASE_URL (#41 D6, no fallback) — an empty pgvector
-    # instance is enough: all startup DB touches degrade to warnings.
+    # Startup requires DATABASE_URL (#41 D6, no fallback) AND a migrated schema:
+    # the boot-time migration head check (2026-07-18 arch-review remediation)
+    # fails loud on an unmigrated database, so migrations run before uvicorn.
     services:
       postgres:
         image: pgvector/pgvector:pg16
@@ -218,6 +230,12 @@ jobs:
         run: |
           uv pip install --system -e apps/quiz-agent
           uv pip install --system -e packages/shared
+
+      - name: Run Alembic migrations
+        working-directory: apps/quiz-agent
+        env:
+          DATABASE_URL: postgresql+asyncpg://quiz:quiz@localhost:5432/quiz_agent_ci
+        run: alembic upgrade head
 
       - name: Start backend server
         env:

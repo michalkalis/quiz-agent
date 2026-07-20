@@ -410,28 +410,8 @@ extension QuizViewModel {
                 Logger.network.error("⏱️ Voice submission timed out after 30 seconds")
             } catch let error as NetworkError {
                 // Handle daily limit reached — show paywall
-                if case let .quotaLimitReached(limitError) = error {
-                    // #102 finding 1: give the server mirror a short bounded
-                    // window to catch up first if RC's local cache already
-                    // says the customer is entitled (purchase/restore sync
-                    // failed or the webhook is still lagging).
-                    let entitlementConfirmed = await self.resyncBeforePaywallIfLocallyEntitled()
-                    await MainActor.run {
-                        if entitlementConfirmed {
-                            // #102 review follow-up: skip the paywall when the
-                            // resync just confirmed the user is entitled — ask
-                            // them to retry instead. (setError transitions to
-                            // .error directly from the in-flight state.)
-                            self.setError(
-                                message: String(localized: "Your subscription just synced — please try again.", comment: "Shown after a 429 quota error self-resolves via entitlement resync; user should retry their last action"),
-                                context: .submission
-                            )
-                        } else {
-                            self.quotaLimitError = limitError
-                            self.showPaywall = true
-                            self.transition(to: .idle)
-                        }
-                    }
+                if case .quotaLimitReached = error {
+                    await self.handleError(error, context: .submission, fallbackMessage: String(localized: "Failed to submit answer", comment: "Error prefix when submitting a voice answer fails; error detail is appended"))
                     return
                 }
 

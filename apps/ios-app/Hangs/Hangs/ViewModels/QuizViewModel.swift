@@ -658,39 +658,8 @@ final class QuizViewModel: ObservableObject {
                 startRecordingOrTimer()
             }
 
-        } catch let error as NetworkError {
-            if case let .quotaLimitReached(limitError) = error {
-                let entitlementConfirmed = await resyncBeforePaywallIfLocallyEntitled()
-                audioService.deactivateSession()
-                if entitlementConfirmed {
-                    // #102 review follow-up: the resync just made the server agree
-                    // the user is entitled — don't strand them behind the paywall
-                    // for this cycle, ask them to retry instead. (setError transitions
-                    // to .error directly; quizState is still .startingQuiz here.)
-                    setError(
-                        message: String(localized: "Your subscription just synced — please try starting the quiz again.", comment: "Shown after a 429 quota error self-resolves via entitlement resync; user should retry starting the quiz"),
-                        context: .initialization
-                    )
-                } else {
-                    quotaLimitError = limitError
-                    showPaywall = true
-                    transition(to: .idle)
-                }
-            } else {
-                setError(
-                    message: String(localized: "Failed to start quiz: \(error.localizedDescription)", comment: "Quiz could not be started; placeholder is the underlying error"),
-                    context: .initialization,
-                    error: error
-                )
-            }
-
-            Logger.quiz.error("❌ Error starting quiz: \(error, privacy: .public)")
         } catch {
-            setError(
-                message: "Failed to start quiz: \(error.localizedDescription)",
-                context: .initialization,
-                error: error
-            )
+            await handleError(error, context: .initialization, fallbackMessage: String(localized: "Failed to start quiz", comment: "Quiz could not be started; error detail is appended"))
 
             Logger.quiz.error("❌ Error starting quiz: \(error, privacy: .public)")
         }
@@ -713,7 +682,7 @@ final class QuizViewModel: ObservableObject {
     }
 
     /// Handle an error, detecting 429 daily limit and showing paywall instead of error state
-    private func handleError(_ error: Error, context: ErrorContext, fallbackMessage: String) async {
+    func handleError(_ error: Error, context: ErrorContext, fallbackMessage: String) async { // internal for QuizViewModel+Recording
         if let networkError = error as? NetworkError,
            case let .quotaLimitReached(limitError) = networkError
         {

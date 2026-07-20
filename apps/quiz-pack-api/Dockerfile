@@ -46,7 +46,8 @@ RUN pip install --no-cache-dir \
     cryptography>=42.0.0 \
     sse-starlette>=2.1.0 \
     pydantic-settings>=2.3.0 \
-    pytest-asyncio>=0.23.0
+    pytest-asyncio>=0.23.0 \
+    "sentry-sdk[fastapi]>=2.0.0"
 
 # Production stage
 FROM python:3.11-slim

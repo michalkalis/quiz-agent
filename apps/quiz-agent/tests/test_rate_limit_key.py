@@ -4,17 +4,19 @@ Before #65 the limiter used ``get_remote_address``, which on Fly.io returns the
 proxy address — collapsing every per-IP limit into one global bucket (so one
 abuser could exhaust everyone's quota, and distinct clients shared a counter).
 
-Three angles, deliberately isolated from slowapi's shared in-memory state:
-1. the ``fly_client_ip`` key function itself prefers ``Fly-Client-IP`` and falls
-   back to the peer address off-Fly (this *is* the one-line fix);
-2. a fresh limiter keyed on it gives distinct IPs independent counters;
-3. the production ``limiter`` is wired to that key function, so every existing
+Two angles, deliberately isolated from slowapi's shared in-memory state:
+1. a fresh limiter keyed on ``fly_client_ip`` gives distinct IPs independent
+   counters;
+2. the production ``limiter`` is wired to that key function, so every existing
    ``@limiter.limit`` decorator inherits the fix.
+
+The key function itself (``fly_client_ip`` — prefers ``Fly-Client-IP``, falls
+back to the peer address off-Fly) is unit-tested once for both apps in
+``packages/shared/tests/test_net_util.py`` since it moved to
+``quiz_shared.net.util`` (backend arch review 2026-07-18).
 """
 
 from __future__ import annotations
-
-from types import SimpleNamespace
 
 import pytest
 import pytest_asyncio
@@ -26,28 +28,7 @@ from slowapi.errors import RateLimitExceeded
 from app.rate_limit import fly_client_ip, limiter
 
 
-class _Req:
-    """Minimal Request stand-in: ``.headers`` and ``.client`` (read by get_remote_address)."""
-
-    def __init__(self, fly_ip: str | None = None, peer: str | None = None) -> None:
-        self.headers = {} if fly_ip is None else {"Fly-Client-IP": fly_ip}
-        self.client = SimpleNamespace(host=peer) if peer else None
-
-
-# 1. The key function ---------------------------------------------------------
-
-
-def test_fly_client_ip_prefers_header() -> None:
-    """On Fly the key is the real client IP from Fly-Client-IP, not the peer."""
-    assert fly_client_ip(_Req(fly_ip="9.9.9.9", peer="10.0.0.1")) == "9.9.9.9"
-
-
-def test_fly_client_ip_falls_back_to_peer_off_fly() -> None:
-    """Off Fly (no header — local dev / tests) it falls back to the peer addr."""
-    assert fly_client_ip(_Req(fly_ip=None, peer="10.0.0.1")) == "10.0.0.1"
-
-
-# 3. The production limiter is keyed on it ------------------------------------
+# The production limiter is keyed on it ---------------------------------------
 
 
 def test_production_limiter_keyed_on_fly_client_ip() -> None:
@@ -55,7 +36,7 @@ def test_production_limiter_keyed_on_fly_client_ip() -> None:
     assert limiter._key_func is fly_client_ip
 
 
-# 2. Behavioral: distinct IPs → independent buckets ---------------------------
+# Behavioral: distinct IPs → independent buckets ------------------------------
 # Uses a *fresh* Limiter (its own storage) so the shared module limiter's state
 # can't leak between tests and make this flaky.
 

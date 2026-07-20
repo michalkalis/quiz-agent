@@ -34,6 +34,7 @@ from app.db.models.order import GenerationOrder
 from app.db.session import get_session
 from app.storekit import AppleJWSVerifier
 from quiz_shared.auth.tokens import TokenService
+from tests._isolation import truncate_order_graph
 from tests.storekit._chain_fixtures import JWSFactory, TestChain
 
 pytestmark = pytest.mark.integration
@@ -95,6 +96,17 @@ async def db_session(engine: AsyncEngine) -> AsyncIterator[AsyncSession]:
     factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
     async with factory() as s:
         yield s
+
+
+@pytest_asyncio.fixture(autouse=True)
+async def _clean_order_tables(db_session: AsyncSession) -> None:
+    """Start each test from an empty order/job/pack/question slate.
+
+    Mirrors test_order_e2e.py's fixture of the same purpose (backend arch
+    review 2026-07-18: per-test isolation gap) — this module also had no
+    cleanup, relying solely on fresh uuid4 tx_ids per test.
+    """
+    await truncate_order_graph(db_session)
 
 
 @pytest_asyncio.fixture(autouse=True)

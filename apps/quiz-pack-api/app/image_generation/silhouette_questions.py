@@ -27,7 +27,8 @@ def generate_silhouette_question_text(
         Dict with keys: question, alternative_answers, tags, explanation.
     """
     # Part of the image-generation pipeline — stays on canonical OpenAI (issue #53).
-    client = llm_factory.openai_client(direct=True)
+    # Offline generation pipeline — needs longer than the voice-path default.
+    client = llm_factory.openai_client(direct=True, timeout=llm_factory.GENERATION_TIMEOUT)
 
     prompt_template = PROMPT_PATH.read_text()
     prompt = prompt_template.format(

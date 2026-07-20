@@ -40,6 +40,7 @@ RUN pip install --no-cache-dir \
     "sqlalchemy[asyncio]>=2.0.0" \
     asyncpg>=0.29.0 \
     alembic>=1.13.0 \
+    pydantic-settings>=2.3.0 \
     "pyjwt[crypto]>=2.8.0" \
     pyattest>=1.0.4 \
     cbor2>=5.6.0 \

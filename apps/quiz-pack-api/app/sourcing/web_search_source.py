@@ -1,5 +1,6 @@
 """Web search fact sourcing via Tavily API."""
 
+import logging
 import os
 from typing import Optional
 
@@ -8,6 +9,14 @@ from tavily import AsyncTavilyClient
 from app.cost_tracking import TAVILY_ADVANCED_SEARCH_CREDITS, add_tavily_credits
 
 from .models import Fact
+
+logger = logging.getLogger(__name__)
+
+# Backend arch review 2026-07-18: repo-conventional HTTP timeout (matches
+# quiz_shared.llm.factory's openai_client()) — AsyncTavilyClient's own default
+# is 60s, which is too long to hold up a paid generation pipeline stage on a
+# stalled connection.
+_TAVILY_TIMEOUT_SECONDS = 10.0
 
 
 class WebSearchSource:
@@ -55,6 +64,7 @@ class WebSearchSource:
                         max_results=5,
                         include_answer=True,
                         search_depth="advanced",
+                        timeout=_TAVILY_TIMEOUT_SECONDS,
                         **news_kwargs,
                     )
                     add_tavily_credits(TAVILY_ADVANCED_SEARCH_CREDITS)
@@ -77,7 +87,10 @@ class WebSearchSource:
                             )
                         )
                 except Exception as e:
-                    print(f"Tavily search failed for '{query}': {e}")
+                    # Broad catch matches the sibling sourcing modules
+                    # (opentriviadb_source, wikipedia_source): a single query
+                    # failure must not abort the rest of the fan-out loop.
+                    logger.warning("Tavily search failed for %r: %s", query, e)
                     continue
 
         return facts[:count]
@@ -97,6 +110,7 @@ class WebSearchSource:
                 max_results=max_results,
                 include_answer=True,
                 search_depth="advanced",
+                timeout=_TAVILY_TIMEOUT_SECONDS,
             )
             add_tavily_credits(TAVILY_ADVANCED_SEARCH_CREDITS)
             return {

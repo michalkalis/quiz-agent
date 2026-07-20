@@ -8,10 +8,15 @@ Dropping the param is NOT a fix: asyncpg then defaults to ``prefer`` and the
 flycast LB hard-resets the TLS handshake (ConnectionResetError, verified on
 the staging machine). asyncpg accepts the same sslmode values under ``ssl``,
 so the key is renamed and the value kept. These tests pin that translation so
-any attach-provisioned environment (the 3rd env included) boots verbatim.
+any attach-provisioned environment boots verbatim.
+
+Consolidated from the near-identical apps/quiz-agent/tests/test_db_engine_url.py
+and apps/quiz-pack-api/tests/db/test_engine_url.py after ``normalize_async_url``
+was promoted into ``quiz_shared.database.engine`` — both apps' behavior is
+the same function now, so one test suite covers both.
 """
 
-from app.db.engine import normalize_async_url
+from quiz_shared.database.engine import normalize_async_url
 
 
 def test_scheme_rewrite_plain():

@@ -24,7 +24,8 @@ def _get_openai_client():
     # Image generation is direct-only: OpenRouter does not serve gpt-image-1
     # (issue #53). The chat prompt-drafting + vision-validation calls in this
     # pipeline share the same direct client to keep the pipeline on one provider.
-    return llm_factory.openai_client(direct=True)
+    # Offline generation pipeline — needs longer than the voice-path default.
+    return llm_factory.openai_client(direct=True, timeout=llm_factory.GENERATION_TIMEOUT)
 
 
 def generate_hint_image_prompt(

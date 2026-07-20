@@ -77,7 +77,10 @@ class TopicPlanner:
         if not self._available():
             return None
         if self._client is None:
-            self._client = llm_factory.openai_client(async_=True)
+            # Offline generation pipeline — needs longer than the voice-path default.
+            self._client = llm_factory.openai_client(
+                async_=True, timeout=llm_factory.GENERATION_TIMEOUT
+            )
         try:
             response = await self._client.chat.completions.create(
                 model=llm_factory.resolve_model(self._model),

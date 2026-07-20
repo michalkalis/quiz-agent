@@ -13,6 +13,11 @@ primary_region = "cdg"
   # RC_ALLOWED_ENVIRONMENT=SANDBOX is set as a Fly secret alongside
   # DATABASE_URL/REVENUECAT_* (issue #101 §3.5) — not duplicated here since
   # those are per-deploy secrets, not build-time config.
+  # Secrets parity gap (backend arch review 2026-07-18): staging lacks the
+  # APPLE_SIGNIN_* / APPLE_TOKEN_ENC_KEY / CORS_ORIGINS secrets present on
+  # prod, so /auth/apple is gracefully disabled (503) here and the beta build
+  # cannot exercise SIWA. Mirror them per issue #101 §3.5 (SIWA rows + owed
+  # `fly secrets set` note) at the next staging secrets/deploy step.
   ENVIRONMENT = "staging"
 
 [[services]]

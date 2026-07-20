@@ -104,7 +104,10 @@ class ExpiryClassifier:
     async def _complete(self, prompt: str) -> Optional[str]:
         """Single LLM boundary: raw model text, or ``None`` on any failure."""
         if self._client is None:
-            self._client = llm_factory.openai_client(async_=True)
+            # Offline generation pipeline — needs longer than the voice-path default.
+            self._client = llm_factory.openai_client(
+                async_=True, timeout=llm_factory.GENERATION_TIMEOUT
+            )
         try:
             response = await self._client.chat.completions.create(
                 model=llm_factory.resolve_model(_CLASSIFIER_MODEL),

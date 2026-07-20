@@ -106,6 +106,20 @@ def test_async_client_type(monkeypatch):
     assert isinstance(factory.openai_client(async_=False), OpenAI)
 
 
+def test_openai_client_defaults_to_bounded_timeout(monkeypatch):
+    """The voice hot path must never inherit the SDK's 600s default."""
+    client = factory.openai_client()
+    assert client.timeout == factory.DEFAULT_TIMEOUT
+    assert client.timeout.read == 30.0
+
+
+def test_openai_client_timeout_is_overridable(monkeypatch):
+    """Offline generation call sites pass an explicit longer timeout."""
+    client = factory.openai_client(timeout=factory.GENERATION_TIMEOUT)
+    assert client.timeout == factory.GENERATION_TIMEOUT
+    assert client.timeout.read == 300.0
+
+
 def test_chat_openai_direct_resolves_model_and_endpoint(monkeypatch):
     monkeypatch.setenv("LLM_GATEWAY", "direct")
     llm = factory.chat_openai("gpt-4o", temperature=0.8)

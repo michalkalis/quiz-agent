@@ -36,6 +36,7 @@ from app.db.models import (
     question_to_row,
     row_to_question,
 )
+from tests._isolation import truncate_order_graph
 
 APP_ROOT = Path(__file__).resolve().parents[2]
 
@@ -79,6 +80,20 @@ async def session(engine: AsyncEngine) -> AsyncIterator[AsyncSession]:
     factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
     async with factory() as s:
         yield s
+
+
+@pytest_asyncio.fixture(autouse=True)
+async def _clean_slate(session: AsyncSession) -> None:
+    """Start each test from an empty order/job/pack/question slate.
+
+    This module (unlike test_pgvector_client.py's random-id + try/finally
+    rows) writes fixed-shape orders/jobs/packs whose isolation previously
+    depended on every test's end-of-test DELETE actually running — a failed
+    assertion mid-test left rows for the next run to trip over (backend arch
+    review 2026-07-18: per-test isolation gap, same fragility class as the
+    order-e2e CI flake, 154b95b). Truncating up front removes that dependency.
+    """
+    await truncate_order_graph(session)
 
 
 def _make_question(**overrides) -> Question:

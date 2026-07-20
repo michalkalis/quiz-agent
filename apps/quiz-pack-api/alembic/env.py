@@ -43,6 +43,23 @@ config.set_main_option("sqlalchemy.url", normalize_async_url(_settings.database_
 target_metadata = Base.metadata
 
 
+def include_object(obj, name, type_, reflected, compare_to) -> bool:
+    """Allowlist: only THIS app's own metadata tables exist for Alembic.
+
+    The shared cluster also hosts quiz-agent's auth/usage tables
+    (``anonymous_identities``, ``refresh_tokens``, …) and their dedicated
+    ``alembic_version_quiz_agent`` table. Without this filter,
+    ``alembic revision --autogenerate`` reflects those co-tenant tables,
+    finds them absent from this app's metadata, and emits ``drop_table`` for
+    them (backend arch review 2026-07-18). Reflected tables not in
+    ``target_metadata`` are therefore excluded; dropping one of our OWN
+    tables consequently needs a hand-written migration.
+    """
+    if type_ == "table":
+        return name in target_metadata.tables
+    return True
+
+
 def run_migrations_offline() -> None:
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
@@ -50,6 +67,7 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        include_object=include_object,
     )
 
     with context.begin_transaction():
@@ -57,7 +75,11 @@ def run_migrations_offline() -> None:
 
 
 def do_run_migrations(connection: Connection) -> None:
-    context.configure(connection=connection, target_metadata=target_metadata)
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+        include_object=include_object,
+    )
 
     with context.begin_transaction():
         context.run_migrations()

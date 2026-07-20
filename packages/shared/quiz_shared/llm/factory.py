@@ -19,12 +19,22 @@ OpenRouter id). Logical roles below are a convenience layer over direct ids.
 import os
 from typing import Optional, Union
 
+import httpx
 from openai import AsyncOpenAI, OpenAI
 
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 
 DIRECT = "direct"
 OPENROUTER = "openrouter"
+
+# Bounds every openai_client() call so the voice-quiz hot path (TTS, Whisper,
+# translation, evaluation) never inherits the OpenAI SDK's 600s default.
+# ~30s covers that path's latency budget; 5s connect is generous for any
+# network path. quiz-pack-api's offline generation pipeline legitimately
+# needs longer calls (chat generation, image generation) — those call sites
+# pass GENERATION_TIMEOUT explicitly instead of relying on this default.
+DEFAULT_TIMEOUT = httpx.Timeout(30.0, connect=5.0)
+GENERATION_TIMEOUT = httpx.Timeout(300.0, connect=10.0)
 
 # Logical role -> canonical (direct-provider) model id. These mirror the
 # defaults that live at each call site today; keeping them here lets the
@@ -132,16 +142,22 @@ def _base_url_and_key(direct: bool) -> tuple[Optional[str], Optional[str]]:
 
 
 def openai_client(
-    *, async_: bool = False, direct: bool = False
+    *,
+    async_: bool = False,
+    direct: bool = False,
+    timeout: Union[httpx.Timeout, float, None] = DEFAULT_TIMEOUT,
 ) -> Union[OpenAI, AsyncOpenAI]:
     """Native OpenAI-SDK client pointed at the active gateway (or forced direct).
 
     Use ``direct=True`` for audio (TTS/Whisper) and image generation, which
-    OpenRouter does not serve.
+    OpenRouter does not serve. ``timeout`` defaults to ``DEFAULT_TIMEOUT``
+    (~30s) so the voice hot path never inherits the SDK's 600s default; call
+    sites that legitimately run long (offline generation) should pass
+    ``GENERATION_TIMEOUT`` or another explicit override.
     """
     base_url, api_key = _base_url_and_key(direct)
     cls = AsyncOpenAI if async_ else OpenAI
-    return cls(api_key=api_key, base_url=base_url)
+    return cls(api_key=api_key, base_url=base_url, timeout=timeout)
 
 
 def chat_openai(model: str, **kwargs):

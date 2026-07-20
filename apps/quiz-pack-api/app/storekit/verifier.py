@@ -77,7 +77,7 @@ class AppleJWSVerifier:
         self,
         root_cert: x509.Certificate,
         app_bundle_id: str,
-        environment: str,
+        environment: Optional[str],
     ) -> None:
         self._root = root_cert
         self._root_der = root_cert.public_bytes(
@@ -91,7 +91,7 @@ class AppleJWSVerifier:
         cls,
         root_cert_path: Union[str, Path],
         app_bundle_id: str,
-        environment: str,
+        environment: Optional[str],
     ) -> "AppleJWSVerifier":
         path = Path(root_cert_path)
         if not path.is_file():
@@ -109,6 +109,15 @@ class AppleJWSVerifier:
         return cls(cert, app_bundle_id, environment)
 
     def verify(self, jws: str) -> SignedTransaction:
+        # Fail closed (backend arch review 2026-07-18): no configured store
+        # environment means we cannot tell Sandbox from Production purchases,
+        # so refuse everything — mirrors quiz-agent's RC_ALLOWED_ENVIRONMENT.
+        if self._environment is None:
+            raise JWSInvalid(
+                "STOREKIT_ENVIRONMENT not configured — refusing JWS "
+                "verification. Set the per-deploy Fly secret to Sandbox or "
+                "Production."
+            )
         if not isinstance(jws, str) or jws.count(".") != 2:
             raise JWSInvalid("JWS must be a string with two '.' separators")
         header_b64, payload_b64, signature_b64 = jws.split(".")

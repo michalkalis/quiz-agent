@@ -152,6 +152,7 @@ class DailyUsage(Base):
     questions_count: Mapped[int] = mapped_column(
         Integer, default=0, nullable=False, server_default="0"
     )
+    # Dead column post-#93: check_limit no longer reads it; kept pending a cleanup migration.
     is_premium: Mapped[bool] = mapped_column(
         Boolean, default=False, nullable=False, server_default="false"
     )

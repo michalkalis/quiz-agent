@@ -25,6 +25,13 @@ class SessionManager:
     - Automatic cleanup of expired sessions
     - Thread-safe operations
     - Multiplayer-ready (supports participants)
+
+    Scaling constraint: sessions live only in this process's memory, backed
+    by a per-machine SQLite volume for write-through persistence. Neither
+    is shared across Fly machines, so a session created on one machine is
+    invisible to another — a second machine would 404 on any session it
+    didn't create, mid-quiz. Sessions must move to Postgres or Redis before
+    running with more than one machine.
     """
 
     def __init__(self, cleanup_interval: int = 300, sql_client=None):

@@ -131,7 +131,7 @@ async def lifespan(app: FastAPI):
     settings = get_settings()
 
     # #65: loudly flag a prod boot that ships App Attest inert (does not refuse).
-    from .startup_checks import warn_if_insecure_production
+    from .startup_checks import assert_migrations_at_head, warn_if_insecure_production
 
     warn_if_insecure_production(settings, os.getenv("ENVIRONMENT"), logger)
 
@@ -142,6 +142,11 @@ async def lifespan(app: FastAPI):
             "Local dev: start the colima dev-stack Postgres (#73) and set "
             "DATABASE_URL in .env."
         )
+
+    # Backend arch review 2026-07-18: migrations are manual (migrate-before-
+    # deploy) — refuse to serve against a schema behind this build's alembic
+    # head; the raise fails Fly's health gate and the deploy rolls back.
+    await assert_migrations_at_head(settings.database_url, logger)
 
     # Fly stores DATABASE_URL as libpq `postgres://`; the async read-path
     # needs the explicit `postgresql+asyncpg://` driver or create_async_engine

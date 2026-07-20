@@ -78,6 +78,24 @@ def test_production_environment_matches_when_configured(test_chain, make_jws):
     assert tx.environment == "Production"
 
 
+def test_unset_environment_refuses_all_verification(test_chain, make_jws):
+    """STOREKIT_ENVIRONMENT unset (None) must fail closed, never verify.
+
+    Backend arch review 2026-07-18: the old implicit "Sandbox" default meant a
+    prod deploy missing the Fly secret silently rejected real Production
+    purchases with a misleading "environment mismatch". With None the verifier
+    must refuse even a validly-signed JWS with an explicit config error, so
+    the misconfiguration is loud — mirrors quiz-agent's RC_ALLOWED_ENVIRONMENT.
+    """
+    unconfigured = AppleJWSVerifier(
+        root_cert=test_chain.root_cert,
+        app_bundle_id="com.missinghue.hangs",
+        environment=None,
+    )
+    with pytest.raises(JWSInvalid, match="STOREKIT_ENVIRONMENT not configured"):
+        unconfigured.verify(make_jws())
+
+
 def test_tampered_payload_raises_jws_invalid(verifier, make_jws):
     """Any payload byte change must invalidate the signature.
 

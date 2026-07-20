@@ -26,7 +26,9 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from sqlalchemy import func, select
 
-from app.api.routes.auth import _merge_anonymous_identity
+from app.usage.account_merge import (
+    merge_anonymous_identity as _merge_anonymous_identity,
+)
 from app.db.base import utcnow
 from app.db.models import (
     AnonymousIdentity,

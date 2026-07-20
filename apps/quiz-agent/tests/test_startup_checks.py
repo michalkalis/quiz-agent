@@ -9,8 +9,10 @@ from __future__ import annotations
 import logging
 from types import SimpleNamespace
 
+import pytest
 
-from app.startup_checks import warn_if_insecure_production
+from app import startup_checks
+from app.startup_checks import assert_migrations_at_head, warn_if_insecure_production
 
 
 # ── warn_if_insecure_production (#65) ────────────────────────────────────────
@@ -93,3 +95,75 @@ def test_warn_development_grace_is_silent(caplog, monkeypatch) -> None:
             _settings(required=True, app_id="x"), "development", logger
         )
     assert _security_errors(caplog.records) == []
+
+
+# ── assert_migrations_at_head (backend arch review 2026-07-18) ───────────────
+#
+# Migrations are manual (migrate-before-deploy); this check is the fail-loud
+# gate that a deploy against an unmigrated schema crashes at boot (Fly rolls
+# back) instead of erroring at runtime. Script head comes from the REAL
+# alembic/ directory; only the DB-side revision lookup is stubbed, so no
+# Postgres is needed.
+
+_LOGGER = logging.getLogger("test.startup_checks.migrations")
+
+
+def _stub_db_revision(monkeypatch, revision: str | None) -> None:
+    async def fake(_url: str) -> str | None:
+        return revision
+
+    monkeypatch.setattr(startup_checks, "_db_revision", fake)
+
+
+def _real_head() -> str:
+    heads = startup_checks._script_directory().get_heads()
+    assert len(heads) == 1, f"expected a linear history, got heads {heads}"
+    return heads[0]
+
+
+@pytest.mark.asyncio
+async def test_head_check_skips_silently_without_database_url(monkeypatch) -> None:
+    """Dev boots without a DB must not be blocked — and must not touch one."""
+
+    async def boom(_url: str) -> str | None:
+        raise AssertionError("DB must not be queried when DATABASE_URL is unset")
+
+    monkeypatch.setattr(startup_checks, "_db_revision", boom)
+    await assert_migrations_at_head(None, _LOGGER)  # no raise
+
+
+@pytest.mark.asyncio
+async def test_head_check_passes_when_db_at_head(monkeypatch) -> None:
+    _stub_db_revision(monkeypatch, _real_head())
+    await assert_migrations_at_head("postgresql+asyncpg://x/x", _LOGGER)
+
+
+@pytest.mark.asyncio
+async def test_head_check_fails_loud_when_never_migrated(monkeypatch) -> None:
+    """Missing/empty version table = schema absent → boot must fail, and the
+    error must name the manual upgrade command (there is no auto-migrate)."""
+    _stub_db_revision(monkeypatch, None)
+    with pytest.raises(RuntimeError, match="alembic upgrade head"):
+        await assert_migrations_at_head("postgresql+asyncpg://x/x", _LOGGER)
+
+
+@pytest.mark.asyncio
+async def test_head_check_fails_loud_when_db_behind(monkeypatch) -> None:
+    """DB on an older known revision → the deploy shipped unapplied
+    migrations; boot must fail so Fly rolls the deploy back."""
+    revisions = [
+        r.revision for r in startup_checks._script_directory().walk_revisions()
+    ]
+    oldest = revisions[-1]
+    assert oldest != _real_head()
+    _stub_db_revision(monkeypatch, oldest)
+    with pytest.raises(RuntimeError, match="BEHIND"):
+        await assert_migrations_at_head("postgresql+asyncpg://x/x", _LOGGER)
+
+
+@pytest.mark.asyncio
+async def test_head_check_passes_when_db_ahead_of_code(monkeypatch) -> None:
+    """A revision this build doesn't know = DB migrated before the deploy
+    rolled out — the intended migrate-before-deploy order must NOT block."""
+    _stub_db_revision(monkeypatch, "deadbeef1234")
+    await assert_migrations_at_head("postgresql+asyncpg://x/x", _LOGGER)

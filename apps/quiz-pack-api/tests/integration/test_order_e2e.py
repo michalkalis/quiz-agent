@@ -52,6 +52,7 @@ from app.db.models.order import GenerationOrder
 from app.db.session import AsyncSessionLocal, get_session
 from app.storekit import AppleJWSVerifier
 from quiz_shared.auth.tokens import TokenService
+from tests._isolation import truncate_order_graph
 from tests.fixtures.storekit.jws_minter import JWSMinter
 from tests.integration.conftest import (
     _ANTHROPIC_MESSAGES_RESPONSE,
@@ -145,6 +146,20 @@ async def db_session(engine: AsyncEngine) -> AsyncIterator[AsyncSession]:
     factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
     async with factory() as s:
         yield s
+
+
+@pytest_asyncio.fixture(autouse=True)
+async def _clean_order_tables(db_session: AsyncSession) -> None:
+    """Start each test from an empty order/job/pack/question slate.
+
+    This suite (unlike tests/api's `_clean_orders`) had NO cleanup at all —
+    isolation depended entirely on every tx_id being a fresh uuid4, so the
+    persistent test DB accumulated every past run's rows forever (backend arch
+    review 2026-07-18: per-test isolation gap, same fragility class as the
+    order-e2e CI flake, 154b95b). Truncating up front bounds that and matches
+    tests/api/tests/db.
+    """
+    await truncate_order_graph(db_session)
 
 
 # ---------------------------------------------------------------------------

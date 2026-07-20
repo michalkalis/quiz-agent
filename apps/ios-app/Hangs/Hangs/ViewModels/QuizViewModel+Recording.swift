@@ -41,7 +41,7 @@ extension QuizViewModel {
         }
 
         // #110 Bug 2: starting an answer (voice or tap) supersedes any pending skip.
-        abortSkipUndoWindow()
+        voiceCommandCoordinator.abortSkipUndoWindow()
 
         cancelAnswerTimer()
         errorMessage = nil

@@ -81,37 +81,37 @@ struct CommandListenerTests {
         let (vm, _, _) = makeCommandVM()
 
         vm.quizState = .idle
-        #expect(vm.currentCommandScreen == .home)
+        #expect(vm.voiceCommandCoordinator.currentCommandScreen == .home)
 
         vm.quizState = .askingQuestion
-        #expect(vm.currentCommandScreen == .question)
+        #expect(vm.voiceCommandCoordinator.currentCommandScreen == .question)
 
         vm.quizState = .processing
-        #expect(vm.currentCommandScreen == .confirmation)
+        #expect(vm.voiceCommandCoordinator.currentCommandScreen == .confirmation)
 
         vm.quizState = makeResultState()
-        #expect(vm.currentCommandScreen == .result)
+        #expect(vm.voiceCommandCoordinator.currentCommandScreen == .result)
 
         // Non-listening states → nil (never armed).
         vm.quizState = .recording
-        #expect(vm.currentCommandScreen == nil)
+        #expect(vm.voiceCommandCoordinator.currentCommandScreen == nil)
         vm.quizState = .startingQuiz
-        #expect(vm.currentCommandScreen == nil)
+        #expect(vm.voiceCommandCoordinator.currentCommandScreen == nil)
         vm.quizState = .finished
-        #expect(vm.currentCommandScreen == nil)
+        #expect(vm.voiceCommandCoordinator.currentCommandScreen == nil)
     }
 
     @Test("the window is CLOSED during question TTS (self-trigger guard)")
     func windowClosedDuringTTS() {
         let (vm, _, _) = makeCommandVM()
         vm.quizState = .askingQuestion
-        #expect(vm.currentCommandScreen == .question)
+        #expect(vm.voiceCommandCoordinator.currentCommandScreen == .question)
 
         vm.isPlayingQuestionTTS = true
-        #expect(vm.currentCommandScreen == nil, "listener must be torn down while TTS plays")
+        #expect(vm.voiceCommandCoordinator.currentCommandScreen == nil, "listener must be torn down while TTS plays")
 
         vm.isPlayingQuestionTTS = false
-        #expect(vm.currentCommandScreen == .question)
+        #expect(vm.voiceCommandCoordinator.currentCommandScreen == .question)
     }
 
     // MARK: - Arm / tear-down per state
@@ -122,17 +122,17 @@ struct CommandListenerTests {
         let mock = silence
 
         vm.quizState = .askingQuestion
-        await vm.syncCommandListenerWindow()
+        await vm.voiceCommandCoordinator.syncCommandListenerWindow()
         #expect(mock.isListening == true)
 
         // Recording → torn down (NEVER armed during recording).
         vm.quizState = .recording
-        await vm.syncCommandListenerWindow()
+        await vm.voiceCommandCoordinator.syncCommandListenerWindow()
         #expect(mock.isListening == false)
 
         // Result → armed again.
         vm.quizState = makeResultState()
-        await vm.syncCommandListenerWindow()
+        await vm.voiceCommandCoordinator.syncCommandListenerWindow()
         #expect(mock.isListening == true)
     }
 
@@ -143,7 +143,7 @@ struct CommandListenerTests {
 
         vm.quizState = .askingQuestion
         vm.isPlayingQuestionTTS = true
-        await vm.syncCommandListenerWindow()
+        await vm.voiceCommandCoordinator.syncCommandListenerWindow()
         #expect(mock.isListening == false, "listener must stay down while TTS is playing")
     }
 
@@ -158,7 +158,7 @@ struct CommandListenerTests {
 
         // Simulate the answer window opening.
         vm.quizState = .recording
-        await vm.syncCommandListenerWindow()
+        await vm.voiceCommandCoordinator.syncCommandListenerWindow()
         #expect(mock.isListening == false)
     }
 
@@ -171,7 +171,7 @@ struct CommandListenerTests {
             let mock = silence
 
             var recognized: [VoiceCommand] = []
-            vm.onCommandRecognized = { recognized.append($0) }
+            vm.voiceCommandCoordinator.onCommandRecognized = { recognized.append($0) }
 
             vm.quizState = .askingQuestion
             await vm.startSilenceDetectionListening() // arms the consumer
@@ -190,7 +190,7 @@ struct CommandListenerTests {
             let mock = silence
 
             var recognized: [VoiceCommand] = []
-            vm.onCommandRecognized = { recognized.append($0) }
+            vm.voiceCommandCoordinator.onCommandRecognized = { recognized.append($0) }
 
             // "next" is NOT a question-screen command → dropped.
             vm.quizState = .askingQuestion
@@ -217,7 +217,7 @@ struct CommandListenerTests {
             let mock = silence
 
             var recognized: [VoiceCommand] = []
-            vm.onCommandRecognized = { recognized.append($0) }
+            vm.voiceCommandCoordinator.onCommandRecognized = { recognized.append($0) }
 
             vm.quizState = .askingQuestion
             await vm.startSilenceDetectionListening()
@@ -232,14 +232,14 @@ struct CommandListenerTests {
     @Test("startCommandConsumer drives the capture phase idle → listening; stop resets to idle")
     func consumerDrivesCapturePhase() async {
         let (vm, _, _) = makeCommandVM()
-        #expect(vm.commandCapturePhase == .idle)
+        #expect(vm.voiceCommandCoordinator.commandCapturePhase == .idle)
 
         vm.quizState = .askingQuestion
         await vm.startSilenceDetectionListening()
-        #expect(vm.commandCapturePhase == .listening)
+        #expect(vm.voiceCommandCoordinator.commandCapturePhase == .listening)
 
         vm.stopSilenceDetectionListening()
-        #expect(vm.commandCapturePhase == .idle)
+        #expect(vm.voiceCommandCoordinator.commandCapturePhase == .idle)
     }
 
     // MARK: - Defensive degrade to buttons (E-fallback)
@@ -251,7 +251,7 @@ struct CommandListenerTests {
         mock.shouldFailSetup = true
 
         vm.quizState = .askingQuestion
-        await vm.syncCommandListenerWindow()
+        await vm.voiceCommandCoordinator.syncCommandListenerWindow()
         // Setup failed → listener stays DOWN, no command layer, no crash.
         #expect(mock.isListening == false)
         #expect(mock.startListeningCallCount >= 1, "setup was attempted")

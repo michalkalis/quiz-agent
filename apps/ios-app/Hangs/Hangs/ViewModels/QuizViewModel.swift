@@ -168,74 +168,34 @@ final class QuizViewModel: ObservableObject {
     // Minimize state
     @Published var isMinimized: Bool = false
 
-    // MARK: - Command Capture Phase (#77, task 77.4)
+    // MARK: - Voice Commands — forwarded to VoiceCommandCoordinator (#113 T3)
 
-    /// Additive capture-phase observable (E-state) — the single source of truth
-    /// for earcons (77.10) and the deferred recording UI (P5). SEPARATE axis from
-    /// `quizState`; driven off injected audio-lifecycle events via
-    /// `applyCaptureEvent(_:)`. Deliberately NOT part of QuizState/validTransitions.
-    @Published private(set) var commandCapturePhase: CommandCapturePhase = .idle
+    // Voice-command slice — owned by VoiceCommandCoordinator. Permanent
+    // forwarding accessors (decision 2) so views keep binding QuizViewModel;
+    // change notifications ride the re-published child `objectWillChange`
+    // wired in `init`.
 
-    /// Most recent screen-scoped command the listener recognized this session
-    /// (#96 P2). Powers the release-visible Settings diagnostics row so the
-    /// founder can confirm on-device that recognition is firing. `nil` until the
-    /// first command is heard.
-    @Published private(set) var lastRecognizedCommand: VoiceCommand?
+    /// Recognizer availability mirror — see `VoiceCommandCoordinator.commandAvailability`
+    /// (SettingsView status row).
+    var commandAvailability: VoiceCommandAvailability { voiceCommandCoordinator.commandAvailability }
 
-    /// Observable mirror of the recognizer's command availability (#96 S2). The
-    /// service's `commandAvailability` is a plain (non-`@Published`) property; on a
-    /// fresh install the en-US model installs asynchronously and flips it to
-    /// `.ready` well after Home has armed the listener — with no observable signal,
-    /// SwiftUI never re-renders and the "LISTENING FOR COMMANDS" bar stays hidden
-    /// even though commands now work. We seed this from the service on start and
-    /// keep it in sync via `commandAvailabilityUpdates`, so `commandListenerHint`
-    /// (and the Settings status row) react to availability changes live.
-    @Published private(set) var commandAvailability: VoiceCommandAvailability = .unknown
+    /// Release diagnostics (#96 P2) — see `VoiceCommandCoordinator.lastRecognizedCommand`
+    /// (SettingsView diagnostics row).
+    var lastRecognizedCommand: VoiceCommand? { voiceCommandCoordinator.lastRecognizedCommand }
 
-    /// Observation hook / test seam (#77, task 77.5): invoked when the command
-    /// listener recognizes a screen-scoped command, BEFORE it is routed to an
-    /// action. Session 3 fired it as the only behaviour; Session 4 (77.8–77.9) adds
-    /// the routing in `handleRecognizedCommand`. Kept for tests + future earcons.
-    var onCommandRecognized: (@MainActor (VoiceCommand) -> Void)?
+    /// Home voice-start flag — see `VoiceCommandCoordinator.voiceStartOnHomeEnabled`
+    /// (HomeView.onAppear).
+    var voiceStartOnHomeEnabled: Bool { voiceCommandCoordinator.voiceStartOnHomeEnabled }
 
-    // MARK: - Voice Command Wiring (#77, tasks 77.8 / 77.9)
+    /// "LISTENING FOR COMMANDS" indicator hint — see
+    /// `VoiceCommandCoordinator.commandListenerHint` (CmdListenBar call sites).
+    var commandListenerHint: String? { voiceCommandCoordinator.commandListenerHint }
 
-    /// P4a founder-overridable flag: spoken "start" on QuestionView opens the mic.
-    /// Seeded from `Config.voiceStartCommandEnabled` (default ON); an instance
-    /// property so tests can flip it and a future settings UI can bind it. `false`
-    /// disables ONLY the question-screen "start"→`startRecording()` wiring — the
-    /// rest of the command layer (and Home "start") stays intact.
-    var voiceStartOnQuestionEnabled: Bool = Config.voiceStartCommandEnabled
-
-    /// Founder-overridable flag: arm the command listener on the idle Home screen so
-    /// spoken "start" begins the quiz. Seeded from `Config.voiceHomeStartEnabled`
-    /// (default ON). Consulted by `HomeView.onAppear` before arming.
-    var voiceStartOnHomeEnabled: Bool = Config.voiceHomeStartEnabled
-
-    /// Skip undo-window (#77, task 77.9 / E-match): a recognized "skip" on the
-    /// question screen opens a ~2.5 s window before the skip commits, so a tap (or,
-    /// deferred to Session 5, a spoken cancel word) can abort it. `nil` = no pending
-    /// skip. Published so the deferred UI + earcons can observe it.
-    @Published private(set) var pendingSkipWindow: UndoWindow?
-
-    /// Session 5 earcon seam (77.10): fired when the skip undo-window OPENS. The
-    /// skip-confirm earcon itself is Session 5 — Session 4 only exposes the event.
-    var onSkipUndoWindowOpened: (@MainActor () -> Void)?
-
-    /// Apply an injected capture-lifecycle event. Illegal transitions are a no-op
-    /// (phase unchanged) and return `false` so a caller can detect a bad sequence.
-    @discardableResult
-    func applyCaptureEvent(_ event: CaptureLifecycleEvent) -> Bool {
-        guard let next = commandCapturePhase.applying(event) else { return false }
-        commandCapturePhase = next
-        return true
-    }
-
-    /// Record the most recently recognized command for the release diagnostics
-    /// row (#96 P2). Lives in the main file so `lastRecognizedCommand`'s private
-    /// setter is honored (the CommandListener extension is a separate file).
-    func noteRecognizedCommand(_ command: VoiceCommand) {
-        lastRecognizedCommand = command
+    /// Fire-and-forget command-window sync for synchronous call sites
+    /// (MAIN / +ScenePhase / +Recording / SettingsView / HomeView) — see
+    /// `VoiceCommandCoordinator.refreshCommandWindow`.
+    func refreshCommandWindow() {
+        voiceCommandCoordinator.refreshCommandWindow()
     }
 
     /// Single funnel for every earcon (77.10). Suppresses cues during question
@@ -453,12 +413,6 @@ final class QuizViewModel: ObservableObject {
 
     private var cancellables = Set<AnyCancellable>()
 
-    /// Long-lived observer of `silenceDetectionService.commandAvailabilityUpdates`,
-    /// mirroring each change into `commandAvailability`. Deliberately NOT in
-    /// `taskBag` (which is quiz-scoped and cleared by `resetState`) — availability
-    /// changes span the whole app lifetime. Cancelled in `deinit`.
-    private var commandAvailabilityTask: Task<Void, Never>?
-
     /// Entitlement/usage/paywall slice owner (#113 T1). The façade owns the
     /// child, re-publishes its `objectWillChange`, and re-exposes the slice
     /// via the forwarding accessors above (decision 2) — views never bind it
@@ -472,6 +426,15 @@ final class QuizViewModel: ObservableObject {
     /// `lazy` so the injected closures can capture `self` weakly — built by
     /// `makeAudioDeviceState()` on first touch (the `init` re-publish sink).
     private(set) lazy var audioDeviceState: AudioDeviceState = makeAudioDeviceState()
+
+    /// Voice-command slice owner (#113 T3): capture phase, recognizer
+    /// availability mirror, listening window + consumer + routing, and the
+    /// skip undo-window. The façade owns the child, re-publishes its
+    /// `objectWillChange`, and re-exposes the view-facing slice via the
+    /// forwarding accessors above (decision 2). `lazy` so the injected
+    /// closures can capture `self` weakly — built by
+    /// `makeVoiceCommandCoordinator()` on first touch (the `init` re-publish sink).
+    private(set) lazy var voiceCommandCoordinator: VoiceCommandCoordinator = makeVoiceCommandCoordinator()
 
     /// Single owner for every long-lived `Task` this view model spawns.
     /// Each call site stores its task under a `TaskKey`; `resetState()` calls
@@ -516,19 +479,6 @@ final class QuizViewModel: ObservableObject {
             isLocallyEntitled: isLocallyEntitled
         )
 
-        // Seed + observe the recognizer availability so the "LISTENING FOR
-        // COMMANDS" indicator is reactive (see `commandAvailability`). Seeding
-        // catches whatever the service resolved before this view-model existed;
-        // the stream then keeps it in sync — including the async `.ready` flip
-        // when the en-US model finishes installing after launch.
-        commandAvailability = silenceDetectionService.commandAvailability
-        commandAvailabilityTask = Task { [weak self, silence = silenceDetectionService] in
-            for await availability in silence.commandAvailabilityUpdates {
-                guard let self, !Task.isCancelled else { break }
-                self.commandAvailability = availability
-            }
-        }
-
         // #67 Part A: recover from a phone-call/Siri interruption that tears down
         // streaming recording — leave .recording and reset streaming STT so no
         // recording is stranded after the call.
@@ -553,6 +503,9 @@ final class QuizViewModel: ObservableObject {
             .sink { [weak self] in self?.objectWillChange.send() }
             .store(in: &cancellables)
         audioDeviceState.objectWillChange
+            .sink { [weak self] in self?.objectWillChange.send() }
+            .store(in: &cancellables)
+        voiceCommandCoordinator.objectWillChange
             .sink { [weak self] in self?.objectWillChange.send() }
             .store(in: &cancellables)
     }
@@ -580,16 +533,41 @@ final class QuizViewModel: ObservableObject {
             setCurrentQuestionAudioUrl: { [weak self] in self?.currentQuestionAudioUrl = $0 },
             setErrorMessage: { [weak self] in self?.errorMessage = $0 },
             onBargeIn: { [weak self] in await self?.handleBargeIn() },
-            startCommandConsumer: { [weak self] in self?.startCommandConsumer() },
-            stopCommandConsumer: { [weak self] in self?.stopCommandConsumer() },
+            startCommandConsumer: { [weak self] in self?.voiceCommandCoordinator.startCommandConsumer() },
+            stopCommandConsumer: { [weak self] in self?.voiceCommandCoordinator.stopCommandConsumer() },
             startThinkingTimeCountdown: { [weak self] in self?.startThinkingTimeCountdown() },
             startAnswerTimer: { [weak self] in self?.startAnswerTimer() }
         )
     }
 
-    deinit {
-        // Availability observer lives outside `taskBag`; end it explicitly.
-        commandAvailabilityTask?.cancel()
+    /// #113 T3: builds the voice-command child. Every closure captures the
+    /// façade weakly — the child is façade-owned so `self` outlives it; `weak`
+    /// just breaks the ownership cycle (façade → child → closure → façade).
+    /// Each closure is the minimal scoped read/write of decision 4 — never a
+    /// vm ref. The recording/timer fan-out targets still live in the
+    /// +Recording/+Timers extensions; their extracts (S4/S5) re-point these.
+    private func makeVoiceCommandCoordinator() -> VoiceCommandCoordinator {
+        VoiceCommandCoordinator(
+            silenceDetectionService: silenceDetectionService,
+            taskBag: taskBag,
+            settings: { [weak self] in self?.settings ?? .default },
+            isAppForeground: { [weak self] in self?.isAppForeground ?? false },
+            isPlayingQuestionTTS: { [weak self] in self?.isPlayingQuestionTTS ?? false },
+            quizState: { [weak self] in self?.quizState ?? .idle },
+            startSilenceDetectionListening: { [weak self] in await self?.audioDeviceState.startSilenceDetectionListening() },
+            stopSilenceDetectionListening: { [weak self] in self?.audioDeviceState.stopSilenceDetectionListening() },
+            emitEarcon: { [weak self] in self?.emitEarcon($0) },
+            startNewQuiz: { [weak self] in await self?.startNewQuiz() },
+            startRecording: { [weak self] in await self?.startRecording() },
+            repeatQuestion: { [weak self] in await self?.repeatQuestion() },
+            skipQuestion: { [weak self] in await self?.skipQuestion() },
+            confirmAnswer: { [weak self] in await self?.confirmAnswer() },
+            rerecordAnswer: { [weak self] in self?.rerecordAnswer() },
+            cancelProcessing: { [weak self] in self?.cancelProcessing() },
+            continueToNext: { [weak self] in self?.continueToNext() },
+            cancelAnswerTimer: { [weak self] in self?.cancelAnswerTimer() },
+            cancelThinkingTime: { [weak self] in self?.cancelThinkingTime() }
+        )
     }
 
     // MARK: - Quiz Flow
@@ -949,7 +927,7 @@ final class QuizViewModel: ObservableObject {
         guard quizState == .askingQuestion || quizState == .recording else { return }
 
         // #110 Bug 2: starting an answer (voice or tap) supersedes any pending skip.
-        abortSkipUndoWindow()
+        voiceCommandCoordinator.abortSkipUndoWindow()
 
         guard let sessionId = currentSession?.id else {
             errorMessage = String(localized: "No active session", comment: "Inline error: no quiz session is currently active")
@@ -1075,52 +1053,6 @@ final class QuizViewModel: ObservableObject {
 
             Logger.quiz.error("❌ Error skipping question: \(error, privacy: .public)")
         }
-    }
-
-    /// Open the skip undo-window (#77, task 77.9). A recognized "skip" on the
-    /// question screen does NOT commit immediately: it opens a ~2.5 s window that a
-    /// tap can abort (`abortSkipUndoWindow`). On expiry (window unaborted) the skip
-    /// commits via `skipQuestion()`. Idempotent while a window is already open.
-    /// `duration` is injectable so tests don't wait the full 2.5 s.
-    ///
-    /// Deferred to Session 5: aborting via a spoken cancel word ("stop"/"no") — that
-    /// needs the cancel-word listener path that ships with the earcons. This method
-    /// leaves the abort seam (`abortSkipUndoWindow`) and the open-event seam
-    /// (`onSkipUndoWindowOpened`) ready for it.
-    func beginSkipUndoWindow(duration: TimeInterval = UndoWindow.defaultDuration) {
-        guard quizState == .askingQuestion, pendingSkipWindow == nil else { return }
-        cancelAnswerTimer()
-        cancelThinkingTime()
-        pendingSkipWindow = UndoWindow(duration: duration)
-        emitEarcon(.skipConfirm) // 77.10 skip-confirm tone — undo-window opened
-        onSkipUndoWindowOpened?() // observation seam (deferred UI / tests)
-
-        let task = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(duration))
-            guard let self, !Task.isCancelled else { return }
-            guard self.pendingSkipWindow != nil else { return } // aborted
-            // #110 Bug 2: a pending skip is only ever committed while the quiz is
-            // still asking the question — starting an answer (voice or tap)
-            // supersedes it. Without this recheck, speaking/tapping during the
-            // window let expiry commit skipQuestion() mid-recording, leaving the
-            // streaming mic live into the result.
-            guard self.quizState == .askingQuestion else {
-                self.pendingSkipWindow = nil
-                return
-            }
-            self.pendingSkipWindow = nil
-            await self.skipQuestion()
-        }
-        taskBag.add(task, key: .skipUndo)
-        Logger.voice.info("⏭️ Skip undo-window opened (\(duration, privacy: .public)s)")
-    }
-
-    /// Abort a pending skip (a tap on the undo affordance). No-op if none is open.
-    func abortSkipUndoWindow() {
-        guard pendingSkipWindow != nil else { return }
-        pendingSkipWindow = nil
-        taskBag.cancel(.skipUndo)
-        Logger.voice.info("↩️ Skip undo-window aborted")
     }
 
     /// End the current quiz session

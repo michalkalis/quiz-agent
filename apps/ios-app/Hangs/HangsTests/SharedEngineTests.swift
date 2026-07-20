@@ -115,7 +115,7 @@ struct SharedEngineTests {
             audio.stopStreamingRecording()
             vm.isStreamingSTT = false
             vm.quizState = .processing
-            await vm.syncCommandListenerWindow()
+            await vm.voiceCommandCoordinator.syncCommandListenerWindow()
             #expect(audio.audioEngineActive == false)
             #expect(silence.isListening == true, "listener re-arms on the confirmation window")
             assertNeverBothLive(silence, audio, "confirm")

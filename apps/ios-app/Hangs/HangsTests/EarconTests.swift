@@ -84,7 +84,7 @@ struct EarconTests {
             let (vm, earcon) = makeVM()
             vm.quizState = .askingQuestion
 
-            vm.beginSkipUndoWindow(duration: 10) // long window: no commit during the assertion
+            vm.voiceCommandCoordinator.beginSkipUndoWindow(duration: 10) // long window: no commit during the assertion
 
             #expect(earcon.played == [.skipConfirm], "opening the skip window must play exactly skip-confirm, got \(earcon.played)")
         }
@@ -96,7 +96,7 @@ struct EarconTests {
             let (vm, earcon) = makeVM()
             vm.quizState = makeResultState() // result: "next" advances, emits no further cue
 
-            vm.handleRecognizedCommand(.next)
+            vm.voiceCommandCoordinator.handleRecognizedCommand(.next)
 
             // command-ack is emitted synchronously; the routed action (advance) emits
             // no earcon, so this is the only cue.
@@ -129,7 +129,7 @@ struct EarconTests {
             vm.quizState = makeResultState()
             vm.isPlayingQuestionTTS = true
 
-            vm.handleRecognizedCommand(.next)
+            vm.voiceCommandCoordinator.handleRecognizedCommand(.next)
 
             #expect(earcon.played.isEmpty, "command-ack must be suppressed during TTS, got \(earcon.played)")
         }

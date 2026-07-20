@@ -169,10 +169,10 @@ struct ScenePhaseTeardownTests {
 
         vm.quizState = .askingQuestion
         vm.handleScenePhase(.background)
-        #expect(vm.currentCommandScreen == nil, "window must be closed while backgrounded")
+        #expect(vm.voiceCommandCoordinator.currentCommandScreen == nil, "window must be closed while backgrounded")
 
         // A racing window refresh must not re-arm…
-        await vm.syncCommandListenerWindow()
+        await vm.voiceCommandCoordinator.syncCommandListenerWindow()
         #expect(mock.isListening == false)
 
         // …and neither may a direct re-arm (e.g. the post-TTS tail).
@@ -181,7 +181,7 @@ struct ScenePhaseTeardownTests {
 
         // Foregrounding restores the window.
         vm.handleScenePhase(.active)
-        #expect(vm.currentCommandScreen == .question)
+        #expect(vm.voiceCommandCoordinator.currentCommandScreen == .question)
     }
 
     @Test("backgrounded: startRecording is suppressed (auto-record can fire after background TTS)")

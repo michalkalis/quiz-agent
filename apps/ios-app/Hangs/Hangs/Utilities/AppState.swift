@@ -241,7 +241,7 @@ final class AppState: ObservableObject {
             // undrivable in UI tests.
             if UITestSupport.isUITesting {
                 UITestSupport.registerCommandSink { [weak self] text in
-                    await self?.quizViewModel?.handleCommandTranscript(text)
+                    await self?.quizViewModel?.voiceCommandCoordinator.handleCommandTranscript(text)
                 }
             }
         #endif

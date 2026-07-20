@@ -91,7 +91,7 @@ struct ConfirmResultCommandTests {
             vm.showAnswerConfirmation = true
             vm.pendingResponse = makePendingResponse()
 
-            vm.handleRecognizedCommand(.ok)
+            vm.voiceCommandCoordinator.handleRecognizedCommand(.ok)
 
             await waitUntil({ !vm.showAnswerConfirmation }, "ok did not confirm")
             #expect(vm.showAnswerConfirmation == false)
@@ -107,7 +107,7 @@ struct ConfirmResultCommandTests {
             vm.showAnswerConfirmation = true
             vm.pendingResponse = makePendingResponse()
 
-            vm.handleRecognizedCommand(.again)
+            vm.voiceCommandCoordinator.handleRecognizedCommand(.again)
 
             for _ in 0 ..< 40 {
                 await Task.yield()
@@ -128,7 +128,7 @@ struct ConfirmResultCommandTests {
             vm.quizState = .processing
             vm.showAnswerConfirmation = true
 
-            vm.handleRecognizedCommand(.stop)
+            vm.voiceCommandCoordinator.handleRecognizedCommand(.stop)
 
             for _ in 0 ..< 40 {
                 await Task.yield()
@@ -162,11 +162,11 @@ struct ConfirmResultCommandTests {
         await withMainSerialExecutor {
             let (vm, _, _) = makeVM()
             vm.quizState = makeResultState()
-            #expect(vm.currentCommandScreen == .result)
+            #expect(vm.voiceCommandCoordinator.currentCommandScreen == .result)
 
-            vm.handleRecognizedCommand(.next)
+            vm.voiceCommandCoordinator.handleRecognizedCommand(.next)
 
-            await waitUntil({ vm.currentCommandScreen != .result }, "next did not advance")
+            await waitUntil({ vm.voiceCommandCoordinator.currentCommandScreen != .result }, "next did not advance")
             if case .showingResult = vm.quizState {
                 Issue.record("still on the result screen after 'next'")
             }
@@ -179,9 +179,9 @@ struct ConfirmResultCommandTests {
             let (vm, _, _) = makeVM()
             vm.quizState = makeResultState()
 
-            vm.handleRecognizedCommand(.ok)
+            vm.voiceCommandCoordinator.handleRecognizedCommand(.ok)
 
-            await waitUntil({ vm.currentCommandScreen != .result }, "ok did not advance on result")
+            await waitUntil({ vm.voiceCommandCoordinator.currentCommandScreen != .result }, "ok did not advance on result")
             if case .showingResult = vm.quizState {
                 Issue.record("still on the result screen after 'ok'")
             }
@@ -197,7 +197,7 @@ struct ConfirmResultCommandTests {
             vm.quizState = .askingQuestion
             vm.currentQuestionAudioUrl = "https://example.com/q.opus"
 
-            vm.handleRecognizedCommand(.repeatQuestion)
+            vm.voiceCommandCoordinator.handleRecognizedCommand(.repeatQuestion)
 
             // Durable signals: the question audio was replayed, and once the replay
             // finished the command listener was re-armed (77.9). isPlayingQuestionTTS
@@ -219,12 +219,12 @@ struct ConfirmResultCommandTests {
             vm.quizState = .askingQuestion
 
             var earconFired = false
-            vm.onSkipUndoWindowOpened = { earconFired = true }
+            vm.voiceCommandCoordinator.onSkipUndoWindowOpened = { earconFired = true }
 
             // Use a long window so it can't commit during the assertion.
-            vm.beginSkipUndoWindow(duration: 10)
+            vm.voiceCommandCoordinator.beginSkipUndoWindow(duration: 10)
 
-            #expect(vm.pendingSkipWindow != nil, "skip must open an undo-window, not commit")
+            #expect(vm.voiceCommandCoordinator.pendingSkipWindow != nil, "skip must open an undo-window, not commit")
             #expect(earconFired == true, "the skip-confirm earcon seam must fire on open")
             #expect(vm.quizState == .askingQuestion, "skip must not commit while the window is open")
         }
@@ -235,11 +235,11 @@ struct ConfirmResultCommandTests {
         await withMainSerialExecutor {
             let (vm, _, _) = makeVM()
             vm.quizState = .askingQuestion
-            vm.beginSkipUndoWindow(duration: 10)
-            #expect(vm.pendingSkipWindow != nil)
+            vm.voiceCommandCoordinator.beginSkipUndoWindow(duration: 10)
+            #expect(vm.voiceCommandCoordinator.pendingSkipWindow != nil)
 
-            vm.abortSkipUndoWindow()
-            #expect(vm.pendingSkipWindow == nil, "abort must clear the pending skip")
+            vm.voiceCommandCoordinator.abortSkipUndoWindow()
+            #expect(vm.voiceCommandCoordinator.pendingSkipWindow == nil, "abort must clear the pending skip")
             #expect(vm.quizState == .askingQuestion, "aborted skip never leaves the question")
         }
     }
@@ -251,12 +251,12 @@ struct ConfirmResultCommandTests {
             vm.quizState = .askingQuestion
 
             // Short window so the commit path runs quickly.
-            vm.beginSkipUndoWindow(duration: 0.05)
+            vm.voiceCommandCoordinator.beginSkipUndoWindow(duration: 0.05)
 
             // On expiry the window commits via skipQuestion() (→ .skipping then advance).
-            await waitUntil({ vm.pendingSkipWindow == nil && vm.quizState != .askingQuestion },
+            await waitUntil({ vm.voiceCommandCoordinator.pendingSkipWindow == nil && vm.quizState != .askingQuestion },
                             "skip did not commit on undo-window expiry")
-            #expect(vm.pendingSkipWindow == nil)
+            #expect(vm.voiceCommandCoordinator.pendingSkipWindow == nil)
             #expect(vm.quizState != .askingQuestion, "expiry must commit the skip")
         }
     }

@@ -68,15 +68,15 @@ struct CommandCapturePhaseTests {
     @MainActor
     func viewModelDrivesPhase() {
         let vm = Fixtures.makeViewModel()
-        #expect(vm.commandCapturePhase == .idle)
-        #expect(vm.applyCaptureEvent(.arm))
-        #expect(vm.commandCapturePhase == .armed)
-        #expect(vm.applyCaptureEvent(.listen))
-        #expect(vm.commandCapturePhase == .listening)
-        #expect(vm.applyCaptureEvent(.record))
-        #expect(vm.commandCapturePhase == .recording)
-        #expect(vm.applyCaptureEvent(.process))
-        #expect(vm.commandCapturePhase == .processing)
+        #expect(vm.voiceCommandCoordinator.commandCapturePhase == .idle)
+        #expect(vm.voiceCommandCoordinator.applyCaptureEvent(.arm))
+        #expect(vm.voiceCommandCoordinator.commandCapturePhase == .armed)
+        #expect(vm.voiceCommandCoordinator.applyCaptureEvent(.listen))
+        #expect(vm.voiceCommandCoordinator.commandCapturePhase == .listening)
+        #expect(vm.voiceCommandCoordinator.applyCaptureEvent(.record))
+        #expect(vm.voiceCommandCoordinator.commandCapturePhase == .recording)
+        #expect(vm.voiceCommandCoordinator.applyCaptureEvent(.process))
+        #expect(vm.voiceCommandCoordinator.commandCapturePhase == .processing)
     }
 
     @Test("An illegal injected event is rejected and leaves the phase unchanged")
@@ -84,7 +84,7 @@ struct CommandCapturePhaseTests {
     func viewModelRejectsIllegal() {
         let vm = Fixtures.makeViewModel()
         // record is illegal from idle
-        #expect(vm.applyCaptureEvent(.record) == false)
-        #expect(vm.commandCapturePhase == .idle)
+        #expect(vm.voiceCommandCoordinator.applyCaptureEvent(.record) == false)
+        #expect(vm.voiceCommandCoordinator.commandCapturePhase == .idle)
     }
 }

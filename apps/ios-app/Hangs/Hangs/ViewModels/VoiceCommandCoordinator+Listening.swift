@@ -1,28 +1,20 @@
 //
-//  QuizViewModel+CommandListener.swift
+//  VoiceCommandCoordinator+Listening.swift
 //  Hangs
 //
-//  Issue #77 (voice commands hands-free), task 77.5 — the windowed native-English
-//  command listener. The English recognizer lives inside SilenceDetectionService
-//  (the paired transcriber, re-localed to English) and surfaces finalized
-//  transcripts via `commandTranscripts`. This extension owns:
-//    • the WINDOW — which screen (if any) is currently listening, and the arm /
-//      tear-down rule (armed on Home / Question-after-TTS / Confirmation / Result;
-//      torn down during TTS and NEVER during recording);
-//    • the CONSUMER loop that feeds each transcript to the screen-scoped
-//      `VoiceCommandMatcher` and drives the additive capture-phase (77.4);
-//    • the DEFENSIVE degrade (E-fallback): no recognizer / a failed setup simply
-//      means no transcripts flow — the manual mic-button + tap flow is untouched.
-//
-//  Command → action ROUTING is Session 4's job. Session 3 recognizes commands and
-//  acknowledges them (capture-phase `.recognize`), but `handleRecognizedCommand`
-//  is a deliberate no-op seam that Session 4 fills in.
+//  The windowed native-English command listener (#77, task 77.5): the WINDOW
+//  (which screen, if any, is currently listening — armed on Home /
+//  Question-after-TTS / Confirmation / Result; torn down during TTS and NEVER
+//  during recording), the CONSUMER loop feeding each finalized transcript to
+//  the screen-scoped `VoiceCommandMatcher`, and the per-screen command ROUTING
+//  (77.8–77.9). Defensive degrade (E-fallback): no recognizer / a failed setup
+//  simply means no transcripts flow — the manual mic-button flow is untouched.
 //
 
 import Foundation
 import os
 
-extension QuizViewModel {
+extension VoiceCommandCoordinator {
     // MARK: - Window
 
     /// The command screen active for the current quiz state, or `nil` when the
@@ -31,21 +23,21 @@ extension QuizViewModel {
     /// source of truth for both arming and for scoping the matcher.
     var currentCommandScreen: VoiceCommandScreen? {
         // Master switch (#96 P2): the founder-facing Settings toggle. OFF → the
-        // command window never arms on any screen and the listening indicator is
-        // suppressed; buttons stay the untouched fallback.
-        if !settings.voiceCommandsEnabled { return nil }
+        // command window never arms on any screen and the listening indicator
+        // is suppressed; buttons stay the untouched fallback.
+        if !settings().voiceCommandsEnabled { return nil }
 
         // Backgrounded → no window: the mic input must never be (re-)armed
         // while the app is in the background, even by a refreshCommandWindow()
         // racing the scene-phase teardown (mic-in-background fix).
-        if !isAppForeground { return nil }
+        if !isAppForeground() { return nil }
 
         // Torn down during TTS (the recognizer must never transcribe its own
         // question playback) and during any recording (the answer window is the
         // Slovak ElevenLabs stream — time-disjoint from command listening).
-        if isPlayingQuestionTTS || isRecordingActive { return nil }
+        if isPlayingQuestionTTS() || isRecordingActive { return nil }
 
-        switch quizState {
+        switch quizState() {
         case .idle: return .home
         case .askingQuestion: return .question
         case .processing: return .confirmation
@@ -56,15 +48,12 @@ extension QuizViewModel {
 
     /// Whether an answer recording (batch or streaming) is live. The command
     /// listener is NEVER armed while this is true.
-    var isRecordingActive: Bool { quizState == .recording }
+    var isRecordingActive: Bool { quizState() == .recording }
 
-    /// Hint for the on-screen "LISTENING FOR COMMANDS" indicator (77.12, pen
-    /// `s49sd`), or `nil` when the cue must be hidden. A view shows `CmdListenBar`
-    /// iff this is non-nil, so it appears exactly during an armed window and names
-    /// the valid word(s) for the current screen. Gated on the recognizer being
-    /// `.ready`: if the on-device assets failed to install (the founder's past
-    /// symptom) the cue must NOT claim to be listening — the buttons take over and
-    /// the Settings diagnostics row reports why.
+    /// Hint for the on-screen "LISTENING FOR COMMANDS" indicator (77.12), or
+    /// `nil` when the cue must be hidden. A view shows `CmdListenBar` iff this
+    /// is non-nil. Gated on the recognizer being `.ready`: if the on-device
+    /// assets failed to install, the cue must NOT claim to be listening.
     var commandListenerHint: String? {
         guard commandCapturePhase == .listening,
               let screen = currentCommandScreen,
@@ -73,7 +62,7 @@ extension QuizViewModel {
     }
 
     /// Arm or tear down the command/VAD listener to match the current window.
-    /// Idempotent (the underlying `start/stopListening` are).
+    /// Idempotent (the underlying choke points are).
     func syncCommandListenerWindow() async {
         if currentCommandScreen != nil {
             await startSilenceDetectionListening()
@@ -83,18 +72,18 @@ extension QuizViewModel {
     }
 
     /// Fire-and-forget window refresh for synchronous call sites (state
-    /// transitions). Kept off the hot transition path so a state change is never
-    /// blocked on audio-engine setup.
+    /// transitions). Kept off the hot transition path so a state change is
+    /// never blocked on audio-engine setup.
     func refreshCommandWindow() {
         Task { [weak self] in await self?.syncCommandListenerWindow() }
     }
 
     // MARK: - Consumer
 
-    /// Start consuming finalized English transcripts and routing them through the
-    /// screen-scoped matcher. Called when the listener arms; idempotent (re-adding
-    /// under the same TaskKey cancels the previous consumer). Drives the capture
-    /// phase to `.armed → .listening`.
+    /// Start consuming finalized English transcripts and routing them through
+    /// the screen-scoped matcher. Called when the listener arms; idempotent
+    /// (re-adding under the same TaskKey cancels the previous consumer). Drives
+    /// the capture phase to `.armed → .listening`.
     func startCommandConsumer() {
         let service = silenceDetectionService
         applyCaptureEvent(.arm)
@@ -121,11 +110,11 @@ extension QuizViewModel {
     func handleCommandTranscript(_ transcript: String) async {
         guard let screen = currentCommandScreen else { return }
 
-        // Spoken-cancel path (77.10 carry-over): while a skip undo-window is open on
-        // the question screen, a spoken cancel word ("stop"/"no") aborts the pending
-        // skip — the spoken twin of the tap-abort. "stop" is NOT in the question
-        // screen's normal command set, so this must be checked BEFORE the matcher
-        // (which would otherwise drop it).
+        // Spoken-cancel path (77.10 carry-over): while a skip undo-window is
+        // open on the question screen, a spoken cancel word ("stop"/"no")
+        // aborts the pending skip — the spoken twin of the tap-abort. "stop" is
+        // NOT in the question screen's normal command set, so this must be
+        // checked BEFORE the matcher (which would otherwise drop it).
         if pendingSkipWindow != nil {
             let tokens = VoiceCommandMatcher.normalize(transcript).split(separator: " ").map(String.init)
             if tokens.contains(where: VoiceCommandLexicon.isCancelWord) {
@@ -141,10 +130,11 @@ extension QuizViewModel {
         handleRecognizedCommand(command)
     }
 
-    /// A command was recognized on the current screen. Fires the `onCommandRecognized`
-    /// observation hook (tests + future earcons), then routes it to an action
-    /// (77.8–77.9). Routing is screen-scoped a second time via `routeCommand` so a
-    /// transcript that lands as the window closes can't fire the wrong action.
+    /// A command was recognized on the current screen. Fires the
+    /// `onCommandRecognized` observation hook (tests + future earcons), then
+    /// routes it to an action (77.8–77.9). Routing is screen-scoped a second
+    /// time via `routeCommand` so a transcript that lands as the window closes
+    /// can't fire the wrong action.
     func handleRecognizedCommand(_ command: VoiceCommand) {
         Logger.voice.info("🎙️ Command recognized: \(command.rawValue, privacy: .public)")
         noteRecognizedCommand(command) // release diagnostics (#96 P2)
@@ -153,10 +143,11 @@ extension QuizViewModel {
         routeCommand(command)
     }
 
-    /// Map a recognized command to its per-screen action (77.8 / 77.9). Buttons + the
-    /// 10 s auto-confirm + auto-advance remain the untouched fallbacks; this is
-    /// additive. Async actions hop to a Task so the @MainActor-sync consumer path is
-    /// never blocked on network/audio.
+    /// Map a recognized command to its per-screen action (77.8 / 77.9). Buttons
+    /// + the 10 s auto-confirm + auto-advance remain the untouched fallbacks;
+    /// this is additive. Async actions hop to a Task so the @MainActor-sync
+    /// consumer path is never blocked on network/audio. Every fan-out target is
+    /// an injected façade closure (decision 4).
     func routeCommand(_ command: VoiceCommand) {
         guard let screen = currentCommandScreen else { return }
         switch (screen, command) {

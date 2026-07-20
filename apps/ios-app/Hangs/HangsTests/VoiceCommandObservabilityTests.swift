@@ -82,7 +82,7 @@ struct VoiceCommandObservabilityTests {
         #expect(vm.commandListenerHint == nil, "not listening yet → no indicator")
 
         await vm.startSilenceDetectionListening() // arms the consumer → .listening
-        #expect(vm.commandCapturePhase == .listening)
+        #expect(vm.voiceCommandCoordinator.commandCapturePhase == .listening)
         #expect(vm.commandListenerHint == #"Say "start""#)
 
         // Moving to the result screen swaps the words shown.
@@ -106,7 +106,7 @@ struct VoiceCommandObservabilityTests {
 
         vm.quizState = .idle
         await vm.startSilenceDetectionListening()
-        #expect(vm.commandCapturePhase == .listening, "the consumer still arms")
+        #expect(vm.voiceCommandCoordinator.commandCapturePhase == .listening, "the consumer still arms")
         #expect(vm.commandListenerHint == nil, "but the cue must not claim to be listening")
     }
 
@@ -130,7 +130,7 @@ struct VoiceCommandObservabilityTests {
 
         vm.quizState = .idle
         await vm.startSilenceDetectionListening()
-        #expect(vm.commandCapturePhase == .listening)
+        #expect(vm.voiceCommandCoordinator.commandCapturePhase == .listening)
         #expect(vm.commandListenerHint == nil, "installing → the cue must not claim to be listening yet")
 
         // Model install completes asynchronously → service flips to .ready.
@@ -148,12 +148,12 @@ struct VoiceCommandObservabilityTests {
         vm.settings.voiceCommandsEnabled = false
         for state in [QuizState.idle, .askingQuestion, .processing, makeResultState()] {
             vm.quizState = state
-            #expect(vm.currentCommandScreen == nil, "toggle off must close the window in every state")
+            #expect(vm.voiceCommandCoordinator.currentCommandScreen == nil, "toggle off must close the window in every state")
         }
         // Re-enabling restores the normal mapping.
         vm.settings.voiceCommandsEnabled = true
         vm.quizState = .idle
-        #expect(vm.currentCommandScreen == .home)
+        #expect(vm.voiceCommandCoordinator.currentCommandScreen == .home)
     }
 
     @Test("disabling the toggle tears down an already-armed listener")
@@ -162,11 +162,11 @@ struct VoiceCommandObservabilityTests {
         let mock = silence
 
         vm.quizState = .askingQuestion
-        await vm.syncCommandListenerWindow()
+        await vm.voiceCommandCoordinator.syncCommandListenerWindow()
         #expect(mock.isListening == true)
 
         vm.settings.voiceCommandsEnabled = false
-        await vm.syncCommandListenerWindow()
+        await vm.voiceCommandCoordinator.syncCommandListenerWindow()
         #expect(mock.isListening == false, "the master toggle must stop the running listener")
     }
 

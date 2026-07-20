@@ -58,12 +58,12 @@ struct SkipCancelWordTests {
         await withMainSerialExecutor {
             let vm = makeVM()
             vm.quizState = .askingQuestion
-            vm.beginSkipUndoWindow(duration: 10) // long window
-            #expect(vm.pendingSkipWindow != nil)
+            vm.voiceCommandCoordinator.beginSkipUndoWindow(duration: 10) // long window
+            #expect(vm.voiceCommandCoordinator.pendingSkipWindow != nil)
 
-            await vm.handleCommandTranscript("stop")
+            await vm.voiceCommandCoordinator.handleCommandTranscript("stop")
 
-            #expect(vm.pendingSkipWindow == nil, "a spoken 'stop' must abort the pending skip")
+            #expect(vm.voiceCommandCoordinator.pendingSkipWindow == nil, "a spoken 'stop' must abort the pending skip")
             #expect(vm.quizState == .askingQuestion, "an aborted skip never leaves the question")
         }
     }
@@ -73,11 +73,11 @@ struct SkipCancelWordTests {
         await withMainSerialExecutor {
             let vm = makeVM()
             vm.quizState = .askingQuestion
-            vm.beginSkipUndoWindow(duration: 10)
+            vm.voiceCommandCoordinator.beginSkipUndoWindow(duration: 10)
 
-            await vm.handleCommandTranscript("no")
+            await vm.voiceCommandCoordinator.handleCommandTranscript("no")
 
-            #expect(vm.pendingSkipWindow == nil, "'no' is a cancel-word variant and must abort")
+            #expect(vm.voiceCommandCoordinator.pendingSkipWindow == nil, "'no' is a cancel-word variant and must abort")
             #expect(vm.quizState == .askingQuestion)
         }
     }
@@ -87,11 +87,11 @@ struct SkipCancelWordTests {
         await withMainSerialExecutor {
             let vm = makeVM()
             vm.quizState = .askingQuestion
-            vm.beginSkipUndoWindow(duration: 10)
+            vm.voiceCommandCoordinator.beginSkipUndoWindow(duration: 10)
 
-            await vm.handleCommandTranscript("hello there")
+            await vm.voiceCommandCoordinator.handleCommandTranscript("hello there")
 
-            #expect(vm.pendingSkipWindow != nil, "only a cancel word may abort — not arbitrary speech")
+            #expect(vm.voiceCommandCoordinator.pendingSkipWindow != nil, "only a cancel word may abort — not arbitrary speech")
         }
     }
 
@@ -100,15 +100,15 @@ struct SkipCancelWordTests {
         await withMainSerialExecutor {
             let vm = makeVM()
             vm.quizState = .askingQuestion
-            vm.beginSkipUndoWindow(duration: 0.05) // short window → commits quickly
+            vm.voiceCommandCoordinator.beginSkipUndoWindow(duration: 0.05) // short window → commits quickly
 
-            await waitUntil({ vm.pendingSkipWindow == nil && vm.quizState != .askingQuestion },
+            await waitUntil({ vm.voiceCommandCoordinator.pendingSkipWindow == nil && vm.quizState != .askingQuestion },
                             "skip did not commit on undo-window expiry")
-            #expect(vm.pendingSkipWindow == nil, "expiry commits the skip")
+            #expect(vm.voiceCommandCoordinator.pendingSkipWindow == nil, "expiry commits the skip")
 
             // A cancel word now has no window to abort — it must be a harmless no-op.
-            await vm.handleCommandTranscript("stop")
-            #expect(vm.pendingSkipWindow == nil)
+            await vm.voiceCommandCoordinator.handleCommandTranscript("stop")
+            #expect(vm.voiceCommandCoordinator.pendingSkipWindow == nil)
         }
     }
 
@@ -121,10 +121,10 @@ struct SkipCancelWordTests {
         await withMainSerialExecutor {
             let vm = makeVM()
             vm.quizState = .askingQuestion
-            vm.beginSkipUndoWindow(duration: 0.05) // short window → expires quickly
+            vm.voiceCommandCoordinator.beginSkipUndoWindow(duration: 0.05) // short window → expires quickly
             vm.quizState = .recording // user started answering during the window
 
-            await waitUntil({ vm.pendingSkipWindow == nil }, "expiry never fired")
+            await waitUntil({ vm.voiceCommandCoordinator.pendingSkipWindow == nil }, "expiry never fired")
             #expect(vm.quizState == .recording, "expiry must not commit skipQuestion mid-recording")
         }
     }
@@ -135,12 +135,12 @@ struct SkipCancelWordTests {
         await withMainSerialExecutor {
             let vm = makeVM()
             vm.quizState = .askingQuestion
-            vm.beginSkipUndoWindow(duration: 10) // long window — must not expire on its own
-            #expect(vm.pendingSkipWindow != nil)
+            vm.voiceCommandCoordinator.beginSkipUndoWindow(duration: 10) // long window — must not expire on its own
+            #expect(vm.voiceCommandCoordinator.pendingSkipWindow != nil)
 
             await vm.startRecording()
 
-            #expect(vm.pendingSkipWindow == nil, "starting to answer must supersede a pending skip")
+            #expect(vm.voiceCommandCoordinator.pendingSkipWindow == nil, "starting to answer must supersede a pending skip")
         }
     }
 
@@ -150,12 +150,12 @@ struct SkipCancelWordTests {
         await withMainSerialExecutor {
             let vm = makeVM()
             vm.quizState = .askingQuestion
-            vm.beginSkipUndoWindow(duration: 10) // long window — must not expire on its own
-            #expect(vm.pendingSkipWindow != nil)
+            vm.voiceCommandCoordinator.beginSkipUndoWindow(duration: 10) // long window — must not expire on its own
+            #expect(vm.voiceCommandCoordinator.pendingSkipWindow != nil)
 
             await vm.submitMCQAnswer(key: "a", value: "Test Answer")
 
-            #expect(vm.pendingSkipWindow == nil, "submitting an MCQ answer must supersede a pending skip")
+            #expect(vm.voiceCommandCoordinator.pendingSkipWindow == nil, "submitting an MCQ answer must supersede a pending skip")
         }
     }
 }

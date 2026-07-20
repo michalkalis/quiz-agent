@@ -1,8 +1,8 @@
 # Issue 112: Error-path dedup — one quota/429 handler + generic NetworkService request
 
-**Triage:** refactor · ready-for-agent
+**Triage:** refactor · **DONE 2026-07-20** (see § Execution & verification)
 **Reversibility:** a
-**Status:** Prep-complete 2026-07-20 — all 6 /prepare-issue phases green (both dual gates PASSED); class `a`, single-session, 4 atomic tasks, ready-for-agent on branch `arch-review-ios`.
+**Status:** ✓ DONE 2026-07-20 on `arch-review-ios` — T1–T4 executed via workflow (2 impl agents → suite gate → 3-lens adversarial verify → remediation); commits `454a99b`·`8002de8`·`6bd02e6`·`af24114`·`523ff8f`.
 **Created:** 2026-07-20
 
 **Source:** [iOS architecture review 2026-07-18](../research/ios-architecture-review-2026-07-18.md) — Top 10 item 9 + dimension 7. Link, don't restate.
@@ -43,22 +43,22 @@ This is a prerequisite, not a parallel effort: **#113 — Decompose the QuizView
 
 Ordered; each an independent commit unless noted. Paths under `apps/ios-app/Hangs/`. Touches only dedup — no method moves (that's #113).
 
-- [ ] **1 · Test infra — submit-path error hook on `MockNetworkService`.** Add `var submitVoiceAnswerError: Error?` and make `submitVoiceAnswer(…)` `throw` it when set, mirroring the existing `createSessionError`/`endSessionError` idiom (`Hangs/Services/Mocks/MockNetworkService.swift:37–42/96–104`). DEBUG-only mock, additive — compiles and every suite stays green on its own. Unblocks copy C's VM test in task 2.
+- [x] **1 · Test infra — submit-path error hook on `MockNetworkService`.** Add `var submitVoiceAnswerError: Error?` and make `submitVoiceAnswer(…)` `throw` it when set, mirroring the existing `createSessionError`/`endSessionError` idiom (`Hangs/Services/Mocks/MockNetworkService.swift:37–42/96–104`). DEBUG-only mock, additive — compiles and every suite stays green on its own. Unblocks copy C's VM test in task 2.
 
-- [ ] **2 · VM — route both quota reimplementations through canonical `handleError`; pin copy C.** *(commit message MUST name the `deactivateSession` behavior fix — decision 1, fail-loud.)*
+- [x] **2 · VM — route both quota reimplementations through canonical `handleError`; pin copy C.** *(commit message MUST name the `deactivateSession` behavior fix — decision 1, fail-loud.)*
   - Drop `private` from `handleError` → **`internal`** so the `+Recording` extension (separate file) can call it — matches `setError`'s existing cross-file precedent (`QuizViewModel.swift:690`). `fileprivate` will not work cross-file.
   - `startNewQuiz` (`QuizViewModel.swift:646–681`): replace **both** the `catch let error as NetworkError { if quotaLimitReached … else … }` block **and** the trailing generic `catch` with a single `catch { await handleError(error, context: .initialization, fallbackMessage: "Failed to start quiz") }` — same idiom as `submitAnswer`/`resubmit`/`skip` (`:942/1009/1040`). This adopts the **recorded founder default** for the "just synced" copy: startNewQuiz's *"…please try starting the quiz again."* becomes the generic *"…please try again."* (no test pins the exact string — verified in task 4).
   - `submitVoiceAnswer` (`QuizViewModel+Recording.swift:410–433`): replace **only** the `if case .quotaLimitReached` block (lines 410–432) with `if case .quotaLimitReached = error { await self.handleError(error, context: .submission, fallbackMessage: String(localized: "Failed to submit answer", …)); return }`. **Preserve the trailing `return`.** **Do NOT touch** the sibling `400` speech-not-understood → `handleTranscriptionFailure` branch (`:436–443`), the `TimeoutError` branch (`:399–407`), the "other network errors" branch (`:445–452`), or the final generic `catch` (`:455–464`) — those stay verbatim.
   - **MainActor mechanism (decision 4):** `handleError` is `@MainActor`-isolated (the whole class is `@MainActor`, `QuizViewModel.swift:99`). The enclosing `Task` is a context-inheriting `Task.init` (not `Task.detached`), so it already runs on the `@MainActor` — `await self.handleError(…)` needs **no `MainActor.run` wrapper** for this branch (unlike the old inline code). The behavior FIX: routing the voice-submit quota path through `handleError` **adds `audioService.deactivateSession()`** (`handleError`, `:706`) that copy C omitted — the mid-answer audio session is now released before the paywall.
   - **New test** in `EntitlementReconcileTests.swift` (copy C is VM-untested today): with `mock.submitVoiceAnswerError = NetworkError.quotaLimitReached(makeQuotaLimitError())`, an active session, a `MockAudioService`, and `isLocallyEntitled { false }`, call `submitVoiceAnswer` and assert `audio.deactivateSessionCallCount == 1` **and** `vm.showPaywall == true`. The test **MUST fail against pre-fix code** (verify by reverting the one-line routing → `deactivateSessionCallCount == 0`) and pass after.
 
-- [ ] **3 · NetworkService — extract one generic request; route the 11 endpoints; unify `createSession`'s 429.** *(commit message MUST state the `createSession` 429 flip — decision 2 / gate note 3.)*
+- [x] **3 · NetworkService — extract one generic request; route the 11 endpoints; unify `createSession`'s 429.** *(commit message MUST state the `createSession` 429 flip — decision 2 / gate note 3.)*
   - Add `performRequest<T: Decodable>(_ request: URLRequest, endpointPath: String) async throws -> T` **+ a `Void`/`EmptyResponse` variant**, owning only the shared middle: `breadcrumbRequest` → `sendAuthorized` → `HTTPURLResponse` guard → **body-discriminated 429 parse** (decode `QuotaLimitErrorWrapper` requiring nested `detail` → `.quotaLimitReached`; else `.serverError(429, "Rate limited")`, verbatim from `:225–231`) → non-2xx `ErrorResponse` decode → `decode(T)`. Caller pre-builds the `URLRequest` (method, JSON/multipart body, content-type, per-endpoint timeout) and passes `endpointPath`.
   - Route the **6 decode** endpoints — `createSession`(→`QuizSession`), `startQuiz`, `submitVoiceAnswer`(multipart), `submitTextInput`, `getUsage`, `fetchElevenLabsToken` — and **5 Void** — `endSession`, `extendSession`, `rateQuestion`, `flagQuestion`, `syncEntitlements`. Keep `endSession`'s `404 → sessionNotFound` as a **caller-side** hook. Leave `downloadAudio` **bespoke** (decision 5).
   - Preserve the MainActor iso8601 decode (`decodeQuizResponse`; `createSession`→`QuizSession`) via **caller-side decode** (pinned — keeps the generic non-isolated so `getUsage`/`fetchElevenLabsToken` decode never moves onto the main actor); **apply consistently** to all 6 decode endpoints. Preserve per-endpoint timeouts (voice 120s / text 60s / token·usage·download 10s / sync 15s) at the caller.
   - **Named behavior change:** `createSession` gains the 429 parse it lacked — a 429 there flips from `.invalidResponse` to `.serverError(429, "Rate limited")` (rate-limit body) or `.quotaLimitReached` (quota-wrapper body). Add two `NetworkServiceTests.swift` tests (StubURLProtocol idiom, `makeService()`): **(a)** `createSession` 429 + valid `QuotaLimitErrorWrapper` body → `.quotaLimitReached`; **(b)** `createSession` 429 + non-quota rate-limit body → `.serverError(429, …)` and **NOT** `.quotaLimitReached` (the paywall must not false-trigger on the `@limiter.limit` rate-limit).
 
-- [ ] **4 · Verify + surface founder wording.** *(no code commit — done-gate + one product surface.)* Run the three suites (task 4 acceptance); confirm the grep-zero/one dedup proofs and the backend re-confirm grep all hold. Surface to the founder, live in-session (CLAUDE #13), the one-line "just synced" wording call — default already applied (adopt generic *"please try again."*), swapping later is trivial, do **not** block on it.
+- [x] **4 · Verify + surface founder wording.** *(no code commit — done-gate + one product surface.)* Run the three suites (task 4 acceptance); confirm the grep-zero/one dedup proofs and the backend re-confirm grep all hold. Surface to the founder, live in-session (CLAUDE #13), the one-line "just synced" wording call — default already applied (adopt generic *"please try again."*), swapping later is trivial, do **not** block on it.
 
 ## Acceptance
 
@@ -103,6 +103,23 @@ Machine-evaluable; each criterion falsifiable with the named check. Greps runnab
 **Web pass skipped:** pure internal refactor, no external API/library research needed.
 
 **PRODUCT question:** which "just synced" copy wins — the quiz-specific *"please try starting the quiz again."* or the generic *"please try again."*? Recommend the generic (context-agnostic, reused across all 3 sites); flag for founder since it's user-facing wording.
+
+## Execution & verification (2026-07-20)
+
+Run: workflow `wf_12fbfa7b` (2 sonnet impl agents → sonnet suite gate → 3 parallel opus adversarial lenses) + main-loop remediation. Commits: `454a99b` (T1 hook) · `8002de8` (T2 routing + copy-C test; deactivateSession fix named) · `6bd02e6` (T3 generic; createSession 429 flip named) · `af24114` (verify-pass fixes) · `523ff8f` (5 dump baselines re-recorded, +1 line each).
+
+**Copy-C fail-loud proof:** new `voiceSubmitQuotaDeactivatesAudioSession` run against pre-fix routing → failed exactly on the deactivation delta (`0 == 1`); green post-fix.
+
+**Adversarial verify findings → all remediated (`af24114`):**
+1. **MED (2 lenses independently):** generic's non-decodable non-2xx fallback `.invalidResponse` silently narrowed `endSession`'s 404→`sessionNotFound` to decodable-body 404s. Fix: pipeline always keeps the status (`.serverError(status, detail-or-"HTTP n")`); bodiless-404 test pins it. Named ride-in: routed endpoints' non-decodable non-2xx now surface `.serverError(status)` instead of per-endpoint `.invalidResponse` collapses (extendSession-500 contract test updated — its own comment said the original spec wanted `.serverError`).
+2. **LOW:** `performRequest<T: Decodable>` overload was dead code (all 6 decode endpoints decode caller-side per decision 4) → deleted per CLAUDE #1; `performRequestData` + `Void` overload remain the seam; re-add `<T>` when #97 — CarPlay / #95 — custom packs brings a real caller.
+3. **LOW:** copy-C test left the submit-path outcome-check/context unpinned → added `voiceSubmitQuotaSkippedWhenResyncConfirmsEntitlement` (resync-confirmed → no paywall, `.submission` context).
+
+**Impl deviations (named, fail-loud):** duplicate per-endpoint post-response `Logger.network.debug` console prints dropped (breadcrumbResponse in the pipeline carries the same metadata); `endSession`'s old ad-hoc fallback copy "Failed to end session (HTTP n)" replaced by the pipeline's "HTTP n" (no test pinned it); `createSession`/`getUsage`/`submitTextInput`/`fetchElevenLabsToken` gained the ErrorResponse-detail decode they lacked (uniform-pipeline consequence, superset of old behavior).
+
+**Gates:** all 5 dedup greps + both VM greps hold (1/0/0/1/1, `sendAuthorized(` = 3); backend re-confirm: quota gate in `quiz.py` + `voice.py:183–184` only, `sessions.py` = 0. Suites: NetworkServiceTests 18/18 (16 + bodiless-404 + updated 500), EntitlementReconcileTests 9/9, AppErrorModelTests 19/19, 3 snapshot suites re-recorded & green (50 tests/6 suites in one run). Full HangsTests: green except the two documented pre-existing allowances (NetworkServiceTests×PackOrderServiceTests `StubURLProtocol.handler` race under parallel full-suite runs — both green isolated; see TODO follow-up for the per-suite URLProtocol fix).
+
+**Founder surface (non-blocking, default applied):** the "just synced" retry copy on startNewQuiz now uses the generic *"…please try again."* (recorded default); say the word to restore the quiz-specific variant — one localized string.
 
 ## Prep progress
 

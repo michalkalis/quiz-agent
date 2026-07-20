@@ -122,10 +122,25 @@ final class QuizViewModel: ObservableObject {
         @Published var lastErrorDebugInfo: String?
     #endif
 
-    // Paywall state
-    @Published var showPaywall: Bool = false
-    @Published var quotaLimitError: QuotaLimitError?
-    @Published var usageInfo: UsageInfo?
+    // Paywall/quota/usage slice — owned by EntitlementReconciler (#113 T1).
+    // Permanent forwarding accessors (decision 2) so views/tests keep binding
+    // QuizViewModel; change notifications ride the re-published child
+    // `objectWillChange` wired in `init`. Settable because ContentView
+    // dismisses via `showPaywall = false` and tests seed usage/quota directly.
+    var showPaywall: Bool {
+        get { entitlementReconciler.showPaywall }
+        set { entitlementReconciler.showPaywall = newValue }
+    }
+
+    var quotaLimitError: QuotaLimitError? {
+        get { entitlementReconciler.quotaLimitError }
+        set { entitlementReconciler.quotaLimitError = newValue }
+    }
+
+    var usageInfo: UsageInfo? {
+        get { entitlementReconciler.usageInfo }
+        set { entitlementReconciler.usageInfo = newValue }
+    }
 
     // Answer confirmation modal state
     @Published var showAnswerConfirmation = false
@@ -434,16 +449,6 @@ final class QuizViewModel: ObservableObject {
     let silenceDetectionService: SilenceDetectionServiceProtocol
     let sttService: ElevenLabsSTTServiceProtocol?
 
-    /// Reads RevenueCat's local cache for whether the customer holds the
-    /// `unlimited` entitlement — used ONLY to decide whether a 429 paywall
-    /// should first give the server mirror a short chance to catch up
-    /// (`resyncBeforePaywallIfLocallyEntitled`, #102 finding 1). The server
-    /// `/usage` gate remains the sole source of truth for whether the user is
-    /// actually unlimited; this never grants anything client-side. Defaults
-    /// to "not entitled" so existing call sites/tests are unaffected unless
-    /// `AppState` wires the real RC-backed check.
-    private let isLocallyEntitled: @MainActor () -> Bool
-
     /// Language-neutral earcon player (#77, task 77.10). A settable property (not
     /// an init param) so the ~15 existing call sites are untouched and tests can
     /// inject a `MockEarconPlayer`. Cues route through `emitEarcon(_:)`, which
@@ -458,12 +463,11 @@ final class QuizViewModel: ObservableObject {
     /// changes span the whole app lifetime. Cancelled in `deinit`.
     private var commandAvailabilityTask: Task<Void, Never>?
 
-    /// Single in-flight entitlement re-sync — a launch and an immediate scene
-    /// `.active` (or two rapid foregrounds) join the same attempt instead of
-    /// firing duplicate network calls (mirrors AuthService's single-flight
-    /// refresh). Set/cleared by `reconcileEntitlements()` only, cancelled in
-    /// `deinit` (#102 findings 1+2).
-    private var entitlementReconcileTask: Task<Void, Never>?
+    /// Entitlement/usage/paywall slice owner (#113 T1). The façade owns the
+    /// child, re-publishes its `objectWillChange`, and re-exposes the slice
+    /// via the forwarding accessors above (decision 2) — views never bind it
+    /// directly.
+    let entitlementReconciler: EntitlementReconciler
 
     /// Single owner for every long-lived `Task` this view model spawns.
     /// Each call site stores its task under a `TaskKey`; `resetState()` calls
@@ -498,7 +502,13 @@ final class QuizViewModel: ObservableObject {
         self.persistenceStore = persistenceStore
         self.silenceDetectionService = silenceDetectionService
         self.sttService = sttService
-        self.isLocallyEntitled = isLocallyEntitled
+        // #113 T1: the entitlement/usage/paywall slice lives in its own child;
+        // its init fires the launch reconcile (#102 finding 1) — single-flight,
+        // bounded backoff, failure logged only (server stays source of truth).
+        entitlementReconciler = EntitlementReconciler(
+            networkService: networkService,
+            isLocallyEntitled: isLocallyEntitled
+        )
 
         // Seed + observe the recognizer availability so the "LISTENING FOR
         // COMMANDS" indicator is reactive (see `commandAvailability`). Seeding
@@ -531,22 +541,16 @@ final class QuizViewModel: ObservableObject {
             .sink { [persistenceStore] in persistenceStore.saveSettings($0) }
             .store(in: &cancellables)
 
-        // Entitlement re-sync on launch (#102 finding 1): the identity-mint
-        // bridge (AppState.setAccountLinkedHandler) only fires on anon-
-        // bootstrap/sign-in/refresh-remint, not a normal launch with an
-        // already-valid token — a returning user whose webhook landed while
-        // the app was closed otherwise never reconciles until their next
-        // purchase. `reconcileEntitlements()` is single-flight and retries
-        // with backoff; failure is logged only (server stays source of truth).
-        Task { [weak self] in
-            await self?.reconcileEntitlements()
-        }
+        // Re-publish child slice changes so views bound to the façade
+        // re-render (#113 decision 2 — views keep @ObservedObject QuizViewModel).
+        entitlementReconciler.objectWillChange
+            .sink { [weak self] in self?.objectWillChange.send() }
+            .store(in: &cancellables)
     }
 
     deinit {
         // Availability observer lives outside `taskBag`; end it explicitly.
         commandAvailabilityTask?.cancel()
-        entitlementReconcileTask?.cancel()
     }
 
     // MARK: - Quiz Flow
@@ -686,7 +690,7 @@ final class QuizViewModel: ObservableObject {
         if let networkError = error as? NetworkError,
            case let .quotaLimitReached(limitError) = networkError
         {
-            let entitlementConfirmed = await resyncBeforePaywallIfLocallyEntitled()
+            let entitlementConfirmed = await entitlementReconciler.resyncBeforePaywallIfLocallyEntitled()
             audioService.deactivateSession()
             if entitlementConfirmed {
                 // #102 review follow-up: skip the paywall when the resync just
@@ -697,8 +701,7 @@ final class QuizViewModel: ObservableObject {
                     context: context
                 )
             } else {
-                quotaLimitError = limitError
-                showPaywall = true
+                entitlementReconciler.presentQuotaPaywall(limitError)
                 transition(to: .idle)
             }
         } else {
@@ -735,126 +738,30 @@ final class QuizViewModel: ObservableObject {
         }
     #endif
 
-    /// Proactive paywall entry (#93 subscription IAP — paywall was reachable
-    /// only via the 429 quota handlers). Called from the Home free-plan card
-    /// and the Settings subscription row. Clears any stale quota error first
-    /// so PaywallView shows the upgrade pitch, not leftover "limit reached" copy.
+    // MARK: - Entitlements / paywall — forwarded to EntitlementReconciler (#113 T1)
+
+    /// Proactive paywall entry (#93) — see `EntitlementReconciler.presentPaywall`.
     func presentPaywall() {
-        quotaLimitError = nil
-        showPaywall = true
+        entitlementReconciler.presentPaywall()
     }
 
-    /// Fetch current usage info from backend (for displaying remaining
-    /// questions). Identity is the bearer subject, derived server-side —
-    /// the same account purchases land on (#96 P1).
+    /// Fetch current usage info — see `EntitlementReconciler.refreshUsage`.
     func refreshUsage() async {
-        do {
-            usageInfo = try await networkService.getUsage()
-        } catch {
-            Logger.network.warning("⚠️ Failed to fetch usage info: \(error, privacy: .public)")
-        }
+        await entitlementReconciler.refreshUsage()
     }
 
-    /// Refresh usage after a purchase or restore (subscription or pack).
-    /// Entitlement is granted server-side via RC webhooks (#93) — the client
-    /// never self-grants (the old `setPremium` call sent no admin key and
-    /// always 401'd, #60). RC webhooks land seconds-to-minutes after purchase,
-    /// so sync via the purchase→webhook propagation bridge
-    /// (`POST /entitlements/sync`, bounded retry+backoff — same helper the
-    /// launch/foreground reconcile uses, #102 finding 1) BEFORE re-fetching
-    /// `/usage` — otherwise a just-paid user can still hit the 429 gate until
-    /// the mirror catches up. A short bounded re-check here (not a new polling
-    /// loop) gives `StoreManager.purchase()` a real chance to land on
-    /// `.success` instead of the transient `.activating` state (#102 finding
-    /// 4) before the caller has to fall back to later convergence points.
-    ///
-    /// Returns whether the refreshed usage shows an active entitlement
-    /// (premium OR a non-zero pack credit balance) — `StoreManager.
-    /// restorePurchases()` uses this to detect a pack-only recovery, since
-    /// `isPurchased` never reflects consumable packs (#102 finding 3); `.purchase()`
-    /// uses it to decide between `.success` and `.activating` (#102 finding 4).
+    /// Post-purchase/restore sync — see `EntitlementReconciler.notifyPremiumPurchased`.
+    /// (`StoreManager` relies on the returned entitlement flag.)
     @discardableResult
     func notifyPremiumPurchased() async -> Bool {
-        await syncEntitlementsWithRetry()
-        await refreshUsage()
-        return (usageInfo?.isPremium ?? false) || (usageInfo?.creditBalance ?? 0) > 0
+        await entitlementReconciler.notifyPremiumPurchased()
     }
 
-    /// Re-syncs entitlements (bounded retry+backoff) then refreshes usage —
-    /// single-flight so a launch and scene `.active` (or two rapid
-    /// foregrounds) collapse onto one attempt rather than firing duplicate
-    /// network calls. Called from `init` (launch) and
-    /// `handleScenePhase(.active)` (foreground) — #102 findings 1+2. The
-    /// server remains the sole source of truth; this only asks it to catch up
-    /// sooner than the next purchase/sign-in event would.
+    /// Launch/foreground entitlement reconcile (single-flight) — see
+    /// `EntitlementReconciler.reconcileEntitlements`. Called from
+    /// `handleScenePhase(.active)`; the launch kick fires in the child's `init`.
     func reconcileEntitlements() async {
-        if let entitlementReconcileTask {
-            await entitlementReconcileTask.value
-            return
-        }
-        let task = Task { [weak self] in
-            guard let self else { return }
-            await self.syncEntitlementsWithRetry()
-            await self.refreshUsage()
-        }
-        entitlementReconcileTask = task
-        await task.value
-        entitlementReconcileTask = nil
-    }
-
-    /// Bounded exponential-backoff retry for the entitlement sync (3
-    /// attempts) — a single missed sync (offline in a tunnel, RC webhook lag)
-    /// must not strand a paying user behind the paywall until their next
-    /// purchase/sign-in event. Failure after the final attempt is logged only
-    /// (Sentry breadcrumb via `SentryLog`) — the webhook still lands on its
-    /// own; the client never grants anything itself.
-    private func syncEntitlementsWithRetry(maxAttempts: Int = 3) async {
-        for attempt in 1 ... maxAttempts {
-            guard !Task.isCancelled else { return }
-            do {
-                try await networkService.syncEntitlements()
-                return
-            } catch {
-                guard attempt < maxAttempts else {
-                    SentryLog.warn(
-                        "entitlements/sync failed after \(attempt) attempts (webhook will still catch up)",
-                        category: .network,
-                        attributes: ["error": String(describing: error)]
-                    )
-                    return
-                }
-                let backoffSeconds = 0.2 * pow(2.0, Double(attempt - 1))
-                try? await Task.sleep(for: .seconds(backoffSeconds))
-            }
-        }
-    }
-
-    /// Bounded pre-paywall reconciliation (#102 finding 1): if RC's local
-    /// cache already reports the customer entitled, the 429 just hit is
-    /// almost certainly the server mirror lagging behind a purchase/restore
-    /// whose sync failed or whose webhook hasn't landed yet — give it a
-    /// short, single-attempt window before the paywall renders, instead of
-    /// making the UI hang for the full launch/foreground retry loop. If it
-    /// doesn't land in time, show the paywall anyway — the next
-    /// launch/foreground reconcile (or the webhook) will still catch it up.
-    ///
-    /// Returns whether the just-refreshed usage now confirms an active
-    /// entitlement (premium OR a non-zero pack credit) — callers use this to
-    /// skip presenting the paywall for the cycle that just resynced, instead
-    /// of showing it unconditionally regardless of outcome (#102 review
-    /// follow-up).
-    @discardableResult
-    func resyncBeforePaywallIfLocallyEntitled() async -> Bool { // internal for QuizViewModel+Recording
-        guard isLocallyEntitled() else { return false }
-        let networkService = self.networkService
-        await withTaskGroup(of: Void.self) { group in
-            group.addTask { try? await networkService.syncEntitlements() }
-            group.addTask { try? await Task.sleep(for: .seconds(2)) }
-            await group.next()
-            group.cancelAll()
-        }
-        await refreshUsage()
-        return (usageInfo?.isPremium ?? false) || (usageInfo?.creditBalance ?? 0) > 0
+        await entitlementReconciler.reconcileEntitlements()
     }
 
     /// Whether to retry with a new session (for initialization errors)

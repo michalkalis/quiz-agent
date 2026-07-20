@@ -21,6 +21,7 @@ from sqlalchemy import (
     LargeBinary,
     Text,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -280,3 +281,35 @@ class CreditLedger(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, nullable=False
     )
+
+
+class Feedback(Base):
+    """One beta in-app feedback submission (issue #109).
+
+    Durable inbox — deliberately our own table, not Sentry, so it has no
+    retention clock and can carry every attachment type (screenshot, raw
+    dictation audio, log tail). ``user_id`` is nullable because the shared
+    ``require_auth_or_grace`` dependency can pass an unauthenticated caller
+    through during the legacy grace window with no subject id, same as every
+    other route on that dependency. The Python attribute is ``metadata_``
+    because ``metadata`` is reserved on ``DeclarativeBase`` (it is the
+    ``MetaData`` instance); the DB column itself is named ``metadata``.
+    """
+
+    __tablename__ = "feedback"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    user_id: Mapped[str | None] = mapped_column(Text, nullable=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False, index=True
+    )
+    message: Mapped[str] = mapped_column(Text, nullable=False)
+    metadata_: Mapped[dict | None] = mapped_column("metadata", JSONB, nullable=True)
+    app_version: Mapped[str | None] = mapped_column(Text, nullable=True)
+    logs: Mapped[str | None] = mapped_column(Text, nullable=True)
+    screenshot: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
+    screenshot_content_type: Mapped[str | None] = mapped_column(Text, nullable=True)
+    audio: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
+    audio_content_type: Mapped[str | None] = mapped_column(Text, nullable=True)

@@ -51,6 +51,10 @@ struct SettingsView: View {
     // #80: pinned-bar title fades in once the in-content hero scrolls away.
     @State private var isHeroCollapsed = false
 
+    // #109: in-app feedback. Built when the row is tapped, with a screenshot of
+    // the Settings screen + a snapshot of the quiz state; drives the sheet.
+    @State private var feedbackPresentation: FeedbackPresentation?
+
     /// Collapse threshold for the large-title behavior (#80 Variant B): the
     /// pinned mono title appears only after the hero headline has scrolled
     /// under the bar (~hero title height + top padding).
@@ -80,6 +84,7 @@ struct SettingsView: View {
                     accountGroup
                     subscriptionGroup
                     aboutGroup
+                    feedbackGroup
                     packsGroup
                     #if DEBUG
                         developerGroup
@@ -147,6 +152,9 @@ struct SettingsView: View {
         }
         .sheet(isPresented: $viewModel.showingMicrophonePicker) {
             AudioDevicePickerView(viewModel: viewModel)
+        }
+        .sheet(item: $feedbackPresentation) { presentation in
+            FeedbackView(viewModel: presentation.viewModel)
         }
     }
 
@@ -578,6 +586,33 @@ struct SettingsView: View {
                 }
             }
             .accessibilityIdentifier("settings.resetHistory")
+        }
+    }
+
+    // MARK: - Feedback group (#109)
+    // Manual entry point for the in-app beta feedback sheet — mirrors the
+    // shake-to-report gesture but is always discoverable. Captures a screenshot
+    // of the Settings screen (still removable in the sheet) + the current quiz
+    // state before presenting.
+
+    private var feedbackGroup: some View {
+        groupSection(label: "feedback", color: Theme.Hangs.Colors.accentTeal) {
+            HangsConfigRow(
+                label: "Send feedback",
+                value: "",
+                valueColor: Theme.Hangs.Colors.muted,
+                showsChevron: true
+            ) {
+                let screenshot = ScreenshotCapture.captureKeyWindow()
+                feedbackPresentation = FeedbackPresentation(
+                    viewModel: FeedbackViewModel(
+                        networkService: appState.networkService,
+                        context: FeedbackContext.capture(from: viewModel),
+                        screenshot: screenshot
+                    )
+                )
+            }
+            .accessibilityIdentifier("settings.sendFeedback")
         }
     }
 

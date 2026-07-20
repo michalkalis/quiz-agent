@@ -43,16 +43,15 @@ struct LogEntry: Identifiable, Hashable, Sendable {
     let level: Level
     let message: String
 
-    /// One-line plain-text rendering suitable for share sheets.
-    func formatted() -> String {
-        let ts = Self.formatter.string(from: date)
-        return "\(ts) [\(level.rawValue.uppercased())] [\(category)] \(message)"
-    }
-
-    private static let formatter: DateFormatter = {
+    /// One-line plain-text rendering suitable for share sheets and the #109
+    /// feedback log attachment. `nonisolated` so the `LogStore` actor can render
+    /// entries off the MainActor; the formatter is built locally (DateFormatter
+    /// isn't Sendable and this isn't a hot path — matches `DebugLogRow`).
+    nonisolated func formatted() -> String {
         let f = DateFormatter()
         f.dateFormat = "HH:mm:ss.SSS"
         f.locale = Locale(identifier: "en_US_POSIX")
-        return f
-    }()
+        let ts = f.string(from: date)
+        return "\(ts) [\(level.rawValue.uppercased())] [\(category)] \(message)"
+    }
 }

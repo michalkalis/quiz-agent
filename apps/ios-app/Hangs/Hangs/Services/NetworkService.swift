@@ -16,6 +16,10 @@ protocol NetworkServiceProtocol: Sendable {
     func startQuiz(sessionId: String, excludedQuestionIds: [String]) async throws -> QuizResponse
     func submitVoiceAnswer(sessionId: String, audioData: Data, fileName: String) async throws -> QuizResponse
     func submitTextInput(sessionId: String, input: String, audio: Bool) async throws -> QuizResponse
+    /// In-app beta feedback (#109): multipart POST to `/feedback`. `message` is
+    /// required; `metadataJSON`, `appVersion`, `screenshotPNG`, and `logsText`
+    /// are optional attachments. Auth = same bearer as every other write path.
+    func submitFeedback(message: String, metadataJSON: String?, appVersion: String?, screenshotPNG: Data?, logsText: String?) async throws
     func downloadAudio(from urlString: String) async throws -> Data
     func endSession(sessionId: String) async throws
     func extendSession(sessionId: String, minutes: Int) async throws
@@ -469,6 +473,64 @@ actor NetworkService: NetworkServiceProtocol {
         }
 
         return try await decodeQuizResponse(from: data)
+    }
+
+    // MARK: - Feedback (#109)
+
+    func submitFeedback(message: String, metadataJSON: String?, appVersion: String?, screenshotPNG: Data?, logsText: String?) async throws {
+        let endpoint = baseURL.appendingPathComponent("/api/v1/feedback")
+
+        let boundary = UUID().uuidString
+        var request = URLRequest(url: endpoint)
+        request.httpMethod = "POST"
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 60
+
+        // Multipart builder — same shape as submitVoiceAnswer, extended with
+        // plain form fields and multiple file parts.
+        var body = Data()
+        func appendField(_ name: String, _ value: String) {
+            body.append(Data("--\(boundary)\r\n".utf8))
+            body.append(Data("Content-Disposition: form-data; name=\"\(name)\"\r\n\r\n".utf8))
+            body.append(Data(value.utf8))
+            body.append(Data("\r\n".utf8))
+        }
+        func appendFile(_ name: String, filename: String, contentType: String, data: Data) {
+            body.append(Data("--\(boundary)\r\n".utf8))
+            body.append(Data("Content-Disposition: form-data; name=\"\(name)\"; filename=\"\(filename)\"\r\n".utf8))
+            body.append(Data("Content-Type: \(contentType)\r\n\r\n".utf8))
+            body.append(data)
+            body.append(Data("\r\n".utf8))
+        }
+
+        appendField("message", message)
+        if let metadataJSON { appendField("metadata", metadataJSON) }
+        if let appVersion { appendField("app_version", appVersion) }
+        if let screenshotPNG { appendFile("screenshot", filename: "screenshot.png", contentType: "image/png", data: screenshotPNG) }
+        if let logsText, !logsText.isEmpty {
+            appendFile("logs", filename: "hangs-logs.txt", contentType: "text/plain", data: Data(logsText.utf8))
+        }
+        body.append(Data("--\(boundary)--\r\n".utf8))
+        request.httpBody = body
+
+        let endpointPath = "/api/v1/feedback"
+        Logger.network.debug("🌐 POST \(endpoint, privacy: .public) (feedback: \(body.count, privacy: .public) bytes)")
+        breadcrumbRequest(method: "POST", endpoint: endpointPath)
+
+        let (data, response) = try await sendAuthorized(request)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw NetworkError.invalidResponse
+        }
+        breadcrumbResponse(endpoint: endpointPath, status: httpResponse.statusCode, bytes: data.count)
+
+        guard (200...299).contains(httpResponse.statusCode) else {
+            logHTTPError(endpoint: endpointPath, status: httpResponse.statusCode)
+            if let errorResponse = try? JSONDecoder().decode(ErrorResponse.self, from: data) {
+                throw NetworkError.serverError(statusCode: httpResponse.statusCode, message: errorResponse.detail)
+            }
+            throw NetworkError.invalidResponse
+        }
     }
 
     // MARK: - Audio Download

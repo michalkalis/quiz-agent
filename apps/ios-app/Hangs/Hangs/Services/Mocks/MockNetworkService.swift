@@ -103,6 +103,29 @@ final class MockNetworkService: NetworkServiceProtocol {
         return response
     }
 
+    // MARK: - Feedback (#109) capture + control
+
+    /// When set, `submitFeedback` throws this instead of succeeding — lets a test
+    /// exercise the send-failure path without tripping `shouldFail` for every call.
+    var feedbackError: Error?
+    var submitFeedbackCallCount = 0
+    var capturedFeedbackMessage: String?
+    var capturedFeedbackMetadataJSON: String?
+    var capturedFeedbackAppVersion: String?
+    var capturedFeedbackScreenshot: Data?
+    var capturedFeedbackLogs: String?
+
+    func submitFeedback(message: String, metadataJSON: String?, appVersion: String?, screenshotPNG: Data?, logsText: String?) async throws {
+        submitFeedbackCallCount += 1
+        capturedFeedbackMessage = message
+        capturedFeedbackMetadataJSON = metadataJSON
+        capturedFeedbackAppVersion = appVersion
+        capturedFeedbackScreenshot = screenshotPNG
+        capturedFeedbackLogs = logsText
+        if let feedbackError { throw feedbackError }
+        if shouldFail { throw NetworkError.invalidResponse }
+    }
+
     func submitTextInput(sessionId: String, input: String, audio: Bool) async throws -> QuizResponse {
         submitTextInputCallCount += 1
         capturedTextInputAudio = audio

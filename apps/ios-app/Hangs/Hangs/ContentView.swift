@@ -31,6 +31,9 @@ struct ContentView: View {
     // #108C: keeps the screen awake for the duration of an active quiz.
     // Injectable so tests assert against a spy, never the real UIApplication.
     @State private var screenAwakeWriter = ScreenAwakeWriter()
+    // #109: shake-to-report. Built at shake time with a screenshot of the
+    // current screen + a snapshot of the quiz state; drives the feedback sheet.
+    @State private var feedbackPresentation: FeedbackPresentation?
 
     init(appState: AppState) {
         _viewModel = StateObject(wrappedValue: appState.makeQuizViewModel())
@@ -185,6 +188,23 @@ struct ContentView: View {
         // down and the freshly started QuestionView is the visible root.
         .onReceive(NotificationCenter.default.publisher(for: .packQuizStarted)) { _ in
             navStackID = UUID()
+        }
+        // #109: shake anywhere → capture the CURRENT screen, then present the
+        // feedback sheet. Capture must happen before presentation so the shot
+        // shows the reported screen, not the sheet. Ignored while one is open.
+        .onShake {
+            guard feedbackPresentation == nil else { return }
+            let screenshot = ScreenshotCapture.captureKeyWindow()
+            feedbackPresentation = FeedbackPresentation(
+                viewModel: FeedbackViewModel(
+                    networkService: appState.networkService,
+                    context: FeedbackContext.capture(from: viewModel),
+                    screenshot: screenshot
+                )
+            )
+        }
+        .sheet(item: $feedbackPresentation) { presentation in
+            FeedbackView(viewModel: presentation.viewModel)
         }
     }
 

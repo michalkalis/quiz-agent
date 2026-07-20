@@ -2,12 +2,14 @@
 //  LogStore.swift
 //  Hangs
 //
-//  Reads back OS Logger entries via OSLogStore for in-app debug inspection.
-//  Only compiled in DEBUG — production builds do not need the reader layer and
-//  OSLogStore's `.currentProcessIdentifier` scope is primarily a dev-tool affordance.
+//  Reads back OS Logger entries via OSLogStore for in-app log inspection.
+//  Compiled in ALL configurations (#109): the in-app feedback path attaches the
+//  recent-log tail from release builds too, so the reader can no longer be
+//  DEBUG-only. The interactive viewer (`DebugLogView`) stays DEBUG-gated.
+//  OSLogStore's `.currentProcessIdentifier` scope reads only our own process,
+//  which needs no entitlement.
 //
 
-#if DEBUG
 import Foundation
 import OSLog
 
@@ -60,5 +62,26 @@ actor LogStore {
             )]
         }
     }
+
+    /// Plain-text export of recent logs for attachment to an in-app feedback
+    /// report (#109). Chronological (oldest → newest); tail-capped to `maxBytes`
+    /// so an oversized buffer never blows the backend's 1 MB logs cap — the tail
+    /// is kept because the most recent lines are the ones that explain the
+    /// screen the user was on. Reuses `LogEntry.formatted()` (the same one-line
+    /// rendering `DebugLogView`'s share-sheet export uses).
+    func exportText(sinceMinutes: Int = 15, maxBytes: Int = 200_000) async -> String {
+        // fetch(...) returns newest-first; reverse to chronological for the export.
+        let entries = Array(await fetch(sinceMinutes: sinceMinutes, limit: 2000).reversed())
+        let header = "Hangs log export — \(Date())\nSubsystem: \(subsystem)\nEntries: \(entries.count)\n\n"
+        let full = header + entries.map { $0.formatted() }.joined(separator: "\n")
+
+        let data = Data(full.utf8)
+        guard data.count > maxBytes else { return full }
+
+        // Keep the most recent `maxBytes`. Decode leniently — a byte-slice may
+        // split a multi-byte character at the boundary.
+        let tail = data.suffix(maxBytes)
+        let tailText = String(decoding: tail, as: UTF8.self)
+        return "…[truncated to last \(maxBytes) bytes]…\n" + tailText
+    }
 }
-#endif

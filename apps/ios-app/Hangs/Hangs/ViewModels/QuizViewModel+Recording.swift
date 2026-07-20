@@ -40,6 +40,16 @@ extension QuizViewModel {
             return
         }
 
+        // Mutual single-engine guard (#109): the feedback sheet can hold the shared
+        // AVAudioEngine while dictating, and the auto-record / thinking-time timers
+        // keep ticking under the modal sheet — so this is reachable. Never open a
+        // second engine on top of it (the #64/#77 two-engine crash class); stay on
+        // the question, the user records once the sheet closes.
+        guard !audioService.isStreamingEngineActive else {
+            Logger.audio.info("🎙️ startRecording suppressed — shared audio engine already active (feedback dictation)")
+            return
+        }
+
         cancelAnswerTimer()
         errorMessage = nil
         transition(to: .recording)

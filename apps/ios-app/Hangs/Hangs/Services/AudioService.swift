@@ -35,6 +35,12 @@ protocol AudioServiceProtocol: AnyObject, Sendable {
     var isRecording: Bool { get }
     var isPlaying: Bool { get }
 
+    /// True while a streaming PCM engine (`AVAudioEngine`) is live. The feedback
+    /// dictation sheet and the quiz share ONE engine, so this is the mutual
+    /// single-engine guard (#64/#77/#109): the quiz refuses to start recording while
+    /// the feedback sheet is dictating, and vice-versa.
+    var isStreamingEngineActive: Bool { get }
+
     /// Invoked on the main actor when an audio-session interruption (`.began` —
     /// e.g. an incoming phone call) tears down an active *streaming* recording.
     /// The owner (QuizViewModel) uses it to leave `.recording` and reset streaming
@@ -734,6 +740,10 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
     private var audioEngine: AVAudioEngine?
 
+    /// See `AudioServiceProtocol.isStreamingEngineActive` — the shared-engine
+    /// liveness signal that backs the mutual single-engine guard (#109).
+    var isStreamingEngineActive: Bool { audioEngine != nil }
+
     /// Monotonic token invalidating in-flight streaming starts. `startStreamingRecording`
     /// suspends for up to ~2s in the settle wait with `audioEngine` still nil; a
     /// teardown arriving in that window (scene-phase background, stop command) would
@@ -792,6 +802,17 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
     /// route settles (e.g. right after a Bluetooth connect/disconnect or a category
     /// switch) — `waitForValidHardwareFormat` retries for up to ~2s before giving up.
     func startStreamingRecording(onChunk: @escaping PCMChunkHandler) async throws {
+        // Single-engine invariant (#64/#77/#109): never overwrite a live engine. A
+        // second concurrent start — e.g. a quiz auto-record timer firing while the
+        // feedback sheet already holds the mic — must fail loud here rather than
+        // silently strand the first engine by overwriting `audioEngine` below (the
+        // two-engine crash class). The callers' mutual guards should prevent ever
+        // reaching this, but this is the structural backstop.
+        guard audioEngine == nil else {
+            Logger.audio.error("🎤 Streaming start refused — an audio engine is already active")
+            throw AudioError.recordingFailed
+        }
+
         // Target format: 16kHz, 16-bit, mono (matching ElevenLabs pcm_16000)
         guard let targetFormat = AVAudioFormat(
             commonFormat: .pcmFormatInt16,

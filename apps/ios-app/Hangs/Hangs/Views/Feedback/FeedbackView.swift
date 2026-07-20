@@ -50,8 +50,15 @@ struct FeedbackView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                        .accessibilityIdentifier("feedback.cancel")
+                    Button("Cancel") {
+                        // Release the shared mic before leaving — otherwise the
+                        // AudioService tap stays installed after the sheet closes and
+                        // the next quiz recording overwrites a still-live engine
+                        // (#64/#77 two-engine crash). #109 review.
+                        Task { await viewModel.stopDictation() }
+                        dismiss()
+                    }
+                    .accessibilityIdentifier("feedback.cancel")
                 }
             }
             .onChange(of: viewModel.sendState) { _, newState in
@@ -63,6 +70,12 @@ struct FeedbackView: View {
                         dismiss()
                     }
                 }
+            }
+            .onDisappear {
+                // Catch-all for every dismissal path (swipe-down, interactive
+                // dismiss, Cancel): always release the shared mic so no tap survives
+                // the sheet. No-op when not dictating. #109 review.
+                Task { await viewModel.stopDictation() }
             }
         }
     }

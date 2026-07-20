@@ -23,6 +23,11 @@ import os
         // interruption teardown can be exercised headlessly. `startStreamingRecording`
         // marks it live; `stopStreamingRecording` clears it (like `audioEngine = nil`).
         private(set) var audioEngineActive = false
+
+        /// Mirrors the real service's `isStreamingEngineActive` so the mutual
+        /// single-engine guard (#109) is exercisable headlessly.
+        var isStreamingEngineActive: Bool { audioEngineActive }
+
         var onInterruptionBegan: (@MainActor @Sendable () -> Void)?
 
         /// Drive a `.began` interruption through the SAME routing decision the real
@@ -149,6 +154,11 @@ import os
 
         func startStreamingRecording(onChunk: @escaping PCMChunkHandler) async throws {
             if shouldFailRecording || !sessionActive {
+                throw AudioError.recordingFailed
+            }
+            // Single-engine invariant (#109): refuse a second concurrent start,
+            // mirroring the real service's `guard audioEngine == nil`.
+            if audioEngineActive {
                 throw AudioError.recordingFailed
             }
             isRecording = true

@@ -7,6 +7,7 @@
 //  multipart feedback report to our own backend inbox.
 //
 
+@preconcurrency import AVFoundation
 import Combine
 import Foundation
 import os
@@ -131,6 +132,14 @@ final class FeedbackViewModel: ObservableObject {
     private var eventListenerTask: Task<Void, Never>?
     private var capTask: Task<Void, Never>?
 
+    /// Observes audio-session interruptions (phone call, Siri) WHILE this sheet
+    /// holds the shared mic. The shared `AudioService` routes its
+    /// `onInterruptionBegan` callback to `QuizViewModel`, not here, so without our
+    /// own observer an interruption would tear down the engine underneath us and
+    /// leave `micState` stuck `.dictating` (#109 review). Registered when dictation
+    /// starts, removed on every stop path.
+    private var interruptionObserver: NSObjectProtocol?
+
     /// Hard cap for a single dictation. Injectable so tests can drive the auto-stop
     /// without waiting the production 120 s.
     var maxDictationSeconds: TimeInterval = Config.feedbackDictationCapSecs
@@ -232,6 +241,10 @@ final class FeedbackViewModel: ObservableObject {
                 logsText: logs
             )
             addSentBreadcrumb()
+            // Clear the accumulated dictation audio now the report is sent — a
+            // fresh dictation on a reused sheet starts from an empty buffer.
+            pcmAccumulator.withLock { $0 = Data() }
+            dictatedAudioWAV = nil
             sendState = .success
         } catch {
             sendState = .failed(error.localizedDescription)
@@ -268,8 +281,10 @@ final class FeedbackViewModel: ObservableObject {
             return
         }
 
-        // Fresh recording: reset the PCM tee and any prior partial.
-        pcmAccumulator.withLock { $0 = Data() }
+        // Fresh segment: clear the prior partial. The PCM tee is deliberately NOT
+        // reset here — it accumulates across dictation segments so a report dictated
+        // in several passes attaches the audio for ALL of them (the buffer is reset
+        // only when the sheet opens / after a successful send). #109 review.
         partialTranscript = ""
         didHitDictationCap = false
 
@@ -279,6 +294,21 @@ final class FeedbackViewModel: ObservableObject {
             startEventListener(sttService)
 
             await voice.audioService.prepareForRecording()
+
+            // Re-check the single-engine guard after the awaits above (token fetch,
+            // connect, prepareForRecording): a quiz auto-record / thinking-time timer
+            // ticking under the modal sheet could have opened the shared mic in that
+            // window. Bail rather than install a second tap on top of it (#64/#77).
+            guard !voice.isQuizRecording() else {
+                eventListenerTask?.cancel()
+                eventListenerTask = nil
+                await sttService.disconnect()
+                partialTranscript = ""
+                micState = .idle
+                Logger.stt.info("🎙️ Feedback dictation aborted — quiz took the mic during setup")
+                return
+            }
+
             let accumulator = pcmAccumulator
             let stt = sttService
             try await voice.audioService.startStreamingRecording { pcmData in
@@ -289,6 +319,7 @@ final class FeedbackViewModel: ObservableObject {
 
             micState = .dictating
             startCapTimer()
+            registerInterruptionObserver()
             Logger.stt.info("🎙️ Feedback dictation started")
         } catch {
             // Teardown on any setup failure; typing stays available.
@@ -309,6 +340,7 @@ final class FeedbackViewModel: ObservableObject {
 
         capTask?.cancel()
         capTask = nil
+        removeInterruptionObserver()
 
         // Stop the mic first so no more PCM is teed, then force-commit any pending
         // words. The listener appends the final committed segment before we cut it.
@@ -344,7 +376,13 @@ final class FeedbackViewModel: ObservableObject {
                 case .connected:
                     break
                 case .disconnected:
-                    self.partialTranscript = ""
+                    // Unexpected socket drop while dictating: without a teardown the
+                    // shared mic keeps recording/teeing into a dead socket and
+                    // micState stays stuck `.dictating` (the #54 stuck-state class,
+                    // which QuizViewModel already handles on its own disconnect).
+                    // Stop the engine, keep whatever was captured as the WAV
+                    // fallback, and reset to idle.
+                    self.abortDictation()
                     return
                 }
             }
@@ -394,6 +432,55 @@ final class FeedbackViewModel: ObservableObject {
         let pcm = pcmAccumulator.withLock { $0 }
         guard !pcm.isEmpty else { return }
         dictatedAudioWAV = WavEncoder.wrapPCM16(pcm)
+    }
+
+    /// Tear down an in-flight dictation WITHOUT the graceful final-commit drain —
+    /// used when the STT socket drops or an audio-session interruption yanks the mic
+    /// away. The engine may already be stopped (the shared `AudioService` tears it
+    /// down on an interruption); `stopStreamingRecording` is idempotent. Whatever
+    /// transcript and PCM were captured so far are preserved (the WAV fallback still
+    /// attaches). Unlike `stopDictation` this never awaits — it runs synchronously
+    /// from the event-listener / notification callbacks that trigger it.
+    private func abortDictation() {
+        guard micState == .dictating else { return }
+        capTask?.cancel()
+        capTask = nil
+        eventListenerTask?.cancel()
+        eventListenerTask = nil
+        removeInterruptionObserver()
+        voice?.audioService.stopStreamingRecording()
+        partialTranscript = ""
+        micState = .idle
+        buildWavAttachment()
+        Logger.stt.warning("⚠️ Feedback dictation torn down (socket drop / interruption)")
+    }
+
+    /// Register a `.began` audio-interruption observer for the lifetime of a
+    /// dictation. The shared `AudioService` tears down its engine on an interruption
+    /// but only notifies `QuizViewModel`; this makes the feedback sheet reset its own
+    /// `micState` instead of stranding it `.dictating` (#109 review).
+    private func registerInterruptionObserver() {
+        guard interruptionObserver == nil else { return }
+        interruptionObserver = NotificationCenter.default.addObserver(
+            forName: AVAudioSession.interruptionNotification,
+            object: AVAudioSession.sharedInstance(),
+            queue: .main
+        ) { [weak self] notification in
+            // Only `.began` matters — the mic is gone. Read the primitive out here
+            // (Notification isn't Sendable) before hopping to the main actor.
+            let typeValue = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt
+            guard typeValue == AVAudioSession.InterruptionType.began.rawValue else { return }
+            Task { @MainActor in
+                self?.abortDictation()
+            }
+        }
+    }
+
+    private func removeInterruptionObserver() {
+        if let observer = interruptionObserver {
+            NotificationCenter.default.removeObserver(observer)
+            interruptionObserver = nil
+        }
     }
 
     // MARK: - Helpers

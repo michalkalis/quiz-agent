@@ -21,6 +21,7 @@
 //  scheduling across the STT actor → AsyncStream → listener Task → @MainActor hops.
 //
 
+@preconcurrency import AVFoundation
 import ConcurrencyExtras
 import Foundation
 import Testing
@@ -179,6 +180,103 @@ struct FeedbackDictationTests {
             // Typing still works and can be sent.
             vm.message = "typed because mic is off"
             #expect(vm.canSend == true)
+        }
+    }
+
+    // MARK: - Multi-segment audio (WAV must hold every pass)
+
+    @Test("PCM accumulates across dictation segments — the WAV holds every pass, not just the last")
+    func multiSegmentPCMAccumulates() async {
+        await withMainSerialExecutor {
+            let (vm, network, audio, stt) = makeVoiceFeedbackVM()
+            // Forced stop-commit stays empty so it doesn't append surprise text.
+            await stt.setMockCommittedText("")
+
+            let chunk = Data(repeating: 0xAB, count: 640) // 320 samples of 16-bit PCM
+
+            // Segment 1 — first dictation pass.
+            await vm.startDictation()
+            await waitUntil({ vm.isDictating }, "segment 1 never started")
+            audio.emitStreamingChunk(chunk)
+            await vm.stopDictation()
+            await waitUntil({ !vm.isDictating }, "segment 1 never stopped")
+
+            // Segment 2 — a second pass, exactly as the UI invites ("Tap Dictate to
+            // add more"). Its audio must be APPENDED, not replace segment 1's.
+            await vm.startDictation()
+            await waitUntil({ vm.isDictating }, "segment 2 never started")
+            audio.emitStreamingChunk(chunk)
+            await vm.stopDictation()
+            await waitUntil({ !vm.isDictating }, "segment 2 never stopped")
+
+            vm.message = "two-pass report"
+            await vm.send()
+
+            #expect(network.submitFeedbackCallCount == 1)
+            let wav = network.capturedFeedbackAudio
+            #expect(wav != nil)
+            // 44-byte RIFF header + BOTH 640-byte segments (1324), not just one (684).
+            #expect(wav?.count == 44 + 640 + 640)
+        }
+    }
+
+    // MARK: - Socket drop releases the shared mic
+
+    @Test("an unexpected STT disconnect releases the shared mic and resets to idle")
+    func disconnectReleasesMic() async {
+        await withMainSerialExecutor {
+            let (vm, _, audio, stt) = makeVoiceFeedbackVM()
+
+            await vm.startDictation()
+            await waitUntil({ vm.isDictating }, "dictation never started")
+            #expect(audio.audioEngineActive == true)
+
+            // The STT socket drops mid-dictation.
+            await stt.injectEvent(.disconnected(nil))
+
+            await waitUntil({ vm.micState == .idle }, "disconnect never reset micState")
+            // The shared engine MUST be released — otherwise the next quiz recording
+            // overwrites a still-live engine (the #64/#77 two-engine crash class).
+            #expect(audio.audioEngineActive == false)
+            #expect(vm.partialTranscript == "")
+        }
+    }
+
+    // MARK: - Interruption releases the shared mic
+
+    @Test("an audio-session interruption releases the shared mic and resets to idle")
+    func interruptionReleasesMic() async {
+        await withMainSerialExecutor {
+            let (vm, _, audio, _) = makeVoiceFeedbackVM()
+
+            await vm.startDictation()
+            await waitUntil({ vm.isDictating }, "dictation never started")
+            #expect(audio.audioEngineActive == true)
+
+            // A phone call / Siri interrupts. The shared AudioService routes its own
+            // callback to QuizViewModel, so the feedback sheet's OWN observer must
+            // fire and reset it — else micState stays stuck .dictating.
+            NotificationCenter.default.post(
+                name: AVAudioSession.interruptionNotification,
+                object: AVAudioSession.sharedInstance(),
+                userInfo: [AVAudioSessionInterruptionTypeKey: AVAudioSession.InterruptionType.began.rawValue]
+            )
+
+            await waitUntil({ vm.micState == .idle }, "interruption never reset micState")
+            #expect(audio.audioEngineActive == false)
+        }
+    }
+
+    // MARK: - Structural single-engine backstop
+
+    @Test("the shared AudioService refuses a second concurrent streaming start")
+    func rejectsSecondStreamingStart() async throws {
+        let audio = MockAudioService()
+        try await audio.startStreamingRecording { _ in }
+        #expect(audio.audioEngineActive == true)
+        // A second start while one is live must fail loud, never overwrite the engine.
+        await #expect(throws: AudioError.self) {
+            try await audio.startStreamingRecording { _ in }
         }
     }
 }

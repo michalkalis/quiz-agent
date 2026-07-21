@@ -14,6 +14,9 @@ import Foundation
 /// Recording-cluster phase state — owned privately by `RecordingCoordinator`;
 /// reached only through its same-file accessors.
 struct RecordingState {
+    // Capture-scoped — dropped whenever the quiz leaves the
+    // recording/processing pair (`resetCaptureState`).
+
     /// Live transcript from ElevenLabs (updates as user speaks)
     var liveTranscript: String = ""
 
@@ -26,15 +29,27 @@ struct RecordingState {
     /// Prevents concurrent stopRecordingAndSubmit calls (silence detection + user tap can race)
     var isStoppingRecording: Bool = false
 
+    // Question-scoped — must SURVIVE pair exits (only full `reset()` clears
+    // them): the escalation counter accumulates across its own tier-1/2
+    // bail-out transitions, and the audio URL is replayed from .showingResult.
+
     /// Consecutive transcription failures for 3-tier error escalation
     var consecutiveTranscriptionFailures: Int = 0
 
-    /// Current question audio URL for the "repeat" command — written by
-    /// AudioDeviceState through the façade's injected closures (#113 T2,
-    /// decision 4); the façade's `repeatQuestion` reads it.
+    /// Current question audio URL for "read aloud" / the "repeat" command —
+    /// written by AudioDeviceState through the façade's injected closures
+    /// (#113 T2, decision 4).
     var currentQuestionAudioUrl: String?
 
-    /// Drop the whole subset atomically (T7 unified reset model).
+    /// Drop only the capture-scoped subset (phase exit, decision 8).
+    mutating func resetCaptureState() {
+        liveTranscript = ""
+        isStreamingSTT = false
+        speechDetectedDuringAutoRecord = false
+        isStoppingRecording = false
+    }
+
+    /// Drop the whole subset atomically (full teardown, T7 unified reset model).
     mutating func reset() { self = RecordingState() }
 }
 

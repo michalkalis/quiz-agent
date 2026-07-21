@@ -377,11 +377,12 @@ final class QuizViewModel: ObservableObject {
         Logger.quiz.info("State: \(from) → \(to) [\(caller, privacy: .public)]")
         quizState = newState
         // T7 (decision 8): leaving the recording/processing phase-pair drops the
-        // recording+confirmation subset atomically via the owner child's reset()
-        // — never mid-pair (recording → processing keeps in-flight state).
+        // confirmation + capture subsets atomically via the owner child — never
+        // mid-pair (recording → processing keeps in-flight state), and never the
+        // question-scoped fields (see `resetOnPhaseExit`).
         let recordingPair = ["recording", "processing"]
         if recordingPair.contains(from), !recordingPair.contains(to) {
-            recordingCoordinator.reset()
+            recordingCoordinator.resetOnPhaseExit()
         }
         if case .askingQuestion = newState { mcqVoiceMatchedKey = nil }
         // #110 Bug 3: .finished never cleared isMinimized, so a stale

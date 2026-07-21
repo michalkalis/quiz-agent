@@ -64,10 +64,13 @@ struct CompletionViewSummaryTests {
     @Test("summary.totalQuestions uses settings.numberOfQuestions fallback when session is nil")
     func summaryTotalQuestionsFromSettings() {
         let vm = makeViewModel(score: 5, answered: 8, correct: 5, incorrect: 3)
-        vm.settings.numberOfQuestions = 10
+        // The shared helper seeds a session (#113 T7 derived counters); this
+        // test pins the nil-session fallback, so drop it and pick a total that
+        // cannot coincide with the Fixtures.session default (10).
+        vm.currentSession = nil
+        vm.settings.numberOfQuestions = 7
         let view = CompletionView(viewModel: vm)
-        // currentSession is nil → falls back to settings.numberOfQuestions
-        #expect(view.summary.totalQuestions == 10)
+        #expect(view.summary.totalQuestions == 7)
     }
 }
 

@@ -41,6 +41,7 @@ struct ResetModelTests {
         viewModel.quizState = .askingQuestion
         viewModel.voiceCommandCoordinator.beginSkipUndoWindow()
         viewModel.consecutiveTranscriptionFailures = 2
+        viewModel.currentQuestionAudioUrl = "https://example.com/q.mp3"
         viewModel.autoConfirmCountdown = 5
         viewModel.recordingCoordinator.transcriptWasEdited = true
         viewModel.recordingCoordinator.preEditTranscript = "draft"
@@ -63,6 +64,7 @@ struct ResetModelTests {
         #expect(viewModel.voiceCommandCoordinator.commandCapturePhase == .idle)
         #expect(viewModel.voiceCommandCoordinator.pendingSkipWindow == nil)
         #expect(viewModel.consecutiveTranscriptionFailures == 0)
+        #expect(viewModel.currentQuestionAudioUrl == nil)
         #expect(viewModel.autoConfirmCountdown == 0)
         #expect(viewModel.recordingCoordinator.transcriptWasEdited == false)
         #expect(viewModel.recordingCoordinator.preEditTranscript == nil)
@@ -76,13 +78,18 @@ struct ResetModelTests {
     /// WHY: decision 8 — phase state must drop atomically when the quiz leaves
     /// the recording/processing pair, but an in-pair move (recording →
     /// processing) must keep in-flight capture state or streaming submissions
-    /// would lose their transcript.
-    @Test("leaving the recording/processing pair drops both subsets; in-pair move keeps them")
+    /// would lose their transcript. Question-scoped fields must SURVIVE the
+    /// exit: the escalation counter accumulates across its own tier-1/2
+    /// bail-out transitions, and the question audio URL is replayed from
+    /// .showingResult ("read aloud" / voice "repeat").
+    @Test("leaving the recording/processing pair drops phase-scoped state; question-scoped state survives")
     func leavingRecordingPairDropsPhaseState() async throws {
         let viewModel = Fixtures.makeViewModel()
         viewModel.quizState = .recording
         viewModel.liveTranscript = "hello"
         viewModel.speechDetectedDuringAutoRecord = true
+        viewModel.consecutiveTranscriptionFailures = 1
+        viewModel.currentQuestionAudioUrl = "https://example.com/q.mp3"
 
         // In-pair move: recording → processing must NOT reset.
         #expect(viewModel.transition(to: .processing))
@@ -93,13 +100,35 @@ struct ResetModelTests {
         viewModel.showAnswerConfirmation = true
         viewModel.autoConfirmCountdown = 3
 
-        // Leaving the pair: processing → askingQuestion drops both subsets.
+        // Leaving the pair: processing → askingQuestion drops the capture +
+        // confirmation subsets…
         #expect(viewModel.transition(to: .askingQuestion))
         #expect(viewModel.liveTranscript.isEmpty)
         #expect(viewModel.speechDetectedDuringAutoRecord == false)
         #expect(viewModel.transcribedAnswer.isEmpty)
         #expect(viewModel.showAnswerConfirmation == false)
         #expect(viewModel.autoConfirmCountdown == 0)
+        // …while the question-scoped pair survives until success/teardown.
+        #expect(viewModel.consecutiveTranscriptionFailures == 1)
+        #expect(viewModel.currentQuestionAudioUrl == "https://example.com/q.mp3")
+    }
+
+    /// WHY: tier-2 ("speak closer") and tier-3 (auto-skip) of the
+    /// transcription-failure escalation are the driving-safety escape valve —
+    /// the counter must survive tier-1's own bail-out transition out of the
+    /// recording pair, or every repeated failure re-enters tier 1 forever
+    /// (S6b verify blocker).
+    @Test("repeated transcription failures escalate past tier 1")
+    func repeatedTranscriptionFailuresEscalate() async throws {
+        let viewModel = Fixtures.makeViewModel()
+        viewModel.quizState = .recording
+        viewModel.recordingCoordinator.handleTranscriptionFailure()
+        #expect(viewModel.consecutiveTranscriptionFailures == 1)
+        #expect(viewModel.quizState == .askingQuestion)
+
+        viewModel.quizState = .recording
+        viewModel.recordingCoordinator.handleTranscriptionFailure()
+        #expect(viewModel.consecutiveTranscriptionFailures == 2)
     }
 
     /// WHY: score/questionsAnswered are derived from currentSession (#113 T7),

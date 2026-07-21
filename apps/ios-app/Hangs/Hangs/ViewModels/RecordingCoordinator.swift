@@ -242,18 +242,29 @@ final class RecordingCoordinator: ObservableObject {
         await facadeHandleError(error, context, fallbackMessage)
     }
 
-    /// T7 unified reset model: drops both phase-state subsets atomically.
-    /// Invoked by the façade's `resetState` (full teardown) and by
-    /// `transition(to:)` when leaving the recording/processing phase-pair
-    /// (decision 8). Long-lived task teardown stays with the façade's
+    /// T7 unified reset model, full teardown: drops both phase-state subsets
+    /// atomically, question-scoped fields included. Invoked by the façade's
+    /// `resetState`. Long-lived task teardown stays with the façade's
     /// `taskBag.cancelAll()`.
     func reset() {
-        // Streaming teardown first: a transition-driven reset can fire while
-        // the engine is still capturing; zeroing `isStreamingSTT` without
-        // stopping it would leak a live recorder past cleanupStreamingSTT's
-        // guard.
+        // Streaming teardown first: a reset can fire while the engine is still
+        // capturing; zeroing `isStreamingSTT` without stopping it would leak a
+        // live recorder past cleanupStreamingSTT's guard.
         cleanupStreamingSTT()
         recordingState.reset()
+        confirmationState.reset()
+    }
+
+    /// Decision-8 phase-exit reset: invoked by the façade's `transition(to:)`
+    /// when the quiz leaves the recording/processing pair. Drops the
+    /// confirmation subset + capture-scoped recording state; question-scoped
+    /// fields survive — `consecutiveTranscriptionFailures` accumulates across
+    /// its own tier-1/2 bail-out transitions out of the pair (else the 3-tier
+    /// escalation could never fire) and `currentQuestionAudioUrl` is replayed
+    /// from `.showingResult` ("read aloud" / voice "repeat").
+    func resetOnPhaseExit() {
+        cleanupStreamingSTT()
+        recordingState.resetCaptureState()
         confirmationState.reset()
     }
 

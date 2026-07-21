@@ -8,7 +8,9 @@
 import Foundation
 
 /// Represents a quiz question
-struct Question: Codable, Identifiable, Equatable, Sendable {
+/// nonisolated: pure Sendable data model — must stay constructible off the main
+/// actor (Swift Testing @Test(arguments:) evaluates in a nonisolated context).
+nonisolated struct Question: Codable, Identifiable, Equatable, Sendable {
     let id: String
     let question: String
     let type: QuestionType

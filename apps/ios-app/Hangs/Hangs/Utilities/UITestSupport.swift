@@ -25,6 +25,14 @@
         /// uses this to inject events into the running ViewModel.
         private static var mockSTT: MockElevenLabsSTTService?
 
+        /// Live command sink registered by `AppState.makeQuizViewModel()` when
+        /// `--ui-test` is active (issue #111 T3). Routes a transcript straight into
+        /// `VoiceCommandCoordinator.handleCommandTranscript` — the real `handleRecognizedCommand`
+        /// → `routeCommand` pipeline — so voice-driven navigation is UI-testable even
+        /// though the recognizer under `--ui-test` is an `.unavailable` mock
+        /// that never yields transcripts.
+        private static var commandSink: (@MainActor (String) async -> Void)?
+
         /// Strong reference to the loopback HTTP listener (kept alive for the app lifetime).
         private static var listener: NWListener?
 
@@ -34,7 +42,7 @@
             network: NetworkServiceProtocol,
             audio: AudioServiceProtocol,
             persistence: PersistenceStoreProtocol,
-            silence: SilenceDetectionServiceProtocol?,
+            silence: SilenceDetectionServiceProtocol,
             stt: ElevenLabsSTTServiceProtocol?
         ) {
             let network = MockNetworkService()
@@ -75,6 +83,12 @@
 
             var seededSettings = QuizSettings.default
             seededSettings.autoConfirmEnabled = false
+            // #115: the silence service is non-optional now, so the auto-record
+            // gate `autoRecordEnabled && service != nil` would flip ON under UI
+            // test (it was OFF before purely because the service was nil).
+            // Disable it explicitly — UI tests drive recording via the answer
+            // timer + injected STT events, exactly as before the de-opt.
+            seededSettings.autoRecordEnabled = false
             // Short answer timer so recording auto-starts within ~1s (no mic button in redesigned UI).
             if CommandLine.arguments.contains("--ui-test-mcq") {
                 seededSettings.answerTimeLimit = 1
@@ -84,8 +98,15 @@
             let stt = MockElevenLabsSTTService()
             mockSTT = stt
 
+            // Silence mock seeded `.unavailable`: keeps the command-listener hint
+            // (and CmdListenBar) hidden exactly as the old `nil` service did — a
+            // default `.ready` mock would arm the listener window and render the
+            // bar across every `--ui-test` scenario.
+            let silence = MockSilenceDetectionService()
+            silence.commandAvailability = .unavailable(reason: "UI-test mock")
+
             Logger.quiz.info("🧪 UITestSupport: mock services wired (autoConfirmEnabled=false)")
-            return (network, audio, persistence, nil, stt)
+            return (network, audio, persistence, silence, stt)
         }
 
         /// Inject an arbitrary STT event into the live mock STT.
@@ -100,6 +121,25 @@
             return true
         }
 
+        /// Register the live command sink. Called by `AppState.makeQuizViewModel()`
+        /// once the real `QuizViewModel` exists. A later registration replaces the
+        /// former (idempotent).
+        static func registerCommandSink(_ sink: @escaping @MainActor (String) async -> Void) {
+            commandSink = sink
+        }
+
+        /// Route an arbitrary transcript to the registered command sink.
+        /// Returns false if no sink has been registered (e.g., not in UI test mode).
+        @discardableResult
+        static func handleCommand(_ text: String) async -> Bool {
+            guard let commandSink else {
+                Logger.quiz.error("🧪 UITestSupport: handleCommand called but no command sink is registered")
+                return false
+            }
+            await commandSink(text)
+            return true
+        }
+
         /// Route a `hangs-test://` URL to the appropriate mock action.
         ///
         /// Supported URLs:
@@ -107,8 +147,16 @@
         /// - `hangs-test://stt/committed?text=foo` → `STTEvent.committedTranscript("foo")`
         /// - `hangs-test://stt/connected`          → `STTEvent.connected`
         /// - `hangs-test://stt/disconnect?msg=x`   → `STTEvent.disconnected(error)`
-        static func handleTestURL(_ url: URL) async {
-            guard url.scheme == "hangs-test" else { return }
+        /// - `hangs-test://command/send?text=start` → registered command sink("start"),
+        ///   driving the real `handleCommandTranscript` → `routeCommand` pipeline
+        ///   (issue #111 T3 — voice-command test seam).
+        /// Returns `false` when the request was NOT actually handled (unknown
+        /// route, or `/command/send` with no sink registered) so the HTTP
+        /// listener can answer non-200 and the XCUITest client fails at the
+        /// seam — not 15s later at some downstream UI assertion.
+        @discardableResult
+        static func handleTestURL(_ url: URL) async -> Bool {
+            guard url.scheme == "hangs-test" else { return false }
 
             let host = url.host ?? ""
             let path = url.path
@@ -120,16 +168,23 @@
             switch (host, path) {
             case ("stt", "/partial"):
                 await injectSTTEvent(.partialTranscript(text))
+                return true
             case ("stt", "/committed"):
                 await injectSTTEvent(.committedTranscript(text))
+                return true
             case ("stt", "/connected"):
                 await injectSTTEvent(.connected)
+                return true
             case ("stt", "/disconnect"):
                 let msg = queryItems.first(where: { $0.name == "msg" })?.value
                 let err: Error? = msg.map { ElevenLabsSTTError.serverError($0) }
                 await injectSTTEvent(.disconnected(err))
+                return true
+            case ("command", "/send"):
+                return await handleCommand(text)
             default:
                 Logger.quiz.error("🧪 UITestSupport: unrecognized URL \(url.absoluteString, privacy: .public)")
+                return false
             }
         }
 
@@ -163,15 +218,15 @@
         }
 
         /// Read one HTTP request, log + dispatch it via `handleTestURL`, write a
-        /// minimal 200 response, then close the connection. Runs on the listener's
-        /// dispatch queue; hops to MainActor for the actual mock injection.
+        /// status response that reflects whether the request was actually
+        /// handled (200 / 404 / 400), then close the connection. Runs on the
+        /// listener's dispatch queue; hops to MainActor for the mock injection.
         private nonisolated static func handleConnection(_ connection: NWConnection) {
             connection.start(queue: .global(qos: .userInitiated))
             connection.receive(minimumIncompleteLength: 1, maximumLength: 4096) { data, _, _, _ in
-                defer {
-                    let response = "HTTP/1.1 200 OK\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
-                    let bytes = Data(response.utf8)
-                    connection.send(content: bytes, completion: .contentProcessed { _ in
+                let respond: @Sendable (String) -> Void = { status in
+                    let response = "HTTP/1.1 \(status)\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
+                    connection.send(content: Data(response.utf8), completion: .contentProcessed { _ in
                         connection.cancel()
                     })
                 }
@@ -180,23 +235,36 @@
                     let data,
                     let requestText = String(data: data, encoding: .utf8),
                     let firstLine = requestText.split(separator: "\r\n", maxSplits: 1).first
-                else { return }
+                else {
+                    respond("400 Bad Request")
+                    return
+                }
 
                 let parts = firstLine.split(separator: " ", maxSplits: 2)
-                guard parts.count >= 2 else { return }
+                guard parts.count >= 2 else {
+                    respond("400 Bad Request")
+                    return
+                }
                 let method = String(parts[0])
                 let pathAndQuery = String(parts[1])
-                guard pathAndQuery.hasPrefix("/") else { return }
+                guard pathAndQuery.hasPrefix("/") else {
+                    respond("400 Bad Request")
+                    return
+                }
 
                 // pathAndQuery is e.g. "/stt/committed?text=Paris" — drop the
                 // leading "/" and prepend "hangs-test://" to reuse handleTestURL.
                 let urlString = "hangs-test://" + pathAndQuery.dropFirst()
-                guard let url = URL(string: urlString) else { return }
+                guard let url = URL(string: urlString) else {
+                    respond("400 Bad Request")
+                    return
+                }
 
                 Logger.quiz.info("🧪 HTTP: \(method, privacy: .public) \(pathAndQuery, privacy: .public)")
 
                 Task { @MainActor in
-                    await UITestSupport.handleTestURL(url)
+                    let handled = await UITestSupport.handleTestURL(url)
+                    respond(handled ? "200 OK" : "404 Not Found")
                 }
             }
         }

@@ -23,6 +23,14 @@ final nonisolated class RegressionTests: XCTestCase {
     override func setUp() {
         super.setUp()
         continueAfterFailure = false
+        // Order-independence: the template launch tests
+        // (runsForEachTargetApplicationUIConfiguration) rotate the simulator to
+        // landscape and the orientation persists across app launches. In
+        // landscape the OrderPack submit button lays out below the 402pt-high
+        // window, so its tap lands on nothing and the order is never created
+        // (testRSPackNavStart then times out waiting for .delivered). Every RS
+        // scenario assumes portrait — force it before each launch.
+        XCUIDevice.shared.orientation = .portrait
     }
 
     // MARK: - RS-start
@@ -208,5 +216,92 @@ final nonisolated class RegressionTests: XCTestCase {
         paywall.tapClose()
 
         home.assertVisible(timeout: 5)
+    }
+
+    // MARK: - RS-pack-nav-start
+
+    //
+    // Scenario: push the full #95 custom-pack depth — Home→Settings→OrderPack→
+    // OrderProgress(delivered) — then start the quiz from that deepest pushed
+    // point, once via the "Start quiz" CTA and once via voice "start". Assert
+    // QuestionView is the clean visible root (no Settings/OrderPack/OrderProgress
+    // covering it) and the back-stack is empty.
+    //
+    // Regression guarded: NavigationModel's reactive teardown (#111) clears the
+    // pushed stack + the OrderProgress `isPresented` child on every quiz-start
+    // entry point — including the voice bypass (originally
+    // QuizViewModel+CommandListener.swift:169) that shipped without any
+    // teardown at all, and proves the belt-and-braces `isPresented` child
+    // actually collapses rather than relying on SwiftUI's transitive pop.
+
+    @MainActor
+    func testRSPackNavStart() async throws {
+        try await runPackNavStartPass(startVia: .ctaButton)
+        try await runPackNavStartPass(startVia: .voiceCommand)
+    }
+
+    private enum PackNavStartTrigger {
+        case ctaButton
+        case voiceCommand
+    }
+
+    /// Drives Home→Settings→OrderPack→OrderProgress(delivered) from a fresh
+    /// launch, fires "start" via `trigger`, then asserts QuestionView is the
+    /// clean visible root with an empty back-stack. A fresh relaunch per pass
+    /// is required — the first start tears the pushed chain down, so a second
+    /// pass needs the chain freshly rebuilt, not a second assert on one stack.
+    @MainActor
+    private func runPackNavStartPass(startVia trigger: PackNavStartTrigger) async throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-test"]
+        app.launch()
+
+        let settings = SettingsPage(app: app)
+        settings.openSettings()
+        settings.openCreatePack()
+        settings.submitOrder()
+
+        // Both triggers need the order delivered first — voice "start" must
+        // fire from the same depth as the CTA, not merely once submitted.
+        XCTAssertTrue(
+            settings.startQuizButton.waitForExistence(timeout: 10),
+            "RS-pack-nav-start: orderProgress.startQuiz not found — order did not reach .delivered"
+        )
+
+        switch trigger {
+        case .ctaButton:
+            settings.startQuizFromProgress()
+        case .voiceCommand:
+            try await client.sendCommand("start")
+        }
+
+        let question = QuestionPage(app: app)
+        question.waitForQuestion(timeout: 15)
+
+        XCTAssertTrue(
+            question.recordButton.waitForExistence(timeout: 5),
+            "RS-pack-nav-start (\(trigger)): question.record button not found after starting from OrderProgress"
+        )
+        XCTAssertTrue(
+            question.recordButton.isHittable,
+            "RS-pack-nav-start (\(trigger)): question.record button is not hittable — a pushed screen may still cover QuestionView"
+        )
+        question.waitForState("askingQuestion", timeout: 10)
+
+        // A7: the back-stack is empty — no back button, and none of the
+        // pushed screens' identifiers survive behind QuestionView. This is
+        // what proves the OrderProgress `isPresented` child actually
+        // dismissed (not just that `path` emptied), pinning the founder
+        // default (post-pack-quiz lands on Home, not back in MyPacks).
+        XCTAssertEqual(
+            app.navigationBars.buttons.count, 0,
+            "RS-pack-nav-start (\(trigger)): a navigation back button still exists — back-stack not empty"
+        )
+        for identifier in ["settings.voiceCommands", "packs.createPack", "orderPack.prompt", "orderPack.submit", "orderProgress.startQuiz"] {
+            XCTAssertFalse(
+                app.descendants(matching: .any)[identifier].exists,
+                "RS-pack-nav-start (\(trigger)): '\(identifier)' still present — pushed stack not fully torn down"
+            )
+        }
     }
 }

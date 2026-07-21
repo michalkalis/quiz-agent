@@ -19,8 +19,8 @@ import Testing
 
 @MainActor
 private func makeVM(
-    silence: MockSilenceDetectionService? = MockSilenceDetectionService()
-) -> (QuizViewModel, MockSilenceDetectionService?, MockAudioService) {
+    silence: MockSilenceDetectionService = MockSilenceDetectionService()
+) -> (QuizViewModel, MockSilenceDetectionService, MockAudioService) {
     let audio = MockAudioService()
     let vm = QuizViewModel(
         networkService: Fixtures.makeFullMockNetwork(),
@@ -81,8 +81,8 @@ struct VoiceCommandObservabilityTests {
         vm.quizState = .idle
         #expect(vm.commandListenerHint == nil, "not listening yet → no indicator")
 
-        await vm.startSilenceDetectionListening() // arms the consumer → .listening
-        #expect(vm.commandCapturePhase == .listening)
+        await vm.audioDeviceState.startSilenceDetectionListening() // arms the consumer → .listening
+        #expect(vm.voiceCommandCoordinator.commandCapturePhase == .listening)
         #expect(vm.commandListenerHint == #"Say "start""#)
 
         // Moving to the result screen swaps the words shown.
@@ -90,14 +90,14 @@ struct VoiceCommandObservabilityTests {
         #expect(vm.commandListenerHint == #"Say "next""#)
 
         // Tearing the listener down hides the indicator.
-        vm.stopSilenceDetectionListening()
+        vm.audioDeviceState.stopSilenceDetectionListening()
         #expect(vm.commandListenerHint == nil)
     }
 
     @Test("indicator stays hidden when the recognizer is unavailable (never lies)")
     func hintHiddenWhenRecognizerUnavailable() async {
         let (vm, silence, _) = makeVM()
-        let mock = try! #require(silence)
+        let mock = silence
         mock.commandAvailability = .unavailable(reason: "assets missing")
         // Availability now mirrors through an async stream — wait for the VM to
         // observe it before asserting on the derived hint.
@@ -105,8 +105,8 @@ struct VoiceCommandObservabilityTests {
                         "availability mirror did not pick up the unavailable state")
 
         vm.quizState = .idle
-        await vm.startSilenceDetectionListening()
-        #expect(vm.commandCapturePhase == .listening, "the consumer still arms")
+        await vm.audioDeviceState.startSilenceDetectionListening()
+        #expect(vm.voiceCommandCoordinator.commandCapturePhase == .listening, "the consumer still arms")
         #expect(vm.commandListenerHint == nil, "but the cue must not claim to be listening")
     }
 
@@ -121,7 +121,7 @@ struct VoiceCommandObservabilityTests {
     @Test("a mid-session .ready flip updates the observed availability and reveals the hint")
     func availabilityReadyFlipRevealsHint() async {
         let (vm, silence, _) = makeVM()
-        let mock = try! #require(silence)
+        let mock = silence
 
         // Fresh-install: still installing → listener arms, indicator hidden.
         mock.commandAvailability = .installingAssets
@@ -129,8 +129,8 @@ struct VoiceCommandObservabilityTests {
                         "mirror did not observe the installing state")
 
         vm.quizState = .idle
-        await vm.startSilenceDetectionListening()
-        #expect(vm.commandCapturePhase == .listening)
+        await vm.audioDeviceState.startSilenceDetectionListening()
+        #expect(vm.voiceCommandCoordinator.commandCapturePhase == .listening)
         #expect(vm.commandListenerHint == nil, "installing → the cue must not claim to be listening yet")
 
         // Model install completes asynchronously → service flips to .ready.
@@ -148,25 +148,25 @@ struct VoiceCommandObservabilityTests {
         vm.settings.voiceCommandsEnabled = false
         for state in [QuizState.idle, .askingQuestion, .processing, makeResultState()] {
             vm.quizState = state
-            #expect(vm.currentCommandScreen == nil, "toggle off must close the window in every state")
+            #expect(vm.voiceCommandCoordinator.currentCommandScreen == nil, "toggle off must close the window in every state")
         }
         // Re-enabling restores the normal mapping.
         vm.settings.voiceCommandsEnabled = true
         vm.quizState = .idle
-        #expect(vm.currentCommandScreen == .home)
+        #expect(vm.voiceCommandCoordinator.currentCommandScreen == .home)
     }
 
     @Test("disabling the toggle tears down an already-armed listener")
     func toggleTearsDownArmed() async {
         let (vm, silence, _) = makeVM()
-        let mock = try! #require(silence)
+        let mock = silence
 
         vm.quizState = .askingQuestion
-        await vm.syncCommandListenerWindow()
+        await vm.voiceCommandCoordinator.syncCommandListenerWindow()
         #expect(mock.isListening == true)
 
         vm.settings.voiceCommandsEnabled = false
-        await vm.syncCommandListenerWindow()
+        await vm.voiceCommandCoordinator.syncCommandListenerWindow()
         #expect(mock.isListening == false, "the master toggle must stop the running listener")
     }
 
@@ -174,7 +174,7 @@ struct VoiceCommandObservabilityTests {
     func toggleOffSuppressesHint() async {
         let (vm, _, _) = makeVM()
         vm.quizState = .idle
-        await vm.startSilenceDetectionListening()
+        await vm.audioDeviceState.startSilenceDetectionListening()
         #expect(vm.commandListenerHint != nil)
 
         vm.settings.voiceCommandsEnabled = false
@@ -187,11 +187,11 @@ struct VoiceCommandObservabilityTests {
     func lastRecognizedCommandRecorded() async {
         await withMainSerialExecutor {
             let (vm, silence, _) = makeVM()
-            let mock = try! #require(silence)
+            let mock = silence
             #expect(vm.lastRecognizedCommand == nil)
 
             vm.quizState = .idle // Home — spoken "start" is valid
-            await vm.startSilenceDetectionListening()
+            await vm.audioDeviceState.startSilenceDetectionListening()
             mock.simulateCommandTranscript("start")
             await waitUntil({ vm.lastRecognizedCommand != nil }, "no command recorded")
 

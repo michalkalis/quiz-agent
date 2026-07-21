@@ -363,7 +363,7 @@ struct QuestionViewReplayProcessingInspectorTests {
     @Test("replay button is disabled when no question audio URL is available (RS-14)")
     func replayDisabledWhenNoAudio() async throws {
         let vm = makeVoiceViewModel()
-        vm.currentQuestionAudioUrl = nil
+        vm.recordingCoordinator.currentQuestionAudioUrl = nil
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
@@ -376,7 +376,7 @@ struct QuestionViewReplayProcessingInspectorTests {
     func replayEnabledWhenAudioPresent() async throws {
         let vm = makeVoiceViewModel()
         vm.settings.isMuted = false
-        vm.currentQuestionAudioUrl = "https://example.com/q.mp3"
+        vm.recordingCoordinator.currentQuestionAudioUrl = "https://example.com/q.mp3"
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()

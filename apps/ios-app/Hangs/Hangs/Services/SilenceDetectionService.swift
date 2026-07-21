@@ -84,9 +84,8 @@ protocol SilenceDetectionServiceProtocol: AnyObject, Sendable {
     func setTTSPlaybackActive(_ active: Bool)
 }
 
-// MARK: - Implementation (iOS 26+)
+// MARK: - Implementation
 
-@available(iOS 26, *)
 @MainActor
 final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     let silenceEvents: AsyncStream<SilenceEvent>

@@ -18,9 +18,9 @@
 //
 
 import Foundation
+@testable import Hangs
 import SwiftUI
 import Testing
-@testable import Hangs
 
 // MARK: - Helpers
 
@@ -30,7 +30,7 @@ import Testing
 @MainActor
 private func waitUntil(
     _ predicate: @MainActor () -> Bool,
-    timeoutMillis: Int = 5_000,
+    timeoutMillis: Int = 5000,
     _ comment: Comment? = nil,
     sourceLocation: SourceLocation = #_sourceLocation
 ) async {
@@ -98,7 +98,6 @@ private actor OneShotGate {
 @Suite("Entitlement re-sync on launch/foreground (#102)")
 @MainActor
 struct EntitlementReconcileTests {
-
     @Test("launch fires exactly one entitlement sync attempt")
     func launchSyncsOnce() async {
         let mock = Fixtures.makeFullMockNetwork()
@@ -139,7 +138,7 @@ struct EntitlementReconcileTests {
         // Generous timeout: this is a real-time wait for the production
         // backoff sleeps (not a race), so it just needs enough headroom for
         // a loaded CI machine — not a tight bound.
-        await waitUntil({ mock.syncEntitlementsCallCount == 3 }, timeoutMillis: 15_000, "retry loop gave up before its bounded 3rd attempt")
+        await waitUntil({ mock.syncEntitlementsCallCount == 3 }, timeoutMillis: 15000, "retry loop gave up before its bounded 3rd attempt")
         await waitUntil({ vm.usageInfo != nil }, "usage never refreshed after the sync eventually recovered")
     }
 
@@ -215,6 +214,55 @@ struct EntitlementReconcileTests {
         #expect(vm.quotaLimitError == nil, "no quota error should be surfaced once entitlement is confirmed")
         if case .error = vm.quizState {
             // Expected: a retryable error asking the user to try again, not the paywall.
+        } else {
+            Issue.record("expected an .error state prompting retry, got \(vm.quizState)")
+        }
+    }
+
+    @Test("429 on a voice-submit quota block deactivates the audio session before the paywall (#112 copy C)")
+    func voiceSubmitQuotaDeactivatesAudioSession() async {
+        let mock = Fixtures.makeFullMockNetwork()
+        let audio = MockAudioService()
+        let vm = QuizViewModel(
+            networkService: mock,
+            audioService: audio,
+            persistenceStore: MockPersistenceStore(),
+            isLocallyEntitled: { false }
+        )
+
+        await waitUntil({ vm.usageInfo != nil }, "launch reconcile never settled")
+        await vm.startNewQuiz()
+        let deactivateCountBeforeSubmit = audio.deactivateSessionCallCount
+
+        mock.submitVoiceAnswerError = NetworkError.quotaLimitReached(makeQuotaLimitError())
+        await vm.recordingCoordinator.submitVoiceAnswer(audioData: Data("mock audio".utf8))
+
+        #expect(audio.deactivateSessionCallCount - deactivateCountBeforeSubmit == 1, "a quota block mid-voice-submit must release the audio session before the paywall — it was left live behind the paywall pre-fix")
+        #expect(vm.showPaywall == true)
+    }
+
+    @Test("voice-submit 429 with RC locally entitled skips the paywall when the resync confirms entitlement (#112 copy C outcome-check)")
+    func voiceSubmitQuotaSkippedWhenResyncConfirmsEntitlement() async {
+        let mock = Fixtures.makeFullMockNetwork()
+        let vm = makeVM(network: mock, isLocallyEntitled: { true })
+
+        await waitUntil({ vm.usageInfo != nil }, "launch reconcile never settled")
+        await vm.startNewQuiz()
+
+        // The server mirror lags when the mid-answer 429 hits, but the
+        // pre-paywall resync confirms entitlement — the submit call-site now
+        // routes through the shared handleError, so the #102 outcome-check
+        // must hold here too: retryable .error, never the paywall. Pins the
+        // submit-path routing (context + outcome), which the deactivation
+        // test alone leaves unconstrained.
+        mock.stubbedUsage = makeUsage(remaining: 100, premium: true)
+        mock.submitVoiceAnswerError = NetworkError.quotaLimitReached(makeQuotaLimitError())
+        await vm.recordingCoordinator.submitVoiceAnswer(audioData: Data("mock audio".utf8))
+
+        #expect(vm.showPaywall == false, "resync confirmed entitlement → must not strand a paying user behind the paywall mid-answer")
+        #expect(vm.quotaLimitError == nil, "no quota error should be surfaced once entitlement is confirmed")
+        if case let .error(_, context) = vm.quizState {
+            #expect(context == .submission, "voice-submit quota block must carry the .submission error context")
         } else {
             Issue.record("expected an .error state prompting retry, got \(vm.quizState)")
         }

@@ -13,7 +13,6 @@ import Foundation
 
 @MainActor
 enum Fixtures {
-
     // MARK: - Model Factories
 
     /// Returns a `QuizSession` populated with a single participant.
@@ -43,10 +42,31 @@ enum Fixtures {
                     isHost: true,
                     isReady: true,
                     joinedAt: Date()
-                )
+                ),
             ],
             expiresAt: Date().addingTimeInterval(30 * 60),
             createdAt: Date()
+        )
+    }
+
+    /// Returns a `QuizSession` whose single participant carries the requested
+    /// totals — the shared way tests pin the derived `QuizViewModel.score`/
+    /// `questionsAnswered` (#113 T7: both are computed over `currentSession`,
+    /// so direct assignment no longer exists). Thin wrapper over the app-target
+    /// `QuizSession.preview` factory previews use, so there is ONE implementation.
+    static func session(
+        score: Double = 0.0,
+        answered: Int = 0,
+        correct: Int = 0,
+        maxQuestions: Int = 10,
+        phase: String = "asking"
+    ) -> QuizSession {
+        QuizSession.preview(
+            score: score,
+            answered: answered,
+            correct: correct,
+            maxQuestions: maxQuestions,
+            phase: phase
         )
     }
 
@@ -75,7 +95,7 @@ enum Fixtures {
         id: String = "q_001",
         text: String = "What is 2+2?",
         source: String = "Test Source",
-        correctAnswer: String = "4"
+        correctAnswer _: String = "4"
     ) -> Question {
         Question(
             id: id,

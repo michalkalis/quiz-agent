@@ -97,7 +97,7 @@ struct PurchaseActivationTests {
         // Drain the launch-time reconcile (#102 finding 1, same view model
         // init) first so it can't consume the failure budget set below —
         // isolates the assertion to notifyPremiumPurchased's own retry pass.
-        await vm.reconcileEntitlements()
+        await vm.entitlementReconciler.reconcileEntitlements()
         let baseline = mock.syncEntitlementsCallCount
 
         mock.syncEntitlementsFailuresBeforeSuccess = 2 // fails twice, succeeds on the 3rd bounded attempt

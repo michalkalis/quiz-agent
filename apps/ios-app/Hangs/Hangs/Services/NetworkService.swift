@@ -93,7 +93,7 @@ actor NetworkService: NetworkServiceProtocol {
             return (data, response)
         }
         guard let fresh = await authService.refreshedAccessToken(replacing: token) else {
-            return (data, response)  // refresh unavailable → surface the 401
+            return (data, response) // refresh unavailable → surface the 401
         }
         req.setValue("Bearer \(fresh)", forHTTPHeaderField: "Authorization")
         return try await session.data(for: req)
@@ -101,27 +101,87 @@ actor NetworkService: NetworkServiceProtocol {
 
     // MARK: - Sentry Breadcrumb Helpers (metadata only — no request/response bodies)
 
-    nonisolated private func breadcrumbRequest(method: String, endpoint: String) {
+    private nonisolated func breadcrumbRequest(method: String, endpoint: String) {
         let crumb = Breadcrumb(level: .info, category: "network.request")
         crumb.message = "\(method) \(endpoint)"
         crumb.data = ["method": method, "endpoint": endpoint]
         SentryBreadcrumb.add(crumb)
     }
 
-    nonisolated private func breadcrumbResponse(endpoint: String, status: Int, bytes: Int) {
-        let level: SentryLevel = (200...299).contains(status) ? .info : .warning
+    private nonisolated func breadcrumbResponse(endpoint: String, status: Int, bytes: Int) {
+        let level: SentryLevel = (200 ... 299).contains(status) ? .info : .warning
         let crumb = Breadcrumb(level: level, category: "network.response")
         crumb.message = "HTTP \(status) \(endpoint) (\(bytes)B)"
         crumb.data = ["status": status, "bytes": bytes, "endpoint": endpoint]
         SentryBreadcrumb.add(crumb)
     }
 
-    nonisolated private func logHTTPError(endpoint: String, status: Int) {
+    private nonisolated func logHTTPError(endpoint: String, status: Int) {
         // Response body is NOT included — may contain user-generated data.
         SentryLog.error("HTTP error", category: .network, attributes: [
             "status": status,
-            "endpoint": endpoint
+            "endpoint": endpoint,
         ])
+    }
+
+    // MARK: - Generic Request Pipeline
+
+    //
+    // The shared middle every endpoint used to hand-roll: breadcrumb → send
+    // with bearer/401-retry → HTTPURLResponse guard → body-discriminated 429
+    // parse (QuotaLimitErrorWrapper → .quotaLimitReached; else
+    // .serverError(429, "Rate limited")) → non-2xx ErrorResponse decode.
+    //
+    // Returns raw `Data` rather than decoding — callers own their own decode
+    // (MainActor iso8601 for createSession/startQuiz/submitVoiceAnswer/
+    // submitTextInput; plain decode for getUsage/fetchElevenLabsToken) so this
+    // stays off the main actor and no decode is dragged onto it implicitly.
+
+    private func performRequestData(_ request: URLRequest, endpointPath: String) async throws -> Data {
+        breadcrumbRequest(method: request.httpMethod ?? "?", endpoint: endpointPath)
+
+        let (data, response) = try await sendAuthorized(request)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw NetworkError.invalidResponse
+        }
+        breadcrumbResponse(endpoint: endpointPath, status: httpResponse.statusCode, bytes: data.count)
+
+        // Handle 429 daily limit reached
+        if httpResponse.statusCode == 429 {
+            logHTTPError(endpoint: endpointPath, status: 429)
+            if let limitError = try? JSONDecoder().decode(QuotaLimitErrorWrapper.self, from: data) {
+                throw NetworkError.quotaLimitReached(limitError.detail)
+            }
+            throw NetworkError.serverError(statusCode: 429, message: "Rate limited")
+        }
+
+        guard (200 ... 299).contains(httpResponse.statusCode) else {
+            let statusCode = httpResponse.statusCode
+            Logger.network.error("❌ HTTP error: \(statusCode, privacy: .public)")
+            if let responseString = String(data: data, encoding: .utf8) {
+                Logger.network.error("📄 Response body: \(responseString, privacy: .public)")
+            }
+            logHTTPError(endpoint: endpointPath, status: statusCode)
+
+            // Surface the backend's error detail (e.g. "question database is empty") instead of a generic message.
+            if let errorResponse = try? JSONDecoder().decode(ErrorResponse.self, from: data) {
+                throw NetworkError.serverError(statusCode: statusCode, message: errorResponse.detail)
+            }
+
+            // Non-decodable body (edge-proxy error page, empty body): keep the
+            // status code on the thrown error — callers hook on it (endSession's
+            // 404 → sessionNotFound must hold for ANY 404, not only ones whose
+            // body decodes as ErrorResponse).
+            throw NetworkError.serverError(statusCode: statusCode, message: "HTTP \(statusCode)")
+        }
+
+        return data
+    }
+
+    /// Void variant for endpoints with no response body to decode.
+    private func performRequest(_ request: URLRequest, endpointPath: String) async throws {
+        _ = try await performRequestData(request, endpointPath: endpointPath)
     }
 
     // MARK: - Session Management
@@ -142,7 +202,7 @@ actor NetworkService: NetworkServiceProtocol {
             "difficulty": difficulty,
             "mode": "single",
             "language": language,
-            "include_images": includeImages
+            "include_images": includeImages,
         ]
 
         // Add category filter if any selected (#82 item 4: multi-select list;
@@ -166,23 +226,8 @@ actor NetworkService: NetworkServiceProtocol {
 
         let endpointPath = "/api/v1/sessions"
         Logger.network.debug("🌐 POST \(endpoint, privacy: .public)")
-        breadcrumbRequest(method: "POST", endpoint: endpointPath)
 
-        let (data, response) = try await sendAuthorized(request)
-
-        Logger.network.debug("📥 Response received: \(data.count, privacy: .public) bytes")
-        if let httpResponse = response as? HTTPURLResponse {
-            Logger.network.debug("📊 Status code: \(httpResponse.statusCode, privacy: .public)")
-            breadcrumbResponse(endpoint: endpointPath, status: httpResponse.statusCode, bytes: data.count)
-        }
-
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
-            if let httpResponse = response as? HTTPURLResponse {
-                logHTTPError(endpoint: endpointPath, status: httpResponse.statusCode)
-            }
-            throw NetworkError.invalidResponse
-        }
+        let data = try await performRequestData(request, endpointPath: endpointPath)
 
         return try await MainActor.run {
             let decoder = JSONDecoder()
@@ -207,51 +252,14 @@ actor NetworkService: NetworkServiceProtocol {
 
         // Send excluded question IDs in request body
         let body: [String: Any] = [
-            "excluded_question_ids": excludedQuestionIds
+            "excluded_question_ids": excludedQuestionIds,
         ]
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
         let endpointPath = "/api/v1/sessions/{id}/start"
         Logger.network.debug("🌐 POST \(url, privacy: .public) with \(excludedQuestionIds.count, privacy: .public) excluded IDs")
-        breadcrumbRequest(method: "POST", endpoint: endpointPath)
 
-        let (data, response) = try await sendAuthorized(request)
-
-        Logger.network.debug("📥 Response received: \(data.count, privacy: .public) bytes")
-        if let httpResponse = response as? HTTPURLResponse {
-            Logger.network.debug("📊 Status code: \(httpResponse.statusCode, privacy: .public)")
-            breadcrumbResponse(endpoint: endpointPath, status: httpResponse.statusCode, bytes: data.count)
-        }
-
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw NetworkError.invalidResponse
-        }
-
-        // Handle 429 daily limit reached
-        if httpResponse.statusCode == 429 {
-            logHTTPError(endpoint: endpointPath, status: 429)
-            if let limitError = try? JSONDecoder().decode(QuotaLimitErrorWrapper.self, from: data) {
-                throw NetworkError.quotaLimitReached(limitError.detail)
-            }
-            throw NetworkError.serverError(statusCode: 429, message: "Rate limited")
-        }
-
-        guard (200...299).contains(httpResponse.statusCode) else {
-            let statusCode = httpResponse.statusCode
-            Logger.network.error("❌ HTTP error: \(statusCode, privacy: .public)")
-            if let responseString = String(data: data, encoding: .utf8) {
-                Logger.network.error("📄 Response body: \(responseString, privacy: .public)")
-            }
-            logHTTPError(endpoint: endpointPath, status: statusCode)
-
-            // Surface the backend's error detail (e.g. "question database is empty") instead of a generic message.
-            if let errorResponse = try? JSONDecoder().decode(ErrorResponse.self, from: data) {
-                throw NetworkError.serverError(statusCode: statusCode, message: errorResponse.detail)
-            }
-
-            throw NetworkError.invalidResponse
-        }
-
+        let data = try await performRequestData(request, endpointPath: endpointPath)
         return try await decodeQuizResponse(from: data)
     }
 
@@ -261,37 +269,15 @@ actor NetworkService: NetworkServiceProtocol {
         var request = URLRequest(url: endpoint)
         request.httpMethod = "DELETE"
 
-        let endpointPath = "/api/v1/sessions/{id}"
         Logger.network.debug("🌐 DELETE \(endpoint, privacy: .public)")
-        breadcrumbRequest(method: "DELETE", endpoint: endpointPath)
 
-        let (data, response) = try await sendAuthorized(request)
-
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw NetworkError.invalidResponse
-        }
-
-        breadcrumbResponse(endpoint: endpointPath, status: httpResponse.statusCode, bytes: data.count)
-
-        guard (200...299).contains(httpResponse.statusCode) else {
-            let statusCode = httpResponse.statusCode
-
-            Logger.network.error("❌ HTTP error: \(statusCode, privacy: .public)")
-            if let responseString = String(data: data, encoding: .utf8) {
-                Logger.network.error("📄 Response body: \(responseString, privacy: .public)")
-            }
-            logHTTPError(endpoint: endpointPath, status: statusCode)
-
-            if statusCode == 404 {
-                throw NetworkError.sessionNotFound
-            }
-
-            // Try to extract error message from backend response
-            if let errorResponse = try? JSONDecoder().decode(ErrorResponse.self, from: data) {
-                throw NetworkError.serverError(statusCode: statusCode, message: errorResponse.detail)
-            }
-
-            throw NetworkError.serverError(statusCode: statusCode, message: "Failed to end session (HTTP \(statusCode))")
+        // 404 → sessionNotFound is a caller-side hook: the generic surfaces
+        // .serverError(404, …) for EVERY 404 (decoded backend detail or not),
+        // and this remaps it — every other status/error passes through unchanged.
+        do {
+            try await performRequest(request, endpointPath: "/api/v1/sessions/{id}")
+        } catch let NetworkError.serverError(statusCode, _) where statusCode == 404 {
+            throw NetworkError.sessionNotFound
         }
     }
 
@@ -307,12 +293,7 @@ actor NetworkService: NetworkServiceProtocol {
 
         Logger.network.debug("🌐 POST \(endpoint, privacy: .public) (extend \(minutes, privacy: .public)min)")
 
-        let (_, response) = try await sendAuthorized(request)
-
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
-            throw NetworkError.invalidResponse
-        }
+        try await performRequest(request, endpointPath: "/api/v1/sessions/{id}/extend")
     }
 
     // MARK: - Question Rating
@@ -327,12 +308,7 @@ actor NetworkService: NetworkServiceProtocol {
 
         Logger.network.debug("🌐 POST \(endpoint, privacy: .public) (rating: \(rating, privacy: .public))")
 
-        let (_, response) = try await sendAuthorized(request)
-
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
-            throw NetworkError.invalidResponse
-        }
+        try await performRequest(request, endpointPath: "/api/v1/sessions/{id}/rate")
     }
 
     func flagQuestion(sessionId: String, reason: String?) async throws {
@@ -348,13 +324,7 @@ actor NetworkService: NetworkServiceProtocol {
 
         Logger.network.debug("🌐 POST \(endpoint, privacy: .public) (flag)")
 
-        let (_, response) = try await sendAuthorized(request)
-
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200 ... 299).contains(httpResponse.statusCode)
-        else {
-            throw NetworkError.invalidResponse
-        }
+        try await performRequest(request, endpointPath: "/api/v1/sessions/{id}/flag")
     }
 
     // MARK: - Voice Submission
@@ -369,7 +339,7 @@ actor NetworkService: NetworkServiceProtocol {
 
         // Voice submission requires longer timeout due to:
         // 1. Audio upload, 2. Whisper transcription, 3. GPT-4 evaluation, 4. TTS generation
-        request.timeoutInterval = 120  // 2 minutes for AI processing
+        request.timeoutInterval = 120 // 2 minutes for AI processing
 
         // Build multipart form data
         var body = Data()
@@ -383,46 +353,8 @@ actor NetworkService: NetworkServiceProtocol {
 
         let endpointPath = "/api/v1/voice/submit/{id}"
         Logger.network.debug("🌐 POST \(endpoint, privacy: .public) (audio: \(audioData.count, privacy: .public) bytes)")
-        breadcrumbRequest(method: "POST", endpoint: endpointPath)
 
-        let (data, response) = try await sendAuthorized(request)
-
-        Logger.network.debug("📥 Voice response received: \(data.count, privacy: .public) bytes")
-        if let httpResponse = response as? HTTPURLResponse {
-            Logger.network.debug("📊 Status code: \(httpResponse.statusCode, privacy: .public)")
-            breadcrumbResponse(endpoint: endpointPath, status: httpResponse.statusCode, bytes: data.count)
-        }
-
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw NetworkError.invalidResponse
-        }
-
-        // Handle 429 daily limit reached
-        if httpResponse.statusCode == 429 {
-            logHTTPError(endpoint: endpointPath, status: 429)
-            if let limitError = try? JSONDecoder().decode(QuotaLimitErrorWrapper.self, from: data) {
-                throw NetworkError.quotaLimitReached(limitError.detail)
-            }
-            throw NetworkError.serverError(statusCode: 429, message: "Rate limited")
-        }
-
-        guard (200...299).contains(httpResponse.statusCode) else {
-            let statusCode = httpResponse.statusCode
-
-            Logger.network.error("❌ HTTP error: \(statusCode, privacy: .public)")
-            if let responseString = String(data: data, encoding: .utf8) {
-                Logger.network.error("📄 Response body: \(responseString, privacy: .public)")
-            }
-            logHTTPError(endpoint: endpointPath, status: statusCode)
-
-            // Try to extract error message from backend response
-            if let errorResponse = try? JSONDecoder().decode(ErrorResponse.self, from: data) {
-                throw NetworkError.serverError(statusCode: statusCode, message: errorResponse.detail)
-            }
-
-            throw NetworkError.invalidResponse
-        }
-
+        let data = try await performRequestData(request, endpointPath: endpointPath)
         return try await decodeQuizResponse(from: data)
     }
 
@@ -450,30 +382,8 @@ actor NetworkService: NetworkServiceProtocol {
         let endpointPath = "/api/v1/sessions/{id}/input"
         Logger.network.debug("🌐 POST \(url, privacy: .public) (text: \(input.prefix(50), privacy: .public)...)")
         // Breadcrumb: metadata only — do NOT include the text input (may be user answer).
-        breadcrumbRequest(method: "POST", endpoint: endpointPath)
 
-        let (data, response) = try await sendAuthorized(request)
-
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw NetworkError.invalidResponse
-        }
-
-        breadcrumbResponse(endpoint: endpointPath, status: httpResponse.statusCode, bytes: data.count)
-
-        // Handle 429 daily limit reached
-        if httpResponse.statusCode == 429 {
-            logHTTPError(endpoint: endpointPath, status: 429)
-            if let limitError = try? JSONDecoder().decode(QuotaLimitErrorWrapper.self, from: data) {
-                throw NetworkError.quotaLimitReached(limitError.detail)
-            }
-            throw NetworkError.serverError(statusCode: 429, message: "Rate limited")
-        }
-
-        guard (200...299).contains(httpResponse.statusCode) else {
-            logHTTPError(endpoint: endpointPath, status: httpResponse.statusCode)
-            throw NetworkError.invalidResponse
-        }
-
+        let data = try await performRequestData(request, endpointPath: endpointPath)
         return try await decodeQuizResponse(from: data)
     }
 
@@ -558,7 +468,7 @@ actor NetworkService: NetworkServiceProtocol {
         // Backend returns same URL for different questions, so we must bypass cache
         var request = URLRequest(url: url)
         request.cachePolicy = .reloadIgnoringLocalCacheData
-        request.timeoutInterval = 10  // Audio downloads should not block the quiz flow
+        request.timeoutInterval = 10 // Audio downloads should not block the quiz flow
 
         // Audio routes are auth-gated (require_auth_or_grace) — the request must
         // carry the bearer like every other endpoint, incl. the single-flight
@@ -567,7 +477,8 @@ actor NetworkService: NetworkServiceProtocol {
         let (data, response) = try await sendAuthorized(request)
 
         guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
+              (200 ... 299).contains(httpResponse.statusCode)
+        else {
             if let status = (response as? HTTPURLResponse)?.statusCode {
                 logHTTPError(endpoint: "audio-download", status: status)
             }
@@ -577,7 +488,8 @@ actor NetworkService: NetworkServiceProtocol {
         // Verify download integrity by checking Content-Length
         if let expectedLength = httpResponse.value(forHTTPHeaderField: "Content-Length"),
            let expectedBytes = Int64(expectedLength),
-           expectedBytes > 0 {
+           expectedBytes > 0
+        {
             let actualBytes = Int64(data.count)
 
             if actualBytes != expectedBytes {
@@ -602,14 +514,7 @@ actor NetworkService: NetworkServiceProtocol {
 
         Logger.network.debug("🌐 POST \(endpoint, privacy: .public) (ElevenLabs token)")
 
-        let (data, response) = try await sendAuthorized(request)
-
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
-            let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
-            Logger.network.error("❌ ElevenLabs token request failed: HTTP \(statusCode, privacy: .public)")
-            throw NetworkError.serverError(statusCode: statusCode, message: "Failed to get ElevenLabs token")
-        }
+        let data = try await performRequestData(request, endpointPath: "/api/v1/elevenlabs/token")
 
         struct TokenResponse: Decodable {
             let token: String
@@ -633,12 +538,7 @@ actor NetworkService: NetworkServiceProtocol {
 
         Logger.network.debug("🌐 GET \(endpoint, privacy: .public)")
 
-        let (data, response) = try await sendAuthorized(request)
-
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
-            throw NetworkError.invalidResponse
-        }
+        let data = try await performRequestData(request, endpointPath: "/api/v1/usage/me")
 
         let decoder = JSONDecoder()
         return try decoder.decode(UsageInfo.self, from: data)
@@ -653,12 +553,7 @@ actor NetworkService: NetworkServiceProtocol {
 
         Logger.network.debug("🌐 POST \(endpoint, privacy: .public)")
 
-        let (_, response) = try await sendAuthorized(request)
-
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
-            throw NetworkError.invalidResponse
-        }
+        try await performRequest(request, endpointPath: "/api/v1/entitlements/sync")
     }
 
     // MARK: - Helper Methods
@@ -679,14 +574,14 @@ actor NetworkService: NetworkServiceProtocol {
                 // Log detailed decoding error
                 if let decodingError = error as? DecodingError {
                     switch decodingError {
-                    case .keyNotFound(let key, let context):
+                    case let .keyNotFound(key, context):
                         Logger.network.error("🔍 Missing key: \(key.stringValue, privacy: .public) at path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "), privacy: .public)")
-                    case .typeMismatch(let type, let context):
+                    case let .typeMismatch(type, context):
                         Logger.network.error("🔍 Type mismatch for \(String(describing: type), privacy: .public) at path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "), privacy: .public)")
                         Logger.network.error("   Expected: \(String(describing: type), privacy: .public), context: \(context.debugDescription, privacy: .public)")
-                    case .valueNotFound(let type, let context):
+                    case let .valueNotFound(type, context):
                         Logger.network.error("🔍 Value not found for \(String(describing: type), privacy: .public) at path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "), privacy: .public)")
-                    case .dataCorrupted(let context):
+                    case let .dataCorrupted(context):
                         Logger.network.error("🔍 Data corrupted at path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "), privacy: .public)")
                         Logger.network.error("   Debug: \(context.debugDescription, privacy: .public)")
                     @unknown default:
@@ -702,12 +597,12 @@ actor NetworkService: NetworkServiceProtocol {
 // MARK: - Error Types
 
 /// Backend error response structure
-nonisolated private struct ErrorResponse: Decodable, Sendable {
+private nonisolated struct ErrorResponse: Decodable, Sendable {
     let detail: String
 }
 
 /// Backend 429 response wraps QuotaLimitError in "detail" field
-nonisolated private struct QuotaLimitErrorWrapper: Decodable, Sendable {
+private nonisolated struct QuotaLimitErrorWrapper: Decodable, Sendable {
     let detail: QuotaLimitError
 }
 
@@ -725,9 +620,9 @@ enum NetworkError: LocalizedError {
             return String(localized: "Invalid server response", comment: "Network error: server returned a malformed response")
         case .invalidURL:
             return String(localized: "Invalid URL", comment: "Network error: the request URL could not be built")
-        case .decodingError(let error):
+        case let .decodingError(error):
             return String(localized: "Failed to decode response: \(error.localizedDescription)", comment: "Network error: response body could not be decoded; placeholder is the underlying error")
-        case .serverError(_, let message):
+        case let .serverError(_, message):
             // Server-provided message, already localized by the backend — do not wrap.
             return message
         case .quotaLimitReached:
@@ -737,4 +632,3 @@ enum NetworkError: LocalizedError {
         }
     }
 }
-

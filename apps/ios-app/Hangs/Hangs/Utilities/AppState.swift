@@ -15,7 +15,7 @@ final class AppState: ObservableObject {
     let networkService: NetworkServiceProtocol
     let audioService: AudioServiceProtocol
     let persistenceStore: PersistenceStoreProtocol
-    let silenceDetectionService: SilenceDetectionServiceProtocol?
+    let silenceDetectionService: SilenceDetectionServiceProtocol
     let sttService: ElevenLabsSTTServiceProtocol?
     let storeManager: StoreManager
     /// The auth service, exposed so SettingsView can drive Apple sign-in, sign-out, and account actions.
@@ -43,6 +43,15 @@ final class AppState: ObservableObject {
                 storeManager.onPurchaseSuccess = { [weak self] in
                     await self?.quizViewModel?.notifyPremiumPurchased() ?? false
                 }
+                // Issue #111 T3: seed a fake admin key so `SettingsView.hasAdminKey`
+                // is true under UI test — the `packs.createPack` / `packs.myPacks`
+                // entries render without a real key. Seed ONLY when the Keychain
+                // slot is empty: the store is the sim's persistent Keychain, and
+                // an unconditional save would silently clobber a real admin key
+                // pasted for manual #95 order testing on the same simulator.
+                if AdminKeyStore().load() == nil {
+                    AdminKeyStore().save("ui-test")
+                }
                 UITestSupport.startTestListener()
                 Logger.quiz.info("🧪 AppState initialized in UI-test mode")
                 return
@@ -67,29 +76,33 @@ final class AppState: ObservableObject {
         self.storeManager = StoreManager()
         packOrderService = PackOrderService(authService: authService)
 
-        // Silence detection / barge-in require iOS 26+ SpeechDetector.
-        var silence: SilenceDetectionServiceProtocol? = nil
+        // Silence detection / barge-in (iOS 26 SpeechDetector; min target is 26.0).
+        let resolved: SilenceDetectionServiceProtocol
         #if DEBUG
             // `--ui-test-voice-ready`: inject a ready mock recognizer so the on-screen
             // "LISTENING FOR COMMANDS" indicator (#96 P2) can be screenshot-verified on
             // the Simulator, where the real SpeechAnalyzer has no installed locales and
             // reports `.unavailable` (which correctly suppresses the cue).
             if CommandLine.arguments.contains("--ui-test-voice-ready") {
-                silence = MockSilenceDetectionService()
+                resolved = MockSilenceDetectionService()
+            } else {
+                let silenceService = SilenceDetectionService()
+                // One-time launch authorization + prepare (#77 device fix, #105 auth
+                // gap): request speech-recognition permission, then — if granted —
+                // check/download the on-device en-US SpeechTranscriber model assets.
+                // Without them the command transcriber never yields a result on a
+                // real device. Non-blocking; any failure flips `commandAvailability`
+                // (fail loud).
+                Task { await silenceService.requestAuthorizationAndPrepareAssets() }
+                resolved = silenceService
             }
-        #endif
-        if silence == nil, #available(iOS 26, *) {
+        #else
             let silenceService = SilenceDetectionService()
-            silence = silenceService
-            // One-time launch authorization + prepare (#77 device fix, #105 auth
-            // gap): request speech-recognition permission, then — if granted —
-            // check/download the on-device en-US SpeechTranscriber model assets.
-            // Without them the command transcriber never yields a result on a
-            // real device. Non-blocking; any failure flips `commandAvailability`
-            // (fail loud).
+            // One-time launch authorization + prepare (#77 / #105) — see DEBUG branch.
             Task { await silenceService.requestAuthorizationAndPrepareAssets() }
-        }
-        silenceDetectionService = silence
+            resolved = silenceService
+        #endif
+        silenceDetectionService = resolved
 
         // ElevenLabs streaming STT (controlled by feature flag)
         if Config.useElevenLabsSTT {
@@ -143,8 +156,7 @@ final class AppState: ObservableObject {
 
         Logger.quiz.info("🚀 AppState initialized")
         Logger.quiz.info("📍 API Base URL: \(Config.apiBaseURL, privacy: .public)")
-        let silenceAvailable = silenceDetectionService != nil ? "available" : "unavailable (requires iOS 26+)"
-        Logger.quiz.info("🔇 Silence detection: \(silenceAvailable)")
+        Logger.quiz.info("🔇 Silence detection: available")
         let sttEnabled = sttService != nil ? "enabled (ElevenLabs)" : "disabled (using Whisper)"
         Logger.quiz.info("🎙️ Streaming STT: \(sttEnabled)")
     }
@@ -154,7 +166,7 @@ final class AppState: ObservableObject {
         networkService: NetworkServiceProtocol,
         audioService: AudioServiceProtocol,
         persistenceStore: PersistenceStoreProtocol,
-        silenceDetectionService: SilenceDetectionServiceProtocol? = nil,
+        silenceDetectionService: SilenceDetectionServiceProtocol = SilenceDetectionService(),
         sttService: ElevenLabsSTTServiceProtocol? = nil,
         storeManager: StoreManager? = nil,
         authService: AuthService? = nil,
@@ -189,7 +201,7 @@ final class AppState: ObservableObject {
             // `--ui-test-error`: land directly on a voice QuestionView with the
             // recording-error banner shown, so the error state can be screenshot-
             // verified without driving the full record→disconnect flow. Mirrors the
-            // "Connection lost" copy set by QuizViewModel+Recording on STT drop.
+            // "Connection lost" copy set by RecordingCoordinator+Streaming on STT drop.
             if CommandLine.arguments.contains("--ui-test-error") {
                 viewModel.currentQuestion = Question.preview
                 viewModel.quizState = .askingQuestion
@@ -219,6 +231,21 @@ final class AppState: ObservableObject {
         #endif
 
         quizViewModel = viewModel
+
+        #if DEBUG
+            // Issue #111 T3: register the live command sink so the `:9999` HTTP
+            // listener can drive real voice commands (e.g. "start") through the
+            // actual `handleRecognizedCommand` → `routeCommand` pipeline — the
+            // recognizer under `--ui-test` is an `.unavailable` mock that never
+            // yields transcripts, so this is otherwise
+            // undrivable in UI tests.
+            if UITestSupport.isUITesting {
+                UITestSupport.registerCommandSink { [weak self] text in
+                    await self?.quizViewModel?.voiceCommandCoordinator.handleCommandTranscript(text)
+                }
+            }
+        #endif
+
         return viewModel
     }
 }

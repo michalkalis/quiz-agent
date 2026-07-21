@@ -36,6 +36,15 @@ on any `EXC_*` signal or app-process exit.
 Numbering: `RS-N` (Regression Scenario). Numbers are never recycled —
 when a scenario is removed, its number is retired.
 
+**Sibling XCUITest RS family (not in this registry):**
+`HangsUITests/Regression/RegressionTests.swift` carries the XCUITest-embodied
+scenarios (`testRSStart` / `testRSCorrect` / `testRSIncorrect` /
+`testRSLongQuestion` / `testRSPaywall` / `testRSPackNavStart` — the #111
+pack-nav voice-start teardown), run via
+`xcodebuild test -scheme Hangs-Local -only-testing:HangsUITests/RegressionTests`,
+not via the MCP-driven steps below. Check both families before concluding a
+flow is uncovered.
+
 ---
 
 ## RS-01: Recording stops on committed transcript

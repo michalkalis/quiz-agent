@@ -40,6 +40,15 @@ private nonisolated enum AuthStubs {
 // Independent statics let the two suites run concurrently and safely.
 
 final class AuthStubURLProtocol: URLProtocol, @unchecked Sendable {
+
+    nonisolated override init(
+        request: URLRequest,
+        cachedResponse: CachedURLResponse?,
+        client: (any URLProtocolClient)?
+    ) {
+        super.init(request: request, cachedResponse: cachedResponse, client: client)
+    }
+
     private nonisolated static let handlerLock = OSAllocatedUnfairLock<
         ((@Sendable (URLRequest) throws -> (HTTPURLResponse, Data))?
     )>(initialState: nil)

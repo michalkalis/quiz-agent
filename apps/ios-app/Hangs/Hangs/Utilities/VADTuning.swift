@@ -33,7 +33,6 @@ nonisolated enum DetectorSensitivity: String, Equatable, Sendable {
 /// `nonisolated`: consumed from nonisolated contexts (`Config`, the STT URL
 /// builder) under the project's MainActor default isolation.
 nonisolated enum VADTuning {
-
     // MARK: - On-device SpeechDetector VAD (SilenceDetectionService)
 
     /// Silence hangover: how long continuous silence must persist AFTER speech
@@ -78,13 +77,11 @@ nonisolated enum VADTuning {
     static let elevenLabsMinSilenceDurationMs: Int = 1500
 }
 
-/// Pure STOP-on-silence decision, factored OUT of the iOS-26-gated
-/// `SilenceDetectionService` so it runs headlessly on the iOS 18.6 sim (the
-/// whole detector class is `@available(iOS 26, *)` and is skipped there). This
+/// Pure STOP-on-silence decision, factored OUT of
+/// `SilenceDetectionService` so it can be exercised headlessly. This
 /// is where the min-speech-duration blip rejection actually lives and can be
 /// unit-tested with a fixture that genuinely fails if the guard regresses.
 nonisolated enum SilenceStopDecision {
-
     enum Outcome: Equatable, Sendable {
         /// Keep waiting — the hangover has not elapsed yet.
         case wait

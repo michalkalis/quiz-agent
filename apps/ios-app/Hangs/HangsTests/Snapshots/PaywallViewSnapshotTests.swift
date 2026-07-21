@@ -9,15 +9,15 @@
 //
 //  A. limitErrorWithCountdown — QuotaLimitError supplied, product loaded ($4.99).
 //     The CountdownPill subview is present in the Mirror tree, and the CTA
-//     PrimaryButton carries the display-price string ("Subscribe — $4.99 / month").
+//     button carries the display-price string ("Subscribe — $4.99 / month").
 //
 //  B. noLimitErrorProductLoading — limitError nil, product nil (isLoading: true).
-//     CountdownToReset is entirely absent from the dump, and PrimaryButton uses
+//     CountdownToReset is entirely absent from the dump, and the CTA button uses
 //     the loading-spinner variant (isLoading: true, no price string).
 //
 //  These two produce the most different .dump output because an entire subview
 //  subtree (CountdownToReset) appears/disappears (criterion B from the issue),
-//  AND the PrimaryButton arguments differ (criterion A). Both differences are
+//  AND the CTA-button arguments differ (criterion A). Both differences are
 //  visible under Mirror reflection, which drives .dump.
 //
 //  Strategy: .dump (text-based, deterministic, Xcode/iOS-version agnostic,
@@ -25,9 +25,9 @@
 //
 
 import Foundation
+@testable import Hangs
 import SnapshotTesting
 import Testing
-@testable import Hangs
 
 // MARK: - Helpers
 
@@ -64,7 +64,6 @@ private func makeLimitError() -> QuotaLimitError {
 @Suite("PaywallView Snapshot Tests")
 @MainActor
 struct PaywallViewSnapshotTests {
-
     // MARK: - Variant A: limitError present, product loaded
 
     /// PaywallView with:
@@ -93,7 +92,7 @@ struct PaywallViewSnapshotTests {
 
     /// PaywallView with:
     ///   • limitError nil → CountdownToReset entirely absent from dump
-    ///   • StoreManager.product nil → PrimaryButton uses loading branch (isLoading: true,
+    ///   • StoreManager.product nil → the CTA button uses loading branch (isLoading: true,
     ///     no price string) — the `else` branch of `if let monthly = storeManager.offerings?.monthly`
     @Test("Snapshot: no limit-error, product loading")
     func noLimitErrorProductLoading() async {

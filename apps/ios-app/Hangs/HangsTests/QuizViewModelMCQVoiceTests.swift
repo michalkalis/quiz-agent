@@ -10,7 +10,7 @@
 //  fall back to the modal so the driver can re-record rather than submit a guess.
 //
 //  Branches under test:
-//    QuizViewModel+Recording.swift handleCommittedTranscript(_:) — MCQ routing
+//    RecordingCoordinator+Streaming.swift handleCommittedTranscript(_:) — MCQ routing
 //    QuizViewModel.swift submitMCQAnswer(key:value:)            — value submit
 //    QuizViewModel.swift startRecordingOrTimer()                — guard removed
 //
@@ -66,7 +66,7 @@ struct QuizViewModelMCQVoiceTests {
     func valueMatchSubmitsValue() async throws {
         let (viewModel, mockNetwork) = makeViewModelRecordingMCQ()
 
-        await viewModel.handleCommittedTranscript("Jupiter")
+        await viewModel.recordingCoordinator.handleCommittedTranscript("Jupiter")
 
         #expect(mockNetwork.capturedTextInputInput == "Jupiter")
         // submitMCQAnswer transitions .recording → .processing → (network) result.
@@ -83,7 +83,7 @@ struct QuizViewModelMCQVoiceTests {
     func letterMatchSubmitsValue() async throws {
         let (viewModel, mockNetwork) = makeViewModelRecordingMCQ()
 
-        await viewModel.handleCommittedTranscript("béčko")
+        await viewModel.recordingCoordinator.handleCommittedTranscript("béčko")
 
         #expect(mockNetwork.capturedTextInputInput == "Jupiter")
         #expect(viewModel.quizState.isShowingResult)
@@ -97,7 +97,7 @@ struct QuizViewModelMCQVoiceTests {
     func noMatchFallsBackToModal() async throws {
         let (viewModel, mockNetwork) = makeViewModelRecordingMCQ()
 
-        await viewModel.handleCommittedTranscript("something entirely unrelated zzz")
+        await viewModel.recordingCoordinator.handleCommittedTranscript("something entirely unrelated zzz")
 
         #expect(mockNetwork.capturedTextInputInput == nil)
         #expect(viewModel.showAnswerConfirmation == true)
@@ -113,7 +113,7 @@ struct QuizViewModelMCQVoiceTests {
     func voiceMatchSetsHighlightKeyAndSubmits() async throws {
         let (viewModel, mockNetwork) = makeViewModelRecordingMCQ()
 
-        await viewModel.handleCommittedTranscript("Jupiter")
+        await viewModel.recordingCoordinator.handleCommittedTranscript("Jupiter")
 
         #expect(viewModel.mcqVoiceMatchedKey == "b")
         #expect(mockNetwork.capturedTextInputInput == "Jupiter")
@@ -125,13 +125,17 @@ struct QuizViewModelMCQVoiceTests {
     /// Regression: re-introducing any `isMultipleChoice != true` guard would make
     /// `startRecordingOrTimer` bail for MCQ, so the answer timer never starts and
     /// the question can't be answered by voice. With the guard removed it starts
-    /// the answer timer (silenceDetectionService is nil → timer, not auto-record).
+    /// the answer timer (autoRecordEnabled off → timer, not auto-record).
     @Test("startRecordingOrTimer starts the answer timer for an MCQ question")
     func mcqRecordingNotShortCircuited() async throws {
         let (viewModel, _) = Fixtures.makeViewModelWithNetwork()
         viewModel.currentSession = Fixtures.makeActiveSession()
         viewModel.currentQuestion = makeMCQQuestion()
         viewModel.quizState = .askingQuestion
+        // #115: the service is always present now, so pin the legacy timer
+        // branch explicitly — the guard-regression this test protects against
+        // would zero the countdown in either branch.
+        viewModel.settings.autoRecordEnabled = false
 
         viewModel.startRecordingOrTimer()
 

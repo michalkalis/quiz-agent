@@ -3,8 +3,9 @@
 //  HangsTests
 //
 //  Split from QuizViewModelTests.swift (issue #31 task 3.2). Covers timer
-//  primitives in QuizViewModel+Timers.swift plus the barge-in path in
-//  QuizViewModel+Audio.swift that auto-starts recording during TTS.
+//  primitives in QuizTimersController.swift (#113 T4, via the façade
+//  forwards) plus the barge-in path — QuizViewModel.handleBargeIn — that
+//  auto-starts recording during TTS.
 //
 
 import Foundation
@@ -146,7 +147,7 @@ struct QuizViewModelThinkingTimeTests {
         let viewModel = Fixtures.makeViewModelForTimerTests()
         viewModel.settings.thinkingTime = 4
 
-        viewModel.startThinkingTimeCountdown()
+        viewModel.quizTimersController.startThinkingTimeCountdown()
 
         // The first iteration of the loop sets countdown to thinkingSeconds
         // synchronously before the first await — so by the time the next yield
@@ -154,7 +155,7 @@ struct QuizViewModelThinkingTimeTests {
         await Task.yield()
         #expect(viewModel.thinkingTimeCountdown == 4)
 
-        viewModel.cancelThinkingTime()
+        viewModel.quizTimersController.cancelThinkingTime()
         #expect(viewModel.thinkingTimeCountdown == 0)
     }
 
@@ -168,7 +169,7 @@ struct QuizViewModelThinkingTimeTests {
     func micTapCancelsThinkingTime() async throws {
         let viewModel = Fixtures.makeViewModelForTimerTests()
         viewModel.settings.thinkingTime = 5
-        viewModel.startThinkingTimeCountdown()
+        viewModel.quizTimersController.startThinkingTimeCountdown()
         await Task.yield()
         #expect(viewModel.thinkingTimeCountdown == 5)
 
@@ -214,7 +215,7 @@ struct QuizViewModelNoModalFreezeTests {
         let viewModel = Fixtures.makeViewModelForTimerTests()
         viewModel.settings.answerTimeLimit = 30
 
-        viewModel.startAnswerTimer()
+        viewModel.quizTimersController.startAnswerTimer()
         // Poll instead of asserting an exact value: under full-suite load the
         // observer can be starved past the first tick and miss the seed.
         await waitUntil({ viewModel.answerTimerCountdown > 0 }, "answer countdown never seeded")
@@ -223,7 +224,7 @@ struct QuizViewModelNoModalFreezeTests {
         // must decrement on its 1s cadence regardless of any presented modal.
         await waitUntil({ viewModel.answerTimerCountdown < 30 }, "answer countdown never ticked — a freeze mechanism is holding it")
 
-        viewModel.cancelAnswerTimer()
+        viewModel.quizTimersController.cancelAnswerTimer()
     }
 
     /// Same fairness guarantee for the thinking-time countdown: it must keep
@@ -235,14 +236,14 @@ struct QuizViewModelNoModalFreezeTests {
         let viewModel = Fixtures.makeViewModelForTimerTests()
         viewModel.settings.thinkingTime = 30
 
-        viewModel.startThinkingTimeCountdown()
+        viewModel.quizTimersController.startThinkingTimeCountdown()
         // Poll for >0 (not ==30): under full-suite load the observer can be
         // starved past the first tick and miss the exact seed value.
         await waitUntil({ viewModel.thinkingTimeCountdown > 0 }, "thinking countdown never seeded")
 
         await waitUntil({ viewModel.thinkingTimeCountdown < 30 }, "thinking countdown never ticked — a freeze mechanism is holding it")
 
-        viewModel.cancelThinkingTime()
+        viewModel.quizTimersController.cancelThinkingTime()
     }
 
     /// Founder decision 2a (#81, superseded recommendation): typing an answer
@@ -256,7 +257,7 @@ struct QuizViewModelNoModalFreezeTests {
         viewModel.settings.answerTimeLimit = 30
         viewModel.currentSession = Fixtures.makeActiveSession()
 
-        viewModel.startAnswerTimer()
+        viewModel.quizTimersController.startAnswerTimer()
         await Task.yield()
         #expect(viewModel.taskBag.contains(.answerTimer))
 
@@ -283,11 +284,11 @@ struct QuizViewModelAutoStopRecordingTests {
         let viewModel = Fixtures.makeViewModelForTimerTests()
         viewModel.quizState = .recording
 
-        viewModel.startAutoStopRecordingTimer()
+        viewModel.quizTimersController.startAutoStopRecordingTimer()
 
         #expect(viewModel.taskBag.contains(.autoStopRecording))
 
-        viewModel.cancelAutoStopRecordingTimer()
+        viewModel.quizTimersController.cancelAutoStopRecordingTimer()
         #expect(!viewModel.taskBag.contains(.autoStopRecording))
     }
 
@@ -304,10 +305,10 @@ struct QuizViewModelAutoStopRecordingTests {
         viewModel.quizState = .recording
         viewModel.isRerecording = true
 
-        viewModel.startAutoStopRecordingTimer()
+        viewModel.quizTimersController.startAutoStopRecordingTimer()
 
         #expect(viewModel.taskBag.contains(.autoStopRecording))
-        viewModel.cancelAutoStopRecordingTimer()
+        viewModel.quizTimersController.cancelAutoStopRecordingTimer()
     }
 }
 
@@ -319,10 +320,9 @@ struct QuizViewModelAutoAdvanceTests {
     @MainActor
     func autoAdvanceHappyPathRegistersTask() async throws {
         let viewModel = Fixtures.makeViewModelForTimerTests()
-        viewModel.autoAdvanceEnabled = true
         viewModel.currentQuestionPaused = false
 
-        await viewModel.startAutoAdvanceCountdown(duration: 7, audioDuration: 2.0)
+        await viewModel.quizTimersController.startAutoAdvanceCountdown(duration: 7, audioDuration: 2.0)
 
         #expect(viewModel.autoAdvanceCountdown == 7)
         #expect(viewModel.taskBag.contains(.autoAdvance))
@@ -333,23 +333,6 @@ struct QuizViewModelAutoAdvanceTests {
         #expect(viewModel.currentQuestionPaused == true)
     }
 
-    /// Regression: the global "auto-advance" toggle in Settings flips
-    /// `autoAdvanceEnabled = false`. If the guard in
-    /// `startAutoAdvanceCountdown` is dropped, every result screen would
-    /// auto-advance regardless of the user's setting.
-    @Test("startAutoAdvanceCountdown is a no-op when autoAdvanceEnabled is false")
-    @MainActor
-    func autoAdvanceSkippedWhenDisabled() async throws {
-        let viewModel = Fixtures.makeViewModelForTimerTests()
-        viewModel.autoAdvanceEnabled = false
-        viewModel.autoAdvanceCountdown = 99 // pretend a previous countdown lingered
-
-        await viewModel.startAutoAdvanceCountdown(duration: 7, audioDuration: 2.0)
-
-        #expect(viewModel.autoAdvanceCountdown == 0)
-        #expect(!viewModel.taskBag.contains(.autoAdvance))
-    }
-
     /// Regression: pause-on-current-question flips `currentQuestionPaused = true`.
     /// Auto-advance must respect that for the rest of the result screen even if
     /// some other code path tries to (re)start it.
@@ -357,10 +340,9 @@ struct QuizViewModelAutoAdvanceTests {
     @MainActor
     func autoAdvanceSkippedWhenPaused() async throws {
         let viewModel = Fixtures.makeViewModelForTimerTests()
-        viewModel.autoAdvanceEnabled = true
         viewModel.currentQuestionPaused = true
 
-        await viewModel.startAutoAdvanceCountdown(duration: 7, audioDuration: 2.0)
+        await viewModel.quizTimersController.startAutoAdvanceCountdown(duration: 7, audioDuration: 2.0)
 
         #expect(viewModel.autoAdvanceCountdown == 0)
         #expect(!viewModel.taskBag.contains(.autoAdvance))

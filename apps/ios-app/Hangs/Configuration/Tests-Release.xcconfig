@@ -1,0 +1,9 @@
+//
+// Tests-Release.xcconfig
+// Base config for the test targets (HangsTests / HangsUITests), Release builds.
+// Shared carries Swift 6 + deployment target (single source of truth);
+// Release carries build-mode settings (-O, wholemodule).
+//
+
+#include "Shared.xcconfig"
+#include "Release.xcconfig"

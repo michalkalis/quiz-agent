@@ -88,3 +88,48 @@ struct Participant: Codable, Identifiable, Sendable {
         case joinedAt = "joined_at"
     }
 }
+
+// MARK: - Preview/Fixture Helpers
+
+#if DEBUG
+    extension QuizSession {
+        /// Session whose single participant carries the requested totals — the
+        /// one shared way previews and tests (via `Fixtures.session`) pin the
+        /// derived `QuizViewModel.score`/`questionsAnswered` (#113 T7; both are
+        /// computed over `currentSession`, so direct assignment no longer exists).
+        static func preview(
+            score: Double = 0.0,
+            answered: Int = 0,
+            correct: Int = 0,
+            maxQuestions: Int = 10,
+            phase: String = "asking"
+        ) -> QuizSession {
+            QuizSession(
+                id: "preview-session",
+                mode: "single",
+                phase: phase,
+                maxQuestions: maxQuestions,
+                currentDifficulty: "medium",
+                category: nil,
+                language: "en",
+                participants: [
+                    Participant(
+                        id: "p1",
+                        userId: nil,
+                        displayName: "Player",
+                        score: score,
+                        answeredCount: answered,
+                        correctCount: correct,
+                        lastAnswer: nil,
+                        lastResult: nil,
+                        isHost: true,
+                        isReady: true,
+                        joinedAt: Date()
+                    ),
+                ],
+                expiresAt: Date().addingTimeInterval(3600),
+                createdAt: Date()
+            )
+        }
+    }
+#endif

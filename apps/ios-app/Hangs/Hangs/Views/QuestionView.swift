@@ -335,7 +335,7 @@ struct QuestionView: View {
                 onSelect: { key, value in
                     Task { await viewModel.submitMCQAnswer(key: key, value: value) }
                 },
-                externalSelectedKey: viewModel.mcqVoiceMatchedKey
+                externalSelectedKey: $viewModel.mcqVoiceMatchedKey
             )
             .padding(.top, 8)
 

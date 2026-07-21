@@ -77,7 +77,7 @@ nonisolated enum Config {
         ("easy", String(localized: "Easy", comment: "Quiz difficulty option")),
         ("medium", String(localized: "Medium", comment: "Quiz difficulty option")),
         ("hard", String(localized: "Hard", comment: "Quiz difficulty option")),
-        ("random", String(localized: "Random", comment: "Quiz difficulty option: pick difficulty at random"))
+        ("random", String(localized: "Random", comment: "Quiz difficulty option: pick difficulty at random")),
     ]
 
     /// Available category options for quiz settings (nil = All Categories)
@@ -91,7 +91,7 @@ nonisolated enum Config {
         ("superheroes", String(localized: "Superheroes", comment: "Quiz category option (themed pack)")),
         ("disney", String(localized: "Disney", comment: "Quiz category option (themed pack; brand name — see 56.4 Don't-translate pass)")),
         ("football", String(localized: "Football", comment: "Quiz category option (themed pack)")),
-        ("sports-mix", String(localized: "Sports Mix", comment: "Quiz category option (themed pack)"))
+        ("sports-mix", String(localized: "Sports Mix", comment: "Quiz category option (themed pack)")),
     ]
 
     /// Available age-appropriate filter options (nil = no filter / show all)
@@ -101,7 +101,7 @@ nonisolated enum Config {
         ("all", "Family-friendly"),
         ("8+", "8+"),
         ("12+", "12+"),
-        ("16+", "16+")
+        ("16+", "16+"),
     ]
 
     /// Whether the Home "Image questions" toggle is shown (#96 P3). OFF until
@@ -155,14 +155,14 @@ nonisolated enum Config {
     /// Default ON. Setting this to `false` disables ONLY that wiring and leaves the
     /// rest of the command layer (repeat / skip / ok / again / next) intact. It does
     /// NOT auto-open the mic — the thinking-timer + mic-button flow is unchanged (P1).
-    /// Copied into `QuizViewModel.voiceStartOnQuestionEnabled` per instance (so tests
-    /// can flip it without a global).
+    /// Copied into `VoiceCommandCoordinator.voiceStartOnQuestionEnabled` per instance
+    /// (so tests can flip it without a global).
     static let voiceStartCommandEnabled: Bool = true
 
     /// Founder-overridable build/settings flag: arm the command listener on the idle
     /// Home screen so spoken "start" begins the quiz. Default ON. On-device English
     /// command recognition only — nothing leaves the device. Copied into
-    /// `QuizViewModel.voiceStartOnHomeEnabled` per instance.
+    /// `VoiceCommandCoordinator.voiceStartOnHomeEnabled` per instance.
     static let voiceHomeStartEnabled: Bool = true
 
     // MARK: - Freemium
@@ -197,15 +197,15 @@ nonisolated enum Config {
     /// Note: nonisolated needed to access from actors (NetworkService, etc.)
     nonisolated static let verboseLogging: Bool = {
         #if DEBUG
-        return true
+            return true
         #else
-        return false
+            return false
         #endif
     }()
 
     #if DEBUG
-    /// Simulate slow network for testing
-    static let simulateSlowNetwork = false
+        /// Simulate slow network for testing
+        static let simulateSlowNetwork = false
     #endif
 }
 
@@ -215,18 +215,18 @@ extension Config {
     /// Check if running in DEBUG mode
     static var isDebug: Bool {
         #if DEBUG
-        return true
+            return true
         #else
-        return false
+            return false
         #endif
     }
 
     /// Check if running on simulator
     static var isSimulator: Bool {
         #if targetEnvironment(simulator)
-        return true
+            return true
         #else
-        return false
+            return false
         #endif
     }
 }

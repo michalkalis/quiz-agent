@@ -6,14 +6,25 @@
 //  ObservableObjects (QuizViewModel et al.).
 //
 //  Problem: Swift.dump() recurses into Combine @Published storage and emits
-//  two categories of non-deterministic output that break snapshot comparisons:
+//  three categories of non-deterministic output that break snapshot comparisons:
 //    1. Allocator-assigned memory addresses: "▿ lock: 0x000000010b025740"
 //       and the adjacent "- pointerValue: 4416748752"
 //    2. Wall-clock Date values captured by @State var now = Date() inside
 //       views, rendered as ISO-8601 strings like "2026-05-15T15:09:19Z"
+//    3. Combine's internal per-process Sink identity counter: dump() labels
+//       each Subscribers.Sink wrapping an objectWillChange relay closure with
+//       "Sink #<N>" (e.g. "- downstream: Sink #20"). With several independently
+//       -initialized ObservableObject children (#113 decomposition), the order
+//       in which those relay subscriptions register is not pinned across
+//       process launches, so this label alone churns run-to-run even when the
+//       object graph shape (types, property names/values, connection counts)
+//       is byte-identical — verified by diffing two consecutive un-recorded
+//       runs of the same code: only "Sink #<N>" differed, every other
+//       instance-identity tag (e.g. "ObservableObjectPublisher #34",
+//       "MockAudioService #5") stayed fixed.
 //
-//  .stableDump strips both before comparison, making the baseline deterministic
-//  across simulator processes and calendar time.
+//  .stableDump strips all three before comparison, making the baseline
+//  deterministic across simulator processes and calendar time.
 //
 
 import Foundation
@@ -42,8 +53,20 @@ extension Snapshotting where Value: Any, Format == String {
                 options: .regularExpression
             )
 
+            // 2b. Combine's per-process Sink identity counter (see file header,
+            //     category 3): "downstream: Sink #20" -> "downstream: Sink #<n>".
+            //     Scoped to "Sink #<N>" specifically (not a blanket "#<N>" strip)
+            //     because every other dump() instance-identity tag was verified
+            //     stable across runs and stays meaningful (e.g. a genuinely added
+            //     or removed ObservableObjectPublisher relay still shows up).
+            let noSinkId = noPtr.replacingOccurrences(
+                of: #"Sink #\d+"#,
+                with: "Sink #<n>",
+                options: .regularExpression
+            )
+
             // 3. ISO-8601 timestamps with T separator: "2026-05-15T15:09:19Z"
-            let noDateISO = noPtr.replacingOccurrences(
+            let noDateISO = noSinkId.replacingOccurrences(
                 of: #"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2})"#,
                 with: "<date>",
                 options: .regularExpression
@@ -63,13 +86,22 @@ extension Snapshotting where Value: Any, Format == String {
                 options: .regularExpression
             )
 
-            // 6. Truncate at the clockTimer section which dumps the live RunLoop
+            // 6. Private-type metadata contexts carry an ASLR-dependent address:
+            //    "(unknown context at $109915fa4)" — e.g. SilenceDetectionService's
+            //    private State enum, dumped since #115 made the service non-optional.
+            let noCtx = noTI.replacingOccurrences(
+                of: #"\(unknown context at \$[0-9a-fA-F]+\)"#,
+                with: "(unknown context at $<addr>)",
+                options: .regularExpression
+            )
+
+            // 7. Truncate at the clockTimer section which dumps the live RunLoop
             //    (CFBasicHash / CFRunLoopSource entries with non-deterministic ordering
             //    and mach port numbers). Everything meaningful for structural assertions
             //    appears before this section.
-            let lines = noTI.components(separatedBy: "\n")
+            let lines = noCtx.components(separatedBy: "\n")
             let cutIndex = lines.firstIndex(where: { $0.contains("clockTimer") })
-            let trimmed = cutIndex.map { lines[..<$0].joined(separator: "\n") } ?? noTI
+            let trimmed = cutIndex.map { lines[..<$0].joined(separator: "\n") } ?? noCtx
 
             return trimmed
         }

@@ -856,7 +856,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
         // A teardown raced the settle wait — recording must stay stopped, and the
         // caller must NOT fall back to batch recording (see the CancellationError
-        // handling in QuizViewModel+Recording).
+        // handling in RecordingCoordinator+Capture).
         guard startedGeneration == streamingGeneration else {
             Logger.audio.info("🎤 Streaming: start cancelled by teardown during settle wait")
             throw CancellationError()

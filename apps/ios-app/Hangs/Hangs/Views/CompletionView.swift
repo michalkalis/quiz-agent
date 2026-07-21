@@ -211,8 +211,7 @@ struct CompletionView: View {
     #Preview {
         let viewModel: QuizViewModel = {
             let vm = QuizViewModel.previewWithEvaluation
-            vm.score = 8.5
-            vm.questionsAnswered = 10
+            vm.currentSession = QuizSession.preview(score: 8.5, answered: 10)
             vm.quizState = .finished
             return vm
         }()

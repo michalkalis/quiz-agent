@@ -36,6 +36,15 @@ import Testing
 // Isolated static handler + session so it never races AuthServiceTests or AuthAttestTests.
 
 final class AppleStubURLProtocol: URLProtocol, @unchecked Sendable {
+
+    nonisolated override init(
+        request: URLRequest,
+        cachedResponse: CachedURLResponse?,
+        client: (any URLProtocolClient)?
+    ) {
+        super.init(request: request, cachedResponse: cachedResponse, client: client)
+    }
+
     private nonisolated static let handlerLock = OSAllocatedUnfairLock<
         ((@Sendable (URLRequest) throws -> (HTTPURLResponse, Data))?
     )>(initialState: nil)

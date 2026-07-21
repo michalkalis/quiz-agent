@@ -89,8 +89,8 @@ extension QuizState {
         case .processing: return ["showingResult", "skipping", "askingQuestion", "error", "idle"]
         case .skipping: return ["showingResult", "askingQuestion", "error", "idle"]
         case .showingResult: return ["askingQuestion", "processing", "finished", "idle"]
-        case .finished: return ["idle"]
-        case .error: return ["idle", "askingQuestion"]
+        case .finished: return ["idle", "startingQuiz"]
+        case .error: return ["idle", "askingQuestion", "startingQuiz"]
         }
     }
 }
@@ -103,8 +103,13 @@ final class QuizViewModel: ObservableObject {
     @Published var quizState: QuizState = .idle
     @Published var currentQuestion: Question?
     @Published var currentSession: QuizSession?
-    @Published var score: Double = 0.0
-    @Published var questionsAnswered: Int = 0
+
+    // Derived projections over `currentSession` (#113 T7) — no stored backing,
+    // so they can never drift from the session (kills the stale-projection bug
+    // where "Play Again" carried the finished quiz's totals into the new quiz's
+    // first render). Change notifications ride `currentSession`'s @Published.
+    var score: Double { currentSession?.participants.first?.score ?? 0.0 }
+    var questionsAnswered: Int { currentSession?.participants.first?.answeredCount ?? 0 }
 
     // Per-session evaluation tallies for the completion breakdown (54.13) —
     // partials and skips land in neither bucket.
@@ -122,105 +127,121 @@ final class QuizViewModel: ObservableObject {
         @Published var lastErrorDebugInfo: String?
     #endif
 
-    // Paywall state
-    @Published var showPaywall: Bool = false
-    @Published var quotaLimitError: QuotaLimitError?
-    @Published var usageInfo: UsageInfo?
+    // Paywall/quota/usage slice — owned by EntitlementReconciler (#113 T1).
+    // Permanent forwarding accessors (decision 2) so views/tests keep binding
+    // QuizViewModel; change notifications ride the re-published child
+    // `objectWillChange` wired in `init`. Settable because ContentView
+    // dismisses via `showPaywall = false` and tests seed usage/quota directly.
+    var showPaywall: Bool {
+        get { entitlementReconciler.showPaywall }
+        set { entitlementReconciler.showPaywall = newValue }
+    }
 
-    // Answer confirmation modal state
-    @Published var showAnswerConfirmation = false
-    @Published var transcribedAnswer = ""
-    @Published var autoConfirmCountdown: Int = 0
-    var pendingResponse: QuizResponse? = nil // internal for QuizViewModel+Recording
-    var transcriptWasEdited = false // internal — suppress TTS on edited confirmations
-    var preEditTranscript: String? = nil // internal — snapshot for cancelEditingTranscript()
+    var quotaLimitError: QuotaLimitError? {
+        get { entitlementReconciler.quotaLimitError }
+        set { entitlementReconciler.quotaLimitError = newValue }
+    }
 
-    // Auto-advance countdown for ResultView binding (single source of truth)
-    @Published var autoAdvanceCountdown: Int = 0
+    var usageInfo: UsageInfo? {
+        get { entitlementReconciler.usageInfo }
+        set { entitlementReconciler.usageInfo = newValue }
+    }
 
-    // Answer timer countdown (visible on QuestionView)
-    @Published var answerTimerCountdown: Int = 0
+    // MARK: - Answer Confirmation — forwarded to RecordingCoordinator (#113 T5)
 
-    // Thinking time countdown (visible on QuestionView before auto-recording)
-    @Published var thinkingTimeCountdown: Int = 0
+    // Confirmation-modal slice — owned by RecordingCoordinator. Permanent
+    // forwarding accessors (decision 2) so views/tests keep binding
+    // QuizViewModel; change notifications ride the re-published child
+    // `objectWillChange` wired in `init`. Settable: QuestionView binds the
+    // sheet + transcript (`$viewModel.…`) and the façade itself writes them
+    // (resubmitAnswer, resetState).
+    var showAnswerConfirmation: Bool {
+        get { recordingCoordinator.showAnswerConfirmation }
+        set { recordingCoordinator.showAnswerConfirmation = newValue }
+    }
 
-    // Auto-advance enabled state (global setting toggle)
-    @Published var autoAdvanceEnabled: Bool = true
+    var transcribedAnswer: String {
+        get { recordingCoordinator.transcribedAnswer }
+        set { recordingCoordinator.transcribedAnswer = newValue }
+    }
 
-    // Per-question pause state (resets on next question)
-    @Published var currentQuestionPaused: Bool = false
+    /// Auto-confirm countdown — owned by `ConfirmationState` inside
+    /// RecordingCoordinator (#113 T7, its semantic owner); QuizTimersController
+    /// ticks it via the injected write closure pointed at the child.
+    var autoConfirmCountdown: Int {
+        get { recordingCoordinator.autoConfirmCountdown }
+        set { recordingCoordinator.autoConfirmCountdown = newValue }
+    }
+
+    // MARK: - Timers — forwarded to QuizTimersController (#113 T4)
+
+    // Timer slice — owned by QuizTimersController. Permanent forwarding
+    // accessors (decision 2) so views/tests keep binding QuizViewModel;
+    // change notifications ride the re-published child `objectWillChange`
+    // wired in `init`. Settable: the façade writes them (resetState,
+    // pauseQuiz/resumeAutoAdvance/continueToNext/proceedToNextQuestion,
+    // startNewQuiz) and tests seed them directly.
+
+    /// Auto-advance countdown for ResultView binding (single source of truth)
+    /// — see `QuizTimersController.autoAdvanceCountdown`.
+    var autoAdvanceCountdown: Int {
+        get { quizTimersController.autoAdvanceCountdown }
+        set { quizTimersController.autoAdvanceCountdown = newValue }
+    }
+
+    /// Answer timer countdown (visible on QuestionView) — see
+    /// `QuizTimersController.answerTimerCountdown`.
+    var answerTimerCountdown: Int {
+        get { quizTimersController.answerTimerCountdown }
+        set { quizTimersController.answerTimerCountdown = newValue }
+    }
+
+    /// Thinking time countdown (visible on QuestionView before auto-recording)
+    /// — see `QuizTimersController.thinkingTimeCountdown`.
+    var thinkingTimeCountdown: Int {
+        get { quizTimersController.thinkingTimeCountdown }
+        set { quizTimersController.thinkingTimeCountdown = newValue }
+    }
+
+    /// Per-question pause state (resets on next question) — see
+    /// `QuizTimersController.currentQuestionPaused`.
+    var currentQuestionPaused: Bool {
+        get { quizTimersController.currentQuestionPaused }
+        set { quizTimersController.currentQuestionPaused = newValue }
+    }
 
     // Minimize state
     @Published var isMinimized: Bool = false
 
-    // MARK: - Command Capture Phase (#77, task 77.4)
+    // MARK: - Voice Commands — forwarded to VoiceCommandCoordinator (#113 T3)
 
-    /// Additive capture-phase observable (E-state) — the single source of truth
-    /// for earcons (77.10) and the deferred recording UI (P5). SEPARATE axis from
-    /// `quizState`; driven off injected audio-lifecycle events via
-    /// `applyCaptureEvent(_:)`. Deliberately NOT part of QuizState/validTransitions.
-    @Published private(set) var commandCapturePhase: CommandCapturePhase = .idle
+    // Voice-command slice — owned by VoiceCommandCoordinator. Permanent
+    // forwarding accessors (decision 2) so views keep binding QuizViewModel;
+    // change notifications ride the re-published child `objectWillChange`
+    // wired in `init`.
 
-    /// Most recent screen-scoped command the listener recognized this session
-    /// (#96 P2). Powers the release-visible Settings diagnostics row so the
-    /// founder can confirm on-device that recognition is firing. `nil` until the
-    /// first command is heard.
-    @Published private(set) var lastRecognizedCommand: VoiceCommand?
+    /// Recognizer availability mirror — see `VoiceCommandCoordinator.commandAvailability`
+    /// (SettingsView status row).
+    var commandAvailability: VoiceCommandAvailability { voiceCommandCoordinator.commandAvailability }
 
-    /// Observable mirror of the recognizer's command availability (#96 S2). The
-    /// service's `commandAvailability` is a plain (non-`@Published`) property; on a
-    /// fresh install the en-US model installs asynchronously and flips it to
-    /// `.ready` well after Home has armed the listener — with no observable signal,
-    /// SwiftUI never re-renders and the "LISTENING FOR COMMANDS" bar stays hidden
-    /// even though commands now work. We seed this from the service on start and
-    /// keep it in sync via `commandAvailabilityUpdates`, so `commandListenerHint`
-    /// (and the Settings status row) react to availability changes live.
-    @Published private(set) var commandAvailability: VoiceCommandAvailability = .unknown
+    /// Release diagnostics (#96 P2) — see `VoiceCommandCoordinator.lastRecognizedCommand`
+    /// (SettingsView diagnostics row).
+    var lastRecognizedCommand: VoiceCommand? { voiceCommandCoordinator.lastRecognizedCommand }
 
-    /// Observation hook / test seam (#77, task 77.5): invoked when the command
-    /// listener recognizes a screen-scoped command, BEFORE it is routed to an
-    /// action. Session 3 fired it as the only behaviour; Session 4 (77.8–77.9) adds
-    /// the routing in `handleRecognizedCommand`. Kept for tests + future earcons.
-    var onCommandRecognized: (@MainActor (VoiceCommand) -> Void)?
+    /// Home voice-start flag — see `VoiceCommandCoordinator.voiceStartOnHomeEnabled`
+    /// (HomeView.onAppear).
+    var voiceStartOnHomeEnabled: Bool { voiceCommandCoordinator.voiceStartOnHomeEnabled }
 
-    // MARK: - Voice Command Wiring (#77, tasks 77.8 / 77.9)
+    /// "LISTENING FOR COMMANDS" indicator hint — see
+    /// `VoiceCommandCoordinator.commandListenerHint` (CmdListenBar call sites).
+    var commandListenerHint: String? { voiceCommandCoordinator.commandListenerHint }
 
-    /// P4a founder-overridable flag: spoken "start" on QuestionView opens the mic.
-    /// Seeded from `Config.voiceStartCommandEnabled` (default ON); an instance
-    /// property so tests can flip it and a future settings UI can bind it. `false`
-    /// disables ONLY the question-screen "start"→`startRecording()` wiring — the
-    /// rest of the command layer (and Home "start") stays intact.
-    var voiceStartOnQuestionEnabled: Bool = Config.voiceStartCommandEnabled
-
-    /// Founder-overridable flag: arm the command listener on the idle Home screen so
-    /// spoken "start" begins the quiz. Seeded from `Config.voiceHomeStartEnabled`
-    /// (default ON). Consulted by `HomeView.onAppear` before arming.
-    var voiceStartOnHomeEnabled: Bool = Config.voiceHomeStartEnabled
-
-    /// Skip undo-window (#77, task 77.9 / E-match): a recognized "skip" on the
-    /// question screen opens a ~2.5 s window before the skip commits, so a tap (or,
-    /// deferred to Session 5, a spoken cancel word) can abort it. `nil` = no pending
-    /// skip. Published so the deferred UI + earcons can observe it.
-    @Published private(set) var pendingSkipWindow: UndoWindow?
-
-    /// Session 5 earcon seam (77.10): fired when the skip undo-window OPENS. The
-    /// skip-confirm earcon itself is Session 5 — Session 4 only exposes the event.
-    var onSkipUndoWindowOpened: (@MainActor () -> Void)?
-
-    /// Apply an injected capture-lifecycle event. Illegal transitions are a no-op
-    /// (phase unchanged) and return `false` so a caller can detect a bad sequence.
-    @discardableResult
-    func applyCaptureEvent(_ event: CaptureLifecycleEvent) -> Bool {
-        guard let next = commandCapturePhase.applying(event) else { return false }
-        commandCapturePhase = next
-        return true
-    }
-
-    /// Record the most recently recognized command for the release diagnostics
-    /// row (#96 P2). Lives in the main file so `lastRecognizedCommand`'s private
-    /// setter is honored (the CommandListener extension is a separate file).
-    func noteRecognizedCommand(_ command: VoiceCommand) {
-        lastRecognizedCommand = command
+    /// Fire-and-forget command-window sync for synchronous call sites
+    /// (MAIN / +ScenePhase / SettingsView / HomeView; RecordingCoordinator
+    /// reaches it via an injected closure) — see
+    /// `VoiceCommandCoordinator.refreshCommandWindow`.
+    func refreshCommandWindow() {
+        voiceCommandCoordinator.refreshCommandWindow()
     }
 
     /// Single funnel for every earcon (77.10). Suppresses cues during question
@@ -255,37 +276,29 @@ final class QuizViewModel: ObservableObject {
         Language.forCode(settings.language) ?? Language.default
     }
 
-    var selectedAudioMode: AudioMode {
-        AudioMode.forId(settings.audioMode) ?? AudioMode.default
-    }
+    // MARK: - Audio Device State — forwarded to AudioDeviceState (#113 T2)
 
-    // MARK: - Audio Device State
+    // Audio device slice — owned by AudioDeviceState. Permanent forwarding
+    // accessors (decision 2) so views/tests keep binding QuizViewModel;
+    // change notifications ride the re-published child `objectWillChange`
+    // wired in `init`.
+    var selectedAudioMode: AudioMode { audioDeviceState.selectedAudioMode }
 
     /// Available input devices from AudioService
-    var availableInputDevices: [AudioDevice] {
-        audioService.availableInputDevices
-    }
+    var availableInputDevices: [AudioDevice] { audioDeviceState.availableInputDevices }
 
     /// Currently selected input device (nil = automatic)
-    var selectedInputDevice: AudioDevice? {
-        audioService.currentInputDevice
-    }
-
-    /// Current output device name for display
-    var currentOutputDeviceName: String {
-        audioService.currentOutputDeviceName
-    }
+    var selectedInputDevice: AudioDevice? { audioDeviceState.selectedInputDevice }
 
     /// Display name for current input device
-    var currentInputDeviceName: String {
-        if let device = audioService.currentInputDevice {
-            return device.name
-        }
-        return String(localized: "Automatic", comment: "Fallback name when no audio input device is selected (iOS picks the best mic)")
-    }
+    var currentInputDeviceName: String { audioDeviceState.currentInputDeviceName }
 
-    /// Sheet presentation state for microphone picker
-    @Published var showingMicrophonePicker = false
+    /// Sheet presentation state for microphone picker. Settable because
+    /// SettingsView/HomeView present the sheet via `$viewModel.showingMicrophonePicker`.
+    var showingMicrophonePicker: Bool {
+        get { audioDeviceState.showingMicrophonePicker }
+        set { audioDeviceState.showingMicrophonePicker = newValue }
+    }
 
     /// Whether minimize is allowed in current state
     /// Enabled during active quiz states (question, recording, processing, results)
@@ -330,7 +343,18 @@ final class QuizViewModel: ObservableObject {
 
         Logger.quiz.info("State: \(from) → \(to) [\(caller, privacy: .public)]")
         quizState = newState
+        // T7 (decision 8): leaving the recording/processing phase-pair drops the
+        // confirmation + capture subsets atomically via the owner child — never
+        // mid-pair (recording → processing keeps in-flight state), and never the
+        // question-scoped fields (see `resetOnPhaseExit`).
+        let recordingPair = ["recording", "processing"]
+        if recordingPair.contains(from), !recordingPair.contains(to) {
+            recordingCoordinator.resetOnPhaseExit()
+        }
         if case .askingQuestion = newState { mcqVoiceMatchedKey = nil }
+        // #110 Bug 3: .finished never cleared isMinimized, so a stale
+        // MinimizedQuizView floated over CompletionView with nothing to dismiss it.
+        if case .finished = newState { isMinimized = false }
 
         // Sentry: tag + context + breadcrumb (metadata only — no transcripts/PII)
         let questionId = currentQuestion?.id
@@ -372,7 +396,8 @@ final class QuizViewModel: ObservableObject {
     /// handler that is suspended mid-flight captures the epoch on entry and, after
     /// each await, aborts if it moved: so a typed answer submitted during that
     /// window can't trigger a second concurrent submission or resurrect the stale
-    /// voice confirmation sheet. Internal for the +Recording extension / tests.
+    /// voice confirmation sheet. Read by RecordingCoordinator via an injected
+    /// closure; internal for tests.
     var submissionEpoch = 0
 
     /// Single-flight guard for `resubmitAnswer` (#79): the typed-answer TextField's
@@ -381,29 +406,39 @@ final class QuizViewModel: ObservableObject {
     /// gate the `confirmAnswer` voice entry (still a single call site).
     var isSubmittingAnswer = false
 
-    /// Prevents concurrent stopRecordingAndSubmit calls (silence detection + user tap can race)
-    var isStoppingRecording = false // internal for QuizViewModel+Recording
+    /// Single-flight guard for `startNewQuiz` (#110): "Try Again"/"Play Again" can be
+    /// double-tapped before the first `createSession` resolves. Held for the whole
+    /// flow via `defer` so exactly one session is created, mirroring `isSubmittingAnswer`.
+    var isStarting = false
 
     // MARK: - Auto-Record State
 
-    /// Whether auto-record is active for the current recording (for UI hints)
+    /// Whether auto-record is active for the current recording (for UI hints).
+    /// Multi-writer cross-cluster flag (Recording *and* Timers write) — stays
+    /// façade-resident (decision 4); children reach it via injected closures.
     @Published var isAutoRecording: Bool = false
 
-    /// Whether speech has been detected during auto-record (for UI hints)
-    @Published var speechDetectedDuringAutoRecord: Bool = false
+    // MARK: - Streaming STT — forwarded to RecordingCoordinator (#113 T5)
 
-    // MARK: - Streaming STT State
+    /// Live transcript from ElevenLabs (updates as user speaks) — see
+    /// `RecordingCoordinator.liveTranscript`. Settable: the DEBUG UI-test
+    /// seed (AppState) and `resetState` write it.
+    var liveTranscript: String {
+        get { recordingCoordinator.liveTranscript }
+        set { recordingCoordinator.liveTranscript = newValue }
+    }
 
-    /// Live transcript from ElevenLabs (updates as user speaks)
-    @Published var liveTranscript: String = ""
-
-    /// Whether streaming STT is active
-    @Published var isStreamingSTT: Bool = false
+    /// Whether streaming STT is active — see `RecordingCoordinator.isStreamingSTT`.
+    var isStreamingSTT: Bool {
+        get { recordingCoordinator.isStreamingSTT }
+        set { recordingCoordinator.isStreamingSTT = newValue }
+    }
 
     /// Whether question TTS is currently playing. The command listener is torn
     /// down during TTS and re-armed after (77.5 windowed lifecycle / the 1a19438
     /// self-trigger guard) — `currentCommandScreen` returns nil while this is true
-    /// so the recognizer never hears its own playback. Internal for +Audio/+CommandListener.
+    /// so the recognizer never hears its own playback. Internal for +CommandListener;
+    /// AudioDeviceState writes it via injected closures (#113 T2, decision 4).
     var isPlayingQuestionTTS: Bool = false
 
     /// The option key matched by voice on an MCQ question (nil between questions).
@@ -415,7 +450,7 @@ final class QuizViewModel: ObservableObject {
     /// `refreshCommandWindow()` or a post-TTS `startSilenceDetectionListening()`
     /// can never re-arm the mic mid-transition to background (mic-in-background
     /// fix). `currentCommandScreen` returns nil while this is false.
-    /// Internal for +CommandListener/+Audio/+Recording/+ScenePhase.
+    /// Internal for +ScenePhase; the child sub-objects read it via injected closures.
     var isAppForeground: Bool = true
 
     // MARK: - Dependencies
@@ -423,18 +458,8 @@ final class QuizViewModel: ObservableObject {
     let networkService: NetworkServiceProtocol
     let audioService: AudioServiceProtocol
     let persistenceStore: PersistenceStoreProtocol
-    let silenceDetectionService: SilenceDetectionServiceProtocol?
+    let silenceDetectionService: SilenceDetectionServiceProtocol
     let sttService: ElevenLabsSTTServiceProtocol?
-
-    /// Reads RevenueCat's local cache for whether the customer holds the
-    /// `unlimited` entitlement — used ONLY to decide whether a 429 paywall
-    /// should first give the server mirror a short chance to catch up
-    /// (`resyncBeforePaywallIfLocallyEntitled`, #102 finding 1). The server
-    /// `/usage` gate remains the sole source of truth for whether the user is
-    /// actually unlimited; this never grants anything client-side. Defaults
-    /// to "not entitled" so existing call sites/tests are unaffected unless
-    /// `AppState` wires the real RC-backed check.
-    private let isLocallyEntitled: @MainActor () -> Bool
 
     /// Language-neutral earcon player (#77, task 77.10). A settable property (not
     /// an init param) so the ~15 existing call sites are untouched and tests can
@@ -444,36 +469,59 @@ final class QuizViewModel: ObservableObject {
 
     private var cancellables = Set<AnyCancellable>()
 
-    /// Long-lived observer of `silenceDetectionService.commandAvailabilityUpdates`,
-    /// mirroring each change into `commandAvailability`. Deliberately NOT in
-    /// `taskBag` (which is quiz-scoped and cleared by `resetState`) — availability
-    /// changes span the whole app lifetime. Cancelled in `deinit`.
-    private var commandAvailabilityTask: Task<Void, Never>?
+    /// Entitlement/usage/paywall slice owner (#113 T1). The façade owns the
+    /// child, re-publishes its `objectWillChange`, and re-exposes the slice
+    /// via the forwarding accessors above (decision 2) — views never bind it
+    /// directly.
+    let entitlementReconciler: EntitlementReconciler
 
-    /// Single in-flight entitlement re-sync — a launch and an immediate scene
-    /// `.active` (or two rapid foregrounds) join the same attempt instead of
-    /// firing duplicate network calls (mirrors AuthService's single-flight
-    /// refresh). Set/cleared by `reconcileEntitlements()` only, cancelled in
-    /// `deinit` (#102 findings 1+2).
-    private var entitlementReconcileTask: Task<Void, Never>?
+    /// Audio slice owner (#113 T2): device management, audio-mode switching,
+    /// the silence-detection choke points, and TTS/feedback playback. The
+    /// façade owns the child, re-publishes its `objectWillChange`, and
+    /// re-exposes the slice via the forwarding accessors above (decision 2).
+    /// `lazy` so the injected closures can capture `self` weakly — built by
+    /// `makeAudioDeviceState()` on first touch (the `init` re-publish sink).
+    private(set) lazy var audioDeviceState: AudioDeviceState = makeAudioDeviceState()
+
+    /// Voice-command slice owner (#113 T3): capture phase, recognizer
+    /// availability mirror, listening window + consumer + routing, and the
+    /// skip undo-window. The façade owns the child, re-publishes its
+    /// `objectWillChange`, and re-exposes the view-facing slice via the
+    /// forwarding accessors above (decision 2). `lazy` so the injected
+    /// closures can capture `self` weakly — built by
+    /// `makeVoiceCommandCoordinator()` on first touch (the `init` re-publish sink).
+    private(set) lazy var voiceCommandCoordinator: VoiceCommandCoordinator = makeVoiceCommandCoordinator()
+
+    /// Timer slice owner (#113 T4): the countdown/pause state + every timer
+    /// start/cancel. The façade owns the child, re-publishes its
+    /// `objectWillChange`, and re-exposes the slice via the forwarding
+    /// accessors above (decision 2). `lazy` so the injected closures can
+    /// capture `self` weakly — built by `makeQuizTimersController()` on
+    /// first touch (the `init` re-publish sink).
+    private(set) lazy var quizTimersController: QuizTimersController = makeQuizTimersController()
+
+    /// Recording + confirmation slice owner (#113 T5): capture lifecycle,
+    /// streaming STT, submission, and answer confirmation. The façade owns
+    /// the child, re-publishes its `objectWillChange`, and re-exposes the
+    /// slice via the forwarding accessors above (decision 2). `lazy` so the
+    /// injected closures can capture `self` weakly — built by
+    /// `makeRecordingCoordinator()` on first touch (the `init` re-publish sink).
+    private(set) lazy var recordingCoordinator: RecordingCoordinator = makeRecordingCoordinator()
 
     /// Single owner for every long-lived `Task` this view model spawns.
     /// Each call site stores its task under a `TaskKey`; `resetState()` calls
     /// `cancelAll()` instead of duplicating ten cancel-and-nil lines.
-    let taskBag = TaskBag() // internal for QuizViewModel+Timers/+Recording/+Audio
+    let taskBag = TaskBag() // shared with the child sub-objects as their decision-4 register/cancel handle
 
-    // Whether the current recording is a re-record (bypasses all timers) (internal for QuizViewModel+Timers)
+    // Whether the current recording is a re-record (bypasses all timers) —
+    // multi-writer cross-cluster flag (decision 4): written by
+    // RecordingCoordinator, read by QuizTimersController/AudioDeviceState,
+    // all via injected closures
     var isRerecording: Bool = false
-
-    // Consecutive transcription failures for 3-tier error escalation
-    var consecutiveTranscriptionFailures: Int = 0 // internal for QuizViewModel+Recording
 
     // Next question data (from response, displayed after showing results)
     private var nextQuestionAudioUrl: String?
     private var nextQuestion: Question?
-
-    // Current question audio URL for "repeat" command
-    var currentQuestionAudioUrl: String? // internal for QuizViewModel+Audio
 
     // MARK: - Initialization
 
@@ -481,7 +529,7 @@ final class QuizViewModel: ObservableObject {
         networkService: NetworkServiceProtocol,
         audioService: AudioServiceProtocol,
         persistenceStore: PersistenceStoreProtocol,
-        silenceDetectionService: SilenceDetectionServiceProtocol? = nil,
+        silenceDetectionService: SilenceDetectionServiceProtocol = SilenceDetectionService(),
         sttService: ElevenLabsSTTServiceProtocol? = nil,
         isLocallyEntitled: @escaping @MainActor () -> Bool = { false }
     ) {
@@ -490,28 +538,19 @@ final class QuizViewModel: ObservableObject {
         self.persistenceStore = persistenceStore
         self.silenceDetectionService = silenceDetectionService
         self.sttService = sttService
-        self.isLocallyEntitled = isLocallyEntitled
-
-        // Seed + observe the recognizer availability so the "LISTENING FOR
-        // COMMANDS" indicator is reactive (see `commandAvailability`). Seeding
-        // catches whatever the service resolved before this view-model existed;
-        // the stream then keeps it in sync — including the async `.ready` flip
-        // when the en-US model finishes installing after launch.
-        commandAvailability = silenceDetectionService?.commandAvailability ?? .unknown
-        if let silence = silenceDetectionService {
-            commandAvailabilityTask = Task { [weak self] in
-                for await availability in silence.commandAvailabilityUpdates {
-                    guard let self, !Task.isCancelled else { break }
-                    self.commandAvailability = availability
-                }
-            }
-        }
+        // #113 T1: the entitlement/usage/paywall slice lives in its own child;
+        // its init fires the launch reconcile (#102 finding 1) — single-flight,
+        // bounded backoff, failure logged only (server stays source of truth).
+        entitlementReconciler = EntitlementReconciler(
+            networkService: networkService,
+            isLocallyEntitled: isLocallyEntitled
+        )
 
         // #67 Part A: recover from a phone-call/Siri interruption that tears down
         // streaming recording — leave .recording and reset streaming STT so no
         // recording is stranded after the call.
         self.audioService.onInterruptionBegan = { [weak self] in
-            self?.handleAudioInterruption()
+            self?.recordingCoordinator.handleAudioInterruption()
         }
 
         // Load saved settings and stats
@@ -525,22 +564,151 @@ final class QuizViewModel: ObservableObject {
             .sink { [persistenceStore] in persistenceStore.saveSettings($0) }
             .store(in: &cancellables)
 
-        // Entitlement re-sync on launch (#102 finding 1): the identity-mint
-        // bridge (AppState.setAccountLinkedHandler) only fires on anon-
-        // bootstrap/sign-in/refresh-remint, not a normal launch with an
-        // already-valid token — a returning user whose webhook landed while
-        // the app was closed otherwise never reconciles until their next
-        // purchase. `reconcileEntitlements()` is single-flight and retries
-        // with backoff; failure is logged only (server stays source of truth).
-        Task { [weak self] in
-            await self?.reconcileEntitlements()
-        }
+        // Re-publish child slice changes so views bound to the façade
+        // re-render (#113 decision 2 — views keep @ObservedObject QuizViewModel).
+        entitlementReconciler.objectWillChange
+            .sink { [weak self] in self?.objectWillChange.send() }
+            .store(in: &cancellables)
+        audioDeviceState.objectWillChange
+            .sink { [weak self] in self?.objectWillChange.send() }
+            .store(in: &cancellables)
+        voiceCommandCoordinator.objectWillChange
+            .sink { [weak self] in self?.objectWillChange.send() }
+            .store(in: &cancellables)
+        quizTimersController.objectWillChange
+            .sink { [weak self] in self?.objectWillChange.send() }
+            .store(in: &cancellables)
+        recordingCoordinator.objectWillChange
+            .sink { [weak self] in self?.objectWillChange.send() }
+            .store(in: &cancellables)
     }
 
-    deinit {
-        // Availability observer lives outside `taskBag`; end it explicitly.
-        commandAvailabilityTask?.cancel()
-        entitlementReconcileTask?.cancel()
+    /// #113 T2: builds the audio child. Every closure captures the façade
+    /// weakly — the child is façade-owned so `self` outlives it; `weak` just
+    /// breaks the ownership cycle (façade → child → closure → façade). Each
+    /// closure is the minimal scoped read/write of decision 4 — never a vm ref.
+    private func makeAudioDeviceState() -> AudioDeviceState {
+        AudioDeviceState(
+            audioService: audioService,
+            networkService: networkService,
+            silenceDetectionService: silenceDetectionService,
+            taskBag: taskBag,
+            settings: { [weak self] in self?.settings ?? .default },
+            setAudioMode: { [weak self] in self?.settings.audioMode = $0 },
+            setPreferredInputDeviceId: { [weak self] in self?.settings.preferredInputDeviceId = $0 },
+            setMuted: { [weak self] in self?.settings.isMuted = $0 },
+            isAppForeground: { [weak self] in self?.isAppForeground ?? false },
+            isAskingQuestion: { [weak self] in self?.quizState == .askingQuestion },
+            isRerecording: { [weak self] in self?.isRerecording ?? false },
+            isPlayingQuestionTTS: { [weak self] in self?.isPlayingQuestionTTS ?? false },
+            setPlayingQuestionTTS: { [weak self] in self?.isPlayingQuestionTTS = $0 },
+            currentQuestionAudioUrl: { [weak self] in self?.recordingCoordinator.currentQuestionAudioUrl },
+            setCurrentQuestionAudioUrl: { [weak self] in self?.recordingCoordinator.currentQuestionAudioUrl = $0 },
+            setErrorMessage: { [weak self] in self?.errorMessage = $0 },
+            onBargeIn: { [weak self] in await self?.handleBargeIn() },
+            startCommandConsumer: { [weak self] in self?.voiceCommandCoordinator.startCommandConsumer() },
+            stopCommandConsumer: { [weak self] in self?.voiceCommandCoordinator.stopCommandConsumer() },
+            startThinkingTimeCountdown: { [weak self] in self?.quizTimersController.startThinkingTimeCountdown() },
+            startAnswerTimer: { [weak self] in self?.quizTimersController.startAnswerTimer() }
+        )
+    }
+
+    /// #113 T3: builds the voice-command child. Every closure captures the
+    /// façade weakly — the child is façade-owned so `self` outlives it; `weak`
+    /// just breaks the ownership cycle (façade → child → closure → façade).
+    /// Each closure is the minimal scoped read/write of decision 4 — never a
+    /// vm ref. The recording fan-out targets point at RecordingCoordinator
+    /// per the cross-child-via-façade pattern (#113 T5).
+    private func makeVoiceCommandCoordinator() -> VoiceCommandCoordinator {
+        VoiceCommandCoordinator(
+            silenceDetectionService: silenceDetectionService,
+            taskBag: taskBag,
+            settings: { [weak self] in self?.settings ?? .default },
+            isAppForeground: { [weak self] in self?.isAppForeground ?? false },
+            isPlayingQuestionTTS: { [weak self] in self?.isPlayingQuestionTTS ?? false },
+            quizState: { [weak self] in self?.quizState ?? .idle },
+            startSilenceDetectionListening: { [weak self] in await self?.audioDeviceState.startSilenceDetectionListening() },
+            stopSilenceDetectionListening: { [weak self] in self?.audioDeviceState.stopSilenceDetectionListening() },
+            emitEarcon: { [weak self] in self?.emitEarcon($0) },
+            startNewQuiz: { [weak self] in await self?.startNewQuiz() },
+            startRecording: { [weak self] in await self?.recordingCoordinator.startRecording() },
+            repeatQuestion: { [weak self] in await self?.repeatQuestion() },
+            skipQuestion: { [weak self] in await self?.skipQuestion() },
+            confirmAnswer: { [weak self] in await self?.recordingCoordinator.confirmAnswer() },
+            rerecordAnswer: { [weak self] in self?.recordingCoordinator.rerecordAnswer() },
+            cancelProcessing: { [weak self] in self?.recordingCoordinator.cancelProcessing() },
+            continueToNext: { [weak self] in self?.continueToNext() },
+            cancelAnswerTimer: { [weak self] in self?.quizTimersController.cancelAnswerTimer() },
+            cancelThinkingTime: { [weak self] in self?.quizTimersController.cancelThinkingTime() }
+        )
+    }
+
+    /// #113 T4: builds the timer child. Every closure captures the façade
+    /// weakly — the child is façade-owned so `self` outlives it; `weak` just
+    /// breaks the ownership cycle (façade → child → closure → façade). Each
+    /// closure is the minimal scoped read/write of decision 4 — never a vm
+    /// ref. The recording fan-out targets point at RecordingCoordinator
+    /// per the cross-child-via-façade pattern (#113 T5).
+    private func makeQuizTimersController() -> QuizTimersController {
+        QuizTimersController(
+            taskBag: taskBag,
+            settings: { [weak self] in self?.settings ?? .default },
+            quizState: { [weak self] in self?.quizState ?? .idle },
+            isRerecording: { [weak self] in self?.isRerecording ?? false },
+            setIsAutoRecording: { [weak self] in self?.isAutoRecording = $0 },
+            showAnswerConfirmation: { [weak self] in self?.recordingCoordinator.showAnswerConfirmation ?? false },
+            setAutoConfirmCountdown: { [weak self] in self?.recordingCoordinator.autoConfirmCountdown = $0 },
+            startRecording: { [weak self] in await self?.recordingCoordinator.startRecording() },
+            stopRecordingAndSubmit: { [weak self] in await self?.recordingCoordinator.stopRecordingAndSubmit() },
+            confirmAnswer: { [weak self] in await self?.recordingCoordinator.confirmAnswer() },
+            proceedToNextQuestion: { [weak self] in await self?.proceedToNextQuestion() }
+        )
+    }
+
+    /// #113 T5: builds the recording child. Every closure captures the façade
+    /// weakly — the child is façade-owned so `self` outlives it; `weak` just
+    /// breaks the ownership cycle (façade → child → closure → façade). Each
+    /// closure is the minimal scoped read/write of decision 4 — never a vm ref.
+    private func makeRecordingCoordinator() -> RecordingCoordinator {
+        RecordingCoordinator(
+            audioService: audioService,
+            networkService: networkService,
+            silenceDetectionService: silenceDetectionService,
+            sttService: sttService,
+            taskBag: taskBag,
+            settings: { [weak self] in self?.settings ?? .default },
+            quizState: { [weak self] in self?.quizState ?? .idle },
+            isAppForeground: { [weak self] in self?.isAppForeground ?? false },
+            currentQuestion: { [weak self] in self?.currentQuestion },
+            currentSession: { [weak self] in self?.currentSession },
+            submissionEpoch: { [weak self] in self?.submissionEpoch ?? 0 },
+            isAutoRecording: { [weak self] in self?.isAutoRecording ?? false },
+            setIsAutoRecording: { [weak self] in self?.isAutoRecording = $0 },
+            setIsRerecording: { [weak self] in self?.isRerecording = $0 },
+            setErrorMessage: { [weak self] in self?.errorMessage = $0 },
+            setMcqVoiceMatchedKey: { [weak self] in self?.mcqVoiceMatchedKey = $0 },
+            transition: { [weak self] state, caller in self?.transition(to: state, caller: caller) ?? false },
+            setError: { [weak self] message, context, error in
+                self?.setError(message: message, context: context, error: error)
+            },
+            handleError: { [weak self] error, context, fallback in
+                await self?.handleError(error, context: context, fallbackMessage: fallback)
+            },
+            handleQuizResponse: { [weak self] in await self?.handleQuizResponse($0) },
+            submitMCQAnswer: { [weak self] key, value in await self?.submitMCQAnswer(key: key, value: value) },
+            resubmitAnswer: { [weak self] answer, suppress in await self?.resubmitAnswer(answer, suppressAudio: suppress) },
+            skipQuestion: { [weak self] in await self?.skipQuestion() },
+            emitEarcon: { [weak self] in self?.emitEarcon($0) },
+            refreshCommandWindow: { [weak self] in self?.voiceCommandCoordinator.refreshCommandWindow() },
+            abortSkipUndoWindow: { [weak self] in self?.voiceCommandCoordinator.abortSkipUndoWindow() },
+            startAutoConfirmIfEnabled: { [weak self] in self?.quizTimersController.startAutoConfirmIfEnabled() },
+            cancelAutoConfirm: { [weak self] in self?.quizTimersController.cancelAutoConfirm() },
+            cancelAnswerTimer: { [weak self] in self?.quizTimersController.cancelAnswerTimer() },
+            cancelThinkingTime: { [weak self] in self?.quizTimersController.cancelThinkingTime() },
+            startAutoStopRecordingTimer: { [weak self] in self?.quizTimersController.startAutoStopRecordingTimer() },
+            cancelAutoStopRecordingTimer: { [weak self] in self?.quizTimersController.cancelAutoStopRecordingTimer() },
+            stopSilenceDetectionListening: { [weak self] in self?.audioDeviceState.stopSilenceDetectionListening() }
+        )
     }
 
     // MARK: - Quiz Flow
@@ -552,14 +720,22 @@ final class QuizViewModel: ObservableObject {
         language: String? = nil,
         packId: String? = nil
     ) async {
-        transition(to: .startingQuiz)
+        // #110: startNewQuiz is legal only from {.idle, .error, .finished} (cold
+        // start, Try Again, Play Again). Check single-flight BEFORE the transition
+        // attempt so a double-tap short-circuits without logging a spurious
+        // rejected transition, then hold isStarting for the whole flow via defer,
+        // mirroring isSubmittingAnswer (#79).
+        guard !isStarting else { return }
+        isStarting = true
+        defer { isStarting = false }
+
+        guard transition(to: .startingQuiz) else { return }
         errorMessage = nil
         #if DEBUG
             lastErrorDebugInfo = nil
         #endif
-        autoAdvanceEnabled = true // Reset auto-advance for new quiz
         isRerecording = false
-        consecutiveTranscriptionFailures = 0
+        recordingCoordinator.consecutiveTranscriptionFailures = 0
 
         // Use provided parameters or fall back to settings
         let quizMaxQuestions = maxQuestions ?? settings.numberOfQuestions
@@ -636,46 +812,15 @@ final class QuizViewModel: ObservableObject {
             if let audioInfo = response.audio,
                let questionUrl = audioInfo.questionUrl
             {
-                await playQuestionAudio(from: questionUrl)
+                await audioDeviceState.playQuestionAudio(from: questionUrl)
             } else {
                 // No audio — start silence detection then recording/timer
-                await startSilenceDetectionListening()
+                await audioDeviceState.startSilenceDetectionListening()
                 startRecordingOrTimer()
             }
 
-        } catch let error as NetworkError {
-            if case let .quotaLimitReached(limitError) = error {
-                let entitlementConfirmed = await resyncBeforePaywallIfLocallyEntitled()
-                audioService.deactivateSession()
-                if entitlementConfirmed {
-                    // #102 review follow-up: the resync just made the server agree
-                    // the user is entitled — don't strand them behind the paywall
-                    // for this cycle, ask them to retry instead. (setError transitions
-                    // to .error directly; quizState is still .startingQuiz here.)
-                    setError(
-                        message: String(localized: "Your subscription just synced — please try starting the quiz again.", comment: "Shown after a 429 quota error self-resolves via entitlement resync; user should retry starting the quiz"),
-                        context: .initialization
-                    )
-                } else {
-                    quotaLimitError = limitError
-                    showPaywall = true
-                    transition(to: .idle)
-                }
-            } else {
-                setError(
-                    message: String(localized: "Failed to start quiz: \(error.localizedDescription)", comment: "Quiz could not be started; placeholder is the underlying error"),
-                    context: .initialization,
-                    error: error
-                )
-            }
-
-            Logger.quiz.error("❌ Error starting quiz: \(error, privacy: .public)")
         } catch {
-            setError(
-                message: "Failed to start quiz: \(error.localizedDescription)",
-                context: .initialization,
-                error: error
-            )
+            await handleError(error, context: .initialization, fallbackMessage: String(localized: "Failed to start quiz", comment: "Quiz could not be started; error detail is appended"))
 
             Logger.quiz.error("❌ Error starting quiz: \(error, privacy: .public)")
         }
@@ -687,7 +832,7 @@ final class QuizViewModel: ObservableObject {
     /// so `DebugErrorDetailsView` can show the full chain without parsing log files.
     /// `model` overrides the derived display model for failures whose copy/CTA
     /// can't be inferred from the error or context (e.g. history at capacity).
-    func setError(message: String, context: ErrorContext, error: Error? = nil, model: AppErrorModel? = nil) { // internal for QuizViewModel+Recording
+    func setError(message: String, context: ErrorContext, error: Error? = nil, model: AppErrorModel? = nil) { // internal for tests; RecordingCoordinator reaches it via an injected closure
         #if DEBUG
             lastErrorDebugInfo = error.map { Self.formatDebugError($0, displayMessage: message) }
         #endif
@@ -698,11 +843,11 @@ final class QuizViewModel: ObservableObject {
     }
 
     /// Handle an error, detecting 429 daily limit and showing paywall instead of error state
-    private func handleError(_ error: Error, context: ErrorContext, fallbackMessage: String) async {
+    func handleError(_ error: Error, context: ErrorContext, fallbackMessage: String) async { // internal for tests; RecordingCoordinator reaches it via an injected closure
         if let networkError = error as? NetworkError,
            case let .quotaLimitReached(limitError) = networkError
         {
-            let entitlementConfirmed = await resyncBeforePaywallIfLocallyEntitled()
+            let entitlementConfirmed = await entitlementReconciler.resyncBeforePaywallIfLocallyEntitled()
             audioService.deactivateSession()
             if entitlementConfirmed {
                 // #102 review follow-up: skip the paywall when the resync just
@@ -713,8 +858,7 @@ final class QuizViewModel: ObservableObject {
                     context: context
                 )
             } else {
-                quotaLimitError = limitError
-                showPaywall = true
+                entitlementReconciler.presentQuotaPaywall(limitError)
                 transition(to: .idle)
             }
         } else {
@@ -751,126 +895,126 @@ final class QuizViewModel: ObservableObject {
         }
     #endif
 
-    /// Proactive paywall entry (#93 subscription IAP — paywall was reachable
-    /// only via the 429 quota handlers). Called from the Home free-plan card
-    /// and the Settings subscription row. Clears any stale quota error first
-    /// so PaywallView shows the upgrade pitch, not leftover "limit reached" copy.
+    // MARK: - Entitlements / paywall — forwarded to EntitlementReconciler (#113 T1)
+
+    /// Proactive paywall entry (#93) — see `EntitlementReconciler.presentPaywall`.
     func presentPaywall() {
-        quotaLimitError = nil
-        showPaywall = true
+        entitlementReconciler.presentPaywall()
     }
 
-    /// Fetch current usage info from backend (for displaying remaining
-    /// questions). Identity is the bearer subject, derived server-side —
-    /// the same account purchases land on (#96 P1).
+    /// Fetch current usage info — see `EntitlementReconciler.refreshUsage`.
     func refreshUsage() async {
-        do {
-            usageInfo = try await networkService.getUsage()
-        } catch {
-            Logger.network.warning("⚠️ Failed to fetch usage info: \(error, privacy: .public)")
-        }
+        await entitlementReconciler.refreshUsage()
     }
 
-    /// Refresh usage after a purchase or restore (subscription or pack).
-    /// Entitlement is granted server-side via RC webhooks (#93) — the client
-    /// never self-grants (the old `setPremium` call sent no admin key and
-    /// always 401'd, #60). RC webhooks land seconds-to-minutes after purchase,
-    /// so sync via the purchase→webhook propagation bridge
-    /// (`POST /entitlements/sync`, bounded retry+backoff — same helper the
-    /// launch/foreground reconcile uses, #102 finding 1) BEFORE re-fetching
-    /// `/usage` — otherwise a just-paid user can still hit the 429 gate until
-    /// the mirror catches up. A short bounded re-check here (not a new polling
-    /// loop) gives `StoreManager.purchase()` a real chance to land on
-    /// `.success` instead of the transient `.activating` state (#102 finding
-    /// 4) before the caller has to fall back to later convergence points.
-    ///
-    /// Returns whether the refreshed usage shows an active entitlement
-    /// (premium OR a non-zero pack credit balance) — `StoreManager.
-    /// restorePurchases()` uses this to detect a pack-only recovery, since
-    /// `isPurchased` never reflects consumable packs (#102 finding 3); `.purchase()`
-    /// uses it to decide between `.success` and `.activating` (#102 finding 4).
+    /// Post-purchase/restore sync — see `EntitlementReconciler.notifyPremiumPurchased`.
+    /// (`StoreManager` relies on the returned entitlement flag.)
     @discardableResult
     func notifyPremiumPurchased() async -> Bool {
-        await syncEntitlementsWithRetry()
-        await refreshUsage()
-        return (usageInfo?.isPremium ?? false) || (usageInfo?.creditBalance ?? 0) > 0
+        await entitlementReconciler.notifyPremiumPurchased()
     }
 
-    /// Re-syncs entitlements (bounded retry+backoff) then refreshes usage —
-    /// single-flight so a launch and scene `.active` (or two rapid
-    /// foregrounds) collapse onto one attempt rather than firing duplicate
-    /// network calls. Called from `init` (launch) and
-    /// `handleScenePhase(.active)` (foreground) — #102 findings 1+2. The
-    /// server remains the sole source of truth; this only asks it to catch up
-    /// sooner than the next purchase/sign-in event would.
-    func reconcileEntitlements() async {
-        if let entitlementReconcileTask {
-            await entitlementReconcileTask.value
-            return
-        }
-        let task = Task { [weak self] in
-            guard let self else { return }
-            await self.syncEntitlementsWithRetry()
-            await self.refreshUsage()
-        }
-        entitlementReconcileTask = task
-        await task.value
-        entitlementReconcileTask = nil
+    // MARK: - Audio — forwarded to AudioDeviceState (#113 T2)
+
+    // Permanent decision-2 forwards: every one has a verified View/app-target
+    // caller (T8 census). Forwards that only MAIN or +ScenePhase called were
+    // deleted in T8 — the façade calls `audioDeviceState.x()` directly instead.
+
+    /// See `AudioDeviceState.canReplayAudio` (#59.5).
+    var canReplayAudio: Bool { audioDeviceState.canReplayAudio }
+
+    /// On-demand question replay — see `AudioDeviceState.replayQuestionAudio`.
+    func replayQuestionAudio() async {
+        await audioDeviceState.replayQuestionAudio()
     }
 
-    /// Bounded exponential-backoff retry for the entitlement sync (3
-    /// attempts) — a single missed sync (offline in a tunnel, RC webhook lag)
-    /// must not strand a paying user behind the paywall until their next
-    /// purchase/sign-in event. Failure after the final attempt is logged only
-    /// (Sentry breadcrumb via `SentryLog`) — the webhook still lands on its
-    /// own; the client never grants anything itself.
-    private func syncEntitlementsWithRetry(maxAttempts: Int = 3) async {
-        for attempt in 1...maxAttempts {
-            guard !Task.isCancelled else { return }
-            do {
-                try await networkService.syncEntitlements()
-                return
-            } catch {
-                guard attempt < maxAttempts else {
-                    SentryLog.warn(
-                        "entitlements/sync failed after \(attempt) attempts (webhook will still catch up)",
-                        category: .network,
-                        attributes: ["error": String(describing: error)]
-                    )
-                    return
-                }
-                let backoffSeconds = 0.2 * pow(2.0, Double(attempt - 1))
-                try? await Task.sleep(for: .seconds(backoffSeconds))
-            }
-        }
+    /// See `AudioDeviceState.toggleMute` (founder bug 2026-07-11).
+    func toggleMute() async {
+        await audioDeviceState.toggleMute()
     }
 
-    /// Bounded pre-paywall reconciliation (#102 finding 1): if RC's local
-    /// cache already reports the customer entitled, the 429 just hit is
-    /// almost certainly the server mirror lagging behind a purchase/restore
-    /// whose sync failed or whose webhook hasn't landed yet — give it a
-    /// short, single-attempt window before the paywall renders, instead of
-    /// making the UI hang for the full launch/foreground retry loop. If it
-    /// doesn't land in time, show the paywall anyway — the next
-    /// launch/foreground reconcile (or the webhook) will still catch it up.
-    ///
-    /// Returns whether the just-refreshed usage now confirms an active
-    /// entitlement (premium OR a non-zero pack credit) — callers use this to
-    /// skip presenting the paywall for the cycle that just resynced, instead
-    /// of showing it unconditionally regardless of outcome (#102 review
-    /// follow-up).
-    @discardableResult
-    func resyncBeforePaywallIfLocallyEntitled() async -> Bool { // internal for QuizViewModel+Recording
-        guard isLocallyEntitled() else { return false }
-        let networkService = self.networkService
-        await withTaskGroup(of: Void.self) { group in
-            group.addTask { try? await networkService.syncEntitlements() }
-            group.addTask { try? await Task.sleep(for: .seconds(2)) }
-            await group.next()
-            group.cancelAll()
-        }
-        await refreshUsage()
-        return (usageInfo?.isPremium ?? false) || (usageInfo?.creditBalance ?? 0) > 0
+    /// See `AudioDeviceState.toggleAudioMode`.
+    func toggleAudioMode() {
+        audioDeviceState.toggleAudioMode()
+    }
+
+    /// See `AudioDeviceState.refreshAudioDevices`.
+    func refreshAudioDevices() {
+        audioDeviceState.refreshAudioDevices()
+    }
+
+    /// See `AudioDeviceState.setPreferredInputDevice(_:)`.
+    func setPreferredInputDevice(_ device: AudioDevice?) {
+        audioDeviceState.setPreferredInputDevice(device)
+    }
+
+    // MARK: - Recording — forwarded to RecordingCoordinator (#113 T5)
+
+    // Permanent decision-2 forwards: every one has a verified View/app-target
+    // caller (T8 census — QuestionView et al.). Façade- and +ScenePhase-only
+    // forwards were deleted in T8; those call `recordingCoordinator.x()` direct.
+
+    /// Mic-button entry — see `RecordingCoordinator.toggleRecording`.
+    func toggleRecording() async {
+        await recordingCoordinator.toggleRecording()
+    }
+
+    /// See `RecordingCoordinator.confirmAnswer`.
+    func confirmAnswer() async {
+        await recordingCoordinator.confirmAnswer()
+    }
+
+    /// See `RecordingCoordinator.beginEditingTranscript`.
+    func beginEditingTranscript() {
+        recordingCoordinator.beginEditingTranscript()
+    }
+
+    /// See `RecordingCoordinator.cancelEditingTranscript`.
+    func cancelEditingTranscript() {
+        recordingCoordinator.cancelEditingTranscript()
+    }
+
+    /// See `RecordingCoordinator.handleAnswerConfirmationDismissed`.
+    func handleAnswerConfirmationDismissed() {
+        recordingCoordinator.handleAnswerConfirmationDismissed()
+    }
+
+    /// See `RecordingCoordinator.rerecordAnswer` (#108A).
+    func rerecordAnswer() {
+        recordingCoordinator.rerecordAnswer()
+    }
+
+    /// See `RecordingCoordinator.cancelProcessing`.
+    func cancelProcessing() {
+        recordingCoordinator.cancelProcessing()
+    }
+
+    /// Handle barge-in: user spoke during TTS playback on external audio route.
+    /// Stays façade-resident (not in AudioDeviceState) — it fans out into the
+    /// recording + timer clusters; the child reaches it via the injected
+    /// `onBargeIn` closure (decision 4).
+    func handleBargeIn() async {
+        guard quizState == .askingQuestion else { return }
+
+        Logger.voice.info("🗣️ Barge-in triggered — stopping TTS and starting recording")
+
+        // 1. Stop TTS immediately
+        await audioDeviceState.stopAnyPlayingAudio()
+
+        // 2. Clear barge-in activation so a re-fire isn't triggered by the
+        //    teardown tail of TTS audio.
+        silenceDetectionService.setTTSPlaybackActive(false)
+
+        // 3. Wait for audio hardware to settle
+        try? await Task.sleep(nanoseconds: 500_000_000)
+
+        // 4. Guard again — state may have changed during sleep
+        guard quizState == .askingQuestion else { return }
+
+        // 5. Auto-start recording (same as post-TTS flow)
+        quizTimersController.cancelAnswerTimer()
+        isAutoRecording = true
+        await recordingCoordinator.startRecording()
     }
 
     /// Whether to retry with a new session (for initialization errors)
@@ -917,14 +1061,25 @@ final class QuizViewModel: ObservableObject {
     /// The backend MCQ fast-path matches both keys and values, so this works
     /// regardless of whether the evaluator checks by key or value.
     func submitMCQAnswer(key _: String, value: String) async {
+        // #110 Bug 4: a fresh MCQ answer is legal only while the question is open
+        // (.askingQuestion) or being voice-answered (.recording). A delayed tap
+        // submit can fire after its same-key voice twin already submitted and
+        // moved the state on — and .showingResult → .processing is a legal
+        // transition (owned by resubmitAnswer), so the transition guard below
+        // cannot absorb that late duplicate by itself.
+        guard quizState == .askingQuestion || quizState == .recording else { return }
+
+        // #110 Bug 2: starting an answer (voice or tap) supersedes any pending skip.
+        voiceCommandCoordinator.abortSkipUndoWindow()
+
         guard let sessionId = currentSession?.id else {
             errorMessage = String(localized: "No active session", comment: "Inline error: no quiz session is currently active")
             return
         }
 
         submissionEpoch &+= 1 // #79: supersede any suspended voice-transcript handler
-        cancelAnswerTimer()
-        cancelAutoStopRecordingTimer()
+        quizTimersController.cancelAnswerTimer()
+        quizTimersController.cancelAutoStopRecordingTimer()
         // #79: a rejected transition means another submission already claimed
         // .processing (e.g. a double-tapped option) — bail instead of firing a
         // second concurrent submit.
@@ -963,23 +1118,23 @@ final class QuizViewModel: ObservableObject {
         // Dismiss the sheet + auto-confirm and drop the STT event listener up front
         // so the typed answer wins and no stale voice sheet resurfaces.
         showAnswerConfirmation = false
-        cancelAutoConfirm()
+        quizTimersController.cancelAutoConfirm()
         taskBag.cancel(.sttEvent)
 
         // Stop any in-flight voice machinery so the typed answer wins the race
         // against a silent auto-stop submission. Answer/thinking timers are left
         // running on purpose — they no-op once state ≠ .askingQuestion.
         taskBag.cancel(.voiceSubmission)
-        cancelAutoStopRecordingTimer()
-        cancelSilenceDetection()
+        quizTimersController.cancelAutoStopRecordingTimer()
+        recordingCoordinator.cancelSilenceDetection()
         isAutoRecording = false
-        speechDetectedDuringAutoRecord = false
+        recordingCoordinator.speechDetectedDuringAutoRecord = false
         // Streaming STT can still be live even after the committed-transcript
         // handler left .recording (it suspends in disconnect() before flipping
         // state), so tear it down regardless of quizState. Batch recording is
         // only ever live while .recording.
         if isStreamingSTT {
-            cleanupStreamingSTT()
+            recordingCoordinator.cleanupStreamingSTT()
         } else if quizState == .recording {
             _ = try? await audioService.stopRecording()
         }
@@ -1017,11 +1172,11 @@ final class QuizViewModel: ObservableObject {
         guard let sessionId = currentSession?.id else { return }
 
         submissionEpoch &+= 1 // #79: supersede any suspended voice-transcript handler
-        cancelAnswerTimer()
-        cancelThinkingTime()
+        quizTimersController.cancelAnswerTimer()
+        quizTimersController.cancelThinkingTime()
 
         // Stop any playing question audio immediately
-        await stopAnyPlayingAudio()
+        await audioDeviceState.stopAnyPlayingAudio()
 
         transition(to: .skipping)
         errorMessage = nil
@@ -1043,54 +1198,17 @@ final class QuizViewModel: ObservableObject {
         }
     }
 
-    /// Open the skip undo-window (#77, task 77.9). A recognized "skip" on the
-    /// question screen does NOT commit immediately: it opens a ~2.5 s window that a
-    /// tap can abort (`abortSkipUndoWindow`). On expiry (window unaborted) the skip
-    /// commits via `skipQuestion()`. Idempotent while a window is already open.
-    /// `duration` is injectable so tests don't wait the full 2.5 s.
-    ///
-    /// Deferred to Session 5: aborting via a spoken cancel word ("stop"/"no") — that
-    /// needs the cancel-word listener path that ships with the earcons. This method
-    /// leaves the abort seam (`abortSkipUndoWindow`) and the open-event seam
-    /// (`onSkipUndoWindowOpened`) ready for it.
-    func beginSkipUndoWindow(duration: TimeInterval = UndoWindow.defaultDuration) {
-        guard quizState == .askingQuestion, pendingSkipWindow == nil else { return }
-        cancelAnswerTimer()
-        cancelThinkingTime()
-        pendingSkipWindow = UndoWindow(duration: duration)
-        emitEarcon(.skipConfirm) // 77.10 skip-confirm tone — undo-window opened
-        onSkipUndoWindowOpened?() // observation seam (deferred UI / tests)
-
-        let task = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(duration))
-            guard let self, !Task.isCancelled else { return }
-            guard self.pendingSkipWindow != nil else { return } // aborted
-            self.pendingSkipWindow = nil
-            await self.skipQuestion()
-        }
-        taskBag.add(task, key: .skipUndo)
-        Logger.voice.info("⏭️ Skip undo-window opened (\(duration, privacy: .public)s)")
-    }
-
-    /// Abort a pending skip (a tap on the undo affordance). No-op if none is open.
-    func abortSkipUndoWindow() {
-        guard pendingSkipWindow != nil else { return }
-        pendingSkipWindow = nil
-        taskBag.cancel(.skipUndo)
-        Logger.voice.info("↩️ Skip undo-window aborted")
-    }
-
     /// End the current quiz session
     func endQuiz() async {
         guard let sessionId = currentSession?.id else { return }
 
-        cancelAnswerTimer()
-        cancelAutoStopRecordingTimer()
+        quizTimersController.cancelAnswerTimer()
+        quizTimersController.cancelAutoStopRecordingTimer()
 
         do {
             try await networkService.endSession(sessionId: sessionId)
             persistenceStore.clearSession()
-            await stopAnyPlayingAudio() // Await properly (we're async here)
+            await audioDeviceState.stopAnyPlayingAudio() // Await properly (we're async here)
             resetState()
 
             Logger.quiz.info("🎮 Quiz ended")
@@ -1154,7 +1272,7 @@ final class QuizViewModel: ObservableObject {
         currentQuestionPaused = false
 
         Task {
-            await startAutoAdvanceCountdown(duration: settings.autoAdvanceDelay, audioDuration: 0)
+            await quizTimersController.startAutoAdvanceCountdown(duration: settings.autoAdvanceDelay, audioDuration: 0)
         }
 
         Logger.quiz.info("▶️ Resuming auto-advance countdown (staying on result)")
@@ -1203,15 +1321,15 @@ final class QuizViewModel: ObservableObject {
     func startRecordingOrTimer() {
         guard quizState == .askingQuestion else { return }
 
-        if settings.autoRecordEnabled && silenceDetectionService != nil && !isRerecording {
+        if settings.autoRecordEnabled && !isRerecording {
             // Auto-record path: thinking time countdown → auto-start recording
-            startThinkingTimeCountdown()
+            quizTimersController.startThinkingTimeCountdown()
         } else {
-            startAnswerTimer()
+            quizTimersController.startAnswerTimer()
         }
     }
 
-    func handleQuizResponse(_ response: QuizResponse) async { // internal for QuizViewModel+Recording
+    func handleQuizResponse(_ response: QuizResponse) async { // internal for tests; RecordingCoordinator reaches it via an injected closure
         // Guard against concurrent calls (safe: @MainActor serializes access)
         guard !isProcessingResponse else {
             Logger.quiz.warning("⚠️ handleQuizResponse already in progress, ignoring duplicate call")
@@ -1221,7 +1339,7 @@ final class QuizViewModel: ObservableObject {
         defer { isProcessingResponse = false }
 
         // Reset transcription failure counter on successful response
-        consecutiveTranscriptionFailures = 0
+        recordingCoordinator.consecutiveTranscriptionFailures = 0
 
         // Cancel any previous auto-advance task
         taskBag.cancel(.autoAdvance)
@@ -1253,12 +1371,6 @@ final class QuizViewModel: ObservableObject {
         guard let question = currentQuestion else {
             setError(message: String(localized: "No question to evaluate", comment: "Inline error: result arrived but there is no current question to pair it with"), context: .general)
             return
-        }
-
-        // Update score and question count
-        if let participant = response.session.participants.first {
-            score = participant.score
-            questionsAnswered = participant.answeredCount
         }
 
         // Update quiz stats (streak tracking)
@@ -1322,14 +1434,14 @@ final class QuizViewModel: ObservableObject {
                 guard let audioInfo = response.audio else { return 0.0 }
                 // Prioritize base64 (enhanced feedback) over URL (generic feedback)
                 if let base64 = audioInfo.feedbackAudioBase64 {
-                    return await playFeedbackAudioBase64(base64)
+                    return await audioDeviceState.playFeedbackAudioBase64(base64)
                 } else if let feedbackUrl = audioInfo.feedbackUrl {
-                    return await playFeedbackAudio(from: feedbackUrl)
+                    return await audioDeviceState.playFeedbackAudio(from: feedbackUrl)
                 }
                 return 0.0
             }()
 
-            await startAutoAdvanceCountdown(duration: settings.autoAdvanceDelay, audioDuration: 0)
+            await quizTimersController.startAutoAdvanceCountdown(duration: settings.autoAdvanceDelay, audioDuration: 0)
 
             // Keep the feedback audio playing to completion (and surface any failure log)
             // before this task ends; the countdown above is already running concurrently.
@@ -1366,7 +1478,7 @@ final class QuizViewModel: ObservableObject {
 
         // CRITICAL: Stop any playing feedback audio before transitioning
         // This ensures clean state transition from ResultView to QuestionView
-        await stopAnyPlayingAudio()
+        await audioDeviceState.stopAnyPlayingAudio()
 
         // Small delay to ensure audio cleanup completes
         try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
@@ -1394,7 +1506,7 @@ final class QuizViewModel: ObservableObject {
 
             // Play next question audio if available
             if let questionUrl = nextQuestionAudioUrl {
-                await playQuestionAudio(from: questionUrl)
+                await audioDeviceState.playQuestionAudio(from: questionUrl)
                 nextQuestionAudioUrl = nil // Clear after use
             } else {
                 // No audio — auto-record or timer based on settings
@@ -1408,11 +1520,11 @@ final class QuizViewModel: ObservableObject {
 
     /// Repeat the current question audio (public for UI button)
     func repeatQuestion() async {
-        if quizState == .askingQuestion, let audioUrl = currentQuestionAudioUrl {
-            cancelAnswerTimer()
-            cancelThinkingTime()
-            await stopAnyPlayingAudio()
-            await playQuestionAudio(from: audioUrl)
+        if quizState == .askingQuestion, let audioUrl = recordingCoordinator.currentQuestionAudioUrl {
+            quizTimersController.cancelAnswerTimer()
+            quizTimersController.cancelThinkingTime()
+            await audioDeviceState.stopAnyPlayingAudio()
+            await audioDeviceState.playQuestionAudio(from: audioUrl)
         }
     }
 
@@ -1421,10 +1533,10 @@ final class QuizViewModel: ObservableObject {
         taskBag.cancelAll()
 
         // Clean up streaming STT
-        cleanupStreamingSTT()
+        recordingCoordinator.cleanupStreamingSTT()
 
         // Stop silence detection / barge-in listening
-        stopSilenceDetectionListening()
+        audioDeviceState.stopSilenceDetectionListening()
 
         // Reset all state
         // Note: audio stop must be awaited by async callers (endQuiz) before resetState().
@@ -1436,31 +1548,30 @@ final class QuizViewModel: ObservableObject {
         // the quiz is torn down (resetToHome / endQuiz / paywall reset).
         audioService.deactivateSession()
         currentQuestion = nil
-        currentSession = nil
-        score = 0.0
-        questionsAnswered = 0
+        currentSession = nil // also zeroes the derived score/questionsAnswered (T7)
         sessionCorrectCount = 0
         sessionIncorrectCount = 0
         errorMessage = nil
         nextQuestionAudioUrl = nil
         nextQuestion = nil
-        currentQuestionAudioUrl = nil
-        autoAdvanceCountdown = 0
-        answerTimerCountdown = 0
-        thinkingTimeCountdown = 0
-        currentQuestionPaused = false
-        autoAdvanceEnabled = true
         isRerecording = false
         isAutoRecording = false
-        speechDetectedDuringAutoRecord = false
-        isStreamingSTT = false
-        liveTranscript = ""
-        pendingResponse = nil
-        transcribedAnswer = ""
-        showAnswerConfirmation = false
+        // The two ownerless façade fields (T7) — no child owns them, so this is
+        // their single explicit reset site.
+        activeErrorModel = nil
+        mcqVoiceMatchedKey = nil
         // Ending a quiz from the minimized widget must dismiss the widget —
         // otherwise a stale card floats over Home (#54 task 54.6).
         isMinimized = false
+        // T7 unified reset model: full teardown clears every child's scoped
+        // state through one reset() per child instead of scattered per-field
+        // writes (paywall/mic-picker sheets + command capture + timers +
+        // recording/confirmation clusters).
+        entitlementReconciler.reset()
+        audioDeviceState.reset()
+        voiceCommandCoordinator.reset()
+        quizTimersController.reset()
+        recordingCoordinator.reset()
     }
 
     // MARK: - Question History Management
@@ -1475,11 +1586,6 @@ final class QuizViewModel: ObservableObject {
         persistenceStore.clearHistory()
 
         Logger.persistence.info("🗑️ Question history reset by user")
-    }
-
-    /// Whether on-device silence detection / auto-record is available (iOS 26+).
-    var silenceDetectionAvailable: Bool {
-        silenceDetectionService != nil
     }
 }
 
@@ -1506,8 +1612,7 @@ final class QuizViewModel: ObservableObject {
                 persistenceStore: MockPersistenceStore()
             )
             viewModel.currentQuestion = Question.preview
-            viewModel.score = 1.0
-            viewModel.questionsAnswered = 1
+            viewModel.currentSession = QuizSession.preview(score: 1.0, answered: 1)
             viewModel.quizState = .showingResult(
                 question: Question.preview,
                 evaluation: Evaluation.previewCorrect

@@ -182,9 +182,10 @@ struct ResultView: View {
     /// #108B: auto-advance countdown lives inside the "Next question" CTA
     /// (Waze-like drain + "Ns" chip, pen `ilWTA`/`4EBgp`) — the separate
     /// "Next in Ns" bar is gone.
+    /// #113 S6a deleted the `autoAdvanceEnabled` axis (write-only-true — no
+    /// Settings toggle ever existed), so "active" = not paused && still ticking.
     private var autoAdvanceActive: Bool {
-        viewModel.autoAdvanceEnabled
-            && !viewModel.currentQuestionPaused
+        !viewModel.currentQuestionPaused
             && viewModel.autoAdvanceCountdown > 0
     }
 
@@ -252,8 +253,7 @@ struct ResultView: View {
     // MARK: - Derived
 
     private func pauseAutoAdvanceIfActive() {
-        guard viewModel.autoAdvanceEnabled,
-              !viewModel.currentQuestionPaused,
+        guard !viewModel.currentQuestionPaused,
               viewModel.autoAdvanceCountdown > 0 else { return }
         viewModel.pauseQuiz()
     }

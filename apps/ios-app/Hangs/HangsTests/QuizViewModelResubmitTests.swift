@@ -8,11 +8,11 @@
 //  QuizViewModelTests.swift was already 1188 lines (audit A2-6).
 //
 //  Branch under test:
-//    QuizViewModel+Recording.swift:401-418  – confirmAnswer() snapshots
+//    RecordingCoordinator+Confirmation.swift – confirmAnswer() snapshots
 //      `silent = transcriptWasEdited` then calls resubmitAnswer(suppressAudio:)
 //    QuizViewModel.swift:598-644            – resubmitAnswer passes
 //      `audio: !suppressAudio && settings.audioMode != "off"`
-//    QuizViewModel+Recording.swift:429-434  – beginEditingTranscript() sets
+//    RecordingCoordinator+Confirmation.swift – beginEditingTranscript() sets
 //      transcriptWasEdited = true
 //
 
@@ -106,11 +106,11 @@ struct QuizViewModelResubmitTests {
         viewModel.showAnswerConfirmation = true
         viewModel.quizState = .processing
         // pendingResponse must be nil so confirmAnswer() takes the streaming path.
-        viewModel.pendingResponse = nil
+        viewModel.recordingCoordinator.pendingResponse = nil
 
         // User taps the pencil — this is the entry point for the "edited" branch.
         viewModel.beginEditingTranscript()
-        #expect(viewModel.transcriptWasEdited == true)
+        #expect(viewModel.recordingCoordinator.transcriptWasEdited == true)
 
         // User taps Confirm (without changing text — we're testing the flag, not editing).
         await viewModel.confirmAnswer()
@@ -118,7 +118,7 @@ struct QuizViewModelResubmitTests {
         // The captured audio flag must be false (silent = transcriptWasEdited was true).
         #expect(mockNetwork.capturedTextInputAudio == false)
         // transcriptWasEdited must be reset so the next round starts clean.
-        #expect(viewModel.transcriptWasEdited == false)
+        #expect(viewModel.recordingCoordinator.transcriptWasEdited == false)
     }
 
     // MARK: - Test 5: Auto-confirm must not cancel its own submit (54.5)
@@ -138,10 +138,10 @@ struct QuizViewModelResubmitTests {
         viewModel.showAnswerConfirmation = true
         viewModel.quizState = .processing
         // pendingResponse nil → confirmAnswer() takes the streaming resubmit path.
-        viewModel.pendingResponse = nil
+        viewModel.recordingCoordinator.pendingResponse = nil
 
         // Fire the real auto-confirm countdown (1s injected for test speed).
-        viewModel.startAutoConfirmIfEnabled(duration: 1)
+        viewModel.quizTimersController.startAutoConfirmIfEnabled(duration: 1)
 
         // Countdown (1s) + handed-off submit; poll up to 4s.
         for _ in 0 ..< 40 where !viewModel.quizState.isShowingResult {

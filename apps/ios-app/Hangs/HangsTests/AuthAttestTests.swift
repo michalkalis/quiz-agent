@@ -12,11 +12,12 @@
 //
 
 import Foundation
+@testable import Hangs
 import os
 import Testing
-@testable import Hangs
 
 // MARK: - AttestStubURLProtocol
+
 //
 // A dedicated URLProtocol with its OWN process-wide handler, independent of
 // AuthServiceTests' AuthStubURLProtocol and NetworkServiceTests' StubURLProtocol.
@@ -25,19 +26,28 @@ import Testing
 // statics + sessions let all three auth suites run concurrently and safely.
 
 final class AttestStubURLProtocol: URLProtocol, @unchecked Sendable {
+    override nonisolated init(
+        request: URLRequest,
+        cachedResponse: CachedURLResponse?,
+        client: (any URLProtocolClient)?
+    ) {
+        super.init(request: request, cachedResponse: cachedResponse, client: client)
+    }
+
     private nonisolated static let handlerLock = OSAllocatedUnfairLock<
         ((@Sendable (URLRequest) throws -> (HTTPURLResponse, Data))?
-    )>(initialState: nil)
+        )
+    >(initialState: nil)
 
     nonisolated static var handler: (@Sendable (URLRequest) throws -> (HTTPURLResponse, Data))? {
         get { handlerLock.withLock { $0 } }
         set { handlerLock.withLock { $0 = newValue } }
     }
 
-    nonisolated override class func canInit(with request: URLRequest) -> Bool { true }
-    nonisolated override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+    override nonisolated class func canInit(with _: URLRequest) -> Bool { true }
+    override nonisolated class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
 
-    nonisolated override func startLoading() {
+    override nonisolated func startLoading() {
         let request = self.request
         DispatchQueue.global(qos: .userInitiated).async {
             guard let handler = Self.handler else {
@@ -55,7 +65,7 @@ final class AttestStubURLProtocol: URLProtocol, @unchecked Sendable {
         }
     }
 
-    nonisolated override func stopLoading() {}
+    override nonisolated func stopLoading() {}
 
     static func makeSession() -> URLSession {
         let cfg = URLSessionConfiguration.ephemeral
@@ -122,10 +132,9 @@ private final class MemTokenStore: TokenStore, @unchecked Sendable {
 
 @Suite("AuthService — App Attest bootstrap", .serialized)
 struct AuthAttestTests {
+    private nonisolated static let challengeJSON = #"{"challenge":"chal-1","expires_in":120}"#
 
-    private static let challengeJSON = #"{"challenge":"chal-1","expires_in":120}"#
-
-    private func tokenJSON(_ access: String, _ anon: String) -> String {
+    private nonisolated func tokenJSON(_ access: String, _ anon: String) -> String {
         #"""
         {"access_token":"\#(access)","refresh_token":"r-\#(access)","token_type":"bearer","expires_in":900,"anon_id":"\#(anon)"}
         """#

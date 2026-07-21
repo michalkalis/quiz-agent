@@ -81,14 +81,14 @@ struct SharedEngineTests {
             let (vm, silence, audio, _) = makeStreamingVM()
 
             // Phase 1 — asking: listener engine live, streaming engine down.
-            await vm.startSilenceDetectionListening()
+            await vm.audioDeviceState.startSilenceDetectionListening()
             #expect(silence.isListening == true)
             #expect(audio.audioEngineActive == false)
             assertNeverBothLive(silence, audio, "asking")
 
             // Phase 2 — record: startRecording routes to the streaming path, which
             // must stop the listener BEFORE the streaming engine starts.
-            await vm.startRecording()
+            await vm.recordingCoordinator.startRecording()
             await waitUntil({ audio.audioEngineActive }, "streaming engine never started")
             #expect(silence.isListening == false, "listener must be torn down during the answer stream")
             #expect(audio.audioEngineActive == true)
@@ -102,11 +102,11 @@ struct SharedEngineTests {
             let (vm, silence, audio, _) = makeStreamingVM()
 
             // ask (listening)
-            await vm.startSilenceDetectionListening()
+            await vm.audioDeviceState.startSilenceDetectionListening()
             assertNeverBothLive(silence, audio, "ask")
 
             // record (streaming)
-            await vm.startRecording()
+            await vm.recordingCoordinator.startRecording()
             await waitUntil({ audio.audioEngineActive }, "streaming engine never started")
             assertNeverBothLive(silence, audio, "record")
 
@@ -115,7 +115,7 @@ struct SharedEngineTests {
             audio.stopStreamingRecording()
             vm.isStreamingSTT = false
             vm.quizState = .processing
-            await vm.syncCommandListenerWindow()
+            await vm.voiceCommandCoordinator.syncCommandListenerWindow()
             #expect(audio.audioEngineActive == false)
             #expect(silence.isListening == true, "listener re-arms on the confirmation window")
             assertNeverBothLive(silence, audio, "confirm")
@@ -138,8 +138,8 @@ struct SharedEngineTests {
             vm.currentQuestion = Fixtures.makeQuestion()
             vm.quizState = .askingQuestion
 
-            await vm.startSilenceDetectionListening()
-            await vm.startRecording()
+            await vm.audioDeviceState.startSilenceDetectionListening()
+            await vm.recordingCoordinator.startRecording()
 
             // Batch uses AVAudioRecorder — the streaming engine is never created,
             // so there is no two-engine condition even though VAD may still run.

@@ -58,10 +58,10 @@ struct StartCommandTests {
     func flagOnStartsRecording() async {
         await withMainSerialExecutor {
             let (vm, audio) = makeStartVM()
-            vm.voiceStartOnQuestionEnabled = true
+            vm.voiceCommandCoordinator.voiceStartOnQuestionEnabled = true
             vm.quizState = .askingQuestion
 
-            vm.handleRecognizedCommand(.start)
+            vm.voiceCommandCoordinator.handleRecognizedCommand(.start)
 
             await waitUntil({ vm.quizState == .recording }, "start did not open the mic")
             #expect(vm.quizState == .recording)
@@ -73,10 +73,10 @@ struct StartCommandTests {
     func flagOffIsInert() async {
         await withMainSerialExecutor {
             let (vm, audio) = makeStartVM()
-            vm.voiceStartOnQuestionEnabled = false
+            vm.voiceCommandCoordinator.voiceStartOnQuestionEnabled = false
             vm.quizState = .askingQuestion
 
-            vm.handleRecognizedCommand(.start)
+            vm.voiceCommandCoordinator.handleRecognizedCommand(.start)
 
             // Give any (wrongly) spawned Task a chance to run — it must not.
             for _ in 0..<40 { await Task.yield() }
@@ -89,14 +89,14 @@ struct StartCommandTests {
     func flagOffKeepsOtherCommands() async {
         await withMainSerialExecutor {
             let (vm, audio) = makeStartVM()
-            vm.voiceStartOnQuestionEnabled = false
+            vm.voiceCommandCoordinator.voiceStartOnQuestionEnabled = false
             vm.quizState = .askingQuestion
-            vm.currentQuestionAudioUrl = "https://example.com/q.opus"
+            vm.recordingCoordinator.currentQuestionAudioUrl = "https://example.com/q.opus"
 
             // 'repeat' is a separate question-screen command — unaffected by the
             // start flag. It must still drive the TTS-replay path (durable signal:
             // the question audio was played back).
-            vm.handleRecognizedCommand(.repeatQuestion)
+            vm.voiceCommandCoordinator.handleRecognizedCommand(.repeatQuestion)
             await waitUntil({ audio.playOpusCallCount >= 1 }, "repeat did not replay the question")
             #expect(audio.playOpusCallCount >= 1)
         }
@@ -107,10 +107,10 @@ struct StartCommandTests {
         await withMainSerialExecutor {
             for state in [QuizState.processing, .startingQuiz, .finished] {
                 let (vm, audio) = makeStartVM()
-                vm.voiceStartOnQuestionEnabled = true
+                vm.voiceCommandCoordinator.voiceStartOnQuestionEnabled = true
                 vm.quizState = state
 
-                vm.handleRecognizedCommand(.start)
+                vm.voiceCommandCoordinator.handleRecognizedCommand(.start)
 
                 for _ in 0..<40 { await Task.yield() }
                 #expect(vm.quizState == state, "start must be inert in \(state.label)")
@@ -123,11 +123,11 @@ struct StartCommandTests {
     func startOnHomeBeginsQuiz() async {
         await withMainSerialExecutor {
             let (vm, _) = makeStartVM()
-            vm.voiceStartOnQuestionEnabled = false // question flag OFF…
+            vm.voiceCommandCoordinator.voiceStartOnQuestionEnabled = false // question flag OFF…
             vm.quizState = .idle                   // …still starts the quiz on Home
-            #expect(vm.currentCommandScreen == .home)
+            #expect(vm.voiceCommandCoordinator.currentCommandScreen == .home)
 
-            vm.handleRecognizedCommand(.start)
+            vm.voiceCommandCoordinator.handleRecognizedCommand(.start)
 
             await waitUntil({ vm.quizState != .idle }, "start on Home did not begin the quiz")
             #expect(vm.quizState != .idle)

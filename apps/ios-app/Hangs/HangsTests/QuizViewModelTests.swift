@@ -199,8 +199,7 @@ struct QuizViewModelResultStateTests {
 
         viewModel.currentQuestion = question
         viewModel.quizState = .showingResult(question: question, evaluation: evaluation)
-        viewModel.score = 5.0
-        viewModel.questionsAnswered = 3
+        viewModel.currentSession = Fixtures.session(score: 5.0, answered: 3)
 
         viewModel.resetToHome()
 
@@ -289,7 +288,7 @@ struct QuizViewModelLoadingStateTests {
         viewModel.currentQuestion = makeQuestion(id: "q_001", source: "Test")
         viewModel.quizState = .askingQuestion
 
-        await viewModel.submitVoiceAnswer(audioData: Data("mock audio".utf8))
+        await viewModel.recordingCoordinator.submitVoiceAnswer(audioData: Data("mock audio".utf8))
 
         // After completion, state should not be .processing (moved to showingResult via confirmation)
         // The answer confirmation sheet should be shown
@@ -358,6 +357,79 @@ struct QuizViewModelLoadingStateTests {
         #expect(viewModel.quizState.isError)
     }
 
+    /// #110 Bug 1: "Try Again" (ErrorView) fires startNewQuiz from `.error` — the
+    /// table must admit `error → startingQuiz` or the whole flow runs while
+    /// quizState stays stuck on `.error`.
+    @Test("startNewQuiz from .error (Try Again) reaches askingQuestion")
+    @MainActor
+    func startNewQuizFromErrorReachesAskingQuestion() async throws {
+        let (viewModel, mockNetwork) = Fixtures.makeViewModelWithNetwork()
+        viewModel.quizState = .error(message: "boom", context: .initialization)
+
+        // Pin the transition itself, not just the end state: pre-#110 the
+        // rejected error → startingQuiz transition was silently dropped and the
+        // flow ran on while quizState stayed .error — the end state
+        // (.askingQuestion) was reachable anyway because error → askingQuestion
+        // was already legal, so it alone cannot detect a revert.
+        var stateDuringCreateSession: QuizState?
+        mockNetwork.onCreateSession = { stateDuringCreateSession = viewModel.quizState }
+
+        await viewModel.startNewQuiz()
+
+        #expect(stateDuringCreateSession == .startingQuiz)
+        #expect(viewModel.quizState == .askingQuestion)
+        #expect(mockNetwork.createSessionCallCount == 1)
+    }
+
+    /// #110 Bug 1: "Play Again" (CompletionView) fires startNewQuiz from
+    /// `.finished` — before the fix `finished → startingQuiz` was rejected, so
+    /// the CTA silently spun up a background session while the UI stayed frozen
+    /// on CompletionView.
+    @Test("startNewQuiz from .finished (Play Again) reaches askingQuestion")
+    @MainActor
+    func startNewQuizFromFinishedReachesAskingQuestion() async throws {
+        let (viewModel, mockNetwork) = Fixtures.makeViewModelWithNetwork()
+        viewModel.quizState = .finished
+
+        await viewModel.startNewQuiz()
+
+        #expect(viewModel.quizState == .askingQuestion)
+        #expect(mockNetwork.createSessionCallCount == 1)
+    }
+
+    /// #110 Bug 1: a double-tap on "Play Again"/"Try Again" before the first
+    /// `createSession` resolves must not clobber `currentSession` with a second
+    /// concurrent session — the `isStarting` single-flight guard closes this.
+    @Test("startNewQuiz double-tap creates exactly one session")
+    @MainActor
+    func startNewQuizDoubleTapCreatesOneSession() async throws {
+        await withMainSerialExecutor {
+            let (viewModel, mockNetwork) = Fixtures.makeViewModelWithNetwork()
+            viewModel.quizState = .finished
+
+            async let first: Void = viewModel.startNewQuiz()
+            async let second: Void = viewModel.startNewQuiz()
+            _ = await (first, second)
+
+            #expect(mockNetwork.createSessionCallCount == 1)
+        }
+    }
+
+    /// #110 Bug 1: an accidental "Start Quiz" tap on the minimized-background
+    /// HomeView while a quiz is actively mid-flight (e.g. `.recording`) must be a
+    /// logged no-op, not a clobbered live session.
+    @Test("startNewQuiz from .recording is a no-op")
+    @MainActor
+    func startNewQuizFromRecordingIsNoOp() async throws {
+        let (viewModel, mockNetwork) = Fixtures.makeViewModelWithNetwork()
+        viewModel.quizState = .recording
+
+        await viewModel.startNewQuiz()
+
+        #expect(viewModel.quizState == .recording)
+        #expect(mockNetwork.createSessionCallCount == 0)
+    }
+
     @Test("resetToHome resets to idle cleanly")
     @MainActor
     func resetToHomeResetsToIdle() async throws {
@@ -365,8 +437,7 @@ struct QuizViewModelLoadingStateTests {
         // Put viewModel into non-idle state
         viewModel.quizState = .processing
         viewModel.errorMessage = "Some error"
-        viewModel.score = 5.0
-        viewModel.questionsAnswered = 3
+        viewModel.currentSession = Fixtures.session(score: 5.0, answered: 3)
 
         viewModel.resetToHome()
 
@@ -438,7 +509,7 @@ struct QuizViewModelAnswerConfirmationDismissTests {
         viewModel.quizState = .askingQuestion
 
         // submitVoiceAnswer sets pendingResponse and showAnswerConfirmation
-        await viewModel.submitVoiceAnswer(audioData: Data("mock audio".utf8))
+        await viewModel.recordingCoordinator.submitVoiceAnswer(audioData: Data("mock audio".utf8))
     }
 
     @Test("handleAnswerConfirmationDismissed resets state when pendingResponse exists")
@@ -513,7 +584,7 @@ struct QuizViewModelAnswerConfirmationDismissTests {
         viewModel.rerecordAnswer()
 
         #expect(viewModel.showAnswerConfirmation == false)
-        #expect(viewModel.pendingResponse == nil, "rerecordAnswer must consume the pending response")
+        #expect(viewModel.recordingCoordinator.pendingResponse == nil, "rerecordAnswer must consume the pending response")
         let stateBeforeDismiss = viewModel.quizState
 
         // Now if onDismiss fires, it should be a no-op (pendingResponse already nil)
@@ -841,6 +912,37 @@ struct QuizViewModelMCQSubmissionTests {
         generatedBy: nil
     )
 
+    @Test("late MCQ submit after the state advanced is a no-op (#110 same-key tap/voice race)")
+    @MainActor
+    func lateMCQSubmitAfterStateAdvancedIsNoOp() async throws {
+        let (viewModel, mockNetwork) = Fixtures.makeViewModelWithNetwork(configure: { mock in
+            mock.mockResponse = makeQuizResponse(
+                evaluationFor: "q_mcq_001",
+                userAnswer: "Paris",
+                isCorrect: true,
+                nextQuestion: makeQuestion(id: "q_002", source: "Next")
+            )
+        })
+        viewModel.currentSession = mockNetwork.mockSession
+        viewModel.currentQuestion = mcqQuestion
+        viewModel.quizState = .askingQuestion
+
+        // First submission (the voice twin of a same-key tap) wins and advances
+        // the state to .showingResult.
+        await viewModel.submitMCQAnswer(key: "a", value: "Paris")
+        #expect(viewModel.quizState.isShowingResult)
+        #expect(mockNetwork.submitTextInputCallCount == 1)
+
+        // The tap's 500 ms delayed submit fires late, from .showingResult. The
+        // entry guard must make it a no-op — .showingResult → .processing is a
+        // legal transition (resubmitAnswer owns it), so without the guard this
+        // would re-submit the same answer.
+        await viewModel.submitMCQAnswer(key: "a", value: "Paris")
+
+        #expect(viewModel.quizState.isShowingResult)
+        #expect(mockNetwork.submitTextInputCallCount == 1)
+    }
+
     @Test("MCQ submission transitions to showingResult on success")
     @MainActor
     func mcqSubmissionSuccess() async throws {
@@ -911,6 +1013,10 @@ struct QuizViewModelMCQSubmissionTests {
         })
         viewModel.currentQuestion = mcqQuestion
         viewModel.currentSession = nil
+        // #110: submitMCQAnswer is a no-op outside .askingQuestion/.recording,
+        // so the no-session error path must be exercised from a legal
+        // answering state (the default .idle would short-circuit earlier).
+        viewModel.quizState = .askingQuestion
 
         await viewModel.submitMCQAnswer(key: "a", value: "Paris")
 
@@ -1069,10 +1175,10 @@ struct QuizViewModelDoubleStopTests {
         viewModel.quizState = .recording
 
         // Simulate the guard being set (as if a stop is already in progress)
-        viewModel.isStoppingRecording = true
+        viewModel.recordingCoordinator.isStoppingRecording = true
 
         // Call stopRecordingAndSubmit — should return early without changing state
-        await viewModel.stopRecordingAndSubmit()
+        await viewModel.recordingCoordinator.stopRecordingAndSubmit()
 
         // State should remain .recording because the guard prevented the call
         #expect(viewModel.quizState == .recording)
@@ -1099,6 +1205,30 @@ struct QuizViewModelEndQuizTests {
         #expect(viewModel.isMinimized == false)
         #expect(viewModel.quizState == .idle)
         #expect(viewModel.currentSession == nil)
+    }
+
+    /// #110 Bug 3: `.finished` never cleared `isMinimized`, so a stale
+    /// MinimizedQuizView floated over CompletionView with no one watching.
+    @Test("entering .finished resets isMinimized")
+    @MainActor
+    func finishedResetsMinimized() async throws {
+        let viewModel = Fixtures.makeViewModel()
+        viewModel.quizState = .showingResult(
+            question: Fixtures.makeQuestion(),
+            evaluation: Evaluation(
+                userAnswer: "Paris",
+                result: .correct,
+                points: 1.0,
+                correctAnswer: "Paris",
+                questionId: "q_001",
+                explanation: nil
+            )
+        )
+        viewModel.isMinimized = true
+
+        viewModel.transition(to: .finished)
+
+        #expect(viewModel.isMinimized == false)
     }
 
     /// 59.4 (RS-13): a backend 404 (`sessionNotFound`) on endSession is *correct* backend
@@ -1174,7 +1304,6 @@ struct QuizViewModelResumeAutoAdvanceTests {
             questionId: "q_001",
             explanation: nil
         )
-        viewModel.autoAdvanceEnabled = true
         viewModel.quizState = .showingResult(question: question, evaluation: evaluation)
 
         // Pause first (mirrors "Stay here"): countdown cancelled, pause flag set.

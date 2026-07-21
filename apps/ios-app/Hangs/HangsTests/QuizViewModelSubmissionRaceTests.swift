@@ -34,7 +34,7 @@ private func makeViewModelWithSTT()
         networkService: mockNetwork,
         audioService: mockAudio,
         persistenceStore: mockPersistence,
-        silenceDetectionService: nil,
+        silenceDetectionService: MockSilenceDetectionService(),
         sttService: mockSTT
     )
     viewModel.currentSession = Fixtures.makeActiveSession()
@@ -124,7 +124,7 @@ struct QuizViewModelSubmissionRaceTests {
         await withMainSerialExecutor {
             let (viewModel, mockNetwork, _, mockSTT) = makeViewModelWithSTT()
 
-            await viewModel.startRecording()
+            await viewModel.recordingCoordinator.startRecording()
             await waitUntil({ viewModel.isStreamingSTT }, "streaming never started")
 
             // Park the committed-transcript handler inside disconnect().
@@ -159,7 +159,7 @@ struct QuizViewModelSubmissionRaceTests {
             let (viewModel, mockNetwork, _, mockSTT) = makeViewModelWithSTT()
             viewModel.currentQuestion = makeMCQQuestion()
 
-            await viewModel.startRecording()
+            await viewModel.recordingCoordinator.startRecording()
             await waitUntil({ viewModel.isStreamingSTT }, "streaming never started")
 
             await mockSTT.setGateDisconnect(true)
@@ -189,7 +189,7 @@ struct QuizViewModelSubmissionRaceTests {
         await withMainSerialExecutor {
             let (viewModel, mockNetwork, _, mockSTT) = makeViewModelWithSTT()
 
-            await viewModel.startRecording()
+            await viewModel.recordingCoordinator.startRecording()
             await waitUntil({ viewModel.isStreamingSTT }, "streaming never started")
 
             await mockSTT.injectEvent(.committedTranscript("Paris")) // no gate → sheet appears
@@ -215,7 +215,7 @@ struct QuizViewModelSubmissionRaceTests {
         await withMainSerialExecutor {
             let (viewModel, mockNetwork, _, mockSTT) = makeViewModelWithSTT()
 
-            await viewModel.startRecording()
+            await viewModel.recordingCoordinator.startRecording()
             await waitUntil({ viewModel.isStreamingSTT }, "streaming never started")
 
             await mockSTT.injectEvent(.committedTranscript("Paris"))
@@ -239,7 +239,7 @@ struct QuizViewModelSubmissionRaceTests {
     func doubleConfirmAnswerYieldsOneSubmit() async throws {
         await withMainSerialExecutor {
             let (viewModel, mockNetwork, _, mockSTT) = makeViewModelWithSTT()
-            await viewModel.startRecording()
+            await viewModel.recordingCoordinator.startRecording()
             await waitUntil({ viewModel.isStreamingSTT }, "streaming never started")
             await mockSTT.injectEvent(.committedTranscript("Paris"))
             await waitUntil({ viewModel.showAnswerConfirmation }, "confirmation sheet never appeared")
@@ -266,7 +266,7 @@ struct QuizViewModelSubmissionRaceTests {
     func staleConfirmAnswerAfterResolutionDoesNotResubmit() async throws {
         await withMainSerialExecutor {
             let (viewModel, mockNetwork, _, mockSTT) = makeViewModelWithSTT()
-            await viewModel.startRecording()
+            await viewModel.recordingCoordinator.startRecording()
             await waitUntil({ viewModel.isStreamingSTT }, "streaming never started")
             await mockSTT.injectEvent(.committedTranscript("Paris"))
             await waitUntil({ viewModel.showAnswerConfirmation }, "confirmation sheet never appeared")
@@ -294,7 +294,7 @@ struct QuizViewModelSubmissionRaceTests {
         _ viewModel: QuizViewModel, _ mockNetwork: MockNetworkService
     ) throws {
         viewModel.quizState = .processing
-        viewModel.pendingResponse = try #require(mockNetwork.mockResponse)
+        viewModel.recordingCoordinator.pendingResponse = try #require(mockNetwork.mockResponse)
         viewModel.transcribedAnswer = "Paris"
         viewModel.showAnswerConfirmation = true
     }

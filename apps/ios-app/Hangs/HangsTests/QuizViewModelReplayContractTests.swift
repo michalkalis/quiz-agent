@@ -42,7 +42,7 @@ struct QuizViewModelReplayContractTests {
         let (viewModel, mockAudio) = makeResultScreenViewModel()
 
         // Simulate the result screen: a known question URL + a countdown already running.
-        viewModel.currentQuestionAudioUrl = "https://example.com/q.mp3"
+        viewModel.recordingCoordinator.currentQuestionAudioUrl = "https://example.com/q.mp3"
         viewModel.autoAdvanceCountdown = 6
 
         await viewModel.replayQuestionAudio()
@@ -55,7 +55,7 @@ struct QuizViewModelReplayContractTests {
     func replayNoOpWhenMuted() async {
         let (viewModel, mockAudio) = makeResultScreenViewModel()
         viewModel.settings.isMuted = true
-        viewModel.currentQuestionAudioUrl = "https://example.com/q.mp3"
+        viewModel.recordingCoordinator.currentQuestionAudioUrl = "https://example.com/q.mp3"
         viewModel.autoAdvanceCountdown = 6
 
         await viewModel.replayQuestionAudio()
@@ -67,7 +67,7 @@ struct QuizViewModelReplayContractTests {
     @Test("replayQuestionAudio is a harmless no-op when no question URL is known")
     func replayNoOpWhenNoURL() async {
         let (viewModel, mockAudio) = makeResultScreenViewModel()
-        viewModel.currentQuestionAudioUrl = nil
+        viewModel.recordingCoordinator.currentQuestionAudioUrl = nil
         viewModel.autoAdvanceCountdown = 6
 
         await viewModel.replayQuestionAudio()
@@ -85,7 +85,7 @@ struct QuizViewModelReplayContractTests {
     @Test("tap during playback stops the in-flight TTS and restarts it, timers untouched")
     func replayRestartsDuringPlayback() async {
         let (viewModel, mockAudio) = makeResultScreenViewModel()
-        viewModel.currentQuestionAudioUrl = "https://example.com/q.mp3"
+        viewModel.recordingCoordinator.currentQuestionAudioUrl = "https://example.com/q.mp3"
         viewModel.autoAdvanceCountdown = 6
 
         // First tap: kick off a replay and wait until it is genuinely mid-playback

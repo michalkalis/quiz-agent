@@ -24,8 +24,8 @@ import Testing
 
 @MainActor
 private func makeScenePhaseVM(
-    silence: MockSilenceDetectionService? = MockSilenceDetectionService()
-) -> (QuizViewModel, MockSilenceDetectionService?, MockAudioService) {
+    silence: MockSilenceDetectionService = MockSilenceDetectionService()
+) -> (QuizViewModel, MockSilenceDetectionService, MockAudioService) {
     let audio = MockAudioService()
     let vm = QuizViewModel(
         networkService: Fixtures.makeFullMockNetwork(),
@@ -65,10 +65,10 @@ struct ScenePhaseTeardownTests {
     @Test("background on idle Home stops the listener AND releases the audio session")
     func backgroundOnIdleStopsListenerAndDeactivates() async {
         let (vm, silence, audio) = makeScenePhaseVM()
-        let mock = try! #require(silence)
+        let mock = silence
 
         vm.quizState = .idle
-        await vm.startSilenceDetectionListening() // Home window armed
+        await vm.audioDeviceState.startSilenceDetectionListening() // Home window armed
         #expect(mock.isListening == true)
 
         vm.handleScenePhase(.background)
@@ -80,10 +80,10 @@ struct ScenePhaseTeardownTests {
     @Test("background mid-question stops the listener but keeps the session (quiz not idle)")
     func backgroundMidQuestionKeepsSession() async {
         let (vm, silence, audio) = makeScenePhaseVM()
-        let mock = try! #require(silence)
+        let mock = silence
 
         vm.quizState = .askingQuestion
-        await vm.startSilenceDetectionListening()
+        await vm.audioDeviceState.startSilenceDetectionListening()
         #expect(mock.isListening == true)
 
         vm.handleScenePhase(.background)
@@ -148,10 +148,10 @@ struct ScenePhaseTeardownTests {
     func activeReArmsListener() async {
         await withMainSerialExecutor {
             let (vm, silence, _) = makeScenePhaseVM()
-            let mock = try! #require(silence)
+            let mock = silence
 
             vm.quizState = .askingQuestion
-            await vm.startSilenceDetectionListening()
+            await vm.audioDeviceState.startSilenceDetectionListening()
             vm.handleScenePhase(.background)
             #expect(mock.isListening == false)
 
@@ -165,23 +165,23 @@ struct ScenePhaseTeardownTests {
     @Test("backgrounded: the command window is nil and no arming path can re-open the mic")
     func backgroundBlocksReArm() async {
         let (vm, silence, _) = makeScenePhaseVM()
-        let mock = try! #require(silence)
+        let mock = silence
 
         vm.quizState = .askingQuestion
         vm.handleScenePhase(.background)
-        #expect(vm.currentCommandScreen == nil, "window must be closed while backgrounded")
+        #expect(vm.voiceCommandCoordinator.currentCommandScreen == nil, "window must be closed while backgrounded")
 
         // A racing window refresh must not re-arm…
-        await vm.syncCommandListenerWindow()
+        await vm.voiceCommandCoordinator.syncCommandListenerWindow()
         #expect(mock.isListening == false)
 
         // …and neither may a direct re-arm (e.g. the post-TTS tail).
-        await vm.startSilenceDetectionListening()
+        await vm.audioDeviceState.startSilenceDetectionListening()
         #expect(mock.isListening == false, "direct arm bypassed the foreground guard")
 
         // Foregrounding restores the window.
         vm.handleScenePhase(.active)
-        #expect(vm.currentCommandScreen == .question)
+        #expect(vm.voiceCommandCoordinator.currentCommandScreen == .question)
     }
 
     @Test("backgrounded: startRecording is suppressed (auto-record can fire after background TTS)")
@@ -191,7 +191,7 @@ struct ScenePhaseTeardownTests {
         vm.quizState = .askingQuestion
         vm.handleScenePhase(.background)
 
-        await vm.startRecording()
+        await vm.recordingCoordinator.startRecording()
 
         #expect(vm.quizState == .askingQuestion, "must not enter .recording while backgrounded")
         #expect(audio.isRecording == false, "mic must not open in the background")

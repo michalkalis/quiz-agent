@@ -15,54 +15,103 @@ import os
 /// façade (QuizViewModel) owns this child, re-publishes its `objectWillChange`,
 /// and re-exposes the view-facing slice via permanent forwarding accessors
 /// (decision 2) — views never bind it directly. The recording and confirmation
-/// clusters live here as child-owned fields (they fold into `RecordingState`/
-/// `ConfirmationState` sub-structs in S6b, decision 8; internal rather than
-/// private only because the decision-7 file split puts their accessors in
-/// same-type extension files). Cross-cluster state (`quizState`, `settings`,
+/// clusters live in the private `RecordingState`/`ConfirmationState` sub-structs
+/// (S6b, decision 8 — see `QuizState+PhaseState.swift`); the same-file accessors
+/// below are the only doors, shared by the decision-7 extension files, the
+/// façade forwards, and tests. Cross-cluster state (`quizState`, `settings`,
 /// `isAutoRecording`, `isRerecording`, `errorMessage`, `submissionEpoch`,
 /// `mcqVoiceMatchedKey`, `isAppForeground`) stays façade-resident and is
 /// reached ONLY through the injected closures below (decision 4 — a child
 /// never holds a back-pointer to the view model).
 @MainActor
 final class RecordingCoordinator: ObservableObject {
-    // MARK: - Recording-cluster state
+    // MARK: - Clustered phase state (#113 T7, decision 8)
+
+    /// Recording-cluster subset — dropped atomically by `reset()`.
+    @Published private var recordingState = RecordingState()
+
+    /// Confirmation-cluster subset (incl. `autoConfirmCountdown`) — dropped
+    /// atomically by `reset()`.
+    @Published private var confirmationState = ConfirmationState()
+
+    // MARK: - Recording-cluster accessors
 
     /// Live transcript from ElevenLabs (updates as user speaks)
-    @Published var liveTranscript: String = ""
+    var liveTranscript: String {
+        get { recordingState.liveTranscript }
+        set { recordingState.liveTranscript = newValue }
+    }
 
     /// Whether streaming STT is active
-    @Published var isStreamingSTT: Bool = false
+    var isStreamingSTT: Bool {
+        get { recordingState.isStreamingSTT }
+        set { recordingState.isStreamingSTT = newValue }
+    }
 
     /// Whether speech has been detected during auto-record (for UI hints)
-    @Published var speechDetectedDuringAutoRecord: Bool = false
+    var speechDetectedDuringAutoRecord: Bool {
+        get { recordingState.speechDetectedDuringAutoRecord }
+        set { recordingState.speechDetectedDuringAutoRecord = newValue }
+    }
 
     /// Prevents concurrent stopRecordingAndSubmit calls (silence detection + user tap can race)
-    var isStoppingRecording = false
+    var isStoppingRecording: Bool {
+        get { recordingState.isStoppingRecording }
+        set { recordingState.isStoppingRecording = newValue }
+    }
 
     /// Consecutive transcription failures for 3-tier error escalation
-    var consecutiveTranscriptionFailures: Int = 0
+    var consecutiveTranscriptionFailures: Int {
+        get { recordingState.consecutiveTranscriptionFailures }
+        set { recordingState.consecutiveTranscriptionFailures = newValue }
+    }
 
     /// Current question audio URL for the "repeat" command — written by
     /// AudioDeviceState through the façade's injected closures (#113 T2,
-    /// decision 4); the façade's `repeatQuestion`/`resetState` read/clear it.
-    var currentQuestionAudioUrl: String?
+    /// decision 4); the façade's `repeatQuestion` reads it.
+    var currentQuestionAudioUrl: String? {
+        get { recordingState.currentQuestionAudioUrl }
+        set { recordingState.currentQuestionAudioUrl = newValue }
+    }
 
-    // MARK: - Confirmation-cluster state
+    // MARK: - Confirmation-cluster accessors
 
     /// Answer confirmation modal visibility (QuestionView sheet binding via façade forward)
-    @Published var showAnswerConfirmation = false
+    var showAnswerConfirmation: Bool {
+        get { confirmationState.showAnswerConfirmation }
+        set { confirmationState.showAnswerConfirmation = newValue }
+    }
 
     /// The transcribed answer shown/edited in the confirmation modal
-    @Published var transcribedAnswer = ""
+    var transcribedAnswer: String {
+        get { confirmationState.transcribedAnswer }
+        set { confirmationState.transcribedAnswer = newValue }
+    }
 
     /// Pending Whisper response awaiting user confirmation
-    var pendingResponse: QuizResponse? = nil
+    var pendingResponse: QuizResponse? {
+        get { confirmationState.pendingResponse }
+        set { confirmationState.pendingResponse = newValue }
+    }
 
     /// Suppress TTS on edited confirmations
-    var transcriptWasEdited = false
+    var transcriptWasEdited: Bool {
+        get { confirmationState.transcriptWasEdited }
+        set { confirmationState.transcriptWasEdited = newValue }
+    }
 
     /// Snapshot for cancelEditingTranscript()
-    var preEditTranscript: String? = nil
+    var preEditTranscript: String? {
+        get { confirmationState.preEditTranscript }
+        set { confirmationState.preEditTranscript = newValue }
+    }
+
+    /// Auto-confirm countdown (T7 — resides in `ConfirmationState`, its semantic
+    /// owner); QuizTimersController ticks it via the façade's injected write closure.
+    var autoConfirmCountdown: Int {
+        get { confirmationState.autoConfirmCountdown }
+        set { confirmationState.autoConfirmCountdown = newValue }
+    }
 
     // MARK: - Dependencies (service handles + the façade's shared task owner)
 
@@ -193,22 +242,19 @@ final class RecordingCoordinator: ObservableObject {
         await facadeHandleError(error, context, fallbackMessage)
     }
 
-    /// T7 unified reset model: clears this child's own scoped state (both
-    /// clusters); task teardown stays with the façade's `taskBag.cancelAll()`.
-    /// Not yet wired — the façade's `resetState`/`transition` invokes this
-    /// once T7 (S6b) lands.
+    /// T7 unified reset model: drops both phase-state subsets atomically.
+    /// Invoked by the façade's `resetState` (full teardown) and by
+    /// `transition(to:)` when leaving the recording/processing phase-pair
+    /// (decision 8). Long-lived task teardown stays with the façade's
+    /// `taskBag.cancelAll()`.
     func reset() {
-        liveTranscript = ""
-        isStreamingSTT = false
-        speechDetectedDuringAutoRecord = false
-        isStoppingRecording = false
-        consecutiveTranscriptionFailures = 0
-        currentQuestionAudioUrl = nil
-        showAnswerConfirmation = false
-        transcribedAnswer = ""
-        pendingResponse = nil
-        transcriptWasEdited = false
-        preEditTranscript = nil
+        // Streaming teardown first: a transition-driven reset can fire while
+        // the engine is still capturing; zeroing `isStreamingSTT` without
+        // stopping it would leak a live recorder past cleanupStreamingSTT's
+        // guard.
+        cleanupStreamingSTT()
+        recordingState.reset()
+        confirmationState.reset()
     }
 
     // MARK: - Cleanup Choke Points (also called cross-cluster by the façade)

@@ -103,8 +103,13 @@ final class QuizViewModel: ObservableObject {
     @Published var quizState: QuizState = .idle
     @Published var currentQuestion: Question?
     @Published var currentSession: QuizSession?
-    @Published var score: Double = 0.0
-    @Published var questionsAnswered: Int = 0
+
+    // Derived projections over `currentSession` (#113 T7) — no stored backing,
+    // so they can never drift from the session (kills the stale-projection bug
+    // where "Play Again" carried the finished quiz's totals into the new quiz's
+    // first render). Change notifications ride `currentSession`'s @Published.
+    var score: Double { currentSession?.participants.first?.score ?? 0.0 }
+    var questionsAnswered: Int { currentSession?.participants.first?.answeredCount ?? 0 }
 
     // Per-session evaluation tallies for the completion breakdown (54.13) —
     // partials and skips land in neither bucket.
@@ -167,10 +172,13 @@ final class QuizViewModel: ObservableObject {
         set { recordingCoordinator.pendingResponse = newValue }
     }
 
-    /// Auto-confirm countdown (confirmation-semantic — folds into
-    /// `ConfirmationState` in S6b): stays façade-resident for now, ticked by
-    /// QuizTimersController via its injected write closure.
-    @Published var autoConfirmCountdown: Int = 0
+    /// Auto-confirm countdown — owned by `ConfirmationState` inside
+    /// RecordingCoordinator (#113 T7, its semantic owner); QuizTimersController
+    /// ticks it via the injected write closure pointed at the child.
+    var autoConfirmCountdown: Int {
+        get { recordingCoordinator.autoConfirmCountdown }
+        set { recordingCoordinator.autoConfirmCountdown = newValue }
+    }
 
     // MARK: - Timers — forwarded to QuizTimersController (#113 T4)
 
@@ -368,6 +376,13 @@ final class QuizViewModel: ObservableObject {
 
         Logger.quiz.info("State: \(from) → \(to) [\(caller, privacy: .public)]")
         quizState = newState
+        // T7 (decision 8): leaving the recording/processing phase-pair drops the
+        // recording+confirmation subset atomically via the owner child's reset()
+        // — never mid-pair (recording → processing keeps in-flight state).
+        let recordingPair = ["recording", "processing"]
+        if recordingPair.contains(from), !recordingPair.contains(to) {
+            recordingCoordinator.reset()
+        }
         if case .askingQuestion = newState { mcqVoiceMatchedKey = nil }
         // #110 Bug 3: .finished never cleared isMinimized, so a stale
         // MinimizedQuizView floated over CompletionView with nothing to dismiss it.
@@ -698,7 +713,7 @@ final class QuizViewModel: ObservableObject {
             isRerecording: { [weak self] in self?.isRerecording ?? false },
             setIsAutoRecording: { [weak self] in self?.isAutoRecording = $0 },
             showAnswerConfirmation: { [weak self] in self?.recordingCoordinator.showAnswerConfirmation ?? false },
-            setAutoConfirmCountdown: { [weak self] in self?.autoConfirmCountdown = $0 },
+            setAutoConfirmCountdown: { [weak self] in self?.recordingCoordinator.autoConfirmCountdown = $0 },
             startRecording: { [weak self] in await self?.recordingCoordinator.startRecording() },
             stopRecordingAndSubmit: { [weak self] in await self?.recordingCoordinator.stopRecordingAndSubmit() },
             confirmAnswer: { [weak self] in await self?.recordingCoordinator.confirmAnswer() },
@@ -1473,12 +1488,6 @@ final class QuizViewModel: ObservableObject {
             return
         }
 
-        // Update score and question count
-        if let participant = response.session.participants.first {
-            score = participant.score
-            questionsAnswered = participant.answeredCount
-        }
-
         // Update quiz stats (streak tracking)
         if evaluation.result != .skipped {
             streakBeforeLastAnswer = quizStats.currentStreak
@@ -1654,30 +1663,30 @@ final class QuizViewModel: ObservableObject {
         // the quiz is torn down (resetToHome / endQuiz / paywall reset).
         audioService.deactivateSession()
         currentQuestion = nil
-        currentSession = nil
-        score = 0.0
-        questionsAnswered = 0
+        currentSession = nil // also zeroes the derived score/questionsAnswered (T7)
         sessionCorrectCount = 0
         sessionIncorrectCount = 0
         errorMessage = nil
         nextQuestionAudioUrl = nil
         nextQuestion = nil
-        currentQuestionAudioUrl = nil
-        autoAdvanceCountdown = 0
-        answerTimerCountdown = 0
-        thinkingTimeCountdown = 0
-        currentQuestionPaused = false
         isRerecording = false
         isAutoRecording = false
-        speechDetectedDuringAutoRecord = false
-        isStreamingSTT = false
-        liveTranscript = ""
-        pendingResponse = nil
-        transcribedAnswer = ""
-        showAnswerConfirmation = false
+        // The two ownerless façade fields (T7) — no child owns them, so this is
+        // their single explicit reset site.
+        activeErrorModel = nil
+        mcqVoiceMatchedKey = nil
         // Ending a quiz from the minimized widget must dismiss the widget —
         // otherwise a stale card floats over Home (#54 task 54.6).
         isMinimized = false
+        // T7 unified reset model: full teardown clears every child's scoped
+        // state through one reset() per child instead of scattered per-field
+        // writes (paywall/mic-picker sheets + command capture + timers +
+        // recording/confirmation clusters).
+        entitlementReconciler.reset()
+        audioDeviceState.reset()
+        voiceCommandCoordinator.reset()
+        quizTimersController.reset()
+        recordingCoordinator.reset()
     }
 
     // MARK: - Question History Management
@@ -1718,8 +1727,7 @@ final class QuizViewModel: ObservableObject {
                 persistenceStore: MockPersistenceStore()
             )
             viewModel.currentQuestion = Question.preview
-            viewModel.score = 1.0
-            viewModel.questionsAnswered = 1
+            viewModel.currentSession = QuizSession.preview(score: 1.0, answered: 1)
             viewModel.quizState = .showingResult(
                 question: Question.preview,
                 evaluation: Evaluation.previewCorrect

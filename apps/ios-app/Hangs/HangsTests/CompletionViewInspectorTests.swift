@@ -30,8 +30,7 @@ struct CompletionViewSummaryTests {
             audioService: MockAudioService(),
             persistenceStore: MockPersistenceStore()
         )
-        vm.score = score
-        vm.questionsAnswered = answered
+        vm.currentSession = Fixtures.session(score: score, answered: answered)
         vm.sessionCorrectCount = correct
         vm.sessionIncorrectCount = incorrect
         vm.quizStats = QuizStats(
@@ -85,8 +84,7 @@ struct CompletionViewBreakdownTests {
                 audioService: MockAudioService(),
                 persistenceStore: MockPersistenceStore()
             )
-            v.score = 8
-            v.questionsAnswered = 10
+            v.currentSession = Fixtures.session(score: 8, answered: 10)
             v.quizState = .finished
             return v
         }()
@@ -107,8 +105,7 @@ struct CompletionViewBreakdownTests {
                 audioService: MockAudioService(),
                 persistenceStore: MockPersistenceStore()
             )
-            v.score = 8
-            v.questionsAnswered = 10
+            v.currentSession = Fixtures.session(score: 8, answered: 10)
             v.quizState = .finished
             return v
         }()

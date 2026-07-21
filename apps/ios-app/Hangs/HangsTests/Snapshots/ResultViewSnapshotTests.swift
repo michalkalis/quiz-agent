@@ -47,12 +47,28 @@ private func makeResultViewModel(evaluation: Evaluation) -> QuizViewModel {
         currentDifficulty: "medium",
         category: nil,
         language: "en",
-        participants: [],
+        // Single participant pins the derived questionsAnswered = 1 (#113 T7 —
+        // computed over currentSession). Built inline rather than via
+        // Fixtures.session because the dump needs the fixed epoch for stability.
+        participants: [
+            Participant(
+                id: "p1",
+                userId: nil,
+                displayName: "Player",
+                score: 1.0,
+                answeredCount: 1,
+                correctCount: 1,
+                lastAnswer: nil,
+                lastResult: nil,
+                isHost: true,
+                isReady: true,
+                joinedAt: fixedNow
+            ),
+        ],
         expiresAt: fixedNow.addingTimeInterval(30 * 60),
         createdAt: fixedNow
     )
     vm.currentQuestion = Question.preview
-    vm.questionsAnswered = 1
     vm.quizState = .showingResult(question: Question.preview, evaluation: evaluation)
     return vm
 }

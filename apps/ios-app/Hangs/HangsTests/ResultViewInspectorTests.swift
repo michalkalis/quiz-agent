@@ -305,15 +305,16 @@ struct ResultViewInspectorTests {
             question: Fixtures.makeQuestion(),
             evaluation: evaluation
         )
-        // No currentSession — fallback path
+        // No currentSession — fallback path. The answered counter derives from
+        // currentSession too (#113 T7), so without a session it reads 0; the
+        // fallback under test is the TOTAL coming from settings, not the session.
         vm.settings.numberOfQuestions = 5
-        vm.questionsAnswered = 2
         let view = ResultView(viewModel: vm)
 
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) {
-                try tree.find(text: "02 / 05")
+                try tree.find(text: "00 / 05")
             }
         }
     }
@@ -434,7 +435,6 @@ struct ResultViewInspectorTests {
 
 @Suite("ResultView Skip Haptic Tests")
 struct ResultViewSkipHapticTests {
-
     /// #82 item 2 (founder decision 7): a skip is not a failure. The result
     /// haptic must be a gentle selection tick — confirming the voice command
     /// landed eyes-free — never the punishing error buzz a wrong answer gets.

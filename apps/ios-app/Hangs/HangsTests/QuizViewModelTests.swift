@@ -199,8 +199,7 @@ struct QuizViewModelResultStateTests {
 
         viewModel.currentQuestion = question
         viewModel.quizState = .showingResult(question: question, evaluation: evaluation)
-        viewModel.score = 5.0
-        viewModel.questionsAnswered = 3
+        viewModel.currentSession = Fixtures.session(score: 5.0, answered: 3)
 
         viewModel.resetToHome()
 
@@ -438,8 +437,7 @@ struct QuizViewModelLoadingStateTests {
         // Put viewModel into non-idle state
         viewModel.quizState = .processing
         viewModel.errorMessage = "Some error"
-        viewModel.score = 5.0
-        viewModel.questionsAnswered = 3
+        viewModel.currentSession = Fixtures.session(score: 5.0, answered: 3)
 
         viewModel.resetToHome()
 

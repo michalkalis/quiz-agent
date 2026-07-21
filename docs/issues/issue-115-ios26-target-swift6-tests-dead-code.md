@@ -1,8 +1,8 @@
 # Issue 115: Raise deployment target to iOS 26 + Swift 6 test targets + dead-code sweep
 
-**Triage:** chore · ready-for-agent (needs Mac + Xcode 26.x env — run on mba)
+**Triage:** chore · **DONE 2026-07-20** (all 5 tasks executed; landed on `main` via merge `257a70f`)
 **Reversibility:** a
-**Status:** Prep complete 2026-07-20 via /prepare-issue on branch `arch-review-ios` (both dual gates green: plan READY · SOUND 0.88, impl-plan cycle 4 targeted READY · SOUND 0.88); 5 atomic tasks / 2 commits, single session (no execution-prompts file), class `a`, ready-for-agent on `mba` — **run this cheap hygiene pass BEFORE #113 (QuizViewModel decomposition) and ideally before #116 (AudioService split)**, whose surfaces it shrinks.
+**Status:** Prep complete 2026-07-20 via /prepare-issue on branch `arch-review-ios` (both dual gates green: plan READY · SOUND 0.88, impl-plan cycle 4 targeted READY · SOUND 0.88); 5 atomic tasks / 2 commits, single session (no execution-prompts file), class `a`. **Executed 2026-07-20** ahead of #113 as planned; landed on `main` 2026-07-21 in merge `257a70f`. #116 (AudioService split) still benefits from the shrunk surface.
 **Created:** 2026-07-20
 
 **Source:** [iOS architecture review 2026-07-18](../research/ios-architecture-review-2026-07-18.md) — Top 10 items 5, 6 + dimensions 5, 6, 8. Link, don't restate.

@@ -165,13 +165,6 @@ final class QuizViewModel: ObservableObject {
         set { recordingCoordinator.transcribedAnswer = newValue }
     }
 
-    /// Pending Whisper response awaiting user confirmation — see
-    /// `RecordingCoordinator.pendingResponse` (`resetState` clears it; tests seed it).
-    var pendingResponse: QuizResponse? {
-        get { recordingCoordinator.pendingResponse }
-        set { recordingCoordinator.pendingResponse = newValue }
-    }
-
     /// Auto-confirm countdown — owned by `ConfirmationState` inside
     /// RecordingCoordinator (#113 T7, its semantic owner); QuizTimersController
     /// ticks it via the injected write closure pointed at the child.
@@ -216,29 +209,6 @@ final class QuizViewModel: ObservableObject {
         get { quizTimersController.currentQuestionPaused }
         set { quizTimersController.currentQuestionPaused = newValue }
     }
-
-    /// Timer start/cancel choke points — see the same-named methods on
-    /// `QuizTimersController`. Kept on the façade (decision 2) for the
-    /// MAIN/AudioDeviceState/VoiceCommandCoordinator callers and the timer
-    /// test surface (RecordingCoordinator reaches them via injected closures).
-    func startThinkingTimeCountdown() { quizTimersController.startThinkingTimeCountdown() }
-    func cancelThinkingTime() { quizTimersController.cancelThinkingTime() }
-    func startAnswerTimer() { quizTimersController.startAnswerTimer() }
-    func cancelAnswerTimer() { quizTimersController.cancelAnswerTimer() }
-    func startAutoStopRecordingTimer(duration: TimeInterval = Config.autoRecordingDuration) {
-        quizTimersController.startAutoStopRecordingTimer(duration: duration)
-    }
-
-    func cancelAutoStopRecordingTimer() { quizTimersController.cancelAutoStopRecordingTimer() }
-    func startAutoAdvanceCountdown(duration: Int, audioDuration: TimeInterval) async {
-        await quizTimersController.startAutoAdvanceCountdown(duration: duration, audioDuration: audioDuration)
-    }
-
-    func startAutoConfirmIfEnabled(duration: Int = Config.autoConfirmDelaySecs) {
-        quizTimersController.startAutoConfirmIfEnabled(duration: duration)
-    }
-
-    func cancelAutoConfirm() { quizTimersController.cancelAutoConfirm() }
 
     // Minimize state
     @Published var isMinimized: Bool = false
@@ -319,9 +289,6 @@ final class QuizViewModel: ObservableObject {
 
     /// Currently selected input device (nil = automatic)
     var selectedInputDevice: AudioDevice? { audioDeviceState.selectedInputDevice }
-
-    /// Current output device name for display
-    var currentOutputDeviceName: String { audioDeviceState.currentOutputDeviceName }
 
     /// Display name for current input device
     var currentInputDeviceName: String { audioDeviceState.currentInputDeviceName }
@@ -451,14 +418,6 @@ final class QuizViewModel: ObservableObject {
     /// façade-resident (decision 4); children reach it via injected closures.
     @Published var isAutoRecording: Bool = false
 
-    /// Whether speech has been detected during auto-record (for UI hints) —
-    /// see `RecordingCoordinator.speechDetectedDuringAutoRecord`. Settable:
-    /// the façade writes it (resubmitAnswer, resetState) and tests seed it.
-    var speechDetectedDuringAutoRecord: Bool {
-        get { recordingCoordinator.speechDetectedDuringAutoRecord }
-        set { recordingCoordinator.speechDetectedDuringAutoRecord = newValue }
-    }
-
     // MARK: - Streaming STT — forwarded to RecordingCoordinator (#113 T5)
 
     /// Live transcript from ElevenLabs (updates as user speaks) — see
@@ -560,25 +519,9 @@ final class QuizViewModel: ObservableObject {
     // all via injected closures
     var isRerecording: Bool = false
 
-    /// Consecutive transcription failures (3-tier escalation) — see
-    /// `RecordingCoordinator.consecutiveTranscriptionFailures`. Settable: the
-    /// façade resets it on quiz start / successful response; tests seed it.
-    var consecutiveTranscriptionFailures: Int {
-        get { recordingCoordinator.consecutiveTranscriptionFailures }
-        set { recordingCoordinator.consecutiveTranscriptionFailures = newValue }
-    }
-
     // Next question data (from response, displayed after showing results)
     private var nextQuestionAudioUrl: String?
     private var nextQuestion: Question?
-
-    /// Current question audio URL for the "repeat" command — see
-    /// `RecordingCoordinator.currentQuestionAudioUrl` (AudioDeviceState writes
-    /// it via injected closures; `repeatQuestion`/`resetState` read/clear it here).
-    var currentQuestionAudioUrl: String? {
-        get { recordingCoordinator.currentQuestionAudioUrl }
-        set { recordingCoordinator.currentQuestionAudioUrl = newValue }
-    }
 
     // MARK: - Initialization
 
@@ -607,7 +550,7 @@ final class QuizViewModel: ObservableObject {
         // streaming recording — leave .recording and reset streaming STT so no
         // recording is stranded after the call.
         self.audioService.onInterruptionBegan = { [weak self] in
-            self?.handleAudioInterruption()
+            self?.recordingCoordinator.handleAudioInterruption()
         }
 
         // Load saved settings and stats
@@ -792,7 +735,7 @@ final class QuizViewModel: ObservableObject {
             lastErrorDebugInfo = nil
         #endif
         isRerecording = false
-        consecutiveTranscriptionFailures = 0
+        recordingCoordinator.consecutiveTranscriptionFailures = 0
 
         // Use provided parameters or fall back to settings
         let quizMaxQuestions = maxQuestions ?? settings.numberOfQuestions
@@ -869,10 +812,10 @@ final class QuizViewModel: ObservableObject {
             if let audioInfo = response.audio,
                let questionUrl = audioInfo.questionUrl
             {
-                await playQuestionAudio(from: questionUrl)
+                await audioDeviceState.playQuestionAudio(from: questionUrl)
             } else {
                 // No audio — start silence detection then recording/timer
-                await startSilenceDetectionListening()
+                await audioDeviceState.startSilenceDetectionListening()
                 startRecordingOrTimer()
             }
 
@@ -971,34 +914,11 @@ final class QuizViewModel: ObservableObject {
         await entitlementReconciler.notifyPremiumPurchased()
     }
 
-    /// Launch/foreground entitlement reconcile (single-flight) — see
-    /// `EntitlementReconciler.reconcileEntitlements`. Called from
-    /// `handleScenePhase(.active)`; the launch kick fires in the child's `init`.
-    func reconcileEntitlements() async {
-        await entitlementReconciler.reconcileEntitlements()
-    }
-
     // MARK: - Audio — forwarded to AudioDeviceState (#113 T2)
 
-    // Permanent decision-2 forwards: every one has production callers today
-    // (views, MAIN quiz flow, or the +Recording/+CommandListener/+ScenePhase
-    // extensions whose extracts will inject the child's primitives instead —
-    // S3/S5 re-point them).
-
-    /// Shared silence-detection choke point — see `AudioDeviceState.startSilenceDetectionListening`.
-    func startSilenceDetectionListening() async {
-        await audioDeviceState.startSilenceDetectionListening()
-    }
-
-    /// Shared silence-detection choke point — see `AudioDeviceState.stopSilenceDetectionListening`.
-    func stopSilenceDetectionListening() {
-        audioDeviceState.stopSilenceDetectionListening()
-    }
-
-    /// Question TTS + post-TTS timer/recording arming — see `AudioDeviceState.playQuestionAudio`.
-    func playQuestionAudio(from urlString: String) async {
-        await audioDeviceState.playQuestionAudio(from: urlString)
-    }
+    // Permanent decision-2 forwards: every one has a verified View/app-target
+    // caller (T8 census). Forwards that only MAIN or +ScenePhase called were
+    // deleted in T8 — the façade calls `audioDeviceState.x()` directly instead.
 
     /// See `AudioDeviceState.canReplayAudio` (#59.5).
     var canReplayAudio: Bool { audioDeviceState.canReplayAudio }
@@ -1008,24 +928,9 @@ final class QuizViewModel: ObservableObject {
         await audioDeviceState.replayQuestionAudio()
     }
 
-    /// See `AudioDeviceState.playFeedbackAudio(from:)`.
-    func playFeedbackAudio(from urlString: String) async -> TimeInterval {
-        await audioDeviceState.playFeedbackAudio(from: urlString)
-    }
-
-    /// See `AudioDeviceState.playFeedbackAudioBase64(_:)`.
-    func playFeedbackAudioBase64(_ base64: String) async -> TimeInterval {
-        await audioDeviceState.playFeedbackAudioBase64(base64)
-    }
-
     /// See `AudioDeviceState.toggleMute` (founder bug 2026-07-11).
     func toggleMute() async {
         await audioDeviceState.toggleMute()
-    }
-
-    /// See `AudioDeviceState.stopAnyPlayingAudio`.
-    func stopAnyPlayingAudio() async {
-        await audioDeviceState.stopAnyPlayingAudio()
     }
 
     /// See `AudioDeviceState.toggleAudioMode`.
@@ -1045,18 +950,13 @@ final class QuizViewModel: ObservableObject {
 
     // MARK: - Recording — forwarded to RecordingCoordinator (#113 T5)
 
-    // Permanent decision-2 forwards: every one has production callers today
-    // (QuestionView, +ScenePhase, the AudioService interruption hook, or the
-    // façade's own quiz flow).
+    // Permanent decision-2 forwards: every one has a verified View/app-target
+    // caller (T8 census — QuestionView et al.). Façade- and +ScenePhase-only
+    // forwards were deleted in T8; those call `recordingCoordinator.x()` direct.
 
     /// Mic-button entry — see `RecordingCoordinator.toggleRecording`.
     func toggleRecording() async {
         await recordingCoordinator.toggleRecording()
-    }
-
-    /// See `RecordingCoordinator.startRecording` (`handleBargeIn` calls it).
-    func startRecording() async {
-        await recordingCoordinator.startRecording()
     }
 
     /// See `RecordingCoordinator.confirmAnswer`.
@@ -1089,22 +989,6 @@ final class QuizViewModel: ObservableObject {
         recordingCoordinator.cancelProcessing()
     }
 
-    /// See `RecordingCoordinator.handleAudioInterruption` (#67 Part A —
-    /// `+ScenePhase` and the AudioService interruption hook call it).
-    func handleAudioInterruption() {
-        recordingCoordinator.handleAudioInterruption()
-    }
-
-    /// See `RecordingCoordinator.cleanupStreamingSTT` (`resubmitAnswer`/`resetState`).
-    func cleanupStreamingSTT() {
-        recordingCoordinator.cleanupStreamingSTT()
-    }
-
-    /// See `RecordingCoordinator.cancelSilenceDetection` (`resubmitAnswer`).
-    func cancelSilenceDetection() {
-        recordingCoordinator.cancelSilenceDetection()
-    }
-
     /// Handle barge-in: user spoke during TTS playback on external audio route.
     /// Stays façade-resident (not in AudioDeviceState) — it fans out into the
     /// recording + timer clusters; the child reaches it via the injected
@@ -1115,7 +999,7 @@ final class QuizViewModel: ObservableObject {
         Logger.voice.info("🗣️ Barge-in triggered — stopping TTS and starting recording")
 
         // 1. Stop TTS immediately
-        await stopAnyPlayingAudio()
+        await audioDeviceState.stopAnyPlayingAudio()
 
         // 2. Clear barge-in activation so a re-fire isn't triggered by the
         //    teardown tail of TTS audio.
@@ -1128,9 +1012,9 @@ final class QuizViewModel: ObservableObject {
         guard quizState == .askingQuestion else { return }
 
         // 5. Auto-start recording (same as post-TTS flow)
-        cancelAnswerTimer()
+        quizTimersController.cancelAnswerTimer()
         isAutoRecording = true
-        await startRecording()
+        await recordingCoordinator.startRecording()
     }
 
     /// Whether to retry with a new session (for initialization errors)
@@ -1194,8 +1078,8 @@ final class QuizViewModel: ObservableObject {
         }
 
         submissionEpoch &+= 1 // #79: supersede any suspended voice-transcript handler
-        cancelAnswerTimer()
-        cancelAutoStopRecordingTimer()
+        quizTimersController.cancelAnswerTimer()
+        quizTimersController.cancelAutoStopRecordingTimer()
         // #79: a rejected transition means another submission already claimed
         // .processing (e.g. a double-tapped option) — bail instead of firing a
         // second concurrent submit.
@@ -1234,23 +1118,23 @@ final class QuizViewModel: ObservableObject {
         // Dismiss the sheet + auto-confirm and drop the STT event listener up front
         // so the typed answer wins and no stale voice sheet resurfaces.
         showAnswerConfirmation = false
-        cancelAutoConfirm()
+        quizTimersController.cancelAutoConfirm()
         taskBag.cancel(.sttEvent)
 
         // Stop any in-flight voice machinery so the typed answer wins the race
         // against a silent auto-stop submission. Answer/thinking timers are left
         // running on purpose — they no-op once state ≠ .askingQuestion.
         taskBag.cancel(.voiceSubmission)
-        cancelAutoStopRecordingTimer()
-        cancelSilenceDetection()
+        quizTimersController.cancelAutoStopRecordingTimer()
+        recordingCoordinator.cancelSilenceDetection()
         isAutoRecording = false
-        speechDetectedDuringAutoRecord = false
+        recordingCoordinator.speechDetectedDuringAutoRecord = false
         // Streaming STT can still be live even after the committed-transcript
         // handler left .recording (it suspends in disconnect() before flipping
         // state), so tear it down regardless of quizState. Batch recording is
         // only ever live while .recording.
         if isStreamingSTT {
-            cleanupStreamingSTT()
+            recordingCoordinator.cleanupStreamingSTT()
         } else if quizState == .recording {
             _ = try? await audioService.stopRecording()
         }
@@ -1288,11 +1172,11 @@ final class QuizViewModel: ObservableObject {
         guard let sessionId = currentSession?.id else { return }
 
         submissionEpoch &+= 1 // #79: supersede any suspended voice-transcript handler
-        cancelAnswerTimer()
-        cancelThinkingTime()
+        quizTimersController.cancelAnswerTimer()
+        quizTimersController.cancelThinkingTime()
 
         // Stop any playing question audio immediately
-        await stopAnyPlayingAudio()
+        await audioDeviceState.stopAnyPlayingAudio()
 
         transition(to: .skipping)
         errorMessage = nil
@@ -1318,13 +1202,13 @@ final class QuizViewModel: ObservableObject {
     func endQuiz() async {
         guard let sessionId = currentSession?.id else { return }
 
-        cancelAnswerTimer()
-        cancelAutoStopRecordingTimer()
+        quizTimersController.cancelAnswerTimer()
+        quizTimersController.cancelAutoStopRecordingTimer()
 
         do {
             try await networkService.endSession(sessionId: sessionId)
             persistenceStore.clearSession()
-            await stopAnyPlayingAudio() // Await properly (we're async here)
+            await audioDeviceState.stopAnyPlayingAudio() // Await properly (we're async here)
             resetState()
 
             Logger.quiz.info("🎮 Quiz ended")
@@ -1388,7 +1272,7 @@ final class QuizViewModel: ObservableObject {
         currentQuestionPaused = false
 
         Task {
-            await startAutoAdvanceCountdown(duration: settings.autoAdvanceDelay, audioDuration: 0)
+            await quizTimersController.startAutoAdvanceCountdown(duration: settings.autoAdvanceDelay, audioDuration: 0)
         }
 
         Logger.quiz.info("▶️ Resuming auto-advance countdown (staying on result)")
@@ -1439,9 +1323,9 @@ final class QuizViewModel: ObservableObject {
 
         if settings.autoRecordEnabled && !isRerecording {
             // Auto-record path: thinking time countdown → auto-start recording
-            startThinkingTimeCountdown()
+            quizTimersController.startThinkingTimeCountdown()
         } else {
-            startAnswerTimer()
+            quizTimersController.startAnswerTimer()
         }
     }
 
@@ -1455,7 +1339,7 @@ final class QuizViewModel: ObservableObject {
         defer { isProcessingResponse = false }
 
         // Reset transcription failure counter on successful response
-        consecutiveTranscriptionFailures = 0
+        recordingCoordinator.consecutiveTranscriptionFailures = 0
 
         // Cancel any previous auto-advance task
         taskBag.cancel(.autoAdvance)
@@ -1550,14 +1434,14 @@ final class QuizViewModel: ObservableObject {
                 guard let audioInfo = response.audio else { return 0.0 }
                 // Prioritize base64 (enhanced feedback) over URL (generic feedback)
                 if let base64 = audioInfo.feedbackAudioBase64 {
-                    return await playFeedbackAudioBase64(base64)
+                    return await audioDeviceState.playFeedbackAudioBase64(base64)
                 } else if let feedbackUrl = audioInfo.feedbackUrl {
-                    return await playFeedbackAudio(from: feedbackUrl)
+                    return await audioDeviceState.playFeedbackAudio(from: feedbackUrl)
                 }
                 return 0.0
             }()
 
-            await startAutoAdvanceCountdown(duration: settings.autoAdvanceDelay, audioDuration: 0)
+            await quizTimersController.startAutoAdvanceCountdown(duration: settings.autoAdvanceDelay, audioDuration: 0)
 
             // Keep the feedback audio playing to completion (and surface any failure log)
             // before this task ends; the countdown above is already running concurrently.
@@ -1594,7 +1478,7 @@ final class QuizViewModel: ObservableObject {
 
         // CRITICAL: Stop any playing feedback audio before transitioning
         // This ensures clean state transition from ResultView to QuestionView
-        await stopAnyPlayingAudio()
+        await audioDeviceState.stopAnyPlayingAudio()
 
         // Small delay to ensure audio cleanup completes
         try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
@@ -1622,7 +1506,7 @@ final class QuizViewModel: ObservableObject {
 
             // Play next question audio if available
             if let questionUrl = nextQuestionAudioUrl {
-                await playQuestionAudio(from: questionUrl)
+                await audioDeviceState.playQuestionAudio(from: questionUrl)
                 nextQuestionAudioUrl = nil // Clear after use
             } else {
                 // No audio — auto-record or timer based on settings
@@ -1636,11 +1520,11 @@ final class QuizViewModel: ObservableObject {
 
     /// Repeat the current question audio (public for UI button)
     func repeatQuestion() async {
-        if quizState == .askingQuestion, let audioUrl = currentQuestionAudioUrl {
-            cancelAnswerTimer()
-            cancelThinkingTime()
-            await stopAnyPlayingAudio()
-            await playQuestionAudio(from: audioUrl)
+        if quizState == .askingQuestion, let audioUrl = recordingCoordinator.currentQuestionAudioUrl {
+            quizTimersController.cancelAnswerTimer()
+            quizTimersController.cancelThinkingTime()
+            await audioDeviceState.stopAnyPlayingAudio()
+            await audioDeviceState.playQuestionAudio(from: audioUrl)
         }
     }
 
@@ -1649,10 +1533,10 @@ final class QuizViewModel: ObservableObject {
         taskBag.cancelAll()
 
         // Clean up streaming STT
-        cleanupStreamingSTT()
+        recordingCoordinator.cleanupStreamingSTT()
 
         // Stop silence detection / barge-in listening
-        stopSilenceDetectionListening()
+        audioDeviceState.stopSilenceDetectionListening()
 
         // Reset all state
         // Note: audio stop must be awaited by async callers (endQuiz) before resetState().

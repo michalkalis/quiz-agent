@@ -58,7 +58,7 @@ struct EarconTests {
             let (vm, earcon) = makeVM()
             vm.quizState = .askingQuestion
 
-            await vm.startRecording()
+            await vm.recordingCoordinator.startRecording()
 
             #expect(earcon.played == [.micLive], "start recording must play exactly mic-live, got \(earcon.played)")
         }

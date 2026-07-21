@@ -14,7 +14,6 @@ import os
 import SwiftUI
 
 extension QuizViewModel {
-
     /// Route a scene-phase change from HangsApp's WindowGroup.
     /// `.background` tears down all audio input: the command/VAD listener
     /// stops, an in-flight recording aborts via the existing #67 interruption
@@ -32,7 +31,7 @@ extension QuizViewModel {
             isAppForeground = false
 
             // (a) Tear down the command/VAD listener (idempotent).
-            stopSilenceDetectionListening()
+            audioDeviceState.stopSilenceDetectionListening()
 
             // (b) An in-flight answer recording aborts via the existing #67
             // interruption teardown — the single recording state-reset path
@@ -43,7 +42,7 @@ extension QuizViewModel {
                 if !isStreamingSTT {
                     Task { [audioService] in _ = try? await audioService.stopRecording() }
                 }
-                handleAudioInterruption()
+                recordingCoordinator.handleAudioInterruption()
             }
 
             // (c) Release the audio session ONLY when fully idle — never kill
@@ -64,7 +63,7 @@ extension QuizViewModel {
             // event or purchase. Single-flight + retry/backoff live in
             // `reconcileEntitlements()`.
             Task { [weak self] in
-                await self?.reconcileEntitlements()
+                await self?.entitlementReconciler.reconcileEntitlements()
             }
 
         default:

@@ -52,14 +52,14 @@ struct QuizViewModelTTSSpyTests {
     func askingQuestionAttemptsTTS() async {
         let (viewModel, mockAudio) = makeAskingViewModel()
 
-        await viewModel.playQuestionAudio(from: "https://example.com/q.mp3")
+        await viewModel.audioDeviceState.playQuestionAudio(from: "https://example.com/q.mp3")
 
         #expect(mockAudio.playOpusCallCount == 1)
         #expect(mockAudio.lastPlayedData == Data("opus-bytes".utf8))
 
         // Stop the answer-timer scheduled in the post-TTS branch so it can't fire
         // mid-suite (silenceDetectionService is nil → legacy startAnswerTimer path).
-        viewModel.cancelAnswerTimer()
+        viewModel.quizTimersController.cancelAnswerTimer()
     }
 
     @Test("a failed TTS playback is swallowed and re-attempted on the next question")
@@ -68,15 +68,15 @@ struct QuizViewModelTTSSpyTests {
 
         // First question: playback throws internally — must NOT propagate, and the
         // quiz must stay in askingQuestion (not stranded), with TTS attempted once.
-        await viewModel.playQuestionAudio(from: "https://example.com/q1.mp3")
+        await viewModel.audioDeviceState.playQuestionAudio(from: "https://example.com/q1.mp3")
         #expect(mockAudio.playOpusCallCount == 1)
         #expect(viewModel.quizState == .askingQuestion)
-        viewModel.cancelAnswerTimer()
+        viewModel.quizTimersController.cancelAnswerTimer()
 
         // Next question: TTS is attempted again (it is not disabled by a prior fail).
         viewModel.quizState = .askingQuestion
-        await viewModel.playQuestionAudio(from: "https://example.com/q2.mp3")
+        await viewModel.audioDeviceState.playQuestionAudio(from: "https://example.com/q2.mp3")
         #expect(mockAudio.playOpusCallCount == 2)
-        viewModel.cancelAnswerTimer()
+        viewModel.quizTimersController.cancelAnswerTimer()
     }
 }

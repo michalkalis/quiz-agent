@@ -91,7 +91,7 @@ struct StartCommandTests {
             let (vm, audio) = makeStartVM()
             vm.voiceCommandCoordinator.voiceStartOnQuestionEnabled = false
             vm.quizState = .askingQuestion
-            vm.currentQuestionAudioUrl = "https://example.com/q.opus"
+            vm.recordingCoordinator.currentQuestionAudioUrl = "https://example.com/q.opus"
 
             // 'repeat' is a separate question-screen command — unaffected by the
             // start flag. It must still drive the TTS-replay path (durable signal:

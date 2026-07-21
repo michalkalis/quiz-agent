@@ -584,7 +584,7 @@ struct QuizViewModelAnswerConfirmationDismissTests {
         viewModel.rerecordAnswer()
 
         #expect(viewModel.showAnswerConfirmation == false)
-        #expect(viewModel.pendingResponse == nil, "rerecordAnswer must consume the pending response")
+        #expect(viewModel.recordingCoordinator.pendingResponse == nil, "rerecordAnswer must consume the pending response")
         let stateBeforeDismiss = viewModel.quizState
 
         // Now if onDismiss fires, it should be a no-op (pendingResponse already nil)

@@ -153,7 +153,7 @@ struct CommandListenerTests {
         let mock = silence
 
         vm.quizState = .askingQuestion
-        await vm.startSilenceDetectionListening()
+        await vm.audioDeviceState.startSilenceDetectionListening()
         #expect(mock.isListening == true)
 
         // Simulate the answer window opening.
@@ -174,7 +174,7 @@ struct CommandListenerTests {
             vm.voiceCommandCoordinator.onCommandRecognized = { recognized.append($0) }
 
             vm.quizState = .askingQuestion
-            await vm.startSilenceDetectionListening() // arms the consumer
+            await vm.audioDeviceState.startSilenceDetectionListening() // arms the consumer
 
             mock.simulateCommandTranscript("start")
             await waitUntil({ !recognized.isEmpty }, "no command recognized")
@@ -194,7 +194,7 @@ struct CommandListenerTests {
 
             // "next" is NOT a question-screen command → dropped.
             vm.quizState = .askingQuestion
-            await vm.startSilenceDetectionListening()
+            await vm.audioDeviceState.startSilenceDetectionListening()
             mock.simulateCommandTranscript("next")
             // Give the consumer a chance to (not) fire.
             for _ in 0 ..< 20 {
@@ -220,7 +220,7 @@ struct CommandListenerTests {
             vm.voiceCommandCoordinator.onCommandRecognized = { recognized.append($0) }
 
             vm.quizState = .askingQuestion
-            await vm.startSilenceDetectionListening()
+            await vm.audioDeviceState.startSilenceDetectionListening()
             mock.simulateCommandTranscript("what is the capital of france")
             for _ in 0 ..< 20 {
                 await Task.yield()
@@ -235,10 +235,10 @@ struct CommandListenerTests {
         #expect(vm.voiceCommandCoordinator.commandCapturePhase == .idle)
 
         vm.quizState = .askingQuestion
-        await vm.startSilenceDetectionListening()
+        await vm.audioDeviceState.startSilenceDetectionListening()
         #expect(vm.voiceCommandCoordinator.commandCapturePhase == .listening)
 
-        vm.stopSilenceDetectionListening()
+        vm.audioDeviceState.stopSilenceDetectionListening()
         #expect(vm.voiceCommandCoordinator.commandCapturePhase == .idle)
     }
 
@@ -257,7 +257,7 @@ struct CommandListenerTests {
         #expect(mock.startListeningCallCount >= 1, "setup was attempted")
 
         // The manual mic button still works (batch path — no STT service).
-        await vm.startRecording()
+        await vm.recordingCoordinator.startRecording()
         #expect(vm.quizState == .recording)
         #expect(audio.isRecording == true)
     }

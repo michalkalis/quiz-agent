@@ -138,7 +138,7 @@ struct SkipCancelWordTests {
             vm.voiceCommandCoordinator.beginSkipUndoWindow(duration: 10) // long window — must not expire on its own
             #expect(vm.voiceCommandCoordinator.pendingSkipWindow != nil)
 
-            await vm.startRecording()
+            await vm.recordingCoordinator.startRecording()
 
             #expect(vm.voiceCommandCoordinator.pendingSkipWindow == nil, "starting to answer must supersede a pending skip")
         }

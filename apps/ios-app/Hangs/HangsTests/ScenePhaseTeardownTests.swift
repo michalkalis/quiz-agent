@@ -68,7 +68,7 @@ struct ScenePhaseTeardownTests {
         let mock = silence
 
         vm.quizState = .idle
-        await vm.startSilenceDetectionListening() // Home window armed
+        await vm.audioDeviceState.startSilenceDetectionListening() // Home window armed
         #expect(mock.isListening == true)
 
         vm.handleScenePhase(.background)
@@ -83,7 +83,7 @@ struct ScenePhaseTeardownTests {
         let mock = silence
 
         vm.quizState = .askingQuestion
-        await vm.startSilenceDetectionListening()
+        await vm.audioDeviceState.startSilenceDetectionListening()
         #expect(mock.isListening == true)
 
         vm.handleScenePhase(.background)
@@ -151,7 +151,7 @@ struct ScenePhaseTeardownTests {
             let mock = silence
 
             vm.quizState = .askingQuestion
-            await vm.startSilenceDetectionListening()
+            await vm.audioDeviceState.startSilenceDetectionListening()
             vm.handleScenePhase(.background)
             #expect(mock.isListening == false)
 
@@ -176,7 +176,7 @@ struct ScenePhaseTeardownTests {
         #expect(mock.isListening == false)
 
         // …and neither may a direct re-arm (e.g. the post-TTS tail).
-        await vm.startSilenceDetectionListening()
+        await vm.audioDeviceState.startSilenceDetectionListening()
         #expect(mock.isListening == false, "direct arm bypassed the foreground guard")
 
         // Foregrounding restores the window.
@@ -191,7 +191,7 @@ struct ScenePhaseTeardownTests {
         vm.quizState = .askingQuestion
         vm.handleScenePhase(.background)
 
-        await vm.startRecording()
+        await vm.recordingCoordinator.startRecording()
 
         #expect(vm.quizState == .askingQuestion, "must not enter .recording while backgrounded")
         #expect(audio.isRecording == false, "mic must not open in the background")

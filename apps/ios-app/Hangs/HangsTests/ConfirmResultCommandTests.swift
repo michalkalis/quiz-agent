@@ -89,13 +89,13 @@ struct ConfirmResultCommandTests {
             let (vm, _, _) = makeVM()
             vm.quizState = .processing
             vm.showAnswerConfirmation = true
-            vm.pendingResponse = makePendingResponse()
+            vm.recordingCoordinator.pendingResponse = makePendingResponse()
 
             vm.voiceCommandCoordinator.handleRecognizedCommand(.ok)
 
             await waitUntil({ !vm.showAnswerConfirmation }, "ok did not confirm")
             #expect(vm.showAnswerConfirmation == false)
-            #expect(vm.pendingResponse == nil, "the pending response was consumed by confirm")
+            #expect(vm.recordingCoordinator.pendingResponse == nil, "the pending response was consumed by confirm")
         }
     }
 
@@ -105,7 +105,7 @@ struct ConfirmResultCommandTests {
             let (vm, _, audio) = makeVM()
             vm.quizState = .processing
             vm.showAnswerConfirmation = true
-            vm.pendingResponse = makePendingResponse()
+            vm.recordingCoordinator.pendingResponse = makePendingResponse()
 
             vm.voiceCommandCoordinator.handleRecognizedCommand(.again)
 
@@ -144,11 +144,11 @@ struct ConfirmResultCommandTests {
             let (vm, _, _) = makeVM()
             vm.quizState = .processing
             vm.showAnswerConfirmation = true
-            vm.pendingResponse = makePendingResponse()
+            vm.recordingCoordinator.pendingResponse = makePendingResponse()
             vm.settings.autoConfirmEnabled = true
 
             // No spoken command — the auto-confirm timer alone must confirm.
-            vm.startAutoConfirmIfEnabled(duration: 1)
+            vm.quizTimersController.startAutoConfirmIfEnabled(duration: 1)
 
             await waitUntil({ !vm.showAnswerConfirmation }, "auto-confirm did not fire with no speech")
             #expect(vm.showAnswerConfirmation == false)
@@ -195,7 +195,7 @@ struct ConfirmResultCommandTests {
         await withMainSerialExecutor {
             let (vm, silence, audio) = makeVM()
             vm.quizState = .askingQuestion
-            vm.currentQuestionAudioUrl = "https://example.com/q.opus"
+            vm.recordingCoordinator.currentQuestionAudioUrl = "https://example.com/q.opus"
 
             vm.voiceCommandCoordinator.handleRecognizedCommand(.repeatQuestion)
 

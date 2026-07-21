@@ -40,8 +40,8 @@ struct ResetModelTests {
         // The skip undo-window only opens while the question is being asked.
         viewModel.quizState = .askingQuestion
         viewModel.voiceCommandCoordinator.beginSkipUndoWindow()
-        viewModel.consecutiveTranscriptionFailures = 2
-        viewModel.currentQuestionAudioUrl = "https://example.com/q.mp3"
+        viewModel.recordingCoordinator.consecutiveTranscriptionFailures = 2
+        viewModel.recordingCoordinator.currentQuestionAudioUrl = "https://example.com/q.mp3"
         viewModel.autoConfirmCountdown = 5
         viewModel.recordingCoordinator.transcriptWasEdited = true
         viewModel.recordingCoordinator.preEditTranscript = "draft"
@@ -63,8 +63,8 @@ struct ResetModelTests {
         #expect(viewModel.showingMicrophonePicker == false)
         #expect(viewModel.voiceCommandCoordinator.commandCapturePhase == .idle)
         #expect(viewModel.voiceCommandCoordinator.pendingSkipWindow == nil)
-        #expect(viewModel.consecutiveTranscriptionFailures == 0)
-        #expect(viewModel.currentQuestionAudioUrl == nil)
+        #expect(viewModel.recordingCoordinator.consecutiveTranscriptionFailures == 0)
+        #expect(viewModel.recordingCoordinator.currentQuestionAudioUrl == nil)
         #expect(viewModel.autoConfirmCountdown == 0)
         #expect(viewModel.recordingCoordinator.transcriptWasEdited == false)
         #expect(viewModel.recordingCoordinator.preEditTranscript == nil)
@@ -87,14 +87,14 @@ struct ResetModelTests {
         let viewModel = Fixtures.makeViewModel()
         viewModel.quizState = .recording
         viewModel.liveTranscript = "hello"
-        viewModel.speechDetectedDuringAutoRecord = true
-        viewModel.consecutiveTranscriptionFailures = 1
-        viewModel.currentQuestionAudioUrl = "https://example.com/q.mp3"
+        viewModel.recordingCoordinator.speechDetectedDuringAutoRecord = true
+        viewModel.recordingCoordinator.consecutiveTranscriptionFailures = 1
+        viewModel.recordingCoordinator.currentQuestionAudioUrl = "https://example.com/q.mp3"
 
         // In-pair move: recording → processing must NOT reset.
         #expect(viewModel.transition(to: .processing))
         #expect(viewModel.liveTranscript == "hello")
-        #expect(viewModel.speechDetectedDuringAutoRecord == true)
+        #expect(viewModel.recordingCoordinator.speechDetectedDuringAutoRecord == true)
 
         viewModel.transcribedAnswer = "Paris"
         viewModel.showAnswerConfirmation = true
@@ -104,13 +104,13 @@ struct ResetModelTests {
         // confirmation subsets…
         #expect(viewModel.transition(to: .askingQuestion))
         #expect(viewModel.liveTranscript.isEmpty)
-        #expect(viewModel.speechDetectedDuringAutoRecord == false)
+        #expect(viewModel.recordingCoordinator.speechDetectedDuringAutoRecord == false)
         #expect(viewModel.transcribedAnswer.isEmpty)
         #expect(viewModel.showAnswerConfirmation == false)
         #expect(viewModel.autoConfirmCountdown == 0)
         // …while the question-scoped pair survives until success/teardown.
-        #expect(viewModel.consecutiveTranscriptionFailures == 1)
-        #expect(viewModel.currentQuestionAudioUrl == "https://example.com/q.mp3")
+        #expect(viewModel.recordingCoordinator.consecutiveTranscriptionFailures == 1)
+        #expect(viewModel.recordingCoordinator.currentQuestionAudioUrl == "https://example.com/q.mp3")
     }
 
     /// WHY: tier-2 ("speak closer") and tier-3 (auto-skip) of the
@@ -123,12 +123,12 @@ struct ResetModelTests {
         let viewModel = Fixtures.makeViewModel()
         viewModel.quizState = .recording
         viewModel.recordingCoordinator.handleTranscriptionFailure()
-        #expect(viewModel.consecutiveTranscriptionFailures == 1)
+        #expect(viewModel.recordingCoordinator.consecutiveTranscriptionFailures == 1)
         #expect(viewModel.quizState == .askingQuestion)
 
         viewModel.quizState = .recording
         viewModel.recordingCoordinator.handleTranscriptionFailure()
-        #expect(viewModel.consecutiveTranscriptionFailures == 2)
+        #expect(viewModel.recordingCoordinator.consecutiveTranscriptionFailures == 2)
     }
 
     /// WHY: score/questionsAnswered are derived from currentSession (#113 T7),

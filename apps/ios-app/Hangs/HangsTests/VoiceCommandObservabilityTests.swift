@@ -81,7 +81,7 @@ struct VoiceCommandObservabilityTests {
         vm.quizState = .idle
         #expect(vm.commandListenerHint == nil, "not listening yet → no indicator")
 
-        await vm.startSilenceDetectionListening() // arms the consumer → .listening
+        await vm.audioDeviceState.startSilenceDetectionListening() // arms the consumer → .listening
         #expect(vm.voiceCommandCoordinator.commandCapturePhase == .listening)
         #expect(vm.commandListenerHint == #"Say "start""#)
 
@@ -90,7 +90,7 @@ struct VoiceCommandObservabilityTests {
         #expect(vm.commandListenerHint == #"Say "next""#)
 
         // Tearing the listener down hides the indicator.
-        vm.stopSilenceDetectionListening()
+        vm.audioDeviceState.stopSilenceDetectionListening()
         #expect(vm.commandListenerHint == nil)
     }
 
@@ -105,7 +105,7 @@ struct VoiceCommandObservabilityTests {
                         "availability mirror did not pick up the unavailable state")
 
         vm.quizState = .idle
-        await vm.startSilenceDetectionListening()
+        await vm.audioDeviceState.startSilenceDetectionListening()
         #expect(vm.voiceCommandCoordinator.commandCapturePhase == .listening, "the consumer still arms")
         #expect(vm.commandListenerHint == nil, "but the cue must not claim to be listening")
     }
@@ -129,7 +129,7 @@ struct VoiceCommandObservabilityTests {
                         "mirror did not observe the installing state")
 
         vm.quizState = .idle
-        await vm.startSilenceDetectionListening()
+        await vm.audioDeviceState.startSilenceDetectionListening()
         #expect(vm.voiceCommandCoordinator.commandCapturePhase == .listening)
         #expect(vm.commandListenerHint == nil, "installing → the cue must not claim to be listening yet")
 
@@ -174,7 +174,7 @@ struct VoiceCommandObservabilityTests {
     func toggleOffSuppressesHint() async {
         let (vm, _, _) = makeVM()
         vm.quizState = .idle
-        await vm.startSilenceDetectionListening()
+        await vm.audioDeviceState.startSilenceDetectionListening()
         #expect(vm.commandListenerHint != nil)
 
         vm.settings.voiceCommandsEnabled = false
@@ -191,7 +191,7 @@ struct VoiceCommandObservabilityTests {
             #expect(vm.lastRecognizedCommand == nil)
 
             vm.quizState = .idle // Home — spoken "start" is valid
-            await vm.startSilenceDetectionListening()
+            await vm.audioDeviceState.startSilenceDetectionListening()
             mock.simulateCommandTranscript("start")
             await waitUntil({ vm.lastRecognizedCommand != nil }, "no command recorded")
 

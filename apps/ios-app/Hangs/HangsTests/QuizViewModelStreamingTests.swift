@@ -91,7 +91,7 @@ struct QuizViewModelStreamingTests {
             let (viewModel, _, _, _) = makeViewModelWithSTT()
 
             // startRecording() calls transition(.recording) then routes to startStreamingRecording()
-            await viewModel.startRecording()
+            await viewModel.recordingCoordinator.startRecording()
             await waitUntil({ viewModel.isStreamingSTT }, "isStreamingSTT never flipped true")
 
             #expect(viewModel.isStreamingSTT == true)
@@ -110,7 +110,7 @@ struct QuizViewModelStreamingTests {
         await withMainSerialExecutor {
             let (viewModel, _, _, mockSTT) = makeViewModelWithSTT()
 
-            await viewModel.startRecording()
+            await viewModel.recordingCoordinator.startRecording()
             await waitUntil({ viewModel.isStreamingSTT }, "streaming never started")
 
             await mockSTT.injectEvent(.partialTranscript("Par..."))
@@ -132,7 +132,7 @@ struct QuizViewModelStreamingTests {
         await withMainSerialExecutor {
             let (viewModel, _, _, mockSTT) = makeViewModelWithSTT()
 
-            await viewModel.startRecording()
+            await viewModel.recordingCoordinator.startRecording()
             await waitUntil({ viewModel.isStreamingSTT }, "streaming never started")
 
             await mockSTT.injectEvent(.committedTranscript("Paris"))
@@ -156,7 +156,7 @@ struct QuizViewModelStreamingTests {
         await withMainSerialExecutor {
             let (viewModel, _, _, mockSTT) = makeViewModelWithSTT()
 
-            await viewModel.startRecording()
+            await viewModel.recordingCoordinator.startRecording()
             await waitUntil({ viewModel.isStreamingSTT }, "streaming never started")
 
             // Establish a partial so we can verify liveTranscript is cleared too
@@ -186,7 +186,7 @@ struct QuizViewModelStreamingTests {
         await withMainSerialExecutor {
             let (viewModel, _, _, mockSTT) = makeViewModelWithSTT()
 
-            await viewModel.startRecording()
+            await viewModel.recordingCoordinator.startRecording()
             await waitUntil({ viewModel.isStreamingSTT }, "streaming never started")
 
             await mockSTT.injectEvent(.committedTranscript(""))
@@ -209,7 +209,7 @@ struct QuizViewModelStreamingTests {
             let (viewModel, _, _, mockSTT) = makeViewModelWithSTT()
             await mockSTT.setCommitEmitsNothing(true)
 
-            await viewModel.startRecording()
+            await viewModel.recordingCoordinator.startRecording()
             await waitUntil({ viewModel.isStreamingSTT }, "streaming never started")
 
             await viewModel.recordingCoordinator.stopRecordingAndSubmit()
@@ -236,7 +236,7 @@ struct QuizViewModelStreamingTests {
             viewModel.isRerecording = true
             viewModel.quizState = .recording
 
-            viewModel.startAutoStopRecordingTimer(duration: 0.01)
+            viewModel.quizTimersController.startAutoStopRecordingTimer(duration: 0.01)
             await waitUntil({ viewModel.quizState != .recording }, "cap never fired during re-record")
 
             #expect(viewModel.quizState != .recording)
@@ -273,7 +273,7 @@ struct QuizViewModelStreamingTests {
                 generatedBy: nil
             )
 
-            await viewModel.startRecording()
+            await viewModel.recordingCoordinator.startRecording()
             await waitUntil({ viewModel.isStreamingSTT }, "streaming never started")
 
             await mockSTT.injectEvent(.committedTranscript("Jupiter"))

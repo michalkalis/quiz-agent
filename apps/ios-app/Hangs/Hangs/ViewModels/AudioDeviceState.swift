@@ -42,11 +42,6 @@ final class AudioDeviceState: ObservableObject {
         audioService.currentInputDevice
     }
 
-    /// Current output device name for display
-    var currentOutputDeviceName: String {
-        audioService.currentOutputDeviceName
-    }
-
     /// Display name for current input device
     var currentInputDeviceName: String {
         if let device = audioService.currentInputDevice {

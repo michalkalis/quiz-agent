@@ -106,7 +106,7 @@ struct QuizViewModelResubmitTests {
         viewModel.showAnswerConfirmation = true
         viewModel.quizState = .processing
         // pendingResponse must be nil so confirmAnswer() takes the streaming path.
-        viewModel.pendingResponse = nil
+        viewModel.recordingCoordinator.pendingResponse = nil
 
         // User taps the pencil — this is the entry point for the "edited" branch.
         viewModel.beginEditingTranscript()
@@ -138,10 +138,10 @@ struct QuizViewModelResubmitTests {
         viewModel.showAnswerConfirmation = true
         viewModel.quizState = .processing
         // pendingResponse nil → confirmAnswer() takes the streaming resubmit path.
-        viewModel.pendingResponse = nil
+        viewModel.recordingCoordinator.pendingResponse = nil
 
         // Fire the real auto-confirm countdown (1s injected for test speed).
-        viewModel.startAutoConfirmIfEnabled(duration: 1)
+        viewModel.quizTimersController.startAutoConfirmIfEnabled(duration: 1)
 
         // Countdown (1s) + handed-off submit; poll up to 4s.
         for _ in 0 ..< 40 where !viewModel.quizState.isShowingResult {

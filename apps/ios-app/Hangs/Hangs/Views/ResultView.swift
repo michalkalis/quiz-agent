@@ -182,8 +182,7 @@ struct ResultView: View {
 
     @ViewBuilder
     private var countdownBar: some View {
-        if viewModel.autoAdvanceEnabled
-            && !viewModel.currentQuestionPaused
+        if !viewModel.currentQuestionPaused
             && viewModel.autoAdvanceCountdown > 0
         {
             VStack(spacing: 6) {
@@ -268,8 +267,7 @@ struct ResultView: View {
     // MARK: - Derived
 
     private func pauseAutoAdvanceIfActive() {
-        guard viewModel.autoAdvanceEnabled,
-              !viewModel.currentQuestionPaused,
+        guard !viewModel.currentQuestionPaused,
               viewModel.autoAdvanceCountdown > 0 else { return }
         viewModel.pauseQuiz()
     }

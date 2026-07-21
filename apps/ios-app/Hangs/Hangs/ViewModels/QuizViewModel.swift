@@ -202,13 +202,6 @@ final class QuizViewModel: ObservableObject {
         set { quizTimersController.thinkingTimeCountdown = newValue }
     }
 
-    /// Auto-advance enabled state (global setting toggle; dead axis, dies in
-    /// S6a) — see `QuizTimersController.autoAdvanceEnabled`.
-    var autoAdvanceEnabled: Bool {
-        get { quizTimersController.autoAdvanceEnabled }
-        set { quizTimersController.autoAdvanceEnabled = newValue }
-    }
-
     /// Per-question pause state (resets on next question) — see
     /// `QuizTimersController.currentQuestionPaused`.
     var currentQuestionPaused: Bool {
@@ -782,7 +775,6 @@ final class QuizViewModel: ObservableObject {
         #if DEBUG
             lastErrorDebugInfo = nil
         #endif
-        autoAdvanceEnabled = true // Reset auto-advance for new quiz
         isRerecording = false
         consecutiveTranscriptionFailures = 0
 
@@ -1675,7 +1667,6 @@ final class QuizViewModel: ObservableObject {
         answerTimerCountdown = 0
         thinkingTimeCountdown = 0
         currentQuestionPaused = false
-        autoAdvanceEnabled = true
         isRerecording = false
         isAutoRecording = false
         speechDetectedDuringAutoRecord = false

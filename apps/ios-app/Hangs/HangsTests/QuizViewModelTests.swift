@@ -1306,7 +1306,6 @@ struct QuizViewModelResumeAutoAdvanceTests {
             questionId: "q_001",
             explanation: nil
         )
-        viewModel.autoAdvanceEnabled = true
         viewModel.quizState = .showingResult(question: question, evaluation: evaluation)
 
         // Pause first (mirrors "Stay here"): countdown cancelled, pause flag set.

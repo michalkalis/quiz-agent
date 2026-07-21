@@ -320,7 +320,6 @@ struct QuizViewModelAutoAdvanceTests {
     @MainActor
     func autoAdvanceHappyPathRegistersTask() async throws {
         let viewModel = Fixtures.makeViewModelForTimerTests()
-        viewModel.autoAdvanceEnabled = true
         viewModel.currentQuestionPaused = false
 
         await viewModel.startAutoAdvanceCountdown(duration: 7, audioDuration: 2.0)
@@ -334,23 +333,6 @@ struct QuizViewModelAutoAdvanceTests {
         #expect(viewModel.currentQuestionPaused == true)
     }
 
-    /// Regression: the global "auto-advance" toggle in Settings flips
-    /// `autoAdvanceEnabled = false`. If the guard in
-    /// `startAutoAdvanceCountdown` is dropped, every result screen would
-    /// auto-advance regardless of the user's setting.
-    @Test("startAutoAdvanceCountdown is a no-op when autoAdvanceEnabled is false")
-    @MainActor
-    func autoAdvanceSkippedWhenDisabled() async throws {
-        let viewModel = Fixtures.makeViewModelForTimerTests()
-        viewModel.autoAdvanceEnabled = false
-        viewModel.autoAdvanceCountdown = 99 // pretend a previous countdown lingered
-
-        await viewModel.startAutoAdvanceCountdown(duration: 7, audioDuration: 2.0)
-
-        #expect(viewModel.autoAdvanceCountdown == 0)
-        #expect(!viewModel.taskBag.contains(.autoAdvance))
-    }
-
     /// Regression: pause-on-current-question flips `currentQuestionPaused = true`.
     /// Auto-advance must respect that for the rest of the result screen even if
     /// some other code path tries to (re)start it.
@@ -358,7 +340,6 @@ struct QuizViewModelAutoAdvanceTests {
     @MainActor
     func autoAdvanceSkippedWhenPaused() async throws {
         let viewModel = Fixtures.makeViewModelForTimerTests()
-        viewModel.autoAdvanceEnabled = true
         viewModel.currentQuestionPaused = true
 
         await viewModel.startAutoAdvanceCountdown(duration: 7, audioDuration: 2.0)

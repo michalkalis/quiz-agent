@@ -32,8 +32,6 @@ final class QuizTimersController: ObservableObject {
     @Published var answerTimerCountdown: Int = 0
     // Thinking time countdown (visible on QuestionView before auto-recording)
     @Published var thinkingTimeCountdown: Int = 0
-    // Auto-advance enabled state (global setting toggle; dead axis, dies in S6a)
-    @Published var autoAdvanceEnabled: Bool = true
     // Per-question pause state (resets on next question)
     @Published var currentQuestionPaused: Bool = false
 
@@ -86,7 +84,6 @@ final class QuizTimersController: ObservableObject {
         autoAdvanceCountdown = 0
         answerTimerCountdown = 0
         thinkingTimeCountdown = 0
-        autoAdvanceEnabled = true
         currentQuestionPaused = false
     }
 
@@ -217,10 +214,9 @@ final class QuizTimersController: ObservableObject {
 
     /// Starts the auto-advance countdown loop with real-time UI updates
     func startAutoAdvanceCountdown(duration: Int, audioDuration: TimeInterval) async {
-        // Skip auto-advance if disabled globally OR if current question is paused
-        guard autoAdvanceEnabled, !currentQuestionPaused else {
-            let reason = !autoAdvanceEnabled ? "disabled globally" : "paused for current question"
-            Logger.quiz.debug("⏱️ Auto-advance skipped (\(reason, privacy: .public))")
+        // Skip auto-advance if the current question is paused
+        guard !currentQuestionPaused else {
+            Logger.quiz.debug("⏱️ Auto-advance skipped (paused for current question)")
             autoAdvanceCountdown = 0
             return
         }

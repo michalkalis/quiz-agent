@@ -12,7 +12,7 @@ on:
           - staging
           - production
         required: true
-        default: staging
+        default: production
       notes:
         description: "Release notes / tester message (optional)"
         required: false

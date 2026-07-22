@@ -65,13 +65,72 @@ private nonisolated func capturedTransactionId(_ request: URLRequest) -> String?
     return json["transaction_id"] as? String
 }
 
+// MARK: - PackOrderStubURLProtocol
+
+//
+// A dedicated URLProtocol with its OWN process-wide handler, independent of
+// NetworkServiceTests' shared `StubURLProtocol`. Swift Testing runs separate
+// suites in parallel and `.serialized` only orders tests *within* a suite, so
+// two suites sharing one static handler race each other (one suite's
+// `handler = …` / `defer = nil` stomps the other's → wrong response or
+// NSURLError -1011). Mirrors the AttestStubURLProtocol/AppleStubURLProtocol/
+// AuthStubURLProtocol split the auth suites already use. Kept a byte-for-byte
+// clone of the original `StubURLProtocol` (synchronous startLoading) so the
+// in-flight semaphore test below observes identical blocking semantics.
+final class PackOrderStubURLProtocol: URLProtocol, @unchecked Sendable {
+
+    nonisolated override init(
+        request: URLRequest,
+        cachedResponse: CachedURLResponse?,
+        client: (any URLProtocolClient)?
+    ) {
+        super.init(request: request, cachedResponse: cachedResponse, client: client)
+    }
+
+    private nonisolated static let handlerLock = OSAllocatedUnfairLock<
+        ((@Sendable (URLRequest) throws -> (HTTPURLResponse, Data))?
+    )>(initialState: nil)
+
+    nonisolated static var handler: (@Sendable (URLRequest) throws -> (HTTPURLResponse, Data))? {
+        get { handlerLock.withLock { $0 } }
+        set { handlerLock.withLock { $0 = newValue } }
+    }
+
+    nonisolated override class func canInit(with request: URLRequest) -> Bool { true }
+
+    nonisolated override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+
+    nonisolated override func startLoading() {
+        guard let handler = PackOrderStubURLProtocol.handler else {
+            client?.urlProtocol(self, didFailWithError: URLError(.badServerResponse))
+            return
+        }
+        do {
+            let (response, data) = try handler(request)
+            client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+            client?.urlProtocol(self, didLoad: data)
+            client?.urlProtocolDidFinishLoading(self)
+        } catch {
+            client?.urlProtocol(self, didFailWithError: error)
+        }
+    }
+
+    nonisolated override func stopLoading() {}
+
+    static func makeSession() -> URLSession {
+        let cfg = URLSessionConfiguration.ephemeral
+        cfg.protocolClasses = [PackOrderStubURLProtocol.self]
+        return URLSession(configuration: cfg)
+    }
+}
+
 @Suite("PackOrderService — idempotency key stability (#103 finding 6)", .serialized)
 struct PackOrderServiceTests {
 
     private func makeService() -> PackOrderService {
         PackOrderService(
             baseURL: Stubs.baseURL,
-            session: StubURLProtocol.makeSession(),
+            session: PackOrderStubURLProtocol.makeSession(),
             authService: nil,
             adminKeyStore: AdminKeyStore()
         )
@@ -84,13 +143,13 @@ struct PackOrderServiceTests {
         let service = makeService()
         let capturedIds = OSAllocatedUnfairLock<[String]>(initialState: [])
 
-        StubURLProtocol.handler = { req in
+        PackOrderStubURLProtocol.handler = { req in
             if let id = capturedTransactionId(req) {
                 capturedIds.withLock { $0.append(id) }
             }
             return (.make(status: 202), Data(Stubs.createdJSON.utf8))
         }
-        defer { StubURLProtocol.handler = nil }
+        defer { PackOrderStubURLProtocol.handler = nil }
 
         let intent = PackOrderIntent(prompt: "History of Rome", language: "en", category: nil, theme: nil)
 
@@ -113,13 +172,13 @@ struct PackOrderServiceTests {
         let service = makeService()
         let capturedIds = OSAllocatedUnfairLock<[String]>(initialState: [])
 
-        StubURLProtocol.handler = { req in
+        PackOrderStubURLProtocol.handler = { req in
             if let id = capturedTransactionId(req) {
                 capturedIds.withLock { $0.append(id) }
             }
             return (.make(status: 202), Data(Stubs.createdJSON.utf8))
         }
-        defer { StubURLProtocol.handler = nil }
+        defer { PackOrderStubURLProtocol.handler = nil }
 
         let firstIntent = PackOrderIntent(prompt: "History of Rome", language: "en", category: nil, theme: nil)
         let secondIntent = PackOrderIntent(prompt: "Solar system facts", language: "en", category: nil, theme: nil)
@@ -147,12 +206,12 @@ struct PackOrderServiceTests {
         // the first one still pending rather than racing to completion.
         let gate = DispatchSemaphore(value: 0)
 
-        StubURLProtocol.handler = { _ in
+        PackOrderStubURLProtocol.handler = { _ in
             callCount.withLock { $0 += 1 }
             gate.wait()
             return (.make(status: 202), Data(Stubs.createdJSON.utf8))
         }
-        defer { StubURLProtocol.handler = nil }
+        defer { PackOrderStubURLProtocol.handler = nil }
 
         let intent = PackOrderIntent(prompt: "History of Rome", language: "en", category: nil, theme: nil)
 

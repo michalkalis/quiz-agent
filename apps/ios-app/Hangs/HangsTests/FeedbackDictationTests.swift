@@ -70,7 +70,16 @@ private func waitUntil(
     Issue.record(comment ?? "waitUntil timed out after \(timeoutMillis)ms", sourceLocation: sourceLocation)
 }
 
-@Suite("FeedbackViewModel Dictation")
+// .serialized is REQUIRED: every test here wraps its body in
+// withMainSerialExecutor, which flips the *process-global*
+// swift_task_enqueueGlobal_hook and restores it in a defer. Run in parallel
+// (Swift Testing's default), sibling tests null that global hook mid-flight and
+// destroy each other's serial-executor guarantee — reordering the STT actor →
+// AsyncStream → @MainActor hops (committedSegments flake) and starving the cap
+// timer's post-wake hops past the poll deadline (the "cap never fires" flake).
+// Same process-global reason NetworkServiceTests/AuthServiceTests/
+// PackOrderServiceTests are .serialized.
+@Suite("FeedbackViewModel Dictation", .serialized)
 @MainActor
 struct FeedbackDictationTests {
 
@@ -140,8 +149,17 @@ struct FeedbackDictationTests {
             await vm.startDictation()
             await waitUntil({ vm.isDictating }, "dictation never started")
 
-            await waitUntil({ vm.micState == .idle }, "cap never auto-stopped dictation")
+            // Wait for the FULL settled state, not just the mic returning idle:
+            // the cap handler sets `micState = .idle` and `didHitDictationCap`
+            // across actor hops, so polling only `micState == .idle` and then
+            // asserting the flag immediately raced the flag's write (green ~1/3).
+            // Gating on both flags removes the ordering race deterministically.
+            await waitUntil(
+                { vm.micState == .idle && vm.didHitDictationCap },
+                "cap never auto-stopped dictation and flagged why"
+            )
             #expect(vm.didHitDictationCap == true)
+            #expect(vm.micState == .idle)
         }
     }
 

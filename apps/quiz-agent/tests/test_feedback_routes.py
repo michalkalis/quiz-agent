@@ -161,6 +161,29 @@ async def test_bad_metadata_json_rejected_400(client):
     assert resp.status_code == 400
 
 
+@pytest.mark.parametrize("non_object", ["[1, 2, 3]", "42", '"a string"', "true"])
+async def test_non_object_metadata_rejected_400(client, non_object):
+    """Metadata that is *valid JSON but not an object* must be rejected with 400
+    and never persisted. This is the guard ported into #109 during the
+    2026-07-18 arch-review sweep (feedback.py `isinstance(metadata_dict, dict)`):
+    `FeedbackDetail.metadata` is typed as an object, so a row carrying a JSON
+    array/number/string/bool would make the admin `GET /feedback/{id}` read
+    unreadable (500). Distinct from the malformed-JSON branch above — both the
+    'invalid JSON' and 'valid-but-non-object JSON' paths stay independently
+    pinned so removing the guard can't slip through green."""
+    resp = await client.post(
+        "/api/v1/feedback",
+        headers=_bearer(),
+        data={"message": "hi", "metadata": non_object},
+    )
+    assert resp.status_code == 400
+
+    # The rejected payload left no row behind — nothing poisons the admin inbox.
+    listing = await client.get("/api/v1/feedback", headers={"X-Admin-Key": _ADMIN_KEY})
+    assert listing.status_code == 200
+    assert listing.json()["total"] == 0
+
+
 async def test_rate_limited_to_5_per_minute(client):
     headers = _bearer()
     for i in range(5):

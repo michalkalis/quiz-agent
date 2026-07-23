@@ -415,6 +415,68 @@ struct QuizViewModelLoadingStateTests {
         }
     }
 
+    /// FIX3: prod Fly machines auto-stop to zero, so the first `createSession`
+    /// after idle hits a cold start and throws a transient connection error
+    /// (`URLError.timedOut`). The bounded retry must swallow that and land on a
+    /// warm second attempt — reaching `.askingQuestion` instead of the error
+    /// screen — with `createSession` invoked twice (1 failure + 1 success).
+    @Test("startNewQuiz retries a transient cold-start error and recovers")
+    @MainActor
+    func startNewQuizRetriesTransientColdStart() async throws {
+        let (viewModel, mockNetwork) = Fixtures.makeViewModelWithNetwork(configure: { mock in
+            // Throws URLError.timedOut once (cold start), then succeeds.
+            mock.createSessionFailuresBeforeSuccess = 1
+        })
+
+        await viewModel.startNewQuiz()
+
+        #expect(mockNetwork.createSessionCallCount == 2)
+        #expect(viewModel.quizState == .askingQuestion)
+        #expect(!viewModel.quizState.isError)
+    }
+
+    /// FIX3: a permanent failure (non-transient server error, e.g. HTTP 400)
+    /// must NOT be retried — it surfaces on the very first attempt so the user
+    /// is not stalled behind pointless backoff. `createSession` runs exactly
+    /// once and the flow lands on the error screen.
+    @Test("startNewQuiz does not retry a permanent error")
+    @MainActor
+    func startNewQuizDoesNotRetryPermanentError() async throws {
+        let (viewModel, mockNetwork) = Fixtures.makeViewModelWithNetwork(configure: { mock in
+            mock.createSessionError = NetworkError.serverError(statusCode: 400, message: "bad request")
+        })
+
+        await viewModel.startNewQuiz()
+
+        #expect(mockNetwork.createSessionCallCount == 1)
+        #expect(viewModel.quizState.isError)
+    }
+
+    /// FIX3: guards the transient/permanent boundary the retry hinges on —
+    /// only cold-start connection failures and Fly-proxy 502/503 are transient;
+    /// quota (429), auth (401), other 4xx, and decoding errors never are.
+    @Test("isTransientStartError classifies only cold-start failures as transient")
+    @MainActor
+    func isTransientStartErrorClassification() async throws {
+        // Transient: connection-level URLErrors (machine asleep)
+        #expect(QuizViewModel.isTransientStartError(URLError(.timedOut)))
+        #expect(QuizViewModel.isTransientStartError(URLError(.cannotConnectToHost)))
+        #expect(QuizViewModel.isTransientStartError(URLError(.networkConnectionLost)))
+        #expect(QuizViewModel.isTransientStartError(URLError(.cannotFindHost)))
+        #expect(QuizViewModel.isTransientStartError(URLError(.dnsLookupFailed)))
+        // Transient: Fly proxy while the machine wakes
+        #expect(QuizViewModel.isTransientStartError(NetworkError.serverError(statusCode: 502, message: "x")))
+        #expect(QuizViewModel.isTransientStartError(NetworkError.serverError(statusCode: 503, message: "x")))
+        // Permanent: never retry
+        #expect(!QuizViewModel.isTransientStartError(NetworkError.serverError(statusCode: 401, message: "x")))
+        #expect(!QuizViewModel.isTransientStartError(NetworkError.serverError(statusCode: 429, message: "x")))
+        #expect(!QuizViewModel.isTransientStartError(NetworkError.serverError(statusCode: 400, message: "x")))
+        #expect(!QuizViewModel.isTransientStartError(NetworkError.serverError(statusCode: 500, message: "x")))
+        #expect(!QuizViewModel.isTransientStartError(NetworkError.quotaLimitReached(QuotaLimitError(error: "limit_reached", questionsUsed: 30, questionsLimit: 30, resetsAt: "2026-08-01T00:00:00Z", upgradeAvailable: true))))
+        #expect(!QuizViewModel.isTransientStartError(NetworkError.decodingError(URLError(.badServerResponse))))
+        #expect(!QuizViewModel.isTransientStartError(URLError(.userAuthenticationRequired)))
+    }
+
     /// #110 Bug 1: an accidental "Start Quiz" tap on the minimized-background
     /// HomeView while a quiz is actively mid-flight (e.g. `.recording`) must be a
     /// logged no-op, not a clobbered live session.

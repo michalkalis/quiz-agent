@@ -777,25 +777,35 @@ final class QuizViewModel: ObservableObject {
                 Logger.audio.warning("⚠️ Failed to configure audio session: \(error, privacy: .public)")
             }
 
-            // Create session with device ID for usage tracking
-            let session = try await networkService.createSession(
-                maxQuestions: quizMaxQuestions,
-                difficulty: quizDifficulty,
-                language: quizLanguage,
-                categories: settings.categories,
-                userId: persistenceStore.deviceId,
-                includeImages: settings.includeImageQuestions,
-                packId: packId
-            )
+            // Create session with device ID for usage tracking.
+            // Wrapped in a bounded transient retry: prod Fly machines auto-stop
+            // to zero, so the first request after idle hits a cold start and
+            // used to fail straight to the error screen (a warm second attempt
+            // succeeds). createSession is a POST — a retry after a timeout can
+            // theoretically orphan a session, but the retry stays tight (≤2
+            // extra attempts) and sessions expire, so the risk is accepted.
+            let session = try await withTransientStartRetry {
+                try await networkService.createSession(
+                    maxQuestions: quizMaxQuestions,
+                    difficulty: quizDifficulty,
+                    language: quizLanguage,
+                    categories: settings.categories,
+                    userId: persistenceStore.deviceId,
+                    includeImages: settings.includeImageQuestions,
+                    packId: packId
+                )
+            }
 
             currentSession = session
             persistenceStore.saveSession(id: session.id)
 
             // Start quiz and get first question with exclusion list
-            let response = try await networkService.startQuiz(
-                sessionId: session.id,
-                excludedQuestionIds: excludedIds
-            )
+            let response = try await withTransientStartRetry {
+                try await networkService.startQuiz(
+                    sessionId: session.id,
+                    excludedQuestionIds: excludedIds
+                )
+            }
 
             currentSession = response.session
             currentQuestion = response.currentQuestion
@@ -831,6 +841,59 @@ final class QuizViewModel: ObservableObject {
 
             Logger.quiz.error("❌ Error starting quiz: \(error, privacy: .public)")
         }
+    }
+
+    /// Runs a start-quiz network step with a bounded retry (up to 2 extra
+    /// attempts, ~1s growing backoff) on transient cold-start failures only.
+    /// Prod Fly machines auto-stop to zero (`min_machines_running=0`), so the
+    /// first request after idle hits a cold start; a warm second attempt
+    /// succeeds. On non-transient errors (or after the attempts are exhausted)
+    /// the original error propagates to the existing `handleError` path
+    /// unchanged. `internal` so a unit test can exercise the retry directly.
+    func withTransientStartRetry<T>(_ operation: () async throws -> T) async throws -> T {
+        let maxAttempts = 3 // 1 initial + 2 retries
+        var attempt = 1
+        while true {
+            do {
+                return try await operation()
+            } catch {
+                guard attempt < maxAttempts, Self.isTransientStartError(error) else {
+                    throw error
+                }
+                let backoffSeconds = Double(attempt) // 1s, then 2s
+                Logger.quiz.warning("⏳ Transient cold-start error on quiz start (attempt \(attempt, privacy: .public)/\(maxAttempts, privacy: .public)), retrying in \(backoffSeconds, privacy: .public)s: \(error, privacy: .public)")
+                SentryLog.info(
+                    "quiz start: retrying transient cold-start error",
+                    category: .network,
+                    attributes: ["attempt": attempt, "error": String(describing: error)]
+                )
+                try? await Task.sleep(for: .seconds(backoffSeconds))
+                attempt += 1
+            }
+        }
+    }
+
+    /// Classifies an error as a transient cold-start / edge-proxy failure worth
+    /// a bounded retry. Only connection-level `URLError`s (the machine is asleep
+    /// so the socket never connects) and Fly-proxy 502/503 (returned while the
+    /// machine wakes) qualify. Everything else — 401, 429/quota, other 4xx,
+    /// decoding errors — is permanent and must surface immediately, never retry.
+    nonisolated static func isTransientStartError(_ error: Error) -> Bool {
+        if let urlError = error as? URLError {
+            switch urlError.code {
+            case .timedOut, .cannotConnectToHost, .networkConnectionLost,
+                 .cannotFindHost, .dnsLookupFailed:
+                return true
+            default:
+                return false
+            }
+        }
+        if let networkError = error as? NetworkError,
+           case let .serverError(statusCode, _) = networkError
+        {
+            return statusCode == 502 || statusCode == 503
+        }
+        return false
     }
 
     /// Set error state. Errors are surfaced visually via `errorMessage`

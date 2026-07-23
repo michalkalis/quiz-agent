@@ -49,6 +49,12 @@ import os
         var capturedStartQuizExcludedIds: [String]?
         /// When set, `createSession` throws this error instead of the default behaviour.
         var createSessionError: Error?
+        /// When > 0, `createSession` throws a transient cold-start error
+        /// (`URLError.timedOut`) this many times before succeeding, decrementing
+        /// on each call — lets a test assert the FIX3 bounded transient-retry
+        /// recovers a cold-start failure (fails N times, then creates the
+        /// session). Independent of `createSessionError` (which is permanent).
+        var createSessionFailuresBeforeSuccess = 0
         /// Number of times `createSession` was invoked — the #110 double-tap
         /// single-flight test asserts exactly ONE session is created from a
         /// concurrent Try-Again/Play-Again double-tap.
@@ -98,6 +104,10 @@ import os
             onCreateSession?()
             capturedIncludeImages = includeImages
             capturedCategories = categories
+            if createSessionFailuresBeforeSuccess > 0 {
+                createSessionFailuresBeforeSuccess -= 1
+                throw URLError(.timedOut)
+            }
             if let error = createSessionError { throw error }
             if shouldFail {
                 throw NetworkError.invalidResponse

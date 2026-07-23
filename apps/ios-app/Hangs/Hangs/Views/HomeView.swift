@@ -101,7 +101,43 @@ struct HomeView: View {
                 .buttonStyle(.plain)
                 .accessibilityIdentifier("home.freePlanUpgradeButton")
             }
+        } else if viewModel.usageLoadState == .failed {
+            // Fetch failed with nothing cached (typically a Fly cold start) —
+            // show a lightweight retry placeholder instead of silently
+            // vanishing (#FIX2, CLAUDE.md Rule #2 fail-loud).
+            freePlanCardUnavailable
         }
+    }
+
+    // Shown only when /usage failed to load and there is nothing cached — a
+    // tap re-fetches. Reuses the free-plan card styling; no new design system.
+    private var freePlanCardUnavailable: some View {
+        Button {
+            Task { await viewModel.refreshUsage() }
+        } label: {
+            HangsCard(padding: .init(top: 12, leading: 16, bottom: 12, trailing: 16)) {
+                HStack(spacing: 6) {
+                    Image(systemName: "bolt.slash.fill")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(Theme.Hangs.Colors.muted)
+                        .accessibilityHidden(true)
+                    Text("Couldn't load your plan")
+                        .font(.hangsBody(13, weight: .semibold))
+                        .foregroundColor(Theme.Hangs.Colors.ink)
+                    Spacer()
+                    HStack(spacing: 4) {
+                        Text("Retry")
+                            .font(.hangsBody(13, weight: .semibold))
+                        Image(systemName: "arrow.clockwise")
+                            .font(.system(size: 11, weight: .semibold))
+                            .accessibilityHidden(true)
+                    }
+                    .foregroundColor(Theme.Hangs.Colors.pink)
+                }
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("home.freePlanRetryButton")
     }
 
     private func freePlanCardBody(_ usage: UsageInfo) -> some View {

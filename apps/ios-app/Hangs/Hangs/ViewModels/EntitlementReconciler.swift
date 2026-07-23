@@ -19,10 +19,30 @@ import os
 /// source of truth for entitlement — nothing here grants client-side.
 @MainActor
 final class EntitlementReconciler: ObservableObject {
+    /// Whether the `/usage` mirror has ever loaded, so the Home card can tell
+    /// "still loading" apart from "the fetch failed" and stop silently
+    /// vanishing on a transient failure (typically a Fly cold start) — #FIX2.
+    /// `usageInfo` alone can't express this: it is `nil` in both cases.
+    enum UsageLoadState {
+        /// No successful load yet — the launch/foreground fetch is still in
+        /// flight or awaiting its first attempt. The card shows nothing.
+        case loading
+        /// `usageInfo` reflects a successful `/usage` fetch.
+        case loaded
+        /// Every bounded attempt failed and `usageInfo` is still `nil` — the
+        /// card shows a lightweight retry placeholder instead of disappearing.
+        case failed
+    }
+
     // Paywall state
     @Published var showPaywall: Bool = false
     @Published var quotaLimitError: QuotaLimitError?
     @Published var usageInfo: UsageInfo?
+    /// Load status of the `/usage` mirror (see `UsageLoadState`). Only flips to
+    /// `.failed` when a fetch exhausts its retries with no cached `usageInfo`;
+    /// a failed *refresh* over an already-loaded value keeps the stale card
+    /// rather than blanking it.
+    @Published private(set) var usageLoadState: UsageLoadState = .loading
 
     private let networkService: NetworkServiceProtocol
 
@@ -42,6 +62,12 @@ final class EntitlementReconciler: ObservableObject {
     /// refresh). Set/cleared by `reconcileEntitlements()` only, cancelled in
     /// `deinit` (#102 findings 1+2).
     private var reconcileTask: Task<Void, Never>?
+
+    /// Single in-flight `/usage` fetch — the launch reconcile and
+    /// `HomeView.onAppear` both call `refreshUsage()` at startup, so they join
+    /// one attempt instead of firing duplicate `/usage` calls (#FIX2). Set/
+    /// cleared by `refreshUsage()` only, cancelled in `deinit`.
+    private var usageFetchTask: Task<Void, Never>?
 
     init(
         networkService: NetworkServiceProtocol,
@@ -64,6 +90,7 @@ final class EntitlementReconciler: ObservableObject {
 
     deinit {
         reconcileTask?.cancel()
+        usageFetchTask?.cancel()
     }
 
     /// Clears the paywall/quota UI state (#113 T7 unified reset model — the
@@ -97,11 +124,49 @@ final class EntitlementReconciler: ObservableObject {
     /// Fetch current usage info from backend (for displaying remaining
     /// questions). Identity is the bearer subject, derived server-side —
     /// the same account purchases land on (#96 P1).
+    ///
+    /// Single-flight (a launch reconcile and `HomeView.onAppear` fire this
+    /// concurrently at startup — they join one fetch) and bounded-retry: a
+    /// single transient failure (a Fly cold start exceeding the 10s `/usage`
+    /// timeout) must not silently strand the Home quota card with no data and
+    /// nothing to reload it (#FIX2). Failure after the final attempt is logged
+    /// only and, if nothing was ever loaded, flips `usageLoadState` to
+    /// `.failed` so the card shows a retry affordance instead of vanishing.
     func refreshUsage() async {
-        do {
-            usageInfo = try await networkService.getUsage()
-        } catch {
-            Logger.network.warning("⚠️ Failed to fetch usage info: \(error, privacy: .public)")
+        if let usageFetchTask {
+            await usageFetchTask.value
+            return
+        }
+        let task = Task { [weak self] in
+            guard let self else { return }
+            await self.performUsageRefresh()
+        }
+        usageFetchTask = task
+        await task.value
+        usageFetchTask = nil
+    }
+
+    /// Bounded exponential-backoff `/usage` fetch (3 attempts) — mirrors the
+    /// shape of `syncEntitlementsWithRetry`. On success publishes the mirror
+    /// and marks `.loaded`; on final failure keeps any already-loaded
+    /// `usageInfo` (a stale card beats a blank one) and only marks `.failed`
+    /// when there is nothing to show.
+    private func performUsageRefresh(maxAttempts: Int = 3) async {
+        for attempt in 1 ... maxAttempts {
+            guard !Task.isCancelled else { return }
+            do {
+                usageInfo = try await networkService.getUsage()
+                usageLoadState = .loaded
+                return
+            } catch {
+                guard attempt < maxAttempts else {
+                    Logger.network.warning("⚠️ Failed to fetch usage info after \(attempt) attempts: \(error, privacy: .public)")
+                    if usageInfo == nil { usageLoadState = .failed }
+                    return
+                }
+                let backoffSeconds = 0.2 * pow(2.0, Double(attempt - 1))
+                try? await Task.sleep(for: .seconds(backoffSeconds))
+            }
         }
     }
 

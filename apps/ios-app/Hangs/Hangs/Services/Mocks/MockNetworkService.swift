@@ -26,6 +26,19 @@ import os
         /// reconciliation bridge (#102 finding 3) actually refreshes usage, not
         /// just entitlements.
         var getUsageCallCount = 0
+        /// When set, `getUsage` throws this error instead of returning — lets a
+        /// test exercise the #FIX2 bounded-retry / failed-load path without
+        /// tripping `shouldFail` for every other call.
+        var getUsageError: Error?
+        /// When > 0, `getUsage` throws this many times before succeeding,
+        /// decrementing on each call — lets a test assert the #FIX2 bounded
+        /// retry recovers (fails N times, then loads).
+        var getUsageFailuresBeforeSuccess = 0
+        /// Optional hook awaited right after incrementing the call count, before
+        /// `getUsage` returns/throws — lets a test deterministically hold a
+        /// fetch in flight (no wall-clock race) to assert the #FIX2 single-flight
+        /// dedup (a launch fetch + an onAppear fetch must join, not fire twice).
+        var getUsageGate: (@Sendable () async -> Void)?
 
         // Capture properties for unit-test assertions (additive — no behaviour change)
         var capturedTextInputAudio: Bool?
@@ -202,6 +215,14 @@ import os
 
         func getUsage() async throws -> UsageInfo {
             getUsageCallCount += 1
+            await getUsageGate?()
+            if getUsageFailuresBeforeSuccess > 0 {
+                getUsageFailuresBeforeSuccess -= 1
+                throw getUsageError ?? NetworkError.invalidResponse
+            }
+            if let getUsageError {
+                throw getUsageError
+            }
             if shouldFail {
                 throw NetworkError.invalidResponse
             }

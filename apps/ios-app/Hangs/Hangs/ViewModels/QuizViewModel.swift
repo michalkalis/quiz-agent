@@ -147,6 +147,13 @@ final class QuizViewModel: ObservableObject {
         set { entitlementReconciler.usageInfo = newValue }
     }
 
+    /// Load status of the `/usage` mirror — lets the Home card distinguish
+    /// "still loading" from "failed" so it renders a retry placeholder instead
+    /// of silently disappearing on a transient fetch failure (#FIX2).
+    var usageLoadState: EntitlementReconciler.UsageLoadState {
+        entitlementReconciler.usageLoadState
+    }
+
     // MARK: - Answer Confirmation — forwarded to RecordingCoordinator (#113 T5)
 
     // Confirmation-modal slice — owned by RecordingCoordinator. Permanent

@@ -98,6 +98,38 @@ struct HomeFreePlanCardTests {
         }
     }
 
+    @Test("Usage that failed to load shows a retry placeholder instead of vanishing (#FIX2)")
+    func failedUsageShowsRetryPlaceholder() async throws {
+        let mock = MockNetworkService()
+        mock.getUsageError = NetworkError.invalidResponse // every /usage attempt fails
+        let vm = QuizViewModel(
+            networkService: mock,
+            audioService: MockAudioService(),
+            persistenceStore: MockPersistenceStore()
+        )
+
+        // The launch reconcile exhausts its bounded retries and marks the load
+        // failed; the card must then render a retry affordance, not disappear.
+        let deadline = ContinuousClock.now.advanced(by: .milliseconds(15000))
+        while ContinuousClock.now < deadline, vm.usageLoadState != .failed {
+            try? await Task.sleep(for: .milliseconds(5))
+        }
+        #expect(vm.usageLoadState == .failed, "usage load never surfaced as failed")
+        #expect(vm.usageInfo == nil)
+
+        let view = HomeView(viewModel: vm)
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: Never.self) {
+                try tree.find(viewWithAccessibilityIdentifier: "home.freePlanRetryButton")
+            }
+            // The normal free-plan card must NOT render when there is no usage.
+            #expect(throws: (any Error).self) {
+                try tree.find(viewWithAccessibilityIdentifier: "home.freePlanCard")
+            }
+        }
+    }
+
     // MARK: - Proactive paywall entry (#93 subscription IAP)
     // The card is the Home upgrade entry point: paywall was previously
     // reachable only via the 429 quota handlers.

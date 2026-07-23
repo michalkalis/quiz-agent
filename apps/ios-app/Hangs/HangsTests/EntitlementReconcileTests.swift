@@ -219,6 +219,68 @@ struct EntitlementReconcileTests {
         }
     }
 
+    // MARK: - Usage-load resilience (#FIX2 — Home quota card must not silently vanish)
+
+    @Test("a /usage fetch that fails every retry flips usageLoadState to .failed with no cached usage — the card must show a retry state, not disappear")
+    func usageFailureMarksFailedWhenNothingCached() async {
+        let mock = Fixtures.makeFullMockNetwork()
+        mock.getUsageError = NetworkError.invalidResponse // every attempt fails
+        let vm = makeVM(network: mock)
+
+        // Bounded retry runs real backoff sleeps, so give it headroom.
+        await waitUntil({ vm.usageLoadState == .failed }, timeoutMillis: 15000, "a fully-failed usage fetch never surfaced as .failed — the card would silently vanish")
+        #expect(vm.usageInfo == nil, "no usage should be fabricated client-side when the fetch failed")
+        #expect(mock.getUsageCallCount >= 3, "the fetch must exhaust its bounded retries, not give up on the first failure")
+    }
+
+    @Test("a /usage fetch that recovers within its retries loads normally and never marks .failed")
+    func usageRecoversWithinRetries() async {
+        let mock = Fixtures.makeFullMockNetwork()
+        mock.getUsageFailuresBeforeSuccess = 2 // fails twice, succeeds on the 3rd (bounded) attempt
+        let vm = makeVM(network: mock)
+
+        await waitUntil({ vm.usageLoadState == .loaded }, timeoutMillis: 15000, "usage never recovered despite a bounded retry")
+        #expect(vm.usageInfo != nil, "a recovered fetch must publish the usage mirror")
+    }
+
+    @Test("a failed refresh over an already-loaded usage keeps the stale card rather than blanking it")
+    func failedRefreshKeepsStaleUsage() async {
+        let mock = Fixtures.makeFullMockNetwork()
+        let loaded = makeUsage(remaining: 42)
+        mock.stubbedUsage = loaded
+        let vm = makeVM(network: mock)
+
+        await waitUntil({ vm.usageInfo == loaded }, "launch reconcile never loaded usage")
+        #expect(vm.usageLoadState == .loaded)
+
+        // A later refresh (e.g. a foreground during a cold start) now fails —
+        // it must not wipe the already-visible card.
+        mock.getUsageError = NetworkError.invalidResponse
+        await vm.refreshUsage()
+
+        #expect(vm.usageInfo == loaded, "a failed refresh must keep the last good usage, not blank the card")
+        #expect(vm.usageLoadState != .failed, "already-loaded usage must not be downgraded to .failed by a transient refresh failure")
+    }
+
+    @Test("a launch fetch and a concurrent onAppear refresh join one in-flight /usage call — no duplicate fetch")
+    func refreshUsageIsSingleFlight() async {
+        let mock = Fixtures.makeFullMockNetwork()
+        let gate = OneShotGate()
+        mock.getUsageGate = { await gate.wait() } // holds the launch fetch in flight, deterministically
+        let vm = makeVM(network: mock)
+
+        await waitUntil({ mock.getUsageCallCount == 1 }, "launch usage fetch never started")
+        // The launch fetch is provably suspended in the gate. Fire the
+        // HomeView.onAppear refresh while it is still in flight.
+        Task { await vm.refreshUsage() }
+        await Task.yield()
+        await Task.yield()
+        #expect(mock.getUsageCallCount == 1, "a concurrent refresh must join the in-flight fetch, not fire a second /usage call")
+
+        await gate.open()
+        await waitUntil({ vm.usageInfo != nil }, "the joined fetch never completed")
+    }
+
     @Test("429 on a voice-submit quota block deactivates the audio session before the paywall (#112 copy C)")
     func voiceSubmitQuotaDeactivatesAudioSession() async {
         let mock = Fixtures.makeFullMockNetwork()

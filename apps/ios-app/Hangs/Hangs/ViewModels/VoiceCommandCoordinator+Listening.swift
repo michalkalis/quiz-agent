@@ -108,7 +108,22 @@ extension VoiceCommandCoordinator {
     /// Guards on `currentCommandScreen` so a transcript that lands after the
     /// window closed (e.g. mid-transition into recording) is dropped.
     func handleCommandTranscript(_ transcript: String) async {
-        guard let screen = currentCommandScreen else { return }
+        // Release diagnostics: the command hot path was invisible in Sentry, so
+        // "commands don't work" on-device could not be triaged remotely (only
+        // availability was logged). One log per finalized transcript, at every
+        // exit, so Sentry distinguishes: window closed vs no vocab match vs
+        // matched. TEMPORARY EXCEPTION to the no-raw-speech rule in Logging.swift:
+        // "text" carries the normalized transcript while the founder is the only
+        // prod user — remove before GA (tracked in docs/todo/TODO.md).
+        let normalized = VoiceCommandMatcher.normalize(transcript)
+        guard let screen = currentCommandScreen else {
+            SentryLog.info(
+                "voice cmd transcript dropped — window closed",
+                category: .voice,
+                attributes: ["len": normalized.count, "text": normalized]
+            )
+            return
+        }
 
         // Spoken-cancel path (77.10 carry-over): while a skip undo-window is
         // open on the question screen, a spoken cancel word ("stop"/"no")
@@ -124,8 +139,20 @@ extension VoiceCommandCoordinator {
             }
         }
 
-        guard let command = VoiceCommandMatcher.match(transcript: transcript, on: screen) else { return }
+        guard let command = VoiceCommandMatcher.match(transcript: transcript, on: screen) else {
+            SentryLog.info(
+                "voice cmd transcript unmatched",
+                category: .voice,
+                attributes: ["screen": String(describing: screen), "len": normalized.count, "text": normalized]
+            )
+            return
+        }
 
+        SentryLog.info(
+            "voice cmd matched",
+            category: .voice,
+            attributes: ["screen": String(describing: screen), "command": command.rawValue]
+        )
         applyCaptureEvent(.recognize) // ack (no phase change) — earcon seam for 77.10
         handleRecognizedCommand(command)
     }
@@ -149,7 +176,14 @@ extension VoiceCommandCoordinator {
     /// consumer path is never blocked on network/audio. Every fan-out target is
     /// an injected façade closure (decision 4).
     func routeCommand(_ command: VoiceCommand) {
-        guard let screen = currentCommandScreen else { return }
+        guard let screen = currentCommandScreen else {
+            SentryLog.info(
+                "voice cmd not routed — window closed after match",
+                category: .voice,
+                attributes: ["command": command.rawValue]
+            )
+            return
+        }
         switch (screen, command) {
         // Home — spoken "start" begins the quiz.
         case (.home, .start):
@@ -186,7 +220,13 @@ extension VoiceCommandCoordinator {
             continueToNext()
 
         default:
-            break // command not valid on this screen — inert
+            // Command not valid on this screen — inert. Logged so a matched
+            // command that silently does nothing is visible in Sentry.
+            SentryLog.info(
+                "voice cmd inert on screen",
+                category: .voice,
+                attributes: ["screen": String(describing: screen), "command": command.rawValue]
+            )
         }
     }
 }

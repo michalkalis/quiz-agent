@@ -827,14 +827,17 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         // the settle wait bumps it, and the check below aborts the start.
         let startedGeneration = streamingGeneration
 
-        // AVAudioEngine caches the input format from when it was instantiated, so a
-        // fresh read requires a fresh engine — each probe below creates and discards
-        // its own engine rather than re-querying a single inputNode.
+        // Probe the settling route directly off AVAudioSession — it reflects the live
+        // hardware sample rate / channel count without instantiating anything. A
+        // throwaway `AVAudioEngine()` per probe would deallocate while the shared HW
+        // AudioUnit is still settling a Bluetooth route, using the unit after free
+        // (EXC_BAD_ACCESS in AVAudioIONodeImpl::GetOutputFormat — Sentry CARQUIZ-A).
+        // The single real engine is created once below, only after the format settles.
         let waitStart = Date()
         let outcome = try await Self.waitForValidHardwareFormat(
             readFormat: {
-                let probeFormat = AVAudioEngine().inputNode.outputFormat(forBus: 0)
-                return (probeFormat.sampleRate, probeFormat.channelCount)
+                let session = AVAudioSession.sharedInstance()
+                return (session.sampleRate, AVAudioChannelCount(session.inputNumberOfChannels))
             }
         )
 
@@ -849,8 +852,8 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         case .success:
             break
         case .timeout:
-            let probeFormat = AVAudioEngine().inputNode.outputFormat(forBus: 0)
-            Logger.audio.error("🎤 Streaming: invalid hardware format: \(probeFormat.sampleRate, privacy: .public)Hz, \(probeFormat.channelCount, privacy: .public)ch")
+            let session = AVAudioSession.sharedInstance()
+            Logger.audio.error("🎤 Streaming: invalid hardware format: \(session.sampleRate, privacy: .public)Hz, \(session.inputNumberOfChannels, privacy: .public)ch")
             throw AudioError.recordingFailed
         }
 

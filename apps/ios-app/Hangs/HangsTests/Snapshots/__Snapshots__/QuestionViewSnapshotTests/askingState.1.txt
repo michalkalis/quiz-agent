@@ -149,6 +149,7 @@
         - submitTextInputCallCount: 0
         - capturedStartQuizExcludedIds: nil
         - createSessionError: nil
+        - createSessionFailuresBeforeSuccess: 0
         - createSessionCallCount: 0
         - onCreateSession: nil
         - endSessionError: nil

@@ -418,6 +418,12 @@ final class QuizViewModel: ObservableObject {
     /// flow via `defer` so exactly one session is created, mirroring `isSubmittingAnswer`.
     var isStarting = false
 
+    /// Test seam: overrides the transient cold-start retry's backoff duration
+    /// (default 1s/2s growth). The cancel-during-backoff test pins it far above
+    /// wall-clock noise so the cancel deterministically lands inside the sleep —
+    /// under the full suite's parallel load the real ~1s window was racy.
+    var transientStartBackoffOverride: ((Int) -> Duration)?
+
     // MARK: - Auto-Record State
 
     /// Whether auto-record is active for the current recording (for UI hints).
@@ -637,7 +643,7 @@ final class QuizViewModel: ObservableObject {
             startSilenceDetectionListening: { [weak self] in await self?.audioDeviceState.startSilenceDetectionListening() },
             stopSilenceDetectionListening: { [weak self] in self?.audioDeviceState.stopSilenceDetectionListening() },
             emitEarcon: { [weak self] in self?.emitEarcon($0) },
-            startNewQuiz: { [weak self] in await self?.startNewQuiz() },
+            startNewQuiz: { [weak self] in _ = self?.beginQuizStart() },
             startRecording: { [weak self] in await self?.recordingCoordinator.startRecording() },
             repeatQuestion: { [weak self] in await self?.repeatQuestion() },
             skipQuestion: { [weak self] in await self?.skipQuestion() },
@@ -719,6 +725,41 @@ final class QuizViewModel: ObservableObject {
     }
 
     // MARK: - Quiz Flow
+
+    /// Begins a quiz start as a cancellable `Task` — the Home button flips to a
+    /// tappable "Cancel" affordance for the duration (see HomeView). Every
+    /// `startNewQuiz` call site that a user can interrupt (Home, playPack,
+    /// error-retry, voice "start") funnels through this so they share one
+    /// cancel handle and the existing `isStarting` single-flight guard.
+    /// Registered in the shared `taskBag` under `.quizStart` (like every other
+    /// long-lived Task this façade owns) rather than a bare stored property:
+    /// a fire-and-forget `Task` isn't cancelled just because nobody holds its
+    /// handle, so an un-tracked one would keep running (and retrying its
+    /// bounded backoff) past `resetState()`'s `taskBag.cancelAll()` teardown —
+    /// this was a real regression, root-caused via a full-suite contention
+    /// repro that showed the answer/thinking-timer tests running measurably
+    /// slower (~13s vs. a low-single-digit-second baseline) under a leaked
+    /// `beginQuizStart` runner competing for MainActor turns.
+    @discardableResult
+    func beginQuizStart(
+        maxQuestions: Int? = nil,
+        difficulty: String? = nil,
+        language: String? = nil,
+        packId: String? = nil
+    ) -> Task<Void, Never> {
+        let task = Task {
+            await startNewQuiz(maxQuestions: maxQuestions, difficulty: difficulty, language: language, packId: packId)
+        }
+        taskBag.add(task, key: .quizStart)
+        return task
+    }
+
+    /// Cancels an in-flight quiz start (Home "Cancel" tap). `startNewQuiz`'s catch
+    /// clause detects the cancellation and lands on `.idle` instead of the error
+    /// screen; `isStarting`'s `defer` clears the single-flight guard.
+    func cancelQuizStart() {
+        taskBag.cancel(.quizStart)
+    }
 
     /// Start a new quiz session
     func startNewQuiz(
@@ -837,6 +878,15 @@ final class QuizViewModel: ObservableObject {
             }
 
         } catch {
+            // A cancelled start (Home "Cancel" tap) is not a failure — land back
+            // on Home instead of the error screen. `.startingQuiz → .idle` is a
+            // legal transition; `isStarting`'s `defer` above already clears the
+            // single-flight guard on this exit.
+            if error is CancellationError || (error as? URLError)?.code == .cancelled || Task.isCancelled {
+                transition(to: .idle)
+                return
+            }
+
             await handleError(error, context: .initialization, fallbackMessage: String(localized: "Failed to start quiz", comment: "Quiz could not be started; error detail is appended"))
 
             Logger.quiz.error("❌ Error starting quiz: \(error, privacy: .public)")
@@ -860,6 +910,7 @@ final class QuizViewModel: ObservableObject {
                 guard attempt < maxAttempts, Self.isTransientStartError(error) else {
                     throw error
                 }
+                let backoff = transientStartBackoffOverride?(attempt) ?? .seconds(Double(attempt)) // 1s, then 2s
                 let backoffSeconds = Double(attempt) // 1s, then 2s
                 Logger.quiz.warning("⏳ Transient cold-start error on quiz start (attempt \(attempt, privacy: .public)/\(maxAttempts, privacy: .public)), retrying in \(backoffSeconds, privacy: .public)s: \(error, privacy: .public)")
                 SentryLog.info(
@@ -867,7 +918,11 @@ final class QuizViewModel: ObservableObject {
                     category: .network,
                     attributes: ["attempt": attempt, "error": String(describing: error)]
                 )
-                try? await Task.sleep(for: .seconds(backoffSeconds))
+                // `try` (not `try?`): a cancelled start (Home "Cancel" tap) must abort
+                // the backoff immediately rather than swallow the cancellation and
+                // retry anyway. `Task.sleep` throws `CancellationError` as soon as the
+                // enclosing Task is cancelled, without waiting out the full duration.
+                try await Task.sleep(for: backoff)
                 attempt += 1
             }
         }

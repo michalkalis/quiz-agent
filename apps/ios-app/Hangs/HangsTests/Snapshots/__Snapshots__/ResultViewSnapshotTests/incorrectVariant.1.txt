@@ -175,6 +175,7 @@
       - submissionEpoch: 0
       - isSubmittingAnswer: false
       - isStarting: false
+      - transientStartBackoffOverride: nil
       ▿ _isAutoRecording: Combine.Published<Swift.Bool>
         ▿ storage: Combine.Published<Swift.Bool>.Storage.value
           - value: false

@@ -76,7 +76,7 @@ struct ContentView: View {
     /// stack via `navModel.handleQuizStateChange` (the single `.onReceive`
     /// teardown below), so this closure needs no notification post of its own.
     private func playPack(_ packId: String) {
-        Task { await viewModel.startNewQuiz(packId: packId) }
+        viewModel.beginQuizStart(packId: packId)
     }
 
     @ViewBuilder
@@ -86,14 +86,16 @@ struct ContentView: View {
             NavigationStack(path: $navModel.path) {
                 Group {
                     switch viewModel.quizState {
-                    case .idle:
+                    // `.startingQuiz` stays on Home instead of mounting QuestionView
+                    // (founder batch 2026-07-12 previously mounted QuestionView here
+                    // immediately): with no `currentQuestion` yet, QuestionView rendered
+                    // only its top chrome + a centered spinner — perceived as an empty
+                    // "Quiz" screen. The Start Quiz button already reflects the loading
+                    // state itself (HomeView's cancellable start control).
+                    case .idle, .startingQuiz:
                         HomeView(viewModel: viewModel)
 
-                    // .startingQuiz mounts QuestionView immediately (founder batch
-                    // 2026-07-12): the top bar + progress render at launch — the
-                    // total count is already known from settings — while the body
-                    // shows the built-in spinner until the first question arrives.
-                    case .startingQuiz, .askingQuestion, .recording, .processing, .skipping:
+                    case .askingQuestion, .recording, .processing, .skipping:
                         // Show HomeView when minimized, otherwise QuestionView
                         if viewModel.isMinimized {
                             HomeView(viewModel: viewModel)
@@ -347,12 +349,10 @@ struct ErrorView: View {
             switch model.retryAction {
             case .retryOperation:
                 HangsPrimaryButton(title: "Try Again", icon: "arrow.counterclockwise") {
-                    Task {
-                        if viewModel.shouldRetryWithNewSession {
-                            await viewModel.startNewQuiz()
-                        } else {
-                            await viewModel.retryLastOperation()
-                        }
+                    if viewModel.shouldRetryWithNewSession {
+                        viewModel.beginQuizStart()
+                    } else {
+                        Task { await viewModel.retryLastOperation() }
                     }
                 }
                 .accessibilityIdentifier("error.retry")

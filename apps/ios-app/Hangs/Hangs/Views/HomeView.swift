@@ -53,16 +53,9 @@ struct HomeView: View {
                     .transition(.opacity)
             }
 
-            HangsPrimaryButton(
-                title: "Start Quiz",
-                icon: "play.fill",
-                isLoading: viewModel.quizState == .startingQuiz
-            ) {
-                Task { await viewModel.startNewQuiz() }
-            }
-            .accessibilityIdentifier("home.startQuiz")
-            .padding(.horizontal, 20)
-            .padding(.bottom, 20)
+            startQuizButton
+                .padding(.horizontal, 20)
+                .padding(.bottom, 20)
         }
         .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
         .onAppear {
@@ -77,6 +70,34 @@ struct HomeView: View {
         }
         .sheet(isPresented: $viewModel.showingMicrophonePicker) {
             AudioDevicePickerView(viewModel: viewModel)
+        }
+    }
+
+    // MARK: - Start Quiz / Cancel (quiz-start in-button loading)
+
+    // While `.startingQuiz` is in flight, the button flips to a still-tappable
+    // "Cancel" control (spinner + xmark) instead of `isLoading` (which both
+    // spins AND disables — Home now stays on screen during the start, per
+    // ContentView routing, so cancelling mid-start must remain reachable).
+    @ViewBuilder
+    private var startQuizButton: some View {
+        if viewModel.quizState == .startingQuiz {
+            HangsPrimaryButton(
+                title: "Cancel",
+                icon: "xmark",
+                showsSpinner: true
+            ) {
+                viewModel.cancelQuizStart()
+            }
+            .accessibilityIdentifier("home.cancelStart")
+        } else {
+            HangsPrimaryButton(
+                title: "Start Quiz",
+                icon: "play.fill"
+            ) {
+                viewModel.beginQuizStart()
+            }
+            .accessibilityIdentifier("home.startQuiz")
         }
     }
 

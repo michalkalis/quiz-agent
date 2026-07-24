@@ -452,6 +452,63 @@ struct QuizViewModelLoadingStateTests {
         #expect(viewModel.quizState.isError)
     }
 
+    /// Cancelling an in-flight start (Home "Cancel" tap) must land back on
+    /// `.idle`, not the error screen — a cancelled start is a user choice, not
+    /// a failure. `onCreateSession` cancels the wrapping `beginQuizStart` Task
+    /// synchronously; the mock's `Task.checkCancellation()` then throws exactly
+    /// like the real `URLSession` would on a cancelled request.
+    @Test("cancelling during in-flight createSession lands on .idle, not the error screen")
+    @MainActor
+    func cancelDuringCreateSessionLandsOnIdle() async throws {
+        let (viewModel, mockNetwork) = Fixtures.makeViewModelWithNetwork()
+        mockNetwork.onCreateSession = { [weak viewModel] in viewModel?.cancelQuizStart() }
+
+        await viewModel.beginQuizStart().value
+
+        #expect(viewModel.quizState == .idle)
+        #expect(!viewModel.quizState.isError)
+        #expect(mockNetwork.createSessionCallCount == 1)
+    }
+
+    /// Cancelling while the transient cold-start retry is sleeping between
+    /// attempts must abort the retry loop immediately rather than swallow the
+    /// cancellation and fire a second attempt — the `withTransientStartRetry`
+    /// backoff switched `try?` (swallows `CancellationError`) to `try`
+    /// (propagates it). The first attempt fails (cold start), then the retry
+    /// parks in its backoff sleep — pinned to 10 minutes via
+    /// `transientStartBackoffOverride` so the cancel deterministically lands
+    /// inside the sleep even when the full suite's parallel load delays this
+    /// test's poll loop by seconds (the real ~1s window was racy: the backoff
+    /// could elapse and fire attempt 2 before the poll ever observed attempt 1).
+    @Test("cancelling during the cold-start backoff aborts the retry")
+    @MainActor
+    func cancelDuringBackoffAbortsRetry() async throws {
+        let (viewModel, mockNetwork) = Fixtures.makeViewModelWithNetwork(configure: { mock in
+            mock.createSessionFailuresBeforeSuccess = 1
+        })
+        viewModel.transientStartBackoffOverride = { _ in .seconds(600) }
+
+        let task = viewModel.beginQuizStart()
+        for _ in 0 ..< 10_000 where mockNetwork.createSessionCallCount < 1 {
+            // Paired with a tiny real sleep (not a bare `Task.yield()` spin) —
+            // matching the `waitUntil` convention elsewhere in this target
+            // (QuizViewModelStreamingTests/QuizViewModelTimerTests): a
+            // yield-only loop never really suspends, so under the full
+            // suite's heavy parallel load it was winning an outsized share of
+            // MainActor turns and measurably starving unrelated tests (the
+            // answer/thinking-timer tests' per-second ticks slowed to ~13s).
+            await Task.yield()
+            try? await Task.sleep(for: .milliseconds(1))
+        }
+        #expect(mockNetwork.createSessionCallCount == 1, "first attempt never landed — retry timing assumption broke")
+        viewModel.cancelQuizStart()
+        await task.value
+
+        #expect(mockNetwork.createSessionCallCount == 1)
+        #expect(viewModel.quizState == .idle)
+        #expect(!viewModel.quizState.isError)
+    }
+
     /// FIX3: guards the transient/permanent boundary the retry hinges on —
     /// only cold-start connection failures and Fly-proxy 502/503 are transient;
     /// quota (429), auth (401), other 4xx, and decoding errors never are.

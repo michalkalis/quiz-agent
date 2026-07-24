@@ -17,6 +17,11 @@ struct HangsPrimaryButton: View {
     var icon: String? = nil
     var trailingIcon: String? = nil
     var isLoading: Bool = false
+    /// Additive to `isLoading`: shows a leading spinner alongside the icon/title
+    /// WITHOUT disabling the button — the Home "Cancel start" control (quiz-start
+    /// in-button loading) needs to stay tappable while work is in flight, unlike
+    /// `isLoading`, which both spins and disables (see `HangsPrimaryButton.isLoading`).
+    var showsSpinner: Bool = false
     var height: CGFloat = 64
     var isDestructive: Bool = false
     /// Seconds left on an active countdown; nil = plain button.
@@ -41,9 +46,14 @@ struct HangsPrimaryButton: View {
             HStack(spacing: 10) {
                 if isLoading {
                     ProgressView().tint(.white)
-                } else if let icon {
-                    Image(systemName: icon)
-                        .font(.system(size: 17, weight: .semibold))
+                } else {
+                    if showsSpinner {
+                        ProgressView().tint(.white)
+                    }
+                    if let icon {
+                        Image(systemName: icon)
+                            .font(.system(size: 17, weight: .semibold))
+                    }
                 }
                 Text(title)
                     .font(.hangsButton)

@@ -68,4 +68,36 @@ struct HomeViewInspectorTests {
             }
         }
     }
+
+    /// Quiz-start in-button loading: while `.startingQuiz` is in flight, the
+    /// button must flip to a still-tappable "Cancel" control (`home.cancelStart`)
+    /// instead of `Start Quiz` — `HangsPrimaryButton.isLoading` both spins AND
+    /// disables, which would make an in-flight start uncancellable.
+    @Test("Home shows a tappable Cancel control while a quiz start is in flight")
+    func homeShowsCancelWhileStarting() async throws {
+        let vm = makeViewModel()
+        vm.quizState = .startingQuiz
+        let view = HomeView(viewModel: vm)
+
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+
+            #expect(throws: Never.self) {
+                try tree.find(viewWithAccessibilityIdentifier: "home.cancelStart")
+            }
+            #expect(throws: (any Error).self) {
+                try tree.find(viewWithAccessibilityIdentifier: "home.startQuiz")
+            }
+
+            // Must stay tappable (not `isLoading`, which disables the button) —
+            // ViewInspector's `.tap()` throws if the button is disabled. Cancel's
+            // downstream effect on `quizState` (landing on `.idle`) is covered by
+            // the QuizViewModelTests cancellation tests, which drive a real
+            // in-flight `beginQuizStart()` task.
+            let cancelButton = try tree.find(viewWithAccessibilityIdentifier: "home.cancelStart").button()
+            #expect(throws: Never.self) {
+                try cancelButton.tap()
+            }
+        }
+    }
 }

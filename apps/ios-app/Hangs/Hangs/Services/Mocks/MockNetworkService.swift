@@ -102,6 +102,11 @@ import os
         func createSession(maxQuestions _: Int, difficulty _: String, language _: String, categories: [String], userId _: String?, includeImages: Bool, packId _: String?) async throws -> QuizSession {
             createSessionCallCount += 1
             onCreateSession?()
+            // Mirrors the real NetworkService's cancellation-cooperative behaviour
+            // (Task cancellation propagates through `URLSession.data(for:)` as
+            // `URLError.cancelled`) — lets a cancel-during-in-flight-start test
+            // deterministically cancel from `onCreateSession` and observe the throw.
+            try Task.checkCancellation()
             capturedIncludeImages = includeImages
             capturedCategories = categories
             if createSessionFailuresBeforeSuccess > 0 {

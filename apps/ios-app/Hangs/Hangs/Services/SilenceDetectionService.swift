@@ -2,14 +2,13 @@
 //  SilenceDetectionService.swift
 //  Hangs
 //
-//  Continuous on-device voice activity detection via iOS 26 SpeechDetector.
-//  Emits two streams:
-//    • `silenceEvents`  — speechStarted / silenceAfterSpeech (drives auto-stop).
-//    • `bargeInEvents`  — speech detected during TTS on an external audio route.
-//
-//  Replaced the former VoiceCommandService. We kept only the VAD half —
-//  the SpeechTranscriber-based command matching was English-only, unreliable
-//  for the Slovak user, and duplicated by silence auto-submit + auto-confirm.
+//  Continuous on-device voice activity detection via iOS 26 SpeechDetector,
+//  plus the paired en-US SpeechTranscriber that feeds voice commands (#77).
+//  Emits four per-acquisition streams (see StreamChannel):
+//    • silence events        — speechStarted / silenceAfterSpeech (auto-stop).
+//    • barge-in events       — speech detected during TTS on an external route.
+//    • command transcripts   — finalized English text for VoiceCommandMatcher.
+//    • command availability  — fail-loud recognizer readiness updates.
 //
 
 // @preconcurrency: AVAudio tap/converter closures are not @Sendable. Without this,
@@ -52,8 +51,13 @@ enum VoiceCommandAvailability: Sendable, Equatable {
 
 @MainActor
 protocol SilenceDetectionServiceProtocol: AnyObject, Sendable {
-    var silenceEvents: AsyncStream<SilenceEvent> { get }
-    var bargeInEvents: AsyncStream<Void> { get }
+    // Streams are acquired per consumer via make*Stream() — each call mints a
+    // FRESH AsyncStream (see StreamChannel). Never store one stream for the
+    // service's lifetime: consumers are re-armed (and their tasks cancelled) on
+    // every listening window, and cancelling a `for await` permanently finishes
+    // a shared AsyncStream — the dead-voice-commands P0.
+    func makeSilenceEventStream() -> AsyncStream<SilenceEvent>
+    func makeBargeInStream() -> AsyncStream<Void>
 
     /// Finalized English transcripts from the paired command transcriber (#77,
     /// task 77.5). The SpeechDetector VAD requires a paired SpeechTranscriber
@@ -62,7 +66,7 @@ protocol SilenceDetectionServiceProtocol: AnyObject, Sendable {
     /// finalized results here for the screen-scoped `VoiceCommandMatcher`. The
     /// answer path stays Slovak ElevenLabs — this stream is command-only and is
     /// consumed only inside a listening window (never during recording).
-    var commandTranscripts: AsyncStream<String> { get }
+    func makeCommandTranscriptStream() -> AsyncStream<String>
 
     /// Current availability of the voice-command recognizer (fail-loud, #77).
     /// `.unavailable` means the app has degraded to the manual button flow.
@@ -75,7 +79,7 @@ protocol SilenceDetectionServiceProtocol: AnyObject, Sendable {
     /// appears on the idle Home screen even though commands now work (the "voice
     /// commands don't work" discoverability symptom). The view-model mirrors this
     /// stream into an observable `@Published` so SwiftUI re-renders on every change.
-    var commandAvailabilityUpdates: AsyncStream<VoiceCommandAvailability> { get }
+    func makeCommandAvailabilityStream() -> AsyncStream<VoiceCommandAvailability>
 
     func startListening() async
     func stopListening()
@@ -88,15 +92,18 @@ protocol SilenceDetectionServiceProtocol: AnyObject, Sendable {
 
 @MainActor
 final class SilenceDetectionService: SilenceDetectionServiceProtocol {
-    let silenceEvents: AsyncStream<SilenceEvent>
-    let bargeInEvents: AsyncStream<Void>
-    let commandTranscripts: AsyncStream<String>
-    let commandAvailabilityUpdates: AsyncStream<VoiceCommandAvailability>
+    // Per-acquisition stream channels (dead-voice-commands fix): each consumer
+    // re-arm gets a fresh AsyncStream, so cancelling a replaced consumer can
+    // never starve the current one. See StreamChannel.swift for the invariant.
+    private let silenceChannel = StreamChannel<SilenceEvent>()
+    private let bargeInChannel = StreamChannel<Void>()
+    private let commandChannel = StreamChannel<String>()
+    private let commandAvailabilityChannel = StreamChannel<VoiceCommandAvailability>()
 
-    private let silenceContinuation: AsyncStream<SilenceEvent>.Continuation
-    private let bargeInContinuation: AsyncStream<Void>.Continuation
-    private let commandContinuation: AsyncStream<String>.Continuation
-    private let commandAvailabilityContinuation: AsyncStream<VoiceCommandAvailability>.Continuation
+    func makeSilenceEventStream() -> AsyncStream<SilenceEvent> { silenceChannel.makeStream() }
+    func makeBargeInStream() -> AsyncStream<Void> { bargeInChannel.makeStream() }
+    func makeCommandTranscriptStream() -> AsyncStream<String> { commandChannel.makeStream() }
+    func makeCommandAvailabilityStream() -> AsyncStream<VoiceCommandAvailability> { commandAvailabilityChannel.makeStream() }
 
     private var audioEngine: AVAudioEngine?
     private var analyzer: SpeechAnalyzer?
@@ -113,7 +120,7 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     /// view-model's `@Published` mirror) re-renders reactively (#96 S2). `didSet`
     /// does not fire for the initializer's value — observers see changes only.
     private(set) var commandAvailability: VoiceCommandAvailability = .unknown {
-        didSet { commandAvailabilityContinuation.yield(commandAvailability) }
+        didSet { commandAvailabilityChannel.yield(commandAvailability) }
     }
 
     private enum State {
@@ -141,29 +148,13 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     ) {
         self.now = now
         self.authorizationProvider = authorizationProvider ?? Self.requestSystemAuthorization
-
-        var silenceCont: AsyncStream<SilenceEvent>.Continuation!
-        silenceEvents = AsyncStream { silenceCont = $0 }
-        silenceContinuation = silenceCont
-
-        var bargeCont: AsyncStream<Void>.Continuation!
-        bargeInEvents = AsyncStream { bargeCont = $0 }
-        bargeInContinuation = bargeCont
-
-        var commandCont: AsyncStream<String>.Continuation!
-        commandTranscripts = AsyncStream { commandCont = $0 }
-        commandContinuation = commandCont
-
-        var availabilityCont: AsyncStream<VoiceCommandAvailability>.Continuation!
-        commandAvailabilityUpdates = AsyncStream { availabilityCont = $0 }
-        commandAvailabilityContinuation = availabilityCont
     }
 
     deinit {
-        silenceContinuation.finish()
-        bargeInContinuation.finish()
-        commandContinuation.finish()
-        commandAvailabilityContinuation.finish()
+        silenceChannel.finish()
+        bargeInChannel.finish()
+        commandChannel.finish()
+        commandAvailabilityChannel.finish()
     }
 
     // MARK: - Authorization (#105)
@@ -428,11 +419,19 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
             do {
                 for try await result in transcriber.results {
                     guard let self, !Task.isCancelled else { break }
-                    guard result.isFinal else { continue }
                     let text = String(result.text.characters)
+                    // Pre-filter telemetry: proves on a real device whether the
+                    // transcriber emits anything at all (vs. finals never arriving)
+                    // — the discriminator the dead-commands diagnosis lacked.
+                    SentryLog.info(
+                        "voice transcriber result",
+                        category: .voice,
+                        attributes: ["isFinal": result.isFinal, "len": text.count]
+                    )
+                    guard result.isFinal else { continue }
                     guard !text.isEmpty else { continue }
                     await MainActor.run { [weak self] in
-                        _ = self?.commandContinuation.yield(text)
+                        self?.commandChannel.yield(text)
                     }
                 }
             } catch is CancellationError {
@@ -517,7 +516,7 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
             // Barge-in: only when TTS is playing on an external audio route
             // (echo from the device speaker would trigger false positives).
             if isTTSPlaybackActive && isExternalAudioRoute() {
-                bargeInContinuation.yield(())
+                bargeInChannel.yield(())
                 Logger.voice.info("🗣️ Barge-in: speech detected during TTS on external route")
                 return
             }
@@ -525,8 +524,11 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
             switch state {
             case .idle:
                 state = .speechActive(since: now())
-                silenceContinuation.yield(.speechStarted)
+                silenceChannel.yield(.speechStarted)
                 Logger.voice.debug("🔇 Silence detection: speech started")
+                // VAD-transition telemetry: if these never fire on a device with a
+                // silent command path, audio isn't reaching the analyzer at all.
+                SentryLog.info("vad speech began", category: .voice)
             case let .silenceAccumulating(speechStart, _):
                 // Resume the SAME utterance — keep its original start so a brief
                 // mid-utterance pause doesn't reset the speech-duration clock.
@@ -547,8 +549,9 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
                 case .wait:
                     break
                 case .stop:
-                    silenceContinuation.yield(.silenceAfterSpeech(duration: silenceElapsed))
+                    silenceChannel.yield(.silenceAfterSpeech(duration: silenceElapsed))
                     state = .idle
+                    SentryLog.info("vad speech ended", category: .voice, attributes: ["speechSecs": speechDuration])
                     Logger.voice.debug("🔇 Silence detection: threshold reached (\(String(format: "%.1f", silenceElapsed), privacy: .public)s)")
                 case .rejectBlip:
                     // Utterance too short (cough/blip/mic-pop) — drop it silently.

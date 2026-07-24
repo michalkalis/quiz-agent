@@ -12,22 +12,26 @@ import os
 #if DEBUG
 @MainActor
 final class MockSilenceDetectionService: SilenceDetectionServiceProtocol {
-    let silenceEvents: AsyncStream<SilenceEvent>
-    let bargeInEvents: AsyncStream<Void>
-    let commandTranscripts: AsyncStream<String>
-    let commandAvailabilityUpdates: AsyncStream<VoiceCommandAvailability>
-    private let silenceContinuation: AsyncStream<SilenceEvent>.Continuation
-    private let bargeInContinuation: AsyncStream<Void>.Continuation
-    private let commandContinuation: AsyncStream<String>.Continuation
-    private let commandAvailabilityContinuation: AsyncStream<VoiceCommandAvailability>.Continuation
+    // Mirrors the real service's per-acquisition StreamChannel design (dead-
+    // voice-commands fix): every make*Stream() call mints a fresh stream, so
+    // tests that re-arm consumers exercise the same lifecycle as production.
+    private let silenceChannel = StreamChannel<SilenceEvent>()
+    private let bargeInChannel = StreamChannel<Void>()
+    private let commandChannel = StreamChannel<String>()
+    private let commandAvailabilityChannel = StreamChannel<VoiceCommandAvailability>()
+
+    func makeSilenceEventStream() -> AsyncStream<SilenceEvent> { silenceChannel.makeStream() }
+    func makeBargeInStream() -> AsyncStream<Void> { bargeInChannel.makeStream() }
+    func makeCommandTranscriptStream() -> AsyncStream<String> { commandChannel.makeStream() }
+    func makeCommandAvailabilityStream() -> AsyncStream<VoiceCommandAvailability> { commandAvailabilityChannel.makeStream() }
 
     /// Defaults to `.ready` so command-listener tests exercise the armed path;
     /// settable so #77 fail-loud tests can drive the unavailable state. Each
-    /// assignment pushes to `commandAvailabilityUpdates` (mirrors the real
-    /// service), so a test that flips this mid-session drives the view-model's
-    /// observable mirror. `didSet` does not fire for the initial `.ready` value.
+    /// assignment pushes to the availability stream (mirrors the real service),
+    /// so a test that flips this mid-session drives the view-model's observable
+    /// mirror. `didSet` does not fire for the initial `.ready` value.
     var commandAvailability: VoiceCommandAvailability = .ready {
-        didSet { commandAvailabilityContinuation.yield(commandAvailability) }
+        didSet { commandAvailabilityChannel.yield(commandAvailability) }
     }
 
     var isListening = false
@@ -40,23 +44,7 @@ final class MockSilenceDetectionService: SilenceDetectionServiceProtocol {
     /// #77 tests can assert the defensive degrade-to-buttons path (E-fallback).
     var shouldFailSetup = false
 
-    init() {
-        var silenceCont: AsyncStream<SilenceEvent>.Continuation!
-        self.silenceEvents = AsyncStream { silenceCont = $0 }
-        self.silenceContinuation = silenceCont
-
-        var bargeCont: AsyncStream<Void>.Continuation!
-        self.bargeInEvents = AsyncStream { bargeCont = $0 }
-        self.bargeInContinuation = bargeCont
-
-        var commandCont: AsyncStream<String>.Continuation!
-        self.commandTranscripts = AsyncStream { commandCont = $0 }
-        self.commandContinuation = commandCont
-
-        var availabilityCont: AsyncStream<VoiceCommandAvailability>.Continuation!
-        self.commandAvailabilityUpdates = AsyncStream { availabilityCont = $0 }
-        self.commandAvailabilityContinuation = availabilityCont
-    }
+    init() {}
 
     func startListening() async {
         startListeningCallCount += 1
@@ -77,32 +65,32 @@ final class MockSilenceDetectionService: SilenceDetectionServiceProtocol {
     }
 
     func simulateSilenceEvent(_ event: SilenceEvent) {
-        silenceContinuation.yield(event)
+        silenceChannel.yield(event)
     }
 
     func simulateBargeIn() {
-        bargeInContinuation.yield(())
+        bargeInChannel.yield(())
     }
 
     /// Emit a finalized English transcript to the command listener (77.5).
     func simulateCommandTranscript(_ transcript: String) {
-        commandContinuation.yield(transcript)
+        commandChannel.yield(transcript)
     }
 
     func finishCommandTranscripts() {
-        commandContinuation.finish()
+        commandChannel.finish()
     }
 
     func finishSilenceEvents() {
-        silenceContinuation.finish()
+        silenceChannel.finish()
     }
 
     func finishBargeInEvents() {
-        bargeInContinuation.finish()
+        bargeInChannel.finish()
     }
 
     func finishCommandAvailabilityUpdates() {
-        commandAvailabilityContinuation.finish()
+        commandAvailabilityChannel.finish()
     }
 }
 #endif

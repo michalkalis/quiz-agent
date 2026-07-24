@@ -46,6 +46,18 @@ struct HangsApp: App {
             options.debug = false // set to true to troubleshoot Sentry setup
             #endif
         }
+
+        // One line per launch so every structured-log query can be dated against
+        // the exact installed build — events carry the release, log rows don't
+        // ("which build is the founder actually running" kept stalling triage).
+        SentryLog.info(
+            "app session start",
+            category: .quiz,
+            attributes: [
+                "build": Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?",
+                "version": Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?",
+            ]
+        )
     }
 
     var body: some Scene {

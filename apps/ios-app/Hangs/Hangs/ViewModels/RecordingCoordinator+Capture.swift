@@ -167,8 +167,11 @@ extension RecordingCoordinator {
     private func startSilenceDetection(service: SilenceDetectionServiceProtocol) {
         cancelSilenceDetection()
 
+        // Acquired synchronously (see startCommandConsumer): an event fired right
+        // after this call must buffer into the new stream, not race task startup.
+        let silenceStream = service.makeSilenceEventStream()
         let task = Task { [weak self] in
-            for await event in service.silenceEvents {
+            for await event in silenceStream {
                 guard let self, !Task.isCancelled else { break }
                 guard self.quizState() == .recording else { continue }
 

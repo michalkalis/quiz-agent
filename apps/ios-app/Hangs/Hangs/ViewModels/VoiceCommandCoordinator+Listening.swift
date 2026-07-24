@@ -89,11 +89,26 @@ extension VoiceCommandCoordinator {
         applyCaptureEvent(.arm)
         applyCaptureEvent(.listen)
 
+        // Fresh stream per arm (StreamChannel): a cancelled predecessor can no
+        // longer starve this consumer — the dead-voice-commands P0. Acquired
+        // SYNCHRONOUSLY before the task so a transcript yielded right after this
+        // call buffers into the new stream instead of racing the task's startup.
+        let stream = service.makeCommandTranscriptStream()
         let task = Task { [weak self] in
-            for await transcript in service.commandTranscripts {
+            SentryLog.info("voice cmd consumer started", category: .voice)
+            var transcriptsSeen = 0
+            for await transcript in stream {
                 guard let self, !Task.isCancelled else { break }
+                transcriptsSeen += 1
                 await self.handleCommandTranscript(transcript)
             }
+            // Field-proof of the fix: the old bug showed as an immediate exit
+            // with transcriptsSeen=0 right after every start.
+            SentryLog.info(
+                "voice cmd consumer exited",
+                category: .voice,
+                attributes: ["transcriptsSeen": transcriptsSeen, "cancelled": Task.isCancelled]
+            )
         }
         taskBag.add(task, key: .commandListener)
     }

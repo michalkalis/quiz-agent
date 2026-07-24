@@ -13,7 +13,7 @@
 //    1. Starts a collector task on `@MainActor`.
 //    2. Calls the user-supplied `driving` closure (synchronously on @MainActor).
 //    3. Finishes the `silenceEvents` stream by deallocating the service (the
-//       `deinit` calls `silenceContinuation.finish()`).  This terminates the
+//       `deinit` calls `silenceChannel.finish()`).  This terminates the
 //       `for await` loop inside the collector.
 //    4. Awaits the collector's value to get the complete event list.
 //  Because finishing the stream is the only reliable termination signal, the
@@ -59,7 +59,7 @@ private final class FakeClock {
 
 /// Creates a `SilenceDetectionService` with an injected `FakeClock`, runs the
 /// `driving` closure (which drives `handleSpeechDetectorResult` calls), then
-/// destroys the service (triggering `deinit` → `silenceContinuation.finish()`)
+/// destroys the service (triggering `deinit` → `silenceChannel.finish()`)
 /// and awaits the collector task to get the complete event list.
 ///
 /// The two-step approach (drive → finish → await) is necessary because
@@ -77,7 +77,7 @@ private func collectSilenceEvents(
     var service: SilenceDetectionService? = SilenceDetectionService(now: { clock.now })
 
     // Capture the stream before the service might be deallocated.
-    let stream = service!.silenceEvents
+    let stream = service!.makeSilenceEventStream()
 
     // Start the collector task BEFORE driving any state changes.
     let collector = Task { @MainActor in
@@ -91,7 +91,7 @@ private func collectSilenceEvents(
     // Drive state machine changes.
     driving(service!, clock)
 
-    // Deallocate the service → deinit calls silenceContinuation.finish() →
+    // Deallocate the service → deinit calls silenceChannel.finish() →
     // the `for await` loop in the collector task terminates naturally.
     service = nil
 

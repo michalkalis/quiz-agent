@@ -148,8 +148,11 @@ final class VoiceCommandCoordinator: ObservableObject {
         // Seeding catches whatever the service resolved before this object
         // existed; the stream then keeps it in sync.
         commandAvailability = silenceDetectionService.commandAvailability
-        commandAvailabilityTask = Task { [weak self, silence = silenceDetectionService] in
-            for await availability in silence.commandAvailabilityUpdates {
+        // Acquired synchronously so an availability flip right after init buffers
+        // into the stream instead of racing the observer task's startup.
+        let availabilityStream = silenceDetectionService.makeCommandAvailabilityStream()
+        commandAvailabilityTask = Task { [weak self] in
+            for await availability in availabilityStream {
                 guard let self, !Task.isCancelled else { break }
                 self.commandAvailability = availability
             }

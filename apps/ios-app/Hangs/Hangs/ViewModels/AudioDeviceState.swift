@@ -158,8 +158,11 @@ final class AudioDeviceState: ObservableObject {
 
         // Barge-in: if the user starts speaking during TTS on an external audio
         // route, stop playback and kick off recording immediately.
+        // Acquired synchronously (see startCommandConsumer): an event fired right
+        // after this call must buffer into the new stream, not race task startup.
+        let bargeInStream = service.makeBargeInStream()
         let task = Task { [weak self] in
-            for await _ in service.bargeInEvents {
+            for await _ in bargeInStream {
                 guard let self, !Task.isCancelled else { break }
                 await self.onBargeIn()
             }

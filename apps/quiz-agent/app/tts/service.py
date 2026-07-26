@@ -9,6 +9,7 @@ import logging
 import random
 from typing import Optional
 
+import sentry_sdk
 from quiz_shared.llm import factory as llm_factory
 
 logger = logging.getLogger(__name__)
@@ -45,7 +46,12 @@ def boost_volume(
         extra_boost: Additional gain in dB after normalization (+3 default)
 
     Returns:
-        Volume-boosted audio bytes in MP3 format
+        Volume-boosted audio bytes in MP3 format — or, on failure, the
+        original bytes, so a session never hard-stops on a loudness problem.
+        That fallback is reported to Sentry: measured on real samples, raw
+        output peaks near -11 dBFS against -0.2 dBFS boosted, so a broken or
+        missing ffmpeg makes every question inaudible over road noise while
+        the API keeps answering 200 (cf. the silent-audio bugs #104, #106).
     """
     try:
         from pydub import AudioSegment
@@ -66,7 +72,12 @@ def boost_volume(
         return buffer.getvalue()
 
     except Exception as e:
-        logger.warning(f"Volume boost failed (returning original): {e}")
+        message = (
+            "TTS volume boost failed — serving unboosted audio, roughly 11 dB "
+            f"quieter and inaudible over road noise (check ffmpeg): {e}"
+        )
+        logger.exception(message)
+        sentry_sdk.capture_message(message, level="error")
         return audio_data
 
 

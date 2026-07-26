@@ -89,7 +89,9 @@ struct OnboardingViewStructureTests {
             // #96 P2: the features card now teaches the command grammar (adopted
             // from pen `hTdkE`) — the founder's discoverability fix.
             #expect(throws: Never.self) { try tree.find(text: "Five simple words") }
-            #expect(throws: Never.self) { try tree.find(text: "English, always") }
+            // #120: commands are English by DEFAULT (Slovak selectable in
+            // Settings) — the "always" copy became wrong when Slovak shipped.
+            #expect(throws: Never.self) { try tree.find(text: "English by default") }
             #expect(throws: Never.self) { try tree.find(text: "Buttons always work") }
         }
     }

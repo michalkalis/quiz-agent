@@ -51,12 +51,18 @@ enum VoiceCommandMatcher {
     /// when there is no confident, unambiguous match (caller re-listens).
     ///
     /// - Parameters:
-    ///   - transcript: a transcript from the English recognizer — since #119 a
+    ///   - transcript: a transcript from the command recognizer — since #119 a
     ///     volatile hypothesis as well as a final (see `isFinal`).
     ///   - screen: the current screen — bounds which commands are considered.
     ///   - isFinal: whether this is a finalized transcript. A volatile hypothesis
     ///     is scored against the stricter `volatileConfidenceFloor`.
-    static func match(transcript: String, on screen: VoiceCommandScreen, isFinal: Bool = true) -> VoiceCommand? {
+    ///   - language: the command grammar language (#120). Defaults to the
+    ///     launch-time selection so call sites above the engine seam are
+    ///     unchanged; tests pin it explicitly.
+    static func match(
+        transcript: String, on screen: VoiceCommandScreen, isFinal: Bool = true,
+        language: CommandLanguage = CommandEngineSelection.current.commandLanguage
+    ) -> VoiceCommand? {
         let normalized = normalize(transcript)
         guard !normalized.isEmpty else { return nil }
         let tokens = normalized.split(separator: " ").map(String.init)
@@ -82,21 +88,21 @@ enum VoiceCommandMatcher {
         // (`armVolatileSettle`). Only the second is contractual — Apple emits a
         // volatile when the hypothesis CHANGES, never on a timer — so the settle
         // is the real gate and the re-delivery is an accelerator.
-        guard contentTokens(tokens).count <= maxContentTokens else { return nil }
+        guard contentTokens(tokens, language: language).count <= maxContentTokens else { return nil }
 
         let candidates = VoiceCommandLexicon.commands(on: screen)
 
         // Skip is strict whole-utterance — handled before (and excluded from) the
         // fuzzy token scan so it can never be triggered by a token buried in a
         // longer sentence.
-        if candidates.contains(.skip), matchesStrictSkip(tokens: tokens) {
+        if candidates.contains(.skip), matchesStrictSkip(tokens: tokens, language: language) {
             return .skip
         }
 
         // Fuzzy token scan over the remaining screen commands.
         var scores: [(command: VoiceCommand, score: Double)] = []
         for command in candidates where command != .skip {
-            let variants = VoiceCommandLexicon.variants(for: command)
+            let variants = VoiceCommandLexicon.variants(for: command, language: language)
             var best = 0.0
             for token in tokens {
                 for variant in variants {
@@ -121,8 +127,9 @@ enum VoiceCommandMatcher {
     /// command is still saying ONE word (build-33: "start start start start
     /// start"); DISTINCT rather than consecutive-only so filler between the
     /// repeats ("start um start") doesn't inflate the count either.
-    private static func contentTokens(_ tokens: [String]) -> Set<String> {
-        Set(tokens.filter { !VoiceCommandLexicon.fillerWords.contains($0) })
+    private static func contentTokens(_ tokens: [String], language: CommandLanguage) -> Set<String> {
+        let filler = VoiceCommandLexicon.fillerWords(for: language)
+        return Set(tokens.filter { !filler.contains($0) })
     }
 
     /// STRICT skip: after stripping filler and collapsing duplicates, EXACTLY one
@@ -131,10 +138,10 @@ enum VoiceCommandMatcher {
     /// words remain) does not. The duplicate collapse matters MORE here than
     /// anywhere else: skip is the one command that may only fire from a final,
     /// and the final is precisely the transcript where repetitions merge.
-    private static func matchesStrictSkip(tokens: [String]) -> Bool {
-        let content = contentTokens(tokens)
+    private static func matchesStrictSkip(tokens: [String], language: CommandLanguage) -> Bool {
+        let content = contentTokens(tokens, language: language)
         guard content.count == 1, let token = content.first else { return false }
-        let best = VoiceCommandLexicon.variants(for: .skip)
+        let best = VoiceCommandLexicon.variants(for: .skip, language: language)
             .map { similarity(token, $0) }
             .max() ?? 0
         return best >= skipFloor

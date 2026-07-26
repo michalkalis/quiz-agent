@@ -88,7 +88,7 @@ extension VoiceCommandCoordinator {
         // checked BEFORE the matcher (which would otherwise drop it).
         if pendingSkipWindow != nil {
             let cancelTokens = VoiceCommandMatcher.normalize(transcript.text).split(separator: " ").map(String.init)
-            if cancelTokens.contains(where: VoiceCommandLexicon.isCancelWord) {
+            if cancelTokens.contains(where: { VoiceCommandLexicon.isCancelWord($0) }) {
                 emitEarcon(.commandAck) // acknowledge the recognized cancel
                 abortSkipUndoWindow()
                 return

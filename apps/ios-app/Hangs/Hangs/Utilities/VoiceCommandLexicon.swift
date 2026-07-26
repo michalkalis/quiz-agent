@@ -3,17 +3,21 @@
 //  Hangs
 //
 //  Issue #77 (voice commands hands-free), task 77.3 — the constant sibling of
-//  MCQTranscriptMatcher's lookup tables. The voice-command layer is a SEPARATE
-//  native-English on-device recognizer (SpeechAnalyzer), English-only for all
-//  users regardless of app language (P2). `AnalysisContext.contextualStrings`
-//  and `SpeechAnalyzer.setContext(_:)` DO exist in the shipping iPhoneOS 26 SDK
-//  (#119 correction — this file used to claim they don't), but the
-//  SpeechTranscriber module IGNORES them; only DictationTranscriber honors them.
-//  So for the transcriber this app runs there is still no vocabulary biasing,
-//  and word choice + a fuzzy matcher remain the mitigation. This file owns the
-//  word-set (P4b: start · ok · next · repeat · skip [+ optional stop]) and each
-//  command's variant spellings — cut back in #119 to the spellings the build-33
-//  field data actually supports (see `variants`).
+//  MCQTranscriptMatcher's lookup tables. #120 made the word-set LANGUAGE-SCOPED:
+//  the command grammar now exists in English (default, #77 P2) and Slovak
+//  (founder-approved 2026-07-26, only reachable on the DictationTranscriber
+//  engine — SpeechTranscriber has no sk_SK). Every lookup takes a
+//  `CommandLanguage` defaulting to the launch-time selection, so callers above
+//  the engine seam stay unchanged and tests can pin a language explicitly.
+//
+//  THE SLOVAK SET RANKS PRECISION ABOVE RECALL. In English mode the command
+//  vocabulary is disjoint from what the car actually hears (the founder speaks
+//  Slovak to passengers); in Slovak mode it is NOT — the mic is open to the
+//  language being spoken. So Slovak phrases are chosen for disjointness from
+//  ordinary conversation: multi-syllable imperatives over particles, and the
+//  high-frequency backchannels ("áno", "dobre", "hej", "jasné", "no") are
+//  deliberately FILLER — neutralized, never commands. Known residual hazards
+//  are flagged inline; the founder owns the final wording (#120).
 //
 
 import Foundation
@@ -44,6 +48,7 @@ enum VoiceCommandLexicon {
     /// screen resolves to `nil` (screen scoping). "ok" is valid on BOTH the
     /// confirmation sheet (→ confirm) and the result (→ advance); the differing
     /// action is the caller's job (Session 4), the matcher only returns `.ok`.
+    /// Language-independent — the grammar's SHAPE is fixed, only its words vary.
     static func commands(on screen: VoiceCommandScreen) -> [VoiceCommand] {
         switch screen {
         case .home: return [.start]
@@ -54,73 +59,133 @@ enum VoiceCommandLexicon {
     }
 
     /// Variant spellings per command (already normalized: lower, diacritic-folded,
-    /// alphanumeric). The matcher scores a token against the MIN edit distance
-    /// across a command's variants.
+    /// alphanumeric — "preskoč" is stored as "preskoc" because
+    /// `VoiceCommandMatcher.normalize` folds the transcript the same way). The
+    /// matcher scores a token against the MIN edit distance across a command's
+    /// variants.
     ///
-    /// #119: the hand-written ACCENT table ("sart", "staat", "nekt", "skib",
-    /// "kay", "skp", "agian"…) is gone. The build-33 field transcripts show that
-    /// when the founder actually says a command word the en-US transcriber
-    /// renders it PERFECTLY — verbatim "start start start start start" — so the
-    /// speculative spellings bought zero recall while being pure false-fire
-    /// surface: they were the only reason radio/conversation words ("sort",
-    /// "sat", "stan", "state", "stats", "nek", "nekst") scored as commands. They
-    /// are dropped for the same reason "nx" and bare "no" were. A genuine
-    /// one-edit slip is still covered by the edit-distance floor.
-    static func variants(for command: VoiceCommand) -> [String] {
-        switch command {
-        case .start: return ["start"]
-        case .ok: return ["ok", "okay", "okey", "oukej"]
-        case .next: return ["next"]
-        case .again: return ["again", "retry"]
-        case .repeatQuestion: return ["repeat"]
-        case .skip: return ["skip"]
+    /// #119 (English): the hand-written ACCENT table is gone — field data showed
+    /// the en-US transcriber renders real command words perfectly, so speculative
+    /// spellings bought zero recall while being pure false-fire surface. A
+    /// genuine one-edit slip is still covered by the edit-distance floor. The
+    /// Slovak set inherits that lesson: dictionary forms only, no phonetics.
+    static func variants(
+        for command: VoiceCommand,
+        language: CommandLanguage = CommandEngineSelection.current.commandLanguage
+    ) -> [String] {
+        switch (language, command) {
+        case (.english, .start): return ["start"]
+        case (.english, .ok): return ["ok", "okay", "okey", "oukej"]
+        case (.english, .next): return ["next"]
+        case (.english, .again): return ["again", "retry"]
+        case (.english, .repeatQuestion): return ["repeat"]
+        case (.english, .skip): return ["skip"]
         // Bare "no" is deliberately NOT a stop variant — it is one of the
         // highest-frequency Slovak discourse particles (~"well/so") and the
         // founder talks to passengers with the mic open. A false `.stop` on the
         // confirmation sheet calls cancelProcessing() and discards an in-flight
         // answer with no undo. The fail-safe undo-abort path keeps accepting it
         // via `undoCancelVariants`.
-        case .stop: return ["stop", "cancel"]
+        case (.english, .stop): return ["stop", "cancel"]
+
+        // "štart" folds to "start" — the command is IDENTICAL across languages,
+        // which also keeps founder muscle memory intact.
+        case (.slovak, .start): return ["start"]
+        // ⚠️ FLAGGED HAZARD (#120): "ok"/"okej" occur in normal Slovak
+        // conversation. Kept because (a) on the confirmation sheet `.ok` is
+        // final-only + one-content-token capped, (b) on the result screen the
+        // action is benign (advance = the default outcome anyway), and
+        // (c) dropping the founder's habitual "ok" would cost real recall.
+        // "potvrď" is the recommended disjoint form. "áno"/"dobre" are NOT
+        // variants — they are filler (see `fillerWords`), by design.
+        case (.slovak, .ok): return ["ok", "okej", "oukej", "potvrd"]
+        // ⚠️ FLAGGED HAZARD (#120): a lone conversational "ďalej?" ("go on")
+        // can fire `.next` — accepted because it is result-screen-only and
+        // benign (auto-advance was coming anyway).
+        case (.slovak, .next): return ["dalej", "pokracuj"]
+        case (.slovak, .again): return ["znova", "znovu"]
+        case (.slovak, .repeatQuestion): return ["zopakuj", "opakuj"]
+        case (.slovak, .skip): return ["preskoc", "vynechaj"]
+        // ⚠️ FLAGGED (minor): "stoj" scores 0.75 vs "stop" — above the final
+        // floor. Rare in cabin conversation; `.stop` is final-only and
+        // confirmation-screen-scoped, so the exposure is bounded.
+        case (.slovak, .stop): return ["stop", "zrus"]
         }
     }
 
     /// Filler words stripped before the STRICT whole-utterance skip check and
-    /// tolerated as padding around a command token. Deliberately conservative —
-    /// only true discourse filler, NOT content words ("this"/"one"/"question")
-    /// so that "let's skip THIS one" stays a multi-token utterance and is
-    /// rejected as a skip (contains-but-isn't-skip).
-    static let fillerWords: Set<String> = [
-        "um", "uh", "uhm", "eh", "hmm", "hm", "er",
-        "please", "just", "well", "so", "like", "yeah", "then",
-    ]
+    /// tolerated as padding around a command token. English: deliberately
+    /// conservative — only true discourse filler, NOT content words
+    /// ("this"/"one"/"question") so that "let's skip THIS one" stays a
+    /// multi-token utterance and is rejected as a skip (contains-but-isn't-skip).
+    ///
+    /// Slovak additionally NEUTRALIZES the high-frequency backchannels
+    /// ("áno", "dobre", "hej", "jasné") — the words a passenger conversation is
+    /// made of. As filler they can never fire a command (a backchannel-only
+    /// utterance strips to zero content tokens) while still tolerating
+    /// "dobre, preskoč" as padding. This is the precision-over-recall trade the
+    /// Slovak set is built on: saying "áno" will NOT confirm an answer.
+    static func fillerWords(
+        for language: CommandLanguage = CommandEngineSelection.current.commandLanguage
+    ) -> Set<String> {
+        switch language {
+        case .english:
+            return [
+                "um", "uh", "uhm", "eh", "hmm", "hm", "er",
+                "please", "just", "well", "so", "like", "yeah", "then",
+            ]
+        case .slovak:
+            return [
+                "um", "uh", "ehm", "eh", "hmm", "hm",
+                "no", "tak", "takze", "teda", "proste", "prosim", "len", "este",
+                "aha", "hej", "ano", "jasne", "dobre",
+            ]
+        }
+    }
 
     /// Canonical spoken spelling of a command, for display (diagnostics + the
     /// listening indicator). NOT the matcher input — matching uses `variants`.
-    static func spokenWord(_ command: VoiceCommand) -> String {
-        switch command {
-        case .start: return "start"
-        case .ok: return "ok"
-        case .next: return "next"
-        case .again: return "again"
-        case .repeatQuestion: return "repeat"
-        case .skip: return "skip"
-        case .stop: return "stop"
+    /// Slovak forms carry their real diacritics (display, not matching).
+    static func spokenWord(
+        _ command: VoiceCommand,
+        language: CommandLanguage = CommandEngineSelection.current.commandLanguage
+    ) -> String {
+        switch (language, command) {
+        case (.english, .start): return "start"
+        case (.english, .ok): return "ok"
+        case (.english, .next): return "next"
+        case (.english, .again): return "again"
+        case (.english, .repeatQuestion): return "repeat"
+        case (.english, .skip): return "skip"
+        case (.english, .stop): return "stop"
+        case (.slovak, .start): return "štart"
+        case (.slovak, .ok): return "potvrď"
+        case (.slovak, .next): return "ďalej"
+        case (.slovak, .again): return "znova"
+        case (.slovak, .repeatQuestion): return "zopakuj"
+        case (.slovak, .skip): return "preskoč"
+        case (.slovak, .stop): return "stop"
         }
     }
 
     /// Curated hint for the on-screen "LISTENING FOR COMMANDS" indicator (77.12,
     /// pen `s49sd`). A concise, driver-facing subset of each screen's routable
-    /// commands. #105: the question screen previously omitted "start" on the
-    /// theory that auto-record was the primary answer path — but "start" is
-    /// what begins answer recording and its omission left the hint claiming
-    /// commands that don't advertise how to actually answer; it must be shown.
-    /// English by design (the command grammar is English-only for all users).
-    static func hint(on screen: VoiceCommandScreen) -> String {
-        switch screen {
-        case .home: return #"Say "start""#
-        case .question: return #"Say "start" or "skip""#
-        case .confirmation: return #"Say "ok", "again" or "stop""#
-        case .result: return #"Say "next""#
+    /// commands. #105: the question screen must advertise "start" — it is what
+    /// begins answer recording. Rendered in the COMMAND language (#120), which
+    /// is independent of the app/quiz language.
+    static func hint(
+        on screen: VoiceCommandScreen,
+        language: CommandLanguage = CommandEngineSelection.current.commandLanguage
+    ) -> String {
+        switch (language, screen) {
+        case (.english, .home): return #"Say "start""#
+        case (.english, .question): return #"Say "start" or "skip""#
+        case (.english, .confirmation): return #"Say "ok", "again" or "stop""#
+        case (.english, .result): return #"Say "next""#
+        case (.slovak, .home): return #"Povedz „štart""#
+        case (.slovak, .question): return #"Povedz „štart" alebo „preskoč""#
+        case (.slovak, .confirmation): return #"Povedz „potvrď", „znova" alebo „stop""#
+        case (.slovak, .result): return #"Povedz „ďalej""#
         }
     }
 
@@ -128,17 +193,46 @@ enum VoiceCommandLexicon {
     static let cancelWords: [VoiceCommand] = [.stop]
 
     /// Words accepted ONLY on the loose undo-abort path: every `.stop` variant
-    /// PLUS "no"/"know". #119: that direction is deliberately looser than the
-    /// matcher because it is fail-safe — aborting a pending skip loses nothing
-    /// when it fires spuriously, while missing it burns a question. The reverse
-    /// (a false `.stop` on the confirmation sheet) is destructive, which is why
-    /// "no" is no longer a `.stop` variant.
-    static let undoCancelVariants: Set<String> = Set(
-        VoiceCommandLexicon.cancelWords.flatMap { VoiceCommandLexicon.variants(for: $0) } + ["no", "know"]
-    )
+    /// PLUS the plain no-words ("no"/"know"; Slovak adds "nie"). #119: that
+    /// direction is deliberately looser than the matcher because it is fail-safe
+    /// — aborting a pending skip loses nothing when it fires spuriously, while
+    /// missing it burns a question. The reverse (a false `.stop` on the
+    /// confirmation sheet) is destructive, which is why "no"/"nie" are never
+    /// `.stop` variants.
+    static func undoCancelVariants(for language: CommandLanguage) -> Set<String> {
+        let looseNoWords: [String]
+        switch language {
+        case .english: looseNoWords = ["no", "know"]
+        case .slovak: looseNoWords = ["nie", "no"]
+        }
+        return Set(
+            cancelWords.flatMap { variants(for: $0, language: language) } + looseNoWords
+        )
+    }
 
     /// Whether `token` (already normalized) is a spoken cancel/undo word.
-    static func isCancelWord(_ token: String) -> Bool {
-        undoCancelVariants.contains(token)
+    static func isCancelWord(
+        _ token: String,
+        language: CommandLanguage = CommandEngineSelection.current.commandLanguage
+    ) -> Bool {
+        undoCancelVariants(for: language).contains(token)
+    }
+
+    /// The raw spoken vocabulary (real diacritics, no folding) handed to a
+    /// recognizer that honors `AnalysisContext.contextualStrings` (#120 —
+    /// DictationTranscriber does, SpeechTranscriber ignores them). Biasing the
+    /// engine toward these exact words is a structurally better defence than
+    /// spelling variants + edit distance, so every command form we accept is
+    /// listed, in its display spelling.
+    static func contextualVocabulary(for language: CommandLanguage) -> [String] {
+        switch language {
+        case .english:
+            return ["start", "ok", "okay", "next", "again", "retry", "repeat", "skip", "stop", "cancel"]
+        case .slovak:
+            return [
+                "štart", "ok", "okej", "potvrď", "ďalej", "pokračuj",
+                "znova", "znovu", "zopakuj", "opakuj", "preskoč", "vynechaj", "stop", "zruš",
+            ]
+        }
     }
 }

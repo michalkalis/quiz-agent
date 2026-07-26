@@ -3,11 +3,14 @@
 //  Hangs
 //
 //  Continuous on-device voice activity detection via iOS 26 SpeechDetector,
-//  plus the paired en-US SpeechTranscriber that feeds voice commands (#77).
-//  Emits four per-acquisition streams (see StreamChannel):
+//  plus the paired command transcriber that feeds voice commands (#77). Since
+//  #120 the transcriber is engine-swappable behind CommandTranscriberAdapter
+//  (SpeechTranscriber en-US by default; DictationTranscriber en-US/sk-SK as the
+//  launch-time comparison engine) — nothing above this service knows which one
+//  runs. Emits four per-acquisition streams (see StreamChannel):
 //    • silence events        — speechStarted / silenceAfterSpeech (auto-stop).
 //    • barge-in events       — speech detected during TTS on an external route.
-//    • command transcripts   — English text (volatile + final) for VoiceCommandMatcher.
+//    • command transcripts   — text (volatile + final) for VoiceCommandMatcher.
 //    • command availability  — fail-loud recognizer readiness updates.
 //
 //  The AVAudioEngine/SpeechAnalyzer lifecycle lives in the sibling
@@ -138,6 +141,25 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     var transcriptionTask: Task<Void, Never>?
     var inputContinuation: AsyncStream<AnalyzerInput>.Continuation?
 
+    /// The engine seam (#120): constructs, configures and normalizes the
+    /// concrete transcriber. Chosen once at launch (CommandEngineSelection);
+    /// everything below reads capabilities off it instead of naming an engine.
+    let transcriberEngine: CommandTranscriberAdapter
+
+    /// Segment-scoped sampling flag for the "voice transcriber result" log —
+    /// first volatile of each segment plus every final (see
+    /// `handleEngineTranscript`). Reset per listening window.
+    var loggedVolatileThisSegment = false
+
+    /// When the VAD last opened an utterance (idle → speechActive) with no
+    /// transcriber result seen yet — the anchor for the FIRST-HYPOTHESIS LATENCY
+    /// metric (#120). This is the number the engine comparison turns on: #119
+    /// showed a recognizer that answers after the command window closes is
+    /// useless no matter how accurate. Consumed (once) by the first transcript
+    /// of the utterance; cleared on teardown so a stale anchor can never span
+    /// windows.
+    var pendingFirstHypothesisSince: Date?
+
     /// Latched when an engine that had voice processing armed refused to start.
     /// Enabling VPIO on the input node also enables it on this engine's
     /// unconnected output node; if that combination is rejected on some route we
@@ -152,7 +174,9 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     /// mutation is pushed to `commandAvailabilityUpdates` so an observer (the
     /// view-model's `@Published` mirror) re-renders reactively (#96 S2). `didSet`
     /// does not fire for the initializer's value — observers see changes only.
-    private(set) var commandAvailability: VoiceCommandAvailability = .unknown {
+    /// Setter is internal (not `private(set)`) because the writers live in the
+    /// sibling-file extensions (+Assets, +Engine) and `private` is file-scoped.
+    var commandAvailability: VoiceCommandAvailability = .unknown {
         didSet { commandAvailabilityChannel.yield(commandAvailability) }
     }
 
@@ -173,14 +197,25 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     /// Requests speech-recognition authorization and returns the resulting
     /// status. Defaults to the real `SFSpeechRecognizer` dialog; tests inject
     /// a stub so the decision logic can run without the system prompt (#105).
-    private let authorizationProvider: () async -> SFSpeechRecognizerAuthorizationStatus
+    /// Internal, not `private` — consumed by the +Assets sibling-file extension.
+    let authorizationProvider: () async -> SFSpeechRecognizerAuthorizationStatus
 
     init(
         now: @escaping @MainActor () -> Date = { Date() },
-        authorizationProvider: (() async -> SFSpeechRecognizerAuthorizationStatus)? = nil
+        authorizationProvider: (() async -> SFSpeechRecognizerAuthorizationStatus)? = nil,
+        engine: CommandTranscriberAdapter? = nil
     ) {
         self.now = now
         self.authorizationProvider = authorizationProvider ?? Self.requestSystemAuthorization
+        let resolvedEngine = engine ?? CommandEngineSelection.current.makeAdapter()
+        transcriberEngine = resolvedEngine
+        // Stamp the process-wide engine/locale telemetry tags (#120): every
+        // `.voice`-category SentryLog event — including the ones emitted ABOVE
+        // this service, which must not know the engine — carries them, so a
+        // Sentry query can slice recall/precision/latency by engine.
+        VoiceTelemetryContext.set(
+            engine: resolvedEngine.engineTag, locale: resolvedEngine.locale.identifier
+        )
     }
 
     deinit {
@@ -190,118 +225,11 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
         commandAvailabilityChannel.finish()
     }
 
-    // MARK: - Authorization (#105)
-
-    /// Requests the OS speech-recognition permission and then, if granted,
-    /// proceeds into the existing asset-prepare flow. #105: the app declared
-    /// `NSSpeechRecognitionUsageDescription` but never actually called
-    /// `SFSpeechRecognizer.requestAuthorization` anywhere — a denied/never-asked
-    /// permission silently strands the command listener with `.unknown`
-    /// availability forever. Called once from AppState at launch, exactly like
-    /// `prepareAssets()` used to be called alone; safe to re-enter (guarded by
-    /// the same `.unknown` check inside `prepareAssets()`).
-    func requestAuthorizationAndPrepareAssets() async {
-        let status = await authorizationProvider()
-        switch Self.authorizationDecision(for: status) {
-        case .proceed:
-            await prepareAssets()
-        case let .unavailable(reason):
-            markCommandsUnavailable(reason: reason)
-        }
-    }
-
-    /// Pure status → decision mapping (#105), kept separate from the async
-    /// system call so the decision logic is unit-testable without triggering
-    /// the real permission dialog.
-    enum AuthorizationDecision: Sendable, Equatable {
-        case proceed
-        case unavailable(reason: String)
-    }
-
-    nonisolated static func authorizationDecision(for status: SFSpeechRecognizerAuthorizationStatus) -> AuthorizationDecision {
-        switch status {
-        case .authorized, .notDetermined:
-            return .proceed
-        case .denied, .restricted:
-            return .unavailable(
-                reason: "Speech recognition permission denied — enable in iOS Settings > Privacy & Security > Speech Recognition"
-            )
-        @unknown default:
-            return .unavailable(
-                reason: "Speech recognition permission denied — enable in iOS Settings > Privacy & Security > Speech Recognition"
-            )
-        }
-    }
-
-    /// The real system dialog, bridged to async. `SFSpeechRecognizer` is the
-    /// only authorization API for this stack — the iOS 26 SpeechAnalyzer/
-    /// SpeechTranscriber/AssetInventory types expose no authorization API of
-    /// their own (verified against the SDK headers/.swiftinterface, #105).
-    /// `nonisolated` + `@Sendable` completion: the TCC callback fires on a
-    /// background XPC queue; without both, the closure inherits @MainActor
-    /// isolation from the enclosing class and the Swift 6 runtime isolation
-    /// check traps at launch (same crash class as the AVAudio tap, CARQUIZ-1).
-    private nonisolated static func requestSystemAuthorization() async -> SFSpeechRecognizerAuthorizationStatus {
-        await withCheckedContinuation { continuation in
-            SFSpeechRecognizer.requestAuthorization { @Sendable status in
-                continuation.resume(returning: status)
-            }
-        }
-    }
-
-    // MARK: - Asset preparation (#77 device fix)
-
-    /// One-time launch check/install of the on-device en-US SpeechTranscriber
-    /// model assets. Without installed assets the transcriber never produces a
-    /// result on a real device — the root cause of "commands never worked".
-    /// Called once from AppState at launch (NOT from startListening, which runs
-    /// per listening window); safe to re-enter (no-op after the first resolution).
-    func prepareAssets() async {
-        guard case .unknown = commandAvailability else { return }
-
-        let locale = Locale(identifier: "en-US")
-        let supported = await SpeechTranscriber.supportedLocales
-        guard supported.contains(where: { $0.identifier(.bcp47) == locale.identifier(.bcp47) }) else {
-            markCommandsUnavailable(
-                reason: "en-US not in SpeechTranscriber.supportedLocales (\(supported.count) supported)"
-            )
-            return
-        }
-
-        let installed = await SpeechTranscriber.installedLocales
-        if installed.contains(where: { $0.identifier(.bcp47) == locale.identifier(.bcp47) }) {
-            commandAvailability = .ready
-            // Mirror to Sentry (#96 P2.3) so the founder's device confirms the
-            // recognizer assets are present at launch — the pre-condition for
-            // commands working at all.
-            SentryLog.info("Voice command assets ready", category: .voice, attributes: ["source": "already-installed"])
-            return
-        }
-
-        commandAvailability = .installingAssets
-        SentryLog.info("Voice command assets installing", category: .voice, attributes: ["locale": "en-US"])
-        // Same configuration the analyzer will run (see makeCommandTranscriber):
-        // the installed assets must match the module that consumes them.
-        let transcriber = Self.makeCommandTranscriber(locale: locale)
-        do {
-            if let request = try await AssetInventory.assetInstallationRequest(supporting: [transcriber]) {
-                try await request.downloadAndInstall()
-            }
-            commandAvailability = .ready
-            SentryLog.info("Voice command assets ready", category: .voice, attributes: ["source": "installed"])
-        } catch {
-            markCommandsUnavailable(reason: "Asset install failed: \(error.localizedDescription)")
-        }
-    }
-
-    /// Fail-loud seam shared by all failure paths: flips the flag the UI reads
-    /// and logs at error level so degrading to buttons is never silent.
-    func markCommandsUnavailable(reason: String) {
-        commandAvailability = .unavailable(reason: reason)
-        // Mirror to Sentry (#96 P2) so a device that silently degrades to
-        // buttons — the founder's exact symptom — surfaces in /check-crashes.
-        SentryLog.error("Voice commands unavailable", category: .voice, attributes: ["reason": reason])
-    }
+    // MARK: - Authorization + assets
+    //
+    // requestAuthorizationAndPrepareAssets() / prepareAssets() /
+    // markCommandsUnavailable() — the #105 permission flow and the #77/#120
+    // engine-asset preparation — live in SilenceDetectionService+Assets.swift.
 
     // MARK: - Lifecycle
     //
@@ -327,6 +255,11 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
             switch state {
             case .idle:
                 state = .speechActive(since: now())
+                // Anchor the first-hypothesis latency clock (#120): measured
+                // from VAD speech-start (engine-independent — SpeechDetector
+                // runs identically under both engines) to the first transcriber
+                // result, so the number is comparable across engines.
+                pendingFirstHypothesisSince = now()
                 silenceChannel.yield(.speechStarted)
                 Logger.voice.debug("🔇 Silence detection: speech started")
                 // VAD-transition telemetry: if these never fire on a device with a
@@ -365,6 +298,16 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
                 break
             }
         }
+    }
+
+    /// Consume the pending first-hypothesis latency anchor: milliseconds from
+    /// VAD speech-start to now, or `nil` when no utterance is pending (already
+    /// consumed, or the transcript preceded any VAD transition). One-shot per
+    /// utterance — the metric means "how long until the engine said ANYTHING".
+    func consumeFirstHypothesisLatencyMs() -> Int? {
+        guard let since = pendingFirstHypothesisSince else { return nil }
+        pendingFirstHypothesisSince = nil
+        return Int((now().timeIntervalSince(since) * 1000).rounded())
     }
 
     // MARK: - Helpers

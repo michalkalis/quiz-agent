@@ -10,6 +10,8 @@ from difflib import SequenceMatcher
 
 from quiz_shared.llm import factory as llm_factory
 
+from ..evaluation.spoken_options import resolve_spoken_option
+
 logger = logging.getLogger(__name__)
 
 
@@ -47,7 +49,11 @@ class InputParser:
         self.temperature = temperature
 
     async def parse(
-        self, user_input: str, current_question: str = "", phase: str = "idle"
+        self,
+        user_input: str,
+        current_question: str = "",
+        phase: str = "idle",
+        options: dict[str, str] | None = None,
     ) -> List[ParsedIntent]:
         """Parse user input into structured intents.
 
@@ -55,6 +61,9 @@ class InputParser:
             user_input: Raw user input (text or transcribed speech)
             current_question: Current question text for context
             phase: Current quiz phase for context
+            options: ``possible_answers`` of the current question, when it is
+                multiple-choice — a one-letter utterance is meaningless noise
+                without them and a valid answer with them
 
         Returns:
             List of parsed intents with extracted data
@@ -79,6 +88,17 @@ class InputParser:
 
         # Fast path for empty input - prevent LLM hallucination
         if not user_input or len(user_input.strip()) < 2:
+            # ...but on a multiple-choice question a single letter is precisely
+            # what the app told the driver to say ("Áčko: Paris."), so treating
+            # it as "no input" silently skips the question it was answering.
+            if options and resolve_spoken_option(user_input, options):
+                return [
+                    {
+                        "intent_type": "answer",
+                        "extracted_data": {"answer": user_input},
+                        "confirmation_message": None,
+                    }
+                ]
             return [
                 {
                     "intent_type": "skip",

@@ -135,6 +135,7 @@ class QuizFlowService:
                 user_input=answer_text,
                 current_question=current_question.question,
                 phase=session.phase,
+                options=current_question.possible_answers,
             )
 
         enhanced_feedback_audio = None

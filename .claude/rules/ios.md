@@ -4,7 +4,7 @@ paths: ["apps/ios-app/**"]
 
 # iOS Development Rules (Hangs)
 
-- **Swift:** 6.0 (strict concurrency), **iOS:** 18.0+
+- **Swift:** 6.0 (strict concurrency), **iOS:** 26.0+
 - **Architecture:** MVVM with Service Layer
 - **Voice-first** for hands-free driving use
 

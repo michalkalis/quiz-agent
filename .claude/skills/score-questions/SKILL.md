@@ -77,7 +77,7 @@ Create `data/scored/` directory if it doesn't exist. Save to `data/scored/scored
   "metadata": {
     "scored_at": "<ISO timestamp>",
     "source_file": "<path>",
-    "scored_by": "claude-sonnet-4-6",
+    "scored_by": "claude-sonnet-5",
     "total_questions": 10,
     "recommendations": {
       "approve": 7,
@@ -119,7 +119,7 @@ Sort questions by overall score (descending) and display:
 Scoring Complete
 ================
 Source: data/generated/claude_batch_016.json
-Scored by: claude-sonnet-4-6
+Scored by: claude-sonnet-5
 
   #  Score  Rec      Diff    Topic         CS  S/D  Tell DrF  CF   Question (truncated)
   1   9.2   approve  hard    Nature        9   10   9    8    10   Which creature can...
@@ -154,7 +154,7 @@ If `--save-to-db` was passed:
    for q in data['questions']:
        db.add_model_score(
            question_id=q['id'],
-           scored_by='claude-sonnet-4-6',
+           scored_by='claude-sonnet-5',
            scores=q['scores'],
            overall_score=q['overall_score']
        )

@@ -1,7 +1,7 @@
 ---
 name: best-practices
 description: Check Claude Code setup for improvements and best practices
-allowed-tools: Task, Read, Write, Bash
+allowed-tools: Agent, Read, Write, Bash
 model: sonnet
 ---
 

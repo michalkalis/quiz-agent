@@ -11,7 +11,7 @@ Phase 6 (the "Split") of the #75 issue-prep orchestrator, and a standalone skill
 
 This is the inverse of `/ready-check`: ready-check decides *whether* an issue is executable; `/split-issue` makes it *executable in session-sized pieces*. It does **not** judge or fix the plan's substance — the Phase 3/5 design-soundness + readiness gates already did that. It assumes the issue passed them.
 
-**Per D3, this skill runs on Opus 4.8** — the #75 pipeline's deliberate, scoped override of the usual "don't default to Opus" rule (quality over token cost for high-leverage, low-frequency prep work).
+**Per D3, this skill runs on Opus** — the #75 pipeline's deliberate, scoped override of the usual "don't default to Opus" rule (quality over token cost for high-leverage, low-frequency prep work).
 
 ## Invocation
 

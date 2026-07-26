@@ -11,7 +11,7 @@ The **substance** gate of the #75 issue-prep pipeline, and a standalone skill. `
 
 **Read-only.** Never edit, fix, or commit — you only render a verdict.
 **Plan-only isolation.** Read the issue plan and the sources/files it cites; do **not** read the conversation that authored it. Independence from the author is the whole point (same rule as `/ready-check`).
-**Per D3, runs on Opus 4.8** (the pipeline's scoped Opus override — flaw-hunting wants the strongest reasoning).
+**Per D3, runs on Opus** (the pipeline's scoped Opus override — flaw-hunting wants the strongest reasoning).
 
 ## Invocation
 

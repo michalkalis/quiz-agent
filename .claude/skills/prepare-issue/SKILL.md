@@ -17,7 +17,7 @@ It **composes existing skills** (D5) — `/deep-research`, `/ready-check`, `/des
 
 ## Operating rules (read before running)
 
-- **All phases on Opus 4.8 (D3).** Every `Agent`/subagent call passes `model: opus` explicitly — including the gate reviewers (a deliberate, scoped override of the usual "don't default to Opus" routing rule; `/ready-check` defaults to sonnet *standalone*, but inside this pipeline its gate runs on Opus). Issue-prep is high-leverage, low-frequency: quality over token cost.
+- **All phases on Opus (D3).** Every `Agent`/subagent call passes `model: opus` explicitly — including the gate reviewers (a deliberate, scoped override of the usual "don't default to Opus" routing rule; `/ready-check` defaults to sonnet *standalone*, but inside this pipeline its gate runs on Opus). Issue-prep is high-leverage, low-frequency: quality over token cost.
 - **Fresh subagent per phase** (research: fresh-subagent-per-phase context discipline). The main session stays the **coordinator, never the worker** — it spawns a subagent, gets a *compressed* return (a verdict / a one-paragraph summary / "issue file updated"), and never pulls raw research dumps or recon into its own context (CLAUDE.md Rule #12).
 - **Durable progress (D4).** Maintain a `## Prep progress` block in the issue file (template below) — refreshed at **every** phase transition. It is the source of truth for "what phase is it in" and lets a fresh session resume. Plus narrate every transition live in chat.
 - **Stop only when blocked (D2).** Auto-advance through all phases. Pause **only** when (a) a review gate fails the cap, or (b) a genuine **product** question surfaces — then ask the founder live (Rule #13), never guess.

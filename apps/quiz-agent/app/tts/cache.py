@@ -16,6 +16,12 @@ import json
 
 logger = logging.getLogger(__name__)
 
+# A cache HIT only bumps an access time, which nothing but eviction order reads.
+# Rewriting the whole metadata.json per hit is an O(entries) write on the read
+# hot path, so access-time changes are flushed at most this often (seconds).
+# Writes, evictions and shutdown flush immediately regardless.
+METADATA_FLUSH_INTERVAL_S = 60.0
+
 
 @dataclass
 class CacheEntry:
@@ -71,6 +77,10 @@ class TTSCache:
         self.lru: Dict[str, CacheEntry] = {}
         self.metadata_path = self.cache_dir / "metadata.json"
 
+        # Debounced access-time persistence (see METADATA_FLUSH_INTERVAL_S)
+        self._metadata_dirty = False
+        self._last_metadata_flush = time.monotonic()
+
         # Load existing metadata
         self._load_metadata()
 
@@ -105,8 +115,25 @@ class TTSCache:
             }
             with open(self.metadata_path, "w") as f:
                 json.dump(data, f, indent=2)
+            self._metadata_dirty = False
+            self._last_metadata_flush = time.monotonic()
         except Exception as e:
+            # Stay dirty so the next flush retries.
             logger.warning("Failed to save cache metadata: %s", e)
+
+    def _touch_metadata(self):
+        """Record an access-time change, writing at most once per interval."""
+        self._metadata_dirty = True
+        if time.monotonic() - self._last_metadata_flush >= METADATA_FLUSH_INTERVAL_S:
+            self._save_metadata()
+
+    def flush(self):
+        """Persist pending access-time changes (no-op when nothing is pending).
+
+        Called on shutdown so a normal stop never drops LRU bookkeeping.
+        """
+        if self._metadata_dirty:
+            self._save_metadata()
 
     def _hash(self, text: str, voice: str) -> str:
         """Generate cache key from text and voice.
@@ -142,9 +169,10 @@ class TTSCache:
                 self._save_metadata()
                 return None
 
-            # Update access time (LRU)
+            # Update access time (LRU) — in memory now, on disk at most once
+            # per METADATA_FLUSH_INTERVAL_S so reads stay O(1).
             entry.last_access = time.time()
-            self._save_metadata()
+            self._touch_metadata()
 
             # Read and return audio
             try:

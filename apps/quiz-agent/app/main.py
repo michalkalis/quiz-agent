@@ -372,6 +372,9 @@ async def lifespan(app: FastAPI):
     logger.info("Shutting down Quiz Agent API...")
     await session_manager.stop_cleanup()
     logger.info("Cleanup stopped")
+    # TTS cache-hit access times are debounced off the read hot path — persist
+    # whatever is still pending so a normal stop keeps LRU order intact.
+    tts_service.cache.flush()
 
 
 # Create FastAPI app

@@ -80,4 +80,4 @@ Analyze a screenshot of the Hangs app against Apple's Human Interface Guidelines
 - Focus on the driving use case — large text, high contrast, minimal distraction
 - Consider both light and dark mode
 - For voice-first app: emphasize visual feedback for audio states (recording, playing, processing)
-- Uses `model: sonnet` — Sonnet 4.6 handles HIG screenshot analysis well at ~5× lower cost than Opus
+- Uses `model: sonnet` — Sonnet handles HIG screenshot analysis well at a fraction of Opus cost

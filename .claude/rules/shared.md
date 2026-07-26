@@ -51,8 +51,33 @@ When changing API models:
 ## Model Routing (token economy)
 
 Advisor/orchestrator pattern via native `Agent`/Workflow `model` only — no third-party plugins or hooks.
-Bulk work (reads, searches, mechanical edits, tests) → Sonnet/Haiku subagents. Frontier (Opus/Fable) only at decision points: planning, architecture, security, verify-before-done, or after 2+ failed attempts. For multi-file work let frontier plan, cheap workers execute.
+Bulk work (reads, searches, mechanical edits, tests) → Sonnet/Haiku subagents. Frontier only at decision points: planning, architecture, security, verify-before-done, or after 2+ failed attempts. For multi-file work let frontier plan, cheap workers execute.
 Session driver model is a per-session `/model` choice (not file-set); cheapest = Sonnet driver + frontier advisor subagents.
+
+### Opus 5 vs Fable 5
+
+**Opus 5 is the default frontier model.** Fable 5 costs roughly 2× Opus 5, so it is never the automatic choice for "this feels important".
+
+Reach for **Fable 5** only when one of these holds:
+- The problem is genuinely hard and Opus has already failed or stalled on it.
+- A long unattended autonomous run (Ralph on `mba`) where nobody is watching to course-correct.
+- Architecture / design decisions or adversarial flaw-hunting where a wrong call is expensive to undo.
+- Orchestrating many parallel subagents at once.
+- First shot at a large, well-specified implementation.
+
+Stay on **Opus 5** for everything else: normal edits, fixes, tests, review, deploy, interactive work, and anything where Opus at medium/high effort already lands the right answer. Paying double for the same output is a defect, not caution.
+
+**Prompting differs by model — this matters more than the price.**
+- *Fable 5* wants **goal + constraints + why**, not a procedure. Step-by-step instructions degrade it. The prescriptive pipeline skills (`prepare-issue`, `split-issue`) are written for Opus; do not point them at Fable without loosening them first.
+- *Opus 5* wants **brakes**, not encouragement. It self-verifies and self-critiques already, so "double-check your work at the end" only adds cost. Keep instructions short and give it explicit limits.
+
+### Working with Opus 5 subagents
+
+- **Don't add self-verification boilerplate.** Opus 5 already re-checks its own work. Ask for verification only where a *different* pair of eyes is the point (security review, gate reviewers, adversarial checks).
+- **Cap the fan-out.** Default to ≤ 3 subagents per step and ≤ 8 per task; delegating is not free. If a step seems to need more, the step is scoped wrong — split it instead.
+- **Delegate for context, not for prestige.** Spawn a subagent when the work would dump bulk file contents into the main context (Rule #12), or when it genuinely runs in parallel. Never spawn one for work that is faster done inline.
+- **Give subagents a tight output contract.** State what to return and how long (findings only, `file:line` + one-line fix, no audit trails) — otherwise Opus returns long reports and the token saving evaporates.
+- **Match model to job explicitly.** Every `Agent` call passes `model`; unstated means it inherits the driver, which is usually more expensive than the job deserves.
 
 ## Config & Infrastructure
 

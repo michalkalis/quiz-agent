@@ -24,6 +24,7 @@ from app.api.routes.quiz import get_current_question
 from quiz_shared.models.question import GenerationProvenance, Question
 from tests.question_audio_harness import (
     RecordingTTS,
+    StubTranslator,
     question_audio,
     start_quiz_for,
 )
@@ -162,6 +163,112 @@ async def test_open_question_speech_is_unchanged():
     )
 
     assert await _spoken_text(question) == question.question
+
+
+def _landmark_mcq() -> Question:
+    """An MCQ whose options are words, not numerals — the untranslatable case.
+
+    One option has an established Slovak form and one (a proper name) does not,
+    which is the mix the real corpus produces.
+    """
+    return Question(
+        id="q_landmark",
+        question="Which landmark stands in Paris?",
+        type="text_multichoice",
+        possible_answers={"a": "the Eiffel Tower", "b": "Big Ben"},
+        correct_answer="a",
+        topic="Geography",
+        category="general",
+        difficulty="easy",
+    )
+
+
+def _landmark_translator() -> StubTranslator:
+    return StubTranslator(
+        {
+            "Which landmark stands in Paris?": "Ktorá pamiatka stojí v Paríži?",
+            "the Eiffel Tower": "Eiffelova veža",
+            # "Big Ben" deliberately absent: the real service returns the
+            # original when it has no translation, and that must survive.
+        }
+    )
+
+
+async def test_slovak_session_never_speaks_english_option_values():
+    """The read-out made the untranslated corpus audible, and unusable.
+
+    Before this, a Slovak session spoke a Slovak sentence with English option
+    values — read by a Slovak voice, so "the Eiffel Tower" came out as Slovak
+    phonetics of English words. The driver cannot answer what they cannot
+    parse, which is the whole reason the options are spoken at all.
+    """
+    translator = _landmark_translator()
+    manager, session_id, retriever = await start_quiz_for(
+        _landmark_mcq(), "sk", translation_service=translator
+    )
+
+    spoken = await question_audio(
+        manager, session_id, retriever, RecordingTTS(), translator
+    )
+
+    assert "Áčko: Eiffelova veža." in spoken
+    assert "Eiffel Tower" not in spoken
+    assert "Béčko: Big Ben." in spoken  # no Slovak form → original, not mangled
+
+
+async def test_display_and_speech_carry_the_same_option_values():
+    """One projection feeds both, so the screen can never list other choices.
+
+    ``question_to_dict_translated`` is where the options are translated
+    precisely so the client's picker and the TTS read-out cannot disagree — a
+    driver told "Áčko: Eiffelova veža" while the screen offers "the Eiffel
+    Tower" has two answer sets for one question.
+    """
+    translator = _landmark_translator()
+    manager, session_id, retriever = await start_quiz_for(
+        _landmark_mcq(), "sk", translation_service=translator
+    )
+
+    spoken = await question_audio(
+        manager, session_id, retriever, RecordingTTS(), translator
+    )
+    displayed = await get_current_question(
+        session_id=session_id,
+        session_manager=manager,
+        question_retriever=retriever,
+        translation_service=translator,
+    )
+
+    options = displayed["question"]["possible_answers"]
+    assert options == {"a": "Eiffelova veža", "b": "Big Ben"}
+    # Keys are untouched: they are what the driver's spoken letter resolves to.
+    for key, value in options.items():
+        assert f"{'Áčko' if key == 'a' else 'Béčko'}: {value}." in spoken
+
+
+async def test_legacy_session_rebuild_also_speaks_translated_options():
+    """The rebuild path must not be the one place English options come back.
+
+    A session written before the speech text was cached rebuilds it from the
+    question row — which is English-only. Rebuilding from the row's own values
+    would put English options back in a Slovak driver's ear on exactly the
+    sessions a mid-quiz deploy touches.
+    """
+    translator = _landmark_translator()
+    manager, session_id, retriever = await start_quiz_for(
+        _landmark_mcq(), "sk", translation_service=translator
+    )
+
+    session = manager.get_session(session_id)
+    session.current_question_speech_text = None
+    manager.update_session(session)
+
+    spoken = await question_audio(
+        manager, session_id, retriever, RecordingTTS(), translator
+    )
+
+    assert "Áčko: Eiffelova veža." in spoken
+    assert "Eiffel Tower" not in spoken
 
 
 async def test_slovak_mcq_options_are_spelled_out():

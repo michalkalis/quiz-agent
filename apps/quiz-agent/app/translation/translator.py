@@ -3,8 +3,10 @@
 Translates questions and feedback to user's preferred language using OpenAI.
 """
 
+import asyncio
 import logging
 import os
+from collections.abc import Mapping
 
 import sentry_sdk
 from quiz_shared.llm import factory as llm_factory
@@ -29,9 +31,12 @@ LANGUAGE_NAMES = {
 }
 
 
-# Process-lifetime cache cap. Translated corpus cardinality (~1160 SK variants) sits well
-# under this, so the guard is a soft safety valve, not a hot-path concern (#69).
-CACHE_MAX_ENTRIES = 2000
+# Process-lifetime cache cap, a soft safety valve rather than a hot-path concern (#69).
+# Raised from 2000 when option values joined the cache: a question contributes its own
+# SK variant (~1160 across the corpus) plus up to four option values, and every key that
+# does NOT fit is re-translated on every miss for the life of the process — the cap must
+# stay above the corpus, or it turns from a safety valve into a recurring bill.
+CACHE_MAX_ENTRIES = 10000
 
 # Manual refresh lever for the durable store: bump after a prompt/model improvement to
 # lazily re-translate unchanged texts (old-version rows are orphaned, never served). One
@@ -42,6 +47,25 @@ TRANSLATION_PROMPT_VERSION = "1"
 # a founder-reported live session still leaked an untranslated question through the old
 # budget.
 TRANSLATION_MAX_ATTEMPTS = 3
+
+
+def _strip_wrapping_quotes(text: str) -> str:
+    """Drop the quote pair a model sometimes wraps a translation in."""
+    if len(text) >= 2 and text[0] == text[-1] and text[0] in "\"'":
+        return text[1:-1]
+    return text
+
+
+def _is_language_neutral(value: str) -> bool:
+    """Whether an option value has nothing to translate ("240", "1969", "12 %").
+
+    Bare numerals are the single most common multiple-choice option shape, and
+    they read the same in every language — a translation call for one buys
+    nothing and would be billed once per distinct number in the corpus. Testing
+    for "no letters" rather than "is a number" also covers "12 %" and "€5",
+    which are equally untranslatable.
+    """
+    return not any(char.isalpha() for char in value)
 
 
 class TranslationService:
@@ -253,6 +277,136 @@ class TranslationService:
         logger.warning(message)
         sentry_sdk.capture_message(message, level="warning")
         return question  # Fallback to original English (not cached)
+
+    async def translate_options(
+        self,
+        options: Mapping[str, str],
+        target_language: str,
+        *,
+        session_id: str | None = None,
+    ) -> dict[str, str]:
+        """Translate the values of a multiple-choice option map.
+
+        The corpus is English-only, so a Slovak session used to show — and,
+        since the read-out shipped, *speak* — "Áčko: the Eiffel Tower" inside a
+        Slovak sentence, in a Slovak voice.
+
+        Keys are never touched: "a"/"b"/"c" are the answer identifiers the
+        evaluator, the iOS matcher and the spoken letter-names all key off.
+
+        Args:
+            options: ``Question.possible_answers`` ({"a": "Paris", ...})
+            target_language: ISO 639-1 code
+            session_id: Quiz session id, used only for the fail-loud fallback message
+
+        Returns:
+            A new map, same keys, values translated where translation applied.
+            A value that could not be translated degrades to the original
+            English one — a question with an English option is playable, a
+            failed request is not.
+        """
+        if target_language == "en" or not options:
+            return dict(options)
+
+        # Concurrent, so a four-option question costs one call's latency and not
+        # four on the /start hot path. Each value resolves against the cache
+        # independently: "Paris" is translated once for the whole corpus, not
+        # once per question that offers it.
+        keys = list(options)
+        results = await asyncio.gather(
+            *(
+                self._translate_option_value(options[key], target_language)
+                for key in keys
+            )
+        )
+
+        translated: dict[str, str] = {}
+        failed: list[str] = []
+        for key, result in zip(keys, results):
+            if result is None:
+                failed.append(key)
+                translated[key] = options[key]
+            else:
+                translated[key] = result
+
+        if failed:
+            # One message per question, not per option: four failing options are
+            # one incident, and a Sentry event per option would bury it.
+            detail_parts = [
+                f"target_language={target_language!r}",
+                f"failed_keys={sorted(failed)}",
+                f"option_count={len(keys)}",
+            ]
+            if session_id is not None:
+                detail_parts.append(f"session_id={session_id!r}")
+            message = (
+                "Option translation failed, speaking/showing the original English "
+                f"value(s): {', '.join(detail_parts)}"
+            )
+            logger.warning(message)
+            sentry_sdk.capture_message(message, level="warning")
+
+        return translated
+
+    async def _translate_option_value(
+        self, value: str, target_language: str
+    ) -> str | None:
+        """Translate one option value, or None when it must fall back to English.
+
+        Cached under its own ``option`` kind and keyed by the value alone, which
+        is what makes the cost bounded: option values are short and heavily
+        repeated across the corpus ("True", "Paris", a year), so the first
+        question that offers one pays for every later question that reuses it.
+        """
+        if _is_language_neutral(value):
+            return value
+
+        cache_key = ("option", value, target_language)
+        cached = self._cache.get(cache_key)
+        if cached is not None:
+            return cached
+
+        target_lang_name = LANGUAGE_NAMES.get(target_language, target_language)
+
+        try:
+            response = await self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": f"You are a professional translator. Translate a single multiple-choice quiz answer option to {target_lang_name}. It is a short phrase, never a sentence — keep it short. Keep proper names that have no established {target_lang_name} form unchanged. Return ONLY the translation, nothing else.",
+                    },
+                    {
+                        "role": "user",
+                        "content": f"Translate to {target_lang_name}: {value}",
+                    },
+                ],
+                temperature=0.3,
+                max_tokens=40,
+            )
+            translated = _strip_wrapping_quotes(
+                response.choices[0].message.content.strip()
+            )
+        except Exception as e:
+            logger.warning("Option translation failed for %r: %s", value, e)
+            return None
+
+        # Deliberately NOT _validate_translation: its 0.3 length ratio rejects
+        # legitimate compressions of a short phrase ("United States" → "USA").
+        # The realistic failure for a phrase this short is the opposite — a
+        # chatty completion ("The Slovak translation of 'Paris' is …") — so the
+        # guard is against a value that grew, plus the empty completion.
+        if not translated or len(translated) > 3 * len(value) + 20:
+            logger.warning(
+                "Option translation rejected for %r → %s: %r",
+                value,
+                target_language,
+                translated,
+            )
+            return None
+
+        self._maybe_store(cache_key, translated)
+        return translated
 
     async def translate_feedback(
         self,

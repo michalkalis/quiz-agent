@@ -15,6 +15,8 @@ silent double-spend that also costs the driver the full synthesis latency on
 the hot path.
 """
 
+from collections.abc import Mapping
+
 from quiz_shared.models.question import Question
 
 from ..translation.feedback_messages import get_option_letter, get_options_label
@@ -36,8 +38,8 @@ def _is_true_false(question: Question) -> bool:
     whole corpus carries today (same normalized comparison as
     ``craft_guards.true_false_key``, the recognizer the generation pipeline
     scores T/F balance with). The generator's ``reasoning_pattern`` provenance
-    is the one that survives option values being translated some day — the
-    question text is translated today, the options are not.
+    is the one that survives translation: what the driver sees and hears is
+    now translated per session, so only the untranslated row is asked here.
     """
     provenance = question.generation_metadata
     if provenance is not None and provenance.reasoning_pattern == _TRUE_FALSE_PATTERN:
@@ -50,30 +52,42 @@ def _is_true_false(question: Question) -> bool:
 
 
 def build_question_speech_text(
-    question_text: str, question: Question | None, language: str
+    question_text: str,
+    question: Question | None,
+    language: str,
+    *,
+    options: Mapping[str, str] | None,
 ) -> str:
     """Return the TTS input for ``question_text`` in ``language``.
 
-    ``question`` supplies the multiple-choice options; pass None when the
-    question row is unavailable, which simply omits the read-out. Only
-    ``text_multichoice`` questions with options get one — open questions have
-    none, and a true/false question already names both choices in its own
-    wording, so reading "Áčko: True. Béčko: False." after "Pravda alebo
-    nepravda: …" is pure noise in a language the option values aren't even in.
+    ``options`` are the option values as the client is shown them — the
+    translated ones from ``serializers.question_to_dict_translated``, so the
+    driver hears the same choices the screen lists. Pass None when there are
+    none to read (an open question, or a lost question row).
+
+    ``question`` is the untranslated row, and supplies only the shape signals
+    that must stay language-independent: the type, and the true/false check
+    (which reads the row's own English values on purpose — the values in
+    ``options`` may be Slovak by then).
+
+    Only ``text_multichoice`` questions with options get a read-out — open
+    questions have none, and a true/false question already names both choices
+    in its own wording, so reading "Áčko: Pravda. Béčko: Nepravda." after
+    "Pravda alebo nepravda: …" is pure noise.
     """
     spoken = question_text
 
     if (
         question is not None
         and question.type == "text_multichoice"
-        and question.possible_answers
+        and options
         and not _is_true_false(question)
     ):
-        options = " ".join(
+        spoken_options = " ".join(
             f"{get_option_letter(key, language)}: {value}."
-            for key, value in sorted(question.possible_answers.items())
+            for key, value in sorted(options.items())
         )
-        spoken = f"{question_text} {get_options_label(language)}. {options}"
+        spoken = f"{question_text} {get_options_label(language)}. {spoken_options}"
 
     # Options join BEFORE normalization: option values are frequently bare
     # numbers ("10", "100", "240"), the exact digits-read-in-English defect.

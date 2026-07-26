@@ -18,7 +18,6 @@ from ..deps import (
     get_translation_service,
     get_tts_service,
     session_to_response,
-    question_to_dict,
     question_to_dict_translated,
     flow_to_response,
 )
@@ -152,12 +151,18 @@ async def start_quiz(
             question, session.language, translation_service, session_id=session_id
         )
         session.current_question_text = translated_question_dict["question"]
+        # What the client is about to be shown, kept for evaluation: an answer
+        # comes back as the option value the driver saw/heard, not as its key.
+        session.current_question_options = translated_question_dict["possible_answers"]
         # Assemble the spoken text here, with the question row already in hand:
         # /question/audio then reads it off the session instead of going back to
         # the question store on the hands-free hot path, and warm-up and route
         # share one string by construction.
         session.current_question_speech_text = build_question_speech_text(
-            translated_question_dict["question"], question, session.language
+            translated_question_dict["question"],
+            question,
+            session.language,
+            options=translated_question_dict["possible_answers"],
         )
         session.transition(to=SessionPhase.ASKING, caller="routes.start_quiz")
         session_manager.update_session(session)
@@ -243,20 +248,21 @@ async def get_current_question(
     if not session.current_question_id:
         raise HTTPException(status_code=400, detail="No active question")
 
+    question = question_retriever.get(session.current_question_id)
+    if not question:
+        raise HTTPException(status_code=500, detail="Question not found")
+
+    # Always the translated projection, even when the session already carries
+    # the question text: the option values live in it too, and reusing only the
+    # cached text would print English choices under a Slovak question — beside
+    # the Slovak ones /question/audio speaks.
+    translated_question = await question_to_dict_translated(
+        question, session.language, translation_service, session_id=session_id
+    )
     if session.current_question_text:
-        question = question_retriever.get(session.current_question_id)
-        if not question:
-            raise HTTPException(status_code=500, detail="Question not found")
-        question_dict = question_to_dict(question)
-        question_dict["question"] = session.current_question_text
-        translated_question = question_dict
-    else:
-        question = question_retriever.get(session.current_question_id)
-        if not question:
-            raise HTTPException(status_code=500, detail="Question not found")
-        translated_question = await question_to_dict_translated(
-            question, session.language, translation_service, session_id=session_id
-        )
+        # The cached text stays authoritative: it is what the client was already
+        # shown and what the question audio was built from.
+        translated_question["question"] = session.current_question_text
 
     return {
         "question": translated_question,

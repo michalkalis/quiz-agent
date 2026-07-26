@@ -32,6 +32,7 @@ from app.quiz.flow import QuizFlowService
 from quiz_shared.models.phase import SessionPhase
 from quiz_shared.models.question import Question
 from quiz_shared.models.session import QuizSession
+from tests.question_audio_harness import StubTranslator, start_quiz_for
 
 OPTIONS = {"a": "Paris", "b": "London", "c": "Berlin", "d": "Madrid"}
 
@@ -140,6 +141,109 @@ class TestSpokenLetterScoresLikeTappingTheOption:
 
         assert tapped == ("incorrect", 0.0)
         assert spoken == tapped
+
+
+class TestTranslatedOptionValueScoresLikeTheEnglishOne:
+    """WHY: the driver answers with the option they were GIVEN, not the row's.
+
+    Picking an option submits its value — iOS ``submitMCQAnswer`` posts
+    ``value``, never the key, whether it came from a tap or from the streaming
+    matcher. Now that a Slovak session is shown and read "Áčko: Paríž", that
+    value is the Slovak one, while the question row stays English-only. If
+    evaluation only knew the row, translating the options would silently score
+    every picked answer in every non-English session incorrect.
+    """
+
+    @pytest.mark.asyncio
+    async def test_translated_value_scores_like_the_english_value(self):
+        question = _make_question()
+        shown = {"a": "Paríž", "b": "Londýn", "c": "Berlín", "d": "Madrid"}
+        evaluator = AnswerEvaluator()
+        evaluator._llm_evaluate = AsyncMock(
+            side_effect=AssertionError("MCQ answers must never reach the LLM path")
+        )
+
+        english = await evaluator.evaluate("London", question, question.question)
+        translated = await evaluator.evaluate(
+            "Londýn", question, question.question, shown_options=shown
+        )
+
+        assert english == ("correct", 1.0)
+        assert translated == english
+
+    @pytest.mark.asyncio
+    async def test_translated_wrong_value_is_still_wrong(self):
+        """The map resolves which option was named — it never grants the point."""
+        question = _make_question()
+        shown = {"a": "Paríž", "b": "Londýn", "c": "Berlín", "d": "Madrid"}
+        evaluator = AnswerEvaluator()
+        evaluator._llm_evaluate = AsyncMock(
+            side_effect=AssertionError("MCQ answers must never reach the LLM path")
+        )
+
+        assert await evaluator.evaluate(
+            "Berlín", question, question.question, shown_options=shown
+        ) == ("incorrect", 0.0)
+
+    @pytest.fixture
+    def _no_rate_limit(self, monkeypatch):
+        from app import rate_limit
+
+        monkeypatch.setattr(rate_limit.limiter, "enabled", False)
+
+    @pytest.mark.asyncio
+    async def test_start_hands_the_flow_the_options_it_showed(self, _no_rate_limit):
+        """The wiring, end to end: what /start showed is what /input scores.
+
+        Driving the real /start rather than hand-setting the session field is
+        the point — the two must be the same map, and only the route that
+        translated the options can prove it.
+        """
+        question = _make_question()
+        translator = StubTranslator(
+            {
+                "Which city hosts the Wimbledon championships?": (
+                    "Ktoré mesto hostí Wimbledon?"
+                ),
+                "Paris": "Paríž",
+                "London": "Londýn",
+                "Berlin": "Berlín",
+                # "Madrid" reads the same in Slovak — the passthrough case.
+            }
+        )
+
+        manager, session_id, retriever = await start_quiz_for(
+            question, "sk", translation_service=translator
+        )
+        session = manager.get_session(session_id)
+
+        assert session.current_question_options == {
+            "a": "Paríž",
+            "b": "Londýn",
+            "c": "Berlín",
+            "d": "Madrid",
+        }
+
+        parser = MagicMock()
+        parser.parse = AsyncMock(
+            return_value=[
+                {"intent_type": "answer", "extracted_data": {"answer": "Londýn"}}
+            ]
+        )
+        flow = QuizFlowService(
+            session_manager=manager,
+            input_parser=parser,
+            question_retriever=retriever,
+            answer_evaluator=AnswerEvaluator(),
+            tts_service=None,
+            usage_tracker=None,
+            translation_service=None,
+        )
+
+        result = await flow.process_answer(session=session, answer_text="Londýn")
+
+        assert result.evaluation["result"] == "correct"
+        assert result.evaluation["points"] == 1.0
 
 
 class TestBareLetterIsAnsweredNotSkipped:

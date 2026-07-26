@@ -151,6 +151,7 @@ class QuizFlowService:
                     user_answer=user_answer,
                     question=current_question,
                     question_text=current_question.question,
+                    shown_options=session.current_question_options,
                 )
 
                 translated_correct = await self._translate_correct_answer(
@@ -308,12 +309,18 @@ class QuizFlowService:
             session_id=session.session_id,
         )
         session.current_question_text = translated_q_dict["question"]
+        # What the client is about to be shown, kept for evaluation: an answer
+        # comes back as the option value the driver saw/heard, not as its key.
+        session.current_question_options = translated_q_dict["possible_answers"]
         # Assemble the spoken text here, with the question row already in hand:
         # /question/audio then reads it off the session instead of going back to
         # the question store on the hands-free hot path, and warm-up and route
         # share one string by construction.
         session.current_question_speech_text = build_question_speech_text(
-            translated_q_dict["question"], next_question, session.language
+            translated_q_dict["question"],
+            next_question,
+            session.language,
+            options=translated_q_dict["possible_answers"],
         )
         self.session_manager.update_session(session)
 

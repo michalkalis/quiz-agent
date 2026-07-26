@@ -22,6 +22,7 @@ from app.tts.voices import DEFAULT_VOICE
 from quiz_shared.models.question import Question
 from tests.question_audio_harness import (
     RecordingTTS,
+    StubTranslator,
     question_audio,
     start_quiz_for,
 )
@@ -47,15 +48,23 @@ def _sk_question(question_text: str, **kwargs) -> Question:
     )
 
 
-async def _warmed_and_served(question: Question) -> tuple[str, str]:
+async def _warmed_and_served(
+    question: Question, translator: StubTranslator | None = None
+) -> tuple[str, str]:
     """Return (text the warm-up synthesized, text /question/audio synthesized)."""
     prefetch_tts = RecordingTTS()
     manager, session_id, retriever = await start_quiz_for(
-        question, "sk", tts_service=prefetch_tts, audio=True
+        question,
+        "sk",
+        tts_service=prefetch_tts,
+        audio=True,
+        translation_service=translator,
     )
     await asyncio.wait_for(prefetch_tts.called.wait(), timeout=1)
 
-    served = await question_audio(manager, session_id, retriever, RecordingTTS())
+    served = await question_audio(
+        manager, session_id, retriever, RecordingTTS(), translator
+    )
     return prefetch_tts.texts[0], served
 
 
@@ -96,6 +105,38 @@ async def test_prefetch_warms_the_mcq_key_the_route_reads(tmp_path):
     # Guard: the served text must genuinely carry the options, otherwise the
     # parity assertion would pass on two identical bare questions.
     assert "Možnosti" in served
+
+    cache = TTSCache(cache_dir=str(tmp_path / "tts_cache"))
+    assert cache._hash(warmed, DEFAULT_VOICE) == cache._hash(served, DEFAULT_VOICE)
+
+
+async def test_prefetch_warms_the_translated_mcq_key_the_route_reads(tmp_path):
+    """Translated options are the third way to break the same invariant.
+
+    The option values are now translated per session, so the spoken string
+    depends on a second translation call. If the warm-up hashed the English
+    values (or the route re-derived them from the English-only question row),
+    every Slovak MCQ would warm a key nobody reads — and the driver would pay
+    the full synthesis latency on every single question.
+    """
+    translator = StubTranslator(
+        {
+            "Ktorá pamiatka stojí v Paríži?": "Ktorá pamiatka stojí v Paríži?",
+            "the Eiffel Tower": "Eiffelova veža",
+            "Big Ben": "Big Ben",
+        }
+    )
+    question = _sk_question(
+        "Ktorá pamiatka stojí v Paríži?",
+        type="text_multichoice",
+        possible_answers={"a": "the Eiffel Tower", "b": "Big Ben"},
+        correct_answer="a",
+    )
+
+    warmed, served = await _warmed_and_served(question, translator)
+
+    # Guard: parity would be trivially true if neither string were translated.
+    assert "Eiffelova veža" in served and "Eiffel Tower" not in served
 
     cache = TTSCache(cache_dir=str(tmp_path / "tts_cache"))
     assert cache._hash(warmed, DEFAULT_VOICE) == cache._hash(served, DEFAULT_VOICE)

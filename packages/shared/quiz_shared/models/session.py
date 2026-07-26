@@ -2,7 +2,7 @@
 
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Union
 from pydantic import BaseModel, Field
 
 from .participant import Participant
@@ -101,6 +101,17 @@ class QuizSession(BaseModel):
             "the question is chosen so the TTS warm-up and the audio route "
             "provably hash the same cache key, and the audio route needs no "
             "question-store round trip on the hands-free hot path."
+        ),
+    )
+    current_question_options: Optional[Dict[str, str]] = Field(
+        None,
+        description=(
+            "Server-side only (never projected into SessionResponse): the "
+            "multiple-choice options exactly as the client received them, "
+            "option values translated into the session language. iOS submits "
+            "the option VALUE, not the key, so evaluation has to recognize the "
+            "translated value — the question row it scores against is "
+            "English-only."
         ),
     )
     current_answer: Optional[str] = Field(None, description="Current correct answer")

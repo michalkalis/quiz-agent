@@ -42,6 +42,31 @@ class RecordingTTS:
         return b"audio"
 
 
+class StubTranslator:
+    """Translation service stand-in: a fixed EN→SK lexicon instead of an LLM.
+
+    Mirrors the real service's contract, fallback included — a text outside the
+    lexicon comes back unchanged, which is what a failed translation returns.
+    """
+
+    def __init__(self, lexicon: dict[str, str]):
+        self.lexicon = lexicon
+
+    async def translate_question(
+        self, question: str, target_language: str, session_id: str | None = None
+    ) -> str:
+        return self.lexicon.get(question, question)
+
+    async def translate_options(
+        self,
+        options: dict[str, str],
+        target_language: str,
+        *,
+        session_id: str | None = None,
+    ) -> dict[str, str]:
+        return {key: self.lexicon.get(value, value) for key, value in options.items()}
+
+
 def retriever_for(question: Question) -> MagicMock:
     """Question store that serves ``question`` to both read paths."""
     retriever = MagicMock()
@@ -56,6 +81,7 @@ async def start_quiz_for(
     *,
     tts_service: RecordingTTS | None = None,
     audio: bool = False,
+    translation_service: StubTranslator | None = None,
 ) -> tuple[SessionManager, str, MagicMock]:
     """Run the real /start — the site that assembles and caches the spoken text."""
     manager = SessionManager()
@@ -71,7 +97,7 @@ async def start_quiz_for(
         session_manager=manager,
         question_retriever=retriever,
         usage_tracker=None,
-        translation_service=None,
+        translation_service=translation_service,
         tts_service=tts_service,
         audio=audio,
     )
@@ -83,6 +109,7 @@ async def question_audio(
     session_id: str,
     retriever: MagicMock,
     tts: RecordingTTS,
+    translation_service: StubTranslator | None = None,
 ) -> str:
     """Run the real /question/audio, return the text it sent to synthesis."""
     await get_question_audio(
@@ -91,7 +118,7 @@ async def question_audio(
         session_manager=manager,
         tts_service=tts,
         question_retriever=retriever,
-        translation_service=None,
+        translation_service=translation_service,
         _auth=None,
     )
 

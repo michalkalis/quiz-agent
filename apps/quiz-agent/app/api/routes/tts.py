@@ -119,24 +119,33 @@ async def get_question_audio(
                 question_retriever, session.current_question_id
             )
             question_text = session.current_question_text
+            options = None
 
-            if not question_text:
-                if not current_question:
-                    raise HTTPException(
-                        status_code=404, detail="Current question not found"
-                    )
-
+            if current_question is not None:
+                # Re-project rather than read the row's own English options: the
+                # driver must hear the choices in the session language here too.
+                # Both translations are keyed by the source English text, so this
+                # is a cache hit for a question that was already asked — the
+                # durable store carries it across the very restart that empties
+                # the session's cached speech text.
                 translated_dict = await question_to_dict_translated(
                     current_question,
                     session.language,
                     translation_service,
                     session_id=session_id,
                 )
-                question_text = translated_dict["question"]
+                options = translated_dict["possible_answers"]
+                # The session's copy stays authoritative: it is what the client
+                # was already shown, so speech can't drift from the screen.
+                question_text = question_text or translated_dict["question"]
                 session.current_question_text = question_text
+            elif not question_text:
+                raise HTTPException(
+                    status_code=404, detail="Current question not found"
+                )
 
             tts_text = build_question_speech_text(
-                question_text, current_question, session.language
+                question_text, current_question, session.language, options=options
             )
             # Never cache a build made without the row: it carries no options,
             # and every later request for this question would inherit it.

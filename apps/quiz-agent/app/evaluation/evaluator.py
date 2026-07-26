@@ -32,7 +32,12 @@ class AnswerEvaluator:
         self.temperature = temperature
 
     async def evaluate(
-        self, user_answer: str, question: Question, question_text: str = ""
+        self,
+        user_answer: str,
+        question: Question,
+        question_text: str = "",
+        *,
+        shown_options: dict[str, str] | None = None,
     ) -> Tuple[str, float]:
         """Evaluate user's answer against correct answer.
 
@@ -40,6 +45,10 @@ class AnswerEvaluator:
             user_answer: User's answer
             question: Question object with correct answer
             question_text: Question text for context
+            shown_options: the option map the client was actually given
+                (``session.current_question_options``), whose values are
+                translated into the session language while ``question`` stays
+                English
 
         Returns:
             Tuple of (result, score_delta)
@@ -83,7 +92,7 @@ class AnswerEvaluator:
 
         # MCQ fast-path: match against option keys or values (no partial credit)
         if question.possible_answers:
-            return self._evaluate_mcq(user_answer, question)
+            return self._evaluate_mcq(user_answer, question, shown_options)
 
         # LLM evaluation for nuanced scoring
         result = await self._llm_evaluate(
@@ -107,6 +116,7 @@ class AnswerEvaluator:
         self,
         user_answer: str,
         question: Question,
+        shown_options: dict[str, str] | None = None,
     ) -> Tuple[str, float]:
         """Evaluate an MCQ answer by matching keys ('a') or values ('Paris').
 
@@ -116,6 +126,8 @@ class AnswerEvaluator:
             user_answer: User's answer (a key like "a", a value like "Paris",
                 or a spoken option reference like "béčko" / "dva")
             question: Question with possible_answers dict
+            shown_options: the same options as the client received them, values
+                translated into the session language
 
         Returns:
             Tuple of (result, score_delta)
@@ -129,6 +141,17 @@ class AnswerEvaluator:
             if normalized == normalize_text(key) or normalized == normalize_text(value):
                 selected_key = key
                 break
+
+        # Picking an option submits its VALUE (iOS QuizViewModel.submitMCQAnswer
+        # posts `value`, never the key), and in a Slovak session that value is
+        # the translated one — "Eiffelova veža" against an English-only row.
+        # Without this the whole translation would score every picked answer
+        # incorrect, on the tap path as much as the voice one.
+        if selected_key is None and shown_options:
+            for key, value in shown_options.items():
+                if key in options and normalized == normalize_text(value):
+                    selected_key = key
+                    break
 
         # The options are read aloud, so a hands-free driver answers with the
         # letter the app just spoke ("Béčko") or its position ("dva") — neither

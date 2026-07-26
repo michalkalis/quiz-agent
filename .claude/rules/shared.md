@@ -56,6 +56,8 @@ Session driver model is a per-session `/model` choice (not file-set); cheapest =
 
 ### Opus 5 vs Fable 5
 
+This section picks *which frontier model* — it does **not** override the delegation rule above. Delegation is decided first (does this work belong in a cheap subagent?), model tier second (if it is frontier work, Opus or Fable?). Mechanical edits and test runs still go to Sonnet/Haiku subagents regardless of what the driver is running on.
+
 **Opus 5 is the default frontier model.** Fable 5 costs roughly 2× Opus 5, so it is never the automatic choice for "this feels important".
 
 Reach for **Fable 5** only when one of these holds:
@@ -65,7 +67,7 @@ Reach for **Fable 5** only when one of these holds:
 - Orchestrating many parallel subagents at once.
 - First shot at a large, well-specified implementation.
 
-Stay on **Opus 5** for everything else: normal edits, fixes, tests, review, deploy, interactive work, and anything where Opus at medium/high effort already lands the right answer. Paying double for the same output is a defect, not caution.
+Stay on **Opus 5** for every other frontier-level call: the interactive driver, reviews, deploys, debugging, and anything where Opus at medium/high effort already lands the right answer. Paying double for the same output is a defect, not caution.
 
 **Prompting differs by model — this matters more than the price.**
 - *Fable 5* wants **goal + constraints + why**, not a procedure. Step-by-step instructions degrade it. The prescriptive pipeline skills (`prepare-issue`, `split-issue`) are written for Opus; do not point them at Fable without loosening them first.
@@ -74,7 +76,7 @@ Stay on **Opus 5** for everything else: normal edits, fixes, tests, review, depl
 ### Working with Opus 5 subagents
 
 - **Don't add self-verification boilerplate.** Opus 5 already re-checks its own work. Ask for verification only where a *different* pair of eyes is the point (security review, gate reviewers, adversarial checks).
-- **Cap the fan-out.** Default to ≤ 3 subagents per step and ≤ 8 per task; delegating is not free. If a step seems to need more, the step is scoped wrong — split it instead.
+- **Keep the fan-out narrow.** Roughly ≤ 3 subagents per step is the normal shape — not a hard ceiling (Rule #12 governs *work size* by judgment; this is about *concurrent helpers*, a different axis). Going wider is fine when the work genuinely parallelises — a `/regression` sweep, a broad audit — but it should be a deliberate call, not the reflex. Delegating is not free.
 - **Delegate for context, not for prestige.** Spawn a subagent when the work would dump bulk file contents into the main context (Rule #12), or when it genuinely runs in parallel. Never spawn one for work that is faster done inline.
 - **Give subagents a tight output contract.** State what to return and how long (findings only, `file:line` + one-line fix, no audit trails) — otherwise Opus returns long reports and the token saving evaporates.
 - **Match model to job explicitly.** Every `Agent` call passes `model`; unstated means it inherits the driver, which is usually more expensive than the job deserves.

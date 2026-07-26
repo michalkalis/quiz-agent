@@ -62,7 +62,7 @@ missing the user must enable the UI-automation workflow in their MCP config
 - `mcp__XcodeBuildMCP__build_sim`
 - `mcp__XcodeBuildMCP__install_app_sim`
 - `mcp__XcodeBuildMCP__launch_app_sim`
-- `mcp__XcodeBuildMCP__start_sim_log_cap` / `stop_sim_log_cap`
+- `mcp__XcodeBuildMCP__stop_app_sim`
 - `mcp__XcodeBuildMCP__snapshot_ui`
 - `mcp__XcodeBuildMCP__tap`
 
@@ -121,18 +121,9 @@ curl -sf -o /dev/null -w '%{http_code}' http://127.0.0.1:9999/stt/connected
 Must return `200`. If not, kill the app (`stop_app_sim`) and relaunch once;
 on a second failure write `VERDICT: FAIL — listener never bound` and stop.
 
-**Then** start log capture **without** `captureConsole` (this is the trap
-RS-01 surfaced — `captureConsole: true` relaunches the app and drops
-`--ui-test`):
-
-```
-start_sim_log_cap({
-  simulatorUuid: "918FD36A-..."
-  // NO captureConsole — structured logs only
-})
-```
-
-Save the returned `logSessionId`.
+**Log capture needs no separate step.** `launch_app_sim` captures runtime
+logs automatically and returns the log file path in its response. Save that
+path — it is what you grep in step 1e instead of a log session.
 
 #### 1b. Drive the steps
 
@@ -183,12 +174,13 @@ FAIL even if all state assertions passed.
 Crash check: scan the captured log for `EXC_`, `signal `, or
 `Terminating app due to`. Any hit ⇒ FAIL.
 
-#### 1d. Stop log capture, kill app
+#### 1d. Kill app
 
 ```
-stop_sim_log_cap({ logSessionId: <saved> })
 stop_app_sim({ simulatorUuid: "918FD36A-...", bundleId: <bundle id> })
 ```
+
+The captured log file stays on disk at the path `launch_app_sim` returned.
 
 #### 1e. Write the report
 
@@ -255,9 +247,11 @@ decides whether to triage and re-run.
 
 ## Important traps (do not relearn the hard way)
 
-1. **Launch BEFORE log capture.** `start_sim_log_cap({captureConsole: true})`
-   relaunches the app without args, dropping `--ui-test`. Always launch
-   first, then start log capture with no `captureConsole`.
+1. **Launch with `launchArgs`, and keep the returned log path.** Logs are
+   captured automatically by `launch_app_sim`; there is no separate
+   start/stop step (the old `start_sim_log_cap` trap — a relaunch dropping
+   `--ui-test` — is gone with it). Losing the returned path means losing
+   the run's evidence.
 2. **Debug-Local config, not Debug.** Verify the resolved app path contains
    `Debug-Local-iphonesimulator`. A plain `Debug` build will not have the
    HTTP listener.

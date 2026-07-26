@@ -61,7 +61,7 @@ struct SkipCancelWordTests {
             vm.voiceCommandCoordinator.beginSkipUndoWindow(duration: 10) // long window
             #expect(vm.voiceCommandCoordinator.pendingSkipWindow != nil)
 
-            await vm.voiceCommandCoordinator.handleCommandTranscript("stop")
+            await vm.voiceCommandCoordinator.handleCommandTranscript(CommandTranscript(text: "stop", isFinal: true))
 
             #expect(vm.voiceCommandCoordinator.pendingSkipWindow == nil, "a spoken 'stop' must abort the pending skip")
             #expect(vm.quizState == .askingQuestion, "an aborted skip never leaves the question")
@@ -75,10 +75,36 @@ struct SkipCancelWordTests {
             vm.quizState = .askingQuestion
             vm.voiceCommandCoordinator.beginSkipUndoWindow(duration: 10)
 
-            await vm.voiceCommandCoordinator.handleCommandTranscript("no")
+            await vm.voiceCommandCoordinator.handleCommandTranscript(CommandTranscript(text: "no", isFinal: true))
 
             #expect(vm.voiceCommandCoordinator.pendingSkipWindow == nil, "'no' is a cancel-word variant and must abort")
             #expect(vm.quizState == .askingQuestion)
+        }
+    }
+
+    /// #110: the undo-abort path is deliberately LOOSER than the matcher. The
+    /// content-token cap makes these utterances resolve to nil through
+    /// `VoiceCommandMatcher.match` (conversational length), but raw cancel-word
+    /// containment must keep aborting an open skip window: aborting loses
+    /// nothing when it fires spuriously, whereas a missed abort burns a
+    /// question. Direction, not confidence, is what justifies the looseness.
+    @Test("a multi-token utterance containing a cancel word still aborts the window")
+    func multiTokenCancelWordAbortsWindow() async {
+        await withMainSerialExecutor {
+            for utterance in ["no wait stop", "no no stop"] {
+                // The same string is NOT a command through the screen-scoped matcher.
+                #expect(VoiceCommandMatcher.match(transcript: utterance, on: .question) == nil)
+
+                let vm = makeVM()
+                vm.quizState = .askingQuestion
+                vm.voiceCommandCoordinator.beginSkipUndoWindow(duration: 10)
+
+                await vm.voiceCommandCoordinator.handleCommandTranscript(CommandTranscript(text: utterance, isFinal: true))
+
+                #expect(vm.voiceCommandCoordinator.pendingSkipWindow == nil,
+                        "'\(utterance)' contains a cancel word — the fail-safe abort must still fire")
+                #expect(vm.quizState == .askingQuestion, "an aborted skip never leaves the question")
+            }
         }
     }
 
@@ -89,7 +115,7 @@ struct SkipCancelWordTests {
             vm.quizState = .askingQuestion
             vm.voiceCommandCoordinator.beginSkipUndoWindow(duration: 10)
 
-            await vm.voiceCommandCoordinator.handleCommandTranscript("hello there")
+            await vm.voiceCommandCoordinator.handleCommandTranscript(CommandTranscript(text: "hello there", isFinal: true))
 
             #expect(vm.voiceCommandCoordinator.pendingSkipWindow != nil, "only a cancel word may abort — not arbitrary speech")
         }
@@ -107,7 +133,7 @@ struct SkipCancelWordTests {
             #expect(vm.voiceCommandCoordinator.pendingSkipWindow == nil, "expiry commits the skip")
 
             // A cancel word now has no window to abort — it must be a harmless no-op.
-            await vm.voiceCommandCoordinator.handleCommandTranscript("stop")
+            await vm.voiceCommandCoordinator.handleCommandTranscript(CommandTranscript(text: "stop", isFinal: true))
             #expect(vm.voiceCommandCoordinator.pendingSkipWindow == nil)
         }
     }

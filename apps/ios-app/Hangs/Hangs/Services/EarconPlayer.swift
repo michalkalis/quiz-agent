@@ -23,7 +23,9 @@
 //
 
 import AudioToolbox
+import CoreHaptics
 import Foundation
+import UIKit
 
 /// The four hands-free audio cues (77.10). Language-neutral tones — no words.
 enum Earcon: String, CaseIterable, Sendable, Equatable {
@@ -47,8 +49,36 @@ protocol EarconPlaying: AnyObject {
 /// generated tones without touching any call site.
 @MainActor
 final class SystemEarconPlayer: EarconPlaying {
+    /// Whether this device has a Taptic Engine. Cached — the capability query is
+    /// not free and the answer cannot change at runtime.
+    private static let supportsHaptics = CHHapticEngine.capabilitiesForHardware().supportsHaptics
+
+    private let impact = UIImpactFeedbackGenerator(style: .light)
+    private let notification = UINotificationFeedbackGenerator()
+
     func play(_ earcon: Earcon) {
         AudioServicesPlaySystemSound(Self.soundID(for: earcon))
+        playHaptic(for: earcon)
+    }
+
+    /// #110: `AudioServicesPlaySystemSound` routes through the SYSTEM-SOUND
+    /// channel, not the media session the founder turns up to hear feedback over
+    /// road noise — so the command ack can be inaudible in a moving car, and the
+    /// 2.5 s skip undo-window is only real protection if he can perceive that a
+    /// skip fired at all. Haptics survive ringer volume, silent mode and road
+    /// noise, so the two COMMAND cues get one alongside the tone. The recording
+    /// pair stays tone-only: it fires on every question and a buzz that often
+    /// would train him to ignore it.
+    private func playHaptic(for earcon: Earcon) {
+        guard Self.supportsHaptics else { return }
+        switch earcon {
+        case .commandAck:
+            impact.impactOccurred() // light tap — "heard you"
+        case .skipConfirm:
+            notification.notificationOccurred(.warning) // destructive, undoable for 2.5 s
+        case .micLive, .gotIt:
+            break
+        }
     }
 
     private static func soundID(for earcon: Earcon) -> SystemSoundID {

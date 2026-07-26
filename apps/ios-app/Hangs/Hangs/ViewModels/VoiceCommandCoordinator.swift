@@ -4,7 +4,9 @@
 //
 //  The voice-command slice: capture phase, recognizer availability, the
 //  voice-start flags, and the skip undo-window state. The listening window +
-//  consumer loop + command routing live in VoiceCommandCoordinator+Listening.swift.
+//  consumer loop + command routing live in VoiceCommandCoordinator+Listening.swift;
+//  the volatile-result policy (one command per utterance, final-only for
+//  destructive commands, cooldown) lives in VoiceCommandCoordinator+Utterance.swift.
 //
 
 import Combine
@@ -64,6 +66,37 @@ final class VoiceCommandCoordinator: ObservableObject {
     /// Earcon seam (77.10): fired when the skip undo-window OPENS.
     var onSkipUndoWindowOpened: (@MainActor () -> Void)?
 
+    // MARK: - Volatile-result Guards (#110 — state; policy lives in +Utterance)
+
+    /// Suppression window for a REPEAT of the same command — the second layer
+    /// behind the utterance latch, covering the case where one spoken word
+    /// arrives as two utterances (the founder repeats himself when nothing
+    /// seems to happen, build-33: "start start start start start").
+    static let commandCooldown: TimeInterval = 1.5
+
+    /// Injected clock so the cooldown is testable with a driven clock instead of
+    /// real sleeps — the repo's three flaky async voice tests all came from
+    /// `Task.sleep`. Mirrors `SilenceDetectionService(now:)`. `var` so a test can
+    /// swap it after the façade has built this child.
+    var now: @MainActor () -> Date
+
+    /// Whether a command has ALREADY fired for the utterance in progress — the
+    /// at-most-one-command-per-utterance latch (see +Utterance for the full
+    /// rationale). Written only through the helpers in
+    /// VoiceCommandCoordinator+Utterance.swift; internal (not `private`) because
+    /// Swift scopes `private` to the file and those helpers are a sibling-file
+    /// extension.
+    var commandFiredThisUtterance = false
+
+    /// The previous VOLATILE hypothesis of the utterance in progress, normalized
+    /// — the input to the stability gate that keeps a growing sentence's 1-token
+    /// prefix from firing (see `noteVolatileTranscript` in +Utterance). Cleared
+    /// by `endUtterance()`.
+    var lastVolatileText: String?
+
+    /// The last command actually routed, and when — the cooldown's input.
+    var lastFiredCommand: (command: VoiceCommand, at: Date)?
+
     // MARK: - Dependencies (façade-owned service instances, shared)
 
     let silenceDetectionService: SilenceDetectionServiceProtocol
@@ -76,7 +109,12 @@ final class VoiceCommandCoordinator: ObservableObject {
 
     let settings: @MainActor () -> QuizSettings
     let isAppForeground: @MainActor () -> Bool
-    let isPlayingQuestionTTS: @MainActor () -> Bool
+    /// ANY TTS playback — question OR feedback. Widened in #110: the flag used
+    /// to be question-only, so the result screen armed the window and then
+    /// played feedback TTS underneath a live input tap, and the app transcribed
+    /// itself (field transcripts "you said proud answer proud", "he is proud of
+    /// you"). Every TTS closes the window.
+    let isPlayingTTS: @MainActor () -> Bool
     let quizState: @MainActor () -> QuizState
     /// The shared silence-detection choke points (AudioDeviceState, #113 T2).
     let startSilenceDetectionListening: @MainActor () async -> Void
@@ -108,7 +146,7 @@ final class VoiceCommandCoordinator: ObservableObject {
         taskBag: TaskBag,
         settings: @escaping @MainActor () -> QuizSettings,
         isAppForeground: @escaping @MainActor () -> Bool,
-        isPlayingQuestionTTS: @escaping @MainActor () -> Bool,
+        isPlayingTTS: @escaping @MainActor () -> Bool,
         quizState: @escaping @MainActor () -> QuizState,
         startSilenceDetectionListening: @escaping @MainActor () async -> Void,
         stopSilenceDetectionListening: @escaping @MainActor () -> Void,
@@ -122,13 +160,14 @@ final class VoiceCommandCoordinator: ObservableObject {
         cancelProcessing: @escaping @MainActor () -> Void,
         continueToNext: @escaping @MainActor () -> Void,
         cancelAnswerTimer: @escaping @MainActor () -> Void,
-        cancelThinkingTime: @escaping @MainActor () -> Void
+        cancelThinkingTime: @escaping @MainActor () -> Void,
+        now: @escaping @MainActor () -> Date = { Date() }
     ) {
         self.silenceDetectionService = silenceDetectionService
         self.taskBag = taskBag
         self.settings = settings
         self.isAppForeground = isAppForeground
-        self.isPlayingQuestionTTS = isPlayingQuestionTTS
+        self.isPlayingTTS = isPlayingTTS
         self.quizState = quizState
         self.startSilenceDetectionListening = startSilenceDetectionListening
         self.stopSilenceDetectionListening = stopSilenceDetectionListening
@@ -143,6 +182,7 @@ final class VoiceCommandCoordinator: ObservableObject {
         self.continueToNext = continueToNext
         self.cancelAnswerTimer = cancelAnswerTimer
         self.cancelThinkingTime = cancelThinkingTime
+        self.now = now
 
         // Seed + observe recognizer availability (see `commandAvailability`).
         // Seeding catches whatever the service resolved before this object
@@ -171,6 +211,7 @@ final class VoiceCommandCoordinator: ObservableObject {
     func reset() {
         applyCaptureEvent(.reset)
         abortSkipUndoWindow()
+        endUtterance() // no utterance survives a reset (#110)
     }
 
     // MARK: - Capture Phase

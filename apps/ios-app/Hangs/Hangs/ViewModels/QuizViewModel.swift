@@ -454,6 +454,18 @@ final class QuizViewModel: ObservableObject {
     /// AudioDeviceState writes it via injected closures (#113 T2, decision 4).
     var isPlayingQuestionTTS: Bool = false
 
+    /// Whether RESULT feedback TTS is currently playing (#110 root cause #3).
+    /// The result screen transitions, arms the command window and only THEN
+    /// plays feedback, so the recognizer was transcribing the app's own voice
+    /// ("you said proud answer proud" in the build-33 field data). Separate from
+    /// `isPlayingQuestionTTS` because that flag also drives barge-in, the replay
+    /// re-entrancy guard and the earcon funnel — this one only closes the
+    /// command window. AudioDeviceState writes it via an injected closure.
+    var isPlayingFeedbackTTS: Bool = false
+
+    /// ANY app TTS playback — the command window's self-trigger guard (#110).
+    var isPlayingAnyTTS: Bool { isPlayingQuestionTTS || isPlayingFeedbackTTS }
+
     /// The option key matched by voice on an MCQ question (nil between questions).
     /// Drives the `selected` highlight in MCQOptionPicker without waiting for tap.
     @Published var mcqVoiceMatchedKey: String?
@@ -615,6 +627,7 @@ final class QuizViewModel: ObservableObject {
             isRerecording: { [weak self] in self?.isRerecording ?? false },
             isPlayingQuestionTTS: { [weak self] in self?.isPlayingQuestionTTS ?? false },
             setPlayingQuestionTTS: { [weak self] in self?.isPlayingQuestionTTS = $0 },
+            setPlayingFeedbackTTS: { [weak self] in self?.isPlayingFeedbackTTS = $0 },
             currentQuestionAudioUrl: { [weak self] in self?.recordingCoordinator.currentQuestionAudioUrl },
             setCurrentQuestionAudioUrl: { [weak self] in self?.recordingCoordinator.currentQuestionAudioUrl = $0 },
             setErrorMessage: { [weak self] in self?.errorMessage = $0 },
@@ -638,7 +651,7 @@ final class QuizViewModel: ObservableObject {
             taskBag: taskBag,
             settings: { [weak self] in self?.settings ?? .default },
             isAppForeground: { [weak self] in self?.isAppForeground ?? false },
-            isPlayingQuestionTTS: { [weak self] in self?.isPlayingQuestionTTS ?? false },
+            isPlayingTTS: { [weak self] in self?.isPlayingAnyTTS ?? false },
             quizState: { [weak self] in self?.quizState ?? .idle },
             startSilenceDetectionListening: { [weak self] in await self?.audioDeviceState.startSilenceDetectionListening() },
             stopSilenceDetectionListening: { [weak self] in self?.audioDeviceState.stopSilenceDetectionListening() },

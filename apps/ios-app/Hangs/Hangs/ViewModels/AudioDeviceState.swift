@@ -76,6 +76,9 @@ final class AudioDeviceState: ObservableObject {
     let isRerecording: @MainActor () -> Bool
     let isPlayingQuestionTTS: @MainActor () -> Bool
     let setPlayingQuestionTTS: @MainActor (Bool) -> Void
+    /// Feedback-TTS twin of the flag above — closes the command window while the
+    /// result feedback plays so the recognizer can't hear it (#110).
+    let setPlayingFeedbackTTS: @MainActor (Bool) -> Void
     let currentQuestionAudioUrl: @MainActor () -> String?
     let setCurrentQuestionAudioUrl: @MainActor (String?) -> Void
     let setErrorMessage: @MainActor (String) -> Void
@@ -102,6 +105,7 @@ final class AudioDeviceState: ObservableObject {
         isRerecording: @escaping @MainActor () -> Bool,
         isPlayingQuestionTTS: @escaping @MainActor () -> Bool,
         setPlayingQuestionTTS: @escaping @MainActor (Bool) -> Void,
+        setPlayingFeedbackTTS: @escaping @MainActor (Bool) -> Void,
         currentQuestionAudioUrl: @escaping @MainActor () -> String?,
         setCurrentQuestionAudioUrl: @escaping @MainActor (String?) -> Void,
         setErrorMessage: @escaping @MainActor (String) -> Void,
@@ -124,6 +128,7 @@ final class AudioDeviceState: ObservableObject {
         self.isRerecording = isRerecording
         self.isPlayingQuestionTTS = isPlayingQuestionTTS
         self.setPlayingQuestionTTS = setPlayingQuestionTTS
+        self.setPlayingFeedbackTTS = setPlayingFeedbackTTS
         self.currentQuestionAudioUrl = currentQuestionAudioUrl
         self.setCurrentQuestionAudioUrl = setCurrentQuestionAudioUrl
         self.setErrorMessage = setErrorMessage

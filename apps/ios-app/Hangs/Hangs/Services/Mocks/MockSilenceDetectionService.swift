@@ -17,12 +17,12 @@ final class MockSilenceDetectionService: SilenceDetectionServiceProtocol {
     // tests that re-arm consumers exercise the same lifecycle as production.
     private let silenceChannel = StreamChannel<SilenceEvent>()
     private let bargeInChannel = StreamChannel<Void>()
-    private let commandChannel = StreamChannel<String>()
+    private let commandChannel = StreamChannel<CommandTranscript>()
     private let commandAvailabilityChannel = StreamChannel<VoiceCommandAvailability>()
 
     func makeSilenceEventStream() -> AsyncStream<SilenceEvent> { silenceChannel.makeStream() }
     func makeBargeInStream() -> AsyncStream<Void> { bargeInChannel.makeStream() }
-    func makeCommandTranscriptStream() -> AsyncStream<String> { commandChannel.makeStream() }
+    func makeCommandTranscriptStream() -> AsyncStream<CommandTranscript> { commandChannel.makeStream() }
     func makeCommandAvailabilityStream() -> AsyncStream<VoiceCommandAvailability> { commandAvailabilityChannel.makeStream() }
 
     /// Defaults to `.ready` so command-listener tests exercise the armed path;
@@ -72,9 +72,13 @@ final class MockSilenceDetectionService: SilenceDetectionServiceProtocol {
         bargeInChannel.yield(())
     }
 
-    /// Emit a finalized English transcript to the command listener (77.5).
-    func simulateCommandTranscript(_ transcript: String) {
-        commandChannel.yield(transcript)
+    /// Emit an English transcript to the command listener (77.5). Defaults to a
+    /// FINAL result because that is what an existing test means by "the user said
+    /// X". Pass `isFinal: false` to drive a volatile hypothesis — the mid-utterance
+    /// results the real transcriber now emits so a one-word command fires before
+    /// the end-of-speech endpoint (build-33 latency fix).
+    func simulateCommandTranscript(_ transcript: String, isFinal: Bool = true) {
+        commandChannel.yield(CommandTranscript(text: transcript, isFinal: isFinal))
     }
 
     func finishCommandTranscripts() {

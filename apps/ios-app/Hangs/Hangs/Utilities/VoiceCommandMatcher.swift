@@ -14,6 +14,10 @@
 //  burns a freemium question, so "let's skip this one" must NOT be read as a
 //  skip — the utterance must BE the skip word, not merely contain it.
 //
+//  #110 (build-33 field data): ALL commands are additionally capped at
+//  `maxContentTokens` content tokens — see the gate in `match` — and a VOLATILE
+//  hypothesis is held to a stricter confidence floor than a final.
+//
 
 import Foundation
 
@@ -22,11 +26,22 @@ enum VoiceCommandMatcher {
     /// Confidence floor for a fuzzy token→command match (1 = exact). A single
     /// edit on a 5-letter word ("stat"→"start" = 0.8) clears it; noise doesn't.
     static let confidenceFloor: Double = 0.72
+    /// A stricter floor for a VOLATILE hypothesis (#110). A volatile is revisable
+    /// by design and arrives while the mic is still open to the road, the radio
+    /// and the passenger, so only a near-exact word may act on one. There is no
+    /// recall cost: the build-33 unmatched field transcripts sit at ~0.50, far
+    /// below either floor, while a real command word transcribes perfectly (1.0).
+    /// What this drops is one-edit noise on a short word ("star"/"gain" → 0.80).
+    static let volatileConfidenceFloor: Double = 0.85
     /// The winning command must beat the runner-up by this margin, else the
     /// utterance is ambiguous and resolves to `nil` (never guess a wrong action).
     static let ambiguityMargin: Double = 0.15
     /// A stricter floor for the destructive `skip` word.
     static let skipFloor: Double = 0.8
+    /// Upper bound on DISTINCT content tokens (filler stripped, duplicates
+    /// collapsed) for an utterance to be treated as a command at all. ONE,
+    /// because every word in this grammar is one word — see the gate in `match`.
+    static let maxContentTokens = 1
 
     /// Resolve `transcript` to the single command valid on `screen`, or `nil`
     /// when there is no confident, unambiguous match (caller re-listens).
@@ -34,11 +49,30 @@ enum VoiceCommandMatcher {
     /// - Parameters:
     ///   - transcript: the committed transcript from the English recognizer.
     ///   - screen: the current screen — bounds which commands are considered.
-    static func match(transcript: String, on screen: VoiceCommandScreen) -> VoiceCommand? {
+    ///   - isFinal: whether this is a finalized transcript. A volatile hypothesis
+    ///     is scored against the stricter `volatileConfidenceFloor`.
+    static func match(transcript: String, on screen: VoiceCommandScreen, isFinal: Bool = true) -> VoiceCommand? {
         let normalized = normalize(transcript)
         guard !normalized.isEmpty else { return nil }
         let tokens = normalized.split(separator: " ").map(String.init)
         guard !tokens.isEmpty else { return nil }
+
+        // #110 content-token cap — the first gate, for every command on every
+        // screen. Every word in this grammar is ONE word, and the build-33 field
+        // data shows real commands arriving as a bare word, often repeated
+        // ("start start start start start") when nothing responds — while every
+        // false-positive candidate was conversational speech or TTS bleed of 3+
+        // tokens ("what about guys come in", "he is proud of you"). Those are not
+        // near-misses (best score ~0.50 against the floor), so no threshold
+        // separates them; length does.
+        //
+        // The cap sees ONE delivered transcript, so it does NOT protect the
+        // leading edge of a volatile hypothesis: the transcriber emits a GROWING
+        // hypothesis, so every sentence passes through a 1-token prefix state
+        // ("Okay, tak to bolo dobré" → volatile "okay"). That hole is closed in
+        // VoiceCommandCoordinator+Utterance, which requires a volatile to be
+        // DELIVERED TWICE UNCHANGED before it may fire.
+        guard contentTokens(tokens).count <= maxContentTokens else { return nil }
 
         let candidates = VoiceCommandLexicon.commands(on: screen)
 
@@ -62,20 +96,33 @@ enum VoiceCommandMatcher {
             scores.append((command, best))
         }
 
+        let floor = isFinal ? confidenceFloor : volatileConfidenceFloor
         scores.sort { $0.score > $1.score }
-        guard let top = scores.first, top.score >= confidenceFloor else { return nil }
-        if scores.count > 1, scores[1].score >= confidenceFloor,
+        guard let top = scores.first, top.score >= floor else { return nil }
+        if scores.count > 1, scores[1].score >= floor,
            top.score - scores[1].score < ambiguityMargin {
             return nil // two commands too close — ambiguous
         }
         return top.command
     }
 
-    /// STRICT skip: after stripping filler, EXACTLY one token remains and it is a
-    /// confident skip variant. "skip" / "um skip please" pass; "let's skip this
-    /// one" (content words remain) does not.
+    /// The DISTINCT content tokens of an utterance: filler stripped, duplicates
+    /// collapsed. Duplicates collapse because a driver repeating an unanswered
+    /// command is still saying ONE word (build-33: "start start start start
+    /// start"); DISTINCT rather than consecutive-only so filler between the
+    /// repeats ("start um start") doesn't inflate the count either.
+    private static func contentTokens(_ tokens: [String]) -> Set<String> {
+        Set(tokens.filter { !VoiceCommandLexicon.fillerWords.contains($0) })
+    }
+
+    /// STRICT skip: after stripping filler and collapsing duplicates, EXACTLY one
+    /// distinct token remains and it is a confident skip variant. "skip" / "um
+    /// skip please" / "skip skip" pass; "let's skip this one" (other content
+    /// words remain) does not. The duplicate collapse matters MORE here than
+    /// anywhere else: skip is the one command that may only fire from a final,
+    /// and the final is precisely the transcript where repetitions merge.
     private static func matchesStrictSkip(tokens: [String]) -> Bool {
-        let content = tokens.filter { !VoiceCommandLexicon.fillerWords.contains($0) }
+        let content = contentTokens(tokens)
         guard content.count == 1, let token = content.first else { return false }
         let best = VoiceCommandLexicon.variants(for: .skip)
             .map { similarity(token, $0) }

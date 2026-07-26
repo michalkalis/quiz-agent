@@ -5,12 +5,15 @@
 //  Issue #77 (voice commands hands-free), task 77.3 — the constant sibling of
 //  MCQTranscriptMatcher's lookup tables. The voice-command layer is a SEPARATE
 //  native-English on-device recognizer (SpeechAnalyzer), English-only for all
-//  users regardless of app language (P2). The new SpeechAnalyzer framework has
-//  NO contextualStrings / custom-vocabulary biasing, so accent-robust word
-//  choice + a fuzzy matcher are the ENTIRE mitigation for a Slovak-accented
-//  driver. This file owns the word-set (P4b: start · ok · next · repeat · skip
-//  [+ optional stop]) and each command's accent-tolerant variant spellings —
-//  the provisional set is finalised on-device at the 77.15 [HUMAN] accent gate.
+//  users regardless of app language (P2). `AnalysisContext.contextualStrings`
+//  and `SpeechAnalyzer.setContext(_:)` DO exist in the shipping iPhoneOS 26 SDK
+//  (#110 correction — this file used to claim they don't), but the
+//  SpeechTranscriber module IGNORES them; only DictationTranscriber honors them.
+//  So for the transcriber this app runs there is still no vocabulary biasing,
+//  and word choice + a fuzzy matcher remain the mitigation. This file owns the
+//  word-set (P4b: start · ok · next · repeat · skip [+ optional stop]) and each
+//  command's variant spellings — cut back in #110 to the spellings the build-33
+//  field data actually supports (see `variants`).
 //
 
 import Foundation
@@ -50,19 +53,34 @@ enum VoiceCommandLexicon {
         }
     }
 
-    /// Accent-tolerant variant spellings per command (already normalized: lower,
-    /// diacritic-folded, alphanumeric). The matcher scores a token against the
-    /// MIN edit distance across a command's variants, so common Slovak-accented
-    /// mistranscriptions are first-class here rather than left to the threshold.
+    /// Variant spellings per command (already normalized: lower, diacritic-folded,
+    /// alphanumeric). The matcher scores a token against the MIN edit distance
+    /// across a command's variants.
+    ///
+    /// #110: the hand-written ACCENT table ("sart", "staat", "nekt", "skib",
+    /// "kay", "skp", "agian"…) is gone. The build-33 field transcripts show that
+    /// when the founder actually says a command word the en-US transcriber
+    /// renders it PERFECTLY — verbatim "start start start start start" — so the
+    /// speculative spellings bought zero recall while being pure false-fire
+    /// surface: they were the only reason radio/conversation words ("sort",
+    /// "sat", "stan", "state", "stats", "nek", "nekst") scored as commands. They
+    /// are dropped for the same reason "nx" and bare "no" were. A genuine
+    /// one-edit slip is still covered by the edit-distance floor.
     static func variants(for command: VoiceCommand) -> [String] {
         switch command {
-        case .start: return ["start", "stat", "staat", "sart", "strt", "shtart"]
-        case .ok: return ["ok", "okay", "okey", "okei", "kay", "oukej"]
-        case .next: return ["next", "nekst", "neks", "nekt", "nx"]
-        case .again: return ["again", "agen", "agian", "retry", "retri"]
-        case .repeatQuestion: return ["repeat", "repit", "repeet", "ripeat", "ripit"]
-        case .skip: return ["skip", "skib", "skep", "skp", "skjp"]
-        case .stop: return ["stop", "stap", "stahp", "no", "cancel", "kancel"]
+        case .start: return ["start"]
+        case .ok: return ["ok", "okay", "okey", "oukej"]
+        case .next: return ["next"]
+        case .again: return ["again", "retry"]
+        case .repeatQuestion: return ["repeat"]
+        case .skip: return ["skip"]
+        // Bare "no" is deliberately NOT a stop variant — it is one of the
+        // highest-frequency Slovak discourse particles (~"well/so") and the
+        // founder talks to passengers with the mic open. A false `.stop` on the
+        // confirmation sheet calls cancelProcessing() and discards an in-flight
+        // answer with no undo. The fail-safe undo-abort path keeps accepting it
+        // via `undoCancelVariants`.
+        case .stop: return ["stop", "cancel"]
         }
     }
 
@@ -109,8 +127,18 @@ enum VoiceCommandLexicon {
     /// The cancel/undo words that abort an open `UndoWindow` (spoken form of a tap).
     static let cancelWords: [VoiceCommand] = [.stop]
 
+    /// Words accepted ONLY on the loose undo-abort path: every `.stop` variant
+    /// PLUS "no"/"know". #110: that direction is deliberately looser than the
+    /// matcher because it is fail-safe — aborting a pending skip loses nothing
+    /// when it fires spuriously, while missing it burns a question. The reverse
+    /// (a false `.stop` on the confirmation sheet) is destructive, which is why
+    /// "no" is no longer a `.stop` variant.
+    static let undoCancelVariants: Set<String> = Set(
+        VoiceCommandLexicon.cancelWords.flatMap { VoiceCommandLexicon.variants(for: $0) } + ["no", "know"]
+    )
+
     /// Whether `token` (already normalized) is a spoken cancel/undo word.
     static func isCancelWord(_ token: String) -> Bool {
-        cancelWords.contains { variants(for: $0).contains(token) }
+        undoCancelVariants.contains(token)
     }
 }

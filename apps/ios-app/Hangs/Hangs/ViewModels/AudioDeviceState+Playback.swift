@@ -131,26 +131,53 @@ extension AudioDeviceState {
 
     /// Play feedback audio from URL, returning the playback duration
     func playFeedbackAudio(from urlString: String) async -> TimeInterval {
-        do {
-            let audioData = try await networkService.downloadAudio(from: urlString)
-            let duration = try await audioService.playOpusAudio(audioData)
-            return duration
-        } catch {
-            Logger.audio.warning("⚠️ Failed to play feedback audio: \(error, privacy: .public)")
-            Self.reportAudioFailure(error, kind: "feedback")
-            return 3.0 // Default fallback duration
+        await withCommandWindowClosed {
+            do {
+                let audioData = try await networkService.downloadAudio(from: urlString)
+                let duration = try await audioService.playOpusAudio(audioData)
+                return duration
+            } catch {
+                Logger.audio.warning("⚠️ Failed to play feedback audio: \(error, privacy: .public)")
+                Self.reportAudioFailure(error, kind: "feedback")
+                return 3.0 // Default fallback duration
+            }
         }
     }
 
     /// Play feedback audio from base64 string, returning the playback duration
     func playFeedbackAudioBase64(_ base64: String) async -> TimeInterval {
-        do {
-            let duration = try await audioService.playOpusAudioFromBase64(base64)
-            return duration
-        } catch {
-            Logger.audio.warning("⚠️ Failed to play base64 feedback audio: \(error, privacy: .public)")
-            return 3.0 // Default fallback duration
+        await withCommandWindowClosed {
+            do {
+                let duration = try await audioService.playOpusAudioFromBase64(base64)
+                return duration
+            } catch {
+                Logger.audio.warning("⚠️ Failed to play base64 feedback audio: \(error, privacy: .public)")
+                return 3.0 // Default fallback duration
+            }
         }
+    }
+
+    /// Run feedback playback with the command window CLOSED (#110 root cause
+    /// #3): `handleAnswerResponse` transitions to `.showingResult`, arms the
+    /// command listener and only then plays the feedback, so the recognizer sat
+    /// on a live input tap while the app talked — the build-33 field transcripts
+    /// "you said proud answer proud" and "he is proud of you" are the app
+    /// hearing itself. Mirrors what `playQuestionAudio` already does for the
+    /// question read: flag + tear the listener down, play, then re-arm.
+    private func withCommandWindowClosed(_ play: () async -> TimeInterval) async -> TimeInterval {
+        setPlayingFeedbackTTS(true)
+        stopSilenceDetectionListening()
+
+        let duration = await play()
+
+        setPlayingFeedbackTTS(false)
+        // Auto-advance can start the NEXT question's read while long feedback is
+        // still playing; that read owns the engine (and stopped it on the way
+        // in), so re-arming here would put the mic live under question TTS.
+        if !isPlayingQuestionTTS() {
+            await startSilenceDetectionListening()
+        }
+        return duration
     }
 
     /// Toggle mute and make it take effect immediately: the `isMuted` guards in

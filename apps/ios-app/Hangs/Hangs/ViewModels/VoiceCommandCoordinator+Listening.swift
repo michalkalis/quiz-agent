@@ -5,8 +5,10 @@
 //  The windowed native-English command listener (#77, task 77.5): the WINDOW
 //  (which screen, if any, is currently listening — armed on Home /
 //  Question-after-TTS / Confirmation / Result; torn down during TTS and NEVER
-//  during recording), the CONSUMER loop feeding each finalized transcript to
-//  the screen-scoped `VoiceCommandMatcher`, and the per-screen command ROUTING
+//  during recording), the CONSUMER loop feeding each transcript — volatile
+//  hypothesis or final, see +Utterance for the policy that makes volatile
+//  results safe — to the screen-scoped `VoiceCommandMatcher`, and the
+//  per-screen command ROUTING
 //  (77.8–77.9). Defensive degrade (E-fallback): no recognizer / a failed setup
 //  simply means no transcripts flow — the manual mic-button flow is untouched.
 //
@@ -32,10 +34,11 @@ extension VoiceCommandCoordinator {
         // racing the scene-phase teardown (mic-in-background fix).
         if !isAppForeground() { return nil }
 
-        // Torn down during TTS (the recognizer must never transcribe its own
-        // question playback) and during any recording (the answer window is the
-        // Slovak ElevenLabs stream — time-disjoint from command listening).
-        if isPlayingQuestionTTS() || isRecordingActive { return nil }
+        // Torn down during ANY TTS (the recognizer must never transcribe the
+        // app's own playback — #110 widened this from question-only to feedback
+        // too) and during any recording (the answer window is the Slovak
+        // ElevenLabs stream — time-disjoint from command listening).
+        if isPlayingTTS() || isRecordingActive { return nil }
 
         switch quizState() {
         case .idle: return .home
@@ -80,8 +83,9 @@ extension VoiceCommandCoordinator {
 
     // MARK: - Consumer
 
-    /// Start consuming finalized English transcripts and routing them through
-    /// the screen-scoped matcher. Called when the listener arms; idempotent
+    /// Start consuming English transcripts (volatile hypotheses AND finals) and
+    /// routing them through the screen-scoped matcher. Called when the listener
+    /// arms; idempotent
     /// (re-adding under the same TaskKey cancels the previous consumer). Drives
     /// the capture phase to `.armed → .listening`.
     func startCommandConsumer() {
@@ -117,25 +121,57 @@ extension VoiceCommandCoordinator {
     func stopCommandConsumer() {
         taskBag.cancel(.commandListener)
         applyCaptureEvent(.reset)
+        // A torn-down listener will never deliver the final that would have
+        // ended the utterance, so the latch must not survive it (#110).
+        endUtterance()
     }
 
-    /// Map one finalized transcript to a screen-scoped command (or ignore it).
-    /// Guards on `currentCommandScreen` so a transcript that lands after the
-    /// window closed (e.g. mid-transition into recording) is dropped.
-    func handleCommandTranscript(_ transcript: String) async {
+    /// Map one transcript — a volatile hypothesis OR a final — to a
+    /// screen-scoped command (or ignore it). Guards on `currentCommandScreen` so
+    /// a transcript that lands after the window closed (e.g. mid-transition into
+    /// recording, or while feedback TTS plays) is dropped.
+    ///
+    /// **AT MOST ONE COMMAND PER UTTERANCE (#110).** This is the load-bearing
+    /// invariant that makes volatile results safe. The transcriber emits a
+    /// GROWING hypothesis and then one final, so a single spoken "start" reaches
+    /// this method several times: the first transcript that resolves to a
+    /// command AND clears `suppressionReason` fires it, and EVERY later
+    /// transcript of that utterance — volatile or final — is suppressed until
+    /// the final ends the utterance. Without the latch a single "ok … again"
+    /// utterance would submit the answer from an early hypothesis and then
+    /// discard it from a later one.
+    func handleCommandTranscript(_ transcript: CommandTranscript) async {
+        // The final result IS the utterance boundary, whatever happens below
+        // (window closed / unmatched / suppressed) — the latch must never
+        // outlive the utterance it belongs to.
+        defer { if transcript.isFinal { endUtterance() } }
+
         // Release diagnostics: the command hot path was invisible in Sentry, so
         // "commands don't work" on-device could not be triaged remotely (only
-        // availability was logged). One log per finalized transcript, at every
-        // exit, so Sentry distinguishes: window closed vs no vocab match vs
-        // matched. TEMPORARY EXCEPTION to the no-raw-speech rule in Logging.swift:
-        // "text" carries the normalized transcript while the founder is the only
-        // prod user — remove before GA (tracked in docs/todo/TODO.md).
-        let normalized = VoiceCommandMatcher.normalize(transcript)
+        // availability was logged). One log per transcript, at every exit, so
+        // Sentry distinguishes: window closed vs no vocab match vs suppressed vs
+        // matched — and, since #110, whether the source was a volatile
+        // hypothesis or a final, plus the token count that the matcher's content
+        // cap keys off. TEMPORARY EXCEPTION to the no-raw-speech rule in
+        // Logging.swift: "text" carries the normalized transcript while the
+        // founder is the only prod user — remove before GA (tracked in
+        // docs/todo/TODO.md).
+        let normalized = VoiceCommandMatcher.normalize(transcript.text)
+        let tokens = normalized.split(separator: " ").count
+
+        // #110 volatile stability (see `noteVolatileTranscript`): recorded for
+        // EVERY volatile, including the ones dropped below, so the baseline is
+        // what the transcriber emitted rather than what happened to match.
+        let isStableVolatile = transcript.isFinal || noteVolatileTranscript(normalized)
+
         guard let screen = currentCommandScreen else {
             SentryLog.info(
                 "voice cmd transcript dropped — window closed",
                 category: .voice,
-                attributes: ["len": normalized.count, "text": normalized]
+                attributes: [
+                    "len": normalized.count, "text": normalized,
+                    "final": transcript.isFinal, "tokens": tokens,
+                ]
             )
             return
         }
@@ -146,19 +182,38 @@ extension VoiceCommandCoordinator {
         // NOT in the question screen's normal command set, so this must be
         // checked BEFORE the matcher (which would otherwise drop it).
         if pendingSkipWindow != nil {
-            let tokens = VoiceCommandMatcher.normalize(transcript).split(separator: " ").map(String.init)
-            if tokens.contains(where: VoiceCommandLexicon.isCancelWord) {
+            let cancelTokens = VoiceCommandMatcher.normalize(transcript.text).split(separator: " ").map(String.init)
+            if cancelTokens.contains(where: VoiceCommandLexicon.isCancelWord) {
                 emitEarcon(.commandAck) // acknowledge the recognized cancel
                 abortSkipUndoWindow()
                 return
             }
         }
 
-        guard let command = VoiceCommandMatcher.match(transcript: transcript, on: screen) else {
+        guard let command = VoiceCommandMatcher.match(
+            transcript: transcript.text, on: screen, isFinal: transcript.isFinal
+        ) else {
             SentryLog.info(
                 "voice cmd transcript unmatched",
                 category: .voice,
-                attributes: ["screen": String(describing: screen), "len": normalized.count, "text": normalized]
+                attributes: [
+                    "screen": String(describing: screen), "len": normalized.count, "text": normalized,
+                    "final": transcript.isFinal, "tokens": tokens,
+                ]
+            )
+            return
+        }
+
+        if let suppression = suppressionReason(
+            for: command, on: screen, isFinal: transcript.isFinal, isStableVolatile: isStableVolatile
+        ) {
+            SentryLog.info(
+                "voice cmd suppressed",
+                category: .voice,
+                attributes: [
+                    "screen": String(describing: screen), "command": command.rawValue,
+                    "reason": suppression.rawValue, "final": transcript.isFinal, "tokens": tokens,
+                ]
             )
             return
         }
@@ -166,8 +221,12 @@ extension VoiceCommandCoordinator {
         SentryLog.info(
             "voice cmd matched",
             category: .voice,
-            attributes: ["screen": String(describing: screen), "command": command.rawValue]
+            attributes: [
+                "screen": String(describing: screen), "command": command.rawValue,
+                "final": transcript.isFinal, "tokens": tokens,
+            ]
         )
+        noteCommandFired(command) // latch the utterance + start the cooldown
         applyCaptureEvent(.recognize) // ack (no phase change) — earcon seam for 77.10
         handleRecognizedCommand(command)
     }

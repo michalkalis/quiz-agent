@@ -7,14 +7,19 @@
 //  Emits four per-acquisition streams (see StreamChannel):
 //    • silence events        — speechStarted / silenceAfterSpeech (auto-stop).
 //    • barge-in events       — speech detected during TTS on an external route.
-//    • command transcripts   — finalized English text for VoiceCommandMatcher.
+//    • command transcripts   — English text (volatile + final) for VoiceCommandMatcher.
 //    • command availability  — fail-loud recognizer readiness updates.
+//
+//  The AVAudioEngine/SpeechAnalyzer lifecycle lives in the sibling
+//  SilenceDetectionService+Engine.swift; this file keeps the state machine,
+//  authorization (#105) and asset preparation.
 //
 
 // @preconcurrency: AVAudio tap/converter closures are not @Sendable. Without this,
 // Swift 6 infers @MainActor isolation for a closure passed from a @MainActor class
 // and the runtime isolation check crashes when AVAudio invokes the tap on its
-// audio thread (see Sentry CARQUIZ-1).
+// audio thread (see Sentry CARQUIZ-1). The tap itself now lives in
+// SilenceDetectionService+Engine.swift, which carries the same annotation.
 @preconcurrency import AVFoundation
 import Foundation
 import os
@@ -47,6 +52,22 @@ enum VoiceCommandAvailability: Sendable, Equatable {
     case unavailable(reason: String)
 }
 
+/// One transcriber result on the command path, carrying its own finality.
+///
+/// WHY finality travels WITH the text (build-33 field fix, 2026-07-24): the
+/// command stream used to be finals-only, but a SpeechTranscriber only finalizes
+/// a segment after an end-of-speech endpoint, and each repetition EXTENDS the
+/// segment and pushes that endpoint further out. Sentry caught the pathology
+/// verbatim — a single final containing "start" seven times, delivered after the
+/// listening window had already closed. Volatile hypotheses are now forwarded
+/// too so a one-word command can fire while the founder is still speaking; the
+/// consumer needs `isFinal` to enforce at-most-one-command-per-utterance so the
+/// repeated hypotheses of one utterance cannot double-fire.
+struct CommandTranscript: Sendable, Equatable {
+    let text: String
+    let isFinal: Bool
+}
+
 // MARK: - Protocol
 
 @MainActor
@@ -59,14 +80,15 @@ protocol SilenceDetectionServiceProtocol: AnyObject, Sendable {
     func makeSilenceEventStream() -> AsyncStream<SilenceEvent>
     func makeBargeInStream() -> AsyncStream<Void>
 
-    /// Finalized English transcripts from the paired command transcriber (#77,
-    /// task 77.5). The SpeechDetector VAD requires a paired SpeechTranscriber
-    /// (CARQUIZ-3); rather than leave that transcriber idle we re-locale it to
-    /// English (P2 — commands are English-only for all users) and surface its
-    /// finalized results here for the screen-scoped `VoiceCommandMatcher`. The
-    /// answer path stays Slovak ElevenLabs — this stream is command-only and is
-    /// consumed only inside a listening window (never during recording).
-    func makeCommandTranscriptStream() -> AsyncStream<String>
+    /// English transcripts from the paired command transcriber (#77, task 77.5),
+    /// BOTH volatile hypotheses and finals, each tagged via `CommandTranscript`.
+    /// The SpeechDetector VAD requires a paired SpeechTranscriber (CARQUIZ-3);
+    /// rather than leave that transcriber idle we re-locale it to English (P2 —
+    /// commands are English-only for all users) and surface its results here for
+    /// the screen-scoped `VoiceCommandMatcher`. The answer path stays Slovak
+    /// ElevenLabs — this stream is command-only and is consumed only inside a
+    /// listening window (never during recording).
+    func makeCommandTranscriptStream() -> AsyncStream<CommandTranscript>
 
     /// Current availability of the voice-command recognizer (fail-loud, #77).
     /// `.unavailable` means the app has degraded to the manual button flow.
@@ -97,20 +119,31 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     // never starve the current one. See StreamChannel.swift for the invariant.
     private let silenceChannel = StreamChannel<SilenceEvent>()
     private let bargeInChannel = StreamChannel<Void>()
-    private let commandChannel = StreamChannel<String>()
+    let commandChannel = StreamChannel<CommandTranscript>()
     private let commandAvailabilityChannel = StreamChannel<VoiceCommandAvailability>()
 
     func makeSilenceEventStream() -> AsyncStream<SilenceEvent> { silenceChannel.makeStream() }
     func makeBargeInStream() -> AsyncStream<Void> { bargeInChannel.makeStream() }
-    func makeCommandTranscriptStream() -> AsyncStream<String> { commandChannel.makeStream() }
+    func makeCommandTranscriptStream() -> AsyncStream<CommandTranscript> { commandChannel.makeStream() }
     func makeCommandAvailabilityStream() -> AsyncStream<VoiceCommandAvailability> { commandAvailabilityChannel.makeStream() }
 
-    private var audioEngine: AVAudioEngine?
-    private var analyzer: SpeechAnalyzer?
-    private var analyzerTask: Task<Void, Never>?
-    private var detectionTask: Task<Void, Never>?
-    private var transcriptionTask: Task<Void, Never>?
-    private var inputContinuation: AsyncStream<AnalyzerInput>.Continuation?
+    // Engine/analyzer state. Internal rather than `private` (like `commandChannel`
+    // above) because the engine lifecycle lives in the sibling
+    // SilenceDetectionService+Engine.swift: `private` is file-scoped and would not
+    // reach an extension in another file.
+    var audioEngine: AVAudioEngine?
+    var analyzer: SpeechAnalyzer?
+    var analyzerTask: Task<Void, Never>?
+    var detectionTask: Task<Void, Never>?
+    var transcriptionTask: Task<Void, Never>?
+    var inputContinuation: AsyncStream<AnalyzerInput>.Continuation?
+
+    /// Latched when an engine that had voice processing armed refused to start.
+    /// Enabling VPIO on the input node also enables it on this engine's
+    /// unconnected output node; if that combination is rejected on some route we
+    /// must degrade to an unprocessed mic rather than lose voice commands
+    /// entirely, so the next listening window skips voice processing.
+    var voiceProcessingUnsupported = false
 
     private var isTTSPlaybackActive = false
 
@@ -123,7 +156,7 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
         didSet { commandAvailabilityChannel.yield(commandAvailability) }
     }
 
-    private enum State {
+    enum State {
         case idle
         /// Speech is active; `since` marks when the utterance began so the
         /// min-speech-duration blip guard (77.11) can measure it.
@@ -133,7 +166,7 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
         case silenceAccumulating(speechStart: Date, since: Date)
     }
 
-    private var state: State = .idle
+    var state: State = .idle
 
     private let now: @MainActor () -> Date
 
@@ -274,236 +307,9 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     }
 
     // MARK: - Lifecycle
-
-    func startListening() async {
-        guard audioEngine == nil else { return }
-
-        state = .idle
-
-        // Sensitivity centralised in VADTuning (77.11): .low for road noise.
-        let detector: SpeechDetector
-        switch VADTuning.detectorSensitivity {
-        case .low:
-            detector = SpeechDetector(detectionOptions: .init(sensitivityLevel: .low), reportResults: true)
-        case .medium:
-            detector = SpeechDetector(detectionOptions: .init(sensitivityLevel: .medium), reportResults: true)
-        case .high:
-            detector = SpeechDetector(detectionOptions: .init(sensitivityLevel: .high), reportResults: true)
-        }
-
-        // iOS 26.3 requires SpeechDetector to be paired with a SpeechTranscriber
-        // (cannot create a SpeechDetector-only worker). We use detector.results for
-        // VAD AND — since the transcriber must exist anyway — its finalized results
-        // as the English command listener (#77, task 77.5). Locale is forced to
-        // English (P2: commands are English-only for every user regardless of the
-        // Slovak answer path). `reportingOptions: []` = finalized results only, which
-        // is exactly what the screen-scoped command matcher wants.
-        let transcriber = SpeechTranscriber(
-            locale: Locale(identifier: "en_US"),
-            transcriptionOptions: [],
-            reportingOptions: [],
-            attributeOptions: []
-        )
-
-        let analyzer = SpeechAnalyzer(modules: [transcriber, detector])
-        self.analyzer = analyzer
-
-        guard let analyzerFormat = await SpeechAnalyzer.bestAvailableAudioFormat(
-            compatibleWith: [transcriber, detector]
-        ) else {
-            markCommandsUnavailable(reason: "No compatible audio format for SpeechAnalyzer")
-            return
-        }
-
-        let engine = AVAudioEngine()
-        audioEngine = engine
-
-        let inputNode = engine.inputNode
-        var inputFormat = inputNode.outputFormat(forBus: 0)
-
-        // Real devices (esp. Bluetooth) can return 0 Hz / 0 channels right after
-        // AVPlayer playback — retry briefly to let the hardware settle.
-        if inputFormat.sampleRate <= 0 || inputFormat.channelCount <= 0 {
-            for attempt in 1 ... 3 {
-                try? await Task.sleep(for: .milliseconds(200))
-                try? AVAudioSession.sharedInstance().setActive(true)
-                inputFormat = inputNode.outputFormat(forBus: 0)
-                if inputFormat.sampleRate > 0 && inputFormat.channelCount > 0 { break }
-                Logger.voice.warning("🔇 SilenceDetection: format retry \(attempt, privacy: .public) — still \(inputFormat.sampleRate, privacy: .public)Hz, \(inputFormat.channelCount, privacy: .public)ch")
-            }
-            guard inputFormat.sampleRate > 0, inputFormat.channelCount > 0 else {
-                // #105: was console-only (Logger.voice.error), invisible to
-                // Sentry and the Settings Status row — fail loud like the
-                // other command-listener failure branches.
-                markCommandsUnavailable(reason: "Command listener: invalid input format")
-                cleanupAfterStartFailure()
-                return
-            }
-        }
-
-        let converter: AVAudioConverter?
-        if inputFormat != analyzerFormat {
-            converter = AVAudioConverter(from: inputFormat, to: analyzerFormat)
-        } else {
-            converter = nil
-        }
-
-        let (inputSequence, continuation) = AsyncStream<AnalyzerInput>.makeStream()
-        inputContinuation = continuation
-
-        let tapFormat = inputFormat
-        let tapAnalyzerFormat = analyzerFormat
-        let tapConverter = converter
-
-        inputNode.installTap(onBus: 0, bufferSize: 1024, format: inputFormat) { @Sendable buffer, _ in
-            if let tapConverter {
-                guard tapFormat.sampleRate > 0 else { return }
-                let frameCount = AVAudioFrameCount(
-                    Double(buffer.frameLength) * tapAnalyzerFormat.sampleRate / tapFormat.sampleRate
-                )
-                guard let convertedBuffer = AVAudioPCMBuffer(
-                    pcmFormat: tapAnalyzerFormat,
-                    frameCapacity: frameCount
-                ) else { return }
-
-                var error: NSError?
-                tapConverter.convert(to: convertedBuffer, error: &error) { _, outStatus in
-                    outStatus.pointee = .haveData
-                    return buffer
-                }
-
-                if error == nil {
-                    continuation.yield(AnalyzerInput(buffer: convertedBuffer))
-                }
-            } else {
-                continuation.yield(AnalyzerInput(buffer: buffer))
-            }
-        }
-
-        // Fail loud (#77): a swallowed throw here was the silent death of both
-        // VAD and voice commands on device. Cancellation (normal teardown via
-        // stopListening) is not a failure.
-        analyzerTask = Task { [weak self] in
-            do {
-                try await analyzer.start(inputSequence: inputSequence)
-            } catch is CancellationError {
-                // normal stopListening() teardown
-            } catch {
-                self?.markCommandsUnavailable(reason: "SpeechAnalyzer start failed: \(error.localizedDescription)")
-            }
-        }
-
-        // NOTE: SpeechDetector delivers results on its own queue; route back to
-        // @MainActor before touching our state.
-        detectionTask = Task { [weak self] in
-            do {
-                for try await result in detector.results {
-                    guard let self, !Task.isCancelled else { break }
-                    let speechDetected = result.speechDetected
-                    await MainActor.run { [weak self] in
-                        self?.handleSpeechDetectorResult(speechDetected: speechDetected)
-                    }
-                }
-            } catch {
-                Logger.voice.error("🔇 SilenceDetection error: \(error, privacy: .public)")
-            }
-        }
-
-        // Command listener (77.5): consume the paired transcriber's FINALIZED
-        // English results and hand them to the view-model's screen-scoped matcher.
-        // Defensive (E-fallback): any throw from the transcriber stream flips
-        // `commandAvailability` (fail-loud, #77) and ends the loop — VAD is
-        // unaffected and the app degrades to the manual mic-button/tap flow
-        // rather than crashing.
-        transcriptionTask = Task { [weak self] in
-            do {
-                for try await result in transcriber.results {
-                    guard let self, !Task.isCancelled else { break }
-                    let text = String(result.text.characters)
-                    // Pre-filter telemetry: proves on a real device whether the
-                    // transcriber emits anything at all (vs. finals never arriving)
-                    // — the discriminator the dead-commands diagnosis lacked.
-                    SentryLog.info(
-                        "voice transcriber result",
-                        category: .voice,
-                        attributes: ["isFinal": result.isFinal, "len": text.count]
-                    )
-                    guard result.isFinal else { continue }
-                    guard !text.isEmpty else { continue }
-                    await MainActor.run { [weak self] in
-                        self?.commandChannel.yield(text)
-                    }
-                }
-            } catch is CancellationError {
-                // normal stopListening() teardown
-            } catch {
-                await MainActor.run { [weak self] in
-                    self?.markCommandsUnavailable(reason: "Command transcriber failed: \(error.localizedDescription)")
-                }
-            }
-        }
-
-        // Give the analyzer task a beat to wire its internal queue up before
-        // buffers start flowing from the engine tap.
-        try? await Task.sleep(for: .milliseconds(50))
-
-        // #100.4: a stopListening() (or a superseding startListening()) racing this
-        // sleep nils/replaces self.audioEngine. Starting the stale local `engine`
-        // anyway would orphan a running engine stopListening() can never reach
-        // again — the #64 two-engine crash config. stopListening() already tore
-        // down this engine's tap/state if it ran, so bailing here is enough.
-        guard Self.shouldStartEngine(engine, tracking: audioEngine) else {
-            Logger.voice.warning("🔇 SilenceDetection: startListening superseded during startup settle window, not starting engine")
-            return
-        }
-
-        do {
-            try engine.start()
-        } catch {
-            // #105: was console-only (Logger.voice.error), invisible to
-            // Sentry and the Settings Status row — fail loud like the other
-            // command-listener failure branches.
-            markCommandsUnavailable(reason: "Command listener: engine start failed")
-            cleanupAfterStartFailure()
-            return
-        }
-
-        Logger.voice.info("🔇 SilenceDetection: listening started")
-    }
-
-    /// Whether the engine we're about to `.start()` (after the analyzer-queue
-    /// settle sleep above) is still the one `self.audioEngine` tracks. Pure
-    /// identity check — no engine object is touched — so it's unit-testable
-    /// without a live SpeechAnalyzer/AVAudioEngine pipeline (real engines "can't
-    /// run headlessly", see SharedEngineTests). #100.4: production code passes
-    /// `self.audioEngine` as `current`; this stays a free function of its inputs
-    /// so tests can drive the exact race (nil / same / different engine) directly.
-    nonisolated static func shouldStartEngine(_ engine: AVAudioEngine, tracking current: AVAudioEngine?) -> Bool {
-        current === engine
-    }
-
-    func stopListening() {
-        detectionTask?.cancel()
-        detectionTask = nil
-
-        transcriptionTask?.cancel()
-        transcriptionTask = nil
-
-        analyzerTask?.cancel()
-        analyzerTask = nil
-
-        inputContinuation?.finish()
-        inputContinuation = nil
-
-        audioEngine?.inputNode.removeTap(onBus: 0)
-        audioEngine?.stop()
-        audioEngine = nil
-
-        analyzer = nil
-        state = .idle
-
-        Logger.voice.info("🔇 SilenceDetection: listening stopped")
-    }
+    //
+    // startListening() / stopListening() — the AVAudioEngine + SpeechAnalyzer
+    // lifecycle — live in SilenceDetectionService+Engine.swift.
 
     func setTTSPlaybackActive(_ active: Bool) {
         isTTSPlaybackActive = active
@@ -565,20 +371,6 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     }
 
     // MARK: - Helpers
-
-    private func cleanupAfterStartFailure() {
-        detectionTask?.cancel()
-        detectionTask = nil
-        transcriptionTask?.cancel()
-        transcriptionTask = nil
-        analyzerTask?.cancel()
-        analyzerTask = nil
-        inputContinuation?.finish()
-        inputContinuation = nil
-        audioEngine?.inputNode.removeTap(onBus: 0)
-        audioEngine = nil
-        analyzer = nil
-    }
 
     private func isExternalAudioRoute() -> Bool {
         let outputs = AVAudioSession.sharedInstance().currentRoute.outputs

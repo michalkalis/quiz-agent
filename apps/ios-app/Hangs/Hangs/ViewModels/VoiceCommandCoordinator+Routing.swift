@@ -39,14 +39,12 @@ extension VoiceCommandCoordinator {
 
         // Release diagnostics: the command hot path was invisible in Sentry, so
         // "commands don't work" on-device could not be triaged remotely (only
-        // availability was logged). One log per transcript, at every exit, so
-        // Sentry distinguishes: window closed vs no vocab match vs suppressed vs
-        // matched — and, since #110, whether the source was a volatile
-        // hypothesis or a final, plus the token count that the matcher's content
-        // cap keys off. TEMPORARY EXCEPTION to the no-raw-speech rule in
-        // Logging.swift: "text" carries the normalized transcript while the
-        // founder is the only prod user — remove before GA (tracked in
-        // docs/todo/TODO.md).
+        // availability was logged). A log at every exit so Sentry distinguishes:
+        // window closed vs no vocab match vs suppressed vs matched — and, since
+        // #110, whether the source was a volatile hypothesis or a final, plus the
+        // token count that the matcher's content cap keys off. The two DROP exits
+        // are sampled (`shouldLogDroppedTranscript`); the command-carrying ones
+        // are not.
         let normalized = VoiceCommandMatcher.normalize(transcript.text)
         let tokens = normalized.split(separator: " ").count
 
@@ -71,15 +69,15 @@ extension VoiceCommandCoordinator {
         supersedePendingSettle(normalized: normalized, isFinal: transcript.isFinal, tokens: tokens)
 
         guard let screen = currentCommandScreen else {
-            SentryLog.info(
-                "voice cmd transcript dropped — window closed",
-                category: .voice,
-                attributes: [
-                    "len": normalized.count, "text": normalized,
-                    "final": transcript.isFinal, "tokens": tokens,
-                    "sincePrevMs": sincePrevMs ?? -1,
-                ]
-            )
+            if shouldLogDroppedTranscript(isFinal: transcript.isFinal) {
+                SentryLog.info(
+                    "voice cmd transcript dropped — window closed",
+                    category: .voice,
+                    attributes: droppedTranscriptAttributes(
+                        normalized, isFinal: transcript.isFinal, tokens: tokens, sincePrevMs: sincePrevMs
+                    )
+                )
+            }
             return
         }
 
@@ -100,15 +98,13 @@ extension VoiceCommandCoordinator {
         guard let command = VoiceCommandMatcher.match(
             transcript: transcript.text, on: screen, isFinal: transcript.isFinal
         ) else {
-            SentryLog.info(
-                "voice cmd transcript unmatched",
-                category: .voice,
-                attributes: [
-                    "screen": String(describing: screen), "len": normalized.count, "text": normalized,
-                    "final": transcript.isFinal, "tokens": tokens,
-                    "sincePrevMs": sincePrevMs ?? -1,
-                ]
-            )
+            if shouldLogDroppedTranscript(isFinal: transcript.isFinal) {
+                var attributes = droppedTranscriptAttributes(
+                    normalized, isFinal: transcript.isFinal, tokens: tokens, sincePrevMs: sincePrevMs
+                )
+                attributes["screen"] = String(describing: screen)
+                SentryLog.info("voice cmd transcript unmatched", category: .voice, attributes: attributes)
+            }
             return
         }
 
@@ -123,6 +119,12 @@ extension VoiceCommandCoordinator {
             if suppression == .awaitingStable {
                 armVolatileSettle(command, text: normalized, on: screen)
             }
+            // NOT sampled, unlike the two drop exits above: reaching here already
+            // required a hit on the seven-word vocabulary, and the latch + the
+            // 1.5 s cooldown bound how often that can repeat within an utterance.
+            // These are the low-frequency events the quota is FOR — the
+            // awaiting-stable / settle behaviour #110 is triaged on. Carries no
+            // raw speech, only the matched command.
             SentryLog.info(
                 "voice cmd suppressed",
                 category: .voice,
@@ -140,6 +142,48 @@ extension VoiceCommandCoordinator {
             path: transcript.isFinal ? .finalResult : .volatileRepeat,
             sincePrevMs: sincePrevMs
         )
+    }
+
+    // MARK: - Drop-log Sampling
+
+    /// Whether a transcript that will be DROPPED (window closed / no vocab match)
+    /// may spend a Sentry event: every final, plus the first volatile of each
+    /// utterance. Mirrors the producer-side sampling in
+    /// `SilenceDetectionService+Engine`, and for the same reason — a volatile is
+    /// emitted on every hypothesis change (several per second while ANY speech is
+    /// audible) and the window stands open for most of a question, so a drive with
+    /// the radio on would otherwise ship thousands of events per drive on a
+    /// quota'd, rate-limited logger and crowd out the "voice cmd matched" /
+    /// `sincePrevMs` events that are the only field confirmation of the
+    /// off-device measurement. The producer's sampling alone does not cover this:
+    /// it counts what the TRANSCRIBER emitted, this counts what the CONSUMER did
+    /// with it, and only the latter is per-exit.
+    func shouldLogDroppedTranscript(isFinal: Bool) -> Bool {
+        if isFinal { return true }
+        defer { loggedVolatileThisUtterance = true }
+        return !loggedVolatileThisUtterance
+    }
+
+    /// Attributes shared by the two drop logs.
+    ///
+    /// TEMPORARY EXCEPTION to the no-raw-speech rule in Logging.swift: `text`
+    /// carries the normalized transcript while the founder is the only prod user
+    /// — remove before GA (tracked in docs/todo/TODO.md). Gated on the master
+    /// switch because with voice commands OFF `currentCommandScreen` is nil, so
+    /// EVERY transcript of every question takes the window-closed branch: a
+    /// founder who turned the feature off would be uploading a running transcript
+    /// of his car in exchange for no diagnostic value at all. The consumer is
+    /// armed for VAD regardless of the switch (`startSilenceDetectionListening`),
+    /// so this branch really is reached in that configuration.
+    func droppedTranscriptAttributes(
+        _ normalized: String, isFinal: Bool, tokens: Int, sincePrevMs: Int?
+    ) -> [String: Any] {
+        var attributes: [String: Any] = [
+            "len": normalized.count, "final": isFinal, "tokens": tokens,
+            "sincePrevMs": sincePrevMs ?? -1,
+        ]
+        if settings().voiceCommandsEnabled { attributes["text"] = normalized }
+        return attributes
     }
 
     // MARK: - Fan-out

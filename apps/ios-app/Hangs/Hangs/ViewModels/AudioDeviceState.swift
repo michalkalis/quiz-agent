@@ -75,6 +75,11 @@ final class AudioDeviceState: ObservableObject {
     let isAskingQuestion: @MainActor () -> Bool
     let isRerecording: @MainActor () -> Bool
     let isPlayingQuestionTTS: @MainActor () -> Bool
+    /// ANY app TTS — question OR feedback. The question-only reader above still
+    /// drives barge-in / replay re-entrancy; this one is the mic's self-trigger
+    /// guard, re-checked after `startListening()` suspends (see
+    /// `startSilenceDetectionListening`).
+    let isPlayingAnyTTS: @MainActor () -> Bool
     let setPlayingQuestionTTS: @MainActor (Bool) -> Void
     /// Feedback-TTS twin of the flag above — closes the command window while the
     /// result feedback plays so the recognizer can't hear it (#110).
@@ -104,6 +109,7 @@ final class AudioDeviceState: ObservableObject {
         isAskingQuestion: @escaping @MainActor () -> Bool,
         isRerecording: @escaping @MainActor () -> Bool,
         isPlayingQuestionTTS: @escaping @MainActor () -> Bool,
+        isPlayingAnyTTS: @escaping @MainActor () -> Bool,
         setPlayingQuestionTTS: @escaping @MainActor (Bool) -> Void,
         setPlayingFeedbackTTS: @escaping @MainActor (Bool) -> Void,
         currentQuestionAudioUrl: @escaping @MainActor () -> String?,
@@ -127,6 +133,7 @@ final class AudioDeviceState: ObservableObject {
         self.isAskingQuestion = isAskingQuestion
         self.isRerecording = isRerecording
         self.isPlayingQuestionTTS = isPlayingQuestionTTS
+        self.isPlayingAnyTTS = isPlayingAnyTTS
         self.setPlayingQuestionTTS = setPlayingQuestionTTS
         self.setPlayingFeedbackTTS = setPlayingFeedbackTTS
         self.currentQuestionAudioUrl = currentQuestionAudioUrl
@@ -160,6 +167,29 @@ final class AudioDeviceState: ObservableObject {
         guard isAppForeground() else { return }
 
         await service.startListening()
+
+        // RE-VALIDATE AFTER THE SUSPENSION — a synchronous stop cannot cancel
+        // this call. `startListening()` suspends at
+        // `SpeechAnalyzer.bestAvailableAudioFormat` while the service's
+        // `audioEngine` is still nil, so a `stopSilenceDetectionListening()`
+        // landing in that window has nothing to tear down; this call then resumes,
+        // installs the tap and starts an engine nobody asked for. (#100.4's
+        // `shouldStartEngine` identity check only covers the LATER 50 ms settle
+        // sleep, by which point the engine is tracked.)
+        //
+        // Reachable on the MCQ-voice path: `startStreamingRecording` tears the
+        // shared engine down for the ElevenLabs stream and `submitMCQAnswer` never
+        // re-arms it, so the engine is DOWN when `handleAnswerResponse` fires
+        // `refreshCommandWindow()` immediately before the feedback-playback Task.
+        // Same shape when the feedback tail re-arms inside `proceedToNextQuestion`'s
+        // 0.1 s sleep and the next `playQuestionAudio` then tries to stop it.
+        // Without this guard the mic goes live under the app's own TTS (#110 root
+        // cause #3 — "you said proud answer proud") and the AVAudioEngine +
+        // AVPlayer pair the crash notes above warn about run concurrently (#64).
+        guard isAppForeground(), !isPlayingAnyTTS() else {
+            stopSilenceDetectionListening()
+            return
+        }
 
         // Barge-in: if the user starts speaking during TTS on an external audio
         // route, stop playback and kick off recording immediately.

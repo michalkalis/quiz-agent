@@ -346,6 +346,7 @@ extension VoiceCommandCoordinator {
         commandFiredThisUtterance = false
         lastVolatileText = nil // the next utterance's first volatile is unproven
         lastTranscriptAt = nil // …and its first transcript has no interval to report
+        loggedVolatileThisUtterance = false // …and gets its own drop-log sample
         // A settle belongs to the utterance that armed it: a command must never
         // fire for an utterance that already ended or a listener that is gone.
         cancelVolatileSettle()

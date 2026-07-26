@@ -44,10 +44,26 @@ final class MockSilenceDetectionService: SilenceDetectionServiceProtocol {
     /// #77 tests can assert the defensive degrade-to-buttons path (E-fallback).
     var shouldFailSetup = false
 
+    /// Park the NEXT `startListening()` mid-flight (one-shot — cleared as it is
+    /// consumed, so the caller's own re-arm isn't parked too).
+    ///
+    /// WHY the mock needs this at all: the real `startListening()` suspends at
+    /// `SpeechAnalyzer.bestAvailableAudioFormat` while `audioEngine` is still nil,
+    /// so a `stopListening()` that lands in that window has NOTHING to tear down
+    /// and cannot cancel the start — the call resumes and puts the mic live
+    /// anyway. Setting `isListening = true` below regardless of an interleaved
+    /// `stopListening()` reproduces exactly that, which is what lets a test prove
+    /// the `AudioDeviceState` choke point re-validates after it suspends.
+    var onStartListeningSuspend: (@MainActor () async -> Void)?
+
     init() {}
 
     func startListening() async {
         startListeningCallCount += 1
+        if let suspend = onStartListeningSuspend {
+            onStartListeningSuspend = nil
+            await suspend()
+        }
         guard !shouldFailSetup else {
             isListening = false // degrade: setup failed, listener stays down
             return

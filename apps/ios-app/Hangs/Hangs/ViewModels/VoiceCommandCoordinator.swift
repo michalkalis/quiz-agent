@@ -129,6 +129,13 @@ final class VoiceCommandCoordinator: ObservableObject {
     /// from one real drive before treating it as load-bearing.
     var volatileSettleDelay: TimeInterval = 0.35
 
+    /// Whether a VOLATILE hypothesis of the utterance in progress has already
+    /// spent a Sentry event on one of the per-transcript DROP logs — the
+    /// consumer-side twin of `loggedVolatileThisSegment` in
+    /// SilenceDetectionService+Engine (see `shouldLogDroppedTranscript`). Cleared
+    /// by `endUtterance()`.
+    var loggedVolatileThisUtterance = false
+
     /// When the previous transcript of the utterance in progress arrived, or
     /// `nil` for its first — the input to the `sincePrevMs` field the command
     /// path logs (see `noteTranscriptArrival`). Cleared by `endUtterance()`.

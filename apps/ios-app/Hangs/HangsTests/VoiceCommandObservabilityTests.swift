@@ -199,6 +199,50 @@ struct VoiceCommandObservabilityTests {
         }
     }
 
+    // MARK: - Drop-log sampling + raw-speech gating
+
+    /// WHY: the producer samples its volatile telemetry to one event per segment
+    /// precisely because volatiles arrive on every hypothesis change. The consumer
+    /// logged one event per transcript at every drop exit, so a drive with the
+    /// radio on reproduced the exact volume the producer's sampling was written to
+    /// avoid — and the events crowded out are the "voice cmd matched"/`sincePrevMs`
+    /// ones that are the only field confirmation of the off-device measurement.
+    @Test("only the first volatile of an utterance may spend a drop-log event")
+    func dropLogSamplesVolatilesPerUtterance() {
+        let (vm, _, _) = makeVM()
+        let coordinator = vm.voiceCommandCoordinator
+
+        #expect(coordinator.shouldLogDroppedTranscript(isFinal: false), "first volatile is the sample")
+        #expect(coordinator.shouldLogDroppedTranscript(isFinal: false) == false, "every later volatile is dropped silently")
+        #expect(coordinator.shouldLogDroppedTranscript(isFinal: false) == false)
+        #expect(coordinator.shouldLogDroppedTranscript(isFinal: true), "a final is low-frequency — always logged")
+
+        // The final ended the utterance, so the next one gets its own sample.
+        coordinator.endUtterance()
+        #expect(coordinator.shouldLogDroppedTranscript(isFinal: false), "the next utterance is sampled afresh")
+    }
+
+    /// WHY: with the master switch OFF `currentCommandScreen` is nil, so EVERY
+    /// transcript takes the window-closed drop branch — yet the consumer is still
+    /// armed for VAD. Attaching raw speech there would upload a running transcript
+    /// of the founder's car in exchange for no diagnostic value whatsoever.
+    @Test("raw speech is never attached to a drop log when voice commands are OFF")
+    func dropLogOmitsTextWhenCommandsDisabled() {
+        let (vm, _, _) = makeVM()
+        let coordinator = vm.voiceCommandCoordinator
+
+        vm.settings.voiceCommandsEnabled = true
+        let on = coordinator.droppedTranscriptAttributes("start now", isFinal: false, tokens: 2, sincePrevMs: 420)
+        #expect(on["text"] as? String == "start now", "the temporary diagnostic exception still applies while ON")
+        #expect(on["len"] as? Int == 9)
+        #expect(on["sincePrevMs"] as? Int == 420)
+
+        vm.settings.voiceCommandsEnabled = false
+        let off = coordinator.droppedTranscriptAttributes("start now", isFinal: false, tokens: 2, sincePrevMs: 420)
+        #expect(off["text"] == nil, "commands OFF must never upload transcripts")
+        #expect(off["len"] as? Int == 9, "the metadata that makes the event triageable stays")
+    }
+
     // MARK: - Persisted settings backward-compat
 
     @Test("voiceCommandsEnabled defaults to true when absent from persisted settings")

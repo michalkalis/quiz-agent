@@ -76,6 +76,13 @@ import os
         /// unobservable with the no-op audio stack.
         var stopPlaybackCallCount = 0
 
+        /// Fired once playback is IN FLIGHT (`isPlaying == true`), before the
+        /// mock's duration sleep. Lets a test resume a racing task at a point where
+        /// "the app is talking" is guaranteed to still hold, instead of betting on
+        /// wall-clock ordering against that sleep — which is flaky under full-suite
+        /// load. Not a spy: the call counts above cover observation.
+        var onPlaybackStarted: (@MainActor () -> Void)?
+
         // Device management
         var availableInputDevices: [AudioDevice] = [.previewBuiltIn, .previewBluetooth]
         var currentInputDevice: AudioDevice?
@@ -129,6 +136,7 @@ import os
                 throw AudioError.playbackFailed
             }
             isPlaying = true
+            onPlaybackStarted?()
             try await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
             isPlaying = false
             return 3.0 // Mock duration

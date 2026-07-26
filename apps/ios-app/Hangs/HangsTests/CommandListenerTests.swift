@@ -813,6 +813,50 @@ struct CommandListenerTests {
         #expect(silence.isListening, "the window re-arms once feedback ends")
     }
 
+    /// WHY: `stopSilenceDetectionListening()` is SYNCHRONOUS and cannot cancel a
+    /// `startListening()` that is already suspended — the real service parks at
+    /// `SpeechAnalyzer.bestAvailableAudioFormat` while its `audioEngine` is still
+    /// nil, so the stop has nothing to tear down and the start resumes and puts
+    /// the mic live anyway. The MCQ-voice ordering reaches exactly that: the
+    /// ElevenLabs stream tore the shared engine down, `submitMCQAnswer` never
+    /// re-armed it, and `handleAnswerResponse` fires `refreshCommandWindow()`
+    /// immediately before the feedback-playback Task. The mic must stay DOWN for
+    /// the whole of feedback playback — otherwise the app transcribes itself
+    /// again and two audio graphs run at once (the #64 crash config).
+    @Test("a window re-arm parked in engine setup must not survive feedback TTS")
+    func parkedRearmMustNotOutliveTheFeedbackStop() async {
+        await withMainSerialExecutor {
+            let (vm, silence, audio) = makeCommandVM()
+            vm.quizState = makeResultState()
+            #expect(silence.isListening == false, "MCQ-voice path: the engine is DOWN at .showingResult")
+
+            var release: CheckedContinuation<Void, Never>?
+            silence.onStartListeningSuspend = { await withCheckedContinuation { release = $0 } }
+
+            // Task A — the refreshCommandWindow() the .showingResult transition fires.
+            // Reports what it observed the instant it returns, so a mis-ordered run
+            // fails the precondition loudly instead of passing by accident.
+            let rearm = Task { @MainActor in
+                await vm.audioDeviceState.startSilenceDetectionListening()
+                return (listening: silence.isListening, feedbackPlaying: vm.isPlayingFeedbackTTS)
+            }
+            await waitUntil({ release != nil }, "the re-arm never parked in engine setup")
+
+            // Task B — the feedback playback Task, which closes the command window.
+            // A is released from INSIDE playback rather than on wall-clock, so
+            // "the app is still talking" is guaranteed to hold when it resumes.
+            audio.onPlaybackStarted = { release?.resume() }
+            let feedback = Task { @MainActor in await vm.audioDeviceState.playFeedbackAudioBase64("ZmFrZQ==") }
+
+            let observed = await rearm.value
+            #expect(observed.feedbackPlaying, "precondition: the re-arm resumed while feedback was still playing")
+            #expect(observed.listening == false, "the mic must not go live under the app's own feedback")
+
+            _ = await feedback.value
+            #expect(silence.isListening, "and the feedback tail re-arms once the app stops talking")
+        }
+    }
+
     // MARK: - Defensive degrade to buttons (E-fallback)
 
     @Test("a failed recognizer setup leaves button-only mode: no crash, buttons work")

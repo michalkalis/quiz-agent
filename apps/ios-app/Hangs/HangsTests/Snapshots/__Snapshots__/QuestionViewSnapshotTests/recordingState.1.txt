@@ -198,6 +198,7 @@
         - playOpusCallCount: 0
         - lastPlayedData: nil
         - stopPlaybackCallCount: 0
+        - onPlaybackStarted: nil
         ▿ availableInputDevices: 2 elements
           ▿ Hangs.AudioDevice
             - id: "Built-In-Mic"
@@ -397,6 +398,7 @@
           - isAskingQuestion: (Function)
           - isRerecording: (Function)
           - isPlayingQuestionTTS: (Function)
+          - isPlayingAnyTTS: (Function)
           - setPlayingQuestionTTS: (Function)
           - setPlayingFeedbackTTS: (Function)
           - currentQuestionAudioUrl: (Function)
@@ -482,6 +484,7 @@
           - commandFiredThisUtterance: false
           - lastVolatileText: nil
           - volatileSettleDelay: 0.35
+          - loggedVolatileThisUtterance: false
           - lastTranscriptAt: nil
           - pendingVolatileSettle: nil
           - lastFiredCommand: nil

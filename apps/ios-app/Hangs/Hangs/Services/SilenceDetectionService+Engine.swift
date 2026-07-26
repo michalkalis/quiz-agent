@@ -209,7 +209,9 @@ extension SilenceDetectionService {
                     // per drive on a quota'd, rate-limited logger — and would
                     // crowd out the low-frequency "voice cmd matched"/"voice cmd
                     // suppressed" events this whole change is triaged with. The
-                    // consumer-side logs already carry `final` per transcript.
+                    // consumer applies the SAME rule to its two per-transcript
+                    // drop exits (`shouldLogDroppedTranscript`) — sampling only
+                    // here would have left that volume in place.
                     if result.isFinal || !loggedVolatileThisSegment {
                         SentryLog.info(
                             "voice transcriber result",

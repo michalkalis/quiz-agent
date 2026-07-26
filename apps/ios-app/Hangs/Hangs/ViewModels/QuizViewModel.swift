@@ -626,6 +626,7 @@ final class QuizViewModel: ObservableObject {
             isAskingQuestion: { [weak self] in self?.quizState == .askingQuestion },
             isRerecording: { [weak self] in self?.isRerecording ?? false },
             isPlayingQuestionTTS: { [weak self] in self?.isPlayingQuestionTTS ?? false },
+            isPlayingAnyTTS: { [weak self] in self?.isPlayingAnyTTS ?? false },
             setPlayingQuestionTTS: { [weak self] in self?.isPlayingQuestionTTS = $0 },
             setPlayingFeedbackTTS: { [weak self] in self?.isPlayingFeedbackTTS = $0 },
             currentQuestionAudioUrl: { [weak self] in self?.recordingCoordinator.currentQuestionAudioUrl },

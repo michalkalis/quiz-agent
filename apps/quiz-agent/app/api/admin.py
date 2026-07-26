@@ -7,7 +7,7 @@ Requires ADMIN_API_KEY for authentication.
 import logging
 from fastapi import APIRouter, Depends, HTTPException, Header, Request, status
 from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any
+from typing import List, Literal, Optional, Dict, Any
 from datetime import datetime
 import hmac
 import os
@@ -122,6 +122,29 @@ class BackfillSourcesResponse(BaseModel):
     updated_count: int
     not_found_count: int
     skipped_count: int
+    not_found_ids: List[str] = []
+
+
+class ReviewStatusUpdateRequest(BaseModel):
+    """Request to retire questions from serving (or bring them back)."""
+
+    ids: List[str] = Field(..., min_length=1, description="Question IDs to update")
+    # Only the two serving-relevant statuses are settable here. The voice read
+    # path filters `review_status == "approved"`, so "archived" takes a question
+    # out of play without deleting it (and back again); the generation-review
+    # statuses stay owned by the review flow.
+    status: Literal["archived", "approved"] = Field(
+        ..., description="New review status: archived (retire) or approved (restore)"
+    )
+
+
+class ReviewStatusUpdateResponse(BaseModel):
+    """Response from a review-status update."""
+
+    success: bool
+    updated_count: int
+    unchanged_count: int
+    not_found_count: int
     not_found_ids: List[str] = []
 
 
@@ -272,6 +295,58 @@ async def backfill_sources(
         updated_count=updated,
         not_found_count=len(not_found_ids),
         skipped_count=skipped,
+        not_found_ids=not_found_ids,
+    )
+
+
+@router.post("/questions/review-status", response_model=ReviewStatusUpdateResponse)
+@limiter.limit("5/minute")
+async def set_review_status(
+    request: Request,
+    payload: ReviewStatusUpdateRequest,
+    store: QuestionStore = Depends(get_question_store),
+    _: str = Depends(verify_admin_key),
+):
+    """Archive existing questions (or restore archived ones) by ID.
+
+    Corpus curation: retiring a weak batch must not destroy it, so this flips
+    `review_status` instead of deleting — the read path serves only `approved`,
+    and the same call with `status="approved"` puts a batch back.
+
+    Goes through `store.get` + `store.upsert` like the source backfill, so the
+    fetched Question's embedding is reused and a status flip never re-embeds.
+    """
+    updated = 0
+    unchanged = 0
+    not_found_ids: List[str] = []
+
+    for question_id in payload.ids:
+        question = store.get(question_id)
+        if question is None:
+            not_found_ids.append(question_id)
+            continue
+        if question.review_status == payload.status:
+            unchanged += 1
+            continue
+        question.review_status = payload.status
+        if store.upsert(question):
+            updated += 1
+        else:
+            not_found_ids.append(question_id)
+
+    logger.info(
+        "Admin review-status update: %d → %s (%d unchanged, %d not found)",
+        updated,
+        payload.status,
+        unchanged,
+        len(not_found_ids),
+    )
+
+    return ReviewStatusUpdateResponse(
+        success=True,
+        updated_count=updated,
+        unchanged_count=unchanged,
+        not_found_count=len(not_found_ids),
         not_found_ids=not_found_ids,
     )
 

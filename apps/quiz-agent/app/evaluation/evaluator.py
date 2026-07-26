@@ -9,6 +9,8 @@ from quiz_shared.llm import factory as llm_factory
 from quiz_shared.models.question import Question
 from quiz_shared.utils.text_normalization import normalize_text
 
+from .spoken_options import resolve_spoken_option
+
 
 class AnswerEvaluator:
     """Evaluates quiz answers with fair, nuanced scoring.
@@ -111,7 +113,8 @@ class AnswerEvaluator:
         No partial credit for MCQ — user picked from finite options.
 
         Args:
-            user_answer: User's answer (could be a key like "a" or value like "Paris")
+            user_answer: User's answer (a key like "a", a value like "Paris",
+                or a spoken option reference like "béčko" / "dva")
             question: Question with possible_answers dict
 
         Returns:
@@ -126,6 +129,14 @@ class AnswerEvaluator:
             if normalized == normalize_text(key) or normalized == normalize_text(value):
                 selected_key = key
                 break
+
+        # The options are read aloud, so a hands-free driver answers with the
+        # letter the app just spoke ("Béčko") or its position ("dva") — neither
+        # is the key nor the value. iOS resolves those before submitting on the
+        # streaming path only; the batch-transcription path and the confirmation
+        # sheet send the raw transcript straight here.
+        if selected_key is None:
+            selected_key = resolve_spoken_option(user_answer, options)
 
         if selected_key is None:
             return "incorrect", 0.0

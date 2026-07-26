@@ -86,29 +86,45 @@ class TestMCQEvaluator:
         assert _evaluate_mcq("", OPTIONS, "a") == ("incorrect", 0.0)
 
 
-class TestMCQEvaluatorSlovakGap:
-    """Backend `_evaluate_mcq` does NOT translate Slovak ordinals / letter-forms.
+class TestMCQEvaluatorResolvesSpokenReferences:
+    """The backend no longer leaves Slovak transcript → option resolution to iOS.
 
-    Raw transcript tokens like "jedna" (one), "dva" (two), "áčko" (A-form),
-    "pričko" (intentional non-Slovak / typo) cannot match keys (`a`–`d`) or
-    English values, so the backend returns "incorrect". This is the gap that
-    Track E task 42.15 (`MCQTranscriptMatcher` in `QuizViewModel+Recording.swift`)
-    is responsible for closing — the iOS layer normalizes the transcript to a
-    key letter BEFORE submitting to the API.
-
-    These tests pin the current contract: backend stays English-only; iOS owns
-    transcript → option resolution. If a future change adds Slovak handling
-    server-side, these tests fail loud and the iOS matcher can be simplified.
+    This class used to pin the opposite contract ("backend stays English-only;
+    iOS owns transcript → option resolution") and predicted its own reversal:
+    iOS only resolves on the streaming STT path, so once the app started reading
+    the options aloud, every other path delivered "áčko" to a backend that
+    scored it incorrect. ``spoken_options.resolve_spoken_option`` closed that;
+    these tests now run the REAL ``_evaluate_mcq`` rather than the mirror above,
+    because a mirror cannot fail when the production branch changes.
     """
 
-    @pytest.mark.parametrize(
-        "token",
-        ["jedna", "dva", "áčko", "pričko"],
-    )
-    def test_slovak_tokens_not_matched_backend_side(self, token):
-        result, score = _evaluate_mcq(token, OPTIONS, "a")
-        assert result == "incorrect"
-        assert score == 0.0
+    def _evaluate(self, token: str, correct_answer: str = "a"):
+        from app.evaluation.evaluator import AnswerEvaluator
+        from quiz_shared.models.question import Question
+
+        question = Question(
+            id="q_test",
+            question="What is the capital of France?",
+            type="text_multichoice",
+            possible_answers=OPTIONS,
+            correct_answer=correct_answer,
+            topic="Geography",
+            category="adults",
+            difficulty="easy",
+        )
+        return AnswerEvaluator()._evaluate_mcq(token, question)
+
+    @pytest.mark.parametrize("token", ["jedna", "áčko", "acko"])
+    def test_slovak_reference_to_the_correct_option_now_scores(self, token):
+        assert self._evaluate(token) == ("correct", 1.0)
+
+    @pytest.mark.parametrize("token", ["dva", "béčko"])
+    def test_slovak_reference_to_a_wrong_option_scores_that_option(self, token):
+        assert self._evaluate(token) == ("incorrect", 0.0)
+
+    def test_non_slovak_lookalike_is_still_not_matched(self):
+        """A near-miss of a letter-name must not be guessed into an option."""
+        assert self._evaluate("pričko") == ("incorrect", 0.0)
 
 
 class TestEvaluatorRoutingByPossibleAnswers:

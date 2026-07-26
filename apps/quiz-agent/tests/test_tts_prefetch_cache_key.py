@@ -20,6 +20,7 @@ import pytest
 from app.tts.cache import TTSCache
 from app.tts.voices import DEFAULT_VOICE
 from quiz_shared.models.question import Question
+
 from tests.question_audio_harness import (
     RecordingTTS,
     StubTranslator,

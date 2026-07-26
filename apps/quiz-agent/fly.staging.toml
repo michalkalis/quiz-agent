@@ -20,6 +20,12 @@ primary_region = "cdg"
   # `fly secrets set` note) at the next staging secrets/deploy step.
   ENVIRONMENT = "staging"
 
+  # Keep the synthesized-speech cache on the /data volume mounted below.
+  # Without this it defaults to ./data/tts_cache under WORKDIR /app — the
+  # ephemeral image layer — so every deploy wipes it and the whole corpus is
+  # re-synthesized and re-paid for.
+  TTS_CACHE_DIR = "/data/tts_cache"
+
 [[services]]
   protocol = "tcp"
   internal_port = 8002

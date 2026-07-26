@@ -27,10 +27,11 @@ ChromaDB was decommissioned in #41 (Phase B done 2026-07-07): `/data/chroma`
 wiped, `CHROMA_PATH` secret unset, code reads only Postgres/pgvector via
 `DATABASE_URL`. **The volume `vol_r1l5163d2gjekdz4` (`/data` mount) must
 stay** — it holds `ratings.db` (and lazily-created `translations.db`), plus
-`tts_cache/` **only when `TTS_CACHE_DIR=/data/tts_cache` is set** — the code
-default (`./data/tts_cache` → `/app/data/tts_cache`) is an ephemeral image
-layer that every deploy wipes, re-paying the whole TTS corpus. Set it with
-`fly secrets set TTS_CACHE_DIR=/data/tts_cache` per app/env.
+`tts_cache/`, which needs `TTS_CACHE_DIR=/data/tts_cache` — the code default
+(`./data/tts_cache` → `/app/data/tts_cache`) is an ephemeral image layer that
+every deploy wipes, re-paying the whole TTS corpus. It is not a secret, so it
+lives in the `[env]` block of `fly.toml` / `fly.staging.toml` and applies on
+the next deploy with no manual step.
 Questions live in pgvector; final Chroma backup:
 `docs/archive/scripts-chroma/chroma_prod_full_backup_2026-07-07.json`.
 

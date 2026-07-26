@@ -22,6 +22,7 @@ on every question.
 import pytest
 from app.api.routes.quiz import get_current_question
 from quiz_shared.models.question import GenerationProvenance, Question
+
 from tests.question_audio_harness import (
     RecordingTTS,
     StubTranslator,

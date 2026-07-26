@@ -57,7 +57,23 @@ Commits `a12eba9` · `cb3afd6` · `5068b03` · `c95b5c3` · `a2fa2c1` · `e76aad
 
 `VoiceCommandLexicon`'s header asserted that SpeechAnalyzer has no vocabulary biasing, and that claim was the stated justification for the entire hand-written-variants design. **It is wrong.** `AnalysisContext.contextualStrings` and `SpeechAnalyzer.setContext(_:)` exist in the iPhoneOS 26 SDK; the accurate narrower statement is that `SpeechTranscriber` ignores them while `DictationTranscriber` honors them.
 
-That makes `DictationTranscriber` the escape hatch if this round is not enough: it supports contextual-string biasing, `ContentHint.atypicalSpeech` (documented verbatim for "a speaker with a heavy accent"), `.farField` for a car mic, a weighted custom language model, and **sk-SK** — `SpeechTranscriber` supports zero Slavic locales. The trade is that Apple positions `SpeechTranscriber` as the newer, more accurate base model. The cheap decisive experiment is to run BOTH modules in the same analyzer and log which one the matcher resolves correctly.
+That makes `DictationTranscriber` the escape hatch if this round is not enough: it supports contextual-string biasing, `ContentHint.atypicalSpeech` (documented verbatim for "a speaker with a heavy accent"), `.farField` for a car mic, a weighted custom language model, and **sk-SK**. The trade is that Apple positions `SpeechTranscriber` as the newer, more accurate base model. The cheap decisive experiment is to run BOTH modules in the same analyzer and log which one the matcher resolves correctly.
+
+### Locale support — measured, not inferred (2026-07-26, macOS 26.5.2)
+
+Both classes ship in iOS/macOS 26.0 as siblings under `SpeechAnalyzer`; neither is deprecated. Queried directly:
+
+| | `SpeechTranscriber` | `DictationTranscriber` |
+|---|---|---|
+| `supportedLocales` | **30** — zero Slavic | **54** — includes `sk_SK`, `cs_CZ`, `pl_PL`, `hr_HR`, `uk_UA`, `ru_RU` |
+| `sk_SK` in that set | **no** | **yes** |
+| On-device asset for `sk_SK` | n/a | **yes** — `assetInstallationRequest` returns a real download request, so Slovak commands would work offline after a one-time model install |
+
+This **refutes** the "keyboard/`DictationTranscriber` Slovak is server-backed" claim recorded in `issue-77-voice-commands-handsfree.md` (§Q1 re-verification, 2026-07-02) — Slovak is on-device-installable.
+
+**Trap:** `supportedLocale(equivalentTo:)` returns `sk_SK` for **both** classes, including the one that does not support it — it normalizes an identifier rather than testing membership. Never gate on it; `SilenceDetectionService.swift:263-269` correctly uses `supportedLocales.contains`. Keep it that way.
+
+Measured on macOS, so the locale sets still want one on-device confirmation before anything is built on them.
 
 ## Verification — the only gate that matters
 

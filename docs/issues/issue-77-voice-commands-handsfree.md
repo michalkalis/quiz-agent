@@ -100,7 +100,9 @@ has **no `sk`**, legacy `SFSpeechRecognizer` has `sk-SK` but server-only.
 > sheet); glanceable buttons stay as fallback. (4) GPT-style polish → **separate follow-up issue** (delegated).
 > (1) The "no Slovak on-device" fact was re-verified with primary sources 2026-07-02 (iOS 26 `SpeechTranscriber`
 > = 44 locales, **no Slovak**; the "new languages" news was Apple-Intelligence locales, also no Slovak;
-> keyboard/DictationTranscriber Slovak is server-backed); the founder was then unavailable for the final pick,
+> keyboard/DictationTranscriber Slovak is server-backed — **the server-backed half was REFUTED 2026-07-26 by a
+> direct runtime query, see `issue-119-voice-command-recognition-quality.md` §"Locale support — measured": `sk_SK`
+> is in `DictationTranscriber.supportedLocales` and has an installable on-device asset**); the founder was then unavailable for the final pick,
 > so the coordinator **adopted auto-VAD START** as the recommended default — **founder may override to
 > button-only START before execution (override caveat on Q1 only).**
 

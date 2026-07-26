@@ -119,6 +119,17 @@ extension VoiceCommandCoordinator {
     /// to. Order matters — the utterance latch is checked first because it is
     /// the load-bearing invariant, and reporting it is what makes double-fire
     /// pressure visible.
+    ///
+    /// The cooldown is checked BEFORE `.awaitingStable` because those two are the
+    /// only clauses whose order changes behaviour rather than just the reported
+    /// reason: `.awaitingStable` PARKS the hypothesis for the settle, and
+    /// `fireSettledVolatile` re-evaluates the cooldown ~`volatileSettleDelay`
+    /// later — by which time it may have expired. Checked the other way round, a
+    /// first-delivery volatile arriving inside the cooldown gets parked instead
+    /// of rejected and then fires late, converting cooldown-suppressed repeats
+    /// into fires for exactly the command most likely to be repeated (he says
+    /// "start" seven times when nothing responds). A cooldown that can be
+    /// re-litigated after a delay is not a cooldown.
     func suppressionReason(
         for command: VoiceCommand,
         on screen: VoiceCommandScreen,
@@ -127,12 +138,12 @@ extension VoiceCommandCoordinator {
     ) -> CommandSuppression? {
         if commandFiredThisUtterance { return .utteranceLatch }
         if !isFinal, Self.requiresFinalResult(command, on: screen) { return .awaitingFinal }
-        if !isFinal, !isStableVolatile { return .awaitingStable }
         if let last = lastFiredCommand,
            last.command == command,
            now().timeIntervalSince(last.at) < Self.commandCooldown {
             return .cooldown
         }
+        if !isFinal, !isStableVolatile { return .awaitingStable }
         return nil
     }
 
@@ -143,20 +154,22 @@ extension VoiceCommandCoordinator {
     /// sees ONE delivered transcript, while the transcriber emits a GROWING
     /// hypothesis — so every utterance passes through a 1-token prefix state and
     /// the cap is a no-op on the leading edge of all speech. "Okay, tak to bolo
-    /// dobré" arrives as volatile "okay" and would confirm the answer ~300 ms
-    /// in; a radio "Starting now…" arrives as volatile "start". Length cannot
-    /// separate those — stopped-growing can: a sentence keeps growing, a
-    /// finished one-word command does not.
+    /// dobré" arrives as volatile "okay" roughly half a second in and would
+    /// confirm the answer from that prefix; a radio "Starting now…" arrives as
+    /// volatile "start". Length cannot separate those — stopped-growing can: a
+    /// sentence keeps growing, a finished one-word command does not.
     ///
     /// WHY only a signal and not THE gate: a repeat is proof, but its absence is
-    /// not disproof. Apple documents volatile results as change-driven ("each
-    /// phrase is sent one or more times as the interpretation gets better"), so
-    /// the transcriber owes us nothing while the founder is silent. A probe of
-    /// the shipped configuration did see a second delivery for every command
-    /// word — but only because a punctuation refinement ("Start" → "Start.")
-    /// collapses to the same string through `VoiceCommandMatcher.normalize`.
-    /// That is luck, not contract. `armVolatileSettle` is the signal that does
-    /// not depend on it.
+    /// not disproof. A probe of this configuration confirmed Apple's doc contract
+    /// directly — a volatile is emitted ONLY when the hypothesis CHANGES, and an
+    /// unchanged one is never re-issued during trailing silence (SpeechModuleResult
+    /// .isFinal: "there is no guarantee that this result will be reissued"). The
+    /// probe did see a second delivery for every command word, but only because
+    /// the change sequence happens to include a punctuation-only refinement
+    /// ("Start" → "Start.") that `VoiceCommandMatcher.normalize` folds to the same
+    /// string. That is uncontracted — it could vanish with a model update, another
+    /// locale, or noisy cabin audio. `armVolatileSettle` is what makes the gate
+    /// real; this repeat path is an accelerator on top of it.
     ///
     /// Called for EVERY volatile transcript (including ones the matcher rejects)
     /// so the baseline tracks what the transcriber actually emitted.
@@ -168,15 +181,15 @@ extension VoiceCommandCoordinator {
     /// Milliseconds since the PREVIOUS transcript of this utterance, or `nil` for
     /// its first, re-stamping the clock as a side effect.
     ///
-    /// WHY every command-path log carries this: `volatileSettleDelay` is a guess
-    /// bounded below by a quantity nobody has measured — how often the
-    /// transcriber emits a new volatile hypothesis while someone is speaking. If
-    /// that interval is LONGER than the settle, a growing sentence's prefix fires
-    /// before the next hypothesis can supersede it and the prefix protection is
-    /// defeated. SpeechTranscriber cannot be probed on the Simulator, so the only
-    /// place this can be learned is a real drive: the volatile-to-volatile deltas
-    /// give the cadence, and the delta on the FINAL gives what the volatile path
-    /// actually bought over waiting for it.
+    /// WHY every command-path log carries this: `volatileSettleDelay`'s lower
+    /// bound is how often the transcriber emits a NEW volatile hypothesis while
+    /// someone is speaking. If that interval is LONGER than the settle, a growing
+    /// sentence's prefix fires before the next hypothesis can supersede it and the
+    /// prefix protection is defeated. An off-device probe measured it (see
+    /// `volatileSettleDelay`), but on macOS rather than on iPhone hardware, so
+    /// these deltas are how the number is confirmed where it matters: the
+    /// volatile-to-volatile gaps give the cadence, and the gap on the FINAL gives
+    /// what the volatile path actually bought over waiting for it.
     ///
     /// `nil` on the first transcript rather than a number: the gap since the
     /// PREVIOUS utterance is the founder's thinking time, not transcriber
@@ -260,8 +273,21 @@ extension VoiceCommandCoordinator {
     /// it — the field needs to see how often a settle was armed and then talked
     /// over, otherwise "commands are slow" and "commands mis-fire" look the same
     /// in Sentry. No-op when nothing is parked.
-    func supersedePendingSettle(isFinal: Bool, tokens: Int) {
+    ///
+    /// `normalized` is what makes the report honest. The measured device sequence
+    /// for a one-word command is volatile "Start" → volatile "Start.", and
+    /// `VoiceCommandMatcher.normalize` folds both to "start": the second delivery
+    /// arms nothing new, it CONFIRMS the parked hypothesis and fires it on the
+    /// repeat path. Logging that as `settle-superseded` would emit a suppression
+    /// event on every successful repeat-path fire and corrupt the very counter
+    /// this change added to measure false-fire pressure. A settle is only
+    /// "talked over" by a DIFFERENT hypothesis; an identical one is the same
+    /// event seen from the other side, and the fire log already records it with
+    /// `path=volatile-repeat`. (If the identical transcript is then blocked by
+    /// the latch or the cooldown, that reason is logged on its own.)
+    func supersedePendingSettle(normalized: String, isFinal: Bool, tokens: Int) {
         guard let pending = cancelVolatileSettle() else { return }
+        guard pending.text != normalized else { return }
         SentryLog.info(
             "voice cmd suppressed",
             category: .voice,

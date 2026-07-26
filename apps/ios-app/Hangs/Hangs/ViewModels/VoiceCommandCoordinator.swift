@@ -100,26 +100,32 @@ final class VoiceCommandCoordinator: ObservableObject {
     /// value instead of sleeping — the repo's three flaky async voice tests all
     /// came from real `Task.sleep`s.
     ///
-    /// ⚠️ **STARTING POINT, NOT A VALIDATED VALUE** — same status as everything in
-    /// `VADTuning` (see that file's header), and for the same reason: nobody has
-    /// measured it on the target device. It is squeezed between two bounds and we
-    /// currently know NEITHER:
+    /// ⚠️ **MEASURED OFF-DEVICE, NOT YET CONFIRMED ON DEVICE.** It is squeezed
+    /// between two bounds, and a probe of the shipped transcriber configuration
+    /// (macOS 26.5, same Speech.framework, 12 runs / 8 utterances) put both of
+    /// them where 0.35 s sits comfortably in between:
     ///
     ///   - it must be LONGER than the transcriber's interval between consecutive
     ///     volatile hypotheses, or a still-growing sentence's 1-token prefix fires
     ///     before the next hypothesis can supersede it (the prefix protection
-    ///     `noteVolatileTranscript` exists for) — and longer than a driver's
-    ///     mid-sentence pause, for the same reason;
+    ///     `noteVolatileTranscript` exists for). During an actual GROWING sentence
+    ///     new hypotheses track the speech itself — a 7.7 s sentence produced 33
+    ///     results, each a strictly longer prefix — so 0.35 s is comfortably
+    ///     inside that cadence and a growing sentence does supersede in time. For
+    ///     a lone word followed by silence the next (refinement-only) hypothesis
+    ///     took ~1.07 s, which is precisely why waiting for a re-delivery instead
+    ///     of a settle would be the slow path.
     ///   - it must be SHORTER than the remaining wait for the end-of-speech final,
-    ///     or the settle buys no latency and #110 is a no-op.
+    ///     or the settle buys no latency and #110 is a no-op. With `.fastResults`
+    ///     the first hypothesis lands ~1.15 s in and the final ~2.29 s, so a
+    ///     0.35 s settle fires roughly 0.8 s ahead of the final.
     ///
-    /// The repo's only cited latency figure is ~1.45 s end-of-speech→result
-    /// (docs/research/voice-commands-handsfree-research-2026-07-02.md, C1) — that
-    /// bounds the SECOND requirement only, and says nothing about emission cadence.
-    /// SpeechTranscriber cannot be exercised on the Simulator at all
-    /// (`supportedLocales` is empty there, same doc, C1), so the number can only
-    /// come from the field: the `sincePrevMs` attribute now on every command-path
-    /// log is that measurement (see `noteTranscriptArrival`). Re-derive this value
+    /// The caveat that keeps this from being "validated": the probe ran on macOS,
+    /// not on iPhone ANE hardware, and SpeechTranscriber cannot be exercised on
+    /// the Simulator at all (`supportedLocales` is empty there —
+    /// docs/research/voice-commands-handsfree-research-2026-07-02.md, C1). The
+    /// `sincePrevMs` attribute on every command-path log is what confirms the
+    /// cadence in the field (see `noteTranscriptArrival`); re-derive this value
     /// from one real drive before treating it as load-bearing.
     var volatileSettleDelay: TimeInterval = 0.35
 

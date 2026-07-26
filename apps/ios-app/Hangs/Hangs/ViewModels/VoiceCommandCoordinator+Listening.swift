@@ -161,8 +161,8 @@ extension VoiceCommandCoordinator {
 
         // Emission cadence (`noteTranscriptArrival`): stamped BEFORE any early
         // return so the interval measures what the transcriber emitted, not the
-        // subset we acted on. `volatileSettleDelay` is a guess bounded by this
-        // number and it can only be learned in the field. -1 == first transcript
+        // subset we acted on. `volatileSettleDelay` is bounded below by this
+        // number, measured off-device and confirmed here. -1 == first transcript
         // of the utterance (no interval), never a real measurement.
         let sincePrevMs = noteTranscriptArrival()
 
@@ -175,8 +175,9 @@ extension VoiceCommandCoordinator {
         // evidence about the same utterance. A DIFFERENT volatile means the
         // sentence is still growing (this is the prefix protection); an
         // IDENTICAL one is the repeat signal, which fires below without waiting;
-        // a FINAL decides on its own, immediately.
-        supersedePendingSettle(isFinal: transcript.isFinal, tokens: tokens)
+        // a FINAL decides on its own, immediately. Only the first of those three
+        // is reported as a suppression — see `supersedePendingSettle`.
+        supersedePendingSettle(normalized: normalized, isFinal: transcript.isFinal, tokens: tokens)
 
         guard let screen = currentCommandScreen else {
             SentryLog.info(

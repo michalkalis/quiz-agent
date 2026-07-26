@@ -71,7 +71,12 @@ enum VoiceCommandMatcher {
         // hypothesis, so every sentence passes through a 1-token prefix state
         // ("Okay, tak to bolo dobré" → volatile "okay"). That hole is closed in
         // VoiceCommandCoordinator+Utterance, which requires a volatile to be
-        // DELIVERED TWICE UNCHANGED before it may fire.
+        // proven to have STOPPED GROWING before it may fire. Either of two
+        // independent signals proves that: an unchanged re-delivery, or
+        // `volatileSettleDelay` elapsing with no newer hypothesis
+        // (`armVolatileSettle`). Only the second is contractual — Apple emits a
+        // volatile when the hypothesis CHANGES, never on a timer — so the settle
+        // is the real gate and the re-delivery is an accelerator.
         guard contentTokens(tokens).count <= maxContentTokens else { return nil }
 
         let candidates = VoiceCommandLexicon.commands(on: screen)

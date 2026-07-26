@@ -313,8 +313,8 @@ struct CommandListenerTests {
     /// GROWING hypothesis — so every utterance passes through a 1-token prefix
     /// state and the cap is a no-op on the leading edge of ALL speech. Without a
     /// stability gate, "Okay, tak to bolo dobré" from the passenger advances the
-    /// quiz ~300 ms in, and a radio "Starting now…" starts one. A sentence never
-    /// presents the same hypothesis twice — it keeps growing.
+    /// quiz from its first half-second, and a radio "Starting now…" starts one. A
+    /// sentence never presents the same hypothesis twice — it keeps growing.
     @Test("a growing sentence's one-word prefix never fires")
     func growingSentencePrefixDoesNotFire() async {
         await withMainSerialExecutor {
@@ -487,6 +487,50 @@ struct CommandListenerTests {
             clock.now = base.addingTimeInterval(VoiceCommandCoordinator.commandCooldown + 0.1)
             await coordinator.handleCommandTranscript(CommandTranscript(text: "start", isFinal: true))
             #expect(recognized == [.start, .start], "after the cooldown the command must work again")
+        }
+    }
+
+    /// WHY: the cooldown must not be re-litigated after a delay. `.awaitingStable`
+    /// PARKS a hypothesis and `fireSettledVolatile` re-runs the whole gate
+    /// `volatileSettleDelay` later — by which time the cooldown can have expired.
+    /// Gated in the wrong order, a first-delivery volatile arriving inside the
+    /// cooldown is parked instead of rejected and then fires late, converting
+    /// cooldown-suppressed repeats into fires for exactly the command he repeats
+    /// most when nothing responds ("start start start …"). So the assertion is
+    /// that nothing is parked at all, not merely that nothing fired now.
+    @Test("a volatile arriving inside the cooldown is rejected outright, not parked for the settle")
+    func cooldownRejectsVolatileRatherThanParkingIt() async {
+        await withMainSerialExecutor {
+            let (vm, _, _) = makeCommandVM()
+            let coordinator = vm.voiceCommandCoordinator
+            let clock = TestClock(Date())
+            let base = clock.now
+            coordinator.now = { clock.now }
+
+            // Inert routing (see volatileFiresOncePerUtterance) so the screen stays open.
+            coordinator.voiceStartOnQuestionEnabled = false
+            vm.quizState = .askingQuestion
+
+            var recognized: [VoiceCommand] = []
+            coordinator.onCommandRecognized = { recognized.append($0) }
+
+            // A FINAL seeds the cooldown and ends the utterance, so the latch is
+            // not what suppresses the volatile below — the cooldown is.
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "start", isFinal: true))
+            #expect(recognized == [.start])
+
+            clock.now = base.addingTimeInterval(0.5) // still inside the cooldown
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "start", isFinal: false))
+            #expect(coordinator.pendingVolatileSettle == nil,
+                    "a cooldown-suppressed volatile must not be parked for later re-evaluation")
+            #expect(coordinator.taskBag.contains(.volatileSettle) == false, "…and must arm no timer")
+
+            // The consequence, made executable: once the cooldown has expired
+            // there is nothing left that could fire, because nothing was parked.
+            clock.now = base.addingTimeInterval(VoiceCommandCoordinator.commandCooldown + 0.1)
+            coordinator.fireSettledVolatile()
+            #expect(recognized == [.start],
+                    "the cooldown must not be re-litigated after a delay, got \(recognized)")
         }
     }
 
@@ -670,13 +714,14 @@ struct CommandListenerTests {
 
     // MARK: - Emission-cadence telemetry (what replaces the volatileSettleDelay guess)
 
-    /// WHY: `volatileSettleDelay` is a GUESS whose lower bound is the
-    /// transcriber's interval between consecutive volatile hypotheses — if the
-    /// settle is shorter than that interval, a growing sentence's prefix fires
-    /// before the next hypothesis can supersede it. That interval has never been
-    /// measured (the real recognizer cannot run on the Simulator at all, see the
-    /// file header), so `sincePrevMs` in the field logs is the ONLY way it can be
-    /// learned. It must report `nil` for an utterance's first transcript: the gap
+    /// WHY: `volatileSettleDelay`'s lower bound is the transcriber's interval
+    /// between consecutive volatile hypotheses — if the settle is shorter than
+    /// that interval, a growing sentence's prefix fires before the next
+    /// hypothesis can supersede it. That interval has been measured off-device
+    /// only (the real recognizer cannot run on the Simulator at all, see the file
+    /// header), so `sincePrevMs` in the field logs is the only way it is
+    /// confirmed on iPhone. It must report `nil` for an utterance's first
+    /// transcript: the gap
     /// there is the founder's thinking time since the last utterance, and folding
     /// that into the cadence would make us tune the settle on a number that has
     /// nothing to do with the transcriber.

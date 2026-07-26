@@ -50,18 +50,56 @@ extension SilenceDetectionService {
         // EXTENDS the segment and pushes that endpoint further out — the founder
         // says "start", nothing fires, he repeats, and the eventual final ("start"
         // ×7, verbatim in Sentry) lands after the window has already closed.
-        // Volatile hypotheses let a one-word command fire in ~300 ms instead. The
-        // consumer enforces at-most-one-command-per-utterance, so the repeated
-        // hypotheses of one utterance cannot double-fire. Deliberately NOT
-        // `.fastResults` (the SDK doc says it trades accuracy for responsiveness,
-        // and bad accuracy is the other half of this bug) and NOT
-        // `.alternativeTranscriptions` (field data shows the primary transcript is
-        // already letter-perfect for real command words — N-best would only widen
-        // the false-fire surface).
+        // Volatile hypotheses let the consumer act on a command before that
+        // endpoint. At-most-one-command-per-utterance is enforced there, so the
+        // repeated hypotheses of one utterance cannot double-fire.
+        //
+        // `.fastResults` REVERSES this change-set's own earlier call, which
+        // rejected the flag on the SDK doc string alone ("yielding faster but
+        // also less accurate results"). Probing this exact configuration — same
+        // Speech.framework, paired SpeechDetector, 100 ms buffers at 1x real
+        // time, 12 runs / 8 utterances — measured what the doc string does not
+        // say. One word followed by silence:
+        //
+        //   without it:  NOTHING is emitted until the audio clock reaches ~4 s
+        //                (the transcriber's default context window), then the
+        //                whole burst lands in one ~70 ms clump — volatile at
+        //                4211 ms, final at 4275 ms;
+        //   with it:     first hypothesis at 1155 ms, final at 2288 ms.
+        //
+        // Two consequences, the second decisive. (a) Without the flag the
+        // volatile path buys ~10 ms over finals-only — the latency fix this
+        // whole change exists for is a no-op. (b) ANY listening window that
+        // closes before ~4 s of audio yields NOTHING, not even a final. That is
+        // the mechanical explanation for the field data: median command-window
+        // lifetime ~1.3 s, and 37 of 56 consumer exits saw ZERO transcripts. The
+        // ~4 s is a context-window choice, not compute (fed at 30x real time a
+        // 33-result sentence completed in 418 ms), and this flag is precisely
+        // what changes it — "reduces result latency by using a smaller context
+        // window". Apple's own Preset.progressiveTranscription, "configuration
+        // for immediate transcription of live audio", IS volatileResults +
+        // fastResults: our use case verbatim.
+        //
+        // Measurement beats a doc string here, and the accuracy cost is bounded
+        // for us in a way it is not for general dictation: a SEVEN-WORD fixed
+        // vocabulary behind a 0.72 floor (0.85 for volatiles), destructive
+        // commands still waiting for a final, and a wrong early hypothesis
+        // superseded rather than acted on.
+        //
+        // ⚠️ CAVEAT: measured on macOS 26.5, NOT on an iOS 26 device — the
+        // Simulator cannot run SpeechTranscriber at all (SFSpeechErrorDomain 1,
+        // no installed locales). The same framework and the same doc contract
+        // ship on both, but the absolute milliseconds could differ on iPhone ANE
+        // hardware. The `sincePrevMs` attribute on every command-path log is what
+        // confirms these numbers in the field.
+        //
+        // Still NOT `.alternativeTranscriptions` (field data shows the primary
+        // transcript is already letter-perfect for real command words — N-best
+        // would only widen the false-fire surface).
         let transcriber = SpeechTranscriber(
             locale: Locale(identifier: "en_US"),
             transcriptionOptions: [],
-            reportingOptions: [.volatileResults],
+            reportingOptions: [.volatileResults, .fastResults],
             attributeOptions: []
         )
 

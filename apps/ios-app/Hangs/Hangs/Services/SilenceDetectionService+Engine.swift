@@ -95,10 +95,20 @@ extension SilenceDetectionService {
         var inputFormat = inputNode.outputFormat(forBus: 0)
 
         // Real devices (esp. Bluetooth) can return 0 Hz / 0 channels right after
-        // AVPlayer playback — retry briefly to let the hardware settle.
+        // AVPlayer playback — retry to let the hardware settle.
+        //
+        // WHY the budget is seconds, not 600 ms (field fix, 2026-07-26): the FIRST
+        // window of every cold launch armed ~1 s after `AppState` activated the
+        // session and hit 0 Hz on all five of the founder's launches in Sentry,
+        // while the next window on the same device started cleanly — 3 × 200 ms is
+        // simply shorter than a cold audio stack takes to come up. The attempt
+        // count rides on the telemetry below so the real settle time stops being a
+        // guess.
+        var settleAttempts = 0
         if inputFormat.sampleRate <= 0 || inputFormat.channelCount <= 0 {
-            for attempt in 1 ... 3 {
-                try? await Task.sleep(for: .milliseconds(200))
+            for attempt in 1 ... 12 {
+                settleAttempts = attempt
+                try? await Task.sleep(for: .milliseconds(250))
                 try? AVAudioSession.sharedInstance().setActive(true)
                 inputFormat = inputNode.outputFormat(forBus: 0)
                 if inputFormat.sampleRate > 0 && inputFormat.channelCount > 0 { break }
@@ -108,10 +118,17 @@ extension SilenceDetectionService {
                 // #105: was console-only (Logger.voice.error), invisible to
                 // Sentry and the Settings Status row — fail loud like the
                 // other command-listener failure branches.
-                markCommandsUnavailable(reason: "Command listener: invalid input format")
+                markCommandsUnavailable(
+                    reason: "Command listener: invalid input format (after \(settleAttempts) settle retries)"
+                )
                 cleanupAfterStartFailure()
                 return
             }
+            SentryLog.warn(
+                "command mic settled late",
+                category: .voice,
+                attributes: ["settleAttempts": settleAttempts, "inputHz": inputFormat.sampleRate]
+            )
         }
 
         let (inputSequence, continuation) = AsyncStream<AnalyzerInput>.makeStream()
@@ -224,6 +241,8 @@ extension SilenceDetectionService {
         }
 
         Logger.voice.info("🔇 SilenceDetection: listening started")
+
+        recoverAvailabilityForLiveWindow()
 
         // Once-per-window proof of WHICH audio path we actually got. Blind spot the
         // build-33 field data could not close: the compatible analyzer formats are

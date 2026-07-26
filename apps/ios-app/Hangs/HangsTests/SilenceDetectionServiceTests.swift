@@ -406,6 +406,60 @@ struct VoiceCommandAvailabilityTests {
         let mock = MockSilenceDetectionService()
         #expect(mock.commandAvailability == .ready)
     }
+
+    // MARK: - Window-scoped failures must not latch (field fix, 2026-07-26)
+    //
+    // WHY THIS MATTERS: `.unavailable` drives what the founder is TOLD — the
+    // Settings status row and the "LISTENING FOR COMMANDS" cue. On device, the
+    // first window of every cold launch failed on a 0 Hz mic and the next one
+    // started cleanly, but nothing ever cleared the flag: the app claimed
+    // commands were dead for the rest of the session while they worked. These
+    // pin that a live listener outranks a stale per-window failure, and that the
+    // gate still protects a genuinely incapable device.
+
+    @Test("a live window clears a per-window failure — the status must not latch")
+    func liveWindowClearsTransientFailure() {
+        guard #available(iOS 26, *) else {
+            withKnownIssue("SilenceDetectionService requires iOS 26+") {}
+            return
+        }
+        let service = SilenceDetectionService()
+        service.assetsPrepared = true
+        service.markCommandsUnavailable(reason: "Command listener: invalid input format")
+
+        service.recoverAvailabilityForLiveWindow()
+
+        #expect(service.commandAvailability == .ready)
+    }
+
+    @Test("recovery is gated on device capability — a started engine cannot fake .ready")
+    func recoveryRequiresPreparedAssets() {
+        guard #available(iOS 26, *) else {
+            withKnownIssue("SilenceDetectionService requires iOS 26+") {}
+            return
+        }
+        let service = SilenceDetectionService()
+        // Permission denied / assets missing → prepareAssets never set the flag.
+        service.markCommandsUnavailable(reason: "Speech recognition permission denied")
+
+        service.recoverAvailabilityForLiveWindow()
+
+        #expect(service.commandAvailability == .unavailable(reason: "Speech recognition permission denied"))
+    }
+
+    @Test("recovery leaves a still-installing state alone (never claims premature readiness)")
+    func recoveryDoesNotDisturbNonFailureStates() {
+        guard #available(iOS 26, *) else {
+            withKnownIssue("SilenceDetectionService requires iOS 26+") {}
+            return
+        }
+        let service = SilenceDetectionService()
+        service.commandAvailability = .installingAssets
+
+        service.recoverAvailabilityForLiveWindow()
+
+        #expect(service.commandAvailability == .installingAssets)
+    }
 }
 
 // MARK: - SpeechAuthorizationTests (#105 — the app never requested permission)

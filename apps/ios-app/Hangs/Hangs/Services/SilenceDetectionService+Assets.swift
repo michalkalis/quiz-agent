@@ -104,6 +104,7 @@ extension SilenceDetectionService {
 
         let installed = await transcriberEngine.installedLocales()
         if installed.contains(where: { $0.identifier(.bcp47) == locale.identifier(.bcp47) }) {
+            assetsPrepared = true
             commandAvailability = .ready
             // Mirror to Sentry (#96 P2.3) so the founder's device confirms the
             // recognizer assets are present at launch — the pre-condition for
@@ -118,11 +119,29 @@ extension SilenceDetectionService {
         // analyzer will run — the installed assets must match the consumer.
         do {
             try await transcriberEngine.installAssets()
+            assetsPrepared = true
             commandAvailability = .ready
             SentryLog.info("Voice command assets ready", category: .voice, attributes: ["source": "installed"])
         } catch {
             markCommandsUnavailable(reason: "Asset install failed: \(error.localizedDescription)")
         }
+    }
+
+    /// The inverse of `markCommandsUnavailable` for WINDOW-scoped failures: a
+    /// listener that is now live proves the recognizer works, so restore `.ready`.
+    ///
+    /// WHY (field fix, 2026-07-26): `markCommandsUnavailable` is shared by durable
+    /// device failures (permission, missing assets) and per-window ones (0 Hz mic
+    /// on a cold launch, a refused engine start), and nothing ever cleared it. One
+    /// transient miss latched "Unavailable" in Settings and killed the "LISTENING
+    /// FOR COMMANDS" cue for the whole session while commands actually worked —
+    /// Sentry shows fail-then-succeed on all five of the founder's launches.
+    /// `assetsPrepared` is the gate: a device that never passed its pre-conditions
+    /// must NOT be talked into `.ready` by a started engine.
+    func recoverAvailabilityForLiveWindow() {
+        guard assetsPrepared, case .unavailable = commandAvailability else { return }
+        commandAvailability = .ready
+        SentryLog.info("Voice commands recovered on a live window", category: .voice)
     }
 
     /// Fail-loud seam shared by all failure paths: flips the flag the UI reads

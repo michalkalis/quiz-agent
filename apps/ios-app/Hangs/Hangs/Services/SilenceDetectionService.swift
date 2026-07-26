@@ -180,6 +180,12 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
         didSet { commandAvailabilityChannel.yield(commandAvailability) }
     }
 
+    /// Whether the DEVICE-level pre-conditions hold: permission granted and the
+    /// selected engine's model assets installed. Set once by `prepareAssets()`.
+    /// Separate from `commandAvailability`, which conflated a durable device
+    /// capability with a per-window one — see `recoverAvailabilityForLiveWindow`.
+    var assetsPrepared = false
+
     enum State {
         case idle
         /// Speech is active; `since` marks when the utterance began so the

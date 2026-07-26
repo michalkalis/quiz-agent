@@ -254,6 +254,7 @@
         - voiceProcessingUnsupported: false
         - isTTSPlaybackActive: false
         - commandAvailability: Hangs.VoiceCommandAvailability.unknown
+        - assetsPrepared: false
         - state: Hangs.SilenceDetectionService.State.idle
         - now: (Function)
         - authorizationProvider: (Function)

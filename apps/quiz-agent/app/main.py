@@ -189,7 +189,13 @@ async def lifespan(app: FastAPI):
             low_rating_threshold=2.5,
         )
         voice_transcriber = VoiceTranscriber()
-        tts_service = TTSService()
+        # The cache must outlive the image: the default ./data/tts_cache
+        # resolves to /app/data in the container (ephemeral layer), so every
+        # deploy re-paid for the whole corpus. Prod points this at the /data
+        # volume (same pattern as RATINGS_DATABASE_URL / TRANSLATION_CACHE_URL).
+        tts_service = TTSService(
+            cache_dir=os.getenv("TTS_CACHE_DIR", "./data/tts_cache")
+        )
         translation_service = TranslationService()
         # Persistent usage tracker on the auth Postgres (#60). Without
         # DATABASE_URL (plain local dev) usage limits are simply not enforced —

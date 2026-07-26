@@ -13,6 +13,7 @@ from ..evaluation.evaluator import AnswerEvaluator
 from ..input.parser import InputParser
 from ..retrieval.question_retriever import QuestionRetriever
 from ..session.manager import SessionManager
+from ..tts.number_normalization import normalize_numbers_for_tts
 from ..tts.service import TTSService
 from ..usage.tracker import UsageTracker
 
@@ -30,9 +31,13 @@ _prefetch_tasks: "set[asyncio.Task]" = set()
 
 
 def prefetch_question_audio(
-    tts_service: Optional[TTSService], question_text: str
+    tts_service: Optional[TTSService], question_text: str, language: str
 ) -> None:
     """Fire-and-forget TTS warm-up so the next /question/audio request hits the cache.
+
+    ``language`` must be the session's: /question/audio synthesizes the
+    digit-normalized text and the cache key is a hash of that final text, so
+    warming the raw text would warm a key nobody ever reads.
 
     Returns immediately. Failures are logged but never propagate to the caller —
     a missed prefetch just means iOS pays the original synthesis cost.
@@ -40,7 +45,8 @@ def prefetch_question_audio(
     if not tts_service or not question_text:
         return
 
-    task = asyncio.create_task(tts_service.synthesize_question(question_text))
+    tts_text = normalize_numbers_for_tts(question_text, language)
+    task = asyncio.create_task(tts_service.synthesize_question(tts_text))
     _prefetch_tasks.add(task)
     task.add_done_callback(_prefetch_tasks.discard)
     task.add_done_callback(_log_prefetch_outcome)
@@ -314,7 +320,9 @@ class QuizFlowService:
             # Warm TTS cache so iOS gets a cache hit when it requests this URL.
             # iOS plays feedback + result screen + auto-advance (~3-5s) before requesting,
             # giving OpenAI TTS time to finish in the background.
-            prefetch_question_audio(self.tts_service, translated_q_dict["question"])
+            prefetch_question_audio(
+                self.tts_service, translated_q_dict["question"], session.language
+            )
 
         return result
 

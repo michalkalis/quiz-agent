@@ -36,8 +36,10 @@ class TTSCache:
     - LRU eviction when max size exceeded
     - Separate static and dynamic caches
 
-    Cache structure:
-    /data/tts_cache/
+    Cache structure (rooted at ``cache_dir``, default ``./data/tts_cache`` —
+    an ephemeral image layer in the container; prod sets ``TTS_CACHE_DIR=
+    /data/tts_cache`` so the cache lands on the Fly volume and survives deploys):
+    <cache_dir>/
     ├── static/              # Pre-generated feedback (never evicted)
     │   ├── feedback_correct_0.opus
     │   ├── feedback_incorrect_0.opus

@@ -26,8 +26,12 @@ read from pyproject directly. Shared package install must stay non-editable
 ChromaDB was decommissioned in #41 (Phase B done 2026-07-07): `/data/chroma`
 wiped, `CHROMA_PATH` secret unset, code reads only Postgres/pgvector via
 `DATABASE_URL`. **The volume `vol_r1l5163d2gjekdz4` (`/data` mount) must
-stay** — it holds `ratings.db`, `tts_cache/` (and lazily-created
-`translations.db`). Questions live in pgvector; final Chroma backup:
+stay** — it holds `ratings.db` (and lazily-created `translations.db`), plus
+`tts_cache/` **only when `TTS_CACHE_DIR=/data/tts_cache` is set** — the code
+default (`./data/tts_cache` → `/app/data/tts_cache`) is an ephemeral image
+layer that every deploy wipes, re-paying the whole TTS corpus. Set it with
+`fly secrets set TTS_CACHE_DIR=/data/tts_cache` per app/env.
+Questions live in pgvector; final Chroma backup:
 `docs/archive/scripts-chroma/chroma_prod_full_backup_2026-07-07.json`.
 
 Historical note: the CHROMA_PATH/mount mismatch bit twice (2026-04-21,

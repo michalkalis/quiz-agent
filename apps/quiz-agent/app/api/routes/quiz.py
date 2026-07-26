@@ -163,7 +163,9 @@ async def start_quiz(
             # Warm TTS cache while iOS is still rendering the question UI.
             # Best-effort: if iOS requests audio before this finishes, both calls
             # run in parallel and the second wins (cache write is idempotent).
-            prefetch_question_audio(tts_service, translated_question_dict["question"])
+            prefetch_question_audio(
+                tts_service, translated_question_dict["question"], session.language
+            )
 
         return InputResponse(
             success=True,

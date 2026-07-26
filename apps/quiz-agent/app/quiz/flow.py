@@ -369,7 +369,11 @@ class QuizFlowService:
             feedback_text = get_correct_answer_message(
                 result=result, answer=correct_answer, language=language
             )
-            return await self.tts_service.synthesize(text=feedback_text, use_cache=True)
+            # Same founder bug as /question/audio (2026-07-12): a numeric correct
+            # answer ("1969", "50 %") is otherwise read with English pronunciation
+            # inside the Slovak/Czech feedback line.
+            tts_text = normalize_numbers_for_tts(feedback_text, language)
+            return await self.tts_service.synthesize(text=tts_text, use_cache=True)
         except Exception as e:
             logger.warning("Failed to generate enhanced feedback: %s", e)
             return None

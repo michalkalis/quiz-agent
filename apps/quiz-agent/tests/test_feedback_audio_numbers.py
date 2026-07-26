@@ -11,11 +11,10 @@ stayed live on the half of the loop the user hears most.
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-
 from app.quiz.flow import QuizFlowService
+from quiz_shared.models.phase import SessionPhase
 from quiz_shared.models.question import Question
 from quiz_shared.models.session import QuizSession
-from quiz_shared.models.phase import SessionPhase
 
 
 class _RecordingTTS:

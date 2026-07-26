@@ -142,6 +142,33 @@ CORRECT_ANSWER_TEMPLATES = {
 }
 
 
+# Spoken lead-in before a multiple-choice option read-out
+# ("… how many Earth days? Options. A: ten. B: one hundred.")
+OPTIONS_LABEL = {
+    "en": "Options",
+    "sk": "Možnosti",  # Slovak
+    "cs": "Možnosti",  # Czech
+    "de": "Optionen",  # German
+    "fr": "Options",  # French
+    "es": "Opciones",  # Spanish
+    "it": "Opzioni",  # Italian
+    "pl": "Opcje",  # Polish
+    "hu": "Lehetőségek",  # Hungarian
+    "ro": "Opțiuni",  # Romanian
+}
+
+
+# Spoken name of an option key, for languages where the bare letter misreads.
+# Slovak/Czech TTS says a standalone "A" as the conjunction *a* ("and"), which
+# is both wrong mid-sentence and prompts the driver to answer "a"; the
+# letter-names below are exactly the vocabulary the iOS MCQTranscriptMatcher
+# accepts back. Languages absent here speak the uppercase letter.
+OPTION_LETTER_NAMES = {
+    "sk": {"a": "Áčko", "b": "Béčko", "c": "Céčko", "d": "Déčko"},
+    "cs": {"a": "Áčko", "b": "Béčko", "c": "Céčko", "d": "Déčko"},
+}
+
+
 def get_feedback_message(result: str, language: str = "en") -> str:
     """Get feedback message in specified language.
 
@@ -184,3 +211,29 @@ def get_correct_answer_message(result: str, answer: str, language: str = "en") -
         clean_answer = clean_answer[:97] + "..."
 
     return template.format(answer=clean_answer)
+
+
+def get_options_label(language: str = "en") -> str:
+    """Get the spoken "Options" lead-in in the specified language.
+
+    Args:
+        language: ISO 639-1 language code
+
+    Returns:
+        Localized label, English fallback for unsupported languages
+    """
+    return OPTIONS_LABEL.get(language, OPTIONS_LABEL["en"])
+
+
+def get_option_letter(key: str, language: str = "en") -> str:
+    """Get the spoken name of a multiple-choice option key ("a" → "Áčko").
+
+    Args:
+        key: Option key from ``Question.possible_answers``
+        language: ISO 639-1 language code
+
+    Returns:
+        Localized letter name, or the uppercase key where the letter reads fine
+    """
+    names = OPTION_LETTER_NAMES.get(language, {})
+    return names.get(key.lower(), key.upper())

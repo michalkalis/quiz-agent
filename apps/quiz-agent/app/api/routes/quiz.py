@@ -164,7 +164,10 @@ async def start_quiz(
             # Best-effort: if iOS requests audio before this finishes, both calls
             # run in parallel and the second wins (cache write is idempotent).
             prefetch_question_audio(
-                tts_service, translated_question_dict["question"], session.language
+                tts_service,
+                translated_question_dict["question"],
+                session.language,
+                question,
             )
 
         return InputResponse(

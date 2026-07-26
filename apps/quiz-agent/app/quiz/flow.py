@@ -14,6 +14,7 @@ from ..input.parser import InputParser
 from ..retrieval.question_retriever import QuestionRetriever
 from ..session.manager import SessionManager
 from ..tts.number_normalization import normalize_numbers_for_tts
+from ..tts.question_speech import build_question_speech_text
 from ..tts.service import TTSService
 from ..usage.tracker import UsageTracker
 
@@ -31,13 +32,18 @@ _prefetch_tasks: "set[asyncio.Task]" = set()
 
 
 def prefetch_question_audio(
-    tts_service: Optional[TTSService], question_text: str, language: str
+    tts_service: Optional[TTSService],
+    question_text: str,
+    language: str,
+    question: Optional[Question],
 ) -> None:
     """Fire-and-forget TTS warm-up so the next /question/audio request hits the cache.
 
-    ``language`` must be the session's: /question/audio synthesizes the
-    digit-normalized text and the cache key is a hash of that final text, so
-    warming the raw text would warm a key nobody ever reads.
+    ``language`` and ``question`` must be the session's current ones:
+    /question/audio synthesizes the spoken text built by
+    ``build_question_speech_text`` (MCQ options appended, digits spelled out)
+    and the cache key is a hash of that final text, so warming anything else
+    warms a key nobody ever reads.
 
     Returns immediately. Failures are logged but never propagate to the caller —
     a missed prefetch just means iOS pays the original synthesis cost.
@@ -45,7 +51,7 @@ def prefetch_question_audio(
     if not tts_service or not question_text:
         return
 
-    tts_text = normalize_numbers_for_tts(question_text, language)
+    tts_text = build_question_speech_text(question_text, question, language)
     task = asyncio.create_task(tts_service.synthesize_question(tts_text))
     _prefetch_tasks.add(task)
     task.add_done_callback(_prefetch_tasks.discard)
@@ -321,7 +327,10 @@ class QuizFlowService:
             # iOS plays feedback + result screen + auto-advance (~3-5s) before requesting,
             # giving OpenAI TTS time to finish in the background.
             prefetch_question_audio(
-                self.tts_service, translated_q_dict["question"], session.language
+                self.tts_service,
+                translated_q_dict["question"],
+                session.language,
+                next_question,
             )
 
         return result

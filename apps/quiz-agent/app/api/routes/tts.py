@@ -16,7 +16,7 @@ from ..deps import (
 )
 from ...session.manager import SessionManager
 from ...retrieval.question_retriever import QuestionRetriever
-from ...tts.number_normalization import normalize_numbers_for_tts
+from ...tts.question_speech import build_question_speech_text
 from ...tts.service import TTSService
 from ...rate_limit import limiter
 
@@ -73,10 +73,14 @@ async def get_question_audio(
         raise HTTPException(status_code=400, detail="No active question in session")
 
     try:
+        # Needed even on the cached-text path: multiple-choice options are
+        # spoken but never cached on the session (they must not leak into the
+        # display text). A missing row only costs the option read-out.
+        current_question = question_retriever.get(session.current_question_id)
+
         if session.current_question_text:
             question_text = session.current_question_text
         else:
-            current_question = question_retriever.get(session.current_question_id)
             if not current_question:
                 raise HTTPException(
                     status_code=404, detail="Current question not found"
@@ -93,10 +97,13 @@ async def get_question_audio(
             session.current_question_text = question_text
             session_manager.update_session(session)
 
-        # Founder bug 2026-07-12: tts-1 reads embedded digits with English
-        # pronunciation in Slovak text — spell them out for the TTS input only
-        # (the cached display text keeps its numerals).
-        tts_text = normalize_numbers_for_tts(question_text, session.language)
+        # Speech-only text: MCQ options appended, then digits spelled out
+        # (founder bug 2026-07-12 — tts-1 reads embedded digits with English
+        # pronunciation in Slovak). The cached display text keeps its numerals
+        # and carries no options.
+        tts_text = build_question_speech_text(
+            question_text, current_question, session.language
+        )
 
         audio_data = await tts_service.synthesize_question(question_text=tts_text)
 

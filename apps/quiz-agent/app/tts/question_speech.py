@@ -18,6 +18,34 @@ from quiz_shared.models.question import Question
 from ..translation.feedback_messages import get_option_letter, get_options_label
 from .number_normalization import normalize_numbers_for_tts
 
+# A true/false question is NOT stored as a plain text row: the generation
+# pipeline routes the `true_false` pattern through PATTERNS_TO_MCQ and emits
+# `type=text_multichoice` with `{"a": "True", "b": "False"}` (see
+# apps/quiz-pack-api/app/generation/{pattern_routing,advanced_generator}.py),
+# so the type alone does not tell the two shapes apart.
+_TRUE_FALSE_OPTION_VALUES = frozenset({"true", "false"})
+_TRUE_FALSE_PATTERN = "true_false"
+
+
+def _is_true_false(question: Question) -> bool:
+    """Whether ``question``'s options are a true/false pair.
+
+    Two signals, because each alone has a hole. The option values are what the
+    whole corpus carries today (same normalized comparison as
+    ``craft_guards.true_false_key``, the recognizer the generation pipeline
+    scores T/F balance with). The generator's ``reasoning_pattern`` provenance
+    is the one that survives option values being translated some day — the
+    question text is translated today, the options are not.
+    """
+    provenance = question.generation_metadata
+    if provenance is not None and provenance.reasoning_pattern == _TRUE_FALSE_PATTERN:
+        return True
+
+    values = {
+        str(v).strip().lower() for v in (question.possible_answers or {}).values()
+    }
+    return values == _TRUE_FALSE_OPTION_VALUES
+
 
 def build_question_speech_text(
     question_text: str, question: Question | None, language: str
@@ -26,8 +54,10 @@ def build_question_speech_text(
 
     ``question`` supplies the multiple-choice options; pass None when the
     question row is unavailable, which simply omits the read-out. Only
-    ``text_multichoice`` questions with options get one — true/false questions
-    already name both choices in their wording, open questions have none.
+    ``text_multichoice`` questions with options get one — open questions have
+    none, and a true/false question already names both choices in its own
+    wording, so reading "Áčko: True. Béčko: False." after "Pravda alebo
+    nepravda: …" is pure noise in a language the option values aren't even in.
     """
     spoken = question_text
 
@@ -35,6 +65,7 @@ def build_question_speech_text(
         question is not None
         and question.type == "text_multichoice"
         and question.possible_answers
+        and not _is_true_false(question)
     ):
         options = " ".join(
             f"{get_option_letter(key, language)}: {value}."

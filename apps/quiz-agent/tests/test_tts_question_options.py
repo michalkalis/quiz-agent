@@ -12,10 +12,11 @@ so appending options there would print the option list on screen next to the
 picker that already shows it, and change what iOS decodes. These tests pin both
 halves: the spoken string gains the options, the displayed string does not.
 
-They also pin the gate. Only ``text_multichoice`` rows get a read-out:
-true/false questions already name both choices in their own wording, and open
-questions have no options at all — appending "Options." to either would be
-noise the driver has to sit through on every question.
+They also pin the gate, which is narrower than "``text_multichoice``": open
+questions have no options at all, and a true/false question — stored AS an
+MCQ by the generation pipeline — already names both choices in its own
+wording. Appending "Options." to either is noise the driver has to sit through
+on every question.
 """
 
 from typing import ClassVar
@@ -25,7 +26,7 @@ import pytest
 from app.api.routes.quiz import get_current_question
 from app.api.routes.tts import get_question_audio
 from app.session.manager import SessionManager
-from quiz_shared.models.question import Question
+from quiz_shared.models.question import GenerationProvenance, Question
 
 pytestmark = pytest.mark.asyncio
 
@@ -143,24 +144,62 @@ async def test_mcq_options_are_spoken_but_never_displayed():
     assert "Options" not in displayed["question"]["question"]
 
 
-async def test_true_false_question_speech_is_unchanged():
-    """A true/false question already names both choices — nothing to append.
+def _true_false(question_text: str) -> Question:
+    """The shape the pipeline actually stores true/false questions in.
 
-    These are stored as plain ``text`` rows with no ``possible_answers``, so a
-    read-out here would be a pure regression: the driver would sit through
-    "Options." with nothing after it before every true/false question.
+    ``true_false`` is in ``PATTERNS_TO_MCQ``
+    (apps/quiz-pack-api/app/generation/pattern_routing.py) and the generator's
+    recipe is ``type=text_multichoice`` with ``{"a": "True", "b": "False"}``
+    (advanced_generator.py; craft_guards.true_false_key documents the same
+    shape) — NOT a plain ``text`` row.
     """
-    question = Question(
+    return Question(
         id="q_tf",
-        question="True or false: Venus rotates in the opposite direction to Earth.",
-        type="text",
-        correct_answer="True",
+        question=question_text,
+        type="text_multichoice",
+        possible_answers={"a": "True", "b": "False"},
+        correct_answer="a",
         topic="Science",
         category="general",
         difficulty="easy",
     )
 
+
+async def test_true_false_question_speech_is_unchanged():
+    """A true/false question already names both choices — nothing to append.
+
+    Pinned in the corpus's real shape, because a type-only gate passes it: the
+    Slovak driver then hears "Možnosti. Áčko: True. Béčko: False." after a
+    question that already said "Pravda alebo nepravda", in English, since
+    option values are never translated.
+    """
+    question = _true_false(
+        "True or false: Venus rotates in the opposite direction to Earth."
+    )
+
     assert await _spoken_text(question) == question.question
+
+    slovak = _true_false("Pravda alebo nepravda: Venuša sa otáča opačne ako Zem.")
+    spoken_sk = await _spoken_text(slovak, language="sk")
+
+    assert spoken_sk == slovak.question
+    assert "Možnosti" not in spoken_sk
+    assert "True" not in spoken_sk
+
+
+async def test_true_false_is_recognized_when_option_values_are_translated():
+    """Provenance, not the English words, is what makes the gate future-proof.
+
+    Question text is already translated per session; option values are not, but
+    the moment they are, a values-only check ("true"/"false") stops matching and
+    the read-out comes back. The generator stamps ``reasoning_pattern`` on every
+    pattern-routed question, so it keeps identifying the shape.
+    """
+    question = _true_false("Pravda alebo nepravda: Venuša sa otáča opačne ako Zem.")
+    question.possible_answers = {"a": "Pravda", "b": "Nepravda"}
+    question.generation_metadata = GenerationProvenance(reasoning_pattern="true_false")
+
+    assert await _spoken_text(question, language="sk") == question.question
 
 
 async def test_open_question_speech_is_unchanged():

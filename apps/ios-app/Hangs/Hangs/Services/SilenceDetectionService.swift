@@ -280,12 +280,9 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
 
         commandAvailability = .installingAssets
         SentryLog.info("Voice command assets installing", category: .voice, attributes: ["locale": "en-US"])
-        let transcriber = SpeechTranscriber(
-            locale: locale,
-            transcriptionOptions: [],
-            reportingOptions: [],
-            attributeOptions: []
-        )
+        // Same configuration the analyzer will run (see makeCommandTranscriber):
+        // the installed assets must match the module that consumes them.
+        let transcriber = Self.makeCommandTranscriber(locale: locale)
         do {
             if let request = try await AssetInventory.assetInstallationRequest(supporting: [transcriber]) {
                 try await request.downloadAndInstall()

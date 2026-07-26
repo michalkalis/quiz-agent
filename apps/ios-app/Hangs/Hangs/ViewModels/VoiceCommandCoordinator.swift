@@ -110,8 +110,13 @@ final class VoiceCommandCoordinator: ObservableObject {
     ///     before the next hypothesis can supersede it (the prefix protection
     ///     `noteVolatileTranscript` exists for). During an actual GROWING sentence
     ///     new hypotheses track the speech itself — a 7.7 s sentence produced 33
-    ///     results, each a strictly longer prefix — so 0.35 s is comfortably
-    ///     inside that cadence and a growing sentence does supersede in time. For
+    ///     results, each a strictly longer prefix, a ~233 ms MEAN interval. Note
+    ///     what that does and does not say: 0.35 s clears the mean, but the MAX
+    ///     gap is unmeasured, and a clause-initial discourse marker followed by a
+    ///     breath ("Okay… tak to bolo dobré") is exactly where it would exceed
+    ///     0.35 s and fire off the prefix. `sincePrevMs` p95 is what settles it;
+    ///     until then this is a bounded bet, taken because every command a settle
+    ///     can fire is benign by construction (`requiresFinalResult`). For
     ///     a lone word followed by silence the next (refinement-only) hypothesis
     ///     took ~1.07 s, which is precisely why waiting for a re-delivery instead
     ///     of a settle would be the slow path.

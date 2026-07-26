@@ -20,6 +20,22 @@ import os
 import Speech
 
 extension SilenceDetectionService {
+    /// The ONE place the command transcriber is configured. `prepareAssets()`
+    /// installs assets by declaring the module it will analyse with, so the two
+    /// must be built identically: a module declares its own asset needs, and if
+    /// the smaller `.fastResults` context window ever pulls a different asset,
+    /// a mismatch would leave `prepareAssets()` reporting `.ready` while
+    /// `analyzer.start` throws — commands silently dead again, the founder's
+    /// exact symptom. Shared factory instead of two literals that can drift.
+    static func makeCommandTranscriber(locale: Locale) -> SpeechTranscriber {
+        SpeechTranscriber(
+            locale: locale,
+            transcriptionOptions: [],
+            reportingOptions: [.volatileResults, .fastResults],
+            attributeOptions: []
+        )
+    }
+
     // MARK: - Lifecycle
 
     func startListening() async {
@@ -96,12 +112,7 @@ extension SilenceDetectionService {
         // Still NOT `.alternativeTranscriptions` (field data shows the primary
         // transcript is already letter-perfect for real command words — N-best
         // would only widen the false-fire surface).
-        let transcriber = SpeechTranscriber(
-            locale: Locale(identifier: "en_US"),
-            transcriptionOptions: [],
-            reportingOptions: [.volatileResults, .fastResults],
-            attributeOptions: []
-        )
+        let transcriber = Self.makeCommandTranscriber(locale: Locale(identifier: "en_US"))
 
         let analyzer = SpeechAnalyzer(modules: [transcriber, detector])
         self.analyzer = analyzer

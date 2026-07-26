@@ -49,15 +49,26 @@ class TTSCache:
     └── metadata.json        # Cache metadata
     """
 
-    def __init__(self, cache_dir: str = "./data/tts_cache", max_size_mb: int = 100):
+    def __init__(
+        self,
+        cache_dir: str = "./data/tts_cache",
+        max_size_mb: int = 100,
+        provider: str = "openai",
+    ):
         """Initialize TTS cache.
 
         Args:
             cache_dir: Directory for cache storage
             max_size_mb: Maximum cache size in megabytes
+            provider: Active TTS backend — namespaces the static feedback files
+                so switching provider re-generates them in the new voice instead
+                of replaying the old one (question audio needs no namespace: its
+                key already includes the voice, and voice ids never collide
+                across vendors)
         """
         self.cache_dir = Path(cache_dir)
         self.max_size_bytes = max_size_mb * 1024 * 1024
+        self.provider = provider
 
         # Create cache directories
         self.static_dir = self.cache_dir / "static"
@@ -210,6 +221,10 @@ class TTSCache:
             del self.lru[key]
             total_size -= entry.size_bytes
 
+    def _static_path(self, result: str, variant: int) -> Path:
+        """Path of one pre-generated feedback clip, namespaced by provider."""
+        return self.static_dir / f"feedback_{self.provider}_{result}_{variant}.opus"
+
     def get_static_feedback(self, result: str, variant: int = 0) -> Optional[bytes]:
         """Get pre-generated static feedback audio.
 
@@ -220,8 +235,7 @@ class TTSCache:
         Returns:
             Audio bytes if available, None otherwise
         """
-        filename = f"feedback_{result}_{variant}.opus"
-        path = self.static_dir / filename
+        path = self._static_path(result, variant)
 
         if path.exists():
             try:
@@ -240,8 +254,7 @@ class TTSCache:
             variant: Phrase variant index (0, 1, 2, ...)
             audio_data: Audio bytes to store
         """
-        filename = f"feedback_{result}_{variant}.opus"
-        path = self.static_dir / filename
+        path = self._static_path(result, variant)
 
         try:
             path.write_bytes(audio_data)

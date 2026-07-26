@@ -97,6 +97,19 @@ class Settings(BaseSettings):
     # deployment ingests + honors ("PRODUCTION" on prod, "SANDBOX" on staging).
     # None (unset/invalid) = fail closed — RC ingest refuses to process.
     rc_allowed_environment: Optional[str] = None
+    # TTS backend selection (founder call 2026-07-26: ElevenLabs/George becomes
+    # the quiz voice, OpenAI TTS stays wired up as the backup rather than being
+    # deleted). `tts_fallback_provider` set to "none"/empty disables failover.
+    # `tts_voice` overrides the provider's default voice — an ElevenLabs voice
+    # id or an OpenAI voice name, so it only makes sense alongside a pinned
+    # `tts_provider`. `tts_cache_dir` must point at the Fly volume (/data/…)
+    # for the audio cache to survive a deploy.
+    tts_provider: str = "elevenlabs"
+    tts_fallback_provider: Optional[str] = "openai"
+    tts_voice: Optional[str] = None
+    tts_cache_dir: str = "./data/tts_cache"
+    elevenlabs_tts_model: str = "eleven_multilingual_v2"
+    openai_tts_model: str = "tts-1"
     apple_signin_client_id: Optional[str] = None
     apple_signin_key_id: Optional[str] = None
     apple_signin_team_id: Optional[str] = None

@@ -1,6 +1,8 @@
-"""Text-to-Speech service using OpenAI TTS API.
+"""Text-to-Speech service with a pluggable synthesis backend.
 
-Provides voice synthesis for quiz questions and feedback with intelligent caching.
+Provides voice synthesis for quiz questions and feedback with intelligent
+caching. Which vendor actually speaks is decided in `providers.py` and chosen
+by config — this layer owns caching, loudness and the static-feedback tier.
 """
 
 import asyncio
@@ -9,12 +11,12 @@ import logging
 import random
 from typing import Optional
 
-from quiz_shared.llm import factory as llm_factory
+from ..config import get_settings
+from .cache import TTSCache
+from .providers import TTSProvider, build_provider
+from .voices import STATIC_FEEDBACK
 
 logger = logging.getLogger(__name__)
-
-from .cache import TTSCache
-from .voices import DEFAULT_VOICE, STATIC_FEEDBACK, TTS_FORMAT, TTS_SPEED
 
 # Target peak level after volume boost (in dBFS)
 # 0 dBFS = maximum digital level. We target -0.5 to leave tiny headroom.
@@ -70,14 +72,36 @@ def boost_volume(
         return audio_data
 
 
+def _model_for(name: str, settings) -> Optional[str]:
+    return {
+        "elevenlabs": settings.elevenlabs_tts_model,
+        "openai": settings.openai_tts_model,
+    }.get(name.strip().lower())
+
+
+def _resolve_provider(
+    name: Optional[str], settings, voice: Optional[str] = None
+) -> Optional[TTSProvider]:
+    """Build a provider from a config name; None/"none" means "not configured".
+
+    `voice` is only ever passed for the primary: a `TTS_VOICE` override is an
+    ElevenLabs voice id or an OpenAI voice name, and handing one to the other
+    vendor would break the very failover it is meant to survive.
+    """
+    if name is None or not name.strip() or name.strip().lower() == "none":
+        return None
+    return build_provider(name, model=_model_for(name, settings), voice=voice)
+
+
 class TTSService:
     """Text-to-Speech service with caching and concurrency control.
 
     Features:
-    - OpenAI TTS API integration
+    - Pluggable synthesis backend (ElevenLabs primary, OpenAI backup)
+    - Automatic failover to the backup provider on synthesis failure
     - 3-tier caching (static, LRU, dynamic)
     - Concurrency limiting (max 20 concurrent requests)
-    - Multilingual support (OpenAI TTS speaks 50+ languages)
+    - Multilingual support (both providers speak 30+ languages)
     - MP3 format (universally supported by iOS AVPlayer)
 
     Usage:
@@ -89,36 +113,71 @@ class TTSService:
 
     def __init__(
         self,
-        model: str = "tts-1",
-        cache_dir: str = "./data/tts_cache",
+        provider: Optional[TTSProvider] = None,
+        fallback_provider: Optional[TTSProvider] = None,
+        cache_dir: Optional[str] = None,
         max_concurrent: int = 20,
         max_cache_mb: int = 100,
     ):
         """Initialize TTS service.
 
         Args:
-            model: OpenAI TTS model ("tts-1" or "tts-1-hd")
-            cache_dir: Directory for audio cache
+            provider: Synthesis backend; defaults to `TTS_PROVIDER` (elevenlabs)
+            fallback_provider: Backend used when the primary fails; defaults to
+                `TTS_FALLBACK_PROVIDER` (openai). Set to "none" to disable.
+            cache_dir: Directory for audio cache; defaults to `TTS_CACHE_DIR`
             max_concurrent: Max concurrent TTS API requests
             max_cache_mb: Max cache size in megabytes
         """
-        # TTS is direct-only: OpenRouter does not serve OpenAI TTS (issue #53).
-        self.client = llm_factory.openai_client(async_=True, direct=True)
-        self.model = model
-        self.cache = TTSCache(cache_dir=cache_dir, max_size_mb=max_cache_mb)
+        settings = get_settings()
+        self.provider = provider or _resolve_provider(
+            settings.tts_provider, settings, voice=settings.tts_voice
+        )
+        if self.provider is None:
+            raise ValueError("TTS_PROVIDER must name a provider, not 'none'")
+
+        self.fallback = fallback_provider or _resolve_provider(
+            settings.tts_fallback_provider, settings
+        )
+        if self.fallback is not None and self.fallback.name == self.provider.name:
+            # Swapping is meant to be a one-line change: flipping `TTS_PROVIDER`
+            # to the configured fallback makes the *other* engine the backup,
+            # rather than silently leaving the deploy with no backup at all.
+            # (Two providers exist; revisit if a third is ever added.)
+            self.fallback = _resolve_provider(
+                next(
+                    (n for n in ("elevenlabs", "openai") if n != self.provider.name),
+                    None,
+                ),
+                settings,
+            )
+
+        # Static feedback is namespaced by provider so flipping `TTS_PROVIDER`
+        # cannot serve yesterday's voice out of a warm cache.
+        self.cache = TTSCache(
+            cache_dir=cache_dir or settings.tts_cache_dir,
+            max_size_mb=max_cache_mb,
+            provider=self.provider.name,
+        )
         self._semaphore = asyncio.Semaphore(max_concurrent)
+
+        logger.info(
+            "TTS provider: %s (fallback: %s)",
+            self.provider.name,
+            self.fallback.name if self.fallback else "none",
+        )
 
     async def synthesize(
         self, text: str, voice: Optional[str] = None, use_cache: bool = True
     ) -> bytes:
-        """Synthesize text to speech with caching.
+        """Synthesize text to speech with caching, failing over to the backup.
 
-        Supports any language - OpenAI TTS automatically detects language
-        from input text and speaks it correctly.
+        Supports any language - both providers detect the language from the
+        input text and speak it correctly.
 
         Args:
             text: Text to synthesize (any language)
-            voice: Voice name (default: "nova")
+            voice: Voice id/name (default: the active provider's default)
             use_cache: Whether to use cache (default: True)
 
         Returns:
@@ -132,39 +191,61 @@ class TTSService:
         if not text.strip():
             raise ValueError("Text cannot be empty")
 
-        voice = voice or DEFAULT_VOICE
+        primary_voice = voice or self.provider.default_voice
 
-        # Check cache first
+        try:
+            return await self._synthesize_with(
+                self.provider, text, primary_voice, use_cache
+            )
+        except Exception as primary_error:
+            if self.fallback is None:
+                raise RuntimeError(f"TTS synthesis failed: {primary_error}")
+
+            # The primary is the metered one (ElevenLabs credits are shared with
+            # realtime STT), so a quota wall here must degrade the voice, not
+            # silence the question.
+            logger.warning(
+                "TTS provider %s failed, falling back to %s: %s",
+                self.provider.name,
+                self.fallback.name,
+                primary_error,
+            )
+            try:
+                return await self._synthesize_with(
+                    self.fallback, text, self.fallback.default_voice, use_cache
+                )
+            except Exception as fallback_error:
+                raise RuntimeError(
+                    f"TTS synthesis failed on {self.provider.name} "
+                    f"({primary_error}) and on fallback {self.fallback.name} "
+                    f"({fallback_error})"
+                )
+
+    async def _synthesize_with(
+        self, provider: TTSProvider, text: str, voice: str, use_cache: bool
+    ) -> bytes:
+        """Cache lookup → synthesis → volume boost → cache store, for one backend.
+
+        The cache key is (text, voice) and voices never collide across vendors
+        (ElevenLabs uses opaque ids, OpenAI uses names like "nova"), so primary
+        and fallback audio coexist in one cache without shadowing each other.
+        """
         if use_cache:
             cached = self.cache.get(text, voice)
             if cached:
                 return cached
 
-        # Generate via OpenAI TTS
         async with self._semaphore:
-            try:
-                response = await self.client.audio.speech.create(
-                    model=self.model,
-                    voice=voice,
-                    input=text,
-                    response_format=TTS_FORMAT,
-                    speed=TTS_SPEED,
-                )
+            audio_data = await provider.synthesize(text, voice)
 
-                # Read audio bytes
-                audio_data = response.content
+        # Apply volume boost (normalize + extra boost for max loudness)
+        audio_data = boost_volume(audio_data)
 
-                # Apply volume boost (normalize + extra boost for max loudness)
-                audio_data = boost_volume(audio_data)
+        # Cache result (cache the boosted version)
+        if use_cache:
+            self.cache.set(text, voice, audio_data)
 
-                # Cache result (cache the boosted version)
-                if use_cache:
-                    self.cache.set(text, voice, audio_data)
-
-                return audio_data
-
-            except Exception as e:
-                raise RuntimeError(f"TTS synthesis failed: {str(e)}")
+        return audio_data
 
     async def get_feedback_audio(
         self, result: str, variant: Optional[int] = None
@@ -199,8 +280,11 @@ class TTSService:
     async def pregenerate_static_feedback(self):
         """Pre-generate all static feedback phrases.
 
-        Called on server startup to ensure instant feedback playback.
-        Total cost: ~$0.05 one-time (12 phrases × ~8 chars × $15/1M chars)
+        Called on server startup to ensure instant feedback playback. Skipped
+        for phrases already on disk, so the real cost is paid once per provider
+        per cache volume: ~250 ElevenLabs credits (1 credit/char) or ~$0.005 on
+        OpenAI. Note that an ephemeral cache dir turns "once" into "every
+        deploy" — see `TTS_CACHE_DIR`.
 
         This creates audio files for all feedback variants:
         - feedback_correct_0.opus ("Correct!")
@@ -225,7 +309,6 @@ class TTSService:
                 try:
                     audio_data = await self.synthesize(
                         text=phrase,
-                        voice=DEFAULT_VOICE,
                         use_cache=False,  # Don't cache in LRU, goes to static
                     )
 

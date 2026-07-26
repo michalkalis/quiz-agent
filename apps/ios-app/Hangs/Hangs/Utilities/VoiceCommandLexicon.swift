@@ -7,12 +7,12 @@
 //  native-English on-device recognizer (SpeechAnalyzer), English-only for all
 //  users regardless of app language (P2). `AnalysisContext.contextualStrings`
 //  and `SpeechAnalyzer.setContext(_:)` DO exist in the shipping iPhoneOS 26 SDK
-//  (#110 correction — this file used to claim they don't), but the
+//  (#119 correction — this file used to claim they don't), but the
 //  SpeechTranscriber module IGNORES them; only DictationTranscriber honors them.
 //  So for the transcriber this app runs there is still no vocabulary biasing,
 //  and word choice + a fuzzy matcher remain the mitigation. This file owns the
 //  word-set (P4b: start · ok · next · repeat · skip [+ optional stop]) and each
-//  command's variant spellings — cut back in #110 to the spellings the build-33
+//  command's variant spellings — cut back in #119 to the spellings the build-33
 //  field data actually supports (see `variants`).
 //
 
@@ -57,7 +57,7 @@ enum VoiceCommandLexicon {
     /// alphanumeric). The matcher scores a token against the MIN edit distance
     /// across a command's variants.
     ///
-    /// #110: the hand-written ACCENT table ("sart", "staat", "nekt", "skib",
+    /// #119: the hand-written ACCENT table ("sart", "staat", "nekt", "skib",
     /// "kay", "skp", "agian"…) is gone. The build-33 field transcripts show that
     /// when the founder actually says a command word the en-US transcriber
     /// renders it PERFECTLY — verbatim "start start start start start" — so the
@@ -128,7 +128,7 @@ enum VoiceCommandLexicon {
     static let cancelWords: [VoiceCommand] = [.stop]
 
     /// Words accepted ONLY on the loose undo-abort path: every `.stop` variant
-    /// PLUS "no"/"know". #110: that direction is deliberately looser than the
+    /// PLUS "no"/"know". #119: that direction is deliberately looser than the
     /// matcher because it is fail-safe — aborting a pending skip loses nothing
     /// when it fires spuriously, while missing it burns a question. The reverse
     /// (a false `.stop` on the confirmation sheet) is destructive, which is why

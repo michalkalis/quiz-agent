@@ -61,7 +61,7 @@ final class SystemEarconPlayer: EarconPlaying {
         playHaptic(for: earcon)
     }
 
-    /// #110: `AudioServicesPlaySystemSound` routes through the SYSTEM-SOUND
+    /// #119: `AudioServicesPlaySystemSound` routes through the SYSTEM-SOUND
     /// channel, not the media session the founder turns up to hear feedback over
     /// road noise — so the command ack can be inaudible in a moving car, and the
     /// 2.5 s skip undo-window is only real protection if he can perceive that a

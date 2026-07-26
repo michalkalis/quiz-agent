@@ -4,11 +4,11 @@
 //
 //  Issue #77 (voice commands hands-free), task 77.3 — the hands-free command
 //  matcher, sibling of MCQTranscriptMatcher. A transcript from the on-device
-//  recognizer — a VOLATILE hypothesis or a final, since #110 (see `isFinal`) —
+//  recognizer — a VOLATILE hypothesis or a final, since #119 (see `isFinal`) —
 //  is mapped to a SCREEN-SCOPED VoiceCommand (or nil). Matching is fuzzy (a
 //  one-edit distance tolerance over each command's canonical spelling) with a
 //  confidence floor and word-boundary tokenization, scoped to only that screen's
-//  1–2 commands. #110 deleted the hand-written accent-variant tables: 24 real
+//  1–2 commands. #119 deleted the hand-written accent-variant tables: 24 real
 //  field transcripts contained not one accent-mangled form, because an en-US
 //  language model snaps its output to dictionary words rather than phonetic
 //  spellings — the tolerance is what covers the accent, not a variant list.
@@ -17,7 +17,7 @@
 //  burns a freemium question, so "let's skip this one" must NOT be read as a
 //  skip — the utterance must BE the skip word, not merely contain it.
 //
-//  #110 (build-33 field data): ALL commands are additionally capped at
+//  #119 (build-33 field data): ALL commands are additionally capped at
 //  `maxContentTokens` content tokens — see the gate in `match` — and a VOLATILE
 //  hypothesis is held to a stricter confidence floor than a final.
 //
@@ -30,7 +30,7 @@ enum VoiceCommandMatcher {
     /// Confidence floor for a fuzzy token→command match (1 = exact). A single
     /// edit on a 5-letter word ("stat"→"start" = 0.8) clears it; noise doesn't.
     static let confidenceFloor: Double = 0.72
-    /// A stricter floor for a VOLATILE hypothesis (#110). A volatile is revisable
+    /// A stricter floor for a VOLATILE hypothesis (#119). A volatile is revisable
     /// by design and arrives while the mic is still open to the road, the radio
     /// and the passenger, so only a near-exact word may act on one. There is no
     /// recall cost: the build-33 unmatched field transcripts sit at ~0.50, far
@@ -51,7 +51,7 @@ enum VoiceCommandMatcher {
     /// when there is no confident, unambiguous match (caller re-listens).
     ///
     /// - Parameters:
-    ///   - transcript: a transcript from the English recognizer — since #110 a
+    ///   - transcript: a transcript from the English recognizer — since #119 a
     ///     volatile hypothesis as well as a final (see `isFinal`).
     ///   - screen: the current screen — bounds which commands are considered.
     ///   - isFinal: whether this is a finalized transcript. A volatile hypothesis
@@ -62,7 +62,7 @@ enum VoiceCommandMatcher {
         let tokens = normalized.split(separator: " ").map(String.init)
         guard !tokens.isEmpty else { return nil }
 
-        // #110 content-token cap — the first gate, for every command on every
+        // #119 content-token cap — the first gate, for every command on every
         // screen. Every word in this grammar is ONE word, and the build-33 field
         // data shows real commands arriving as a bare word, often repeated
         // ("start start start start start") when nothing responds — while every

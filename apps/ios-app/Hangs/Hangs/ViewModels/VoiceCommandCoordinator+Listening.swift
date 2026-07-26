@@ -35,7 +35,7 @@ extension VoiceCommandCoordinator {
         if !isAppForeground() { return nil }
 
         // Torn down during ANY TTS (the recognizer must never transcribe the
-        // app's own playback — #110 widened this from question-only to feedback
+        // app's own playback — #119 widened this from question-only to feedback
         // too) and during any recording (the answer window is the Slovak
         // ElevenLabs stream — time-disjoint from command listening).
         if isPlayingTTS() || isRecordingActive { return nil }
@@ -122,7 +122,7 @@ extension VoiceCommandCoordinator {
         taskBag.cancel(.commandListener)
         applyCaptureEvent(.reset)
         // A torn-down listener will never deliver the final that would have
-        // ended the utterance, so the latch must not survive it (#110).
+        // ended the utterance, so the latch must not survive it (#119).
         endUtterance()
     }
 }

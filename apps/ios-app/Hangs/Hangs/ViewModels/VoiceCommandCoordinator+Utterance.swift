@@ -2,7 +2,7 @@
 //  VoiceCommandCoordinator+Utterance.swift
 //  Hangs
 //
-//  Issue #110 — the volatile-result policy, in one place instead of scattered
+//  Issue #119 — the volatile-result policy, in one place instead of scattered
 //  ifs across the consumer. The transcriber now reports VOLATILE hypotheses as
 //  well as finals (build-33 root cause #1: waiting for the end-of-speech
 //  endpoint meant the first "start" never fired, so the founder repeated

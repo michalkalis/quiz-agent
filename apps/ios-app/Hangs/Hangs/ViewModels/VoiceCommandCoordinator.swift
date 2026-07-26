@@ -66,7 +66,7 @@ final class VoiceCommandCoordinator: ObservableObject {
     /// Earcon seam (77.10): fired when the skip undo-window OPENS.
     var onSkipUndoWindowOpened: (@MainActor () -> Void)?
 
-    // MARK: - Volatile-result Guards (#110 — state; policy lives in +Utterance)
+    // MARK: - Volatile-result Guards (#119 — state; policy lives in +Utterance)
 
     /// Suppression window for a REPEAT of the same command — the second layer
     /// behind the utterance latch, covering the case where one spoken word
@@ -121,7 +121,7 @@ final class VoiceCommandCoordinator: ObservableObject {
     ///     took ~1.07 s, which is precisely why waiting for a re-delivery instead
     ///     of a settle would be the slow path.
     ///   - it must be SHORTER than the remaining wait for the end-of-speech final,
-    ///     or the settle buys no latency and #110 is a no-op. With `.fastResults`
+    ///     or the settle buys no latency and #119 is a no-op. With `.fastResults`
     ///     the first hypothesis lands ~1.15 s in and the final ~2.29 s, so a
     ///     0.35 s settle fires roughly 0.8 s ahead of the final.
     ///
@@ -167,7 +167,7 @@ final class VoiceCommandCoordinator: ObservableObject {
 
     let settings: @MainActor () -> QuizSettings
     let isAppForeground: @MainActor () -> Bool
-    /// ANY TTS playback — question OR feedback. Widened in #110: the flag used
+    /// ANY TTS playback — question OR feedback. Widened in #119: the flag used
     /// to be question-only, so the result screen armed the window and then
     /// played feedback TTS underneath a live input tap, and the app transcribed
     /// itself (field transcripts "you said proud answer proud", "he is proud of
@@ -269,7 +269,7 @@ final class VoiceCommandCoordinator: ObservableObject {
     func reset() {
         applyCaptureEvent(.reset)
         abortSkipUndoWindow()
-        endUtterance() // no utterance survives a reset (#110)
+        endUtterance() // no utterance survives a reset (#119)
     }
 
     // MARK: - Capture Phase

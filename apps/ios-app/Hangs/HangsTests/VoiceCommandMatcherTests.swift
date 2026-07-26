@@ -55,7 +55,7 @@ struct VoiceCommandMatcherTests {
 
     @Test("Accented near-miss 'stat' still routes to start")
     func accentedNearMiss() {
-        // #110 cut the hand-written variant table ("stat"/"staat"/"nekst" were
+        // #119 cut the hand-written variant table ("stat"/"staat"/"nekst" were
         // literal entries); the edit-distance floor is what carries these now,
         // which is a ONE-edit tolerance and no more.
         #expect(VoiceCommandMatcher.match(transcript: "stat", on: .question) == .start)
@@ -109,7 +109,7 @@ struct VoiceCommandMatcherTests {
     func bareSkipMatches() {
         #expect(VoiceCommandMatcher.match(transcript: "skip", on: .question) == .skip)
         #expect(VoiceCommandMatcher.match(transcript: "um skip please", on: .question) == .skip)
-        // #110: skipping burns a freemium question, so it is held to a near-exact
+        // #119: skipping burns a freemium question, so it is held to a near-exact
         // word. With the speculative accent variants gone, a one-edit mangling of
         // a 4-letter word ("skib" = 0.75) no longer clears the 0.8 skip floor.
         #expect(VoiceCommandMatcher.match(transcript: "skib", on: .question) == nil)
@@ -133,7 +133,7 @@ struct VoiceCommandMatcherTests {
         #expect(VoiceCommandMatcher.match(transcript: "can we skip the question", on: .question) == nil)
     }
 
-    // MARK: - Content-token cap (#110, build-33 field data)
+    // MARK: - Content-token cap (#119, build-33 field data)
 
     /// WHY: the Sentry build-33 transcripts contain verbatim "start start start
     /// start start" — the founder repeating an unanswered command. The cap must

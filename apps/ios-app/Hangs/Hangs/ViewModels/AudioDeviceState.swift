@@ -82,7 +82,7 @@ final class AudioDeviceState: ObservableObject {
     let isPlayingAnyTTS: @MainActor () -> Bool
     let setPlayingQuestionTTS: @MainActor (Bool) -> Void
     /// Feedback-TTS twin of the flag above — closes the command window while the
-    /// result feedback plays so the recognizer can't hear it (#110).
+    /// result feedback plays so the recognizer can't hear it (#119).
     let setPlayingFeedbackTTS: @MainActor (Bool) -> Void
     let currentQuestionAudioUrl: @MainActor () -> String?
     let setCurrentQuestionAudioUrl: @MainActor (String?) -> Void
@@ -183,7 +183,7 @@ final class AudioDeviceState: ObservableObject {
         // `refreshCommandWindow()` immediately before the feedback-playback Task.
         // Same shape when the feedback tail re-arms inside `proceedToNextQuestion`'s
         // 0.1 s sleep and the next `playQuestionAudio` then tries to stop it.
-        // Without this guard the mic goes live under the app's own TTS (#110 root
+        // Without this guard the mic goes live under the app's own TTS (#119 root
         // cause #3 — "you said proud answer proud") and the AVAudioEngine +
         // AVPlayer pair the crash notes above warn about run concurrently (#64).
         guard isAppForeground(), !isPlayingAnyTTS() else {

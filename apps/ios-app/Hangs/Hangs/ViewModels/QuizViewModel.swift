@@ -454,7 +454,7 @@ final class QuizViewModel: ObservableObject {
     /// AudioDeviceState writes it via injected closures (#113 T2, decision 4).
     var isPlayingQuestionTTS: Bool = false
 
-    /// Whether RESULT feedback TTS is currently playing (#110 root cause #3).
+    /// Whether RESULT feedback TTS is currently playing (#119 root cause #3).
     /// The result screen transitions, arms the command window and only THEN
     /// plays feedback, so the recognizer was transcribing the app's own voice
     /// ("you said proud answer proud" in the build-33 field data). Separate from
@@ -463,7 +463,7 @@ final class QuizViewModel: ObservableObject {
     /// command window. AudioDeviceState writes it via an injected closure.
     var isPlayingFeedbackTTS: Bool = false
 
-    /// ANY app TTS playback — the command window's self-trigger guard (#110).
+    /// ANY app TTS playback — the command window's self-trigger guard (#119).
     var isPlayingAnyTTS: Bool { isPlayingQuestionTTS || isPlayingFeedbackTTS }
 
     /// The option key matched by voice on an MCQ question (nil between questions).

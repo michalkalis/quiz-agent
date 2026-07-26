@@ -82,7 +82,7 @@ struct SkipCancelWordTests {
         }
     }
 
-    /// #110: the undo-abort path is deliberately LOOSER than the matcher. The
+    /// #119: the undo-abort path is deliberately LOOSER than the matcher. The
     /// content-token cap makes these utterances resolve to nil through
     /// `VoiceCommandMatcher.match` (conversational length), but raw cancel-word
     /// containment must keep aborting an open skip window: aborting loses

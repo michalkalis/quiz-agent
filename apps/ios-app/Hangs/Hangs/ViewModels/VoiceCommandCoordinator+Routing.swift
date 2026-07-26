@@ -22,7 +22,7 @@ extension VoiceCommandCoordinator {
     /// a transcript that lands after the window closed (e.g. mid-transition into
     /// recording, or while feedback TTS plays) is dropped.
     ///
-    /// **AT MOST ONE COMMAND PER UTTERANCE (#110).** This is the load-bearing
+    /// **AT MOST ONE COMMAND PER UTTERANCE (#119).** This is the load-bearing
     /// invariant that makes volatile results safe. The transcriber emits a
     /// GROWING hypothesis and then one final, so a single spoken "start" reaches
     /// this method several times: the first transcript that resolves to a
@@ -41,7 +41,7 @@ extension VoiceCommandCoordinator {
         // "commands don't work" on-device could not be triaged remotely (only
         // availability was logged). A log at every exit so Sentry distinguishes:
         // window closed vs no vocab match vs suppressed vs matched — and, since
-        // #110, whether the source was a volatile hypothesis or a final, plus the
+        // #119, whether the source was a volatile hypothesis or a final, plus the
         // token count that the matcher's content cap keys off. The two DROP exits
         // are sampled (`shouldLogDroppedTranscript`); the command-carrying ones
         // are not.
@@ -55,7 +55,7 @@ extension VoiceCommandCoordinator {
         // of the utterance (no interval), never a real measurement.
         let sincePrevMs = noteTranscriptArrival()
 
-        // #110 volatile stability (see `noteVolatileTranscript`): recorded for
+        // #119 volatile stability (see `noteVolatileTranscript`): recorded for
         // EVERY volatile, including the ones dropped below, so the baseline is
         // what the transcriber emitted rather than what happened to match.
         let isStableVolatile = transcript.isFinal || noteVolatileTranscript(normalized)
@@ -123,7 +123,7 @@ extension VoiceCommandCoordinator {
             // required a hit on the seven-word vocabulary, and the latch + the
             // 1.5 s cooldown bound how often that can repeat within an utterance.
             // These are the low-frequency events the quota is FOR — the
-            // awaiting-stable / settle behaviour #110 is triaged on. Carries no
+            // awaiting-stable / settle behaviour #119 is triaged on. Carries no
             // raw speech, only the matched command.
             SentryLog.info(
                 "voice cmd suppressed",

@@ -241,7 +241,7 @@ final class AppState: ObservableObject {
             // undrivable in UI tests.
             if UITestSupport.isUITesting {
                 UITestSupport.registerCommandSink { [weak self] text in
-                    // An injected utterance is a COMPLETED one (#110): the UI
+                    // An injected utterance is a COMPLETED one (#119): the UI
                     // test types a whole command, never a mid-speech hypothesis.
                     await self?.quizViewModel?.voiceCommandCoordinator
                         .handleCommandTranscript(CommandTranscript(text: text, isFinal: true))

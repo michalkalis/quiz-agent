@@ -14,7 +14,7 @@
 //    • NO arming during TTS or recording;
 //    • the consumer: a transcript routes through the screen-scoped
 //      matcher and fires onCommandRecognized (screen scoping enforced);
-//    • #110 volatile results: at most ONE command per utterance, destructive
+//    • #119 volatile results: at most ONE command per utterance, destructive
 //      commands only from a final result, a volatile having to be proven
 //      STOPPED GROWING before it may fire (so a growing sentence's one-word
 //      prefix can't) — via EITHER an unchanged re-delivery or the settle timer,
@@ -66,7 +66,7 @@ private func waitUntil(
     Issue.record(comment ?? "waitUntil timed out after \(timeoutMillis)ms", sourceLocation: sourceLocation)
 }
 
-/// Driven clock for the command cooldown (#110). A reference box so the test can
+/// Driven clock for the command cooldown (#119). A reference box so the test can
 /// move "now" forward without a real `Task.sleep` — the repo's three flaky async
 /// voice tests all came from sleeping in tests.
 @MainActor
@@ -257,7 +257,7 @@ struct CommandListenerTests {
         #expect(vm.voiceCommandCoordinator.commandCapturePhase == .idle)
     }
 
-    // MARK: - Volatile results: one command per utterance (#110)
+    // MARK: - Volatile results: one command per utterance (#119)
 
     /// WHY: the transcriber now reports a GROWING volatile hypothesis several
     /// times per utterance (the build-33 latency fix — waiting for the
@@ -308,7 +308,7 @@ struct CommandListenerTests {
         }
     }
 
-    /// WHY (#110, the hole the content-token cap structurally cannot see): the
+    /// WHY (#119, the hole the content-token cap structurally cannot see): the
     /// cap is evaluated on ONE delivered transcript, but the transcriber emits a
     /// GROWING hypothesis — so every utterance passes through a 1-token prefix
     /// state and the cap is a no-op on the leading edge of ALL speech. Without a
@@ -419,7 +419,7 @@ struct CommandListenerTests {
         }
     }
 
-    /// WHY (#110): `ok` on the confirmation sheet SUBMITS the answer. The 10 s
+    /// WHY (#119): `ok` on the confirmation sheet SUBMITS the answer. The 10 s
     /// auto-confirm does NOT make that benign — that timer exists precisely so a
     /// wrong transcription can be caught with "again", and firing `ok` from a
     /// revisable hypothesis removes the escape before the founder can use it.
@@ -768,7 +768,7 @@ struct CommandListenerTests {
         }
     }
 
-    // MARK: - Window closed during ANY TTS (#110 root cause #3)
+    // MARK: - Window closed during ANY TTS (#119 root cause #3)
 
     /// WHY: `handleAnswerResponse` transitions to `.showingResult`, arms the
     /// command window and only THEN plays feedback TTS — so the recognizer was

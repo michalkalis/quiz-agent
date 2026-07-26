@@ -157,7 +157,7 @@ extension AudioDeviceState {
         }
     }
 
-    /// Run feedback playback with the command window CLOSED (#110 root cause
+    /// Run feedback playback with the command window CLOSED (#119 root cause
     /// #3): `handleAnswerResponse` transitions to `.showingResult`, arms the
     /// command listener and only then plays the feedback, so the recognizer sat
     /// on a live input tap while the app talked — the build-33 field transcripts

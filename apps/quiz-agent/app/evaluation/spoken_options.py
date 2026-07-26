@@ -102,16 +102,25 @@ def resolve_spoken_option(utterance: str, options: Mapping[str, str]) -> str | N
     ordered_keys = sorted(options)
     keys_by_normalized = {_normalize(key): key for key in ordered_keys}
 
+    tokens = _normalize(utterance).split()
+    # A bare key and a position word are only a reference when they are the WHOLE
+    # utterance. Both collide with ordinary speech: "a" is the Slovak conjunction
+    # and an English article, and numerals are this corpus's most common option
+    # VALUE — so "one hundred" against {a: 10, b: 100} would otherwise resolve to
+    # option A and score the driver's correct answer as wrong. The letter-names
+    # ("béčko", "bé") carry no such collision and still match anywhere.
+    is_bare = len(tokens) == 1
+
     matched = set()
-    for token in _normalize(utterance).split():
-        if token in keys_by_normalized:
+    for token in tokens:
+        if is_bare and token in keys_by_normalized:
             matched.add(keys_by_normalized[token])
 
         letter = _LETTER_NAMES.get(token)
         if letter is not None and letter in keys_by_normalized:
             matched.add(keys_by_normalized[letter])
 
-        position = _NUMBER_WORDS.get(token)
+        position = _NUMBER_WORDS.get(token) if is_bare else None
         if position is not None and position <= len(ordered_keys):
             matched.add(ordered_keys[position - 1])
 

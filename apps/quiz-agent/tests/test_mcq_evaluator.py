@@ -120,7 +120,15 @@ class TestMCQEvaluatorResolvesSpokenReferences:
 
     @pytest.mark.parametrize("token", ["dva", "béčko"])
     def test_slovak_reference_to_a_wrong_option_scores_that_option(self, token):
-        assert self._evaluate(token) == ("incorrect", 0.0)
+        """Naming option B must score B — worth nothing here, everything there.
+
+        Asserting only the wrong-answer case would pass even if the token were
+        never understood at all, since an unresolved utterance also scores
+        ("incorrect", 0.0). Flipping which option is correct is what proves the
+        reference actually landed on B.
+        """
+        assert self._evaluate(token, correct_answer="a") == ("incorrect", 0.0)
+        assert self._evaluate(token, correct_answer="b") == ("correct", 1.0)
 
     def test_non_slovak_lookalike_is_still_not_matched(self):
         """A near-miss of a letter-name must not be guessed into an option."""

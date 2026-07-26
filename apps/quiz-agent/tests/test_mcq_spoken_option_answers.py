@@ -32,6 +32,7 @@ from app.quiz.flow import QuizFlowService
 from quiz_shared.models.phase import SessionPhase
 from quiz_shared.models.question import Question
 from quiz_shared.models.session import QuizSession
+
 from tests.question_audio_harness import StubTranslator, start_quiz_for
 
 OPTIONS = {"a": "Paris", "b": "London", "c": "Berlin", "d": "Madrid"}
@@ -93,6 +94,30 @@ class TestSpokenOptionResolution:
         """A true/false pair has no third option to select."""
         assert resolve_spoken_option("tri", {"a": "True", "b": "False"}) is None
 
+    @pytest.mark.parametrize(
+        "utterance", ["one hundred", "two hundred and forty", "sto"]
+    )
+    def test_a_spoken_numeric_value_is_not_read_as_a_position(self, utterance):
+        """Speaking a numeric option out loud must not select a different one.
+
+        Bare numerals are this corpus's most common option shape, so "one
+        hundred" against {a: 10, b: 100} used to resolve on its leading "one"
+        and hand back option A — scoring the driver's correct answer as wrong
+        (and, where A happened to be correct, a wrong answer as right). Position
+        words only count when they are the entire utterance; matching a spoken
+        VALUE is the evaluator's job, not this resolver's.
+        """
+        numeric = {"a": "10", "b": "100", "c": "240"}
+        assert resolve_spoken_option(utterance, numeric) is None
+
+    def test_a_leading_slovak_conjunction_is_not_read_as_option_a(self):
+        """The Slovak word for "and" is "a" — it must not select option A.
+
+        The read-out prompts drivers to speak letters, so a bare letter sitting
+        inside ordinary speech would otherwise be picked up and scored.
+        """
+        assert resolve_spoken_option("a to je Londýn", OPTIONS) is None
+
 
 class TestSpokenLetterScoresLikeTappingTheOption:
     """WHY: saying the letter must be worth what tapping the option is worth.
@@ -141,6 +166,10 @@ class TestSpokenLetterScoresLikeTappingTheOption:
 
         assert tapped == ("incorrect", 0.0)
         assert spoken == tapped
+        # Scoring alone cannot tell "resolved to C" from "understood nothing" —
+        # both are worth 0.0. Pin the resolution so this test fails if the
+        # letter stops being understood.
+        assert resolve_spoken_option(utterance, OPTIONS) == "c"
 
 
 class TestTranslatedOptionValueScoresLikeTheEnglishOne:

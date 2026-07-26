@@ -189,6 +189,13 @@ import os
         }
 
         func downloadAudio(from _: String) async throws -> Data {
+            // Mirror the real download's cancellation behaviour: `session.data(for:)`
+            // throws URLError(.cancelled) when the calling task is cancelled. Without
+            // this the mock silently succeeds under a cancelled task and hides the
+            // "question is never read aloud" class of bug (auto-advance, 2026-07-26).
+            if Task.isCancelled {
+                throw URLError(.cancelled)
+            }
             if shouldFail {
                 throw NetworkError.invalidResponse
             }

@@ -545,8 +545,10 @@ final class QuizViewModel: ObservableObject {
     var isRerecording: Bool = false
 
     // Next question data (from response, displayed after showing results)
-    private var nextQuestionAudioUrl: String?
-    private var nextQuestion: Question?
+    // Internal, not private, so the auto-advance regression test can seed the
+    // hand-off without driving a whole response round-trip.
+    var nextQuestionAudioUrl: String?
+    var nextQuestion: Question?
 
     // MARK: - Initialization
 

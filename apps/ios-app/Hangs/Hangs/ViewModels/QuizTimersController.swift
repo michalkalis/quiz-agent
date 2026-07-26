@@ -253,7 +253,13 @@ final class QuizTimersController: ObservableObject {
                 return
             }
 
-            await self.proceedToNextQuestion()
+            // Hand off to a fresh task — same reason as the auto-confirm path
+            // below: proceedToNextQuestion() opens with `taskBag.cancel(.autoAdvance)`,
+            // i.e. it cancels THIS task, and everything after that point runs
+            // cancelled. The next question's TTS download (`session.data(for:)`)
+            // then throws URLError.cancelled and the question is silently never
+            // read aloud — the "question sometimes isn't read" report, 2026-07-26.
+            Task { await self.proceedToNextQuestion() }
         }
         taskBag.add(task, key: .autoAdvance)
     }

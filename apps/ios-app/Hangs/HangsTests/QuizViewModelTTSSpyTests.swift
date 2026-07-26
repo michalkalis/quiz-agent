@@ -79,4 +79,42 @@ struct QuizViewModelTTSSpyTests {
         #expect(mockAudio.playOpusCallCount == 2)
         viewModel.quizTimersController.cancelAnswerTimer()
     }
+
+    /// WHY (founder report "the question sometimes isn't read aloud", 2026-07-26):
+    /// `proceedToNextQuestion()` opens with `taskBag.cancel(.autoAdvance)`. When the
+    /// advance is driven BY the auto-advance countdown — the hands-free path, i.e.
+    /// most of a drive — that cancels the very task it is running in, and the next
+    /// question's TTS download dies with URLError.cancelled while the quiz sails on
+    /// silently. The countdown must hand the advance to a fresh task. Playing the
+    /// next question's audio is the observable proof it did.
+    @Test("auto-advance reads the next question aloud (not cancelled by its own task)")
+    func autoAdvanceStillReadsNextQuestion() async {
+        let (viewModel, mockAudio) = makeAskingViewModel()
+        viewModel.currentSession = Fixtures.makeQuizSession()
+        viewModel.nextQuestion = Fixtures.makeQuestion(id: "q_002", text: "Next?", source: "Next")
+        viewModel.nextQuestionAudioUrl = "https://example.com/q2.mp3"
+        viewModel.quizState = .showingResult(
+            question: Fixtures.makeQuestion(),
+            evaluation: Evaluation(
+                userAnswer: "Paris",
+                result: .correct,
+                points: 1.0,
+                correctAnswer: "Paris",
+                questionId: "q_001",
+                explanation: nil
+            )
+        )
+
+        await viewModel.quizTimersController.startAutoAdvanceCountdown(duration: 0, audioDuration: 0)
+
+        // The advance runs on a task the countdown handed off to; give it turns to land.
+        for _ in 0 ..< 200 where mockAudio.playOpusCallCount == 0 {
+            try? await Task.sleep(nanoseconds: 5_000_000)
+        }
+
+        #expect(mockAudio.playOpusCallCount == 1)
+        #expect(viewModel.quizState == .askingQuestion)
+        viewModel.quizTimersController.cancelAnswerTimer()
+        viewModel.quizTimersController.cancelThinkingTime()
+    }
 }

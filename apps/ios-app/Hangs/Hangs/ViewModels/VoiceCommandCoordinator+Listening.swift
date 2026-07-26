@@ -164,6 +164,13 @@ extension VoiceCommandCoordinator {
         // what the transcriber emitted rather than what happened to match.
         let isStableVolatile = transcript.isFinal || noteVolatileTranscript(normalized)
 
+        // ANY newer transcript supersedes a pending settle — it is fresher
+        // evidence about the same utterance. A DIFFERENT volatile means the
+        // sentence is still growing (this is the prefix protection); an
+        // IDENTICAL one is the repeat signal, which fires below without waiting;
+        // a FINAL decides on its own, immediately.
+        supersedePendingSettle(isFinal: transcript.isFinal, tokens: tokens)
+
         guard let screen = currentCommandScreen else {
             SentryLog.info(
                 "voice cmd transcript dropped — window closed",
@@ -207,6 +214,14 @@ extension VoiceCommandCoordinator {
         if let suppression = suppressionReason(
             for: command, on: screen, isFinal: transcript.isFinal, isStableVolatile: isStableVolatile
         ) {
+            // `awaitingStable` is a WAIT, not a rejection: the repeat signal may
+            // never arrive (volatiles are emitted on CHANGE, not on a timer), so
+            // hand this hypothesis to the settle timer instead of dropping it —
+            // otherwise the command only ever fires from the end-of-speech
+            // final and the latency fix is a no-op. Every other reason is final.
+            if suppression == .awaitingStable {
+                armVolatileSettle(command, text: normalized, on: screen)
+            }
             SentryLog.info(
                 "voice cmd suppressed",
                 category: .voice,
@@ -218,17 +233,10 @@ extension VoiceCommandCoordinator {
             return
         }
 
-        SentryLog.info(
-            "voice cmd matched",
-            category: .voice,
-            attributes: [
-                "screen": String(describing: screen), "command": command.rawValue,
-                "final": transcript.isFinal, "tokens": tokens,
-            ]
+        fireCommand(
+            command, on: screen, text: normalized,
+            path: transcript.isFinal ? .finalResult : .volatileRepeat
         )
-        noteCommandFired(command) // latch the utterance + start the cooldown
-        applyCaptureEvent(.recognize) // ack (no phase change) — earcon seam for 77.10
-        handleRecognizedCommand(command)
     }
 
     /// A command was recognized on the current screen. Fires the

@@ -94,6 +94,19 @@ final class VoiceCommandCoordinator: ObservableObject {
     /// by `endUtterance()`.
     var lastVolatileText: String?
 
+    /// How long an unchanged volatile hypothesis must stand before the SETTLE
+    /// signal accepts it as stopped-growing (see `armVolatileSettle`). `var` and
+    /// injected for the same reason as `now`: tests drive it to a negligible
+    /// value instead of sleeping — the repo's three flaky async voice tests all
+    /// came from real `Task.sleep`s.
+    var volatileSettleDelay: TimeInterval = 0.35
+
+    /// The matched-but-unproven volatile currently waiting out
+    /// `volatileSettleDelay`, or `nil`. Written ONLY through
+    /// `armVolatileSettle` / `cancelVolatileSettle` (+Utterance), which keep it
+    /// in lockstep with the `.volatileSettle` task.
+    var pendingVolatileSettle: PendingVolatileSettle?
+
     /// The last command actually routed, and when — the cooldown's input.
     var lastFiredCommand: (command: VoiceCommand, at: Date)?
 

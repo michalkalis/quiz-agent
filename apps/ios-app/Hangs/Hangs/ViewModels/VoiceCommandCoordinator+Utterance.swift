@@ -13,9 +13,13 @@
 //       results safe at all (`suppressionReason` / `noteCommandFired` /
 //       `endUtterance`).
 //    2. DESTRUCTIVE COMMANDS REQUIRE A FINAL RESULT (`requiresFinalResult`).
-//    3. A VOLATILE MUST BE DELIVERED TWICE UNCHANGED before it may fire
-//       (`noteVolatileTranscript`) — the growing-hypothesis hole the matcher's
-//       content-token cap structurally cannot see.
+//    3. A VOLATILE MUST HAVE STOPPED GROWING before it may fire — the
+//       growing-hypothesis hole the matcher's content-token cap structurally
+//       cannot see. Two INDEPENDENT signals establish that, either one is
+//       enough: the transcriber delivered the same normalized text twice
+//       (`noteVolatileTranscript`, fires immediately), or the text stood
+//       unchanged for `volatileSettleDelay` (`armVolatileSettle`). The second
+//       exists because the first is not contractual — see `armVolatileSettle`.
 //    4. A ~1.5 s per-command COOLDOWN as the second layer behind the latch.
 //
 //  State lives on the class (Swift forbids stored properties in an extension);
@@ -77,11 +81,38 @@ extension VoiceCommandCoordinator {
         case utteranceLatch = "utterance-latch"
         /// Destructive command seen on a revisable volatile hypothesis.
         case awaitingFinal = "awaiting-final"
-        /// Volatile hypothesis that the transcriber has not yet repeated
-        /// unchanged — still growing, so still a sentence prefix.
+        /// Volatile hypothesis not yet proven stopped-growing — so still a
+        /// possible sentence prefix. Arms the settle fallback.
         case awaitingStable = "awaiting-stable"
+        /// A pending settle was dropped because a newer transcript arrived.
+        case settleSuperseded = "settle-superseded"
+        /// The settle delay elapsed but the world moved on (screen changed, a
+        /// different hypothesis won) — nothing was routed.
+        case settleStale = "settle-stale"
         /// The same command fired less than `commandCooldown` ago.
         case cooldown
+    }
+
+    /// Which evidence fired a command. Logged on EVERY fire because the field
+    /// question we cannot otherwise answer is whether volatile results are
+    /// actually buying latency on device, or whether every command still comes
+    /// from the end-of-speech final (the build-33 bug, silently restored).
+    enum CommandFirePath: String {
+        case finalResult = "final"
+        case volatileRepeat = "volatile-repeat"
+        case volatileSettle = "volatile-settle"
+    }
+
+    /// A volatile hypothesis that matched a command and is waiting out
+    /// `volatileSettleDelay` to prove it has stopped growing.
+    struct PendingVolatileSettle {
+        let command: VoiceCommand
+        /// The NORMALIZED text it matched from — re-validated against
+        /// `lastVolatileText` when the delay elapses.
+        let text: String
+        /// The screen it matched on. A command must never land on a screen the
+        /// founder left while we were waiting.
+        let screen: VoiceCommandScreen
     }
 
     /// The gate in front of routing: `nil` means fire, otherwise the reason not
@@ -106,24 +137,142 @@ extension VoiceCommandCoordinator {
     }
 
     /// Record a volatile hypothesis and report whether it REPEATS the previous
-    /// volatile of this utterance unchanged.
+    /// volatile of this utterance unchanged — the FAST stability signal.
     ///
-    /// WHY: the matcher's content-token cap only ever sees ONE delivered
-    /// transcript, while the transcriber emits a GROWING hypothesis — so every
-    /// utterance passes through a 1-token prefix state and the cap is a no-op on
-    /// the leading edge of all speech. "Okay, tak to bolo dobré" arrives as
-    /// volatile "okay" and would confirm the answer ~300 ms in; a radio
-    /// "Starting now…" arrives as volatile "start". Length cannot separate those
-    /// — STABILITY can: a sentence never presents the same hypothesis twice, it
-    /// keeps growing, whereas a one-word command followed by silence is re-emitted
-    /// unchanged long before the end-of-speech endpoint, so the latency win the
-    /// volatile results were turned on for survives.
+    /// WHY a stability gate at all: the matcher's content-token cap only ever
+    /// sees ONE delivered transcript, while the transcriber emits a GROWING
+    /// hypothesis — so every utterance passes through a 1-token prefix state and
+    /// the cap is a no-op on the leading edge of all speech. "Okay, tak to bolo
+    /// dobré" arrives as volatile "okay" and would confirm the answer ~300 ms
+    /// in; a radio "Starting now…" arrives as volatile "start". Length cannot
+    /// separate those — stopped-growing can: a sentence keeps growing, a
+    /// finished one-word command does not.
+    ///
+    /// WHY only a signal and not THE gate: a repeat is proof, but its absence is
+    /// not disproof. Apple documents volatile results as change-driven ("each
+    /// phrase is sent one or more times as the interpretation gets better"), so
+    /// the transcriber owes us nothing while the founder is silent. A probe of
+    /// the shipped configuration did see a second delivery for every command
+    /// word — but only because a punctuation refinement ("Start" → "Start.")
+    /// collapses to the same string through `VoiceCommandMatcher.normalize`.
+    /// That is luck, not contract. `armVolatileSettle` is the signal that does
+    /// not depend on it.
     ///
     /// Called for EVERY volatile transcript (including ones the matcher rejects)
     /// so the baseline tracks what the transcriber actually emitted.
     func noteVolatileTranscript(_ normalized: String) -> Bool {
         defer { lastVolatileText = normalized }
         return lastVolatileText == normalized
+    }
+
+    // MARK: - Settle Fallback (the second, independent stability signal)
+
+    /// Start the settle timer for a matched-but-unproven volatile: if this exact
+    /// normalized text is still the newest hypothesis `volatileSettleDelay` from
+    /// now, it has stopped growing and may fire.
+    ///
+    /// WHY: without it, the whole latency win rides on the transcriber choosing
+    /// to re-deliver an unchanged hypothesis (see `noteVolatileTranscript`). If a
+    /// model update, another locale or noisy car audio drops that re-delivery,
+    /// every command silently falls back to the end-of-speech final — which IS
+    /// the build-33 bug (the founder says "start" seven times, each repeat
+    /// extending the segment and pushing finalization past the window). Elapsed
+    /// silence is independent evidence: it needs no cooperation from the
+    /// transcriber, only the absence of a newer hypothesis.
+    func armVolatileSettle(_ command: VoiceCommand, text: String, on screen: VoiceCommandScreen) {
+        pendingVolatileSettle = PendingVolatileSettle(command: command, text: text, screen: screen)
+        let delay = volatileSettleDelay
+        let task = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(delay))
+            guard let self, !Task.isCancelled else { return }
+            self.fireSettledVolatile()
+        }
+        taskBag.add(task, key: .volatileSettle)
+    }
+
+    /// Drop the pending settle and return what was dropped (for the caller's
+    /// log). Any newer transcript is fresher evidence about the same utterance,
+    /// and an ended utterance or a torn-down consumer leaves nothing for a
+    /// settle to belong to.
+    @discardableResult
+    func cancelVolatileSettle() -> PendingVolatileSettle? {
+        guard let pending = pendingVolatileSettle else { return nil }
+        pendingVolatileSettle = nil
+        taskBag.cancel(.volatileSettle)
+        return pending
+    }
+
+    /// The settle delay elapsed. Re-validate everything that could have moved
+    /// while we waited, then route through the SAME funnel a live transcript
+    /// uses — the at-most-one-command-per-utterance latch and the cooldown are
+    /// not optional for this path.
+    func fireSettledVolatile() {
+        guard let pending = pendingVolatileSettle else { return }
+        pendingVolatileSettle = nil
+
+        // `lastVolatileText`: a different hypothesis would have cancelled us, so
+        // this only catches an ordering surprise. `currentCommandScreen`: the
+        // founder can leave the screen while we wait (auto-advance, a tap, TTS
+        // starting) — a command scoped to a screen he is no longer on is wrong.
+        guard lastVolatileText == pending.text, currentCommandScreen == pending.screen else {
+            logSettleNotRouted(pending, reason: .settleStale)
+            return
+        }
+        if let suppression = suppressionReason(
+            for: pending.command, on: pending.screen, isFinal: false, isStableVolatile: true
+        ) {
+            logSettleNotRouted(pending, reason: suppression)
+            return
+        }
+        fireCommand(pending.command, on: pending.screen, text: pending.text, path: .volatileSettle)
+    }
+
+    /// Drop the pending settle because a newer transcript is in hand, and report
+    /// it — the field needs to see how often a settle was armed and then talked
+    /// over, otherwise "commands are slow" and "commands mis-fire" look the same
+    /// in Sentry. No-op when nothing is parked.
+    func supersedePendingSettle(isFinal: Bool, tokens: Int) {
+        guard let pending = cancelVolatileSettle() else { return }
+        SentryLog.info(
+            "voice cmd suppressed",
+            category: .voice,
+            attributes: [
+                "screen": String(describing: pending.screen), "command": pending.command.rawValue,
+                "reason": CommandSuppression.settleSuperseded.rawValue,
+                "final": isFinal, "tokens": tokens,
+            ]
+        )
+    }
+
+    private func logSettleNotRouted(_ pending: PendingVolatileSettle, reason: CommandSuppression) {
+        SentryLog.info(
+            "voice cmd suppressed",
+            category: .voice,
+            attributes: [
+                "screen": String(describing: pending.screen), "command": pending.command.rawValue,
+                "reason": reason.rawValue, "final": false, "path": CommandFirePath.volatileSettle.rawValue,
+            ]
+        )
+    }
+
+    /// The ONLY place a command is routed. Both volatile signals and the final
+    /// path funnel through here so the latch, the cooldown seed, the earcon ack
+    /// and the field log can never diverge per-path.
+    func fireCommand(
+        _ command: VoiceCommand, on screen: VoiceCommandScreen, text: String, path: CommandFirePath
+    ) {
+        SentryLog.info(
+            "voice cmd matched",
+            category: .voice,
+            attributes: [
+                "screen": String(describing: screen), "command": command.rawValue,
+                "final": path == .finalResult, "tokens": text.split(separator: " ").count,
+                "path": path.rawValue,
+            ]
+        )
+        noteCommandFired(command) // latch the utterance + start the cooldown
+        applyCaptureEvent(.recognize) // ack (no phase change) — earcon seam for 77.10
+        handleRecognizedCommand(command)
     }
 
     /// Latch the utterance and start the cooldown. Called ONLY on the path that
@@ -140,5 +289,8 @@ extension VoiceCommandCoordinator {
     func endUtterance() {
         commandFiredThisUtterance = false
         lastVolatileText = nil // the next utterance's first volatile is unproven
+        // A settle belongs to the utterance that armed it: a command must never
+        // fire for an utterance that already ended or a listener that is gone.
+        cancelVolatileSettle()
     }
 }

@@ -486,6 +486,8 @@
           - now: (Function)
           - commandFiredThisUtterance: false
           - lastVolatileText: nil
+          - volatileSettleDelay: 0.35
+          - pendingVolatileSettle: nil
           - lastFiredCommand: nil
           ▿ silenceDetectionService: Hangs.SilenceDetectionService #7
           ▿ taskBag: Hangs.TaskBag #42

@@ -26,6 +26,7 @@ enum TaskKey: Hashable, Sendable {
     case sttCommitWatchdog
     case bargeIn
     case commandListener
+    case volatileSettle
     case skipUndo
     case questionReplay
     case quizStart

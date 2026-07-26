@@ -15,10 +15,11 @@
 //    • the consumer: a transcript routes through the screen-scoped
 //      matcher and fires onCommandRecognized (screen scoping enforced);
 //    • #110 volatile results: at most ONE command per utterance, destructive
-//      commands only from a final result, a volatile having to be DELIVERED
-//      TWICE UNCHANGED before it may fire (so a growing sentence's one-word
-//      prefix can't), the same-command cooldown, and the window being closed
-//      during feedback TTS as well as question TTS;
+//      commands only from a final result, a volatile having to be proven
+//      STOPPED GROWING before it may fire (so a growing sentence's one-word
+//      prefix can't) — via EITHER an unchanged re-delivery or the settle timer,
+//      the same-command cooldown, and the window being closed during feedback
+//      TTS as well as question TTS;
 //    • the defensive degrade: a failed recognizer setup / a nil service leaves the
 //      manual mic-button flow working, no crash.
 //
@@ -277,6 +278,10 @@ struct CommandListenerTests {
             // never changes: the ONLY thing that can stop the 2nd/3rd fire is
             // the utterance latch.
             vm.voiceCommandCoordinator.voiceStartOnQuestionEnabled = false
+            // Isolate the REPEAT signal: with the settle fallback parked out of
+            // reach, the only thing that can fire below is a re-delivery. The
+            // settle path has its own tests (`lonelyVolatileFiresViaSettle` …).
+            vm.voiceCommandCoordinator.volatileSettleDelay = 3600
             vm.quizState = .askingQuestion
             await vm.audioDeviceState.startSilenceDetectionListening() // arms the consumer
 
@@ -315,6 +320,10 @@ struct CommandListenerTests {
         await withMainSerialExecutor {
             let (vm, _, _) = makeCommandVM()
             let coordinator = vm.voiceCommandCoordinator
+            // Isolate the REPEAT signal (see volatileFiresOncePerUtterance); the
+            // settle fallback's own supersede path is
+            // `okayPrefixOnResultCancelsPendingSettle`.
+            coordinator.volatileSettleDelay = 3600
             vm.quizState = makeResultState()
 
             var recognized: [VoiceCommand] = []
@@ -478,6 +487,184 @@ struct CommandListenerTests {
             clock.now = base.addingTimeInterval(VoiceCommandCoordinator.commandCooldown + 0.1)
             await coordinator.handleCommandTranscript(CommandTranscript(text: "start", isFinal: true))
             #expect(recognized == [.start, .start], "after the cooldown the command must work again")
+        }
+    }
+
+    // MARK: - Volatile results: the settle fallback (second stability signal)
+
+    /// WHY: this is the entire point of turning volatile results on. The repeat
+    /// signal is NOT contractual — Apple emits a volatile when the hypothesis
+    /// CHANGES, so a one-word command followed by silence can be delivered
+    /// exactly once and then never again until the end-of-speech final. If a
+    /// lone delivery cannot fire, the founder is back to waiting for the end of
+    /// speech — the build-33 bug (he says "start" seven times, each repeat
+    /// EXTENDING the segment and pushing finalization past the window).
+    @Test("a single volatile 'start' that is never repeated still fires, via the settle delay")
+    func lonelyVolatileFiresViaSettle() async {
+        await withMainSerialExecutor {
+            let (vm, _, _) = makeCommandVM()
+            let coordinator = vm.voiceCommandCoordinator
+            coordinator.volatileSettleDelay = 0 // driven to negligible — never a wall-clock race
+            // Inert routing (see volatileFiresOncePerUtterance) so the screen stays open.
+            coordinator.voiceStartOnQuestionEnabled = false
+            vm.quizState = .askingQuestion
+
+            var recognized: [VoiceCommand] = []
+            coordinator.onCommandRecognized = { recognized.append($0) }
+
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "start", isFinal: false))
+            #expect(coordinator.pendingVolatileSettle?.command == .start,
+                    "an unproven volatile must be PARKED for the settle, not dropped")
+
+            await waitUntil({ !recognized.isEmpty }, "the settle timer never fired the parked command")
+            #expect(recognized == [.start])
+            #expect(coordinator.pendingVolatileSettle == nil, "a fired settle must not stay armed")
+        }
+    }
+
+    /// WHY: the settle fallback must not re-open the growing-hypothesis hole it
+    /// sits next to. "Start telling me about…" reaches the consumer first as the
+    /// bare volatile "start"; the very next, longer hypothesis is proof the
+    /// sentence is still growing and must kill the parked command. The assertion
+    /// is that the settle is GONE — not that a timer happened to lose a race.
+    @Test("a volatile 'start' superseded by a longer hypothesis never fires")
+    func growingHypothesisCancelsPendingSettle() async {
+        await withMainSerialExecutor {
+            let (vm, _, _) = makeCommandVM()
+            let coordinator = vm.voiceCommandCoordinator
+            coordinator.voiceStartOnQuestionEnabled = false
+            vm.quizState = .askingQuestion
+
+            var recognized: [VoiceCommand] = []
+            coordinator.onCommandRecognized = { recognized.append($0) }
+
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "start", isFinal: false))
+            #expect(coordinator.pendingVolatileSettle?.command == .start)
+
+            await coordinator.handleCommandTranscript(
+                CommandTranscript(text: "start telling me about", isFinal: false)
+            )
+            #expect(coordinator.pendingVolatileSettle == nil, "a growing sentence must supersede the parked command")
+            #expect(coordinator.taskBag.contains(.volatileSettle) == false, "…and cancel its timer")
+
+            coordinator.fireSettledVolatile() // even a timer that somehow ran must be inert
+            #expect(recognized.isEmpty, "a sentence prefix must never fire, got \(recognized)")
+        }
+    }
+
+    /// WHY: on the result screen `ok` fires from a volatile (advancing is the
+    /// default outcome), which is exactly what makes the passenger's "Okay, tak
+    /// to bolo dobré" dangerous — it arrives as the volatile "okay" and would
+    /// advance past the answer the founder is still listening to.
+    @Test("a volatile 'okay' superseded by 'okay tak to bolo dobre' does not advance the result")
+    func okayPrefixOnResultCancelsPendingSettle() async {
+        await withMainSerialExecutor {
+            let (vm, _, _) = makeCommandVM()
+            let coordinator = vm.voiceCommandCoordinator
+            vm.quizState = makeResultState()
+
+            var recognized: [VoiceCommand] = []
+            coordinator.onCommandRecognized = { recognized.append($0) }
+
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "okay", isFinal: false))
+            #expect(coordinator.pendingVolatileSettle?.command == .ok,
+                    "the low-latency path IS live for 'okay' here — which is why it needs superseding")
+
+            await coordinator.handleCommandTranscript(
+                CommandTranscript(text: "okay tak to bolo dobre", isFinal: false)
+            )
+            #expect(coordinator.pendingVolatileSettle == nil)
+
+            coordinator.fireSettledVolatile()
+            #expect(recognized.isEmpty, "conversational speech must not advance the quiz, got \(recognized)")
+        }
+    }
+
+    /// WHY: the settle fallback must not become the slow path for everyone. When
+    /// the transcriber DOES re-deliver an unchanged hypothesis, that is proof in
+    /// hand and the command fires on the spot. The delay is parked out of reach
+    /// here, so a fire can only have come from the repeat signal.
+    @Test("the repeat signal fires immediately, without waiting out the settle delay")
+    func repeatSignalDoesNotWaitForSettle() async {
+        await withMainSerialExecutor {
+            let (vm, _, _) = makeCommandVM()
+            let coordinator = vm.voiceCommandCoordinator
+            coordinator.volatileSettleDelay = 3600
+            coordinator.voiceStartOnQuestionEnabled = false
+            vm.quizState = .askingQuestion
+
+            var recognized: [VoiceCommand] = []
+            coordinator.onCommandRecognized = { recognized.append($0) }
+
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "start", isFinal: false))
+            #expect(recognized.isEmpty, "one delivery is not yet proof")
+
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "start", isFinal: false))
+            #expect(recognized == [.start], "an unchanged re-delivery must fire without any delay")
+            #expect(coordinator.pendingVolatileSettle == nil, "and must leave no settle armed behind it")
+        }
+    }
+
+    /// WHY: once the final arrives it is strictly better evidence than the
+    /// hypothesis we parked, and it makes its own decision (destructive commands
+    /// are allowed only there). A settle surviving the final would fire a SECOND
+    /// command for one utterance and break the at-most-one invariant that makes
+    /// volatile results safe at all.
+    @Test("a final result cancels the pending settle and its own decision is what applies")
+    func finalCancelsPendingSettle() async {
+        await withMainSerialExecutor {
+            let (vm, _, _) = makeCommandVM()
+            let coordinator = vm.voiceCommandCoordinator
+            coordinator.volatileSettleDelay = 3600
+            vm.quizState = makeResultState()
+
+            var recognized: [VoiceCommand] = []
+            coordinator.onCommandRecognized = { recognized.append($0) }
+
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "okay", isFinal: false))
+            #expect(coordinator.pendingVolatileSettle?.command == .ok)
+
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "okay", isFinal: true))
+            #expect(recognized == [.ok], "the final decides")
+            #expect(coordinator.pendingVolatileSettle == nil)
+            #expect(coordinator.taskBag.contains(.volatileSettle) == false)
+
+            coordinator.fireSettledVolatile()
+            #expect(recognized == [.ok], "one utterance = at most one command, got \(recognized)")
+        }
+    }
+
+    /// WHY: the settle is the ONE path that can outlive the transcript that
+    /// armed it, so it has to die with its utterance and with its listener. A
+    /// command firing after the founder stopped talking — or after the window
+    /// closed and the consumer was torn down — acts on a screen that has moved on.
+    @Test("a pending settle is cancelled when the utterance ends and when the consumer stops")
+    func pendingSettleDiesWithItsUtteranceAndListener() async {
+        await withMainSerialExecutor {
+            let (vm, _, _) = makeCommandVM()
+            let coordinator = vm.voiceCommandCoordinator
+            coordinator.volatileSettleDelay = 3600
+            coordinator.voiceStartOnQuestionEnabled = false
+            vm.quizState = .askingQuestion
+
+            var recognized: [VoiceCommand] = []
+            coordinator.onCommandRecognized = { recognized.append($0) }
+
+            // (1) the utterance ends under a parked command.
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "start", isFinal: false))
+            #expect(coordinator.pendingVolatileSettle != nil)
+            coordinator.endUtterance()
+            #expect(coordinator.pendingVolatileSettle == nil, "no settle outlives its utterance")
+            #expect(coordinator.taskBag.contains(.volatileSettle) == false)
+
+            // (2) the consumer is torn down under a parked command (window closed).
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "start", isFinal: false))
+            #expect(coordinator.pendingVolatileSettle != nil)
+            coordinator.stopCommandConsumer()
+            #expect(coordinator.pendingVolatileSettle == nil, "no settle outlives its listener")
+
+            coordinator.fireSettledVolatile()
+            #expect(recognized.isEmpty, "nothing may fire once the utterance/listener is gone, got \(recognized)")
         }
     }
 

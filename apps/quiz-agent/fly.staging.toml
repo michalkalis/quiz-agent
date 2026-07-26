@@ -19,6 +19,9 @@ primary_region = "cdg"
   # cannot exercise SIWA. Mirror them per issue #101 §3.5 (SIWA rows + owed
   # `fly secrets set` note) at the next staging secrets/deploy step.
   ENVIRONMENT = "staging"
+  # Keep the TTS audio cache on the mounted volume — see fly.toml for why the
+  # default path would silently re-buy the cache on every deploy.
+  TTS_CACHE_DIR = "/data/tts_cache"
 
 [[services]]
   protocol = "tcp"

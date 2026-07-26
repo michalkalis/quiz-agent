@@ -13,6 +13,11 @@ primary_region = "cdg"
   # warnings (warn_if_insecure_production) — without it prod boots as
   # "development" and every prod-only check is silently skipped (#65).
   ENVIRONMENT = "production"
+  # Park the TTS audio cache on the mounted volume. The default
+  # (`./data/tts_cache`) resolves against WORKDIR /app, i.e. container-local
+  # storage — so every deploy would re-buy the whole cache from ElevenLabs,
+  # whose credits are metered and shared with realtime STT.
+  TTS_CACHE_DIR = "/data/tts_cache"
 
 [[services]]
   protocol = "tcp"

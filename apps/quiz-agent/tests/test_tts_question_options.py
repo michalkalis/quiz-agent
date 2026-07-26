@@ -19,36 +19,16 @@ wording. Appending "Options." to either is noise the driver has to sit through
 on every question.
 """
 
-from typing import ClassVar
-from unittest.mock import MagicMock
-
 import pytest
 from app.api.routes.quiz import get_current_question
-from app.api.routes.tts import get_question_audio
-from app.session.manager import SessionManager
 from quiz_shared.models.question import GenerationProvenance, Question
+from tests.question_audio_harness import (
+    RecordingTTS,
+    question_audio,
+    start_quiz_for,
+)
 
 pytestmark = pytest.mark.asyncio
-
-
-class _Url:
-    path = "/api/v1/sessions/x/question/audio"
-
-
-class _Req:
-    url = _Url()
-    headers: ClassVar[dict] = {}
-
-
-class _RecordingTTS:
-    """Captures the text the route actually hands to synthesis."""
-
-    def __init__(self) -> None:
-        self.texts: list[str] = []
-
-    async def synthesize_question(self, question_text: str) -> bytes:
-        self.texts.append(question_text)
-        return b"audio"
 
 
 @pytest.fixture(autouse=True)
@@ -75,56 +55,18 @@ def _venus_mcq(question_text: str | None = None) -> Question:
     )
 
 
-def _session_for(question: Question, language: str = "en"):
-    manager = SessionManager()
-    session = manager.create_session()
-    session.language = language
-    session.current_question_id = question.id
-    session.current_question_text = question.question
-    session.asked_question_ids = [question.id]
-    manager.update_session(session)
-
-    retriever = MagicMock()
-    retriever.get.return_value = question
-    return manager, session, retriever
-
-
 async def _spoken_text(question: Question, language: str = "en") -> str:
-    """Run the real /question/audio route, return what it sent to TTS."""
-    manager, session, retriever = _session_for(question, language)
-    tts = _RecordingTTS()
-
-    await get_question_audio(
-        request=_Req(),
-        session_id=session.session_id,
-        session_manager=manager,
-        tts_service=tts,
-        question_retriever=retriever,
-        translation_service=None,
-        _auth=None,
-    )
-
-    assert tts.texts, "the route must synthesize question audio"
-    return tts.texts[0]
+    """Run the real /start → /question/audio pair, return what reached TTS."""
+    manager, session_id, retriever = await start_quiz_for(question, language)
+    return await question_audio(manager, session_id, retriever, RecordingTTS())
 
 
 async def test_mcq_options_are_spoken_but_never_displayed():
     """The driver hears every choice; the on-screen text keeps only the question."""
     question = _venus_mcq()
-    manager, session, retriever = _session_for(question)
-    tts = _RecordingTTS()
+    manager, session_id, retriever = await start_quiz_for(question)
 
-    await get_question_audio(
-        request=_Req(),
-        session_id=session.session_id,
-        session_manager=manager,
-        tts_service=tts,
-        question_retriever=retriever,
-        translation_service=None,
-        _auth=None,
-    )
-
-    spoken = tts.texts[0]
+    spoken = await question_audio(manager, session_id, retriever, RecordingTTS())
     assert spoken.startswith(question.question)
     assert "Options." in spoken
     # Letter labels, because repeating "A" is what the driver can actually do
@@ -134,7 +76,7 @@ async def test_mcq_options_are_spoken_but_never_displayed():
     assert "C: 240." in spoken
 
     displayed = await get_current_question(
-        session_id=session.session_id,
+        session_id=session_id,
         session_manager=manager,
         question_retriever=retriever,
         translation_service=None,

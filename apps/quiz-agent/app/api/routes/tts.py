@@ -2,8 +2,11 @@
 
 import logging
 from typing import Optional
+
+import sentry_sdk
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import Response
+from quiz_shared.models.question import Question
 
 from ..deps import (
     SynthesizeTTSRequest,
@@ -22,6 +25,34 @@ from ...rate_limit import limiter
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+
+def _question_row_for_speech(
+    question_retriever: QuestionRetriever, question_id: str
+) -> Optional[Question]:
+    """The question row needed to speak its options, or None — never raises.
+
+    Reached only when a session has no cached speech text. Losing the row costs
+    the driver the option read-out, which is bad but survivable; failing the
+    request costs the whole question, which is not. So the lookup degrades and
+    reports to Sentry instead — same fail-loud-but-keep-driving shape as
+    ``boost_volume`` (4e72ce6).
+    """
+    reason = "no such question row"
+    try:
+        question = question_retriever.get(question_id)
+        if question is not None:
+            return question
+    except Exception as e:
+        reason = f"question store lookup failed: {e}"
+
+    message = (
+        f"Speaking question {question_id} without its multiple-choice options "
+        f"({reason}) — a driver who cannot see the picker cannot answer it"
+    )
+    logger.error(message)
+    sentry_sdk.capture_message(message, level="error")
+    return None
 
 
 @router.post("/tts/synthesize")
@@ -73,37 +104,45 @@ async def get_question_audio(
         raise HTTPException(status_code=400, detail="No active question in session")
 
     try:
-        # Needed even on the cached-text path: multiple-choice options are
-        # spoken but never cached on the session (they must not leak into the
-        # display text). A missing row only costs the option read-out.
-        current_question = question_retriever.get(session.current_question_id)
+        # Hot path: the spoken text — MCQ options appended, digits spelled out
+        # (founder bug 2026-07-12) — was assembled where the question was chosen
+        # and cached on the session, which is also the exact string the TTS
+        # warm-up hashed. No question-store round trip: QuestionRetriever.get
+        # blocks this event-loop thread on Postgres, and a DB blip must never
+        # cost a driver audio that is already synthesized and cached.
+        tts_text = session.current_question_speech_text
 
-        if session.current_question_text:
-            question_text = session.current_question_text
-        else:
-            if not current_question:
-                raise HTTPException(
-                    status_code=404, detail="Current question not found"
-                )
-
-            translated_dict = await question_to_dict_translated(
-                current_question,
-                session.language,
-                translation_service,
-                session_id=session_id,
+        if not tts_text:
+            # Only sessions written before the speech text was cached (a rolling
+            # deploy mid-quiz, or a restored session) land here.
+            current_question = _question_row_for_speech(
+                question_retriever, session.current_question_id
             )
-            question_text = translated_dict["question"]
+            question_text = session.current_question_text
 
-            session.current_question_text = question_text
+            if not question_text:
+                if not current_question:
+                    raise HTTPException(
+                        status_code=404, detail="Current question not found"
+                    )
+
+                translated_dict = await question_to_dict_translated(
+                    current_question,
+                    session.language,
+                    translation_service,
+                    session_id=session_id,
+                )
+                question_text = translated_dict["question"]
+                session.current_question_text = question_text
+
+            tts_text = build_question_speech_text(
+                question_text, current_question, session.language
+            )
+            # Never cache a build made without the row: it carries no options,
+            # and every later request for this question would inherit it.
+            if current_question is not None:
+                session.current_question_speech_text = tts_text
             session_manager.update_session(session)
-
-        # Speech-only text: MCQ options appended, then digits spelled out
-        # (founder bug 2026-07-12 — tts-1 reads embedded digits with English
-        # pronunciation in Slovak). The cached display text keeps its numerals
-        # and carries no options.
-        tts_text = build_question_speech_text(
-            question_text, current_question, session.language
-        )
 
         audio_data = await tts_service.synthesize_question(question_text=tts_text)
 

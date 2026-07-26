@@ -33,26 +33,23 @@ _prefetch_tasks: "set[asyncio.Task]" = set()
 
 def prefetch_question_audio(
     tts_service: Optional[TTSService],
-    question_text: str,
-    language: str,
-    question: Optional[Question],
+    speech_text: Optional[str],
 ) -> None:
     """Fire-and-forget TTS warm-up so the next /question/audio request hits the cache.
 
-    ``language`` and ``question`` must be the session's current ones:
-    /question/audio synthesizes the spoken text built by
-    ``build_question_speech_text`` (MCQ options appended, digits spelled out)
-    and the cache key is a hash of that final text, so warming anything else
-    warms a key nobody ever reads.
+    ``speech_text`` must be ``session.current_question_speech_text`` — the one
+    string /question/audio synthesizes, assembled by
+    ``build_question_speech_text`` where the question is chosen. The cache key
+    is a hash of that final text, so warming anything else warms a key nobody
+    ever reads.
 
     Returns immediately. Failures are logged but never propagate to the caller —
     a missed prefetch just means iOS pays the original synthesis cost.
     """
-    if not tts_service or not question_text:
+    if not tts_service or not speech_text:
         return
 
-    tts_text = build_question_speech_text(question_text, question, language)
-    task = asyncio.create_task(tts_service.synthesize_question(tts_text))
+    task = asyncio.create_task(tts_service.synthesize_question(speech_text))
     _prefetch_tasks.add(task)
     task.add_done_callback(_prefetch_tasks.discard)
     task.add_done_callback(_log_prefetch_outcome)
@@ -310,6 +307,13 @@ class QuizFlowService:
             session_id=session.session_id,
         )
         session.current_question_text = translated_q_dict["question"]
+        # Assemble the spoken text here, with the question row already in hand:
+        # /question/audio then reads it off the session instead of going back to
+        # the question store on the hands-free hot path, and warm-up and route
+        # share one string by construction.
+        session.current_question_speech_text = build_question_speech_text(
+            translated_q_dict["question"], next_question, session.language
+        )
         self.session_manager.update_session(session)
 
         result.next_question_dict = translated_q_dict
@@ -327,10 +331,7 @@ class QuizFlowService:
             # iOS plays feedback + result screen + auto-advance (~3-5s) before requesting,
             # giving OpenAI TTS time to finish in the background.
             prefetch_question_audio(
-                self.tts_service,
-                translated_q_dict["question"],
-                session.language,
-                next_question,
+                self.tts_service, session.current_question_speech_text
             )
 
         return result

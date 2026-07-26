@@ -92,6 +92,17 @@ class QuizSession(BaseModel):
     current_question_text: Optional[str] = Field(
         None, description="Current question text"
     )
+    current_question_speech_text: Optional[str] = Field(
+        None,
+        description=(
+            "Server-side only (never projected into SessionResponse): the exact "
+            "string /question/audio synthesizes — question text plus the spoken "
+            "multiple-choice options, digits spelled out. Assembled once where "
+            "the question is chosen so the TTS warm-up and the audio route "
+            "provably hash the same cache key, and the audio route needs no "
+            "question-store round trip on the hands-free hot path."
+        ),
+    )
     current_answer: Optional[str] = Field(None, description="Current correct answer")
     current_topic: Optional[str] = Field(None, description="Current question topic")
     last_user_answer: Optional[str] = Field(None, description="Last answer provided")

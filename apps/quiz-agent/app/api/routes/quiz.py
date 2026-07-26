@@ -28,6 +28,7 @@ from ...rating.feedback import FeedbackService
 from ...usage.tracker import UsageTracker
 from ...tts.service import TTSService
 from ...quiz.flow import QuizFlowService, prefetch_question_audio
+from ...tts.question_speech import build_question_speech_text
 from ...rate_limit import limiter
 from quiz_shared.models.phase import SessionPhase
 
@@ -151,6 +152,13 @@ async def start_quiz(
             question, session.language, translation_service, session_id=session_id
         )
         session.current_question_text = translated_question_dict["question"]
+        # Assemble the spoken text here, with the question row already in hand:
+        # /question/audio then reads it off the session instead of going back to
+        # the question store on the hands-free hot path, and warm-up and route
+        # share one string by construction.
+        session.current_question_speech_text = build_question_speech_text(
+            translated_question_dict["question"], question, session.language
+        )
         session.transition(to=SessionPhase.ASKING, caller="routes.start_quiz")
         session_manager.update_session(session)
 
@@ -163,12 +171,7 @@ async def start_quiz(
             # Warm TTS cache while iOS is still rendering the question UI.
             # Best-effort: if iOS requests audio before this finishes, both calls
             # run in parallel and the second wins (cache write is idempotent).
-            prefetch_question_audio(
-                tts_service,
-                translated_question_dict["question"],
-                session.language,
-                question,
-            )
+            prefetch_question_audio(tts_service, session.current_question_speech_text)
 
         return InputResponse(
             success=True,

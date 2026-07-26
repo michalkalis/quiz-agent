@@ -6,11 +6,13 @@ here, at synthesis time only — the displayed question text is untouched, the
 same display-vs-speech split ``normalize_numbers_for_tts`` already established
 (founder bug 2026-07-12).
 
-Every site that synthesizes question audio (the /question/audio route and the
-prefetch warm-up) MUST build its text through this one function: the TTS cache
-key is a hash of the final string, so any divergence makes the warm-up write a
-key nobody ever reads — a silent double-spend that also costs the driver the
-full synthesis latency on the hot path.
+Call this where the question is chosen (routes.quiz.start_quiz,
+QuizFlowService.process_answer) and store the result in
+``session.current_question_speech_text``: the TTS warm-up and /question/audio
+then synthesize one and the same string. The cache key is a hash of that final
+string, so any divergence makes the warm-up write a key nobody ever reads — a
+silent double-spend that also costs the driver the full synthesis latency on
+the hot path.
 """
 
 from quiz_shared.models.question import Question

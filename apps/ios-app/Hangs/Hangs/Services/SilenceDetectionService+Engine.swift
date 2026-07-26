@@ -3,11 +3,14 @@
 //  Hangs
 //
 //  The AVAudioEngine + SpeechAnalyzer lifecycle for SilenceDetectionService:
-//  building the paired SpeechDetector / en-US SpeechTranscriber, starting the
-//  engine, consuming both result streams, and tearing it all down. Split out of
-//  SilenceDetectionService.swift (past the ~300-line cap); the VAD state machine,
-//  authorization (#105) and asset preparation stay there, and the mic side
-//  (voice processing + the input tap) is in SilenceDetectionService+InputTap.swift.
+//  pairing the SpeechDetector with the command transcriber from the engine
+//  adapter (#120 — SpeechTranscriber or DictationTranscriber, chosen at
+//  launch), starting the engine, consuming both result streams, and tearing it
+//  all down. Split out of SilenceDetectionService.swift (past the ~300-line
+//  cap); the VAD state machine, authorization (#105) and asset preparation stay
+//  there, the per-engine transcriber configuration lives in
+//  CommandTranscriberAdapter.swift, and the mic side (voice processing + the
+//  input tap) is in SilenceDetectionService+InputTap.swift.
 //
 
 // @preconcurrency: AVAudio tap/converter closures are not @Sendable. Without
@@ -20,28 +23,14 @@ import os
 import Speech
 
 extension SilenceDetectionService {
-    /// The ONE place the command transcriber is configured. `prepareAssets()`
-    /// installs assets by declaring the module it will analyse with, so the two
-    /// must be built identically: a module declares its own asset needs, and if
-    /// the smaller `.fastResults` context window ever pulls a different asset,
-    /// a mismatch would leave `prepareAssets()` reporting `.ready` while
-    /// `analyzer.start` throws — commands silently dead again, the founder's
-    /// exact symptom. Shared factory instead of two literals that can drift.
-    static func makeCommandTranscriber(locale: Locale) -> SpeechTranscriber {
-        SpeechTranscriber(
-            locale: locale,
-            transcriptionOptions: [],
-            reportingOptions: [.volatileResults, .fastResults],
-            attributeOptions: []
-        )
-    }
-
     // MARK: - Lifecycle
 
     func startListening() async {
         guard audioEngine == nil else { return }
 
         state = .idle
+        loggedVolatileThisSegment = false
+        pendingFirstHypothesisSince = nil
 
         // Sensitivity centralised in VADTuning (77.11): .low for road noise.
         let detector: SpeechDetector
@@ -54,71 +43,40 @@ extension SilenceDetectionService {
             detector = SpeechDetector(detectionOptions: .init(sensitivityLevel: .high), reportResults: true)
         }
 
-        // iOS 26.3 requires SpeechDetector to be paired with a SpeechTranscriber
-        // (cannot create a SpeechDetector-only worker). We use detector.results for
-        // VAD AND — since the transcriber must exist anyway — its results as the
-        // English command listener (#77, task 77.5). Locale is forced to English
-        // (P2: commands are English-only for every user regardless of the Slovak
-        // answer path).
-        //
-        // `.volatileResults` (build-33 field fix, 2026-07-24): with finals-only the
-        // transcriber waits for an end-of-speech endpoint, and every repetition
-        // EXTENDS the segment and pushes that endpoint further out — the founder
-        // says "start", nothing fires, he repeats, and the eventual final ("start"
-        // ×7, verbatim in Sentry) lands after the window has already closed.
-        // Volatile hypotheses let the consumer act on a command before that
-        // endpoint. At-most-one-command-per-utterance is enforced there, so the
-        // repeated hypotheses of one utterance cannot double-fire.
-        //
-        // `.fastResults` REVERSES this change-set's own earlier call, which
-        // rejected the flag on the SDK doc string alone ("yielding faster but
-        // also less accurate results"). Probing this exact configuration — same
-        // Speech.framework, paired SpeechDetector, 100 ms buffers at 1x real
-        // time, 12 runs / 8 utterances — measured what the doc string does not
-        // say. One word followed by silence:
-        //
-        //   without it:  NOTHING is emitted until the audio clock reaches ~4 s
-        //                (the transcriber's default context window), then the
-        //                whole burst lands in one ~70 ms clump — volatile at
-        //                4211 ms, final at 4275 ms;
-        //   with it:     first hypothesis at 1155 ms, final at 2288 ms.
-        //
-        // Two consequences, the second decisive. (a) Without the flag the
-        // volatile path buys ~10 ms over finals-only — the latency fix this
-        // whole change exists for is a no-op. (b) ANY listening window that
-        // closes before ~4 s of audio yields NOTHING, not even a final. That is
-        // the mechanical explanation for the field data: median command-window
-        // lifetime ~1.3 s, and 37 of 56 consumer exits saw ZERO transcripts. The
-        // ~4 s is a context-window choice, not compute (fed at 30x real time a
-        // 33-result sentence completed in 418 ms), and this flag is precisely
-        // what changes it — "reduces result latency by using a smaller context
-        // window". Apple's own Preset.progressiveTranscription, "configuration
-        // for immediate transcription of live audio", IS volatileResults +
-        // fastResults: our use case verbatim.
-        //
-        // Measurement beats a doc string here, and the accuracy cost is bounded
-        // for us in a way it is not for general dictation: a SEVEN-WORD fixed
-        // vocabulary behind a 0.72 floor (0.85 for volatiles), destructive
-        // commands still waiting for a final, and a wrong early hypothesis
-        // superseded rather than acted on.
-        //
-        // ⚠️ CAVEAT: measured on macOS 26.5, NOT on an iOS 26 device — the
-        // Simulator cannot run SpeechTranscriber at all (SFSpeechErrorDomain 1,
-        // no installed locales). The same framework and the same doc contract
-        // ship on both, but the absolute milliseconds could differ on iPhone ANE
-        // hardware. The `sincePrevMs` attribute on every command-path log is what
-        // confirms these numbers in the field.
-        //
-        // Still NOT `.alternativeTranscriptions` (field data shows the primary
-        // transcript is already letter-perfect for real command words — N-best
-        // would only widen the false-fire surface).
-        let transcriber = Self.makeCommandTranscriber(locale: Locale(identifier: "en_US"))
+        // iOS 26.3 requires SpeechDetector to be paired with a transcriber
+        // module (cannot create a SpeechDetector-only worker). We use
+        // detector.results for VAD AND — since the transcriber must exist
+        // anyway — its results as the command listener (#77, task 77.5). Which
+        // engine and locale, and why its reporting options look the way they do,
+        // is the adapter's business (CommandTranscriberAdapter.swift — the #119
+        // `.fastResults` measurement rationale lives with the SpeechTranscriber
+        // adapter config it justifies). This file only wires modules together.
+        let session = transcriberEngine.makeSession()
 
-        let analyzer = SpeechAnalyzer(modules: [transcriber, detector])
+        let analyzer = SpeechAnalyzer(modules: [session.module, detector])
         self.analyzer = analyzer
 
+        // Vocabulary biasing (#120): fed ONLY to an engine that declares the
+        // capability — DictationTranscriber honors contextual strings,
+        // SpeechTranscriber ignores them (adapter returns nil; no call at all).
+        // Failure is non-fatal: an unbiased recognizer still recognizes, so log
+        // and continue rather than degrade to buttons.
+        if let vocabulary = transcriberEngine.contextualStrings {
+            let context = AnalysisContext()
+            context.contextualStrings = [.general: vocabulary]
+            do {
+                try await analyzer.setContext(context)
+            } catch {
+                SentryLog.warn(
+                    "contextual strings rejected",
+                    category: .voice,
+                    attributes: ["error": error.localizedDescription, "count": vocabulary.count]
+                )
+            }
+        }
+
         guard let analyzerFormat = await SpeechAnalyzer.bestAvailableAudioFormat(
-            compatibleWith: [transcriber, detector]
+            compatibleWith: [session.module, detector]
         ) else {
             markCommandsUnavailable(reason: "No compatible audio format for SpeechAnalyzer")
             return
@@ -192,52 +150,19 @@ extension SilenceDetectionService {
             }
         }
 
-        // Command listener (77.5): consume the paired transcriber's English results
-        // — volatile hypotheses AND finals, each tagged — and hand them to the
-        // view-model's screen-scoped matcher. Defensive (E-fallback): any throw from
-        // the transcriber stream flips `commandAvailability` (fail-loud, #77) and
-        // ends the loop — VAD is unaffected and the app degrades to the manual
-        // mic-button/tap flow rather than crashing.
+        // Command listener (77.5): consume the adapter-normalized transcripts —
+        // volatile hypotheses AND finals, each tagged — and hand them to the
+        // view-model's screen-scoped matcher. Defensive (E-fallback): any throw
+        // from the transcriber stream flips `commandAvailability` (fail-loud,
+        // #77) and ends the loop — VAD is unaffected and the app degrades to the
+        // manual mic-button/tap flow rather than crashing.
         transcriptionTask = Task { [weak self] in
-            // SAMPLING (see the log below): reset on every final, so each segment
-            // contributes at most one volatile event.
-            var loggedVolatileThisSegment = false
             do {
-                for try await result in transcriber.results {
+                for try await transcript in session.transcripts {
                     guard let self, !Task.isCancelled else { break }
-                    let text = String(result.text.characters)
-                    guard !text.isEmpty else { continue }
-                    // Pre-filter telemetry: proves on a real device whether the
-                    // transcriber emits anything at all (vs. finals never arriving)
-                    // — the discriminator the dead-commands diagnosis lacked.
-                    // `tokens` is the content-token count: the finals-only build
-                    // produced one 7-token final ("start" ×7); volatile results
-                    // should now show short hypotheses arriving early instead.
-                    //
-                    // SAMPLED to the FIRST volatile of each segment plus every
-                    // final. Volatiles arrive continuously while any speech is
-                    // audible, so logging them all would be thousands of events
-                    // per drive on a quota'd, rate-limited logger — and would
-                    // crowd out the low-frequency "voice cmd matched"/"voice cmd
-                    // suppressed" events this whole change is triaged with. The
-                    // consumer applies the SAME rule to its two per-transcript
-                    // drop exits (`shouldLogDroppedTranscript`) — sampling only
-                    // here would have left that volume in place.
-                    if result.isFinal || !loggedVolatileThisSegment {
-                        SentryLog.info(
-                            "voice transcriber result",
-                            category: .voice,
-                            attributes: [
-                                "isFinal": result.isFinal,
-                                "len": text.count,
-                                "tokens": text.split(whereSeparator: \.isWhitespace).count,
-                            ]
-                        )
-                    }
-                    loggedVolatileThisSegment = !result.isFinal
-                    let transcript = CommandTranscript(text: text, isFinal: result.isFinal)
+                    guard !transcript.text.isEmpty else { continue }
                     await MainActor.run { [weak self] in
-                        self?.commandChannel.yield(transcript)
+                        self?.handleEngineTranscript(transcript)
                     }
                 }
             } catch is CancellationError {
@@ -301,11 +226,12 @@ extension SilenceDetectionService {
         Logger.voice.info("🔇 SilenceDetection: listening started")
 
         // Once-per-window proof of WHICH audio path we actually got. Blind spot the
-        // build-33 field data could not close: `SpeechTranscriber
-        // .availableCompatibleAudioFormats` is [8000, 16000], so a Bluetooth HFP
-        // route at 8 kHz is silently ACCEPTED and degrades recognition quietly, and
-        // we have never confirmed which mic the founder's car actually uses — nor
-        // whether voice processing survived on it.
+        // build-33 field data could not close: the compatible analyzer formats are
+        // [8000, 16000] Hz, so a Bluetooth HFP route at 8 kHz is silently ACCEPTED
+        // and degrades recognition quietly, and we have never confirmed which mic
+        // the founder's car actually uses — nor whether voice processing survived
+        // on it. Engine + locale tags ride on every voice event via
+        // VoiceTelemetryContext (#120).
         SentryLog.info(
             "voice command listener started",
             category: .voice,
@@ -315,6 +241,34 @@ extension SilenceDetectionService {
                 "voiceProcessing": inputNode.isVoiceProcessingEnabled,
             ]
         )
+    }
+
+    /// One adapter-normalized transcriber result on the command path: sampled
+    /// telemetry, the first-hypothesis latency measurement (#120), and the yield
+    /// into the consumer channel.
+    ///
+    /// SAMPLING: first volatile of each segment plus every final. Volatiles
+    /// arrive continuously while any speech is audible, so logging them all
+    /// would be thousands of events per drive on a quota'd, rate-limited logger
+    /// — and would crowd out the low-frequency "voice cmd matched"/"voice cmd
+    /// suppressed" events this pipeline is triaged with. The consumer applies
+    /// the SAME rule to its per-transcript drop exits
+    /// (`shouldLogDroppedTranscript`). A transcript carrying the one-shot
+    /// first-hypothesis measurement is always logged — dropping it would lose
+    /// the engine-comparison data point #120 exists for.
+    func handleEngineTranscript(_ transcript: CommandTranscript) {
+        let firstHypothesisMs = consumeFirstHypothesisLatencyMs()
+        if transcript.isFinal || !loggedVolatileThisSegment || firstHypothesisMs != nil {
+            var attributes: [String: Any] = [
+                "isFinal": transcript.isFinal,
+                "len": transcript.text.count,
+                "tokens": transcript.text.split(whereSeparator: \.isWhitespace).count,
+            ]
+            if let firstHypothesisMs { attributes["firstHypothesisMs"] = firstHypothesisMs }
+            SentryLog.info("voice transcriber result", category: .voice, attributes: attributes)
+        }
+        loggedVolatileThisSegment = !transcript.isFinal
+        commandChannel.yield(transcript)
     }
 
     /// Whether the engine we're about to `.start()` (after the analyzer-queue
@@ -347,6 +301,7 @@ extension SilenceDetectionService {
 
         analyzer = nil
         state = .idle
+        pendingFirstHypothesisSince = nil
 
         Logger.voice.info("🔇 SilenceDetection: listening stopped")
     }
@@ -365,5 +320,6 @@ extension SilenceDetectionService {
         audioEngine?.inputNode.removeTap(onBus: 0)
         audioEngine = nil
         analyzer = nil
+        pendingFirstHypothesisSince = nil
     }
 }

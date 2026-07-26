@@ -55,6 +55,30 @@ enum LogCategory: String {
     }
 }
 
+/// Process-wide engine + locale tags for the voice-command path (#120).
+///
+/// Stamped once, by SilenceDetectionService when it resolves its engine adapter,
+/// and merged onto EVERY `.voice`-category `SentryLog` event — including the
+/// coordinator/matcher events emitted ABOVE the engine seam, which must not
+/// know the engine. This is what lets one Sentry query slice #119's
+/// recall/precision/latency metrics by engine without renaming any metric.
+/// Keys are `engine` ("speech"/"dictation") and `cmdLocale` (recognizer locale)
+/// — `cmdLocale` rather than `locale` so the asset-install event's existing
+/// `locale` attribute is never clobbered. Explicit per-event attributes always
+/// win over the context on a key collision.
+enum VoiceTelemetryContext {
+    nonisolated private static let state = OSAllocatedUnfairLock<(engine: String, locale: String)?>(initialState: nil)
+
+    nonisolated static func set(engine: String, locale: String) {
+        state.withLock { $0 = (engine, locale) }
+    }
+
+    nonisolated static var attributes: [String: Any] {
+        guard let tags = state.withLock({ $0 }) else { return [:] }
+        return ["engine": tags.engine, "cmdLocale": tags.locale]
+    }
+}
+
 /// Adds a Sentry breadcrumb when the SDK is running; no-op otherwise.
 /// Keeps scattered call sites free of `SentrySDK.isEnabled` checks so simulator builds
 /// (where Sentry is intentionally off) don't emit "SDK is disabled" warnings.
@@ -73,6 +97,7 @@ enum SentryBreadcrumb {
 /// Default defensive: never pass raw user speech/transcripts as attribute values; use metadata (length, confidence).
 enum SentryLog {
     nonisolated static func info(_ message: String, category: LogCategory, attributes: [String: Any] = [:]) {
+        let attributes = enrich(attributes, category: category)
         let summary = attributesSummary(attributes)
         category.logger.info("\(message, privacy: .public)\(summary, privacy: .public)")
         guard SentrySDK.isEnabled else { return }
@@ -80,6 +105,7 @@ enum SentryLog {
     }
 
     nonisolated static func warn(_ message: String, category: LogCategory, attributes: [String: Any] = [:]) {
+        let attributes = enrich(attributes, category: category)
         let summary = attributesSummary(attributes)
         category.logger.warning("\(message, privacy: .public)\(summary, privacy: .public)")
         guard SentrySDK.isEnabled else { return }
@@ -87,10 +113,18 @@ enum SentryLog {
     }
 
     nonisolated static func error(_ message: String, category: LogCategory, attributes: [String: Any] = [:]) {
+        let attributes = enrich(attributes, category: category)
         let summary = attributesSummary(attributes)
         category.logger.error("\(message, privacy: .public)\(summary, privacy: .public)")
         guard SentrySDK.isEnabled else { return }
         SentrySDK.logger.error(message, attributes: attributes.merging(["category": category.rawValue]) { current, _ in current })
+    }
+
+    /// Merge the process-wide voice engine/locale tags (#120) onto every
+    /// `.voice`-category event. Explicit attributes win on collision.
+    nonisolated private static func enrich(_ attributes: [String: Any], category: LogCategory) -> [String: Any] {
+        guard category == .voice else { return attributes }
+        return attributes.merging(VoiceTelemetryContext.attributes) { current, _ in current }
     }
 
     nonisolated private static func attributesSummary(_ attributes: [String: Any]) -> String {

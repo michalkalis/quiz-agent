@@ -55,6 +55,12 @@ struct SettingsView: View {
     // the Settings screen + a snapshot of the quiz state; drives the sheet.
     @State private var feedbackPresentation: FeedbackPresentation?
 
+    // #120: the persisted command-engine choice (SpeechTranscriber vs
+    // DictationTranscriber, English vs Slovak). LAUNCH-TIME — the active engine
+    // is `CommandEngineSelection.current`, a launch snapshot; this state mirrors
+    // the STORED value so the row can show "restart to apply" when they differ.
+    @State private var commandEngineStored: CommandEngineSelection = .stored
+
     /// Collapse threshold for the large-title behavior (#80 Variant B): the
     /// pinned mono title appears only after the hero headline has scrolled
     /// under the bar (~hero title height + top padding).
@@ -182,6 +188,31 @@ struct SettingsView: View {
             // recognition is armed and firing. Full failure reason → Sentry.
             HangsValueRow(label: "Status", value: voiceCommandsDiagnostic)
                 .accessibilityIdentifier("settings-voice-commands-status")
+
+            hairline
+
+            // #120 engine comparison switch. Release-visible (like Status) so a
+            // TestFlight build can flip engines on a real drive — no recompile.
+            // Applies at the NEXT launch; the value flags a pending restart.
+            Menu {
+                ForEach(CommandEngineSelection.allCases) { option in
+                    Button(option.displayName) {
+                        commandEngineStored = option
+                        CommandEngineSelection.stored = option
+                    }
+                }
+            } label: {
+                HangsConfigRow(
+                    label: "Command engine",
+                    value: commandEngineStored == CommandEngineSelection.current
+                        ? commandEngineStored.displayName
+                        : "\(commandEngineStored.displayName) · restart app",
+                    valueColor: Theme.Hangs.Colors.blue,
+                    action: {}
+                )
+                .allowsHitTesting(false)
+            }
+            .accessibilityIdentifier("settings-command-engine-menu")
 
             hairline
 

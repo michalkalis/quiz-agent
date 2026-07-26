@@ -1,6 +1,6 @@
 # #120 — Transcriber abstraction + Slovak voice commands
 
-**Triage:** ready-for-agent · class b (design + implementation) · target model Fable 5, effort high
+**Triage:** implemented 2026-07-26 (agent work done, all suites green) · open = founder car legs + engine decision · class b · Fable 5, effort high
 **Depends on:** #119 — Voice-command recognition quality (landed `a12eba9`…`c64209c`, `4d98e11`)
 **Related:** #77 — Voice commands hands-free (locked "English-only commands" as decision P2 — **this issue reopens that decision, founder-approved 2026-07-26**)
 
@@ -86,3 +86,30 @@ The MCQ spoken-answer path (`MCQTranscriptMatcher.swift`) — different matcher,
 - Slovak commands are wanted; #77's "English-only for all users" (decision P2) is **superseded** for this issue.
 - Both engines ship behind a switch; this is a comparison, not a migration. No engine is removed until a car leg says which wins.
 - Final Slovak wording is the founder's call — bring a recommendation with collision reasoning, do not just translate.
+
+---
+
+## Implemented 2026-07-26
+
+- **Seam:** `CommandTranscriberAdapter` (Services/) — two concrete adapters, each owning its transcriber's construction, config and `Result`→`CommandTranscript` normalization. SpeechTranscriber config is bit-identical to #119 (`.volatileResults`+`.fastResults`); DictationTranscriber runs `.volatileResults`+`.frequentFinalization`, hints `.shortForm`+`.farField`, and gets the command vocabulary via `AnalysisContext.contextualStrings` (capability declared as presence/absence — `nil` on the engine that ignores it). `SilenceDetectionServiceProtocol` untouched; every consumer above the seam unchanged.
+- **Selection:** `CommandEngineSelection` (Utilities/) — 3 valid cases only (`speech-en` default, `dictation-en`, `dictation-sk`), UserDefaults-backed, launch snapshot; release-visible "Command engine" menu row in Settings → voice (flags "restart app" until relaunch). Unrecognized stored value falls back to today's engine.
+- **Lexicon/matcher:** language-scoped with a default arg = launch selection, so all call sites and pre-#120 tests are unchanged. Slovak set below. Onboarding "English, always" copy updated.
+- **Telemetry:** every `.voice` SentryLog event now carries `engine` + `cmdLocale`, injected centrally in `SentryLog` from `VoiceTelemetryContext` (stamped once by the service; code above the seam stays engine-blind). No metric renamed. New `firstHypothesisMs` attribute on `voice transcriber result`: ms from VAD speech-start (engine-independent anchor) to the engine's first result, one-shot per utterance.
+- **Tests:** `TranscriberEngineTests.swift` (18 tests: selection mapping/persistence, adapter capability asymmetry + concrete modules, Slovak recall/precision/strict-skip/volatile-floor, latency anchor with fake clock). Full HangsTests **778/778 green** (5 `.dump` snapshots re-recorded — diff was exactly the service's three new stored properties; onboarding copy assert updated to the new string).
+
+**Simulator reality (measured on iOS 26.5 sim):** `DictationTranscriber.supportedLocales` = 54 incl. `sk_SK`, `installedLocales` = 1 — unlike SpeechTranscriber (empty, `SFSpeechErrorDomain 1`). So the dictation engine at least passes the locale gate on the Simulator; whether it actually transcribes there is unverified, and the mock-at-protocol test strategy stays. Probe test `simulatorLocaleProbe` prints the counts on every run.
+
+### Slovak command set (recommendation — founder confirms wording)
+
+Matcher variants (normalized): štart→`start` · potvrď/ok/okej→`.ok` · ďalej/pokračuj→`.next` · znova/znovu→`.again` · zopakuj/opakuj→`.repeatQuestion` · preskoč/vynechaj→`.skip` (strict) · stop/zruš→`.stop`. Backchannels **áno · dobre · hej · jasné · no · tak** are deliberately FILLER — they can never fire a command (saying "áno" will not confirm; say "potvrď" or "ok"). Flagged residual hazards, kept knowingly: **"ok"/"okej"** occur in conversation (bounded: final-only on the confirmation sheet, benign on result); lone **"ďalej?"** as a conversational "go on" can advance the result screen (benign — auto-advance was coming); **"stoj"** scores 0.75 vs "stop" (rare, final-only, confirmation-only). Dropped as too hot: bare "no" (per existing lexicon note), "áno"/"dobre" as confirm words.
+
+### The Sentry queries that settle the engine choice
+
+All voice events now carry `engine` (`speech`|`dictation`) and `cmdLocale`. Compare per drive (one engine per drive, flipped in Settings + relaunch):
+
+1. **Latency (primary):** `message:"voice transcriber result" has:firstHypothesisMs` → p50/p95 of `firstHypothesisMs` grouped by `engine`. Baseline: SpeechTranscriber ≈1155 ms (off-device #119 measurement; confirm on-device). **Decision rule: if dictation p50 > ~1.3 s (the median command-window lifetime from build-33), dictation is unusable regardless of accuracy.**
+2. **Recall proxy:** count of `voice cmd matched` ÷ count of `voice cmd consumer started`, by `engine`; plus `voice cmd consumer exited` with `transcriptsSeen=0` rate (the #119 zero-transcript symptom).
+3. **Precision proxy:** `voice cmd suppressed` reason distribution by `engine`, plus the `beginSkipUndoWindow`→abort rate and any `voice cmd matched` with no intended command (founder feedback leg).
+4. **Slovak leg:** same queries with `cmdLocale:sk_SK`; extra attention to false fires (query 3) — the Slovak set's structural risk.
+
+**Winner =** engine with p50 `firstHypothesisMs` ≤ ~1.3 s AND equal-or-better matched-rate AND no worse suppression/false-fire profile over at least one full drive each. If both pass latency, prefer the one with fewer `unmatched` finals on real command words (founder narrates which words he said).

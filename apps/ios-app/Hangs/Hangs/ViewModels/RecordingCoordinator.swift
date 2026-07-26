@@ -151,6 +151,11 @@ final class RecordingCoordinator: ObservableObject {
     let startAutoStopRecordingTimer: @MainActor () -> Void
     let cancelAutoStopRecordingTimer: @MainActor () -> Void
     let stopSilenceDetectionListening: @MainActor () -> Void
+    /// Re-arms the question-screen countdown (thinking-time → auto-record, or the
+    /// legacy answer timer) — see `QuizViewModel.startRecordingOrTimer()`. Used by
+    /// the tier-1/2 transcription-failure bail-out so a missed answer reopens the
+    /// mic by itself instead of leaving a dead question screen (founder, 2026-07-26).
+    let startRecordingOrTimer: @MainActor () -> Void
 
     init(
         audioService: AudioServiceProtocol,
@@ -185,7 +190,8 @@ final class RecordingCoordinator: ObservableObject {
         cancelThinkingTime: @escaping @MainActor () -> Void,
         startAutoStopRecordingTimer: @escaping @MainActor () -> Void,
         cancelAutoStopRecordingTimer: @escaping @MainActor () -> Void,
-        stopSilenceDetectionListening: @escaping @MainActor () -> Void
+        stopSilenceDetectionListening: @escaping @MainActor () -> Void,
+        startRecordingOrTimer: @escaping @MainActor () -> Void
     ) {
         self.audioService = audioService
         self.networkService = networkService
@@ -220,6 +226,7 @@ final class RecordingCoordinator: ObservableObject {
         self.startAutoStopRecordingTimer = startAutoStopRecordingTimer
         self.cancelAutoStopRecordingTimer = cancelAutoStopRecordingTimer
         self.stopSilenceDetectionListening = stopSilenceDetectionListening
+        self.startRecordingOrTimer = startRecordingOrTimer
     }
 
     // MARK: - Façade fan-out wrappers (keep the moved call sites byte-identical)

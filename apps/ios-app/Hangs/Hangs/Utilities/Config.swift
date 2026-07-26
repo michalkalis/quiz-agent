@@ -111,8 +111,11 @@ nonisolated enum Config {
     static let imageQuestionsToggleVisible = false
 
     /// Duration for auto-stop recording — hard safety limit (seconds)
-    /// Increased from 4s to 15s for Phase 2 silence detection (users may speak longer answers)
-    static let autoRecordingDuration: TimeInterval = 15.0
+    /// Increased from 4s to 15s for Phase 2 silence detection (users may speak longer answers),
+    /// then to 30s (founder, 2026-07-26) so the answer window after the question is read
+    /// totals ~40s (thinkingTime 10s + this). Silence detection still closes the mic as
+    /// soon as the driver stops speaking, so this only widens the dead-air ceiling.
+    static let autoRecordingDuration: TimeInterval = 30.0
 
     /// How long the streaming path waits after a forced STT commit before
     /// treating the silence as a transcription failure (#54 task 54.4)
@@ -122,7 +125,9 @@ nonisolated enum Config {
     static let autoRecordDelayMs: UInt64 = 500
 
     /// Countdown duration for auto-confirm (also controls re-record window) in seconds
-    static let autoConfirmDelaySecs: Int = 10
+    /// Shortened 10s → 5s (founder, 2026-07-26): the confirmation step should not stall
+    /// the driving loop once the transcript is on screen.
+    static let autoConfirmDelaySecs: Int = 5
 
     // MARK: - ElevenLabs Streaming STT
 

@@ -273,7 +273,7 @@ struct QuizViewModelNoModalFreezeTests {
 
 @Suite("QuizViewModel Auto-Stop Recording Timer Tests")
 struct QuizViewModelAutoStopRecordingTests {
-    /// Regression: `Config.autoRecordingDuration = 15` is the safety net that
+    /// Regression: `Config.autoRecordingDuration` (30 s) is the safety net that
     /// guarantees a recording session can't run indefinitely if silence
     /// detection misses the trailing silence event. Removing the
     /// `taskBag.add(_, key: .autoStopRecording)` call would silently break this
@@ -296,7 +296,7 @@ struct QuizViewModelAutoStopRecordingTests {
     /// assert re-record opts OUT of the cap ("longer pauses while reformulating").
     /// But silence detection is also disabled for re-records and never runs on
     /// the streaming path — so opting out meant a silent re-record could record
-    /// FOREVER. The hard cap must always be armed; 15 s is the same allowance a
+    /// FOREVER. The hard cap must always be armed; the same allowance a
     /// first attempt gets.
     @Test("startAutoStopRecordingTimer is armed even while isRerecording")
     @MainActor
@@ -309,6 +309,27 @@ struct QuizViewModelAutoStopRecordingTests {
 
         #expect(viewModel.taskBag.contains(.autoStopRecording))
         viewModel.quizTimersController.cancelAutoStopRecordingTimer()
+    }
+
+    /// WHY (founder, 2026-07-26): the quiz screen must never go dead. A tier-1/2
+    /// transcription failure drops back to `.askingQuestion`; before this it left
+    /// no countdown armed, so a driver who was not heard had to reach for the mic
+    /// button — and doing nothing eventually auto-skipped to the result screen
+    /// with no answer. The bail-out must re-arm the thinking-time countdown that
+    /// reopens the mic on its own.
+    @Test("tier-1 transcription failure re-arms the auto-record countdown")
+    @MainActor
+    func transcriptionFailureRearmsAutoRecord() async throws {
+        let viewModel = Fixtures.makeViewModelForTimerTests()
+        viewModel.settings.autoRecordEnabled = true
+        viewModel.quizState = .recording
+
+        viewModel.recordingCoordinator.handleTranscriptionFailure()
+
+        #expect(viewModel.quizState == .askingQuestion)
+        #expect(viewModel.taskBag.contains(.thinkingTime))
+
+        viewModel.quizTimersController.cancelThinkingTime()
     }
 }
 

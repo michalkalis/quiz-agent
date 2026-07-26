@@ -734,7 +734,8 @@ final class QuizViewModel: ObservableObject {
             cancelThinkingTime: { [weak self] in self?.quizTimersController.cancelThinkingTime() },
             startAutoStopRecordingTimer: { [weak self] in self?.quizTimersController.startAutoStopRecordingTimer() },
             cancelAutoStopRecordingTimer: { [weak self] in self?.quizTimersController.cancelAutoStopRecordingTimer() },
-            stopSilenceDetectionListening: { [weak self] in self?.audioDeviceState.stopSilenceDetectionListening() }
+            stopSilenceDetectionListening: { [weak self] in self?.audioDeviceState.stopSilenceDetectionListening() },
+            startRecordingOrTimer: { [weak self] in self?.startRecordingOrTimer() }
         )
     }
 

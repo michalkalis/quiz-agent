@@ -733,6 +733,7 @@
           - startAutoStopRecordingTimer: (Function)
           - cancelAutoStopRecordingTimer: (Function)
           - stopSilenceDetectionListening: (Function)
+          - startRecordingOrTimer: (Function)
       ▿ taskBag: Hangs.TaskBag #43
       - isRerecording: false
       - nextQuestionAudioUrl: nil

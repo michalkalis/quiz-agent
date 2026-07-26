@@ -234,7 +234,9 @@ extension RecordingCoordinator {
 
     /// 3-tier error escalation for transcription failures. Messages are shown
     /// visually via `errorMessage`; we intentionally don't announce them via TTS.
-    /// Tier 1–2: Show retry prompt
+    /// Tier 1–2: Show retry prompt and re-arm the question-screen countdown so the
+    ///           mic reopens by itself (founder, 2026-07-26 — hands-free retry;
+    ///           previously the screen sat idle until the driver tapped the mic).
     /// Tier 3: Auto-skip after 2+ failures
     /// (Internal, not private — also called from +Streaming and +Submission.)
     func handleTranscriptionFailure() {
@@ -244,10 +246,12 @@ extension RecordingCoordinator {
         case 1:
             setErrorMessage(String(localized: "Sorry, I didn't catch that. Please try again.", comment: "Transcription failure tier 1: ask the user to retry"))
             transition(to: .askingQuestion)
+            startRecordingOrTimer()
 
         case 2:
             setErrorMessage(String(localized: "Having trouble hearing you. Try speaking closer to the mic.", comment: "Transcription failure tier 2: suggest speaking closer to the mic"))
             transition(to: .askingQuestion)
+            startRecordingOrTimer()
 
         default:
             consecutiveTranscriptionFailures = 0

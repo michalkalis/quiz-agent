@@ -668,6 +668,61 @@ struct CommandListenerTests {
         }
     }
 
+    // MARK: - Emission-cadence telemetry (what replaces the volatileSettleDelay guess)
+
+    /// WHY: `volatileSettleDelay` is a GUESS whose lower bound is the
+    /// transcriber's interval between consecutive volatile hypotheses — if the
+    /// settle is shorter than that interval, a growing sentence's prefix fires
+    /// before the next hypothesis can supersede it. That interval has never been
+    /// measured (the real recognizer cannot run on the Simulator at all, see the
+    /// file header), so `sincePrevMs` in the field logs is the ONLY way it can be
+    /// learned. It must report `nil` for an utterance's first transcript: the gap
+    /// there is the founder's thinking time since the last utterance, and folding
+    /// that into the cadence would make us tune the settle on a number that has
+    /// nothing to do with the transcriber.
+    @Test("the inter-transcript interval is absent on an utterance's first transcript and measured after")
+    func transcriptIntervalIsNilOnFirstThenMeasured() async {
+        let (vm, _, _) = makeCommandVM()
+        let coordinator = vm.voiceCommandCoordinator
+        let clock = TestClock(Date())
+        let base = clock.now
+        coordinator.now = { clock.now }
+
+        #expect(coordinator.noteTranscriptArrival() == nil,
+                "the first transcript of an utterance has no interval to report")
+
+        clock.now = base.addingTimeInterval(0.42)
+        #expect(coordinator.noteTranscriptArrival() == 420,
+                "the second must report the measured gap — this is the cadence the settle is tuned against")
+
+        // A final ends the utterance, so the NEXT utterance starts over: the
+        // silence between two utterances must never be reported as cadence.
+        coordinator.endUtterance()
+        clock.now = base.addingTimeInterval(9.0)
+        #expect(coordinator.noteTranscriptArrival() == nil,
+                "an utterance boundary must reset the clock, not report the 9 s pause as an interval")
+    }
+
+    /// WHY: the cadence must describe what the TRANSCRIBER emitted, not the
+    /// subset that happened to match a command. The growing hypotheses that
+    /// supersede a parked prefix are mostly UNMATCHED ("start telling me
+    /// about…"), so stamping only on matches would measure the rare case and
+    /// leave the settle tuned on a cadence that never occurs in real speech.
+    @Test("the interval clock is stamped for transcripts the matcher rejects too")
+    func transcriptIntervalCoversUnmatchedTranscripts() async {
+        await withMainSerialExecutor {
+            let (vm, _, _) = makeCommandVM()
+            let coordinator = vm.voiceCommandCoordinator
+            vm.quizState = .askingQuestion
+
+            await coordinator.handleCommandTranscript(
+                CommandTranscript(text: "tak to bolo dobre", isFinal: false)
+            )
+            #expect(coordinator.lastTranscriptAt != nil,
+                    "an unmatched hypothesis still advances the emission clock")
+        }
+    }
+
     // MARK: - Window closed during ANY TTS (#110 root cause #3)
 
     /// WHY: `handleAnswerResponse` transitions to `.showingResult`, arms the

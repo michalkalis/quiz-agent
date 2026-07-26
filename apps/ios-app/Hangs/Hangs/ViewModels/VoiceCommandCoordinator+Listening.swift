@@ -159,6 +159,13 @@ extension VoiceCommandCoordinator {
         let normalized = VoiceCommandMatcher.normalize(transcript.text)
         let tokens = normalized.split(separator: " ").count
 
+        // Emission cadence (`noteTranscriptArrival`): stamped BEFORE any early
+        // return so the interval measures what the transcriber emitted, not the
+        // subset we acted on. `volatileSettleDelay` is a guess bounded by this
+        // number and it can only be learned in the field. -1 == first transcript
+        // of the utterance (no interval), never a real measurement.
+        let sincePrevMs = noteTranscriptArrival()
+
         // #110 volatile stability (see `noteVolatileTranscript`): recorded for
         // EVERY volatile, including the ones dropped below, so the baseline is
         // what the transcriber emitted rather than what happened to match.
@@ -178,6 +185,7 @@ extension VoiceCommandCoordinator {
                 attributes: [
                     "len": normalized.count, "text": normalized,
                     "final": transcript.isFinal, "tokens": tokens,
+                    "sincePrevMs": sincePrevMs ?? -1,
                 ]
             )
             return
@@ -206,6 +214,7 @@ extension VoiceCommandCoordinator {
                 attributes: [
                     "screen": String(describing: screen), "len": normalized.count, "text": normalized,
                     "final": transcript.isFinal, "tokens": tokens,
+                    "sincePrevMs": sincePrevMs ?? -1,
                 ]
             )
             return
@@ -228,6 +237,7 @@ extension VoiceCommandCoordinator {
                 attributes: [
                     "screen": String(describing: screen), "command": command.rawValue,
                     "reason": suppression.rawValue, "final": transcript.isFinal, "tokens": tokens,
+                    "sincePrevMs": sincePrevMs ?? -1,
                 ]
             )
             return
@@ -235,7 +245,8 @@ extension VoiceCommandCoordinator {
 
         fireCommand(
             command, on: screen, text: normalized,
-            path: transcript.isFinal ? .finalResult : .volatileRepeat
+            path: transcript.isFinal ? .finalResult : .volatileRepeat,
+            sincePrevMs: sincePrevMs
         )
     }
 

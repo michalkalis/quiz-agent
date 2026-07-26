@@ -487,6 +487,7 @@
           - commandFiredThisUtterance: false
           - lastVolatileText: nil
           - volatileSettleDelay: 0.35
+          - lastTranscriptAt: nil
           - pendingVolatileSettle: nil
           - lastFiredCommand: nil
           ▿ silenceDetectionService: Hangs.SilenceDetectionService #7

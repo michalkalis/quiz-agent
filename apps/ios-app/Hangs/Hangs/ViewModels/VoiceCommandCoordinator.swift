@@ -99,7 +99,34 @@ final class VoiceCommandCoordinator: ObservableObject {
     /// injected for the same reason as `now`: tests drive it to a negligible
     /// value instead of sleeping — the repo's three flaky async voice tests all
     /// came from real `Task.sleep`s.
+    ///
+    /// ⚠️ **STARTING POINT, NOT A VALIDATED VALUE** — same status as everything in
+    /// `VADTuning` (see that file's header), and for the same reason: nobody has
+    /// measured it on the target device. It is squeezed between two bounds and we
+    /// currently know NEITHER:
+    ///
+    ///   - it must be LONGER than the transcriber's interval between consecutive
+    ///     volatile hypotheses, or a still-growing sentence's 1-token prefix fires
+    ///     before the next hypothesis can supersede it (the prefix protection
+    ///     `noteVolatileTranscript` exists for) — and longer than a driver's
+    ///     mid-sentence pause, for the same reason;
+    ///   - it must be SHORTER than the remaining wait for the end-of-speech final,
+    ///     or the settle buys no latency and #110 is a no-op.
+    ///
+    /// The repo's only cited latency figure is ~1.45 s end-of-speech→result
+    /// (docs/research/voice-commands-handsfree-research-2026-07-02.md, C1) — that
+    /// bounds the SECOND requirement only, and says nothing about emission cadence.
+    /// SpeechTranscriber cannot be exercised on the Simulator at all
+    /// (`supportedLocales` is empty there, same doc, C1), so the number can only
+    /// come from the field: the `sincePrevMs` attribute now on every command-path
+    /// log is that measurement (see `noteTranscriptArrival`). Re-derive this value
+    /// from one real drive before treating it as load-bearing.
     var volatileSettleDelay: TimeInterval = 0.35
+
+    /// When the previous transcript of the utterance in progress arrived, or
+    /// `nil` for its first — the input to the `sincePrevMs` field the command
+    /// path logs (see `noteTranscriptArrival`). Cleared by `endUtterance()`.
+    var lastTranscriptAt: Date?
 
     /// The matched-but-unproven volatile currently waiting out
     /// `volatileSettleDelay`, or `nil`. Written ONLY through

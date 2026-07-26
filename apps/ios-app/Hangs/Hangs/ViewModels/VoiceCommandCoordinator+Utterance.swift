@@ -165,6 +165,30 @@ extension VoiceCommandCoordinator {
         return lastVolatileText == normalized
     }
 
+    /// Milliseconds since the PREVIOUS transcript of this utterance, or `nil` for
+    /// its first, re-stamping the clock as a side effect.
+    ///
+    /// WHY every command-path log carries this: `volatileSettleDelay` is a guess
+    /// bounded below by a quantity nobody has measured — how often the
+    /// transcriber emits a new volatile hypothesis while someone is speaking. If
+    /// that interval is LONGER than the settle, a growing sentence's prefix fires
+    /// before the next hypothesis can supersede it and the prefix protection is
+    /// defeated. SpeechTranscriber cannot be probed on the Simulator, so the only
+    /// place this can be learned is a real drive: the volatile-to-volatile deltas
+    /// give the cadence, and the delta on the FINAL gives what the volatile path
+    /// actually bought over waiting for it.
+    ///
+    /// `nil` on the first transcript rather than a number: the gap since the
+    /// PREVIOUS utterance is the founder's thinking time, not transcriber
+    /// cadence, and averaging it in would silently corrupt the value we tune on.
+    func noteTranscriptArrival() -> Int? {
+        let previous = lastTranscriptAt
+        lastTranscriptAt = now()
+        // Rounded, not truncated: `Int()` on a float-imprecise 419.999… reports
+        // 419 ms for a 420 ms gap, and this number is read as a measurement.
+        return previous.map { Int((now().timeIntervalSince($0) * 1000).rounded()) }
+    }
+
     // MARK: - Settle Fallback (the second, independent stability signal)
 
     /// Start the settle timer for a matched-but-unproven volatile: if this exact
@@ -224,7 +248,12 @@ extension VoiceCommandCoordinator {
             logSettleNotRouted(pending, reason: suppression)
             return
         }
-        fireCommand(pending.command, on: pending.screen, text: pending.text, path: .volatileSettle)
+        // `sincePrevMs: nil` — a settle fires on the ABSENCE of a newer
+        // transcript, so there is no interval to report; `path` already says so.
+        fireCommand(
+            pending.command, on: pending.screen, text: pending.text, path: .volatileSettle,
+            sincePrevMs: nil
+        )
     }
 
     /// Drop the pending settle because a newer transcript is in hand, and report
@@ -259,7 +288,8 @@ extension VoiceCommandCoordinator {
     /// path funnel through here so the latch, the cooldown seed, the earcon ack
     /// and the field log can never diverge per-path.
     func fireCommand(
-        _ command: VoiceCommand, on screen: VoiceCommandScreen, text: String, path: CommandFirePath
+        _ command: VoiceCommand, on screen: VoiceCommandScreen, text: String, path: CommandFirePath,
+        sincePrevMs: Int?
     ) {
         SentryLog.info(
             "voice cmd matched",
@@ -267,7 +297,7 @@ extension VoiceCommandCoordinator {
             attributes: [
                 "screen": String(describing: screen), "command": command.rawValue,
                 "final": path == .finalResult, "tokens": text.split(separator: " ").count,
-                "path": path.rawValue,
+                "path": path.rawValue, "sincePrevMs": sincePrevMs ?? -1,
             ]
         )
         noteCommandFired(command) // latch the utterance + start the cooldown
@@ -289,6 +319,7 @@ extension VoiceCommandCoordinator {
     func endUtterance() {
         commandFiredThisUtterance = false
         lastVolatileText = nil // the next utterance's first volatile is unproven
+        lastTranscriptAt = nil // …and its first transcript has no interval to report
         // A settle belongs to the utterance that armed it: a command must never
         // fire for an utterance that already ended or a listener that is gone.
         cancelVolatileSettle()

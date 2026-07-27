@@ -12,7 +12,7 @@ import json
 import re
 from typing import List, Optional, Dict, Any, Literal
 from langchain_core.messages import HumanMessage
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 
 from quiz_shared.llm import factory as llm_factory
 
@@ -153,6 +153,22 @@ class MCQQuestionItem(BaseModel):
     pattern_used: Optional[str] = Field(
         None,
         description="snake_case reasoning-pattern key, e.g. 'true_false' or 'odd_one_out'",
+    )
+    # 2026-07-27 live-run F-d: the structured MCQ contract had no source
+    # fields at all, so every MCQ question depended on the token-overlap
+    # matcher for attribution — the airport-runway/Library-of-Alexandria
+    # misattribution. Letting the model copy the exact fact URL makes the
+    # attribution exact at the source; the matcher stays as the gap net.
+    source_url: Optional[str] = Field(
+        None,
+        description=(
+            "Exact URL of the ONE source fact this question was built from, "
+            "copied verbatim from that fact's Source line"
+        ),
+    )
+    source_excerpt: Optional[str] = Field(
+        None,
+        description="Short snippet from that same source fact confirming the answer",
     )
 
 
@@ -626,6 +642,11 @@ class AdvancedQuestionGenerator:
         back to the slice's first sourced fact (still slice-local, never the
         global pack head); the orchestrator's global net + the F8 gate catch
         anything still unsourced (e.g. a fact-free sub-batch).
+
+        2026-07-27 live-run F-d: a fallback-stamped URL is by construction a
+        sibling fact's URL, which is worse than null for a fact-check pass —
+        so the fallback now marks provenance ``source_attribution:
+        "unmatched_fallback"`` instead of passing as a real attribution.
         """
         if not facts:
             return
@@ -635,12 +656,25 @@ class AdvancedQuestionGenerator:
         for q in questions:
             if q.source_url:
                 continue
-            match = self._best_matching_fact(q, sourced) or sourced[0]
+            match = self._best_matching_fact(q, sourced)
+            if match is None:
+                match = sourced[0]
+                self._mark_source_attribution(q, "unmatched_fallback")
             q.source_url = getattr(match, "source_url", None)
             if q.source_excerpt is None:
                 q.source_excerpt = getattr(match, "excerpt", None) or getattr(
                     match, "text", None
                 )
+
+    @staticmethod
+    def _mark_source_attribution(question: Question, value: str) -> None:
+        """Record on provenance that ``source_url`` is not a real attribution."""
+        provenance = question.generation_metadata or GenerationProvenance()
+        extra = dict(provenance.extra)
+        extra["source_attribution"] = value
+        question.generation_metadata = provenance.model_copy(
+            update={"extra": extra}
+        )
 
     async def _generate_batch(
         self,
@@ -911,16 +945,24 @@ class AdvancedQuestionGenerator:
             mcq_emphasis=True,
         )
 
+        # 2026-07-27 live-run F-a: `include_raw=True` so one invalid item can
+        # no longer void its whole sub-batch. Without it, a single question
+        # coming back as open `text` with `possible_answers: null` failed the
+        # whole `MCQBatchOutput` parse and every valid sibling was discarded
+        # with it (measured: 64/106 delivered, one batch collapsed to 4/16).
+        # The raw tool-call args survive the failed parse, so we salvage
+        # per-question below instead of hardening the prompt further.
         structured_llm = self.generation_llm.with_structured_output(
-            MCQBatchOutput, method="function_calling"
+            MCQBatchOutput, method="function_calling", include_raw=True
         )
         result = await structured_llm.ainvoke([HumanMessage(content=prompt)])
+        items = self._mcq_items_from_structured_result(result)
 
         default_category = categories[0] if categories else "general"
         pinned_pattern = sorted(mcq_patterns)[0] if mcq_patterns else None
 
         questions: List[Question] = []
-        for item in result.questions if result else []:
+        for item in items:
             try:
                 questions.append(
                     Question.from_dict(
@@ -932,6 +974,8 @@ class AdvancedQuestionGenerator:
                             "explanation": item.explanation,
                             "category": item.category or default_category,
                             "difficulty": item.difficulty or difficulty,
+                            "source_url": item.source_url,
+                            "source_excerpt": item.source_excerpt,
                             "reasoning": {
                                 "pattern_used": item.pattern_used or pinned_pattern
                             },
@@ -954,6 +998,43 @@ class AdvancedQuestionGenerator:
             use_fact_first=use_fact_first,
             source_facts=source_facts,
         )
+
+    @staticmethod
+    def _mcq_items_from_structured_result(result: Any) -> List[MCQQuestionItem]:
+        """Per-question salvage for one MCQ sub-batch (2026-07-27 live-run F-a).
+
+        With ``include_raw=True`` the structured chain returns
+        ``{"raw": AIMessage, "parsed": MCQBatchOutput | None, "parsing_error"}``.
+        When the batch parse succeeded, use it as-is. When it failed — one
+        item with ``possible_answers: null`` is enough — re-validate each
+        question in the raw tool-call args individually, keeping the valid
+        siblings and dropping only the offender. A bare ``MCQBatchOutput``
+        (no ``include_raw``) is accepted for callers/tests that stub the
+        chain directly.
+        """
+        if isinstance(result, MCQBatchOutput):
+            return list(result.questions)
+        if not isinstance(result, dict):
+            return []
+        parsed = result.get("parsed")
+        if isinstance(parsed, MCQBatchOutput):
+            return list(parsed.questions)
+
+        items: List[MCQQuestionItem] = []
+        dropped = 0
+        for call in getattr(result.get("raw"), "tool_calls", None) or []:
+            args = call.get("args") if isinstance(call, dict) else None
+            for raw_item in (args or {}).get("questions") or []:
+                try:
+                    items.append(MCQQuestionItem.model_validate(raw_item))
+                except ValidationError:
+                    dropped += 1
+        if dropped:
+            print(
+                f"MCQ sub-batch salvage: dropped {dropped} invalid "
+                f"question(s), kept {len(items)} valid sibling(s)"
+            )
+        return items
 
     @staticmethod
     def _strip_markdown_fences(content: str) -> str:
@@ -1109,6 +1190,11 @@ class AdvancedQuestionGenerator:
             "3. Emit `possible_answers` per the shape described below.",
             "4. Set `correct_answer` to the key letter (`\"a\"`, `\"b\"`, …), "
             "not the value.",
+            "5. When Source Facts are provided, set `source_url` to the exact "
+            "URL of the ONE fact this question was built from (copy it "
+            "verbatim from that fact's Source line — never a sibling fact's "
+            "URL) and `source_excerpt` to the snippet from that same fact "
+            "that confirms the answer.",
             "",
             "**These patterns are selectable choices, not just the numbered "
             "Pattern Library.** `odd_one_out` and `comparison_bet_older_larger` "

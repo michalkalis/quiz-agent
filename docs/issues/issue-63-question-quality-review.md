@@ -220,6 +220,36 @@ fact-check pass.
 **Not yet done on this batch:** no `/score-questions` or `/verify-questions` pass, no human
 review, no prod import.
 
+### Remediation — 2026-07-27 (F-a..F-d fixed, F-e = product gap)
+
+- **F-a fixed:** the MCQ structured chain now runs `include_raw=True` and salvages
+  per-question — an item coming back as open `text` with `possible_answers: null` is dropped
+  alone; its valid siblings survive (`_mcq_items_from_structured_result`). Pinned by
+  `test_mcq_sub_batch_salvages_valid_siblings_when_one_item_invalid`.
+- **F-b fixed:** `scripts/generate_pack.py` now runs `TopUpStage` after dedup, sharing the
+  initial pass's stage instances exactly as the worker does (#103 F5) — short packs top up or
+  fail loud at the 80% floor. The CLI integration test moved to the 10-distinct-question
+  `e2e_http_mocks_full` fixture (now shared in `tests/integration/conftest.py`) for the same
+  reason the worker e2e did.
+- **F-c fixed:** the CLI activates the order cost tracker and brackets the run with OpenRouter
+  usage snapshots (worker parity); it prints the search/LLM breakdown (LLM leg says
+  `UNMEASURED` when the gateway isn't openrouter) and, in live mode, persists
+  `llm_cost_usd`/`search_cost_cents` on the order row and closes it out as `delivered`.
+- **F-d fixed at the source + made honest at the fallback:** the structured MCQ contract now
+  carries `source_url`/`source_excerpt` (the model copies the exact fact URL; MCQ activation
+  rule 5) — previously MCQ had no source fields at all and relied wholly on token matching.
+  Where attribution still falls back (unmatched → slice head in `_attribute_sources`, or the
+  pack-global net in `GenerationStage`), provenance is branded
+  `extra.source_attribution = "unmatched_fallback" | "pack_fallback"` so a fact-check pass can
+  treat the URL as untrusted instead of verifying against a sibling fact's source. F8 stays
+  intact.
+- **F-e not code-fixed:** neither `GenerationOrder` nor `OrderContext` has a difficulty axis
+  (generator hard-defaults `medium`; topic-pool runs have no category) — a spread needs a
+  product decision (target mix per pack?) + an order-schema field, not a patch. Parked for the
+  founder.
+- The 164 existing local rows keep their as-generated attribution — re-check source URLs during
+  the review pass before any import (the `verify-questions` leg above).
+
 ## Acceptance
 
 - Track A: an HTML report exists with ≥3 type samples, each with auto-score + fact verdict, and a

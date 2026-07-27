@@ -144,6 +144,34 @@ class TestExpiryClassifierWiring:
         assert stage._expiry_classifier is not None
 
 
+class TestTopUpWiring:
+    """2026-07-27 live-run F-b — the CLI omitted `TopUpStage`, so every pack
+    that lost questions downstream just delivered short (the plain 100-question
+    run needed 11 batches). The CLI must run the same top-up leg as the worker
+    (`app/worker/tasks.py::_build_stages`), sharing the initial pass's stage
+    instances, and it must sit after dedup (it re-runs dedup itself)."""
+
+    def test_cli_pipeline_ends_with_topup_sharing_stage_instances(self, monkeypatch):
+        monkeypatch.setenv("TAVILY_API_KEY", "tvly-test-placeholder")
+        monkeypatch.setenv("OPENAI_API_KEY", "sk-test-placeholder")
+        from app.orchestrator.stages import TopUpStage
+
+        stages = generate_pack._build_stages(
+            persist=False, dedup_store=generate_pack._NoopQuestionStore()
+        )
+
+        assert isinstance(stages[-1], TopUpStage)
+        topup = stages[-1]
+        names = [s.name for s in stages]
+        assert names.index("topup") > names.index("dedup")
+        # Same instances as the initial pass (#103 F5) — identical config,
+        # so a top-up round behaves exactly like the first one.
+        assert topup._generation_stage in stages
+        assert topup._verification_stage in stages
+        assert topup._scoring_stage in stages
+        assert topup._dedup_stage in stages
+
+
 class _StubSourcingStage:
     """Records the prompt the pipeline carries and emits one fixed question.
 

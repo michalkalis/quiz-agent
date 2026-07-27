@@ -450,3 +450,98 @@ def e2e_http_mocks(_block_external_http: respx.MockRouter) -> respx.MockRouter:
     """Layer the full pipeline's canned routes on the egress-guard router."""
     register_e2e_mocks(_block_external_http)
     return _block_external_http
+
+
+# ---------------------------------------------------------------------------
+# Full-pack generation mock (#103 F5) — `e2e_http_mocks` returns 3
+# near-duplicate question variants per call, which is fine for consumers that
+# only assert "≥1 survivor" but means DedupStage's in-batch Jaccard check
+# always collapses them to ~1 real question, tripping TopUpStage's 80% floor
+# on any real-sized order. 10 GENUINELY distinct phrasings of the SAME
+# easy-to-verify fact (all answer "three", which `_TAVILY_VERIFY_RESPONSE`
+# already supports) let the first generation pass alone satisfy target_count,
+# so TopUpStage does 0 rounds — the intended happy path, not a workaround
+# around the floor. Shared here (moved from test_order_e2e.py, 2026-07-27)
+# because the generate_pack CLI now runs TopUpStage too (live-run F-b).
+# ---------------------------------------------------------------------------
+
+_TOPUP_FRIENDLY_QUESTIONS = [
+    ("How many hearts does an octopus have?", "https://example.com/octopus-hearts-1"),
+    ("An octopus's circulatory system relies on how many separate hearts?", "https://example.com/octopus-hearts-2"),
+    ("Marine biologists count how many hearts inside a live octopus?", "https://example.com/octopus-hearts-3"),
+    ("A healthy octopus pumps blood using how many hearts?", "https://example.com/octopus-hearts-4"),
+    ("Zoology textbooks list how many hearts for the common octopus?", "https://example.com/octopus-hearts-5"),
+    ("What number of hearts keeps an octopus's blue blood flowing?", "https://example.com/octopus-hearts-6"),
+    ("How many pumping hearts does the octopus species carry?", "https://example.com/octopus-hearts-7"),
+    ("Aquarium guides say an octopus has how many hearts?", "https://example.com/octopus-hearts-8"),
+    ("Cephalopod anatomy books describe how many hearts in an octopus?", "https://example.com/octopus-hearts-9"),
+    ("How many separate hearts circulate blood in an octopus's body?", "https://example.com/octopus-hearts-10"),
+]
+
+
+def _topup_friendly_generation_payload() -> dict:
+    questions = [
+        {
+            "reasoning": {
+                "source_fact": "Octopuses possess three hearts and copper-based hemocyanin",
+                "pattern_used": "Surprising biology",
+                "why_interesting": "Most people assume one heart",
+                "universal_appeal": "Anatomy is universally relatable",
+                "boring_check": "Pinned to verified zoological fact",
+            },
+            "question": text,
+            "type": "text",
+            "correct_answer": "three",
+            "possible_answers": None,
+            "alternative_answers": ["3"],
+            "topic": "Biology",
+            "category": "science",
+            "difficulty": "medium",
+            "tags": ["zoology", "anatomy"],
+            "language_dependent": False,
+            "age_appropriate": "all",
+            "source_url": url,
+            "source_excerpt": "Octopuses have three hearts.",
+            "self_critique": {
+                "surprise_factor": 8,
+                "universal_appeal": 9,
+                "clever_framing": 7,
+                "educational_value": 9,
+                "answerability": 9,
+                "overall_score": 8.4,
+                "reasoning": "Strong universal appeal",
+            },
+        }
+        for text, url in _TOPUP_FRIENDLY_QUESTIONS
+    ]
+    return {"questions": questions}
+
+
+def _topup_friendly_openai_dispatch(request: httpx.Request) -> httpx.Response:
+    body = json.loads(request.content)
+    model = body.get("model", "")
+    if "gpt-4o-mini" in model:
+        content = json.dumps(_CRITIQUE_PAYLOAD)
+    elif "gpt-4o" in model:
+        content = json.dumps(_topup_friendly_generation_payload())
+    else:
+        content = json.dumps(_SCORING_PAYLOAD)
+    return httpx.Response(200, json=_chat_completion_envelope(content, model))
+
+
+@pytest.fixture
+def e2e_http_mocks_full(_block_external_http):
+    """Like `e2e_http_mocks`, but the generation mock returns enough
+    genuinely distinct questions for a real-sized order to clear
+    TopUpStage's floor on the first pass (see block comment above)."""
+    register_sourcing_mocks(_block_external_http)
+    _block_external_http.post("https://api.tavily.com/search").mock(
+        return_value=httpx.Response(200, json=_TAVILY_VERIFY_RESPONSE)
+    )
+    _block_external_http.post("https://api.openai.com/v1/chat/completions").mock(
+        side_effect=_topup_friendly_openai_dispatch
+    )
+    _block_external_http.post("https://api.anthropic.com/v1/messages").mock(
+        return_value=httpx.Response(200, json=_ANTHROPIC_MESSAGES_RESPONSE)
+    )
+    return _block_external_http

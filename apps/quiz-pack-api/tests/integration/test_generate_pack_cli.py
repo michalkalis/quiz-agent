@@ -34,15 +34,18 @@ pytestmark = pytest.mark.integration
 
 def test_dry_run_prints_questions_and_pack_id(
     capsys: pytest.CaptureFixture[str],
-    e2e_http_mocks,
+    e2e_http_mocks_full,
 ) -> None:
-    """`--dry-run` runs the 5-stage pipeline against canned HTTP and prints output.
+    """`--dry-run` runs the full pipeline against canned HTTP and prints output.
 
-    The mocked OpenAI generation route returns 3 stub questions
-    (`_generation_payload(n=3)` in conftest), so a `--target-count 3` run
-    must surface a non-zero question count plus a synthetic `pack_id`.
-    A zero count would mean the dedup/verification stages silently dropped
-    everything — exactly the regression this test exists to catch.
+    Uses `e2e_http_mocks_full` (10 genuinely distinct canned questions):
+    since the CLI runs `TopUpStage` (2026-07-27 live-run F-b), the older
+    3-near-duplicate fixture collapses to ~1 survivor under in-batch dedup
+    and trips the 80% floor — same interaction the worker e2e documents.
+    A `--target-count 3` run must surface a non-zero question count plus a
+    synthetic `pack_id`. A zero count would mean the dedup/verification
+    stages silently dropped everything — exactly the regression this test
+    exists to catch.
     """
     import generate_pack
 

@@ -42,6 +42,8 @@ import logging
 import os
 import sys
 import uuid
+from datetime import datetime, timezone
+from decimal import Decimal
 from typing import Any, Sequence
 
 # Ensure `app.*` imports resolve when invoked as `python scripts/generate_pack.py`
@@ -51,6 +53,7 @@ _APP_DIR = os.path.dirname(_SCRIPT_DIR)
 if _APP_DIR not in sys.path:
     sys.path.insert(0, _APP_DIR)
 
+from app import cost_tracking
 from app.db.models import GenerationOrder
 from app.orchestrator import PackGenerator, ProgressSink
 from app.orchestrator.pack_generator import Stage
@@ -60,6 +63,7 @@ from app.orchestrator.stages import (
     PersistStage,
     ScoringStage,
     SourcingStage,
+    TopUpStage,
     VerificationStage,
 )
 from quiz_shared.database.question_store import QuestionStore
@@ -244,25 +248,35 @@ def _build_stages(*, persist: bool, dedup_store: QuestionStore) -> list[Stage]:
         critique_model=feature_flags.critique_model() or llm_factory.CRITIQUE,
     )
 
+    # Issue #76 F-3b — the founder's manual replenishment pass runs through
+    # THIS path (decision B: no new command), so the expiry classifier must
+    # be wired here exactly as in the worker (`worker.py on_startup`), behind
+    # the same EXPIRY_CLASSIFICATION flag (default off → dormant, None).
+    generation = GenerationStage(
+        generator,
+        expiry_classifier=(
+            ExpiryClassifier() if feature_flags.expiry_classification() else None
+        ),
+    )
+    verification = VerificationStage(FactVerifier())
+    scoring = ScoringStage(MultiModelScorer())
+    dedup = DedupStage(dedup_store, gold_standard_path=None)
+
     stages: list[Stage] = [
         # #72 F-1 (Scope A): the CLI/batch path wires the curated TopicPool so a
         # no-category run samples a diverse concrete topic set (no per-pack LLM
         # call). The worker/live path deliberately does NOT (stays byte-identical
         # until Scope B). Refresh the pool offline via scripts/refresh_topic_pool.py.
         SourcingStage(FactSourcer(), topic_pool=TopicPool()),
-        # Issue #76 F-3b — the founder's manual replenishment pass runs through
-        # THIS path (decision B: no new command), so the expiry classifier must
-        # be wired here exactly as in the worker (`worker.py on_startup`), behind
-        # the same EXPIRY_CLASSIFICATION flag (default off → dormant, None).
-        GenerationStage(
-            generator,
-            expiry_classifier=(
-                ExpiryClassifier() if feature_flags.expiry_classification() else None
-            ),
-        ),
-        VerificationStage(FactVerifier()),
-        ScoringStage(MultiModelScorer()),
-        DedupStage(dedup_store, gold_standard_path=None),
+        generation,
+        verification,
+        scoring,
+        dedup,
+        # 2026-07-27 live-run F-b: the CLI omitted TopUpStage, so every pack
+        # that lost questions downstream just delivered short (the plain run
+        # needed 11 batches for 100 questions). Same instances as the initial
+        # pass, mirroring the worker's `_build_stages` (#103 F5).
+        TopUpStage(generation, verification, scoring, dedup),
     ]
     if persist:
         from app.db.session import AsyncSessionLocal
@@ -312,15 +326,58 @@ async def _run(args: argparse.Namespace) -> int:
             session.add(order)
             await session.commit()
 
-    pack = await pack_generator.run(order)
+    # 2026-07-27 live-run F-c: stage-summed cost_cents is structurally 0 on
+    # the CLI (every stage returns cost_cents=0; only the worker drained the
+    # cost tracker), so the printed cost and the order row were meaningless.
+    # Mirror the worker's capture: Tavily calls report into the contextvar
+    # tracker as they happen, OpenRouter account-usage snapshots bracket the
+    # run (see app.cost_tracking for the shared-account caveat).
+    tracker, tracker_token = cost_tracking.activate()
+    usage_before = await cost_tracking.fetch_openrouter_usage()
+    try:
+        pack = await pack_generator.run(order)
+    finally:
+        cost_tracking.deactivate(tracker_token)
+    usage_after = await cost_tracking.fetch_openrouter_usage()
+
     ctx = pack_generator.last_ctx
     questions = list(ctx.questions) if ctx else []
+
+    llm_cost_usd: Decimal | None = None
+    if usage_before is not None and usage_after is not None:
+        llm_cost_usd = round(Decimal(str(max(usage_after - usage_before, 0.0))), 6)
+    search_cost_cents = tracker.search_cost_cents
+    stage_cost_cents = ctx.cost_cents if ctx else 0
+    llm_cost_cents = int(round(llm_cost_usd * 100)) if llm_cost_usd is not None else 0
+    cost_cents = stage_cost_cents + search_cost_cents + llm_cost_cents
+
+    if persist and pack is not None:
+        # Make the measured spend durable on the order row (the worker's
+        # contract) and close the order out — a CLI order left `in_progress`
+        # forever reads as a stuck order to the #103 sweep's operator.
+        async with AsyncSessionLocal() as session:
+            db_order = await session.get(GenerationOrder, order.id)
+            if db_order is not None:
+                db_order.status = "delivered"
+                db_order.pack_id = pack.id
+                db_order.delivered_at = datetime.now(timezone.utc)
+                db_order.llm_cost_usd = llm_cost_usd
+                db_order.search_cost_cents = search_cost_cents
+                await session.commit()
 
     pack_id = str(pack.id) if pack is not None else f"dry-run:{order.id}"
     print()
     print(f"pack_id: {pack_id}")
     print(f"questions: {len(questions)}")
-    print(f"cost_cents: {ctx.cost_cents if ctx else 0}")
+    print(f"cost_cents: {cost_cents}")
+    print(f"  search (Tavily): {search_cost_cents}¢ ({tracker.tavily_credits} credits)")
+    if llm_cost_usd is not None:
+        print(f"  llm (OpenRouter delta): ${llm_cost_usd}")
+    else:
+        print(
+            "  llm: UNMEASURED — OpenRouter usage snapshot unavailable "
+            "(gateway not 'openrouter', key missing, or API failure)"
+        )
     for i, q in enumerate(questions, start=1):
         source = q.source_url or "(no source)"
         print(f"  {i}. {q.question}  →  {q.correct_answer}   [{source}]")

@@ -286,6 +286,16 @@ class GenerationStage:
             if fallback_fact is not None:
                 if q.source_url is None:
                     q.source_url = getattr(fallback_fact, "source_url", None)
+                    # 2026-07-27 live-run F-d: a pack-head URL stamped here is
+                    # not a real attribution — mark it so a fact-check pass
+                    # can treat the URL as untrusted instead of verifying the
+                    # question against a sibling fact's source.
+                    provenance = q.generation_metadata or GenerationProvenance()
+                    extra = dict(provenance.extra)
+                    extra.setdefault("source_attribution", "pack_fallback")
+                    q.generation_metadata = provenance.model_copy(
+                        update={"extra": extra}
+                    )
                 if q.source_excerpt is None:
                     q.source_excerpt = getattr(
                         fallback_fact, "excerpt", None

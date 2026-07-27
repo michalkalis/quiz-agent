@@ -608,6 +608,169 @@ async def test_mcq_sub_batch_uses_structured_output() -> None:
 
 
 @pytest.mark.asyncio
+async def test_mcq_sub_batch_salvages_valid_siblings_when_one_item_invalid() -> None:
+    """2026-07-27 live-run F-a — one bad item must not void its sub-batch.
+
+    The live `--mcq-bias` run delivered 64/106 (one batch collapsed to 4/16)
+    because a single question coming back as open `text` with
+    `possible_answers: null` failed the whole `MCQBatchOutput` parse and
+    every valid sibling was discarded with it. With `include_raw=True` the
+    raw tool-call args survive the failed parse, so the sub-batch must keep
+    the valid siblings and drop only the offender.
+    """
+    valid_a = {
+        "question": "True or false: honey never spoils.",
+        "possible_answers": {"a": "True", "b": "False"},
+        "correct_answer": "a",
+        "pattern_used": "true_false",
+    }
+    invalid = {
+        # The exact live failure shape: open text, no options.
+        "question": "What is the capital of France?",
+        "possible_answers": None,
+        "correct_answer": "Paris",
+    }
+    valid_b = {
+        "question": "True or false: bananas are berries.",
+        "possible_answers": {"a": "True", "b": "False"},
+        "correct_answer": "a",
+        "pattern_used": "true_false",
+    }
+    raw = SimpleNamespace(
+        tool_calls=[{"args": {"questions": [valid_a, invalid, valid_b]}}]
+    )
+    result = {"raw": raw, "parsed": None, "parsing_error": ValueError("boom")}
+    structured_chain = SimpleNamespace(ainvoke=AsyncMock(return_value=result))
+    captured = {}
+
+    def _with_structured_output(schema, **kwargs):
+        captured.update(kwargs)
+        return structured_chain
+
+    gen = _make_generator_with_fake_llm(AsyncMock())
+    gen.generation_llm = SimpleNamespace(
+        with_structured_output=_with_structured_output,
+        temperature=0.8,
+    )
+
+    questions = await gen._generate_mcq_batch_structured(
+        count=3,
+        difficulty="medium",
+        topics=None,
+        categories=None,
+        question_type="text",
+        excluded_topics=None,
+        avoid_questions=None,
+        user_bad_examples=None,
+        source_facts=None,
+        mcq_patterns={"true_false"},
+    )
+
+    # Without include_raw the failed parse leaves nothing to salvage from.
+    assert captured["include_raw"] is True
+    assert len(questions) == 2
+    assert all(q.type == "text_multichoice" for q in questions)
+    assert {q.question for q in questions} == {
+        valid_a["question"],
+        valid_b["question"],
+    }
+
+
+@pytest.mark.asyncio
+async def test_mcq_item_source_url_reaches_question() -> None:
+    """2026-07-27 live-run F-d — the structured MCQ contract had no source
+    fields, so every MCQ depended on the token-overlap matcher (the
+    airport/Alexandria misattribution). A model-emitted `source_url` /
+    `source_excerpt` must now land on the Question verbatim."""
+    from app.generation.advanced_generator import MCQBatchOutput, MCQQuestionItem
+
+    batch_out = MCQBatchOutput(
+        questions=[
+            MCQQuestionItem(
+                question="True or false: runway numbers follow compass bearings.",
+                possible_answers={"a": "True", "b": "False"},
+                correct_answer="a",
+                pattern_used="true_false",
+                source_url="https://example.com/runway-numbering",
+                source_excerpt="Runways are numbered by magnetic heading.",
+            )
+        ]
+    )
+    structured_chain = SimpleNamespace(ainvoke=AsyncMock(return_value=batch_out))
+    gen = _make_generator_with_fake_llm(AsyncMock())
+    gen.generation_llm = SimpleNamespace(
+        with_structured_output=lambda schema, **kwargs: structured_chain,
+        temperature=0.8,
+    )
+
+    questions = await gen._generate_mcq_batch_structured(
+        count=1,
+        difficulty="medium",
+        topics=None,
+        categories=None,
+        question_type="text",
+        excluded_topics=None,
+        avoid_questions=None,
+        user_bad_examples=None,
+        source_facts=None,
+        mcq_patterns={"true_false"},
+    )
+
+    assert questions[0].source_url == "https://example.com/runway-numbering"
+    assert questions[0].source_excerpt == "Runways are numbered by magnetic heading."
+
+
+def test_attribute_sources_marks_unmatched_fallback() -> None:
+    """2026-07-27 live-run F-d — a fallback-stamped URL is a sibling fact's
+    URL by construction, worse than null for a fact-check pass. The blind
+    `sourced[0]` fallback must brand provenance so downstream verification
+    can treat the URL as untrusted; a real token match must stay unbranded."""
+    from quiz_shared.models.question import Question
+
+    gen = _make_generator_with_fake_llm(AsyncMock())
+    fact_head = SimpleNamespace(
+        text="The Library of Alexandria burned repeatedly over centuries",
+        excerpt=None,
+        source_url="https://example.com/alexandria",
+    )
+    fact_runways = SimpleNamespace(
+        text="Airport runway numbers follow magnetic compass bearings",
+        excerpt=None,
+        source_url="https://example.com/runways",
+    )
+
+    def _question(text: str, answer: str) -> Question:
+        return Question.from_dict(
+            {
+                "question": text,
+                "type": "text",
+                "correct_answer": answer,
+                "category": "general",
+                "difficulty": "medium",
+            }
+        )
+
+    matched = _question(
+        "Why do airport runway numbers follow compass bearings?", "magnetic heading"
+    )
+    unmatched = _question("Zzyzx qwfp blorp?", "vexq")
+
+    gen._attribute_sources([matched, unmatched], [fact_head, fact_runways])
+
+    assert matched.source_url == "https://example.com/runways"
+    matched_extra = (
+        matched.generation_metadata.extra if matched.generation_metadata else {}
+    )
+    assert "source_attribution" not in matched_extra
+
+    assert unmatched.source_url == "https://example.com/alexandria"
+    assert (
+        unmatched.generation_metadata.extra["source_attribution"]
+        == "unmatched_fallback"
+    )
+
+
+@pytest.mark.asyncio
 async def test_mcq_sub_batches_partition_source_facts_disjointly() -> None:
     """Issue #42 task 42.28 — each MCQ sub-batch gets a distinct fact slice.
 

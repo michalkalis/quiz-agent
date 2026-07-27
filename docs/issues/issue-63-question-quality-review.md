@@ -171,6 +171,55 @@ Export (read-only, raw — bypasses the Pydantic validator that chokes on 5 `tru
 - **No corpus writes.** 86 source-URL backfills staged in `verify_enriched.json` (not applied —
   holding until verification completes). Backfill bottleneck: FactVerifier is single-sourced on Tavily.
 
+## Live run record — 2026-07-27 (founder-ordered, corpus writes ON)
+
+Founder ordered a live 100-question generation run (the first corpus-writing run since the
+2026-06-12 park), then a follow-up MCQ batch once the mix came back wrong. Local DB only —
+nothing imported to prod. **164 new `pending_review` rows** (165 pending in total — one predates
+this run) across 18 packs / 37 topics, every row carrying a `source_url`. Prompt-free (#72 F-1 topic-pool mode), `--language en`,
+`--dedup-store pgvector`, `--target-count 10` per batch (the pool samples 5 topics per order
+regardless of count, so one 100-question order would have been 5 topics wide).
+
+| Run | Ordered | Delivered | MCQ | open `text` |
+|-----|---------|-----------|-----|-------------|
+| Plain (11 batches) | 106 | 100 | 6 | 94 |
+| `--mcq-bias` (7 batches) | 106 | 64 | 57 | 7 |
+| **Total new** | 212 | **164** | **63** | **101** |
+
+**What improved since the 2026-06-18 audit.** Sourcing now honours the topic pool (concrete,
+cross-domain topics instead of the generic listicle feed), pgvector dedup fires for real
+(2 drops), and `--mcq-bias` produces a genuine MCQ contract — **89% of what survives it is
+`text_multichoice`**, versus 1/10 in the audit. The park's biggest lever is largely fixed.
+
+**F-a (NEW, root cause) — MCQ sub-batch validation is all-or-nothing, and it is the real yield
+killer.** `--mcq-bias` fans out into per-pattern sub-batches and parses each into
+`MCQBatchOutput`. If *one* question in a sub-batch comes back as open `text` with
+`possible_answers: null`, Pydantic rejects the **whole sub-batch** and every sibling question is
+discarded with it. Measured: 64/106 delivered (60%), one batch collapsed to 4/16. So the
+audit's diagnosis ("the model won't emit MCQ") is now wrong twice over — it *does* emit MCQ, and
+what we lose we lose to sibling-kill, not to model refusal. Fix shape: per-question salvage
+(keep the valid siblings, drop the offender) rather than a stricter prompt.
+
+**F-b — the CLI omits `TopUpStage`, so every short pack ships short.** `scripts/generate_pack.py`
+wires sourcing → generation → verification → scoring → dedup → persist. The worker path also runs
+`TopUpStage` (#103 F5: backfill to `target_count`, fail below 80%). On the CLI a pack that loses
+questions downstream just delivers less — this is the whole reason the plain run needed 11 batches
+for 100 questions. One-line-ish fix, and it makes F-a far less visible.
+
+**F-c — `cost_cents` on the CLI is structurally always 0.** Every stage returns `cost_cents=0`
+and only the worker drains `app.cost_tracking`, so the CLI's printed cost and the persisted
+`questions.cost_cents` are meaningless. This run's real spend is unmeasured.
+
+**F-d — source URLs are attributed per-pack, not per-question.** Spot-check: an airport-runway
+question carries a Library-of-Alexandria URL from a sibling question's fact. F8 ("non-null
+`source_url`") passes while the attribution is wrong, which is worse than null for a
+fact-check pass.
+
+**F-e — no difficulty spread.** All 164 rows are `difficulty=medium`, `category=general`.
+
+**Not yet done on this batch:** no `/score-questions` or `/verify-questions` pass, no human
+review, no prod import.
+
 ## Acceptance
 
 - Track A: an HTML report exists with ≥3 type samples, each with auto-score + fact verdict, and a

@@ -1,7 +1,7 @@
 # Issue 130: UI stays English when the quiz language is Slovak — mixed-language app
 
-**Triage:** ux · needs-triage
-**Status:** Filed 2026-07-28 by the founder. No analysis, no research done yet — deliberately parked as a research + design task. Needs `/research` on best practices, then `/prepare-issue`.
+**Triage:** ux · ready
+**Status:** Researched 2026-07-28 → [`docs/research/research-130-ui-vs-content-language.md`](../research/research-130-ui-vs-content-language.md). **Founder picked Option B on 2026-07-28**: two decoupled lists — many quiz-content languages, exactly two interface languages (English + Slovak). Implementation in progress.
 **Created:** 2026-07-28
 
 ## Symptom
@@ -23,9 +23,27 @@ The language models behind the questions handle many languages out of the box, s
 
 Outward-sourced research with citations, prior art first (how do other multilingual / AI-content apps solve this). **No research in this session — founder asked to file only.**
 
-## Not in scope (yet)
+## Decided approach (Option B, founder 2026-07-28)
 
-No implementation, no localization files, no picker changes until the approach is decided.
+Content languages and interface languages are two separate lists that grow at different speeds.
+
+- **Quiz language** — stays as is: 10 languages, free to extend, drives questions, answers, voice and speech recognition.
+- **App language** — English and Slovak only. An interface language is a permanent maintenance commitment, so it is added only when a native speaker can review it.
+- **No second in-app picker.** iOS already exposes a per-app interface language (Settings → Trubbo → Preferred Language) as soon as the bundle ships more than one localization. Settings gets a read-only row that deep-links there.
+- **No runtime/on-the-fly translation** of the interface: non-deterministic, costs a model call on the hot path, and would break the fixed-phrase voice command lexicon.
+
+Rejected: English-only forever (leaves the reported symptom in place) and translating into all 10 quiz languages (research measured up to 1 in 6 machine-translated UI strings carrying an error, and 8 of those languages have no reviewer).
+
+## Tasks
+
+- [ ] Slovak translations for the String Catalog (274 keys), translated with per-string context, founder-reviewed
+- [ ] Declare `sk` as a supported localization so the iOS per-app language row appears
+- [ ] Settings: caption the Quiz language row, add the read-only App language row deep-linking to iOS settings
+- [ ] Verify both interface languages on the simulator, no clipped or wrapped hero texts in Slovak
+
+## Not in scope
+
+Interface languages beyond English and Slovak. Any change to the quiz-language list.
 
 ## Related
 

@@ -7,106 +7,119 @@
 //
 
 #if DEBUG
-import Foundation
+    import Foundation
 
-@MainActor
-final class MockPurchaseService: PurchaseService {
+    @MainActor
+    final class MockPurchaseService: PurchaseService {
+        // MARK: - Configuration
 
-    // MARK: - Configuration
+        /// Return value for `loadOfferings`. Defaults to all three pinned packages.
+        var stubbedOfferings: PurchasableOfferings? = PurchasableOfferings(
+            monthly: PurchasableProduct(id: StoreProduct.monthlySubId, displayPrice: "$4.99", displayName: "Hangs Unlimited (Monthly)"),
+            annual: PurchasableProduct(id: StoreProduct.annualSubId, displayPrice: "$29.99", displayName: "Hangs Unlimited (Annual)"),
+            pack: PurchasableProduct(id: StoreProduct.packId, displayPrice: "$1.99", displayName: "+100 Questions")
+        )
 
-    /// Return value for `loadOfferings`. Defaults to all three pinned packages.
-    var stubbedOfferings: PurchasableOfferings? = PurchasableOfferings(
-        monthly: PurchasableProduct(id: StoreProduct.monthlySubId, displayPrice: "$4.99", displayName: "Hangs Unlimited (Monthly)"),
-        annual: PurchasableProduct(id: StoreProduct.annualSubId, displayPrice: "$29.99", displayName: "Hangs Unlimited (Annual)"),
-        pack: PurchasableProduct(id: StoreProduct.packId, displayPrice: "$1.99", displayName: "+100 Questions")
-    )
+        /// Return value for `purchase`. Defaults to `.success` with the
+        /// entitlement active (the happy subscription path).
+        var stubbedPurchaseOutcome: PurchaseOutcome = .success(unlimitedActive: true)
 
-    /// Return value for `purchase`. Defaults to `.success` with the
-    /// entitlement active (the happy subscription path).
-    var stubbedPurchaseOutcome: PurchaseOutcome = .success(unlimitedActive: true)
+        /// If non-nil, `purchase` throws this error instead of returning an outcome.
+        var stubbedPurchaseError: Error? = nil
 
-    /// If non-nil, `purchase` throws this error instead of returning an outcome.
-    var stubbedPurchaseError: Error? = nil
+        /// If `true`, `restore()` throws a generic error.
+        var stubbedRestoreShouldFail: Bool = false
 
-    /// If `true`, `restore()` throws a generic error.
-    var stubbedRestoreShouldFail: Bool = false
+        /// Return value for `currentlyEntitled`. Defaults to `false`.
+        var stubbedIsEntitled: Bool = false
 
-    /// Return value for `currentlyEntitled`. Defaults to `false`.
-    var stubbedIsEntitled: Bool = false
+        /// Optional stall run *inside* `purchase` / `restore` before they resolve.
+        /// The deterministic mock otherwise completes instantly, so the
+        /// `.purchasing` / `.restoring` in-flight window is never observable — a
+        /// gate that suspends (e.g. a long `Task.sleep`) lets UI-test screenshots
+        /// and ViewInspector tests pin the narrating-CTA state (#129).
+        var purchaseGate: (() async -> Void)?
+        var restoreGate: (() async -> Void)?
 
-    // MARK: - Call Tracking
+        // MARK: - Call Tracking
 
-    var loadOfferingsCallCount: Int = 0
-    var purchaseCallCount: Int = 0
-    var restoreCallCount: Int = 0
-    var currentlyEntitledCallCount: Int = 0
-    var logInCallCount: Int = 0
-    var lastLogInAppUserID: String?
+        var loadOfferingsCallCount: Int = 0
+        var purchaseCallCount: Int = 0
+        var restoreCallCount: Int = 0
+        var currentlyEntitledCallCount: Int = 0
+        var logInCallCount: Int = 0
+        var lastLogInAppUserID: String?
 
-    // MARK: - Entitlement Stream
+        // MARK: - Entitlement Stream
 
-    private let continuation: AsyncStream<EntitlementUpdate>.Continuation
-    let entitlementUpdates: AsyncStream<EntitlementUpdate>
+        private let continuation: AsyncStream<EntitlementUpdate>.Continuation
+        let entitlementUpdates: AsyncStream<EntitlementUpdate>
 
-    init() {
-        var cont: AsyncStream<EntitlementUpdate>.Continuation!
-        self.entitlementUpdates = AsyncStream { cont = $0 }
-        self.continuation = cont
-    }
-
-    /// Emit a synthetic entitlement update to the transaction listener.
-    func emitEntitlementUpdate(_ update: EntitlementUpdate) {
-        continuation.yield(update)
-    }
-
-    // MARK: - PurchaseService
-
-    func loadOfferings() async -> PurchasableOfferings? {
-        loadOfferingsCallCount += 1
-        return stubbedOfferings
-    }
-
-    func purchase(productID: String) async throws -> PurchaseOutcome {
-        purchaseCallCount += 1
-        if let error = stubbedPurchaseError {
-            throw error
+        init() {
+            var cont: AsyncStream<EntitlementUpdate>.Continuation!
+            entitlementUpdates = AsyncStream { cont = $0 }
+            continuation = cont
         }
-        return stubbedPurchaseOutcome
-    }
 
-    func restore() async throws {
-        restoreCallCount += 1
-        if stubbedRestoreShouldFail {
-            throw MockPurchaseError.restoreFailed
+        /// Emit a synthetic entitlement update to the transaction listener.
+        func emitEntitlementUpdate(_ update: EntitlementUpdate) {
+            continuation.yield(update)
+        }
+
+        // MARK: - PurchaseService
+
+        func loadOfferings() async -> PurchasableOfferings? {
+            loadOfferingsCallCount += 1
+            return stubbedOfferings
+        }
+
+        func purchase(productID _: String) async throws -> PurchaseOutcome {
+            purchaseCallCount += 1
+            if let purchaseGate {
+                await purchaseGate()
+            }
+            if let error = stubbedPurchaseError {
+                throw error
+            }
+            return stubbedPurchaseOutcome
+        }
+
+        func restore() async throws {
+            restoreCallCount += 1
+            if let restoreGate {
+                await restoreGate()
+            }
+            if stubbedRestoreShouldFail {
+                throw MockPurchaseError.restoreFailed
+            }
+        }
+
+        func currentlyEntitled(entitlementId _: String) async -> Bool {
+            currentlyEntitledCallCount += 1
+            return stubbedIsEntitled
+        }
+
+        func logIn(appUserID: String) async {
+            logInCallCount += 1
+            lastLogInAppUserID = appUserID
         }
     }
 
-    func currentlyEntitled(entitlementId: String) async -> Bool {
-        currentlyEntitledCallCount += 1
-        return stubbedIsEntitled
+    // Stable `Mirror` output so snapshot tests (`.dump`) that transitively reflect
+    // a StoreManager don't pick up the AsyncStream continuation's opaque internals,
+    // which vary across runs depending on observer registration timing. Variants
+    // remain distinguishable via StoreManager._offerings and PaywallView.limitError.
+    extension MockPurchaseService: CustomReflectable {
+        nonisolated var customMirror: Mirror {
+            Mirror(self, children: [])
+        }
     }
 
-    func logIn(appUserID: String) async {
-        logInCallCount += 1
-        lastLogInAppUserID = appUserID
-    }
-}
+    enum MockPurchaseError: LocalizedError {
+        case restoreFailed
 
-// Stable `Mirror` output so snapshot tests (`.dump`) that transitively reflect
-// a StoreManager don't pick up the AsyncStream continuation's opaque internals,
-// which vary across runs depending on observer registration timing. Variants
-// remain distinguishable via StoreManager._offerings and PaywallView.limitError.
-extension MockPurchaseService: CustomReflectable {
-    nonisolated var customMirror: Mirror {
-        Mirror(self, children: [])
+        var errorDescription: String? {
+            "Mock restore failed"
+        }
     }
-}
-
-enum MockPurchaseError: LocalizedError {
-    case restoreFailed
-
-    var errorDescription: String? {
-        "Mock restore failed"
-    }
-}
 #endif

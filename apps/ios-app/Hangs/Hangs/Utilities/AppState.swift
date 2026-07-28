@@ -37,7 +37,17 @@ final class AppState: ObservableObject {
                 persistenceStore = mocks.persistence
                 silenceDetectionService = mocks.silence
                 sttService = mocks.stt
-                self.storeManager = StoreManager(purchaseService: MockPurchaseService())
+                let purchaseMock = MockPurchaseService()
+                // `--ui-test-purchase-stall` (#129): suspend purchase/restore so
+                // the paywall's `.purchasing`/`.restoring` narrating-CTA states
+                // stay on screen long enough to screenshot. Without it the mock
+                // resolves instantly and the in-flight window is never visible.
+                if CommandLine.arguments.contains("--ui-test-purchase-stall") {
+                    let stall: () async -> Void = { try? await Task.sleep(for: .seconds(600)) }
+                    purchaseMock.purchaseGate = stall
+                    purchaseMock.restoreGate = stall
+                }
+                self.storeManager = StoreManager(purchaseService: purchaseMock)
                 self.authService = AuthService(baseURL: Config.apiBaseURL)
                 packOrderService = MockPackOrderService()
                 storeManager.onPurchaseSuccess = { [weak self] in

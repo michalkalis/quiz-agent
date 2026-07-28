@@ -45,6 +45,12 @@ enum StoreProduct {
 enum PurchaseState: Equatable {
     case idle
     case purchasing(productID: String)
+    /// A restore is in flight. Restore acts on the account, not on any one
+    /// product, so it carries no productID — the paywall renders this as the
+    /// blue "Restoring purchases…" narrating CTA (#129). Symmetric with
+    /// `.purchasing`: the single in-flight signal the paywall reads, so no
+    /// second store operation can start while it is set.
+    case restoring
     /// `productID` is nil for a restore (the restored product isn't known).
     case success(productID: String?)
     /// RC confirmed the purchase (receipt is real, `checkPurchaseStatus()` ran)
@@ -130,6 +136,14 @@ final class StoreManager: ObservableObject {
     /// Purchases a package by product id — either subscription (monthly/annual)
     /// or the consumable pack. Only a subscription purchase flips `isPurchased`.
     func purchase(productID: String) async {
+        // Reentrancy guard (#129 scope A): never start a second store operation
+        // while one is in flight. The paywall already disables every purchase
+        // trigger during an in-flight window (the CTA becomes a non-tappable
+        // narrator, the rows dim + disable), but the guard makes an overlapping
+        // call impossible regardless of the caller. `isLoading` is the single
+        // "any store op in flight" flag, set true around both purchase and
+        // restore below.
+        guard !isLoading else { return }
         isLoading = true
         purchaseError = nil
         purchaseState = .purchasing(productID: productID)
@@ -139,7 +153,7 @@ final class StoreManager: ObservableObject {
             let outcome = try await purchaseService.purchase(productID: productID)
 
             switch outcome {
-            case .success(let unlimitedActive):
+            case let .success(unlimitedActive):
                 let isSubscription = productID == StoreProduct.monthlySubId
                     || productID == StoreProduct.annualSubId
                 if isSubscription && !unlimitedActive {
@@ -192,7 +206,12 @@ final class StoreManager: ObservableObject {
     /// this on appear so a previous attempt's outcome doesn't leak into a new
     /// presentation. No-op mid-purchase.
     func resetPurchaseState() {
-        if case .purchasing = purchaseState { return }
+        // Never clear an in-flight attempt — a paywall re-appear mid-purchase
+        // or mid-restore must not wipe the narrating state (#129).
+        switch purchaseState {
+        case .purchasing, .restoring: return
+        default: break
+        }
         purchaseState = .idle
         purchaseError = nil
     }
@@ -208,8 +227,13 @@ final class StoreManager: ObservableObject {
     /// buyer was silently told "nothing to restore" even though the server
     /// could have recovered their credits.
     func restorePurchases() async {
+        // Same reentrancy guard as `purchase()` — restore is a store operation
+        // too, and while it runs the paywall shows the blue narrating CTA with
+        // every other trigger disabled (#129).
+        guard !isLoading else { return }
         isLoading = true
         purchaseError = nil
+        purchaseState = .restoring
 
         do {
             try await purchaseService.restore()

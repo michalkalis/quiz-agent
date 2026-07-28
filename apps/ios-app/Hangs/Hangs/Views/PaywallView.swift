@@ -78,7 +78,7 @@ struct PaywallView: View {
     private var paywallBody: some View {
         ScrollView {
             VStack(spacing: Theme.Hangs.Spacing.xl) {
-                if case .success(let productID) = storeManager.purchaseState {
+                if case let .success(productID) = storeManager.purchaseState {
                     purchaseSuccessBlock(productID: productID)
                         .padding(.top, Theme.Hangs.Spacing.xxl)
                 } else if case .activating = storeManager.purchaseState {
@@ -153,8 +153,8 @@ struct PaywallView: View {
                     .accessibilityHidden(true)
 
                 Text(productID == StoreProduct.packId
-                     ? "100 questions were added to your account."
-                     : "Unlimited questions are now active.")
+                    ? "100 questions were added to your account."
+                    : "Unlimited questions are now active.")
                     .font(.hangsBody(15))
                     .foregroundColor(Theme.Hangs.Colors.muted)
                     .multilineTextAlignment(.center)
@@ -274,6 +274,50 @@ struct PaywallView: View {
         }
     }
 
+    // MARK: - In-flight activity (#129 "The Button Narrates")
+
+    /// What the store is doing right now, derived from `purchaseState` — the
+    /// single source the whole in-flight paywall renders from. During any of
+    /// these the CTA becomes a non-tappable status narrator and every purchase
+    /// trigger dims + disables (no second purchase can start).
+    private enum PaywallActivity: Equatable {
+        case idle
+        case purchasing(productID: String)
+        case restoring
+    }
+
+    private var activity: PaywallActivity {
+        switch storeManager.purchaseState {
+        case let .purchasing(id): return .purchasing(productID: id)
+        case .restoring: return .restoring
+        default: return .idle
+        }
+    }
+
+    /// True while any store operation is in flight — gates dimming + disabling.
+    private var isBusy: Bool { activity != .idle }
+
+    private func productID(for plan: PaywallPlan) -> String {
+        plan == .annual ? StoreProduct.annualSubId : StoreProduct.monthlySubId
+    }
+
+    /// The plan whose subscription is the exact product being purchased (stays
+    /// bright with a full check — the highlight is correct here).
+    private func isPurchasing(_ plan: PaywallPlan) -> Bool {
+        activity == .purchasing(productID: productID(for: plan))
+    }
+
+    private var isPurchasingPack: Bool {
+        activity == .purchasing(productID: StoreProduct.packId)
+    }
+
+    /// A control recedes to 24% when the store is busy and it is not the subject
+    /// of the current operation.
+    private func dimmed(_ isSubject: Bool) -> Bool { isBusy && !isSubject }
+
+    private static let dimmedOpacity: Double = 0.24
+    private static let restoreFadedOpacity: Double = 0.35
+
     private var planPicker: some View {
         VStack(spacing: 10) {
             if let annual = storeManager.offerings?.annual {
@@ -281,6 +325,7 @@ struct PaywallView: View {
                     title: "Annual",
                     price: "\(annual.displayPrice) / year",
                     badge: "SAVE 50%",
+                    plan: .annual,
                     isSelected: effectivePlan == .annual
                 ) {
                     selectedPlan = .annual
@@ -293,6 +338,7 @@ struct PaywallView: View {
                     title: "Monthly",
                     price: "\(monthly.displayPrice) / month",
                     badge: nil,
+                    plan: .monthly,
                     isSelected: effectivePlan == .monthly
                 ) {
                     selectedPlan = .monthly
@@ -305,20 +351,33 @@ struct PaywallView: View {
                     .font(.hangsBody(12, weight: .medium))
                     .foregroundColor(Theme.Hangs.Colors.mutedFaint)
                     .padding(.top, 2)
+                    // Recedes while any purchase/restore is in flight — the pack
+                    // is no longer the offered path while something is buying.
+                    .opacity(isBusy ? Self.dimmedOpacity : 1)
 
                 packCard(pack)
             }
         }
     }
 
+    /// The pink selection radio, demoted (#129 decision 2) to a hollow outline
+    /// when the card stays selected while a *different* product is in flight.
+    private enum PlanCheck { case none, solid, hollow }
+
     private func planCard(
         title: LocalizedStringKey,
         price: LocalizedStringKey,
         badge: LocalizedStringKey?,
+        plan: PaywallPlan,
         isSelected: Bool,
         action: @escaping () -> Void
     ) -> some View {
-        Button(action: action) {
+        // Bright only when idle or when this plan's subscription is the exact
+        // product being bought; otherwise recede to 24% (#129).
+        let isSubject = isPurchasing(plan)
+        let isDimmed = dimmed(isSubject)
+        let check: PlanCheck = isSelected ? (isDimmed ? .hollow : .solid) : .none
+        return Button(action: action) {
             HStack(spacing: Theme.Hangs.Spacing.sm) {
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 8) {
@@ -340,7 +399,7 @@ struct PaywallView: View {
                         .foregroundColor(Theme.Hangs.Colors.muted)
                 }
                 Spacer()
-                planRadio(isSelected: isSelected)
+                planRadio(check)
             }
             .padding(.horizontal, Theme.Hangs.Spacing.md)
             .padding(.vertical, 14)
@@ -357,18 +416,31 @@ struct PaywallView: View {
             )
         }
         .buttonStyle(.plain)
+        .opacity(isDimmed ? Self.dimmedOpacity : 1)
+        // No plan selection change (or a second purchase) may start while a
+        // store operation is in flight — reentrancy is impossible (#129).
+        .disabled(isBusy)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
-    private func planRadio(isSelected: Bool) -> some View {
+    private func planRadio(_ style: PlanCheck) -> some View {
         ZStack {
-            if isSelected {
+            switch style {
+            case .solid:
                 Circle()
                     .fill(Theme.Hangs.Colors.pink)
                 Image(systemName: "checkmark")
                     .font(.system(size: 12, weight: .bold))
                     .foregroundColor(.white)
-            } else {
+            case .hollow:
+                // Demoted: pink outline + pink check, still readable as "this is
+                // what you'd buy next" without competing with the busy product.
+                Circle()
+                    .strokeBorder(Theme.Hangs.Colors.pink, lineWidth: 1.5)
+                Image(systemName: "checkmark")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(Theme.Hangs.Colors.pink)
+            case .none:
                 Circle()
                     .strokeBorder(Theme.Hangs.Colors.subtleBorder, lineWidth: 1.5)
             }
@@ -378,37 +450,48 @@ struct PaywallView: View {
     }
 
     /// One-time consumable pack — tapping the card purchases directly (the
-    /// primary CTA is subscription-only per z8TS6).
+    /// primary CTA is subscription-only per z8TS6). Drawn deliberately lighter
+    /// than the plan cards (smaller title, tighter padding, smaller price pill)
+    /// so it reads as the secondary escape hatch it is (#129 idle spec).
     private func packCard(_ pack: PurchasableProduct) -> some View {
-        Button {
+        // The pack is the "source" of the busy state while it is being bought:
+        // no row spinner — the purple filled pill + leading dot point at it, and
+        // the purple narrating CTA does the same (#129). Otherwise it dims.
+        let isSource = isPurchasingPack
+        let isDimmed = dimmed(isSource)
+        return Button {
             Task { await storeManager.purchase(productID: pack.id) }
         } label: {
             HStack(spacing: Theme.Hangs.Spacing.sm) {
+                if isSource {
+                    Circle()
+                        .fill(Theme.Hangs.Colors.accentPrimary)
+                        .frame(width: 6, height: 6)
+                        .accessibilityHidden(true)
+                }
                 VStack(alignment: .leading, spacing: 3) {
                     Text("100 Question Pack")
-                        .font(.hangsBody(15, weight: .semibold))
+                        .font(.hangsBody(14, weight: .semibold))
                         .foregroundColor(Theme.Hangs.Colors.ink)
                     Text("One-time purchase · never expires")
                         .font(.hangsBody(12))
                         .foregroundColor(Theme.Hangs.Colors.muted)
                 }
                 Spacer()
-                Group {
-                    if storeManager.purchaseState == .purchasing(productID: pack.id) {
-                        ProgressView()
-                            .tint(Theme.Hangs.Colors.accentPrimary)
-                    } else {
-                        Text(verbatim: pack.displayPrice)
-                            .font(.hangsBody(14, weight: .bold))
-                            .foregroundColor(Theme.Hangs.Colors.accentPrimary)
-                    }
-                }
-                .padding(.horizontal, 14)
-                .padding(.vertical, 8)
-                .background(Capsule().fill(Theme.Hangs.Colors.accentPrimarySoft))
+                Text(verbatim: pack.displayPrice)
+                    .font(.hangsBody(13, weight: .bold))
+                    .foregroundColor(isSource ? .white : Theme.Hangs.Colors.accentPrimary)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .frame(minHeight: 30)
+                    .background(
+                        Capsule().fill(
+                            isSource ? Theme.Hangs.Colors.accentPrimary : Theme.Hangs.Colors.accentPrimarySoft
+                        )
+                    )
             }
             .padding(.horizontal, Theme.Hangs.Spacing.md)
-            .padding(.vertical, 14)
+            .padding(.vertical, 12)
             .background(
                 RoundedRectangle(cornerRadius: Theme.Hangs.Radius.cardInner, style: .continuous)
                     .fill(Theme.Hangs.Colors.bgCard)
@@ -419,45 +502,83 @@ struct PaywallView: View {
             )
         }
         .buttonStyle(.plain)
-        .disabled(storeManager.isLoading)
+        .opacity(isDimmed ? Self.dimmedOpacity : 1)
+        // Disabled whenever busy: while it is the source (already buying) and
+        // while another product is in flight — no overlapping purchase (#129).
+        .disabled(isBusy)
         .accessibilityIdentifier("paywall-purchase-pack-button")
     }
 
     // MARK: - CTA stack
 
+    /// The single status surface (#129 "The Button Narrates"): the Subscribe CTA
+    /// while idle, and — while a purchase or restore is in flight — a tinted,
+    /// non-tappable narrator that spells out exactly what is happening. It never
+    /// looks like a dead Subscribe button because it changes colour and copy.
+    @ViewBuilder
+    private var ctaButton: some View {
+        switch activity {
+        case let .purchasing(id) where id == StoreProduct.packId:
+            // Purple: the pack. Literal label mirrors the pack row's own title
+            // (#56 — never interpolate RC's runtime product name into a key).
+            PaywallNarratingCTA(title: "Buying 100 Question Pack…", tint: Theme.Hangs.Colors.accentPrimary)
+                .accessibilityIdentifier("paywall-cta-narrating")
+        case let .purchasing(id) where id == StoreProduct.annualSubId:
+            PaywallNarratingCTA(
+                title: "Buying Annual — \(annualPriceString) / year…",
+                tint: Theme.Hangs.Colors.pink
+            )
+            .accessibilityIdentifier("paywall-cta-narrating")
+        case let .purchasing(id) where id == StoreProduct.monthlySubId:
+            PaywallNarratingCTA(
+                title: "Buying Monthly — \(monthlyPriceString) / month…",
+                tint: Theme.Hangs.Colors.pink
+            )
+            .accessibilityIdentifier("paywall-cta-narrating")
+        case .restoring:
+            // Blue: restore acts on the account, not a product.
+            PaywallNarratingCTA(title: "Restoring purchases…", tint: Theme.Hangs.Colors.blue)
+                .accessibilityIdentifier("paywall-cta-narrating")
+        default:
+            subscribeButton
+        }
+    }
+
+    /// The idle Subscribe CTA — buys the selected plan. No longer consumes the
+    /// global `storeManager.isLoading`: the in-flight window is the narrating CTA
+    /// above, so this button is only ever shown while idle (#129 scope A).
+    @ViewBuilder
+    private var subscribeButton: some View {
+        if let product = selectedProduct {
+            // #56: title param is LocalizedStringKey; pass the interpolated
+            // literal directly so the compiler extracts "Subscribe — %@ / year"
+            // (the displayPrice is a runtime placeholder, not translatable).
+            if effectivePlan == .annual {
+                HangsPrimaryButton(title: "Subscribe — \(product.displayPrice) / year", height: 52) {
+                    Task { await storeManager.purchase(productID: product.id) }
+                }
+                .accessibilityIdentifier("paywall-purchase-button")
+            } else {
+                HangsPrimaryButton(title: "Subscribe — \(product.displayPrice) / month", height: 52) {
+                    Task { await storeManager.purchase(productID: product.id) }
+                }
+                .accessibilityIdentifier("paywall-purchase-button")
+            }
+        } else {
+            // Offerings not yet loaded — the load placeholder (out of #129 scope).
+            HangsPrimaryButton(title: "Subscribe", isLoading: true, height: 52) {}
+                .accessibilityIdentifier("paywall-purchase-button")
+        }
+    }
+
+    /// Locale-formatted subscription prices for the narrating CTA (empty only in
+    /// the impossible case of an in-flight product with no matching offering).
+    private var annualPriceString: String { storeManager.offerings?.annual?.displayPrice ?? "" }
+    private var monthlyPriceString: String { storeManager.offerings?.monthly?.displayPrice ?? "" }
+
     private var paywallCTAStack: some View {
         VStack(spacing: Theme.Hangs.Spacing.xs) {
-            if let product = selectedProduct {
-                // #56: title param is LocalizedStringKey; pass the interpolated
-                // literal directly so the compiler extracts "Subscribe — %@ / year"
-                // (the displayPrice is a runtime placeholder, not translatable).
-                if effectivePlan == .annual {
-                    HangsPrimaryButton(
-                        title: "Subscribe — \(product.displayPrice) / year",
-                        isLoading: storeManager.isLoading,
-                        height: 52
-                    ) {
-                        Task { await storeManager.purchase(productID: product.id) }
-                    }
-                    .accessibilityIdentifier("paywall-purchase-button")
-                } else {
-                    HangsPrimaryButton(
-                        title: "Subscribe — \(product.displayPrice) / month",
-                        isLoading: storeManager.isLoading,
-                        height: 52
-                    ) {
-                        Task { await storeManager.purchase(productID: product.id) }
-                    }
-                    .accessibilityIdentifier("paywall-purchase-button")
-                }
-            } else {
-                HangsPrimaryButton(
-                    title: "Subscribe",
-                    isLoading: true,
-                    height: 52
-                ) {}
-                    .accessibilityIdentifier("paywall-purchase-button")
-            }
+            ctaButton
 
             HangsGhostButton(
                 title: "Restore purchases",
@@ -466,6 +587,10 @@ struct PaywallView: View {
             ) {
                 Task { await storeManager.restorePurchases() }
             }
+            // Fades in place while any store op is in flight (#129) — including
+            // its own restore, which the blue narrating CTA reports instead.
+            .opacity(isBusy ? Self.restoreFadedOpacity : 1)
+            .disabled(isBusy)
             .accessibilityIdentifier("paywall-restore-button")
 
             HangsGhostButton(
@@ -579,6 +704,69 @@ struct PaywallView: View {
             }
             .accessibilityIdentifier("paywall-close-button")
         }
+    }
+}
+
+// MARK: - Narrating CTA (#129 "The Button Narrates")
+
+/// The in-flight status surface for the paywall: a tinted pill that names the
+/// product being processed, with an indeterminate progress track along the
+/// bottom edge. Deliberately NOT a `Button` — it is a status, not a control, so
+/// it is non-tappable by construction, and because it changes colour + copy it
+/// never reads as a greyed-out dead Subscribe button (issue #129, decision 1).
+private struct PaywallNarratingCTA: View {
+    let title: LocalizedStringKey
+    let tint: Color
+    var height: CGFloat = 52
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var animating = false
+
+    var body: some View {
+        Text(title)
+            // Hero-text rule (#96 P3): single line, scale down before wrapping —
+            // "Buying 100 Question Pack…" must never break to two lines.
+            .font(.hangsButton)
+            .foregroundColor(.white)
+            .lineLimit(1)
+            .minimumScaleFactor(0.5)
+            .padding(.horizontal, Theme.Hangs.Spacing.md)
+            .frame(maxWidth: .infinity)
+            .frame(height: height)
+            .background(
+                ZStack(alignment: .bottom) {
+                    Capsule().fill(tint)
+                    indeterminateTrack
+                }
+                .clipShape(Capsule())
+            )
+            .hangsShadow(Theme.Hangs.Shadow.cta)
+            .accessibilityElement()
+            .accessibilityLabel(title)
+            .accessibilityAddTraits(.updatesFrequently)
+    }
+
+    /// A thin segment that slides back and forth along the bottom edge — an
+    /// indeterminate "working" signal, no spinner. Honors Reduce Motion by
+    /// resting static rather than looping.
+    private var indeterminateTrack: some View {
+        GeometryReader { geo in
+            let trackWidth = geo.size.width
+            let segmentWidth = trackWidth * 0.35
+            Capsule()
+                .fill(Color.white.opacity(0.9))
+                .frame(width: segmentWidth, height: 3)
+                .offset(x: animating ? trackWidth - segmentWidth : 0)
+                .animation(
+                    reduceMotion ? nil : .easeInOut(duration: 1.1).repeatForever(autoreverses: true),
+                    value: animating
+                )
+        }
+        .frame(height: 3)
+        .padding(.horizontal, 6)
+        .padding(.bottom, 6)
+        .onAppear { animating = true }
+        .accessibilityHidden(true)
     }
 }
 

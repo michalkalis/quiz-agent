@@ -632,6 +632,36 @@
         }
       }
     },
+    "Buying 100 Question Pack…" : {
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kupujem Balík 100 otázok…"
+          }
+        }
+      }
+    },
+    "Buying Annual — %@ / year…" : {
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kupujem Ročne — %@ / rok…"
+          }
+        }
+      }
+    },
+    "Buying Monthly — %@ / month…" : {
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kupujem Mesačne — %@ / mesiac…"
+          }
+        }
+      }
+    },
     "CAN'T REACH\nTHE STORE" : {
       "localizations" : {
         "sk" : {
@@ -2985,6 +3015,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Obnoviť nákupy"
+          }
+        }
+      }
+    },
+    "Restoring purchases…" : {
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obnovujem nákupy…"
           }
         }
       }

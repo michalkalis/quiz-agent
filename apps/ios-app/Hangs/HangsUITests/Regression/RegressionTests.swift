@@ -251,6 +251,19 @@ final nonisolated class RegressionTests: XCTestCase {
             question.option("d").isHittable,
             "RS-mcq-long: the last option is off-screen — the long stem pushed the picker down"
         )
+
+        // Post-reveal the option cards legitimately take the stem's space back, so a
+        // ~300-char stem no longer fits — but it must still be REACHABLE by scrolling
+        // rather than dead-clipped (that distinction is the whole of #125's stem half;
+        // making the remainder *visible* without scrolling is Track B's layout call).
+        let beforeScroll = question.questionText.frame.minY
+        question.questionText.swipeUp()
+        XCTAssertNotEqual(
+            question.questionText.frame.minY,
+            beforeScroll,
+            accuracy: 0.5,
+            "RS-mcq-long: the stem region did not scroll post-reveal — the rest of the question is unreachable"
+        )
     }
 
     // MARK: - RS-paywall

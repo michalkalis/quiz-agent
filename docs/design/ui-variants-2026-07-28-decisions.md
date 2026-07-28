@@ -26,6 +26,24 @@ Colour-washed verdict field (verdict word + score inline), answer dominant, one 
 **#129 — Paywall in-flight states: Variant C "The Button Narrates"** (`issue-129-paywall-inflight-states.html`).
 The CTA is the single status surface and morphs per product (purple "Buying 100 Question Pack…", pink for the plan, blue for restore) with a progress track; no row spinners. Resolves the issue's decision 1 (CTA repurposed as narrator — no dead-looking button, no second purchase mid-flight) and decision 2 (pink selection check kept but demoted).
 
+## Addendum 2026-07-28 (later) — one ListenBar, text swaps
+
+Founder, on reviewing the voice-answer screen (`vywGO`): the app only ever shows **either**
+"LISTENING FOR COMMANDS" **or** "LISTENING — SAY A–D" — never both at once. So there is
+**one shared ListenBar component** (the #125A full-width 44pt bar, mute button absorbed),
+docked as the first footer row, whose text/accent swaps by mode:
+
+- **Command mode** — teal, "LISTENING FOR COMMANDS" (voice-answer question screens).
+- **Answer mode** — pink, "LISTENING — SAY A–D" (MCQ answering).
+- Match/no-match feedback stays #122C (teal sweep / amber breath) in both modes.
+
+Synced into Pencil same day: the floating `CmdListenBar` pill is gone from question screens
+(Home/Result keep it — commands only, no conflict); `McqListenBar` renamed `ListenBar`;
+the three 122C voice states (`vywGO`/`S5dYpE`/`BmeEu`) now use the docked bar; the states
+board gained a command-mode row; `note-one-listenbar` records the rule on canvas.
+This supersedes the HTML variant page `voice-answer-listening-bar.html` (A/B/C) — the
+founder's either/or insight collapses it to Variant A with swapped text.
+
 ## Follow-through
 
 1. **Pencil sync** — redraw all five picked variants into `design/quiz-agent.pen` in ONE session so V1 holds (draw #122C's glow language first, reuse it in #125A and #127C); founder reviews frames + `⌘S`.

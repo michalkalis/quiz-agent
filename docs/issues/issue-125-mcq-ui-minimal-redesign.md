@@ -1,7 +1,7 @@
 # Issue 125: MCQ screen: oversized layout, question text clipped, options+listening revealed too early
 
 **Triage:** bug · needs-triage
-**Status:** Filed 2026-07-28 from the founder's TestFlight field test. Both halves CONFIRMED by direct code read (layout squeeze + missing reveal gate); the redesign half is design-gated, not implementable as filed. **Track A (reveal gate) + the stem-clipping fix + Track C (regression coverage) DONE 2026-07-28. Track B (minimalist redesign) still design-gated — untouched.**
+**Status:** Filed 2026-07-28 from the founder's TestFlight field test. Both halves CONFIRMED by direct code read (layout squeeze + missing reveal gate); the redesign half is design-gated, not implementable as filed. **Track A (reveal gate) + the stem-clipping fix + Track C (regression coverage) DONE 2026-07-28. Track B (minimalist redesign): HTML variant picked 2026-07-28 — Variant A "Answer Grid" (see [ui-variants-2026-07-28-decisions.md](../design/ui-variants-2026-07-28-decisions.md)); next = Pencil sync, then code.**
 **Created:** 2026-07-28
 
 ## Symptom
@@ -63,6 +63,8 @@ Decided 2026-07-28 and implemented (Track A):
 - **Skip stays always visible** — the founder's report named only the options and the listening pill, and a driver must be able to bail out of a question they can't answer.
 - **"Reveal" = whichever comes first of: the running think/answer countdown hits 0, or `quizState` leaves `.askingQuestion` (recording started).** In the state machine those are the same moment on the happy path — every countdown expiry calls `startRecording()` — so both are wired and the result is latched per question. Latching matters because `startRecording()` can bail back to `.askingQuestion` (backgrounded, shared audio engine busy, capture failure) with no timer left running; without the latch the options would vanish again and the question would be unanswerable. Same reason for the fail-open case: with auto-record OFF *and* `answerTimeLimit == 0` no countdown ever arms, so the cards render from the start.
 - **Option card size (64/80pt) is untouched** — that is Track B's call, still design-gated.
+
+Decided 2026-07-28 (Track B, HTML variant pick): **Variant A "Answer Grid"** — 2×2 letter tiles halve the option block, 360pt stem floor at Anton 34, listening pill becomes a full-width bar absorbing the mute button (match/no-match visuals follow #122's ambient-glow per rule V1); SE-class 375×667 stands as the design floor. See `docs/design/ui-variants-2026-07-28-decisions.md`.
 
 ## Related
 

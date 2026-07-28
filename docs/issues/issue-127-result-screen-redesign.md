@@ -1,7 +1,7 @@
 # Issue 127: Result screen redesign: clipped header, missing correct answer and source on a wrong answer
 
 **Triage:** enhancement · needs-triage
-**Status:** Filed 2026-07-28 from the founder's TestFlight field test (three screenshots). Two sub-findings CONFIRMED in code; the header-clipping mechanism is UNPROVEN without the screenshots. The dominant ask is a design pass, not a patch. Needs `/prepare-issue` before an agent run.
+**Status:** Filed 2026-07-28 from the founder's TestFlight field test (three screenshots). Two sub-findings CONFIRMED in code; the header-clipping mechanism is UNPROVEN without the screenshots. The dominant ask is a design pass, not a patch. Needs `/prepare-issue` before an agent run. **2026-07-28: design gate PASSED — founder picked Variant C "Zero-Scroll Deck" with one modification (long content scrolls *inside* the answer/explanation card; the screen chrome itself never scrolls); see [ui-variants-2026-07-28-decisions.md](../design/ui-variants-2026-07-28-decisions.md). Next: Pencil sync, then code.**
 **Created:** 2026-07-28
 
 ## Symptom
@@ -56,6 +56,8 @@ Questions the design session must answer:
 - Re-sync frames into `design/quiz-agent.pen` and re-export `docs/design/frames/X4o4l.png` / `31AzE.png`.
 
 ## Founder decisions needed
+
+> **2026-07-28:** resolved by the HTML variant pick — **Variant C "Zero-Scroll Deck", modified**: answer dominates over the verdict; explanation inline within the answer card (scrolling internally when long) and shown on wrong answers too; footer consolidates to one row; "Try this question again" formally dropped. Detail in `docs/design/ui-variants-2026-07-28-decisions.md`.
 
 - **Explanation on wrong answers?** Show the source/explanation on wrong answers too (it is arguably most useful exactly there), or keep the asymmetry as an intentional "bonus trivia for getting it right" reward. Tradeoff: symmetry serves learning; asymmetry preserves the reward feel and keeps the wrong-answer screen shorter.
 - **What is dominant?** Verdict banner vs answer card vs score. Founder asked for this to be decided in a design pass, not defaulted by the agent.

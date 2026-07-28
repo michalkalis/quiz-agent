@@ -1,7 +1,7 @@
 # Issue 122: Voice commands: no recognition feedback + reconsider the Slovak "štart" wake word
 
 **Triage:** enhancement · needs-triage
-**Status:** Filed 2026-07-28 from the founder's TestFlight field test. Both halves CONFIRMED against the code (Track A: no visual match/no-match state exists; Track B: one shared `.start` word drives both quiz-start and recording-start). Track B is a founder wording decision that [#120 — Transcriber abstraction + Slovak voice commands](issue-120-transcriber-abstraction-slovak-commands.md) explicitly reserved for him; Track A needs a design pass before any code. Needs `/prepare-issue` before an agent run.
+**Status:** Filed 2026-07-28 from the founder's TestFlight field test. Both halves CONFIRMED against the code (Track A: no visual match/no-match state exists; Track B: one shared `.start` word drives both quiz-start and recording-start). Track B is a founder wording decision that [#120 — Transcriber abstraction + Slovak voice commands](issue-120-transcriber-abstraction-slovak-commands.md) explicitly reserved for him; Track A needs a design pass before any code. Needs `/prepare-issue` before an agent run. **2026-07-28: Track A design gate PASSED — founder picked Variant C "Ambient glow" from the HTML variants; see [ui-variants-2026-07-28-decisions.md](../design/ui-variants-2026-07-28-decisions.md) (rule V1: this treatment owns voice-command feedback app-wide). Next: Pencil sync, then code.**
 **Created:** 2026-07-28
 
 ## Symptom
@@ -61,6 +61,8 @@ The design session must answer:
 **Explicitly not in scope:** raising recognition accuracy itself. The founder's "I could imagine slightly better recognition" is the open engine comparison in #120 (DictationTranscriber `firstHypothesisMs`, pending his car legs) — do not retune thresholds here.
 
 ## Founder decisions needed
+
+> **2026-07-28:** decision 3 resolved by the HTML variant pick — **Variant C "Ambient glow"** (text-free bottom-third teal wash on match, amber breath on no-match; `docs/design/ui-variants-2026-07-28-decisions.md`). Decisions 1, 2 and 4 remain open.
 
 1. **Which Slovak word starts an answer recording?** Candidates, with tradeoffs (not a pick — #120 reserved this for you):
    - **"spusti"** (imperative of *spustiť*, launch) — idiomatic Slovak tech phrasing, multi-syllable, semantically generic so it can keep covering Home-start-quiz too. Not on your shortlist; surfaced as the strongest single-word-for-both option.

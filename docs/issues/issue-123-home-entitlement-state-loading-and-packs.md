@@ -1,7 +1,7 @@
 # Issue 123: Home: free-question count missing at launch, no loading placeholder, no pack/subscription state
 
 **Triage:** bug · Track A done — Track B design-gated
-**Status:** Filed 2026-07-28 from the founder's TestFlight field test; both halves CONFIRMED by direct code read. **Track A landed same day (`23b9e843`, worktree agent run):** `HomeView.freePlanCard` gained a `.loading` branch (spinner + "Loading your plan…", same single-row `HangsCard` shape as the failed placeholder so the slot never jumps), and `SettingsView.subscriptionPlanDisplay` returns "Loading…" instead of the wrong literal "Free" while `/usage` is in flight. 9 targeted tests green (`HomeFreePlanCardTests` 8/8 incl. the assertion that failed pre-fix, `SettingsSubscriptionPlanTests` 1/1); sim visual check done in light + dark against a deliberately stalled `/usage`. Remaining: **Track B** (pack credits + subscription tier on Home) — design-gated, HTML variants → founder pick → Pencil → code.
+**Status:** Filed 2026-07-28 from the founder's TestFlight field test; both halves CONFIRMED by direct code read. **Track A landed same day (`23b9e843`, worktree agent run):** `HomeView.freePlanCard` gained a `.loading` branch (spinner + "Loading your plan…", same single-row `HangsCard` shape as the failed placeholder so the slot never jumps), and `SettingsView.subscriptionPlanDisplay` returns "Loading…" instead of the wrong literal "Free" while `/usage` is in flight. 9 targeted tests green (`HomeFreePlanCardTests` 8/8 incl. the assertion that failed pre-fix, `SettingsSubscriptionPlanTests` 1/1); sim visual check done in light + dark against a deliberately stalled `/usage`. Remaining: **Track B** (pack credits + subscription tier on Home) — design-gated, HTML variants → founder pick → Pencil → code. **2026-07-28: founder picked Variant A "One adaptive balance card" (see [ui-variants-2026-07-28-decisions.md](../design/ui-variants-2026-07-28-decisions.md)); next = Pencil sync, then code.**
 **Created:** 2026-07-28
 
 ## Symptom
@@ -51,6 +51,8 @@ Consequence today: a free user holding pack credits sees only "N of 100 free que
 **Verification:** targeted HangsTests for the loading/failed/loaded branches plus the new entitlement states, and a sim visual check (light + dark) per the UI-verification rule.
 
 ## Founder decisions needed
+
+> **2026-07-28:** the Variant A pick implicitly resolves decision 3 — a free user's pack credits DO show on Home, folded into the card's combined free+credits total (`docs/design/ui-variants-2026-07-28-decisions.md`).
 
 1. **Loading placeholder treatment (Track A):** skeleton/shimmer bar · plain spinner in the card · static "Loading your plan…" text. Tradeoff — skeleton reads as "unknown duration" and best matches a variable Fly cold start, but is the most new styling; a spinner is cheapest and matches existing `HangsPrimaryButton` behaviour; static text is loudest for a driver's glance but least polished. Recommend deciding this one in-session so Track A can ship without waiting on Track B's design pass.
 2. **Does Track A ship independently of Track B?** Splitting means the blank-at-launch complaint is fixed now and the pack/subscription redesign follows the design gate. Bundling means one visual change but the founder's most-repeated complaint waits on a design session.

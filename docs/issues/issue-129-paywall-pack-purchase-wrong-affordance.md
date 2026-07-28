@@ -1,7 +1,7 @@
 # Issue 129: Paywall: buying the pack shows the loading state on the Subscribe button and keeps the plan selected
 
 **Triage:** bug · needs-triage
-**Status:** Filed 2026-07-28 from the founder's TestFlight field test. Root cause CONFIRMED by direct code read (every cited line verified); the *fix* is half state-plumbing, half UI design and is gated on a Pencil design pass + founder sign-off. Needs `/prepare-issue` before an agent run.
+**Status:** Filed 2026-07-28 from the founder's TestFlight field test. Root cause CONFIRMED by direct code read (every cited line verified); the *fix* is half state-plumbing, half UI design and is gated on a Pencil design pass + founder sign-off. Needs `/prepare-issue` before an agent run. **2026-07-28: design gate PASSED — founder picked Variant C "The Button Narrates" (resolves both founder decisions below); see [ui-variants-2026-07-28-decisions.md](../design/ui-variants-2026-07-28-decisions.md). Next: Pencil sync, then code.**
 **Created:** 2026-07-28
 
 ## Symptom
@@ -54,6 +54,8 @@ Questions the design session must answer (visual hierarchy, not code):
 - A paywall-level test asserting that a pack purchase in flight does **not** put the Subscribe CTA into its loading/disabled state — the assertion that fails on today's code.
 
 ## Founder decisions needed
+
+> **2026-07-28:** both resolved by the HTML variant pick — **Variant C "The Button Narrates"**: the CTA morphs into the status narrator for whichever product is in flight (not interactive mid-flight, never dead-looking, no row spinners); the pink selection check is kept but demoted. See `docs/design/ui-variants-2026-07-28-decisions.md`.
 
 1. **While a pack purchase is in flight, should the Subscribe CTA stay fully interactive (no spinner, tappable), or be disabled-but-not-spinning?** Tradeoff: fully interactive is the most honest reading of "you are not subscribing right now", but permits a second purchase sheet on top of the first; disabled-but-not-spinning prevents that at the cost of a briefly dead-looking primary CTA. (Same call applies to "Restore purchases".)
 2. **Should the Annual/Monthly card visually deselect during a pack purchase?** Tradeoff: keeping the pink check is defensible ("this is what you'd buy next") and the founder still read it as wrong; deselecting removes the contradiction but leaves the picker with no selection, which needs its own visual treatment and a rule for what happens after the pack purchase resolves.

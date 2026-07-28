@@ -580,7 +580,10 @@ struct SettingsView: View {
 
     private var subscriptionPlanDisplay: String {
         guard let usage = viewModel.usageInfo else {
-            return String(localized: "Free", comment: "Settings subscription row value before usage has loaded")
+            // #123 Track A: previously the literal "Free" — briefly told an
+            // unlimited subscriber they were on the free plan. Read as
+            // loading, not as a (possibly wrong) answer.
+            return String(localized: "Loading…", comment: "Settings subscription row value before usage has loaded")
         }
         if usage.isPremium {
             return String(localized: "Unlimited", comment: "Settings subscription row value for premium users")

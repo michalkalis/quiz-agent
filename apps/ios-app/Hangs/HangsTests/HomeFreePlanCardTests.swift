@@ -14,6 +14,46 @@ import Foundation
 import Testing
 import ViewInspector
 
+// MARK: - Helpers (duplicated per-suite convention, matches EntitlementReconcileTests)
+
+/// Spin the main serial executor until `predicate` holds or the deadline
+/// passes.
+@MainActor
+private func waitUntil(
+    _ predicate: @MainActor () -> Bool,
+    timeoutMillis: Int = 5000,
+    _ comment: Comment? = nil,
+    sourceLocation: SourceLocation = #_sourceLocation
+) async {
+    let deadline = ContinuousClock.now.advanced(by: .milliseconds(timeoutMillis))
+    while ContinuousClock.now < deadline {
+        if predicate() { return }
+        await Task.yield()
+        try? await Task.sleep(for: .milliseconds(1))
+    }
+    if predicate() { return }
+    Issue.record(comment ?? "waitUntil timed out after \(timeoutMillis)ms", sourceLocation: sourceLocation)
+}
+
+/// One-shot async gate: `wait()` suspends until `open()` is called. Lets a
+/// test hold the mocked `/usage` fetch in flight deterministically, so the
+/// loading-state assertion below isn't a wall-clock race.
+private actor OneShotGate {
+    private var isOpen = false
+    private var waiters: [CheckedContinuation<Void, Never>] = []
+
+    func wait() async {
+        if isOpen { return }
+        await withCheckedContinuation { waiters.append($0) }
+    }
+
+    func open() {
+        isOpen = true
+        waiters.forEach { $0.resume() }
+        waiters.removeAll()
+    }
+}
+
 @Suite("Home free-plan quota card (#87)")
 @MainActor
 struct HomeFreePlanCardTests {
@@ -84,18 +124,43 @@ struct HomeFreePlanCardTests {
         }
     }
 
-    @Test("Card is hidden until usage has loaded")
-    func noCardBeforeUsageLoads() async throws {
-        let vm = makeViewModel()
-        vm.usageInfo = nil
-        let view = HomeView(viewModel: vm)
+    @Test("Usage still loading shows a loading placeholder, never a blank slot (#123)")
+    func loadingUsageShowsPlaceholder() async throws {
+        let mock = MockNetworkService()
+        let gate = OneShotGate()
+        // Holds the launch fetch in flight, deterministically, so the
+        // assertion below observes .loading rather than racing a real fetch.
+        mock.getUsageGate = { await gate.wait() }
+        let vm = QuizViewModel(
+            networkService: mock,
+            audioService: MockAudioService(),
+            persistenceStore: MockPersistenceStore()
+        )
 
+        await waitUntil({ mock.getUsageCallCount >= 1 }, "launch usage fetch never started")
+        #expect(vm.usageLoadState == .loading)
+        #expect(vm.usageInfo == nil)
+
+        let view = HomeView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
+            // This is the assertion that failed on pre-#123 code: the card
+            // rendered EmptyView for the whole in-flight window instead of a
+            // visible loading placeholder.
+            #expect(throws: Never.self) {
+                try tree.find(viewWithAccessibilityIdentifier: "home.freePlanLoading")
+            }
+            // Neither the loaded card nor the failed-retry placeholder must
+            // render while still loading — exactly one state at a time.
             #expect(throws: (any Error).self) {
                 try tree.find(viewWithAccessibilityIdentifier: "home.freePlanCard")
             }
+            #expect(throws: (any Error).self) {
+                try tree.find(viewWithAccessibilityIdentifier: "home.freePlanRetryButton")
+            }
         }
+
+        await gate.open() // release the held fetch so the reconciler's task can finish cleanly
     }
 
     @Test("Usage that failed to load shows a retry placeholder instead of vanishing (#FIX2)")

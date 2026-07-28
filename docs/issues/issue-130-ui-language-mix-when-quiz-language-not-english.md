@@ -36,10 +36,18 @@ Rejected: English-only forever (leaves the reported symptom in place) and transl
 
 ## Tasks
 
-- [ ] Slovak translations for the String Catalog (274 keys), translated with per-string context, founder-reviewed
-- [ ] Declare `sk` as a supported localization so the iOS per-app language row appears
-- [ ] Settings: caption the Quiz language row, add the read-only App language row deep-linking to iOS settings
-- [ ] Verify both interface languages on the simulator, no clipped or wrapped hero texts in Slovak
+- [x] Slovak translations for the String Catalog — 430 keys, all translated with per-string context (the catalog was stale: 141 keys had never been extracted from source, so they were re-synced first)
+- [x] Declare `sk` as a supported localization so the iOS per-app language row appears
+- [x] Settings: caption the Quiz language row, add the read-only App language row deep-linking to iOS settings; Home uses the same "Quiz language" wording
+- [x] Fix English leaks in a localized interface: difficulty value, voice-command status readout, and the audio / speech / purchase / persistence error descriptions
+- [x] Verified on the simulator in Slovak (onboarding, home, settings, error screen) and 787 unit tests pass
+- [ ] Founder review of the Slovak wording (native-speaker pass — the point of limiting interface languages to reviewable ones)
+
+## Known-English surfaces, by decision
+
+- **Command engine row** ("Standard · English") — diagnostics-grade control, deliberately raw per its own code comment. Not translated.
+- **Backend-supplied error messages** (e.g. "Authentication required") — the server returns English text and the client shows it verbatim. Localizing those is a backend change, not part of this issue.
+- **Quiz content** — follows the Quiz language setting, as designed.
 
 ## Not in scope
 

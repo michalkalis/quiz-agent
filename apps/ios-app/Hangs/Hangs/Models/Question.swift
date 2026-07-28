@@ -279,5 +279,26 @@ extension Question {
             explanation: "Jupiter is by far the largest planet, with a mass more than twice that of all other planets combined.",
             generatedBy: "gpt-4.1"
         )
+
+        /// Long-stem MCQ (~300 chars) — used by `--ui-test-mcq --ui-test-long`
+        /// together (#125). This is the shape the founder hit in the field: a
+        /// multi-line question competing with four fixed-height option cards for
+        /// the same screen. `previewLong` is a *voice* question, so before #125 no
+        /// fixture could reproduce the MCQ clipping at all.
+        static let previewMCQLong = Question(
+            id: "q_preview_mcq_long_001",
+            question: "Which European capital city, founded as a Roman settlement on the banks of a major river, later became the seat of a dual monarchy, and is today famous for its thermal baths, its grand parliament building on the riverbank, and a castle district listed as a UNESCO World Heritage Site?",
+            type: .textMultichoice,
+            possibleAnswers: ["a": "Vienna", "b": "Budapest", "c": "Prague", "d": "Bratislava"],
+            difficulty: "hard",
+            topic: "Geography",
+            category: "adults",
+            sourceUrl: nil,
+            sourceExcerpt: nil,
+            mediaUrl: nil,
+            imageSubtype: nil,
+            explanation: nil,
+            generatedBy: nil
+        )
     }
 #endif

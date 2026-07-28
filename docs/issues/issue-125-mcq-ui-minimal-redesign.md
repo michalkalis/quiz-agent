@@ -1,7 +1,7 @@
 # Issue 125: MCQ screen: oversized layout, question text clipped, options+listening revealed too early
 
 **Triage:** bug · needs-triage
-**Status:** Filed 2026-07-28 from the founder's TestFlight field test. Both halves CONFIRMED by direct code read (layout squeeze + missing reveal gate); the redesign half is design-gated, not implementable as filed. Needs `/prepare-issue` before an agent run.
+**Status:** Filed 2026-07-28 from the founder's TestFlight field test. Both halves CONFIRMED by direct code read (layout squeeze + missing reveal gate); the redesign half is design-gated, not implementable as filed. **Track A (reveal gate) + the stem-clipping fix + Track C (regression coverage) DONE 2026-07-28. Track B (minimalist redesign) still design-gated — untouched.**
 **Created:** 2026-07-28
 
 ## Symptom
@@ -30,10 +30,13 @@ Note the stem itself does *not* truncate: `HangsQuestionPrompt` uses `.fixedSize
 
 ## Scope of a fix
 
-**Track A — reveal timing (code-only, no design gate).**
+**Track A — reveal timing (code-only, no design gate). — DONE 2026-07-28.**
 - Gate `MCQOptionPicker` and `ListeningPill` on a post-reveal condition tied to thinking/answer-timer expiry or `.recording`, mirroring the `audioStrip`/`CmdListenBar` conditional pattern already in `QuestionView.swift`.
 - Decide and encode what the pre-reveal screen shows instead (see founder decisions), including whether the freed vertical space is given to the stem.
 - Voice answers must stay accepted throughout — the gate is visual only; confirm the MCQ voice-match path (`viewModel.mcqVoiceMatchedKey`) is unaffected when the picker is not on screen.
+- Shipped as `mcqAnswersRevealed` in `QuestionView.swift` (latch + `mcqRevealDue`). The stem clipping fix (the 54.2 `GeometryReader` + `minHeight` pattern) landed in the same pass on `mcqBody`'s scroll region.
+
+**Residual after Track A (feeds Track B).** Simulator check 2026-07-28 with `--ui-test-mcq --ui-test-long`: pre-reveal the ~300-char stem renders in full and the options/pill are absent, as designed. Post-reveal the option cards take that space back and the stem is cut mid-line. It *does* scroll — asserted in `RS-mcq-long` by swiping and comparing `question.text`'s frame — so nothing is unreachable, but with `showsIndicators: false` there is no cue that it continues, which is precisely the "reads as clipped, not scrolled" complaint. Deliberately NOT changed here: "how much vertical space is reserved for the stem, and what happens beyond it (scroll with a visible affordance, shrink-to-fit, both)" is a Track B design question, not a bug fix.
 
 **Track B — minimalist MCQ layout (DESIGN-GATED).**
 - **Gate: a proper design pass with founder sign-off BEFORE any implementation.** Founder asked explicitly for "a more minimalist version to be designed".
@@ -47,16 +50,19 @@ Note the stem itself does *not* truncate: `HangsQuestionPrompt` uses `.fixedSize
   - What is the worst-case device the layout must hold on (see open question below)?
 - Implementation follows the approved frame, and must guarantee the stem never clips regardless of length — likely the `GeometryReader` + `minHeight` scroll pattern from `voiceBody`/#54.2, a smaller option footprint, or both.
 
-**Track C — regression coverage.**
+**Track C — regression coverage. — DONE 2026-07-28.**
 - Add a long-stem MCQ fixture (a `previewStartQuizMCQLong`, or make `--ui-test-long` compose with `--ui-test-mcq` instead of overwriting it) plus a test asserting the stem is fully reachable and the options/pill are absent pre-reveal.
+- Shipped: `Question.previewMCQLong` / `QuizResponse.previewStartQuizMCQLong`, seeded when `--ui-test-mcq` and `--ui-test-long` are passed **together** (the two flags now compose in `UITestSupport` instead of the later one overwriting the earlier), with a 5s answer countdown so the pre-reveal window is observable. Covered by the `QuestionView — MCQ answer reveal gate (#125)` ViewInspector suite and the `RS-mcq-long` XCUITest scenario.
 
-## Founder decisions needed
+## Founder decisions
 
-- **What does the MCQ screen show before reveal?** Question only / question + countdown / question + TTS waveform. Tradeoff: a nearly empty screen maximises stem legibility but gives the driver no preview of how many options are coming.
-- **Reveal all at once, or staggered?** All-at-once on timer expiry or recording start is simplest and predictable; a stagger looks better but adds motion in a driving context.
-- **Does the redesign keep the 64/80pt full-width option card?** Shrinking it is the most direct way to free stem space, but it trades directly against the driving-safety touch-target size that motivated the current floor.
-- **Should Skip also be gated to post-reveal, or stay always visible?** The founder's report named only the options and the listening pill.
-- **Which trigger defines "reveal"** — thinking-timer expiry, answer-timer start, or recording start? The founder named both "timer expires" and "start of recording"; these are different moments in the state machine.
+Decided 2026-07-28 and implemented (Track A):
+
+- **Pre-reveal screen:** question stem + existing chrome (meta row, timer strip, Skip). The space freed by the hidden option block goes to the stem.
+- **Reveal is all-at-once**, no stagger — motion is a liability in a driving context.
+- **Skip stays always visible** — the founder's report named only the options and the listening pill, and a driver must be able to bail out of a question they can't answer.
+- **"Reveal" = whichever comes first of: the running think/answer countdown hits 0, or `quizState` leaves `.askingQuestion` (recording started).** In the state machine those are the same moment on the happy path — every countdown expiry calls `startRecording()` — so both are wired and the result is latched per question. Latching matters because `startRecording()` can bail back to `.askingQuestion` (backgrounded, shared audio engine busy, capture failure) with no timer left running; without the latch the options would vanish again and the question would be unanswerable. Same reason for the fail-open case: with auto-record OFF *and* `answerTimeLimit == 0` no countdown ever arms, so the cards render from the start.
+- **Option card size (64/80pt) is untouched** — that is Track B's call, still design-gated.
 
 ## Related
 

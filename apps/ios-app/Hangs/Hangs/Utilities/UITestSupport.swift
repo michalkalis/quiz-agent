@@ -68,20 +68,30 @@
             let audio = MockAudioService()
             let persistence = MockPersistenceStore()
 
-            // Disable the 10s auto-confirm timer under UI test. Edit-flow scenarios
-            // (RS-06/07/08) drive the confirmation sheet through accessibility-tree
-            // taps and field typing; the timer fires before they can land.
-            if CommandLine.arguments.contains("--ui-test-mcq") {
+            // #125: these were two independent `if` blocks where `--ui-test-long`
+            // overwrote `--ui-test-mcq`, so the shape that actually broke in the
+            // field — a long stem competing with four fixed-height option cards —
+            // could not be seeded at all. Compose them instead.
+            let wantsMCQ = CommandLine.arguments.contains("--ui-test-mcq")
+            let wantsLong = CommandLine.arguments.contains("--ui-test-long")
+            switch (wantsMCQ, wantsLong) {
+            case (true, true):
+                network.mockSession = QuizResponse.previewStartQuizMCQLong.session
+                network.mockResponse = QuizResponse.previewStartQuizMCQLong
+            case (true, false):
                 network.mockSession = QuizResponse.previewStartQuizMCQ.session
                 network.mockResponse = QuizResponse.previewStartQuizMCQ
-            }
-
-            if CommandLine.arguments.contains("--ui-test-long") {
+            case (false, true):
                 network.mockSession = QuizResponse.previewStartQuizLong.session
                 network.mockResponse = QuizResponse.previewStartQuizLong
+            case (false, false):
+                break
             }
 
             var seededSettings = QuizSettings.default
+            // Disable the 10s auto-confirm timer under UI test. Edit-flow scenarios
+            // (RS-06/07/08) drive the confirmation sheet through accessibility-tree
+            // taps and field typing; the timer fires before they can land.
             seededSettings.autoConfirmEnabled = false
             // #115: the silence service is non-optional now, so the auto-record
             // gate `autoRecordEnabled && service != nil` would flip ON under UI
@@ -90,8 +100,11 @@
             // timer + injected STT events, exactly as before the de-opt.
             seededSettings.autoRecordEnabled = false
             // Short answer timer so recording auto-starts within ~1s (no mic button in redesigned UI).
-            if CommandLine.arguments.contains("--ui-test-mcq") {
-                seededSettings.answerTimeLimit = 1
+            // #125: the long-stem MCQ fixture needs an observable PRE-reveal window
+            // (options + listening pill still hidden while the countdown runs), so
+            // give that combination a few seconds instead of 1.
+            if wantsMCQ {
+                seededSettings.answerTimeLimit = wantsLong ? 5 : 1
             }
             persistence.savedSettings = seededSettings
 

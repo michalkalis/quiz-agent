@@ -262,5 +262,24 @@ extension QuizResponse {
                 format: "opus"
             )
         )
+
+        /// Long-stem MCQ variant — seeded when `--ui-test-mcq` and `--ui-test-long`
+        /// are passed together (#125). Guards the MCQ counterpart of the 54.2
+        /// squeeze plus the reveal gate: pre-reveal the stem must be legible and
+        /// the option cards absent.
+        static let previewStartQuizMCQLong = QuizResponse(
+            success: true,
+            message: "Quiz started",
+            session: QuizResponse.previewStartQuizMCQ.session,
+            currentQuestion: Question.previewMCQLong,
+            evaluation: nil,
+            feedbackReceived: [],
+            audio: AudioInfo(
+                feedbackUrl: nil,
+                feedbackAudioBase64: nil,
+                questionUrl: "/api/v1/sessions/sess_preview_123/question/audio",
+                format: "opus"
+            )
+        )
     }
 #endif

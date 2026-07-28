@@ -192,6 +192,80 @@ final nonisolated class RegressionTests: XCTestCase {
         )
     }
 
+    // MARK: - RS-mcq-long
+
+    //
+    // Scenario: launch with "--ui-test-mcq --ui-test-long" (they compose since #125)
+    // so the seeded question is a ~300-char MCQ stem, then observe the screen across
+    // the reveal boundary.
+    //
+    // Regression guarded: #125 — the option cards and the listening pill must stay
+    // off screen while the answer countdown is still running (the driver is still
+    // hearing the question, and four fixed-height cards squeezed the stem until it
+    // read as clipped mid-sentence), and must be there once recording starts. Skip
+    // and the stem stay reachable throughout.
+
+    @MainActor
+    func testRSMCQLongReveal() async throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-test", "--ui-test-mcq", "--ui-test-long"]
+        app.launch()
+
+        let home = HomePage(app: app)
+        home.assertVisible()
+        home.tapStartQuiz()
+
+        let question = QuestionPage(app: app)
+        question.waitForQuestion(timeout: 15)
+        question.waitForState("askingQuestion", timeout: 10)
+
+        // Pre-reveal: the fixture's 5s answer countdown is still running.
+        XCTAssertFalse(
+            question.option("a").exists,
+            "RS-mcq-long: option cards are on screen while the question is still being timed"
+        )
+        XCTAssertFalse(
+            question.listeningPillExists,
+            "RS-mcq-long: listening pill is on screen while the question is still being timed"
+        )
+        XCTAssertTrue(
+            question.questionText.isHittable,
+            "RS-mcq-long: the long stem is not on screen — it was squeezed or clipped"
+        )
+        XCTAssertTrue(
+            question.skipButton.isHittable,
+            "RS-mcq-long: Skip must stay reachable throughout, including pre-reveal"
+        )
+
+        // Reveal: the countdown expires and recording starts.
+        question.waitForState("recording", timeout: 15)
+        XCTAssertTrue(
+            question.option("a").waitForExistence(timeout: 5),
+            "RS-mcq-long: options never appeared after recording started"
+        )
+        XCTAssertTrue(
+            question.listeningPillExists,
+            "RS-mcq-long: listening pill never appeared after recording started"
+        )
+        XCTAssertTrue(
+            question.option("d").isHittable,
+            "RS-mcq-long: the last option is off-screen — the long stem pushed the picker down"
+        )
+
+        // Post-reveal the option cards legitimately take the stem's space back, so a
+        // ~300-char stem no longer fits — but it must still be REACHABLE by scrolling
+        // rather than dead-clipped (that distinction is the whole of #125's stem half;
+        // making the remainder *visible* without scrolling is Track B's layout call).
+        let beforeScroll = question.questionText.frame.minY
+        question.questionText.swipeUp()
+        XCTAssertNotEqual(
+            question.questionText.frame.minY,
+            beforeScroll,
+            accuracy: 0.5,
+            "RS-mcq-long: the stem region did not scroll post-reveal — the rest of the question is unreachable"
+        )
+    }
+
     // MARK: - RS-paywall
 
     //

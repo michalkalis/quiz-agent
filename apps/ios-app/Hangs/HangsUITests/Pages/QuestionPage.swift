@@ -38,6 +38,17 @@ struct QuestionPage {
         app.buttons["question.closeButton"]
     }
 
+    /// A multiple-choice option card by its option key ("a"…"d").
+    func option(_ key: String) -> XCUIElement {
+        app.buttons["mcq.option.\(key)"]
+    }
+
+    /// The "listening — say A–D or the answer" pill. Queried across element types:
+    /// it is a decorated container, not a button.
+    var listeningPillExists: Bool {
+        app.descendants(matching: .any).matching(identifier: "question.listeningPill").count > 0
+    }
+
     /// Wait for the question screen to appear (question.text must exist).
     func waitForQuestion(timeout: TimeInterval = 10) {
         XCTAssertTrue(

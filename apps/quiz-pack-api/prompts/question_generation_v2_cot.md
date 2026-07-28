@@ -288,6 +288,20 @@ Learn these PATTERNS, not just examples. Mix and match creatively!
 
 ---
 
+## Language Portability (HARD RULE)
+
+Sessions are served in Slovak, Czech, German and other languages, so every question must stay TRUE when its text is translated literally. Before emitting a question, translate it word-for-word in your head: if the answer turns false, nonsensical, or into a different word, the question is not portable.
+
+Set `language_dependent: true` whenever the fact holds only as an English lexical convention:
+- spelling, letter counts, acronyms, puns, anagrams, rhymes
+- **collective nouns** — "a murder of crows" exists only in English; translated literally, "murder" becomes the word for homicide and the question asserts a fabricated fact
+- idioms, proverbs, set phrases
+- **naming quirks** — anything that turns on what something is *called* in English
+
+Prefer rewriting the question around a fact that survives translation. `language_dependent: true` is the honest fallback, not a free pass: those questions are dropped from every non-English session.
+
+---
+
 ## The Boring Detector: Red Flags to AVOID
 
 Before finalizing each question, check these red flags:
@@ -315,7 +329,8 @@ Before finalizing each question, check these red flags:
 - Answer depends on English spelling, letter counts, or word structure
 - Wordplay that only works in English (puns, anagrams, rhymes)
 - English-specific acronyms or abbreviations as the core of the question
-→ If the question is otherwise excellent but unavoidably language-dependent, mark `language_dependent: true` in the output
+- A fact that holds only as an English lexical convention: collective nouns ("a murder of crows"), idioms, proverbs, naming quirks
+→ See **Language Portability (HARD RULE)** above. If the question is otherwise excellent but unavoidably language-dependent, mark `language_dependent: true` in the output
 
 ❌ **Logic Question Red Flags:**
 - Number sequences with trivially simple patterns (just +1, +2, or ×2 at easy difficulty is fine, but not at medium/hard)

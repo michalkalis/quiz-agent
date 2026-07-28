@@ -176,8 +176,10 @@ class MCQQuestionItem(BaseModel):
     language_dependent: bool = Field(
         False,
         description=(
-            "True only if the question relies on English language properties "
-            "(wordplay, spelling, letter counts, acronyms)"
+            "True if the fact holds only as an English lexical convention and "
+            "breaks under literal translation: wordplay, spelling, letter "
+            "counts, acronyms, and also collective nouns ('a murder of "
+            "crows'), idioms, proverbs, English-only naming quirks (#128)"
         ),
     )
     age_appropriate: Optional[str] = Field(

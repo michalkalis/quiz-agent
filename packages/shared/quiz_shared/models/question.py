@@ -126,9 +126,18 @@ class Question(BaseModel):
         default_factory=list,
         description="Additional tags: ['europe', 'capitals', 'france']",
     )
+    # #128 — the flag is about TRUTH surviving literal translation, not only
+    # about orthography. "A murder of crows" is a real English collective noun
+    # whose Slovak literal rendering ("vražda") is a fabricated fact, so idioms,
+    # proverbs, collective nouns and English-only naming quirks are all
+    # language-dependent even though none of them is wordplay.
     language_dependent: bool = Field(
         False,
-        description="True if question relies on English language properties (wordplay, spelling, letter counts, acronyms)",
+        description=(
+            "True if the fact holds only as an English lexical convention and breaks "
+            "under literal translation: wordplay, spelling, letter counts, acronyms, "
+            "collective nouns ('a murder of crows'), idioms, proverbs, naming quirks"
+        ),
     )
     age_appropriate: Optional[str] = Field(
         None,

@@ -26,49 +26,20 @@ struct AnswerOption: View {
     var minHeight: CGFloat = 64
     var action: (() -> Void)? = nil
 
-    // MARK: - State → style mapping (internal so unit tests assert the mapping)
+    // MARK: - State → style mapping
 
-    var borderColor: Color {
-        switch state {
-        case .default: return Theme.Hangs.Colors.subtleBorder
-        case .selected: return Theme.Hangs.Colors.accentPrimary
-        case .correct: return Theme.Hangs.Colors.greenCheck
-        case .incorrect: return Theme.Hangs.Colors.pink
-        }
-    }
+    // Delegates to the shared `State` mapping below, so `AnswerTile` reads the
+    // SAME state→color roles without duplicating them.
 
-    var badgeFill: Color {
-        switch state {
-        case .default: return Theme.Hangs.Colors.accentPrimarySoft
-        case .selected: return Theme.Hangs.Colors.accentPrimary
-        case .correct: return Theme.Hangs.Colors.greenCheck
-        case .incorrect: return Theme.Hangs.Colors.pink
-        }
-    }
-
-    var letterColor: Color {
-        switch state {
-        case .default: return Theme.Hangs.Colors.accentPrimary
-        case .selected, .correct, .incorrect: return .white
-        }
-    }
+    var borderColor: Color { state.borderColor }
+    var badgeFill: Color { state.badgeFill }
+    var letterColor: Color { state.letterColor }
 
     /// SF Symbol for the right-hand status badge, or nil when no status shows.
-    var statusSymbol: String? {
-        switch state {
-        case .correct: return "checkmark"
-        case .incorrect: return "xmark"
-        case .default, .selected: return nil
-        }
-    }
+    var statusSymbol: String? { state.statusSymbol }
 
     /// Icon color inside the status badge circle (white on colored fill), or nil when no badge.
-    var statusIconColor: Color? {
-        switch state {
-        case .correct, .incorrect: return .white
-        case .default, .selected: return nil
-        }
-    }
+    var statusIconColor: Color? { state.statusIconColor }
 
     // MARK: - Body
 
@@ -120,6 +91,113 @@ struct AnswerOption: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: 16).stroke(borderColor, lineWidth: 1.5)
+        )
+    }
+}
+
+// MARK: - Shared state → color mapping
+
+/// The single source of truth for how a choice's state maps to its design
+/// colours / status symbol. Both `AnswerOption` (full-width row) and
+/// `AnswerTile` (2×2 grid, #125) read from here (internal so unit tests can
+/// assert the mapping directly).
+extension AnswerOption.State {
+    var borderColor: Color {
+        switch self {
+        case .default: return Theme.Hangs.Colors.subtleBorder
+        case .selected: return Theme.Hangs.Colors.accentPrimary
+        case .correct: return Theme.Hangs.Colors.greenCheck
+        case .incorrect: return Theme.Hangs.Colors.pink
+        }
+    }
+
+    var badgeFill: Color {
+        switch self {
+        case .default: return Theme.Hangs.Colors.accentPrimarySoft
+        case .selected: return Theme.Hangs.Colors.accentPrimary
+        case .correct: return Theme.Hangs.Colors.greenCheck
+        case .incorrect: return Theme.Hangs.Colors.pink
+        }
+    }
+
+    var letterColor: Color {
+        switch self {
+        case .default: return Theme.Hangs.Colors.accentPrimary
+        case .selected, .correct, .incorrect: return .white
+        }
+    }
+
+    var statusSymbol: String? {
+        switch self {
+        case .correct: return "checkmark"
+        case .incorrect: return "xmark"
+        case .default, .selected: return nil
+        }
+    }
+
+    var statusIconColor: Color? {
+        switch self {
+        case .correct, .incorrect: return .white
+        case .default, .selected: return nil
+        }
+    }
+}
+
+// MARK: - Answer tile (2×2 grid — #125 Variant A "Answer Grid")
+
+/// Compact half-width tile for the #125 2×2 MCQ grid: badge stacked over the
+/// value so four choices fit in the space two full-width rows used to take,
+/// giving the stem its 360pt floor back. Shares `AnswerOption.State`'s colour
+/// mapping (never a second copy). Keeps the `mcq.option.<key>` a11y id so the
+/// existing page objects / voice-match highlight are unaffected.
+struct AnswerTile: View {
+    let key: String
+    let value: String
+    var state: AnswerOption.State = .default
+    /// SE-class shrinks the tile 88 → 76 and tightens the internal gap.
+    var compact: Bool = false
+    var action: (() -> Void)? = nil
+
+    var body: some View {
+        Group {
+            if let action {
+                Button(action: action) { tile }
+                    .buttonStyle(.plain)
+            } else {
+                tile
+            }
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(String(localized: "Option \(key.uppercased()): \(value)", comment: "Accessibility label for a multiple-choice option: letter and answer text"))
+        .accessibilityIdentifier("mcq.option.\(key)")
+    }
+
+    private var tile: some View {
+        VStack(alignment: .leading, spacing: compact ? 6 : 8) {
+            ZStack {
+                Circle().fill(state.badgeFill)
+                Text(key.uppercased())
+                    .font(.hangsBody(15, weight: .bold))
+                    .foregroundColor(state.letterColor)
+            }
+            .frame(width: 32, height: 32)
+
+            Text(value)
+                .font(.hangsBody(16, weight: .semibold))
+                .foregroundColor(Theme.Hangs.Colors.ink)
+                .lineLimit(2)
+                .minimumScaleFactor(0.7)
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity, minHeight: compact ? 76 : 88, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 16).fill(Theme.Hangs.Colors.bgCard)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16).stroke(state.borderColor, lineWidth: 1.5)
         )
     }
 }

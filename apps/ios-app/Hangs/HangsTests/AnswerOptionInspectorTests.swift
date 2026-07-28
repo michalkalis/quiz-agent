@@ -120,3 +120,77 @@ struct AnswerOptionInspectorTests {
         }
     }
 }
+
+// MARK: - AnswerTile (2×2 grid, #125 Variant A)
+
+/// The half-width grid tile must read the SAME state→color roles as the full-
+/// width row (no second copy) and keep the `mcq.option.<key>` id the page
+/// objects / voice-match highlight depend on.
+@Suite("AnswerTile Inspector Tests (#125)")
+@MainActor
+struct AnswerTileInspectorTests {
+    /// The shared `AnswerOption.State` mapping — both `AnswerOption` and
+    /// `AnswerTile` render from these exact roles, so asserting it once covers
+    /// the tile's colours too.
+    @Test("Shared state → color mapping (single source of truth)")
+    func sharedStateMapping() {
+        #expect(AnswerOption.State.default.borderColor == Theme.Hangs.Colors.subtleBorder)
+        #expect(AnswerOption.State.default.badgeFill == Theme.Hangs.Colors.accentPrimarySoft)
+        #expect(AnswerOption.State.default.letterColor == Theme.Hangs.Colors.accentPrimary)
+        #expect(AnswerOption.State.default.statusSymbol == nil)
+
+        #expect(AnswerOption.State.selected.borderColor == Theme.Hangs.Colors.accentPrimary)
+        #expect(AnswerOption.State.selected.badgeFill == Theme.Hangs.Colors.accentPrimary)
+        #expect(AnswerOption.State.selected.letterColor == .white)
+
+        #expect(AnswerOption.State.correct.borderColor == Theme.Hangs.Colors.greenCheck)
+        #expect(AnswerOption.State.correct.statusSymbol == "checkmark")
+
+        #expect(AnswerOption.State.incorrect.borderColor == Theme.Hangs.Colors.pink)
+        #expect(AnswerOption.State.incorrect.statusSymbol == "xmark")
+    }
+
+    @Test("Tile renders the uppercased letter badge")
+    func letterAppearsInTree() async throws {
+        let view = AnswerTile(key: "a", value: "Mars")
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: Never.self) {
+                try tree.find(text: "A")
+            }
+        }
+    }
+
+    @Test("Tile renders the answer value")
+    func valueAppearsInTree() async throws {
+        let view = AnswerTile(key: "b", value: "Jupiter")
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: Never.self) {
+                try tree.find(text: "Jupiter")
+            }
+        }
+    }
+
+    @Test("Tile keeps the mcq.option.<key> a11y id")
+    func accessibilityIdentifierPresent() async throws {
+        let view = AnswerTile(key: "c", value: "Saturn")
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: Never.self) {
+                try tree.find(viewWithAccessibilityIdentifier: "mcq.option.c")
+            }
+        }
+    }
+
+    @Test("Tapping the tile fires its action")
+    func tapFiresAction() async throws {
+        var tapped = false
+        let view = AnswerTile(key: "a", value: "Mars", action: { tapped = true })
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            try tree.find(ViewType.Button.self).tap()
+            #expect(tapped == true)
+        }
+    }
+}

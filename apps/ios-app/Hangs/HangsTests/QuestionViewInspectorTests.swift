@@ -40,18 +40,18 @@ struct QuestionViewMCQInspectorTests {
         return vm
     }
 
-    @Test("MCQ category header contains QUESTION number")
+    @Test("MCQ merged top row contains the abbreviated Qn label (#125)")
     func mcqHeaderContainsQuestionNumber() async throws {
         let vm = makeMCQViewModel()
         // questionsAnswered = 0 → question 1
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            // #56: HangsSectionLabel uppercases via a `.textCase(.uppercase)`
-            // *display* modifier, so ViewInspector matches the source content
-            // ("adults · QUESTION 1") — the header still renders as "ADULTS …".
+            // #125 Variant A: the MCQ chrome merges into one row using the
+            // "CATEGORY · Qn" style. #56: uppercased via a `.textCase` *display*
+            // modifier, so ViewInspector matches the source ("adults · Q1").
             #expect(throws: Never.self) {
-                try tree.find(text: "adults · QUESTION 1")
+                try tree.find(text: "adults · Q1")
             }
         }
     }
@@ -72,15 +72,15 @@ struct QuestionViewMCQInspectorTests {
         }
     }
 
-    @Test("MCQ body shows ListeningPill once revealed")
-    func mcqShowsListeningPill() async throws {
+    @Test("MCQ body shows the docked answer ListenBar once revealed (#125)")
+    func mcqShowsListenBar() async throws {
         let vm = makeMCQViewModel()
         vm.quizState = .recording
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) {
-                try tree.find(viewWithAccessibilityIdentifier: "question.listeningPill")
+                try tree.find(viewWithAccessibilityIdentifier: "listen-bar")
             }
         }
     }
@@ -128,7 +128,7 @@ struct QuestionViewMCQRevealGateTests {
         return (vm, network)
     }
 
-    @Test("options and listening pill are absent while the question is still being timed")
+    @Test("options and listen bar are absent (strip present) while the question is still being timed")
     func answerAffordancesHiddenPreReveal() async throws {
         let (vm, _) = makePreRevealViewModel()
         let view = QuestionView(viewModel: vm)
@@ -137,17 +137,23 @@ struct QuestionViewMCQRevealGateTests {
             #expect(throws: (any Error).self) {
                 _ = try tree.find(viewWithAccessibilityIdentifier: "mcq.option.a")
             }
+            // #125: the docked answer ListenBar must not be on screen pre-reveal.
             #expect(throws: (any Error).self) {
-                _ = try tree.find(viewWithAccessibilityIdentifier: "question.listeningPill")
+                _ = try tree.find(viewWithAccessibilityIdentifier: "listen-bar")
             }
             // The stem is what the pre-reveal screen is for — it must be there.
             #expect(throws: Never.self) {
                 try tree.find(viewWithAccessibilityIdentifier: "question.text")
             }
+            // #125: pre-reveal keeps the audio strip (timer chips + mute) — no bar
+            // is present yet, so the strip carries the mute.
+            #expect(throws: Never.self) {
+                try tree.find(viewWithAccessibilityIdentifier: "question.timerStrip")
+            }
         }
     }
 
-    @Test("options and listening pill appear once recording starts")
+    @Test("all four option tiles + the answer ListenBar appear once recording starts (strip gone)")
     func answerAffordancesShownOnceRecording() async throws {
         let (vm, _) = makePreRevealViewModel()
         vm.quizState = .recording // founder trigger: "start of recording"
@@ -155,11 +161,19 @@ struct QuestionViewMCQRevealGateTests {
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
+            // #125 Variant A: a 2×2 grid — all four tiles present.
             #expect(throws: Never.self) {
                 try tree.find(viewWithAccessibilityIdentifier: "mcq.option.a")
             }
             #expect(throws: Never.self) {
-                try tree.find(viewWithAccessibilityIdentifier: "question.listeningPill")
+                try tree.find(viewWithAccessibilityIdentifier: "mcq.option.d")
+            }
+            #expect(throws: Never.self) {
+                try tree.find(viewWithAccessibilityIdentifier: "listen-bar")
+            }
+            // The audio strip is dropped post-reveal — its mute moved into the bar.
+            #expect(throws: (any Error).self) {
+                _ = try tree.find(viewWithAccessibilityIdentifier: "question.timerStrip")
             }
         }
     }
@@ -288,6 +302,36 @@ struct QuestionViewVoiceInspectorTests {
         }
     }
 
+    /// #125 addendum: the floating `CmdListenBar` on the question screen is
+    /// replaced by the docked shared `ListenBar` in COMMAND mode — shown while a
+    /// command window is armed (same gating as before: `commandListenerHint !=
+    /// nil`). Arms the listener the way `VoiceCommandObservabilityTests` does
+    /// (mock recognizer reports `.ready`, then start listening), then asserts the
+    /// docked bar (id "listen-bar") appears. This is the unit-level cover for the
+    /// sim state the UI-test harness cannot produce (its mock forces
+    /// `commandAvailability = .unavailable`).
+    @Test("Voice body shows the docked command ListenBar while a command window is armed (#125)")
+    func voiceShowsCommandListenBarWhenArmed() async throws {
+        let vm = QuizViewModel(
+            networkService: MockNetworkService(),
+            audioService: MockAudioService(),
+            persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService(),
+            sttService: nil
+        )
+        vm.currentQuestion = Question.preview // .text → voice body
+        vm.quizState = .askingQuestion
+        await vm.audioDeviceState.startSilenceDetectionListening() // arms → .listening
+        #expect(vm.commandListenerHint != nil, "precondition: the command window must be armed")
+
+        let view = QuestionView(viewModel: vm)
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: Never.self) {
+                try tree.find(viewWithAccessibilityIdentifier: "listen-bar")
+            }
+        }
+    }
 }
 
 // MARK: - Unified quiz chrome (#83 / G1)
@@ -306,16 +350,28 @@ struct QuestionViewUnifiedChromeTests {
         return vm
     }
 
-    /// G1 binding layout: the top bar is close + settings in EVERY question mode —
-    /// the settings chip must never disappear when the question type changes.
-    @Test("settings button is present in both MCQ and voice mode", arguments: [Question.previewMCQ, Question.preview])
-    func settingsButtonPresent(question: Question) async throws {
+    /// #125: the MCQ screen drops its settings gear (settings reachable via the
+    /// End Quiz sheet) to reclaim chrome for the stem; the voice body keeps the
+    /// close + settings top bar. The close chip must survive in BOTH so a driver
+    /// can always bail / reach settings.
+    @Test("settings gear stays in voice mode and is dropped on MCQ (#125)", arguments: [Question.previewMCQ, Question.preview])
+    func settingsGearPresence(question: Question) async throws {
         let vm = makeViewModel(question: question)
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
+            if question.isMultipleChoice {
+                #expect(throws: (any Error).self) {
+                    _ = try tree.find(viewWithAccessibilityIdentifier: "question.settingsButton")
+                }
+            } else {
+                #expect(throws: Never.self) {
+                    try tree.find(viewWithAccessibilityIdentifier: "question.settingsButton")
+                }
+            }
+            // Close chip present in both modes.
             #expect(throws: Never.self) {
-                try tree.find(viewWithAccessibilityIdentifier: "question.settingsButton")
+                try tree.find(viewWithAccessibilityIdentifier: "question.closeButton")
             }
         }
     }
@@ -433,12 +489,14 @@ struct QuestionViewAudioStripTests {
         }
     }
 
-    /// #85 acceptance: a visible mute affordance on the quiz screen (regressed in the
-    /// #52 redesign — mute logic existed with no on-screen control). Driving-first:
-    /// audio controls must sit on a fixed spot in every mode.
-    @Test("mute toggle is present in both MCQ and voice mode", arguments: [Question.previewMCQ, Question.preview])
+    /// #85 acceptance, carried into #125: a visible mute affordance on the quiz
+    /// screen. It now lives in the docked ListenBar, so both modes show it while
+    /// recording (MCQ = post-reveal answer bar; voice = answer bar). Driving-first:
+    /// the audio control sits on one predictable spot.
+    @Test("mute toggle is present in both modes (in the docked ListenBar)", arguments: [Question.previewMCQ, Question.preview])
     func mutePresentInBothModes(question: Question) async throws {
         let vm = makeViewModel(question: question)
+        vm.quizState = .recording // #125: the docked bar (with the mute) shows here
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
@@ -455,6 +513,7 @@ struct QuestionViewAudioStripTests {
     func muteTogglesSetting() async throws {
         let vm = makeViewModel(question: Question.preview)
         vm.settings.isMuted = false
+        vm.quizState = .recording // #125: mute lives in the docked ListenBar
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
@@ -463,7 +522,9 @@ struct QuestionViewAudioStripTests {
             // toggleMute() became async when mute learned to stop in-flight TTS
             // (8a01675) — the flip happens inside a Task, so drain the main actor
             // instead of asserting synchronously (this test was red on main).
-            for _ in 0..<50 where !vm.settings.isMuted { await Task.yield() }
+            for _ in 0 ..< 50 where !vm.settings.isMuted {
+                await Task.yield()
+            }
             #expect(vm.settings.isMuted == true)
         }
     }

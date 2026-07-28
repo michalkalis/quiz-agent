@@ -225,8 +225,8 @@ final nonisolated class RegressionTests: XCTestCase {
             "RS-mcq-long: option cards are on screen while the question is still being timed"
         )
         XCTAssertFalse(
-            question.listeningPillExists,
-            "RS-mcq-long: listening pill is on screen while the question is still being timed"
+            question.listenBarExists,
+            "RS-mcq-long: the answer ListenBar is on screen while the question is still being timed"
         )
         XCTAssertTrue(
             question.questionText.isHittable,
@@ -244,8 +244,8 @@ final nonisolated class RegressionTests: XCTestCase {
             "RS-mcq-long: options never appeared after recording started"
         )
         XCTAssertTrue(
-            question.listeningPillExists,
-            "RS-mcq-long: listening pill never appeared after recording started"
+            question.listenBarExists,
+            "RS-mcq-long: the answer ListenBar never appeared after recording started"
         )
         XCTAssertTrue(
             question.option("d").isHittable,

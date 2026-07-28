@@ -43,10 +43,11 @@ struct QuestionPage {
         app.buttons["mcq.option.\(key)"]
     }
 
-    /// The "listening — say A–D or the answer" pill. Queried across element types:
-    /// it is a decorated container, not a button.
-    var listeningPillExists: Bool {
-        app.descendants(matching: .any).matching(identifier: "question.listeningPill").count > 0
+    /// The docked answer ListenBar ("LISTENING — SAY A–D", #125 — replaced the
+    /// old listening pill). Queried across element types: the caption is a
+    /// combined a11y element, not a button.
+    var listenBarExists: Bool {
+        app.descendants(matching: .any).matching(identifier: "listen-bar").count > 0
     }
 
     /// Wait for the question screen to appear (question.text must exist).

@@ -51,20 +51,39 @@ struct MCQOptionPicker: View {
     /// submits voice matches itself, so letting both run fired onSelect twice.
     @State private var pendingSubmit = MCQDelayedSubmit()
 
+    /// #125: SE-class shrinks the grid tiles + gaps (driven by container height).
+    var compact: Bool = false
+
     init(
         options: [(key: String, value: String)],
         onSelect: @escaping (String, String) -> Void,
-        externalSelectedKey: Binding<String?> = .constant(nil)
+        externalSelectedKey: Binding<String?> = .constant(nil),
+        compact: Bool = false
     ) {
         self.options = options
         self.onSelect = onSelect
         _externalSelectedKey = externalSelectedKey
+        self.compact = compact
     }
 
-    /// 80pt for the 2-option T/F variant; 64pt for all other MCQ lists.
+    /// 80pt for the 2-option T/F variant; 64pt for all other MCQ rows. (The 4-up
+    /// grid uses `AnswerTile`'s own 88/76pt floor, not this.)
     var optionMinHeight: CGFloat { options.count == 2 ? 80 : 64 }
 
+    /// #125 Variant A: 2×2 letter tiles for 4 options, full-width rows for the
+    /// 2-option T/F variant (locked decision — the grid is for 4 options only).
+    @ViewBuilder
     var body: some View {
+        if options.count == 2 {
+            twoOptionRows
+        } else {
+            optionGrid
+        }
+    }
+
+    /// Full-width AnswerOption rows — the untouched T/F path. The `.onChange`
+    /// stays on THIS VStack (the tap/voice race wiring the 54.16 tests drive).
+    private var twoOptionRows: some View {
         VStack(spacing: Theme.Hangs.Spacing.sm) {
             ForEach(options, id: \.key) { option in
                 AnswerOption(
@@ -72,14 +91,7 @@ struct MCQOptionPicker: View {
                     value: option.value,
                     state: externalSelectedKey == option.key ? .selected : .default,
                     minHeight: optionMinHeight,
-                    action: {
-                        guard externalSelectedKey == nil else { return }
-                        // Schedule before writing the key, so the in-flight
-                        // pendingKey is already set before this write can be
-                        // observed by the onChange below (self-echo below).
-                        submitAfterDelay(key: option.key, value: option.value)
-                        externalSelectedKey = option.key
-                    }
+                    action: { tapOption(option) }
                 )
                 .disabled(externalSelectedKey != nil)
                 .animation(
@@ -90,19 +102,62 @@ struct MCQOptionPicker: View {
         }
         .padding(.horizontal, Theme.Hangs.Spacing.md)
         .onChange(of: externalSelectedKey) { _, newValue in
-            // #110 T4 cancel-semantics rework: now that the tap writes this same
-            // key, this fires on the tap's own echo too. Only cancel on an
-            // other-source supersede (a different key arriving — e.g. a voice
-            // match overriding a pending tap); never on the tap's own echo, and
-            // never on nil (the VM clears this key on a new question). A voice
-            // match on the SAME key as a pending tap never fires this at all
-            // (no value change) — that duplicate is absorbed by the entry guard
-            // in `submitMCQAnswer` (answers are legal only from
-            // .askingQuestion/.recording), not here.
-            guard let newValue else { return }
-            guard newValue != pendingSubmit.pendingKey else { return }
-            pendingSubmit.cancel()
+            handleSelectionChange(newValue)
         }
+    }
+
+    private var gridGap: CGFloat { compact ? 10 : 12 }
+
+    private var optionGrid: some View {
+        LazyVGrid(
+            columns: [
+                GridItem(.flexible(), spacing: gridGap),
+                GridItem(.flexible(), spacing: gridGap),
+            ],
+            spacing: gridGap
+        ) {
+            ForEach(options, id: \.key) { option in
+                AnswerTile(
+                    key: option.key,
+                    value: option.value,
+                    state: externalSelectedKey == option.key ? .selected : .default,
+                    compact: compact,
+                    action: { tapOption(option) }
+                )
+                .disabled(externalSelectedKey != nil)
+                .animation(
+                    reduceMotion ? nil : .easeInOut(duration: 0.15),
+                    value: externalSelectedKey
+                )
+            }
+        }
+        .padding(.horizontal, Theme.Hangs.Spacing.md)
+        .onChange(of: externalSelectedKey) { _, newValue in
+            handleSelectionChange(newValue)
+        }
+    }
+
+    /// Shared tap handler (both the rows and the grid). Schedules BEFORE writing
+    /// the key so the in-flight `pendingKey` is set before the write can be
+    /// observed by `handleSelectionChange` as the tap's own echo.
+    private func tapOption(_ option: (key: String, value: String)) {
+        guard externalSelectedKey == nil else { return }
+        submitAfterDelay(key: option.key, value: option.value)
+        externalSelectedKey = option.key
+    }
+
+    /// #110 T4 cancel-semantics rework: now that the tap writes this same key,
+    /// this fires on the tap's own echo too. Only cancel on an other-source
+    /// supersede (a different key arriving — e.g. a voice match overriding a
+    /// pending tap); never on the tap's own echo, and never on nil (the VM
+    /// clears this key on a new question). A voice match on the SAME key as a
+    /// pending tap never fires this at all (no value change) — that duplicate is
+    /// absorbed by the entry guard in `submitMCQAnswer` (answers are legal only
+    /// from .askingQuestion/.recording), not here.
+    private func handleSelectionChange(_ newValue: String?) {
+        guard let newValue else { return }
+        guard newValue != pendingSubmit.pendingKey else { return }
+        pendingSubmit.cancel()
     }
 
     private func submitAfterDelay(key: String, value: String) {

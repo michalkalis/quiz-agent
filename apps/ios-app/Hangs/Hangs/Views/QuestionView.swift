@@ -7,8 +7,8 @@
 //  #83 (G1 unified quiz chrome): both modes share the same top bar (close + settings
 //  + progress bar), a muted category + counter meta row above the question, and the
 //  think/answer timer strip at the BOTTOM next to the action row.
-//  MCQ: AnswerOption list, ListeningPill, Skip. Voice: display-font question,
-//       Record/Stop | Skip action row.
+//  MCQ (#125 Variant A): 2×2 AnswerTile grid, docked answer ListenBar, Skip.
+//       Voice: display-font question, Record/Stop | Skip action row.
 //
 
 import Combine
@@ -24,6 +24,9 @@ struct QuestionView: View {
     @State private var textAnswer = ""
     /// MCQ answer-reveal latch — see "MCQ reveal gate (#125)" below.
     @State private var mcqRevealLatched = false
+    /// #125: true while more of the stem sits below the fold — drives the
+    /// bottom fade + "SCROLL ↓" overflow cue on the MCQ stem.
+    @State private var showScrollCue = false
     @FocusState private var isTextFieldFocused: Bool
 
     var body: some View {
@@ -38,19 +41,25 @@ struct QuestionView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
                 .ignoresSafeArea()
 
-            VStack(spacing: 0) {
-                topChrome
+            // #125: measure the container height once — SE-class (≤ 700pt tall)
+            // degrades the stem floor / type / tile / bar sizes off the height,
+            // not the device model.
+            GeometryReader { geo in
+                let compact = geo.size.height <= 700
+                VStack(spacing: 0) {
+                    topChrome(question: viewModel.currentQuestion)
 
-                if let question = viewModel.currentQuestion {
-                    if question.isMultipleChoice {
-                        mcqBody(question: question)
+                    if let question = viewModel.currentQuestion {
+                        if question.isMultipleChoice {
+                            mcqBody(question: question, compact: compact)
+                        } else {
+                            voiceBody(question: question, compact: compact)
+                        }
                     } else {
-                        voiceBody(question: question)
+                        Spacer()
+                        ProgressView().tint(Theme.Hangs.Colors.pink)
+                        Spacer()
                     }
-                } else {
-                    Spacer()
-                    ProgressView().tint(Theme.Hangs.Colors.pink)
-                    Spacer()
                 }
             }
         }
@@ -88,6 +97,9 @@ struct QuestionView: View {
         // title only — replaces the bottom confirmationDialog.
         .alert("End Quiz?", isPresented: $showEndQuizConfirmation) {
             Button("Continue", role: .cancel) {}
+            // #125: the MCQ screen drops its settings gear, so settings stay
+            // reachable through this sheet (both modes share the alert).
+            Button("Settings") { showQuizSettings = true }
             Button("End Quiz", role: .destructive) {
                 Task { await viewModel.endQuiz() }
             }
@@ -100,12 +112,19 @@ struct QuestionView: View {
 
     // MARK: - Top chrome
 
-    private var topChrome: some View {
+    /// The top row differs by mode (#125): voice keeps the shared close + settings
+    /// bar; MCQ merges close + "CATEGORY · Qn" + counter into one row and drops the
+    /// settings gear. The progress bar + error banner are shared by both.
+    private func topChrome(question: Question?) -> some View {
         VStack(spacing: 8) {
-            HangsQuizTopBar(
-                onClose: { showEndQuizConfirmation = true },
-                onSettings: { showQuizSettings = true }
-            )
+            if let question, question.isMultipleChoice {
+                mcqTopRow(question: question)
+            } else {
+                HangsQuizTopBar(
+                    onClose: { showEndQuizConfirmation = true },
+                    onSettings: { showQuizSettings = true }
+                )
+            }
             // #122: the bar flips teal for the duration of a matched glow.
             HangsProgressBar(
                 progress: progressValue,
@@ -116,6 +135,54 @@ struct QuestionView: View {
                 errorBanner(error)
             }
         }
+    }
+
+    // MARK: - MCQ merged top row (#125 Variant A)
+
+    /// #125: MCQ chrome collapses to ONE row — close chip + "CATEGORY · Qn" +
+    /// the NN/NN counter (keeping its pink-while-recording accent). The settings
+    /// gear leaves the MCQ screen (reachable via the End Quiz sheet); the separate
+    /// meta row is dropped. voiceBody keeps its own chrome + `metaRow`.
+    private func mcqTopRow(question: Question) -> some View {
+        HStack(spacing: 12) {
+            closeChip
+            // #56: interpolated literal so the compiler extracts "%@ · Q%lld";
+            // uppercased as a display modifier (ViewInspector matches the source).
+            Text("\(question.category) · Q\(currentQuestionNumber)")
+                .textCase(.uppercase)
+                .font(.hangsMono(11, weight: .medium))
+                .tracking(2)
+                .foregroundColor(Theme.Hangs.Colors.muted)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+                .accessibilityIdentifier("question.category")
+
+            Spacer(minLength: 12)
+
+            Text(verbatim: counterString)
+                .font(.hangsMono(11, weight: .semibold))
+                .tracking(2)
+                .foregroundColor(isRecording ? Theme.Hangs.Colors.pink : Theme.Hangs.Colors.muted)
+                .accessibilityIdentifier("question.counter")
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 14)
+        .padding(.bottom, 4)
+    }
+
+    /// Close chip matching `HangsQuizTopBar`'s (36pt circle, xmark) — kept its
+    /// `question.closeButton` id so page objects still bail out of the quiz here.
+    private var closeChip: some View {
+        Button { showEndQuizConfirmation = true } label: {
+            Image(systemName: "xmark")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(Theme.Hangs.Colors.ink)
+                .frame(width: 36, height: 36)
+                .background(Circle().fill(Theme.Hangs.Colors.bgCard))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(String(localized: "Close quiz", comment: "Accessibility label for the in-quiz close button"))
+        .accessibilityIdentifier("question.closeButton")
     }
 
     // MARK: - Question meta row (muted category + counter)
@@ -207,8 +274,12 @@ struct QuestionView: View {
     /// (`questionReplayTapTarget`) — founder decision, 2026-07-11. The voice body
     /// passes `withTypeToggle: true` so the typed-answer link sits in the strip's
     /// middle slot (founder batch 2026-07-12: one horizontal row, not stacked).
+    ///
+    /// #125: `withMute` lets the voice body drop the strip's mute — the docked
+    /// `ListenBar` carries it there. The MCQ pre-reveal strip keeps its mute (no
+    /// bar is present pre-reveal).
     @ViewBuilder
-    private func audioStrip(withTypeToggle: Bool = false) -> some View {
+    private func audioStrip(withTypeToggle: Bool = false, withMute: Bool = true) -> some View {
         if viewModel.quizState == .askingQuestion || viewModel.quizState == .recording {
             let showThink = viewModel.quizState == .askingQuestion && viewModel.thinkingTimeCountdown > 0
             let showAnswer = viewModel.quizState == .askingQuestion && viewModel.answerTimerCountdown > 0
@@ -224,7 +295,9 @@ struct QuestionView: View {
                     textInputToggle
                     Spacer(minLength: 0)
                 }
-                muteButton
+                if withMute {
+                    muteButton
+                }
             }
             .padding(.horizontal, 24)
             .frame(minHeight: audioStripHeight)
@@ -359,76 +432,54 @@ struct QuestionView: View {
         max(viewModel.thinkingTimeCountdown, viewModel.answerTimerCountdown)
     }
 
-    // MARK: - MCQ body (frames b8zObz / WCaT6)
+    // MARK: - MCQ body (#125 Variant A "Answer Grid")
 
-    private func mcqBody(question: Question) -> some View {
-        VStack(spacing: 0) {
-            metaRow(question: question)
-                .padding(.horizontal, 28)
-                .padding(.top, 12)
-                .padding(.bottom, 6)
+    private func mcqBody(question: Question, compact: Bool) -> some View {
+        let revealed = mcqAnswersRevealed
+        return VStack(spacing: 0) {
+            // Merged top row (close + category + counter) lives in `topChrome`
+            // now; the MCQ body starts at the stem.
+            mcqStem(question: question, compact: compact, revealed: revealed)
 
-            // #125: the GeometryReader + `minHeight` scroll pattern voiceBody already
-            // uses (54.2). Without it the fixed-height option cards below are served
-            // their floors first and this flexible ScrollView absorbs the whole
-            // deficit — a long stem then reads as clipped rather than scrollable.
-            GeometryReader { geo in
-                ScrollView(.vertical, showsIndicators: false) {
-                    VStack(spacing: 0) {
-                        questionReplayTapTarget {
-                            VStack(alignment: .leading, spacing: 10) {
-                                HangsQuestionPrompt(
-                                    text: question.question,
-                                    barColor: Theme.Hangs.Colors.blue,
-                                    textFont: .hangsQuestion
-                                )
-                                .accessibilityIdentifier("question.text")
-                                replaySpeakerGlyph
-                            }
-                            .padding(.horizontal, 28)
-                            .padding(.vertical, 12)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-                    }
-                    .frame(minHeight: geo.size.height, alignment: .top)
-                }
-            }
-
-            // #125 reveal gate — all-at-once, no stagger (driving context). Skip and
-            // the audio strip stay visible throughout; the founder named only the
-            // options and the listening pill.
-            if mcqAnswersRevealed {
+            // #125 reveal gate — all-at-once, no stagger (driving context). Skip
+            // stays visible throughout; the founder named only the options and the
+            // listening bar. Pre-reveal shows the timer strip (with its mute, since
+            // no bar is present yet); post-reveal the strip is gone and its mute
+            // moves into the answer ListenBar.
+            if revealed {
                 MCQOptionPicker(
                     options: question.sortedAnswerOptions,
                     onSelect: { key, value in
                         Task { await viewModel.submitMCQAnswer(key: key, value: value) }
                     },
-                    externalSelectedKey: $viewModel.mcqVoiceMatchedKey
+                    externalSelectedKey: $viewModel.mcqVoiceMatchedKey,
+                    compact: compact
                 )
-                .padding(.top, 8)
-
-                ListeningPill(mode: question.sortedAnswerOptions.count == 2 ? .trueFalse : .mcq)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.horizontal, 24)
-                    .padding(.top, 12)
+                .padding(.top, compact ? 10 : 14)
+            } else {
+                audioStrip()
+                    .padding(.top, 8)
             }
 
-            audioStrip()
-                .padding(.top, 8)
-
-            // #122: light sweep strip — always reserves its 4 pt so the bar
+            // #122: light sweep strip — always reserves its 4 pt so the docked bar
             // below never shifts; glows only during a feedback phase.
             GlowSweepLine(phase: viewModel.voiceFeedbackPhase)
                 .padding(.horizontal, 20)
                 .padding(.top, 8)
 
-            // #77/#96 P2: listening indicator (pen `s49sd`) — MCQ command
-            // window (repeat / skip). Shown only while armed.
-            if let hint = viewModel.commandListenerHint {
-                CmdListenBar(hint: hint, feedback: viewModel.voiceFeedbackPhase)
-                    .padding(.horizontal, 20)
-                    .padding(.top, 8)
-                    .transition(.opacity)
+            // #125 addendum: the docked answer ListenBar (pink, "LISTENING — SAY
+            // A–D"), carrying the mute. Shown only once the answer is revealed.
+            if revealed {
+                ListenBar(
+                    mode: .answer(question.sortedAnswerOptions.count == 2 ? .trueFalse : .mcq),
+                    feedback: viewModel.voiceFeedbackPhase,
+                    isMuted: viewModel.settings.isMuted,
+                    onToggleMute: { Task { await viewModel.toggleMute() } },
+                    compact: compact
+                )
+                .padding(.horizontal, 20)
+                .padding(.top, 8)
+                .transition(.opacity)
             }
 
             HangsSecondaryButton(title: "Skip question",
@@ -440,8 +491,8 @@ struct QuestionView: View {
             .accessibilityIdentifier("question.skip")
             // #96 P3 (founder): tighter side padding + lower footprint (was h24 / bottom 28).
             .padding(.horizontal, 20)
-            .padding(.top, 4)
-            .padding(.bottom, 16)
+            .padding(.top, compact ? 8 : 12)
+            .padding(.bottom, compact ? 10 : 16)
 
             #if DEBUG
                 Text(quizStateName)
@@ -466,9 +517,92 @@ struct QuestionView: View {
         }
     }
 
+    // MARK: - MCQ stem (floor + overflow affordance — #125 Variant A)
+
+    /// The stem scroll region. Pre-reveal it fills the space freed by the hidden
+    /// grid at Anton 30 with the tap-to-replay glyph. Post-reveal it holds a hard
+    /// floor (360pt, 300 on SE-class) at Anton 34 (30 on SE); anything past the
+    /// floor scrolls behind a VISIBLE overflow affordance — a bottom fade, a
+    /// "SCROLL ↓" cue, and the native indicator — so a long stem reads as
+    /// scrollable, never clipped. The `GeometryReader` + `minHeight` keeps the
+    /// flexible ScrollView from being squeezed to near-zero by the fixed-height
+    /// grid below (54.2's failure mode).
+    private func mcqStem(question: Question, compact: Bool, revealed: Bool) -> some View {
+        let floor: CGFloat = compact ? 300 : 360
+        let stemFont: Font = .hangsDisplay(revealed ? (compact ? 30 : 34) : 30)
+        return GeometryReader { geo in
+            ScrollView(.vertical) {
+                VStack(spacing: 0) {
+                    questionReplayTapTarget {
+                        VStack(alignment: .leading, spacing: 10) {
+                            HangsQuestionPrompt(
+                                text: question.question,
+                                barColor: Theme.Hangs.Colors.blue,
+                                textFont: stemFont
+                            )
+                            .accessibilityIdentifier("question.text")
+                            // Pre-reveal only: the replay hint glyph. Post-reveal
+                            // the stem scrolls and vertical space is tight.
+                            if !revealed {
+                                replaySpeakerGlyph
+                            }
+                        }
+                        .padding(.horizontal, 28)
+                        .padding(.vertical, 12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
+                .frame(minHeight: geo.size.height, alignment: .top)
+            }
+            .scrollIndicators(revealed ? .visible : .hidden)
+            .onScrollGeometryChange(for: Bool.self) { g in
+                // Is there more stem below the fold? (taller than the viewport
+                // AND not scrolled to the end.)
+                g.contentOffset.y + g.containerSize.height < g.contentSize.height - 1
+            } action: { _, more in
+                showScrollCue = more
+            }
+            .overlay(alignment: .bottom) {
+                if showScrollCue {
+                    stemOverflowCue
+                }
+            }
+        }
+        .frame(minHeight: floor)
+    }
+
+    /// Bottom fade + a small mono "SCROLL ↓" cue — the visible overflow
+    /// affordance. a11y-hidden (peripheral cue), never blocks taps.
+    private var stemOverflowCue: some View {
+        ZStack(alignment: .bottomTrailing) {
+            LinearGradient(
+                colors: [Theme.Hangs.Colors.bg.opacity(0), Theme.Hangs.Colors.bg],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .frame(height: 56)
+            .frame(maxWidth: .infinity)
+
+            HStack(spacing: 5) {
+                Text("SCROLL")
+                    .font(.hangsMono(9, weight: .medium))
+                    .tracking(1.4)
+                    .textCase(.uppercase)
+                Image(systemName: "arrow.down")
+                    .font(.system(size: 10, weight: .semibold))
+            }
+            .foregroundColor(Theme.Hangs.Colors.muted)
+            .padding(.trailing, 22)
+            .padding(.bottom, 8)
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+        .transition(.opacity)
+    }
+
     // MARK: - Voice body (frames f9csl / uGhZg)
 
-    private func voiceBody(question: Question) -> some View {
+    private func voiceBody(question: Question, compact: Bool) -> some View {
         VStack(spacing: 0) {
             metaRow(question: question)
                 .padding(.horizontal, 24)
@@ -521,7 +655,9 @@ struct QuestionView: View {
                 } else {
                     // Typed-answer fallback toggle (#54 task 54.18) lives inside the
                     // strip's middle slot — one horizontal row (founder, 2026-07-12).
-                    audioStrip(withTypeToggle: true)
+                    // #125: the strip drops its mute here — the docked ListenBar
+                    // below now carries it.
+                    audioStrip(withTypeToggle: true, withMute: false)
 
                     // Live transcript (recording + STT streaming) — static, pinned
                     // directly above the buttons so it never scrolls away.
@@ -538,13 +674,31 @@ struct QuestionView: View {
                     GlowSweepLine(phase: viewModel.voiceFeedbackPhase)
                         .padding(.horizontal, 20)
 
-                    // #77/#96 P2: listening indicator (pen `s49sd`) — shows
-                    // exactly while the question command window is armed (after
-                    // TTS, not while recording). Hidden during recording/typing.
-                    if let hint = viewModel.commandListenerHint {
-                        CmdListenBar(hint: hint, feedback: viewModel.voiceFeedbackPhase)
-                            .padding(.horizontal, 20)
-                            .transition(.opacity)
+                    // #125 addendum: the docked ListenBar replaces the floating
+                    // CmdListenBar on the question screen — exactly one bar at a
+                    // time. Recording → pink answer bar (unconditional); otherwise
+                    // the teal command bar iff a command window is armed (hidden
+                    // during TTS, same gating as before). Both carry the mute.
+                    if isRecording {
+                        ListenBar(
+                            mode: .answer(.open),
+                            feedback: viewModel.voiceFeedbackPhase,
+                            isMuted: viewModel.settings.isMuted,
+                            onToggleMute: { Task { await viewModel.toggleMute() } },
+                            compact: compact
+                        )
+                        .padding(.horizontal, 20)
+                        .transition(.opacity)
+                    } else if viewModel.commandListenerHint != nil {
+                        ListenBar(
+                            mode: .command,
+                            feedback: viewModel.voiceFeedbackPhase,
+                            isMuted: viewModel.settings.isMuted,
+                            onToggleMute: { Task { await viewModel.toggleMute() } },
+                            compact: compact
+                        )
+                        .padding(.horizontal, 20)
+                        .transition(.opacity)
                     }
 
                     voiceActionRow

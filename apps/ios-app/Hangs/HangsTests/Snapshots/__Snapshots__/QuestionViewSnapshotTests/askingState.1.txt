@@ -729,6 +729,9 @@
   ▿ _mcqRevealLatched: SwiftUI.State<Swift.Bool>
     - _value: false
     - _location: nil
+  ▿ _showScrollCue: SwiftUI.State<Swift.Bool>
+    - _value: false
+    - _location: nil
   ▿ _isTextFieldFocused: SwiftUI.FocusState<Swift.Bool>
     - value: false
     - location: nil

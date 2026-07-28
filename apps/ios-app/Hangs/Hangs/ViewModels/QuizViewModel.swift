@@ -243,6 +243,10 @@ final class QuizViewModel: ObservableObject {
     /// `VoiceCommandCoordinator.commandListenerHint` (CmdListenBar call sites).
     var commandListenerHint: String? { voiceCommandCoordinator.commandListenerHint }
 
+    /// #122 Variant C ambient-glow feedback phase — see
+    /// `VoiceCommandCoordinator.voiceFeedbackPhase` (glow/bar call sites).
+    var voiceFeedbackPhase: VoiceFeedbackPhase { voiceCommandCoordinator.voiceFeedbackPhase }
+
     /// Fire-and-forget command-window sync for synchronous call sites
     /// (MAIN / +ScenePhase / SettingsView / HomeView; RecordingCoordinator
     /// reaches it via an injected closure) — see
@@ -359,6 +363,9 @@ final class QuizViewModel: ObservableObject {
             recordingCoordinator.resetOnPhaseExit()
         }
         if case .askingQuestion = newState { mcqVoiceMatchedKey = nil }
+        // #122: "action landed" signal — a matched glow clears as soon as the
+        // min-display floor allows once the screen visibly changed.
+        voiceCommandCoordinator.noteQuizStateChangedForFeedback()
         // #110 Bug 3: .finished never cleared isMinimized, so a stale
         // MinimizedQuizView floated over CompletionView with nothing to dismiss it.
         if case .finished = newState { isMinimized = false }

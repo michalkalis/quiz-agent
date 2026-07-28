@@ -194,7 +194,7 @@ struct ResultView: View {
             // #77/#96 P2: listening indicator (pen `s49sd`) — result command
             // window ("next"). Shown only while armed.
             if let hint = viewModel.commandListenerHint {
-                CmdListenBar(hint: hint)
+                CmdListenBar(hint: hint, feedback: viewModel.voiceFeedbackPhase)
                     .transition(.opacity)
             }
 

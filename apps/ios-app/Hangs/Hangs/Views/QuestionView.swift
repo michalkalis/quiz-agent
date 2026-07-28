@@ -30,6 +30,14 @@ struct QuestionView: View {
         ZStack(alignment: .top) {
             Theme.Hangs.Colors.bg.ignoresSafeArea()
 
+            // #122 Variant C: ambient bottom-third wash — teal on a matched
+            // command, one amber breath on a content-bearing miss. Behind all
+            // content, hit-testing disabled inside the component.
+            AmbientGlowWash(phase: viewModel.voiceFeedbackPhase)
+                .frame(height: 330)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+                .ignoresSafeArea()
+
             VStack(spacing: 0) {
                 topChrome
 
@@ -65,7 +73,8 @@ struct QuestionView: View {
                 onEditingBegan: { viewModel.beginEditingTranscript() },
                 onCancelEditing: { viewModel.cancelEditingTranscript() },
                 onCancel: { viewModel.cancelProcessing() },
-                commandHint: viewModel.commandListenerHint
+                commandHint: viewModel.commandListenerHint,
+                commandFeedback: viewModel.voiceFeedbackPhase
             )
         }
         .sheet(isPresented: $showQuizSettings) {
@@ -97,7 +106,12 @@ struct QuestionView: View {
                 onClose: { showEndQuizConfirmation = true },
                 onSettings: { showQuizSettings = true }
             )
-            HangsProgressBar(progress: progressValue)
+            // #122: the bar flips teal for the duration of a matched glow.
+            HangsProgressBar(
+                progress: progressValue,
+                tint: viewModel.voiceFeedbackPhase == .matched
+                    ? Theme.Hangs.Colors.accentTeal : nil
+            )
             if let error = viewModel.errorMessage {
                 errorBanner(error)
             }
@@ -402,10 +416,16 @@ struct QuestionView: View {
             audioStrip()
                 .padding(.top, 8)
 
+            // #122: light sweep strip — always reserves its 4 pt so the bar
+            // below never shifts; glows only during a feedback phase.
+            GlowSweepLine(phase: viewModel.voiceFeedbackPhase)
+                .padding(.horizontal, 20)
+                .padding(.top, 8)
+
             // #77/#96 P2: listening indicator (pen `s49sd`) — MCQ command
             // window (repeat / skip). Shown only while armed.
             if let hint = viewModel.commandListenerHint {
-                CmdListenBar(hint: hint)
+                CmdListenBar(hint: hint, feedback: viewModel.voiceFeedbackPhase)
                     .padding(.horizontal, 20)
                     .padding(.top, 8)
                     .transition(.opacity)
@@ -513,11 +533,16 @@ struct QuestionView: View {
                         textInputRow
                     }
 
+                    // #122: light sweep strip — reserved in every phase so the
+                    // stack below never shifts; glows only during feedback.
+                    GlowSweepLine(phase: viewModel.voiceFeedbackPhase)
+                        .padding(.horizontal, 20)
+
                     // #77/#96 P2: listening indicator (pen `s49sd`) — shows
                     // exactly while the question command window is armed (after
                     // TTS, not while recording). Hidden during recording/typing.
                     if let hint = viewModel.commandListenerHint {
-                        CmdListenBar(hint: hint)
+                        CmdListenBar(hint: hint, feedback: viewModel.voiceFeedbackPhase)
                             .padding(.horizontal, 20)
                             .transition(.opacity)
                     }
@@ -563,6 +588,14 @@ struct QuestionView: View {
                 // question text keeps as much room as possible.
                 .frame(height: 44)
                 .background(Capsule().fill(Theme.Hangs.Colors.pink))
+                // #122: teal ring while a matched-command glow is live.
+                .overlay {
+                    if viewModel.voiceFeedbackPhase == .matched {
+                        Capsule()
+                            .inset(by: -2)
+                            .stroke(Theme.Hangs.Colors.accentTeal.opacity(0.30), lineWidth: 4)
+                    }
+                }
                 .hangsShadow(Theme.Hangs.Shadow.cta)
             }
             .buttonStyle(.plain)

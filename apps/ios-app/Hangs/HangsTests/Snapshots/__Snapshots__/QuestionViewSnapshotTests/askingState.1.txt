@@ -484,6 +484,25 @@
                   - hasAnyDownstreamDemand: false
                   ▿ changePublisher: Optional(Combine.ObservableObjectPublisher)
                     ▿ some: Combine.ObservableObjectPublisher #46
+          ▿ _voiceFeedbackPhase: Combine.Published<Hangs.VoiceFeedbackPhase>
+            ▿ storage: Combine.Published<Hangs.VoiceFeedbackPhase>.Storage.publisher
+              ▿ publisher: Combine.Published<Hangs.VoiceFeedbackPhase>.Publisher
+                ▿ subject: Combine.PublishedSubject<Hangs.VoiceFeedbackPhase> #53
+                  ▿ lock: 0x<addr>
+                    - pointerValue: <n>
+                  - downstreams: Combine.ConduitList<Hangs.VoiceFeedbackPhase, Swift.Never>.empty
+                  - currentValue: Hangs.VoiceFeedbackPhase.idle
+                  - upstreamSubscriptions: 0 elements
+                  - hasAnyDownstreamDemand: false
+                  ▿ changePublisher: Optional(Combine.ObservableObjectPublisher)
+                    ▿ some: Combine.ObservableObjectPublisher #46
+          - matchedGlowStartedAt: nil
+          - lastUnmatchedGlowAt: nil
+          - lastUnmatchedGlowText: nil
+          - matchedGlowMinDisplay: 0.6
+          - matchedGlowMaxDisplay: 2.0
+          - unmatchedGlowDisplay: 1.2
+          - unmatchedGlowCooldown: 4.0
           - voiceStartOnQuestionEnabled: true
           - voiceStartOnHomeEnabled: true
           - onCommandRecognized: nil
@@ -519,11 +538,11 @@
             ▿ some: Swift.Task<(), Swift.Never>
               - _task: (Opaque Value)
       ▿ $__lazy_storage_$_quizTimersController: Optional(Hangs.QuizTimersController)
-        ▿ some: Hangs.QuizTimersController #53
+        ▿ some: Hangs.QuizTimersController #54
           ▿ _autoAdvanceCountdown: Combine.Published<Swift.Int>
             ▿ storage: Combine.Published<Swift.Int>.Storage.publisher
               ▿ publisher: Combine.Published<Swift.Int>.Publisher
-                ▿ subject: Combine.PublishedSubject<Swift.Int> #54
+                ▿ subject: Combine.PublishedSubject<Swift.Int> #55
                   ▿ lock: 0x<addr>
                     - pointerValue: <n>
                   - downstreams: Combine.ConduitList<Swift.Int, Swift.Never>.empty
@@ -531,12 +550,12 @@
                   - upstreamSubscriptions: 0 elements
                   - hasAnyDownstreamDemand: false
                   ▿ changePublisher: Optional(Combine.ObservableObjectPublisher)
-                    ▿ some: Combine.ObservableObjectPublisher #55
+                    ▿ some: Combine.ObservableObjectPublisher #56
                       ▿ _registrar: Observation.ObservationRegistrar
-                        ▿ extent: Observation.ObservationRegistrar.(unknown context at $<addr>).Extent #56
+                        ▿ extent: Observation.ObservationRegistrar.(unknown context at $<addr>).Extent #57
                           ▿ context: Observation.ObservationRegistrar.Context
                             ▿ state: Observation._ManagedCriticalState<Observation.ObservationRegistrar.(unknown context at $<addr>).State>
-                              - buffer: Observation._ManagedCriticalState<Observation.ObservationRegistrar.(unknown context at $<addr>).State>.(unknown context at $<addr>).LockedBuffer #57
+                              - buffer: Observation._ManagedCriticalState<Observation.ObservationRegistrar.(unknown context at $<addr>).State>.(unknown context at $<addr>).LockedBuffer #58
                                 ▿ super: Swift.ManagedBuffer<Observation.ObservationRegistrar.(unknown context at $<addr>).State, __C.os_unfair_lock_s>
                                   ▿ header: Observation.ObservationRegistrar.(unknown context at $<addr>).State
                                     - id: 0
@@ -545,23 +564,11 @@
                       ▿ lock: 0x<addr>
                         - pointerValue: <n>
                       ▿ connections: 1 member
-                        ▿ ObservableObjectPublisher #58
+                        ▿ ObservableObjectPublisher #59
                           - super: Combine.ObservableObjectPublisher.(unknown context at $<addr>).Conduit
                           - downstream: Sink #<n>
                       - identifier: nil
           ▿ _answerTimerCountdown: Combine.Published<Swift.Int>
-            ▿ storage: Combine.Published<Swift.Int>.Storage.publisher
-              ▿ publisher: Combine.Published<Swift.Int>.Publisher
-                ▿ subject: Combine.PublishedSubject<Swift.Int> #59
-                  ▿ lock: 0x<addr>
-                    - pointerValue: <n>
-                  - downstreams: Combine.ConduitList<Swift.Int, Swift.Never>.empty
-                  - currentValue: 0
-                  - upstreamSubscriptions: 0 elements
-                  - hasAnyDownstreamDemand: false
-                  ▿ changePublisher: Optional(Combine.ObservableObjectPublisher)
-                    ▿ some: Combine.ObservableObjectPublisher #55
-          ▿ _thinkingTimeCountdown: Combine.Published<Swift.Int>
             ▿ storage: Combine.Published<Swift.Int>.Storage.publisher
               ▿ publisher: Combine.Published<Swift.Int>.Publisher
                 ▿ subject: Combine.PublishedSubject<Swift.Int> #60
@@ -572,11 +579,23 @@
                   - upstreamSubscriptions: 0 elements
                   - hasAnyDownstreamDemand: false
                   ▿ changePublisher: Optional(Combine.ObservableObjectPublisher)
-                    ▿ some: Combine.ObservableObjectPublisher #55
+                    ▿ some: Combine.ObservableObjectPublisher #56
+          ▿ _thinkingTimeCountdown: Combine.Published<Swift.Int>
+            ▿ storage: Combine.Published<Swift.Int>.Storage.publisher
+              ▿ publisher: Combine.Published<Swift.Int>.Publisher
+                ▿ subject: Combine.PublishedSubject<Swift.Int> #61
+                  ▿ lock: 0x<addr>
+                    - pointerValue: <n>
+                  - downstreams: Combine.ConduitList<Swift.Int, Swift.Never>.empty
+                  - currentValue: 0
+                  - upstreamSubscriptions: 0 elements
+                  - hasAnyDownstreamDemand: false
+                  ▿ changePublisher: Optional(Combine.ObservableObjectPublisher)
+                    ▿ some: Combine.ObservableObjectPublisher #56
           ▿ _currentQuestionPaused: Combine.Published<Swift.Bool>
             ▿ storage: Combine.Published<Swift.Bool>.Storage.publisher
               ▿ publisher: Combine.Published<Swift.Bool>.Publisher
-                ▿ subject: Combine.PublishedSubject<Swift.Bool> #61
+                ▿ subject: Combine.PublishedSubject<Swift.Bool> #62
                   ▿ lock: 0x<addr>
                     - pointerValue: <n>
                   - downstreams: Combine.ConduitList<Swift.Bool, Swift.Never>.empty
@@ -584,7 +603,7 @@
                   - upstreamSubscriptions: 0 elements
                   - hasAnyDownstreamDemand: false
                   ▿ changePublisher: Optional(Combine.ObservableObjectPublisher)
-                    ▿ some: Combine.ObservableObjectPublisher #55
+                    ▿ some: Combine.ObservableObjectPublisher #56
           ▿ taskBag: Hangs.TaskBag #43
           - settings: (Function)
           - quizState: (Function)
@@ -597,11 +616,11 @@
           - confirmAnswer: (Function)
           - proceedToNextQuestion: (Function)
       ▿ $__lazy_storage_$_recordingCoordinator: Optional(Hangs.RecordingCoordinator)
-        ▿ some: Hangs.RecordingCoordinator #62
+        ▿ some: Hangs.RecordingCoordinator #63
           ▿ _recordingState: Combine.Published<Hangs.RecordingState>
             ▿ storage: Combine.Published<Hangs.RecordingState>.Storage.publisher
               ▿ publisher: Combine.Published<Hangs.RecordingState>.Publisher
-                ▿ subject: Combine.PublishedSubject<Hangs.RecordingState> #63
+                ▿ subject: Combine.PublishedSubject<Hangs.RecordingState> #64
                   ▿ lock: 0x<addr>
                     - pointerValue: <n>
                   - downstreams: Combine.ConduitList<Hangs.RecordingState, Swift.Never>.empty
@@ -615,12 +634,12 @@
                   - upstreamSubscriptions: 0 elements
                   - hasAnyDownstreamDemand: false
                   ▿ changePublisher: Optional(Combine.ObservableObjectPublisher)
-                    ▿ some: Combine.ObservableObjectPublisher #64
+                    ▿ some: Combine.ObservableObjectPublisher #65
                       ▿ _registrar: Observation.ObservationRegistrar
-                        ▿ extent: Observation.ObservationRegistrar.(unknown context at $<addr>).Extent #65
+                        ▿ extent: Observation.ObservationRegistrar.(unknown context at $<addr>).Extent #66
                           ▿ context: Observation.ObservationRegistrar.Context
                             ▿ state: Observation._ManagedCriticalState<Observation.ObservationRegistrar.(unknown context at $<addr>).State>
-                              - buffer: Observation._ManagedCriticalState<Observation.ObservationRegistrar.(unknown context at $<addr>).State>.(unknown context at $<addr>).LockedBuffer #66
+                              - buffer: Observation._ManagedCriticalState<Observation.ObservationRegistrar.(unknown context at $<addr>).State>.(unknown context at $<addr>).LockedBuffer #67
                                 ▿ super: Swift.ManagedBuffer<Observation.ObservationRegistrar.(unknown context at $<addr>).State, __C.os_unfair_lock_s>
                                   ▿ header: Observation.ObservationRegistrar.(unknown context at $<addr>).State
                                     - id: 0
@@ -629,14 +648,14 @@
                       ▿ lock: 0x<addr>
                         - pointerValue: <n>
                       ▿ connections: 1 member
-                        ▿ ObservableObjectPublisher #67
+                        ▿ ObservableObjectPublisher #68
                           - super: Combine.ObservableObjectPublisher.(unknown context at $<addr>).Conduit
                           - downstream: Sink #<n>
                       - identifier: nil
           ▿ _confirmationState: Combine.Published<Hangs.ConfirmationState>
             ▿ storage: Combine.Published<Hangs.ConfirmationState>.Storage.publisher
               ▿ publisher: Combine.Published<Hangs.ConfirmationState>.Publisher
-                ▿ subject: Combine.PublishedSubject<Hangs.ConfirmationState> #68
+                ▿ subject: Combine.PublishedSubject<Hangs.ConfirmationState> #69
                   ▿ lock: 0x<addr>
                     - pointerValue: <n>
                   - downstreams: Combine.ConduitList<Hangs.ConfirmationState, Swift.Never>.empty
@@ -650,7 +669,7 @@
                   - upstreamSubscriptions: 0 elements
                   - hasAnyDownstreamDemand: false
                   ▿ changePublisher: Optional(Combine.ObservableObjectPublisher)
-                    ▿ some: Combine.ObservableObjectPublisher #64
+                    ▿ some: Combine.ObservableObjectPublisher #65
           ▿ audioService: Hangs.MockAudioService #5
           ▿ networkService: Hangs.MockNetworkService #4
           ▿ silenceDetectionService: Hangs.SilenceDetectionService #7
@@ -690,7 +709,7 @@
       - nextQuestion: nil
   ▿ _reduceMotion: SwiftUI.Environment<Swift.Bool>
     ▿ content: SwiftUI.Environment<Swift.Bool>.Content.keyPath
-      - keyPath: \EnvironmentValues.<computed 0x<addr> (Bool)> #69
+      - keyPath: \EnvironmentValues.<computed 0x<addr> (Bool)> #70
         - super: Swift.KeyPath<SwiftUI.EnvironmentValues, Swift.Bool>
           - super: Swift.PartialKeyPath<SwiftUI.EnvironmentValues>
             ▿ super: Swift.AnyKeyPath

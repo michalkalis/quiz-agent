@@ -228,6 +228,22 @@ final class AppState: ObservableObject {
                 viewModel.liveTranscript = "Paris is the capital of France"
                 viewModel.isStreamingSTT = true
             }
+            // `--ui-test-glow-matched` / `--ui-test-glow-unmatched` (#122): voice
+            // QuestionView with the ambient-glow feedback phase pinned, so the
+            // Variant C wash/sweep/bar states can be screenshot-verified — the
+            // real trigger (SpeechTranscriber) cannot run on the Simulator at
+            // all. Direct assignment schedules no clear timer, so the phase is
+            // sticky for the screenshot.
+            if CommandLine.arguments.contains("--ui-test-glow-matched") {
+                viewModel.currentQuestion = Question.preview
+                viewModel.quizState = .askingQuestion
+                viewModel.voiceCommandCoordinator.voiceFeedbackPhase = .matched
+            }
+            if CommandLine.arguments.contains("--ui-test-glow-unmatched") {
+                viewModel.currentQuestion = Question.preview
+                viewModel.quizState = .askingQuestion
+                viewModel.voiceCommandCoordinator.voiceFeedbackPhase = .unmatched
+            }
         #endif
 
         quizViewModel = viewModel

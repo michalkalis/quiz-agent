@@ -28,6 +28,7 @@ enum TaskKey: Hashable, Sendable {
     case commandListener
     case volatileSettle
     case skipUndo
+    case voiceFeedbackGlow
     case questionReplay
     case quizStart
 }

@@ -25,6 +25,8 @@ struct AnswerConfirmationView: View {
     /// #77/#96 P2: the "LISTENING FOR COMMANDS" hint (pen `s49sd`), or nil when
     /// the confirmation command window isn't armed. Supplied by the presenter.
     var commandHint: String? = nil
+    /// #122 Variant C: transient match/miss tint for the listening bar.
+    var commandFeedback: VoiceFeedbackPhase = .idle
 
     @State private var isEditing = false
     @FocusState private var editFocused: Bool
@@ -108,7 +110,7 @@ struct AnswerConfirmationView: View {
             .frame(maxHeight: .infinity)
 
             if let commandHint, !isEditing {
-                CmdListenBar(hint: commandHint)
+                CmdListenBar(hint: commandHint, feedback: commandFeedback)
                     .padding(.top, 12)
                     .transition(.opacity)
             }
@@ -225,40 +227,40 @@ struct AnswerConfirmationView: View {
 }
 
 #if DEBUG
-#Preview("Transcript") {
-    AnswerConfirmationView(
-        isProcessing: false,
-        transcribedAnswer: .constant("Z mumíí."),
-        autoConfirmCountdown: 7,
-        autoConfirmEnabled: true,
-        autoConfirmTotal: 10,
-        onConfirm: {},
-        onReRecord: {}
-    )
-}
+    #Preview("Transcript") {
+        AnswerConfirmationView(
+            isProcessing: false,
+            transcribedAnswer: .constant("Z mumíí."),
+            autoConfirmCountdown: 7,
+            autoConfirmEnabled: true,
+            autoConfirmTotal: 10,
+            onConfirm: {},
+            onReRecord: {}
+        )
+    }
 
-#Preview("Transcript long") {
-    AnswerConfirmationView(
-        isProcessing: false,
-        transcribedAnswer: .constant("The capital of France is Paris and it has been so since the 10th century."),
-        autoConfirmCountdown: 3,
-        autoConfirmEnabled: true,
-        autoConfirmTotal: 10,
-        onConfirm: {},
-        onReRecord: {}
-    )
-}
+    #Preview("Transcript long") {
+        AnswerConfirmationView(
+            isProcessing: false,
+            transcribedAnswer: .constant("The capital of France is Paris and it has been so since the 10th century."),
+            autoConfirmCountdown: 3,
+            autoConfirmEnabled: true,
+            autoConfirmTotal: 10,
+            onConfirm: {},
+            onReRecord: {}
+        )
+    }
 
-#Preview("Processing") {
-    AnswerConfirmationView(
-        isProcessing: true,
-        transcribedAnswer: .constant(""),
-        autoConfirmCountdown: 0,
-        autoConfirmEnabled: true,
-        autoConfirmTotal: 10,
-        onConfirm: {},
-        onReRecord: {},
-        onCancel: {}
-    )
-}
+    #Preview("Processing") {
+        AnswerConfirmationView(
+            isProcessing: true,
+            transcribedAnswer: .constant(""),
+            autoConfirmCountdown: 0,
+            autoConfirmEnabled: true,
+            autoConfirmTotal: 10,
+            onConfirm: {},
+            onReRecord: {},
+            onCancel: {}
+        )
+    }
 #endif

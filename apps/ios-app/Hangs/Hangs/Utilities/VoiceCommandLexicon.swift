@@ -87,7 +87,6 @@ enum VoiceCommandLexicon {
         // answer with no undo. The fail-safe undo-abort path keeps accepting it
         // via `undoCancelVariants`.
         case (.english, .stop): return ["stop", "cancel"]
-
         // "štart" folds to "start" — the command is IDENTICAL across languages,
         // which also keeps founder muscle memory intact.
         case (.slovak, .start): return ["start"]
@@ -186,6 +185,20 @@ enum VoiceCommandLexicon {
         case (.slovak, .question): return #"Povedz „štart" alebo „preskoč""#
         case (.slovak, .confirmation): return #"Povedz „potvrď", „znova" alebo „stop""#
         case (.slovak, .result): return #"Povedz „ďalej""#
+        }
+    }
+
+    /// Caption for the on-screen listening indicator, in the COMMAND language
+    /// (#120 rule — same as `hint(on:language:)`; #122 closes the gap for the
+    /// caption itself, which was hardcoded English). Deliberately NOT in
+    /// Localizable.xcstrings: it must track the command-engine language, not
+    /// the app locale.
+    static func listeningCaption(
+        language: CommandLanguage = CommandEngineSelection.current.commandLanguage
+    ) -> String {
+        switch language {
+        case .english: return "LISTENING FOR COMMANDS"
+        case .slovak: return "POČÚVAM PRÍKAZY"
         }
     }
 

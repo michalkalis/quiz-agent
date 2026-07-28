@@ -50,6 +50,30 @@ final class VoiceCommandCoordinator: ObservableObject {
     /// spoken cancel word can abort it. `nil` = no pending skip.
     @Published private(set) var pendingSkipWindow: UndoWindow?
 
+    /// #122 Track A — the ambient-glow feedback phase (Variant C). Written only
+    /// through the helpers in VoiceCommandCoordinator+Feedback.swift; internal
+    /// (not `private(set)`) because those helpers are a sibling-file extension.
+    @Published var voiceFeedbackPhase: VoiceFeedbackPhase = .idle
+
+    // MARK: - Glow Feedback State (#122 — policy lives in +Feedback)
+
+    /// When the current `.matched` glow lit, or `nil` — input to the
+    /// min/max-display window in `noteQuizStateChangedForFeedback()`.
+    var matchedGlowStartedAt: Date?
+    /// When the unmatched glow last lit — the 4 s cooldown's input.
+    var lastUnmatchedGlowAt: Date?
+    /// The last transcript the unmatched glow lit for — "never twice in a row
+    /// for the same transcript" (locked variant-page answer).
+    var lastUnmatchedGlowText: String?
+
+    /// #122 glow durations (locked variant-page answers). `var` so tests drive
+    /// them to negligible values instead of sleeping — the repo's three flaky
+    /// async voice tests all came from real `Task.sleep`s.
+    var matchedGlowMinDisplay: TimeInterval = 0.6
+    var matchedGlowMaxDisplay: TimeInterval = 2.0
+    var unmatchedGlowDisplay: TimeInterval = 1.2
+    var unmatchedGlowCooldown: TimeInterval = 4.0
+
     /// P4a founder-overridable flag: spoken "start" on QuestionView opens the
     /// mic. `false` disables ONLY that wiring — the rest of the command layer
     /// (and Home "start") stays intact.
@@ -270,6 +294,7 @@ final class VoiceCommandCoordinator: ObservableObject {
         applyCaptureEvent(.reset)
         abortSkipUndoWindow()
         endUtterance() // no utterance survives a reset (#119)
+        resetFeedbackGlow() // #122: no glow survives a reset either
     }
 
     // MARK: - Capture Phase

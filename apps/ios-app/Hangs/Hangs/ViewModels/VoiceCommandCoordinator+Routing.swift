@@ -90,6 +90,7 @@ extension VoiceCommandCoordinator {
             let cancelTokens = VoiceCommandMatcher.normalize(transcript.text).split(separator: " ").map(String.init)
             if cancelTokens.contains(where: { VoiceCommandLexicon.isCancelWord($0) }) {
                 emitEarcon(.commandAck) // acknowledge the recognized cancel
+                noteMatchedForFeedback() // #122: visual twin of the ack earcon
                 abortSkipUndoWindow()
                 return
             }
@@ -98,6 +99,8 @@ extension VoiceCommandCoordinator {
         guard let command = VoiceCommandMatcher.match(
             transcript: transcript.text, on: screen, isFinal: transcript.isFinal
         ) else {
+            // #122: the "heard you, didn't understand" glow — throttled inside.
+            noteUnmatchedForFeedback(normalized, isFinal: transcript.isFinal)
             if shouldLogDroppedTranscript(isFinal: transcript.isFinal) {
                 var attributes = droppedTranscriptAttributes(
                     normalized, isFinal: transcript.isFinal, tokens: tokens, sincePrevMs: sincePrevMs
@@ -197,6 +200,7 @@ extension VoiceCommandCoordinator {
         Logger.voice.info("🎙️ Command recognized: \(command.rawValue, privacy: .public)")
         noteRecognizedCommand(command) // release diagnostics (#96 P2)
         emitEarcon(.commandAck) // 77.10 command-ack tone
+        noteMatchedForFeedback() // #122: visual twin of the ack earcon
         onCommandRecognized?(command)
         routeCommand(command)
     }

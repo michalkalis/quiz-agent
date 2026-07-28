@@ -116,10 +116,23 @@ enum VoiceCommandMatcher {
         scores.sort { $0.score > $1.score }
         guard let top = scores.first, top.score >= floor else { return nil }
         if scores.count > 1, scores[1].score >= floor,
-           top.score - scores[1].score < ambiguityMargin {
+           top.score - scores[1].score < ambiguityMargin
+        {
             return nil // two commands too close — ambiguous
         }
         return top.command
+    }
+
+    /// #122 Track A: whether a normalized utterance still carries at least one
+    /// non-filler token — the content-bearing gate for the unmatched-feedback
+    /// throttle. Lives here so the feedback path and the matcher share one
+    /// filler definition.
+    static func hasContentTokens(
+        _ normalized: String,
+        language: CommandLanguage = CommandEngineSelection.current.commandLanguage
+    ) -> Bool {
+        let tokens = normalized.split(separator: " ").map(String.init)
+        return !contentTokens(tokens, language: language).isEmpty
     }
 
     /// The DISTINCT content tokens of an utterance: filler stripped, duplicates
@@ -162,11 +175,11 @@ enum VoiceCommandMatcher {
     private static func levenshtein(_ a: [Character], _ b: [Character]) -> Int {
         if a.isEmpty { return b.count }
         if b.isEmpty { return a.count }
-        var previous = Array(0...b.count)
+        var previous = Array(0 ... b.count)
         var current = [Int](repeating: 0, count: b.count + 1)
-        for i in 1...a.count {
+        for i in 1 ... a.count {
             current[0] = i
-            for j in 1...b.count {
+            for j in 1 ... b.count {
                 let cost = a[i - 1] == b[j - 1] ? 0 : 1
                 current[j] = min(
                     previous[j] + 1, // deletion

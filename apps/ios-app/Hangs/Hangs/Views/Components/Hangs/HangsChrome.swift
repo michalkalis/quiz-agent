@@ -155,6 +155,9 @@ struct HangsQuizNav: View {
 struct HangsProgressBar: View {
     /// 0…1
     let progress: Double
+    /// Optional fill override — #122 Variant C flips the bar teal for the
+    /// duration of a matched-command glow. `nil` = the standard pink.
+    var tint: Color?
 
     var body: some View {
         GeometryReader { proxy in
@@ -162,12 +165,13 @@ struct HangsProgressBar: View {
                 Capsule()
                     .fill(Theme.Hangs.Colors.mutedBorder)
                 Capsule()
-                    .fill(Theme.Hangs.Colors.pink)
+                    .fill(tint ?? Theme.Hangs.Colors.pink)
                     .frame(width: max(0, min(1, progress)) * proxy.size.width)
             }
         }
         .frame(height: 3)
         .padding(.horizontal, 24)
+        .animation(.easeInOut(duration: 0.25), value: tint)
     }
 }
 

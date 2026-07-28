@@ -1,0 +1,825 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Issue #127 — Result screen redesign · design variants</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ---------------------------------------------------------------
+   Review page chrome (dark). The phone mockups below use the REAL
+   Hangs light-mode tokens from Theme+Hangs.swift.
+----------------------------------------------------------------*/
+:root{
+  --page-bg:#0F1116;
+  --page-panel:#171A21;
+  --page-line:#262B36;
+  --page-text:#E7EAF0;
+  --page-dim:#98A0B0;
+
+  /* Real app tokens — apps/ios-app/Hangs/Hangs/Utilities/Theme+Hangs.swift (light) */
+  --bg:#F6F7F9;
+  --card:#FFFFFF;
+  --ink:#0E1A2B;
+  --pink:#FF3D8F;
+  --pinkDeep:#D91E72;
+  --pinkText:#C2185B;
+  --blue:#0A84FF;
+  --blueText:#0A5DC2;
+  --muted:#6B7280;
+  --mutedFaint:#9CA3AF;
+  --green:#16A34A;
+  --greenCheck:#22C55E;
+  --teal:#14B8A6;
+  --hair:rgba(14,26,43,.078);
+  --border:rgba(14,26,43,.122);
+  --greenSoft:rgba(34,197,94,.12);
+  --pinkSoft:rgba(255,61,143,.12);
+  --cardShadow:0 4px 20px rgba(14,26,43,.08);
+  --ctaShadow:0 6px 16px rgba(255,61,143,.20);
+  --navShadow:0 2px 8px rgba(14,26,43,.06);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--page-bg);
+  color:var(--page-text);
+  font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:15px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1240px;margin:0 auto;padding:48px 28px 96px}
+a{color:#7FB4FF}
+
+/* Page header */
+.kicker{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--pink);margin:0 0 10px}
+h1{font-family:Anton,Impact,sans-serif;font-weight:400;font-size:46px;line-height:1.02;letter-spacing:-1px;margin:0 0 16px}
+.lede{max-width:78ch;color:var(--page-dim);font-size:16px;margin:0 0 14px}
+.lede strong{color:var(--page-text);font-weight:600}
+.meta{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:1.2px;color:#6E7688;margin-top:22px;padding-top:16px;border-top:1px solid var(--page-line)}
+
+/* Variant section */
+.variant{margin-top:72px;padding-top:34px;border-top:1px solid var(--page-line)}
+.vhead{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.vtag{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:2px;color:#0F1116;background:var(--pink);border-radius:5px;padding:3px 9px;font-weight:600}
+h2{font-family:Anton,Impact,sans-serif;font-weight:400;font-size:34px;letter-spacing:-.5px;margin:0}
+.concept{color:var(--page-dim);max-width:82ch;margin:10px 0 0;font-size:16px}
+
+/* Device row */
+.devices{display:flex;gap:44px;flex-wrap:wrap;margin:32px 0 6px}
+figure.device{margin:0}
+figure.device figcaption{
+  font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--page-dim);margin-top:14px;text-align:center;
+}
+figure.device figcaption b{color:var(--greenCheck);font-weight:600}
+figure.device figcaption i{color:#FF7FB4;font-style:normal;font-weight:600}
+
+/* Notes under a variant */
+.cols{display:grid;grid-template-columns:1.15fr 1fr;gap:36px;margin-top:34px}
+@media (max-width:980px){.cols{grid-template-columns:1fr}}
+h3{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--pink);margin:0 0 12px;font-weight:600}
+table.dec{width:100%;border-collapse:collapse;font-size:14px}
+table.dec td{padding:9px 0;border-bottom:1px solid var(--page-line);vertical-align:top}
+table.dec td:first-child{width:38%;color:var(--page-dim);padding-right:18px}
+ul.trade{list-style:none;margin:0;padding:0;font-size:14px}
+ul.trade li{padding:9px 0 9px 24px;border-bottom:1px solid var(--page-line);position:relative;color:var(--page-dim)}
+ul.trade li b{color:var(--page-text);font-weight:600}
+ul.trade li::before{position:absolute;left:0;top:9px;font-family:"IBM Plex Mono",monospace;font-size:12px}
+li.good::before{content:"+";color:#4ADE80}
+li.warn::before{content:"~";color:#FBBF24}
+li.bad::before{content:"−";color:#FB7185}
+
+/* =========================================================
+   iPhone frame + real Hangs components
+   390 x 844 CSS px = 1:1 with iOS points on a 390pt device.
+==========================================================*/
+.phone{
+  width:390px;height:844px;flex:0 0 auto;
+  background:var(--bg);color:var(--ink);
+  border-radius:44px;overflow:hidden;position:relative;
+  display:flex;flex-direction:column;
+  box-shadow:0 26px 64px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.07);
+}
+.phone .mono{font-family:"IBM Plex Mono",monospace}
+.anton{font-family:Anton,Impact,sans-serif;font-weight:400}
+
+/* status bar */
+.sb{height:47px;flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 30px 0 34px;font-size:15px;font-weight:600}
+.sb .dots{letter-spacing:1px;font-size:16px}
+
+/* nav (HangsQuizNav) */
+.nav{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:14px 20px 4px}
+.nav-l{display:flex;align-items:center;gap:10px}
+.xchip{width:36px;height:36px;border-radius:50%;background:var(--card);display:grid;place-items:center;box-shadow:var(--navShadow)}
+.xchip svg{width:14px;height:14px;color:var(--ink)}
+.brand{display:flex;align-items:center;gap:6px;font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:600;color:var(--blue)}
+.brand i{width:4.5px;height:4.5px;border-radius:50%;background:var(--pink);display:block}
+.counter{font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:600;letter-spacing:2px;color:var(--muted)}
+
+/* progress (HangsProgressBar) */
+.prog{flex:0 0 auto;height:3px;margin:0 24px;border-radius:2px;background:rgba(14,26,43,.10);overflow:hidden}
+.prog i{display:block;height:100%;width:30%;background:var(--pink);border-radius:2px}
+
+/* generic bits */
+.lbl{font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:500;letter-spacing:2px;text-transform:uppercase}
+.lbl.sm{font-size:10px;letter-spacing:1.6px}
+.lbl.g{color:var(--green)}.lbl.p{color:var(--pink)}.lbl.b{color:var(--blue)}
+.hair{height:1px;background:var(--hair)}
+.card{background:var(--card);border-radius:18px;box-shadow:var(--cardShadow);padding:16px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.badge{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;color:#fff;flex:0 0 auto}
+.badge svg{width:12px;height:12px}
+.badge.ok{background:var(--greenCheck)}.badge.no{background:var(--pink)}
+.badge.s20{width:20px;height:20px}.badge.s20 svg{width:10px;height:10px}
+.badge.s16{width:16px;height:16px}.badge.s16 svg{width:8px;height:8px}
+
+/* HangsResultBanner */
+.chip{display:inline-flex;align-items:center;gap:8px;border-radius:14px;padding:6px 12px;font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;letter-spacing:2px}
+.chip svg{width:11px;height:11px}
+.chip.ok{background:var(--greenSoft);color:var(--green)}
+.chip.no{background:var(--pinkSoft);color:var(--pink)}
+
+/* read aloud */
+.readaloud{display:inline-flex;align-items:center;gap:5px;color:var(--blue);font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;letter-spacing:2px}
+.readaloud svg{width:13px;height:13px}
+.raicon{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:var(--blue);background:rgba(10,132,255,.08)}
+.raicon svg{width:16px;height:16px}
+
+/* scroll zone */
+.scroll{flex:1 1 auto;min-height:0;position:relative;overflow:hidden;padding:10px 24px 0}
+.scroll::after{content:"";position:absolute;left:0;right:0;bottom:0;height:26px;background:linear-gradient(to bottom,rgba(246,247,249,0),var(--bg))}
+.fixedzone{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:10px;padding:10px 24px 0}
+
+/* boundary annotation */
+.bound{flex:0 0 auto;height:0;position:relative;z-index:5}
+.bound::before{content:"";position:absolute;left:0;right:0;top:0;border-top:1px dashed rgba(255,61,143,.6)}
+.bound span{position:absolute;right:10px;top:-8px;background:#FF3D8F;color:#fff;
+  font-family:"IBM Plex Mono",monospace;font-size:8px;font-weight:600;letter-spacing:1.2px;
+  padding:2px 6px;border-radius:5px;white-space:nowrap}
+.bound.l span{right:auto;left:10px}
+.bound.gap{margin-top:14px}
+
+/* footer (HangsPrimaryButton / Secondary / Ghost / CmdListenBar) */
+.footer{flex:0 0 auto;padding:0 24px 8px;display:flex;flex-direction:column;gap:10px}
+.cmdbar{border-radius:16px;background:rgba(20,184,166,.08);border:1px solid rgba(20,184,166,.35);padding:10px 18px;text-align:center}
+.cmdbar .t{display:flex;align-items:center;justify-content:center;gap:8px;color:var(--teal);font-family:"IBM Plex Mono",monospace;font-size:10px;font-weight:500;letter-spacing:1.5px}
+.cmdbar .t svg{width:13px;height:13px}
+.cmdbar .d{display:flex;gap:4px}
+.cmdbar .d b{width:5px;height:5px;border-radius:50%;background:var(--teal);display:block}
+.cmdbar .d b:nth-child(2){opacity:.55}.cmdbar .d b:nth-child(3){opacity:.3}
+.cmdbar .h{margin-top:6px;font-size:13px;font-weight:600;color:var(--ink)}
+.cta{height:64px;border-radius:32px;background:var(--pinkDeep);position:relative;overflow:hidden;display:grid;place-items:center;box-shadow:var(--ctaShadow)}
+.cta .fill{position:absolute;left:0;top:0;bottom:0;width:52%;background:var(--pink)}
+.cta .in{position:relative;display:flex;align-items:center;gap:10px;color:#fff;font-size:17px;font-weight:700}
+.cta .in svg{width:15px;height:15px}
+.cta .sec{font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:500;background:rgba(0,0,0,.22);border-radius:10px;padding:3px 8px}
+.btn2{height:44px;border-radius:22px;background:var(--card);border:1px solid var(--border);display:grid;place-items:center;font-size:16px;font-weight:600;color:var(--ink)}
+.ghost{min-height:32px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:14px;font-weight:500;color:var(--blue)}
+.ghost svg{width:13px;height:13px}
+.ghost.m{color:var(--muted)}
+.homebar{flex:0 0 auto;height:26px;display:grid;place-items:center}
+.homebar::after{content:"";width:140px;height:5px;border-radius:3px;background:rgba(14,26,43,.28)}
+
+/* text helpers inside phone */
+.sub{font-size:14px;font-weight:500;color:var(--muted)}
+.explain{font-size:15px;line-height:1.42;color:var(--ink)}
+.explain.clamp3{display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
+.qrecap{font-size:13px;line-height:1.35;color:var(--muted)}
+.said{font-size:14px;font-weight:600;color:var(--mutedFaint);text-decoration:line-through}
+.srcline{display:flex;align-items:center;gap:6px;font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:1.2px;color:var(--mutedFaint)}
+.srcline svg{width:9px;height:9px}
+.hearit{display:inline-flex;align-items:center;gap:5px;color:var(--blue);font-size:12px;font-weight:600}
+.hearit svg{width:12px;height:12px}
+.ellipsis{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* variant-specific */
+.a-strip{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 24px 12px}
+.pill{display:inline-flex;align-items:baseline;gap:6px;background:rgba(14,26,43,.05);border-radius:14px;padding:5px 11px}
+.pill .lbl{font-size:10px;letter-spacing:1.6px;color:var(--pinkText)}
+.pill b{font-family:Anton,Impact,sans-serif;font-weight:400;font-size:20px;letter-spacing:-.5px;color:var(--ink)}
+.pill em{font-style:normal;font-size:11px;font-weight:500;color:var(--muted)}
+
+.hero{flex:0 0 auto;padding:12px 28px 8px}
+.hero .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.heroline{font-family:Anton,Impact,sans-serif;font-size:40px;letter-spacing:-2px;line-height:1.06;color:var(--ink);white-space:nowrap}
+
+.b-strip{flex:0 0 auto;display:flex;align-items:center;gap:12px;padding:10px 24px 12px}
+.b-strip .w{font-family:Anton,Impact,sans-serif;font-size:26px;letter-spacing:-1.2px;color:var(--ink);white-space:nowrap}
+
+.discl{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.discl .l{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600;color:var(--blue)}
+.discl .l svg{width:15px;height:15px}
+.discl .c svg{width:14px;height:14px;color:var(--mutedFaint)}
+
+.field{border-radius:18px;padding:14px 16px}
+.field.ok{background:var(--greenSoft)}
+.field.no{background:var(--pinkSoft)}
+.field .w{font-family:Anton,Impact,sans-serif;font-size:30px;letter-spacing:-1.4px;line-height:1.06;color:var(--ink);white-space:nowrap;margin-top:6px}
+.scorebox{display:flex;align-items:baseline;gap:6px}
+.scorebox b{font-family:Anton,Impact,sans-serif;font-weight:400;font-size:22px;letter-spacing:-.5px;color:var(--ink)}
+.scorebox em{font-style:normal;font-size:12px;font-weight:500;color:var(--muted)}
+
+.answerpanel{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;background:var(--card);border-radius:18px;box-shadow:var(--cardShadow);padding:16px}
+.answerpanel .grow{flex:1 1 auto;min-height:0}
+.bigans{font-family:Anton,Impact,sans-serif;font-size:46px;letter-spacing:-1.5px;line-height:1.04;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:clip}
+
+.footrow{display:flex;gap:10px;align-items:stretch}
+.footrow .cta{flex:1 1 auto}
+.stayblock{flex:0 0 auto;width:76px;height:64px;border-radius:32px;background:var(--card);border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--ink)}
+.stayblock svg{width:16px;height:16px}
+.stayblock span{font-family:"IBM Plex Mono",monospace;font-size:10px;font-weight:500;letter-spacing:1.4px;color:var(--muted)}
+
+.statbox{background:var(--card);border-radius:18px;box-shadow:var(--cardShadow);padding:10px 14px}
+.statbox .v{display:flex;align-items:baseline;gap:6px;margin-top:2px}
+.statbox .v b{font-family:Anton,Impact,sans-serif;font-weight:400;font-size:26px;letter-spacing:-1px;color:var(--ink)}
+.statbox .v em{font-style:normal;font-size:12px;font-weight:500;color:var(--muted)}
+
+.stack{display:flex;flex-direction:column;gap:12px}
+.mt6{margin-top:6px}.mt10{margin-top:10px}.mt12{margin-top:12px}.mb8{margin-bottom:8px}
+</style>
+</head>
+<body>
+
+<!-- icon sprite -->
+<svg style="display:none" aria-hidden="true">
+  <symbol id="ic-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="ic-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5.2 5.2L20 7"/></symbol>
+  <symbol id="ic-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h14M12.5 5.5L19 12l-6.5 6.5"/></symbol>
+  <symbol id="ic-speaker" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5v5h3.6L11 18.5v-13L6.6 9.5H3z" fill="currentColor" stroke="none"/><path d="M14.5 9a4 4 0 010 6M17.6 6.4a8 8 0 010 11.2"/></symbol>
+  <symbol id="ic-wave" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 12h2M7 7v10M12 4v16M17 8v8M22 12h0"/></symbol>
+  <symbol id="ic-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></symbol>
+  <symbol id="ic-chevr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></symbol>
+  <symbol id="ic-book" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5.5h6a2.5 2.5 0 012.5 2.5v11a2 2 0 00-2-2H3zM21 5.5h-6A2.5 2.5 0 0012.5 8v11a2 2 0 012-2H21z"/></symbol>
+  <symbol id="ic-pause" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1.4"/><rect x="14" y="5" width="4" height="14" rx="1.4"/></symbol>
+</svg>
+
+<div class="wrap">
+
+<p class="kicker">Design session · 2026-07-28</p>
+<h1>Issue #127 — Result screen redesign</h1>
+<p class="lede">
+  The Result screen today leads with a 52pt <strong>“MISSED IT.”</strong> and buries the two things a wrong answer
+  actually needs — <strong>the correct answer and why</strong> — below it, while the pinned nav has no visual boundary
+  so the hero clips against it on scroll. All three variants below rebuild the hierarchy rather than repaint it:
+  each one takes a different position on what dominates (verdict / answer card / a fixed no-scroll deck), where the
+  explanation lives, and how much footer chrome survives.
+</p>
+<p class="lede">
+  Every mockup uses the real shipped tokens and copy from <code>Theme+Hangs.swift</code>, <code>ResultView.swift</code>
+  and the Hangs component library — real hexes, Anton / IBM Plex Mono / Inter, real button heights, the real
+  <code>CmdListenBar</code> and the #108B countdown CTA. Frames are 390×844 (1:1 with iOS points).
+  <strong>Score is never made dominant in any variant</strong> — it lost that argument in #84; it appears as a chip,
+  a compact box, or inline with the verdict, and each variant says which.
+</p>
+<p class="meta">
+  Content shown is one sample question · dashed pink lines mark where pinned chrome ends and scrolling begins ·
+  light appearance shown; every token has a dark-mode pair.
+</p>
+
+<!-- =====================================================================
+     VARIANT A
+====================================================================== -->
+<section class="variant">
+  <div class="vhead">
+    <span class="vtag">VARIANT A</span>
+    <h2>ANSWER FIRST</h2>
+  </div>
+  <p class="concept">
+    The verdict shrinks to the chip it already is, and the answer card becomes the whole screen. On a wrong answer the
+    <em>correct</em> answer is the top row at 44pt and the user's own answer drops to a struck-through footnote — the
+    exact inverse of today. The explanation is always-on inline body copy, so “Why is this correct?” disappears from
+    the footer entirely.
+  </p>
+
+  <div class="devices">
+
+    <!-- A · CORRECT -->
+    <figure class="device">
+      <div class="phone">
+        <div class="sb"><span>9:41</span><span class="dots">•••</span></div>
+        <div class="nav">
+          <div class="nav-l">
+            <div class="xchip"><svg><use href="#ic-x"/></svg></div>
+            <span class="brand">trubbo.<i></i></span>
+          </div>
+          <span class="counter">03 / 10</span>
+        </div>
+        <div class="prog"><i></i></div>
+
+        <div class="a-strip">
+          <span class="chip ok"><svg><use href="#ic-check"/></svg>correct</span>
+          <span class="pill"><span class="lbl">score</span><b>3</b><em>+1</em></span>
+          <span class="readaloud"><svg><use href="#ic-speaker"/></svg>read aloud</span>
+        </div>
+
+        <div class="bound"><span>PINNED ↑ · SCROLLS ↓</span></div>
+
+        <div class="scroll">
+          <div class="card">
+            <div class="row">
+              <span class="lbl g">your answer</span>
+              <span class="badge ok"><svg><use href="#ic-check"/></svg></span>
+            </div>
+            <div class="anton mt6" style="font-size:44px;letter-spacing:-1.5px;line-height:1.05">Uranus</div>
+            <div class="hair mt12"></div>
+            <div class="mt12"><span class="lbl b">why</span></div>
+            <p class="explain mt6" style="margin:6px 0 0">
+              Uranus is tipped about 98°, almost certainly knocked over by a giant impact early on — so it rolls
+              around the Sun on its side instead of spinning upright like every other planet.
+            </p>
+            <div class="hair mt12"></div>
+            <div class="mt12"><span class="lbl p sm">the question</span></div>
+            <p class="qrecap" style="margin:5px 0 0">Which planet in our solar system rotates on its side?</p>
+            <div class="hair mt12"></div>
+            <div class="srcline mt10">source · nasa.gov <svg><use href="#ic-chevr"/></svg></div>
+          </div>
+        </div>
+
+        <div class="bound l"><span>↓ PINNED FOOTER</span></div>
+
+        <div class="footer">
+          <div class="cmdbar">
+            <div class="t"><svg><use href="#ic-wave"/></svg>LISTENING FOR COMMANDS<span class="d"><b></b><b></b><b></b></span></div>
+            <div class="h">Say "next"</div>
+          </div>
+          <div class="cta">
+            <div class="fill"></div>
+            <div class="in">Next question <svg><use href="#ic-arrow"/></svg> <span class="sec">5s</span></div>
+          </div>
+          <div class="btn2">Stay here</div>
+        </div>
+        <div class="homebar"></div>
+      </div>
+      <figcaption><b>Correct answer</b></figcaption>
+    </figure>
+
+    <!-- A · INCORRECT -->
+    <figure class="device">
+      <div class="phone">
+        <div class="sb"><span>9:41</span><span class="dots">•••</span></div>
+        <div class="nav">
+          <div class="nav-l">
+            <div class="xchip"><svg><use href="#ic-x"/></svg></div>
+            <span class="brand">trubbo.<i></i></span>
+          </div>
+          <span class="counter">03 / 10</span>
+        </div>
+        <div class="prog"><i></i></div>
+
+        <div class="a-strip">
+          <span class="chip no"><svg><use href="#ic-x"/></svg>not quite</span>
+          <span class="pill"><span class="lbl">score</span><b>2</b><em>+0</em></span>
+          <span class="readaloud"><svg><use href="#ic-speaker"/></svg>read aloud</span>
+        </div>
+
+        <div class="bound"><span>PINNED ↑ · SCROLLS ↓</span></div>
+
+        <div class="scroll">
+          <div class="card">
+            <div class="row">
+              <span class="lbl g">the answer</span>
+              <span class="badge ok"><svg><use href="#ic-check"/></svg></span>
+            </div>
+            <div class="anton mt6" style="font-size:44px;letter-spacing:-1.5px;line-height:1.05">Uranus</div>
+            <div class="hair mt12"></div>
+            <div class="mt12"><span class="lbl b">why</span></div>
+            <p class="explain mt6" style="margin:6px 0 0">
+              Uranus is tipped about 98°, almost certainly knocked over by a giant impact early on — so it rolls
+              around the Sun on its side instead of spinning upright like every other planet.
+            </p>
+            <div class="hair mt12"></div>
+            <div class="row mt12">
+              <div>
+                <span class="lbl p sm">you said</span>
+                <div class="said" style="margin-top:3px">Saturn</div>
+              </div>
+              <span class="badge no s20"><svg><use href="#ic-x"/></svg></span>
+            </div>
+            <div class="hair mt12"></div>
+            <div class="srcline mt10">source · nasa.gov <svg><use href="#ic-chevr"/></svg></div>
+          </div>
+        </div>
+
+        <div class="bound l"><span>↓ PINNED FOOTER</span></div>
+
+        <div class="footer">
+          <div class="cmdbar">
+            <div class="t"><svg><use href="#ic-wave"/></svg>LISTENING FOR COMMANDS<span class="d"><b></b><b></b><b></b></span></div>
+            <div class="h">Say "next"</div>
+          </div>
+          <div class="cta">
+            <div class="fill"></div>
+            <div class="in">Next question <svg><use href="#ic-arrow"/></svg> <span class="sec">5s</span></div>
+          </div>
+          <div class="btn2">Stay here</div>
+        </div>
+        <div class="homebar"></div>
+      </div>
+      <figcaption><i>Incorrect answer</i> — correct answer on top, “you said” demoted</figcaption>
+    </figure>
+
+  </div>
+
+  <div class="cols">
+    <div>
+      <h3>What this variant decides</h3>
+      <table class="dec">
+        <tr><td>Dominant element</td><td>The <strong>answer card</strong>. The verdict is a chip; the score is a header pill. Nothing competes with the 44pt answer.</td></tr>
+        <tr><td>Correct vs incorrect</td><td><strong>One shared layout.</strong> The 44pt slot always holds the canonical answer; only the label (“your answer” / “the answer”) and the bottom row (question recap / struck “you said”) swap.</td></tr>
+        <tr><td>Explanation</td><td><strong>Inline, always visible</strong>, under a blue <span class="mono">WHY</span> label, on both states. The web sheet degrades to a mono <span class="mono">source · nasa.gov</span> line inside the card.</td></tr>
+        <tr><td>Pinned / scroll boundary</td><td>Nav + progress + verdict strip are pinned as one band; the card region scrolls beneath it. Boundary marked by the strip's own padding, so nothing can clip mid-glyph.</td></tr>
+        <tr><td>Footer inventory</td><td><span class="mono">CmdListenBar</span> · “Next question” (with #108B countdown) · “Stay here” (→ “Resume auto-advance” when paused). <strong>“Why is this correct?” is cut.</strong></td></tr>
+        <tr><td>“Try this question again”</td><td><strong>Formally dropped.</strong> The answer is already revealed, so a retry has nothing left to test.</td></tr>
+      </table>
+    </div>
+    <div>
+      <h3>Tradeoffs</h3>
+      <ul class="trade">
+        <li class="good"><b>Glanceability</b> — one word at 44pt is the only large text; a driver's eye lands on the answer with no scan.</li>
+        <li class="good"><b>Wrong-answer hierarchy</b> — best of the three. Correct answer first, explanation second, own answer last, source last.</li>
+        <li class="warn"><b>Scroll</b> — the card can still overflow on a long explanation; scrolling is confined to one card, but auto-advance may pull the screen away mid-read.</li>
+        <li class="good"><b>Footer</b> — 2 controls plus the listening bar; the shortest footer of the three.</li>
+        <li class="bad"><b>Brand cost</b> — “NAILED IT.” / “MISSED IT.” disappears entirely. The screen loses its most characteristic moment.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================================
+     VARIANT B
+====================================================================== -->
+<section class="variant">
+  <div class="vhead">
+    <span class="vtag">VARIANT B</span>
+    <h2>VERDICT HERO, DIVERGENT STATES</h2>
+  </div>
+  <p class="concept">
+    Keeps the Anton verdict as the brand moment but pins it and caps it at 40pt so it can never clip or wrap — then
+    lets the two states genuinely diverge. <strong>Correct celebrates</strong> (full hero, explanation collapsed as a
+    reward you can open). <strong>Incorrect teaches</strong> (the hero collapses to a 26pt inline strip, and the
+    explanation is expanded by default because that is the moment it matters).
+  </p>
+
+  <div class="devices">
+
+    <!-- B · CORRECT -->
+    <figure class="device">
+      <div class="phone">
+        <div class="sb"><span>9:41</span><span class="dots">•••</span></div>
+        <div class="nav">
+          <div class="nav-l">
+            <div class="xchip"><svg><use href="#ic-x"/></svg></div>
+            <span class="brand">trubbo.<i></i></span>
+          </div>
+          <span class="counter">03 / 10</span>
+        </div>
+        <div class="prog"><i></i></div>
+
+        <div class="hero">
+          <div class="top">
+            <span class="chip ok"><svg><use href="#ic-check"/></svg>correct</span>
+            <span class="readaloud"><svg><use href="#ic-speaker"/></svg>read aloud</span>
+          </div>
+          <div class="heroline">NAILED IT.</div>
+          <div class="sub" style="margin-top:6px">+1 points</div>
+        </div>
+
+        <div class="bound"><span>PINNED ↑ · SCROLLS ↓</span></div>
+
+        <div class="scroll">
+          <div class="stack">
+            <div class="card">
+              <div class="row">
+                <span class="lbl g">your answer</span>
+                <span class="badge ok"><svg><use href="#ic-check"/></svg></span>
+              </div>
+              <div class="anton mt6" style="font-size:32px;letter-spacing:-1px;line-height:1.06">Uranus</div>
+              <div class="hair mt12"></div>
+              <div class="mt12"><span class="lbl p">the question</span></div>
+              <p class="qrecap" style="margin:5px 0 0;font-size:15px">Which planet in our solar system rotates on its side?</p>
+            </div>
+
+            <div class="statbox">
+              <span class="lbl p">score</span>
+              <div class="v"><b>3</b><em>+1</em></div>
+            </div>
+
+            <div class="card" style="padding:14px 16px">
+              <div class="discl">
+                <span class="l"><svg><use href="#ic-book"/></svg>Why is this correct?</span>
+                <span class="c"><svg><use href="#ic-chev"/></svg></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bound l"><span>↓ PINNED FOOTER</span></div>
+
+        <div class="footer">
+          <div class="cmdbar">
+            <div class="t"><svg><use href="#ic-wave"/></svg>LISTENING FOR COMMANDS<span class="d"><b></b><b></b><b></b></span></div>
+            <div class="h">Say "next"</div>
+          </div>
+          <div class="cta">
+            <div class="fill"></div>
+            <div class="in">Next question <svg><use href="#ic-arrow"/></svg> <span class="sec">5s</span></div>
+          </div>
+          <div class="btn2">Stay here</div>
+        </div>
+        <div class="homebar"></div>
+      </div>
+      <figcaption><b>Correct answer</b> — full hero, explanation collapsed</figcaption>
+    </figure>
+
+    <!-- B · INCORRECT -->
+    <figure class="device">
+      <div class="phone">
+        <div class="sb"><span>9:41</span><span class="dots">•••</span></div>
+        <div class="nav">
+          <div class="nav-l">
+            <div class="xchip"><svg><use href="#ic-x"/></svg></div>
+            <span class="brand">trubbo.<i></i></span>
+          </div>
+          <span class="counter">03 / 10</span>
+        </div>
+        <div class="prog"><i></i></div>
+
+        <div class="b-strip">
+          <span class="chip no"><svg><use href="#ic-x"/></svg>not quite</span>
+          <span class="w">MISSED IT.</span>
+          <span style="flex:1"></span>
+          <span class="raicon"><svg><use href="#ic-speaker"/></svg></span>
+        </div>
+
+        <div class="bound"><span>PINNED ↑ · SCROLLS ↓</span></div>
+
+        <div class="scroll">
+          <div class="stack">
+            <div class="card">
+              <div class="row">
+                <span class="lbl g">the answer</span>
+                <span class="badge ok"><svg><use href="#ic-check"/></svg></span>
+              </div>
+              <div class="anton mt6" style="font-size:36px;letter-spacing:-1.2px;line-height:1.05">Uranus</div>
+              <div class="hair mt12"></div>
+              <div class="row mt12">
+                <span class="lbl b">why</span>
+                <span class="hearit"><svg><use href="#ic-speaker"/></svg>hear it</span>
+              </div>
+              <p class="explain" style="margin:6px 0 0">
+                Uranus is tipped about 98°, almost certainly knocked over by a giant impact early on — so it rolls
+                around the Sun on its side instead of spinning upright like every other planet.
+              </p>
+              <div class="hair mt12"></div>
+              <div class="row mt12">
+                <div>
+                  <span class="lbl p sm">you said</span>
+                  <div class="said" style="margin-top:3px">Saturn</div>
+                </div>
+                <span class="badge no s20"><svg><use href="#ic-x"/></svg></span>
+              </div>
+            </div>
+
+            <div class="statbox">
+              <span class="lbl p">score</span>
+              <div class="v"><b>2</b><em>+0</em></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bound l"><span>↓ PINNED FOOTER</span></div>
+
+        <div class="footer">
+          <div class="cmdbar">
+            <div class="t"><svg><use href="#ic-wave"/></svg>LISTENING FOR COMMANDS<span class="d"><b></b><b></b><b></b></span></div>
+            <div class="h">Say "next"</div>
+          </div>
+          <div class="cta">
+            <div class="fill"></div>
+            <div class="in">Next question <svg><use href="#ic-arrow"/></svg> <span class="sec">5s</span></div>
+          </div>
+          <div class="btn2">Stay here</div>
+          <div class="ghost"><svg><use href="#ic-book"/></svg>Read the source</div>
+        </div>
+        <div class="homebar"></div>
+      </div>
+      <figcaption><i>Incorrect answer</i> — hero collapses, explanation expands</figcaption>
+    </figure>
+
+  </div>
+
+  <div class="cols">
+    <div>
+      <h3>What this variant decides</h3>
+      <table class="dec">
+        <tr><td>Dominant element</td><td><strong>The verdict — but only when you were right.</strong> On a wrong answer the answer card takes over and the verdict becomes a 26pt inline strip.</td></tr>
+        <tr><td>Correct vs incorrect</td><td><strong>Genuinely divergent.</strong> Different hero size, different card contents, different default disclosure state. Two layouts to build and maintain.</td></tr>
+        <tr><td>Explanation</td><td><strong>Collapsible row, state-dependent default</strong>: closed on correct (a “reward” you opt into), open on incorrect. The full-screen <span class="mono">SourceWebView</span> survives behind a ghost “Read the source” — now shown on <em>both</em> states, closing the <code>isCorrect &amp;&amp;</code> gate at <code>ResultView.swift:225</code>.</td></tr>
+        <tr><td>Pinned / scroll boundary</td><td>Nav + progress + hero all pinned; only cards scroll. The 52pt headline drops to 40pt (correct) / 26pt (incorrect) with a hard one-line rule, which removes the clipping mechanism at its source.</td></tr>
+        <tr><td>Footer inventory</td><td>Correct: <span class="mono">CmdListenBar</span> · “Next question” · “Stay here”. Incorrect adds a ghost “Read the source”. “Why is this correct?” moves out of the footer and into the card as a disclosure row.</td></tr>
+        <tr><td>“Try this question again”</td><td><strong>Dropped</strong>, and the freed footer slot is spent on the source link instead.</td></tr>
+      </table>
+    </div>
+    <div>
+      <h3>Tradeoffs</h3>
+      <ul class="trade">
+        <li class="good"><b>Glanceability</b> — strongest emotional read on a correct answer; the wrong-answer strip is calm and puts the answer at 36pt.</li>
+        <li class="good"><b>Wrong-answer hierarchy</b> — answer, then why, then your answer. Only marginally behind Variant A, and it keeps the brand voice.</li>
+        <li class="warn"><b>Scroll</b> — the tallest content of the three (card + score box + disclosure). Real scrolling is expected, which is a poor fit for a moving car.</li>
+        <li class="warn"><b>Footer</b> — up to 4 stacked elements on the incorrect state; the busiest footer here.</li>
+        <li class="bad"><b>Build cost</b> — two divergent layouts plus a disclosure animation; the most implementation surface and the most snapshot churn.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================================
+     VARIANT C
+====================================================================== -->
+<section class="variant">
+  <div class="vhead">
+    <span class="vtag">VARIANT C</span>
+    <h2>ZERO-SCROLL DECK</h2>
+  </div>
+  <p class="concept">
+    The driving-safety maximalist: the screen <strong>never scrolls</strong>, so the header cannot clip by
+    construction. Three fixed zones — chrome, a colour-washed verdict field that carries the verdict word and the
+    score together, and an answer panel that fills whatever is left. The explanation is capped at about five lines with a
+    <em>hear it</em> button that speaks it, replacing the unusable-in-motion web sheet; the footer consolidates to a
+    single row.
+  </p>
+
+  <div class="devices">
+
+    <!-- C · CORRECT -->
+    <figure class="device">
+      <div class="phone">
+        <div class="sb"><span>9:41</span><span class="dots">•••</span></div>
+        <div class="nav">
+          <div class="nav-l">
+            <div class="xchip"><svg><use href="#ic-x"/></svg></div>
+            <span class="brand">trubbo.<i></i></span>
+          </div>
+          <span class="counter">03 / 10</span>
+        </div>
+        <div class="prog"><i></i></div>
+
+        <div class="bound gap"><span>NOTHING BELOW EVER SCROLLS</span></div>
+
+        <div class="fixedzone">
+          <div class="field ok">
+            <div class="row">
+              <span class="chip ok" style="background:transparent;padding:0"><svg><use href="#ic-check"/></svg>correct</span>
+              <span class="scorebox"><span class="lbl p sm">score</span><b>3</b><em>+1</em></span>
+            </div>
+            <div class="w">NAILED IT.</div>
+          </div>
+
+          <div class="answerpanel">
+            <div class="row">
+              <span class="lbl g">your answer</span>
+              <span class="readaloud"><svg><use href="#ic-speaker"/></svg>read aloud</span>
+            </div>
+            <div class="bigans mt6">Uranus</div>
+            <div class="hair mt12"></div>
+            <div class="row mt12">
+              <span class="lbl b">why</span>
+              <span class="hearit"><svg><use href="#ic-speaker"/></svg>hear it</span>
+            </div>
+            <p class="explain clamp3" style="margin:6px 0 0">
+              Uranus is tipped about 98°, almost certainly knocked over by a giant impact early on — so it rolls
+              around the Sun on its side instead of spinning upright like every other planet.
+            </p>
+            <div class="grow"></div>
+            <div class="hair"></div>
+            <div class="srcline mt10 ellipsis">the question · Which planet rotates on its side?</div>
+            <div class="srcline" style="margin-top:6px">source · nasa.gov <svg><use href="#ic-chevr"/></svg></div>
+          </div>
+        </div>
+
+        <div class="footer" style="margin-top:10px">
+          <div class="cmdbar">
+            <div class="t"><svg><use href="#ic-wave"/></svg>LISTENING FOR COMMANDS<span class="d"><b></b><b></b><b></b></span></div>
+            <div class="h">Say "next"</div>
+          </div>
+          <div class="footrow">
+            <div class="stayblock"><svg><use href="#ic-pause"/></svg><span>STAY</span></div>
+            <div class="cta">
+              <div class="fill"></div>
+              <div class="in">Next question <svg><use href="#ic-arrow"/></svg> <span class="sec">5s</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="homebar"></div>
+      </div>
+      <figcaption><b>Correct answer</b></figcaption>
+    </figure>
+
+    <!-- C · INCORRECT -->
+    <figure class="device">
+      <div class="phone">
+        <div class="sb"><span>9:41</span><span class="dots">•••</span></div>
+        <div class="nav">
+          <div class="nav-l">
+            <div class="xchip"><svg><use href="#ic-x"/></svg></div>
+            <span class="brand">trubbo.<i></i></span>
+          </div>
+          <span class="counter">03 / 10</span>
+        </div>
+        <div class="prog"><i></i></div>
+
+        <div class="bound gap"><span>NOTHING BELOW EVER SCROLLS</span></div>
+
+        <div class="fixedzone">
+          <div class="field no">
+            <div class="row">
+              <span class="chip no" style="background:transparent;padding:0"><svg><use href="#ic-x"/></svg>not quite</span>
+              <span class="scorebox"><span class="lbl p sm">score</span><b>2</b><em>+0</em></span>
+            </div>
+            <div class="w">MISSED IT.</div>
+          </div>
+
+          <div class="answerpanel">
+            <div class="row">
+              <span class="lbl g">the answer</span>
+              <span class="readaloud"><svg><use href="#ic-speaker"/></svg>read aloud</span>
+            </div>
+            <div class="bigans mt6">Uranus</div>
+            <div class="hair mt12"></div>
+            <div class="row mt12">
+              <span class="lbl b">why</span>
+              <span class="hearit"><svg><use href="#ic-speaker"/></svg>hear it</span>
+            </div>
+            <p class="explain clamp3" style="margin:6px 0 0">
+              Uranus is tipped about 98°, almost certainly knocked over by a giant impact early on — so it rolls
+              around the Sun on its side instead of spinning upright like every other planet.
+            </p>
+            <div class="grow"></div>
+            <div class="hair"></div>
+            <div class="row" style="margin-top:10px">
+              <div class="srcline">you said · <span class="said" style="font-size:12px">Saturn</span></div>
+              <span class="badge no s16"><svg><use href="#ic-x"/></svg></span>
+            </div>
+            <div class="srcline" style="margin-top:6px">source · nasa.gov <svg><use href="#ic-chevr"/></svg></div>
+          </div>
+        </div>
+
+        <div class="footer" style="margin-top:10px">
+          <div class="cmdbar">
+            <div class="t"><svg><use href="#ic-wave"/></svg>LISTENING FOR COMMANDS<span class="d"><b></b><b></b><b></b></span></div>
+            <div class="h">Say "next"</div>
+          </div>
+          <div class="footrow">
+            <div class="stayblock"><svg><use href="#ic-pause"/></svg><span>STAY</span></div>
+            <div class="cta">
+              <div class="fill"></div>
+              <div class="in">Next question <svg><use href="#ic-arrow"/></svg> <span class="sec">5s</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="homebar"></div>
+      </div>
+      <figcaption><i>Incorrect answer</i> — identical layout, swapped colour field</figcaption>
+    </figure>
+
+  </div>
+
+  <div class="cols">
+    <div>
+      <h3>What this variant decides</h3>
+      <table class="dec">
+        <tr><td>Dominant element</td><td><strong>The answer at 46pt</strong>, inside a panel whose <em>colour</em> carries the verdict. The verdict word survives at 30pt inside the tinted field; the score sits inline next to it and is never a card.</td></tr>
+        <tr><td>Correct vs incorrect</td><td><strong>One layout, byte-identical structure.</strong> Only the field tint, the labels and the last row (question recap vs struck “you said”) change. Cheapest to build and to keep in sync.</td></tr>
+        <tr><td>Explanation</td><td><strong>Inline, hard-clamped to ~5 lines</strong>, with a blue <em>hear it</em> control that speaks the explanation via the existing TTS path. The web sheet is demoted to a mono source line — legal to tap when parked, invisible when driving.</td></tr>
+        <tr><td>Pinned / scroll boundary</td><td><strong>There is no boundary — nothing scrolls.</strong> The panel flexes to the viewport, so the clipping mechanism (#127 finding 3) cannot occur on any screen size.</td></tr>
+        <tr><td>Footer inventory</td><td><span class="mono">CmdListenBar</span> plus <strong>one row</strong>: a 76pt “STAY” pill next to the “Next question” CTA. Paused state swaps the pause glyph for play — same slot, no extra row. “Why is this correct?” is cut.</td></tr>
+        <tr><td>“Try this question again”</td><td><strong>Formally dropped</strong> — there is no fixed-height budget for it, and the answer is already on screen.</td></tr>
+      </table>
+    </div>
+    <div>
+      <h3>Tradeoffs</h3>
+      <ul class="trade">
+        <li class="good"><b>Glanceability</b> — highest. Colour tells you the verdict pre-attentively; the answer is the largest thing on screen; nothing moves under your thumb.</li>
+        <li class="good"><b>Wrong-answer hierarchy</b> — answer, why, then a 12pt footnote for what you said. Same as A, plus an audio route to the explanation.</li>
+        <li class="good"><b>Scroll</b> — none. The header-clipping bug is structurally impossible, and auto-advance can never yank content mid-scroll.</li>
+        <li class="good"><b>Footer</b> — the simplest: two controls on one row, fixed height, no state-dependent stacking.</li>
+        <li class="bad"><b>Truncation</b> — long explanations lose their tail and long answers must scale down. Content quality has to carry the constraint, or the “hear it” route becomes mandatory rather than optional.</li>
+        <li class="warn"><b>Brand cost</b> — the Anton verdict survives, but at 30pt inside a tinted box it is a label, not a moment.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<p class="meta">
+  Open questions for the founder that the mockups deliberately do <em>not</em> pre-decide:
+  whether the explanation should appear on correct answers at all (all three variants say yes — symmetry serves
+  learning) · whether an audio “hear it” route is worth the TTS cost per result · and whether the
+  <span class="mono">CmdListenBar</span> earns its ~56pt on this screen now that the CTA already carries the countdown.
+</p>
+
+</div>
+</body>
+</html>

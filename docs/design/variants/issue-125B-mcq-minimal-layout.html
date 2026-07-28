@@ -1,0 +1,721 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Issue #125 Track B — Minimalist MCQ layout</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ===========================================================
+   Issue #125 Track B — design variants
+   Tokens copied verbatim from apps/ios-app/Hangs/Hangs/Utilities/Theme+Hangs.swift
+   (light appearance shown; every token below is adaptive in code).
+   Component geometry from AnswerOption.swift (64pt/r16/1.5pt/40pt badge),
+   MCQOptionPicker.swift (12pt gaps, h16), ListeningPill.swift, HangsChrome.swift
+   (36pt chips, 3pt progress bar), HangsButton.swift (44pt Skip capsule).
+   =========================================================== */
+:root{
+  /* app tokens (light appearance) */
+  --bg:#F6F7F9;
+  --bgCard:#FFFFFF;
+  --ink:#0E1A2B;
+  --muted:#6B7280;
+  --pink:#FF3D8F;
+  --pinkText:#C2185B;
+  --pinkSoft:rgba(255,61,143,.12);
+  --blue:#0A84FF;
+  --blueText:#0A5DC2;
+  --accentPrimary:#8B5CF6;
+  --accentPrimarySoft:rgba(139,92,246,.125);
+  --hairline:rgba(14,26,43,.078);
+  --subtleBorder:rgba(14,26,43,.122);
+  --mutedBorder:rgba(14,26,43,.10);
+  --navShadow:0 2px 8px rgba(14,26,43,.06);
+  /* page chrome (review page only — not an app token) */
+  --page:#0C0D10;
+  --panel:#15171C;
+  --panelLine:rgba(255,255,255,.09);
+  --pageText:#E8EAF0;
+  --pageMuted:#8B93A5;
+  --display:"Anton","Arial Narrow",Haettenschweiler,Impact,sans-serif;
+  --body:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--page);color:var(--pageText);
+  font-family:var(--body);font-size:15px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;padding:0 0 96px;
+}
+.wrap{max-width:1360px;margin:0 auto;padding:0 28px}
+code{font-family:var(--mono);font-size:.9em;color:var(--pageText);background:rgba(255,255,255,.06);padding:1px 5px;border-radius:4px}
+
+/* ---------- page header ---------- */
+header.page{padding:56px 0 8px;border-bottom:1px solid var(--panelLine);margin-bottom:12px}
+header.page .kicker{font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--pink)}
+header.page h1{font-family:var(--display);font-size:52px;line-height:1.02;letter-spacing:-.5px;margin:12px 0 14px;text-transform:uppercase;font-weight:400}
+header.page p.lede{max-width:80ch;color:var(--pageMuted);font-size:16px;margin:0 0 22px}
+header.page p.lede strong{color:var(--pageText);font-weight:600}
+
+.tokenbar{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 34px;padding:0;list-style:none}
+.tokenbar li{font-family:var(--mono);font-size:11px;color:var(--pageMuted);border:1px solid var(--panelLine);border-radius:999px;padding:5px 11px;display:flex;align-items:center;gap:7px}
+.tokenbar i{width:10px;height:10px;border-radius:3px;display:inline-block}
+
+/* ---------- sections ---------- */
+section.variant{padding:44px 0;border-top:1px solid var(--panelLine)}
+section.variant h2{font-family:var(--display);font-size:36px;letter-spacing:-.3px;margin:0 0 6px;text-transform:uppercase;font-weight:400}
+section.variant h2 .vtag{font-family:var(--mono);font-size:12px;letter-spacing:2px;color:var(--pink);display:block;margin-bottom:8px;text-transform:uppercase}
+p.concept{color:var(--pageMuted);max-width:88ch;margin:0 0 28px;font-size:16px}
+p.concept b{color:var(--pageText);font-weight:600}
+
+.frames{display:flex;flex-wrap:wrap;gap:30px;align-items:flex-start;margin-bottom:30px}
+figure.shot{margin:0;width:390px}
+figure.shot.se{width:375px}
+figcaption{margin-top:14px}
+figcaption .ftitle{font-family:var(--mono);font-size:11px;letter-spacing:1.6px;text-transform:uppercase;color:var(--pageText)}
+figcaption .fnote{color:var(--pageMuted);font-size:13px;margin-top:5px;line-height:1.5}
+.measures{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px;padding:0;list-style:none}
+.measures li{font-family:var(--mono);font-size:10px;letter-spacing:.4px;color:var(--pageMuted);border:1px solid var(--panelLine);border-radius:5px;padding:3px 7px}
+.measures li.good{color:#7CE0A9;border-color:rgba(124,224,169,.32)}
+.measures li.bad{color:#FF7DA8;border-color:rgba(255,125,168,.34)}
+
+.cols{display:flex;flex-wrap:wrap;gap:26px}
+.panel{background:var(--panel);border:1px solid var(--panelLine);border-radius:14px;padding:20px 22px;flex:1 1 420px}
+.panel h3{font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--pink);margin:0 0 14px;font-weight:500}
+.panel table{width:100%;border-collapse:collapse;font-size:14px}
+.panel td{padding:7px 0;vertical-align:top;border-bottom:1px solid var(--panelLine)}
+.panel tr:last-child td{border-bottom:0}
+.panel td.q{width:34%;color:var(--pageMuted);padding-right:16px}
+.panel ul{margin:0;padding-left:18px}
+.panel li{margin-bottom:9px;font-size:14px;color:var(--pageText)}
+.panel li:last-child{margin-bottom:0}
+.panel li b{font-weight:600}
+.panel li.plus b{color:#7CE0A9}
+.panel li.minus b{color:#FF7DA8}
+
+.scrollx{overflow-x:auto}
+table.compare{width:100%;min-width:760px;border-collapse:collapse;font-size:14px}
+table.compare th,table.compare td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--panelLine);vertical-align:top}
+table.compare th{font-family:var(--mono);font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:var(--pageMuted);font-weight:500}
+table.compare td:first-child{color:var(--pageMuted);width:20%}
+
+/* ===========================================================
+   PHONE FRAMES — 1 CSS px = 1 iOS pt
+   =========================================================== */
+.frame{width:390px;height:844px;border-radius:46px;padding:5px;background:#26282E;
+  box-shadow:0 20px 50px rgba(0,0,0,.55);position:relative}
+.frame.se{width:375px;height:667px;border-radius:34px}
+.screen{width:100%;height:100%;border-radius:42px;overflow:hidden;background:var(--bg);
+  color:var(--ink);display:flex;flex-direction:column}
+.frame.se .screen{border-radius:30px}
+
+/* status bar */
+.sb{height:44px;flex:0 0 44px;display:flex;align-items:flex-end;justify-content:space-between;
+  padding:0 30px 2px;font-size:13px;font-weight:600;color:var(--ink)}
+.frame.se .sb{height:22px;flex-basis:22px;padding:0 24px 1px;font-size:12px}
+.sb .dots{letter-spacing:2px}
+
+/* top bar — HangsQuizTopBar (36pt chips, h20 / t14 / b4) */
+.topbar{display:flex;align-items:center;padding:14px 20px 0;flex:0 0 auto}
+.chip{width:36px;height:36px;border-radius:50%;background:var(--bgCard);box-shadow:var(--navShadow);
+  display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--ink);flex:0 0 36px}
+.chip.sm{width:32px;height:32px;flex-basis:32px;font-size:13px;border:1px solid var(--hairline);box-shadow:none}
+.spacer{flex:1}
+.mono{font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--muted);font-weight:500}
+.mono.b{font-weight:600}
+.mono.rec{color:var(--pink)}
+
+/* progress — HangsProgressBar 3pt, h24 */
+.prog{height:3px;margin:8px 24px 0;border-radius:2px;background:var(--mutedBorder);overflow:hidden;flex:0 0 auto}
+.prog>i{display:block;height:100%;width:30%;background:var(--pink);border-radius:2px}
+.prog.edge{margin:0;height:2px;border-radius:0}
+
+/* meta row */
+.meta{display:flex;align-items:baseline;gap:10px;padding:12px 28px 6px;font-family:var(--mono);
+  font-size:11px;letter-spacing:2px;color:var(--muted);font-weight:500;flex:0 0 auto}
+.meta .ctr{margin-left:auto;font-weight:600}
+.meta .ctr.rec{color:var(--pink)}
+.meta.live{color:var(--pinkText)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--pink);display:inline-block}
+
+/* stem — HangsQuestionPrompt (3pt bar + Anton, tracking -1) */
+.stemwrap{position:relative;overflow:hidden;flex:0 0 auto}
+.stem{display:flex;gap:8px;padding:14px 28px}
+.frame.se .stem{padding:12px 22px}
+.stem .bar{width:3px;border-radius:2px;background:var(--blue);flex:0 0 3px;align-self:stretch}
+.stem p{margin:0;font-family:var(--display);letter-spacing:-1px;line-height:1.06;color:var(--ink);font-weight:400}
+.stem .spk{font-size:12px;color:var(--muted);margin-top:12px;letter-spacing:0;font-family:var(--body)}
+/* overflow affordances */
+.fade{position:absolute;left:0;right:0;bottom:0;height:56px;pointer-events:none;
+  background:linear-gradient(to bottom,rgba(246,247,249,0) 0%,rgba(246,247,249,.9) 60%,var(--bg) 100%)}
+.rail{position:absolute;top:14px;bottom:14px;right:10px;width:4px;border-radius:2px;background:var(--mutedBorder)}
+.rail>i{display:block;width:100%;border-radius:2px;background:var(--accentPrimary);opacity:.55}
+.morecue{position:absolute;right:22px;bottom:9px;display:flex;align-items:center;gap:5px;
+  font-family:var(--mono);font-size:9px;letter-spacing:1.4px;color:var(--muted);text-transform:uppercase}
+.morecue .arw{font-size:11px;line-height:1}
+
+/* full-width option card — AnswerOption (64pt, r16, 1.5pt border, 40pt badge) */
+.opts{display:flex;flex-direction:column;gap:12px;padding:0 16px}
+.opt{display:flex;align-items:center;gap:16px;min-height:64px;padding:0 20px;border-radius:16px;
+  background:var(--bgCard);border:1.5px solid var(--subtleBorder)}
+.badge{width:40px;height:40px;flex:0 0 40px;border-radius:50%;background:var(--accentPrimarySoft);
+  color:var(--accentPrimary);font-weight:700;font-size:17px;display:flex;align-items:center;justify-content:center}
+.opt .val{font-size:16px;font-weight:500;color:var(--ink)}
+/* B — slim rows */
+.opts.slim{gap:8px}
+.opts.slim .opt{min-height:52px;gap:14px;padding:0 16px;border-radius:14px}
+.opts.slim .badge{width:28px;height:28px;flex-basis:28px;font-size:14px}
+.opts.slim .val{font-size:15px}
+.opts.slim.se .opt{min-height:48px}
+/* A — 2x2 grid tiles */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 16px}
+.tile{min-height:88px;border-radius:16px;background:var(--bgCard);border:1.5px solid var(--subtleBorder);
+  padding:12px 14px;display:flex;flex-direction:column;gap:8px;justify-content:center}
+.tile .badge{width:32px;height:32px;flex-basis:32px;font-size:15px}
+.tile .val{font-size:16px;font-weight:600;color:var(--ink);line-height:1.15}
+.grid.se .tile{min-height:76px;gap:6px}
+
+/* listening pill / bar — ListeningPill tokens */
+.pill{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;
+  background:var(--pinkSoft);border:1px solid var(--pink);color:var(--pinkText);
+  font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.5px}
+.pillrow{display:flex;justify-content:center;padding:12px 24px 0;flex:0 0 auto}
+.lbar{display:flex;align-items:center;gap:10px;margin:0 16px;height:44px;border-radius:999px;
+  background:var(--pinkSoft);border:1px solid var(--pink);color:var(--pinkText);padding:0 16px 0 18px;
+  font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.6px;flex:0 0 auto}
+.wave{font-size:14px}
+
+/* audio strip — timer chips + mute (32pt) */
+.strip{display:flex;align-items:center;gap:8px;min-height:32px;padding:0 24px;flex:0 0 auto}
+.tchip{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;
+  font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:1.5px}
+.tchip.think{color:var(--blueText);background:rgba(10,132,255,.12);border:1px solid rgba(10,132,255,.4)}
+.tchip.ans{color:var(--pinkText);background:rgba(255,61,143,.12);border:1px solid rgba(255,61,143,.4)}
+.tchip .sec{font-size:12px;letter-spacing:0}
+.mute{width:32px;height:32px;flex:0 0 32px;border-radius:50%;background:var(--bgCard);
+  border:1px solid var(--hairline);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted)}
+
+/* skip — HangsSecondaryButton 44pt capsule */
+.skip{display:flex;align-items:center;justify-content:center;gap:10px;height:44px;margin:0 20px 16px;
+  border-radius:999px;background:var(--bgCard);border:1px solid var(--subtleBorder);
+  font-size:16px;font-weight:600;color:var(--ink);flex:0 0 auto}
+.frame.se .skip{margin-bottom:10px}
+.skiplink{display:flex;align-items:center;justify-content:center;gap:8px;height:44px;
+  font-size:15px;font-weight:600;color:var(--muted);flex:0 0 auto}
+
+/* C — split panes */
+.divider{display:flex;align-items:center;gap:10px;height:44px;padding:0 20px;background:var(--bgCard);
+  border-top:1px solid var(--hairline);border-bottom:1px solid var(--hairline);flex:0 0 44px}
+.divider .skipmini{font-size:14px;font-weight:600;color:var(--muted)}
+.deck{position:relative;overflow:hidden;padding-top:14px;flex:1 1 auto;min-height:0}
+.deckfade{position:absolute;left:0;right:0;bottom:0;height:40px;pointer-events:none;
+  background:linear-gradient(to bottom,rgba(246,247,249,0),var(--bg))}
+.push{margin-top:auto}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <div class="kicker">Design variants · 2026-07-28 · founder review</div>
+  <h1>Issue #125 Track B — Minimalist MCQ layout</h1>
+  <p class="lede">Track A already landed the reveal gate: until the countdown expires the driver sees the stem alone, and the four option cards plus the listening pill appear only at answer time. What is left is the layout itself — <strong>after the reveal the option block takes the screen back, a long stem is cut mid-line, and nothing on screen says it continues</strong>. All three variants below share one rule: <strong>the stem gets a guaranteed floor, the option block lives in whatever is left, and the overflow always sits behind a visible affordance</strong> — never silently clipped. Everything is drawn 1 CSS px = 1 pt with the shipped tokens and component geometry (Anton / Inter / IBM Plex Mono, <code>Theme.Hangs.Colors</code>, <code>AnswerOption</code> 64pt / r16 / 1.5pt).</p>
+  <p class="lede">Worst-case copy in every frame is the shipped long-stem fixture <code>Question.previewMCQLong</code> (290 chars) extended to <strong>~340 chars</strong> — the length the same question reaches once rendered in Slovak, which is what the founder actually had on screen. At 290 chars a slimmed layout very nearly fits on a 6.1-inch phone; 340 is where each strategy has to show its hand.</p>
+  <ul class="tokenbar">
+    <li><i style="background:#F6F7F9"></i>bg #F6F7F9</li>
+    <li><i style="background:#FFFFFF"></i>card #FFFFFF</li>
+    <li><i style="background:#0E1A2B"></i>ink #0E1A2B</li>
+    <li><i style="background:#FF3D8F"></i>pink #FF3D8F</li>
+    <li><i style="background:#8B5CF6"></i>accent #8B5CF6</li>
+    <li><i style="background:#0A84FF"></i>blue #0A84FF</li>
+    <li><i style="background:#6B7280"></i>muted #6B7280</li>
+    <li>Anton display · Inter body · Plex Mono labels</li>
+    <li>light appearance shown — all tokens are adaptive</li>
+  </ul>
+</header>
+
+<!-- ===================== BASELINE ===================== -->
+<section class="variant" style="border-top:0;padding-top:20px">
+  <h2><span class="vtag">Starting point</span>What ships today</h2>
+  <p class="concept">Post Track A, at the moment the options are revealed. Every element below the stem carries a fixed or floored height, so the stem's scroll region absorbs the entire deficit — and <code>showsIndicators: false</code> removes the only cue that anything is missing.</p>
+  <div class="frames">
+    <figure class="shot">
+      <div class="frame"><div class="screen">
+        <div class="sb"><span>9:41</span><span class="dots">•••</span></div>
+        <div class="topbar"><div class="chip">✕</div><div class="spacer"></div><div class="chip">⚙</div></div>
+        <div class="prog"><i></i></div>
+        <div class="meta"><span>GEOGRAPHY · QUESTION 3</span><span class="ctr rec">03 / 10</span></div>
+        <div class="stemwrap" style="height:214px">
+          <div class="stem" style="padding-top:6px">
+            <span class="bar"></span>
+            <div><p style="font-size:26px">Which European capital city, founded as a Roman settlement on the banks of a major river, later became the seat of a dual monarchy, and is today famous for its thermal baths, its grand parliament building on the riverbank, the ruin bars of its old Jewish quarter, and a castle district listed as a UNESCO World Heritage Site since 1987?</p></div>
+          </div>
+        </div>
+        <div class="opts" style="margin-top:8px">
+          <div class="opt"><span class="badge">A</span><span class="val">Vienna</span></div>
+          <div class="opt"><span class="badge">B</span><span class="val">Budapest</span></div>
+          <div class="opt"><span class="badge">C</span><span class="val">Prague</span></div>
+          <div class="opt"><span class="badge">D</span><span class="val">Bratislava</span></div>
+        </div>
+        <div class="pillrow"><span class="pill"><span class="wave">⌇</span>Listening — say A–D or the answer</span></div>
+        <div class="strip" style="margin-top:8px"><div class="spacer"></div><div class="mute">🔊</div></div>
+        <div class="skip push" style="margin-top:4px">▶| Skip question</div>
+      </div></div>
+      <figcaption>
+        <div class="ftitle">Today — answering phase, post Track A</div>
+        <div class="fnote">The 292pt option block, the 45pt pill, the 32pt strip and the 44pt Skip are served first; the stem gets the ~214pt remainder and stops mid-sentence with no rail, no fade, no cue.</div>
+        <ul class="measures"><li class="bad">stem 214pt · no floor</li><li class="bad">no overflow cue</li><li>option block 292pt</li><li>8 chrome elements</li></ul>
+      </figcaption>
+    </figure>
+
+    <div class="panel" style="max-width:560px">
+      <h3>What every variant has to answer</h3>
+      <table>
+        <tr><td class="q">Hierarchy per phase</td><td>Reading = stem dominant (Track A settled this). Answering = who wins, and does the stem move or re-flow?</td></tr>
+        <tr><td class="q">Stem floor + overflow</td><td>How many pt are guaranteed, and what happens past them — scroll, shrink, or both.</td></tr>
+        <tr><td class="q">Option footprint</td><td>Keep the full-width 64/80pt card or go compact — while staying comfortably above the 44pt target minimum for a driver's thumb.</td></tr>
+        <tr><td class="q">Listening pill</td><td>Own element, folded into the audio strip, or dissolved into a row that already exists.</td></tr>
+        <tr><td class="q">Surviving chrome</td><td>Meta row, replay speaker glyph, timer chips, mute, Skip, settings gear.</td></tr>
+        <tr><td class="q">Worst-case device</td><td>Assumed below: <b>iPhone SE-class, 375×667pt</b>. Every variant is drawn on it and must degrade <em>without</em> clipping the stem.</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- =======================================================
+     VARIANT A
+     ======================================================= -->
+<section class="variant">
+  <h2><span class="vtag">Variant A</span>Answer Grid</h2>
+  <p class="concept">Halve the option block by putting the four choices in a <b>2×2 grid of letter tiles</b>, and spend the reclaimed points on the stem — which gets the <b>largest type of the three variants (Anton 34)</b> in the answering phase, because at that moment the driver glances rather than reads. The pill stops being its own element: it becomes a full-width listening bar that also carries the mute control, so the audio strip disappears entirely once the timers have expired.</p>
+
+  <div class="frames">
+    <!-- A reading -->
+    <figure class="shot">
+      <div class="frame"><div class="screen">
+        <div class="sb"><span>9:41</span><span class="dots">•••</span></div>
+        <div class="topbar">
+          <div class="chip">✕</div>
+          <span class="mono" style="margin-left:12px">GEOGRAPHY · Q3</span>
+          <div class="spacer"></div><span class="mono b">03 / 10</span>
+        </div>
+        <div class="prog"><i></i></div>
+        <div class="stemwrap" style="height:620px">
+          <div class="stem" style="padding-top:18px">
+            <span class="bar"></span>
+            <div><p style="font-size:30px">Which European capital city, founded as a Roman settlement on the banks of a major river, later became the seat of a dual monarchy, and is today famous for its thermal baths, its grand parliament building on the riverbank, the ruin bars of its old Jewish quarter, and a castle district listed as a UNESCO World Heritage Site since 1987?</p>
+            <div class="spk">🔊 tap anywhere to replay</div></div>
+          </div>
+        </div>
+        <div class="strip push" style="margin-bottom:12px"><span class="tchip think">THINK<span class="sec">5s</span></span><div class="spacer"></div><div class="mute">🔊</div></div>
+        <div class="skip">▶| Skip question</div>
+      </div></div>
+      <figcaption>
+        <div class="ftitle">A · reading phase (pre-reveal)</div>
+        <div class="fnote">Stem alone at Anton 30, the whole ~340-char sentence visible without scrolling. Chrome collapses to one row — close chip, category, counter — and the settings gear leaves the question screen entirely.</div>
+        <ul class="measures"><li class="good">stem 620pt — full text</li><li>Anton 30</li><li>1 chrome row + 3pt bar</li></ul>
+      </figcaption>
+    </figure>
+
+    <!-- A answering -->
+    <figure class="shot">
+      <div class="frame"><div class="screen">
+        <div class="sb"><span>9:41</span><span class="dots">•••</span></div>
+        <div class="topbar">
+          <div class="chip">✕</div>
+          <span class="mono" style="margin-left:12px">GEOGRAPHY · Q3</span>
+          <div class="spacer"></div><span class="mono b rec">03 / 10</span>
+        </div>
+        <div class="prog"><i></i></div>
+        <div class="stemwrap" style="height:360px">
+          <div class="stem" style="padding-top:16px">
+            <span class="bar"></span>
+            <div><p style="font-size:34px">Which European capital city, founded as a Roman settlement on the banks of a major river, later became the seat of a dual monarchy, and is today famous for its thermal baths, its grand parliament building on the riverbank, the ruin bars of its old Jewish quarter, and a castle district listed as a UNESCO World Heritage Site since 1987?</p></div>
+          </div>
+          <div class="rail"><i style="height:52%"></i></div>
+          <div class="fade"></div>
+          <div class="morecue"><span>scroll</span><span class="arw">↓</span></div>
+        </div>
+        <div class="grid" style="margin-top:14px">
+          <div class="tile"><span class="badge">A</span><span class="val">Vienna</span></div>
+          <div class="tile"><span class="badge">B</span><span class="val">Budapest</span></div>
+          <div class="tile"><span class="badge">C</span><span class="val">Prague</span></div>
+          <div class="tile"><span class="badge">D</span><span class="val">Bratislava</span></div>
+        </div>
+        <div class="lbar" style="margin-top:16px"><span class="wave">⌇</span><span>LISTENING — SAY A–D</span><div class="spacer"></div><div class="mute" style="margin-right:-6px">🔊</div></div>
+        <div class="skip push" style="margin-top:16px">▶| Skip question</div>
+      </div></div>
+      <figcaption>
+        <div class="ftitle">A · answering phase (post-reveal)</div>
+        <div class="fnote">The stem holds a hard 360pt floor and <em>scales up</em> to Anton 34; what does not fit scrolls behind a proportional rail, a fade and a "SCROLL ↓" micro-cue. Tiles are 88 × ~171pt — four times the 44pt minimum.</div>
+        <ul class="measures"><li class="good">stem floor 360pt</li><li class="good">rail + fade + cue</li><li>tiles 88pt</li><li>option block 188pt (−104)</li></ul>
+      </figcaption>
+    </figure>
+
+    <!-- A SE -->
+    <figure class="shot se">
+      <div class="frame se"><div class="screen">
+        <div class="sb"><span>9:41</span><span class="dots">•••</span></div>
+        <div class="topbar" style="padding:10px 20px 0">
+          <div class="chip sm">✕</div>
+          <span class="mono" style="margin-left:10px">GEOGRAPHY · Q3</span>
+          <div class="spacer"></div><span class="mono b rec">03 / 10</span>
+        </div>
+        <div class="prog"><i></i></div>
+        <div class="stemwrap" style="height:300px">
+          <div class="stem" style="padding-top:12px">
+            <span class="bar"></span>
+            <div><p style="font-size:30px">Which European capital city, founded as a Roman settlement on the banks of a major river, later became the seat of a dual monarchy, and is today famous for its thermal baths, its grand parliament building on the riverbank, the ruin bars of its old Jewish quarter, and a castle district listed as a UNESCO World Heritage Site since 1987?</p></div>
+          </div>
+          <div class="rail"><i style="height:44%"></i></div>
+          <div class="fade"></div>
+          <div class="morecue"><span>scroll</span><span class="arw">↓</span></div>
+        </div>
+        <div class="grid se" style="margin-top:10px">
+          <div class="tile"><span class="badge">A</span><span class="val">Vienna</span></div>
+          <div class="tile"><span class="badge">B</span><span class="val">Budapest</span></div>
+          <div class="tile"><span class="badge">C</span><span class="val">Prague</span></div>
+          <div class="tile"><span class="badge">D</span><span class="val">Bratislava</span></div>
+        </div>
+        <div class="lbar" style="margin-top:12px;height:40px"><span class="wave">⌇</span><span>LISTENING — SAY A–D</span><div class="spacer"></div><div class="mute" style="margin-right:-6px">🔊</div></div>
+        <div class="skiplink push">▶| Skip question</div>
+      </div></div>
+      <figcaption>
+        <div class="ftitle">A · answering phase on SE-class (375×667)</div>
+        <div class="fnote">Tiles drop 88 → 76pt and the stem type 34 → 30; the floor is still 300pt, 40% more stem than a 6.1-inch shows today. Skip degrades from a capsule to a 44pt text button — the only element that loses its container.</div>
+        <ul class="measures"><li class="good">stem 300pt held</li><li>tiles 76pt (&gt; 44pt)</li><li class="good">nothing else cut</li></ul>
+      </figcaption>
+    </figure>
+  </div>
+
+  <div class="cols">
+    <div class="panel">
+      <h3>Answers to the Track B questions</h3>
+      <table>
+        <tr><td class="q">Hierarchy</td><td>Reading: stem is the only content. Answering: the stem still wins (34pt Anton against 16pt option labels) and does not move — the grid grows underneath it.</td></tr>
+        <tr><td class="q">Stem floor</td><td><b>360pt on 6.1-inch, 300pt on SE</b> (≈43% and 45% of the screen). Past the floor: scroll only; type never drops below 30.</td></tr>
+        <tr><td class="q">Overflow cue</td><td>Right-edge rail with a proportional thumb + bottom fade + "SCROLL ↓" mono cue. Present whenever, and only when, content overflows.</td></tr>
+        <tr><td class="q">Options</td><td>2×2 grid of 88 × ~171pt tiles (76pt on SE). ~13 000pt² of target versus ~22 000 today — still far above the 44pt HIG minimum.</td></tr>
+        <tr><td class="q">Listening pill</td><td>Becomes a full-width 44pt listening bar that swallows the mute button; the audio strip is dropped after the reveal, since its timer chips have expired by then.</td></tr>
+        <tr><td class="q">Chrome kept</td><td>Close chip, progress bar, category + counter (merged into the top row), tap-to-replay with the speaker glyph pre-reveal only, mute, Skip. <b>Dropped:</b> settings gear (moves into the close sheet) and the separate meta row.</td></tr>
+      </table>
+    </div>
+    <div class="panel">
+      <h3>Trade-offs</h3>
+      <ul>
+        <li class="plus"><b>Glanceability:</b> best of the three — biggest stem type and the largest letters; A/B/C/D are read by position, not by scanning a list.</li>
+        <li class="minus"><b>Touch safety:</b> two columns add a horizontal aiming axis, which is harder in a moving car than a full-width row you can hit anywhere along x. The tiles are big, but the left/right split is a real cost.</li>
+        <li class="plus"><b>Density:</b> highest — frees 104pt against today and removes two chrome elements outright.</li>
+        <li class="minus"><b>Extreme stems:</b> the biggest type overflows first. At ~340 chars roughly half the sentence is below the fold on SE, so the scroll cue does real work here rather than covering an edge case.</li>
+        <li class="minus"><b>Long option text:</b> half-width tiles wrap after ~14 characters. "Bratislava" fits; "The Austro-Hungarian Empire" needs two lines and 88pt then becomes the binding constraint.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- =======================================================
+     VARIANT B
+     ======================================================= -->
+<section class="variant">
+  <h2><span class="vtag">Variant B</span>Elastic Stem</h2>
+  <p class="concept">Keep the shipped single-column list — the safest thing to hit while driving — and make everything else <b>elastic</b>: rows slim from 64 to 52pt, and the stem <b>shrinks to fit before it scrolls</b> (Anton 30 → 24 → 22 floor, exactly the <code>minimumScaleFactor</code> behaviour the component already has). The listening pill is dissolved entirely: the meta row that already sits above the stem turns pink and becomes the listening indicator, at zero extra height.</p>
+
+  <div class="frames">
+    <!-- B reading -->
+    <figure class="shot">
+      <div class="frame"><div class="screen">
+        <div class="sb"><span>9:41</span><span class="dots">•••</span></div>
+        <div class="topbar" style="padding-bottom:4px"><div class="chip">✕</div><div class="spacer"></div><div class="chip">⚙</div></div>
+        <div class="prog"><i></i></div>
+        <div class="meta"><span>GEOGRAPHY · QUESTION 3</span><span class="ctr">03 / 10</span></div>
+        <div class="stemwrap" style="height:560px">
+          <div class="stem" style="padding-top:6px">
+            <span class="bar"></span>
+            <div><p style="font-size:30px">Which European capital city, founded as a Roman settlement on the banks of a major river, later became the seat of a dual monarchy, and is today famous for its thermal baths, its grand parliament building on the riverbank, the ruin bars of its old Jewish quarter, and a castle district listed as a UNESCO World Heritage Site since 1987?</p>
+            <div class="spk">🔊 tap anywhere to replay</div></div>
+          </div>
+        </div>
+        <div class="strip push" style="margin-bottom:12px"><span class="tchip think">THINK<span class="sec">5s</span></span><div class="spacer"></div><div class="mute">🔊</div></div>
+        <div class="skip">▶| Skip question</div>
+      </div></div>
+      <figcaption>
+        <div class="ftitle">B · reading phase (pre-reveal)</div>
+        <div class="fnote">Deliberately identical to today's pre-reveal screen at Anton 30 — full chrome survives, nothing has to be relearned. This is the phase where the stem is meant to be <em>read</em>, not glanced at.</div>
+        <ul class="measures"><li class="good">stem 560pt — full text</li><li>Anton 30</li><li>all chrome kept</li></ul>
+      </figcaption>
+    </figure>
+
+    <!-- B answering -->
+    <figure class="shot">
+      <div class="frame"><div class="screen">
+        <div class="sb"><span>9:41</span><span class="dots">•••</span></div>
+        <div class="topbar" style="padding-bottom:4px"><div class="chip">✕</div><div class="spacer"></div><div class="chip">⚙</div></div>
+        <div class="prog"><i></i></div>
+        <div class="meta live"><span class="dot"></span><span>LISTENING — SAY A–D</span><span class="ctr rec">03 / 10</span></div>
+        <div class="stemwrap" style="height:330px">
+          <div class="stem" style="padding-top:6px">
+            <span class="bar"></span>
+            <div><p style="font-size:30px">Which European capital city, founded as a Roman settlement on the banks of a major river, later became the seat of a dual monarchy, and is today famous for its thermal baths, its grand parliament building on the riverbank, the ruin bars of its old Jewish quarter, and a castle district listed as a UNESCO World Heritage Site since 1987?</p></div>
+          </div>
+          <div class="rail"><i style="height:66%"></i></div>
+          <div class="fade"></div>
+          <div class="morecue"><span>scroll</span><span class="arw">↓</span></div>
+        </div>
+        <div class="opts slim" style="margin-top:14px">
+          <div class="opt"><span class="badge">A</span><span class="val">Vienna</span></div>
+          <div class="opt"><span class="badge">B</span><span class="val">Budapest</span></div>
+          <div class="opt"><span class="badge">C</span><span class="val">Prague</span></div>
+          <div class="opt"><span class="badge">D</span><span class="val">Bratislava</span></div>
+        </div>
+        <div class="strip" style="margin-top:14px"><div class="spacer"></div><div class="mute">🔊</div></div>
+        <div class="skip push" style="margin-top:12px">▶| Skip question</div>
+      </div></div>
+      <figcaption>
+        <div class="ftitle">B · answering phase (post-reveal)</div>
+        <div class="fnote">On a 6.1-inch the 330pt floor is met without shrinking, so type stays at Anton 30 and only the tail scrolls. The pink meta row <em>is</em> the listening state — no pill, no extra 45pt.</div>
+        <ul class="measures"><li class="good">stem floor 330pt</li><li class="good">no shrink needed here</li><li>rows 52pt (−12)</li><li class="good">pill costs 0pt</li></ul>
+      </figcaption>
+    </figure>
+
+    <!-- B SE -->
+    <figure class="shot se">
+      <div class="frame se"><div class="screen">
+        <div class="sb"><span>9:41</span><span class="dots">•••</span></div>
+        <div class="topbar" style="padding:10px 20px 2px"><div class="chip sm">✕</div><div class="spacer"></div><div class="chip sm">⚙</div></div>
+        <div class="prog"><i></i></div>
+        <div class="meta live" style="padding:8px 22px 4px"><span class="dot"></span><span>LISTENING — SAY A–D</span><span class="ctr rec">03 / 10</span></div>
+        <div class="stemwrap" style="height:220px">
+          <div class="stem" style="padding-top:4px">
+            <span class="bar"></span>
+            <div><p style="font-size:24px">Which European capital city, founded as a Roman settlement on the banks of a major river, later became the seat of a dual monarchy, and is today famous for its thermal baths, its grand parliament building on the riverbank, the ruin bars of its old Jewish quarter, and a castle district listed as a UNESCO World Heritage Site since 1987?</p></div>
+          </div>
+          <div class="rail"><i style="height:70%"></i></div>
+          <div class="fade"></div>
+          <div class="morecue"><span>scroll</span><span class="arw">↓</span></div>
+        </div>
+        <div class="opts slim se" style="margin-top:10px">
+          <div class="opt"><span class="badge">A</span><span class="val">Vienna</span></div>
+          <div class="opt"><span class="badge">B</span><span class="val">Budapest</span></div>
+          <div class="opt"><span class="badge">C</span><span class="val">Prague</span></div>
+          <div class="opt"><span class="badge">D</span><span class="val">Bratislava</span></div>
+        </div>
+        <div class="strip" style="margin-top:10px"><div class="spacer"></div><div class="mute">🔊</div></div>
+        <div class="skiplink push">▶| Skip question</div>
+      </div></div>
+      <figcaption>
+        <div class="ftitle">B · answering phase on SE-class (375×667)</div>
+        <div class="fnote">Here the elastic behaviour actually fires: type shrinks 30 → 24 and rows 52 → 48 so the 220pt floor is never breached. Smallest stem type of the three — the thing to judge on a real device at arm's length.</div>
+        <ul class="measures"><li class="good">stem 220pt held</li><li class="bad">Anton 24 (floor 22)</li><li>rows 48pt (&gt; 44pt)</li></ul>
+      </figcaption>
+    </figure>
+  </div>
+
+  <div class="cols">
+    <div class="panel">
+      <h3>Answers to the Track B questions</h3>
+      <table>
+        <tr><td class="q">Hierarchy</td><td>Reading: stem dominant at 30. Answering: deliberately balanced — the stem keeps its size where it can, the options stay full width, and the only thing that changes state is the meta row turning pink.</td></tr>
+        <tr><td class="q">Stem floor</td><td><b>330pt on 6.1-inch, 220pt on SE.</b> Order of defence: shrink type (30 → 24 → 22 hard floor) first, scroll second. Both, in that order.</td></tr>
+        <tr><td class="q">Overflow cue</td><td>Same rail + fade + "SCROLL ↓" as A, on a smaller viewport — so it appears more often, on more questions.</td></tr>
+        <tr><td class="q">Options</td><td>Full-width rows at 52pt (48 on SE) with 28pt badges. Above the 44pt minimum and still the full screen width to aim at.</td></tr>
+        <tr><td class="q">Listening pill</td><td><b>Dissolved</b> into the meta row: the category is replaced by a pink dot + "LISTENING — SAY A–D" for the duration of the answer window. Zero vertical cost.</td></tr>
+        <tr><td class="q">Chrome kept</td><td>Everything — close, gear, progress, meta row, replay glyph, timer chips, mute, full-width Skip. The least disruptive variant to build and to relearn.</td></tr>
+      </table>
+    </div>
+    <div class="panel">
+      <h3>Trade-offs</h3>
+      <ul>
+        <li class="plus"><b>Touch safety:</b> best of the three — a full-width row is the easiest target to hit without looking, and the vertical A→D order matches the order the options are read aloud.</li>
+        <li class="minus"><b>Glanceability:</b> weakest type in the squeeze (Anton 24 on SE, floor 22). Legibility at arm's length in a moving car is the open risk.</li>
+        <li class="plus"><b>Density:</b> highest — the most lines of stem per point of screen, and the listening state costs nothing at all.</li>
+        <li class="minus"><b>Extreme stems:</b> shrink-to-fit softens the problem rather than solving it. A 500-char stem ends up small <em>and</em> scrollable — the worst of both.</li>
+        <li class="plus"><b>Cheapest to ship:</b> no new components — a floor on the scroll region Track A already added, smaller row heights, a visible indicator, and one conditional in the meta row.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- =======================================================
+     VARIANT C
+     ======================================================= -->
+<section class="variant">
+  <h2><span class="vtag">Variant C</span>Split Deck</h2>
+  <p class="concept">Stop negotiating for space: <b>split the screen at a fixed proportion</b>. The stem owns the top 45% permanently, one pinned control strip is the divider (timers, listening state, mute and Skip in a single 44pt bar), and the options live in their own scrollable deck below it. <b>The deck becomes the overflow victim instead of the stem</b> — the exact inverse of today's bug — so the cards keep their shipped 64pt geometry and the stem type never changes between phases.</p>
+
+  <div class="frames">
+    <!-- C reading -->
+    <figure class="shot">
+      <div class="frame"><div class="screen">
+        <div class="sb"><span>9:41</span><span class="dots">•••</span></div>
+        <div class="prog edge"><i></i></div>
+        <div class="topbar" style="padding:10px 20px 0">
+          <div class="chip sm">✕</div><div class="spacer"></div><span class="mono b">03 / 10</span>
+        </div>
+        <div class="stemwrap" style="height:600px">
+          <div class="stem" style="padding-top:20px">
+            <span class="bar"></span>
+            <div><p style="font-size:30px">Which European capital city, founded as a Roman settlement on the banks of a major river, later became the seat of a dual monarchy, and is today famous for its thermal baths, its grand parliament building on the riverbank, the ruin bars of its old Jewish quarter, and a castle district listed as a UNESCO World Heritage Site since 1987?</p>
+            <div class="spk">🔊 tap anywhere to replay</div></div>
+          </div>
+        </div>
+        <div class="divider push"><span class="tchip think">THINK<span class="sec">5s</span></span><div class="spacer"></div><div class="mute">🔊</div><span class="skipmini">Skip</span></div>
+      </div></div>
+      <figcaption>
+        <div class="ftitle">C · reading phase (pre-reveal)</div>
+        <div class="fnote">Minimum chrome of the three: a 2pt progress line on the screen edge, a close chip, a counter. The stem pane fills everything down to the pinned strip, which rests at the bottom until the reveal.</div>
+        <ul class="measures"><li class="good">stem 600pt — full text</li><li>Anton 30 (constant)</li><li class="good">3 chrome elements</li></ul>
+      </figcaption>
+    </figure>
+
+    <!-- C answering -->
+    <figure class="shot">
+      <div class="frame"><div class="screen">
+        <div class="sb"><span>9:41</span><span class="dots">•••</span></div>
+        <div class="prog edge"><i></i></div>
+        <div class="topbar" style="padding:10px 20px 0">
+          <div class="chip sm">✕</div><div class="spacer"></div><span class="mono b rec">03 / 10</span>
+        </div>
+        <div class="stemwrap" style="height:340px">
+          <div class="stem" style="padding-top:14px">
+            <span class="bar"></span>
+            <div><p style="font-size:30px">Which European capital city, founded as a Roman settlement on the banks of a major river, later became the seat of a dual monarchy, and is today famous for its thermal baths, its grand parliament building on the riverbank, the ruin bars of its old Jewish quarter, and a castle district listed as a UNESCO World Heritage Site since 1987?</p></div>
+          </div>
+          <div class="rail"><i style="height:68%"></i></div>
+          <div class="fade"></div>
+          <div class="morecue"><span>1 of 2 · scroll</span><span class="arw">↓</span></div>
+        </div>
+        <div class="divider">
+          <span class="dot"></span>
+          <span style="font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:1.4px;color:var(--pinkText)">LISTENING — SAY A–D</span>
+          <div class="spacer"></div><div class="mute">🔊</div><span class="skipmini">Skip</span>
+        </div>
+        <div class="deck">
+          <div class="opts" style="gap:16px">
+            <div class="opt"><span class="badge">A</span><span class="val">Vienna</span></div>
+            <div class="opt"><span class="badge">B</span><span class="val">Budapest</span></div>
+            <div class="opt"><span class="badge">C</span><span class="val">Prague</span></div>
+            <div class="opt"><span class="badge">D</span><span class="val">Bratislava</span></div>
+          </div>
+        </div>
+      </div></div>
+      <figcaption>
+        <div class="ftitle">C · answering phase (post-reveal)</div>
+        <div class="fnote">The strip travels up to the 45% line; the stem keeps the type it had while reading, so the sentence does not re-flow — only its viewport shrinks, and the reading position is preserved. Cards are the shipped 64pt, untouched.</div>
+        <ul class="measures"><li class="good">stem pane 340pt (45%)</li><li class="good">rail + fade + "1 of 2"</li><li>cards 64pt unchanged</li><li class="good">one control strip</li></ul>
+      </figcaption>
+    </figure>
+
+    <!-- C SE -->
+    <figure class="shot se">
+      <div class="frame se"><div class="screen">
+        <div class="sb"><span>9:41</span><span class="dots">•••</span></div>
+        <div class="prog edge"><i></i></div>
+        <div class="topbar" style="padding:8px 20px 0">
+          <div class="chip sm">✕</div><div class="spacer"></div><span class="mono b rec">03 / 10</span>
+        </div>
+        <div class="stemwrap" style="height:271px">
+          <div class="stem" style="padding-top:10px">
+            <span class="bar"></span>
+            <div><p style="font-size:30px">Which European capital city, founded as a Roman settlement on the banks of a major river, later became the seat of a dual monarchy, and is today famous for its thermal baths, its grand parliament building on the riverbank, the ruin bars of its old Jewish quarter, and a castle district listed as a UNESCO World Heritage Site since 1987?</p></div>
+          </div>
+          <div class="rail"><i style="height:50%"></i></div>
+          <div class="fade"></div>
+          <div class="morecue"><span>1 of 3 · scroll</span><span class="arw">↓</span></div>
+        </div>
+        <div class="divider">
+          <span class="dot"></span>
+          <span style="font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:1.2px;color:var(--pinkText)">LISTENING — A–D</span>
+          <div class="spacer"></div><div class="mute">🔊</div><span class="skipmini">Skip</span>
+        </div>
+        <div class="deck" style="padding-top:12px">
+          <div class="opts">
+            <div class="opt"><span class="badge">A</span><span class="val">Vienna</span></div>
+            <div class="opt"><span class="badge">B</span><span class="val">Budapest</span></div>
+            <div class="opt"><span class="badge">C</span><span class="val">Prague</span></div>
+            <div class="opt"><span class="badge">D</span><span class="val">Bratislava</span></div>
+          </div>
+          <div class="deckfade"></div>
+        </div>
+      </div></div>
+      <figcaption>
+        <div class="ftitle">C · answering phase on SE-class (375×667)</div>
+        <div class="fnote">The stem pane keeps its 45% share, so the <em>deck</em> is what runs out of room — option D sits partly below the fold behind a fade and has to be scrolled or spoken. That is the trade this variant makes on purpose.</div>
+        <ul class="measures"><li class="good">stem 271pt held (45%)</li><li class="bad">option D partly hidden</li><li>cards still 64pt</li></ul>
+      </figcaption>
+    </figure>
+  </div>
+
+  <div class="cols">
+    <div class="panel">
+      <h3>Answers to the Track B questions</h3>
+      <table>
+        <tr><td class="q">Hierarchy</td><td>Fixed by construction rather than by content: the stem always owns the top band, the options the bottom one. The reveal only moves the divider — no re-flow, no type change, so the eye never has to re-find the sentence.</td></tr>
+        <tr><td class="q">Stem floor</td><td><b>45% of the content area — 340pt on 6.1-inch, 271pt on SE</b> — guaranteed regardless of option count or text length. Overflow always scrolls; type never shrinks.</td></tr>
+        <tr><td class="q">Overflow cue</td><td>Rail + fade + a page counter ("1 of 2"), which also says <em>how much</em> is left. The one cue that survives a half-second glance.</td></tr>
+        <tr><td class="q">Options</td><td>Untouched 64pt full-width cards (80pt for the True/False variant), inside their own scroll deck. The safest possible target, at the price of not always seeing all four at once.</td></tr>
+        <tr><td class="q">Listening pill</td><td>Folded into the pinned strip, where it replaces the expired timer chips. One bar carries every transient control: timers → listening state, mute, Skip.</td></tr>
+        <tr><td class="q">Chrome kept</td><td>Close chip, 2pt edge progress, counter, tap-to-replay, mute, Skip (as a text button in the strip). <b>Dropped:</b> the gear, the category label, the standalone meta row, and the full-width Skip capsule — the most aggressive minimalist pass of the three.</td></tr>
+      </table>
+    </div>
+    <div class="panel">
+      <h3>Trade-offs</h3>
+      <ul>
+        <li class="plus"><b>Glanceability:</b> spatial constancy is its strongest asset — stem, controls and options sit in the same band on every device and in both phases, so muscle memory builds across questions.</li>
+        <li class="plus"><b>Touch safety:</b> the shipped 64pt full-width cards are kept verbatim; no target shrinks anywhere, on any device.</li>
+        <li class="minus"><b>Density:</b> lowest — a fixed split wastes room on short stems ("What is the largest planet?" leaves ~250pt of empty pane) unless the split is allowed to collapse for short text, which then costs exactly the constancy it was bought for.</li>
+        <li class="minus"><b>Extreme stems:</b> handled best (the pane is contractually guaranteed), but on SE it pushes the fourth option below the fold — fine for a voice-first flow where options are also read aloud, a regression for anyone tapping.</li>
+        <li class="minus"><b>Most to build:</b> two independent scroll regions, a pinned strip that changes owner mid-question, and the loss of the category label the meta row carries today.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- =======================================================
+     COMPARISON + OPEN QUESTIONS
+     ======================================================= -->
+<section class="variant">
+  <h2><span class="vtag">Pick one</span>Side by side</h2>
+  <div class="panel" style="flex:1 1 100%">
+    <div class="scrollx">
+    <table class="compare">
+      <tr><th></th><th>A · Answer Grid</th><th>B · Elastic Stem</th><th>C · Split Deck</th></tr>
+      <tr><td>Strategy</td><td>Shrink the option block into a 2×2 grid</td><td>Slim everything; shrink stem type before scrolling</td><td>Fixed proportional split, two scroll regions</td></tr>
+      <tr><td>Stem floor (6.1" / SE)</td><td>360 / 300pt</td><td>330 / 220pt</td><td>340 / 271pt (45% of content)</td></tr>
+      <tr><td>Stem type</td><td>30 reading → 34 answering</td><td>30 → 24 → 22 floor (shrink-to-fit)</td><td>30, constant in both phases</td></tr>
+      <tr><td>Option target</td><td>88 × 171pt tile (76 on SE)</td><td>52pt full-width row (48 on SE)</td><td>64pt full-width card, unchanged</td></tr>
+      <tr><td>Overflow victim</td><td>Stem (scrolls)</td><td>Stem (shrinks, then scrolls)</td><td><b>Options</b> — the stem never loses its band</td></tr>
+      <tr><td>Listening pill</td><td>Full-width bar + mute</td><td>Dissolved into the meta row</td><td>Folded into the pinned strip</td></tr>
+      <tr><td>Chrome dropped</td><td>Gear, separate meta row</td><td>Nothing</td><td>Gear, category, meta row, Skip capsule</td></tr>
+      <tr><td>Build cost</td><td>Medium — new grid component</td><td>Low — heights, a floor, one conditional</td><td>High — two scroll regions + a pinned strip</td></tr>
+      <tr><td>Best at</td><td>Legibility at a glance</td><td>Blind tapping and cheapest ship</td><td>Predictability and very long stems</td></tr>
+    </table>
+    </div>
+  </div>
+
+  <div class="cols" style="margin-top:26px">
+    <div class="panel">
+      <h3>Still open — needs a founder call</h3>
+      <ul>
+        <li><b>Is SE-class (375×667) really the floor?</b> Every frame above assumes yes. If the real minimum is 6.1-inch, the option block gets ~120pt more room and B's type never has to shrink at all.</li>
+        <li><b>Should the pipeline carry a max stem length too?</b> All three variants hold ~340 chars; none makes 600 chars pleasant. A generation-side budget (~300 chars) would let the chosen layout stop designing for the tail.</li>
+        <li><b>Slovak runs 15–20% longer</b> than English for the same question — the floors above are sized on the Slovak-length render, not the English fixture. Worth confirming that is the right target.</li>
+        <li><b>Long option labels</b> only bite Variant A (half-width tiles). If options can be long noun phrases, A needs a 2-line clamp rule before it is drawn in Pencil.</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h3>Next step</h3>
+      <ul>
+        <li>Founder picks one variant — or a hybrid, e.g. <b>B's dissolved pill</b> on top of <b>C's guaranteed pane</b>, or <b>A's grid</b> inside <b>C's deck</b>.</li>
+        <li>Only the chosen frame is drawn into <code>design/quiz-agent.pen</code>; ⌘S stays the founder's step.</li>
+        <li>Implementation then follows the approved frame: the stem floor becomes a real <code>minHeight</code> on the <code>GeometryReader</code> region Track A already added, and the visible affordance replaces <code>showsIndicators: false</code>.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+</div>
+</body>
+</html>

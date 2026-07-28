@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Issue #129 — Paywall purchase-in-flight states</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   Design tokens — copied 1:1 from Theme+Hangs.swift (dark mode)
+   ============================================================ */
+:root{
+  --bg:#161616;            /* Colors.bg dark */
+  --card:#1F1F22;          /* Colors.bgCard dark */
+  --elevated:#2A2A2A;      /* Colors.bgElevated dark */
+  --ink:#F4F4F4;           /* Colors.ink dark */
+  --pink:#FF3D8F;          /* Colors.pink */
+  --pink-deep:#D91E72;     /* Colors.pinkDeep */
+  --pink-soft:rgba(255,61,143,.12);
+  --purple:#8B5CF6;        /* Colors.accentPrimary */
+  --purple-soft:rgba(139,92,246,.125); /* accentPrimarySoft */
+  --blue:#0A84FF;          /* Colors.blue */
+  --green:#22C55E;         /* Colors.greenCheck */
+  --muted:#9CA3AF;         /* Colors.muted dark */
+  --muted-faint:#6B7280;   /* Colors.mutedFaint dark */
+  --border:rgba(255,255,255,.141);  /* subtleBorder dark */
+  --hairline:rgba(255,255,255,.078);/* hairline dark */
+  --warning:#F59E0B;
+  --r-card:18px; --r-inner:16px; --r-cta:32px;
+
+  /* page chrome (not app tokens) */
+  --page:#0B0B0D;
+  --page-panel:#131316;
+  --page-line:rgba(255,255,255,.09);
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--page);
+  color:var(--ink);
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  -webkit-font-smoothing:antialiased;
+  padding:48px 32px 96px;
+}
+.wrap{max-width:1760px;margin:0 auto}
+
+/* ---------- page header ---------- */
+.kicker{
+  font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;
+  letter-spacing:2px;text-transform:uppercase;color:var(--pink);margin:0 0 10px;
+}
+h1{
+  font-family:'Anton',sans-serif;font-weight:400;font-size:52px;line-height:1;
+  letter-spacing:-.5px;margin:0 0 14px;
+}
+.rule-lg{display:block;width:56px;height:4px;background:var(--pink);border-radius:2px;margin-bottom:20px}
+.lede{font-size:15.5px;line-height:1.65;color:var(--muted);max-width:900px;margin:0 0 14px}
+.lede strong{color:var(--ink);font-weight:600}
+.meta{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted-faint);letter-spacing:.4px}
+.meta a{color:var(--blue);text-decoration:none}
+
+/* ---------- section chrome ---------- */
+section{margin-top:64px;border-top:1px solid var(--page-line);padding-top:36px}
+h2{
+  font-family:'Anton',sans-serif;font-weight:400;font-size:34px;line-height:1.05;
+  margin:0 0 8px;letter-spacing:-.2px;
+}
+h2 .tag{
+  font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:2px;
+  color:var(--muted-faint);display:block;margin-bottom:8px;
+}
+.concept{font-size:15px;color:var(--muted);margin:0 0 4px;max-width:900px;line-height:1.6}
+.concept em{color:var(--ink);font-style:normal;font-weight:600}
+
+/* ---------- frame row ---------- */
+.row{
+  display:flex;gap:28px;overflow-x:auto;padding:26px 4px 18px;
+  scrollbar-color:var(--border) transparent;
+}
+.fig{flex:0 0 auto;width:390px;margin:0}
+.fig figcaption{margin-top:14px}
+.stateid{
+  font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:1.6px;
+  text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:8px;
+}
+.stateid .money{
+  background:var(--pink);color:#fff;font-weight:600;letter-spacing:1px;
+  padding:2px 7px;border-radius:6px;font-size:9.5px;
+}
+.notes{margin:8px 0 0;padding-left:16px;color:var(--muted-faint);font-size:12.5px;line-height:1.6}
+.notes li{margin-bottom:3px}
+.notes b{color:var(--muted);font-weight:600}
+
+/* ---------- decisions + tradeoffs ---------- */
+.grid2{display:grid;grid-template-columns:minmax(340px,1.05fr) minmax(340px,1fr);gap:26px;margin-top:18px}
+.panel{background:var(--page-panel);border:1px solid var(--page-line);border-radius:14px;padding:18px 20px}
+.panel h3{
+  font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:600;letter-spacing:2px;
+  text-transform:uppercase;color:var(--pink);margin:0 0 12px;
+}
+.panel.alt h3{color:var(--blue)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+td{padding:7px 0;vertical-align:top;border-bottom:1px solid var(--hairline);line-height:1.55}
+tr:last-child td{border-bottom:none}
+td.q{color:var(--muted-faint);width:47%;padding-right:14px}
+td.a{color:var(--ink)}
+.tl{list-style:none;margin:0;padding:0;font-size:13px}
+.tl li{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--hairline);line-height:1.55}
+.tl li:last-child{border-bottom:none}
+.tl .k{flex:0 0 132px;color:var(--muted-faint);font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:1px;text-transform:uppercase;padding-top:2px}
+.tl .v{color:var(--ink)}
+.pill{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:1px;
+  padding:2px 7px;border-radius:6px;margin-right:6px;text-transform:uppercase;font-weight:600}
+.pill.good{background:rgba(34,197,94,.15);color:var(--green)}
+.pill.ok{background:rgba(10,132,255,.15);color:var(--blue)}
+.pill.warn{background:rgba(245,158,11,.16);color:var(--warning)}
+.pill.bad{background:rgba(255,61,143,.16);color:var(--pink)}
+
+/* ============================================================
+   PHONE FRAME — 390 x 844
+   ============================================================ */
+.phone{
+  width:390px;height:844px;border-radius:44px;padding:0;position:relative;
+  background:var(--bg);border:1px solid rgba(255,255,255,.14);
+  box-shadow:0 24px 60px rgba(0,0,0,.55);overflow:hidden;
+}
+.screen{position:absolute;inset:0;border-radius:43px;overflow:hidden;background:var(--bg)}
+.notch{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:112px;height:28px;
+  background:#000;border-radius:16px;z-index:40}
+.sbar{height:46px}
+
+/* brand row (HangsBrandRow + closeButton) */
+.brandrow{display:flex;align-items:center;justify-content:space-between;padding:0 20px 6px}
+.brand{font-family:'IBM Plex Mono',monospace;font-size:17px;font-weight:600;color:var(--blue);
+  display:flex;align-items:center;gap:6px}
+.brand i{width:6px;height:6px;border-radius:50%;background:var(--pink);display:block}
+.xbtn{width:32px;height:32px;display:flex;align-items:center;justify-content:center;
+  color:var(--muted);font-size:16px;font-weight:600}
+
+/* paywall body */
+.pw{padding:6px 20px 0;display:flex;flex-direction:column;gap:18px;position:relative}
+.iconc{width:88px;height:88px;border-radius:50%;background:var(--pink-soft);
+  display:flex;align-items:center;justify-content:center;align-self:center;
+  color:var(--pink);font-size:46px;line-height:1;font-weight:500;margin-top:2px}
+.hero{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
+.display{font-family:'Anton',sans-serif;font-weight:400;font-size:54px;line-height:1;
+  margin:0;letter-spacing:-.5px;color:var(--ink);white-space:nowrap}
+.rule{width:40px;height:3px;border-radius:2px;background:var(--pink);display:block}
+.sub{font-size:15px;line-height:1.45;color:var(--muted);margin:0;max-width:300px}
+
+/* plan picker */
+.picker{display:flex;flex-direction:column;gap:10px}
+.card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--r-inner);
+  padding:14px 16px;display:flex;align-items:center;gap:12px;position:relative}
+.card .lbl{display:flex;flex-direction:column;gap:3px;min-width:0}
+.card .t{font-size:16px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:8px}
+.card .p{font-size:13px;color:var(--muted)}
+.badge{background:var(--pink);color:#fff;font-size:10px;font-weight:700;letter-spacing:.5px;
+  padding:3px 8px;border-radius:99px}
+.card .spacer{flex:1}
+.radio{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--border);flex:0 0 auto;
+  display:flex;align-items:center;justify-content:center}
+.radio.on{background:var(--pink);border-color:var(--pink);color:#fff;font-size:12px;font-weight:700}
+.card.sel{border-color:var(--pink);border-width:2px;padding:13.5px 15.5px}
+.topup{font-size:12px;font-weight:500;color:var(--muted-faint);text-align:center;margin:2px 0 0}
+
+/* pack row */
+.pack .t{font-size:15px;font-weight:600}
+.pack .p{font-size:12px}
+.pricepill{background:var(--purple-soft);color:var(--purple);border-radius:99px;
+  padding:8px 14px;font-size:14px;font-weight:700;display:flex;align-items:center;
+  justify-content:center;min-width:66px;min-height:34px}
+
+/* CTA stack */
+.ctastack{display:flex;flex-direction:column;gap:8px;align-items:stretch}
+.cta{height:52px;border-radius:99px;background:var(--pink);color:#fff;font-size:17px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;gap:10px;border:none;
+  box-shadow:0 6px 16px rgba(255,61,143,.20);position:relative;overflow:hidden}
+.ghost{min-height:32px;display:flex;align-items:center;justify-content:center;gap:6px;
+  font-size:14px;font-weight:600;color:var(--blue)}
+.ghost.dim{color:var(--muted);font-weight:400}
+.legal{font-size:11px;color:var(--muted-faint);text-align:center;margin:2px 0 0;line-height:1.4}
+
+/* ---------- busy indicators ---------- */
+.spin{width:18px;height:18px;border-radius:50%;border:2px solid currentColor;
+  border-top-color:transparent;animation:sp .8s linear infinite;display:inline-block;flex:0 0 auto}
+.spin.sm{width:14px;height:14px;border-width:2px}
+.spin.lg{width:22px;height:22px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.track{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(255,255,255,.14);overflow:hidden}
+.track i{position:absolute;top:0;bottom:0;width:38%;background:currentColor;border-radius:2px;
+  animation:slide 1.35s ease-in-out infinite}
+@keyframes slide{0%{left:-40%}100%{left:102%}}
+
+/* ---------- state modifiers ---------- */
+.dimmed{opacity:.38}
+.dimmed-hard{opacity:.24}
+.cta.dead{background:rgba(255,61,143,.28);color:rgba(255,255,255,.55);box-shadow:none}
+.cta.purple{background:var(--purple);box-shadow:0 6px 16px rgba(139,92,246,.22);color:#fff}
+.cta.blueish{background:var(--blue);box-shadow:0 6px 16px rgba(10,132,255,.22);color:#fff}
+.cta.hollow{background:transparent;border:2px solid var(--pink);color:var(--pink);box-shadow:none}
+.card.busy{border-color:var(--purple);border-width:2px;padding:13.5px 15.5px;
+  background:linear-gradient(0deg,var(--purple-soft),var(--purple-soft)),var(--card)}
+.card.busy-pink{border-color:var(--pink);border-width:2px;padding:13.5px 15.5px}
+.statusline{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1.4px;
+  text-transform:uppercase;text-align:center;color:var(--muted);margin:0}
+.statusline.pk{color:var(--pink)}
+.statusline.pu{color:var(--purple)}
+.statusline.bl{color:var(--blue)}
+.hint{font-size:12px;color:var(--muted-faint);text-align:center;margin:0;line-height:1.45}
+
+/* scrim variant */
+.scrim{position:absolute;inset:0;background:rgba(10,10,12,.78);backdrop-filter:blur(1.5px);z-index:20}
+.lift{position:relative;z-index:30;box-shadow:0 18px 40px rgba(0,0,0,.6)}
+.lift-card{position:absolute;left:20px;right:20px;z-index:30;background:var(--elevated);
+  border:1.5px solid var(--border);border-radius:var(--r-inner);padding:16px;
+  box-shadow:0 20px 44px rgba(0,0,0,.6)}
+.lift-head{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1.6px;
+  text-transform:uppercase;margin:0 0 8px}
+
+/* morph-CTA "source ring" on the pack row */
+.card.source{border-color:var(--purple);border-width:2px;padding:13.5px 15.5px}
+.srcdot{position:absolute;left:-1px;top:14px;bottom:14px;width:3px;border-radius:2px;background:var(--purple)}
+
+/* today/bug callout */
+.bugrow{display:flex;gap:30px;align-items:flex-start;flex-wrap:wrap;margin-top:26px}
+.bugnote{flex:1 1 380px;max-width:520px}
+.bugnote h3{font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:600;letter-spacing:2px;
+  text-transform:uppercase;color:var(--warning);margin:0 0 12px}
+.bugnote p{font-size:14px;line-height:1.65;color:var(--muted);margin:0 0 12px}
+.bugnote code{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink);
+  background:rgba(255,255,255,.06);padding:1px 5px;border-radius:4px}
+.quote{border-left:2px solid var(--pink);padding-left:14px;color:var(--ink);font-size:14px;
+  line-height:1.6;font-style:italic}
+.legend{display:flex;gap:22px;flex-wrap:wrap;margin-top:22px;font-size:12.5px;color:var(--muted-faint)}
+.legend div{display:flex;gap:8px;align-items:baseline}
+.legend b{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:1.2px;color:var(--muted)}
+footer{margin-top:72px;border-top:1px solid var(--page-line);padding-top:24px;
+  font-size:12.5px;color:var(--muted-faint);line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ============================ HEADER ============================ -->
+<p class="kicker">Design variants · founder review</p>
+<h1>Issue #129 — Paywall purchase-in-flight states</h1>
+<span class="rule-lg"></span>
+<p class="lede">Today the paywall has <strong>one global busy flag</strong>, so buying the one-time pack spins and freezes the pink <em>Subscribe</em> CTA while the Annual card keeps its pink check — the screen says "you are subscribing" during a purchase that is not a subscription. These three variants give three genuinely different answers to the same question: <strong>while one product is being bought, what happens to everything else on this screen?</strong></p>
+<p class="lede">Each variant is a complete, self-consistent position — it answers all five design questions in the issue plus both founder decisions. Pick one whole variant, not a mix; the chosen one goes into Pencil frame <code style="font-family:'IBM Plex Mono',monospace">z8TS6</code>, then into code.</p>
+<p class="meta">Rendered against the live dark-mode tokens in <span style="color:var(--muted)">Theme+Hangs.swift</span> and the real copy in <span style="color:var(--muted)">PaywallView.swift</span>. Prices are RevenueCat <span style="color:var(--muted)">displayPrice</span> (locale-formatted at runtime) — shown here in EUR; the founder's field test showed 699,00 Kč / 49,00 Kč.</p>
+
+<div class="legend">
+  <div><b>(a)</b><span>idle / default paywall</span></div>
+  <div><b>(b)</b><span>pack purchase in flight — the money shot</span></div>
+  <div><b>(c)</b><span>subscription purchase in flight</span></div>
+  <div><b>(d)</b><span>restore purchases in flight</span></div>
+</div>
+
+<!-- ============================ TODAY ============================ -->
+<section>
+<h2><span class="tag">Reference · shipped build</span>Today, and why it reads wrong</h2>
+<p class="concept">The current screen during a <em>pack</em> purchase. Two spinners, and the pink check still sits on Annual.</p>
+
+<div class="bugrow">
+  <figure class="fig" style="margin:0">
+    <div class="phone"><div class="screen">
+      <div class="notch"></div><div class="sbar"></div>
+      <div class="brandrow"><span class="brand">trubbo.<i></i></span><span class="xbtn">✕</span></div>
+      <div class="pw">
+        <div class="iconc">∞</div>
+        <div class="hero">
+          <h3 class="display">GO UNLIMITED</h3><span class="rule"></span>
+          <p class="sub">Unlimited questions for every drive, no monthly cap.</p>
+        </div>
+        <div class="picker">
+          <div class="card plan sel">
+            <div class="lbl"><span class="t">Annual <span class="badge">SAVE 50%</span></span><span class="p">€29.99 / year</span></div>
+            <span class="spacer"></span><span class="radio on">✓</span>
+          </div>
+          <div class="card plan">
+            <div class="lbl"><span class="t">Monthly</span><span class="p">€4.99 / month</span></div>
+            <span class="spacer"></span><span class="radio"></span>
+          </div>
+          <p class="topup">or top up without subscribing</p>
+          <div class="card pack dimmed">
+            <div class="lbl"><span class="t">100 Question Pack</span><span class="p">One-time purchase · never expires</span></div>
+            <span class="spacer"></span>
+            <span class="pricepill"><span class="spin sm"></span></span>
+          </div>
+        </div>
+        <div class="ctastack">
+          <button class="cta"><span class="spin"></span></button>
+          <div class="ghost">Restore purchases</div>
+          <div class="ghost dim">Maybe tomorrow</div>
+          <p class="legal">Auto-renews until cancelled. Cancel anytime in Settings.</p>
+        </div>
+      </div>
+    </div></div>
+  </figure>
+
+  <div class="bugnote">
+    <h3>What the screenshot shows</h3>
+    <p><code>StoreManager.isLoading</code> is one app-wide flag. Every purchase — pack or subscription — flips it, and the CTA passes it straight into <code>HangsPrimaryButton.isLoading</code>, which both spins <em style="font-style:normal;color:var(--ink)">and</em> disables. The same flag greys the pack row during a subscription buy, and <code>restorePurchases()</code> sets it too.</p>
+    <p>Meanwhile <code>selectedPlan</code> is plain view state that only plan taps ever change, so there is no way to express "a non-plan product is in flight". The pink check therefore stays put.</p>
+    <p class="quote">"When buying a pack, the Subscribe button shows a loading state. That's weird. And at the same time the subscription is selected even though I'm buying the pack."</p>
+    <p style="margin-top:16px"><span class="pill bad">two spinners</span><span class="pill bad">wrong product highlighted</span><span class="pill warn">frozen primary CTA</span></p>
+  </div>
+</div>
+</section>
+
+
+<!-- ============================ VARIANT A ============================ -->
+<section>
+<h2><span class="tag">Variant A</span>One Job At A Time</h2>
+<p class="concept">The busy indicator lives <em>only</em> on the thing being bought, and the plan picker openly stands down: both cards deselect, a mono line names what is actually in flight, and the Subscribe CTA stays full-strength and tappable because you genuinely are not subscribing right now.</p>
+
+<div class="row">
+
+  <!-- A · idle -->
+  <figure class="fig">
+    <div class="phone"><div class="screen">
+      <div class="notch"></div><div class="sbar"></div>
+      <div class="brandrow"><span class="brand">trubbo.<i></i></span><span class="xbtn">✕</span></div>
+      <div class="pw">
+        <div class="iconc">∞</div>
+        <div class="hero"><h3 class="display">GO UNLIMITED</h3><span class="rule"></span>
+          <p class="sub">Unlimited questions for every drive, no monthly cap.</p></div>
+        <div class="picker">
+          <div class="card plan sel">
+            <div class="lbl"><span class="t">Annual <span class="badge">SAVE 50%</span></span><span class="p">€29.99 / year</span></div>
+            <span class="spacer"></span><span class="radio on">✓</span>
+          </div>
+          <div class="card plan">
+            <div class="lbl"><span class="t">Monthly</span><span class="p">€4.99 / month</span></div>
+            <span class="spacer"></span><span class="radio"></span>
+          </div>
+          <p class="topup">or top up without subscribing</p>
+          <div class="card pack">
+            <div class="lbl"><span class="t">100 Question Pack</span><span class="p">One-time purchase · never expires</span></div>
+            <span class="spacer"></span><span class="pricepill">€1.99</span>
+          </div>
+        </div>
+        <div class="ctastack">
+          <button class="cta">Subscribe — €29.99 / year</button>
+          <div class="ghost">Restore purchases</div>
+          <div class="ghost dim">Maybe tomorrow</div>
+          <p class="legal">Auto-renews until cancelled. Cancel anytime in Settings.</p>
+        </div>
+      </div>
+    </div></div>
+    <figcaption>
+      <div class="stateid">(a) idle</div>
+      <ul class="notes">
+        <li>Unchanged from today. The pack row is drawn at <b>plan-card weight</b> — same padding, same border — so it reads as a peer choice, not a footnote.</li>
+      </ul>
+    </figcaption>
+  </figure>
+
+  <!-- A · pack in flight -->
+  <figure class="fig">
+    <div class="phone"><div class="screen">
+      <div class="notch"></div><div class="sbar"></div>
+      <div class="brandrow"><span class="brand">trubbo.<i></i></span><span class="xbtn">✕</span></div>
+      <div class="pw">
+        <div class="iconc">∞</div>
+        <div class="hero"><h3 class="display">GO UNLIMITED</h3><span class="rule"></span>
+          <p class="sub">Unlimited questions for every drive, no monthly cap.</p></div>
+        <div class="picker">
+          <div class="card plan dimmed">
+            <div class="lbl"><span class="t">Annual <span class="badge">SAVE 50%</span></span><span class="p">€29.99 / year</span></div>
+            <span class="spacer"></span><span class="radio"></span>
+          </div>
+          <div class="card plan dimmed">
+            <div class="lbl"><span class="t">Monthly</span><span class="p">€4.99 / month</span></div>
+            <span class="spacer"></span><span class="radio"></span>
+          </div>
+          <p class="statusline pu" style="margin-top:2px">buying the pack · plans on hold</p>
+          <div class="card pack busy">
+            <div class="lbl"><span class="t">100 Question Pack</span><span class="p">Confirm in the App&nbsp;Store sheet…</span></div>
+            <span class="spacer"></span>
+            <span class="pricepill"><span class="spin sm"></span></span>
+          </div>
+        </div>
+        <div class="ctastack">
+          <button class="cta">Subscribe — €29.99 / year</button>
+          <div class="ghost">Restore purchases</div>
+          <div class="ghost dim">Maybe tomorrow</div>
+          <p class="legal">Auto-renews until cancelled. Cancel anytime in Settings.</p>
+        </div>
+      </div>
+    </div></div>
+    <figcaption>
+      <div class="stateid">(b) pack in flight <span class="money">money shot</span></div>
+      <ul class="notes">
+        <li><b>Exactly one spinner</b>, inside the pack row's price pill; the row gains the purple 2pt active border.</li>
+        <li>Both plan radios go <b>empty</b> and the cards drop to 38% — the picker is visibly parked, not broken, because the mono line names why.</li>
+        <li>The CTA is <b>untouched: full pink, tappable</b>. It is honest — nothing about your subscription is happening.</li>
+        <li>On resolve, the previously selected plan is restored (Annual by default).</li>
+      </ul>
+    </figcaption>
+  </figure>
+
+  <!-- A · subscription in flight -->
+  <figure class="fig">
+    <div class="phone"><div class="screen">
+      <div class="notch"></div><div class="sbar"></div>
+      <div class="brandrow"><span class="brand">trubbo.<i></i></span><span class="xbtn">✕</span></div>
+      <div class="pw">
+        <div class="iconc">∞</div>
+        <div class="hero"><h3 class="display">GO UNLIMITED</h3><span class="rule"></span>
+          <p class="sub">Unlimited questions for every drive, no monthly cap.</p></div>
+        <div class="picker">
+          <div class="card plan busy-pink">
+            <div class="lbl"><span class="t">Annual <span class="badge">SAVE 50%</span></span><span class="p">€29.99 / year</span></div>
+            <span class="spacer"></span>
+            <span class="radio on" style="background:transparent;border-color:var(--pink);color:var(--pink)"><span class="spin sm"></span></span>
+          </div>
+          <div class="card plan dimmed">
+            <div class="lbl"><span class="t">Monthly</span><span class="p">€4.99 / month</span></div>
+            <span class="spacer"></span><span class="radio"></span>
+          </div>
+          <p class="statusline pk" style="margin-top:2px">buying annual · pack on hold</p>
+          <div class="card pack dimmed">
+            <div class="lbl"><span class="t">100 Question Pack</span><span class="p">Available right after this</span></div>
+            <span class="spacer"></span><span class="pricepill">€1.99</span>
+          </div>
+        </div>
+        <div class="ctastack">
+          <button class="cta"><span class="spin"></span> Subscribing…</button>
+          <div class="ghost">Restore purchases</div>
+          <div class="ghost dim">Maybe tomorrow</div>
+          <p class="legal">Auto-renews until cancelled. Cancel anytime in Settings.</p>
+        </div>
+      </div>
+    </div></div>
+    <figcaption>
+      <div class="stateid">(c) subscription in flight</div>
+      <ul class="notes">
+        <li>Mirror image: the busy state sits on the <b>plan being bought</b> — its radio becomes the spinner in place, the card keeps the pink 2pt ring.</li>
+        <li>The CTA spins here, and <b>only</b> here, with the label switched to "Subscribing…" so a spinner alone never has to carry the meaning.</li>
+        <li>The pack row's grey gets a reason: <b>"Available right after this"</b> instead of silent disabling.</li>
+      </ul>
+    </figcaption>
+  </figure>
+
+  <!-- A · restore -->
+  <figure class="fig">
+    <div class="phone"><div class="screen">
+      <div class="notch"></div><div class="sbar"></div>
+      <div class="brandrow"><span class="brand">trubbo.<i></i></span><span class="xbtn">✕</span></div>
+      <div class="pw">
+        <div class="iconc">∞</div>
+        <div class="hero"><h3 class="display">GO UNLIMITED</h3><span class="rule"></span>
+          <p class="sub">Unlimited questions for every drive, no monthly cap.</p></div>
+        <div class="picker">
+          <div class="card plan dimmed">
+            <div class="lbl"><span class="t">Annual <span class="badge">SAVE 50%</span></span><span class="p">€29.99 / year</span></div>
+            <span class="spacer"></span><span class="radio"></span>
+          </div>
+          <div class="card plan dimmed">
+            <div class="lbl"><span class="t">Monthly</span><span class="p">€4.99 / month</span></div>
+            <span class="spacer"></span><span class="radio"></span>
+          </div>
+          <p class="statusline bl" style="margin-top:2px">checking your apple account · plans on hold</p>
+          <div class="card pack dimmed">
+            <div class="lbl"><span class="t">100 Question Pack</span><span class="p">One-time purchase · never expires</span></div>
+            <span class="spacer"></span><span class="pricepill">€1.99</span>
+          </div>
+        </div>
+        <div class="ctastack">
+          <button class="cta">Subscribe — €29.99 / year</button>
+          <div class="ghost"><span class="spin sm"></span> Restoring…</div>
+          <div class="ghost dim">Maybe tomorrow</div>
+          <p class="legal">Auto-renews until cancelled. Cancel anytime in Settings.</p>
+        </div>
+      </div>
+    </div></div>
+    <figcaption>
+      <div class="stateid">(d) restore in flight</div>
+      <ul class="notes">
+        <li>Same rule, no exception: the spinner goes on the <b>restore link itself</b>, in blue, at 14pt.</li>
+        <li>Picker parks (nothing is being bought), CTA stays full-strength and tappable.</li>
+      </ul>
+    </figcaption>
+  </figure>
+</div>
+
+<div class="grid2">
+  <div class="panel">
+    <h3>The five questions, answered</h3>
+    <table>
+      <tr><td class="q">Subscribe CTA during a pack buy</td><td class="a">Untouched — full pink, tappable. Never spins for someone else's purchase.</td></tr>
+      <tr><td class="q">One busy indicator or two</td><td class="a">Always exactly one, on the row that owns the purchase.</td></tr>
+      <tr><td class="q">Pack row during a subscription buy</td><td class="a">Dimmed <em>with a reason line</em> ("Available right after this") — legible as queued, not broken.</td></tr>
+      <tr><td class="q">Fate of the pink check</td><td class="a">Deselects fully; replaced by a mono status line naming what is in flight, so the picker never reads empty.</td></tr>
+      <tr><td class="q">Restore purchases</td><td class="a">Spinner moves onto the link; CTA untouched.</td></tr>
+      <tr><td class="q">Pack row: peer or escape hatch</td><td class="a"><strong>Peer.</strong> Same card weight as the plans; it can host the primary busy state.</td></tr>
+    </table>
+  </div>
+  <div class="panel alt">
+    <h3>Tradeoffs</h3>
+    <ul class="tl">
+      <li><span class="k">What's bought</span><span class="v"><span class="pill good">clear</span>One spinner, one active border, one status line — all pointing at the same row.</span></li>
+      <li><span class="k">Dead CTA risk</span><span class="v"><span class="pill good">none</span>The CTA is never disabled by another product's purchase.</span></li>
+      <li><span class="k">Double purchase</span><span class="v"><span class="pill bad">real</span>A live CTA during a pack buy lets a second StoreKit sheet be requested. <code style="font-family:'IBM Plex Mono',monospace;font-size:11px">StoreManager.purchase()</code> has no in-flight guard today — this variant <em style="font-style:normal;color:var(--ink)">requires</em> adding one.</span></li>
+      <li><span class="k">Implementation</span><span class="v"><span class="pill ok">medium</span>Per-product CTA state, a third "nothing selected" case for the picker, restore-of-selection on resolve, a reentrancy guard, plus three status strings.</span></li>
+      <li><span class="k">Founder decisions</span><span class="v"><b>1 → fully interactive.</b> <b>2 → yes, deselect.</b></span></li>
+    </ul>
+  </div>
+</div>
+</section>
+
+
+<!-- ============================ VARIANT B ============================ -->
+<section>
+<h2><span class="tag">Variant B</span>Spotlight</h2>
+<p class="concept">Nothing on the screen changes shape. A scrim drops over the whole paywall and <em>only the row being purchased stays lit</em>, floated above it with an explicit sentence. The contradiction disappears because the frozen plan check is literally in the dark.</p>
+
+<div class="row">
+
+  <!-- B · idle -->
+  <figure class="fig">
+    <div class="phone"><div class="screen">
+      <div class="notch"></div><div class="sbar"></div>
+      <div class="brandrow"><span class="brand">trubbo.<i></i></span><span class="xbtn">✕</span></div>
+      <div class="pw">
+        <div class="iconc">∞</div>
+        <div class="hero"><h3 class="display">GO UNLIMITED</h3><span class="rule"></span>
+          <p class="sub">Unlimited questions for every drive, no monthly cap.</p></div>
+        <div class="picker">
+          <div class="card plan sel">
+            <div class="lbl"><span class="t">Annual <span class="badge">SAVE 50%</span></span><span class="p">€29.99 / year</span></div>
+            <span class="spacer"></span><span class="radio on">✓</span>
+          </div>
+          <div class="card plan">
+            <div class="lbl"><span class="t">Monthly</span><span class="p">€4.99 / month</span></div>
+            <span class="spacer"></span><span class="radio"></span>
+          </div>
+          <p class="topup">or top up without subscribing</p>
+          <div class="card pack">
+            <div class="lbl"><span class="t">100 Question Pack</span><span class="p">One-time purchase · never expires</span></div>
+            <span class="spacer"></span><span class="pricepill">€1.99</span>
+          </div>
+        </div>
+        <div class="ctastack">
+          <button class="cta">Subscribe — €29.99 / year</button>
+          <div class="ghost">Restore purchases</div>
+          <div class="ghost dim">Maybe tomorrow</div>
+          <p class="legal">Auto-renews until cancelled. Cancel anytime in Settings.</p>
+        </div>
+      </div>
+    </div></div>
+    <figcaption>
+      <div class="stateid">(a) idle</div>
+      <ul class="notes">
+        <li>Byte-identical to the shipped idle screen — this variant adds a layer, it does not restyle anything underneath.</li>
+      </ul>
+    </figcaption>
+  </figure>
+
+  <!-- B · pack in flight -->
+  <figure class="fig">
+    <div class="phone"><div class="screen">
+      <div class="notch"></div><div class="sbar"></div>
+      <div class="brandrow"><span class="brand">trubbo.<i></i></span><span class="xbtn">✕</span></div>
+      <div class="pw">
+        <div class="iconc">∞</div>
+        <div class="hero"><h3 class="display">GO UNLIMITED</h3><span class="rule"></span>
+          <p class="sub">Unlimited questions for every drive, no monthly cap.</p></div>
+        <div class="picker">
+          <div class="card plan sel">
+            <div class="lbl"><span class="t">Annual <span class="badge">SAVE 50%</span></span><span class="p">€29.99 / year</span></div>
+            <span class="spacer"></span><span class="radio on">✓</span>
+          </div>
+          <div class="card plan">
+            <div class="lbl"><span class="t">Monthly</span><span class="p">€4.99 / month</span></div>
+            <span class="spacer"></span><span class="radio"></span>
+          </div>
+          <p class="topup">or top up without subscribing</p>
+          <div class="card pack" style="visibility:hidden">
+            <div class="lbl"><span class="t">100 Question Pack</span><span class="p">One-time purchase · never expires</span></div>
+            <span class="spacer"></span><span class="pricepill">€1.99</span>
+          </div>
+        </div>
+        <div class="ctastack">
+          <button class="cta">Subscribe — €29.99 / year</button>
+          <div class="ghost">Restore purchases</div>
+          <div class="ghost dim">Maybe tomorrow</div>
+          <p class="legal">Auto-renews until cancelled. Cancel anytime in Settings.</p>
+        </div>
+      </div>
+      <div class="scrim"></div>
+      <div class="lift-card" style="top:512px;border-color:var(--purple)">
+        <p class="lift-head" style="color:var(--purple)">buying now</p>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="lbl" style="display:flex;flex-direction:column;gap:3px">
+            <span class="t" style="font-size:16px;font-weight:700;color:var(--ink)">100 Question Pack</span>
+            <span class="p" style="font-size:12.5px;color:var(--muted)">One-time · €1.99 · never expires</span>
+          </div>
+          <span class="spacer" style="flex:1"></span>
+          <span style="color:var(--purple);display:flex"><span class="spin lg"></span></span>
+        </div>
+        <p class="hint" style="text-align:left;margin-top:10px;color:var(--muted)">Confirm in the App&nbsp;Store sheet. Nothing else is being bought — your plan choice is just waiting.</p>
+      </div>
+    </div></div>
+    <figcaption>
+      <div class="stateid">(b) pack in flight <span class="money">money shot</span></div>
+      <ul class="notes">
+        <li>The pack row <b>lifts out of the list</b> onto an elevated card at full brightness; everything else, CTA and pink check included, sits under a 78% scrim.</li>
+        <li>One spinner, one lit element, and the card <b>names the product and price in words</b> — no reliance on the user tracing which row is glowing.</li>
+        <li>The card's own subline denies the wrong reading in words: "nothing else is being bought".</li>
+        <li>The scrim swallows all taps, so the CTA cannot be pressed — but it never looks broken, it looks <em style="font-style:normal;color:var(--muted)">behind</em>.</li>
+      </ul>
+    </figcaption>
+  </figure>
+
+  <!-- B · subscription in flight -->
+  <figure class="fig">
+    <div class="phone"><div class="screen">
+      <div class="notch"></div><div class="sbar"></div>
+      <div class="brandrow"><span class="brand">trubbo.<i></i></span><span class="xbtn">✕</span></div>
+      <div class="pw">
+        <div class="iconc">∞</div>
+        <div class="hero"><h3 class="display">GO UNLIMITED</h3><span class="rule"></span>
+          <p class="sub">Unlimited questions for every drive, no monthly cap.</p></div>
+        <div class="picker">
+          <div class="card plan sel" style="visibility:hidden">
+            <div class="lbl"><span class="t">Annual <span class="badge">SAVE 50%</span></span><span class="p">€29.99 / year</span></div>
+            <span class="spacer"></span><span class="radio on">✓</span>
+          </div>
+          <div class="card plan">
+            <div class="lbl"><span class="t">Monthly</span><span class="p">€4.99 / month</span></div>
+            <span class="spacer"></span><span class="radio"></span>
+          </div>
+          <p class="topup">or top up without subscribing</p>
+          <div class="card pack">
+            <div class="lbl"><span class="t">100 Question Pack</span><span class="p">One-time purchase · never expires</span></div>
+            <span class="spacer"></span><span class="pricepill">€1.99</span>
+          </div>
+        </div>
+        <div class="ctastack">
+          <button class="cta">Subscribe — €29.99 / year</button>
+          <div class="ghost">Restore purchases</div>
+          <div class="ghost dim">Maybe tomorrow</div>
+          <p class="legal">Auto-renews until cancelled. Cancel anytime in Settings.</p>
+        </div>
+      </div>
+      <div class="scrim"></div>
+      <div class="lift-card" style="top:328px;border-color:var(--pink)">
+        <p class="lift-head" style="color:var(--pink)">buying now</p>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="lbl" style="display:flex;flex-direction:column;gap:3px">
+            <span class="t" style="font-size:16px;font-weight:700;color:var(--ink)">Annual — Hangs Unlimited</span>
+            <span class="p" style="font-size:12.5px;color:var(--muted)">€29.99 / year · auto-renews</span>
+          </div>
+          <span class="spacer" style="flex:1"></span>
+          <span style="color:var(--pink);display:flex"><span class="spin lg"></span></span>
+        </div>
+        <p class="hint" style="text-align:left;margin-top:10px;color:var(--muted)">Confirm in the App&nbsp;Store sheet. The pack is still here when this finishes.</p>
+      </div>
+    </div></div>
+    <figcaption>
+      <div class="stateid">(c) subscription in flight</div>
+      <ul class="notes">
+        <li>Exactly the same mechanic, pink instead of purple: the <b>Annual card</b> lifts, the CTA goes under the scrim with everything else.</li>
+        <li>The CTA never spins in this variant at all — the lifted card is the single busy surface for every product.</li>
+        <li>The pack row is not "greyed out", it is behind a scrim with a promise: "still here when this finishes".</li>
+      </ul>
+    </figcaption>
+  </figure>
+
+  <!-- B · restore -->
+  <figure class="fig">
+    <div class="phone"><div class="screen">
+      <div class="notch"></div><div class="sbar"></div>
+      <div class="brandrow"><span class="brand">trubbo.<i></i></span><span class="xbtn">✕</span></div>
+      <div class="pw">
+        <div class="iconc">∞</div>
+        <div class="hero"><h3 class="display">GO UNLIMITED</h3><span class="rule"></span>
+          <p class="sub">Unlimited questions for every drive, no monthly cap.</p></div>
+        <div class="picker">
+          <div class="card plan sel">
+            <div class="lbl"><span class="t">Annual <span class="badge">SAVE 50%</span></span><span class="p">€29.99 / year</span></div>
+            <span class="spacer"></span><span class="radio on">✓</span>
+          </div>
+          <div class="card plan">
+            <div class="lbl"><span class="t">Monthly</span><span class="p">€4.99 / month</span></div>
+            <span class="spacer"></span><span class="radio"></span>
+          </div>
+          <p class="topup">or top up without subscribing</p>
+          <div class="card pack">
+            <div class="lbl"><span class="t">100 Question Pack</span><span class="p">One-time purchase · never expires</span></div>
+            <span class="spacer"></span><span class="pricepill">€1.99</span>
+          </div>
+        </div>
+        <div class="ctastack">
+          <button class="cta">Subscribe — €29.99 / year</button>
+          <div class="ghost" style="visibility:hidden">Restore purchases</div>
+          <div class="ghost dim">Maybe tomorrow</div>
+          <p class="legal">Auto-renews until cancelled. Cancel anytime in Settings.</p>
+        </div>
+      </div>
+      <div class="scrim"></div>
+      <div class="lift-card" style="top:670px;border-color:var(--blue)">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="color:var(--blue);display:flex"><span class="spin"></span></span>
+          <div class="lbl" style="display:flex;flex-direction:column;gap:2px">
+            <span class="t" style="font-size:15px;font-weight:700;color:var(--ink)">Restoring purchases</span>
+            <span class="p" style="font-size:12.5px;color:var(--muted)">Checking your Apple Account…</span>
+          </div>
+        </div>
+      </div>
+    </div></div>
+    <figcaption>
+      <div class="stateid">(d) restore in flight</div>
+      <ul class="notes">
+        <li>Restore is not a purchase, so it gets the <b>lightest version</b> of the same idea: scrim plus a compact blue card where the link was.</li>
+        <li>No product is named because none is being bought — the copy is deliberately about <em style="font-style:normal;color:var(--muted)">checking</em>, not buying.</li>
+      </ul>
+    </figcaption>
+  </figure>
+</div>
+
+<div class="grid2">
+  <div class="panel">
+    <h3>The five questions, answered</h3>
+    <table>
+      <tr><td class="q">Subscribe CTA during a pack buy</td><td class="a">Recedes under the scrim at full colour — not restyled, not disabled-looking, just clearly not in front.</td></tr>
+      <tr><td class="q">One busy indicator or two</td><td class="a">One, always on the lifted card.</td></tr>
+      <tr><td class="q">Pack row during a subscription buy</td><td class="a">Behind the scrim like everything else, with "still here when this finishes" — the greyed/broken ambiguity is gone entirely.</td></tr>
+      <tr><td class="q">Fate of the pink check</td><td class="a">Stays exactly as it was, dimmed by the scrim. No new selection state to model or restore.</td></tr>
+      <tr><td class="q">Restore purchases</td><td class="a">Same scrim, smaller blue card, no product named.</td></tr>
+      <tr><td class="q">Pack row: peer or escape hatch</td><td class="a">Stays a <strong>secondary escape hatch</strong> in the resting layout, but becomes the hero of its own purchase.</td></tr>
+    </table>
+  </div>
+  <div class="panel alt">
+    <h3>Tradeoffs</h3>
+    <ul class="tl">
+      <li><span class="k">What's bought</span><span class="v"><span class="pill good">unambiguous</span>The only lit, readable element on the screen names the product and its price in a sentence.</span></li>
+      <li><span class="k">Dead CTA risk</span><span class="v"><span class="pill good">none</span>Nothing looks disabled; the whole screen is visibly behind a temporary layer.</span></li>
+      <li><span class="k">Double purchase</span><span class="v"><span class="pill good">impossible</span>The scrim eats every tap — no reentrancy guard strictly required.</span></li>
+      <li><span class="k">Implementation</span><span class="v"><span class="pill warn">largest</span>A new overlay layer with per-product content, an anchored/lifted copy of a row, plus a scrim tap-blocker. But <em style="font-style:normal;color:var(--ink)">zero</em> changes to selection state or the CTA's own logic.</span></li>
+      <li><span class="k">Watch out</span><span class="v">StoreKit already shows its own sheet over this — during the sheet the founder sees a scrim behind a sheet. Strongest at the moment the sheet is dismissed and the purchase is still settling.</span></li>
+      <li><span class="k">Founder decisions</span><span class="v"><b>1 → non-interactive, but by scrim, not by a dead button.</b> <b>2 → no, keep the check.</b></span></li>
+    </ul>
+  </div>
+</div>
+</section>
+
+
+<!-- ============================ VARIANT C ============================ -->
+<section>
+<h2><span class="tag">Variant C</span>The Button Narrates</h2>
+<p class="concept">One status surface for the whole screen: the primary CTA. It morphs into whatever is actually happening — purple "Buying 100 Question Pack" for the pack, pink for a subscription, blue for restore — with a progress track and the product spelled out. No row ever spins.</p>
+
+<div class="row">
+
+  <!-- C · idle -->
+  <figure class="fig">
+    <div class="phone"><div class="screen">
+      <div class="notch"></div><div class="sbar"></div>
+      <div class="brandrow"><span class="brand">trubbo.<i></i></span><span class="xbtn">✕</span></div>
+      <div class="pw">
+        <div class="iconc">∞</div>
+        <div class="hero"><h3 class="display">GO UNLIMITED</h3><span class="rule"></span>
+          <p class="sub">Unlimited questions for every drive, no monthly cap.</p></div>
+        <div class="picker">
+          <div class="card plan sel">
+            <div class="lbl"><span class="t">Annual <span class="badge">SAVE 50%</span></span><span class="p">€29.99 / year</span></div>
+            <span class="spacer"></span><span class="radio on">✓</span>
+          </div>
+          <div class="card plan">
+            <div class="lbl"><span class="t">Monthly</span><span class="p">€4.99 / month</span></div>
+            <span class="spacer"></span><span class="radio"></span>
+          </div>
+          <p class="topup">or top up without subscribing</p>
+          <div class="card pack" style="padding:12px 16px">
+            <div class="lbl"><span class="t" style="font-size:14px">100 Question Pack</span><span class="p">One-time · never expires</span></div>
+            <span class="spacer"></span><span class="pricepill" style="font-size:13px;min-height:30px;padding:6px 12px">€1.99</span>
+          </div>
+        </div>
+        <div class="ctastack">
+          <button class="cta">Subscribe — €29.99 / year</button>
+          <div class="ghost">Restore purchases</div>
+          <div class="ghost dim">Maybe tomorrow</div>
+          <p class="legal">Auto-renews until cancelled. Cancel anytime in Settings.</p>
+        </div>
+      </div>
+    </div></div>
+    <figcaption>
+      <div class="stateid">(a) idle</div>
+      <ul class="notes">
+        <li>The pack row is deliberately drawn <b>lighter than the plan cards</b> — smaller title, tighter padding, smaller price pill — so it reads as the secondary escape hatch it is.</li>
+      </ul>
+    </figcaption>
+  </figure>
+
+  <!-- C · pack in flight -->
+  <figure class="fig">
+    <div class="phone"><div class="screen">
+      <div class="notch"></div><div class="sbar"></div>
+      <div class="brandrow"><span class="brand">trubbo.<i></i></span><span class="xbtn">✕</span></div>
+      <div class="pw">
+        <div class="iconc">∞</div>
+        <div class="hero"><h3 class="display">GO UNLIMITED</h3><span class="rule"></span>
+          <p class="sub">Unlimited questions for every drive, no monthly cap.</p></div>
+        <div class="picker">
+          <div class="card plan dimmed-hard">
+            <div class="lbl"><span class="t">Annual <span class="badge">SAVE 50%</span></span><span class="p">€29.99 / year</span></div>
+            <span class="spacer"></span>
+            <span class="radio" style="border-color:var(--pink);color:var(--pink);font-size:12px;font-weight:700">✓</span>
+          </div>
+          <div class="card plan dimmed-hard">
+            <div class="lbl"><span class="t">Monthly</span><span class="p">€4.99 / month</span></div>
+            <span class="spacer"></span><span class="radio"></span>
+          </div>
+          <p class="topup" style="opacity:.24">or top up without subscribing</p>
+          <div class="card pack source" style="padding:11.5px 15.5px">
+            <span class="srcdot"></span>
+            <div class="lbl"><span class="t" style="font-size:14px">100 Question Pack</span><span class="p">One-time · never expires</span></div>
+            <span class="spacer"></span>
+            <span class="pricepill" style="font-size:13px;min-height:30px;padding:6px 12px;background:var(--purple);color:#fff">€1.99</span>
+          </div>
+        </div>
+        <div class="ctastack">
+          <button class="cta purple">Buying 100 Question Pack…<span class="track"><i></i></span></button>
+          <div class="ghost" style="opacity:.35">Restore purchases</div>
+          <div class="ghost dim">Maybe tomorrow</div>
+          <p class="legal">Auto-renews until cancelled. Cancel anytime in Settings.</p>
+        </div>
+      </div>
+    </div></div>
+    <figcaption>
+      <div class="stateid">(b) pack in flight <span class="money">money shot</span></div>
+      <ul class="notes">
+        <li>The CTA <b>stops being a Subscribe button</b>: pink → purple, label → "Buying 100 Question Pack…", with an indeterminate track along the bottom edge. It cannot be misread as a subscription.</li>
+        <li>Colour does the pointing: the purple CTA, the purple filled price pill and the purple edge bar are the same product. No spinner anywhere.</li>
+        <li>The plan cards drop to 24% and the check goes <b>hollow pink</b> — still visible as "this is what you'd buy next", but demoted below the pack.</li>
+        <li>The CTA is non-tappable while it is a status surface; because it changed colour and copy, it never looks like a dead Subscribe button.</li>
+      </ul>
+    </figcaption>
+  </figure>
+
+  <!-- C · subscription in flight -->
+  <figure class="fig">
+    <div class="phone"><div class="screen">
+      <div class="notch"></div><div class="sbar"></div>
+      <div class="brandrow"><span class="brand">trubbo.<i></i></span><span class="xbtn">✕</span></div>
+      <div class="pw">
+        <div class="iconc">∞</div>
+        <div class="hero"><h3 class="display">GO UNLIMITED</h3><span class="rule"></span>
+          <p class="sub">Unlimited questions for every drive, no monthly cap.</p></div>
+        <div class="picker">
+          <div class="card plan sel">
+            <div class="lbl"><span class="t">Annual <span class="badge">SAVE 50%</span></span><span class="p">€29.99 / year</span></div>
+            <span class="spacer"></span><span class="radio on">✓</span>
+          </div>
+          <div class="card plan dimmed-hard">
+            <div class="lbl"><span class="t">Monthly</span><span class="p">€4.99 / month</span></div>
+            <span class="spacer"></span><span class="radio"></span>
+          </div>
+          <p class="topup" style="opacity:.24">or top up without subscribing</p>
+          <div class="card pack dimmed-hard" style="padding:12px 16px">
+            <div class="lbl"><span class="t" style="font-size:14px">100 Question Pack</span><span class="p">One-time · never expires</span></div>
+            <span class="spacer"></span><span class="pricepill" style="font-size:13px;min-height:30px;padding:6px 12px">€1.99</span>
+          </div>
+        </div>
+        <div class="ctastack">
+          <button class="cta">Buying Annual — €29.99 / year…<span class="track"><i></i></span></button>
+          <div class="ghost" style="opacity:.35">Restore purchases</div>
+          <div class="ghost dim">Maybe tomorrow</div>
+          <p class="legal">Auto-renews until cancelled. Cancel anytime in Settings.</p>
+        </div>
+      </div>
+    </div></div>
+    <figcaption>
+      <div class="stateid">(c) subscription in flight</div>
+      <ul class="notes">
+        <li>Same surface, brand pink: "Buying Annual — €29.99 / year…" with the same track. The selected card <b>keeps its full pink ring and check</b> — here the highlight is correct, so it stays bright.</li>
+        <li>Pack row dims to 24% along with Monthly. It is uniformly "not the current subject", which is easier to read than a lone greyed row.</li>
+      </ul>
+    </figcaption>
+  </figure>
+
+  <!-- C · restore -->
+  <figure class="fig">
+    <div class="phone"><div class="screen">
+      <div class="notch"></div><div class="sbar"></div>
+      <div class="brandrow"><span class="brand">trubbo.<i></i></span><span class="xbtn">✕</span></div>
+      <div class="pw">
+        <div class="iconc">∞</div>
+        <div class="hero"><h3 class="display">GO UNLIMITED</h3><span class="rule"></span>
+          <p class="sub">Unlimited questions for every drive, no monthly cap.</p></div>
+        <div class="picker">
+          <div class="card plan dimmed-hard">
+            <div class="lbl"><span class="t">Annual <span class="badge">SAVE 50%</span></span><span class="p">€29.99 / year</span></div>
+            <span class="spacer"></span>
+            <span class="radio" style="border-color:var(--pink);color:var(--pink);font-size:12px;font-weight:700">✓</span>
+          </div>
+          <div class="card plan dimmed-hard">
+            <div class="lbl"><span class="t">Monthly</span><span class="p">€4.99 / month</span></div>
+            <span class="spacer"></span><span class="radio"></span>
+          </div>
+          <p class="topup" style="opacity:.24">or top up without subscribing</p>
+          <div class="card pack dimmed-hard" style="padding:12px 16px">
+            <div class="lbl"><span class="t" style="font-size:14px">100 Question Pack</span><span class="p">One-time · never expires</span></div>
+            <span class="spacer"></span><span class="pricepill" style="font-size:13px;min-height:30px;padding:6px 12px">€1.99</span>
+          </div>
+        </div>
+        <div class="ctastack">
+          <button class="cta blueish">Restoring purchases…<span class="track"><i></i></span></button>
+          <div class="ghost" style="opacity:.35">Restore purchases</div>
+          <div class="ghost dim">Maybe tomorrow</div>
+          <p class="legal">Auto-renews until cancelled. Cancel anytime in Settings.</p>
+        </div>
+      </div>
+    </div></div>
+    <figcaption>
+      <div class="stateid">(d) restore in flight</div>
+      <ul class="notes">
+        <li>Third colour, same surface: blue "Restoring purchases…". The link that started it fades to 35% rather than moving or growing a spinner.</li>
+        <li>The whole picker dims because restore acts on the account, not on any one product.</li>
+      </ul>
+    </figcaption>
+  </figure>
+</div>
+
+<div class="grid2">
+  <div class="panel">
+    <h3>The five questions, answered</h3>
+    <table>
+      <tr><td class="q">Subscribe CTA during a pack buy</td><td class="a">Becomes the pack's progress bar — purple, named, non-tappable. It is never a "loading Subscribe button" because it is no longer a Subscribe button.</td></tr>
+      <tr><td class="q">One busy indicator or two</td><td class="a">One, always in the same place regardless of product — the eye learns where to look.</td></tr>
+      <tr><td class="q">Pack row during a subscription buy</td><td class="a">Dims to 24% together with the non-selected plan; uniform recession instead of one lonely greyed row.</td></tr>
+      <tr><td class="q">Fate of the pink check</td><td class="a">Kept but demoted — hollow pink outline on a 24% card. The CTA copy carries the truth, so the check cannot mislead.</td></tr>
+      <tr><td class="q">Restore purchases</td><td class="a">Same CTA surface, blue; the link fades in place.</td></tr>
+      <tr><td class="q">Pack row: peer or escape hatch</td><td class="a"><strong>Clearly secondary</strong> — smaller type and pill by design, since it never has to host a busy state.</td></tr>
+    </table>
+  </div>
+  <div class="panel alt">
+    <h3>Tradeoffs</h3>
+    <ul class="tl">
+      <li><span class="k">What's bought</span><span class="v"><span class="pill good">stated in words</span>The product name is spelled out on the largest element on screen — the strongest of the three at defeating the founder's exact misread.</span></li>
+      <li><span class="k">Dead CTA risk</span><span class="v"><span class="pill ok">low</span>It is never a greyed-out button, but it does become non-tappable while narrating. A user who wants to switch to Subscribe mid-pack must wait.</span></li>
+      <li><span class="k">Double purchase</span><span class="v"><span class="pill good">prevented</span>The one control that could start a second purchase is the one occupied by the status.</span></li>
+      <li><span class="k">Implementation</span><span class="v"><span class="pill good">smallest</span>Mostly one component: a CTA that takes an in-flight product (label, tint, track) instead of a bare bool. No overlay, no new picker state — only a dim rule and a hollow-check style.</span></li>
+      <li><span class="k">Watch out</span><span class="v">Three CTA tints in one screen risks colour soup, and the label must not wrap — "Buying 100 Question Pack…" needs the single-line + minimum-scale treatment the hero texts already use.</span></li>
+      <li><span class="k">Founder decisions</span><span class="v"><b>1 → non-interactive, repurposed rather than disabled.</b> <b>2 → keep the check, but demote it.</b></span></li>
+    </ul>
+  </div>
+</div>
+</section>
+
+<footer>
+  <p>Sources: <span style="color:var(--muted)">apps/ios-app/Hangs/Hangs/Views/PaywallView.swift</span> (copy, layout, card structure) · <span style="color:var(--muted)">Views/Components/Hangs/HangsButton.swift</span> (CTA behaviour) · <span style="color:var(--muted)">Utilities/Theme+Hangs.swift</span> (all colours, radii, spacing, fonts) · <span style="color:var(--muted)">docs/issues/issue-129-paywall-pack-purchase-wrong-affordance.md</span>.</p>
+  <p>Frames are 390 × 844 with vertical rhythm compressed slightly to fit without scrolling; the real screen is a ScrollView, so nothing here depends on the exact vertical gaps. Fonts are Anton / Inter / IBM Plex Mono, the bundled app typefaces.</p>
+  <p>Next step after a pick: draw the chosen variant into <span style="color:var(--muted)">design/quiz-agent.pen</span> frame z8TS6, then implement. Nothing here has been written to the .pen file.</p>
+</footer>
+
+</div>
+</body>
+</html>

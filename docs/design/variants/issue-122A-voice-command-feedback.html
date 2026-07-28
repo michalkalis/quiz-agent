@@ -1,0 +1,1019 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Issue #122 Track A — Voice command recognition feedback</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   Issue #122 Track A — design variants
+   Tokens are the REAL app tokens (Theme+Hangs.swift, dark mode):
+   bg #161616 · bgCard #1F1F22 · bgElevated #2A2A2A · ink #F4F4F4
+   pink #FF3D8F · teal #14B8A6 · blue #0A84FF · warning #F59E0B
+   muted #9CA3AF · error #FF4444 (deliberately NOT used here)
+   Fonts: Anton (display) · Inter (body) · IBM Plex Mono (mono)
+   ============================================================ */
+:root{
+  --bg:#161616; --bg-card:#1F1F22; --bg-elev:#2A2A2A;
+  --ink:#F4F4F4; --muted:#9CA3AF; --muted-faint:#6B7280;
+  --pink:#FF3D8F; --teal:#14B8A6; --blue:#0A84FF; --warn:#F59E0B;
+  --hairline:rgba(255,255,255,.078); --border:rgba(255,255,255,.141);
+  --page:#0D0D0F; --panel:#151517;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--page); color:var(--ink);
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  padding:48px 40px 96px;
+}
+.wrap{max-width:1360px;margin:0 auto}
+
+/* ---------- page header ---------- */
+.kicker{
+  font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;font-weight:500;
+  letter-spacing:2.4px;text-transform:uppercase;color:var(--teal);margin:0 0 14px;
+}
+h1{
+  font-family:'Anton',Impact,sans-serif;font-weight:400;font-size:52px;line-height:1.02;
+  letter-spacing:-.5px;margin:0 0 4px;text-transform:uppercase;
+}
+h1 .accent{color:var(--pink)}
+.rule{height:4px;width:96px;background:var(--pink);margin:18px 0 22px;border-radius:2px}
+.lede{font-size:16px;line-height:1.62;color:#D7D9DE;max-width:74ch;margin:0 0 14px}
+.lede b{color:var(--ink);font-weight:600}
+.meta-chips{display:flex;flex-wrap:wrap;gap:8px;margin:24px 0 0}
+.chip{
+  font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10.5px;letter-spacing:.8px;
+  color:var(--muted);background:var(--panel);border:1px solid var(--hairline);
+  padding:6px 11px;border-radius:8px;
+}
+.chip b{color:var(--ink);font-weight:500}
+
+/* ---------- shared answers panel ---------- */
+.panel{
+  background:var(--panel);border:1px solid var(--hairline);border-radius:16px;
+  padding:26px 28px;margin:40px 0 8px;
+}
+.panel h2{
+  font-family:'Anton',Impact,sans-serif;font-weight:400;font-size:22px;letter-spacing:.4px;
+  text-transform:uppercase;margin:0 0 6px;
+}
+.panel .sub{color:var(--muted);font-size:13.5px;line-height:1.6;margin:0 0 20px;max-width:78ch}
+table{width:100%;border-collapse:collapse;font-size:13.5px;line-height:1.55}
+th,td{text-align:left;padding:11px 14px 11px 0;vertical-align:top;border-bottom:1px solid var(--hairline)}
+th{
+  font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10px;font-weight:500;
+  letter-spacing:1.6px;text-transform:uppercase;color:var(--muted-faint);
+  border-bottom:1px solid var(--border);padding-bottom:9px;
+}
+td:first-child{color:var(--ink);font-weight:600;width:29%;padding-right:26px}
+td{color:#C9CCD2}
+td code,.panel code,.tr code{
+  font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11.5px;
+  background:rgba(255,255,255,.06);padding:1.5px 5px;border-radius:5px;color:#E4E6EA;
+}
+.tbl-scroll{overflow-x:auto}
+
+/* ---------- variant section ---------- */
+.variant{margin:64px 0 0;padding-top:34px;border-top:1px solid var(--border)}
+.vhead{display:flex;align-items:flex-start;gap:18px;flex-wrap:wrap;margin-bottom:6px}
+.vnum{
+  font-family:'Anton',Impact,sans-serif;font-size:44px;line-height:.9;color:var(--pink);
+  min-width:44px;
+}
+.vtitle{
+  font-family:'Anton',Impact,sans-serif;font-weight:400;font-size:34px;line-height:1.05;
+  text-transform:uppercase;letter-spacing:.2px;margin:0;
+}
+.vconcept{color:#D7D9DE;font-size:15px;line-height:1.6;margin:8px 0 0;max-width:80ch}
+.vtag{
+  display:inline-block;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10px;
+  letter-spacing:1.4px;text-transform:uppercase;padding:5px 10px;border-radius:7px;margin-top:10px;
+}
+.vtag.a{color:var(--teal);background:rgba(20,184,166,.12);border:1px solid rgba(20,184,166,.35)}
+.vtag.b{color:var(--pink);background:rgba(255,61,143,.12);border:1px solid rgba(255,61,143,.35)}
+.vtag.c{color:var(--blue);background:rgba(10,132,255,.12);border:1px solid rgba(10,132,255,.35)}
+
+/* ---------- phone row ---------- */
+.row{
+  display:flex;gap:36px;overflow-x:auto;padding:34px 4px 12px;
+  scrollbar-color:#333 transparent;
+}
+.state{flex:0 0 auto;width:390px}
+.state-cap{margin:20px 2px 0}
+.state-cap .n{
+  font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10px;letter-spacing:1.8px;
+  text-transform:uppercase;color:var(--muted-faint);display:block;margin-bottom:6px;
+}
+.state-cap .t{font-size:14.5px;font-weight:600;color:var(--ink);display:block;margin-bottom:6px}
+.state-cap .d{font-size:13px;line-height:1.55;color:var(--muted)}
+
+/* ---------- the phone ---------- */
+.phone{
+  width:390px;height:844px;border-radius:52px;background:#000;
+  padding:10px;box-shadow:0 0 0 1px #303036, 0 30px 70px rgba(0,0,0,.65);
+}
+.screen{
+  width:100%;height:100%;border-radius:43px;overflow:hidden;position:relative;
+  background:var(--bg);display:flex;flex-direction:column;
+}
+.notch{
+  position:absolute;top:9px;left:50%;transform:translateX(-50%);
+  width:112px;height:30px;border-radius:16px;background:#000;z-index:6;
+}
+.statusbar{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:16px 26px 0;font-family:'Inter';font-size:14px;font-weight:600;color:var(--ink);
+  height:48px;flex:0 0 auto;
+}
+.statusbar .r{display:flex;gap:5px;align-items:center;color:var(--ink);opacity:.9}
+.bars{display:flex;gap:2px;align-items:flex-end}
+.bars i{display:block;width:3px;background:currentColor;border-radius:1px}
+.bars i:nth-child(1){height:4px}.bars i:nth-child(2){height:6px}
+.bars i:nth-child(3){height:8px}.bars i:nth-child(4){height:10px}
+.batt{width:22px;height:11px;border:1.4px solid currentColor;border-radius:3px;position:relative}
+.batt::after{content:'';position:absolute;inset:1.6px;background:currentColor;border-radius:1px;right:6px}
+
+.upper{flex:1 1 auto;display:flex;flex-direction:column;min-height:0}
+.lower{flex:0 0 auto;padding-bottom:26px}
+
+/* top chrome — HangsQuizTopBar + HangsProgressBar */
+.topbar{display:flex;justify-content:space-between;padding:14px 20px 4px}
+.tchip{
+  width:36px;height:36px;border-radius:50%;background:var(--bg-card);
+  display:flex;align-items:center;justify-content:center;color:var(--ink);
+}
+.progress{height:3px;margin:8px 24px 0;border-radius:2px;background:rgba(244,244,244,.10);position:relative;overflow:hidden}
+.progress i{position:absolute;inset:0 auto 0 0;width:30%;background:var(--pink);border-radius:2px}
+
+/* meta row */
+.meta{
+  display:flex;justify-content:space-between;align-items:baseline;
+  padding:12px 24px 4px;font-family:'IBM Plex Mono',ui-monospace,monospace;
+  font-size:11px;font-weight:500;letter-spacing:2px;color:var(--muted);
+}
+/* question — Anton 28 */
+.q{padding:14px 24px 0}
+.q p{
+  font-family:'Anton',Impact,sans-serif;font-weight:400;font-size:28px;line-height:1.14;
+  color:var(--ink);margin:0 0 10px;letter-spacing:.1px;
+}
+.q .spk{color:var(--muted);display:block}
+
+/* audio strip */
+.strip{display:flex;align-items:center;gap:8px;padding:0 24px;min-height:32px;margin-bottom:12px}
+.timerchip{
+  display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;
+  background:rgba(10,132,255,.12);border:1px solid rgba(10,132,255,.4);color:var(--blue);
+  font-family:'IBM Plex Mono',ui-monospace,monospace;
+}
+.timerchip .l{font-size:10px;font-weight:600;letter-spacing:1.5px}
+.timerchip .v{font-size:12px;font-weight:600}
+.typechip{
+  display:flex;align-items:center;gap:6px;margin:0 auto;padding:9px 18px;border-radius:999px;
+  background:var(--bg-card);border:1px solid var(--hairline);color:var(--muted);
+  font-size:13px;font-weight:500;
+}
+.mutebtn{
+  width:32px;height:32px;border-radius:50%;background:var(--bg-card);
+  border:1px solid var(--hairline);display:flex;align-items:center;justify-content:center;color:var(--muted);
+}
+
+/* action row */
+.actions{display:flex;gap:12px;padding:0 20px;margin-top:12px}
+.btn-rec{
+  flex:1;height:44px;border-radius:999px;background:var(--pink);color:#fff;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  font-size:17px;font-weight:700;box-shadow:0 6px 16px rgba(255,61,143,.20);
+}
+.btn-skip{
+  height:44px;padding:0 20px;border-radius:999px;background:var(--bg-card);
+  border:1px solid var(--hairline);color:var(--ink);
+  display:flex;align-items:center;justify-content:center;gap:6px;font-size:15px;font-weight:500;
+}
+
+/* dimming: everything that is NOT the feedback element */
+.dim{opacity:.30}
+.dim-mid{opacity:.42}
+
+/* ---------- CmdListenBar (today's real component) ---------- */
+.cmdbar{
+  margin:0 20px;padding:10px 18px;border-radius:16px;
+  background:rgba(20,184,166,.08);border:1px solid rgba(20,184,166,.35);
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  min-height:62px;justify-content:center;
+}
+.cmdbar .cap{display:flex;align-items:center;gap:8px;color:var(--teal)}
+.cmdbar .cap span{
+  font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10px;font-weight:500;letter-spacing:1.5px;
+}
+.cmdbar .hint{font-size:13px;font-weight:600;color:var(--ink)}
+.dots{display:flex;gap:4px}
+.dots i{width:5px;height:5px;border-radius:50%;background:currentColor;display:block}
+.dots i:nth-child(1){animation:dot 1.4s ease-in-out infinite}
+.dots i:nth-child(2){opacity:.55;animation:dot 1.4s ease-in-out .18s infinite}
+.dots i:nth-child(3){opacity:.30;animation:dot 1.4s ease-in-out .36s infinite}
+@keyframes dot{0%,100%{opacity:.28}50%{opacity:1}}
+
+/* variant A: matched + unmatched morphs (same 62px box, same slot) */
+.cmdbar.matched{background:rgba(20,184,166,.18);border-color:rgba(20,184,166,.60)}
+.cmdbar.unmatched{background:rgba(245,158,11,.10);border-color:rgba(245,158,11,.45)}
+.cmdbar.unmatched .cap{color:var(--warn)}
+.badge{
+  width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  background:var(--teal);color:#0B1A18;flex:0 0 auto;
+}
+.badge.warn{background:var(--warn);color:#2A1B02;font-family:'Inter';font-size:11px;font-weight:700;line-height:1}
+.echoword{
+  font-family:'Anton',Impact,sans-serif;font-size:19px;letter-spacing:.8px;color:var(--teal);
+  text-transform:uppercase;
+}
+.sweep{
+  width:150px;height:3px;border-radius:2px;background:rgba(20,184,166,.22);
+  overflow:hidden;position:relative;
+}
+.sweep i{position:absolute;top:0;bottom:0;width:40%;border-radius:2px;background:var(--teal);animation:sweep 1.1s ease-in-out infinite}
+@keyframes sweep{0%{left:-40%}100%{left:100%}}
+.subtle{font-size:12px;font-weight:500;color:var(--muted)}
+.subtle.warn{color:rgba(245,158,11,.85)}
+
+/* ---------- variant B: transient echo card ---------- */
+.echo-holder{position:relative;margin:0 20px 10px}
+.echocard{
+  border-radius:18px;padding:16px 18px 14px;position:relative;overflow:hidden;
+  background:linear-gradient(180deg, rgba(20,184,166,.20), rgba(20,184,166,.10)), var(--bg-elev);
+  border:1px solid rgba(20,184,166,.55);
+  box-shadow:0 14px 34px rgba(0,0,0,.55), 0 0 0 6px rgba(20,184,166,.06);
+  display:flex;align-items:center;gap:14px;
+}
+.echocard.miss{
+  background:linear-gradient(180deg, rgba(245,158,11,.14), rgba(245,158,11,.06)), var(--bg-elev);
+  border-color:rgba(245,158,11,.50);box-shadow:0 14px 34px rgba(0,0,0,.55), 0 0 0 6px rgba(245,158,11,.05);
+}
+.echo-ico{
+  width:44px;height:44px;border-radius:50%;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+  background:var(--teal);color:#08201D;
+}
+.echo-ico.miss{background:rgba(245,158,11,.18);color:var(--warn);border:1.5px solid rgba(245,158,11,.55);
+  font-family:'Anton';font-size:22px;line-height:1}
+.echo-txt{min-width:0}
+.echo-txt .lbl{
+  font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10px;font-weight:500;letter-spacing:1.6px;
+  color:var(--teal);display:block;margin-bottom:3px;
+}
+.echo-txt .lbl.miss{color:var(--warn)}
+.echo-txt .word{
+  font-family:'Anton',Impact,sans-serif;font-size:34px;line-height:1;color:var(--ink);
+  text-transform:uppercase;letter-spacing:.6px;display:block;
+}
+.echo-txt .word.quiet{font-size:20px;color:var(--muted);text-transform:none;font-family:'Inter';font-weight:600}
+.echo-txt .sub{font-size:12px;color:var(--muted);display:block;margin-top:5px}
+.echo-timer{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(255,255,255,.06)}
+.echo-timer i{position:absolute;left:0;top:0;bottom:0;width:62%;background:var(--teal);border-radius:0 2px 2px 0}
+.echo-timer i.miss{background:var(--warn);width:38%}
+.cmdbar.behind{opacity:.45}
+
+/* ---------- variant C: ambient glow ---------- */
+.glow-wrap{position:relative}
+.glow{
+  position:absolute;left:0;right:0;bottom:-26px;height:330px;pointer-events:none;z-index:0;
+  background:radial-gradient(120% 78% at 50% 100%, rgba(20,184,166,.42) 0%, rgba(20,184,166,.16) 42%, rgba(20,184,166,0) 74%);
+  animation:glowp 1.6s ease-in-out infinite;
+}
+.glow.miss{
+  background:radial-gradient(120% 78% at 50% 100%, rgba(245,158,11,.30) 0%, rgba(245,158,11,.10) 44%, rgba(245,158,11,0) 74%);
+  animation:glowp 2.6s ease-in-out infinite;
+}
+@keyframes glowp{0%,100%{opacity:.62}50%{opacity:1}}
+.glow-wrap > *:not(.glow){position:relative;z-index:1}
+.edgeline{
+  height:4px;margin:0 0 14px;border-radius:0;overflow:hidden;position:relative;
+  background:rgba(20,184,166,.14);
+}
+.edgeline i{position:absolute;top:0;bottom:0;width:34%;background:linear-gradient(90deg,rgba(20,184,166,0),var(--teal),rgba(20,184,166,0));animation:sweep 1.2s linear infinite}
+.edgeline.miss{background:rgba(245,158,11,.16)}
+.edgeline.miss i{width:100%;left:0;background:rgba(245,158,11,.55);animation:glowp 2.2s ease-in-out infinite}
+.cmdbar.lit{background:rgba(20,184,166,.22);border-color:rgba(20,184,166,.75)}
+.cmdbar.lit-miss{background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.55)}
+.cmdbar.lit-miss .cap{color:var(--warn)}
+.btn-rec.ring{box-shadow:0 0 0 4px rgba(20,184,166,.30), 0 6px 16px rgba(255,61,143,.20)}
+.progress i.teal{background:var(--teal);width:30%}
+
+/* ---------- tradeoffs ---------- */
+.tr{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin:34px 0 0;
+}
+.tr .card{
+  background:var(--panel);border:1px solid var(--hairline);border-radius:14px;padding:18px 20px;
+}
+.tr .card h4{
+  font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10px;font-weight:500;letter-spacing:1.7px;
+  text-transform:uppercase;color:var(--muted-faint);margin:0 0 10px;
+}
+.tr .card p{margin:0;font-size:13.5px;line-height:1.6;color:#C9CCD2}
+.score{
+  display:inline-block;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10px;letter-spacing:1.2px;
+  padding:3px 8px;border-radius:6px;margin-bottom:10px;text-transform:uppercase;
+}
+.score.good{color:#4ADE80;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.30)}
+.score.mid{color:var(--warn);background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.30)}
+.score.low{color:#FF7BA9;background:rgba(255,61,143,.12);border:1px solid rgba(255,61,143,.30)}
+.answers{margin:22px 0 0;font-size:13.5px;line-height:1.75;color:#C9CCD2}
+.answers b{color:var(--ink);font-weight:600}
+.answers li{margin-bottom:2px}
+.answers ul{margin:8px 0 0;padding-left:20px}
+
+footer{margin-top:74px;padding-top:30px;border-top:1px solid var(--border);color:var(--muted-faint);font-size:12.5px;line-height:1.7}
+.svg{display:block}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<p class="kicker">Design pass · gate before any code · 2026-07-28</p>
+<h1>Issue #122 Track&nbsp;A —<br><span class="accent">Voice command</span> recognition feedback</h1>
+<div class="rule"></div>
+<p class="lede">
+  Today the app gives <b>zero visual confirmation</b> that a spoken command was heard: <code>CmdListenBar</code>
+  renders the identical static bar before, during and after a command fires, and an unmatched utterance produces
+  nothing at all but a sampled Sentry log. The gap the founder feels while driving is the <b>latency window</b>
+  between "recognized" and "the action visibly lands" — so he repeats himself.
+</p>
+<p class="lede">
+  Below are three genuinely different ways to close that window, mocked on the real quiz screen with the real dark-mode
+  tokens and the real Slovak command copy. Every variant shows the same three states side by side, with the rest of the
+  screen dimmed so the feedback element is the only thing competing for attention. <b>Pick one</b> — it then goes to
+  Pencil (component <code>s49sd</code>) and only afterwards into code.
+</p>
+
+<div class="meta-chips">
+  <span class="chip"><b>Component</b> · CmdListenBar.swift (pen s49sd)</span>
+  <span class="chip"><b>Screen</b> · QuestionView, voice mode, bottom pinned stack</span>
+  <span class="chip"><b>Mode</b> · dark · Slovak command language (dictation-sk)</span>
+  <span class="chip"><b>Teal</b> #14B8A6 listening</span>
+  <span class="chip"><b>Amber</b> #F59E0B not-caught</span>
+  <span class="chip"><b>Red #FF4444 deliberately unused</b></span>
+</div>
+
+<!-- ================= shared answers ================= -->
+<section class="panel">
+  <h2>What every variant answers the same way</h2>
+  <p class="sub">
+    These six questions come from the issue's "Scope of a fix". Five of them have one right answer regardless of which
+    visual direction wins — locking them here keeps the variant choice a purely visual one.
+  </p>
+  <div class="tbl-scroll">
+  <table>
+    <tr><th>Question</th><th>Answer, and why</th></tr>
+    <tr>
+      <td>Colour semantics for "heard you, didn't understand"</td>
+      <td><b>Amber <code>#F59E0B</code></b> (the existing <code>warning</code> token), never <code>error #FF4444</code>.
+      Nothing failed — the app is working correctly, it just did not match a command. Red at 90&nbsp;km/h reads as a crash;
+      amber reads as "say it again". Teal keeps its single meaning: the listener is live.</td>
+    </tr>
+    <tr>
+      <td>Does the recognized state name the command back?</td>
+      <td><b>Yes — and it is free.</b> <code>VoiceCommandLexicon.spokenWord(_:language:)</code> already returns the localized
+      canonical form ("štart", "preskoč", "zopakuj"), so naming the command costs <b>zero new strings</b>. It doubles as the
+      founder's recognition-quality check. (Variant C is the deliberate exception — it names nothing.)</td>
+    </tr>
+    <tr>
+      <td>How long does each transient state persist?</td>
+      <td><b>Matched: min 600&nbsp;ms, max 2.0&nbsp;s</b>, whichever the screen change allows — the min-display floor is what stops a
+      &lt;200&nbsp;ms action from flashing; the max is what stops it from lying about a stuck network call.
+      <b>Not matched: fixed 1.2&nbsp;s</b>, no min/max coupling since nothing is pending.</td>
+    </tr>
+    <tr>
+      <td>Does "not recognized" fire on every unmatched utterance?</td>
+      <td><b>No — throttled.</b> Fire only on a <b>final</b> transcript that still has ≥1 non-filler token after
+      <code>fillerWords</code> stripping, at most <b>once per 4&nbsp;s</b>, and never twice in a row for the same transcript.
+      The mic is open through ordinary passenger conversation; an indicator that lights on every Slovak sentence is itself
+      the distraction.</td>
+    </tr>
+    <tr>
+      <td>Does the recognized state suppress the listener?</td>
+      <td><b>No — presentation-only</b> (recommended). The complaint is "I don't know if it heard me", not "it fired twice".
+      Disarming the window would drop a legitimate follow-up command and pushes the change into
+      <code>VoiceCommandCoordinator+Listening.swift</code>. Keep it cosmetic + the existing <code>.commandAck</code> earcon.
+      Variant B is the one direction where suppression is arguably worth it.</td>
+    </tr>
+    <tr>
+      <td>Does the bar's caption get localized?</td>
+      <td><b>Yes.</b> "LISTENING FOR COMMANDS" is hardcoded English and stays English in Slovak mode — a real gap.
+      It becomes a localized string keyed off <b><code>CommandEngineSelection.current.commandLanguage</code></b> (the
+      <i>command</i> language, not the app language — same rule <code>hint(on:language:)</code> already follows).
+      Slovak: <b>POČÚVAM PRÍKAZY</b>. All mockups below show that fix in place.</td>
+    </tr>
+  </table>
+  </div>
+</section>
+
+<!-- =========================================================
+     VARIANT A
+     ========================================================= -->
+<section class="variant">
+  <div class="vhead">
+    <div class="vnum">A</div>
+    <div>
+      <h3 class="vtitle">Morph in place</h3>
+      <p class="vconcept">
+        The existing bar becomes a three-state component. Same slot, same height, same corner radius — only the tint,
+        the caption and the second line change. Nothing appears, nothing moves, nothing reflows.
+      </p>
+      <span class="vtag a">Inline state machine · conservative · smallest diff</span>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- A1 idle -->
+    <div class="state">
+      <div class="phone"><div class="screen"><div class="notch"></div>
+        <div class="statusbar"><span>9:41</span><span class="r"><span class="bars"><i></i><i></i><i></i><i></i></span><span class="batt"></span></span></div>
+        <div class="upper dim">
+          <div class="topbar">
+            <div class="tchip"><svg class="svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></div>
+            <div class="tchip"><svg class="svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="7.6" stroke-dasharray="2.2 2.4"/></svg></div>
+          </div>
+          <div class="progress"><i></i></div>
+          <div class="meta"><span>astronomy</span><span>03 / 10</span></div>
+          <div class="q">
+            <p>Which planet in our solar system has the shortest day?</p>
+            <span class="spk"><svg class="svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M4 9h4l5-4v14l-5-4H4z"/></svg></span>
+          </div>
+        </div>
+        <div class="lower">
+          <div class="strip dim">
+            <div class="timerchip"><span class="l">THINK</span><span class="v">55s</span></div>
+            <div class="typechip"><svg class="svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M8 15h8" stroke-linecap="round"/></svg>Type answer instead</div>
+            <div class="mutebtn"><svg class="svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M4 9h4l5-4v14l-5-4H4z"/></svg></div>
+          </div>
+          <div class="cmdbar">
+            <div class="cap">
+              <svg class="svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="10" width="2.6" height="4" rx="1.3"/><rect x="7" y="6" width="2.6" height="12" rx="1.3"/><rect x="12" y="3" width="2.6" height="18" rx="1.3"/><rect x="17" y="8" width="2.6" height="8" rx="1.3"/></svg>
+              <span>POČÚVAM PRÍKAZY</span>
+              <span class="dots"><i></i><i></i><i></i></span>
+            </div>
+            <div class="hint">Povedz „štart“ alebo „preskoč“</div>
+          </div>
+          <div class="actions dim">
+            <div class="btn-rec"><svg class="svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="2.5" width="6" height="11" rx="3" fill="currentColor" stroke="none"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>Record</div>
+            <div class="btn-skip"><svg class="svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M5 4l10 8-10 8z"/><rect x="16.5" y="4" width="2.8" height="16" rx="1"/></svg>Skip</div>
+          </div>
+        </div>
+      </div></div>
+      <div class="state-cap">
+        <span class="n">State 1 · unchanged</span>
+        <span class="t">Idle — armed &amp; listening</span>
+        <span class="d">Exactly today's bar, plus the localized caption. Teal at 8% fill / 35% stroke, animated waveform, the per-screen hint underneath.</span>
+      </div>
+    </div>
+
+    <!-- A2 matched -->
+    <div class="state">
+      <div class="phone"><div class="screen"><div class="notch"></div>
+        <div class="statusbar"><span>9:41</span><span class="r"><span class="bars"><i></i><i></i><i></i><i></i></span><span class="batt"></span></span></div>
+        <div class="upper dim">
+          <div class="topbar">
+            <div class="tchip"><svg class="svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></div>
+            <div class="tchip"><svg class="svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="7.6" stroke-dasharray="2.2 2.4"/></svg></div>
+          </div>
+          <div class="progress"><i></i></div>
+          <div class="meta"><span>astronomy</span><span>03 / 10</span></div>
+          <div class="q">
+            <p>Which planet in our solar system has the shortest day?</p>
+            <span class="spk"><svg class="svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M4 9h4l5-4v14l-5-4H4z"/></svg></span>
+          </div>
+        </div>
+        <div class="lower">
+          <div class="strip dim">
+            <div class="timerchip"><span class="l">THINK</span><span class="v">55s</span></div>
+            <div class="typechip"><svg class="svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M8 15h8" stroke-linecap="round"/></svg>Type answer instead</div>
+            <div class="mutebtn"><svg class="svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M4 9h4l5-4v14l-5-4H4z"/></svg></div>
+          </div>
+          <div class="cmdbar matched">
+            <div class="cap">
+              <span class="badge"><svg class="svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span>
+              <span>ROZPOZNANÉ</span>
+              <span class="echoword">ŠTART</span>
+            </div>
+            <div class="sweep"><i></i></div>
+          </div>
+          <div class="actions dim">
+            <div class="btn-rec"><svg class="svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="2.5" width="6" height="11" rx="3" fill="currentColor" stroke="none"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>Record</div>
+            <div class="btn-skip"><svg class="svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M5 4l10 8-10 8z"/><rect x="16.5" y="4" width="2.8" height="16" rx="1"/></svg>Skip</div>
+          </div>
+        </div>
+      </div></div>
+      <div class="state-cap">
+        <span class="n">State 2 · matched</span>
+        <span class="t">Heard it — working on it</span>
+        <span class="d">Same box, tint deepens to 18%. Check badge + <b>ROZPOZNANÉ</b> + the word it matched in Anton 19. The hint line is replaced in place by an indeterminate sweep — that is the "loading state so I don't repeat the command".</span>
+      </div>
+    </div>
+
+    <!-- A3 unmatched -->
+    <div class="state">
+      <div class="phone"><div class="screen"><div class="notch"></div>
+        <div class="statusbar"><span>9:41</span><span class="r"><span class="bars"><i></i><i></i><i></i><i></i></span><span class="batt"></span></span></div>
+        <div class="upper dim">
+          <div class="topbar">
+            <div class="tchip"><svg class="svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></div>
+            <div class="tchip"><svg class="svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="7.6" stroke-dasharray="2.2 2.4"/></svg></div>
+          </div>
+          <div class="progress"><i></i></div>
+          <div class="meta"><span>astronomy</span><span>03 / 10</span></div>
+          <div class="q">
+            <p>Which planet in our solar system has the shortest day?</p>
+            <span class="spk"><svg class="svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M4 9h4l5-4v14l-5-4H4z"/></svg></span>
+          </div>
+        </div>
+        <div class="lower">
+          <div class="strip dim">
+            <div class="timerchip"><span class="l">THINK</span><span class="v">52s</span></div>
+            <div class="typechip"><svg class="svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M8 15h8" stroke-linecap="round"/></svg>Type answer instead</div>
+            <div class="mutebtn"><svg class="svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M4 9h4l5-4v14l-5-4H4z"/></svg></div>
+          </div>
+          <div class="cmdbar unmatched">
+            <div class="cap">
+              <span class="badge warn">?</span>
+              <span>NEZACHYTIL SOM PRÍKAZ</span>
+            </div>
+            <div class="subtle warn">Skús „štart“ alebo „preskoč“</div>
+          </div>
+          <div class="actions dim">
+            <div class="btn-rec"><svg class="svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="2.5" width="6" height="11" rx="3" fill="currentColor" stroke="none"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>Record</div>
+            <div class="btn-skip"><svg class="svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M5 4l10 8-10 8z"/><rect x="16.5" y="4" width="2.8" height="16" rx="1"/></svg>Skip</div>
+          </div>
+        </div>
+      </div></div>
+      <div class="state-cap">
+        <span class="n">State 3 · no match</span>
+        <span class="t">Heard you, didn't understand</span>
+        <span class="d">Amber at 10% fill / 45% stroke, "?" badge, no dots and no motion — the stillness is the signal that nothing is pending. Reverts to State 1 after 1.2&nbsp;s.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="tr">
+    <div class="card">
+      <h4>Glanceability while driving</h4>
+      <span class="score mid">Medium</span>
+      <p>The signal sits where the eye has already learned to look, but the differentiator is a 10&nbsp;pt mono caption plus a
+      tint shift inside a 62&nbsp;pt box. From a phone mount in peripheral vision you reliably get <i>teal vs. amber</i> and the
+      presence or absence of motion — the words themselves need a real glance.</p>
+    </div>
+    <div class="card">
+      <h4>Distraction risk</h4>
+      <span class="score good">Lowest</span>
+      <p>Nothing appears, nothing overlaps the question, and the box height is identical in all three states, so there is
+      zero layout jump on a bumpy road. It is the only variant a driver can completely ignore without losing information
+      elsewhere on the screen.</p>
+    </div>
+    <div class="card">
+      <h4>Implementation surface</h4>
+      <span class="score good">Smallest</span>
+      <p><code>CommandCapturePhase</code> gains <code>.heard(VoiceCommand)</code> and <code>.unmatched</code>;
+      <code>CmdListenBar</code> gains two style branches; the two existing call sites
+      (<code>+Utterance.swift:330</code>, <code>+Routing.swift:98</code>) get wired to a min-display timer. No new view,
+      no overlay, no z-order, no new copy beyond three strings. Automatically inherits every screen that already renders
+      the bar.</p>
+    </div>
+  </div>
+
+  <div class="answers">
+    <b>Variant-specific answers:</b>
+    <ul>
+      <li>Morph in place — <b>no separate overlay</b>, no layout jump by construction.</li>
+      <li>Names the command (<b>ŠTART</b>), free via <code>spokenWord</code>.</li>
+      <li>Listener stays armed; the state is presentation-only next to the existing <code>.commandAck</code> earcon.</li>
+      <li>Primary peripheral signal = <b>colour + motion presence</b>; the text is the secondary, confirming layer.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- =========================================================
+     VARIANT B
+     ========================================================= -->
+<section class="variant">
+  <div class="vhead">
+    <div class="vnum">B</div>
+    <div>
+      <h3 class="vtitle">Command echo</h3>
+      <p class="vconcept">
+        The bar is left exactly as it is. A transient card rises above it for ~1.2&nbsp;s and echoes back, in display type,
+        the word the recognizer matched — or, when nothing matched, what it actually heard.
+      </p>
+      <span class="vtag b">Transient overlay · loudest · most informative</span>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- B1 idle -->
+    <div class="state">
+      <div class="phone"><div class="screen"><div class="notch"></div>
+        <div class="statusbar"><span>9:41</span><span class="r"><span class="bars"><i></i><i></i><i></i><i></i></span><span class="batt"></span></span></div>
+        <div class="upper dim">
+          <div class="topbar">
+            <div class="tchip"><svg class="svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></div>
+            <div class="tchip"><svg class="svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="7.6" stroke-dasharray="2.2 2.4"/></svg></div>
+          </div>
+          <div class="progress"><i></i></div>
+          <div class="meta"><span>astronomy</span><span>03 / 10</span></div>
+          <div class="q">
+            <p>Which planet in our solar system has the shortest day?</p>
+            <span class="spk"><svg class="svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M4 9h4l5-4v14l-5-4H4z"/></svg></span>
+          </div>
+        </div>
+        <div class="lower">
+          <div class="strip dim">
+            <div class="timerchip"><span class="l">THINK</span><span class="v">55s</span></div>
+            <div class="typechip"><svg class="svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M8 15h8" stroke-linecap="round"/></svg>Type answer instead</div>
+            <div class="mutebtn"><svg class="svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M4 9h4l5-4v14l-5-4H4z"/></svg></div>
+          </div>
+          <div class="cmdbar">
+            <div class="cap">
+              <svg class="svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="10" width="2.6" height="4" rx="1.3"/><rect x="7" y="6" width="2.6" height="12" rx="1.3"/><rect x="12" y="3" width="2.6" height="18" rx="1.3"/><rect x="17" y="8" width="2.6" height="8" rx="1.3"/></svg>
+              <span>POČÚVAM PRÍKAZY</span>
+              <span class="dots"><i></i><i></i><i></i></span>
+            </div>
+            <div class="hint">Povedz „štart“ alebo „preskoč“</div>
+          </div>
+          <div class="actions dim">
+            <div class="btn-rec"><svg class="svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="2.5" width="6" height="11" rx="3" fill="currentColor" stroke="none"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>Record</div>
+            <div class="btn-skip"><svg class="svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M5 4l10 8-10 8z"/><rect x="16.5" y="4" width="2.8" height="16" rx="1"/></svg>Skip</div>
+          </div>
+        </div>
+      </div></div>
+      <div class="state-cap">
+        <span class="n">State 1 · unchanged</span>
+        <span class="t">Idle — armed &amp; listening</span>
+        <span class="d">Byte-for-byte today's bar (plus the localized caption). Nothing is added to the resting screen, so the quiet state costs no vertical space at all.</span>
+      </div>
+    </div>
+
+    <!-- B2 matched -->
+    <div class="state">
+      <div class="phone"><div class="screen"><div class="notch"></div>
+        <div class="statusbar"><span>9:41</span><span class="r"><span class="bars"><i></i><i></i><i></i><i></i></span><span class="batt"></span></span></div>
+        <div class="upper dim">
+          <div class="topbar">
+            <div class="tchip"><svg class="svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></div>
+            <div class="tchip"><svg class="svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="7.6" stroke-dasharray="2.2 2.4"/></svg></div>
+          </div>
+          <div class="progress"><i></i></div>
+          <div class="meta"><span>astronomy</span><span>03 / 10</span></div>
+          <div class="q">
+            <p>Which planet in our solar system has the shortest day?</p>
+            <span class="spk"><svg class="svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M4 9h4l5-4v14l-5-4H4z"/></svg></span>
+          </div>
+        </div>
+        <div class="lower">
+          <div class="strip dim">
+            <div class="timerchip"><span class="l">THINK</span><span class="v">55s</span></div>
+            <div class="typechip"><svg class="svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M8 15h8" stroke-linecap="round"/></svg>Type answer instead</div>
+            <div class="mutebtn"><svg class="svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M4 9h4l5-4v14l-5-4H4z"/></svg></div>
+          </div>
+          <div class="echo-holder">
+            <div class="echocard">
+              <div class="echo-ico"><svg class="svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg></div>
+              <div class="echo-txt">
+                <span class="lbl">POČUL SOM</span>
+                <span class="word">ŠTART</span>
+                <span class="sub">spúšťam nahrávanie…</span>
+              </div>
+              <div class="echo-timer"><i></i></div>
+            </div>
+          </div>
+          <div class="cmdbar behind">
+            <div class="cap">
+              <svg class="svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="10" width="2.6" height="4" rx="1.3"/><rect x="7" y="6" width="2.6" height="12" rx="1.3"/><rect x="12" y="3" width="2.6" height="18" rx="1.3"/><rect x="17" y="8" width="2.6" height="8" rx="1.3"/></svg>
+              <span>POČÚVAM PRÍKAZY</span>
+              <span class="dots"><i></i><i></i><i></i></span>
+            </div>
+            <div class="hint">Povedz „štart“ alebo „preskoč“</div>
+          </div>
+          <div class="actions dim">
+            <div class="btn-rec"><svg class="svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="2.5" width="6" height="11" rx="3" fill="currentColor" stroke="none"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>Record</div>
+            <div class="btn-skip"><svg class="svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M5 4l10 8-10 8z"/><rect x="16.5" y="4" width="2.8" height="16" rx="1"/></svg>Skip</div>
+          </div>
+        </div>
+      </div></div>
+      <div class="state-cap">
+        <span class="n">State 2 · matched</span>
+        <span class="t">"I heard ŠTART"</span>
+        <span class="d">A card slides up over the bar: teal check, the matched word in <b>Anton 34</b>, and what it is doing about it. The 3&nbsp;pt bottom rail drains as the auto-dismiss timer, doubling as the "busy" cue. Bar dims to 45% underneath.</span>
+      </div>
+    </div>
+
+    <!-- B3 unmatched -->
+    <div class="state">
+      <div class="phone"><div class="screen"><div class="notch"></div>
+        <div class="statusbar"><span>9:41</span><span class="r"><span class="bars"><i></i><i></i><i></i><i></i></span><span class="batt"></span></span></div>
+        <div class="upper dim">
+          <div class="topbar">
+            <div class="tchip"><svg class="svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></div>
+            <div class="tchip"><svg class="svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="7.6" stroke-dasharray="2.2 2.4"/></svg></div>
+          </div>
+          <div class="progress"><i></i></div>
+          <div class="meta"><span>astronomy</span><span>03 / 10</span></div>
+          <div class="q">
+            <p>Which planet in our solar system has the shortest day?</p>
+            <span class="spk"><svg class="svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M4 9h4l5-4v14l-5-4H4z"/></svg></span>
+          </div>
+        </div>
+        <div class="lower">
+          <div class="strip dim">
+            <div class="timerchip"><span class="l">THINK</span><span class="v">52s</span></div>
+            <div class="typechip"><svg class="svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M8 15h8" stroke-linecap="round"/></svg>Type answer instead</div>
+            <div class="mutebtn"><svg class="svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M4 9h4l5-4v14l-5-4H4z"/></svg></div>
+          </div>
+          <div class="echo-holder">
+            <div class="echocard miss">
+              <div class="echo-ico miss">?</div>
+              <div class="echo-txt">
+                <span class="lbl miss">POČUL SOM, ALE NEROZUMIEM</span>
+                <span class="word quiet">„a poď už na to“</span>
+                <span class="sub">skús „štart“ alebo „preskoč“</span>
+              </div>
+              <div class="echo-timer"><i class="miss"></i></div>
+            </div>
+          </div>
+          <div class="cmdbar behind">
+            <div class="cap">
+              <svg class="svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="10" width="2.6" height="4" rx="1.3"/><rect x="7" y="6" width="2.6" height="12" rx="1.3"/><rect x="12" y="3" width="2.6" height="18" rx="1.3"/><rect x="17" y="8" width="2.6" height="8" rx="1.3"/></svg>
+              <span>POČÚVAM PRÍKAZY</span>
+              <span class="dots"><i></i><i></i><i></i></span>
+            </div>
+            <div class="hint">Povedz „štart“ alebo „preskoč“</div>
+          </div>
+          <div class="actions dim">
+            <div class="btn-rec"><svg class="svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="2.5" width="6" height="11" rx="3" fill="currentColor" stroke="none"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>Record</div>
+            <div class="btn-skip"><svg class="svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M5 4l10 8-10 8z"/><rect x="16.5" y="4" width="2.8" height="16" rx="1"/></svg>Skip</div>
+          </div>
+        </div>
+      </div></div>
+      <div class="state-cap">
+        <span class="n">State 3 · no match</span>
+        <span class="t">Echo of what it actually heard</span>
+        <span class="d">Same slot, amber. This is the only variant that shows the <b>raw transcript</b> — enormous diagnostic value for tuning the lexicon, but it is a reading task in a moving car, so it should be gated behind a setting (default off) with the plain "?" card shipping by default.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="tr">
+    <div class="card">
+      <h4>Glanceability while driving</h4>
+      <span class="score good">Highest (matched)</span>
+      <p>Anton 34 on a lit teal card is resolvable in roughly the length of a single glance, and it is the only design that
+      answers "<i>what</i> did it hear" rather than just "did it hear something". The unmatched state inverts that: reading a
+      transcript is the least glanceable thing on this page.</p>
+    </div>
+    <div class="card">
+      <h4>Distraction risk</h4>
+      <span class="score low">Highest</span>
+      <p>Something new appearing over the question is exactly the motion pattern that pulls foveal attention off the road.
+      The 4-second throttle becomes load-bearing rather than nice-to-have, and the transcript echo needs its own opt-in.
+      This is also the one variant where briefly suppressing the listener is defensible, so the card is not immediately
+      replaced by a second card.</p>
+    </div>
+    <div class="card">
+      <h4>Implementation surface</h4>
+      <span class="score low">Largest</span>
+      <p>A new overlay component plus presentation-timer state on the coordinator, z-order and safe-area handling on every
+      surface that hosts the bar (question, MCQ, the confirmation <i>sheet</i>, result), and min/max-display coordination so a
+      card never outlives the screen change that follows it. Exposing the raw transcript also puts recognizer output on
+      screen for the first time.</p>
+    </div>
+  </div>
+
+  <div class="answers">
+    <b>Variant-specific answers:</b>
+    <ul>
+      <li>Separate transient overlay — <b>the bar itself is never touched</b>; the resting screen keeps its current density.</li>
+      <li>Names the command <b>and</b> optionally the raw transcript on a miss.</li>
+      <li>Recommended to suppress the listener for the card's lifetime, so the feedback matches what the app will act on.</li>
+      <li>Primary signal = <b>size and type</b>; the card is deliberately loud, which is its strength and its risk.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- =========================================================
+     VARIANT C
+     ========================================================= -->
+<section class="variant">
+  <div class="vhead">
+    <div class="vnum">C</div>
+    <div>
+      <h3 class="vtitle">Ambient glow</h3>
+      <p class="vconcept">
+        No new words at all. The whole bottom third of the screen washes teal and a light sweeps across the full width when
+        a command lands; a slow amber breath when nothing matched. Designed to be read by peripheral vision, not by eyes.
+      </p>
+      <span class="vtag c">Full-width colour pulse · text-free · peripheral-first</span>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- C1 idle -->
+    <div class="state">
+      <div class="phone"><div class="screen"><div class="notch"></div>
+        <div class="statusbar"><span>9:41</span><span class="r"><span class="bars"><i></i><i></i><i></i><i></i></span><span class="batt"></span></span></div>
+        <div class="upper dim">
+          <div class="topbar">
+            <div class="tchip"><svg class="svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></div>
+            <div class="tchip"><svg class="svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="7.6" stroke-dasharray="2.2 2.4"/></svg></div>
+          </div>
+          <div class="progress"><i></i></div>
+          <div class="meta"><span>astronomy</span><span>03 / 10</span></div>
+          <div class="q">
+            <p>Which planet in our solar system has the shortest day?</p>
+            <span class="spk"><svg class="svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M4 9h4l5-4v14l-5-4H4z"/></svg></span>
+          </div>
+        </div>
+        <div class="lower">
+          <div class="strip dim">
+            <div class="timerchip"><span class="l">THINK</span><span class="v">55s</span></div>
+            <div class="typechip"><svg class="svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M8 15h8" stroke-linecap="round"/></svg>Type answer instead</div>
+            <div class="mutebtn"><svg class="svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M4 9h4l5-4v14l-5-4H4z"/></svg></div>
+          </div>
+          <div class="cmdbar">
+            <div class="cap">
+              <svg class="svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="10" width="2.6" height="4" rx="1.3"/><rect x="7" y="6" width="2.6" height="12" rx="1.3"/><rect x="12" y="3" width="2.6" height="18" rx="1.3"/><rect x="17" y="8" width="2.6" height="8" rx="1.3"/></svg>
+              <span>POČÚVAM PRÍKAZY</span>
+              <span class="dots"><i></i><i></i><i></i></span>
+            </div>
+            <div class="hint">Povedz „štart“ alebo „preskoč“</div>
+          </div>
+          <div class="actions dim">
+            <div class="btn-rec"><svg class="svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="2.5" width="6" height="11" rx="3" fill="currentColor" stroke="none"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>Record</div>
+            <div class="btn-skip"><svg class="svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M5 4l10 8-10 8z"/><rect x="16.5" y="4" width="2.8" height="16" rx="1"/></svg>Skip</div>
+          </div>
+        </div>
+      </div></div>
+      <div class="state-cap">
+        <span class="n">State 1 · unchanged</span>
+        <span class="t">Idle — armed &amp; listening</span>
+        <span class="d">Today's bar, untouched. It keeps its job: telling the driver <i>what he is allowed to say</i>. The feedback layer sits behind and around it and is invisible at rest.</span>
+      </div>
+    </div>
+
+    <!-- C2 matched -->
+    <div class="state">
+      <div class="phone"><div class="screen"><div class="notch"></div>
+        <div class="statusbar"><span>9:41</span><span class="r"><span class="bars"><i></i><i></i><i></i><i></i></span><span class="batt"></span></span></div>
+        <div class="upper dim">
+          <div class="topbar">
+            <div class="tchip"><svg class="svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></div>
+            <div class="tchip"><svg class="svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="7.6" stroke-dasharray="2.2 2.4"/></svg></div>
+          </div>
+          <div class="progress"><i class="teal"></i></div>
+          <div class="meta"><span>astronomy</span><span>03 / 10</span></div>
+          <div class="q">
+            <p>Which planet in our solar system has the shortest day?</p>
+            <span class="spk"><svg class="svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M4 9h4l5-4v14l-5-4H4z"/></svg></span>
+          </div>
+        </div>
+        <div class="lower glow-wrap">
+          <div class="glow"></div>
+          <div class="strip dim-mid">
+            <div class="timerchip"><span class="l">THINK</span><span class="v">55s</span></div>
+            <div class="typechip"><svg class="svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M8 15h8" stroke-linecap="round"/></svg>Type answer instead</div>
+            <div class="mutebtn"><svg class="svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M4 9h4l5-4v14l-5-4H4z"/></svg></div>
+          </div>
+          <div class="edgeline"><i></i></div>
+          <div class="cmdbar lit">
+            <div class="cap">
+              <svg class="svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="10" width="2.6" height="4" rx="1.3"/><rect x="7" y="6" width="2.6" height="12" rx="1.3"/><rect x="12" y="3" width="2.6" height="18" rx="1.3"/><rect x="17" y="8" width="2.6" height="8" rx="1.3"/></svg>
+              <span>POČÚVAM PRÍKAZY</span>
+              <span class="dots"><i></i><i></i><i></i></span>
+            </div>
+            <div class="hint">Povedz „štart“ alebo „preskoč“</div>
+          </div>
+          <div class="actions">
+            <div class="btn-rec ring"><svg class="svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="2.5" width="6" height="11" rx="3" fill="currentColor" stroke="none"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>Record</div>
+            <div class="btn-skip"><svg class="svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M5 4l10 8-10 8z"/><rect x="16.5" y="4" width="2.8" height="16" rx="1"/></svg>Skip</div>
+          </div>
+        </div>
+      </div></div>
+      <div class="state-cap">
+        <span class="n">State 2 · matched</span>
+        <span class="t">Teal wash + left-to-right sweep</span>
+        <span class="d">The bottom third lights teal, a 4&nbsp;pt light sweeps the full screen width above the bar, the bar itself brightens to 22% fill, the Record button gains a teal ring and the top progress bar flips teal for the duration. <b>No text changes anywhere</b> — the direction of the sweep is the "working on it".</span>
+      </div>
+    </div>
+
+    <!-- C3 unmatched -->
+    <div class="state">
+      <div class="phone"><div class="screen"><div class="notch"></div>
+        <div class="statusbar"><span>9:41</span><span class="r"><span class="bars"><i></i><i></i><i></i><i></i></span><span class="batt"></span></span></div>
+        <div class="upper dim">
+          <div class="topbar">
+            <div class="tchip"><svg class="svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></div>
+            <div class="tchip"><svg class="svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="7.6" stroke-dasharray="2.2 2.4"/></svg></div>
+          </div>
+          <div class="progress"><i></i></div>
+          <div class="meta"><span>astronomy</span><span>03 / 10</span></div>
+          <div class="q">
+            <p>Which planet in our solar system has the shortest day?</p>
+            <span class="spk"><svg class="svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M4 9h4l5-4v14l-5-4H4z"/></svg></span>
+          </div>
+        </div>
+        <div class="lower glow-wrap">
+          <div class="glow miss"></div>
+          <div class="strip dim-mid">
+            <div class="timerchip"><span class="l">THINK</span><span class="v">52s</span></div>
+            <div class="typechip"><svg class="svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M8 15h8" stroke-linecap="round"/></svg>Type answer instead</div>
+            <div class="mutebtn"><svg class="svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M4 9h4l5-4v14l-5-4H4z"/></svg></div>
+          </div>
+          <div class="edgeline miss"><i class="miss"></i></div>
+          <div class="cmdbar lit-miss">
+            <div class="cap">
+              <svg class="svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="10" width="2.6" height="4" rx="1.3"/><rect x="7" y="6" width="2.6" height="12" rx="1.3"/><rect x="12" y="3" width="2.6" height="18" rx="1.3"/><rect x="17" y="8" width="2.6" height="8" rx="1.3"/></svg>
+              <span>POČÚVAM PRÍKAZY</span>
+            </div>
+            <div class="hint">Povedz „štart“ alebo „preskoč“</div>
+          </div>
+          <div class="actions">
+            <div class="btn-rec"><svg class="svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="2.5" width="6" height="11" rx="3" fill="currentColor" stroke="none"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>Record</div>
+            <div class="btn-skip"><svg class="svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M5 4l10 8-10 8z"/><rect x="16.5" y="4" width="2.8" height="16" rx="1"/></svg>Skip</div>
+          </div>
+        </div>
+      </div></div>
+      <div class="state-cap">
+        <span class="n">State 3 · no match</span>
+        <span class="t">One slow amber breath</span>
+        <span class="d">Half the amplitude of the matched wash, one 2.2&nbsp;s fade in-and-out instead of a directional sweep, and the animated dots stop. The absence of the sweep is what distinguishes it — a driver learns "moving light = it acted, still light = it didn't".</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="tr">
+    <div class="card">
+      <h4>Glanceability while driving</h4>
+      <span class="score good">Highest peripherally</span>
+      <p>Large-area colour and lateral motion are precisely what peripheral vision resolves well, so this works when the
+      phone is at the edge of the visual field in a mount — no foveal glance needed at all. The cost: it conveys
+      <i>that</i> something registered, never <i>what</i>, so it does not double as a recognition-quality check.</p>
+    </div>
+    <div class="card">
+      <h4>Distraction risk</h4>
+      <span class="score mid">Low to medium</span>
+      <p>Nothing to read and no layout change, but a large glowing area in a dark cabin at night is a strong attention
+      magnet, and it is the variant most damaged by a mis-throttled no-match (it would read as strobing). Amplitude must
+      stay low, and <code>accessibilityReduceMotion</code> needs a static-tint fallback with no sweep.</p>
+    </div>
+    <div class="card">
+      <h4>Implementation surface</h4>
+      <span class="score mid">Medium</span>
+      <p>Zero new copy and zero localization work — the single cheapest variant on the string side. But it lives at the
+      screen-container level rather than inside one component, so it needs a modifier on <code>QuestionView</code>'s bottom
+      stack (and later on each other host), plus a reduce-motion branch and care that the glow never bleeds into the
+      answer-confirmation sheet's own chrome.</p>
+    </div>
+  </div>
+
+  <div class="answers">
+    <b>Variant-specific answers:</b>
+    <ul>
+      <li>Neither morph nor overlay — a <b>background layer</b>, so no layout can jump by definition.</li>
+      <li><b>Does not name the command</b> — deliberately. Motion and size are the entire signal.</li>
+      <li>Listener stays armed; purely presentational.</li>
+      <li>Matched vs. not-matched is carried by <b>hue + whether the light moves</b>, which survives a glance the words would not.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================= comparison ================= -->
+<section class="panel" style="margin-top:64px">
+  <h2>Side by side</h2>
+  <p class="sub">The three are not variations on one idea — they trade the same three things against each other in opposite directions. Pick the row that matters most while driving.</p>
+  <div class="tbl-scroll">
+  <table>
+    <tr><th></th><th>A · Morph in place</th><th>B · Command echo</th><th>C · Ambient glow</th></tr>
+    <tr><td>Where the feedback lives</td><td>Inside the existing bar</td><td>New card above the bar</td><td>Behind everything, full width</td></tr>
+    <tr><td>Tells you <i>what</i> it heard</td><td>Yes, small type</td><td>Yes, display type (+ transcript on a miss)</td><td>No, by design</td></tr>
+    <tr><td>Readable without looking</td><td>Colour only</td><td>Needs a glance</td><td>Yes — colour + motion</td></tr>
+    <tr><td>Layout jump risk</td><td>None (fixed box)</td><td>Real — needs reserved space or an overlay</td><td>None (background layer)</td></tr>
+    <tr><td>New strings to localize</td><td>3</td><td>4–5 (+ transcript exposure)</td><td>0</td></tr>
+    <tr><td>Files touched</td><td>2 (+ enum)</td><td>4+ (new view, coordinator timers, 4 host screens)</td><td>2–3 (container modifier + reduce-motion)</td></tr>
+    <tr><td>Answers "how ambitious" (issue Q3)</td><td>Full bar state machine, quiet</td><td>Full state machine, loud + informative</td><td>Two-state flash, wordless</td></tr>
+  </table>
+  </div>
+</section>
+
+<footer>
+  Mockups use the real dark-mode tokens from <code>apps/ios-app/Hangs/Hangs/Utilities/Theme+Hangs.swift</code> and the real
+  bottom-stack layout of <code>Views/QuestionView.swift</code> (voice mode). Command copy is the Slovak command language per
+  <code>VoiceCommandLexicon.hint(on:language:)</code>; question text stays English because the corpus is English-only.
+  Fonts: Anton · Inter · IBM Plex Mono, the three bundled typefaces.
+  Next step after the pick: Pencil component <code>s49sd</code> in <code>design/quiz-agent.pen</code>, then code.
+</footer>
+
+</div>
+</body>
+</html>

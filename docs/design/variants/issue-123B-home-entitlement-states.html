@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Issue #123 Track B — Pack credits + subscription state on Home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ───────────────────────── review board (page chrome) ───────────────────────── */
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:#0c0c0f;color:#E9E9EE;
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1560px;margin:0 auto;padding:44px 28px 100px}
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#FF3D8F}
+h1{font-family:'Anton',Haettenschweiler,'Arial Narrow',sans-serif;font-weight:400;font-size:44px;line-height:1.05;letter-spacing:-.5px;margin:10px 0 0}
+.rule{width:44px;height:3px;background:#FF3D8F;margin:16px 0 18px}
+.lede{max-width:760px;color:#B9B9C4;font-size:15.5px}
+.lede strong{color:#fff;font-weight:600}
+h2{font-family:'Anton',Haettenschweiler,sans-serif;font-weight:400;font-size:30px;letter-spacing:-.3px;margin:0}
+h3{font-size:13px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:#8E8E9C;margin:0 0 12px}
+.variant{background:#141418;border:1px solid rgba(255,255,255,.07);border-radius:20px;padding:30px 26px 26px;margin-top:34px}
+.vhead{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:4px}
+.vtag{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:2px;color:#0A84FF;border:1px solid rgba(10,132,255,.4);border-radius:6px;padding:3px 8px}
+.concept{color:#B9B9C4;max-width:900px;margin:8px 0 22px}
+.frames{display:flex;gap:26px;overflow-x:auto;padding:6px 2px 18px}
+.fw{flex:0 0 auto;zoom:.78}
+.cap{margin-top:12px;width:410px;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.6px;color:#9A9AA6;text-align:center}
+.cap b{display:block;color:#fff;font-family:'Inter';font-size:14px;font-weight:700;letter-spacing:0;margin-bottom:2px}
+.details{display:flex;gap:22px;flex-wrap:wrap;margin-top:6px}
+.detail{background:#1a1a20;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:16px 16px 14px;width:392px}
+.detail .dcap{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:#8E8E9C;margin-bottom:10px}
+.detail .app{background:var(--bg);border-radius:12px;padding:14px}
+.cols{display:grid;grid-template-columns:1.15fr 1fr;gap:26px;margin-top:26px}
+@media (max-width:1000px){.cols{grid-template-columns:1fr}}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+td{border-top:1px solid rgba(255,255,255,.08);padding:9px 0;vertical-align:top;color:#C9C9D3}
+td:first-child{width:150px;color:#8E8E9C;font-weight:600;padding-right:14px}
+ul.trade{list-style:none;margin:0;padding:0}
+ul.trade li{position:relative;padding:0 0 0 26px;margin-bottom:11px;color:#C9C9D3;font-size:13.5px}
+ul.trade li b{color:#fff}
+ul.trade li:before{position:absolute;left:0;top:0;font-size:13px}
+li.plus:before{content:"+";color:#4ADE80;font-weight:700}
+li.minus:before{content:"−";color:#FF3D8F;font-weight:700}
+li.eq:before{content:"~";color:#F59E0B;font-weight:700}
+.note{background:#141418;border:1px solid rgba(255,255,255,.07);border-left:3px solid #0A84FF;border-radius:12px;padding:18px 22px;margin-top:34px;color:#B9B9C4;font-size:14px}
+.note b{color:#fff}
+.tokens{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+.tok{display:flex;align-items:center;gap:7px;background:#17171c;border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:5px 12px 5px 6px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#B9B9C4}
+.sw{width:16px;height:16px;border-radius:50%}
+.hint{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6f6f7d;letter-spacing:.5px;margin-top:-6px}
+
+/* ───────────────────────── app design tokens (real, from Theme+Hangs.swift) ───────────────────────── */
+.app{
+  --bg:#F6F7F9; --card:#FFFFFF; --ink:#0E1A2B;
+  --pink:#FF3D8F; --pinkText:#C2185B; --blue:#0A84FF; --blueText:#0A5DC2;
+  --purple:#8B5CF6; --purpleSoft:rgba(139,92,246,.125);
+  --muted:#6B7280; --faint:#9CA3AF; --green:#16A34A; --amber:#F59E0B;
+  --hair:rgba(14,26,43,.078); --subtle:rgba(14,26,43,.122);
+  --shadow:0 4px 20px rgba(14,26,43,.08);
+  --ctaShadow:0 6px 16px rgba(255,61,143,.20);
+  --skel:rgba(14,26,43,.09);
+  color:var(--ink);
+}
+.app.dark{
+  --bg:#161616; --card:#1F1F22; --ink:#F4F4F4;
+  --pinkText:#FF3D8F; --blueText:#0A84FF;
+  --muted:#9CA3AF; --faint:#6B7280; --green:#4ADE80;
+  --hair:rgba(255,255,255,.078); --subtle:rgba(255,255,255,.141);
+  --shadow:0 4px 20px rgba(0,0,0,.55);
+  --skel:rgba(255,255,255,.10);
+}
+
+/* device */
+.bezel{padding:11px;background:#26262b;border-radius:56px;box-shadow:0 24px 60px rgba(0,0,0,.55),inset 0 0 0 1px rgba(255,255,255,.07);width:412px}
+.phone{width:390px;height:844px;background:var(--bg);border-radius:45px;overflow:hidden;position:relative;display:flex;flex-direction:column}
+.notch{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:118px;height:33px;background:#0a0a0a;border-radius:20px;z-index:5}
+.sbar{height:56px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 30px 6px;font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;color:var(--ink)}
+.sbar .sig{display:flex;gap:5px;align-items:center;opacity:.85}
+.sbar .bat{width:24px;height:11px;border:1.4px solid var(--ink);border-radius:3px;position:relative;opacity:.85}
+.sbar .bat:after{content:"";position:absolute;inset:1.5px;right:6px;background:var(--ink);border-radius:1px}
+.brandrow{display:flex;align-items:center;justify-content:space-between;padding:8px 20px}
+.brand{display:flex;align-items:center;gap:6px}
+.brand span{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:17px;color:var(--blue)}
+.brand i{width:6px;height:6px;border-radius:50%;background:var(--pink);display:block}
+.chip{width:36px;height:36px;border-radius:10px;background:var(--card);box-shadow:0 2px 8px rgba(14,26,43,.06);display:flex;align-items:center;justify-content:center;color:var(--ink)}
+.tagline{padding:4px 20px 0;font-size:14px;color:var(--muted)}
+.slot{padding:0 20px;margin-top:20px}
+.seclabel{padding:0 20px;margin-top:28px;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;letter-spacing:2px;text-transform:uppercase;color:var(--pink)}
+.cfg{margin:20px 20px 0;background:var(--card);border-radius:18px;box-shadow:var(--shadow);overflow:hidden}
+.cfgrow{display:flex;align-items:center;justify-content:space-between;padding:16px 18px}
+.cfgrow .l{font-size:17px;font-weight:600;color:var(--ink)}
+.cfgrow .r{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:500;color:var(--blueText)}
+.cfgrow .r svg{color:var(--faint)}
+.hr{height:1px;background:var(--hair);margin:0 18px}
+.grow{flex:1}
+.cta{margin:0 20px 22px;height:64px;border-radius:32px;background:var(--pink);box-shadow:var(--ctaShadow);display:flex;align-items:center;justify-content:center;gap:10px;color:#fff;font-size:17px;font-weight:700}
+
+/* card primitives — HangsCard: bgCard, radius 18, cardShadow, padding 12/16 */
+.card{background:var(--card);border-radius:18px;box-shadow:var(--shadow);padding:12px 16px}
+.card.rows{padding:0}
+.mono{font-family:'IBM Plex Mono',monospace;font-weight:500}
+.mlabel{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;letter-spacing:2px;text-transform:uppercase}
+.b13{font-size:13px;font-weight:600;color:var(--ink)}
+.b12{font-size:12px;color:var(--faint)}
+.meta{font-size:12px;color:var(--faint)}
+.anton{font-family:'Anton',Haettenschweiler,'Arial Narrow',sans-serif;font-weight:400;letter-spacing:-1px;color:var(--ink);line-height:1}
+.link{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:600;color:var(--pinkText)}
+.link.purple{color:var(--purple)}
+.link.amber{color:var(--amber)}
+.row{display:flex;align-items:center;justify-content:space-between}
+.track{height:4px;border-radius:2px;background:var(--subtle);overflow:hidden;display:flex}
+.track i{display:block;height:100%}
+.fblue{background:var(--blue)}
+.fpurple{background:var(--purple)}
+.fpink{background:var(--pink)}
+.pill{display:inline-flex;align-items:center;gap:5px;border-radius:14px;padding:3px 9px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+.pill.green{background:rgba(34,197,94,.12);color:var(--green)}
+.pill.amber{background:rgba(245,158,11,.14);color:var(--amber)}
+.pill.pink{background:rgba(255,61,143,.12);color:var(--pinkText)}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+.legend{display:flex;gap:14px;align-items:center;font-size:11.5px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.creditchip{display:inline-flex;align-items:center;gap:6px;background:var(--purpleSoft);color:var(--purple);border-radius:12px;padding:4px 9px;font-size:11.5px;font-weight:600}
+.spin{width:14px;height:14px;border-radius:50%;border:2px solid var(--subtle);border-top-color:var(--muted);animation:sp .9s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.skel{background:var(--skel);border-radius:5px;animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+svg.ic{width:14px;height:14px;stroke-width:2.2;fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round}
+svg.ic.fill{fill:currentColor;stroke:none}
+svg.ic.s11{width:11px;height:11px}
+svg.ic.s16{width:16px;height:16px}
+svg.ic.s18{width:18px;height:18px}
+
+/* variant C — badge strip */
+.strip{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.bpill{position:relative;display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:17px;background:var(--card);box-shadow:var(--shadow);overflow:hidden}
+.bpill .n{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;color:var(--ink);letter-spacing:-.3px}
+.bpill .k{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted)}
+.bpill .uf{position:absolute;left:0;bottom:0;height:3px;background:var(--blue)}
+.bpill.solid{background:var(--pink);box-shadow:var(--ctaShadow)}
+.bpill.solid .n,.bpill.solid .k{color:#fff}
+.bpill.solid svg{color:#fff}
+.bpill.ghost{background:transparent;box-shadow:none;border:1.5px solid var(--subtle);color:var(--pinkText);font-size:12.5px;font-weight:600}
+.bpill.plus{width:34px;padding:0;justify-content:center;background:var(--purpleSoft);box-shadow:none;color:var(--purple)}
+.bpill .amberk{color:var(--amber)}
+</style>
+</head>
+<body>
+
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="bolt" viewBox="0 0 24 24"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/></symbol>
+  <symbol id="inf" viewBox="0 0 24 24"><path d="M12 12c-2-2.67-4-4-6-4a4 4 0 1 0 0 8c2 0 4-1.33 6-4Zm0 0c2 2.67 4 4 6 4a4 4 0 0 0 0-8c-2 0-4 1.33-6 4Z"/></symbol>
+  <symbol id="chev" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></symbol>
+  <symbol id="play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></symbol>
+  <symbol id="pack" viewBox="0 0 24 24"><path d="m7.5 4.27 9 5.15M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></symbol>
+  <symbol id="warn" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4M12 17h.01"/></symbol>
+  <symbol id="plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="check" viewBox="0 0 24 24"><path d="m20 6-11 11-5-5"/></symbol>
+  <symbol id="wifi" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14 0M2 8.82a16 16 0 0 1 20 0M8.5 16.4a6 6 0 0 1 7 0M12 20h.01"/></symbol>
+</svg>
+
+<div class="wrap">
+
+  <div class="eyebrow">design variants · 2026-07-28</div>
+  <h1>Issue #123 Track B — Pack credits + subscription state on Home</h1>
+  <div class="rule"></div>
+  <p class="lede">
+    Home's plan card today speaks one language only: <strong>“N of 30 free questions left”</strong> for free users, <strong>“Unlimited questions”</strong> for subscribers.
+    A user who bought a 100 Question Pack sees nothing about it, and a subscriber gets no confirmation that the €4.99 they pay is live — both facts already ship inside the same <code>/usage</code> payload
+    (<code>credit_balance</code>, <code>subscription_status</code>) and are already rendered in Settings.
+    Three approaches below, each shown across the five states that matter, using the real <code>Theme.Hangs</code> tokens and the real card geometry from <code>HomeView.freePlanCard</code>.
+    Every variant keeps Track A's shipped loading treatment coherent — the slot never goes blank and never changes height between loading, loaded and failed.
+  </p>
+
+  <div class="tokens">
+    <div class="tok"><span class="sw" style="background:#FF3D8F"></span>pink #FF3D8F · plan / paywall</div>
+    <div class="tok"><span class="sw" style="background:#0A84FF"></span>blue #0A84FF · monthly quota</div>
+    <div class="tok"><span class="sw" style="background:#8B5CF6"></span>purple #8B5CF6 · pack credits</div>
+    <div class="tok"><span class="sw" style="background:#F59E0B"></span>amber #F59E0B · grace / renewal failed</div>
+    <div class="tok"><span class="sw" style="background:#16A34A"></span>green #16A34A · subscription active</div>
+    <div class="tok"><span class="sw" style="background:#fff;border:1px solid #444"></span>Anton · Inter · IBM Plex Mono</div>
+  </div>
+  <p class="hint" style="margin-top:18px">Phone frames are 390 × 844 shown at 78%; the card-detail strips under each variant are actual size. Colour = the meaning of the money, consistently across all three variants.</p>
+
+
+  <!-- ═══════════════════════════ VARIANT A ═══════════════════════════ -->
+  <section class="variant">
+    <div class="vhead"><span class="vtag">variant a</span><h2>One adaptive balance card</h2></div>
+    <p class="concept">The card stays a single surface and a single tap target, but its headline becomes the number the user actually spends. Free users read their quota; credit holders read one combined balance with a two-tone track; subscribers read a word instead of a number. Nothing is added to Home — the existing card just learns to say more.</p>
+
+    <div class="frames">
+
+      <!-- A1 free -->
+      <div class="fw"><div class="bezel"><div class="phone app"><div class="notch"></div>
+        <div class="sbar"><span>9:41</span><span class="sig"><svg class="ic s16" viewBox="0 0 24 24"><use href="#wifi"/></svg><span class="bat"></span></span></div>
+        <div class="brandrow"><div class="brand"><span>trubbo.</span><i></i></div><div class="chip"><svg class="ic s18" viewBox="0 0 24 24"><use href="#gear"/></svg></div></div>
+        <div class="tagline">voice-based trivia for the road</div>
+        <div class="slot">
+          <div class="card">
+            <div class="mlabel" style="color:var(--blueText)">your plan</div>
+            <div style="display:flex;align-items:baseline;gap:8px;margin:6px 0 10px">
+              <span class="anton" style="font-size:40px">12</span>
+              <span style="font-size:13px;font-weight:600;color:var(--muted)">of 30 free questions left</span>
+            </div>
+            <div class="track"><i class="fblue" style="width:40%"></i></div>
+            <div class="row" style="margin-top:10px">
+              <span class="meta">resets in 3 days</span>
+              <span class="link">Upgrade <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span>
+            </div>
+          </div>
+        </div>
+        <div class="seclabel">session</div>
+        <div class="cfg">
+          <div class="cfgrow"><span class="l">Language</span><span class="r">English <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div><div class="hr"></div>
+          <div class="cfgrow"><span class="l">Difficulty</span><span class="r">Medium <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div><div class="hr"></div>
+          <div class="cfgrow"><span class="l">Categories</span><span class="r">All <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div>
+        </div>
+        <div class="grow"></div>
+        <div class="cta"><svg class="ic fill s16" viewBox="0 0 24 24"><use href="#play"/></svg> Start Quiz</div>
+      </div></div><div class="cap"><b>Free · quota only</b>today's state, restated as a number</div></div>
+
+      <!-- A2 subscriber -->
+      <div class="fw"><div class="bezel"><div class="phone app"><div class="notch"></div>
+        <div class="sbar"><span>9:41</span><span class="sig"><svg class="ic s16" viewBox="0 0 24 24"><use href="#wifi"/></svg><span class="bat"></span></span></div>
+        <div class="brandrow"><div class="brand"><span>trubbo.</span><i></i></div><div class="chip"><svg class="ic s18" viewBox="0 0 24 24"><use href="#gear"/></svg></div></div>
+        <div class="tagline">voice-based trivia for the road</div>
+        <div class="slot">
+          <div class="card">
+            <div class="mlabel" style="color:var(--blueText)">your plan</div>
+            <div style="display:flex;align-items:center;gap:10px;margin:6px 0 10px">
+              <span class="anton" style="font-size:32px">UNLIMITED</span>
+              <span class="pill green"><svg class="ic s11" viewBox="0 0 24 24"><use href="#check"/></svg>active</span>
+            </div>
+            <div class="track"><i class="fpink" style="width:100%"></i></div>
+            <div class="row" style="margin-top:10px">
+              <span class="meta">monthly · renews 12 Aug</span>
+              <span class="link">Manage <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span>
+            </div>
+          </div>
+        </div>
+        <div class="seclabel">session</div>
+        <div class="cfg">
+          <div class="cfgrow"><span class="l">Language</span><span class="r">English <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div><div class="hr"></div>
+          <div class="cfgrow"><span class="l">Difficulty</span><span class="r">Medium <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div><div class="hr"></div>
+          <div class="cfgrow"><span class="l">Categories</span><span class="r">All <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div>
+        </div>
+        <div class="grow"></div>
+        <div class="cta"><svg class="ic fill s16" viewBox="0 0 24 24"><use href="#play"/></svg> Start Quiz</div>
+      </div></div><div class="cap"><b>Subscriber · active</b>full track = nothing to run out of</div></div>
+
+      <!-- A3 free + credits -->
+      <div class="fw"><div class="bezel"><div class="phone app"><div class="notch"></div>
+        <div class="sbar"><span>9:41</span><span class="sig"><svg class="ic s16" viewBox="0 0 24 24"><use href="#wifi"/></svg><span class="bat"></span></span></div>
+        <div class="brandrow"><div class="brand"><span>trubbo.</span><i></i></div><div class="chip"><svg class="ic s18" viewBox="0 0 24 24"><use href="#gear"/></svg></div></div>
+        <div class="tagline">voice-based trivia for the road</div>
+        <div class="slot">
+          <div class="card">
+            <div class="mlabel" style="color:var(--blueText)">your plan</div>
+            <div style="display:flex;align-items:baseline;gap:8px;margin:6px 0 8px">
+              <span class="anton" style="font-size:40px">112</span>
+              <span style="font-size:13px;font-weight:600;color:var(--muted)">questions available</span>
+            </div>
+            <div class="legend" style="margin-bottom:8px">
+              <span><i class="dot" style="background:var(--blue)"></i>12 monthly free</span>
+              <span><i class="dot" style="background:var(--purple)"></i>100 pack credits</span>
+            </div>
+            <div class="track"><i class="fblue" style="width:11%"></i><i class="fpurple" style="width:89%"></i></div>
+            <div class="row" style="margin-top:10px">
+              <span class="meta">free resets in 3 days · credits never expire</span>
+              <span class="link">More <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span>
+            </div>
+          </div>
+        </div>
+        <div class="seclabel">session</div>
+        <div class="cfg">
+          <div class="cfgrow"><span class="l">Language</span><span class="r">English <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div><div class="hr"></div>
+          <div class="cfgrow"><span class="l">Difficulty</span><span class="r">Medium <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div><div class="hr"></div>
+          <div class="cfgrow"><span class="l">Categories</span><span class="r">All <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div>
+        </div>
+        <div class="grow"></div>
+        <div class="cta"><svg class="ic fill s16" viewBox="0 0 24 24"><use href="#play"/></svg> Start Quiz</div>
+      </div></div><div class="cap"><b>Free + 100 pack credits</b>one spendable total, two-tone track</div></div>
+
+      <!-- A4 subscriber + credits -->
+      <div class="fw"><div class="bezel"><div class="phone app"><div class="notch"></div>
+        <div class="sbar"><span>9:41</span><span class="sig"><svg class="ic s16" viewBox="0 0 24 24"><use href="#wifi"/></svg><span class="bat"></span></span></div>
+        <div class="brandrow"><div class="brand"><span>trubbo.</span><i></i></div><div class="chip"><svg class="ic s18" viewBox="0 0 24 24"><use href="#gear"/></svg></div></div>
+        <div class="tagline">voice-based trivia for the road</div>
+        <div class="slot">
+          <div class="card">
+            <div class="mlabel" style="color:var(--blueText)">your plan</div>
+            <div style="display:flex;align-items:center;gap:10px;margin:6px 0 8px">
+              <span class="anton" style="font-size:32px">UNLIMITED</span>
+              <span class="pill green"><svg class="ic s11" viewBox="0 0 24 24"><use href="#check"/></svg>active</span>
+            </div>
+            <div style="margin-bottom:8px"><span class="creditchip"><svg class="ic s11" viewBox="0 0 24 24"><use href="#pack"/></svg>100 pack credits kept for later</span></div>
+            <div class="track"><i class="fpink" style="width:100%"></i></div>
+            <div class="row" style="margin-top:10px">
+              <span class="meta">monthly · renews 12 Aug</span>
+              <span class="link">Manage <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span>
+            </div>
+          </div>
+        </div>
+        <div class="seclabel">session</div>
+        <div class="cfg">
+          <div class="cfgrow"><span class="l">Language</span><span class="r">English <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div><div class="hr"></div>
+          <div class="cfgrow"><span class="l">Difficulty</span><span class="r">Medium <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div><div class="hr"></div>
+          <div class="cfgrow"><span class="l">Categories</span><span class="r">All <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div>
+        </div>
+        <div class="grow"></div>
+        <div class="cta"><svg class="ic fill s16" viewBox="0 0 24 24"><use href="#play"/></svg> Start Quiz</div>
+      </div></div><div class="cap"><b>Subscriber + credits</b>credits are stated, not counted down</div></div>
+
+      <!-- A5 loading -->
+      <div class="fw"><div class="bezel"><div class="phone app"><div class="notch"></div>
+        <div class="sbar"><span>9:41</span><span class="sig"><svg class="ic s16" viewBox="0 0 24 24"><use href="#wifi"/></svg><span class="bat"></span></span></div>
+        <div class="brandrow"><div class="brand"><span>trubbo.</span><i></i></div><div class="chip"><svg class="ic s18" viewBox="0 0 24 24"><use href="#gear"/></svg></div></div>
+        <div class="tagline">voice-based trivia for the road</div>
+        <div class="slot">
+          <div class="card">
+            <div class="mlabel" style="color:var(--blueText)">your plan</div>
+            <div style="display:flex;align-items:center;gap:8px;margin:6px 0 10px;height:40px">
+              <div class="spin"></div>
+              <span class="b13" style="color:var(--muted)">Loading your plan…</span>
+            </div>
+            <div class="track"></div>
+            <div class="row" style="margin-top:10px"><div class="skel" style="width:96px;height:11px"></div></div>
+          </div>
+        </div>
+        <div class="seclabel">session</div>
+        <div class="cfg">
+          <div class="cfgrow"><span class="l">Language</span><span class="r">English <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div><div class="hr"></div>
+          <div class="cfgrow"><span class="l">Difficulty</span><span class="r">Medium <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div><div class="hr"></div>
+          <div class="cfgrow"><span class="l">Categories</span><span class="r">All <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div>
+        </div>
+        <div class="grow"></div>
+        <div class="cta"><svg class="ic fill s16" viewBox="0 0 24 24"><use href="#play"/></svg> Start Quiz</div>
+      </div></div><div class="cap"><b>Loading</b>Track A's spinner + copy, at final height</div></div>
+
+    </div>
+
+    <h3>Edge states — card detail, actual size</h3>
+    <div class="details">
+      <div class="detail"><div class="dcap">subscription in grace (renewal failed)</div><div class="app">
+        <div class="card">
+          <div class="mlabel" style="color:var(--blueText)">your plan</div>
+          <div style="display:flex;align-items:center;gap:10px;margin:6px 0 10px">
+            <span class="anton" style="font-size:32px">UNLIMITED</span>
+            <span class="pill amber"><svg class="ic s11" viewBox="0 0 24 24"><use href="#warn"/></svg>renewal failed</span>
+          </div>
+          <div class="track"><i style="width:100%;background:var(--amber)"></i></div>
+          <div class="row" style="margin-top:10px"><span class="meta">access ends 15 Aug</span><span class="link amber">Fix payment <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div>
+        </div>
+      </div></div>
+
+      <div class="detail"><div class="dcap">subscription expired — collapses to free</div><div class="app">
+        <div class="card">
+          <div class="mlabel" style="color:var(--blueText)">your plan</div>
+          <div style="display:flex;align-items:baseline;gap:8px;margin:6px 0 10px">
+            <span class="anton" style="font-size:40px">30</span>
+            <span style="font-size:13px;font-weight:600;color:var(--muted)">of 30 free questions left</span>
+            <span class="pill pink" style="margin-left:auto">ended</span>
+          </div>
+          <div class="track"><i class="fblue" style="width:100%"></i></div>
+          <div class="row" style="margin-top:10px"><span class="meta">your subscription ended 1 Aug</span><span class="link">Resubscribe <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div>
+        </div>
+      </div></div>
+
+      <div class="detail"><div class="dcap">dark mode · subscriber + credits</div><div class="app dark">
+        <div class="card">
+          <div class="mlabel" style="color:var(--blueText)">your plan</div>
+          <div style="display:flex;align-items:center;gap:10px;margin:6px 0 8px">
+            <span class="anton" style="font-size:32px">UNLIMITED</span>
+            <span class="pill green"><svg class="ic s11" viewBox="0 0 24 24"><use href="#check"/></svg>active</span>
+          </div>
+          <div style="margin-bottom:8px"><span class="creditchip"><svg class="ic s11" viewBox="0 0 24 24"><use href="#pack"/></svg>100 pack credits kept for later</span></div>
+          <div class="track"><i class="fpink" style="width:100%"></i></div>
+          <div class="row" style="margin-top:10px"><span class="meta">monthly · renews 12 Aug</span><span class="link">Manage <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="cols">
+      <div>
+        <h3>Decisions this variant makes</h3>
+        <table>
+          <tr><td>States</td><td>Six distinct visuals: free · free+credits · active · active+credits · grace · expired. Loading and failed keep the shipped shapes.</td></tr>
+          <tr><td>Primary number</td><td>The <em>total spendable</em> (free + credits) when both exist. The track becomes a two-tone spend meter, blue = monthly, purple = credits, drawn in burn order.</td></tr>
+          <tr><td>One card or split</td><td>Stays one card — the founder's existing single tap target survives untouched.</td></tr>
+          <tr><td>Tap target</td><td>Whole card, destination is state-dependent: paywall (free / free+credits), manage subscription (active), App Store billing (grace).</td></tr>
+          <tr><td>Upgrade affordance</td><td>Same slot, different verb: “Upgrade” → “More” (has credits) → “Manage” (subscribed) → “Fix payment” (grace).</td></tr>
+          <tr><td>Grace / expired</td><td>Home warns. Grace turns the whole track amber — a lapsing subscriber is the one person who must act, and Settings is two taps away.</td></tr>
+          <tr><td>Loading</td><td>Track A's spinner and “Loading your plan…” copy stay verbatim; the label, empty track and a skeleton meta line hold the card at its final height so nothing jumps.</td></tr>
+        </table>
+      </div>
+      <div>
+        <h3>Tradeoffs</h3>
+        <ul class="trade">
+          <li class="plus"><b>Best glanceability at speed.</b> One Anton number is readable at arm's length in a car mount; the current 13px sentence is not.</li>
+          <li class="plus"><b>Zero new Home real estate</b> — the card grows from ~64pt to ~112pt but stays one block, and the tap semantics never fork.</li>
+          <li class="minus"><b>“112” conflates two currencies.</b> The user cannot tell from the headline alone that 12 of them expire in three days; the legend row carries that burden.</li>
+          <li class="minus"><b>Most state logic per pixel.</b> Six layouts through one card means the height changes between states (subscriber card is shorter), so Home shifts slightly on state change.</li>
+          <li class="eq"><b>Scales to future states by substitution, not addition</b> — a trial, a family plan or a bonus-credit promo replaces the headline rather than joining it, so the card can never show two offers at once.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════ VARIANT B ═══════════════════════════ -->
+  <section class="variant">
+    <div class="vhead"><span class="vtag">variant b</span><h2>Stacked entitlement rows</h2></div>
+    <p class="concept">One row per thing you own, hairline-separated inside the existing card, each row its own tap target. Rows appear as entitlements are acquired and vanish when they aren't there — the card is a ledger, not a headline. Structurally this is the same idiom as the Home config card and the Settings groups, so it needs no new component.</p>
+
+    <div class="frames">
+
+      <!-- B1 free -->
+      <div class="fw"><div class="bezel"><div class="phone app"><div class="notch"></div>
+        <div class="sbar"><span>9:41</span><span class="sig"><svg class="ic s16" viewBox="0 0 24 24"><use href="#wifi"/></svg><span class="bat"></span></span></div>
+        <div class="brandrow"><div class="brand"><span>trubbo.</span><i></i></div><div class="chip"><svg class="ic s18" viewBox="0 0 24 24"><use href="#gear"/></svg></div></div>
+        <div class="tagline">voice-based trivia for the road</div>
+        <div class="slot">
+          <div class="card rows">
+            <div style="padding:12px 16px">
+              <div class="row">
+                <span style="display:flex;align-items:center;gap:6px"><svg class="ic fill" style="color:var(--blue)" viewBox="0 0 24 24"><use href="#bolt"/></svg><span class="b13">12 of 30 free questions left</span></span>
+                <span class="meta">resets in 3 days</span>
+              </div>
+              <div class="track" style="margin-top:8px"><i class="fblue" style="width:40%"></i></div>
+            </div>
+            <div class="hr"></div>
+            <div class="row" style="padding:12px 16px">
+              <span class="link" style="font-size:13.5px">Upgrade to unlimited — €4.99/mo</span>
+              <svg class="ic s11" style="color:var(--pinkText)" viewBox="0 0 24 24"><use href="#chev"/></svg>
+            </div>
+          </div>
+        </div>
+        <div class="seclabel">session</div>
+        <div class="cfg">
+          <div class="cfgrow"><span class="l">Language</span><span class="r">English <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div><div class="hr"></div>
+          <div class="cfgrow"><span class="l">Difficulty</span><span class="r">Medium <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div><div class="hr"></div>
+          <div class="cfgrow"><span class="l">Categories</span><span class="r">All <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div>
+        </div>
+        <div class="grow"></div>
+        <div class="cta"><svg class="ic fill s16" viewBox="0 0 24 24"><use href="#play"/></svg> Start Quiz</div>
+      </div></div><div class="cap"><b>Free · quota only</b>quota row + an explicit upgrade row</div></div>
+
+      <!-- B2 subscriber -->
+      <div class="fw"><div class="bezel"><div class="phone app"><div class="notch"></div>
+        <div class="sbar"><span>9:41</span><span class="sig"><svg class="ic s16" viewBox="0 0 24 24"><use href="#wifi"/></svg><span class="bat"></span></span></div>
+        <div class="brandrow"><div class="brand"><span>trubbo.</span><i></i></div><div class="chip"><svg class="ic s18" viewBox="0 0 24 24"><use href="#gear"/></svg></div></div>
+        <div class="tagline">voice-based trivia for the road</div>
+        <div class="slot">
+          <div class="card rows">
+            <div class="row" style="padding:14px 16px">
+              <span style="display:flex;align-items:center;gap:8px">
+                <svg class="ic" style="color:var(--pink)" viewBox="0 0 24 24"><use href="#inf"/></svg>
+                <span class="b13">Unlimited questions</span>
+                <span class="pill green">active</span>
+              </span>
+              <span style="display:flex;align-items:center;gap:6px"><span class="meta">renews 12 Aug</span><svg class="ic s11" style="color:var(--faint)" viewBox="0 0 24 24"><use href="#chev"/></svg></span>
+            </div>
+          </div>
+        </div>
+        <div class="seclabel">session</div>
+        <div class="cfg">
+          <div class="cfgrow"><span class="l">Language</span><span class="r">English <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div><div class="hr"></div>
+          <div class="cfgrow"><span class="l">Difficulty</span><span class="r">Medium <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div><div class="hr"></div>
+          <div class="cfgrow"><span class="l">Categories</span><span class="r">All <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div>
+        </div>
+        <div class="grow"></div>
+        <div class="cta"><svg class="ic fill s16" viewBox="0 0 24 24"><use href="#play"/></svg> Start Quiz</div>
+      </div></div><div class="cap"><b>Subscriber · active</b>a paying user gets the quietest Home</div></div>
+
+      <!-- B3 free + credits -->
+      <div class="fw"><div class="bezel"><div class="phone app"><div class="notch"></div>
+        <div class="sbar"><span>9:41</span><span class="sig"><svg class="ic s16" viewBox="0 0 24 24"><use href="#wifi"/></svg><span class="bat"></span></span></div>
+        <div class="brandrow"><div class="brand"><span>trubbo.</span><i></i></div><div class="chip"><svg class="ic s18" viewBox="0 0 24 24"><use href="#gear"/></svg></div></div>
+        <div class="tagline">voice-based trivia for the road</div>
+        <div class="slot">
+          <div class="card rows">
+            <div style="padding:12px 16px">
+              <div class="row">
+                <span style="display:flex;align-items:center;gap:6px"><svg class="ic fill" style="color:var(--blue)" viewBox="0 0 24 24"><use href="#bolt"/></svg><span class="b13">12 of 30 free questions left</span></span>
+                <span class="meta">resets in 3 days</span>
+              </div>
+              <div class="track" style="margin-top:8px"><i class="fblue" style="width:40%"></i></div>
+            </div>
+            <div class="hr"></div>
+            <div class="row" style="padding:12px 16px">
+              <span style="display:flex;align-items:center;gap:6px">
+                <svg class="ic" style="color:var(--purple)" viewBox="0 0 24 24"><use href="#pack"/></svg>
+                <span><span class="b13">100 pack credits</span><span class="b12" style="display:block;margin-top:1px">used after your free questions</span></span>
+              </span>
+              <span class="link purple">Top up <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span>
+            </div>
+            <div class="hr"></div>
+            <div class="row" style="padding:12px 16px">
+              <span class="link" style="font-size:13.5px">Upgrade to unlimited — €4.99/mo</span>
+              <svg class="ic s11" style="color:var(--pinkText)" viewBox="0 0 24 24"><use href="#chev"/></svg>
+            </div>
+          </div>
+        </div>
+        <div class="seclabel">session</div>
+        <div class="cfg">
+          <div class="cfgrow"><span class="l">Language</span><span class="r">English <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div><div class="hr"></div>
+          <div class="cfgrow"><span class="l">Difficulty</span><span class="r">Medium <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div>
+        </div>
+        <div class="grow"></div>
+        <div class="cta"><svg class="ic fill s16" viewBox="0 0 24 24"><use href="#play"/></svg> Start Quiz</div>
+      </div></div><div class="cap"><b>Free + 100 pack credits</b>three rows — and Home starts to get long</div></div>
+
+      <!-- B4 subscriber + credits -->
+      <div class="fw"><div class="bezel"><div class="phone app"><div class="notch"></div>
+        <div class="sbar"><span>9:41</span><span class="sig"><svg class="ic s16" viewBox="0 0 24 24"><use href="#wifi"/></svg><span class="bat"></span></span></div>
+        <div class="brandrow"><div class="brand"><span>trubbo.</span><i></i></div><div class="chip"><svg class="ic s18" viewBox="0 0 24 24"><use href="#gear"/></svg></div></div>
+        <div class="tagline">voice-based trivia for the road</div>
+        <div class="slot">
+          <div class="card rows">
+            <div class="row" style="padding:14px 16px">
+              <span style="display:flex;align-items:center;gap:8px">
+                <svg class="ic" style="color:var(--pink)" viewBox="0 0 24 24"><use href="#inf"/></svg>
+                <span class="b13">Unlimited questions</span>
+                <span class="pill green">active</span>
+              </span>
+              <span style="display:flex;align-items:center;gap:6px"><span class="meta">renews 12 Aug</span><svg class="ic s11" style="color:var(--faint)" viewBox="0 0 24 24"><use href="#chev"/></svg></span>
+            </div>
+            <div class="hr"></div>
+            <div class="row" style="padding:12px 16px">
+              <span style="display:flex;align-items:center;gap:6px">
+                <svg class="ic" style="color:var(--purple)" viewBox="0 0 24 24"><use href="#pack"/></svg>
+                <span><span class="b13">100 pack credits</span><span class="b12" style="display:block;margin-top:1px">kept for when your plan ends</span></span>
+              </span>
+              <svg class="ic s11" style="color:var(--faint)" viewBox="0 0 24 24"><use href="#chev"/></svg>
+            </div>
+          </div>
+        </div>
+        <div class="seclabel">session</div>
+        <div class="cfg">
+          <div class="cfgrow"><span class="l">Language</span><span class="r">English <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div><div class="hr"></div>
+          <div class="cfgrow"><span class="l">Difficulty</span><span class="r">Medium <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div><div class="hr"></div>
+          <div class="cfgrow"><span class="l">Categories</span><span class="r">All <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div>
+        </div>
+        <div class="grow"></div>
+        <div class="cta"><svg class="ic fill s16" viewBox="0 0 24 24"><use href="#play"/></svg> Start Quiz</div>
+      </div></div><div class="cap"><b>Subscriber + credits</b>no upgrade row — nothing left to sell</div></div>
+
+      <!-- B5 loading -->
+      <div class="fw"><div class="bezel"><div class="phone app"><div class="notch"></div>
+        <div class="sbar"><span>9:41</span><span class="sig"><svg class="ic s16" viewBox="0 0 24 24"><use href="#wifi"/></svg><span class="bat"></span></span></div>
+        <div class="brandrow"><div class="brand"><span>trubbo.</span><i></i></div><div class="chip"><svg class="ic s18" viewBox="0 0 24 24"><use href="#gear"/></svg></div></div>
+        <div class="tagline">voice-based trivia for the road</div>
+        <div class="slot">
+          <div class="card rows">
+            <div class="row" style="padding:14px 16px">
+              <span style="display:flex;align-items:center;gap:8px"><div class="spin"></div><span class="b13">Loading your plan…</span></span>
+            </div>
+          </div>
+        </div>
+        <div class="seclabel">session</div>
+        <div class="cfg">
+          <div class="cfgrow"><span class="l">Language</span><span class="r">English <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div><div class="hr"></div>
+          <div class="cfgrow"><span class="l">Difficulty</span><span class="r">Medium <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div><div class="hr"></div>
+          <div class="cfgrow"><span class="l">Categories</span><span class="r">All <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div>
+        </div>
+        <div class="grow"></div>
+        <div class="cta"><svg class="ic fill s16" viewBox="0 0 24 24"><use href="#play"/></svg> Start Quiz</div>
+      </div></div><div class="cap"><b>Loading</b>literally the shipped Track A row, unchanged</div></div>
+
+    </div>
+
+    <h3>Edge states — card detail, actual size</h3>
+    <div class="details">
+      <div class="detail"><div class="dcap">grace — a warning row is inserted on top</div><div class="app">
+        <div class="card rows">
+          <div class="row" style="padding:12px 16px;background:rgba(245,158,11,.10);border-radius:18px 18px 0 0">
+            <span style="display:flex;align-items:center;gap:6px"><svg class="ic" style="color:var(--amber)" viewBox="0 0 24 24"><use href="#warn"/></svg><span class="b13" style="color:var(--amber)">Renewal failed — access ends 15 Aug</span></span>
+            <span class="link amber">Fix <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span>
+          </div>
+          <div class="hr"></div>
+          <div class="row" style="padding:14px 16px">
+            <span style="display:flex;align-items:center;gap:8px"><svg class="ic" style="color:var(--pink)" viewBox="0 0 24 24"><use href="#inf"/></svg><span class="b13">Unlimited questions</span><span class="pill amber">grace</span></span>
+          </div>
+        </div>
+      </div></div>
+
+      <div class="detail"><div class="dcap">expired — plan row reverts, credits row survives</div><div class="app">
+        <div class="card rows">
+          <div style="padding:12px 16px">
+            <div class="row">
+              <span style="display:flex;align-items:center;gap:6px"><svg class="ic fill" style="color:var(--blue)" viewBox="0 0 24 24"><use href="#bolt"/></svg><span class="b13">30 of 30 free questions left</span></span>
+              <span class="pill pink">plan ended</span>
+            </div>
+            <div class="track" style="margin-top:8px"><i class="fblue" style="width:100%"></i></div>
+          </div>
+          <div class="hr"></div>
+          <div class="row" style="padding:12px 16px">
+            <span style="display:flex;align-items:center;gap:6px"><svg class="ic" style="color:var(--purple)" viewBox="0 0 24 24"><use href="#pack"/></svg><span class="b13">100 pack credits</span></span>
+            <span class="link">Resubscribe <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span>
+          </div>
+        </div>
+      </div></div>
+
+      <div class="detail"><div class="dcap">dark mode · free + credits</div><div class="app dark">
+        <div class="card rows">
+          <div style="padding:12px 16px">
+            <div class="row">
+              <span style="display:flex;align-items:center;gap:6px"><svg class="ic fill" style="color:var(--blue)" viewBox="0 0 24 24"><use href="#bolt"/></svg><span class="b13">12 of 30 free questions left</span></span>
+              <span class="meta">resets in 3 days</span>
+            </div>
+            <div class="track" style="margin-top:8px"><i class="fblue" style="width:40%"></i></div>
+          </div>
+          <div class="hr"></div>
+          <div class="row" style="padding:12px 16px">
+            <span style="display:flex;align-items:center;gap:6px"><svg class="ic" style="color:var(--purple)" viewBox="0 0 24 24"><use href="#pack"/></svg><span class="b13">100 pack credits</span></span>
+            <span class="link purple">Top up <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span>
+          </div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="cols">
+      <div>
+        <h3>Decisions this variant makes</h3>
+        <table>
+          <tr><td>States</td><td>Every state is a composition of three row types (plan · credits · action), so nothing needs its own layout; grace adds a fourth, amber-tinted row.</td></tr>
+          <tr><td>Primary number</td><td>No combined number. The monthly quota stays primary because it is the one that expires; credits read as a stated stock. The track keeps its current meaning — free quota only.</td></tr>
+          <tr><td>One card or split</td><td>Split inside one card. This is the variant that directly answers the issue's “plain row + credits row” option.</td></tr>
+          <tr><td>Tap target</td><td>Per row, which resolves the two-meanings-one-surface problem: quota row → paywall, credits row → packs, action row → paywall, grace row → App Store billing.</td></tr>
+          <tr><td>Upgrade affordance</td><td>Promoted to its own row with the price in it (“Upgrade to unlimited — €4.99/mo”), and simply removed once the user subscribes.</td></tr>
+          <tr><td>Grace / expired</td><td>Home warns, loudly — grace gets a tinted row above everything else; expired reverts the plan row and keeps the credits row, so a lapsed user still sees what they own.</td></tr>
+          <tr><td>Loading</td><td>Unchanged from Track A: exactly one row, spinner + “Loading your plan…”. This variant is the only one where the shipped placeholder is already pixel-correct.</td></tr>
+        </table>
+      </div>
+      <div>
+        <h3>Tradeoffs</h3>
+        <ul class="trade">
+          <li class="plus"><b>Never ambiguous.</b> Each currency keeps its own row, its own colour and its own destination — no arithmetic for the user, no shared tap target to disambiguate.</li>
+          <li class="plus"><b>Cheapest to build and to test.</b> Reuses the existing card + hairline idiom; each row is independently unit-testable, and Track A ships as-is.</li>
+          <li class="plus"><b>Scales best.</b> A trial, a bonus, a family seat = one more row; the rules stay “one row per entitlement”.</li>
+          <li class="minus"><b>Tallest on Home.</b> Free + credits is three rows (~150pt) and pushes the config card and the Start Quiz CTA down — the driving-first CTA is the thing this design most risks.</li>
+          <li class="minus"><b>Lowest glanceability.</b> All information is 13pt body text; there is no big number, so it is read, not glanced.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════ VARIANT C ═══════════════════════════ -->
+  <section class="variant">
+    <div class="vhead"><span class="vtag">variant c</span><h2>Compact badge strip</h2></div>
+    <p class="concept">The plan card disappears. Entitlements become a row of small pills directly under the tagline — one pill per thing you own, plus a purple “+” to top up. Home gets ~70pt shorter and the Start Quiz CTA moves up, at the cost of dropping the card as a paywall surface.</p>
+
+    <div class="frames">
+
+      <!-- C1 free -->
+      <div class="fw"><div class="bezel"><div class="phone app"><div class="notch"></div>
+        <div class="sbar"><span>9:41</span><span class="sig"><svg class="ic s16" viewBox="0 0 24 24"><use href="#wifi"/></svg><span class="bat"></span></span></div>
+        <div class="brandrow"><div class="brand"><span>trubbo.</span><i></i></div><div class="chip"><svg class="ic s18" viewBox="0 0 24 24"><use href="#gear"/></svg></div></div>
+        <div class="tagline">voice-based trivia for the road</div>
+        <div class="slot">
+          <div class="strip">
+            <div class="bpill"><svg class="ic s11 fill" style="color:var(--blue)" viewBox="0 0 24 24"><use href="#bolt"/></svg><span class="n">12/30</span><span class="k">free</span><i class="uf" style="width:40%"></i></div>
+            <div class="bpill ghost">Upgrade <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></div>
+          </div>
+          <div class="meta" style="margin-top:8px">resets in 3 days</div>
+        </div>
+        <div class="seclabel">session</div>
+        <div class="cfg">
+          <div class="cfgrow"><span class="l">Language</span><span class="r">English <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div><div class="hr"></div>
+          <div class="cfgrow"><span class="l">Difficulty</span><span class="r">Medium <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div><div class="hr"></div>
+          <div class="cfgrow"><span class="l">Categories</span><span class="r">All <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div>
+        </div>
+        <div class="grow"></div>
+        <div class="cta"><svg class="ic fill s16" viewBox="0 0 24 24"><use href="#play"/></svg> Start Quiz</div>
+      </div></div><div class="cap"><b>Free · quota only</b>micro fill line under the pill = quota left</div></div>
+
+      <!-- C2 subscriber -->
+      <div class="fw"><div class="bezel"><div class="phone app"><div class="notch"></div>
+        <div class="sbar"><span>9:41</span><span class="sig"><svg class="ic s16" viewBox="0 0 24 24"><use href="#wifi"/></svg><span class="bat"></span></span></div>
+        <div class="brandrow"><div class="brand"><span>trubbo.</span><i></i></div><div class="chip"><svg class="ic s18" viewBox="0 0 24 24"><use href="#gear"/></svg></div></div>
+        <div class="tagline">voice-based trivia for the road</div>
+        <div class="slot">
+          <div class="strip">
+            <div class="bpill solid"><svg class="ic s11" viewBox="0 0 24 24"><use href="#inf"/></svg><span class="k" style="letter-spacing:1.6px">unlimited</span></div>
+          </div>
+          <div class="meta" style="margin-top:8px">monthly · renews 12 Aug</div>
+        </div>
+        <div class="seclabel">session</div>
+        <div class="cfg">
+          <div class="cfgrow"><span class="l">Language</span><span class="r">English <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div><div class="hr"></div>
+          <div class="cfgrow"><span class="l">Difficulty</span><span class="r">Medium <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div><div class="hr"></div>
+          <div class="cfgrow"><span class="l">Categories</span><span class="r">All <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div>
+        </div>
+        <div class="grow"></div>
+        <div class="cta"><svg class="ic fill s16" viewBox="0 0 24 24"><use href="#play"/></svg> Start Quiz</div>
+      </div></div><div class="cap"><b>Subscriber · active</b>one pink badge, nothing else to say</div></div>
+
+      <!-- C3 free + credits -->
+      <div class="fw"><div class="bezel"><div class="phone app"><div class="notch"></div>
+        <div class="sbar"><span>9:41</span><span class="sig"><svg class="ic s16" viewBox="0 0 24 24"><use href="#wifi"/></svg><span class="bat"></span></span></div>
+        <div class="brandrow"><div class="brand"><span>trubbo.</span><i></i></div><div class="chip"><svg class="ic s18" viewBox="0 0 24 24"><use href="#gear"/></svg></div></div>
+        <div class="tagline">voice-based trivia for the road</div>
+        <div class="slot">
+          <div class="strip">
+            <div class="bpill"><svg class="ic s11 fill" style="color:var(--blue)" viewBox="0 0 24 24"><use href="#bolt"/></svg><span class="n">12/30</span><span class="k">free</span><i class="uf" style="width:40%"></i></div>
+            <div class="bpill"><svg class="ic s11" style="color:var(--purple)" viewBox="0 0 24 24"><use href="#pack"/></svg><span class="n">100</span><span class="k">credits</span></div>
+            <div class="bpill plus"><svg class="ic" viewBox="0 0 24 24"><use href="#plus"/></svg></div>
+          </div>
+          <div class="meta" style="margin-top:8px">free resets in 3 days · credits never expire</div>
+        </div>
+        <div class="seclabel">session</div>
+        <div class="cfg">
+          <div class="cfgrow"><span class="l">Language</span><span class="r">English <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div><div class="hr"></div>
+          <div class="cfgrow"><span class="l">Difficulty</span><span class="r">Medium <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div><div class="hr"></div>
+          <div class="cfgrow"><span class="l">Categories</span><span class="r">All <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div>
+        </div>
+        <div class="grow"></div>
+        <div class="cta"><svg class="ic fill s16" viewBox="0 0 24 24"><use href="#play"/></svg> Start Quiz</div>
+      </div></div><div class="cap"><b>Free + 100 pack credits</b>two currencies, two pills, one “+”</div></div>
+
+      <!-- C4 subscriber + credits -->
+      <div class="fw"><div class="bezel"><div class="phone app"><div class="notch"></div>
+        <div class="sbar"><span>9:41</span><span class="sig"><svg class="ic s16" viewBox="0 0 24 24"><use href="#wifi"/></svg><span class="bat"></span></span></div>
+        <div class="brandrow"><div class="brand"><span>trubbo.</span><i></i></div><div class="chip"><svg class="ic s18" viewBox="0 0 24 24"><use href="#gear"/></svg></div></div>
+        <div class="tagline">voice-based trivia for the road</div>
+        <div class="slot">
+          <div class="strip">
+            <div class="bpill solid"><svg class="ic s11" viewBox="0 0 24 24"><use href="#inf"/></svg><span class="k" style="letter-spacing:1.6px">unlimited</span></div>
+            <div class="bpill"><svg class="ic s11" style="color:var(--purple)" viewBox="0 0 24 24"><use href="#pack"/></svg><span class="n">100</span><span class="k">credits</span></div>
+          </div>
+          <div class="meta" style="margin-top:8px">renews 12 Aug · credits saved for later</div>
+        </div>
+        <div class="seclabel">session</div>
+        <div class="cfg">
+          <div class="cfgrow"><span class="l">Language</span><span class="r">English <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div><div class="hr"></div>
+          <div class="cfgrow"><span class="l">Difficulty</span><span class="r">Medium <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div><div class="hr"></div>
+          <div class="cfgrow"><span class="l">Categories</span><span class="r">All <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div>
+        </div>
+        <div class="grow"></div>
+        <div class="cta"><svg class="ic fill s16" viewBox="0 0 24 24"><use href="#play"/></svg> Start Quiz</div>
+      </div></div><div class="cap"><b>Subscriber + credits</b>the “+” is gone — nothing to upsell</div></div>
+
+      <!-- C5 loading -->
+      <div class="fw"><div class="bezel"><div class="phone app"><div class="notch"></div>
+        <div class="sbar"><span>9:41</span><span class="sig"><svg class="ic s16" viewBox="0 0 24 24"><use href="#wifi"/></svg><span class="bat"></span></span></div>
+        <div class="brandrow"><div class="brand"><span>trubbo.</span><i></i></div><div class="chip"><svg class="ic s18" viewBox="0 0 24 24"><use href="#gear"/></svg></div></div>
+        <div class="tagline">voice-based trivia for the road</div>
+        <div class="slot">
+          <div class="strip">
+            <div class="bpill" style="gap:7px"><div class="spin" style="width:12px;height:12px"></div><span class="k">loading your plan</span></div>
+            <div class="skel" style="width:78px;height:34px;border-radius:17px"></div>
+          </div>
+          <div class="skel" style="width:120px;height:11px;margin-top:10px"></div>
+        </div>
+        <div class="seclabel">session</div>
+        <div class="cfg">
+          <div class="cfgrow"><span class="l">Language</span><span class="r">English <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div><div class="hr"></div>
+          <div class="cfgrow"><span class="l">Difficulty</span><span class="r">Medium <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div><div class="hr"></div>
+          <div class="cfgrow"><span class="l">Categories</span><span class="r">All <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></span></div>
+        </div>
+        <div class="grow"></div>
+        <div class="cta"><svg class="ic fill s16" viewBox="0 0 24 24"><use href="#play"/></svg> Start Quiz</div>
+      </div></div><div class="cap"><b>Loading</b>skeleton pills at pill height — Track A's copy survives, its card does not</div></div>
+
+    </div>
+
+    <h3>Edge states — strip detail, actual size</h3>
+    <div class="details">
+      <div class="detail"><div class="dcap">grace — amber pill replaces the plan pill</div><div class="app">
+        <div class="strip">
+          <div class="bpill" style="box-shadow:none;background:rgba(245,158,11,.12)"><svg class="ic s11" style="color:var(--amber)" viewBox="0 0 24 24"><use href="#warn"/></svg><span class="k amberk">renewal failed</span></div>
+          <div class="bpill ghost" style="color:var(--amber);border-color:rgba(245,158,11,.5)">Fix payment <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></div>
+        </div>
+        <div class="meta" style="margin-top:8px">access ends 15 Aug</div>
+      </div></div>
+
+      <div class="detail"><div class="dcap">expired — back to free pills, credits stay</div><div class="app">
+        <div class="strip">
+          <div class="bpill"><svg class="ic s11 fill" style="color:var(--blue)" viewBox="0 0 24 24"><use href="#bolt"/></svg><span class="n">30/30</span><span class="k">free</span><i class="uf" style="width:100%"></i></div>
+          <div class="bpill"><svg class="ic s11" style="color:var(--purple)" viewBox="0 0 24 24"><use href="#pack"/></svg><span class="n">100</span><span class="k">credits</span></div>
+          <div class="bpill ghost">Resubscribe <svg class="ic s11" viewBox="0 0 24 24"><use href="#chev"/></svg></div>
+        </div>
+        <div class="meta" style="margin-top:8px">your plan ended 1 Aug</div>
+      </div></div>
+
+      <div class="detail"><div class="dcap">dark mode · free + credits</div><div class="app dark">
+        <div class="strip">
+          <div class="bpill"><svg class="ic s11 fill" style="color:var(--blue)" viewBox="0 0 24 24"><use href="#bolt"/></svg><span class="n">12/30</span><span class="k">free</span><i class="uf" style="width:40%"></i></div>
+          <div class="bpill"><svg class="ic s11" style="color:var(--purple)" viewBox="0 0 24 24"><use href="#pack"/></svg><span class="n">100</span><span class="k">credits</span></div>
+          <div class="bpill plus"><svg class="ic" viewBox="0 0 24 24"><use href="#plus"/></svg></div>
+        </div>
+        <div class="meta" style="margin-top:8px">free resets in 3 days · credits never expire</div>
+      </div></div>
+    </div>
+
+    <div class="cols">
+      <div>
+        <h3>Decisions this variant makes</h3>
+        <table>
+          <tr><td>States</td><td>Collapses to two pill types (a balance pill and an action pill) recoloured per entitlement; grace and expired reuse the same shapes. Fewest distinct visuals of the three.</td></tr>
+          <tr><td>Primary number</td><td>Neither dominates — pills are peers, read left to right in burn order. The progress track is demoted to a 3pt fill line inside the free pill; there is no track for credits.</td></tr>
+          <tr><td>One card or split</td><td>Neither: the card is deleted. Home loses a card and gains ~70pt of vertical space for the CTA.</td></tr>
+          <tr><td>Tap target</td><td>Per pill (34pt tall — at the 44pt HIG minimum only if padded). Balance pills → paywall / packs, “+” → paywall.</td></tr>
+          <tr><td>Upgrade affordance</td><td>A dedicated ghost pill for free users, a purple “+” once they hold credits, and nothing at all once subscribed.</td></tr>
+          <tr><td>Grace / expired</td><td>Home warns via an amber pill pair, but with far less weight than variants A and B — arguably too little for a payment failure.</td></tr>
+          <tr><td>Loading</td><td>Skeleton pills at the same 34pt height, plus the spinner and Track A's copy in the first pill. Track A's <em>behaviour</em> is preserved; its card shape is not, so Track A's tests would need re-recording.</td></tr>
+        </table>
+      </div>
+      <div>
+        <h3>Tradeoffs</h3>
+        <ul class="trade">
+          <li class="plus"><b>Least noise, shortest Home.</b> The CTA sits higher, which matters more than anything else for a driver reaching for “Start Quiz”.</li>
+          <li class="plus"><b>Scales sideways forever</b> — any future entitlement is one more pill, and the strip can scroll horizontally without touching the layout.</li>
+          <li class="minus"><b>Weakest paywall surface.</b> Today the entire card is a proactive paywall entry (<code>presentPaywall()</code>); a ghost pill is a much smaller, easier-to-ignore target and likely costs conversions.</li>
+          <li class="minus"><b>Smallest type on the screen.</b> 10–14pt mono in a moving car is the worst of the three for glanceability, and 34pt pills are below the comfortable touch target.</li>
+          <li class="eq"><b>Invalidates Track A's shape</b> (not its logic): the shipped placeholder card becomes skeleton pills, so the Track A tests and the visual check get re-recorded.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+
+  <div class="note">
+    <b>Held constant across all three variants, so the pick is about layout only:</b>
+    blue = the monthly free quota (expires), purple = pack credits (never expire, spent after the free quota), pink = subscription and every paywall affordance, amber = grace/renewal failure, green = an active subscription.
+    Copy reuses what already ships: “N of 30 free questions left”, “Unlimited questions”, “100 Question Pack · one-time purchase · never expires”, “Loading your plan…”, and the untouched failed-state “Couldn't load your plan · Retry”.
+    All three read the two fields Home already receives — <code>credit_balance</code> and <code>subscription_status</code> — so whichever wins, Track B is presentation work with no new network call.
+    <br><br>
+    <b>Still open for you to decide (the issue asks these explicitly):</b> should a free user's pack credits appear on Home at all, or wait for the packs product story; and does Home warn about a lapsing subscription (all three variants above assume yes) or stay silent and leave it to Settings.
+  </div>
+
+</div>
+</body>
+</html>

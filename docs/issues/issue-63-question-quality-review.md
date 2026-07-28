@@ -243,12 +243,21 @@ review, no prod import.
   `extra.source_attribution = "unmatched_fallback" | "pack_fallback"` so a fact-check pass can
   treat the URL as untrusted instead of verifying against a sibling fact's source. F8 stays
   intact.
-- **F-e not code-fixed:** neither `GenerationOrder` nor `OrderContext` has a difficulty axis
-  (generator hard-defaults `medium`; topic-pool runs have no category) — a spread needs a
-  product decision (target mix per pack?) + an order-schema field, not a patch. Parked for the
-  founder.
-- The 164 existing local rows keep their as-generated attribution — re-check source URLs during
-  the review pass before any import (the `verify-questions` leg above).
+- **F-e fixed (2026-07-27, founder call "náročnosť a kategórie sa musia generovať"):** the
+  generation LLM now assesses **per-question `difficulty` and `category`** instead of echoing
+  the order defaults. Prompts (v3 fact-first, entertainment, open, v2_cot, legacy) carry a
+  DIFFICULTY & CATEGORY section: difficulty = honest easy|medium|hard for a non-native-English
+  adult player, batch target "mixed ~30/50/20" when the order names no level (an explicit
+  order/`OrderContext.difficulty` becomes the target instead); category = classification into
+  the player-facing filter taxonomy mirrored from iOS `Config.categoryOptions`
+  (`app/generation/classification.py` is the source of truth), with an explicit order category
+  always winning. The structured MCQ contract also gained `topic` (was missing entirely — every
+  MCQ row landed `topic="General"`). `GenerationStage` normalizes fail-safe (junk → medium/general)
+  so off-vocabulary values never reach Postgres. Pinned by `tests/generation/test_classification.py`
+  + new stage/MCQ-contract tests.
+- The 164 existing local rows keep their as-generated values — the review pass before any import
+  (the `verify-questions` leg above) must backfill **source URLs *and now also* per-question
+  `category` + `difficulty`** (they all sit at `medium`/`general`).
 
 ## Acceptance
 

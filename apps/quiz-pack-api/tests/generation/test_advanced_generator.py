@@ -946,3 +946,65 @@ def test_partition_facts_handles_none_and_short_inputs() -> None:
     assert AdvancedQuestionGenerator._partition_facts([], 3) == [None, None, None]
     # Fewer facts than patterns → first slots filled, rest None, still disjoint.
     assert AdvancedQuestionGenerator._partition_facts(["x", "y"], 3) == [["x"], ["y"], None]
+
+
+@pytest.mark.asyncio
+async def test_mcq_structured_contract_carries_topic_category_difficulty() -> None:
+    """2026-07-27 live-run F-e — the structured MCQ contract must carry the
+    model's per-question assessment.
+
+    Before this, `MCQQuestionItem` had no `topic` at all (every MCQ row
+    landed as topic="General") and no filling instruction for
+    category/difficulty, so the code fallback stamped "general"/"medium"
+    across the whole 63-question MCQ half of the live run. The mapping into
+    `Question` must prefer the item's own values and only fall back when the
+    model left them out.
+    """
+    from app.generation.advanced_generator import MCQBatchOutput, MCQQuestionItem
+
+    batch_out = MCQBatchOutput(
+        questions=[
+            MCQQuestionItem(
+                question="True or false: bananas are berries.",
+                possible_answers={"a": "True", "b": "False"},
+                correct_answer="a",
+                pattern_used="true_false",
+                topic="Food",
+                category="kids",
+                difficulty="easy",
+            ),
+            MCQQuestionItem(
+                # No assessment emitted -> falls back to defaults.
+                question="True or false: honey never spoils.",
+                possible_answers={"a": "True", "b": "False"},
+                correct_answer="a",
+                pattern_used="true_false",
+            ),
+        ]
+    )
+    structured_chain = SimpleNamespace(ainvoke=AsyncMock(return_value=batch_out))
+    gen = _make_generator_with_fake_llm(AsyncMock())
+    gen.generation_llm = SimpleNamespace(
+        with_structured_output=lambda schema, **kwargs: structured_chain,
+        temperature=0.8,
+    )
+
+    questions = await gen._generate_mcq_batch_structured(
+        count=2,
+        difficulty=None,  # mixed batch — the pipeline's default since F-e
+        topics=["science"],
+        categories=None,
+        question_type="text",
+        excluded_topics=None,
+        avoid_questions=None,
+        user_bad_examples=None,
+        source_facts=None,
+        mcq_patterns={"true_false"},
+    )
+
+    assert (questions[0].topic, questions[0].category, questions[0].difficulty) == (
+        "Food", "kids", "easy",
+    )
+    assert (questions[1].topic, questions[1].category, questions[1].difficulty) == (
+        "General", "general", "medium",
+    )

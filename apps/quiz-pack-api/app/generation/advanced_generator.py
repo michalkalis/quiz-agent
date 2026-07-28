@@ -148,8 +148,44 @@ class MCQQuestionItem(BaseModel):
     explanation: Optional[str] = Field(
         None, description="Short factual context for the answer"
     )
-    category: Optional[str] = None
-    difficulty: Optional[str] = None
+    # 2026-07-27 live-run F-e — the structured contract must carry the model's
+    # per-question assessment (topic was missing entirely, so every MCQ row
+    # landed as topic="General"; category/difficulty had no filling
+    # instruction, so the code fallback stamped "general"/"medium" pack-wide).
+    topic: Optional[str] = Field(
+        None, description="Subject of the question, e.g. 'Geography' or 'Music'"
+    )
+    category: Optional[str] = Field(
+        None,
+        description=(
+            "Player-facing category filter id. When the prompt names an order "
+            "category, copy it exactly; otherwise classify this question as "
+            "one of: general | adults | kids | wizarding-world | superheroes "
+            "| disney | football | sports-mix (use 'general' when nothing "
+            "themed fits)"
+        ),
+    )
+    difficulty: Optional[str] = Field(
+        None,
+        description=(
+            "easy | medium | hard — honest per-question assessment for a "
+            "non-native-English adult player, never one value copied across "
+            "the batch"
+        ),
+    )
+    language_dependent: bool = Field(
+        False,
+        description=(
+            "True only if the question relies on English language properties "
+            "(wordplay, spelling, letter counts, acronyms)"
+        ),
+    )
+    age_appropriate: Optional[str] = Field(
+        None,
+        description=(
+            "Minimum recommended age band: 'all' | '8+' | '12+' | '16+'"
+        ),
+    )
     pattern_used: Optional[str] = Field(
         None,
         description="snake_case reasoning-pattern key, e.g. 'true_false' or 'odd_one_out'",
@@ -275,7 +311,7 @@ class AdvancedQuestionGenerator:
     async def generate_questions(
         self,
         count: int = 10,
-        difficulty: str = "medium",
+        difficulty: Optional[str] = None,
         topics: Optional[List[str]] = None,
         categories: Optional[List[str]] = None,
         question_type: str = "text",
@@ -300,7 +336,9 @@ class AdvancedQuestionGenerator:
 
         Args:
             count: Number of questions to return
-            difficulty: easy, medium, or hard
+            difficulty: easy, medium, or hard; None (default) = mixed batch —
+                the prompt asks the LLM to assess each question and aim for a
+                spread (2026-07-27 live-run F-e)
             topics: Preferred topics
             categories: Question categories
             question_type: text or text_multichoice
@@ -457,7 +495,7 @@ class AdvancedQuestionGenerator:
     async def _generate_mcq_sub_batches(
         self,
         count: int,
-        difficulty: str,
+        difficulty: Optional[str],
         topics: Optional[List[str]],
         categories: Optional[List[str]],
         excluded_topics: Optional[List[str]],
@@ -679,7 +717,7 @@ class AdvancedQuestionGenerator:
     async def _generate_batch(
         self,
         count: int,
-        difficulty: str,
+        difficulty: Optional[str],
         topics: Optional[List[str]],
         categories: Optional[List[str]],
         question_type: str,
@@ -725,7 +763,7 @@ class AdvancedQuestionGenerator:
         # Parse response
         questions = self._parse_response(
             response.content,
-            default_difficulty=difficulty,
+            default_difficulty=difficulty or "medium",
             default_category=categories[0] if categories else "general"
         )
 
@@ -741,7 +779,7 @@ class AdvancedQuestionGenerator:
         self,
         *,
         count: int,
-        difficulty: str,
+        difficulty: Optional[str],
         topics: Optional[List[str]],
         categories: Optional[List[str]],
         question_type: str,
@@ -903,7 +941,7 @@ class AdvancedQuestionGenerator:
         self,
         *,
         count: int,
-        difficulty: str,
+        difficulty: Optional[str],
         topics: Optional[List[str]],
         categories: Optional[List[str]],
         question_type: str,
@@ -972,15 +1010,18 @@ class AdvancedQuestionGenerator:
                             "possible_answers": item.possible_answers,
                             "correct_answer": item.correct_answer,
                             "explanation": item.explanation,
+                            "topic": item.topic or "General",
                             "category": item.category or default_category,
-                            "difficulty": item.difficulty or difficulty,
+                            "difficulty": item.difficulty or difficulty or "medium",
+                            "language_dependent": item.language_dependent,
+                            "age_appropriate": item.age_appropriate,
                             "source_url": item.source_url,
                             "source_excerpt": item.source_excerpt,
                             "reasoning": {
                                 "pattern_used": item.pattern_used or pinned_pattern
                             },
                         },
-                        default_difficulty=difficulty,
+                        default_difficulty=difficulty or "medium",
                         default_category=default_category,
                     )
                 )

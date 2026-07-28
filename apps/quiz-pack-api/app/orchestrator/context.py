@@ -24,6 +24,11 @@ class OrderContext:
     target_count: int
     category: str | None = None
     theme: str | None = None
+    # 2026-07-27 live-run F-e: optional order-level difficulty target
+    # (easy|medium|hard). None (default, and every current order) = mixed
+    # batch — the generation prompt asks the LLM for an honest per-question
+    # assessment with a spread instead of one echoed value.
+    difficulty: str | None = None
     # Issue #42 task 42.20 blocker fix (root cause D): True when the order
     # asks for a mostly-MCQ batch. Set by `PackGenerator` from the
     # MULTIPLE-CHOICE EMPHASIS marker on the order prompt; read by

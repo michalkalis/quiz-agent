@@ -106,6 +106,10 @@ Generate {count} pub quiz questions with these specifications:
 
 ---
 
+{classification_section}
+
+---
+
 ## Response Format
 
 Respond in this exact JSON format:
@@ -120,8 +124,8 @@ Respond in this exact JSON format:
       "possible_answers": {{"a": "Option A", "b": "Option B", "c": "Option C", "d": "Option D"}} OR null,
       "alternative_answers": ["alternative 1", "alternative 2"] OR [],
       "topic": "Geography/History/Science/Arts/etc",
-      "category": "{categories}",
-      "difficulty": "{difficulty}",
+      "category": "{category_field}",
+      "difficulty": "{difficulty_field}",
       "tags": ["tag1", "tag2"],
       "language_dependent": false,
       "age_appropriate": "all"

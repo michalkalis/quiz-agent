@@ -18,6 +18,7 @@ from datetime import datetime, timezone
 
 from app.generation.advanced_generator import AdvancedQuestionGenerator
 from app.generation.answer_normalizer import AnswerNormalizer
+from app.generation.classification import normalize_category, normalize_difficulty
 from app.generation.expiry_classifier import (
     CONTENT_CLASS_TTL,
     Classification,
@@ -220,6 +221,11 @@ class GenerationStage:
         questions = await self._generator.generate_questions(
             count=ctx.target_count,
             open_count=open_count,
+            # 2026-07-27 live-run F-e: None = mixed batch with per-question
+            # assessment; an explicit order difficulty becomes the prompt's
+            # target level (the model still reports its honest per-question
+            # value, normalized below).
+            difficulty=ctx.difficulty,
             topics=topics,
             categories=categories,
             source_facts=ctx.facts or None,
@@ -277,6 +283,15 @@ class GenerationStage:
 
             q.prompt_seed = prompt_seed
             q.language = ctx.language
+
+            # 2026-07-27 live-run F-e: the model now emits per-question
+            # difficulty/category; normalize fail-safe so an off-vocabulary
+            # value can never reach Postgres (difficulty → easy|medium|hard,
+            # category → taxonomy id, with an explicit order category winning).
+            q.difficulty = normalize_difficulty(
+                q.difficulty, default=ctx.difficulty or "medium"
+            )
+            q.category = normalize_category(q.category, order_category=ctx.category)
 
             provenance = q.generation_metadata or GenerationProvenance()
             if ctx.facts:

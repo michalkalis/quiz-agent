@@ -461,6 +461,10 @@ The player should be able to reason, estimate, or deduce toward the answer — n
 
 ---
 
+{classification_section}
+
+---
+
 ## Response Format
 
 For EACH question, respond with this EXACT structure:
@@ -482,8 +486,8 @@ For EACH question, respond with this EXACT structure:
       "possible_answers": null,
       "alternative_answers": [],
       "topic": "Topic name",
-      "category": "{categories}",
-      "difficulty": "{difficulty}",
+      "category": "{category_field}",
+      "difficulty": "{difficulty_field}",
       "tags": ["tag1", "tag2"],
       "language_dependent": false,
       "age_appropriate": "all",

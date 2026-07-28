@@ -3,7 +3,42 @@
 import os
 from typing import List, Optional
 
+from .classification import CATEGORIES
 from .examples import OK_EXAMPLES, BAD_EXAMPLES_TEMPLATE, load_gold_standard, load_anti_patterns
+
+# 2026-07-27 live-run F-e — per-question difficulty/category assessment.
+# Injected into every generation template via `{classification_section}`;
+# the JSON schema lines reference it through `{difficulty_field}` /
+# `{category_field}`. The calibration lens matches the scorer's
+# (multi_model_scorer.py): a non-native-English adult player.
+_MIXED_DIFFICULTY_HEADER = (
+    "mixed — aim for roughly 30% easy / 50% medium / 20% hard across the batch"
+)
+
+_DIFFICULTY_FIELD = (
+    "easy | medium | hard — your honest assessment of THIS question "
+    "(see DIFFICULTY & CATEGORY)"
+)
+
+_DIFFICULTY_GUIDANCE = """\
+**`difficulty` — assess each question honestly** (never copy one value onto the
+whole batch). Calibrate for a non-native-English adult player:
+- `easy` — most players answer instantly (widely known fact, obvious deduction).
+- `medium` — takes real thought or partial knowledge; a motivated player gets there.
+- `hard` — only players with genuine knowledge of the area get it; still fair, never arcane."""
+
+_CATEGORY_CLASSIFY_GUIDANCE = """\
+**`category` — classify each question** into exactly one player-facing filter id:
+{category_ids}.
+`category` is the audience/theme filter players pick in the app — it is NOT the
+subject (`topic` carries that). Use `kids` only for questions a young child can
+enjoy and answer; `adults` only for content unsuited to children; a themed id
+(`disney`, `football`, …) only when the question is squarely about that theme.
+When in doubt, use `general`."""
+
+_CATEGORY_FIXED_GUIDANCE = """\
+**`category`** — this order is for the "{category}" category: set `category` to
+exactly "{category}" on every question."""
 
 
 class PromptBuilder:
@@ -33,7 +68,7 @@ class PromptBuilder:
     def build_prompt(
         self,
         count: int = 10,
-        difficulty: str = "medium",
+        difficulty: Optional[str] = None,
         topics: Optional[List[str]] = None,
         categories: Optional[List[str]] = None,
         question_type: str = "text",
@@ -48,7 +83,8 @@ class PromptBuilder:
 
         Args:
             count: Number of questions to generate
-            difficulty: easy, medium, or hard
+            difficulty: easy, medium, or hard; None (default) = mixed batch —
+                the LLM assesses each question and aims for a spread
             topics: List of preferred topics
             categories: List of categories (adults, children, etc.)
             question_type: text or text_multichoice
@@ -99,13 +135,40 @@ class PromptBuilder:
                 user_bad_examples=examples_text
             )
 
+        # 2026-07-27 live-run F-e — per-question difficulty/category.
+        # `{difficulty}` (the order-level header) shows the explicit target or
+        # the mixed-spread instruction; `{difficulty_field}`/`{category_field}`
+        # replace the old echo-values in the templates' JSON schema lines, and
+        # `{classification_section}` carries the calibration guidance.
+        order_category = categories[0] if categories else None
+        if order_category:
+            category_field = order_category
+            category_guidance = _CATEGORY_FIXED_GUIDANCE.format(
+                category=order_category
+            )
+        else:
+            category_field = (
+                " | ".join(CATEGORIES)
+                + " — classify THIS question (see DIFFICULTY & CATEGORY)"
+            )
+            category_guidance = _CATEGORY_CLASSIFY_GUIDANCE.format(
+                category_ids=", ".join(f"`{c}`" for c in CATEGORIES)
+            )
+        classification_section = (
+            "## DIFFICULTY & CATEGORY (per question)\n\n"
+            f"{_DIFFICULTY_GUIDANCE}\n\n{category_guidance}"
+        )
+
         # Build format variables dict
         format_vars = {
             "excellent_examples": excellent_examples,
             "ok_examples": ok_examples,
             "bad_examples_section": bad_examples_section,
             "count": count,
-            "difficulty": difficulty,
+            "difficulty": difficulty or _MIXED_DIFFICULTY_HEADER,
+            "difficulty_field": _DIFFICULTY_FIELD,
+            "category_field": category_field,
+            "classification_section": classification_section,
             "topics": ", ".join(topics) if topics else "any",
             "categories": ", ".join(categories) if categories else "general",
             "type": question_type,

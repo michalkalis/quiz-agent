@@ -802,3 +802,66 @@ async def test_classifier_failure_leaves_expiry_unset_and_warns(
     assert all(q.expires_at is None for q in ctx.questions)
     assert all(q.freshness_tag is None for q in ctx.questions)
     assert any("ExpiryClassifier" in r.message for r in caplog.records)
+
+
+@pytest.mark.asyncio
+async def test_normalizes_per_question_difficulty_and_category() -> None:
+    """2026-07-27 live-run F-e — the stage is the fail-safe classifier gate.
+
+    The generation LLM now emits per-question difficulty/category. Whatever
+    it emits, only vocabulary values may reach Postgres: the voice-quiz
+    retriever and the iOS filter match these strings exactly, so an
+    off-vocabulary value would make the question invisible to players.
+    """
+    questions = [
+        _stub_question(0, difficulty="Hard "),           # normalizes to hard
+        _stub_question(1, difficulty="expert"),          # junk -> default
+        _stub_question(2, category="children"),          # alias -> kids
+        _stub_question(3, category="History"),           # topic-as-category -> general
+    ]
+    gen = _FakeGenerator(questions)
+    stage = GenerationStage(gen)  # type: ignore[arg-type]
+    facts = [Fact(text="t", source_url="https://ex/1")]
+    ctx = _make_ctx(target_count=4, facts=facts, category=None)
+
+    await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert [q.difficulty for q in ctx.questions] == [
+        "hard", "medium", "medium", "medium",
+    ]
+    assert [q.category for q in ctx.questions] == [
+        "general", "general", "kids", "general",
+    ]
+
+
+@pytest.mark.asyncio
+async def test_explicit_order_category_overrides_model_classification() -> None:
+    """A themed/custom-pack order names its category — the model's own
+    classification must never fork a paid pack across categories."""
+    questions = [_stub_question(0, category="general")]
+    gen = _FakeGenerator(questions)
+    stage = GenerationStage(gen)  # type: ignore[arg-type]
+    facts = [Fact(text="t", source_url="https://ex/1")]
+    ctx = _make_ctx(target_count=1, facts=facts, category="entertainment")
+
+    await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert ctx.questions[0].category == "entertainment"
+
+
+@pytest.mark.asyncio
+async def test_passes_order_difficulty_to_generator() -> None:
+    """None (every current order) = mixed batch; an explicit order-level
+    difficulty must reach the generator so the prompt targets that level."""
+    gen = _FakeGenerator([_stub_question(0)])
+    stage = GenerationStage(gen)  # type: ignore[arg-type]
+    facts = [Fact(text="t", source_url="https://ex/1")]
+
+    ctx = _make_ctx(target_count=1, facts=facts)
+    await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+    assert gen.calls[-1]["difficulty"] is None
+
+    ctx = _make_ctx(target_count=1, facts=facts)
+    ctx.difficulty = "easy"
+    await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+    assert gen.calls[-1]["difficulty"] == "easy"

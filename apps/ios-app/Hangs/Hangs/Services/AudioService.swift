@@ -1245,19 +1245,19 @@ enum AudioError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .noActiveRecording:
-            return "No active recording"
+            return String(localized: "No active recording", comment: "Audio error: stop was requested with no recording in progress")
         case .recordingFailed:
-            return "Recording failed"
+            return String(localized: "Recording failed", comment: "Audio error: recording could not be completed")
         case .recordingTooShort:
-            return "Recording too short or empty"
+            return String(localized: "Recording too short or empty", comment: "Audio error: the captured audio was unusable")
         case .playbackFailed:
-            return "Playback failed"
+            return String(localized: "Playback failed", comment: "Audio error: audio could not be played back")
         case .permissionDenied:
-            return "Microphone permission denied"
+            return String(localized: "Microphone permission denied", comment: "Audio error: the user denied microphone access")
         case .invalidBase64:
-            return "Invalid base64 audio data"
+            return String(localized: "Invalid base64 audio data", comment: "Audio error: the audio payload could not be decoded")
         case .deviceNotFound:
-            return "Audio device not available"
+            return String(localized: "Audio device not available", comment: "Audio error: the selected input/output device is gone")
         }
     }
 }

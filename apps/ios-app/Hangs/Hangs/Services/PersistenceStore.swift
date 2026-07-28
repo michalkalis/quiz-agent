@@ -15,7 +15,7 @@ enum QuestionHistoryError: Error {
     var localizedDescription: String {
         switch self {
         case .capacityReached:
-            return "Question history has reached its maximum capacity of 500 questions."
+            return String(localized: "Question history has reached its maximum capacity of 500 questions.", comment: "Persistence error: the saved-question history hit its cap")
         }
     }
 }

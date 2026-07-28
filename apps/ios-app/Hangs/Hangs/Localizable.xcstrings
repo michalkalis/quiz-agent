@@ -433,6 +433,17 @@
         }
       }
     },
+    "Audio device not available" : {
+      "comment" : "Audio error: the selected input/output device is gone",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zvukové zariadenie nie je dostupné"
+          }
+        }
+      }
+    },
     "Auto-Advance" : {
       "comment" : "A feature of the app: \"Auto-Advance\"",
       "extractionState" : "stale",
@@ -464,7 +475,7 @@
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Oneskorenie automatického posunu"
+            "value" : "Automatický posun"
           }
         }
       }
@@ -1768,6 +1779,17 @@
         }
       }
     },
+    "Invalid base64 audio data" : {
+      "comment" : "Audio error: the audio payload could not be decoded",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neplatné zvukové dáta"
+          }
+        }
+      }
+    },
     "Invalid response from the pack service" : {
       "comment" : "Pack-order error: malformed server response",
       "localizations" : {
@@ -1786,6 +1808,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Neplatná odpoveď servera"
+          }
+        }
+      }
+    },
+    "Invalid speech-recognition address" : {
+      "comment" : "Speech-to-text error: the streaming URL could not be built",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neplatná adresa rozpoznávania reči"
           }
         }
       }
@@ -2081,6 +2114,17 @@
         }
       }
     },
+    "Microphone permission denied" : {
+      "comment" : "Audio error: the user denied microphone access",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prístup k mikrofónu je zamietnutý"
+          }
+        }
+      }
+    },
     "Monthly" : {
       "localizations" : {
         "sk" : {
@@ -2191,6 +2235,17 @@
         }
       }
     },
+    "No active recording" : {
+      "comment" : "Audio error: stop was requested with no recording in progress",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Žiadne aktívne nahrávanie"
+          }
+        }
+      }
+    },
     "No active session" : {
       "comment" : "Inline error: no quiz session is currently active",
       "localizations" : {
@@ -2283,6 +2338,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nenašla sa uložená relácia"
+          }
+        }
+      }
+    },
+    "Not connected to speech recognition" : {
+      "comment" : "Speech-to-text error: no active streaming connection",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bez spojenia s rozpoznávaním reči"
           }
         }
       }
@@ -2476,6 +2542,17 @@
         }
       }
     },
+    "Playback failed" : {
+      "comment" : "Audio error: audio could not be played back",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prehrávanie zlyhalo"
+          }
+        }
+      }
+    },
     "Polish" : {
       "comment" : "Language name (exonym)",
       "localizations" : {
@@ -2544,6 +2621,17 @@
         }
       }
     },
+    "Purchase verification failed" : {
+      "comment" : "Purchase error: the store receipt could not be verified",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Overenie nákupu zlyhalo"
+          }
+        }
+      }
+    },
     "Question %lld of %lld" : {
       "comment" : "Accessibility label for the progress badge: current question number out of total",
       "extractionState" : "stale",
@@ -2558,6 +2646,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Otázka %1$lld z %2$lld"
+          }
+        }
+      }
+    },
+    "Question history has reached its maximum capacity of 500 questions." : {
+      "comment" : "Persistence error: the saved-question history hit its cap",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "História otázok dosiahla maximálnu kapacitu 500 otázok."
           }
         }
       }
@@ -2688,7 +2787,7 @@
       }
     },
     "Recording failed" : {
-      "comment" : "Error title: audio recording failed (no specific error)",
+      "comment" : "Audio error: recording could not be completed\nError title: audio recording failed (no specific error)",
       "localizations" : {
         "sk" : {
           "stringUnit" : {
@@ -2739,6 +2838,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nahrávanie sa spustí automaticky po každej otázke"
+          }
+        }
+      }
+    },
+    "Recording too short or empty" : {
+      "comment" : "Audio error: the captured audio was unusable",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nahrávka je príliš krátka alebo prázdna"
           }
         }
       }
@@ -3387,6 +3497,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hovoriť skóre nahlas"
+          }
+        }
+      }
+    },
+    "Speech recognition error: %@" : {
+      "comment" : "Speech-to-text error; placeholder is the service message",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chyba rozpoznávania reči: %@"
           }
         }
       }

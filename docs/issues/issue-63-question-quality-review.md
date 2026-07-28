@@ -255,9 +255,13 @@ review, no prod import.
   MCQ row landed `topic="General"`). `GenerationStage` normalizes fail-safe (junk → medium/general)
   so off-vocabulary values never reach Postgres. Pinned by `tests/generation/test_classification.py`
   + new stage/MCQ-contract tests.
-- The 164 existing local rows keep their as-generated values — the review pass before any import
-  (the `verify-questions` leg above) must backfill **source URLs *and now also* per-question
-  `category` + `difficulty`** (they all sit at `medium`/`general`).
+- ~~The 164 existing local rows keep their as-generated values~~ **Backfilled 2026-07-28** (TF
+  field test surfaced the flat metadata): the **31 approved prod questions** got honest
+  per-question `difficulty` (8 easy / 17 medium / 6 hard) + `category` (30 general,
+  1 superheroes — Green Arrow) via a one-off SQL update on prod *and* the local mirror; the
+  **164 local `pending_review` rows** got the same classification pass (difficulty, category,
+  and honest `topic` for the MCQ rows that landed `topic="General"`). Rollback = set
+  `medium`/`general` back. Still open for the pre-import review pass: **source URLs** on the 164.
 
 ## Acceptance
 

@@ -1,7 +1,7 @@
 # Issue 123: Home: free-question count missing at launch, no loading placeholder, no pack/subscription state
 
-**Triage:** bug · needs-triage
-**Status:** Filed 2026-07-28 from the founder's TestFlight field test. Both halves CONFIRMED by direct code read — (A) the Home plan card renders literally nothing while `/usage` is in flight, (B) Home never surfaces pack credits or subscription tier although the same response already carries them. (B) is design-gated. Needs `/prepare-issue` before an agent run.
+**Triage:** bug · Track A done — Track B design-gated
+**Status:** Filed 2026-07-28 from the founder's TestFlight field test; both halves CONFIRMED by direct code read. **Track A landed same day (`23b9e843`, worktree agent run):** `HomeView.freePlanCard` gained a `.loading` branch (spinner + "Loading your plan…", same single-row `HangsCard` shape as the failed placeholder so the slot never jumps), and `SettingsView.subscriptionPlanDisplay` returns "Loading…" instead of the wrong literal "Free" while `/usage` is in flight. 9 targeted tests green (`HomeFreePlanCardTests` 8/8 incl. the assertion that failed pre-fix, `SettingsSubscriptionPlanTests` 1/1); sim visual check done in light + dark against a deliberately stalled `/usage`. Remaining: **Track B** (pack credits + subscription tier on Home) — design-gated, HTML variants → founder pick → Pencil → code.
 **Created:** 2026-07-28
 
 ## Symptom

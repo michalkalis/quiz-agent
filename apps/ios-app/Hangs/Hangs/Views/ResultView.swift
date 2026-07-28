@@ -2,11 +2,14 @@
 //  ResultView.swift
 //  Hangs
 //
-//  Pencil Result screen — correct (X4o4l) and incorrect (31AzE) variants.
-//  bg-page background, editorial Anton headline, answer comparison card,
-//  score stat box (#84 dropped the streak box — logic kept in QuizStats),
-//  and a footer CTA carrying the auto-advance countdown inside it (#108B).
-//  Source web-view sheet preserved from original design.
+//  Issue #127 — Result screen, Variant C "Zero-Scroll Deck" (founder pick
+//  2026-07-28). Three FIXED zones and no screen-level ScrollView, so the header
+//  can never clip: chrome (nav + progress), a colour-washed verdict field
+//  (verdict word + inline score), and an answer panel that fills the rest — the
+//  explanation scrolls INSIDE the panel (founder modification) rather than the
+//  screen. The footer consolidates to a docked glow + CmdListenBar + one row
+//  (STAY/RESUME pill next to the "Next question" CTA). Zone views live in the
+//  sibling ResultScreenSections.swift. SourceWebView sheet preserved.
 //
 
 import SwiftUI
@@ -15,7 +18,9 @@ struct ResultView: View {
     @ObservedObject var viewModel: QuizViewModel
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var showEvaluation = false
+    // Flipped in .onAppear purely to fire the result haptic once — no longer
+    // gates any content (Variant C never hides the answer behind an appear).
+    @State private var didAppear = false
     @State private var showSourceWebView = false
     @State private var showEndQuizConfirmation = false
 
@@ -23,6 +28,8 @@ struct ResultView: View {
         ZStack {
             Theme.Hangs.Colors.bg.ignoresSafeArea()
 
+            // NO ScrollView at the screen level — the three zones are laid out in
+            // a fixed VStack, so nothing can clip under the nav (issue #127).
             VStack(spacing: 0) {
                 HangsQuizNav(
                     onClose: { showEndQuizConfirmation = true },
@@ -30,25 +37,41 @@ struct ResultView: View {
                 )
                 HangsProgressBar(progress: progressFraction)
 
-                ScrollView {
-                    VStack(spacing: 0) {
-                        heroBlock
-
-                        if showEvaluation, viewModel.resultEvaluation != nil {
-                            answerCard
-                                .padding(.horizontal, 24)
-                                .padding(.top, 8)
-
-                            statsRow
-                                .padding(.horizontal, 24)
-                                .padding(.top, 12)
-                        }
-                    }
-                    .padding(.bottom, 8)
+                VStack(spacing: 10) {
+                    ResultVerdictField(
+                        verdict: verdict,
+                        scoreValue: formattedScore,
+                        scoreDelta: scoreDelta
+                    )
+                    ResultAnswerPanel(
+                        verdict: verdict,
+                        answerLabel: answerLabel,
+                        answerText: answerText,
+                        isRecap: isRecap,
+                        explanation: explanationText,
+                        questionStem: questionStem,
+                        userAnswer: viewModel.resultEvaluation?.userAnswer,
+                        sourceDomain: sourceDomain,
+                        onReadAloud: { Task { await viewModel.replayQuestionAudio() } },
+                        onHearIt: { Task { await viewModel.replayFeedbackAudio() } },
+                        onOpenSource: { showSourceWebView = true }
+                    )
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(.horizontal, 24)
+                .padding(.top, 10)
 
-                footerBar
+                ResultFooter(
+                    feedbackPhase: viewModel.voiceFeedbackPhase,
+                    commandHint: viewModel.commandListenerHint,
+                    autoAdvanceActive: autoAdvanceActive,
+                    isPaused: viewModel.currentQuestionPaused,
+                    countdownRemaining: viewModel.autoAdvanceCountdown,
+                    countdownTotal: viewModel.settings.autoAdvanceDelay,
+                    onNext: { viewModel.continueToNext() },
+                    onStay: { viewModel.pauseQuiz() },
+                    onResume: { viewModel.resumeAutoAdvance() }
+                )
             }
         }
         .interactiveMinimize(isMinimized: $viewModel.isMinimized, canMinimize: viewModel.canMinimize)
@@ -58,16 +81,14 @@ struct ResultView: View {
         .simultaneousGesture(
             TapGesture().onEnded { pauseAutoAdvanceIfActive() }
         )
-        .animation(reduceMotion ? nil : .easeOut(duration: 0.3), value: showEvaluation)
-        .sensoryFeedback(resultHaptic, trigger: showEvaluation)
-        .onAppear { showEvaluation = true }
+        .sensoryFeedback(resultHaptic, trigger: didAppear)
+        .onAppear { didAppear = true }
         .sheet(isPresented: $showSourceWebView) {
-            if let sourceUrl = viewModel.resultQuestion?.sourceUrl {
+            if let sourceUrl = viewModel.resultQuestion?.sourceUrl ?? viewModel.currentQuestion?.sourceUrl {
                 SourceWebView(url: sourceUrl, isPresented: $showSourceWebView)
             }
         }
-        // #81 follow-up (founder 2026-07-06): the X must confirm before quitting —
-        // same native alert as QuestionView / MinimizedQuizView (frame w9tOoU).
+        // #81 follow-up (founder 2026-07-06): the X must confirm before quitting.
         .alert("End Quiz?", isPresented: $showEndQuizConfirmation) {
             Button("Continue", role: .cancel) {}
             Button("End Quiz", role: .destructive) {
@@ -76,181 +97,78 @@ struct ResultView: View {
         }
     }
 
-    // MARK: - Hero
+    // MARK: - Verdict / answer derivation
 
-    private var heroBlock: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .center) {
-                HangsResultBanner(kind: isCorrect ? .correct : .incorrect)
-                    .accessibilityIdentifier("result.heroBanner")
-                Spacer()
-                readAloudButton
-            }
-            // #96 P3 (founder no-wrap): one line — was the stacked "NAILED\nIT."
-            // / "MISSED\nIT."; scales down instead of wrapping.
-            Text(isCorrect ? "NAILED IT." : "MISSED IT.")
-                .font(.hangsDisplay(52))
-                .tracking(-2)
-                .foregroundColor(Theme.Hangs.Colors.ink)
-                .lineLimit(1)
-                .minimumScaleFactor(0.5)
-            Text(subHeadline)
-                .font(.hangsBody(14, weight: .medium))
-                .foregroundColor(Theme.Hangs.Colors.muted)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 28)
-        .padding(.top, 12)
-        .padding(.bottom, 4)
+    private var verdict: ResultVerdict {
+        // The recap fallback (nil evaluation OR an empty answer) is one coherent
+        // degraded state: a neutral field — never a confident "MISSED IT." verdict
+        // over an answer we cannot show (req. 6 nil-eval + req. 7 empty-answer).
+        guard !isRecap, let evaluation = viewModel.resultEvaluation else { return .neutral }
+        return evaluation.isCorrect ? .correct : .incorrect
     }
 
-    private var readAloudButton: some View {
-        Button {
-            // 59.7 Bug A: use the timer-safe `replayQuestionAudio()` — `playQuestionAudio`
-            // is the question-screen flow function (it tears down silence detection and
-            // re-arms the think/answer timers), which is wrong on the result screen and can
-            // silently drop playback. `replayQuestionAudio()` reads the URL internally and
-            // leaves the running auto-advance countdown untouched.
-            Task { await viewModel.replayQuestionAudio() }
-        } label: {
-            HStack(spacing: 4) {
-                Image(systemName: "speaker.wave.2")
-                    .font(.system(size: 11, weight: .semibold))
-                Text("read aloud")
-                    .font(.hangsMono(11, weight: .semibold))
-                    .tracking(2)
-            }
-            .foregroundColor(Theme.Hangs.Colors.blue)
-        }
-        .buttonStyle(.plain)
-        .accessibilityIdentifier("result.readAloud")
+    /// The 46pt answer: the user's (correct) answer on a correct result, the
+    /// revealed correct answer on a wrong one. Empty in the neutral path.
+    private var canonicalAnswer: String {
+        guard let evaluation = viewModel.resultEvaluation else { return "" }
+        return evaluation.isCorrect ? evaluation.userAnswer : revealedAnswer
     }
 
-    // MARK: - Answer card
+    /// Recap fallback: nil evaluation OR an empty canonical answer. The question
+    /// stem becomes the dominant text instead of an empty 46pt row (req. 6 & 7).
+    private var isRecap: Bool {
+        viewModel.resultEvaluation == nil
+            || canonicalAnswer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
 
-    @ViewBuilder
-    private var answerCard: some View {
-        if let evaluation = viewModel.resultEvaluation {
-            if evaluation.isCorrect {
-                HangsAnswerComparisonCard(
-                    primaryLabel: "YOUR ANSWER",
-                    primaryValue: evaluation.userAnswer,
-                    primaryValueColor: Theme.Hangs.Colors.ink,
-                    primaryBadge: .correct,
-                    secondaryLabel: "THE QUESTION",
-                    secondaryValue: viewModel.resultQuestion?.question ?? "",
-                    secondaryValueColor: Theme.Hangs.Colors.muted,
-                    secondaryBadge: nil,
-                    primaryValueFont: .hangsDisplay(32, weight: .black),
-                    secondaryValueFont: .hangsBody(15, weight: .medium)
-                )
-            } else {
-                HangsAnswerComparisonCard(
-                    primaryLabel: "YOU SAID",
-                    primaryValue: evaluation.userAnswer,
-                    primaryValueColor: Theme.Hangs.Colors.mutedFaint,
-                    primaryBadge: .incorrect,
-                    secondaryLabel: "THE ANSWER",
-                    secondaryValue: revealedAnswer,
-                    secondaryValueColor: Theme.Hangs.Colors.ink,
-                    secondaryBadge: .correct,
-                    primaryValueFont: .hangsDisplay(26, weight: .black),
-                    secondaryValueFont: .hangsDisplay(30, weight: .black)
-                )
-            }
+    private var answerLabel: LocalizedStringKey {
+        if isRecap { return "the question" }
+        return verdict == .correct ? "your answer" : "the answer"
+    }
+
+    private var answerText: String {
+        isRecap ? questionStem ?? "" : canonicalAnswer
+    }
+
+    private var questionStem: String? {
+        viewModel.resultQuestion?.question ?? viewModel.currentQuestion?.question
+    }
+
+    /// Inline explanation source: the question's `explanation`, falling back to
+    /// the evaluation's. Empty/nil hides the whole "why" block on BOTH outcomes.
+    private var explanationText: String? {
+        let raw = viewModel.resultQuestion?.explanation
+            ?? viewModel.currentQuestion?.explanation
+            ?? viewModel.resultEvaluation?.explanation
+        guard let raw, !raw.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
+        return raw
+    }
+
+    /// Host of the source URL ("nasa.gov"), or nil when no source exists — the
+    /// source line is gated on the URL only, never on correctness (issue #127
+    /// root cause 1: the old `if isCorrect` gate dies).
+    private var sourceDomain: String? {
+        let urlString = viewModel.resultQuestion?.sourceUrl ?? viewModel.currentQuestion?.sourceUrl
+        guard let urlString, let host = URL(string: urlString)?.host else { return nil }
+        return host.hasPrefix("www.") ? String(host.dropFirst(4)) : host
+    }
+
+    /// Scorebox delta: the earned points on a correct answer, "+0" otherwise;
+    /// hidden entirely in the neutral path. Mirrors the old statsRow suffix.
+    private var scoreDelta: String? {
+        switch verdict {
+        case .correct: return pointsDeltaSuffix
+        case .incorrect: return "+0"
+        case .neutral: return nil
         }
     }
 
-    // MARK: - Stats row
+    // MARK: - Footer state
 
-    /// #84: streak box removed (founder decision 5) — only the score box remains.
-    /// Streak keeps computing in QuizStats; it's just no longer displayed.
-    private var statsRow: some View {
-        HangsStatBox(
-            label: "score",
-            value: formattedScore,
-            labelColor: Theme.Hangs.Colors.pink,
-            valueColor: Theme.Hangs.Colors.ink,
-            suffix: isCorrect ? pointsDeltaSuffix : "+0",
-            inlineSuffix: true,
-            compact: true
-        )
-    }
-
-    // MARK: - Footer
-
-    /// #108B: auto-advance countdown lives inside the "Next question" CTA
-    /// (Waze-like drain + "Ns" chip, pen `ilWTA`/`4EBgp`) — the separate
-    /// "Next in Ns" bar is gone.
-    /// #113 S6a deleted the `autoAdvanceEnabled` axis (write-only-true — no
-    /// Settings toggle ever existed), so "active" = not paused && still ticking.
+    /// #113 S6a: "active" = not paused && still ticking (no Settings toggle).
     private var autoAdvanceActive: Bool {
-        !viewModel.currentQuestionPaused
-            && viewModel.autoAdvanceCountdown > 0
+        !viewModel.currentQuestionPaused && viewModel.autoAdvanceCountdown > 0
     }
-
-    private var footerBar: some View {
-        VStack(spacing: 10) {
-            // #77/#96 P2: listening indicator (pen `s49sd`) — result command
-            // window ("next"). Shown only while armed.
-            if let hint = viewModel.commandListenerHint {
-                CmdListenBar(hint: hint, feedback: viewModel.voiceFeedbackPhase)
-                    .transition(.opacity)
-            }
-
-            HangsPrimaryButton(
-                title: "Next question",
-                icon: nil,
-                trailingIcon: "arrow.right",
-                height: 64,
-                countdownSecondsRemaining: autoAdvanceActive ? viewModel.autoAdvanceCountdown : nil,
-                countdownTotal: viewModel.settings.autoAdvanceDelay
-            ) {
-                viewModel.continueToNext()
-            }
-            .accessibilityLabel(autoAdvanceActive
-                ? String(localized: "Next question, auto-advancing in \(viewModel.autoAdvanceCountdown) seconds", comment: "Accessibility label for the next-question button while auto-advance counts down")
-                : String(localized: "Next question", comment: "Accessibility label for the next-question button"))
-            .accessibilityIdentifier("result.continue")
-
-            if autoAdvanceActive {
-                // #81: full-size secondary button (44pt target) — the tiny text
-                // link was the only way to linger on a result while driving.
-                HangsSecondaryButton(title: "Stay here", height: 44) {
-                    viewModel.pauseQuiz()
-                }
-                .accessibilityIdentifier("result.stayHere")
-            }
-
-            if isCorrect, viewModel.resultQuestion?.sourceUrl != nil {
-                HangsGhostButton(
-                    title: "Why is this correct?",
-                    icon: "book.closed",
-                    color: Theme.Hangs.Colors.blue
-                ) {
-                    showSourceWebView = true
-                }
-                .accessibilityIdentifier("result-why-correct-button")
-            }
-
-            if viewModel.currentQuestionPaused {
-                HangsGhostButton(
-                    title: "Resume auto-advance",
-                    icon: "play.fill",
-                    color: Theme.Hangs.Colors.muted
-                ) {
-                    // 59.8: resume the countdown (stay on the result), NOT continueToNext()
-                    // which is the "Next question" action and jumps straight to the next Q.
-                    viewModel.resumeAutoAdvance()
-                }
-                .accessibilityIdentifier("result-resume-auto-advance-button")
-            }
-        }
-        .padding(.horizontal, 24)
-        .padding(.bottom, 28)
-    }
-
-    // MARK: - Derived
 
     private func pauseAutoAdvanceIfActive() {
         guard !viewModel.currentQuestionPaused,
@@ -258,33 +176,25 @@ struct ResultView: View {
         viewModel.pauseQuiz()
     }
 
-    private var isCorrect: Bool {
-        viewModel.resultEvaluation?.isCorrect ?? false
-    }
+    // MARK: - Derived
 
-    /// The answer surfaced in "THE ANSWER" card. Open questions reveal the short
-    /// `headlineAnswer` gist (the field the evaluator scores against); closed
-    /// questions carry no gist, so this falls back to the full `correctAnswer`,
-    /// leaving the existing reveal path unchanged (46.B9). Internal for tests:
-    /// the answer card sits behind the `showEvaluation` @State gate, which
-    /// ViewInspector cannot flip, so the reveal logic is asserted here directly.
+    /// The answer surfaced as the correct answer. Open questions reveal the short
+    /// `headlineAnswer` gist (what the evaluator scores against); closed questions
+    /// carry no gist, so this falls back to the full `correctAnswer` (46.B9).
+    /// Internal for tests — the reveal logic is asserted here directly.
     var revealedAnswer: String {
         guard let evaluation = viewModel.resultEvaluation else { return "" }
         return evaluation.headlineAnswer ?? evaluation.correctAnswer
     }
 
     private var totalQuestions: Int {
-        // 54.10: fall back to the configured length (matching CompletionView /
-        // QuestionView), not a hardcoded 10 — a non-10 session showed a wrong total.
+        // 54.10: fall back to the configured length, not a hardcoded 10.
         viewModel.currentSession?.maxQuestions ?? viewModel.settings.numberOfQuestions
     }
 
     private var counterString: String {
-        // #79: shows the 1-based index of the question just answered. Raw
-        // `questionsAnswered` (no +1) is correct HERE because handleQuizResponse
-        // already incremented it before transitioning to .showingResult — this
-        // renders the SAME number QuestionView showed for the same question
-        // (there it is pre-increment, so it adds +1). Keep the two in lockstep.
+        // #79: 1-based index of the question just answered (questionsAnswered is
+        // already incremented before .showingResult — keep in lockstep with QuestionView).
         String(format: "%02d / %02d", viewModel.questionsAnswered, totalQuestions)
     }
 
@@ -317,15 +227,6 @@ struct ResultView: View {
         return String(format: "%.1f", score)
     }
 
-    private var subHeadline: String {
-        if isCorrect {
-            // 54.12: pointsDeltaSuffix already carries the correct sign (+3 / -2 / +0);
-            // the old "+ " prefix + trim produced "+ -2 points" on a negative delta.
-            return String(localized: "\(pointsDeltaSuffix) points", comment: "Result subheadline on a correct answer: points delta")
-        }
-        return String(localized: "still worth the try", comment: "Result subheadline on an incorrect answer")
-    }
-
     private var resultHaptic: SensoryFeedback {
         guard let evaluation = viewModel.resultEvaluation else { return .impact }
         return Self.haptic(for: evaluation.result)
@@ -336,9 +237,7 @@ struct ResultView: View {
         switch result {
         case .correct: return .success
         case .incorrect: return .error
-        // #82 item 2 (decision 7): a skip is not a failure — gentle tick that
-        // confirms the voice command landed, no punishing error buzz. The
-        // visual stays the plain Result screen (founder: no skip banner).
+        // #82 item 2 (decision 7): a skip is not a failure — gentle tick.
         case .skipped: return .selection
         case .partiallyCorrect, .partiallyIncorrect: return .warning
         }

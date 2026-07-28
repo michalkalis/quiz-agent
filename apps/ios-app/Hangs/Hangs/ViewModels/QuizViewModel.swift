@@ -555,6 +555,12 @@ final class QuizViewModel: ObservableObject {
     private var nextQuestionAudioUrl: String?
     private var nextQuestion: Question?
 
+    // #127: the feedback audio of the current result, retained so the result
+    // screen's "hear it" control can replay the spoken explanation on demand via
+    // the existing feedback-TTS path. Overwritten on each new result; cleared on reset.
+    private var lastFeedbackAudioBase64: String?
+    private var lastFeedbackUrl: String?
+
     // MARK: - Initialization
 
     init(
@@ -1074,6 +1080,18 @@ final class QuizViewModel: ObservableObject {
         await audioDeviceState.replayQuestionAudio()
     }
 
+    /// #127: replay the current result's feedback audio (the spoken explanation)
+    /// on demand — the result screen's "hear it" control. Reuses the existing
+    /// feedback-TTS playback path; a no-op when this result carried no audio (the
+    /// full explanation text stays reachable via the panel's internal scroll).
+    func replayFeedbackAudio() async {
+        if let base64 = lastFeedbackAudioBase64 {
+            _ = await audioDeviceState.playFeedbackAudioBase64(base64)
+        } else if let url = lastFeedbackUrl {
+            _ = await audioDeviceState.playFeedbackAudio(from: url)
+        }
+    }
+
     /// See `AudioDeviceState.toggleMute` (founder bug 2026-07-11).
     func toggleMute() async {
         await audioDeviceState.toggleMute()
@@ -1538,6 +1556,10 @@ final class QuizViewModel: ObservableObject {
         nextQuestion = response.currentQuestion
         nextQuestionAudioUrl = response.audio?.questionUrl
 
+        // #127: retain this result's feedback audio for the "hear it" replay.
+        lastFeedbackAudioBase64 = response.audio?.feedbackAudioBase64
+        lastFeedbackUrl = response.audio?.feedbackUrl
+
         // Save question ID to history
         if let questionId = response.currentQuestion?.id {
             do {
@@ -1700,6 +1722,8 @@ final class QuizViewModel: ObservableObject {
         errorMessage = nil
         nextQuestionAudioUrl = nil
         nextQuestion = nil
+        lastFeedbackAudioBase64 = nil
+        lastFeedbackUrl = nil
         isRerecording = false
         isAutoRecording = false
         // The two ownerless façade fields (T7) — no child owns them, so this is

@@ -264,6 +264,25 @@ extension Question {
             generatedBy: nil
         )
 
+        /// #127: a wrong-answer result fixture with a long explanation, used by
+        /// `--ui-test-result-incorrect` to force the answer panel's internal
+        /// explanation scroll (the founder modification — chrome never scrolls).
+        static let previewResultLong = Question(
+            id: "q_preview_result_long_001",
+            question: "Which planet rotates on its side?",
+            type: .text,
+            possibleAnswers: nil,
+            difficulty: "medium",
+            topic: "Astronomy",
+            category: "adults",
+            sourceUrl: "https://www.nasa.gov/solar-system/planets/uranus/",
+            sourceExcerpt: nil,
+            mediaUrl: nil,
+            imageSubtype: nil,
+            explanation: "Uranus is tipped about 98 degrees, almost certainly knocked over by a giant impact early in the solar system's history, so it rolls around the Sun on its side instead of spinning upright like every other planet. This extreme axial tilt gives Uranus the most bizarre seasons in the solar system: each pole spends roughly 42 Earth years in continuous sunlight, followed by 42 years of darkness. Voyager 2, the only spacecraft to visit, flew past in 1986 and found a strangely featureless blue-green world whose magnetic field is also tilted and offset from the planet's centre.",
+            generatedBy: "claude-opus-4.6"
+        )
+
         static let previewMCQ = Question(
             id: "q_preview_mcq_001",
             question: "What is the largest planet in our solar system?",

@@ -244,6 +244,61 @@ final class AppState: ObservableObject {
                 viewModel.quizState = .askingQuestion
                 viewModel.voiceCommandCoordinator.voiceFeedbackPhase = .unmatched
             }
+            // `--ui-test-result-correct` / `--ui-test-result-incorrect` (#127):
+            // land directly on the redesigned Result screen (Variant C) so the
+            // verdict field, answer panel and footer can be screenshot-verified.
+            // The countdown is pinned so the CTA chip + STAY pill render (no timer
+            // runs, so it's static). The incorrect seed carries a deliberately long
+            // explanation to force the founder-modification internal scroll.
+            if CommandLine.arguments.contains("--ui-test-result-correct") {
+                viewModel.currentQuestion = Question.preview
+                viewModel.currentSession = QuizSession.preview(score: 3.0, answered: 3, correct: 3)
+                viewModel.quizState = .showingResult(
+                    question: Question.preview,
+                    evaluation: Evaluation.previewCorrect
+                )
+                viewModel.autoAdvanceCountdown = 5
+                viewModel.settings.autoAdvanceDelay = 8
+            }
+            if CommandLine.arguments.contains("--ui-test-result-incorrect") {
+                viewModel.currentQuestion = Question.previewResultLong
+                viewModel.currentSession = QuizSession.preview(score: 2.0, answered: 3, correct: 2)
+                viewModel.quizState = .showingResult(
+                    question: Question.previewResultLong,
+                    evaluation: Evaluation(
+                        userAnswer: "Saturn",
+                        result: .incorrect,
+                        points: 0.0,
+                        correctAnswer: "Uranus",
+                        questionId: Question.previewResultLong.id,
+                        explanation: nil
+                    )
+                )
+                viewModel.autoAdvanceCountdown = 5
+                viewModel.settings.autoAdvanceDelay = 8
+            }
+            // `--ui-test-result-nil-evaluation` (#127 req. 6/7): a genuinely nil
+            // evaluation cannot route to ResultView (ContentView shows it only for
+            // .showingResult, whose payload always carries an evaluation), so this
+            // seeds the IDENTICAL recap fallback via an empty-answer evaluation:
+            // the empty canonical answer trips `isRecap`, so the question stem
+            // becomes the dominant text instead of a blank 46pt row. Plain footer
+            // (no countdown) matches the defined nil-path rendering.
+            if CommandLine.arguments.contains("--ui-test-result-nil-evaluation") {
+                viewModel.currentQuestion = Question.preview
+                viewModel.currentSession = QuizSession.preview(score: 3.0, answered: 3, correct: 3)
+                viewModel.quizState = .showingResult(
+                    question: Question.preview,
+                    evaluation: Evaluation(
+                        userAnswer: "",
+                        result: .incorrect,
+                        points: 0.0,
+                        correctAnswer: "",
+                        questionId: Question.preview.id,
+                        explanation: nil
+                    )
+                )
+            }
         #endif
 
         quizViewModel = viewModel

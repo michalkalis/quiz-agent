@@ -707,6 +707,8 @@
       - isRerecording: false
       - nextQuestionAudioUrl: nil
       - nextQuestion: nil
+      - lastFeedbackAudioBase64: nil
+      - lastFeedbackUrl: nil
   ▿ _reduceMotion: SwiftUI.Environment<Swift.Bool>
     ▿ content: SwiftUI.Environment<Swift.Bool>.Content.keyPath
       - keyPath: \EnvironmentValues.<computed 0x<addr> (Bool)> #70

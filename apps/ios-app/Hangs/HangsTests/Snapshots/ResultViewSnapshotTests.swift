@@ -2,22 +2,20 @@
 //  ResultViewSnapshotTests.swift
 //  HangsTests
 //
-//  Task 5 (issue #31): .dump snapshot baselines for two structurally-distinct
-//  variants of ResultView.
+//  .dump snapshot baselines for two structurally-distinct variants of ResultView.
+//  Re-recorded for issue #127 (Variant C "Zero-Scroll Deck"): the three fixed
+//  zones replace the pinned-nav-above-ScrollView layout, so the baselines were
+//  deleted and re-recorded.
 //
 //  Chosen variants and rationale:
 //
-//  A. correctVariant — evaluation.isCorrect == true.
-//     "NAILED" substring present in heroBlock headline.
-//     "result.continue" footer button present.
+//  A. correctVariant — evaluation.isCorrect == true. "NAILED" verdict word +
+//     "result.continue" CTA present.
 //
-//  B. incorrectVariant — evaluation.isCorrect == false.
-//     "CLOSE" substring present in heroBlock headline.
+//  B. incorrectVariant — evaluation.isCorrect == false. "MISSED" verdict word.
 //
-//  IMPORTANT: Both variants are captured BEFORE .onAppear fires, so
-//  `showEvaluation` is false and the answerCard/statsRow guarded by
-//  `if showEvaluation, viewModel.resultEvaluation != nil` are NOT in the dump.
-//  Assertions intentionally target only always-rendered heroBlock content.
+//  Variant C removed the .onAppear content gate (nothing scrolls, so the answer
+//  panel always renders); the dump captures the full struct topology.
 //
 //  Strategy: .dump only — no image rendering; stable across simulator versions.
 //
@@ -94,11 +92,9 @@ struct ResultViewSnapshotTests {
 
     /// ResultView with an incorrect evaluation.
     /// Structural assertions (verified via dump baseline):
-    ///   • "MISSED" substring present in heroBlock headline Text ("MISSED\nIT.")
+    ///   • "MISSED" verdict word present in the verdict field.
     ///
-    /// answerCard and statsRow gated behind `showEvaluation` (@State = false at
-    /// struct init time) are NOT asserted here — see ResultViewInspectorTests for
-    /// runtime-state assertions.
+    /// Runtime-state assertions live in ResultViewInspectorTests.
     @Test("Snapshot: incorrect evaluation renders MISSED headline")
     func incorrectVariant() {
         let view = ResultView(viewModel: makeResultViewModel(evaluation: .previewIncorrect))

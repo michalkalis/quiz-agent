@@ -712,3 +712,5 @@
       - isRerecording: false
       - nextQuestionAudioUrl: nil
       - nextQuestion: nil
+      - lastFeedbackAudioBase64: nil
+      - lastFeedbackUrl: nil

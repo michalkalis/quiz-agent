@@ -757,6 +757,8 @@
       - isRerecording: false
       - nextQuestionAudioUrl: nil
       - nextQuestion: nil
+      - lastFeedbackAudioBase64: nil
+      - lastFeedbackUrl: nil
   ▿ _reduceMotion: SwiftUI.Environment<Swift.Bool>
     ▿ content: SwiftUI.Environment<Swift.Bool>.Content.keyPath
       - keyPath: \EnvironmentValues.<computed 0x<addr> (Bool)> #70
@@ -764,7 +766,7 @@
           - super: Swift.PartialKeyPath<SwiftUI.EnvironmentValues>
             ▿ super: Swift.AnyKeyPath
               - _kvcKeyPathStringPtr: nil
-  ▿ _showEvaluation: SwiftUI.State<Swift.Bool>
+  ▿ _didAppear: SwiftUI.State<Swift.Bool>
     - _value: false
     - _location: nil
   ▿ _showSourceWebView: SwiftUI.State<Swift.Bool>

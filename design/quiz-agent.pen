@@ -17281,35 +17281,6 @@
         },
         {
           "type": "frame",
-          "id": "vW4Oi",
-          "name": "micWrap",
-          "width": "fill_container",
-          "layout": "vertical",
-          "gap": 12,
-          "padding": [
-            8,
-            24,
-            16,
-            24
-          ],
-          "justifyContent": "center",
-          "alignItems": "center",
-          "children": [
-            {
-              "id": "xo9VN",
-              "type": "ref",
-              "ref": "s49sd",
-              "name": "QuestionCmdListen",
-              "descendants": {
-                "kOUVN": {
-                  "content": "Say “start” · “repeat” · “skip”"
-                }
-              }
-            }
-          ]
-        },
-        {
-          "type": "frame",
           "id": "tl9Uv",
           "name": "footer",
           "width": "fill_container",
@@ -17323,6 +17294,26 @@
           ],
           "alignItems": "center",
           "children": [
+            {
+              "id": "OgQrY",
+              "type": "ref",
+              "ref": "JWoqN",
+              "name": "CmdModeListenBar",
+              "width": "fill_container",
+              "fill": "#14B8A614",
+              "stroke": "#14B8A659",
+              "descendants": {
+                "B5CJ3Z": {
+                  "fill": "$accent-teal"
+                },
+                "m892R": {
+                  "content": "LISTENING FOR COMMANDS",
+                  "fill": "$accent-teal",
+                  "fontSize": 11,
+                  "letterSpacing": 1.5
+                }
+              }
+            },
             {
               "type": "frame",
               "id": "YA7Tr",
@@ -17411,7 +17402,10 @@
                 {
                   "type": "frame",
                   "id": "PUVgH",
+                  "x": 318,
+                  "y": 2,
                   "name": "muteBtn",
+                  "enabled": false,
                   "width": 32,
                   "height": 32,
                   "fill": "$bg-card",
@@ -17775,44 +17769,6 @@
         },
         {
           "type": "frame",
-          "id": "spW7q",
-          "name": "micWrap",
-          "width": "fill_container",
-          "layout": "vertical",
-          "gap": 12,
-          "padding": [
-            8,
-            24,
-            16,
-            24
-          ],
-          "justifyContent": "center",
-          "alignItems": "center",
-          "children": [
-            {
-              "id": "a5tuX",
-              "type": "ref",
-              "ref": "rOkNY",
-              "name": "sweepBar",
-              "width": "fill_container"
-            },
-            {
-              "id": "chZT7",
-              "type": "ref",
-              "ref": "s49sd",
-              "name": "QuestionCmdListen",
-              "fill": "#14B8A638",
-              "stroke": "#14B8A6BF",
-              "descendants": {
-                "kOUVN": {
-                  "content": "Say “start” · “repeat” · “skip”"
-                }
-              }
-            }
-          ]
-        },
-        {
-          "type": "frame",
           "id": "rOZJP",
           "name": "footer",
           "width": "fill_container",
@@ -17826,6 +17782,33 @@
           ],
           "alignItems": "center",
           "children": [
+            {
+              "id": "a5tuX",
+              "type": "ref",
+              "ref": "rOkNY",
+              "name": "sweepBar",
+              "width": "fill_container"
+            },
+            {
+              "id": "WHDVa",
+              "type": "ref",
+              "ref": "JWoqN",
+              "name": "CmdModeListenBar",
+              "width": "fill_container",
+              "fill": "#14B8A638",
+              "stroke": "#14B8A6BF",
+              "descendants": {
+                "B5CJ3Z": {
+                  "fill": "$accent-teal"
+                },
+                "m892R": {
+                  "content": "LISTENING FOR COMMANDS",
+                  "fill": "$accent-teal",
+                  "fontSize": 11,
+                  "letterSpacing": 1.5
+                }
+              }
+            },
             {
               "type": "frame",
               "id": "QI9XB",
@@ -17914,7 +17897,10 @@
                 {
                   "type": "frame",
                   "id": "KJeaG",
+                  "x": 318,
+                  "y": 2,
                   "name": "muteBtn",
+                  "enabled": false,
                   "width": 32,
                   "height": 32,
                   "fill": "$bg-card",
@@ -18286,53 +18272,6 @@
         },
         {
           "type": "frame",
-          "id": "QpYGG",
-          "name": "micWrap",
-          "width": "fill_container",
-          "layout": "vertical",
-          "gap": 12,
-          "padding": [
-            8,
-            24,
-            16,
-            24
-          ],
-          "justifyContent": "center",
-          "alignItems": "center",
-          "children": [
-            {
-              "id": "zaagS",
-              "type": "ref",
-              "ref": "Yf4qD",
-              "name": "missLine",
-              "width": "fill_container"
-            },
-            {
-              "id": "gzitt",
-              "type": "ref",
-              "ref": "s49sd",
-              "name": "QuestionCmdListen",
-              "fill": "#F59E0B1F",
-              "stroke": "#F59E0B8C",
-              "descendants": {
-                "F5OIEk": {
-                  "fill": "$accent-amber"
-                },
-                "oD2gv": {
-                  "fill": "$accent-amber"
-                },
-                "wCUvc": {
-                  "enabled": false
-                },
-                "kOUVN": {
-                  "content": "Say “start” · “repeat” · “skip”"
-                }
-              }
-            }
-          ]
-        },
-        {
-          "type": "frame",
           "id": "E0cWZi",
           "name": "footer",
           "width": "fill_container",
@@ -18346,6 +18285,33 @@
           ],
           "alignItems": "center",
           "children": [
+            {
+              "id": "zaagS",
+              "type": "ref",
+              "ref": "Yf4qD",
+              "name": "missLine",
+              "width": "fill_container"
+            },
+            {
+              "id": "Y56y5D",
+              "type": "ref",
+              "ref": "JWoqN",
+              "name": "CmdModeListenBar",
+              "width": "fill_container",
+              "fill": "#F59E0B1F",
+              "stroke": "#F59E0B8C",
+              "descendants": {
+                "B5CJ3Z": {
+                  "fill": "$accent-amber"
+                },
+                "m892R": {
+                  "content": "LISTENING FOR COMMANDS",
+                  "fill": "$accent-amber",
+                  "fontSize": 11,
+                  "letterSpacing": 1.5
+                }
+              }
+            },
             {
               "type": "frame",
               "id": "EBro9",
@@ -18434,7 +18400,10 @@
                 {
                   "type": "frame",
                   "id": "AR9hi",
+                  "x": 318,
+                  "y": 2,
                   "name": "muteBtn",
+                  "enabled": false,
                   "width": 32,
                   "height": 32,
                   "fill": "$bg-card",
@@ -18572,7 +18541,7 @@
       "id": "JWoqN",
       "x": 1780,
       "y": 10805,
-      "name": "McqListenBar",
+      "name": "ListenBar",
       "reusable": true,
       "width": 358,
       "height": 44,
@@ -20271,6 +20240,44 @@
       "gap": 8,
       "padding": 20,
       "children": [
+        {
+          "type": "text",
+          "id": "aKrZV",
+          "name": "c0",
+          "fill": "$accent-teal",
+          "content": "COMMAND MODE — SAME BAR, TEXT SWAPS. NEVER TWO BARS ON SCREEN",
+          "fontFamily": "IBM Plex Mono",
+          "fontSize": 10,
+          "fontWeight": "600",
+          "letterSpacing": 1.5
+        },
+        {
+          "id": "WtBRD",
+          "type": "ref",
+          "ref": "JWoqN",
+          "name": "stCmd",
+          "width": "fill_container",
+          "fill": "#14B8A614",
+          "stroke": "#14B8A659",
+          "descendants": {
+            "B5CJ3Z": {
+              "fill": "$accent-teal"
+            },
+            "m892R": {
+              "content": "LISTENING FOR COMMANDS",
+              "fill": "$accent-teal",
+              "fontSize": 11,
+              "letterSpacing": 1.5
+            }
+          }
+        },
+        {
+          "type": "frame",
+          "id": "WYx90",
+          "name": "sp0",
+          "width": 1,
+          "height": 10
+        },
         {
           "type": "text",
           "id": "i1lNJf",
@@ -27108,6 +27115,16 @@
       "width": 900,
       "height": 0,
       "content": "129C The Button Narrates: CTA is the ONLY status surface — no row spinners ever. Tint says what's happening: purple = pack, pink = subscription, blue = restore. Track = translucent white base + solid white bar sliding L→R, 1.35s ease loop, identical in all three states. Non-involved rows dim to 24%; the pink selection check demotes to a hollow outline when its plan isn't the thing being bought. Restore link fades to 35% when tapped. CTA labels single-line (lineLimit 1 + minScale). CTA non-tappable in flight — no second purchase mid-flight (decision 1); pink check kept but demoted (decision 2)."
+    },
+    {
+      "type": "note",
+      "id": "JKvMG",
+      "x": 1780,
+      "y": 13877,
+      "name": "note-one-listenbar",
+      "width": 360,
+      "height": 0,
+      "content": "RULE (founder 2026-07-28): only ONE ListenBar exists per screen. Text swaps by mode — 'LISTENING FOR COMMANDS' (teal, command mode) vs 'LISTENING — SAY A–D' (pink, answer mode). The two are never shown together. Bar is docked as the first footer row and owns the mute button; the old floating CmdListenBar pill is gone from question screens (still used on Home/Result where only commands apply)."
     }
   ],
   "themes": {

@@ -44,6 +44,11 @@ board gained a command-mode row; `note-one-listenbar` records the rule on canvas
 This supersedes the HTML variant page `voice-answer-listening-bar.html` (A/B/C) — the
 founder's either/or insight collapses it to Variant A with swapped text.
 
+Clarified on review: the swap must be visible as a *state pair*, not implied. Added the
+fourth voice frame `Question-Listen — Recording (bar → answer mode)`: same slot, bar turns
+pink "LISTENING — SAY YOUR ANSWER", think-timer gone, Record becomes Stop. Idle shows only
+the command bar; Recording shows only the answer bar.
+
 ## Follow-through
 
 1. **Pencil sync** — redraw all five picked variants into `design/quiz-agent.pen` in ONE session so V1 holds (draw #122C's glow language first, reuse it in #125A and #127C); founder reviews frames + `⌘S`.

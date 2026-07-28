@@ -14,12 +14,11 @@ if [ -z "$staged" ]; then
   exit 0
 fi
 
+# Same pin as backend-ci.yml — unpinned ruff broke on 0.16.0's expanded rule set.
+RUFF_VERSION=0.15.22
+
 run_ruff() {
-  if command -v ruff >/dev/null 2>&1; then
-    ruff "$@"
-  else
-    uvx ruff "$@"
-  fi
+  uvx "ruff@${RUFF_VERSION}" "$@"
 }
 
 echo "pre-commit: ruff check + format on apps/quiz-agent/ packages/shared/"

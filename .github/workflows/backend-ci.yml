@@ -110,7 +110,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv pip install --system ruff
+          # Pinned: unpinned ruff broke CI when 0.16.0 expanded the default rule set (2026-07-26)
+          uv pip install --system ruff==0.15.22
 
       - name: Run ruff linter
         run: |

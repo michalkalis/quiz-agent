@@ -105,7 +105,8 @@ struct HomeView: View {
 
     // Free users see remaining monthly questions + reset countdown; premium
     // users see an Unlimited row in the same slot (founder decision 2026-07-07).
-    // Hidden until /usage has loaded.
+    // #123 Track A: the slot is never silently blank — while /usage is still
+    // in flight it shows a loading placeholder instead of disappearing.
     // #93 subscription IAP: for free users the whole card is a proactive
     // paywall entry point (Upgrade affordance + tap → presentPaywall()).
     @ViewBuilder
@@ -127,7 +128,30 @@ struct HomeView: View {
             // show a lightweight retry placeholder instead of silently
             // vanishing (#FIX2, CLAUDE.md Rule #2 fail-loud).
             freePlanCardUnavailable
+        } else {
+            // #123: still loading (the launch/foreground fetch hasn't
+            // resolved yet) — same card shape as the failed placeholder so
+            // the slot doesn't jump once /usage resolves either way.
+            freePlanCardLoading
         }
+    }
+
+    // Shown only while /usage's launch/foreground fetch is still in flight
+    // and nothing is cached yet (#123 Track A). Same single-row shape as
+    // `freePlanCardUnavailable` so the card doesn't change height once the
+    // fetch resolves into the loaded or failed state.
+    private var freePlanCardLoading: some View {
+        HangsCard(padding: .init(top: 12, leading: 16, bottom: 12, trailing: 16)) {
+            HStack(spacing: 6) {
+                ProgressView()
+                    .tint(Theme.Hangs.Colors.muted)
+                Text("Loading your plan…")
+                    .font(.hangsBody(13, weight: .semibold))
+                    .foregroundColor(Theme.Hangs.Colors.ink)
+                Spacer()
+            }
+        }
+        .accessibilityIdentifier("home.freePlanLoading")
     }
 
     // Shown only when /usage failed to load and there is nothing cached — a

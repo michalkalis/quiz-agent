@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voice-answer screen — listening bar without overlap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ===========================================================
+   Voice-answer screen — variants that remove the floating
+   "LISTENING FOR COMMANDS" pill overlap.
+   Dark-appearance tokens verbatim from Theme+Hangs.swift.
+   Per founder rule V1 (2026-07-28): #122C ambient glow is the
+   app-wide voice-command feedback; #125A owns the full-width
+   listening bar. These variants only re-host, never re-invent.
+   =========================================================== */
+:root{
+  /* app tokens (dark appearance) */
+  --bg:#161616;
+  --bgCard:#1F1F22;
+  --bgElevated:#2A2A2A;
+  --ink:#F4F4F4;
+  --muted:#9CA3AF;
+  --pink:#FF3D8F;
+  --blue:#0A84FF;
+  --teal:#14B8A6;
+  --tealSoft:rgba(20,184,166,.14);
+  --tealLine:rgba(20,184,166,.38);
+  --hairline:rgba(255,255,255,.078);
+  --subtleBorder:rgba(255,255,255,.141);
+  /* page chrome (review page only) */
+  --page:#0C0D10;
+  --panelLine:rgba(255,255,255,.09);
+  --pageText:#E8EAF0;
+  --pageMuted:#8B93A5;
+  --display:"Anton","Arial Narrow",Haettenschweiler,Impact,sans-serif;
+  --body:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--page);color:var(--pageText);font-family:var(--body);
+  font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;padding:0 0 96px}
+.wrap{max-width:1360px;margin:0 auto;padding:0 28px}
+
+header.page{padding:56px 0 8px;border-bottom:1px solid var(--panelLine);margin-bottom:12px}
+header.page .kicker{font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--pink)}
+header.page h1{font-family:var(--display);font-size:52px;line-height:1.02;margin:12px 0 14px;text-transform:uppercase;font-weight:400}
+header.page p.lede{max-width:80ch;color:var(--pageMuted);font-size:16px;margin:0 0 40px}
+header.page p.lede strong{color:var(--pageText);font-weight:600}
+
+section.variant{padding:44px 0;border-top:1px solid var(--panelLine)}
+section.variant h2{font-family:var(--display);font-size:36px;margin:0 0 6px;text-transform:uppercase;font-weight:400}
+section.variant h2 .vtag{font-family:var(--mono);font-size:12px;letter-spacing:2px;color:var(--pink);display:block;margin-bottom:8px;text-transform:uppercase}
+p.concept{color:var(--pageMuted);max-width:88ch;margin:0 0 28px;font-size:16px}
+p.concept b{color:var(--pageText);font-weight:600}
+
+.frames{display:flex;flex-wrap:wrap;gap:30px;align-items:flex-start}
+figure.shot{margin:0;width:390px}
+figcaption{margin-top:14px}
+figcaption .ftitle{font-family:var(--mono);font-size:11px;letter-spacing:1.6px;text-transform:uppercase;color:var(--pageText)}
+figcaption .fnote{color:var(--pageMuted);font-size:13px;margin-top:5px;line-height:1.5}
+
+/* ---------- phone frame, 1 CSS px = 1 iOS pt ---------- */
+.frame{width:390px;height:844px;border-radius:46px;padding:5px;background:#26282E;
+  box-shadow:0 20px 50px rgba(0,0,0,.55);position:relative}
+.screen{width:100%;height:100%;border-radius:42px;overflow:hidden;background:var(--bg);
+  color:var(--ink);display:flex;flex-direction:column;position:relative}
+
+.sb{height:44px;flex:0 0 44px;display:flex;align-items:flex-end;justify-content:space-between;
+  padding:0 30px 2px;font-size:13px;font-weight:600;color:var(--ink)}
+.sb .dots{letter-spacing:2px}
+
+.topbar{display:flex;align-items:center;padding:14px 20px 0;flex:0 0 auto}
+.chip{width:36px;height:36px;border-radius:50%;background:var(--bgCard);border:1px solid var(--hairline);
+  display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--ink);flex:0 0 36px}
+.spacer{flex:1}
+
+.prog{height:3px;margin:14px 24px 0;border-radius:2px;background:var(--subtleBorder);overflow:hidden;flex:0 0 auto}
+.prog>i{display:block;height:100%;width:26%;background:var(--pink);border-radius:2px}
+
+.meta{display:flex;align-items:baseline;gap:10px;padding:22px 28px 6px;font-family:var(--mono);
+  font-size:12px;letter-spacing:3px;color:var(--muted);font-weight:500;flex:0 0 auto}
+.meta .ctr{margin-left:auto;font-weight:600;letter-spacing:2px}
+.meta.live{color:var(--teal)}
+.meta.live .ctr{color:var(--muted)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--teal);display:inline-block;align-self:center;
+  animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.45}50%{opacity:1}}
+
+.stem{padding:6px 28px 0;flex:0 0 auto}
+.stem p{margin:0;font-family:var(--display);font-size:38px;letter-spacing:-.5px;line-height:1.06;font-weight:400}
+
+.hintline{padding:14px 28px 0;font-family:var(--mono);font-size:11px;letter-spacing:1.6px;
+  color:var(--muted);flex:0 0 auto}
+.hintline b{color:var(--ink);font-weight:600}
+
+.grow{flex:1}
+
+/* ---------- footer building blocks ---------- */
+.footer{flex:0 0 auto;padding:0 20px 22px;display:flex;flex-direction:column;gap:12px;position:relative;z-index:1}
+
+.lbar{height:44px;border-radius:14px;background:var(--tealSoft);border:1px solid var(--tealLine);
+  display:flex;align-items:center;gap:10px;padding:0 14px;font-family:var(--mono);font-size:11px;
+  letter-spacing:1.8px;color:var(--teal);font-weight:600}
+.lbar .cmds{color:var(--ink);font-weight:500;letter-spacing:.4px;font-family:var(--body);font-size:13px}
+.wave{font-size:15px;letter-spacing:0}
+.lbar .spk{margin-left:auto;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.06);
+  display:flex;align-items:center;justify-content:center;font-size:13px;letter-spacing:0}
+
+.utilrow{display:flex;align-items:center;gap:10px}
+.tchip{height:36px;border-radius:18px;padding:0 14px;display:flex;align-items:center;gap:7px;
+  font-family:var(--mono);font-size:11px;letter-spacing:1.6px;font-weight:600;
+  color:var(--blue);border:1px solid rgba(10,132,255,.45);background:rgba(10,132,255,.10)}
+.typebtn{height:44px;border-radius:22px;flex:1;display:flex;align-items:center;justify-content:center;gap:8px;
+  background:var(--bgCard);border:1px solid var(--subtleBorder);font-size:15px;font-weight:500;color:var(--muted)}
+.spkbtn{width:36px;height:36px;flex:0 0 36px;border-radius:50%;background:var(--bgCard);
+  border:1px solid var(--subtleBorder);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--muted)}
+
+.mainrow{display:flex;gap:12px}
+.rec{height:56px;border-radius:28px;flex:1;background:var(--pink);color:#fff;display:flex;align-items:center;
+  justify-content:center;gap:9px;font-size:17px;font-weight:700;box-shadow:0 0 34px rgba(255,61,143,.35)}
+.skip{height:56px;border-radius:28px;flex:0 0 128px;background:var(--bgElevated);border:1px solid var(--subtleBorder);
+  color:var(--ink);display:flex;align-items:center;justify-content:center;gap:8px;font-size:16px;font-weight:600}
+
+/* ---------- #122C ambient glow (owning language, reused) ---------- */
+.glow{position:absolute;left:0;right:0;bottom:0;height:34%;pointer-events:none;
+  background:linear-gradient(to top,rgba(20,184,166,.28),rgba(20,184,166,.10) 45%,transparent);
+  animation:glowp 1.6s ease-in-out infinite}
+@keyframes glowp{0%,100%{opacity:.62}50%{opacity:1}}
+.edgeline{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(20,184,166,.55)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <div class="kicker">Voice-answer screen · node vywGO</div>
+  <h1>Listening bar,<br>bez prekryvu</h1>
+  <p class="lede">Dnešný stav: pilulka „LISTENING FOR COMMANDS" pláva voľne nad spodným klastrom a pôsobí ako cudzí overlay. Tri varianty nižšie ju riešia tromi cestami — vždy tak, že <strong>nič nepláva a nič sa neprekrýva</strong>. Všetky rešpektujú pravidlo V1: match/no-match feedback preberá <strong>#122C ambient glow</strong>, full-width bar je jazyk <strong>#125A</strong>.</p>
+</header>
+
+<!-- ============================================================ -->
+<section class="variant">
+  <h2><span class="vtag">Variant A</span>Docked bar</h2>
+  <p class="concept">Jazyk #125A prenesený 1:1 na voice obrazovku: pilulka sa stane <b>full-width 44pt barom ukotveným v pätičke</b> a pohltí tlačidlo reproduktora. Pätička je jeden pevný stĺpec s 12pt medzerami — bar, riadok THINK + písanie, Record + Skip. Nič nepláva, poradie číta zhora nadol ako priorita.</p>
+  <div class="frames">
+    <figure class="shot">
+      <div class="frame"><div class="screen">
+        <div class="sb"><span>9:41</span><span class="dots">•••</span></div>
+        <div class="topbar"><div class="chip">✕</div><div class="spacer"></div><div class="chip">⚙</div></div>
+        <div class="prog"><i></i></div>
+        <div class="meta"><span>g e o g r a p h y</span><span class="ctr">03 / 10</span></div>
+        <div class="stem"><p>What's the capital of France?</p></div>
+        <div class="grow"></div>
+        <div class="footer">
+          <div class="lbar"><span class="wave">⌇</span><span>LISTENING</span><span class="cmds">"start" · "repeat" · "skip"</span><span class="spk">🔊</span></div>
+          <div class="utilrow"><span class="tchip">THINK 55s</span><div class="typebtn">⌨ Type answer instead</div></div>
+          <div class="mainrow"><div class="rec">🎙 Record</div><div class="skip">▷ Skip</div></div>
+        </div>
+      </div></div>
+      <figcaption>
+        <span class="ftitle">Idle — armed &amp; listening</span>
+        <div class="fnote">Bar 44pt, pätička 3 riadky × 12pt gap. Reproduktor žije v bare, samostatné koliesko zmizlo. Match/no-match stavy baru = #122C (teal sweep / amber breath), nie vlastné.</div>
+      </figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section class="variant">
+  <h2><span class="vtag">Variant B</span>Glow only</h2>
+  <p class="concept">Čistá aplikácia #122C: <b>pilulka úplne zmizne</b>. Že appka počúva, hovorí ambientný teal glow spodnej tretiny + 3pt linka na hrane; príkazy sa presunú do jedného tichého mono riadku pod otázkou. Najviac uvoľnená obrazovka — pätička má len to, na čo sa klika.</p>
+  <div class="frames">
+    <figure class="shot">
+      <div class="frame"><div class="screen">
+        <div class="glow"></div><div class="edgeline"></div>
+        <div class="sb"><span>9:41</span><span class="dots">•••</span></div>
+        <div class="topbar"><div class="chip">✕</div><div class="spacer"></div><div class="chip">⚙</div></div>
+        <div class="prog"><i></i></div>
+        <div class="meta"><span>g e o g r a p h y</span><span class="ctr">03 / 10</span></div>
+        <div class="stem"><p>What's the capital of France?</p></div>
+        <div class="hintline">SAY <b>"START"</b> · <b>"REPEAT"</b> · <b>"SKIP"</b></div>
+        <div class="grow"></div>
+        <div class="footer">
+          <div class="utilrow"><span class="tchip">THINK 55s</span><div class="typebtn">⌨ Type answer instead</div><div class="spkbtn">🔊</div></div>
+          <div class="mainrow"><div class="rec">🎙 Record</div><div class="skip">▷ Skip</div></div>
+        </div>
+      </div></div>
+      <figcaption>
+        <span class="ftitle">Idle — glow dýcha, žiadna pilulka</span>
+        <div class="fnote">Glow = trvalý „počúvam". Hint riadok pod otázkou sa po pár otázkach môže prestať zobrazovať (naučené príkazy). Match = teal sweep, no-match = amber breath — presne #122C.</div>
+      </figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section class="variant">
+  <h2><span class="vtag">Variant C</span>Meta row počúva</h2>
+  <p class="concept">Nulové pridané pixely: <b>riadok „geography · 03/10", ktorý už na obrazovke je, sa sám stane indikátorom počúvania</b> — teal farba + pulzujúca bodka + príkazy. Žiadny nový element, žiadny bar, pätička ostáva čisto akčná. (Jazyk vyskúšaný v #125 variante C.)</p>
+  <div class="frames">
+    <figure class="shot">
+      <div class="frame"><div class="screen">
+        <div class="sb"><span>9:41</span><span class="dots">•••</span></div>
+        <div class="topbar"><div class="chip">✕</div><div class="spacer"></div><div class="chip">⚙</div></div>
+        <div class="prog"><i></i></div>
+        <div class="meta live"><span class="dot"></span><span>LISTENING — "START" · "REPEAT" · "SKIP"</span><span class="ctr">03 / 10</span></div>
+        <div class="stem"><p>What's the capital of France?</p></div>
+        <div class="grow"></div>
+        <div class="footer">
+          <div class="utilrow"><span class="tchip">THINK 55s</span><div class="typebtn">⌨ Type answer instead</div><div class="spkbtn">🔊</div></div>
+          <div class="mainrow"><div class="rec">🎙 Record</div><div class="skip">▷ Skip</div></div>
+        </div>
+      </div></div>
+      <figcaption>
+        <span class="ftitle">Idle — meta row je listening state</span>
+        <div class="fnote">Kategória ustúpi počas počúvania (vráti sa po odpovedi); počítadlo ostáva. Feedback na povel opäť #122C glow — meta row len drží statický „armed" stav.</div>
+      </figcaption>
+    </figure>
+  </div>
+</section>
+
+</div>
+</body>
+</html>

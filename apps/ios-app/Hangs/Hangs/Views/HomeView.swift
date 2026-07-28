@@ -310,7 +310,9 @@ struct HomeView: View {
             }
         } label: {
             configRowVisual(
-                label: "Language",
+                // #130: same scope wording as Settings — this picks the quiz
+                // content language, not the interface language.
+                label: "Quiz language",
                 value: Language.forCode(viewModel.settings.language)?.nativeName ?? "Unknown",
                 valueColor: Theme.Hangs.Colors.blue
             )

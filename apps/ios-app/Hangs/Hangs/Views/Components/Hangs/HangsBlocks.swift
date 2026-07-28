@@ -135,6 +135,9 @@ struct HangsStatBox: View {
 struct HangsConfigRow: View {
     let label: LocalizedStringKey
     let value: String
+    /// Optional muted line under the label, for rows whose scope isn't
+    /// self-evident (#130: quiz language vs. app language).
+    var subtitle: LocalizedStringKey? = nil
     var valueColor: Color = Theme.Hangs.Colors.blue
     var showsChevron: Bool = true
     var action: (() -> Void)? = nil
@@ -142,9 +145,17 @@ struct HangsConfigRow: View {
     var body: some View {
         Button(action: { action?() }) {
             HStack {
-                Text(label)
-                    .font(.hangsBody(17, weight: .semibold))
-                    .foregroundColor(Theme.Hangs.Colors.ink)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(label)
+                        .font(.hangsBody(17, weight: .semibold))
+                        .foregroundColor(Theme.Hangs.Colors.ink)
+                    if let subtitle {
+                        Text(subtitle)
+                            .font(.hangsBody(12))
+                            .foregroundColor(Theme.Hangs.Colors.muted)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
                 Spacer()
                 HStack(spacing: 6) {
                     Text(value)

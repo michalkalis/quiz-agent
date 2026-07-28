@@ -22,6 +22,7 @@ struct SettingsView: View {
     /// actions. Marked `optional` via `@EnvironmentObject` — nil only in raw Xcode previews
     /// that don't inject AppState; the real app and tests via NavigationStack always have it.
     @EnvironmentObject private var appState: AppState
+    @Environment(\.openURL) private var openURL
 
     /// Called when the user taps "Replay intro". Caller is responsible for
     /// presenting the onboarding flow; this view only fires the callback.
@@ -275,13 +276,39 @@ struct SettingsView: View {
                     // quiz content/voice language (founder batch 2026-07-12).
                     label: "Quiz language",
                     value: Language.forCode(viewModel.settings.language)?.nativeName ?? "English",
+                    subtitle: "Questions, answers and voice",
                     valueColor: Theme.Hangs.Colors.pink,
                     action: {}
                 )
                 .allowsHitTesting(false)
             }
             .accessibilityIdentifier("settings-language-menu")
+
+            hairline
+
+            // #130: the interface language is a separate, much smaller list
+            // (English + Slovak). iOS already owns that picker per app, so we
+            // only mirror the current value and deep-link to it instead of
+            // duplicating a second picker in-app.
+            HangsConfigRow(
+                label: "App language",
+                value: Self.appLanguageDisplayName,
+                subtitle: "Buttons, labels and settings",
+                valueColor: Theme.Hangs.Colors.blue
+            ) {
+                if let url = URL(string: "app-settings:") {
+                    openURL(url)
+                }
+            }
+            .accessibilityIdentifier("settings-app-language-row")
         }
+    }
+
+    /// Native name of the localization iOS actually resolved for the app bundle,
+    /// which is what the user sees in the interface — not `settings.language`.
+    private static var appLanguageDisplayName: String {
+        let code = Bundle.main.preferredLocalizations.first ?? Language.default.id
+        return Language.forCode(String(code.prefix(2)))?.nativeName ?? Language.default.nativeName
     }
 
     // MARK: - Session group (#68, founder decision 6 Variant A)
@@ -712,19 +739,27 @@ struct SettingsView: View {
     /// heard. Kept short for the row; the full failure reason goes to Sentry via
     /// `SilenceDetectionService.markCommandsUnavailable`.
     private var voiceCommandsDiagnostic: String {
-        if !viewModel.settings.voiceCommandsEnabled { return "Off" }
+        // #130: these are String-typed, so they need explicit localization —
+        // bare literals here stayed English in a Slovak interface.
+        if !viewModel.settings.voiceCommandsEnabled {
+            return String(localized: "Off", comment: "Voice-command status: the feature is switched off")
+        }
         // Read the view-model's observable mirror (not the service's plain
         // property) so this row live-updates when the recognizer flips to
         // `.ready` after the model finishes installing (#96 S2).
         let base: String
         switch viewModel.commandAvailability {
-        case .unknown: base = "Checking…"
-        case .installingAssets: base = "Installing…"
-        case .ready: base = "Ready"
-        case .unavailable: base = "Unavailable"
+        case .unknown: base = String(localized: "Checking…", comment: "Voice-command status: availability is being determined")
+        case .installingAssets: base = String(localized: "Installing…", comment: "Voice-command status: on-device recognizer assets are downloading")
+        case .ready: base = String(localized: "Ready", comment: "Voice-command status: recognizer is ready")
+        case .unavailable: base = String(localized: "Unavailable", comment: "Voice-command status: recognizer could not start")
         }
         if let last = viewModel.lastRecognizedCommand {
-            return "\(base) · heard \"\(VoiceCommandLexicon.spokenWord(last))\""
+            let word = VoiceCommandLexicon.spokenWord(last)
+            return String(
+                localized: "\(base) · heard \"\(word)\"",
+                comment: "Voice-command status with the last recognized command word appended"
+            )
         }
         return base
     }

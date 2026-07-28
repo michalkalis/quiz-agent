@@ -246,11 +246,11 @@ enum ElevenLabsSTTError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidURL:
-            return "Invalid ElevenLabs WebSocket URL"
+            return String(localized: "Invalid speech-recognition address", comment: "Speech-to-text error: the streaming URL could not be built")
         case .notConnected:
-            return "Not connected to ElevenLabs STT"
+            return String(localized: "Not connected to speech recognition", comment: "Speech-to-text error: no active streaming connection")
         case .serverError(let message):
-            return "ElevenLabs STT error: \(message)"
+            return String(localized: "Speech recognition error: \(message)", comment: "Speech-to-text error; placeholder is the service message")
         }
     }
 }

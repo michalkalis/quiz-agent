@@ -229,8 +229,12 @@ struct QuizSettings: Codable, Equatable, Sendable {
     }
 
     /// Difficulty display name (capitalize first letter)
+    /// #130: capitalizing the raw id ("medium" → "Medium") left this value English
+    /// in a Slovak interface. Resolve through the same localized option list the
+    /// picker uses; fall back to the capitalized id for unknown ids.
     func difficultyDisplayName() -> String {
-        difficulty.prefix(1).uppercased() + difficulty.dropFirst()
+        Config.difficultyOptions.first { $0.0 == difficulty }?.1
+            ?? (difficulty.prefix(1).uppercased() + difficulty.dropFirst())
     }
 }
 

@@ -22,6 +22,8 @@ struct QuestionView: View {
     @State private var showQuizSettings = false
     @State private var showTextInput = false
     @State private var textAnswer = ""
+    /// MCQ answer-reveal latch — see "MCQ reveal gate (#125)" below.
+    @State private var mcqRevealLatched = false
     @FocusState private var isTextFieldFocused: Bool
 
     var body: some View {
@@ -304,6 +306,45 @@ struct QuestionView: View {
         .accessibilityIdentifier("question.liveTranscript")
     }
 
+    // MARK: - MCQ reveal gate (#125)
+
+    /// Whether this question has reached its answering phase. Founder, 2026-07-28:
+    /// the option cards and the listening pill must "only appear after the timer
+    /// expires, or after 'start' of recording" — while the stem is still being read
+    /// out and the think/answer countdown runs, four cards compete for a driver's
+    /// eyes and squeeze the stem to near-nothing. Both of the founder's triggers are
+    /// wired below; the freed vertical space goes to the stem until then.
+    ///
+    /// `mcqRevealLatched` makes it stick for the rest of the question, so a failed
+    /// mic start or a cancelled countdown — both of which land back on
+    /// `.askingQuestion` with no timer running — can't strand the driver on a
+    /// screen with nothing to answer with.
+    ///
+    /// VISUAL ONLY: `submitMCQAnswer` accepts answers from `.askingQuestion` and
+    /// `.recording` alike, and the voice path writes `mcqVoiceMatchedKey` on the
+    /// view model, not on the picker — so a spoken A–D answer is accepted whether or
+    /// not the picker is on screen.
+    private var mcqAnswersRevealed: Bool {
+        mcqRevealLatched || mcqRevealDue
+    }
+
+    /// Reveal is due from the current state alone, no history needed: either we are
+    /// already past `.askingQuestion` (recording started — founder trigger 2), or
+    /// nothing will ever arm a countdown (auto-record off AND no answer time limit),
+    /// in which case tapping an option is the only way to answer and the cards must
+    /// never be hidden.
+    private var mcqRevealDue: Bool {
+        viewModel.quizState != .askingQuestion
+            || !(viewModel.settings.autoRecordEnabled || viewModel.settings.answerTimeLimit > 0)
+    }
+
+    /// The countdown on screen for this question — think or answer, whichever path
+    /// `startRecordingOrTimer()` picked (the two are mutually exclusive). Its
+    /// `> 0 → 0` edge is the founder's "timer expires" trigger.
+    private var mcqActiveCountdown: Int {
+        max(viewModel.thinkingTimeCountdown, viewModel.answerTimerCountdown)
+    }
+
     // MARK: - MCQ body (frames b8zObz / WCaT6)
 
     private func mcqBody(question: Question) -> some View {
@@ -313,36 +354,50 @@ struct QuestionView: View {
                 .padding(.top, 12)
                 .padding(.bottom, 6)
 
-            ScrollView(.vertical, showsIndicators: false) {
-                questionReplayTapTarget {
-                    VStack(alignment: .leading, spacing: 10) {
-                        HangsQuestionPrompt(
-                            text: question.question,
-                            barColor: Theme.Hangs.Colors.blue,
-                            textFont: .hangsQuestion
-                        )
-                        .accessibilityIdentifier("question.text")
-                        replaySpeakerGlyph
+            // #125: the GeometryReader + `minHeight` scroll pattern voiceBody already
+            // uses (54.2). Without it the fixed-height option cards below are served
+            // their floors first and this flexible ScrollView absorbs the whole
+            // deficit — a long stem then reads as clipped rather than scrollable.
+            GeometryReader { geo in
+                ScrollView(.vertical, showsIndicators: false) {
+                    VStack(spacing: 0) {
+                        questionReplayTapTarget {
+                            VStack(alignment: .leading, spacing: 10) {
+                                HangsQuestionPrompt(
+                                    text: question.question,
+                                    barColor: Theme.Hangs.Colors.blue,
+                                    textFont: .hangsQuestion
+                                )
+                                .accessibilityIdentifier("question.text")
+                                replaySpeakerGlyph
+                            }
+                            .padding(.horizontal, 28)
+                            .padding(.vertical, 12)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        }
                     }
-                    .padding(.horizontal, 28)
-                    .padding(.vertical, 12)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .frame(minHeight: geo.size.height, alignment: .top)
                 }
             }
 
-            MCQOptionPicker(
-                options: question.sortedAnswerOptions,
-                onSelect: { key, value in
-                    Task { await viewModel.submitMCQAnswer(key: key, value: value) }
-                },
-                externalSelectedKey: $viewModel.mcqVoiceMatchedKey
-            )
-            .padding(.top, 8)
+            // #125 reveal gate — all-at-once, no stagger (driving context). Skip and
+            // the audio strip stay visible throughout; the founder named only the
+            // options and the listening pill.
+            if mcqAnswersRevealed {
+                MCQOptionPicker(
+                    options: question.sortedAnswerOptions,
+                    onSelect: { key, value in
+                        Task { await viewModel.submitMCQAnswer(key: key, value: value) }
+                    },
+                    externalSelectedKey: $viewModel.mcqVoiceMatchedKey
+                )
+                .padding(.top, 8)
 
-            ListeningPill(mode: question.sortedAnswerOptions.count == 2 ? .trueFalse : .mcq)
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.horizontal, 24)
-                .padding(.top, 12)
+                ListeningPill(mode: question.sortedAnswerOptions.count == 2 ? .trueFalse : .mcq)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 12)
+            }
 
             audioStrip()
                 .padding(.top, 8)
@@ -375,6 +430,20 @@ struct QuestionView: View {
             #endif
         }
         .frame(maxHeight: .infinity)
+        // A new question re-arms the gate.
+        .onChange(of: question.id) { _, _ in
+            mcqRevealLatched = false
+        }
+        // Founder trigger 2 — "start of recording". Latched so a mic start that
+        // fails back to `.askingQuestion` doesn't re-hide the options.
+        .onChange(of: viewModel.quizState) { _, newState in
+            if newState != .askingQuestion { mcqRevealLatched = true }
+        }
+        // Founder trigger 1 — "the timer expires". Independent of whether the
+        // recording that normally follows actually starts.
+        .onChange(of: mcqActiveCountdown) { previous, current in
+            if previous > 0, current == 0 { mcqRevealLatched = true }
+        }
     }
 
     // MARK: - Voice body (frames f9csl / uGhZg)

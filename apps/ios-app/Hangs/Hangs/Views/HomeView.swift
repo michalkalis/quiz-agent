@@ -7,6 +7,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct HomeView: View {
     @ObservedObject var viewModel: QuizViewModel
@@ -101,24 +102,32 @@ struct HomeView: View {
         }
     }
 
-    // MARK: - Free-plan quota card (#87)
+    // MARK: - Plan / entitlement card (#87 · #123 Track B)
 
-    // Free users see remaining monthly questions + reset countdown; premium
-    // users see an Unlimited row in the same slot (founder decision 2026-07-07).
+    // The adaptive balance card (Variant A): one surface, one whole-card tap
+    // target, six visuals derived from UsageInfo — free · free+credits ·
+    // subscriber · subscriber+credits · grace · expired (rendered by
+    // `HomePlanCard`). The tap destination forks by state: family A (free /
+    // free+credits / expired) opens the paywall; family B (active / grace)
+    // opens the manage-subscription surface.
     // #123 Track A: the slot is never silently blank — while /usage is still
     // in flight it shows a loading placeholder instead of disappearing.
-    // #93 subscription IAP: for free users the whole card is a proactive
-    // paywall entry point (Upgrade affordance + tap → presentPaywall()).
     @ViewBuilder
     private var freePlanCard: some View {
         if let usage = viewModel.usageInfo {
-            if usage.isPremium {
-                freePlanCardBody(usage)
+            if HomePlanCard.state(for: usage).isManageSurface {
+                Button {
+                    openManageSubscriptions()
+                } label: {
+                    HomePlanCard(usage: usage)
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("home.planManageButton")
             } else {
                 Button {
                     viewModel.presentPaywall()
                 } label: {
-                    freePlanCardBody(usage)
+                    HomePlanCard(usage: usage)
                 }
                 .buttonStyle(.plain)
                 .accessibilityIdentifier("home.freePlanUpgradeButton")
@@ -130,25 +139,49 @@ struct HomeView: View {
             freePlanCardUnavailable
         } else {
             // #123: still loading (the launch/foreground fetch hasn't
-            // resolved yet) — same card shape as the failed placeholder so
-            // the slot doesn't jump once /usage resolves either way.
+            // resolved yet).
             freePlanCardLoading
         }
     }
 
-    // Shown only while /usage's launch/foreground fetch is still in flight
-    // and nothing is cached yet (#123 Track A). Same single-row shape as
-    // `freePlanCardUnavailable` so the card doesn't change height once the
-    // fetch resolves into the loaded or failed state.
+    /// Manage-subscription destination for an active/grace subscriber (#123
+    /// Track B). The standard App Store account-subscriptions URL is the
+    /// simplest reliable surface: it's one hop and needs no live UIWindowScene,
+    /// unlike StoreKit's `AppStore.showManageSubscriptions(in:)`.
+    private func openManageSubscriptions() {
+        guard let url = URL(string: "https://apps.apple.com/account/subscriptions") else { return }
+        UIApplication.shared.open(url)
+    }
+
+    // Shown only while /usage's launch/foreground fetch is still in flight and
+    // nothing is cached yet (#123 Track A). Holds the loaded card's full
+    // scaffold — the "your plan" label, a headline-height spinner row, an empty
+    // track and a skeleton meta line — so the slot doesn't jump when /usage
+    // resolves into the loaded (or failed) state.
     private var freePlanCardLoading: some View {
         HangsCard(padding: .init(top: 12, leading: 16, bottom: 12, trailing: 16)) {
-            HStack(spacing: 6) {
-                ProgressView()
-                    .tint(Theme.Hangs.Colors.muted)
-                Text("Loading your plan…")
-                    .font(.hangsBody(13, weight: .semibold))
-                    .foregroundColor(Theme.Hangs.Colors.ink)
-                Spacer()
+            VStack(alignment: .leading, spacing: 8) {
+                Text("your plan")
+                    .font(.hangsMono(11, weight: .medium))
+                    .tracking(1)
+                    .foregroundColor(Theme.Hangs.Colors.blueText)
+                    .accessibilityIdentifier("home.planLabel")
+                HStack(spacing: 6) {
+                    ProgressView()
+                        .tint(Theme.Hangs.Colors.muted)
+                    Text("Loading your plan…")
+                        .font(.hangsBody(13, weight: .semibold))
+                        .foregroundColor(Theme.Hangs.Colors.ink)
+                    Spacer()
+                }
+                .frame(height: 40)
+                Capsule()
+                    .fill(Theme.Hangs.Colors.subtleBorder)
+                    .frame(height: 4)
+                RoundedRectangle(cornerRadius: 3)
+                    .fill(Theme.Hangs.Colors.subtleBorder)
+                    .frame(width: 96, height: 11)
+                    .accessibilityIdentifier("home.planLoadingSkeleton")
             }
         }
         .accessibilityIdentifier("home.freePlanLoading")
@@ -183,65 +216,6 @@ struct HomeView: View {
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("home.freePlanRetryButton")
-    }
-
-    private func freePlanCardBody(_ usage: UsageInfo) -> some View {
-        HangsCard(padding: .init(top: 12, leading: 16, bottom: 12, trailing: 16)) {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    HStack(spacing: 6) {
-                        Image(systemName: "bolt.fill")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundColor(Theme.Hangs.Colors.blue)
-                            .accessibilityHidden(true)
-                        if usage.isPremium {
-                            Text("Unlimited questions")
-                                .font(.hangsBody(13, weight: .semibold))
-                                .foregroundColor(Theme.Hangs.Colors.ink)
-                                .accessibilityIdentifier("home.freePlanUnlimited")
-                        } else {
-                            Text("\(usage.remaining ?? 0) of \(usage.questionsLimit ?? 0) free questions left")
-                                .font(.hangsBody(13, weight: .semibold))
-                                .foregroundColor(Theme.Hangs.Colors.ink)
-                                .accessibilityIdentifier("home.freePlanCount")
-                        }
-                    }
-                    Spacer()
-                    if !usage.isPremium, let countdown = Self.resetCountdown(usage) {
-                        Text(countdown)
-                            .font(.hangsBody(12))
-                            .foregroundColor(Theme.Hangs.Colors.mutedFaint)
-                            .accessibilityIdentifier("home.freePlanReset")
-                    }
-                }
-                if !usage.isPremium {
-                    quotaTrack(fraction: Self.quotaFraction(usage))
-                    HStack(spacing: 4) {
-                        Text("Upgrade")
-                            .font(.hangsBody(13, weight: .semibold))
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 11, weight: .semibold))
-                            .accessibilityHidden(true)
-                    }
-                    .foregroundColor(Theme.Hangs.Colors.pink)
-                    .accessibilityIdentifier("home.freePlanUpgrade")
-                }
-            }
-        }
-        .accessibilityIdentifier("home.freePlanCard")
-    }
-
-    private func quotaTrack(fraction: Double) -> some View {
-        GeometryReader { geo in
-            ZStack(alignment: .leading) {
-                Capsule().fill(Theme.Hangs.Colors.subtleBorder)
-                Capsule()
-                    .fill(Theme.Hangs.Colors.blue)
-                    .frame(width: geo.size.width * fraction)
-            }
-        }
-        .frame(height: 4)
-        .accessibilityHidden(true)
     }
 
     /// Fraction of the free quota still available (drives the track fill).

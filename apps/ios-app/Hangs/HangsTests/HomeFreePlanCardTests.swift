@@ -69,7 +69,9 @@ struct HomeFreePlanCardTests {
         premium: Bool = false,
         remaining: Int? = 70,
         limit: Int? = 100,
-        resetsIn: TimeInterval = 12 * 86400
+        resetsIn: TimeInterval = 12 * 86400,
+        credits: Int = 0,
+        status: String? = nil
     ) -> UsageInfo {
         UsageInfo(
             userId: "test-subject",
@@ -78,12 +80,12 @@ struct HomeFreePlanCardTests {
             questionsLimit: premium ? nil : limit,
             remaining: premium ? nil : remaining,
             resetsAt: ISO8601DateFormatter().string(from: Date().addingTimeInterval(resetsIn)),
-            subscriptionStatus: premium ? "active" : "none",
-            creditBalance: 0
+            subscriptionStatus: status ?? (premium ? "active" : "none"),
+            creditBalance: credits
         )
     }
 
-    @Test("Free user sees remaining count and reset countdown")
+    @Test("Free user sees the remaining count as the Anton headline + reset countdown (#123 Variant A)")
     func freeStateShowsCounterAndCountdown() async throws {
         let vm = makeViewModel()
         vm.usageInfo = usage()
@@ -91,20 +93,29 @@ struct HomeFreePlanCardTests {
 
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            let count = try tree.find(viewWithAccessibilityIdentifier: "home.freePlanCount").text()
-            #expect(try count.string() == "70 of 100 free questions left")
+            // The remaining count is now the dominant Anton number (verbatim),
+            // with "of N free questions left" as a muted caption beside it.
+            let primary = try tree.find(viewWithAccessibilityIdentifier: "home.planPrimary").text()
+            #expect(try primary.string() == "70")
+            #expect(throws: Never.self) {
+                try tree.find(viewWithAccessibilityIdentifier: "home.planCaption")
+            }
 
             let reset = try tree.find(viewWithAccessibilityIdentifier: "home.freePlanReset").text()
             #expect(try reset.string() == "resets in 12 days")
 
-            // Premium row must not render for a free user.
+            // A plain free user (no credits) gets no two-currency legend and no
+            // subscriber word.
+            #expect(throws: (any Error).self) {
+                try tree.find(viewWithAccessibilityIdentifier: "home.planLegend")
+            }
             #expect(throws: (any Error).self) {
                 try tree.find(viewWithAccessibilityIdentifier: "home.freePlanUnlimited")
             }
         }
     }
 
-    @Test("Premium user sees Unlimited row, no counter, no countdown")
+    @Test("Subscriber sees the UNLIMITED word + active pill, no numeric headline, no reset countdown")
     func premiumStateShowsUnlimited() async throws {
         let vm = makeViewModel()
         vm.usageInfo = usage(premium: true)
@@ -115,11 +126,22 @@ struct HomeFreePlanCardTests {
             #expect(throws: Never.self) {
                 try tree.find(viewWithAccessibilityIdentifier: "home.freePlanUnlimited")
             }
+            // "active" status pill and subscriber meta line render for a subscriber.
+            let pill = try tree.find(viewWithAccessibilityIdentifier: "home.planStatusPill").text()
+            #expect(try pill.string() == "active")
+            #expect(throws: Never.self) {
+                try tree.find(viewWithAccessibilityIdentifier: "home.planMeta")
+            }
+            // A subscriber has no spendable-quota number and no free-reset line.
             #expect(throws: (any Error).self) {
-                try tree.find(viewWithAccessibilityIdentifier: "home.freePlanCount")
+                try tree.find(viewWithAccessibilityIdentifier: "home.planPrimary")
             }
             #expect(throws: (any Error).self) {
                 try tree.find(viewWithAccessibilityIdentifier: "home.freePlanReset")
+            }
+            // No pack-credit chip when the subscriber holds no credits.
+            #expect(throws: (any Error).self) {
+                try tree.find(viewWithAccessibilityIdentifier: "home.planCreditChip")
             }
         }
     }
@@ -149,6 +171,16 @@ struct HomeFreePlanCardTests {
             // visible loading placeholder.
             #expect(throws: Never.self) {
                 try tree.find(viewWithAccessibilityIdentifier: "home.freePlanLoading")
+            }
+            // #123 Track B: the loading card holds the loaded card's full
+            // scaffold — the "your plan" label row and a skeleton meta line —
+            // so the slot doesn't jump when /usage resolves. A single-row
+            // spinner (the pre-Track-B shape) would fail this.
+            #expect(throws: Never.self) {
+                try tree.find(viewWithAccessibilityIdentifier: "home.planLabel")
+            }
+            #expect(throws: Never.self) {
+                try tree.find(viewWithAccessibilityIdentifier: "home.planLoadingSkeleton")
             }
             // Neither the loaded card nor the failed-retry placeholder must
             // render while still loading — exactly one state at a time.
@@ -196,6 +228,7 @@ struct HomeFreePlanCardTests {
     }
 
     // MARK: - Proactive paywall entry (#93 subscription IAP)
+
     // The card is the Home upgrade entry point: paywall was previously
     // reachable only via the 429 quota handlers.
 
@@ -226,21 +259,164 @@ struct HomeFreePlanCardTests {
         }
     }
 
-    @Test("Premium card is not tappable and shows no Upgrade affordance")
-    func premiumCardHasNoUpgradeEntry() async throws {
+    @Test("Subscriber card taps through to Manage, not the paywall (#123 Variant A)")
+    func premiumCardShowsManageEntry() async throws {
         let vm = makeViewModel()
         vm.usageInfo = usage(premium: true)
         let view = HomeView(viewModel: vm)
 
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: (any Error).self) {
-                try tree.find(viewWithAccessibilityIdentifier: "home.freePlanUpgrade")
+            // The whole card is now the manage-subscription tap target — not the
+            // free-family paywall button, and not the free "Upgrade" link.
+            #expect(throws: Never.self) {
+                try tree.find(viewWithAccessibilityIdentifier: "home.planManageButton")
             }
+            let cta = try tree.find(viewWithAccessibilityIdentifier: "home.planManageCTA").text()
+            #expect(try cta.string() == "Manage")
             #expect(throws: (any Error).self) {
                 try tree.find(viewWithAccessibilityIdentifier: "home.freePlanUpgradeButton")
             }
+            #expect(throws: (any Error).self) {
+                try tree.find(viewWithAccessibilityIdentifier: "home.freePlanUpgrade")
+            }
         }
+    }
+
+    // MARK: - #123 Track B entitlement states
+
+    @Test("Free + pack credits: headline is the combined total; legend names both currencies")
+    func freeWithCreditsShowsCombinedTotalAndLegend() async throws {
+        let vm = makeViewModel()
+        // 12 monthly free + 100 pack credits must read as one spendable "112".
+        vm.usageInfo = usage(remaining: 12, limit: 30, credits: 100)
+        let view = HomeView(viewModel: vm)
+
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            let primary = try tree.find(viewWithAccessibilityIdentifier: "home.planPrimary").text()
+            #expect(try primary.string() == "112")
+            let caption = try tree.find(viewWithAccessibilityIdentifier: "home.planCaption").text()
+            #expect(try caption.string() == "questions available")
+            // Both balances > 0 → the two-currency legend renders, and the link
+            // verb becomes "More" (not "Upgrade").
+            #expect(throws: Never.self) {
+                try tree.find(viewWithAccessibilityIdentifier: "home.planLegend")
+            }
+            let link = try tree.find(viewWithAccessibilityIdentifier: "home.freePlanUpgrade").text()
+            #expect(try link.string() == "More")
+            // Free + credits still routes to the paywall (family A), not manage.
+            #expect(throws: Never.self) {
+                try tree.find(viewWithAccessibilityIdentifier: "home.freePlanUpgradeButton")
+            }
+        }
+    }
+
+    @Test("Free + credits but zero monthly free left: no legend (only one balance > 0)")
+    func freeWithZeroMonthlyHidesLegend() async throws {
+        let vm = makeViewModel()
+        vm.usageInfo = usage(remaining: 0, limit: 30, credits: 50)
+        let view = HomeView(viewModel: vm)
+
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            // Combined total is just the credits; the legend row is a two-way
+            // split, so it stays hidden unless BOTH balances are non-zero.
+            let primary = try tree.find(viewWithAccessibilityIdentifier: "home.planPrimary").text()
+            #expect(try primary.string() == "50")
+            #expect(throws: (any Error).self) {
+                try tree.find(viewWithAccessibilityIdentifier: "home.planLegend")
+            }
+        }
+    }
+
+    @Test("Subscriber + credits: UNLIMITED plus a purple credit chip, credits stated not counted")
+    func subscriberWithCreditsShowsCreditChip() async throws {
+        let vm = makeViewModel()
+        vm.usageInfo = usage(premium: true, credits: 100)
+        let view = HomeView(viewModel: vm)
+
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: Never.self) {
+                try tree.find(viewWithAccessibilityIdentifier: "home.freePlanUnlimited")
+            }
+            // The credits a subscriber holds are kept for later, not spent down
+            // against the unlimited plan — surfaced as a chip, not the headline.
+            #expect(throws: Never.self) {
+                try tree.find(viewWithAccessibilityIdentifier: "home.planCreditChip")
+            }
+            #expect(throws: Never.self) {
+                try tree.find(viewWithAccessibilityIdentifier: "home.planManageButton")
+            }
+        }
+    }
+
+    @Test("Grace (renewal failed): amber pill + Fix payment link, still the manage surface")
+    func graceShowsRenewalFailedAndFixPayment() async throws {
+        let vm = makeViewModel()
+        // A grace-period subscriber can still read isPremium == true — the
+        // status field, not isPremium, must drive the grace visual.
+        vm.usageInfo = usage(premium: true, status: "grace")
+        let view = HomeView(viewModel: vm)
+
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            let pill = try tree.find(viewWithAccessibilityIdentifier: "home.planStatusPill").text()
+            #expect(try pill.string() == "renewal failed")
+            let cta = try tree.find(viewWithAccessibilityIdentifier: "home.planManageCTA").text()
+            #expect(try cta.string() == "Fix payment")
+            // A lapsing subscriber is the one person who must act — Home warns,
+            // and the whole card routes to the billing/manage surface.
+            #expect(throws: Never.self) {
+                try tree.find(viewWithAccessibilityIdentifier: "home.planManageButton")
+            }
+        }
+    }
+
+    @Test("Expired: collapses to the free layout with an 'ended' pill + Resubscribe → paywall")
+    func expiredCollapsesToFreeWithEndedPill() async throws {
+        let vm = makeViewModel()
+        // Expired has already dropped back to the free tier server-side, so the
+        // free quota fields are populated again.
+        vm.usageInfo = usage(remaining: 30, limit: 30, status: "expired")
+        let view = HomeView(viewModel: vm)
+
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            let primary = try tree.find(viewWithAccessibilityIdentifier: "home.planPrimary").text()
+            #expect(try primary.string() == "30")
+            let pill = try tree.find(viewWithAccessibilityIdentifier: "home.planStatusPill").text()
+            #expect(try pill.string() == "ended")
+            let link = try tree.find(viewWithAccessibilityIdentifier: "home.freePlanUpgrade").text()
+            #expect(try link.string() == "Resubscribe")
+            // Expired routes to the paywall (resubscribe), not the manage surface.
+            #expect(throws: Never.self) {
+                try tree.find(viewWithAccessibilityIdentifier: "home.freePlanUpgradeButton")
+            }
+        }
+    }
+
+    // MARK: - State derivation (pure helper — the six-visual contract)
+
+    @Test("state(for:) maps subscriptionStatus + credits onto the six card visuals")
+    func planStateDerivation() {
+        // status is authoritative for grace/expired even when isPremium is set.
+        #expect(HomePlanCard.state(for: usage()) == .free)
+        #expect(HomePlanCard.state(for: usage(credits: 100)) == .freeWithCredits)
+        #expect(HomePlanCard.state(for: usage(premium: true)) == .subscriber)
+        #expect(HomePlanCard.state(for: usage(premium: true, credits: 100)) == .subscriberWithCredits)
+        #expect(HomePlanCard.state(for: usage(premium: true, status: "grace")) == .grace)
+        #expect(HomePlanCard.state(for: usage(remaining: 30, limit: 30, status: "expired")) == .expired)
+        // grace/expired win over a stale isPremium flag.
+        #expect(HomePlanCard.state(for: usage(premium: true, status: "expired")) == .expired)
+    }
+
+    @Test("combinedTotal sums monthly free remaining + pack credits")
+    func combinedTotalMath() {
+        #expect(HomePlanCard.combinedTotal(usage(remaining: 12, limit: 30, credits: 100)) == 112)
+        #expect(HomePlanCard.combinedTotal(usage(remaining: 0, limit: 30, credits: 50)) == 50)
+        #expect(HomePlanCard.combinedTotal(usage(remaining: 30, limit: 30, credits: 0)) == 30)
     }
 
     // MARK: - Countdown wording (pure helpers)

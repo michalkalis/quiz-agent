@@ -65,6 +65,33 @@
                 ))
             }
 
+            // #123 Track B: seed the Home entitlement card's key visuals for the
+            // screenshot-verify sweep. /usage is mocked, so stub the payload (or
+            // stall it) instead of hitting a backend. Combine with `--ui-test`.
+            if CommandLine.arguments.contains("--ui-test-plan-free-credits") {
+                // The money shot: 12 monthly free + 100 pack credits → "112"
+                // combined total, two-tone blue+purple track.
+                network.stubbedUsage = UsageInfo(
+                    userId: "mock-subject", isPremium: false, questionsUsed: 18,
+                    questionsLimit: 30, remaining: 12,
+                    resetsAt: ISO8601DateFormatter().string(from: Date().addingTimeInterval(3 * 86400)),
+                    subscriptionStatus: "none", creditBalance: 100
+                )
+            }
+            if CommandLine.arguments.contains("--ui-test-plan-subscriber") {
+                network.stubbedUsage = UsageInfo(
+                    userId: "mock-subject", isPremium: true, questionsUsed: 0,
+                    questionsLimit: nil, remaining: nil,
+                    resetsAt: ISO8601DateFormatter().string(from: Date().addingTimeInterval(30 * 86400)),
+                    subscriptionStatus: "active", creditBalance: 0
+                )
+            }
+            if CommandLine.arguments.contains("--ui-test-plan-loading") {
+                // Never-resolving /usage → the card holds its loading placeholder
+                // so the loading→loaded frame-stability can be verified.
+                network.getUsageGate = { try? await Task.sleep(for: .seconds(600)) }
+            }
+
             let audio = MockAudioService()
             let persistence = MockPersistenceStore()
 

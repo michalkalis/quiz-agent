@@ -1,7 +1,7 @@
 # Issue 128: Idiom-based question breaks in Slovak: "murder of crows" translated literally as "vražda"
 
-**Triage:** bug · needs-triage
-**Status:** Filed 2026-07-28 from the founder's TestFlight field test. Mechanism CONFIRMED in code (no language-portability guard exists at generation, scoring, or translation time); which specific corpus row was served is UNPROVEN without a prod query. Needs `/prepare-issue` before an agent run.
+**Triage:** bug · repo-side fix landed — founder decisions remain
+**Status:** Filed 2026-07-28 from the founder's TestFlight field test; mechanism CONFIRMED in code. **Repo-side fix landed same day (`d25c768e`, worktree agent run):** canonical "Language Portability (HARD RULE)" section in all 8 generation prompts, widened `language_dependent` docstring + generator field description, and a Sentry-flagged observational serving guard in `question_to_dict_translated` (mirrors #107's fail-loud pattern; still serves — skipping or raw English judged worse mid-drive). Tests: quiz-agent 465 · quiz-pack-api 685 green; guard tests verified failing pre-fix. Corpus audit (repo files only): the offending row is `kids_30_05` in the shared kids corpus (also in the 2026-07-07 prod export), mistagged `false`; siblings `kids_27_08` (flamboyance) and "saved by the bell" (batch-09). **Remaining:** founder call on the custom-pack filter bypass (untouched) · prod query + retire of surviving idiom rows (did `kids_30_05` outlive the 2026-07-26 archive-to-31?) · scorer portability dimension deferred to #99.
 **Created:** 2026-07-28
 
 ## Symptom

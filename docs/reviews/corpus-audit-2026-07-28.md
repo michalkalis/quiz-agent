@@ -87,6 +87,25 @@ The long-standing blocker (neither `.env` key authenticated against staging) had
 Both environments now authenticate with the single `ADMIN_API_KEY` from `.env` (verified 200 against
 the admin stats endpoint on staging and prod).
 
+## Do the edits actually reach clients?
+
+Yes, with no redeploy or machine restart. Verified against the code:
+
+- The retrieval layer holds **no cache** — `QuestionRetriever` and `PgvectorQuestionStore` issue a live
+  `SELECT` per call, so the next question served is the corrected row.
+- The TTS cache is keyed on `sha256(text:voice)` (`apps/quiz-agent/app/tts/cache.py:120-131`), so changed
+  question wording produces a new key: fresh audio is synthesised and the old clip is simply orphaned on
+  the volume. No stale narration.
+- Answer grading re-fetches the question at answer time (`apps/quiz-agent/app/quiz/flow.py:114`), so it
+  always uses the corrected answer key.
+
+One nuance, harmless here: a session that was **already mid-question** when the edit landed keeps the old
+wording for that one question, because `current_question_text` is snapshotted onto the session
+(`packages/shared/quiz_shared/models/session.py:92-93`) and write-through-persisted, so a restart would not
+clear it either. Grading for that question would use the new answer key against the old spoken text. Prod
+has no users beyond the founder and staging is beta-only, so no real session was exposed; sessions pick up
+the correction on their next question.
+
 ## Rollback
 
 Full pre-change exports of both databases exist for the session; per-row rollback is also possible

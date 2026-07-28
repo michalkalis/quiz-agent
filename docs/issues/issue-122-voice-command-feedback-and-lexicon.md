@@ -35,7 +35,11 @@ Historical note: richer `.recording`/`.processing` phases existed in the origina
 
 ## Scope of a fix
 
-**Gate (blocking, founder requirement): a proper design pass before any Track A implementation.** Draft the states in Pencil (`design/quiz-agent.pen`, existing component `s49sd`) or another design tool, get founder sign-off in-session, then implement. No code on Track A before sign-off. The design session must answer:
+**Gate (blocking, founder requirement): a proper design pass before any Track A implementation.** No code on Track A before sign-off.
+
+**Process — founder decision 2026-07-28, applies to every UI issue: HTML variants first, Pencil second, code third.** The agent generates several *HTML* variants of the screen/component, the founder reviews them and picks one; only the chosen variant is then drawn into Pencil (`design/quiz-agent.pen` — here the existing component `s49sd`), and only after that is it implemented. Never Pencil-first, never code-first. `⌘S` on the `.pen` stays the founder's step.
+
+The design session must answer:
 
 - What does "recognized / working on it" look like — does `CmdListenBar` morph in place (same slot, same size, no layout jump at 90 km/h) or does a separate transient overlay appear?
 - Does the recognized state name the command back ("ŠTART ✓") or stay generic ("…")? Naming it doubles as a recognition-quality check for the founder; it costs a localized string per command.

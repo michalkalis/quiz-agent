@@ -37,7 +37,8 @@ Consequence today: a free user holding pack credits sees only "N of 100 free que
 - Same class of gap in Settings, in scope if cheap: `subscriptionPlanDisplay` returns the literal "Free" before `usageInfo` loads (`SettingsView.swift:582-584`) — an unlimited subscriber is briefly told they are on Free. Should read as loading, not as a wrong answer.
 
 **Track B — pack + subscription state on Home. DESIGN GATE, mandatory.**
-- **No implementation until a proper design pass exists and the founder has signed off.** Draft the revised Home plan-card states in Pencil (`design/quiz-agent.pen`, the frame 86.8 slot from #87), present them interactively, founder approves, ⌘S save is the founder's step — same procedure as [#108 — driving UX papercuts](issue-108-driving-ux-papercuts.md) item B.
+- **No implementation until a proper design pass exists and the founder has signed off.**
+- **Process — founder decision 2026-07-28, applies to every UI issue: HTML variants first, Pencil second, code third.** The agent generates several *HTML* variants of the revised Home plan-card states, the founder reviews and picks one; only the chosen variant goes into Pencil (`design/quiz-agent.pen`, the frame 86.8 slot from #87), and only then into code. Never Pencil-first, never code-first. `⌘S` save stays the founder's step.
 - The design session must answer, explicitly:
   - What states the slot must express: free-with-quota · free-with-pack-credits · free-with-both · subscribed-active · subscribed-grace · subscribed-expired · loading · failed. Which of these get their own visual, which collapse.
   - Visual hierarchy when a user has both monthly free questions and pack credits — which number is primary, and what the progress track then represents (it currently maps to the free quota only).

@@ -37,8 +37,8 @@ But the **entire** answer card and stats row sit behind `if showEvaluation, view
 The founder explicitly asked for a design tool and a rethink of hierarchy. No Result-screen code lands before an approved frame.
 
 - Attach/inspect the three founder screenshots; reproduce both Result variants on-device and diff against `docs/design/frames/X4o4l.png` (correct) / `31AzE.png` (incorrect) — those are from #52.11 (Jun 16) and predate later footer additions, so treat them as stale.
-- Redraw both Result frames in `design/quiz-agent.pen`, answering the visual-hierarchy questions below.
-- **Founder sign-off in-session on the frames** (same pattern as [#108 — driving UX papercuts](issue-108-driving-ux-papercuts.md) item B: draft → interactive approval → implement). `⌘S` on the `.pen` is the founder's step; re-export the two PNGs afterwards.
+- **Process — founder decision 2026-07-28, applies to every UI issue: HTML variants first, Pencil second, code third.** Generate several *HTML* variants of both Result states (correct / incorrect) answering the visual-hierarchy questions below; the founder reviews them and picks one. Only the chosen variant is redrawn in `design/quiz-agent.pen`, and only then implemented. Never Pencil-first, never code-first.
+- **Founder sign-off on the picked variant**, then `⌘S` on the `.pen` (the founder's step) and re-export the two PNGs.
 
 Questions the design session must answer:
 - What is dominant — the verdict banner ("NAILED IT." / "MISSED IT."), the answer-comparison card, or the score box? Right now the 52pt headline dominates while the information a wrong answer actually needs (the right answer + why) is second.

@@ -33,7 +33,9 @@ The correct pattern already exists one row above: the pack row checks per-produc
 
 ## Scope of a fix
 
-**Gate (blocking): proper design pass before any implementation.** Per the founder's standing rule (same shape as [#108 — driving UX papercuts](issue-108-driving-ux-papercuts.md) item B), the paywall's in-flight states must be drafted in `design/quiz-agent.pen` (frame z8TS6) — or another design tool — and signed off by the founder **before** code is written. The agent drafts; ⌘S / approval is the founder's step. Implementation without sign-off is out of bounds.
+**Gate (blocking): proper design pass before any implementation.** The paywall's in-flight states must be designed and signed off by the founder **before** code is written. Implementation without sign-off is out of bounds.
+
+**Process — founder decision 2026-07-28, applies to every UI issue: HTML variants first, Pencil second, code third.** The agent generates several *HTML* variants of the paywall in-flight states, the founder reviews and picks one; only the chosen variant is drawn into `design/quiz-agent.pen` (frame z8TS6), and only then implemented. Never Pencil-first, never code-first. `⌘S` / approval stays the founder's step.
 
 Questions the design session must answer (visual hierarchy, not code):
 - What does the paywall look like while a **pack** purchase is in flight: does the Subscribe CTA dim, stay full-strength, or gain a "not now" treatment? Is there exactly one visible busy indicator on screen, or two?

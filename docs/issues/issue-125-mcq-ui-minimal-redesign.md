@@ -36,7 +36,8 @@ Note the stem itself does *not* truncate: `HangsQuestionPrompt` uses `.fixedSize
 - Voice answers must stay accepted throughout — the gate is visual only; confirm the MCQ voice-match path (`viewModel.mcqVoiceMatchedKey`) is unaffected when the picker is not on screen.
 
 **Track B — minimalist MCQ layout (DESIGN-GATED).**
-- **Gate: a proper design pass in `design/quiz-agent.pen` (Pencil) with founder sign-off BEFORE any implementation.** Founder asked explicitly for "a more minimalist version to be designed"; same process as the [#108 — driving UX papercuts](issue-108-driving-ux-papercuts.md) item B precedent (draft the frame, founder approves interactively, ⌘S is the founder's step, then implement).
+- **Gate: a proper design pass with founder sign-off BEFORE any implementation.** Founder asked explicitly for "a more minimalist version to be designed".
+- **Process — founder decision 2026-07-28, applies to every UI issue: HTML variants first, Pencil second, code third.** The agent generates several *HTML* variants of the minimalist MCQ layout, the founder reviews and picks one; only the chosen variant is drawn into `design/quiz-agent.pen`, and only then implemented. Never Pencil-first, never code-first. `⌘S` is the founder's step.
 - Questions the design session must answer:
   - What is the visual hierarchy at each phase — reading (stem dominant), answering (options dominant), and the transition between them?
   - How much vertical space is reserved for the stem as a floor, and what happens beyond it (scroll with a visible affordance, shrink-to-fit, both)?

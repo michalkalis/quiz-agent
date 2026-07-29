@@ -287,6 +287,27 @@ final class AppState: ObservableObject {
                 viewModel.autoAdvanceCountdown = 5
                 viewModel.settings.autoAdvanceDelay = 8
             }
+            // `--ui-test-result-skipped` (#131 Track D): a skip must render the
+            // neutral "SKIPPED." verdict, never "MISSED IT." — lands directly on
+            // the skipped result so the chip/headline/dropped you-said row can be
+            // screenshot-verified.
+            if CommandLine.arguments.contains("--ui-test-result-skipped") {
+                viewModel.currentQuestion = Question.preview
+                viewModel.currentSession = QuizSession.preview(score: 2.0, answered: 3, correct: 2)
+                viewModel.quizState = .showingResult(
+                    question: Question.preview,
+                    evaluation: Evaluation(
+                        userAnswer: "",
+                        result: .skipped,
+                        points: 0.0,
+                        correctAnswer: "Uranus",
+                        questionId: Question.preview.id,
+                        explanation: nil
+                    )
+                )
+                viewModel.autoAdvanceCountdown = 5
+                viewModel.settings.autoAdvanceDelay = 8
+            }
             // `--ui-test-result-nil-evaluation` (#127 req. 6/7): a genuinely nil
             // evaluation cannot route to ResultView (ContentView shows it only for
             // .showingResult, whose payload always carries an evaluation), so this

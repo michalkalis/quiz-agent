@@ -1,7 +1,9 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "" : {},
+    "" : {
+
+    },
     "%@ / month" : {
       "localizations" : {
         "sk" : {
@@ -3279,6 +3281,16 @@
         }
       }
     },
+    "SKIPPED." : {
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PRESKOČENÉ."
+          }
+        }
+      }
+    },
     "STAY" : {
       "localizations" : {
         "sk" : {
@@ -4922,6 +4934,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "dobrá práca — tu je tvoj výsledok"
+          }
+        }
+      }
+    },
+    "no answer" : {
+      "comment" : "Result verdict chip label when the question was skipped without an answer",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bez odpovede"
           }
         }
       }

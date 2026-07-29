@@ -100,4 +100,20 @@ struct ResultViewSnapshotTests {
         let view = ResultView(viewModel: makeResultViewModel(evaluation: .previewIncorrect))
         assertSnapshot(of: view, as: .stableDump)
     }
+
+    // MARK: - Variant C: skipped (#131 Track D)
+
+    /// ResultView with a skipped evaluation.
+    /// Structural assertions (verified via dump baseline):
+    ///   • "SKIPPED." verdict word present, not "MISSED IT."
+    ///   • no "you said" recap row (dropped for this state)
+    @Test("Snapshot: skipped evaluation renders SKIPPED headline, no you-said row")
+    func skippedVariant() {
+        let evaluation = Evaluation(
+            userAnswer: "", result: .skipped, points: 0.0,
+            correctAnswer: "Uranus", questionId: "q_test", explanation: nil
+        )
+        let view = ResultView(viewModel: makeResultViewModel(evaluation: evaluation))
+        assertSnapshot(of: view, as: .stableDump)
+    }
 }

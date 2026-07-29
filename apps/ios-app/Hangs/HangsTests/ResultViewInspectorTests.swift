@@ -123,6 +123,82 @@ struct ResultViewInspectorTests {
         }
     }
 
+    // MARK: - Skipped variant (#131 Track D)
+
+    /// A skip must never render "MISSED IT. / not quite" over an answer the
+    /// driver never gave — it gets its own neutral verdict: "SKIPPED." headline,
+    /// a "no answer" chip, and no MISSED/NAILED word at all.
+    @Test("Skipped evaluation renders neutral SKIPPED verdict, not MISSED IT")
+    func skippedVariantRendersNeutralVerdict() async throws {
+        let evaluation = Evaluation(
+            userAnswer: "", result: .skipped, points: 0.0,
+            correctAnswer: "Uranus", questionId: "q_test", explanation: nil
+        )
+        let view = ResultView(viewModel: makeViewModel(evaluation: evaluation))
+
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: Never.self) { try tree.find(text: "SKIPPED.") }
+            #expect(throws: Never.self) { try tree.find(text: "no answer") }
+            #expect(throws: Never.self) {
+                try tree.find(ViewType.Image.self, where: { try $0.actualImage().name() == "minus" })
+            }
+            // The wrong verdicts must NOT appear.
+            #expect(throws: (any Error).self) { try tree.find(text: "MISSED IT.") }
+            #expect(throws: (any Error).self) { try tree.find(text: "not quite") }
+            #expect(throws: (any Error).self) { try tree.find(text: "NAILED IT.") }
+        }
+    }
+
+    /// The redundant strikethrough "you said · <empty>" row must be dropped for
+    /// a skip — there is nothing the driver said, so no "you said" label at all.
+    @Test("Skipped evaluation drops the 'you said' recap row")
+    func skippedVariantHasNoYouSaidRow() async throws {
+        let evaluation = Evaluation(
+            userAnswer: "", result: .skipped, points: 0.0,
+            correctAnswer: "Uranus", questionId: "q_test", explanation: nil
+        )
+        let view = ResultView(viewModel: makeViewModel(evaluation: evaluation))
+
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: (any Error).self) { try tree.find(text: "you said") }
+        }
+    }
+
+    /// Score delta stays "+0" for a skip, same as a wrong answer (unchanged).
+    @Test("Skipped evaluation shows +0 score delta")
+    func skippedVariantShowsZeroScoreDelta() async throws {
+        let evaluation = Evaluation(
+            userAnswer: "", result: .skipped, points: 0.0,
+            correctAnswer: "Uranus", questionId: "q_test", explanation: nil
+        )
+        let view = ResultView(viewModel: makeViewModel(evaluation: evaluation))
+
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: Never.self) { try tree.find(text: "+0") }
+        }
+    }
+
+    /// A genuine wrong answer must still show "MISSED IT." — the new `.skipped`
+    /// branch must not swallow the existing incorrect path.
+    @Test("Wrong answer still renders MISSED IT after the skipped verdict was added")
+    func incorrectVariantStillRendersMissedIt() async throws {
+        let evaluation = Evaluation(
+            userAnswer: "Saturn", result: .incorrect, points: 0.0,
+            correctAnswer: "Uranus", questionId: "q_test", explanation: nil
+        )
+        let view = ResultView(viewModel: makeViewModel(evaluation: evaluation))
+
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: Never.self) { try tree.find(text: "MISSED IT.") }
+            #expect(throws: Never.self) { try tree.find(text: "you said") }
+            #expect(throws: (any Error).self) { try tree.find(text: "SKIPPED.") }
+        }
+    }
+
     // MARK: - Partial credit variant
 
     /// Partial collapses to the incorrect visual branch (documented limitation);
@@ -280,6 +356,29 @@ struct ResultViewInspectorTests {
             #expect(throws: Never.self) { try tree.find(button: "Next question") }
             #expect(throws: Never.self) { try tree.find(text: "STAY") }
             #expect(throws: (any Error).self) { try tree.find(button: "Why is this correct?") }
+        }
+    }
+
+    /// #131 Track D: "Next question" is the primary CTA and must sit LEFT of the
+    /// STAY/RESUME pill (swapped from the #127 layout, founder spec). Asserted by
+    /// document order of the two footer buttons, which mirrors left-to-right
+    /// layout order in the underlying HStack.
+    @Test("Footer button order: Next question precedes the STAY pill")
+    func footerNextQuestionPrecedesStayPill() async throws {
+        let evaluation = Evaluation(
+            userAnswer: "Uranus", result: .correct, points: 1.0,
+            correctAnswer: "Uranus", questionId: "q_test", explanation: nil
+        )
+        let view = ResultView(viewModel: makeViewModel(evaluation: evaluation))
+
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            // Document order of Text nodes mirrors left-to-right HStack layout
+            // order; "Next question" is the CTA's label, "STAY" the pill's.
+            let texts = try tree.findAll(ViewType.Text.self).compactMap { try? $0.string() }
+            let nextIndex = try #require(texts.firstIndex(of: "Next question"))
+            let stayIndex = try #require(texts.firstIndex(of: "STAY"))
+            #expect(nextIndex < stayIndex)
         }
     }
 

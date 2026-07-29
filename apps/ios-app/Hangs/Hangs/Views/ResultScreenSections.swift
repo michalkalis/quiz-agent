@@ -19,13 +19,18 @@ enum ResultVerdict {
     case correct
     case incorrect
     case neutral
+    /// #131 Track D: a skip is not a failure — distinct from `.incorrect` so it
+    /// never renders "MISSED IT. / not quite" over an answer the driver never
+    /// gave. Neutral palette, own chip ("no answer") and headline ("SKIPPED.").
+    case skipped
 
-    /// The banner kind (nil = neutral, no chip).
+    /// The banner kind (nil = neutral/skipped, which render their own chip —
+    /// skipped has no correct/incorrect HangsResultKind counterpart).
     var kind: HangsResultKind? {
         switch self {
         case .correct: return .correct
         case .incorrect: return .incorrect
-        case .neutral: return nil
+        case .neutral, .skipped: return nil
         }
     }
 
@@ -34,16 +39,18 @@ enum ResultVerdict {
         switch self {
         case .correct: return "NAILED IT."
         case .incorrect: return "MISSED IT."
+        case .skipped: return "SKIPPED."
         case .neutral: return nil
         }
     }
 
-    /// Field wash: greenSoft / pinkSoft tint; neutral falls back to a plain card.
+    /// Field wash: greenSoft / pinkSoft tint; neutral and skipped fall back to
+    /// the plain card (skipped reuses the same neutral token — no new colors).
     var fieldFill: Color {
         switch self {
         case .correct: return Theme.Hangs.Colors.greenSoft
         case .incorrect: return Theme.Hangs.Colors.pinkSoft
-        case .neutral: return Theme.Hangs.Colors.bgCard
+        case .neutral, .skipped: return Theme.Hangs.Colors.bgCard
         }
     }
 }
@@ -61,17 +68,7 @@ struct ResultVerdictField: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .center) {
-                if let kind = verdict.kind {
-                    HStack(spacing: 8) {
-                        Image(systemName: kind.icon)
-                            .font(.system(size: 11, weight: .bold))
-                        Text(kind.label)
-                            .font(.hangsMono(11, weight: .medium))
-                            .tracking(2)
-                    }
-                    .foregroundColor(kind.color)
-                    .accessibilityIdentifier("result.heroBanner")
-                }
+                chip
                 Spacer()
                 scorebox
             }
@@ -90,6 +87,34 @@ struct ResultVerdictField: View {
             RoundedRectangle(cornerRadius: Theme.Hangs.Radius.card, style: .continuous)
                 .fill(verdict.fieldFill)
         )
+    }
+
+    /// The status chip: correct/incorrect reuse the shared `HangsResultKind`
+    /// tokens; skipped gets its own neutral-palette chip ("no answer") — it has
+    /// no HangsResultKind counterpart, so it's rendered locally (#131 Track D).
+    @ViewBuilder
+    private var chip: some View {
+        if let kind = verdict.kind {
+            HStack(spacing: 8) {
+                Image(systemName: kind.icon)
+                    .font(.system(size: 11, weight: .bold))
+                Text(kind.label)
+                    .font(.hangsMono(11, weight: .medium))
+                    .tracking(2)
+            }
+            .foregroundColor(kind.color)
+            .accessibilityIdentifier("result.heroBanner")
+        } else if verdict == .skipped {
+            HStack(spacing: 8) {
+                Image(systemName: "minus")
+                    .font(.system(size: 11, weight: .bold))
+                Text("no answer", comment: "Result verdict chip label when the question was skipped without an answer")
+                    .font(.hangsMono(11, weight: .medium))
+                    .tracking(2)
+            }
+            .foregroundColor(Theme.Hangs.Colors.muted)
+            .accessibilityIdentifier("result.heroBanner")
+        }
     }
 
     private var scorebox: some View {
@@ -225,12 +250,17 @@ struct ResultAnswerPanel: View {
             }
         } else {
             hairline.padding(.top, 10)
-            if verdict == .correct {
+            switch verdict {
+            case .correct:
                 if let questionStem {
                     monoRecapLine(label: "the question", value: questionStem, struck: false)
                         .padding(.top, 10)
                 }
-            } else {
+            case .skipped:
+                // #131 Track D: no redundant strikethrough "you said · skipped" —
+                // there is nothing the driver said.
+                EmptyView()
+            case .incorrect, .neutral:
                 HStack {
                     monoRecapLine(label: "you said", value: userAnswer ?? "", struck: true)
                     Spacer()
@@ -355,7 +385,8 @@ struct ResultFooter: View {
             }
 
             HStack(spacing: 10) {
-                stayPill
+                // #131 Track D: primary CTA sits LEFT, STAY/RESUME to its right
+                // (founder spec, swapped from the #127 layout).
                 HangsPrimaryButton(
                     title: "Next question",
                     icon: nil,
@@ -369,6 +400,7 @@ struct ResultFooter: View {
                     ? Text("Next question, auto-advancing in \(countdownRemaining) seconds", comment: "Accessibility label for the next-question button while auto-advance counts down")
                     : Text("Next question", comment: "Accessibility label for the next-question button"))
                 .accessibilityIdentifier("result.continue")
+                stayPill
             }
         }
         .padding(.horizontal, 24)

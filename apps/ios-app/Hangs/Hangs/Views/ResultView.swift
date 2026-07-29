@@ -104,6 +104,10 @@ struct ResultView: View {
         // degraded state: a neutral field — never a confident "MISSED IT." verdict
         // over an answer we cannot show (req. 6 nil-eval + req. 7 empty-answer).
         guard !isRecap, let evaluation = viewModel.resultEvaluation else { return .neutral }
+        // #131 Track D: a skip is not a failure — it must never fall through to
+        // `.incorrect` and render "MISSED IT. / not quite" over an answer the
+        // driver never gave.
+        if evaluation.wasSkipped { return .skipped }
         return evaluation.isCorrect ? .correct : .incorrect
     }
 
@@ -158,7 +162,7 @@ struct ResultView: View {
     private var scoreDelta: String? {
         switch verdict {
         case .correct: return pointsDeltaSuffix
-        case .incorrect: return "+0"
+        case .incorrect, .skipped: return "+0"
         case .neutral: return nil
         }
     }

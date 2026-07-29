@@ -25,4 +25,7 @@ Founder: with a 10-question set, reveal/speak all answers on one screen after th
 2. Track E picks: ①A/①B × ②C/②D + default position of the new setting.
 
 ## Execution log
-- 2026-07-29: tracks A/C (iOS) + D (backend+iOS) implemented in-session; variant pages built. (Commits/tests: see TODO line.)
+- 2026-07-29: variant pages + issue filed `38805813`.
+- 2026-07-29: **A+C iOS shipped `72fb7cfc`** — reveal gate deleted (grid from first frame; think-phase tap submits AND stops the think countdown — latent bug the gate had masked), ListenBar gated on `.recording`, verdict-band replay-question speaker removed, meta row = you-said + source only, `mcqLabelled()` composes "B — Pyramída" both directions (key→text, text→key). 57/57 targeted tests green (10 suites), 2 `.dump` baselines re-recorded (diff = removed elements only), sim visual pass incl. long-stem MCQ.
+- 2026-07-29: **D backend shipped `d16620d8`** — `translate_question_payload()` one structured call (stem+options+explanation+answer), record persisted on the session (`current_question_translation`), evaluation/result/`GET /question` all read it; MCQ correct→key resolved at serve time so the evaluator is unchanged; drops per-answer `translate_feedback` (2→1 LLM calls/question). 484 backend tests green (+12). **Deployed prod AND staging** (the #131 staging-token blocker doesn't bind this machine's fly auth; staging healthy, 592 approved, runway ok). TF staging build run 30461629086 triggered.
+- Residuals: `voice.py` still feeds the ENGLISH stem to Whisper context + the TTS-leakage guard (dead for non-EN sessions — follow-up candidate) · sessions started before the deploy degrade to stem-only translation · `translate_question` now unused by app code (deletion candidate).

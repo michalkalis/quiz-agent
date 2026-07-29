@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#132B — MCQ: odpočet premýšľania · varianty</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ===========================================================
+   #132 Track B — kde žije odpočet premýšľania na MCQ otázke.
+   Predpoklad všetkých variantov (track A, už opravené):
+   možnosti A–D sú viditeľné od PRVEJ sekundy otázky.
+   Page chrome = dark review page, phone = Hangs light tokens.
+   =========================================================== */
+:root{
+  --page-bg:#0F1116; --page-line:#262B36; --page-text:#E7EAF0; --page-dim:#98A0B0;
+  --bg:#F6F7F9; --card:#FFFFFF; --ink:#0E1A2B;
+  --pink:#FF3D8F; --pinkDeep:#D91E72; --pinkText:#C2185B;
+  --blue:#0A84FF; --muted:#6B7280; --mutedFaint:#9CA3AF;
+  --green:#16A34A; --greenCheck:#22C55E; --teal:#14B8A6; --slate:#64748B;
+  --hair:rgba(14,26,43,.078); --border:rgba(14,26,43,.122);
+  --tealSoft:rgba(20,184,166,.14); --pinkSoft:rgba(255,61,143,.12);
+  --neutralSoft:rgba(14,26,43,.055);
+  --cardShadow:0 4px 20px rgba(14,26,43,.08);
+  --navShadow:0 2px 8px rgba(14,26,43,.06);
+  --display:Anton,"Arial Narrow",Haettenschweiler,Impact,sans-serif;
+  --body:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--page-bg);color:var(--page-text);font-family:var(--body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1420px;margin:0 auto;padding:48px 28px 96px}
+.kicker{font-family:var(--mono);font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--pink);margin:0 0 10px}
+h1{font-family:var(--display);font-weight:400;font-size:46px;line-height:1.02;letter-spacing:-1px;margin:0 0 16px;text-transform:uppercase}
+.lede{max-width:80ch;color:var(--page-dim);font-size:16px;margin:0 0 10px}
+.lede strong{color:var(--page-text);font-weight:600}
+.meta{font-family:var(--mono);font-size:11px;letter-spacing:1.2px;color:#6E7688;margin-top:22px;padding-top:16px;border-top:1px solid var(--page-line)}
+.variant{margin-top:64px;padding-top:32px;border-top:1px solid var(--page-line)}
+.vhead{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.vtag{font-family:var(--mono);font-size:11px;letter-spacing:2px;color:#0F1116;background:var(--pink);border-radius:5px;padding:3px 9px;font-weight:600}
+h2{font-family:var(--display);font-weight:400;font-size:34px;letter-spacing:-.5px;margin:0;text-transform:uppercase}
+.concept{color:var(--page-dim);max-width:88ch;margin:10px 0 0;font-size:16px}
+.concept b{color:var(--page-text);font-weight:600}
+.devices{display:flex;gap:36px;flex-wrap:wrap;margin:28px 0 0}
+figure.device{margin:0}
+figure.device figcaption{font-family:var(--mono);font-size:11px;letter-spacing:1.8px;text-transform:uppercase;color:var(--page-dim);margin-top:13px;text-align:center}
+figure.device figcaption b{color:var(--greenCheck);font-weight:600}
+figure.device figcaption i{color:#FF7FB4;font-style:normal;font-weight:600}
+
+/* ================= phone ================= */
+.phone{width:390px;height:844px;flex:0 0 auto;background:var(--bg);color:var(--ink);border-radius:44px;overflow:hidden;position:relative;display:flex;flex-direction:column;box-shadow:0 26px 64px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.07)}
+.anton{font-family:var(--display);font-weight:400}
+.mono{font-family:var(--mono)}
+.sb{height:47px;flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 30px 0 34px;font-size:15px;font-weight:600}
+.sb .dots{letter-spacing:1px;font-size:16px}
+.nav{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:14px 20px 4px}
+.nav-l{display:flex;align-items:center;gap:10px}
+.xchip{width:36px;height:36px;border-radius:50%;background:var(--card);display:grid;place-items:center;box-shadow:var(--navShadow)}
+.xchip svg{width:14px;height:14px;color:var(--ink)}
+.counter{font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:2px;color:var(--muted)}
+.prog{flex:0 0 auto;height:3px;margin:6px 24px 0;border-radius:2px;background:rgba(14,26,43,.10);overflow:hidden}
+.prog i{display:block;height:100%;width:10%;background:var(--pink);border-radius:2px}
+.lbl{font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:2px;text-transform:uppercase}
+.lbl.n{color:var(--slate)}.lbl.f{color:var(--mutedFaint)}.lbl.t{color:var(--teal)}.lbl.p{color:var(--pink)}
+
+/* question */
+.stem{flex:1 1 auto;min-height:0;margin:18px 24px 6px;padding-left:16px;border-left:4px solid var(--blue);font-family:var(--display);font-size:29px;line-height:1.1;letter-spacing:.2px;overflow:hidden}
+.grid{flex:0 0 auto;display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:8px 20px 0}
+.tile{background:var(--card);border-radius:18px;box-shadow:var(--cardShadow);padding:14px 14px 16px;display:flex;flex-direction:column;gap:10px;min-height:96px}
+.kbadge{width:34px;height:34px;border-radius:50%;background:rgba(124,58,237,.13);color:#7C3AED;display:grid;place-items:center;font-weight:700;font-size:15px}
+.opt{font-size:19px;font-weight:600}
+.foot{flex:0 0 auto;padding:14px 20px 28px;display:flex;flex-direction:column;gap:12px}
+.ctrl{display:flex;align-items:center;gap:12px}
+.ctrl>.grow{flex:1 1 auto;min-width:0}
+.spk{width:48px;height:48px;border-radius:50%;background:var(--card);box-shadow:var(--navShadow);display:grid;place-items:center;flex:0 0 auto}
+.spk svg{width:18px;height:18px;color:var(--ink)}
+.skipbtn{height:56px;border-radius:28px;background:var(--card);border:1px solid var(--border);display:grid;place-items:center;font-size:18px;font-weight:600}
+
+/* Variant A — bar */
+.lbar{position:relative;height:56px;border-radius:28px;overflow:hidden;background:var(--neutralSoft);display:flex;align-items:center;gap:10px;padding:0 18px;font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:1.6px;text-transform:uppercase;color:var(--slate)}
+.lbar .fill{position:absolute;inset:0;background:var(--tealSoft);border-radius:28px}
+.lbar>span,.lbar>svg{position:relative;z-index:1}
+.lbar svg{width:15px;height:15px;flex:0 0 auto}
+.lbar.listen{background:var(--pinkSoft);color:var(--pinkText)}
+.lbar.listen .fill{display:none}
+.ldots i{display:inline-block;width:5px;height:5px;border-radius:50%;background:currentColor;margin-left:4px;opacity:.4}
+.ldots i:first-child{opacity:1}
+
+/* Variant B — ring */
+.ringwrap{position:relative;width:54px;height:54px;flex:0 0 auto}
+.ringwrap svg{transform:rotate(-90deg)}
+.ringnum{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--mono);font-size:15px;font-weight:600}
+.ringlbls{display:flex;flex-direction:column;gap:3px;min-width:0}
+
+/* Variant C — hairline */
+.linewrap{display:flex;flex-direction:column;gap:6px}
+.linetop{display:flex;justify-content:space-between;align-items:baseline}
+.thinline{height:3px;border-radius:2px;background:rgba(14,26,43,.08);overflow:hidden}
+.thinline i{display:block;height:100%;border-radius:2px;background:var(--teal)}
+.thinline i.p{background:var(--pink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="kicker">#132 · Track B · návrhy na výber</p>
+  <h1>MCQ — odpočet premýšľania</h1>
+  <p class="lede"><strong>Možnosti A–D sú odteraz viditeľné od prvej sekundy</strong> (track A, už opravené v kóde). Otázka na výber: kde žije odpočet do začiatku počúvania — náhrada za doterajší pill „THINK 45s“.</p>
+  <p class="lede">Fixované, nie je predmetom výberu: tlačidlo Preskočiť · reproduktor (prehrá otázku) · po vypršaní odpočtu sa spustí počúvanie A–D v jednotnej lište (#131F, plná veľkosť).</p>
+  <p class="meta">TOKENY: THEME+HANGS.SWIFT · 390×844 = 1:1 IOS BODY · OTÁZKA UŽ PO SLOVENSKY VRÁTANE MOŽNOSTÍ (TRACK D)</p>
+
+  <!-- ============================ VARIANT A ============================ -->
+  <section class="variant">
+    <div class="vhead"><span class="vtag">VARIANT A</span><h2>Odpočet v lište</h2></div>
+    <p class="concept">Odpočet žije priamo v <b>jednotnej lište</b> (#131F): počas premýšľania je tyrkysová a vyprázdňuje sa doľava, pri nule sa <b>tá istá lišta preklopí na ružové počúvanie</b>. Nič nepribúda ani nemizne — jeden prvok, dva stavy. Najkonzistentnejšie s už schváleným systémom.</p>
+    <div class="devices">
+
+      <figure class="device">
+        <div class="phone">
+          <div class="sb"><span>15:47</span><span class="dots">•••</span></div>
+          <div class="nav">
+            <div class="nav-l">
+              <div class="xchip"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 2l10 10M12 2L2 12"/></svg></div>
+              <span class="lbl n">GENERAL · Q1</span>
+            </div>
+            <span class="counter">01 / 10</span>
+          </div>
+          <div class="prog"><i></i></div>
+          <div class="stem">V Japonsku farmári pestujú známy melón v pevných nádobách, aby získal nezvyčajný tvar. Aký tvar má?</div>
+          <div class="grid">
+            <div class="tile"><span class="kbadge">A</span><span class="opt">Kocka</span></div>
+            <div class="tile"><span class="kbadge">B</span><span class="opt">Pyramída</span></div>
+            <div class="tile"><span class="kbadge">C</span><span class="opt">Valec</span></div>
+            <div class="tile"><span class="kbadge">D</span><span class="opt">Srdce</span></div>
+          </div>
+          <div class="foot">
+            <div class="ctrl">
+              <div class="grow lbar">
+                <div class="fill" style="width:71%"></div>
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="6.4"/><path d="M8 4.6V8l2.4 1.6"/></svg>
+                <span>PREMÝŠĽAJ — POČÚVAM O 32 S</span>
+              </div>
+              <div class="spk"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v4h3l4 3V4L6 7H3z" fill="currentColor" stroke="none"/><path d="M12.5 6.5a3.6 3.6 0 010 5"/></svg></div>
+            </div>
+            <div class="skipbtn">Preskočiť otázku</div>
+          </div>
+        </div>
+        <figcaption>A · premýšľanie — lišta sa vyprázdňuje</figcaption>
+      </figure>
+
+      <figure class="device">
+        <div class="phone">
+          <div class="sb"><span>15:47</span><span class="dots">•••</span></div>
+          <div class="nav">
+            <div class="nav-l">
+              <div class="xchip"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 2l10 10M12 2L2 12"/></svg></div>
+              <span class="lbl n">GENERAL · Q1</span>
+            </div>
+            <span class="counter">01 / 10</span>
+          </div>
+          <div class="prog"><i></i></div>
+          <div class="stem">V Japonsku farmári pestujú známy melón v pevných nádobách, aby získal nezvyčajný tvar. Aký tvar má?</div>
+          <div class="grid">
+            <div class="tile"><span class="kbadge">A</span><span class="opt">Kocka</span></div>
+            <div class="tile"><span class="kbadge">B</span><span class="opt">Pyramída</span></div>
+            <div class="tile"><span class="kbadge">C</span><span class="opt">Valec</span></div>
+            <div class="tile"><span class="kbadge">D</span><span class="opt">Srdce</span></div>
+          </div>
+          <div class="foot">
+            <div class="ctrl">
+              <div class="grow lbar listen">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 2v12M4.5 5v6M11.5 5v6M1.5 7v2M14.5 7v2"/></svg>
+                <span>POČÚVAM — POVEDZ A–D</span>
+                <span class="ldots"><i></i><i></i><i></i></span>
+              </div>
+              <div class="spk"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v4h3l4 3V4L6 7H3z" fill="currentColor" stroke="none"/><path d="M12.5 6.5a3.6 3.6 0 010 5"/></svg></div>
+            </div>
+            <div class="skipbtn">Preskočiť otázku</div>
+          </div>
+        </div>
+        <figcaption>A · po nule — tá istá lišta, stav počúvania</figcaption>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ============================ VARIANT B ============================ -->
+  <section class="variant">
+    <div class="vhead"><span class="vtag">VARIANT B</span><h2>Prstenec</h2></div>
+    <p class="concept">Na mieste dnešného pillu je <b>kruhový odpočet so sekundami</b> — na jeden pohľad vidno, koľko ostáva, bez čítania textu. Vedľa neho stručný popis, čo príde po nule. Posledných 10 sekúnd prstenec sružovie. Pri nule ho nahradí lišta počúvania.</p>
+    <div class="devices">
+
+      <figure class="device">
+        <div class="phone">
+          <div class="sb"><span>15:47</span><span class="dots">•••</span></div>
+          <div class="nav">
+            <div class="nav-l">
+              <div class="xchip"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 2l10 10M12 2L2 12"/></svg></div>
+              <span class="lbl n">GENERAL · Q1</span>
+            </div>
+            <span class="counter">01 / 10</span>
+          </div>
+          <div class="prog"><i></i></div>
+          <div class="stem">V Japonsku farmári pestujú známy melón v pevných nádobách, aby získal nezvyčajný tvar. Aký tvar má?</div>
+          <div class="grid">
+            <div class="tile"><span class="kbadge">A</span><span class="opt">Kocka</span></div>
+            <div class="tile"><span class="kbadge">B</span><span class="opt">Pyramída</span></div>
+            <div class="tile"><span class="kbadge">C</span><span class="opt">Valec</span></div>
+            <div class="tile"><span class="kbadge">D</span><span class="opt">Srdce</span></div>
+          </div>
+          <div class="foot">
+            <div class="ctrl">
+              <div class="grow ctrl" style="gap:12px">
+                <div class="ringwrap">
+                  <svg width="54" height="54" viewBox="0 0 54 54">
+                    <circle cx="27" cy="27" r="23" fill="none" stroke="rgba(14,26,43,.08)" stroke-width="5"/>
+                    <circle cx="27" cy="27" r="23" fill="none" stroke="var(--teal)" stroke-width="5" stroke-linecap="round" stroke-dasharray="144.5" stroke-dashoffset="41"/>
+                  </svg>
+                  <span class="ringnum">32</span>
+                </div>
+                <div class="ringlbls">
+                  <span class="lbl t">PREMÝŠĽAJ</span>
+                  <span class="lbl f" style="font-size:10px;letter-spacing:1.4px">POTOM POČÚVAM A–D</span>
+                </div>
+              </div>
+              <div class="spk"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v4h3l4 3V4L6 7H3z" fill="currentColor" stroke="none"/><path d="M12.5 6.5a3.6 3.6 0 010 5"/></svg></div>
+            </div>
+            <div class="skipbtn">Preskočiť otázku</div>
+          </div>
+        </div>
+        <figcaption>B · premýšľanie — 32 s v prstenci</figcaption>
+      </figure>
+
+      <figure class="device">
+        <div class="phone">
+          <div class="sb"><span>15:47</span><span class="dots">•••</span></div>
+          <div class="nav">
+            <div class="nav-l">
+              <div class="xchip"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 2l10 10M12 2L2 12"/></svg></div>
+              <span class="lbl n">GENERAL · Q1</span>
+            </div>
+            <span class="counter">01 / 10</span>
+          </div>
+          <div class="prog"><i></i></div>
+          <div class="stem">V Japonsku farmári pestujú známy melón v pevných nádobách, aby získal nezvyčajný tvar. Aký tvar má?</div>
+          <div class="grid">
+            <div class="tile"><span class="kbadge">A</span><span class="opt">Kocka</span></div>
+            <div class="tile"><span class="kbadge">B</span><span class="opt">Pyramída</span></div>
+            <div class="tile"><span class="kbadge">C</span><span class="opt">Valec</span></div>
+            <div class="tile"><span class="kbadge">D</span><span class="opt">Srdce</span></div>
+          </div>
+          <div class="foot">
+            <div class="ctrl">
+              <div class="grow ctrl" style="gap:12px">
+                <div class="ringwrap">
+                  <svg width="54" height="54" viewBox="0 0 54 54">
+                    <circle cx="27" cy="27" r="23" fill="none" stroke="rgba(14,26,43,.08)" stroke-width="5"/>
+                    <circle cx="27" cy="27" r="23" fill="none" stroke="var(--pink)" stroke-width="5" stroke-linecap="round" stroke-dasharray="144.5" stroke-dashoffset="116"/>
+                  </svg>
+                  <span class="ringnum" style="color:var(--pinkText)">9</span>
+                </div>
+                <div class="ringlbls">
+                  <span class="lbl p">UŽ LEN CHVÍĽA</span>
+                  <span class="lbl f" style="font-size:10px;letter-spacing:1.4px">POTOM POČÚVAM A–D</span>
+                </div>
+              </div>
+              <div class="spk"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v4h3l4 3V4L6 7H3z" fill="currentColor" stroke="none"/><path d="M12.5 6.5a3.6 3.6 0 010 5"/></svg></div>
+            </div>
+            <div class="skipbtn">Preskočiť otázku</div>
+          </div>
+        </div>
+        <figcaption>B · <i>posledných 10 s — ružová</i></figcaption>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ============================ VARIANT C ============================ -->
+  <section class="variant">
+    <div class="vhead"><span class="vtag">VARIANT C</span><h2>Tenká linka</h2></div>
+    <p class="concept">Najtichšia možnosť: <b>žiadny chip ani číslo</b>, len vlásková linka nad pätičkou, ktorá sa vyprázdňuje. Sekundy sa objavia až posledných 10 s. Nič nesúperí s otázkou a možnosťami; presný čas nie je počas šoférovania podstatný.</p>
+    <div class="devices">
+
+      <figure class="device">
+        <div class="phone">
+          <div class="sb"><span>15:47</span><span class="dots">•••</span></div>
+          <div class="nav">
+            <div class="nav-l">
+              <div class="xchip"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 2l10 10M12 2L2 12"/></svg></div>
+              <span class="lbl n">GENERAL · Q1</span>
+            </div>
+            <span class="counter">01 / 10</span>
+          </div>
+          <div class="prog"><i></i></div>
+          <div class="stem">V Japonsku farmári pestujú známy melón v pevných nádobách, aby získal nezvyčajný tvar. Aký tvar má?</div>
+          <div class="grid">
+            <div class="tile"><span class="kbadge">A</span><span class="opt">Kocka</span></div>
+            <div class="tile"><span class="kbadge">B</span><span class="opt">Pyramída</span></div>
+            <div class="tile"><span class="kbadge">C</span><span class="opt">Valec</span></div>
+            <div class="tile"><span class="kbadge">D</span><span class="opt">Srdce</span></div>
+          </div>
+          <div class="foot">
+            <div class="ctrl">
+              <div class="grow linewrap">
+                <div class="linetop"><span class="lbl f" style="font-size:10px;letter-spacing:1.4px">PREMÝŠĽAJ</span></div>
+                <div class="thinline"><i style="width:71%"></i></div>
+              </div>
+              <div class="spk"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v4h3l4 3V4L6 7H3z" fill="currentColor" stroke="none"/><path d="M12.5 6.5a3.6 3.6 0 010 5"/></svg></div>
+            </div>
+            <div class="skipbtn">Preskočiť otázku</div>
+          </div>
+        </div>
+        <figcaption>C · premýšľanie — len linka, bez čísla</figcaption>
+      </figure>
+
+      <figure class="device">
+        <div class="phone">
+          <div class="sb"><span>15:47</span><span class="dots">•••</span></div>
+          <div class="nav">
+            <div class="nav-l">
+              <div class="xchip"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 2l10 10M12 2L2 12"/></svg></div>
+              <span class="lbl n">GENERAL · Q1</span>
+            </div>
+            <span class="counter">01 / 10</span>
+          </div>
+          <div class="prog"><i></i></div>
+          <div class="stem">V Japonsku farmári pestujú známy melón v pevných nádobách, aby získal nezvyčajný tvar. Aký tvar má?</div>
+          <div class="grid">
+            <div class="tile"><span class="kbadge">A</span><span class="opt">Kocka</span></div>
+            <div class="tile"><span class="kbadge">B</span><span class="opt">Pyramída</span></div>
+            <div class="tile"><span class="kbadge">C</span><span class="opt">Valec</span></div>
+            <div class="tile"><span class="kbadge">D</span><span class="opt">Srdce</span></div>
+          </div>
+          <div class="foot">
+            <div class="ctrl">
+              <div class="grow linewrap">
+                <div class="linetop">
+                  <span class="lbl f" style="font-size:10px;letter-spacing:1.4px">PREMÝŠĽAJ</span>
+                  <span class="lbl p" style="font-size:11px">8 S</span>
+                </div>
+                <div class="thinline"><i class="p" style="width:16%"></i></div>
+              </div>
+              <div class="spk"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v4h3l4 3V4L6 7H3z" fill="currentColor" stroke="none"/><path d="M12.5 6.5a3.6 3.6 0 010 5"/></svg></div>
+            </div>
+            <div class="skipbtn">Preskočiť otázku</div>
+          </div>
+        </div>
+        <figcaption>C · <i>posledných 10 s — sekundy sa ukážu</i></figcaption>
+      </figure>
+
+    </div>
+  </section>
+
+  <p class="meta">PO NULE VO VŠETKÝCH VARIANTOCH: JEDNOTNÁ LIŠTA V STAVE „POČÚVAM — POVEDZ A–D“ (#131F) · ŤUKNUTIE NA MOŽNOSŤ ODPOVEDÁ KEDYKOĽVEK, AJ POČAS PREMÝŠĽANIA</p>
+</div>
+</body>
+</html>

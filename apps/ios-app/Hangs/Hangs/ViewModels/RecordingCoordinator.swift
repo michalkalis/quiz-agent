@@ -113,6 +113,10 @@ final class RecordingCoordinator: ObservableObject {
         set { confirmationState.autoConfirmCountdown = newValue }
     }
 
+    /// Test seam (#131 Track A): overrides the submit path's transient cold-wake
+    /// retry backoff (default 1s/2s growth) so a retry test doesn't sleep for real.
+    var transientBackoffOverride: (@Sendable (Int) -> Duration)?
+
     // MARK: - Dependencies (service handles + the façade's shared task owner)
 
     let audioService: AudioServiceProtocol

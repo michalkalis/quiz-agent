@@ -210,6 +210,33 @@ final class QuizViewModel: ObservableObject {
         set { quizTimersController.thinkingTimeCountdown = newValue }
     }
 
+    /// Recording-window countdown (visible on QuestionView while recording) —
+    /// see `QuizTimersController.recordingCountdown`.
+    var recordingCountdown: Int {
+        get { quizTimersController.recordingCountdown }
+        set { quizTimersController.recordingCountdown = newValue }
+    }
+
+    /// #131 Track B — the ONE countdown the question screen shows, from the end
+    /// of the question read to submit or expiry. It is a single VALUE, not a
+    /// single timer: the think/answer window while the driver is deciding, the
+    /// recording window once the mic is open. The two hand over synchronously
+    /// (see `RecordingCoordinator.startRecording`), so the number never blanks,
+    /// freezes, or disappears — the founder rule after the 2026-07-29 field test.
+    var answerWindowRemaining: Int {
+        if quizState == .recording { return recordingCountdown }
+        return max(thinkingTimeCountdown, answerTimerCountdown)
+    }
+
+    /// The window `answerWindowRemaining` drains from — the Record/Stop button's
+    /// fill fraction. 0 means "no countdown is running" (fill hidden).
+    var answerWindowTotal: Int {
+        if quizState == .recording { return quizTimersController.recordingCountdownTotal }
+        if thinkingTimeCountdown > 0 { return settings.thinkingTime }
+        if answerTimerCountdown > 0 { return settings.answerTimeLimit }
+        return 0
+    }
+
     /// Per-question pause state (resets on next question) — see
     /// `QuizTimersController.currentQuestionPaused`.
     var currentQuestionPaused: Bool {
@@ -429,7 +456,7 @@ final class QuizViewModel: ObservableObject {
     /// (default 1s/2s growth). The cancel-during-backoff test pins it far above
     /// wall-clock noise so the cancel deterministically lands inside the sleep —
     /// under the full suite's parallel load the real ~1s window was racy.
-    var transientStartBackoffOverride: ((Int) -> Duration)?
+    var transientStartBackoffOverride: (@Sendable (Int) -> Duration)?
 
     // MARK: - Auto-Record State
 
@@ -928,54 +955,21 @@ final class QuizViewModel: ObservableObject {
     /// the original error propagates to the existing `handleError` path
     /// unchanged. `internal` so a unit test can exercise the retry directly.
     func withTransientStartRetry<T>(_ operation: () async throws -> T) async throws -> T {
-        let maxAttempts = 3 // 1 initial + 2 retries
-        var attempt = 1
-        while true {
-            do {
-                return try await operation()
-            } catch {
-                guard attempt < maxAttempts, Self.isTransientStartError(error) else {
-                    throw error
-                }
-                let backoff = transientStartBackoffOverride?(attempt) ?? .seconds(Double(attempt)) // 1s, then 2s
-                let backoffSeconds = Double(attempt) // 1s, then 2s
-                Logger.quiz.warning("⏳ Transient cold-start error on quiz start (attempt \(attempt, privacy: .public)/\(maxAttempts, privacy: .public)), retrying in \(backoffSeconds, privacy: .public)s: \(error, privacy: .public)")
-                SentryLog.info(
-                    "quiz start: retrying transient cold-start error",
-                    category: .network,
-                    attributes: ["attempt": attempt, "error": String(describing: error)]
-                )
-                // `try` (not `try?`): a cancelled start (Home "Cancel" tap) must abort
-                // the backoff immediately rather than swallow the cancellation and
-                // retry anyway. `Task.sleep` throws `CancellationError` as soon as the
-                // enclosing Task is cancelled, without waiting out the full duration.
-                try await Task.sleep(for: backoff)
-                attempt += 1
-            }
-        }
+        try await withTransientRetry(label: "quiz start", operation)
     }
 
-    /// Classifies an error as a transient cold-start / edge-proxy failure worth
-    /// a bounded retry. Only connection-level `URLError`s (the machine is asleep
-    /// so the socket never connects) and Fly-proxy 502/503 (returned while the
-    /// machine wakes) qualify. Everything else — 401, 429/quota, other 4xx,
-    /// decoding errors — is permanent and must surface immediately, never retry.
+    /// #131 Track A: the same bounded retry, reusable by the SUBMIT paths (skip,
+    /// typed answer). The policy itself lives in `TransientRetry` so
+    /// `RecordingCoordinator`'s voice submit shares it without a back-pointer to
+    /// the façade. `label` only names the operation in the log/Sentry breadcrumb.
+    func withTransientRetry<T>(label: String, _ operation: () async throws -> T) async throws -> T {
+        try await TransientRetry.run(label: label, backoff: transientStartBackoffOverride, operation)
+    }
+
+    /// See `TransientRetry.isTransient` — kept as a forwarding alias so the
+    /// existing start-path tests keep their vocabulary.
     nonisolated static func isTransientStartError(_ error: Error) -> Bool {
-        if let urlError = error as? URLError {
-            switch urlError.code {
-            case .timedOut, .cannotConnectToHost, .networkConnectionLost,
-                 .cannotFindHost, .dnsLookupFailed:
-                return true
-            default:
-                return false
-            }
-        }
-        if let networkError = error as? NetworkError,
-           case let .serverError(statusCode, _) = networkError
-        {
-            return statusCode == 502 || statusCode == 503
-        }
-        return false
+        TransientRetry.isTransient(error)
     }
 
     /// Set error state. Errors are surfaced visually via `errorMessage`
@@ -1316,11 +1310,16 @@ final class QuizViewModel: ObservableObject {
         do {
             Logger.network.info("✏️ Resubmitting edited answer: \(newAnswer, privacy: .public)")
 
-            let response = try await networkService.submitTextInput(
-                sessionId: sessionId,
-                input: newAnswer,
-                audio: !suppressAudio && settings.audioMode != "off"
-            )
+            // #131 Track A: same bounded cold-wake retry as skip/start — only
+            // failures that prove the request never reached application code
+            // qualify, so the answer can never be counted twice.
+            let response = try await withTransientRetry(label: "text answer submit") {
+                try await networkService.submitTextInput(
+                    sessionId: sessionId,
+                    input: newAnswer,
+                    audio: !suppressAudio && settings.audioMode != "off"
+                )
+            }
 
             await handleQuizResponse(response)
 
@@ -1348,11 +1347,16 @@ final class QuizViewModel: ObservableObject {
         do {
             Logger.quiz.info("⏭️ Skipping current question")
 
-            let response = try await networkService.submitTextInput(
-                sessionId: sessionId,
-                input: "skip",
-                audio: settings.audioMode != "off"
-            )
+            // #131 Track A: a staging cold wake used to surface OOPS on the first
+            // Skip. A skip carries no user content, so re-sending it after a
+            // connection-level failure or a 502/503 is safe.
+            let response = try await withTransientRetry(label: "skip question") {
+                try await networkService.submitTextInput(
+                    sessionId: sessionId,
+                    input: "skip",
+                    audio: settings.audioMode != "off"
+                )
+            }
 
             await handleQuizResponse(response)
         } catch {

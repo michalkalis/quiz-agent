@@ -70,6 +70,15 @@ import os
         var endSessionError: Error?
         /// When set, `submitVoiceAnswer` throws this error instead of the default behaviour.
         var submitVoiceAnswerError: Error?
+        /// #131 Track A: when > 0, the SUBMIT calls throw the backend's retryable
+        /// 503 this many times before succeeding — the staging cold-wake shape the
+        /// founder hit on 2026-07-29. Lets a test assert the bounded retry recovers
+        /// instead of surfacing OOPS. Siblings of `createSessionFailuresBeforeSuccess`.
+        var textInputFailuresBeforeSuccess = 0
+        var submitVoiceAnswerFailuresBeforeSuccess = 0
+        var submitVoiceAnswerCallCount = 0
+        /// The transient failure those two counters throw.
+        static let coldWakeError = NetworkError.serverError(statusCode: 503, message: "machine waking")
         /// Number of times `endSession` was invoked — for assertions that X actually
         /// attempted server-side cleanup.
         var endSessionCallCount = 0
@@ -135,6 +144,11 @@ import os
         }
 
         func submitVoiceAnswer(sessionId _: String, audioData _: Data, fileName _: String) async throws -> QuizResponse {
+            submitVoiceAnswerCallCount += 1
+            if submitVoiceAnswerFailuresBeforeSuccess > 0 {
+                submitVoiceAnswerFailuresBeforeSuccess -= 1
+                throw Self.coldWakeError
+            }
             if let error = submitVoiceAnswerError { throw error }
             if shouldFail {
                 throw NetworkError.invalidResponse
@@ -178,6 +192,10 @@ import os
             // URLError(.cancelled) — the 54.5 self-cancelling-auto-confirm vector.
             if Task.isCancelled {
                 throw URLError(.cancelled)
+            }
+            if textInputFailuresBeforeSuccess > 0 {
+                textInputFailuresBeforeSuccess -= 1
+                throw Self.coldWakeError
             }
             if shouldFail {
                 throw NetworkError.invalidResponse

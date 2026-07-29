@@ -32,6 +32,14 @@ final class QuizTimersController: ObservableObject {
     @Published var answerTimerCountdown: Int = 0
     // Thinking time countdown (visible on QuestionView before auto-recording)
     @Published var thinkingTimeCountdown: Int = 0
+    /// #131 Track B: seconds left of the auto-stop recording window. The founder
+    /// rule is "after the question is read the countdown NEVER stops until the
+    /// answer is submitted or time expires" — so the hard recording cap, which
+    /// used to be an invisible one-shot sleep, now ticks in public and the
+    /// Record/Stop button keeps showing a number through the whole answer phase.
+    @Published var recordingCountdown: Int = 0
+    /// The window `recordingCountdown` drains from — the button's fill fraction.
+    private(set) var recordingCountdownTotal: Int = 0
     // Per-question pause state (resets on next question)
     @Published var currentQuestionPaused: Bool = false
 
@@ -84,6 +92,8 @@ final class QuizTimersController: ObservableObject {
         autoAdvanceCountdown = 0
         answerTimerCountdown = 0
         thinkingTimeCountdown = 0
+        recordingCountdown = 0
+        recordingCountdownTotal = 0
         currentQuestionPaused = false
     }
 
@@ -115,7 +125,13 @@ final class QuizTimersController: ObservableObject {
                     self.thinkingTimeCountdown = 0
                     return
                 }
-                guard self.quizState() == .askingQuestion else {
+                // #131 Track B: `.recording` must NOT zero the countdown. The
+                // tick and the state flip race whenever recording starts (manual
+                // tap, spoken "start", auto-record), and this guard used to win —
+                // blanking the number for the frame before `cancelThinkingTime`
+                // handed over to `recordingCountdown`. Only a state that has left
+                // the answer phase entirely stops it.
+                guard self.quizState() == .askingQuestion || self.quizState() == .recording else {
                     self.thinkingTimeCountdown = 0
                     return
                 }
@@ -189,15 +205,29 @@ final class QuizTimersController: ObservableObject {
     /// detection is disabled for re-records and never runs on the streaming
     /// path, so this hard cap is the only guarantee recording stops on dead air.
     /// `duration` is injectable for tests; production callers use the default.
+    /// #131 Track B: it also PUBLISHES the window (`recordingCountdown`) once per
+    /// second, so the Record→Stop button keeps a live number and draining fill
+    /// while the answer is being spoken. Expiry mid-recording therefore reads as
+    /// "the countdown ran out", and its consequence — auto-stop + submit whatever
+    /// was transcribed — is the one that was already here.
     func startAutoStopRecordingTimer(duration: TimeInterval = Config.autoRecordingDuration) {
         cancelAutoStopRecordingTimer()
+
+        // Sub-second durations (tests) collapse to a single tick; production's 15s
+        // ticks 15 times. Either way the total elapsed time equals `duration`.
+        let ticks = max(1, Int(duration.rounded()))
+        let tickInterval = duration / Double(ticks)
+        recordingCountdownTotal = ticks
+        recordingCountdown = ticks
 
         let task = Task { [weak self] in
             guard let self else { return }
 
-            try? await Task.sleep(nanoseconds: UInt64(duration * 1_000_000_000))
-
-            if Task.isCancelled { return }
+            for remaining in stride(from: ticks - 1, through: 0, by: -1) {
+                try? await Task.sleep(nanoseconds: UInt64(tickInterval * 1_000_000_000))
+                if Task.isCancelled { return }
+                self.recordingCountdown = remaining
+            }
 
             guard self.quizState() == .recording else { return }
             await self.stopRecordingAndSubmit()
@@ -208,6 +238,8 @@ final class QuizTimersController: ObservableObject {
     /// Cancel the auto-stop recording timer
     func cancelAutoStopRecordingTimer() {
         taskBag.cancel(.autoStopRecording)
+        recordingCountdown = 0
+        recordingCountdownTotal = 0
     }
 
     // MARK: - Auto-Advance Countdown

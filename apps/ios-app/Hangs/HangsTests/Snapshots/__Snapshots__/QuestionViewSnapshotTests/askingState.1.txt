@@ -156,6 +156,9 @@
         - onCreateSession: nil
         - endSessionError: nil
         - submitVoiceAnswerError: nil
+        - textInputFailuresBeforeSuccess: 0
+        - submitVoiceAnswerFailuresBeforeSuccess: 0
+        - submitVoiceAnswerCallCount: 0
         - endSessionCallCount: 0
         - capturedIncludeImages: nil
         - capturedCategories: nil
@@ -592,10 +595,23 @@
                   - hasAnyDownstreamDemand: false
                   ▿ changePublisher: Optional(Combine.ObservableObjectPublisher)
                     ▿ some: Combine.ObservableObjectPublisher #56
+          ▿ _recordingCountdown: Combine.Published<Swift.Int>
+            ▿ storage: Combine.Published<Swift.Int>.Storage.publisher
+              ▿ publisher: Combine.Published<Swift.Int>.Publisher
+                ▿ subject: Combine.PublishedSubject<Swift.Int> #62
+                  ▿ lock: 0x<addr>
+                    - pointerValue: <n>
+                  - downstreams: Combine.ConduitList<Swift.Int, Swift.Never>.empty
+                  - currentValue: 0
+                  - upstreamSubscriptions: 0 elements
+                  - hasAnyDownstreamDemand: false
+                  ▿ changePublisher: Optional(Combine.ObservableObjectPublisher)
+                    ▿ some: Combine.ObservableObjectPublisher #56
+          - recordingCountdownTotal: 0
           ▿ _currentQuestionPaused: Combine.Published<Swift.Bool>
             ▿ storage: Combine.Published<Swift.Bool>.Storage.publisher
               ▿ publisher: Combine.Published<Swift.Bool>.Publisher
-                ▿ subject: Combine.PublishedSubject<Swift.Bool> #62
+                ▿ subject: Combine.PublishedSubject<Swift.Bool> #63
                   ▿ lock: 0x<addr>
                     - pointerValue: <n>
                   - downstreams: Combine.ConduitList<Swift.Bool, Swift.Never>.empty
@@ -616,11 +632,11 @@
           - confirmAnswer: (Function)
           - proceedToNextQuestion: (Function)
       ▿ $__lazy_storage_$_recordingCoordinator: Optional(Hangs.RecordingCoordinator)
-        ▿ some: Hangs.RecordingCoordinator #63
+        ▿ some: Hangs.RecordingCoordinator #64
           ▿ _recordingState: Combine.Published<Hangs.RecordingState>
             ▿ storage: Combine.Published<Hangs.RecordingState>.Storage.publisher
               ▿ publisher: Combine.Published<Hangs.RecordingState>.Publisher
-                ▿ subject: Combine.PublishedSubject<Hangs.RecordingState> #64
+                ▿ subject: Combine.PublishedSubject<Hangs.RecordingState> #65
                   ▿ lock: 0x<addr>
                     - pointerValue: <n>
                   - downstreams: Combine.ConduitList<Hangs.RecordingState, Swift.Never>.empty
@@ -634,12 +650,12 @@
                   - upstreamSubscriptions: 0 elements
                   - hasAnyDownstreamDemand: false
                   ▿ changePublisher: Optional(Combine.ObservableObjectPublisher)
-                    ▿ some: Combine.ObservableObjectPublisher #65
+                    ▿ some: Combine.ObservableObjectPublisher #66
                       ▿ _registrar: Observation.ObservationRegistrar
-                        ▿ extent: Observation.ObservationRegistrar.(unknown context at $<addr>).Extent #66
+                        ▿ extent: Observation.ObservationRegistrar.(unknown context at $<addr>).Extent #67
                           ▿ context: Observation.ObservationRegistrar.Context
                             ▿ state: Observation._ManagedCriticalState<Observation.ObservationRegistrar.(unknown context at $<addr>).State>
-                              - buffer: Observation._ManagedCriticalState<Observation.ObservationRegistrar.(unknown context at $<addr>).State>.(unknown context at $<addr>).LockedBuffer #67
+                              - buffer: Observation._ManagedCriticalState<Observation.ObservationRegistrar.(unknown context at $<addr>).State>.(unknown context at $<addr>).LockedBuffer #68
                                 ▿ super: Swift.ManagedBuffer<Observation.ObservationRegistrar.(unknown context at $<addr>).State, __C.os_unfair_lock_s>
                                   ▿ header: Observation.ObservationRegistrar.(unknown context at $<addr>).State
                                     - id: 0
@@ -648,14 +664,14 @@
                       ▿ lock: 0x<addr>
                         - pointerValue: <n>
                       ▿ connections: 1 member
-                        ▿ ObservableObjectPublisher #68
+                        ▿ ObservableObjectPublisher #69
                           - super: Combine.ObservableObjectPublisher.(unknown context at $<addr>).Conduit
                           - downstream: Sink #<n>
                       - identifier: nil
           ▿ _confirmationState: Combine.Published<Hangs.ConfirmationState>
             ▿ storage: Combine.Published<Hangs.ConfirmationState>.Storage.publisher
               ▿ publisher: Combine.Published<Hangs.ConfirmationState>.Publisher
-                ▿ subject: Combine.PublishedSubject<Hangs.ConfirmationState> #69
+                ▿ subject: Combine.PublishedSubject<Hangs.ConfirmationState> #70
                   ▿ lock: 0x<addr>
                     - pointerValue: <n>
                   - downstreams: Combine.ConduitList<Hangs.ConfirmationState, Swift.Never>.empty
@@ -669,7 +685,8 @@
                   - upstreamSubscriptions: 0 elements
                   - hasAnyDownstreamDemand: false
                   ▿ changePublisher: Optional(Combine.ObservableObjectPublisher)
-                    ▿ some: Combine.ObservableObjectPublisher #65
+                    ▿ some: Combine.ObservableObjectPublisher #66
+          - transientBackoffOverride: nil
           ▿ audioService: Hangs.MockAudioService #5
           ▿ networkService: Hangs.MockNetworkService #4
           ▿ silenceDetectionService: Hangs.SilenceDetectionService #7
@@ -711,7 +728,7 @@
       - lastFeedbackUrl: nil
   ▿ _reduceMotion: SwiftUI.Environment<Swift.Bool>
     ▿ content: SwiftUI.Environment<Swift.Bool>.Content.keyPath
-      - keyPath: \EnvironmentValues.<computed 0x<addr> (Bool)> #70
+      - keyPath: \EnvironmentValues.<computed 0x<addr> (Bool)> #71
         - super: Swift.KeyPath<SwiftUI.EnvironmentValues, Swift.Bool>
           - super: Swift.PartialKeyPath<SwiftUI.EnvironmentValues>
             ▿ super: Swift.AnyKeyPath

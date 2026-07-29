@@ -73,13 +73,23 @@ extension RecordingCoordinator {
             do {
                 Logger.network.info("🎤 Submitting voice answer: \(audioData.count, privacy: .public) bytes")
 
-                // Race the network call against a 30-second timeout
+                // Race the network call against a 30-second timeout. #131 Track A:
+                // the bounded cold-wake retry sits INSIDE the timeout, so all three
+                // attempts plus their 1s/2s backoff still land within the one
+                // user-facing 30s budget — a staging machine waking up costs a
+                // pause, never an OOPS screen.
+                let backoff = self.transientBackoffOverride
                 let response = try await withUserFacingTimeout(seconds: 30) {
-                    try await self.networkService.submitVoiceAnswer(
-                        sessionId: sessionId,
-                        audioData: audioData,
-                        fileName: "answer.m4a"
-                    )
+                    try await TransientRetry.run(
+                        label: "voice answer submit",
+                        backoff: backoff
+                    ) {
+                        try await self.networkService.submitVoiceAnswer(
+                            sessionId: sessionId,
+                            audioData: audioData,
+                            fileName: "answer.m4a"
+                        )
+                    }
                 }
 
                 // Check for cancellation before updating UI
@@ -112,11 +122,16 @@ extension RecordingCoordinator {
             } catch is CancellationError {
                 // User cancelled - state already cleaned up by cancelProcessing()
                 Logger.network.debug("🚫 Voice submission task was cancelled")
-            } catch is TimeoutError {
+            } catch let error as URLError where error.code == .timedOut {
+                // #131 Track A: pass the error through. Without it `setError` fell
+                // back to the context-only model and every failure — timeout,
+                // cold wake, 5xx — rendered the same generic "Couldn't submit your
+                // answer" OOPS. With it the user reads what actually happened.
                 await MainActor.run {
                     self.setError(
                         message: String(localized: "Request timed out. Please try again.", comment: "Inline error when a voice answer submission times out"),
-                        context: .submission
+                        context: .submission,
+                        error: error
                     )
                 }
 
@@ -166,10 +181,10 @@ extension RecordingCoordinator {
         await task.value
     }
 
-    /// User-facing timeout error
-    private struct TimeoutError: Error {}
-
-    /// Runs an async operation with a timeout, throwing TimeoutError if exceeded
+    /// Runs an async operation with a timeout, throwing `URLError(.timedOut)` if
+    /// exceeded. #131 Track A: a real `URLError` (not a private marker type) so
+    /// `AppErrorModel.from` can map it to the accurate "Request timed out" copy
+    /// instead of the generic submission fallback.
     private func withUserFacingTimeout<T: Sendable>(
         seconds: Int,
         operation: @escaping @Sendable () async throws -> T
@@ -181,12 +196,12 @@ extension RecordingCoordinator {
 
             group.addTask {
                 try await Task.sleep(nanoseconds: UInt64(seconds) * 1_000_000_000)
-                throw TimeoutError()
+                throw URLError(.timedOut)
             }
 
             // Return first result, cancel the other
             guard let result = try await group.next() else {
-                throw TimeoutError()
+                throw URLError(.timedOut)
             }
             group.cancelAll()
             return result

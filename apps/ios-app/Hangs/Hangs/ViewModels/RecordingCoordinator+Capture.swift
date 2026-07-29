@@ -60,6 +60,13 @@ extension RecordingCoordinator {
         transition(to: .recording)
         emitEarcon(.micLive) // 77.10 mic-live tone — the mic just opened
 
+        // #131 Track B: arm the recording window HERE, not after the engine is up.
+        // The founder rule is that the countdown never disappears; the WebSocket
+        // handshake + audio-session settle take a few hundred ms, and arming it
+        // downstream left the button blank for exactly that gap. Both start paths
+        // cancel it again if the mic fails to open.
+        startAutoStopRecordingTimer()
+
         // Choose streaming STT or batch M4A based on feature flag
         if Config.useElevenLabsSTT, sttService != nil {
             await startStreamingRecording()
@@ -78,9 +85,8 @@ extension RecordingCoordinator {
                 speechDetectedDuringAutoRecord = false
                 startSilenceDetection(service: silenceDetectionService)
             }
-
-            startAutoStopRecordingTimer()
         } catch {
+            cancelAutoStopRecordingTimer() // mic never opened — drop the window
             setIsAutoRecording(false)
             speechDetectedDuringAutoRecord = false
             transition(to: .askingQuestion)
@@ -131,14 +137,12 @@ extension RecordingCoordinator {
                 }
             }
 
-            // 5. Start hard safety limit timer
-            startAutoStopRecordingTimer()
-
             Logger.stt.info("🎙️ Streaming STT recording started")
 
         } catch is CancellationError {
             // A teardown (scene-phase background, stop command) raced the streaming
             // start's settle wait — recording must stay stopped, so no batch fallback.
+            cancelAutoStopRecordingTimer()
             isStreamingSTT = false
             liveTranscript = ""
             await sttService.disconnect()

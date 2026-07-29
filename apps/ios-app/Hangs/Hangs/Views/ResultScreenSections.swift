@@ -52,13 +52,14 @@ enum ResultVerdict {
         }
     }
 
-    /// Band wash: greenSoft / pinkSoft tint; neutral and skipped fall back to
-    /// the plain card surface (skipped reuses it — no new colors).
+    /// Band wash: greenSoft / pinkSoft tint. Skipped and neutral take the
+    /// neutralSoft wash — a white band was indistinguishable from the page, so
+    /// the band stopped reading as a band at all on a skip (sim check).
     var fieldFill: Color {
         switch self {
         case .correct: return Theme.Hangs.Colors.greenSoft
         case .incorrect: return Theme.Hangs.Colors.pinkSoft
-        case .neutral, .skipped: return Theme.Hangs.Colors.bgCard
+        case .neutral, .skipped: return Theme.Hangs.Colors.neutralSoft
         }
     }
 
@@ -167,16 +168,18 @@ struct ResultMetaRow: View {
         .accessibilityIdentifier("result.metaRow")
     }
 
+    /// Every label and number is `.fixedSize()`: without it SwiftUI shares the
+    /// squeeze across all of them and the row degrades to "stre… 0 · you s…
+    /// Saturn" (sim check, long-answer case). Only the spoken answer may
+    /// truncate — it is the one part with unbounded length.
     private var stats: some View {
         HStack(spacing: 5) {
             monoLabel("score")
-            Text(verbatim: scoreValue).font(.hangsMono(10, weight: .medium))
-            if let scoreDelta {
-                Text(verbatim: scoreDelta).font(.hangsMono(10, weight: .medium))
-            }
+            monoValue(scoreValue)
+            if let scoreDelta { monoValue(scoreDelta) }
             separator
             monoLabel("streak")
-            Text(verbatim: "\(streak)").font(.hangsMono(10, weight: .medium))
+            monoValue("\(streak)")
             if let userAnswer, !userAnswer.isEmpty {
                 separator
                 monoLabel("you said")
@@ -187,18 +190,28 @@ struct ResultMetaRow: View {
                     .truncationMode(.tail)
             }
         }
-        .lineLimit(1)
-        .minimumScaleFactor(0.8)
     }
 
     private func monoLabel(_ key: LocalizedStringKey) -> some View {
         Text(key)
             .font(.hangsMono(10, weight: .medium))
             .tracking(1.2)
+            .lineLimit(1)
+            .fixedSize()
+    }
+
+    private func monoValue(_ value: String) -> some View {
+        Text(verbatim: value)
+            .font(.hangsMono(10, weight: .medium))
+            .lineLimit(1)
+            .fixedSize()
     }
 
     private var separator: some View {
-        Text(verbatim: "·").font(.hangsMono(10, weight: .medium)).opacity(0.55)
+        Text(verbatim: "·")
+            .font(.hangsMono(10, weight: .medium))
+            .opacity(0.55)
+            .fixedSize()
     }
 
     /// Tappable source link — opens the existing SourceWebView sheet. Variant A

@@ -54,6 +54,10 @@ extension Theme {
             static let pinkHalo2 = Color(hex: "#FF3D8F").opacity(0.20)
             static let pinkHaloStrong = Color(hex: "#FF3D8F").opacity(0.15)
             static let greenSoft = Color(hex: "#22C55E").opacity(0.12)
+            /// neutral-soft — the "no verdict either way" wash (skipped result
+            /// band, neutral chips). Derived from ink so it adapts per mode
+            /// (#131 Track F token sheet).
+            static let neutralSoft = ink.opacity(0.055)
 
             // Legacy aliases kept for compatibility with not-yet-migrated files.
             static let accent = pink

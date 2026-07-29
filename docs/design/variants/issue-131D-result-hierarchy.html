@@ -1,0 +1,723 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#131D — Result screen: vizuálna hierarchia · varianty</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ===========================================================
+   #131 Track D — result screen visual hierarchy.
+   Page chrome = dark review page (same as the other variant
+   pages). Phone frames use the REAL Hangs light-appearance
+   tokens (Theme+Hangs.swift). 390×844 = 1:1 with iOS points.
+   Fixed by #131D and NOT up for review here:
+     · skipped = neutral verdict "PRESKOČENÉ."
+     · footer = "Ďalšia otázka" primary LEFT, STAY/RESUME right
+     · one shared ListenBar with a command sub-line
+   =========================================================== */
+:root{
+  --page-bg:#0F1116;
+  --page-line:#262B36;
+  --page-text:#E7EAF0;
+  --page-dim:#98A0B0;
+
+  /* app tokens (light appearance) */
+  --bg:#F6F7F9;
+  --card:#FFFFFF;
+  --ink:#0E1A2B;
+  --pink:#FF3D8F;
+  --pinkDeep:#D91E72;
+  --pinkText:#C2185B;
+  --blue:#0A84FF;
+  --muted:#6B7280;
+  --mutedFaint:#9CA3AF;
+  --green:#16A34A;
+  --greenCheck:#22C55E;
+  --teal:#14B8A6;
+  --slate:#64748B;
+  --hair:rgba(14,26,43,.078);
+  --border:rgba(14,26,43,.122);
+  --greenSoft:rgba(34,197,94,.13);
+  --pinkSoft:rgba(255,61,143,.12);
+  --neutralSoft:rgba(14,26,43,.055);
+  --cardShadow:0 4px 20px rgba(14,26,43,.08);
+  --ctaShadow:0 6px 16px rgba(255,61,143,.20);
+  --navShadow:0 2px 8px rgba(14,26,43,.06);
+
+  --display:Anton,"Arial Narrow",Haettenschweiler,Impact,sans-serif;
+  --body:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--page-bg);color:var(--page-text);font-family:var(--body);
+  font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1420px;margin:0 auto;padding:48px 28px 96px}
+
+.kicker{font-family:var(--mono);font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--pink);margin:0 0 10px}
+h1{font-family:var(--display);font-weight:400;font-size:46px;line-height:1.02;letter-spacing:-1px;margin:0 0 16px;text-transform:uppercase}
+.lede{max-width:80ch;color:var(--page-dim);font-size:16px;margin:0 0 10px}
+.lede strong{color:var(--page-text);font-weight:600}
+.meta{font-family:var(--mono);font-size:11px;letter-spacing:1.2px;color:#6E7688;margin-top:22px;padding-top:16px;border-top:1px solid var(--page-line)}
+
+.variant{margin-top:64px;padding-top:32px;border-top:1px solid var(--page-line)}
+.vhead{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.vtag{font-family:var(--mono);font-size:11px;letter-spacing:2px;color:#0F1116;background:var(--pink);border-radius:5px;padding:3px 9px;font-weight:600}
+h2{font-family:var(--display);font-weight:400;font-size:34px;letter-spacing:-.5px;margin:0;text-transform:uppercase}
+.concept{color:var(--page-dim);max-width:88ch;margin:10px 0 0;font-size:16px}
+.concept b{color:var(--page-text);font-weight:600}
+
+.devices{display:flex;gap:36px;flex-wrap:wrap;margin:28px 0 0}
+figure.device{margin:0}
+figure.device figcaption{font-family:var(--mono);font-size:11px;letter-spacing:1.8px;text-transform:uppercase;
+  color:var(--page-dim);margin-top:13px;text-align:center}
+figure.device figcaption b{color:var(--greenCheck);font-weight:600}
+figure.device figcaption i{color:#FF7FB4;font-style:normal;font-weight:600}
+figure.device figcaption s{color:#B9C0CE;text-decoration:none;font-weight:600}
+
+/* ================= phone ================= */
+.phone{width:390px;height:844px;flex:0 0 auto;background:var(--bg);color:var(--ink);
+  border-radius:44px;overflow:hidden;position:relative;display:flex;flex-direction:column;
+  box-shadow:0 26px 64px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.07)}
+.anton{font-family:var(--display);font-weight:400}
+.mono{font-family:var(--mono)}
+
+.sb{height:47px;flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 30px 0 34px;font-size:15px;font-weight:600}
+.sb .dots{letter-spacing:1px;font-size:16px}
+.nav{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:14px 20px 4px}
+.nav-l{display:flex;align-items:center;gap:10px}
+.xchip{width:36px;height:36px;border-radius:50%;background:var(--card);display:grid;place-items:center;box-shadow:var(--navShadow)}
+.xchip svg{width:14px;height:14px;color:var(--ink)}
+.brand{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:13px;font-weight:600;color:var(--blue)}
+.brand i{width:4.5px;height:4.5px;border-radius:50%;background:var(--pink);display:block}
+.counter{font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:2px;color:var(--muted)}
+.prog{flex:0 0 auto;height:3px;margin:0 24px;border-radius:2px;background:rgba(14,26,43,.10);overflow:hidden}
+.prog i{display:block;height:100%;width:30%;background:var(--pink);border-radius:2px}
+
+/* generic */
+.lbl{font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:2px;text-transform:uppercase}
+.lbl.sm{font-size:10px;letter-spacing:1.6px}
+.lbl.g{color:var(--green)}.lbl.p{color:var(--pink)}.lbl.b{color:var(--blue)}.lbl.n{color:var(--slate)}
+.lbl.f{color:var(--mutedFaint)}
+.hair{height:1px;background:var(--hair)}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.badge{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;color:#fff;flex:0 0 auto}
+.badge svg{width:11px;height:11px}
+.badge.ok{background:var(--greenCheck)}.badge.no{background:var(--pink)}.badge.sk{background:var(--mutedFaint)}
+.chip{display:inline-flex;align-items:center;gap:7px;border-radius:14px;padding:5px 11px;font-family:var(--mono);
+  font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase}
+.chip svg{width:11px;height:11px}
+.chip.ok{background:var(--greenSoft);color:var(--green)}
+.chip.no{background:var(--pinkSoft);color:var(--pink)}
+.chip.sk{background:var(--neutralSoft);color:var(--slate)}
+.mt4{margin-top:4px}.mt6{margin-top:6px}.mt8{margin-top:8px}.mt10{margin-top:10px}.mt12{margin-top:12px}
+
+/* de-emphasised secondary info — SAME treatment in all three variants */
+.faintline{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;letter-spacing:1.2px;
+  color:var(--mutedFaint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.faintline svg{width:9px;height:9px;flex:0 0 auto}
+.faintline s{text-decoration:line-through}
+.faintline .sep{opacity:.55}
+.metarow{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 24px 2px}
+
+.explain{font-size:15px;line-height:1.42;color:var(--ink)}
+.explain.clamp{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.explain.clamp5{display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
+.qrecap{font-size:13px;line-height:1.35;color:var(--muted)}
+
+.body{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:10px;padding:10px 24px 0}
+.card{background:var(--card);border-radius:18px;box-shadow:var(--cardShadow);padding:16px}
+.panel{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;background:var(--card);
+  border-radius:18px;box-shadow:var(--cardShadow);padding:16px}
+.panel .grow{flex:1 1 auto;min-height:0}
+
+/* ---------- A: verdict-dominant ---------- */
+.vband{flex:0 0 auto;padding:16px 24px 20px;margin-top:6px}
+.vband.ok{background:var(--greenSoft)}
+.vband.no{background:var(--pinkSoft)}
+.vband.sk{background:var(--neutralSoft)}
+.vband .w{font-family:var(--display);font-size:56px;line-height:.98;letter-spacing:-2.4px;white-space:nowrap;margin-top:10px}
+.vband.sk .w{font-size:44px;letter-spacing:-1.8px;color:#334155}
+
+/* ---------- B: answer-dominant ---------- */
+.ribbon{flex:0 0 auto;display:flex;align-items:center;gap:10px;height:38px;padding:0 24px;margin-top:8px}
+.ribbon .w{font-family:var(--display);font-size:20px;letter-spacing:-.6px;line-height:1}
+.ribbon .bar{width:4px;height:20px;border-radius:2px;flex:0 0 auto}
+.ribbon.ok .bar{background:var(--greenCheck)} .ribbon.ok .w{color:var(--green)}
+.ribbon.no .bar{background:var(--pink)} .ribbon.no .w{color:var(--pinkText)}
+.ribbon.sk .bar{background:var(--mutedFaint)} .ribbon.sk .w{color:var(--slate)}
+.mega{font-family:var(--display);font-size:62px;line-height:1;letter-spacing:-2.6px;color:var(--ink);
+  white-space:nowrap;overflow:hidden}
+
+/* ---------- C: score-forward fused banner ---------- */
+.banner{flex:0 0 auto;display:flex;align-items:stretch;gap:14px;border-radius:20px;padding:14px 16px;margin:8px 24px 0}
+.banner.ok{background:var(--greenSoft)}
+.banner.no{background:var(--pinkSoft)}
+.banner.sk{background:var(--neutralSoft)}
+.banner .l{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;justify-content:center}
+.banner .l .w{font-family:var(--display);font-size:32px;line-height:1;letter-spacing:-1.6px;white-space:nowrap;margin-top:8px}
+.banner.sk .l .w{font-size:27px;letter-spacing:-1.2px;color:#334155}
+.banner .r{flex:0 0 auto;width:96px;border-left:1px solid rgba(14,26,43,.10);padding-left:14px;
+  display:flex;flex-direction:column;justify-content:center;gap:1px}
+.banner .r b{font-family:var(--display);font-weight:400;font-size:42px;line-height:1;letter-spacing:-1.6px;color:var(--ink)}
+.banner .r em{font-style:normal;font-size:12px;font-weight:600;color:var(--muted)}
+.banner .r .streak{font-family:var(--mono);font-size:10px;letter-spacing:1.2px;color:var(--mutedFaint);margin-top:4px}
+
+.ansbig{font-family:var(--display);font-size:38px;line-height:1.04;letter-spacing:-1.4px;color:var(--ink);white-space:nowrap;overflow:hidden}
+.ansmid{font-family:var(--display);font-size:32px;line-height:1.05;letter-spacing:-1.2px;color:var(--ink);white-space:nowrap;overflow:hidden}
+
+/* ---------- footer: ONE ListenBar + Next | STAY ---------- */
+.footer{flex:0 0 auto;padding:10px 24px 8px;display:flex;flex-direction:column;gap:10px}
+.lbar{border-radius:16px;background:rgba(20,184,166,.08);border:1px solid rgba(20,184,166,.35);padding:9px 16px;text-align:center}
+.lbar .t{display:flex;align-items:center;justify-content:center;gap:8px;color:var(--teal);font-family:var(--mono);
+  font-size:10px;font-weight:500;letter-spacing:1.5px}
+.lbar .t svg{width:13px;height:13px}
+.lbar .d{display:flex;gap:4px}
+.lbar .d b{width:5px;height:5px;border-radius:50%;background:var(--teal);display:block}
+.lbar .d b:nth-child(2){opacity:.55}.lbar .d b:nth-child(3){opacity:.3}
+.lbar .h{margin-top:5px;font-size:13px;font-weight:600;color:var(--ink)}
+.footrow{display:flex;gap:10px;align-items:stretch}
+.cta{height:64px;border-radius:32px;background:var(--pinkDeep);position:relative;overflow:hidden;display:grid;
+  place-items:center;box-shadow:var(--ctaShadow);flex:1 1 auto}
+.cta .fill{position:absolute;left:0;top:0;bottom:0;width:52%;background:var(--pink)}
+.cta .in{position:relative;display:flex;align-items:center;gap:10px;color:#fff;font-size:17px;font-weight:700}
+.cta .in svg{width:15px;height:15px}
+.cta .sec{font-family:var(--mono);font-size:12px;font-weight:500;background:rgba(0,0,0,.22);border-radius:10px;padding:3px 8px}
+.stayblock{flex:0 0 auto;width:84px;height:64px;border-radius:32px;background:var(--card);border:1px solid var(--border);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--ink)}
+.stayblock svg{width:16px;height:16px}
+.stayblock span{font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:1.4px;color:var(--muted)}
+.homebar{flex:0 0 auto;height:26px;display:grid;place-items:center}
+.homebar::after{content:"";width:140px;height:5px;border-radius:3px;background:rgba(14,26,43,.28)}
+
+.hearit{display:inline-flex;align-items:center;gap:5px;color:var(--blue);font-size:12px;font-weight:600}
+.hearit svg{width:12px;height:12px}
+.iconbtn{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:var(--blue);background:rgba(10,132,255,.08);flex:0 0 auto}
+.iconbtn svg{width:15px;height:15px}
+
+/* hierarchy ladder under each variant — replaces spec tables (rule V2) */
+.hier{display:flex;gap:10px;flex-wrap:wrap;margin:26px 0 0}
+.hier span{display:inline-flex;align-items:baseline;gap:8px;font-family:var(--mono);font-size:11px;
+  letter-spacing:1.6px;text-transform:uppercase;color:var(--page-dim);background:#171A21;
+  border:1px solid var(--page-line);border-radius:8px;padding:7px 12px}
+.hier span i{font-style:normal;color:var(--pink);font-weight:600}
+.hier span b{color:var(--page-text);font-weight:600}
+.hier span.dim{opacity:.62}
+</style>
+</head>
+<body>
+
+<svg style="display:none" aria-hidden="true">
+  <symbol id="ic-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="ic-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5.2 5.2L20 7"/></symbol>
+  <symbol id="ic-dash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 12h12"/></symbol>
+  <symbol id="ic-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h14M12.5 5.5L19 12l-6.5 6.5"/></symbol>
+  <symbol id="ic-speaker" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5v5h3.6L11 18.5v-13L6.6 9.5H3z" fill="currentColor" stroke="none"/><path d="M14.5 9a4 4 0 010 6M17.6 6.4a8 8 0 010 11.2"/></symbol>
+  <symbol id="ic-wave" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 12h2M7 7v10M12 4v16M17 8v8M22 12h0"/></symbol>
+  <symbol id="ic-chevr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></symbol>
+  <symbol id="ic-pause" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1.4"/><rect x="14" y="5" width="4" height="14" rx="1.4"/></symbol>
+</svg>
+
+<div class="wrap">
+
+<p class="kicker">#131 Track D · design round 2026-07-29</p>
+<h1>Result screen —<br>čo má dominovať</h1>
+<p class="lede">
+  Tri hierarchie tej istej obrazovky. Každý variant je nakreslený vo <strong>všetkých troch stavoch</strong>
+  (správne / nesprávne / preskočené), s <strong>jedným spoločným ListenBarom</strong> a jedným pätičkovým riadkom —
+  <strong>„Ďalšia otázka" vľavo, ZOSTAŤ / Obnoviť vpravo</strong>. Tieto dve veci sú už rozhodnuté, nevyberajú sa.
+</p>
+<p class="lede">
+  Vo všetkých troch variantoch je <strong>vedľajšia informácia potlačená rovnako</strong>: zdroj, „tvoja odpoveď"
+  pri chybe a otázka žijú v jednom 10pt mono riadku v najsvetlejšej šedej. A <strong>stav sa nikdy neopakuje dvakrát</strong> —
+  buď slovo, alebo štítok, nie oboje (dnes obrazovka hovorí „tesne vedľa" aj „TESNE VEDĽA.").
+</p>
+<p class="meta">Skutočné tokeny a slovenské reťazce z Theme+Hangs.swift a Localizable.xcstrings · rámy 390×844 = 1:1 s iOS bodmi · svetlý vzhľad (tmavý má pár ku každému tokenu)</p>
+
+<!-- =====================================================================
+     VARIANT A
+====================================================================== -->
+<section class="variant">
+  <div class="vhead"><span class="vtag">VARIANT A</span><h2>Verdikt vládne</h2></div>
+  <p class="concept">
+    Verdikt dostane celý farebný pás cez šírku obrazovky a <b>56pt Anton</b> — je to prvé aj jediné, čo vodič
+    prečíta na jeden pohľad. Odpoveď a „prečo" sú druhé v jednej karte, a <b>všetka meta sa scvrkne na jeden
+    tichý riadok pod kartou</b> (skóre, séria, čo si povedal, zdroj). Štítok „správne/tesne vedľa" mizne — pás ho hovorí sám.
+  </p>
+
+  <div class="devices">
+
+    <!-- A · CORRECT -->
+    <figure class="device">
+      <div class="phone">
+        <div class="sb"><span>9:41</span><span class="dots">•••</span></div>
+        <div class="nav">
+          <div class="nav-l"><div class="xchip"><svg><use href="#ic-x"/></svg></div><span class="brand">trubbo.<i></i></span></div>
+          <span class="counter">03 / 10</span>
+        </div>
+        <div class="prog"><i></i></div>
+
+        <div class="vband ok">
+          <div class="row"><span class="badge ok"><svg><use href="#ic-check"/></svg></span>
+            <span class="iconbtn"><svg><use href="#ic-speaker"/></svg></span></div>
+          <div class="w">MÁŠ TO.</div>
+        </div>
+
+        <div class="body">
+          <div class="card">
+            <span class="lbl g">tvoja odpoveď</span>
+            <div class="ansbig mt6">Urán</div>
+            <div class="hair mt12"></div>
+            <div class="row mt12"><span class="lbl b">prečo</span><span class="hearit"><svg><use href="#ic-speaker"/></svg>vypočuť</span></div>
+            <p class="explain clamp mt6" style="margin:6px 0 0">Urán je naklonený o približne 98° — pravdepodobne ho prevrátil obrovský náraz krátko po vzniku sústavy, takže sa okolo Slnka kotúľa nabok namiesto toho, aby stál vzpriamene ako ostatné planéty.</p>
+          </div>
+          <div style="flex:1"></div>
+        </div>
+
+        <div class="metarow">
+          <span class="faintline">skóre 3 <span class="sep">·</span> séria 2</span>
+          <span class="faintline">zdroj <svg><use href="#ic-chevr"/></svg></span>
+        </div>
+
+        <div class="footer">
+          <div class="lbar">
+            <div class="t"><svg><use href="#ic-wave"/></svg>POČÚVAM PRÍKAZY<span class="d"><b></b><b></b><b></b></span></div>
+            <div class="h">Povedz „ďalej"</div>
+          </div>
+          <div class="footrow">
+            <div class="cta"><div class="fill"></div><div class="in">Ďalšia otázka <svg><use href="#ic-arrow"/></svg> <span class="sec">5s</span></div></div>
+            <div class="stayblock"><svg><use href="#ic-pause"/></svg><span>ZOSTAŤ</span></div>
+          </div>
+        </div>
+        <div class="homebar"></div>
+      </div>
+      <figcaption><b>Správne</b></figcaption>
+    </figure>
+
+    <!-- A · INCORRECT -->
+    <figure class="device">
+      <div class="phone">
+        <div class="sb"><span>9:41</span><span class="dots">•••</span></div>
+        <div class="nav">
+          <div class="nav-l"><div class="xchip"><svg><use href="#ic-x"/></svg></div><span class="brand">trubbo.<i></i></span></div>
+          <span class="counter">03 / 10</span>
+        </div>
+        <div class="prog"><i></i></div>
+
+        <div class="vband no">
+          <div class="row"><span class="badge no"><svg><use href="#ic-x"/></svg></span>
+            <span class="iconbtn"><svg><use href="#ic-speaker"/></svg></span></div>
+          <div class="w">TESNE VEDĽA.</div>
+        </div>
+
+        <div class="body">
+          <div class="card">
+            <span class="lbl g">správna odpoveď</span>
+            <div class="ansbig mt6">Urán</div>
+            <div class="hair mt12"></div>
+            <div class="row mt12"><span class="lbl b">prečo</span><span class="hearit"><svg><use href="#ic-speaker"/></svg>vypočuť</span></div>
+            <p class="explain clamp mt6" style="margin:6px 0 0">Urán je naklonený o približne 98° — pravdepodobne ho prevrátil obrovský náraz krátko po vzniku sústavy, takže sa okolo Slnka kotúľa nabok namiesto toho, aby stál vzpriamene ako ostatné planéty.</p>
+          </div>
+          <div style="flex:1"></div>
+        </div>
+
+        <div class="metarow">
+          <span class="faintline">skóre 2 <span class="sep">·</span> séria 0 <span class="sep">·</span> povedal si <s>Saturn</s></span>
+          <span class="faintline">zdroj <svg><use href="#ic-chevr"/></svg></span>
+        </div>
+
+        <div class="footer">
+          <div class="lbar">
+            <div class="t"><svg><use href="#ic-wave"/></svg>POČÚVAM PRÍKAZY<span class="d"><b></b><b></b><b></b></span></div>
+            <div class="h">Povedz „ďalej"</div>
+          </div>
+          <div class="footrow">
+            <div class="cta"><div class="fill"></div><div class="in">Ďalšia otázka <svg><use href="#ic-arrow"/></svg> <span class="sec">5s</span></div></div>
+            <div class="stayblock"><svg><use href="#ic-pause"/></svg><span>ZOSTAŤ</span></div>
+          </div>
+        </div>
+        <div class="homebar"></div>
+      </div>
+      <figcaption><i>Nesprávne</i> — „povedal si" klesá do meta riadku</figcaption>
+    </figure>
+
+    <!-- A · SKIPPED -->
+    <figure class="device">
+      <div class="phone">
+        <div class="sb"><span>9:41</span><span class="dots">•••</span></div>
+        <div class="nav">
+          <div class="nav-l"><div class="xchip"><svg><use href="#ic-x"/></svg></div><span class="brand">trubbo.<i></i></span></div>
+          <span class="counter">03 / 10</span>
+        </div>
+        <div class="prog"><i></i></div>
+
+        <div class="vband sk">
+          <div class="row"><span class="badge sk"><svg><use href="#ic-dash"/></svg></span>
+            <span class="iconbtn"><svg><use href="#ic-speaker"/></svg></span></div>
+          <div class="w">PRESKOČENÉ.</div>
+        </div>
+
+        <div class="body">
+          <div class="card">
+            <span class="lbl g">správna odpoveď</span>
+            <div class="ansbig mt6">Urán</div>
+            <div class="hair mt12"></div>
+            <div class="row mt12"><span class="lbl b">prečo</span><span class="hearit"><svg><use href="#ic-speaker"/></svg>vypočuť</span></div>
+            <p class="explain clamp mt6" style="margin:6px 0 0">Urán je naklonený o približne 98° — pravdepodobne ho prevrátil obrovský náraz krátko po vzniku sústavy, takže sa okolo Slnka kotúľa nabok namiesto toho, aby stál vzpriamene ako ostatné planéty.</p>
+          </div>
+          <div style="flex:1"></div>
+        </div>
+
+        <div class="metarow">
+          <span class="faintline">skóre 2 <span class="sep">·</span> séria 0</span>
+          <span class="faintline">zdroj <svg><use href="#ic-chevr"/></svg></span>
+        </div>
+
+        <div class="footer">
+          <div class="lbar">
+            <div class="t"><svg><use href="#ic-wave"/></svg>POČÚVAM PRÍKAZY<span class="d"><b></b><b></b><b></b></span></div>
+            <div class="h">Povedz „ďalej"</div>
+          </div>
+          <div class="footrow">
+            <div class="cta"><div class="fill"></div><div class="in">Ďalšia otázka <svg><use href="#ic-arrow"/></svg> <span class="sec">5s</span></div></div>
+            <div class="stayblock"><svg><use href="#ic-pause"/></svg><span>ZOSTAŤ</span></div>
+          </div>
+        </div>
+        <div class="homebar"></div>
+      </div>
+      <figcaption><s>Preskočené</s> — neutrálny pás, žiadne „povedal si"</figcaption>
+    </figure>
+
+  </div>
+
+  <div class="hier">
+    <span><i>1.</i><b>Verdikt 56pt</b></span>
+    <span><i>2.</i><b>Odpoveď 38pt + prečo</b></span>
+    <span class="dim"><i>3.</i>skóre · séria · povedal si · zdroj (10pt mono)</span>
+  </div>
+</section>
+
+<!-- =====================================================================
+     VARIANT B
+====================================================================== -->
+<section class="variant">
+  <div class="vhead"><span class="vtag">VARIANT B</span><h2>Odpoveď vládne</h2></div>
+  <p class="concept">
+    Verdikt sa scvrkne na <b>38pt vysokú stužku</b> s farebným prúžkom — stav prečítaš periférne, farbou.
+    Hrdinom obrazovky je <b>samotná správna odpoveď v 62pt</b>, hneď pod ňou vysvetlenie. Vo všetkých troch stavoch
+    je to <b>tá istá kompozícia</b> — mení sa iba farba prúžku, slovo v stužke a posledný tichý riadok.
+  </p>
+
+  <div class="devices">
+
+    <!-- B · CORRECT -->
+    <figure class="device">
+      <div class="phone">
+        <div class="sb"><span>9:41</span><span class="dots">•••</span></div>
+        <div class="nav">
+          <div class="nav-l"><div class="xchip"><svg><use href="#ic-x"/></svg></div><span class="brand">trubbo.<i></i></span></div>
+          <span class="counter">03 / 10</span>
+        </div>
+        <div class="prog"><i></i></div>
+
+        <div class="ribbon ok">
+          <span class="bar"></span><span class="w">MÁŠ TO.</span>
+          <span style="flex:1"></span>
+          <span class="faintline">skóre 3 <span class="sep">·</span> +1 <span class="sep">·</span> séria 2</span>
+        </div>
+
+        <div class="body">
+          <div class="panel">
+            <div class="row"><span class="lbl g">tvoja odpoveď</span><span class="iconbtn"><svg><use href="#ic-speaker"/></svg></span></div>
+            <div class="mega mt6">Urán</div>
+            <div class="hair mt12"></div>
+            <div class="row mt12"><span class="lbl b">prečo</span><span class="hearit"><svg><use href="#ic-speaker"/></svg>vypočuť</span></div>
+            <p class="explain clamp5 mt6" style="margin:6px 0 0">Urán je naklonený o približne 98° — pravdepodobne ho prevrátil obrovský náraz krátko po vzniku sústavy, takže sa okolo Slnka kotúľa nabok namiesto toho, aby stál vzpriamene ako ostatné planéty.</p>
+            <div class="grow"></div>
+            <div class="hair"></div>
+            <div class="faintline mt10">otázka · Ktorá planéta sa otáča nabok?</div>
+            <div class="faintline mt6">zdroj · nasa.gov <svg><use href="#ic-chevr"/></svg></div>
+          </div>
+        </div>
+
+        <div class="footer">
+          <div class="lbar">
+            <div class="t"><svg><use href="#ic-wave"/></svg>POČÚVAM PRÍKAZY<span class="d"><b></b><b></b><b></b></span></div>
+            <div class="h">Povedz „ďalej"</div>
+          </div>
+          <div class="footrow">
+            <div class="cta"><div class="fill"></div><div class="in">Ďalšia otázka <svg><use href="#ic-arrow"/></svg> <span class="sec">5s</span></div></div>
+            <div class="stayblock"><svg><use href="#ic-pause"/></svg><span>ZOSTAŤ</span></div>
+          </div>
+        </div>
+        <div class="homebar"></div>
+      </div>
+      <figcaption><b>Správne</b></figcaption>
+    </figure>
+
+    <!-- B · INCORRECT -->
+    <figure class="device">
+      <div class="phone">
+        <div class="sb"><span>9:41</span><span class="dots">•••</span></div>
+        <div class="nav">
+          <div class="nav-l"><div class="xchip"><svg><use href="#ic-x"/></svg></div><span class="brand">trubbo.<i></i></span></div>
+          <span class="counter">03 / 10</span>
+        </div>
+        <div class="prog"><i></i></div>
+
+        <div class="ribbon no">
+          <span class="bar"></span><span class="w">TESNE VEDĽA.</span>
+          <span style="flex:1"></span>
+          <span class="faintline">skóre 2 <span class="sep">·</span> +0</span>
+        </div>
+
+        <div class="body">
+          <div class="panel">
+            <div class="row"><span class="lbl g">správna odpoveď</span><span class="iconbtn"><svg><use href="#ic-speaker"/></svg></span></div>
+            <div class="mega mt6">Urán</div>
+            <div class="hair mt12"></div>
+            <div class="row mt12"><span class="lbl b">prečo</span><span class="hearit"><svg><use href="#ic-speaker"/></svg>vypočuť</span></div>
+            <p class="explain clamp5 mt6" style="margin:6px 0 0">Urán je naklonený o približne 98° — pravdepodobne ho prevrátil obrovský náraz krátko po vzniku sústavy, takže sa okolo Slnka kotúľa nabok namiesto toho, aby stál vzpriamene ako ostatné planéty.</p>
+            <div class="grow"></div>
+            <div class="hair"></div>
+            <div class="faintline mt10">povedal si · <s>Saturn</s></div>
+            <div class="faintline mt6">zdroj · nasa.gov <svg><use href="#ic-chevr"/></svg></div>
+          </div>
+        </div>
+
+        <div class="footer">
+          <div class="lbar">
+            <div class="t"><svg><use href="#ic-wave"/></svg>POČÚVAM PRÍKAZY<span class="d"><b></b><b></b><b></b></span></div>
+            <div class="h">Povedz „ďalej"</div>
+          </div>
+          <div class="footrow">
+            <div class="cta"><div class="fill"></div><div class="in">Ďalšia otázka <svg><use href="#ic-arrow"/></svg> <span class="sec">5s</span></div></div>
+            <div class="stayblock"><svg><use href="#ic-pause"/></svg><span>ZOSTAŤ</span></div>
+          </div>
+        </div>
+        <div class="homebar"></div>
+      </div>
+      <figcaption><i>Nesprávne</i> — rovnaká kompozícia, iná farba prúžku</figcaption>
+    </figure>
+
+    <!-- B · SKIPPED -->
+    <figure class="device">
+      <div class="phone">
+        <div class="sb"><span>9:41</span><span class="dots">•••</span></div>
+        <div class="nav">
+          <div class="nav-l"><div class="xchip"><svg><use href="#ic-x"/></svg></div><span class="brand">trubbo.<i></i></span></div>
+          <span class="counter">03 / 10</span>
+        </div>
+        <div class="prog"><i></i></div>
+
+        <div class="ribbon sk">
+          <span class="bar"></span><span class="w">PRESKOČENÉ.</span>
+          <span style="flex:1"></span>
+          <span class="faintline">skóre 2 <span class="sep">·</span> +0</span>
+        </div>
+
+        <div class="body">
+          <div class="panel">
+            <div class="row"><span class="lbl g">správna odpoveď</span><span class="iconbtn"><svg><use href="#ic-speaker"/></svg></span></div>
+            <div class="mega mt6">Urán</div>
+            <div class="hair mt12"></div>
+            <div class="row mt12"><span class="lbl b">prečo</span><span class="hearit"><svg><use href="#ic-speaker"/></svg>vypočuť</span></div>
+            <p class="explain clamp5 mt6" style="margin:6px 0 0">Urán je naklonený o približne 98° — pravdepodobne ho prevrátil obrovský náraz krátko po vzniku sústavy, takže sa okolo Slnka kotúľa nabok namiesto toho, aby stál vzpriamene ako ostatné planéty.</p>
+            <div class="grow"></div>
+            <div class="hair"></div>
+            <div class="faintline mt10">otázka · Ktorá planéta sa otáča nabok?</div>
+            <div class="faintline mt6">zdroj · nasa.gov <svg><use href="#ic-chevr"/></svg></div>
+          </div>
+        </div>
+
+        <div class="footer">
+          <div class="lbar">
+            <div class="t"><svg><use href="#ic-wave"/></svg>POČÚVAM PRÍKAZY<span class="d"><b></b><b></b><b></b></span></div>
+            <div class="h">Povedz „ďalej"</div>
+          </div>
+          <div class="footrow">
+            <div class="cta"><div class="fill"></div><div class="in">Ďalšia otázka <svg><use href="#ic-arrow"/></svg> <span class="sec">5s</span></div></div>
+            <div class="stayblock"><svg><use href="#ic-pause"/></svg><span>ZOSTAŤ</span></div>
+          </div>
+        </div>
+        <div class="homebar"></div>
+      </div>
+      <figcaption><s>Preskočené</s> — šedý prúžok, posledný riadok = otázka</figcaption>
+    </figure>
+
+  </div>
+
+  <div class="hier">
+    <span><i>1.</i><b>Odpoveď 62pt</b></span>
+    <span><i>2.</i><b>Prečo (5 riadkov)</b></span>
+    <span class="dim"><i>3.</i>stužka: verdikt 20pt + skóre</span>
+    <span class="dim"><i>4.</i>povedal si / otázka · zdroj (10pt mono)</span>
+  </div>
+</section>
+
+<!-- =====================================================================
+     VARIANT C
+====================================================================== -->
+<section class="variant">
+  <div class="vhead"><span class="vtag">VARIANT C</span><h2>Verdikt a skóre v jednom</h2></div>
+  <p class="concept">
+    Verdikt a skóre prestanú súťažiť a <b>zlejú sa do jedného zafarbeného banneru</b>: vľavo slovo v 32pt,
+    vpravo za deliacou linkou skóre v 42pt a séria pod ním. Karta s odpoveďou je druhá v poradí (32pt).
+    Jediný variant, kde je <b>postup v hre viditeľný na prvý pohľad</b> — cena je menší verdikt aj menšia odpoveď.
+  </p>
+
+  <div class="devices">
+
+    <!-- C · CORRECT -->
+    <figure class="device">
+      <div class="phone">
+        <div class="sb"><span>9:41</span><span class="dots">•••</span></div>
+        <div class="nav">
+          <div class="nav-l"><div class="xchip"><svg><use href="#ic-x"/></svg></div><span class="brand">trubbo.<i></i></span></div>
+          <span class="counter">03 / 10</span>
+        </div>
+        <div class="prog"><i></i></div>
+
+        <div class="banner ok">
+          <div class="l"><span class="badge ok"><svg><use href="#ic-check"/></svg></span><div class="w">MÁŠ TO.</div></div>
+          <div class="r"><span class="lbl p sm">skóre</span><b>3</b><em>+1 bod</em><div class="streak">séria 2</div></div>
+        </div>
+
+        <div class="body">
+          <div class="panel">
+            <div class="row"><span class="lbl g">tvoja odpoveď</span><span class="iconbtn"><svg><use href="#ic-speaker"/></svg></span></div>
+            <div class="ansmid mt6">Urán</div>
+            <div class="hair mt12"></div>
+            <div class="row mt12"><span class="lbl b">prečo</span><span class="hearit"><svg><use href="#ic-speaker"/></svg>vypočuť</span></div>
+            <p class="explain clamp mt6" style="margin:6px 0 0">Urán je naklonený o približne 98° — pravdepodobne ho prevrátil obrovský náraz krátko po vzniku sústavy, takže sa okolo Slnka kotúľa nabok namiesto toho, aby stál vzpriamene ako ostatné planéty.</p>
+            <div class="grow"></div>
+            <div class="hair"></div>
+            <div class="faintline mt10">otázka · Ktorá planéta sa otáča nabok?</div>
+            <div class="faintline mt6">zdroj · nasa.gov <svg><use href="#ic-chevr"/></svg></div>
+          </div>
+        </div>
+
+        <div class="footer">
+          <div class="lbar">
+            <div class="t"><svg><use href="#ic-wave"/></svg>POČÚVAM PRÍKAZY<span class="d"><b></b><b></b><b></b></span></div>
+            <div class="h">Povedz „ďalej"</div>
+          </div>
+          <div class="footrow">
+            <div class="cta"><div class="fill"></div><div class="in">Ďalšia otázka <svg><use href="#ic-arrow"/></svg> <span class="sec">5s</span></div></div>
+            <div class="stayblock"><svg><use href="#ic-pause"/></svg><span>ZOSTAŤ</span></div>
+          </div>
+        </div>
+        <div class="homebar"></div>
+      </div>
+      <figcaption><b>Správne</b></figcaption>
+    </figure>
+
+    <!-- C · INCORRECT -->
+    <figure class="device">
+      <div class="phone">
+        <div class="sb"><span>9:41</span><span class="dots">•••</span></div>
+        <div class="nav">
+          <div class="nav-l"><div class="xchip"><svg><use href="#ic-x"/></svg></div><span class="brand">trubbo.<i></i></span></div>
+          <span class="counter">03 / 10</span>
+        </div>
+        <div class="prog"><i></i></div>
+
+        <div class="banner no">
+          <div class="l"><span class="badge no"><svg><use href="#ic-x"/></svg></span><div class="w">TESNE VEDĽA.</div></div>
+          <div class="r"><span class="lbl p sm">skóre</span><b>2</b><em>+0 bodov</em><div class="streak">séria 0</div></div>
+        </div>
+
+        <div class="body">
+          <div class="panel">
+            <div class="row"><span class="lbl g">správna odpoveď</span><span class="iconbtn"><svg><use href="#ic-speaker"/></svg></span></div>
+            <div class="ansmid mt6">Urán</div>
+            <div class="hair mt12"></div>
+            <div class="row mt12"><span class="lbl b">prečo</span><span class="hearit"><svg><use href="#ic-speaker"/></svg>vypočuť</span></div>
+            <p class="explain clamp mt6" style="margin:6px 0 0">Urán je naklonený o približne 98° — pravdepodobne ho prevrátil obrovský náraz krátko po vzniku sústavy, takže sa okolo Slnka kotúľa nabok namiesto toho, aby stál vzpriamene ako ostatné planéty.</p>
+            <div class="grow"></div>
+            <div class="hair"></div>
+            <div class="faintline mt10">povedal si · <s>Saturn</s></div>
+            <div class="faintline mt6">zdroj · nasa.gov <svg><use href="#ic-chevr"/></svg></div>
+          </div>
+        </div>
+
+        <div class="footer">
+          <div class="lbar">
+            <div class="t"><svg><use href="#ic-wave"/></svg>POČÚVAM PRÍKAZY<span class="d"><b></b><b></b><b></b></span></div>
+            <div class="h">Povedz „ďalej"</div>
+          </div>
+          <div class="footrow">
+            <div class="cta"><div class="fill"></div><div class="in">Ďalšia otázka <svg><use href="#ic-arrow"/></svg> <span class="sec">5s</span></div></div>
+            <div class="stayblock"><svg><use href="#ic-pause"/></svg><span>ZOSTAŤ</span></div>
+          </div>
+        </div>
+        <div class="homebar"></div>
+      </div>
+      <figcaption><i>Nesprávne</i> — rovnaký banner, iná farba a skóre</figcaption>
+    </figure>
+
+    <!-- C · SKIPPED -->
+    <figure class="device">
+      <div class="phone">
+        <div class="sb"><span>9:41</span><span class="dots">•••</span></div>
+        <div class="nav">
+          <div class="nav-l"><div class="xchip"><svg><use href="#ic-x"/></svg></div><span class="brand">trubbo.<i></i></span></div>
+          <span class="counter">03 / 10</span>
+        </div>
+        <div class="prog"><i></i></div>
+
+        <div class="banner sk">
+          <div class="l"><span class="badge sk"><svg><use href="#ic-dash"/></svg></span><div class="w">PRESKOČENÉ.</div></div>
+          <div class="r"><span class="lbl n sm">skóre</span><b>2</b><em>+0 bodov</em><div class="streak">séria 0</div></div>
+        </div>
+
+        <div class="body">
+          <div class="panel">
+            <div class="row"><span class="lbl g">správna odpoveď</span><span class="iconbtn"><svg><use href="#ic-speaker"/></svg></span></div>
+            <div class="ansmid mt6">Urán</div>
+            <div class="hair mt12"></div>
+            <div class="row mt12"><span class="lbl b">prečo</span><span class="hearit"><svg><use href="#ic-speaker"/></svg>vypočuť</span></div>
+            <p class="explain clamp mt6" style="margin:6px 0 0">Urán je naklonený o približne 98° — pravdepodobne ho prevrátil obrovský náraz krátko po vzniku sústavy, takže sa okolo Slnka kotúľa nabok namiesto toho, aby stál vzpriamene ako ostatné planéty.</p>
+            <div class="grow"></div>
+            <div class="hair"></div>
+            <div class="faintline mt10">otázka · Ktorá planéta sa otáča nabok?</div>
+            <div class="faintline mt6">zdroj · nasa.gov <svg><use href="#ic-chevr"/></svg></div>
+          </div>
+        </div>
+
+        <div class="footer">
+          <div class="lbar">
+            <div class="t"><svg><use href="#ic-wave"/></svg>POČÚVAM PRÍKAZY<span class="d"><b></b><b></b><b></b></span></div>
+            <div class="h">Povedz „ďalej"</div>
+          </div>
+          <div class="footrow">
+            <div class="cta"><div class="fill"></div><div class="in">Ďalšia otázka <svg><use href="#ic-arrow"/></svg> <span class="sec">5s</span></div></div>
+            <div class="stayblock"><svg><use href="#ic-pause"/></svg><span>ZOSTAŤ</span></div>
+          </div>
+        </div>
+        <div class="homebar"></div>
+      </div>
+      <figcaption><s>Preskočené</s> — neutrálny banner, skóre sa nemení</figcaption>
+    </figure>
+
+  </div>
+
+  <div class="hier">
+    <span><i>1.</i><b>Banner: verdikt 32pt + skóre 42pt</b></span>
+    <span><i>2.</i><b>Odpoveď 32pt + prečo</b></span>
+    <span class="dim"><i>3.</i>povedal si / otázka · zdroj (10pt mono)</span>
+  </div>
+</section>
+
+<p class="meta">
+  Spoločné pre všetky tri: pätička je jeden ListenBar + jeden riadok („Ďalšia otázka" s odpočtom vľavo, ZOSTAŤ vpravo —
+  po pozastavení sa pilulka prepne na „Obnoviť") · v pozastavenom stave sa ružová výplň odpočtu zastaví ·
+  nič sa neroluje, dlhé vysvetlenie sa roluje vnútri karty (rozhodnutie #127C).
+</p>
+
+</div>
+</body>
+</html>

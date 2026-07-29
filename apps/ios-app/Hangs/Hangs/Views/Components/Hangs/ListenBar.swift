@@ -17,9 +17,17 @@
 //
 //  Match/no-match feedback follows #122 Variant C (teal sweep / amber breath) in
 //  both modes and re-tints the bar exactly like CmdListenBar's lit / lit-miss.
-//  The bar absorbs the mute control (audio strip drops it once the bar is on
-//  screen). isMuted + the toggle come in as parameters so the component stays
-//  decoupled from QuizViewModel.
+//
+//  #131 Track C (founder, 2026-07-29):
+//   - NO mute button. It was a duplicate of the question audio strip's (#85), and
+//     the strip is the one place a driver learns to reach for. The strip is now
+//     rendered in every state this bar shows in.
+//   - Command mode carries a SUB-LINE with the actual words to say, sourced from
+//     `VoiceCommandLexicon.hint(on:language:)` via the caller — "LISTENING FOR
+//     COMMANDS" alone never told anyone what a command is.
+//   - The amber no-match state swaps that sub-line for a corrective hint. Colour
+//     alone is not feedback: a driver glancing at an amber bar must read what to
+//     do differently, not infer it.
 //
 
 import SwiftUI
@@ -43,10 +51,10 @@ struct ListenBar: View {
     /// #122 Variant C transient tint — overrides the mode accent while live.
     var feedback: VoiceFeedbackPhase = .idle
 
-    /// Mute state + toggle passed in (not coupled to QuizViewModel); the bar
-    /// carries the same mute the audio strip used to.
-    let isMuted: Bool
-    let onToggleMute: () -> Void
+    /// The screen's concrete command words, already rendered by
+    /// `VoiceCommandLexicon.hint(on:language:)` (the same string the caller gates
+    /// the bar on). Command mode only; nil keeps the bar single-line.
+    var commandHint: String? = nil
 
     /// SE-class degrades the bar 44 → 40. Driven by container height, not device.
     var compact: Bool = false
@@ -103,7 +111,23 @@ struct ListenBar: View {
         }
     }
 
-    private var barHeight: CGFloat { compact ? 40 : 44 }
+    private var barHeight: CGFloat {
+        guard subLine != nil else { return compact ? 40 : 44 }
+        return compact ? 50 : 56
+    }
+
+    /// The sub-line under the caption: the words to say, or — on a no-match — a
+    /// corrective hint that still names them. Answer mode has none (the caption
+    /// already IS the instruction).
+    private var subLine: Text? {
+        guard case .command = mode, let commandHint else { return nil }
+        switch feedback {
+        case .unmatched:
+            return Text("Didn't catch that. \(commandHint)")
+        case .idle, .matched:
+            return Text(verbatim: commandHint)
+        }
+    }
 
     /// Caption as a `Text`: verbatim command caption (command language) OR a
     /// catalog-localized answer prompt. Reused verbatim as the a11y label.
@@ -121,14 +145,14 @@ struct ListenBar: View {
     }
 
     var body: some View {
-        HStack(spacing: 10) {
-            HStack(spacing: 8) {
-                Image(systemName: "waveform")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(accent)
-                    .symbolEffect(.variableColor.iterative.dimInactiveLayers)
-                    .accessibilityHidden(true)
+        HStack(spacing: 8) {
+            Image(systemName: "waveform")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(accent)
+                .symbolEffect(.variableColor.iterative.dimInactiveLayers)
+                .accessibilityHidden(true)
 
+            VStack(alignment: .leading, spacing: 2) {
                 captionText
                     .font(.hangsMono(12, weight: .medium))
                     .tracking(0.6)
@@ -136,17 +160,23 @@ struct ListenBar: View {
                     .foregroundColor(accent)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
+
+                if let subLine {
+                    subLine
+                        .font(.hangsBody(12, weight: .medium))
+                        .foregroundColor(accent.opacity(0.9))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.6)
+                        .accessibilityIdentifier("listen-bar.commands")
+                }
             }
-            // Combined so VoiceOver reads one "listening …" element; the mute
-            // button stays a separate, independently operable control.
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel(captionText)
-            .accessibilityIdentifier("listen-bar")
 
             Spacer(minLength: 8)
-
-            muteButton
         }
+        // Combined so VoiceOver reads one "listening … say X" element.
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(subLine.map { captionText + Text(verbatim: ". ") + $0 } ?? captionText)
+        .accessibilityIdentifier("listen-bar")
         .padding(.leading, 18)
         .padding(.trailing, 16)
         .frame(maxWidth: .infinity)
@@ -155,35 +185,18 @@ struct ListenBar: View {
         .overlay(Capsule().strokeBorder(border, lineWidth: 1))
         .animation(.easeInOut(duration: 0.25), value: feedback)
     }
-
-    /// Same toggle the audio strip's mute used — routes through the injected
-    /// action so muting mid-read can still stop in-flight TTS at the call site.
-    private var muteButton: some View {
-        Button(action: onToggleMute) {
-            Image(systemName: isMuted ? "speaker.slash.fill" : "speaker.wave.2")
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundColor(isMuted ? Theme.Hangs.Colors.pink : Theme.Hangs.Colors.muted)
-                .frame(width: 32, height: 32)
-                .background(Circle().fill(Theme.Hangs.Colors.bgCard))
-                .overlay(Circle().stroke(Theme.Hangs.Colors.hairline, lineWidth: 1))
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(isMuted
-            ? String(localized: "Unmute", comment: "Accessibility label for the quiz mute toggle while muted")
-            : String(localized: "Mute", comment: "Accessibility label for the quiz mute toggle while audible"))
-        .accessibilityIdentifier("question.mute")
-    }
 }
 
 #if DEBUG
     #Preview {
         VStack(spacing: 16) {
-            ListenBar(mode: .command, isMuted: false, onToggleMute: {})
-            ListenBar(mode: .command, feedback: .matched, isMuted: false, onToggleMute: {})
-            ListenBar(mode: .answer(.mcq), isMuted: false, onToggleMute: {})
-            ListenBar(mode: .answer(.trueFalse), feedback: .unmatched, isMuted: true, onToggleMute: {})
-            ListenBar(mode: .answer(.open), isMuted: false, onToggleMute: {})
-            ListenBar(mode: .command, isMuted: false, onToggleMute: {}, language: .slovak)
+            ListenBar(mode: .command, commandHint: #"Say "start" or "skip""#)
+            ListenBar(mode: .command, feedback: .matched, commandHint: #"Say "start" or "skip""#)
+            ListenBar(mode: .command, feedback: .unmatched, commandHint: #"Say "start" or "skip""#)
+            ListenBar(mode: .answer(.mcq))
+            ListenBar(mode: .answer(.trueFalse), feedback: .unmatched)
+            ListenBar(mode: .answer(.open))
+            ListenBar(mode: .command, commandHint: #"Povedz „štart" alebo „preskoč""#, language: .slovak)
         }
         .padding(20)
         .frame(maxWidth: .infinity, maxHeight: .infinity)

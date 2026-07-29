@@ -6,7 +6,8 @@
 //  swaps text/accent by mode: teal command mode (COMMAND language, #120) vs pink
 //  answer mode (app-locale). #122 Variant C feedback re-tints it without moving
 //  it. Verifies: mode captions (incl. the Slovak command caption), that the bar
-//  keeps its id + caption across every feedback phase, and the mute button.
+//  keeps its id + caption across every feedback phase, the #131 concrete-commands
+//  sub-line (+ its corrective no-match variant), and that no mute lives here.
 //  vzor: CmdListenBarInspectorTests / the old ListeningPillInspectorTests.
 //
 
@@ -23,7 +24,7 @@ struct ListenBarInspectorTests {
 
     @Test("Command mode renders the English caption")
     func commandEnglishCaption() async throws {
-        let view = ListenBar(mode: .command, isMuted: false, onToggleMute: {}, language: .english)
+        let view = ListenBar(mode: .command, language: .english)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) {
@@ -36,7 +37,7 @@ struct ListenBarInspectorTests {
     /// locale — a Slovak driver must read the Slovak caption.
     @Test("Command mode renders the Slovak caption")
     func commandSlovakCaption() async throws {
-        let view = ListenBar(mode: .command, isMuted: false, onToggleMute: {}, language: .slovak)
+        let view = ListenBar(mode: .command, language: .slovak)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) {
@@ -49,7 +50,7 @@ struct ListenBarInspectorTests {
 
     @Test("Answer/MCQ mode prompts for A–D")
     func answerMCQCaption() async throws {
-        let view = ListenBar(mode: .answer(.mcq), isMuted: false, onToggleMute: {})
+        let view = ListenBar(mode: .answer(.mcq))
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) {
@@ -60,7 +61,7 @@ struct ListenBarInspectorTests {
 
     @Test("Answer/true-false mode prompts for true or false")
     func answerTrueFalseCaption() async throws {
-        let view = ListenBar(mode: .answer(.trueFalse), isMuted: false, onToggleMute: {})
+        let view = ListenBar(mode: .answer(.trueFalse))
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) {
@@ -71,7 +72,7 @@ struct ListenBarInspectorTests {
 
     @Test("Answer/open mode prompts for the spoken answer")
     func answerOpenCaption() async throws {
-        let view = ListenBar(mode: .answer(.open), isMuted: false, onToggleMute: {})
+        let view = ListenBar(mode: .answer(.open))
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) {
@@ -87,7 +88,7 @@ struct ListenBarInspectorTests {
     @Test("Bar keeps its id + caption across every feedback phase")
     func structureStableAcrossPhases() async throws {
         for phase in [VoiceFeedbackPhase.idle, .matched, .unmatched] {
-            let view = ListenBar(mode: .answer(.mcq), feedback: phase, isMuted: false, onToggleMute: {})
+            let view = ListenBar(mode: .answer(.mcq), feedback: phase)
             try await ViewHosting.host(view) {
                 let tree = try view.inspect()
                 #expect(throws: Never.self, "listen-bar id missing in \(phase)") {
@@ -100,34 +101,87 @@ struct ListenBarInspectorTests {
         }
     }
 
-    // MARK: - Mute button (absorbed from the audio strip)
+    // MARK: - Concrete commands sub-line (#131 Track C)
 
-    @Test("Bar carries the mute button")
-    func muteButtonPresent() async throws {
-        let view = ListenBar(mode: .answer(.mcq), isMuted: false, onToggleMute: {})
+    /// "LISTENING FOR COMMANDS" told a driver that the mic was open but never what
+    /// to say — the founder read it as a dead-end (TF test 2026-07-29). The bar must
+    /// name the actual words, and they must come from `VoiceCommandLexicon` so the
+    /// screen's real grammar and the on-screen promise can never drift apart.
+    @Test("Command mode names the screen's actual command words")
+    func commandModeShowsConcreteCommands() async throws {
+        let hint = VoiceCommandLexicon.hint(on: .question, language: .english)
+        let view = ListenBar(mode: .command, commandHint: hint)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) {
-                try tree.find(viewWithAccessibilityIdentifier: "question.mute")
+            let sub = try tree.find(viewWithAccessibilityIdentifier: "listen-bar.commands")
+            #expect(try sub.text().string() == hint)
+            #expect(hint.contains("start") && hint.contains("skip"), "the question screen's words")
+        }
+    }
+
+    /// The Slovak driver must read Slovak command words — the sub-line follows the
+    /// COMMAND language (#120), not the app locale, exactly like the caption above it.
+    @Test("Command sub-line follows the command language, not the app locale")
+    func commandSubLineUsesCommandLanguage() async throws {
+        let hint = VoiceCommandLexicon.hint(on: .question, language: .slovak)
+        let view = ListenBar(mode: .command, commandHint: hint, language: .slovak)
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            let sub = try tree.find(viewWithAccessibilityIdentifier: "listen-bar.commands")
+            #expect(try sub.text().string() == hint)
+            #expect(hint.contains("štart"), "Slovak spoken form, not the English one")
+        }
+    }
+
+    /// Amber alone said "something happened" and nothing else. A no-match must tell
+    /// the driver what to do instead — while still naming the words, so the
+    /// correction is actionable at a glance.
+    @Test("No-match swaps the sub-line to a corrective hint that still names the words")
+    func unmatchedShowsCorrectiveHint() async throws {
+        let hint = VoiceCommandLexicon.hint(on: .question, language: .english)
+        let view = ListenBar(mode: .command, feedback: .unmatched, commandHint: hint)
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            let sub = try tree.find(viewWithAccessibilityIdentifier: "listen-bar.commands")
+            let rendered = try sub.text().string()
+            #expect(rendered != hint, "the sub-line must change, not just the colour")
+            #expect(rendered.contains(hint), "the corrective hint still names the commands")
+        }
+    }
+
+    /// Answer mode's caption IS the instruction ("SAY A–D") — a sub-line there would
+    /// be noise on the one screen where the driver is mid-answer.
+    @Test("Answer mode renders no sub-line")
+    func answerModeHasNoSubLine() async throws {
+        let view = ListenBar(mode: .answer(.mcq), commandHint: "Say \"start\"")
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: (any Error).self) {
+                _ = try tree.find(viewWithAccessibilityIdentifier: "listen-bar.commands")
             }
         }
     }
 
-    @Test("Tapping mute fires the injected toggle")
-    func muteButtonFiresToggle() async throws {
-        var toggled = false
-        let view = ListenBar(mode: .answer(.mcq), isMuted: false, onToggleMute: { toggled = true })
+    // MARK: - Mute (moved back out — #131 Track C)
+
+    /// #125 put a mute on the bar; it duplicated the question audio strip's (#85)
+    /// and cost the driver the one fixed spot they had learned. The bar must carry
+    /// none — `QuestionViewAudioStripTests` covers the strip being reachable in
+    /// every state the bar shows.
+    @Test("Bar carries no mute button")
+    func barHasNoMuteButton() async throws {
+        let view = ListenBar(mode: .answer(.mcq))
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            let mute = try tree.find(viewWithAccessibilityIdentifier: "question.mute")
-            try mute.button().tap()
-            #expect(toggled == true)
+            #expect(throws: (any Error).self) {
+                _ = try tree.find(viewWithAccessibilityIdentifier: "question.mute")
+            }
         }
     }
 
     @Test("Accessibility identifier listen-bar is present")
     func accessibilityIdentifierPresent() async throws {
-        let view = ListenBar(mode: .command, isMuted: false, onToggleMute: {})
+        let view = ListenBar(mode: .command)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) {

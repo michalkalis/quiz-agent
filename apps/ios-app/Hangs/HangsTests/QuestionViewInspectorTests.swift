@@ -145,15 +145,15 @@ struct QuestionViewMCQRevealGateTests {
             #expect(throws: Never.self) {
                 try tree.find(viewWithAccessibilityIdentifier: "question.text")
             }
-            // #125: pre-reveal keeps the audio strip (timer chips + mute) — no bar
-            // is present yet, so the strip carries the mute.
+            // The audio strip (timer chips + mute) is the pre-reveal MCQ's only
+            // countdown surface — MCQ has no Record button to host it (#131 B).
             #expect(throws: Never.self) {
                 try tree.find(viewWithAccessibilityIdentifier: "question.timerStrip")
             }
         }
     }
 
-    @Test("all four option tiles + the answer ListenBar appear once recording starts (strip gone)")
+    @Test("all four option tiles + the answer ListenBar appear once recording starts (strip stays)")
     func answerAffordancesShownOnceRecording() async throws {
         let (vm, _) = makePreRevealViewModel()
         vm.quizState = .recording // founder trigger: "start of recording"
@@ -171,9 +171,11 @@ struct QuestionViewMCQRevealGateTests {
             #expect(throws: Never.self) {
                 try tree.find(viewWithAccessibilityIdentifier: "listen-bar")
             }
-            // The audio strip is dropped post-reveal — its mute moved into the bar.
-            #expect(throws: (any Error).self) {
-                _ = try tree.find(viewWithAccessibilityIdentifier: "question.timerStrip")
+            // #131 Track C: the strip survives the reveal. It is the only mute on
+            // the screen now that the bar dropped its duplicate — dropping the
+            // strip here would leave the answering phase with no way to mute.
+            #expect(throws: Never.self) {
+                try tree.find(viewWithAccessibilityIdentifier: "question.timerStrip")
             }
         }
     }
@@ -425,17 +427,25 @@ struct QuestionViewUnifiedChromeTests {
         }
     }
 
-    /// Founder batch 2026-07-12: the typed-answer link belongs INSIDE the bottom
-    /// strip (one horizontal row with the timer chip and mute), not on its own row.
-    @Test("typed-answer toggle sits inside the timer strip in voice mode")
-    func typeToggleInsideTimerStrip() async throws {
+    /// #131 Track C (founder, 2026-07-29): the footer row is Record · Type · Skip.
+    /// "Type answer instead" left its floating slot in the audio strip and became a
+    /// compact button beside the other two — one row a driver can hit without
+    /// hunting. The strip must no longer contain it.
+    @Test("typed-answer toggle sits in the footer row, not in the timer strip")
+    func typeToggleSitsInFooterRow() async throws {
         let vm = makeViewModel(question: Question.preview)
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             let strip = try tree.find(viewWithAccessibilityIdentifier: "question.timerStrip")
-            #expect(throws: Never.self) {
-                try strip.find(viewWithAccessibilityIdentifier: "question.textInputToggle")
+            #expect(throws: (any Error).self) {
+                _ = try strip.find(viewWithAccessibilityIdentifier: "question.textInputToggle")
+            }
+            // All three footer controls are on screen together.
+            for id in ["question.record", "question.textInputToggle", "question.skip"] {
+                #expect(throws: Never.self, "\(id) missing from the footer row") {
+                    try tree.find(viewWithAccessibilityIdentifier: id)
+                }
             }
         }
     }
@@ -489,19 +499,22 @@ struct QuestionViewAudioStripTests {
         }
     }
 
-    /// #85 acceptance, carried into #125: a visible mute affordance on the quiz
-    /// screen. It now lives in the docked ListenBar, so both modes show it while
-    /// recording (MCQ = post-reveal answer bar; voice = answer bar). Driving-first:
-    /// the audio control sits on one predictable spot.
-    @Test("mute toggle is present in both modes (in the docked ListenBar)", arguments: [Question.previewMCQ, Question.preview])
+    /// #85 acceptance, restored by #131 Track C: the mute lives in the audio strip
+    /// in BOTH modes and BOTH answering states. #125 had moved it into the docked
+    /// ListenBar, which made it a duplicate and tied the only mute to whether a bar
+    /// happened to be on screen. Driving-first: one predictable spot, always there.
+    @Test("mute toggle is present in both modes, asking and recording",
+          arguments: [Question.previewMCQ, Question.preview])
     func mutePresentInBothModes(question: Question) async throws {
-        let vm = makeViewModel(question: question)
-        vm.quizState = .recording // #125: the docked bar (with the mute) shows here
-        let view = QuestionView(viewModel: vm)
-        try await ViewHosting.host(view) {
-            let tree = try view.inspect()
-            #expect(throws: Never.self) {
-                try tree.find(viewWithAccessibilityIdentifier: "question.mute")
+        for state in [QuizState.askingQuestion, .recording] {
+            let vm = makeViewModel(question: question)
+            vm.quizState = state
+            let view = QuestionView(viewModel: vm)
+            try await ViewHosting.host(view) {
+                let tree = try view.inspect()
+                #expect(throws: Never.self, "no mute in \(state)") {
+                    try tree.find(viewWithAccessibilityIdentifier: "question.mute")
+                }
             }
         }
     }

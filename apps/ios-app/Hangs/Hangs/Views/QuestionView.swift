@@ -271,18 +271,22 @@ struct QuestionView: View {
     /// and the voice body, through `recording` too, so the driver finds the audio
     /// controls on one fixed spot in every mode. The replay link that used to sit in
     /// the middle (#85 Variant B) became the tap-anywhere-on-question target
-    /// (`questionReplayTapTarget`) — founder decision, 2026-07-11. The voice body
-    /// passes `withTypeToggle: true` so the typed-answer link sits in the strip's
-    /// middle slot (founder batch 2026-07-12: one horizontal row, not stacked).
+    /// (`questionReplayTapTarget`) — founder decision, 2026-07-11. The typed-answer
+    /// link that shared the strip's middle slot moved into the footer row (#131 C).
     ///
-    /// #125: `withMute` lets the voice body drop the strip's mute — the docked
-    /// `ListenBar` carries it there. The MCQ pre-reveal strip keeps its mute (no
-    /// bar is present pre-reveal).
+    /// #131 Track B/C: the strip is now the MUTE's permanent home in both modes —
+    /// the #125 experiment of moving mute into the docked `ListenBar` made it a
+    /// duplicate of this one and cost the driver a fixed spot, so the bar dropped
+    /// it and the strip renders wherever the bar can appear.
+    ///
+    /// `withTimers` is false on the voice screen: its countdown moved into the
+    /// Record/Stop button (Track B), which killed the THINK/ANSWER chips. MCQ has
+    /// no Record button, so it keeps them as its only countdown surface.
     @ViewBuilder
-    private func audioStrip(withTypeToggle: Bool = false, withMute: Bool = true) -> some View {
+    private func audioStrip(withTimers: Bool = true) -> some View {
         if viewModel.quizState == .askingQuestion || viewModel.quizState == .recording {
-            let showThink = viewModel.quizState == .askingQuestion && viewModel.thinkingTimeCountdown > 0
-            let showAnswer = viewModel.quizState == .askingQuestion && viewModel.answerTimerCountdown > 0
+            let showThink = withTimers && viewModel.quizState == .askingQuestion && viewModel.thinkingTimeCountdown > 0
+            let showAnswer = withTimers && viewModel.quizState == .askingQuestion && viewModel.answerTimerCountdown > 0
             HStack(spacing: 8) {
                 if showThink {
                     timerChip(label: "THINK", seconds: viewModel.thinkingTimeCountdown, color: Theme.Hangs.Colors.blue, textColor: Theme.Hangs.Colors.blueText)
@@ -291,13 +295,7 @@ struct QuestionView: View {
                     timerChip(label: "ANSWER", seconds: viewModel.answerTimerCountdown, color: Theme.Hangs.Colors.pink, textColor: Theme.Hangs.Colors.pinkText)
                 }
                 Spacer(minLength: 0)
-                if withTypeToggle && !showTextInput {
-                    textInputToggle
-                    Spacer(minLength: 0)
-                }
-                if withMute {
-                    muteButton
-                }
+                muteButton
             }
             .padding(.horizontal, 24)
             .frame(minHeight: audioStripHeight)
@@ -376,23 +374,6 @@ struct QuestionView: View {
         .overlay(Capsule().stroke(color.opacity(0.4), lineWidth: 1))
     }
 
-    // MARK: - Transcript card
-
-    private var transcriptCard: some View {
-        HangsCard(padding: EdgeInsets(top: 14, leading: 16, bottom: 14, trailing: 16)) {
-            VStack(alignment: .leading, spacing: 10) {
-                HangsSectionLabel(text: "TRANSCRIPT", color: Theme.Hangs.Colors.pink)
-                LiveTranscriptView(
-                    text: viewModel.liveTranscript,
-                    isCommitted: !viewModel.isStreamingSTT
-                )
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
-        }
-        .padding(.horizontal, 24)
-        .accessibilityIdentifier("question.liveTranscript")
-    }
-
     // MARK: - MCQ reveal gate (#125)
 
     /// Whether this question has reached its answering phase. Founder, 2026-07-28:
@@ -441,11 +422,16 @@ struct QuestionView: View {
             // now; the MCQ body starts at the stem.
             mcqStem(question: question, compact: compact, revealed: revealed)
 
+            // #131 Track C: the strip renders in BOTH phases now. #125 dropped it
+            // post-reveal because the answer bar had absorbed the mute; the bar no
+            // longer carries one, so removing the strip here would leave the MCQ
+            // answering phase with no mute at all.
+            audioStrip()
+                .padding(.top, 8)
+
             // #125 reveal gate — all-at-once, no stagger (driving context). Skip
             // stays visible throughout; the founder named only the options and the
-            // listening bar. Pre-reveal shows the timer strip (with its mute, since
-            // no bar is present yet); post-reveal the strip is gone and its mute
-            // moves into the answer ListenBar.
+            // listening bar.
             if revealed {
                 MCQOptionPicker(
                     options: question.sortedAnswerOptions,
@@ -456,9 +442,6 @@ struct QuestionView: View {
                     compact: compact
                 )
                 .padding(.top, compact ? 10 : 14)
-            } else {
-                audioStrip()
-                    .padding(.top, 8)
             }
 
             // #122: light sweep strip — always reserves its 4 pt so the docked bar
@@ -468,13 +451,11 @@ struct QuestionView: View {
                 .padding(.top, 8)
 
             // #125 addendum: the docked answer ListenBar (pink, "LISTENING — SAY
-            // A–D"), carrying the mute. Shown only once the answer is revealed.
+            // A–D"). Shown only once the answer is revealed.
             if revealed {
                 ListenBar(
                     mode: .answer(question.sortedAnswerOptions.count == 2 ? .trueFalse : .mcq),
                     feedback: viewModel.voiceFeedbackPhase,
-                    isMuted: viewModel.settings.isMuted,
-                    onToggleMute: { Task { await viewModel.toggleMute() } },
                     compact: compact
                 )
                 .padding(.horizontal, 20)
@@ -642,9 +623,8 @@ struct QuestionView: View {
                 }
             }
 
-            // Pinned controls below the scroll region — timer strip (G1: timer at
-            // the bottom), transcript (recording only), typed-answer fallback, then
-            // the Record/Skip action row.
+            // Pinned controls below the scroll region — mute strip (G1: audio
+            // controls at the bottom), then the #131 footer.
             VStack(spacing: 12) {
                 if isProcessing {
                     // 59.6: the typed-answer path (resubmitAnswer → .processing) stays on
@@ -653,56 +633,17 @@ struct QuestionView: View {
                     // frozen between "send" and the result. Mirrors the sheet's processingBody.
                     processingRow
                 } else {
-                    // Typed-answer fallback toggle (#54 task 54.18) lives inside the
-                    // strip's middle slot — one horizontal row (founder, 2026-07-12).
-                    // #125: the strip drops its mute here — the docked ListenBar
-                    // below now carries it.
-                    audioStrip(withTypeToggle: true, withMute: false)
+                    // #131 Track B: no timer chips here — the countdown lives in the
+                    // Record/Stop button. The strip stays for the mute (Track C).
+                    audioStrip(withTimers: false)
 
-                    // Live transcript (recording + STT streaming) — static, pinned
-                    // directly above the buttons so it never scrolls away.
-                    if isRecording && viewModel.isStreamingSTT {
-                        transcriptCard
-                    }
-
-                    if showTextInput {
-                        textInputRow
-                    }
-
-                    // #122: light sweep strip — reserved in every phase so the
-                    // stack below never shifts; glows only during feedback.
-                    GlowSweepLine(phase: viewModel.voiceFeedbackPhase)
-                        .padding(.horizontal, 20)
-
-                    // #125 addendum: the docked ListenBar replaces the floating
-                    // CmdListenBar on the question screen — exactly one bar at a
-                    // time. Recording → pink answer bar (unconditional); otherwise
-                    // the teal command bar iff a command window is armed (hidden
-                    // during TTS, same gating as before). Both carry the mute.
-                    if isRecording {
-                        ListenBar(
-                            mode: .answer(.open),
-                            feedback: viewModel.voiceFeedbackPhase,
-                            isMuted: viewModel.settings.isMuted,
-                            onToggleMute: { Task { await viewModel.toggleMute() } },
-                            compact: compact
-                        )
-                        .padding(.horizontal, 20)
-                        .transition(.opacity)
-                    } else if viewModel.commandListenerHint != nil {
-                        ListenBar(
-                            mode: .command,
-                            feedback: viewModel.voiceFeedbackPhase,
-                            isMuted: viewModel.settings.isMuted,
-                            onToggleMute: { Task { await viewModel.toggleMute() } },
-                            compact: compact
-                        )
-                        .padding(.horizontal, 20)
-                        .transition(.opacity)
-                    }
-
-                    voiceActionRow
-                        .padding(.horizontal, 20)
+                    QuestionVoiceFooter(
+                        viewModel: viewModel,
+                        showTextInput: $showTextInput,
+                        textAnswer: $textAnswer,
+                        isTextFieldFocused: $isTextFieldFocused,
+                        compact: compact
+                    )
                 }
             }
             // #96 P3 (founder): tighter side padding + lower footprint so the
@@ -716,119 +657,6 @@ struct QuestionView: View {
             #endif
         }
         .frame(maxHeight: .infinity)
-    }
-
-    // MARK: - Voice action row (Record/Stop | Skip)
-
-    private var voiceActionRow: some View {
-        HStack(spacing: 12) {
-            Button {
-                // Manual override (54.3): toggleRecording starts recording
-                // immediately from .askingQuestion (cancelling the auto-record
-                // think/answer countdown) and stops+submits from .recording.
-                // Auto-record still fires on its own via startRecordingOrTimer()
-                // when the question is presented (QuizViewModel:440/945).
-                Task { await viewModel.toggleRecording() }
-            } label: {
-                HStack(spacing: 10) {
-                    Image(systemName: isRecording ? "stop.fill" : "mic.fill")
-                        .font(.system(size: 17, weight: .semibold))
-                    (isRecording ? Text("Stop", comment: "Record button label while recording is active") : Text("Record", comment: "Record button label to start recording an answer"))
-                        .font(.hangsButton)
-                }
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                // G1 (#83): action buttons deliberately modest (44pt) so long
-                // question text keeps as much room as possible.
-                .frame(height: 44)
-                .background(Capsule().fill(Theme.Hangs.Colors.pink))
-                // #122: teal ring while a matched-command glow is live.
-                .overlay {
-                    if viewModel.voiceFeedbackPhase == .matched {
-                        Capsule()
-                            .inset(by: -2)
-                            .stroke(Theme.Hangs.Colors.accentTeal.opacity(0.30), lineWidth: 4)
-                    }
-                }
-                .hangsShadow(Theme.Hangs.Shadow.cta)
-            }
-            .buttonStyle(.plain)
-            .accessibilityIdentifier(isRecording ? "question.stop" : "question.record")
-
-            Button {
-                Task { await viewModel.skipQuestion() }
-            } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: "play.forward.fill")
-                        .font(.system(size: 12, weight: .semibold))
-                    Text("Skip")
-                        .font(.hangsBody(15, weight: .medium))
-                }
-                .foregroundColor(Theme.Hangs.Colors.ink)
-                .frame(height: 44)
-                .padding(.horizontal, 20)
-                .background(Capsule().fill(Theme.Hangs.Colors.bgCard))
-                .overlay(Capsule().stroke(Theme.Hangs.Colors.hairline, lineWidth: 1))
-            }
-            .buttonStyle(.plain)
-            .disabled(isRecording || isProcessing)
-            .opacity((isRecording || isProcessing) ? 0.45 : 1)
-            .accessibilityIdentifier("question.skip")
-        }
-    }
-
-    // MARK: - Typed-answer fallback (54.18)
-
-    private var textInputToggle: some View {
-        Button {
-            showTextInput = true
-            isTextFieldFocused = true
-        } label: {
-            HStack(spacing: 6) {
-                Image(systemName: "keyboard")
-                    .font(.system(size: 12, weight: .semibold))
-                Text("Type answer instead")
-                    .font(.hangsBody(13, weight: .medium))
-            }
-            .foregroundColor(Theme.Hangs.Colors.muted)
-            .padding(.vertical, 10)
-            .padding(.horizontal, 18)
-            .background(Capsule().fill(Theme.Hangs.Colors.bgCard))
-            .overlay(Capsule().stroke(Theme.Hangs.Colors.hairline, lineWidth: 1))
-        }
-        .buttonStyle(.plain)
-        .disabled(!canInteract)
-        .opacity(canInteract ? 1 : 0.45)
-        .accessibilityIdentifier("question.textInputToggle")
-    }
-
-    private var textInputRow: some View {
-        HangsCard(padding: EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 8)) {
-            HStack(spacing: 8) {
-                TextField("Type your answer…", text: $textAnswer)
-                    .font(.hangsBody(15))
-                    .foregroundColor(Theme.Hangs.Colors.ink)
-                    .frame(height: 40)
-                    .focused($isTextFieldFocused)
-                    .accessibilityIdentifier("question.textField")
-                    .submitLabel(.send)
-                    .onSubmit(submitTypedAnswer)
-
-                Button(action: submitTypedAnswer) {
-                    Image(systemName: "arrow.up")
-                        .font(.system(size: 15, weight: .bold))
-                        .foregroundColor(.white)
-                        .frame(width: 40, height: 40)
-                        .background(
-                            Circle()
-                                .fill(textAnswer.isEmpty ? Theme.Hangs.Colors.muted : Theme.Hangs.Colors.pink)
-                        )
-                }
-                .disabled(textAnswer.isEmpty)
-                .accessibilityIdentifier("question.textSubmit")
-            }
-        }
-        .padding(.horizontal, 24)
     }
 
     // MARK: - Processing indicator (typed-answer path, 59.6)
@@ -846,19 +674,9 @@ struct QuestionView: View {
         .accessibilityIdentifier("question.processingIndicator")
     }
 
-    private func submitTypedAnswer() {
-        guard !textAnswer.isEmpty else { return }
-        let answer = textAnswer
-        textAnswer = ""
-        showTextInput = false
-        Task { await viewModel.resubmitAnswer(answer) }
-    }
-
     // MARK: - Derived
 
     private var isRecording: Bool { viewModel.quizState == .recording }
-
-    private var canInteract: Bool { viewModel.quizState == .askingQuestion }
 
     private var isProcessing: Bool {
         viewModel.quizState == .processing || viewModel.quizState == .skipping

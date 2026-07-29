@@ -36,7 +36,9 @@ def make_question(*, language_dependent: bool, pack_id: str | None = None) -> Qu
 @pytest.fixture
 def translation_service():
     service = AsyncMock()
-    service.translate_question = AsyncMock(return_value="Ako sa nazýva skupina vrán?")
+    service.translate_question_payload = AsyncMock(
+        return_value={"question": "Ako sa nazýva skupina vrán?"}
+    )
     return service
 
 
@@ -75,7 +77,7 @@ def test_flagged_question_is_still_translated_and_served(translation_service):
             question_to_dict_translated(question, "sk", translation_service)
         )
 
-    translation_service.translate_question.assert_awaited_once()
+    translation_service.translate_question_payload.assert_awaited_once()
     assert result["question"] == "Ako sa nazýva skupina vrán?"
     assert result["id"] == "q_crows"
 
@@ -102,7 +104,7 @@ def test_english_session_never_reports(translation_service):
         )
 
     mock_sentry.capture_message.assert_not_called()
-    translation_service.translate_question.assert_not_awaited()
+    translation_service.translate_question_payload.assert_not_awaited()
     assert result["question"] == "What do you call a group of crows?"
 
 

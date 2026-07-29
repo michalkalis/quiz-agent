@@ -2,7 +2,7 @@
 
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 from pydantic import BaseModel, Field
 
 from .participant import Participant
@@ -99,6 +99,18 @@ class QuizSession(BaseModel):
     current_question_id: Optional[str] = Field(None, description="Current question ID")
     current_question_text: Optional[str] = Field(
         None, description="Current question text"
+    )
+    # #132 D — the ONE translated payload the player actually saw. Written once
+    # at serve time (one LLM call per question), then read by evaluation, the
+    # result screen and the audio path so all three agree on the same strings.
+    # Internal state, never projected into a response: it carries the answer.
+    current_question_translation: Optional[Dict[str, Any]] = Field(
+        None,
+        description=(
+            "Serve-time translation of the current question (stem, options, "
+            "explanation, answer) in the session language. None for English "
+            "sessions and when translation fell back to English."
+        ),
     )
     current_answer: Optional[str] = Field(None, description="Current correct answer")
     current_topic: Optional[str] = Field(None, description="Current question topic")

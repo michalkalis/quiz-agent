@@ -20,7 +20,11 @@ from quiz_shared.models.question import Question
 from quiz_shared.models.session import QuizSession
 from quiz_shared.models.phase import SessionPhase
 
-from ..serializers import question_to_dict_translated
+from ..serializers import (
+    session_translation,
+    translated_question_payload,
+    translated_question_view,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -118,13 +122,22 @@ class QuizFlowService:
         if not current_question:
             raise ValueError("Current question not found")
 
+        # #132 D / #126: score against the question exactly as the player saw it.
+        # The serve-time translation record (one LLM call, stored on the session)
+        # carries the translated stem, options, explanation and answer — so the
+        # spoken Slovak answer is matched against Slovak option text, and the
+        # result screen quotes the same strings. No record (English session, or a
+        # translation that fell back) → the original English question, unchanged.
+        translation = session_translation(session, evaluated_question_id)
+        display_question = translated_question_view(current_question, translation)
+
         # Parse intents (fast-path for literal "skip")
         if answer_text.strip().lower() == "skip":
             intents = [{"intent_type": "skip", "extracted_data": {}}]
         else:
             intents = await self.input_parser.parse(
                 user_input=answer_text,
-                current_question=current_question.question,
+                current_question=display_question.question,
                 phase=session.phase,
             )
 
@@ -139,14 +152,12 @@ class QuizFlowService:
                 user_answer = extracted_data.get("answer")
                 eval_result, score_delta = await self.answer_evaluator.evaluate(
                     user_answer=user_answer,
-                    question=current_question,
-                    question_text=current_question.question,
+                    question=display_question,
+                    question_text=display_question.question,
                 )
 
-                translated_correct = await self._translate_correct_answer(
-                    str(current_question.correct_answer),
-                    session.language,
-                    session_id=session.session_id,
+                translated_correct = await self._correct_answer_display(
+                    current_question, translation, session
                 )
 
                 result.evaluation = {
@@ -156,12 +167,12 @@ class QuizFlowService:
                     "correct_answer": translated_correct,
                     "question_id": evaluated_question_id,
                 }
-                if current_question.headline_answer:
+                if display_question.headline_answer:
                     result.evaluation["headline_answer"] = (
-                        current_question.headline_answer
+                        display_question.headline_answer
                     )
-                if current_question.explanation:
-                    result.evaluation["explanation"] = current_question.explanation
+                if display_question.explanation:
+                    result.evaluation["explanation"] = display_question.explanation
 
                 # Generate enhanced feedback audio
                 if include_audio and self.tts_service:
@@ -174,10 +185,8 @@ class QuizFlowService:
                 result.feedback_received.append(f"answer: {eval_result}")
 
             elif intent_type == "skip":
-                translated_correct = await self._translate_correct_answer(
-                    str(current_question.correct_answer),
-                    session.language,
-                    session_id=session.session_id,
+                translated_correct = await self._correct_answer_display(
+                    current_question, translation, session
                 )
                 result.evaluation = {
                     "user_answer": "skipped",
@@ -186,12 +195,12 @@ class QuizFlowService:
                     "correct_answer": translated_correct,
                     "question_id": evaluated_question_id,
                 }
-                if current_question.headline_answer:
+                if display_question.headline_answer:
                     result.evaluation["headline_answer"] = (
-                        current_question.headline_answer
+                        display_question.headline_answer
                     )
-                if current_question.explanation:
-                    result.evaluation["explanation"] = current_question.explanation
+                if display_question.explanation:
+                    result.evaluation["explanation"] = display_question.explanation
                 result.feedback_received.append("skipped question")
 
             elif intent_type == "rating":
@@ -290,14 +299,17 @@ class QuizFlowService:
         if self.usage_tracker and session.user_id and not session.pack_id:
             await self.usage_tracker.record_question(session.user_id)
 
-        # Cache translated question text
-        translated_q_dict = await question_to_dict_translated(
+        # Translate the next question ONCE (stem + options + explanation + answer)
+        # and persist the record: /question, /question/audio and the next
+        # evaluation all read it instead of re-translating.
+        translated_q_dict, translation_record = await translated_question_payload(
             next_question,
             session.language,
             self.translation_service,
             session_id=session.session_id,
         )
         session.current_question_text = translated_q_dict["question"]
+        session.current_question_translation = translation_record
         self.session_manager.update_session(session)
 
         result.next_question_dict = translated_q_dict
@@ -365,6 +377,28 @@ class QuizFlowService:
         except Exception as e:
             logger.warning("Failed to generate enhanced feedback: %s", e)
             return None
+
+    async def _correct_answer_display(
+        self,
+        question: Question,
+        translation: Optional[Dict[str, Any]],
+        session: QuizSession,
+    ) -> str:
+        """The correct answer as the result screen and feedback audio say it.
+
+        Prefers the serve-time translation record (free — already paid for by the
+        one payload call, and guaranteed to be the same wording as the options the
+        player saw). Only a session with no record — English, or a translation that
+        fell back — pays for the legacy single-string translation.
+        """
+        if translation:
+            return translation["correct_answer"]
+        correct = question.correct_answer
+        if isinstance(correct, list):
+            correct = correct[0] if correct else ""
+        return await self._translate_correct_answer(
+            str(correct), session.language, session_id=session.session_id
+        )
 
     async def _translate_correct_answer(
         self, answer: str, language: str, session_id: str | None = None

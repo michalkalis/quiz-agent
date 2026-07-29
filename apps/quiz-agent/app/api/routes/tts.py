@@ -11,9 +11,9 @@ from ..deps import (
     get_tts_service,
     get_question_retriever,
     get_translation_service,
-    question_to_dict_translated,
     require_auth_or_grace,
 )
+from ...serializers import translated_question_payload
 from ...session.manager import SessionManager
 from ...retrieval.question_retriever import QuestionRetriever
 from ...tts.number_normalization import normalize_numbers_for_tts
@@ -82,7 +82,7 @@ async def get_question_audio(
                     status_code=404, detail="Current question not found"
                 )
 
-            translated_dict = await question_to_dict_translated(
+            translated_dict, translation_record = await translated_question_payload(
                 current_question,
                 session.language,
                 translation_service,
@@ -91,6 +91,7 @@ async def get_question_audio(
             question_text = translated_dict["question"]
 
             session.current_question_text = question_text
+            session.current_question_translation = translation_record
             session_manager.update_session(session)
 
         # Founder bug 2026-07-12: tts-1 reads embedded digits with English

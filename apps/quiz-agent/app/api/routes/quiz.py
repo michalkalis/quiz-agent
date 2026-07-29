@@ -25,6 +25,11 @@ from ..deps import (
     question_to_dict_translated,
     flow_to_response,
 )
+from ...serializers import (
+    apply_question_translation,
+    session_translation,
+    translated_question_payload,
+)
 from ...session.manager import SessionManager
 from ...retrieval.question_retriever import QuestionRetriever
 from ...rating.feedback import FeedbackService
@@ -166,10 +171,14 @@ async def start_quiz(
         if usage_tracker and session.user_id and not session.pack_id:
             await usage_tracker.record_question(session.user_id)
 
-        translated_question_dict = await question_to_dict_translated(
+        (
+            translated_question_dict,
+            translation_record,
+        ) = await translated_question_payload(
             question, session.language, translation_service, session_id=session_id
         )
         session.current_question_text = translated_question_dict["question"]
+        session.current_question_translation = translation_record
         session.transition(to=SessionPhase.ASKING, caller="routes.start_quiz")
         session_manager.update_session(session)
 
@@ -269,17 +278,22 @@ async def get_current_question(
     if not session.current_question_id:
         raise HTTPException(status_code=400, detail="No active question")
 
-    if session.current_question_text:
-        question = question_retriever.get(session.current_question_id)
-        if not question:
-            raise HTTPException(status_code=500, detail="Question not found")
+    question = question_retriever.get(session.current_question_id)
+    if not question:
+        raise HTTPException(status_code=500, detail="Question not found")
+
+    record = session_translation(session, question.id)
+    if record:
+        # Serve the exact payload the player was already shown — never re-translate.
+        translated_question = apply_question_translation(
+            question_to_dict(question), record
+        )
+    elif session.current_question_text:
+        # Pre-#132 session (or a fallback-to-English serve): stem only.
         question_dict = question_to_dict(question)
         question_dict["question"] = session.current_question_text
         translated_question = question_dict
     else:
-        question = question_retriever.get(session.current_question_id)
-        if not question:
-            raise HTTPException(status_code=500, detail="Question not found")
         translated_question = await question_to_dict_translated(
             question, session.language, translation_service, session_id=session_id
         )

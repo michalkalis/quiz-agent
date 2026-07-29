@@ -3,8 +3,10 @@
 Translates questions and feedback to user's preferred language using OpenAI.
 """
 
+import json
 import logging
 import os
+from typing import Any, Dict, Optional
 
 import sentry_sdk
 from quiz_shared.llm import factory as llm_factory
@@ -253,6 +255,169 @@ class TranslationService:
         logger.warning(message)
         sentry_sdk.capture_message(message, level="warning")
         return question  # Fallback to original English (not cached)
+
+    # Fields whose length heuristics in _validate_translation make sense. The short
+    # fields (options, answers) are single words or phrases where a legitimate
+    # translation can be far shorter than the original ("United States" → "USA"), so
+    # they are only checked for non-emptiness.
+    _LONG_PAYLOAD_FIELDS = ("question", "explanation")
+
+    def _validate_payload(
+        self,
+        payload: Dict[str, Any],
+        translated: Any,
+        target_language: str,
+    ) -> Optional[Dict[str, Any]]:
+        """Validate a whole-payload translation. Returns it cleaned, or None."""
+        if not isinstance(translated, dict):
+            return None
+
+        result: Dict[str, Any] = {}
+        for key, original in payload.items():
+            value = translated.get(key)
+            if key == "options":
+                if not isinstance(value, dict) or set(value) != set(original):
+                    logger.warning(
+                        "Payload translation dropped/renamed option keys → %s",
+                        target_language,
+                    )
+                    return None
+                options: Dict[str, str] = {}
+                for opt_key, opt_original in original.items():
+                    opt_value = value.get(opt_key)
+                    if not isinstance(opt_value, str) or not opt_value.strip():
+                        logger.warning(
+                            "Payload translation empty for option %r → %s",
+                            opt_key,
+                            target_language,
+                        )
+                        return None
+                    options[opt_key] = opt_value.strip()
+                result[key] = options
+                continue
+
+            if not isinstance(value, str) or not value.strip():
+                logger.warning(
+                    "Payload translation empty for field %r → %s", key, target_language
+                )
+                return None
+            value = value.strip()
+            if key in self._LONG_PAYLOAD_FIELDS:
+                validated = self._validate_translation(original, value, target_language)
+                if validated is None:
+                    return None
+                value = validated
+            result[key] = value
+        return result
+
+    async def translate_question_payload(
+        self,
+        payload: Dict[str, Any],
+        target_language: str,
+        *,
+        session_id: str | None = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Translate a whole question payload in ONE call (#132 track D).
+
+        ``payload`` carries only the fields that exist on the question: ``question``
+        plus any of ``options`` (a ``{key: text}`` map), ``explanation``,
+        ``headline_answer``, ``correct_answer``. The reply must mirror those keys
+        exactly — option keys included, since the evaluator resolves the correct
+        answer by key.
+
+        Field-by-field translation would multiply the per-question LLM cost and,
+        worse, let the stem and its options disagree; one call keeps them coherent.
+
+        Returns the translated payload, or **None** when every attempt failed — the
+        caller then serves English rather than breaking the quiz (#107 pattern).
+        """
+        if target_language == "en" or not payload:
+            return None
+
+        cache_key = (
+            "payload",
+            json.dumps(payload, sort_keys=True, ensure_ascii=False),
+            target_language,
+        )
+        cached = self._cache.get(cache_key)
+        if cached is not None:
+            try:
+                return json.loads(cached)
+            except json.JSONDecodeError:
+                logger.warning("Corrupt cached payload translation, re-translating")
+
+        target_lang_name = LANGUAGE_NAMES.get(target_language, target_language)
+        system_prompt = (
+            "You are a professional translator for a spoken quiz app. You are given a "
+            f"JSON object of quiz text. Translate every value into {target_lang_name} and "
+            "return ONLY a JSON object with exactly the same keys and structure. "
+            "'options' is a map of option letters to answer texts: keep the letters "
+            "unchanged and translate only the texts. 'correct_answer' and "
+            "'headline_answer' must match the wording used in 'options' when both are "
+            "present. Preserve meaning and difficulty, keep answers short and natural to "
+            "say out loud, and never answer or explain the question — only translate."
+        )
+
+        last_failure: dict[str, object] = {}
+        for attempt in range(TRANSLATION_MAX_ATTEMPTS):
+            try:
+                response = await self.client.chat.completions.create(
+                    model=self.model,
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {
+                            "role": "user",
+                            "content": json.dumps(payload, ensure_ascii=False),
+                        },
+                    ],
+                    temperature=0.3,
+                    max_tokens=900,
+                    response_format={"type": "json_object"},
+                )
+                raw = response.choices[0].message.content
+                try:
+                    parsed = json.loads(raw)
+                except (TypeError, json.JSONDecodeError):
+                    logger.warning(
+                        "Payload translation returned non-JSON (attempt %d)",
+                        attempt + 1,
+                    )
+                    last_failure = {"kind": "non_json"}
+                    continue
+
+                validated = self._validate_payload(payload, parsed, target_language)
+                if validated is None:
+                    last_failure = {"kind": "validation_reject"}
+                    continue
+
+                self._maybe_store(cache_key, json.dumps(validated, ensure_ascii=False))
+                return validated
+
+            except Exception as e:
+                logger.warning(
+                    "Payload translation failed (attempt %d): %s", attempt + 1, e
+                )
+                last_failure = {"kind": "api_error", "exception": type(e).__name__}
+
+        # Same fail-loud contract as translate_question: these events are the only
+        # calibration data we have for the validation thresholds above.
+        detail_parts = [
+            f"target_language={target_language!r}",
+            f"kind={last_failure.get('kind')!r}",
+            f"fields={sorted(payload)!r}",
+            f"question_len={len(str(payload.get('question', '')))}",
+        ]
+        if last_failure.get("kind") == "api_error":
+            detail_parts.append(f"exception={last_failure.get('exception')!r}")
+        if session_id is not None:
+            detail_parts.append(f"session_id={session_id!r}")
+        message = (
+            "Question-payload translation exhausted retries, serving English "
+            f"(#132): {', '.join(detail_parts)}"
+        )
+        logger.warning(message)
+        sentry_sdk.capture_message(message, level="warning")
+        return None
 
     async def translate_feedback(
         self,

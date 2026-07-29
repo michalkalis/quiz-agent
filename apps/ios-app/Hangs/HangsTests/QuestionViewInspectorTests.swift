@@ -143,24 +143,35 @@ struct QuestionViewMCQOptionVisibilityTests {
             #expect(throws: Never.self) {
                 try tree.find(viewWithAccessibilityIdentifier: "question.text")
             }
-            // The audio strip (timer chips + mute) is the MCQ's only countdown
-            // surface — MCQ has no Record button to host it (#131 B).
+            // The audio strip is the mute's fixed home in both phases (#131 C);
+            // the countdown moved into the ListenBar (#132 B).
             #expect(throws: Never.self) {
                 try tree.find(viewWithAccessibilityIdentifier: "question.timerStrip")
             }
         }
     }
 
-    /// The half of the #125 gate that survives: a bar claiming "LISTENING" while
-    /// the mic is off is a lie, so it stays tied to `.recording`.
-    @Test("the answer ListenBar stays off the think phase and appears with recording")
-    func listenBarFollowsTheMicNotTheOptions() async throws {
+    /// #132 Track B (variant A): ONE bar slot across both phases. During the
+    /// think phase the bar is MCQ's countdown surface — in the teal think state,
+    /// which does NOT claim "LISTENING" (the #125-gate lesson survives) — and the
+    /// moment the mic goes live it flips to the pink answer state.
+    @Test("the ListenBar counts the think phase down and flips to answer mode with recording")
+    func listenBarCountsThinkAndFlipsToAnswer() async throws {
         let (vm, _) = makeThinkPhaseViewModel()
         let thinking = QuestionView(viewModel: vm)
         try await ViewHosting.host(thinking) {
             let tree = try thinking.inspect()
+            #expect(throws: Never.self) {
+                try tree.find(viewWithAccessibilityIdentifier: "listen-bar")
+            }
+            // The think caption counts the running window down (12 s left in the
+            // fixture's legacy answer window — the bar covers both timer paths)…
+            #expect(throws: Never.self) {
+                try tree.find(text: "THINK — LISTENING IN 12 S")
+            }
+            // …and never claims a live mic during the think phase.
             #expect(throws: (any Error).self) {
-                _ = try tree.find(viewWithAccessibilityIdentifier: "listen-bar")
+                _ = try tree.find(text: "LISTENING — SAY A–D")
             }
         }
 
@@ -170,7 +181,10 @@ struct QuestionViewMCQOptionVisibilityTests {
         try await ViewHosting.host(recording) {
             let tree = try recording.inspect()
             #expect(throws: Never.self) {
-                try tree.find(viewWithAccessibilityIdentifier: "listen-bar")
+                try tree.find(text: "LISTENING — SAY A–D")
+            }
+            #expect(throws: (any Error).self) {
+                _ = try tree.find(text: "THINK — LISTENING IN 0 S")
             }
             // #131 Track C: the strip is the only mute on the screen now that the
             // bar dropped its duplicate — it must survive into the answer phase.

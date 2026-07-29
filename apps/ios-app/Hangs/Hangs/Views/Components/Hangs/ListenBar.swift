@@ -34,6 +34,14 @@
 //     alone is not feedback: a driver glancing at an amber bar must read what to
 //     do differently, not infer it.
 //
+//  #132 Track B, variant A "odpočet v lište" (founder pick 2026-07-29): the MCQ
+//  think-phase countdown lives IN this bar — command mode gains an optional
+//  `thinkCountdown`: a teal fill anchored left drains leftwards as the window
+//  empties and the caption counts the seconds down. At zero the call site swaps
+//  the mode to `.answer`, so one element carries both states (nothing appears or
+//  disappears). The command-word sub-line stays exactly as every other command
+//  bar renders it — the founder's correction to the mock, which had dropped it.
+//
 
 import SwiftUI
 
@@ -58,6 +66,14 @@ struct ListenBar: View {
         case slim // Home: short caption + the words on a single ~40pt row
     }
 
+    /// #132 Track B — the think-phase window this bar is counting down. The fill
+    /// fraction is `remaining/total`; a zero total hides the fill (no window is
+    /// draining, e.g. while the question is still being read).
+    struct ThinkCountdown: Equatable {
+        let remaining: Int
+        let total: Int
+    }
+
     let mode: Mode
 
     /// #122 Variant C transient tint — overrides the mode accent while live.
@@ -73,6 +89,22 @@ struct ListenBar: View {
 
     /// Command-mode caption language (#120) — independent of the app/quiz locale.
     var language: CommandLanguage = CommandEngineSelection.current.commandLanguage
+
+    /// #132 Track B: MCQ think-phase countdown. Command mode only — answer mode
+    /// ignores it (the mic is already live, there is nothing left to count down).
+    var thinkCountdown: ThinkCountdown? = nil
+
+    /// The countdown, iff the mode can host one.
+    private var activeThinkCountdown: ThinkCountdown? {
+        guard case .command = mode else { return nil }
+        return thinkCountdown
+    }
+
+    /// Left-anchored drain fraction, nil when no window is running.
+    private var thinkFillFraction: CGFloat? {
+        guard let countdown = activeThinkCountdown, countdown.total > 0 else { return nil }
+        return min(max(CGFloat(countdown.remaining) / CGFloat(countdown.total), 0), 1)
+    }
 
     // MARK: - Tint tokens
 
@@ -149,7 +181,13 @@ struct ListenBar: View {
 
     /// Caption as a `Text`: verbatim command caption (command language) OR a
     /// catalog-localized answer prompt. Reused verbatim as the a11y label.
+    /// With a think countdown the caption counts the window down instead —
+    /// catalog-localized like the answer captions, since it narrates the answer
+    /// flow ("listening in N s"), not the command engine.
     private var captionText: Text {
+        if let countdown = activeThinkCountdown {
+            return Text("THINK — LISTENING IN \(countdown.remaining) S")
+        }
         switch mode {
         case .command:
             return Text(verbatim: VoiceCommandLexicon.listeningCaption(
@@ -167,10 +205,13 @@ struct ListenBar: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            Image(systemName: "waveform")
+            // Clock while a think window drains, live waveform once listening —
+            // the mock's two glyphs for the two states of the one bar (#132 B).
+            Image(systemName: activeThinkCountdown == nil ? "waveform" : "clock")
                 .font(.system(size: 14, weight: .semibold))
                 .foregroundColor(accent)
-                .symbolEffect(.variableColor.iterative.dimInactiveLayers)
+                .symbolEffect(.variableColor.iterative.dimInactiveLayers,
+                              isActive: activeThinkCountdown == nil)
                 .accessibilityHidden(true)
 
             switch size {
@@ -199,7 +240,22 @@ struct ListenBar: View {
         .padding(.trailing, 16)
         .frame(maxWidth: .infinity)
         .frame(height: barHeight)
-        .background(Capsule().fill(fill))
+        .background(
+            ZStack(alignment: .leading) {
+                Capsule().fill(fill)
+                // #132 B: the draining think window — right edge retreats
+                // leftwards each tick ("vyprázdňuje sa doľava").
+                if let fraction = thinkFillFraction {
+                    GeometryReader { geo in
+                        Rectangle()
+                            .fill(teal.opacity(0.14))
+                            .frame(width: geo.size.width * fraction)
+                            .animation(.linear(duration: 1), value: fraction)
+                    }
+                    .clipShape(Capsule())
+                }
+            }
+        )
         .overlay(Capsule().strokeBorder(border, lineWidth: 1))
         .animation(.easeInOut(duration: 0.25), value: feedback)
     }
@@ -249,6 +305,8 @@ struct ListenBar: View {
     #Preview {
         VStack(spacing: 16) {
             ListenBar(mode: .command, commandHint: #"Say "start" or "skip""#)
+            ListenBar(mode: .command, commandHint: #"Say "start" or "skip""#,
+                      thinkCountdown: .init(remaining: 32, total: 45))
             ListenBar(mode: .command, feedback: .matched, commandHint: #"Say "start" or "skip""#)
             ListenBar(mode: .command, feedback: .unmatched, commandHint: #"Say "start" or "skip""#)
             ListenBar(mode: .answer(.mcq))

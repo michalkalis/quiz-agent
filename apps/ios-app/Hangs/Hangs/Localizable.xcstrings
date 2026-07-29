@@ -3992,6 +3992,17 @@
         }
       }
     },
+    "THINK — LISTENING IN %lld S" : {
+      "comment" : "MCQ think-phase caption in the unified ListenBar (#132 B variant A): countdown until listening starts",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PREMÝŠĽAJ — POČÚVAM O %lld S"
+          }
+        }
+      }
+    },
     "TRANSCRIPT" : {
       "comment" : "Label for the transcript section of the question view.",
       "extractionState" : "stale",

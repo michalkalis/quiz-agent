@@ -257,15 +257,14 @@ struct QuestionView: View {
         .accessibilityIdentifier("question.errorBanner")
     }
 
-    // MARK: - Audio strip (timers + mute — bottom, next to the action row)
+    // MARK: - Audio strip (mute — bottom, next to the action row)
 
-    /// Fixed height reserved for the audio strip, so the timer chips fading in when the
-    /// countdown starts never shift the pinned action buttons (#59.2 rationale, now at
-    /// the bottom per G1/#83). ~timerChip height (text + 5pt vertical padding × 2).
+    /// Fixed height reserved for the audio strip so the pinned action buttons never
+    /// shift (#59.2 rationale, now at the bottom per G1/#83).
     private let audioStripHeight: CGFloat = 32
 
-    /// G1 binding layout (#83 + #85, frames b8zObz/f9csl `audioStrip`): timer chips on
-    /// the left, the mute toggle on the right. Rendered identically by both the MCQ
+    /// G1 binding layout (#83 + #85, frames b8zObz/f9csl `audioStrip`): the mute
+    /// toggle on the right. Rendered identically by both the MCQ
     /// and the voice body, through `recording` too, so the driver finds the audio
     /// controls on one fixed spot in every mode. The replay link that used to sit in
     /// the middle (#85 Variant B) became the tap-anywhere-on-question target
@@ -277,21 +276,14 @@ struct QuestionView: View {
     /// duplicate of this one and cost the driver a fixed spot, so the bar dropped
     /// it and the strip renders wherever the bar can appear.
     ///
-    /// `withTimers` is false on the voice screen: its countdown moved into the
-    /// Record/Stop button (Track B), which killed the THINK/ANSWER chips. MCQ has
-    /// no Record button, so it keeps them as its only countdown surface.
+    /// #132 Track B killed the THINK/ANSWER chips: MCQ's countdown now lives in
+    /// the unified `ListenBar` (variant A), just like the voice screen's lives in
+    /// the Record/Stop button (#131 B). The strip keeps its id — it is still the
+    /// fixed row a driver reaches for, it just only carries the mute now.
     @ViewBuilder
-    private func audioStrip(withTimers: Bool = true) -> some View {
+    private func audioStrip() -> some View {
         if viewModel.quizState == .askingQuestion || viewModel.quizState == .recording {
-            let showThink = withTimers && viewModel.quizState == .askingQuestion && viewModel.thinkingTimeCountdown > 0
-            let showAnswer = withTimers && viewModel.quizState == .askingQuestion && viewModel.answerTimerCountdown > 0
             HStack(spacing: 8) {
-                if showThink {
-                    timerChip(label: "THINK", seconds: viewModel.thinkingTimeCountdown, color: Theme.Hangs.Colors.blue, textColor: Theme.Hangs.Colors.blueText)
-                }
-                if showAnswer {
-                    timerChip(label: "ANSWER", seconds: viewModel.answerTimerCountdown, color: Theme.Hangs.Colors.pink, textColor: Theme.Hangs.Colors.pinkText)
-                }
                 Spacer(minLength: 0)
                 muteButton
             }
@@ -354,24 +346,6 @@ struct QuestionView: View {
         .accessibilityIdentifier("question.mute")
     }
 
-    /// `textColor` is the WCAG-AA per-mode variant of `color` (#82 item 6) —
-    /// the capsule tint/stroke keep the brand accent, only the small text
-    /// darkens in light mode.
-    private func timerChip(label: LocalizedStringKey, seconds: Int, color: Color, textColor: Color) -> some View {
-        HStack(spacing: 6) {
-            Text(label)
-                .font(.hangsMono(10, weight: .semibold))
-                .tracking(1.5)
-            Text(verbatim: "\(seconds)s")
-                .font(.hangsMono(12, weight: .semibold))
-        }
-        .foregroundColor(textColor)
-        .padding(.horizontal, 10)
-        .padding(.vertical, 5)
-        .background(Capsule().fill(color.opacity(0.12)))
-        .overlay(Capsule().stroke(color.opacity(0.4), lineWidth: 1))
-    }
-
     // MARK: - MCQ body (#125 Variant A "Answer Grid")
 
     /// The #125 answer-reveal gate is GONE (founder reversed the 2026-07-28
@@ -408,9 +382,15 @@ struct QuestionView: View {
                 .padding(.horizontal, 20)
                 .padding(.top, 8)
 
-            // #125 addendum: the docked answer ListenBar (pink, "LISTENING — SAY
-            // A–D"). Only while the mic is actually live — during the think phase
-            // it would claim a listening state that does not exist (#132).
+            // #132 Track B (variant A "odpočet v lište"): ONE bar slot from the
+            // first countdown tick to submit. While the driver decides, the bar
+            // shows the think state — teal drain + seconds + the same command
+            // words every other command bar shows (founder's correction to the
+            // mock). The moment the mic goes live it flips to the pink answer
+            // state (#125 addendum) — it still never claims a listening state
+            // that does not exist (#132 A), because the think state doesn't
+            // claim one. Silent while the question is still being read, exactly
+            // like the THINK/ANSWER chips it replaces.
             if isRecording {
                 ListenBar(
                     mode: .answer(question.sortedAnswerOptions.count == 2 ? .trueFalse : .mcq),
@@ -418,6 +398,18 @@ struct QuestionView: View {
                     // #131 Track F folded the old SE-class `compact` flag into the
                     // one size axis: a short container gets the slim bar.
                     size: compact ? .slim : .full
+                )
+                .padding(.horizontal, 20)
+                .padding(.top, 8)
+                .transition(.opacity)
+            } else if viewModel.answerWindowRemaining > 0 {
+                ListenBar(
+                    mode: .command,
+                    feedback: viewModel.voiceFeedbackPhase,
+                    commandHint: viewModel.commandListenerHint,
+                    size: compact ? .slim : .full,
+                    thinkCountdown: .init(remaining: viewModel.answerWindowRemaining,
+                                          total: viewModel.answerWindowTotal)
                 )
                 .padding(.horizontal, 20)
                 .padding(.top, 8)
@@ -574,9 +566,9 @@ struct QuestionView: View {
                     // frozen between "send" and the result. Mirrors the sheet's processingBody.
                     processingRow
                 } else {
-                    // #131 Track B: no timer chips here — the countdown lives in the
-                    // Record/Stop button. The strip stays for the mute (Track C).
-                    audioStrip(withTimers: false)
+                    // #131 Track B: the voice countdown lives in the Record/Stop
+                    // button. The strip stays for the mute (Track C).
+                    audioStrip()
 
                     QuestionVoiceFooter(
                         viewModel: viewModel,

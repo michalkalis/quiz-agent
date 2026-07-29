@@ -46,6 +46,63 @@ struct ListenBarInspectorTests {
         }
     }
 
+    // MARK: - Think countdown (#132 Track B, variant A)
+
+    /// The MCQ think countdown lives IN the bar: the caption counts the window
+    /// down and — the founder's correction to the mock — the concrete command
+    /// words stay on the sub-line exactly as every other command bar shows them.
+    @Test("Think countdown swaps the caption but keeps the command words")
+    func thinkCountdownCaptionAndWords() async throws {
+        let view = ListenBar(
+            mode: .command,
+            commandHint: #"Say "start" or "skip""#,
+            thinkCountdown: .init(remaining: 32, total: 45)
+        )
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: Never.self) {
+                try tree.find(text: "THINK — LISTENING IN 32 S")
+            }
+            let words = try tree.find(viewWithAccessibilityIdentifier: "listen-bar.commands")
+            #expect(try words.text().string() == #"Say "start" or "skip""#)
+        }
+    }
+
+    /// Answer mode must ignore a stray countdown — the mic is already live,
+    /// there is nothing left to count down to.
+    @Test("Answer mode ignores a think countdown")
+    func answerModeIgnoresThinkCountdown() async throws {
+        let view = ListenBar(mode: .answer(.mcq),
+                             thinkCountdown: .init(remaining: 10, total: 45))
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: Never.self) {
+                try tree.find(text: "LISTENING — SAY A–D")
+            }
+            #expect(throws: (any Error).self) {
+                _ = try tree.find(text: "THINK — LISTENING IN 10 S")
+            }
+        }
+    }
+
+    /// The think state keeps the bar's identity — same id, same full height —
+    /// so the flip to answer mode at zero moves nothing on screen.
+    @Test("Think state keeps the bar id and the full-with-words height")
+    func thinkStateKeepsIdentityAndHeight() async throws {
+        let view = ListenBar(
+            mode: .command,
+            commandHint: #"Say "start" or "skip""#,
+            thinkCountdown: .init(remaining: 5, total: 45)
+        )
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: Never.self) {
+                try tree.find(viewWithAccessibilityIdentifier: "listen-bar")
+            }
+        }
+        #expect(ListenBar.height(size: .full, hasSubLine: true) == 56)
+    }
+
     // MARK: - Answer mode captions (app-locale, per kind)
 
     @Test("Answer/MCQ mode prompts for A–D")

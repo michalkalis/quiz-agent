@@ -124,6 +124,11 @@ final class AppState: ObservableObject {
         // Setup audio session with default mode
         try? audioService.setupAudioSession(mode: AudioMode.default)
 
+        // #131 Track E: diagnostic-only telemetry for the founder-reported
+        // hardware volume drift (media volume set to 0, rises during quiz
+        // play). Observe-only — never activates/reconfigures the session.
+        VolumeChangeMonitor.shared.start(audioService: audioService)
+
         // Check Apple credential state and register revocation observer (#61 task 61.6).
         // Runs asynchronously so it does not block app launch; a revoked credential
         // drops to a fresh anon identity transparently.

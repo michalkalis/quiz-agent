@@ -365,6 +365,15 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
                 // wired for .playback (no input), which silently breaks the next recording.
                 try session.setActive(true)
                 Logger.audio.debug("🔊 Restored audio category: \(previousCategory.rawValue, privacy: .public)")
+
+                // #131 Track E: exit side of the .playAndRecord↔.playback swap —
+                // pairs with the "Switched to .playback for TTS" entry crumb
+                // above so a volume change can be correlated against exactly
+                // which side of the swap the app was on.
+                let restoreCrumb = Breadcrumb(level: .info, category: "audio.category_switch")
+                restoreCrumb.message = "Restored audio category from .playback"
+                restoreCrumb.data = ["restored_to": previousCategory.rawValue]
+                SentryBreadcrumb.add(restoreCrumb)
             } catch {
                 Logger.audio.error("❌ Failed to restore audio category \(previousCategory.rawValue, privacy: .public): \(error.localizedDescription, privacy: .public)")
                 let crumb = Breadcrumb(level: .error, category: "audio.category_restore")
@@ -420,6 +429,15 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         else {
             return
         }
+
+        // #131 Track E: breadcrumb every route change (reason only, no PII) so
+        // it can be correlated against volume-change events from
+        // VolumeChangeMonitor — a Bluetooth/route flip is one of the
+        // candidate mechanisms for the founder's volume-drift report.
+        let routeCrumb = Breadcrumb(level: .info, category: "audio.route_change")
+        routeCrumb.message = "Audio route changed"
+        routeCrumb.data = ["reason": String(describing: reason)]
+        SentryBreadcrumb.add(routeCrumb)
 
         switch reason {
         case .newDeviceAvailable:

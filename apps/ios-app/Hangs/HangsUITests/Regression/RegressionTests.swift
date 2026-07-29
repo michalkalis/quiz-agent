@@ -197,13 +197,14 @@ final nonisolated class RegressionTests: XCTestCase {
     //
     // Scenario: launch with "--ui-test-mcq --ui-test-long" (they compose since #125)
     // so the seeded question is a ~300-char MCQ stem, then observe the screen across
-    // the reveal boundary.
+    // the think → recording boundary.
     //
-    // Regression guarded: #125 — the option cards and the listening pill must stay
-    // off screen while the answer countdown is still running (the driver is still
-    // hearing the question, and four fixed-height cards squeezed the stem until it
-    // read as clipped mid-sentence), and must be there once recording starts. Skip
-    // and the stem stay reachable throughout.
+    // Regression guarded: #132 (founder reversal of #125's reveal gate, 2026-07-29) —
+    // the option cards must be on screen from the first frame, think phase included,
+    // because you cannot pick between alternatives you have not been shown. The
+    // "LISTENING" bar is the half that did NOT reverse: it must stay off until the
+    // mic is live. Skip and the long stem stay reachable throughout, and the stem
+    // must still SCROLL with the grid sharing the screen (#125's stem half).
 
     @MainActor
     func testRSMCQLongReveal() async throws {
@@ -219,14 +220,18 @@ final nonisolated class RegressionTests: XCTestCase {
         question.waitForQuestion(timeout: 15)
         question.waitForState("askingQuestion", timeout: 10)
 
-        // Pre-reveal: the fixture's 5s answer countdown is still running.
-        XCTAssertFalse(
+        // Think phase: the fixture's 5s answer countdown is still running.
+        XCTAssertTrue(
             question.option("a").exists,
-            "RS-mcq-long: option cards are on screen while the question is still being timed"
+            "RS-mcq-long: the option cards are hidden during the think phase again (#132)"
+        )
+        XCTAssertTrue(
+            question.option("d").exists,
+            "RS-mcq-long: the 2×2 grid is incomplete during the think phase"
         )
         XCTAssertFalse(
             question.listenBarExists,
-            "RS-mcq-long: the answer ListenBar is on screen while the question is still being timed"
+            "RS-mcq-long: the answer ListenBar claims LISTENING before the mic is live"
         )
         XCTAssertTrue(
             question.questionText.isHittable,
@@ -234,15 +239,11 @@ final nonisolated class RegressionTests: XCTestCase {
         )
         XCTAssertTrue(
             question.skipButton.isHittable,
-            "RS-mcq-long: Skip must stay reachable throughout, including pre-reveal"
+            "RS-mcq-long: Skip must stay reachable throughout"
         )
 
-        // Reveal: the countdown expires and recording starts.
+        // The countdown expires and recording starts: the listening bar joins.
         question.waitForState("recording", timeout: 15)
-        XCTAssertTrue(
-            question.option("a").waitForExistence(timeout: 5),
-            "RS-mcq-long: options never appeared after recording started"
-        )
         XCTAssertTrue(
             question.listenBarExists,
             "RS-mcq-long: the answer ListenBar never appeared after recording started"
@@ -252,10 +253,10 @@ final nonisolated class RegressionTests: XCTestCase {
             "RS-mcq-long: the last option is off-screen — the long stem pushed the picker down"
         )
 
-        // Post-reveal the option cards legitimately take the stem's space back, so a
-        // ~300-char stem no longer fits — but it must still be REACHABLE by scrolling
-        // rather than dead-clipped (that distinction is the whole of #125's stem half;
-        // making the remainder *visible* without scrolling is Track B's layout call).
+        // The option cards legitimately take the stem's space, so a ~300-char stem
+        // does not fit — but it must still be REACHABLE by scrolling rather than
+        // dead-clipped (that distinction is the whole of #125's stem half; making
+        // the remainder *visible* without scrolling is Track B's layout call).
         let beforeScroll = question.questionText.frame.minY
         question.questionText.swipeUp()
         XCTAssertNotEqual(

@@ -56,12 +56,11 @@ struct QuestionViewMCQInspectorTests {
         }
     }
 
-    @Test("MCQ body renders AnswerOption rows for each option once revealed")
+    @Test("MCQ body renders AnswerOption rows for each option while asking")
     func mcqRendersAnswerOptions() async throws {
         let vm = makeMCQViewModel()
-        // #125: the options are gated behind the answering phase now — `.recording`
-        // is the founder's "start of recording" reveal trigger.
-        vm.quizState = .recording
+        // #132: no reveal gate any more — the options are on screen from the
+        // first frame of the question, `.askingQuestion` included.
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
@@ -72,7 +71,7 @@ struct QuestionViewMCQInspectorTests {
         }
     }
 
-    @Test("MCQ body shows the docked answer ListenBar once revealed (#125)")
+    @Test("MCQ body shows the docked answer ListenBar once recording starts (#125)")
     func mcqShowsListenBar() async throws {
         let vm = makeMCQViewModel()
         vm.quizState = .recording
@@ -85,14 +84,12 @@ struct QuestionViewMCQInspectorTests {
         }
     }
 
-    /// Skip is deliberately NOT part of the #125 reveal gate — the founder named
-    /// only the options and the listening pill, and a driver must always be able to
-    /// bail out of a question they can't answer, including while it is still being
-    /// read aloud.
-    @Test("MCQ body shows Skip button before the options are revealed")
+    /// A driver must always be able to bail out of a question they can't answer,
+    /// including while it is still being read aloud and the countdown runs.
+    @Test("MCQ body shows Skip button while the countdown is still running")
     func mcqShowsSkipButton() async throws {
         let vm = makeMCQViewModel()
-        vm.answerTimerCountdown = 12 // pre-reveal: the countdown is still running
+        vm.answerTimerCountdown = 12 // the countdown is still running
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
@@ -103,21 +100,23 @@ struct QuestionViewMCQInspectorTests {
     }
 }
 
-// MARK: - MCQ answer reveal gate + stem scroll region (#125)
+// MARK: - MCQ options visible from the start + stem scroll region (#132)
 
-/// Founder, TestFlight 2026-07-28: "make sure the options and the 'listening' text
-/// only appear after the timer expires, or after 'start' of recording". WHY it
-/// matters: while the question is still being read out, four fixed-height option
-/// cards squeeze the stem to near-zero (it read as clipped mid-sentence in the
-/// field) and pull a driver's eyes off the road before they have even heard the
-/// question. The gate is VISUAL ONLY — the hands-free voice path must keep
-/// accepting an answer whether or not the picker is on screen.
+/// Founder, TestFlight 2026-07-29 (#132) — REVERSES the #125 reveal gate of
+/// 2026-07-28: on a multiple-choice question the driver must SEE the options
+/// while thinking, so the grid renders from the first frame, think phase
+/// included. Hiding them cost the whole point of MCQ — you cannot pick between
+/// alternatives you have not been shown.
+///
+/// What did NOT reverse: the answer `ListenBar` says "LISTENING — SAY A–D", so
+/// it must still appear only once the mic is actually live. The long-stem
+/// scroll affordance has to keep working with the grid on screen throughout.
 @MainActor
-@Suite("QuestionView — MCQ answer reveal gate (#125)")
-struct QuestionViewMCQRevealGateTests {
+@Suite("QuestionView — MCQ options visible from the start (#132)")
+struct QuestionViewMCQOptionVisibilityTests {
     /// A long-stem MCQ mid-countdown — the exact field shape (`--ui-test-mcq
-    /// --ui-test-long`), still in the pre-reveal phase.
-    private func makePreRevealViewModel() -> (QuizViewModel, MockNetworkService) {
+    /// --ui-test-long`), still in the think phase.
+    private func makeThinkPhaseViewModel() -> (QuizViewModel, MockNetworkService) {
         let (vm, network) = Fixtures.makeViewModelWithNetwork()
         vm.currentSession = Fixtures.makeActiveSession()
         vm.currentQuestion = Question.previewMCQLong
@@ -128,105 +127,114 @@ struct QuestionViewMCQRevealGateTests {
         return (vm, network)
     }
 
-    @Test("options and listen bar are absent (strip present) while the question is still being timed")
-    func answerAffordancesHiddenPreReveal() async throws {
-        let (vm, _) = makePreRevealViewModel()
+    @Test("all four option tiles are on screen while the question is still being timed")
+    func optionsVisibleDuringThinkPhase() async throws {
+        let (vm, _) = makeThinkPhaseViewModel()
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: (any Error).self) {
-                _ = try tree.find(viewWithAccessibilityIdentifier: "mcq.option.a")
+            // #132 Variant A grid: all four tiles, from the first frame.
+            for id in ["mcq.option.a", "mcq.option.b", "mcq.option.c", "mcq.option.d"] {
+                #expect(throws: Never.self, "\(id) is hidden during the think phase again") {
+                    try tree.find(viewWithAccessibilityIdentifier: id)
+                }
             }
-            // #125: the docked answer ListenBar must not be on screen pre-reveal.
-            #expect(throws: (any Error).self) {
-                _ = try tree.find(viewWithAccessibilityIdentifier: "listen-bar")
-            }
-            // The stem is what the pre-reveal screen is for — it must be there.
+            // The stem must not have been pushed off in the process.
             #expect(throws: Never.self) {
                 try tree.find(viewWithAccessibilityIdentifier: "question.text")
             }
-            // The audio strip (timer chips + mute) is the pre-reveal MCQ's only
-            // countdown surface — MCQ has no Record button to host it (#131 B).
+            // The audio strip (timer chips + mute) is the MCQ's only countdown
+            // surface — MCQ has no Record button to host it (#131 B).
             #expect(throws: Never.self) {
                 try tree.find(viewWithAccessibilityIdentifier: "question.timerStrip")
             }
         }
     }
 
-    @Test("all four option tiles + the answer ListenBar appear once recording starts (strip stays)")
-    func answerAffordancesShownOnceRecording() async throws {
-        let (vm, _) = makePreRevealViewModel()
-        vm.quizState = .recording // founder trigger: "start of recording"
+    /// The half of the #125 gate that survives: a bar claiming "LISTENING" while
+    /// the mic is off is a lie, so it stays tied to `.recording`.
+    @Test("the answer ListenBar stays off the think phase and appears with recording")
+    func listenBarFollowsTheMicNotTheOptions() async throws {
+        let (vm, _) = makeThinkPhaseViewModel()
+        let thinking = QuestionView(viewModel: vm)
+        try await ViewHosting.host(thinking) {
+            let tree = try thinking.inspect()
+            #expect(throws: (any Error).self) {
+                _ = try tree.find(viewWithAccessibilityIdentifier: "listen-bar")
+            }
+        }
+
+        vm.quizState = .recording
         vm.answerTimerCountdown = 0
-        let view = QuestionView(viewModel: vm)
-        try await ViewHosting.host(view) {
-            let tree = try view.inspect()
-            // #125 Variant A: a 2×2 grid — all four tiles present.
-            #expect(throws: Never.self) {
-                try tree.find(viewWithAccessibilityIdentifier: "mcq.option.a")
-            }
-            #expect(throws: Never.self) {
-                try tree.find(viewWithAccessibilityIdentifier: "mcq.option.d")
-            }
+        let recording = QuestionView(viewModel: vm)
+        try await ViewHosting.host(recording) {
+            let tree = try recording.inspect()
             #expect(throws: Never.self) {
                 try tree.find(viewWithAccessibilityIdentifier: "listen-bar")
             }
-            // #131 Track C: the strip survives the reveal. It is the only mute on
-            // the screen now that the bar dropped its duplicate — dropping the
-            // strip here would leave the answering phase with no way to mute.
+            // #131 Track C: the strip is the only mute on the screen now that the
+            // bar dropped its duplicate — it must survive into the answer phase.
             #expect(throws: Never.self) {
                 try tree.find(viewWithAccessibilityIdentifier: "question.timerStrip")
             }
         }
     }
 
-    /// Fail-open: with auto-record off AND no answer time limit nothing ever arms a
-    /// countdown and recording never auto-starts, so tapping an option is the only
-    /// way to answer. Hiding the cards there would deadlock the question.
-    @Test("options are visible from the start when no countdown will ever arm")
-    func answerAffordancesVisibleWhenNoTimerWillRun() async throws {
-        let (vm, _) = makePreRevealViewModel()
-        vm.settings.autoRecordEnabled = false
-        vm.settings.answerTimeLimit = 0
-        vm.answerTimerCountdown = 0
+    /// The whole point of showing the options during the think phase: they must
+    /// be answerable there. `submitMCQAnswer` is legal from `.askingQuestion` and
+    /// must cancel the countdown it was tapped over — otherwise the THINK chip
+    /// keeps ticking on the processing screen and the thinking task still owns a
+    /// pending auto-start of recording.
+    @Test("tapping an option during the think phase submits and stops the countdown")
+    func tapDuringThinkPhaseSubmitsAndStopsCountdown() async throws {
+        let (vm, network) = makeThinkPhaseViewModel()
+        vm.thinkingTimeCountdown = 7
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) {
-                try tree.find(viewWithAccessibilityIdentifier: "mcq.option.a")
+            let tile = try tree.find(viewWithAccessibilityIdentifier: "mcq.option.b")
+            try tile.find(ViewType.Button.self).tap()
+            // MCQOptionPicker debounces the tap (54.16) before submitting.
+            for _ in 0 ..< 200 where network.capturedTextInputInput == nil {
+                try? await Task.sleep(nanoseconds: 10_000_000)
+                await Task.yield()
             }
+            #expect(network.capturedTextInputInput == "Budapest")
+            #expect(vm.thinkingTimeCountdown == 0, "the THINK countdown kept running under the result")
         }
     }
 
-    /// The invariant the gate must never break: a spoken answer is accepted while
-    /// the picker is off screen. `submitMCQAnswer` is legal from `.askingQuestion`,
-    /// and the voice match writes `mcqVoiceMatchedKey` on the view model — not on
-    /// the picker — so hiding the picker must not cost the driver an answer.
-    @Test("a spoken answer is still accepted while the options are hidden")
-    func voiceAnswerAcceptedWhileOptionsHidden() async throws {
-        let (vm, network) = makePreRevealViewModel()
+    /// The hands-free path must keep working regardless of what is on screen: the
+    /// voice matcher writes `mcqVoiceMatchedKey` on the view model, not on the
+    /// picker, so a spoken A–D answer is accepted during the think phase too.
+    @Test("a spoken answer is accepted during the think phase")
+    func voiceAnswerAcceptedDuringThinkPhase() async throws {
+        let (vm, network) = makeThinkPhaseViewModel()
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
-            let tree = try view.inspect()
-            #expect(throws: (any Error).self) {
-                _ = try tree.find(viewWithAccessibilityIdentifier: "mcq.option.b")
-            }
+            _ = try view.inspect()
             // Same call the MCQ voice matcher makes for a spoken "B" / "Budapest".
             await vm.submitMCQAnswer(key: "b", value: "Budapest")
             #expect(network.capturedTextInputInput == "Budapest")
         }
     }
 
-    /// 54.2's MCQ counterpart: the stem's scroll region must be measured against the
-    /// available height (`GeometryReader` + `minHeight`), otherwise the fixed-height
-    /// option cards are served their floors first and the flexible ScrollView
-    /// collapses — which is what made a long stem read as clipped, not scrollable.
-    @Test("the stem scroll region is height-measured, not free to collapse")
+    /// 54.2's MCQ counterpart, and the reason the grid could be hidden in the
+    /// first place: with the option cards on screen for the WHOLE question, the
+    /// stem's scroll region must still be measured against the available height
+    /// (`GeometryReader` + `minHeight`), otherwise the fixed-height cards are
+    /// served their floors first and the flexible ScrollView collapses — which is
+    /// what made a long stem read as clipped rather than scrollable.
+    @Test("the stem scroll region is height-measured with the grid on screen")
     func stemScrollRegionHasMeasuredMinimumHeight() async throws {
-        let (vm, _) = makePreRevealViewModel()
+        let (vm, _) = makeThinkPhaseViewModel()
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
+            // Precondition: this is the with-grid layout, not a stem-only screen.
+            #expect(throws: Never.self) {
+                try tree.find(viewWithAccessibilityIdentifier: "mcq.option.a")
+            }
             let stemGeometryReaders = tree.findAll(ViewType.GeometryReader.self).filter {
                 (try? $0.find(viewWithAccessibilityIdentifier: "question.text")) != nil
             }

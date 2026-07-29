@@ -76,18 +76,18 @@ enum ResultVerdict {
 
 // MARK: - Verdict band
 
-/// Full-bleed colour band: [state badge · read-aloud] over the Anton verdict
-/// word. No status chip — Variant A says the state exactly once.
+/// Full-bleed colour band: the state badge over the Anton verdict word. No
+/// status chip — Variant A says the state exactly once. #132: the replay-the-
+/// question speaker left the band; the WHY card's "hear it" is the one replay
+/// affordance on this screen.
 struct ResultVerdictBand: View {
     let verdict: ResultVerdict
-    let onReadAloud: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 badge
                 Spacer()
-                readAloudControl
             }
             if let word = verdict.word {
                 Text(word)
@@ -123,33 +123,15 @@ struct ResultVerdictBand: View {
                 .accessibilityIdentifier("result.heroBanner")
         }
     }
-
-    /// Icon-only in the band (the label would compete with the verdict word);
-    /// the spoken affordance survives as the accessibility label.
-    private var readAloudControl: some View {
-        Button(action: onReadAloud) {
-            Image(systemName: "speaker.wave.2")
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundColor(Theme.Hangs.Colors.blue)
-                .frame(width: 34, height: 34)
-                .background(Circle().fill(Theme.Hangs.Colors.blue.opacity(0.08)))
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(Text("read aloud"))
-        .accessibilityIdentifier("result.readAloud")
-    }
 }
 
 // MARK: - Meta row
 
-/// The ONE quiet row under the answer card. Everything the driver does not need
-/// at a glance lives here in 10pt mono, faintest grey: score (+ delta), streak,
-/// what they said when it was wrong, and the source link.
+/// The ONE quiet row under the answer card, in 10pt mono, faintest grey: what
+/// the driver said when it was wrong, and the source link. #132: score and
+/// streak are gone from the result screen entirely (founder — a per-question
+/// score echo is noise, and the row is the last place they still lived).
 struct ResultMetaRow: View {
-    let scoreValue: String
-    /// "+1" / "+0"; nil in the neutral fallback where no answer was scored.
-    let scoreDelta: String?
-    let streak: Int
     /// The wrong answer, struck through. nil on correct/skipped — a skip has
     /// nothing the driver said (#131 Track D).
     let userAnswer: String?
@@ -159,7 +141,7 @@ struct ResultMetaRow: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            stats
+            if let userAnswer, !userAnswer.isEmpty { saidEntry(userAnswer) }
             Spacer(minLength: 8)
             if sourceDomain != nil { sourceLink }
         }
@@ -168,27 +150,17 @@ struct ResultMetaRow: View {
         .accessibilityIdentifier("result.metaRow")
     }
 
-    /// Every label and number is `.fixedSize()`: without it SwiftUI shares the
-    /// squeeze across all of them and the row degrades to "stre… 0 · you s…
-    /// Saturn" (sim check, long-answer case). Only the spoken answer may
-    /// truncate — it is the one part with unbounded length.
-    private var stats: some View {
+    /// The label is `.fixedSize()`: without it SwiftUI shares the squeeze and the
+    /// row degrades to "you s… Saturn" (sim check, long-answer case). Only the
+    /// spoken answer may truncate — it is the one part with unbounded length.
+    private func saidEntry(_ answer: String) -> some View {
         HStack(spacing: 5) {
-            monoLabel("score")
-            monoValue(scoreValue)
-            if let scoreDelta { monoValue(scoreDelta) }
-            separator
-            monoLabel("streak")
-            monoValue("\(streak)")
-            if let userAnswer, !userAnswer.isEmpty {
-                separator
-                monoLabel("you said")
-                Text(verbatim: userAnswer)
-                    .font(.hangsMono(10, weight: .medium))
-                    .strikethrough()
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-            }
+            monoLabel("you said")
+            Text(verbatim: answer)
+                .font(.hangsMono(10, weight: .medium))
+                .strikethrough()
+                .lineLimit(1)
+                .truncationMode(.tail)
         }
     }
 
@@ -200,24 +172,9 @@ struct ResultMetaRow: View {
             .fixedSize()
     }
 
-    private func monoValue(_ value: String) -> some View {
-        Text(verbatim: value)
-            .font(.hangsMono(10, weight: .medium))
-            .lineLimit(1)
-            .fixedSize()
-    }
-
-    private var separator: some View {
-        Text(verbatim: "·")
-            .font(.hangsMono(10, weight: .medium))
-            .opacity(0.55)
-            .fixedSize()
-    }
-
     /// Tappable source link — opens the existing SourceWebView sheet. Variant A
-    /// drops the domain from the label: the row also has to fit score, streak
-    /// and a struck answer, and "source ›" is the whole affordance. The domain
-    /// survives as the accessibility label, where there is no width budget.
+    /// drops the domain from the label: "source ›" is the whole affordance. The
+    /// domain survives as the accessibility label, where there is no width budget.
     private var sourceLink: some View {
         Button(action: onOpenSource) {
             HStack(spacing: 4) {

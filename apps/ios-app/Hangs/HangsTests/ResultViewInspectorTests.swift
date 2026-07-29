@@ -172,9 +172,10 @@ struct ResultViewInspectorTests {
         }
     }
 
-    /// Score delta stays "+0" for a skip, same as a wrong answer (unchanged).
-    @Test("Skipped evaluation shows +0 score delta")
-    func skippedVariantShowsZeroScoreDelta() async throws {
+    /// #132 (founder, 2026-07-29): a skip shows no score delta at all — score and
+    /// streak left the result screen entirely.
+    @Test("Skipped evaluation shows no score delta")
+    func skippedVariantShowsNoScoreDelta() async throws {
         let evaluation = Evaluation(
             userAnswer: "", result: .skipped, points: 0.0,
             correctAnswer: "Uranus", questionId: "q_test", explanation: nil
@@ -183,7 +184,7 @@ struct ResultViewInspectorTests {
 
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) { try tree.find(text: "+0") }
+            #expect(throws: (any Error).self) { try tree.find(text: "+0") }
         }
     }
 
@@ -474,37 +475,44 @@ struct ResultViewInspectorTests {
         }
     }
 
-    // MARK: - read-aloud control
+    // MARK: - One replay affordance only (#132)
 
-    /// Variant A moves read-aloud into the verdict band as an icon-only control
-    /// (a text label would compete with the 56pt verdict word) — the affordance
-    /// must survive the move, so assert its stable identifier, not its label.
-    @Test("Read-aloud control is present in the verdict band")
-    func readAloudButtonPresent() async throws {
+    /// #132 (founder, TestFlight 2026-07-29): the verdict band's speaker button
+    /// replayed the QUESTION on a screen the driver has already left behind, and
+    /// sat two taps away from the "hear it" that replays the answer + why. One
+    /// replay affordance survives — the card's, not the band's.
+    @Test("The verdict band has no replay-question speaker; 'hear it' is the only replay")
+    func verdictBandHasNoReadAloudControl() async throws {
         let evaluation = Evaluation(
             userAnswer: "Paris", result: .correct, points: 1.0,
-            correctAnswer: "Paris", questionId: "q_test", explanation: nil
+            correctAnswer: "Paris", questionId: "q_test",
+            explanation: "Paris has been the capital since the 10th century."
         )
-        let view = ResultView(viewModel: makeViewModel(evaluation: evaluation))
+        let view = ResultView(viewModel: makeViewModel(
+            evaluation: evaluation,
+            question: makeQuestion(explanation: "Paris has been the capital since the 10th century.")
+        ))
 
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
+            #expect(throws: (any Error).self) {
+                _ = try tree.find(viewWithAccessibilityIdentifier: "result.readAloud")
+            }
             #expect(throws: Never.self) {
-                try tree.find(viewWithAccessibilityIdentifier: "result.readAloud")
+                try tree.find(viewWithAccessibilityIdentifier: "result.hearIt")
             }
         }
     }
 
-    // MARK: - Score / streak live ONLY in the muted meta row (#131 Track D)
+    // MARK: - Score / streak are off the result screen (#132)
 
-    /// #84 (founder decision 5) banned a streak *echo* — a second, celebratory
-    /// statement of progress competing with the verdict. #131 Track D Variant A
-    /// (founder pick 2026-07-29) supersedes the blanket ban: score, delta and
-    /// streak are allowed, but ONLY demoted into the single 10pt mono meta row
-    /// under the card. So: the values render, and they render inside
-    /// `result.metaRow` — never as their own hero block.
-    @Test("Correct variant shows score, delta and streak only inside the meta row")
-    func correctVariantHasNoStreakEcho() async throws {
+    /// #84 (founder decision 5) banned a streak *echo*; #131 Track D demoted score
+    /// and streak into the muted meta row instead. #132 finishes the job — a
+    /// per-question result says nothing about the running total, so the numbers
+    /// leave the screen entirely. The meta row survives for what the driver still
+    /// needs: what they said, and where the answer came from.
+    @Test("Correct variant shows no score or streak anywhere on the screen")
+    func correctVariantHasNoScoreOrStreak() async throws {
         let evaluation = Evaluation(
             userAnswer: "Paris", result: .correct, points: 1.0,
             correctAnswer: "Paris", questionId: "q_test", explanation: nil
@@ -515,16 +523,19 @@ struct ResultViewInspectorTests {
 
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            let meta = try tree.find(viewWithAccessibilityIdentifier: "result.metaRow")
-            #expect(throws: Never.self) { try meta.find(text: "+1") }
-            #expect(throws: Never.self) { try meta.find(text: "streak") }
-            #expect(throws: Never.self) { try meta.find(text: "score") }
+            for banned in ["score", "streak", "+1"] {
+                #expect(throws: (any Error).self, "\(banned) is back on the result screen") {
+                    _ = try tree.find(text: banned)
+                }
+            }
+            // The row itself stays — it still carries the source link.
+            #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "result.metaRow") }
             #expect(vm.quizStats.currentStreak == 1)
         }
     }
 
-    @Test("Incorrect variant shows score, delta and streak only inside the meta row")
-    func incorrectVariantHasNoStreakEcho() async throws {
+    @Test("Incorrect variant shows no score or streak, but keeps 'you said'")
+    func incorrectVariantHasNoScoreOrStreak() async throws {
         let evaluation = Evaluation(
             userAnswer: "London", result: .incorrect, points: 0.0,
             correctAnswer: "Paris", questionId: "q_test", explanation: nil
@@ -533,9 +544,95 @@ struct ResultViewInspectorTests {
 
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
+            for banned in ["score", "streak", "+0"] {
+                #expect(throws: (any Error).self, "\(banned) is back on the result screen") {
+                    _ = try tree.find(text: banned)
+                }
+            }
             let meta = try tree.find(viewWithAccessibilityIdentifier: "result.metaRow")
-            #expect(throws: Never.self) { try meta.find(text: "+0") }
-            #expect(throws: Never.self) { try meta.find(text: "streak") }
+            #expect(throws: Never.self) { try meta.find(text: "you said") }
+        }
+    }
+
+    // MARK: - MCQ answer reads as letter + option text (#132)
+
+    private static func makeMCQQuestion(_ options: [String: String]) -> Question {
+        Question(
+            id: "q_mcq", question: "Which structure is in Giza?", type: .textMultichoice,
+            possibleAnswers: options,
+            difficulty: "easy", topic: "History", category: "adults",
+            sourceUrl: nil, sourceExcerpt: nil, mediaUrl: nil, imageSubtype: nil,
+            explanation: nil, generatedBy: nil
+        )
+    }
+
+    /// Founder, TestFlight 2026-07-29: an MCQ result showed a bare "b" as the
+    /// answer — the option KEY is meaningless once the options are off screen.
+    /// Older backends/sessions still send that key, so it must resolve to the
+    /// option text the question already carries.
+    @Test("MCQ answer given as a key renders as 'B — <option text>'")
+    func mcqKeyAnswerRendersLetterAndOptionText() async throws {
+        let mcq = Self.makeMCQQuestion(["a": "Colosseum", "b": "Pyramid", "c": "Parthenon", "d": "Stonehenge"])
+        let evaluation = Evaluation(
+            userAnswer: "Colosseum", result: .incorrect, points: 0.0,
+            correctAnswer: "b", questionId: "q_mcq", explanation: nil
+        )
+        let view = ResultView(viewModel: makeViewModel(evaluation: evaluation, question: mcq))
+
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: Never.self) { try tree.find(text: "B — Pyramid") }
+        }
+    }
+
+    /// The other direction: the current backend serves the TRANSLATED option text,
+    /// so the letter has to be recovered from `possibleAnswers` instead. Both
+    /// directions must land on the same "letter — text" shape, whatever language
+    /// the option is in (the client does no language logic — it renders whatever
+    /// `possibleAnswers` holds).
+    @Test("MCQ answer given as option text renders as '<KEY> — <option text>'")
+    func mcqTextAnswerRendersLetterAndOptionText() async throws {
+        let mcq = Self.makeMCQQuestion(["a": "Koloseum", "b": "Pyramída", "c": "Parthenón", "d": "Stonehenge"])
+        let evaluation = Evaluation(
+            userAnswer: "Koloseum", result: .incorrect, points: 0.0,
+            correctAnswer: "pyramída", questionId: "q_mcq", explanation: nil
+        )
+        let view = ResultView(viewModel: makeViewModel(evaluation: evaluation, question: mcq))
+
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            // Case-insensitive match, and the option's own casing is what renders.
+            #expect(throws: Never.self) { try tree.find(text: "B — Pyramída") }
+        }
+    }
+
+    /// The fallback must be silent: an answer that matches neither a key nor an
+    /// option text — and a question with no options at all — renders unchanged,
+    /// never with a stray letter prefix or an empty dash.
+    @Test("Answers matching neither a key nor an option text render unchanged")
+    func unmatchedAnswersRenderUnchanged() async throws {
+        // Open question — no possibleAnswers at all.
+        let openEval = Evaluation(
+            userAnswer: "Saturn", result: .incorrect, points: 0.0,
+            correctAnswer: "Uranus", questionId: "q_test", explanation: nil
+        )
+        let openView = ResultView(viewModel: makeViewModel(evaluation: openEval))
+        try await ViewHosting.host(openView) {
+            let tree = try openView.inspect()
+            #expect(throws: Never.self) { try tree.find(text: "Uranus") }
+            #expect(throws: (any Error).self) { _ = try tree.find(text: "U — Uranus") }
+        }
+
+        // MCQ whose evaluation carries an answer that is in neither column.
+        let mcq = Self.makeMCQQuestion(["a": "Colosseum", "b": "Pyramid"])
+        let strayEval = Evaluation(
+            userAnswer: "Colosseum", result: .incorrect, points: 0.0,
+            correctAnswer: "The Great Sphinx", questionId: "q_mcq", explanation: nil
+        )
+        let strayView = ResultView(viewModel: makeViewModel(evaluation: strayEval, question: mcq))
+        try await ViewHosting.host(strayView) {
+            let tree = try strayView.inspect()
+            #expect(throws: Never.self) { try tree.find(text: "The Great Sphinx") }
         }
     }
 

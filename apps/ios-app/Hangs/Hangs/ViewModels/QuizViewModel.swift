@@ -1237,6 +1237,11 @@ final class QuizViewModel: ObservableObject {
 
         submissionEpoch &+= 1 // #79: supersede any suspended voice-transcript handler
         quizTimersController.cancelAnswerTimer()
+        // #132: the option grid is on screen during the think phase now, so a tap
+        // can land while the THINK countdown is still ticking. Without this the
+        // chip keeps counting down over the processing screen for up to a second
+        // and the thinking task still owns a pending auto-start of recording.
+        quizTimersController.cancelThinkingTime()
         quizTimersController.cancelAutoStopRecordingTimer()
         // #79: a rejected transition means another submission already claimed
         // .processing (e.g. a double-tapped option) — bail instead of firing a

@@ -745,9 +745,6 @@
   ▿ _textAnswer: SwiftUI.State<Swift.String>
     - _value: ""
     - _location: nil
-  ▿ _mcqRevealLatched: SwiftUI.State<Swift.Bool>
-    - _value: false
-    - _location: nil
   ▿ _showScrollCue: SwiftUI.State<Swift.Bool>
     - _value: false
     - _location: nil

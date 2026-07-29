@@ -22,8 +22,6 @@ struct QuestionView: View {
     @State private var showQuizSettings = false
     @State private var showTextInput = false
     @State private var textAnswer = ""
-    /// MCQ answer-reveal latch — see "MCQ reveal gate (#125)" below.
-    @State private var mcqRevealLatched = false
     /// #125: true while more of the stem sits below the fold — drives the
     /// bottom fade + "SCROLL ↓" overflow cue on the MCQ stem.
     @State private var showScrollCue = false
@@ -374,53 +372,18 @@ struct QuestionView: View {
         .overlay(Capsule().stroke(color.opacity(0.4), lineWidth: 1))
     }
 
-    // MARK: - MCQ reveal gate (#125)
-
-    /// Whether this question has reached its answering phase. Founder, 2026-07-28:
-    /// the option cards and the listening pill must "only appear after the timer
-    /// expires, or after 'start' of recording" — while the stem is still being read
-    /// out and the think/answer countdown runs, four cards compete for a driver's
-    /// eyes and squeeze the stem to near-nothing. Both of the founder's triggers are
-    /// wired below; the freed vertical space goes to the stem until then.
-    ///
-    /// `mcqRevealLatched` makes it stick for the rest of the question, so a failed
-    /// mic start or a cancelled countdown — both of which land back on
-    /// `.askingQuestion` with no timer running — can't strand the driver on a
-    /// screen with nothing to answer with.
-    ///
-    /// VISUAL ONLY: `submitMCQAnswer` accepts answers from `.askingQuestion` and
-    /// `.recording` alike, and the voice path writes `mcqVoiceMatchedKey` on the
-    /// view model, not on the picker — so a spoken A–D answer is accepted whether or
-    /// not the picker is on screen.
-    private var mcqAnswersRevealed: Bool {
-        mcqRevealLatched || mcqRevealDue
-    }
-
-    /// Reveal is due from the current state alone, no history needed: either we are
-    /// already past `.askingQuestion` (recording started — founder trigger 2), or
-    /// nothing will ever arm a countdown (auto-record off AND no answer time limit),
-    /// in which case tapping an option is the only way to answer and the cards must
-    /// never be hidden.
-    private var mcqRevealDue: Bool {
-        viewModel.quizState != .askingQuestion
-            || !(viewModel.settings.autoRecordEnabled || viewModel.settings.answerTimeLimit > 0)
-    }
-
-    /// The countdown on screen for this question — think or answer, whichever path
-    /// `startRecordingOrTimer()` picked (the two are mutually exclusive). Its
-    /// `> 0 → 0` edge is the founder's "timer expires" trigger.
-    private var mcqActiveCountdown: Int {
-        max(viewModel.thinkingTimeCountdown, viewModel.answerTimerCountdown)
-    }
-
     // MARK: - MCQ body (#125 Variant A "Answer Grid")
 
+    /// The #125 answer-reveal gate is GONE (founder reversed the 2026-07-28
+    /// hide-until-the-timer decision on 2026-07-29, #132): on MCQ the driver must
+    /// see the options while thinking, so the grid renders from the first frame.
+    /// The answer `ListenBar` is NOT part of that reversal — it still claims the
+    /// mic is live, so it stays gated on `.recording`.
     private func mcqBody(question: Question, compact: Bool) -> some View {
-        let revealed = mcqAnswersRevealed
-        return VStack(spacing: 0) {
+        VStack(spacing: 0) {
             // Merged top row (close + category + counter) lives in `topChrome`
             // now; the MCQ body starts at the stem.
-            mcqStem(question: question, compact: compact, revealed: revealed)
+            mcqStem(question: question, compact: compact)
 
             // #131 Track C: the strip renders in BOTH phases now. #125 dropped it
             // post-reveal because the answer bar had absorbed the mute; the bar no
@@ -429,20 +392,15 @@ struct QuestionView: View {
             audioStrip()
                 .padding(.top, 8)
 
-            // #125 reveal gate — all-at-once, no stagger (driving context). Skip
-            // stays visible throughout; the founder named only the options and the
-            // listening bar.
-            if revealed {
-                MCQOptionPicker(
-                    options: question.sortedAnswerOptions,
-                    onSelect: { key, value in
-                        Task { await viewModel.submitMCQAnswer(key: key, value: value) }
-                    },
-                    externalSelectedKey: $viewModel.mcqVoiceMatchedKey,
-                    compact: compact
-                )
-                .padding(.top, compact ? 10 : 14)
-            }
+            MCQOptionPicker(
+                options: question.sortedAnswerOptions,
+                onSelect: { key, value in
+                    Task { await viewModel.submitMCQAnswer(key: key, value: value) }
+                },
+                externalSelectedKey: $viewModel.mcqVoiceMatchedKey,
+                compact: compact
+            )
+            .padding(.top, compact ? 10 : 14)
 
             // #122: light sweep strip — always reserves its 4 pt so the docked bar
             // below never shifts; glows only during a feedback phase.
@@ -451,8 +409,9 @@ struct QuestionView: View {
                 .padding(.top, 8)
 
             // #125 addendum: the docked answer ListenBar (pink, "LISTENING — SAY
-            // A–D"). Shown only once the answer is revealed.
-            if revealed {
+            // A–D"). Only while the mic is actually live — during the think phase
+            // it would claim a listening state that does not exist (#132).
+            if isRecording {
                 ListenBar(
                     mode: .answer(question.sortedAnswerOptions.count == 2 ? .trueFalse : .mcq),
                     feedback: viewModel.voiceFeedbackPhase,
@@ -484,52 +443,32 @@ struct QuestionView: View {
             #endif
         }
         .frame(maxHeight: .infinity)
-        // A new question re-arms the gate.
-        .onChange(of: question.id) { _, _ in
-            mcqRevealLatched = false
-        }
-        // Founder trigger 2 — "start of recording". Latched so a mic start that
-        // fails back to `.askingQuestion` doesn't re-hide the options.
-        .onChange(of: viewModel.quizState) { _, newState in
-            if newState != .askingQuestion { mcqRevealLatched = true }
-        }
-        // Founder trigger 1 — "the timer expires". Independent of whether the
-        // recording that normally follows actually starts.
-        .onChange(of: mcqActiveCountdown) { previous, current in
-            if previous > 0, current == 0 { mcqRevealLatched = true }
-        }
     }
 
     // MARK: - MCQ stem (floor + overflow affordance — #125 Variant A)
 
-    /// The stem scroll region. Pre-reveal it fills the space freed by the hidden
-    /// grid at Anton 30 with the tap-to-replay glyph. Post-reveal it holds a hard
-    /// floor (360pt, 300 on SE-class) at Anton 34 (30 on SE); anything past the
-    /// floor scrolls behind a VISIBLE overflow affordance — a bottom fade, a
-    /// "SCROLL ↓" cue, and the native indicator — so a long stem reads as
-    /// scrollable, never clipped. The `GeometryReader` + `minHeight` keeps the
-    /// flexible ScrollView from being squeezed to near-zero by the fixed-height
-    /// grid below (54.2's failure mode).
-    private func mcqStem(question: Question, compact: Bool, revealed: Bool) -> some View {
+    /// The stem scroll region: a hard floor (360pt, 300 on SE-class) at Anton 34
+    /// (30 on SE); anything past the floor scrolls behind a VISIBLE overflow
+    /// affordance — a bottom fade, a "SCROLL ↓" cue, and the native indicator — so
+    /// a long stem reads as scrollable, never clipped. The `GeometryReader` +
+    /// `minHeight` keeps the flexible ScrollView from being squeezed to near-zero
+    /// by the fixed-height grid below (54.2's failure mode).
+    private func mcqStem(question: Question, compact: Bool) -> some View {
         let floor: CGFloat = compact ? 300 : 360
-        let stemFont: Font = .hangsDisplay(revealed ? (compact ? 30 : 34) : 30)
+        let stemFont: Font = .hangsDisplay(compact ? 30 : 34)
         return GeometryReader { geo in
             ScrollView(.vertical) {
                 VStack(spacing: 0) {
                     questionReplayTapTarget {
-                        VStack(alignment: .leading, spacing: 10) {
-                            HangsQuestionPrompt(
-                                text: question.question,
-                                barColor: Theme.Hangs.Colors.blue,
-                                textFont: stemFont
-                            )
-                            .accessibilityIdentifier("question.text")
-                            // Pre-reveal only: the replay hint glyph. Post-reveal
-                            // the stem scrolls and vertical space is tight.
-                            if !revealed {
-                                replaySpeakerGlyph
-                            }
-                        }
+                        // No replay glyph on MCQ: the grid now shares the screen
+                        // for the whole question and vertical space is tight — the
+                        // whole stem block stays the tap target (#132).
+                        HangsQuestionPrompt(
+                            text: question.question,
+                            barColor: Theme.Hangs.Colors.blue,
+                            textFont: stemFont
+                        )
+                        .accessibilityIdentifier("question.text")
                         .padding(.horizontal, 28)
                         .padding(.vertical, 12)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -537,7 +476,7 @@ struct QuestionView: View {
                 }
                 .frame(minHeight: geo.size.height, alignment: .top)
             }
-            .scrollIndicators(revealed ? .visible : .hidden)
+            .scrollIndicators(.visible)
             .onScrollGeometryChange(for: Bool.self) { g in
                 // Is there more stem below the fold? (taller than the viewport
                 // AND not scrolled to the end.)

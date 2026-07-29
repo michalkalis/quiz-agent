@@ -8,9 +8,13 @@
 //
 //  #131 Track D, Variant A "Verdikt vládne" (founder pick 2026-07-29) re-ranks
 //  those zones: a dominant full-bleed verdict band first, the answer card
-//  second, and ONE muted mono meta row (score · streak · you said · source)
-//  third. Zone views live in ResultScreenSections / ResultAnswerPanel /
-//  ResultFooter. SourceWebView sheet preserved.
+//  second, and ONE muted mono meta row (you said · source) third. Zone views
+//  live in ResultScreenSections / ResultAnswerPanel / ResultFooter.
+//  SourceWebView sheet preserved.
+//
+//  #132 (founder, 2026-07-29): the band's replay-question speaker and the meta
+//  row's score/streak stats are gone — one replay affordance ("hear it" on the
+//  why card) and no per-question score echo.
 //
 
 import SwiftUI
@@ -39,10 +43,7 @@ struct ResultView: View {
                 HangsProgressBar(progress: progressFraction)
 
                 // Rank 1 — the verdict, edge to edge (Variant A).
-                ResultVerdictBand(
-                    verdict: verdict,
-                    onReadAloud: { Task { await viewModel.replayQuestionAudio() } }
-                )
+                ResultVerdictBand(verdict: verdict)
 
                 // Rank 2 — the answer + why, filling whatever is left.
                 ResultAnswerPanel(
@@ -58,9 +59,6 @@ struct ResultView: View {
 
                 // Rank 3 — everything else, in one quiet line.
                 ResultMetaRow(
-                    scoreValue: formattedScore,
-                    scoreDelta: scoreDelta,
-                    streak: viewModel.quizStats.currentStreak,
                     userAnswer: metaUserAnswer,
                     sourceDomain: sourceDomain,
                     onOpenSource: { showSourceWebView = true }
@@ -138,7 +136,34 @@ struct ResultView: View {
     }
 
     private var answerText: String {
-        isRecap ? questionStem ?? "" : canonicalAnswer
+        isRecap ? questionStem ?? "" : mcqLabelled(canonicalAnswer)
+    }
+
+    /// #132 (founder, 2026-07-29): on MCQ the evaluation used to carry the bare
+    /// option KEY ("b"), which read as a one-letter answer. The card pairs letter
+    /// and text — "B — Pyramid" — resolving from `possibleAnswers` in BOTH
+    /// directions, because the backend now serves the translated option text
+    /// while older sessions still send the key:
+    ///   1. the value IS a key → take that key's text;
+    ///   2. the value IS an option's text → take that option's letter.
+    /// Anything that matches neither (open answers, a question with no options)
+    /// renders unchanged.
+    private func mcqLabelled(_ raw: String) -> String {
+        let value = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !value.isEmpty,
+              let question = viewModel.resultQuestion ?? viewModel.currentQuestion,
+              let options = question.possibleAnswers
+        else { return raw }
+
+        if let text = options[value.lowercased()],
+           !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        {
+            return "\(value.uppercased()) — \(text)"
+        }
+        if let match = options.first(where: { $0.value.caseInsensitiveCompare(value) == .orderedSame }) {
+            return "\(match.key.uppercased()) — \(match.value)"
+        }
+        return raw
     }
 
     /// "you said" belongs in the meta row only when the driver actually said
@@ -172,16 +197,6 @@ struct ResultView: View {
         let urlString = viewModel.resultQuestion?.sourceUrl ?? viewModel.currentQuestion?.sourceUrl
         guard let urlString, let host = URL(string: urlString)?.host else { return nil }
         return host.hasPrefix("www.") ? String(host.dropFirst(4)) : host
-    }
-
-    /// Scorebox delta: the earned points on a correct answer, "+0" otherwise;
-    /// hidden entirely in the neutral path. Mirrors the old statsRow suffix.
-    private var scoreDelta: String? {
-        switch verdict {
-        case .correct: return pointsDeltaSuffix
-        case .incorrect, .skipped: return "+0"
-        case .neutral: return nil
-        }
     }
 
     // MARK: - Footer state
@@ -222,30 +237,6 @@ struct ResultView: View {
     private var progressFraction: Double {
         guard totalQuestions > 0 else { return 0 }
         return Double(viewModel.questionsAnswered) / Double(totalQuestions)
-    }
-
-    private var pointsDelta: Double {
-        viewModel.resultEvaluation?.points ?? 0
-    }
-
-    private var pointsDeltaSuffix: String {
-        let pts = pointsDelta
-        let sign = pts >= 0 ? "+" : ""
-        if pts == pts.rounded() {
-            return "\(sign)\(Int(pts))"
-        }
-        return String(format: "%@%.1f", sign, pts)
-    }
-
-    private var formattedScore: String {
-        let score = viewModel.score
-        if score >= 1000 {
-            return String(format: "%.1fk", score / 1000)
-        }
-        if score == score.rounded() {
-            return "\(Int(score))"
-        }
-        return String(format: "%.1f", score)
     }
 
     private var resultHaptic: SensoryFeedback {

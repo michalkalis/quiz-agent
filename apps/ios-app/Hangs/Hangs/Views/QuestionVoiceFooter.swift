@@ -61,7 +61,8 @@ struct QuestionVoiceFooter: View {
                     mode: .command,
                     feedback: viewModel.voiceFeedbackPhase,
                     commandHint: hint,
-                    compact: compact
+                    // #131 Track F: the SE-class `compact` flag is now the slim size.
+                    size: compact ? .slim : .full
                 )
                 .padding(.horizontal, 20)
                 .transition(.opacity)

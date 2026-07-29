@@ -71,9 +71,10 @@ private func makeViewModelNoEvaluation() -> QuizViewModel {
 struct ResultViewInspectorTests {
     // MARK: - Correct variant
 
-    /// Correct: verdict field shows the "correct" chip + check + "NAILED IT.",
-    /// the answer panel labels the user's answer "your answer".
-    @Test("Correct evaluation renders verdict field, NAILED word and 'your answer' panel")
+    /// #131 Track D Variant A: the band states the outcome ONCE — the big
+    /// "NAILED IT." word plus the check badge. The old "correct" status chip is
+    /// gone; the screen must never say the same state twice.
+    @Test("Correct evaluation renders the verdict band, NAILED word and 'your answer' panel")
     func correctVariantRendersVerdictAndAnswerPanel() async throws {
         let evaluation = Evaluation(
             userAnswer: "Uranus", result: .correct, points: 1.0,
@@ -84,7 +85,9 @@ struct ResultViewInspectorTests {
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) { try tree.find(text: "NAILED IT.") }
-            #expect(throws: Never.self) { try tree.find(text: "correct") }
+            #expect(throws: (any Error).self, "the status chip must not repeat the verdict") {
+                try tree.find(text: "correct")
+            }
             #expect(throws: Never.self) {
                 try tree.find(ViewType.Image.self, where: { try $0.actualImage().name() == "checkmark" })
             }
@@ -96,8 +99,9 @@ struct ResultViewInspectorTests {
 
     // MARK: - Incorrect variant
 
-    /// Incorrect: verdict field shows "not quite" + xmark + "MISSED IT.", the
-    /// panel labels the revealed answer "the answer" and struck "you said" line.
+    /// Incorrect: the band says "MISSED IT." once (xmark badge, no "not quite"
+    /// chip), the card labels the revealed answer "the answer", and what the
+    /// driver said drops to the muted meta row under the card.
     @Test("Incorrect evaluation renders MISSED word, 'the answer' panel and 'you said' line")
     func incorrectVariantRendersAnswerPanel() async throws {
         let evaluation = Evaluation(
@@ -109,15 +113,18 @@ struct ResultViewInspectorTests {
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) { try tree.find(text: "MISSED IT.") }
-            #expect(throws: Never.self) { try tree.find(text: "not quite") }
+            #expect(throws: (any Error).self, "the status chip must not repeat the verdict") {
+                try tree.find(text: "not quite")
+            }
             #expect(throws: Never.self) {
                 try tree.find(ViewType.Image.self, where: { try $0.actualImage().name() == "xmark" })
             }
             // The revealed correct answer is the dominant text under "the answer".
             #expect(throws: Never.self) { try tree.find(text: "the answer") }
             #expect(throws: Never.self) { try tree.find(text: "Uranus") }
-            // The wrong answer is footnoted in the "you said" recap line.
+            // The wrong answer is footnoted in the meta row's "you said" entry.
             #expect(throws: Never.self) { try tree.find(text: "you said") }
+            #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "result.metaRow") }
             // NAILED must NOT appear.
             #expect(throws: (any Error).self) { try tree.find(text: "NAILED IT.") }
         }
@@ -126,8 +133,8 @@ struct ResultViewInspectorTests {
     // MARK: - Skipped variant (#131 Track D)
 
     /// A skip must never render "MISSED IT. / not quite" over an answer the
-    /// driver never gave — it gets its own neutral verdict: "SKIPPED." headline,
-    /// a "no answer" chip, and no MISSED/NAILED word at all.
+    /// driver never gave — it gets its own neutral verdict: a "SKIPPED."
+    /// headline over a neutral dash badge, and no MISSED/NAILED word at all.
     @Test("Skipped evaluation renders neutral SKIPPED verdict, not MISSED IT")
     func skippedVariantRendersNeutralVerdict() async throws {
         let evaluation = Evaluation(
@@ -139,7 +146,6 @@ struct ResultViewInspectorTests {
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) { try tree.find(text: "SKIPPED.") }
-            #expect(throws: Never.self) { try tree.find(text: "no answer") }
             #expect(throws: Never.self) {
                 try tree.find(ViewType.Image.self, where: { try $0.actualImage().name() == "minus" })
             }
@@ -215,7 +221,6 @@ struct ResultViewInspectorTests {
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) { try tree.find(text: "MISSED IT.") }
-            #expect(throws: Never.self) { try tree.find(text: "not quite") }
             #expect(vm.resultEvaluation?.result == .partiallyCorrect)
             #expect(vm.resultEvaluation?.points == 0.5)
         }
@@ -471,7 +476,10 @@ struct ResultViewInspectorTests {
 
     // MARK: - read-aloud control
 
-    @Test("Read-aloud control is present in the answer panel")
+    /// Variant A moves read-aloud into the verdict band as an icon-only control
+    /// (a text label would compete with the 56pt verdict word) — the affordance
+    /// must survive the move, so assert its stable identifier, not its label.
+    @Test("Read-aloud control is present in the verdict band")
     func readAloudButtonPresent() async throws {
         let evaluation = Evaluation(
             userAnswer: "Paris", result: .correct, points: 1.0,
@@ -481,16 +489,21 @@ struct ResultViewInspectorTests {
 
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) { try tree.find(button: "read aloud") }
+            #expect(throws: Never.self) {
+                try tree.find(viewWithAccessibilityIdentifier: "result.readAloud")
+            }
         }
     }
 
-    // MARK: - #84 — streak stays off the result screen (logic kept)
+    // MARK: - Score / streak live ONLY in the muted meta row (#131 Track D)
 
-    /// #84 (founder decision 5): the result screen must not surface streak
-    /// anywhere. Variant C dropped the subheadline, so the delta now lives in the
-    /// inline scorebox — assert the "+1" delta and NO "streak" copy in the tree.
-    @Test("Correct variant shows the score delta but no streak echo (#84)")
+    /// #84 (founder decision 5) banned a streak *echo* — a second, celebratory
+    /// statement of progress competing with the verdict. #131 Track D Variant A
+    /// (founder pick 2026-07-29) supersedes the blanket ban: score, delta and
+    /// streak are allowed, but ONLY demoted into the single 10pt mono meta row
+    /// under the card. So: the values render, and they render inside
+    /// `result.metaRow` — never as their own hero block.
+    @Test("Correct variant shows score, delta and streak only inside the meta row")
     func correctVariantHasNoStreakEcho() async throws {
         let evaluation = Evaluation(
             userAnswer: "Paris", result: .correct, points: 1.0,
@@ -502,17 +515,15 @@ struct ResultViewInspectorTests {
 
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) { try tree.find(text: "+1") }
-            #expect(throws: (any Error).self) {
-                try tree.find(ViewType.Text.self, where: {
-                    try $0.string().localizedCaseInsensitiveContains("streak")
-                })
-            }
+            let meta = try tree.find(viewWithAccessibilityIdentifier: "result.metaRow")
+            #expect(throws: Never.self) { try meta.find(text: "+1") }
+            #expect(throws: Never.self) { try meta.find(text: "streak") }
+            #expect(throws: Never.self) { try meta.find(text: "score") }
             #expect(vm.quizStats.currentStreak == 1)
         }
     }
 
-    @Test("Incorrect variant shows the score delta but no streak echo (#84)")
+    @Test("Incorrect variant shows score, delta and streak only inside the meta row")
     func incorrectVariantHasNoStreakEcho() async throws {
         let evaluation = Evaluation(
             userAnswer: "London", result: .incorrect, points: 0.0,
@@ -522,12 +533,9 @@ struct ResultViewInspectorTests {
 
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) { try tree.find(text: "+0") }
-            #expect(throws: (any Error).self) {
-                try tree.find(ViewType.Text.self, where: {
-                    try $0.string().localizedCaseInsensitiveContains("streak")
-                })
-            }
+            let meta = try tree.find(viewWithAccessibilityIdentifier: "result.metaRow")
+            #expect(throws: Never.self) { try meta.find(text: "+0") }
+            #expect(throws: Never.self) { try meta.find(text: "streak") }
         }
     }
 

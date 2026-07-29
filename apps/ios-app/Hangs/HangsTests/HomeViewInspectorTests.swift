@@ -100,4 +100,25 @@ struct HomeViewInspectorTests {
             }
         }
     }
+
+    // MARK: - Listening bar (#131 Track F, Option B)
+
+    /// Availability gating lives at the CALL SITE, not in the bar: the bar is
+    /// rendered iff `commandListenerHint != nil` (window armed AND the recognizer
+    /// ready). With no armed window — the default in these tests — Home must show
+    /// no bar at all, so the app never claims to be listening when it is not.
+    /// This is the gate the retired `CmdListenBar` carried on Home.
+    @Test("Home renders no listening bar while no command window is armed")
+    func homeHidesListenBarWhenNotListening() async throws {
+        let vm = makeViewModel()
+        let view = HomeView(viewModel: vm)
+
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(vm.commandListenerHint == nil)
+            #expect(throws: (any Error).self) {
+                try tree.find(viewWithAccessibilityIdentifier: "listen-bar")
+            }
+        }
+    }
 }

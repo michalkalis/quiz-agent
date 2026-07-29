@@ -3,13 +3,14 @@
 //  Hangs
 //
 //  Issue #127 — Result screen, Variant C "Zero-Scroll Deck" (founder pick
-//  2026-07-28). Three FIXED zones and no screen-level ScrollView, so the header
-//  can never clip: chrome (nav + progress), a colour-washed verdict field
-//  (verdict word + inline score), and an answer panel that fills the rest — the
-//  explanation scrolls INSIDE the panel (founder modification) rather than the
-//  screen. The footer consolidates to a docked glow + CmdListenBar + one row
-//  (STAY/RESUME pill next to the "Next question" CTA). Zone views live in the
-//  sibling ResultScreenSections.swift. SourceWebView sheet preserved.
+//  2026-07-28): FIXED zones and no screen-level ScrollView, so the header can
+//  never clip — only the explanation scrolls, inside the answer card.
+//
+//  #131 Track D, Variant A "Verdikt vládne" (founder pick 2026-07-29) re-ranks
+//  those zones: a dominant full-bleed verdict band first, the answer card
+//  second, and ONE muted mono meta row (score · streak · you said · source)
+//  third. Zone views live in ResultScreenSections / ResultAnswerPanel /
+//  ResultFooter. SourceWebView sheet preserved.
 //
 
 import SwiftUI
@@ -28,8 +29,8 @@ struct ResultView: View {
         ZStack {
             Theme.Hangs.Colors.bg.ignoresSafeArea()
 
-            // NO ScrollView at the screen level — the three zones are laid out in
-            // a fixed VStack, so nothing can clip under the nav (issue #127).
+            // NO ScrollView at the screen level — the zones are laid out in a
+            // fixed VStack, so nothing can clip under the nav (issue #127).
             VStack(spacing: 0) {
                 HangsQuizNav(
                     onClose: { showEndQuizConfirmation = true },
@@ -37,29 +38,35 @@ struct ResultView: View {
                 )
                 HangsProgressBar(progress: progressFraction)
 
-                VStack(spacing: 10) {
-                    ResultVerdictField(
-                        verdict: verdict,
-                        scoreValue: formattedScore,
-                        scoreDelta: scoreDelta
-                    )
-                    ResultAnswerPanel(
-                        verdict: verdict,
-                        answerLabel: answerLabel,
-                        answerText: answerText,
-                        isRecap: isRecap,
-                        explanation: explanationText,
-                        questionStem: questionStem,
-                        userAnswer: viewModel.resultEvaluation?.userAnswer,
-                        sourceDomain: sourceDomain,
-                        onReadAloud: { Task { await viewModel.replayQuestionAudio() } },
-                        onHearIt: { Task { await viewModel.replayFeedbackAudio() } },
-                        onOpenSource: { showSourceWebView = true }
-                    )
-                }
+                // Rank 1 — the verdict, edge to edge (Variant A).
+                ResultVerdictBand(
+                    verdict: verdict,
+                    onReadAloud: { Task { await viewModel.replayQuestionAudio() } }
+                )
+
+                // Rank 2 — the answer + why, filling whatever is left.
+                ResultAnswerPanel(
+                    answerLabel: answerLabel,
+                    answerText: answerText,
+                    isRecap: isRecap,
+                    explanation: explanationText,
+                    onHearIt: { Task { await viewModel.replayFeedbackAudio() } }
+                )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding(.horizontal, 24)
                 .padding(.top, 10)
+
+                // Rank 3 — everything else, in one quiet line.
+                ResultMetaRow(
+                    scoreValue: formattedScore,
+                    scoreDelta: scoreDelta,
+                    streak: viewModel.quizStats.currentStreak,
+                    userAnswer: metaUserAnswer,
+                    sourceDomain: sourceDomain,
+                    onOpenSource: { showSourceWebView = true }
+                )
+                .padding(.horizontal, 24)
+                .padding(.top, 8)
 
                 ResultFooter(
                     feedbackPhase: viewModel.voiceFeedbackPhase,
@@ -132,6 +139,16 @@ struct ResultView: View {
 
     private var answerText: String {
         isRecap ? questionStem ?? "" : canonicalAnswer
+    }
+
+    /// "you said" belongs in the meta row only when the driver actually said
+    /// something that was wrong — never on a correct answer (it is already the
+    /// headline answer) and never on a skip (#131 Track D: nothing was said).
+    private var metaUserAnswer: String? {
+        guard verdict == .incorrect || verdict == .neutral,
+              let said = viewModel.resultEvaluation?.userAnswer,
+              !said.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
+        return said
     }
 
     private var questionStem: String? {

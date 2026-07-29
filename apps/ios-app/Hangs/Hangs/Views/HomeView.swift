@@ -45,10 +45,17 @@ struct HomeView: View {
                 .padding(.bottom, 24)
             }
 
-            // #77/#96 P2: listening indicator (pen `s49sd`) above the primary
-            // action — visible only while the Home command window is armed.
+            // #77/#96 P2: listening indicator above the primary action — visible
+            // only while the Home command window is armed. #131 Track F: the one
+            // shared `ListenBar`, slim here — Home's command never changes and
+            // the screen has content to show.
             if let hint = viewModel.commandListenerHint {
-                CmdListenBar(hint: hint, feedback: viewModel.voiceFeedbackPhase)
+                ListenBar(
+                    mode: .command,
+                    feedback: viewModel.voiceFeedbackPhase,
+                    commandHint: hint,
+                    size: .slim
+                )
                     .padding(.horizontal, 20)
                     .padding(.bottom, 10)
                     .transition(.opacity)

@@ -9,14 +9,19 @@
 //  an answer, never both (founder, 2026-07-28):
 //
 //   - `.command`  — teal, "LISTENING FOR COMMANDS" in the COMMAND language (#120),
-//                    shown on voice-answer question screens while a command window
-//                    is armed. Replaces the floating `CmdListenBar` pill on the
-//                    question screen (CmdListenBar stays on Home/Result).
+//                    shown while a command window is armed.
 //   - `.answer`   — pink, "LISTENING — SAY A–D / TRUE OR FALSE / YOUR ANSWER",
 //                    app-locale localized, shown while answering.
 //
 //  Match/no-match feedback follows #122 Variant C (teal sweep / amber breath) in
-//  both modes and re-tints the bar exactly like CmdListenBar's lit / lit-miss.
+//  both modes and re-tints the bar (lit / lit-miss).
+//
+//  #131 Track F, Option B "full + slim" (founder pick 2026-07-29): this is now
+//  the ONLY listening bar in the app — `CmdListenBar` is retired, Home /
+//  Confirmation / Result all render this one. A `size` parameter is the single
+//  fork allowed: `.full` (~56pt, caption over the words) on quiz screens, `.slim`
+//  (~40pt, short caption + words on ONE row) on Home, where the command never
+//  changes and the screen has content to show.
 //
 //  #131 Track C (founder, 2026-07-29):
 //   - NO mute button. It was a duplicate of the question audio strip's (#85), and
@@ -46,6 +51,13 @@ struct ListenBar: View {
         case answer(AnswerKind) // listening for an answer (pink)
     }
 
+    /// #131 Track F Option B — the one permitted variation. Same colours, same
+    /// states, same component; only the height and the row layout differ.
+    enum Size {
+        case full // quiz screens: caption row over the words to say
+        case slim // Home: short caption + the words on a single ~40pt row
+    }
+
     let mode: Mode
 
     /// #122 Variant C transient tint — overrides the mode accent while live.
@@ -56,8 +68,8 @@ struct ListenBar: View {
     /// the bar on). Command mode only; nil keeps the bar single-line.
     var commandHint: String? = nil
 
-    /// SE-class degrades the bar 44 → 40. Driven by container height, not device.
-    var compact: Bool = false
+    /// Full on quiz screens, slim on Home (#131 Track F).
+    var size: Size = .full
 
     /// Command-mode caption language (#120) — independent of the app/quiz locale.
     var language: CommandLanguage = CommandEngineSelection.current.commandLanguage
@@ -85,8 +97,8 @@ struct ListenBar: View {
         }
     }
 
-    /// Background fill — matched/unmatched are identical to CmdListenBar's
-    /// lit / lit-miss; idle uses the mode's soft accent.
+    /// Background fill — matched/unmatched are the #122 lit /
+    /// lit-miss tints; idle uses the mode's soft accent.
     private var fill: Color {
         switch feedback {
         case .matched: return teal.opacity(0.22)
@@ -111,9 +123,15 @@ struct ListenBar: View {
         }
     }
 
-    private var barHeight: CGFloat {
-        guard subLine != nil else { return compact ? 40 : 44 }
-        return compact ? 50 : 56
+    private var barHeight: CGFloat { Self.height(size: size, hasSubLine: subLine != nil) }
+
+    /// Pure so the founder-picked sizes (full ~56 with the words, slim ~40) are
+    /// assertable without rendering. Internal for tests.
+    static func height(size: Size, hasSubLine: Bool) -> CGFloat {
+        switch size {
+        case .slim: return 40
+        case .full: return hasSubLine ? 56 : 44
+        }
     }
 
     /// The sub-line under the caption: the words to say, or — on a no-match — a
@@ -134,7 +152,10 @@ struct ListenBar: View {
     private var captionText: Text {
         switch mode {
         case .command:
-            return Text(verbatim: VoiceCommandLexicon.listeningCaption(language: language))
+            return Text(verbatim: VoiceCommandLexicon.listeningCaption(
+                language: language,
+                short: size == .slim
+            ))
         case let .answer(kind):
             switch kind {
             case .mcq: return Text("LISTENING — SAY A–D")
@@ -152,23 +173,20 @@ struct ListenBar: View {
                 .symbolEffect(.variableColor.iterative.dimInactiveLayers)
                 .accessibilityHidden(true)
 
-            VStack(alignment: .leading, spacing: 2) {
-                captionText
-                    .font(.hangsMono(12, weight: .medium))
-                    .tracking(0.6)
-                    .textCase(.uppercase)
-                    .foregroundColor(accent)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-
-                if let subLine {
-                    subLine
-                        .font(.hangsBody(12, weight: .medium))
-                        .foregroundColor(accent.opacity(0.9))
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.6)
-                        .accessibilityIdentifier("listen-bar.commands")
+            switch size {
+            case .full:
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 6) {
+                        caption
+                        dots
+                    }
+                    words
                 }
+            case .slim:
+                // One row: the short caption and the words share the 40pt bar.
+                caption
+                dots
+                words
             }
 
             Spacer(minLength: 8)
@@ -177,13 +195,53 @@ struct ListenBar: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel(subLine.map { captionText + Text(verbatim: ". ") + $0 } ?? captionText)
         .accessibilityIdentifier("listen-bar")
-        .padding(.leading, 18)
+        .padding(.leading, size == .slim ? 16 : 18)
         .padding(.trailing, 16)
         .frame(maxWidth: .infinity)
         .frame(height: barHeight)
         .background(Capsule().fill(fill))
         .overlay(Capsule().strokeBorder(border, lineWidth: 1))
         .animation(.easeInOut(duration: 0.25), value: feedback)
+    }
+
+    // MARK: - Parts
+
+    private var caption: some View {
+        captionText
+            .font(.hangsMono(12, weight: .medium))
+            .tracking(0.6)
+            .textCase(.uppercase)
+            .foregroundColor(accent)
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
+    }
+
+    /// The words to say. Command mode only — answer mode's caption IS the
+    /// instruction. Never wraps: it must stay one glanceable line at 40pt too.
+    @ViewBuilder
+    private var words: some View {
+        if let subLine {
+            subLine
+                .font(.hangsBody(12, weight: .medium))
+                .foregroundColor(accent.opacity(0.9))
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+                .accessibilityIdentifier("listen-bar.commands")
+        }
+    }
+
+    /// Three trailing dots fading back (opacity 1 · 0.55 · 0.3) — the "live mic"
+    /// tell migrated from `CmdListenBar` when it was retired (#131 Track F).
+    private var dots: some View {
+        HStack(spacing: 4) {
+            ForEach(Array([1.0, 0.55, 0.3].enumerated()), id: \.offset) { _, opacity in
+                Circle()
+                    .fill(accent)
+                    .frame(width: 5, height: 5)
+                    .opacity(opacity)
+            }
+        }
+        .accessibilityHidden(true)
     }
 }
 
@@ -197,6 +255,9 @@ struct ListenBar: View {
             ListenBar(mode: .answer(.trueFalse), feedback: .unmatched)
             ListenBar(mode: .answer(.open))
             ListenBar(mode: .command, commandHint: #"Povedz „štart" alebo „preskoč""#, language: .slovak)
+            ListenBar(mode: .command, commandHint: #"Say "start""#, size: .slim)
+            ListenBar(mode: .command, feedback: .unmatched, commandHint: #"Povedz „štart""#,
+                      size: .slim, language: .slovak)
         }
         .padding(20)
         .frame(maxWidth: .infinity, maxHeight: .infinity)

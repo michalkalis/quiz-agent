@@ -3702,6 +3702,17 @@
         }
       }
     },
+    "Source: %@" : {
+      "comment" : "Accessibility label for the result screen's source link, naming the site",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zdroj: %@"
+          }
+        }
+      }
+    },
     "Spanish" : {
       "comment" : "Language name (exonym)",
       "localizations" : {
@@ -4934,17 +4945,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "dobrá práca — tu je tvoj výsledok"
-          }
-        }
-      }
-    },
-    "no answer" : {
-      "comment" : "Result verdict chip label when the question was skipped without an answer",
-      "localizations" : {
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "bez odpovede"
           }
         }
       }

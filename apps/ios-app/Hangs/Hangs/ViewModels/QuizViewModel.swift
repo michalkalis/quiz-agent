@@ -267,7 +267,7 @@ final class QuizViewModel: ObservableObject {
     var voiceStartOnHomeEnabled: Bool { voiceCommandCoordinator.voiceStartOnHomeEnabled }
 
     /// "LISTENING FOR COMMANDS" indicator hint — see
-    /// `VoiceCommandCoordinator.commandListenerHint` (CmdListenBar call sites).
+    /// `VoiceCommandCoordinator.commandListenerHint` (ListenBar call sites).
     var commandListenerHint: String? { voiceCommandCoordinator.commandListenerHint }
 
     /// #122 Variant C ambient-glow feedback phase — see

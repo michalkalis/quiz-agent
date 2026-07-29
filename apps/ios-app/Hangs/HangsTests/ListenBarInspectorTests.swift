@@ -8,7 +8,7 @@
 //  it. Verifies: mode captions (incl. the Slovak command caption), that the bar
 //  keeps its id + caption across every feedback phase, the #131 concrete-commands
 //  sub-line (+ its corrective no-match variant), and that no mute lives here.
-//  vzor: CmdListenBarInspectorTests / the old ListeningPillInspectorTests.
+//  vzor: the retired CmdListenBarInspectorTests / ListeningPillInspectorTests.
 //
 
 import Foundation
@@ -186,6 +186,74 @@ struct ListenBarInspectorTests {
             let tree = try view.inspect()
             #expect(throws: Never.self) {
                 try tree.find(viewWithAccessibilityIdentifier: "listen-bar")
+            }
+        }
+    }
+
+    // MARK: - Size variant (#131 Track F, Option B) — migrated CmdListenBar coverage
+
+    /// The founder picked "full + slim" over one uniform bar: Home gets ~40pt so
+    /// the bar stops dominating a screen that has content, quiz screens keep the
+    /// ~56pt bar where voice is the driver's only hand. Asserted on the pure
+    /// mapping so a layout tweak can't silently re-inflate Home's bar.
+    @Test("Slim is ~40pt, full stays ~56pt with the words / 44pt without")
+    func sizeVariantHeights() {
+        #expect(ListenBar.height(size: .slim, hasSubLine: true) == 40)
+        #expect(ListenBar.height(size: .slim, hasSubLine: false) == 40)
+        #expect(ListenBar.height(size: .full, hasSubLine: true) == 56)
+        #expect(ListenBar.height(size: .full, hasSubLine: false) == 44)
+    }
+
+    /// A 40pt single row cannot carry "LISTENING FOR COMMANDS" AND the words to
+    /// say — and the words are the part a driver acts on, so the caption is what
+    /// shortens. Full keeps the whole sentence.
+    @Test("Slim shortens the caption; full keeps the full sentence")
+    func slimUsesShortCaption() async throws {
+        let slim = ListenBar(mode: .command, commandHint: #"Say "start""#, size: .slim, language: .english)
+        try await ViewHosting.host(slim) {
+            let tree = try slim.inspect()
+            #expect(throws: Never.self) { try tree.find(text: "LISTENING") }
+            #expect(throws: (any Error).self) { try tree.find(text: "LISTENING FOR COMMANDS") }
+        }
+
+        let full = ListenBar(mode: .command, commandHint: #"Say "start""#, language: .english)
+        try await ViewHosting.host(full) {
+            let tree = try full.inspect()
+            #expect(throws: Never.self) { try tree.find(text: "LISTENING FOR COMMANDS") }
+        }
+    }
+
+    /// Shrinking the bar must not drop the one thing that tells the driver what
+    /// to say — Home's slim bar still names its command, in the command language.
+    @Test("Slim still names the screen's command words, in the command language")
+    func slimKeepsTheWords() async throws {
+        let hint = VoiceCommandLexicon.hint(on: .home, language: .slovak)
+        let view = ListenBar(mode: .command, commandHint: hint, size: .slim, language: .slovak)
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: Never.self) { try tree.find(text: "POČÚVAM") }
+            let sub = try tree.find(viewWithAccessibilityIdentifier: "listen-bar.commands")
+            #expect(try sub.text().string() == hint)
+            #expect(hint.contains("štart"), "Slovak spoken form, not the English one")
+        }
+    }
+
+    /// Migrated from the retired `CmdListenBar` (which Home used until #131
+    /// Track F): the #122 lit / lit-miss tint is cosmetic, so the slim bar must
+    /// keep its id and its words in every feedback phase — a driver who mis-spoke
+    /// must still be able to read what to say.
+    @Test("Slim bar keeps its id and its words across every feedback phase")
+    func slimStructureStableAcrossPhases() async throws {
+        let hint = VoiceCommandLexicon.hint(on: .home, language: .english)
+        for phase in [VoiceFeedbackPhase.idle, .matched, .unmatched] {
+            let view = ListenBar(mode: .command, feedback: phase, commandHint: hint, size: .slim)
+            try await ViewHosting.host(view) {
+                let tree = try view.inspect()
+                #expect(throws: Never.self, "listen-bar id missing in \(phase)") {
+                    try tree.find(viewWithAccessibilityIdentifier: "listen-bar")
+                }
+                let sub = try tree.find(viewWithAccessibilityIdentifier: "listen-bar.commands")
+                #expect(try sub.text().string().contains(hint), "the words survive \(phase)")
             }
         }
     }

@@ -54,7 +54,7 @@ extension VoiceCommandCoordinator {
     var isRecordingActive: Bool { quizState() == .recording }
 
     /// Hint for the on-screen "LISTENING FOR COMMANDS" indicator (77.12), or
-    /// `nil` when the cue must be hidden. A view shows `CmdListenBar` iff this
+    /// `nil` when the cue must be hidden. A view shows a `ListenBar` iff this
     /// is non-nil. Gated on the recognizer being `.ready`: if the on-device
     /// assets failed to install, the cue must NOT claim to be listening.
     var commandListenerHint: String? {

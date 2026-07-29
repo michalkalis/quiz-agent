@@ -193,12 +193,17 @@ enum VoiceCommandLexicon {
     /// caption itself, which was hardcoded English). Deliberately NOT in
     /// Localizable.xcstrings: it must track the command-engine language, not
     /// the app locale.
+    /// `short` is the slim-bar form (#131 Track F): a 40pt one-row bar cannot
+    /// carry the full sentence AND the words to say, and the words matter more.
     static func listeningCaption(
-        language: CommandLanguage = CommandEngineSelection.current.commandLanguage
+        language: CommandLanguage = CommandEngineSelection.current.commandLanguage,
+        short: Bool = false
     ) -> String {
-        switch language {
-        case .english: return "LISTENING FOR COMMANDS"
-        case .slovak: return "POČÚVAM PRÍKAZY"
+        switch (language, short) {
+        case (.english, false): return "LISTENING FOR COMMANDS"
+        case (.english, true): return "LISTENING"
+        case (.slovak, false): return "POČÚVAM PRÍKAZY"
+        case (.slovak, true): return "POČÚVAM"
         }
     }
 

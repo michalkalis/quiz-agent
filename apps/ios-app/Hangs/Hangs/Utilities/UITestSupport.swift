@@ -139,7 +139,7 @@
             mockSTT = stt
 
             // Silence mock seeded `.unavailable`: keeps the command-listener hint
-            // (and CmdListenBar) hidden exactly as the old `nil` service did — a
+            // (and the ListenBar) hidden exactly as the old `nil` service did — a
             // default `.ready` mock would arm the listener window and render the
             // bar across every `--ui-test` scenario.
             let silence = MockSilenceDetectionService()

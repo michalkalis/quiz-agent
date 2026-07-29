@@ -456,7 +456,9 @@ struct QuestionView: View {
                 ListenBar(
                     mode: .answer(question.sortedAnswerOptions.count == 2 ? .trueFalse : .mcq),
                     feedback: viewModel.voiceFeedbackPhase,
-                    compact: compact
+                    // #131 Track F folded the old SE-class `compact` flag into the
+                    // one size axis: a short container gets the slim bar.
+                    size: compact ? .slim : .full
                 )
                 .padding(.horizontal, 20)
                 .padding(.top, 8)

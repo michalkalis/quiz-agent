@@ -109,8 +109,10 @@ struct AnswerConfirmationView: View {
             }
             .frame(maxHeight: .infinity)
 
+            // #131 Track F: full ListenBar — confirmation is a quiz screen, and
+            // its three commands need the words on their own line.
             if let commandHint, !isEditing {
-                CmdListenBar(hint: commandHint, feedback: commandFeedback)
+                ListenBar(mode: .command, feedback: commandFeedback, commandHint: commandHint)
                     .padding(.top, 12)
                     .transition(.opacity)
             }

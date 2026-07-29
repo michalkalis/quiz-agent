@@ -304,7 +304,7 @@ struct QuestionViewVoiceInspectorTests {
         }
     }
 
-    /// #125 addendum: the floating `CmdListenBar` on the question screen is
+    /// #125 addendum: the floating command pill on the question screen is
     /// replaced by the docked shared `ListenBar` in COMMAND mode — shown while a
     /// command window is armed (same gating as before: `commandListenerHint !=
     /// nil`). Arms the listener the way `VoiceCommandObservabilityTests` does

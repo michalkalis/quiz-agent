@@ -1,7 +1,10 @@
 """Quiz game flow endpoints: start, submit input, get question, rate."""
 
 import logging
+import sentry_sdk
 from fastapi import APIRouter, Depends, HTTPException, Request
+from sqlalchemy.exc import OperationalError
+from sqlalchemy.exc import TimeoutError as SATimeoutError
 
 from ..deps import (
     StartQuizRequest,
@@ -33,6 +36,18 @@ from quiz_shared.models.phase import SessionPhase
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+# #131 Track A: DB connection/pool errors typical of a Fly `auto_stop_machines`
+# cold wake (staging) — surface these as a retryable 503 instead of a raw 500.
+# ``OperationalError`` covers DBAPI/asyncpg disconnects; ``SATimeoutError`` is
+# the SQLAlchemy pool-checkout timeout (pool exhaustion); ``ConnectionError``/
+# ``TimeoutError`` catch a raw socket failure before SQLAlchemy wraps it.
+_TRANSIENT_INFRA_ERRORS = (
+    OperationalError,
+    SATimeoutError,
+    ConnectionError,
+    TimeoutError,
+)
 
 
 @router.post("/sessions/{session_id}/start", response_model=InputResponse)
@@ -198,12 +213,27 @@ async def submit_input(
     if session.phase not in (SessionPhase.ASKING, SessionPhase.AWAITING_ANSWER):
         raise HTTPException(status_code=400, detail="Not waiting for input")
 
-    flow_result = await quiz_flow.process_answer(
-        session=session,
-        answer_text=body.input,
-        participant_id=body.participant_id,
-        include_audio=audio,
-    )
+    try:
+        flow_result = await quiz_flow.process_answer(
+            session=session,
+            answer_text=body.input,
+            participant_id=body.participant_id,
+            include_audio=audio,
+        )
+    except _TRANSIENT_INFRA_ERRORS as e:
+        # Cold-wake DB hiccup (staging auto_stop_machines) or pool exhaustion —
+        # retryable, not a bug. iOS retries on 502/503 (isTransientStartError).
+        logger.warning(
+            "Transient infra error in submit_input (session=%s): %s", session_id, e
+        )
+        raise HTTPException(
+            status_code=503, detail="Temporary server issue, please retry"
+        )
+    except Exception as e:
+        logger.error("Unexpected exception in submit_input: %s", e, exc_info=True)
+        if sentry_sdk.get_client().is_active():
+            sentry_sdk.capture_exception(e)
+        raise HTTPException(status_code=500, detail="Failed to process your answer")
 
     # Ghost-question guard (#66): a non-answer intent leaves the session
     # untouched (no current_question_id advance, no question recorded). Surface

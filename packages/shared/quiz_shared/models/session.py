@@ -83,6 +83,14 @@ class QuizSession(BaseModel):
     asked_question_ids: List[str] = Field(
         default_factory=list, description="IDs of questions already asked this session"
     )
+    client_excluded_ids: List[str] = Field(
+        default_factory=list,
+        description=(
+            "Client-supplied cross-session history (from /start's "
+            "excluded_question_ids), excluded from retrieval for every "
+            "question in the session — not just the first"
+        ),
+    )
     skipped_question_numbers: List[int] = Field(
         default_factory=list, description="Question numbers that were skipped"
     )

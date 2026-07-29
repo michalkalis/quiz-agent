@@ -93,6 +93,10 @@ async def start_quiz(
 
         client_excluded_ids = body.excluded_question_ids or []
         logger.debug("Client excluded %d questions", len(client_excluded_ids))
+        # Persist on the session so every subsequent question (voice.py's
+        # get_next_question has no client history of its own) keeps excluding
+        # cross-session history, not just the first one.
+        session.client_excluded_ids = client_excluded_ids
 
         # Phase transition is deferred to just before update_session() — if
         # question retrieval below fails, the stored session stays in IDLE

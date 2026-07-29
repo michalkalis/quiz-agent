@@ -96,7 +96,7 @@ class QuestionRetriever:
 
         # Step 4: Merge session-scoped and client-side exclusions
         session_excluded = session.asked_question_ids
-        client_excluded = client_excluded_ids or []
+        client_excluded = list(client_excluded_ids or []) + session.client_excluded_ids
         all_excluded_ids = list(set(session_excluded + client_excluded))
 
         logger.debug(

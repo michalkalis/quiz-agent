@@ -157,19 +157,25 @@ def test_validation_fail_retries_within_call(service):
 
 
 def test_feedback_error_then_success_recomputes(service):
-    """translate_feedback's only non-success path (except → original) is likewise never cached."""
+    """translate_feedback's exhausted-retries fallback is likewise never cached — a
+    transient outage must not pin English feedback to that text for the process life."""
     feedback = "Correct! Well done."
     feedback_sk = "Správne! Výborne."
     service.client.chat.completions.create = AsyncMock(
-        side_effect=[Exception("boom"), mock_response(feedback_sk)]
+        side_effect=[
+            Exception("boom"),
+            Exception("boom"),
+            Exception("boom"),
+            mock_response(feedback_sk),
+        ]
     )
 
     first = asyncio.run(service.translate_feedback(feedback, "sk"))
     second = asyncio.run(service.translate_feedback(feedback, "sk"))
 
-    assert first == feedback  # error fell back to original (not cached)
+    assert first == feedback  # all 3 attempts failed → original (not cached)
     assert second == feedback_sk
-    assert service.client.chat.completions.create.call_count == 2
+    assert service.client.chat.completions.create.call_count == 4
 
 
 def test_noop_shortcircuit_untouched(service):
@@ -317,11 +323,18 @@ def test_question_fallbacks_not_persisted_to_disk(service, tmp_path):
 
 
 def test_feedback_fallback_not_persisted_to_disk(service, tmp_path):
-    """translate_feedback's except-fallback likewise never reaches disk."""
+    """Neither translate_feedback failure mode may poison the durable store: the first
+    call burns all 3 attempts (exception, empty completion, exception) and writes
+    nothing, so the second call's fresh success is the only row on disk."""
     feedback = "Correct! Well done."
     feedback_sk = "Správne! Výborne."
     service.client.chat.completions.create = AsyncMock(
-        side_effect=[Exception("boom"), mock_response(feedback_sk)]
+        side_effect=[
+            Exception("boom"),
+            mock_response(""),
+            Exception("boom"),
+            mock_response(feedback_sk),
+        ]
     )
 
     asyncio.run(service.translate_feedback(feedback, "sk"))

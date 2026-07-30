@@ -132,8 +132,9 @@ def test_third_attempt_recovers_no_report_and_caches(service, tmp_path):
 
 
 def test_feedback_raising_reports_once(service):
-    """translate_feedback keeps its single-attempt fallback but must now report
-    exactly once, with the exception class and session_id when passed."""
+    """translate_feedback spends the same retry budget as translate_question (it carries
+    the announced correct answer, so English there is just as audible), then reports
+    exactly once with the exception class and session_id when passed."""
     service.client.chat.completions.create = AsyncMock(side_effect=Exception("boom"))
 
     with patch("app.translation.translator.sentry_sdk") as mock_sentry:
@@ -142,7 +143,7 @@ def test_feedback_raising_reports_once(service):
         )
 
     assert result == "Correct!"
-    assert service.client.chat.completions.create.call_count == 1  # no retry loop
+    assert service.client.chat.completions.create.call_count == 3  # full budget spent
     mock_sentry.capture_message.assert_called_once()
     message = mock_sentry.capture_message.call_args[0][0]
     assert "Exception" in message

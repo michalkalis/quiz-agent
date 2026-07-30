@@ -446,8 +446,12 @@ class TranslationService:
     ) -> str:
         """Translate feedback message to target language.
 
+        Also carries the correct answer the session announces out loud
+        (``flow._translate_correct_answer``), so a bad translation here is heard by
+        the player as the answer itself.
+
         Args:
-            feedback: Feedback text (e.g., "Correct!", "Incorrect")
+            feedback: Feedback text (e.g., "Correct!", "Incorrect") or a correct answer
             target_language: ISO 639-1 code
             session_id: Quiz session id, used only for the fail-loud fallback message
 
@@ -465,47 +469,82 @@ class TranslationService:
 
         target_lang_name = LANGUAGE_NAMES.get(target_language, target_language)
 
-        try:
-            response = await self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": f"You are a professional translator. Translate short feedback messages to {target_lang_name}. Return ONLY the translation, nothing else.",
-                    },
-                    {
-                        "role": "user",
-                        "content": f"Translate to {target_lang_name}: {feedback}",
-                    },
-                ],
-                # No temperature: claude-opus-5 rejects sampling params (400).
-                # max_tokens covers thinking + output on reasoning models.
-                max_tokens=500,
+        # Validate-then-retry, same contract as translate_question: the store is
+        # durable with no TTL or invalidation, so storing raw output would serve one
+        # bad — or empty — translation of the announced answer forever under that
+        # (text, language) key. Trade-off: text that legitimately contracts in the
+        # target language ("United States of America" → "USA") trips the ratio guard
+        # in _validate_translation and falls back to English uncached; the Sentry
+        # report below is the calibration data for that threshold.
+        last_failure: dict[str, object] = {}
+        for attempt in range(TRANSLATION_MAX_ATTEMPTS):
+            try:
+                response = await self.client.chat.completions.create(
+                    model=self.model,
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": f"You are a professional translator. Translate short feedback messages to {target_lang_name}. Return ONLY the translation, nothing else. Do NOT answer, explain or expand the text, only translate it.",
+                        },
+                        {
+                            "role": "user",
+                            "content": f"Translate to {target_lang_name}: {feedback}",
+                        },
+                    ],
+                    # No temperature: claude-opus-5 rejects sampling params (400).
+                    # max_tokens covers thinking + output on reasoning models.
+                    max_tokens=500,
+                )
+
+                translated = response.choices[0].message.content.strip()
+
+                # Remove quotes if added
+                if translated.startswith('"') and translated.endswith('"'):
+                    translated = translated[1:-1]
+                if translated.startswith("'") and translated.endswith("'"):
+                    translated = translated[1:-1]
+
+                validated = self._validate_translation(
+                    feedback, translated, target_language
+                )
+                if validated is None:
+                    logger.warning(
+                        "Feedback translation validation failed (attempt %d) for '%s'",
+                        attempt + 1,
+                        feedback[:50],
+                    )
+                    last_failure = {
+                        "kind": "validation_reject",
+                        "translated_len": len(translated),
+                    }
+                    continue
+
+                self._maybe_store(cache_key, validated)
+                return validated
+
+            except Exception as e:
+                logger.warning(
+                    "Feedback translation failed (attempt %d): %s", attempt + 1, e
+                )
+                last_failure = {"kind": "api_error", "exception": type(e).__name__}
+
+        detail_parts = [
+            f"target_language={target_language!r}",
+            f"kind={last_failure.get('kind')!r}",
+            f"feedback_len={len(feedback)}",
+        ]
+        if last_failure.get("kind") == "api_error":
+            detail_parts.append(f"exception={last_failure.get('exception')!r}")
+        elif last_failure.get("kind") == "validation_reject":
+            detail_parts.append(
+                f"translated_len={last_failure.get('translated_len', 0)}"
             )
-
-            translated = response.choices[0].message.content.strip()
-
-            # Remove quotes if added
-            if translated.startswith('"') and translated.endswith('"'):
-                translated = translated[1:-1]
-            if translated.startswith("'") and translated.endswith("'"):
-                translated = translated[1:-1]
-
-            self._maybe_store(cache_key, translated)
-            return translated
-
-        except Exception as e:
-            detail_parts = [
-                f"target_language={target_language!r}",
-                f"exception={type(e).__name__!r}",
-                f"feedback_len={len(feedback)}",
-            ]
-            if session_id is not None:
-                detail_parts.append(f"session_id={session_id!r}")
-            message = (
-                "Feedback translation failed, falling back to original (#107): "
-                f"{', '.join(detail_parts)}"
-            )
-            logger.warning(message)
-            sentry_sdk.capture_message(message, level="warning")
-            return feedback  # Fallback to original (not cached)
+        if session_id is not None:
+            detail_parts.append(f"session_id={session_id!r}")
+        message = (
+            "Feedback translation exhausted retries, falling back to original "
+            f"(#107): {', '.join(detail_parts)}"
+        )
+        logger.warning(message)
+        sentry_sdk.capture_message(message, level="warning")
+        return feedback  # Fallback to original (not cached)

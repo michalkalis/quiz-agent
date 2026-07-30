@@ -31,6 +31,7 @@ from fastapi import FastAPI
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from app.api.deps import get_arq_pool, get_jws_verifier
+from app.api.v1 import orders as orders_module
 from app.api.v1.orders import router as orders_router
 from app.config import Settings, get_settings
 from app.db.engine import build_engine, normalize_async_url
@@ -160,3 +161,73 @@ async def client(
         base_url="http://test",
     ) as ac:
         yield ac
+
+
+@pytest_asyncio.fixture
+async def per_request_client(
+    test_engine: AsyncEngine,
+    test_chain: TestChain,
+    arq_mock: MagicMock,
+    _clean_orders: None,
+) -> AsyncIterator[httpx.AsyncClient]:
+    """Same test app as `client`, but every request gets its OWN AsyncSession.
+
+    WHY a second wiring exists: `client` overrides `get_session` with ONE
+    shared session for the whole test. That is fine for sequential assertions,
+    but it structurally MASKS any defect that only exists between two
+    concurrent DB transactions — two requests sharing one session also share
+    one transaction, so neither can ever collide with the other's uncommitted
+    row. The concurrent-duplicate-create race (adversarial audit 2026-07-30)
+    was invisible under `client` and reproducible only here.
+
+    Production is the per-request shape (`app.db.session.get_session` opens a
+    session per request), so this fixture is the faithful one for anything
+    concurrency-sensitive.
+    """
+    verifier = AppleJWSVerifier(
+        test_chain.root_cert,
+        "com.missinghue.hangs",
+        "Sandbox",
+    )
+    factory = async_sessionmaker(
+        test_engine, class_=AsyncSession, expire_on_commit=False, autoflush=False
+    )
+
+    async def _override_session() -> AsyncIterator[AsyncSession]:
+        async with factory() as s:
+            yield s
+
+    test_settings = Settings(
+        admin_api_key=TEST_ADMIN_KEY,
+        auth_jwt_secret=TEST_JWT_SECRET,
+    )
+
+    test_app = FastAPI()
+    test_app.include_router(orders_router)
+    test_app.dependency_overrides[get_session] = _override_session
+    test_app.dependency_overrides[get_jws_verifier] = lambda: verifier
+    test_app.dependency_overrides[get_arq_pool] = lambda: arq_mock
+    test_app.dependency_overrides[get_settings] = lambda: test_settings
+
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=test_app),
+        base_url="http://test",
+    ) as ac:
+        yield ac
+
+
+@pytest.fixture
+def sentry_messages(monkeypatch: pytest.MonkeyPatch) -> list[str]:
+    """Collect `sentry_sdk.capture_message` bodies emitted by the orders route.
+
+    The verified→reject trail (#133 V5) is only useful if it actually reaches
+    Sentry, so the tests assert the capture, not just the log line. Patched on
+    the module object the route calls through and reverted by monkeypatch.
+    """
+    captured: list[str] = []
+    monkeypatch.setattr(
+        orders_module.sentry_sdk,
+        "capture_message",
+        lambda message, *args, **kwargs: captured.append(message),
+    )
+    return captured

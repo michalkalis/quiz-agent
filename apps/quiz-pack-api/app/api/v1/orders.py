@@ -24,16 +24,19 @@ accepted for the founder-only phase (#95 Session 1).
 
 from __future__ import annotations
 
+import logging
 import uuid
 from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Annotated, Optional
 
+import sentry_sdk
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict
 from redis.asyncio import Redis
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sse_starlette.sse import EventSourceResponse
 
@@ -45,7 +48,12 @@ from ...db.models.order import GenerationOrder
 from ...db.models.pack import QuestionPack
 from ...db.session import AsyncSessionLocal, get_session
 from ...sse import event_stream
-from ...storekit import AppleJWSVerifier, JWSError, JWSWrongBundle
+from ...storekit import (
+    AppleJWSVerifier,
+    JWSError,
+    JWSWrongBundle,
+    SignedTransaction,
+)
 from ...storekit.jws_cache import verify_jws_cached
 from ..deps import (
     admin_key_presented,
@@ -56,6 +64,8 @@ from ..deps import (
     optional_user,
     require_user,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/v1/orders", tags=["orders"])
 
@@ -161,6 +171,55 @@ def _validate_guards(body: CreateOrderRequest) -> None:
         )
 
 
+def _report_verified_reject(
+    tx: Optional[SignedTransaction], reason: str, detail: str
+) -> None:
+    """Leave a trail when an already-VERIFIED (Apple-charged) purchase is rejected.
+
+    Adversarial audit 2026-07-30: past JWS verification Apple has already
+    charged the customer, yet both post-verification reject branches below
+    (unmapped `product_id`, guard violation) returned a 4xx with **zero**
+    trail anywhere — this module had no logger, Sentry only reports 5xx, and
+    `uvicorn.access` is pinned to WARNING (app/logging_config.py). A real
+    purchase could therefore disappear with nothing to reconcile or refund
+    from.
+
+    Deliberately observability-only: it does NOT persist an order row for the
+    reject. Recording rejected purchases as first-class rows (a record-first
+    order lifecycle, so support has a durable handle on a paid-but-refused
+    transaction) is a separate design decision — it needs a schema/status
+    change plus a refund policy, not a log line.
+    """
+    if tx is None:
+        # Admin path (#95): no Apple charge behind the request, nothing to
+        # reconcile — a rejected founder order is just a bad request.
+        return
+    message = (
+        "verified StoreKit purchase rejected before any order row was written: "
+        f"reason={reason} transaction_id={tx.transaction_id} "
+        f"product_id={tx.product_id} detail={detail}"
+    )
+    logger.error(message)
+    sentry_sdk.capture_message(message, level="error")
+
+
+def _idempotent_replay_response(existing: GenerationOrder) -> JSONResponse:
+    """The 200 body returned when this transaction_id already has an order.
+
+    Shared by the two ways a duplicate create is detected: the up-front SELECT
+    and the concurrent-insert loser (see `create_order`), so both replies are
+    byte-identical — a client must not be able to tell which path it hit.
+    """
+    return JSONResponse(
+        status_code=200,
+        content={
+            "order_id": str(existing.id),
+            "status": existing.status,
+            "created_at": existing.created_at.isoformat(),
+        },
+    )
+
+
 # ---------------------------------------------------------------------------
 # Routes
 # ---------------------------------------------------------------------------
@@ -188,8 +247,15 @@ async def create_order(
     never matches). `require_user` raises 401 before this body runs when the
     bearer is missing or invalid, and 503 if bearer auth isn't configured.
 
-    Returns 202 on creation and 200 on idempotent replay (same transaction_id).
+    Returns 202 on creation and 200 on idempotent replay (same transaction_id),
+    including when two requests for one purchase race each other into the
+    INSERT — see the `IntegrityError` branch below.
     """
+    # Non-None once a JWS verified, i.e. once Apple has certainly charged for
+    # this transaction — every reject after that point must leave a trail
+    # (`_report_verified_reject`).
+    verified_tx: Optional[SignedTransaction] = None
+
     if x_storekit_jws:
         # 1. Verify JWS
         try:
@@ -198,9 +264,15 @@ async def create_order(
             raise HTTPException(status_code=403, detail=str(exc)) from exc
         except JWSError as exc:
             raise HTTPException(status_code=401, detail=str(exc)) from exc
+        verified_tx = tx
 
         # 2. Cross-check body vs JWS payload
         if body.transaction_id != tx.transaction_id or body.product_id != tx.product_id:
+            _report_verified_reject(
+                verified_tx,
+                "body_jws_mismatch",
+                f"body=({body.transaction_id!r}, {body.product_id!r})",
+            )
             raise HTTPException(status_code=400, detail="JWS payload does not match body")
     elif admin_key_presented(request):
         check_admin_key(request, settings)
@@ -218,26 +290,27 @@ async def create_order(
     # 3. Authoritative target_count from product_id
     target_count = _PRODUCT_TIERS.get(body.product_id)
     if target_count is None:
-        raise HTTPException(
-            status_code=400,
-            detail=f"unknown product_id {body.product_id!r}; valid: {sorted(_PRODUCT_TIERS)}",
+        detail = (
+            f"unknown product_id {body.product_id!r}; valid: {sorted(_PRODUCT_TIERS)}"
         )
+        # A verified purchase for a product this deploy doesn't map (App Store
+        # Connect tier added ahead of the backend) is money taken for nothing —
+        # report it before the 400.
+        _report_verified_reject(verified_tx, "unknown_product_id", detail)
+        raise HTTPException(status_code=400, detail=detail)
 
     # 4. Guards (before any DB write)
-    _validate_guards(body)
+    try:
+        _validate_guards(body)
+    except HTTPException as exc:
+        _report_verified_reject(verified_tx, "guard_violation", str(exc.detail))
+        raise
 
     # 5. Idempotency check
     stmt = select(GenerationOrder).where(GenerationOrder.transaction_id == body.transaction_id)
     existing = (await session.execute(stmt)).scalars().first()
     if existing is not None:
-        return JSONResponse(  # type: ignore[return-value]
-            status_code=200,
-            content={
-                "order_id": str(existing.id),
-                "status": existing.status,
-                "created_at": existing.created_at.isoformat(),
-            },
-        )
+        return _idempotent_replay_response(existing)  # type: ignore[return-value]
 
     # 6. Insert order + job
     order = GenerationOrder(
@@ -256,24 +329,46 @@ async def create_order(
         # handoff instead of a stuck order.
         enqueued_at=datetime.now(timezone.utc),
     )
-    session.add(order)
-    await session.flush()  # get order.id
+    try:
+        session.add(order)
+        await session.flush()  # get order.id
 
-    job = GenerationJob(order_id=order.id, status="queued")
-    session.add(job)
-    await session.flush()  # get job.id
+        job = GenerationJob(order_id=order.id, status="queued")
+        session.add(job)
+        await session.flush()  # get job.id
 
-    order.job_id = job.id
-    await session.flush()
+        order.job_id = job.id
+        await session.flush()
 
-    # Read the attempt key before the commit (same reason as in retry_order:
-    # afterwards the ORM would need a lazy refresh, unavailable on this async
-    # session). Counters are 0/0 here, so this first attempt has the same
-    # deterministic id any duplicate enqueue of it would compute — arq drops the
-    # duplicate instead of running two paid pipelines for one purchase.
-    enqueue_id = attempt_job_id(order.id, job)
+        # Read the attempt key before the commit (same reason as in retry_order:
+        # afterwards the ORM would need a lazy refresh, unavailable on this async
+        # session). Counters are 0/0 here, so this first attempt has the same
+        # deterministic id any duplicate enqueue of it would compute — arq drops the
+        # duplicate instead of running two paid pipelines for one purchase.
+        enqueue_id = attempt_job_id(order.id, job)
 
-    await session.commit()
+        await session.commit()
+    except IntegrityError:
+        # Concurrent duplicate create (adversarial audit 2026-07-30, reproduced
+        # with two simultaneous POSTs on per-request sessions): both requests
+        # can pass the step-5 SELECT — each in its own transaction, neither
+        # seeing the other's uncommitted row — and then the loser's INSERT
+        # trips the `transaction_id` unique index. Nothing caught that, so the
+        # loser got a 500 even though its Apple purchase had succeeded: the
+        # client sees a failed order it already paid for, and Sentry sees a
+        # fake outage. The loser is not an error — it is exactly the idempotent
+        # replay case, so roll back and answer with the winner's row via the
+        # same response builder the step-5 path uses.
+        #
+        # Enqueue semantics are unchanged: only the winner reaches the enqueue
+        # below, so one purchase still runs exactly one paid pipeline.
+        await session.rollback()
+        existing = (await session.execute(stmt)).scalars().first()
+        if existing is None:
+            # Not the transaction_id collision (some other constraint) — don't
+            # swallow it into a fake 200.
+            raise
+        return _idempotent_replay_response(existing)  # type: ignore[return-value]
 
     # 7. Enqueue ARQ — after commit so the worker can read the row.
     # #103 F4a: a Redis blip here used to leave the order 'pending' forever

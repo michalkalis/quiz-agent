@@ -10,7 +10,10 @@ Bring up the local test DB first: `make dev-db` from apps/quiz-pack-api/.
 
 from __future__ import annotations
 
+import asyncio
+import logging
 import uuid
+from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock
 
 import pytest
@@ -18,9 +21,12 @@ import httpx
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.db.models.job import GenerationJob
 from app.db.models.order import GenerationOrder
 from tests.api.conftest import TEST_ADMIN_KEY, _bearer
 from tests.storekit._chain_fixtures import JWSFactory
+
+ORDERS_LOGGER = "app.api.v1.orders"
 
 # #103 F3: order creation now requires a bearer alongside the StoreKit JWS —
 # every JWS-authenticated create in this module needs one too.
@@ -121,49 +127,132 @@ async def test_create_order_idempotent_200(
 
 
 @pytest.mark.asyncio
-async def test_create_order_body_mismatch_400(
+async def test_create_order_body_mismatch_400_is_reported(
     client: httpx.AsyncClient,
     make_jws: JWSFactory,
+    sentry_messages: list[str],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Body transaction_id differs from JWS payload → 400."""
+    """Body transaction_id differs from JWS payload → 400, with a trail.
+
+    The JWS verified — Apple charged someone — so the reject must leave the
+    same reconciliation trail as the other verified-then-refused branches.
+    """
     jws = make_jws(payload_overrides={"transactionId": "jws-tx-id"})
     body = _valid_body(tx_id="different-tx-id")  # mismatch
-    resp = await client.post(
-        "/v1/orders", json=body, headers={"X-StoreKit-JWS": jws, **BEARER}
-    )
+    with caplog.at_level(logging.ERROR, logger=ORDERS_LOGGER):
+        resp = await client.post(
+            "/v1/orders", json=body, headers={"X-StoreKit-JWS": jws, **BEARER}
+        )
     assert resp.status_code == 400
     assert "JWS payload does not match body" in resp.json()["detail"]
+    logged = [r.message for r in caplog.records if r.name == ORDERS_LOGGER]
+    assert any("body_jws_mismatch" in m and "jws-tx-id" in m for m in logged)
+    assert any(
+        "body_jws_mismatch" in m and "jws-tx-id" in m for m in sentry_messages
+    ), sentry_messages
 
 
 @pytest.mark.asyncio
-async def test_create_order_unknown_product_400(
+async def test_create_order_unknown_product_400_is_reported(
     client: httpx.AsyncClient,
     make_jws: JWSFactory,
+    test_session: AsyncSession,
+    sentry_messages: list[str],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Unknown product_id → 400."""
+    """Unknown product_id → 400, no row, and a LOUD trail.
+
+    The status code was never the risk here. This branch runs *after* the JWS
+    verified, so Apple has already charged the customer — and it used to reject
+    with zero trail anywhere (#133 V5: no logger in the module, Sentry reports
+    only 5xx, `uvicorn.access` pinned to WARNING). A product tier added in App
+    Store Connect ahead of `_PRODUCT_TIERS` would silently take money and leave
+    nothing to reconcile or refund from, so the log + Sentry capture (carrying
+    transaction_id and product_id) is the part under test.
+    """
     tx_id = "tx-unknown-product"
     jws = make_jws(payload_overrides={"transactionId": tx_id, "productId": "pack_99"})
     body = _valid_body(tx_id=tx_id, product_id="pack_99")
-    resp = await client.post(
-        "/v1/orders", json=body, headers={"X-StoreKit-JWS": jws, **BEARER}
-    )
+
+    with caplog.at_level(logging.ERROR, logger=ORDERS_LOGGER):
+        resp = await client.post(
+            "/v1/orders", json=body, headers={"X-StoreKit-JWS": jws, **BEARER}
+        )
+
     assert resp.status_code == 400
     assert "unknown product_id" in resp.json()["detail"]
 
+    # No order row for a rejected purchase (record-first lifecycle is a separate
+    # design decision — see _report_verified_reject).
+    test_session.expire_all()
+    orders = (await test_session.execute(select(GenerationOrder))).scalars().all()
+    assert orders == []
+
+    logged = [r.message for r in caplog.records if r.name == ORDERS_LOGGER]
+    assert any(
+        tx_id in m and "pack_99" in m and "unknown_product_id" in m for m in logged
+    ), logged
+    assert any(
+        tx_id in m and "pack_99" in m and "unknown_product_id" in m
+        for m in sentry_messages
+    ), sentry_messages
+
 
 @pytest.mark.asyncio
-async def test_create_order_bad_language_422(
+async def test_create_order_bad_language_422_is_reported(
     client: httpx.AsyncClient,
     make_jws: JWSFactory,
+    test_session: AsyncSession,
+    sentry_messages: list[str],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Unsupported language code → 422."""
-    jws = make_jws(payload_overrides={"transactionId": "tx-bad-lang"})
-    body = {**_valid_body(tx_id="tx-bad-lang"), "language": "de"}
-    resp = await client.post(
-        "/v1/orders", json=body, headers={"X-StoreKit-JWS": jws, **BEARER}
-    )
+    """Unsupported language code → 422, no row, and the same LOUD trail.
+
+    Second half of the #133 V5 boundary: a guard violation rejects an
+    already-charged transaction exactly like the unmapped-product branch, so it
+    must be equally reconcilable. Asserting only one branch would let the
+    reporting hook be wired to one call site and silently missing from the other.
+    """
+    tx_id = "tx-bad-lang"
+    jws = make_jws(payload_overrides={"transactionId": tx_id})
+    body = {**_valid_body(tx_id=tx_id), "language": "de"}
+
+    with caplog.at_level(logging.ERROR, logger=ORDERS_LOGGER):
+        resp = await client.post(
+            "/v1/orders", json=body, headers={"X-StoreKit-JWS": jws, **BEARER}
+        )
+
     assert resp.status_code == 422
     assert "language" in resp.json()["detail"]
+
+    test_session.expire_all()
+    orders = (await test_session.execute(select(GenerationOrder))).scalars().all()
+    assert orders == []
+
+    logged = [r.message for r in caplog.records if r.name == ORDERS_LOGGER]
+    assert any(tx_id in m and "guard_violation" in m for m in logged), logged
+    assert any(
+        tx_id in m and "guard_violation" in m for m in sentry_messages
+    ), sentry_messages
+
+
+@pytest.mark.asyncio
+async def test_admin_reject_is_not_reported_as_lost_purchase(
+    client: httpx.AsyncClient,
+    sentry_messages: list[str],
+) -> None:
+    """An admin-path reject must NOT page anyone: no Apple charge behind it.
+
+    The trail exists to catch *money* taken for nothing. Firing it for founder
+    (#95 admin-key) orders, which are free, would train everyone to ignore it.
+    """
+    body = {**_valid_body(tx_id="admin-tx-bad-lang"), "language": "de"}
+    resp = await client.post(
+        "/v1/orders", json=body, headers={"X-Admin-Key": TEST_ADMIN_KEY, **BEARER}
+    )
+    assert resp.status_code == 422
+    assert sentry_messages == []
 
 
 @pytest.mark.asyncio
@@ -271,6 +360,121 @@ async def test_create_order_wrong_bundle_jws_rejected_no_row(
     orders = (await test_session.execute(select(GenerationOrder))).scalars().all()
     assert orders == [], f"foreign-bundle JWS created order rows: {[o.id for o in orders]}"
     arq_mock.enqueue_job.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_create_order_revoked_jws_rejected_no_row(
+    client: httpx.AsyncClient,
+    make_jws: JWSFactory,
+    test_session: AsyncSession,
+    arq_mock: MagicMock,
+) -> None:
+    """A refunded transaction must not buy a pack at the route either.
+
+    `tests/storekit/test_verifier.py` proves `verify()` raises on a revoked
+    payload; this proves the money path acts on it — a customer who charged back
+    must not walk away with a freshly generated (LLM+Tavily billed) pack. Same
+    shape as the tampered/wrong-bundle route tests: status code alone is not
+    enough, because a reject that already committed the order would still be a
+    free pack via `POST /retry`.
+    """
+    tx_id = "tx-revoked"
+    revoked_ms = int(
+        (datetime.now(timezone.utc) - timedelta(days=2)).timestamp() * 1000
+    )
+    jws = make_jws(
+        payload_overrides={
+            "transactionId": tx_id,
+            "revocationDate": revoked_ms,
+            "revocationReason": 1,
+        }
+    )
+
+    resp = await client.post(
+        "/v1/orders",
+        json=_valid_body(tx_id=tx_id),
+        headers={"X-StoreKit-JWS": jws, **BEARER},
+    )
+    # 401: JWSRevoked is a JWSError, and the route maps every JWSError except a
+    # bundle mismatch to "unauthenticated".
+    assert resp.status_code == 401, resp.text
+    assert "revoked" in resp.json()["detail"]
+
+    test_session.expire_all()
+    orders = (await test_session.execute(select(GenerationOrder))).scalars().all()
+    assert orders == [], f"revoked JWS created order rows: {[o.id for o in orders]}"
+    arq_mock.enqueue_job.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_concurrent_duplicate_create_is_idempotent_not_500(
+    per_request_client: httpx.AsyncClient,
+    make_jws: JWSFactory,
+    test_session: AsyncSession,
+    arq_mock: MagicMock,
+) -> None:
+    """Two simultaneous POSTs for ONE purchase → one order, one enqueue, no 500.
+
+    Reproduced in the adversarial audit 2026-07-30 (#133 V4): both requests
+    passed the idempotency SELECT (separate transactions, neither seeing the
+    other's uncommitted row) and the loser's INSERT tripped the
+    `transaction_id` unique index. Nothing caught the `IntegrityError`, so the
+    loser got a 500 — a user whose Apple purchase had *succeeded* saw a failed
+    order, and Sentry saw an outage that never happened. The client legitimately
+    produces this: a retry on a slow response, or StoreKit re-delivering the
+    same transaction.
+
+    Note the fixture: this needs `per_request_client` (one session per request).
+    The shared-session `client` fixture cannot express the race at all.
+
+    Asserted invariants, in the order they'd bite:
+      - neither request 5xx's (the reported defect),
+      - exactly one 202 + one 200 — the loser is served the winner's row, not a
+        second order for one payment,
+      - exactly one order row and one job row (the loser's inserts rolled back
+        cleanly, no orphan job),
+      - exactly one enqueue — two would run two paid LLM pipelines for one
+        purchase.
+    """
+    tx_id = "tx-concurrent-duplicate"
+    jws = make_jws(payload_overrides={"transactionId": tx_id})
+    headers = {"X-StoreKit-JWS": jws, **BEARER}
+    body = _valid_body(tx_id=tx_id)
+
+    r1, r2 = await asyncio.gather(
+        per_request_client.post("/v1/orders", json=body, headers=headers),
+        per_request_client.post("/v1/orders", json=body, headers=headers),
+    )
+
+    assert sorted([r1.status_code, r2.status_code]) == [200, 202], (
+        r1.status_code,
+        r1.text,
+        r2.status_code,
+        r2.text,
+    )
+    assert r1.json()["order_id"] == r2.json()["order_id"]
+
+    test_session.expire_all()
+    orders = (
+        (
+            await test_session.execute(
+                select(GenerationOrder).where(
+                    GenerationOrder.transaction_id == tx_id
+                )
+            )
+        )
+        .scalars()
+        .all()
+    )
+    assert len(orders) == 1, [o.id for o in orders]
+    assert str(orders[0].id) == r1.json()["order_id"]
+
+    jobs = (await test_session.execute(select(GenerationJob))).scalars().all()
+    assert len(jobs) == 1, [j.id for j in jobs]
+
+    assert arq_mock.enqueue_job.await_count == 1, (
+        f"one purchase enqueued {arq_mock.enqueue_job.await_count} paid pipelines"
+    )
 
 
 @pytest.mark.asyncio

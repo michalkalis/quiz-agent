@@ -7,6 +7,26 @@
 
 import Foundation
 
+/// #132 Track E (founder pick 2026-07-29): when the driver learns the correct
+/// answers — after every question (today's behavior, the default) or all at
+/// once in the end-of-set recap. Supersedes launch decision D4.
+enum AnswerRevealMode: String, Codable, CaseIterable, Identifiable, Sendable {
+    case perQuestion = "per_question"
+    case endOfSet = "end_of_set"
+
+    var id: String { rawValue }
+
+    /// Menu/row display string (localized).
+    var displayName: String {
+        switch self {
+        case .perQuestion:
+            return String(localized: "After each question", comment: "Answer reveal setting: today's per-question result screen")
+        case .endOfSet:
+            return String(localized: "At the end of the set", comment: "Answer reveal setting: deferred reveal, one recap after the last question")
+        }
+    }
+}
+
 /// Comprehensive quiz settings model
 /// Persisted to UserDefaults for cross-session configuration
 struct QuizSettings: Codable, Equatable, Sendable {
@@ -73,6 +93,11 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// listening indicator is suppressed — buttons remain the untouched fallback.
     var voiceCommandsEnabled: Bool
 
+    /// #132 Track E: when correct answers are revealed. `.perQuestion` is
+    /// today's flow (result screen after every answer); `.endOfSet` skips the
+    /// per-question result entirely and reveals everything in the recap.
+    var answerRevealMode: AnswerRevealMode
+
     // MARK: - Memberwise Init
 
     init(
@@ -92,7 +117,8 @@ struct QuizSettings: Codable, Equatable, Sendable {
         ageAppropriate: String? = nil,
         recordingSoundsEnabled: Bool = true,
         includeImageQuestions: Bool = false,
-        voiceCommandsEnabled: Bool = true
+        voiceCommandsEnabled: Bool = true,
+        answerRevealMode reveal: AnswerRevealMode = .perQuestion
     ) {
         self.language = language
         self.audioMode = audioMode
@@ -111,6 +137,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
         self.recordingSoundsEnabled = recordingSoundsEnabled
         self.includeImageQuestions = includeImageQuestions
         self.voiceCommandsEnabled = voiceCommandsEnabled
+        answerRevealMode = reveal
     }
 
     // MARK: - Default Configuration
@@ -157,7 +184,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
         } else {
             // Migrate the pre-#82 single-select blob: one category → one-element list.
             let legacy = try decoder.container(keyedBy: LegacyKeys.self)
-            categories = (try legacy.decodeIfPresent(String.self, forKey: .category)).map { [$0] } ?? []
+            categories = try (legacy.decodeIfPresent(String.self, forKey: .category)).map { [$0] } ?? []
         }
         difficulty = try container.decode(String.self, forKey: .difficulty)
         autoAdvanceDelay = try container.decode(Int.self, forKey: .autoAdvanceDelay)
@@ -172,6 +199,9 @@ struct QuizSettings: Codable, Equatable, Sendable {
         recordingSoundsEnabled = try container.decodeIfPresent(Bool.self, forKey: .recordingSoundsEnabled) ?? true
         includeImageQuestions = try container.decodeIfPresent(Bool.self, forKey: .includeImageQuestions) ?? false
         voiceCommandsEnabled = try container.decodeIfPresent(Bool.self, forKey: .voiceCommandsEnabled) ?? true
+        // #132 E: pre-existing blobs (and unknown future raw values) fall back
+        // to today's per-question flow — the founder-picked default.
+        answerRevealMode = (try? container.decodeIfPresent(AnswerRevealMode.self, forKey: .answerRevealMode)).flatMap { $0 } ?? .perQuestion
     }
 
     // MARK: - Validation Helpers
@@ -195,7 +225,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
     static let categoryOptions: [String?] = [
         nil, "general", "adults", "kids",
         "wizarding-world", "superheroes", "disney",
-        "football", "sports-mix"
+        "football", "sports-mix",
     ]
 
     /// Valid age-appropriate options (nil means no filter). Mirrors `Config.ageAppropriateOptions`.
@@ -241,16 +271,16 @@ struct QuizSettings: Codable, Equatable, Sendable {
 // MARK: - Preview Helpers
 
 #if DEBUG
-extension QuizSettings {
-    static let previewCustom = QuizSettings(
-        language: "sk",
-        audioMode: "media",
-        numberOfQuestions: 20,
-        categories: ["adults"],
-        difficulty: "hard",
-        autoAdvanceDelay: 5,
-        answerTimeLimit: 45,
-        preferredInputDeviceId: nil
-    )
-}
+    extension QuizSettings {
+        static let previewCustom = QuizSettings(
+            language: "sk",
+            audioMode: "media",
+            numberOfQuestions: 20,
+            categories: ["adults"],
+            difficulty: "hard",
+            autoAdvanceDelay: 5,
+            answerTimeLimit: 45,
+            preferredInputDeviceId: nil
+        )
+    }
 #endif

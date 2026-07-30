@@ -86,8 +86,11 @@ extension QuizState {
         case .startingQuiz: return ["askingQuestion", "error", "idle"]
         case .askingQuestion: return ["recording", "processing", "skipping", "error", "idle"]
         case .recording: return ["processing", "skipping", "askingQuestion", "error", "idle"]
-        case .processing: return ["showingResult", "skipping", "askingQuestion", "error", "idle"]
-        case .skipping: return ["showingResult", "askingQuestion", "error", "idle"]
+        // "finished" on processing/skipping is the #132 E deferred-reveal path:
+        // with reveal-at-end there is no result interstitial, so the last
+        // question's evaluation lands directly on the recap.
+        case .processing: return ["showingResult", "skipping", "askingQuestion", "finished", "error", "idle"]
+        case .skipping: return ["showingResult", "askingQuestion", "finished", "error", "idle"]
         case .showingResult: return ["askingQuestion", "processing", "finished", "idle"]
         case .finished: return ["idle", "startingQuiz"]
         case .error: return ["idle", "askingQuestion", "startingQuiz"]
@@ -115,6 +118,17 @@ final class QuizViewModel: ObservableObject {
     // partials and skips land in neither bucket.
     @Published var sessionCorrectCount: Int = 0
     @Published var sessionIncorrectCount: Int = 0
+
+    /// #132 Track E: the running set's per-question results, frozen at result
+    /// time for the end-of-set recap. Captured in BOTH reveal modes so a
+    /// mid-set settings flip still yields a complete recap; cleared on quiz
+    /// start and in `resetState`.
+    @Published private(set) var recapEntries: [RecapEntry] = []
+
+    /// #132 Track E: whether the full recap summary narration is playing —
+    /// drives the recap CTA's play/stop swap. Row-level "hear it" playback
+    /// does not set this (it replaces the summary via the shared task key).
+    @Published var isNarratingRecap: Bool = false
     @Published var errorMessage: String? // Inline errors shown in QuestionView (e.g., recording failures)
     /// Display model for the full-screen Error state, built by `setError` via
     /// `AppErrorModel.from` so ErrorView shows localised copy + the right CTA (54.15).
@@ -894,6 +908,14 @@ final class QuizViewModel: ObservableObject {
             currentSession = session
             persistenceStore.saveSession(id: session.id)
 
+            // A fresh set starts with a fresh ledger. "Play Again" reaches here
+            // WITHOUT resetState (it goes .finished → .startingQuiz), which had
+            // been quietly accumulating the completion-breakdown tallies across
+            // replays — the same hole the #132 E recap would fall into.
+            sessionCorrectCount = 0
+            sessionIncorrectCount = 0
+            recapEntries = []
+
             // Start quiz and get first question with exclusion list
             let response = try await withTransientStartRetry {
                 try await networkService.startQuiz(
@@ -1581,12 +1603,13 @@ final class QuizViewModel: ObservableObject {
             }
         }
 
-        // IMPORTANT: Show result screen BEFORE playing audio
-        // This ensures ResultView is visible when audio starts playing
-        transition(to: .showingResult(question: question, evaluation: evaluation))
-        // #77 (77.5): result window — re-arm the command listener for "next"/"ok"
-        // (Session 4 routes them) on top of auto-advance.
-        refreshCommandWindow()
+        // #132 Track E: freeze this result for the end-of-set recap — in BOTH
+        // reveal modes, so flipping the setting mid-set still yields a full list.
+        recapEntries.append(RecapEntry(
+            number: recapEntries.count + 1,
+            question: question,
+            evaluation: evaluation
+        ))
 
         // Auto-extend session TTL to prevent timeout on long drives
         if let sessionId = currentSession?.id {
@@ -1600,6 +1623,28 @@ final class QuizViewModel: ObservableObject {
                 }
             }
         }
+
+        // #132 Track E (founder pick 2026-07-29): deferred reveal = NO
+        // interstitial at all. The verdict is neither shown nor spoken —
+        // feedback TTS would be an audible interstitial that gives the verdict
+        // away — and the next question appears immediately (or the recap, after
+        // the last one). Untracked Task, mirroring how proceedToNextQuestion
+        // runs outside this method in the per-question flow: holding
+        // isProcessingResponse through the next question's TTS would drop a
+        // fast tap-answer on that question.
+        if settings.answerRevealMode == .endOfSet {
+            taskBag.add(Task { [weak self] in
+                await self?.advanceToNextQuestionOrFinish()
+            }, key: .deferredAdvance)
+            return
+        }
+
+        // IMPORTANT: Show result screen BEFORE playing audio
+        // This ensures ResultView is visible when audio starts playing
+        transition(to: .showingResult(question: question, evaluation: evaluation))
+        // #77 (77.5): result window — re-arm the command listener for "next"/"ok"
+        // (Session 4 routes them) on top of auto-advance.
+        refreshCommandWindow()
 
         // 59.7 Bug B: start the auto-advance countdown immediately so the countdown bar is
         // visible the moment the result appears — previously it ran feedback audio first and
@@ -1626,15 +1671,27 @@ final class QuizViewModel: ObservableObject {
         }
     }
 
-    /// Proceed to next question or finish quiz
-    /// Can be called manually via button or automatically via timer
+    /// Proceed to next question or finish quiz — the per-question flow's
+    /// advance (Next button, auto-advance timer, voice "next").
     func proceedToNextQuestion() async {
+        // Only proceed if currently showing results
+        guard quizState.isShowingResult else {
+            Logger.quiz.warning("⚠️ Ignoring proceedToNextQuestion - not in showingResult state")
+            return
+        }
+        await advanceToNextQuestionOrFinish()
+    }
+
+    /// The shared advance body: from the result screen (per-question flow) or
+    /// straight from `.processing`/`.skipping` (#132 E deferred flow — the
+    /// caller has already decided no result screen will be shown).
+    private func advanceToNextQuestionOrFinish() async {
         // Guard against concurrent calls (safe: @MainActor serializes access).
         // Checked-and-set before any `await` so a second concurrent call
         // (double-tap Next, or Next racing auto-advance) is a silent no-op
         // instead of clobbering state the first call already advanced (#100).
         guard !isAdvancing else {
-            Logger.quiz.warning("⚠️ proceedToNextQuestion already in progress, ignoring duplicate call")
+            Logger.quiz.warning("⚠️ advance already in progress, ignoring duplicate call")
             return
         }
         isAdvancing = true
@@ -1642,12 +1699,6 @@ final class QuizViewModel: ObservableObject {
 
         // Cancel any pending auto-advance
         taskBag.cancel(.autoAdvance)
-
-        // Only proceed if currently showing results
-        guard quizState.isShowingResult else {
-            Logger.quiz.warning("⚠️ Ignoring proceedToNextQuestion - not in showingResult state")
-            return
-        }
 
         // Reset per-question pause and re-record state when moving to next question
         currentQuestionPaused = false
@@ -1728,6 +1779,7 @@ final class QuizViewModel: ObservableObject {
         currentSession = nil // also zeroes the derived score/questionsAnswered (T7)
         sessionCorrectCount = 0
         sessionIncorrectCount = 0
+        recapEntries = []
         errorMessage = nil
         nextQuestionAudioUrl = nil
         nextQuestion = nil

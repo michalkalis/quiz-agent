@@ -355,6 +355,27 @@ struct SettingsView: View {
                 display: Self.answerLimitDisplay
             )
             .accessibilityIdentifier("settings-answer-limit-menu")
+
+            hairline
+
+            // #132 E (founder pick 2026-07-29): when answers are revealed —
+            // per question (today's default) or all at once after the set.
+            Menu {
+                ForEach(AnswerRevealMode.allCases) { mode in
+                    Button(mode.displayName) {
+                        viewModel.settings.answerRevealMode = mode
+                    }
+                }
+            } label: {
+                HangsConfigRow(
+                    label: "Answer reveal",
+                    value: viewModel.settings.answerRevealMode.displayName,
+                    valueColor: Theme.Hangs.Colors.blue,
+                    action: {}
+                )
+                .allowsHitTesting(false)
+            }
+            .accessibilityIdentifier("settings-answer-reveal-menu")
         }
     }
 
@@ -655,6 +676,7 @@ struct SettingsView: View {
     }
 
     // MARK: - Feedback group (#109)
+
     // Manual entry point for the in-app beta feedback sheet — mirrors the
     // shake-to-report gesture but is always discoverable. Captures a screenshot
     // of the Settings screen (still removable in the sheet) + the current quiz

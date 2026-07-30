@@ -112,7 +112,19 @@ struct ContentView: View {
                         }
 
                     case .finished:
-                        CompletionView(viewModel: viewModel)
+                        // #132 E: deferred reveal ends on the recap (variant C);
+                        // the per-question flow keeps today's CompletionView.
+                        // The entries guard is defensive — an empty recap (e.g.
+                        // the setting flipped after a quota-cut set of zero
+                        // recorded questions) degrades to the score screen
+                        // rather than an empty list.
+                        if viewModel.settings.answerRevealMode == .endOfSet,
+                           !viewModel.recapEntries.isEmpty
+                        {
+                            SetRecapView(viewModel: viewModel)
+                        } else {
+                            CompletionView(viewModel: viewModel)
+                        }
 
                     case let .error(_, context):
                         // activeErrorModel is built by setError via AppErrorModel.from

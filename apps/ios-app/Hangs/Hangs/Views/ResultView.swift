@@ -139,31 +139,12 @@ struct ResultView: View {
         isRecap ? questionStem ?? "" : mcqLabelled(canonicalAnswer)
     }
 
-    /// #132 (founder, 2026-07-29): on MCQ the evaluation used to carry the bare
-    /// option KEY ("b"), which read as a one-letter answer. The card pairs letter
-    /// and text — "B — Pyramid" — resolving from `possibleAnswers` in BOTH
-    /// directions, because the backend now serves the translated option text
-    /// while older sessions still send the key:
-    ///   1. the value IS a key → take that key's text;
-    ///   2. the value IS an option's text → take that option's letter.
-    /// Anything that matches neither (open answers, a question with no options)
-    /// renders unchanged.
+    /// #132 letter+text pairing ("B — Pyramid") — logic lives in
+    /// `Question.labelledAnswer` (shared with the #132 E recap capture).
     private func mcqLabelled(_ raw: String) -> String {
-        let value = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !value.isEmpty,
-              let question = viewModel.resultQuestion ?? viewModel.currentQuestion,
-              let options = question.possibleAnswers
+        guard let question = viewModel.resultQuestion ?? viewModel.currentQuestion
         else { return raw }
-
-        if let text = options[value.lowercased()],
-           !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        {
-            return "\(value.uppercased()) — \(text)"
-        }
-        if let match = options.first(where: { $0.value.caseInsensitiveCompare(value) == .orderedSame }) {
-            return "\(match.key.uppercased()) — \(match.value)"
-        }
-        return raw
+        return question.labelledAnswer(raw)
     }
 
     /// "you said" belongs in the meta row only when the driver actually said

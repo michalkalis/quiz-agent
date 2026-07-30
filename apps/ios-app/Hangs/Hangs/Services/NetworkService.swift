@@ -23,6 +23,10 @@ protocol NetworkServiceProtocol: Sendable {
     /// = same bearer as every other write path.
     func submitFeedback(message: String, metadataJSON: String?, appVersion: String?, screenshotPNG: Data?, audioWAV: Data?, logsText: String?) async throws
     func downloadAudio(from urlString: String) async throws -> Data
+    /// #132 E: generic TTS (`POST /tts/synthesize`) for the recap narration —
+    /// speaks arbitrary already-translated text. The server caps `text` at
+    /// 1000 chars per call; callers chunk longer narrations.
+    func synthesizeSpeech(text: String) async throws -> Data
     func endSession(sessionId: String) async throws
     func extendSession(sessionId: String, minutes: Int) async throws
     func rateQuestion(sessionId: String, rating: Int) async throws
@@ -296,6 +300,21 @@ actor NetworkService: NetworkServiceProtocol {
         try await performRequest(request, endpointPath: "/api/v1/sessions/{id}/extend")
     }
 
+    // MARK: - Generic TTS (#132 E recap narration)
+
+    func synthesizeSpeech(text: String) async throws -> Data {
+        let endpoint = baseURL.appendingPathComponent("/api/v1/tts/synthesize")
+
+        var request = URLRequest(url: endpoint)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONEncoder().encode(["text": text])
+
+        Logger.network.debug("🌐 POST \(endpoint, privacy: .public) (tts, \(text.count, privacy: .public) chars)")
+
+        return try await performRequestData(request, endpointPath: "/api/v1/tts/synthesize")
+    }
+
     // MARK: - Question Rating
 
     func rateQuestion(sessionId: String, rating: Int) async throws {
@@ -439,7 +458,7 @@ actor NetworkService: NetworkServiceProtocol {
         }
         breadcrumbResponse(endpoint: endpointPath, status: httpResponse.statusCode, bytes: data.count)
 
-        guard (200...299).contains(httpResponse.statusCode) else {
+        guard (200 ... 299).contains(httpResponse.statusCode) else {
             logHTTPError(endpoint: endpointPath, status: httpResponse.statusCode)
             if let errorResponse = try? JSONDecoder().decode(ErrorResponse.self, from: data) {
                 throw NetworkError.serverError(statusCode: httpResponse.statusCode, message: errorResponse.detail)

@@ -153,6 +153,63 @@
         }
       }
     },
+    "%lld CORRECT" : {
+      "comment" : "Recap hero chip: number of correct answers (#132 E)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld SPRÁVNE"
+          }
+        }
+      }
+    },
+    "%lld MISSED" : {
+      "comment" : "Recap hero chip: number of wrong answers (#132 E)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld VEDĽA"
+          }
+        }
+      }
+    },
+    "%lld SKIPPED" : {
+      "comment" : "Recap hero chip: number of skipped questions (#132 E)",
+      "localizations" : {
+        "sk" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld PRESKOČENÁ"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld PRESKOČENÉ"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld PRESKOČENÝCH"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld PRESKOČENÝCH"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld monthly free" : {
       "localizations" : {
         "sk" : {
@@ -415,6 +472,17 @@
         }
       }
     },
+    "After each question" : {
+      "comment" : "Answer reveal option: today's per-question result screen",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Po každej otázke"
+          }
+        }
+      }
+    },
     "All Categories" : {
       "comment" : "Quiz category option: no category filter",
       "localizations" : {
@@ -461,6 +529,17 @@
         }
       }
     },
+    "Answer reveal" : {
+      "comment" : "Session settings row: when correct answers are revealed (#132 E)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odhalenie odpovedí"
+          }
+        }
+      }
+    },
     "Answer time limit" : {
       "localizations" : {
         "sk" : {
@@ -490,6 +569,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Naozaj chceš ukončiť kvíz? Postup sa uloží."
+          }
+        }
+      }
+    },
+    "At the end of the set" : {
+      "comment" : "Answer reveal option: deferred reveal in the end-of-set recap",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Na konci sady"
           }
         }
       }
@@ -2707,6 +2797,17 @@
         }
       }
     },
+    "Play summary" : {
+      "comment" : "Recap CTA: read the whole summary aloud (#132 E)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prehrať súhrn"
+          }
+        }
+      }
+    },
     "Playback failed" : {
       "comment" : "Audio error: audio could not be played back",
       "localizations" : {
@@ -2811,6 +2912,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Otázka %1$lld z %2$lld"
+          }
+        }
+      }
+    },
+    "Question %lld — correct. %@." : {
+      "comment" : "Recap narration line for a correct answer: number, then the answer",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Question %1$lld — correct. %2$@."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otázka %1$lld — správne. %2$@."
+          }
+        }
+      }
+    },
+    "Question %lld — missed. The answer: %@." : {
+      "comment" : "Recap narration line for a wrong answer: number, then the revealed answer",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Question %1$lld — missed. The answer: %2$@."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otázka %1$lld — vedľa. Správna odpoveď: %2$@."
+          }
+        }
+      }
+    },
+    "Question %lld — skipped. The answer: %@." : {
+      "comment" : "Recap narration line for a skipped question: number, then the revealed answer",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Question %1$lld — skipped. The answer: %2$@."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otázka %1$lld — preskočená. Správna odpoveď: %2$@."
           }
         }
       }
@@ -3269,6 +3421,17 @@
         }
       }
     },
+    "SET RESULT · %@" : {
+      "comment" : "Recap hero label; placeholder is the category (#132 E)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VÝSLEDOK SADY · %@"
+          }
+        }
+      }
+    },
     "SETTINGS" : {
       "comment" : "Title of the settings screen.",
       "isCommentAutoGenerated" : true,
@@ -3457,6 +3620,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Relácia sa nenašla alebo už skončila"
+          }
+        }
+      }
+    },
+    "Set finished. You got %lld out of %lld right." : {
+      "comment" : "Recap narration intro: correct count out of total",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Set finished. You got %1$lld out of %2$lld right."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sada dokončená. Máš %1$lld z %2$lld správne."
           }
         }
       }
@@ -3869,6 +4049,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zastaviť nahrávanie"
+          }
+        }
+      }
+    },
+    "Stop summary" : {
+      "comment" : "Recap CTA while the summary narration is playing (#132 E)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zastaviť súhrn"
           }
         }
       }

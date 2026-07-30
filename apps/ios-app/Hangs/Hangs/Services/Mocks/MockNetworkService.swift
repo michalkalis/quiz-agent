@@ -26,6 +26,8 @@ import os
         /// reconciliation bridge (#102 finding 3) actually refreshes usage, not
         /// just entitlements.
         var getUsageCallCount = 0
+        /// #132 E: chunks handed to `synthesizeSpeech`, in call order.
+        var synthesizedTexts: [String] = []
         /// When set, `getUsage` throws this error instead of returning — lets a
         /// test exercise the #FIX2 bounded-retry / failed-load path without
         /// tripping `shouldFail` for every other call.
@@ -244,6 +246,16 @@ import os
                 throw NetworkError.invalidResponse
             }
             return "mock-elevenlabs-token"
+        }
+
+        /// #132 E recap narration: records each chunk so tests can assert what
+        /// would have been spoken (and that nothing is spoken in per-question mode).
+        func synthesizeSpeech(text: String) async throws -> Data {
+            synthesizedTexts.append(text)
+            if shouldFail {
+                throw NetworkError.invalidResponse
+            }
+            return Data("mock-tts".utf8)
         }
 
         func getUsage() async throws -> UsageInfo {

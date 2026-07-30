@@ -17,8 +17,8 @@
 //
 
 import Foundation
-import Testing
 @testable import Hangs
+import Testing
 
 // MARK: - Local helpers
 
@@ -58,7 +58,7 @@ private let legacyMinimalJSON: [String: Any] = [
     "difficulty": "medium",
     "autoAdvanceDelay": 8,
     "answerTimeLimit": 30,
-    "autoRecordEnabled": true
+    "autoRecordEnabled": true,
 ]
 
 // MARK: - Suite: Exclusion-list wiring
@@ -66,7 +66,6 @@ private let legacyMinimalJSON: [String: Any] = [
 @Suite("QuizViewModel Exclusion-List Wiring")
 @MainActor
 struct QuizViewModelExclusionListTests {
-
     // MARK: - Test 1: Seeded history is forwarded
 
     /// Regression: a refactor that replaces `getExclusionList()` with an empty
@@ -115,7 +114,6 @@ struct QuizViewModelExclusionListTests {
 
 @Suite("QuizSettings Backward-Compat Decoder")
 struct QuizSettingsBackwardCompatTests {
-
     // MARK: - Missing thinkingTime
 
     /// Regression: adding `thinkingTime` as a required `decode` call (instead of
@@ -225,6 +223,24 @@ struct QuizSettingsBackwardCompatTests {
 
         #expect(settings.recordingSoundsEnabled == true)
         #expect(settings.includeImageQuestions == false)
+    }
+
+    // MARK: - Missing answerRevealMode (#132 E)
+
+    /// Regression: every pre-#132 blob must decode to the founder-picked
+    /// default — per-question reveal, today's behavior. An unknown future raw
+    /// value must also fall back rather than throw and wipe the settings.
+    @Test("missing or unknown answerRevealMode decodes to per-question")
+    func missingAnswerRevealModeDefaultsPerQuestion() throws {
+        var json = legacyMinimalJSON
+        json.removeValue(forKey: "answerRevealMode")
+        #expect(try decodeSettings(json).answerRevealMode == .perQuestion)
+
+        json["answerRevealMode"] = "some_future_mode"
+        #expect(try decodeSettings(json).answerRevealMode == .perQuestion)
+
+        json["answerRevealMode"] = "end_of_set"
+        #expect(try decodeSettings(json).answerRevealMode == .endOfSet)
     }
 
     // MARK: - Driving-critical default (#68)

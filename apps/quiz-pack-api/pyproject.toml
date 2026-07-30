@@ -9,6 +9,10 @@ dependencies = [
     "uvicorn>=0.24.0",
     "langchain>=0.3.9",
     "langchain-openai>=0.2.10",
+    # Bedrock generation channel (2026-07-30, founder decision — AWS credit).
+    # The factory lazy-imports this only for "bedrock:" model ids; listed in
+    # the Dockerfile pip list too (memory project_dockerfile_drift).
+    "langchain-aws>=0.2.27",
     "gradio>=4.0.0",
     "anthropic>=0.42.0",
     "geopandas>=0.14.0",

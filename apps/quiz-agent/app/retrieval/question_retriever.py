@@ -218,13 +218,26 @@ class QuestionRetriever:
 
         # #95 custom-pack session: the pack IS the curated set the user ordered
         # and paid for, so pack_id scoping replaces the global constraints. We
-        # drop difficulty / review_status / language_dependent / category: a pack
-        # is a fixed bundle in its ordered language, and its questions stay
-        # `pending_review` (they are never promoted into the shared corpus), so
-        # requiring "approved" here would serve zero. Only the image-safety
-        # opt-out (type) is kept — no visual prompts at the wheel unless opted in.
+        # drop difficulty / review_status / category: a pack is a fixed bundle
+        # in its ordered language, and its questions stay `pending_review` (they
+        # are never promoted into the shared corpus), so requiring "approved"
+        # here would serve zero. The image-safety opt-out (type) is kept — no
+        # visual prompts at the wheel unless opted in — and so is #128's
+        # language_dependent guard: wordplay/collective-noun questions break
+        # under literal translation regardless of which corpus they came from.
+        # Safe to filter on here because `language_dependent` is a Postgres
+        # column declared NOT NULL with a server-side default of false
+        # (QuestionRow.language_dependent / migration 1c5e0fa7b3d4), so every
+        # pack question carries an explicit value — this can never silently
+        # exclude a row for lacking the key.
         if session.pack_id:
-            return {"pack_id": session.pack_id, "type": {"$in": allowed_types}}
+            pack_filters: dict = {
+                "pack_id": session.pack_id,
+                "type": {"$in": allowed_types},
+            }
+            if session.language and session.language != "en":
+                pack_filters["language_dependent"] = False
+            return pack_filters
 
         filters = {
             "difficulty": difficulty,

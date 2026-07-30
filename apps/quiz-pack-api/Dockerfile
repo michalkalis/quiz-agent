@@ -30,6 +30,7 @@ RUN pip install --no-cache-dir \
     uvicorn>=0.24.0 \
     langchain>=0.3.9 \
     langchain-openai>=0.2.10 \
+    langchain-aws>=0.2.27 \
     anthropic>=0.42.0 \
     tavily-python>=0.5.0 \
     google-generativeai>=0.8.0 \

@@ -131,7 +131,9 @@ class FactVerifier:
             )
         try:
             response = await self._client.chat.completions.create(
-                model=llm_factory.resolve_model("gemini-2.5-flash"),
+                # 2026-07-30 frontier refresh: verification correctness is
+                # quality-critical — factory VERIFY role, no flash-class model.
+                model=llm_factory.resolve_model(llm_factory.VERIFY),
                 messages=[{"role": "user", "content": prompt}],
             )
             return response.choices[0].message.content

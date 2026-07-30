@@ -114,11 +114,13 @@ def test_pack_session_scopes_to_pack_id_only():
     # constraints. Crucially it must drop review_status: delivered pack questions
     # stay `pending_review` (they are never promoted into the shared corpus), so
     # if the "approved" gate survived here every pack would play as an EMPTY quiz.
+    # (#128's language_dependent guard is NOT one of the dropped constraints —
+    # see the dedicated pack + language tests below.)
     retriever = _retriever()
     session = QuizSession(
         session_id="sess_pack",
         current_difficulty="hard",
-        language="sk",  # non-en would normally add a language_dependent filter
+        language="en",
         pack_id="e5b8c1a2-0000-4000-8000-000000000abc",
         preferred_categories=["music"],  # would normally add a category filter
     )
@@ -131,9 +133,74 @@ def test_pack_session_scopes_to_pack_id_only():
         "difficulty" not in filters
     )  # a pack is a fixed bundle, not difficulty-scoped
     assert "category" not in filters  # pack scoping overrides the category picker
-    assert "language_dependent" not in filters
+    assert "language_dependent" not in filters  # en session: nothing to exclude
     # The image-safety opt-out is the one constraint that still applies.
     assert "image" not in filters["type"]["$in"]
+
+
+def test_pack_session_non_english_excludes_language_dependent():
+    # #128: a paid custom pack is not exempt from the translation guard.
+    # Wordplay/collective-noun questions ("a murder of crows") break under
+    # literal translation regardless of which corpus they came from, so a
+    # Slovak pack session must still exclude them even though pack scoping
+    # drops every other global constraint (review_status/difficulty/category).
+    retriever = _retriever()
+    session = QuizSession(
+        session_id="sess_pack",
+        current_difficulty="medium",
+        language="sk",
+        pack_id="e5b8c1a2-0000-4000-8000-000000000abc",
+    )
+
+    filters = retriever._build_metadata_filters("medium", session)
+
+    assert filters["language_dependent"] is False
+
+
+def test_pack_session_english_keeps_no_language_filter():
+    # English is exactly where a language_dependent question belongs — adding
+    # the filter there would silently shrink an English pack's own question
+    # set for no protective reason.
+    retriever = _retriever()
+    session = QuizSession(
+        session_id="sess_pack",
+        current_difficulty="medium",
+        language="en",
+        pack_id="e5b8c1a2-0000-4000-8000-000000000abc",
+    )
+
+    filters = retriever._build_metadata_filters("medium", session)
+
+    assert "language_dependent" not in filters
+
+
+def test_pack_language_dependent_column_cannot_be_silently_missing():
+    # Why it's safe to add a `{"language_dependent": False}` equality filter to
+    # the pack branch at all: unlike a schemaless metadata dict (e.g. Chroma,
+    # where a filter on an absent key excludes the document), `language_dependent`
+    # is a real Postgres column declared NOT NULL with a server-side default of
+    # `false` (quiz-pack-api's QuestionRow + migration 1c5e0fa7b3d4), and the
+    # Question domain model defaults the same field to False. So no pack
+    # question can ever reach the DB with the key simply absent, and this
+    # filter can only correctly select/exclude real values — never silently
+    # drop an untagged row.
+    from quiz_shared.database.pgvector_client import questions_table
+    from quiz_shared.models.question import Question
+
+    assert questions_table.c.language_dependent.nullable is False
+
+    untagged = Question(
+        id="q_untagged",
+        question="Untagged pack question",
+        type="text",
+        correct_answer="answer",
+        topic="General",
+        category="general",
+        difficulty="easy",
+        pack_id="e5b8c1a2-0000-4000-8000-000000000abc",
+        # language_dependent intentionally omitted — must default, not be absent.
+    )
+    assert untagged.language_dependent is False
 
 
 def test_normal_session_never_serves_pack_questions():

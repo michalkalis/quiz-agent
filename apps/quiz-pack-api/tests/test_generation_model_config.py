@@ -1,48 +1,49 @@
-"""Config resolution for the #72 Lever-A generation/critique models (P1.1).
+"""Config resolution for the generation/critique models (#72 P1.1 wiring).
 
-WHY these assertions matter: P1.1 makes the creative-generation and critique
-models *config-driven* while keeping them *dormant*. Two promises must hold or
-the issue's discipline ("nothing changes output until Phase 6") breaks:
+WHY these assertions matter: the generation and critique models are
+config-driven (``GENERATION_MODEL`` / ``CRITIQUE_MODEL`` env flags) with the
+factory role constants as the fallback. Two promises must hold:
 
-1. With no env set, the generator must build with exactly today's models
-   (``gpt-4o`` / ``gpt-4o-mini``, sourced from the factory role constants) —
-   output unchanged.
-2. An override flag (e.g. ``GENERATION_MODEL=claude-opus-4-8``) must actually
-   reach the constructed generator, because Phase 6 flips the flag, not the code.
-
-The OpenRouter slug for any override is asserted in ``test_llm_factory.py``;
-here we only prove the call-site wiring picks the right *direct* id.
+1. With no env set, the generator builds with the factory's frontier role
+   defaults (2026-07-30 founder policy: best models, no mini-class in the
+   generation pipeline) — asserted against the constants, not literals, so a
+   deliberate factory bump never breaks this wiring test.
+2. An override flag must actually reach the constructed generator — the Fly
+   env, not the code, selects the deployed model (e.g. a future
+   ``bedrock:...`` id once AWS credentials are configured).
 """
 
 from __future__ import annotations
 
 import pytest
 
+from quiz_shared.llm import factory as llm_factory
+
 from app.api.routes import _build_advanced_generator
 
 
-def test_dormant_default_keeps_todays_models(monkeypatch: pytest.MonkeyPatch) -> None:
-    """No flag set → unchanged production models (gpt-4o / gpt-4o-mini)."""
+def test_default_uses_factory_frontier_roles(monkeypatch: pytest.MonkeyPatch) -> None:
+    """No flag set → the factory's frontier role defaults, verbatim."""
     monkeypatch.delenv("GENERATION_MODEL", raising=False)
     monkeypatch.delenv("CRITIQUE_MODEL", raising=False)
 
     gen = _build_advanced_generator()
 
-    assert gen.generation_model == "gpt-4o"
-    assert gen.critique_model == "gpt-4o-mini"
+    assert gen.generation_model == llm_factory.GEN
+    assert gen.critique_model == llm_factory.CRITIQUE
 
 
 def test_generation_model_override_reaches_generator(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """GENERATION_MODEL flag overrides only the creative-gen model."""
-    monkeypatch.setenv("GENERATION_MODEL", "claude-opus-4-8")
+    monkeypatch.setenv("GENERATION_MODEL", "claude-opus-5")
     monkeypatch.delenv("CRITIQUE_MODEL", raising=False)
 
     gen = _build_advanced_generator()
 
-    assert gen.generation_model == "claude-opus-4-8"
-    assert gen.critique_model == "gpt-4o-mini"  # untouched fallback
+    assert gen.generation_model == "claude-opus-5"
+    assert gen.critique_model == llm_factory.CRITIQUE  # untouched fallback
 
 
 def test_critique_model_override_reaches_generator(
@@ -54,5 +55,5 @@ def test_critique_model_override_reaches_generator(
 
     gen = _build_advanced_generator()
 
-    assert gen.generation_model == "gpt-4o"  # untouched fallback
+    assert gen.generation_model == llm_factory.GEN  # untouched fallback
     assert gen.critique_model == "claude-haiku-4-5"

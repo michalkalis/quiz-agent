@@ -247,20 +247,64 @@ def _chat_completion_envelope(content: str, model: str) -> dict:
     }
 
 
-def _openai_chat_dispatch(request: httpx.Request) -> httpx.Response:
-    """Pick generation vs critique payload by model name in request body.
+# Per-dimension scorer verdict (2026-07-30 redesign: MultiModelScorer makes
+# one call per quality dimension and expects {"score", "reasoning"}). 8 keeps
+# every question clear of the gate floor and the veto thresholds.
+_DIM_SCORE_PAYLOAD = {"score": 8, "reasoning": "stubbed dimension verdict"}
 
-    Generator model (``gpt-4o``) → questions JSON.
-    Critique model (``gpt-4o-mini``) → critique JSON.
-    Pinning by model name keeps the route shape decoupled from prompt text.
+# Pairwise best-of-N verdict (stage 3 refinement).
+_PAIRWISE_PAYLOAD = {"winner": "A", "reason": "stubbed pairwise verdict"}
+
+
+def _request_prompt_text(body: dict) -> str:
+    """Flatten a ChatCompletion request's message contents to one string.
+
+    Handles both plain-string content and the content-parts list shape the
+    generator sends when a prompt-cache breakpoint is active.
+    """
+    chunks: list[str] = []
+    for message in body.get("messages", []):
+        content = message.get("content", "")
+        if isinstance(content, list):
+            chunks.extend(
+                str(part.get("text", ""))
+                for part in content
+                if isinstance(part, dict)
+            )
+        else:
+            chunks.append(str(content))
+    return "\n".join(chunks)
+
+
+def _pipeline_llm_response(
+    request: httpx.Request, generation_payload: dict
+) -> httpx.Response:
+    """Dispatch one ChatCompletion request to the right canned payload.
+
+    Since the 2026-07-30 model refresh the critique and scorer share one model
+    id, so model-name routing can no longer discriminate call sites. Routing
+    keys on STRUCTURAL prompt markers instead — each marker is the fixed
+    header of exactly one call site (scorer's per-dimension header, the
+    pairwise verdict schema, critique_v2's evaluation header); anything else
+    is a generation call.
     """
     body = json.loads(request.content)
     model = body.get("model", "")
-    if "mini" in model:
+    prompt = _request_prompt_text(body)
+    if "DIMENSION TO SCORE" in prompt:
+        content = json.dumps(_DIM_SCORE_PAYLOAD)
+    elif '"winner"' in prompt:
+        content = json.dumps(_PAIRWISE_PAYLOAD)
+    elif "Question to Evaluate" in prompt:
         content = json.dumps(_CRITIQUE_PAYLOAD)
     else:
-        content = json.dumps(_generation_payload())
+        content = json.dumps(generation_payload)
     return httpx.Response(200, json=_chat_completion_envelope(content, model))
+
+
+def _openai_chat_dispatch(request: httpx.Request) -> httpx.Response:
+    """Generation + critique + scorer dispatch (3-variant canned questions)."""
+    return _pipeline_llm_response(request, _generation_payload())
 
 
 def register_generation_mocks(router: respx.MockRouter) -> None:
@@ -355,15 +399,15 @@ _ANTHROPIC_MESSAGES_RESPONSE = {
 
 
 def _scoring_openai_dispatch(request: httpx.Request) -> httpx.Response:
-    """OpenAI ChatCompletion stub for the scoring prompt.
+    """OpenAI ChatCompletion stub for the scoring path.
 
-    Returns the scoring JSON regardless of model — this fixture is for tests
-    that only exercise the scoring path. Composition with the generation mock
-    (which discriminates by model name) is handled by 2.11e.
+    2026-07-30: the scorer makes one call per dimension and expects a
+    {"score", "reasoning"} verdict, so this returns the per-dimension payload
+    regardless of model — sufficient for tests that only exercise scoring.
     """
     body = json.loads(request.content)
-    model = body.get("model", "gpt-4.1-mini")
-    content = json.dumps(_SCORING_PAYLOAD)
+    model = body.get("model", "gpt-5.6-sol")
+    content = json.dumps(_DIM_SCORE_PAYLOAD)
     return httpx.Response(200, json=_chat_completion_envelope(content, model))
 
 
@@ -405,24 +449,14 @@ def verify_score_http_mocks(
 
 
 def _openai_e2e_dispatch(request: httpx.Request) -> httpx.Response:
-    """Dispatch OpenAI ChatCompletion across all three pipeline call sites.
+    """Dispatch OpenAI ChatCompletion across all pipeline call sites.
 
-    Generator (``gpt-4o``) → questions JSON.
-    Critique (``gpt-4o-mini``) → critique JSON.
-    Scorer (``gpt-4.1-mini`` or anything else) → scoring JSON.
-
-    Discriminating by model name keeps the dispatcher decoupled from prompt
-    wording, so future prompt edits don't break the e2e test.
+    Marker-based (see ``_pipeline_llm_response``): generation, critique,
+    per-dimension scoring and pairwise ranking all share one endpoint — and
+    since the 2026-07-30 refresh critique and scoring share one model id, so
+    the structural prompt markers are the only stable discriminator.
     """
-    body = json.loads(request.content)
-    model = body.get("model", "")
-    if "gpt-4o-mini" in model:
-        content = json.dumps(_CRITIQUE_PAYLOAD)
-    elif "gpt-4o" in model:
-        content = json.dumps(_generation_payload())
-    else:
-        content = json.dumps(_SCORING_PAYLOAD)
-    return httpx.Response(200, json=_chat_completion_envelope(content, model))
+    return _pipeline_llm_response(request, _generation_payload())
 
 
 def register_e2e_mocks(router: respx.MockRouter) -> None:
@@ -518,15 +552,7 @@ def _topup_friendly_generation_payload() -> dict:
 
 
 def _topup_friendly_openai_dispatch(request: httpx.Request) -> httpx.Response:
-    body = json.loads(request.content)
-    model = body.get("model", "")
-    if "gpt-4o-mini" in model:
-        content = json.dumps(_CRITIQUE_PAYLOAD)
-    elif "gpt-4o" in model:
-        content = json.dumps(_topup_friendly_generation_payload())
-    else:
-        content = json.dumps(_SCORING_PAYLOAD)
-    return httpx.Response(200, json=_chat_completion_envelope(content, model))
+    return _pipeline_llm_response(request, _topup_friendly_generation_payload())
 
 
 @pytest.fixture

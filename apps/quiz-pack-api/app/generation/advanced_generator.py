@@ -19,9 +19,10 @@ from quiz_shared.llm import factory as llm_factory
 import os
 
 from quiz_shared.models.question import GenerationProvenance, Question
-from .examples import example_corpus_path
-from .prompt_builder import PromptBuilder
+from .prompt_builder import PromptBuilder, STRUCTURED_MCQ_FORMAT_NOTE
 from .pattern_routing import verification_mode
+from .examples import example_corpus_path, load_gold_standard, load_anti_patterns
+from ..scoring.multi_model_scorer import resolve_correct_answer
 from .. import feature_flags
 
 try:
@@ -46,6 +47,31 @@ GENERATION_FLOW = "fun-redesign-72"
 _CATEGORY_PROMPT_FILES = {
     "entertainment": "question_generation_entertainment.md",
 }
+
+# 2026-07-30 (generation review A2) — every fact-first template must carry
+# every injection placeholder. A missing one silently disables quality
+# machinery: entertainment shipped without `{craft_guards_section}`, so the
+# #99 guards were a no-op for every entertainment order even with the flag on.
+# Checked at generator construction so a broken template fails the app at
+# boot, not mid-order.
+_REQUIRED_FACT_FIRST_PLACEHOLDERS = (
+    "{facts_section}",
+    "{escape_hatch_section}",
+    "{craft_guards_section}",
+    "{mcq_patterns_section}",
+    "{response_format_section}",
+    "{process_header}",
+)
+
+# Splits the cacheable static prefix (role, contract, patterns, examples,
+# order specs) from per-call dynamic content (fact slice, MCQ pattern pin,
+# count). Under the OpenRouter gateway with an Anthropic generation model the
+# static half is sent as a `cache_control` block — the five concurrent MCQ
+# sub-batch calls share one prefix, and any sequential reuse (top-up,
+# follow-up order) reads it from cache instead of re-paying for it
+# (generation review section B). Other providers just get the marker stripped;
+# static-first ordering still helps their implicit prefix caching.
+CACHE_BREAKPOINT_MARKER = "<!--CACHE_BREAKPOINT-->"
 
 
 # Issue #72 — per-question source attribution. Tokeniser for matching a
@@ -84,46 +110,39 @@ def _content_tokens(*texts: object) -> set[str]:
 # why output stays "prvoplánové". This loosens the rule for the *framing* only
 # — the core factual claim (the answer) must still trace to a source fact, so
 # grounding (the reason v3 exists) is preserved. Begins with a blank line so it
-# appends cleanly to the SOURCE FACTS instruction; empty when the flag is off
-# keeps flag-off output byte-identical. Fully revertible (flip the flag off).
+# appends cleanly to the grounding rule of THE CONTRACT; empty when the flag is
+# off keeps flag-off output byte-identical. Fully revertible (flip the flag
+# off). Wording is direction-neutral ("provided source facts") because the
+# static-first template ordering (2026-07-30) places the facts BELOW this rule.
 _V3_ESCAPE_HATCH_SECTION = """
 
-### Escape Hatch: A Surprising Angle (the answer still traces to a source)
-
-You MAY draw a surprising *angle, comparison, or framing* from your own general knowledge to make a question more engaging — on **one strict condition: the core factual claim (the answer the player must reach) still traces to one of the source facts above.** Use general knowledge for the *angle*, never for the *answer*.
-
-- ALLOWED: reframe a source fact through an unexpected comparison, estimation, or "aha" connection from general knowledge, as long as the verifiable answer comes from a source fact.
-- NOT ALLOWED: an answer whose correctness depends on a fact that is not in the list above. If the angle only works with an unsourced fact, drop it.
-
-When you use this, `source_excerpt` must still confirm the answer."""
+   **Escape Hatch: A Surprising Angle (the answer still traces to a source).** You MAY draw a surprising *angle, comparison, or framing* from your own general knowledge to make a question more engaging — on **one strict condition: the core factual claim (the answer the player must reach) still traces to one of the provided source facts.** Use general knowledge for the *angle*, never for the *answer*. NOT allowed: an answer whose correctness depends on a fact that is not in the SOURCE FACTS list — if the angle only works with an unsourced fact, drop it. When you use this, `source_excerpt` must still confirm the answer."""
 
 
-# Issue #72 Phase 3 — founder-calibrated craft guards, injected into the v3
-# prompt only when `GEN_CRAFT_GUARDS` is on (see `feature_flags.gen_craft_guards`).
-# Mirrors the reviewer's checks so defects are prevented at generation, not
-# just caught at scoring. Calibration: founder rating session 2026-07-09/10 +
-# `docs/research/question-craft-prior-art-2026-07-10.md`.
-# Rules 9-12: issue #99 (G3 blind-rating 2026-07-15,
-# `docs/testing/runs/corpus-blind-sample-2026-07.md`) — formulation-craft
-# defects shared by both generation models; examples verbatim from G3.
+# Issue #72 Phase 3 / 2026-07-30 consolidation — founder-calibrated CRAFT
+# GUARDS, injected only when `GEN_CRAFT_GUARDS` is on. The RULES themselves
+# moved into THE CONTRACT (always on, deduplicated — generation review
+# section B); what stays behind the flag are the founder's worked
+# illustrations and carve-outs, which are the calibration data the contract's
+# terse rules can't carry. Calibration: founder rating sessions 2026-07-09/10
+# and #99 G3 blind-rating 2026-07-15; examples verbatim from those sessions.
 _V3_CRAFT_GUARDS_SECTION = """
 
----
+**Craft guards — founder-calibrated illustrations (apply together with the rules above):**
 
-## CRAFT GUARDS (hard checks — apply to EVERY question before you keep it)
+- **Stem leak** (rule 6). BAD: "The myth that Napoleon was short came from British wartime propaganda. Which country's cartoonists spread it?" → "Britain" — the stem already says it. Re-read every stem as the player: any word handing over the answer → rewrite.
+- **Deductive giveaway** (rule 6). BAD: "every British tank has a built-in boiling vessel — what beverage is it designed to make?" → tea (British + beverage: the stereotype answers for you). BAD: "the only U.S. state made up of two distinct peninsulas" → Michigan (the frame is a lookup key). BAD: "a Renaissance genius sketched a diving suit… who designed it?" → Leonardo da Vinci (famous-inventor reputation). Fix: ask about the surprising detail instead of the identity the frame gives away.
+- **Clue pile** (rule 7). BAD: "known for its ancient empire, iconic amphitheater, gladiators…" — one sharp hook, never a list of properties.
+- **Unanchored referent** (rule 8). BAD: "a citizen called a 'hippeus' owned which animal?" (term never glossed); a temperature record with no year or era; "appear the same size" with no vantage point. Context evicted from the answer by the word cap lands in the stem as a NEUTRAL anchor — never as a category hint, never dropped entirely.
+- **Telegraphed T/F → transform** (rule 15). "St Andrews originally had 22 holes — true or false?" becomes "How many holes did the Old Course at St Andrews originally have?" with options.
+- **Convoluted stem** (rule 10). BAD: "you're never more than six miles from a body of water" — double condition in imperial units; forces a second listen.
+- **Answer context payoff** (rule 9). `explanation` is read aloud after the reveal: 1–2 sentences of genuinely interesting context (where, how big, why surprising) — never empty, never a restatement.
 
-1. **No stem leak.** The answer, or a word derived from it, must never appear in the question text. BAD: "The myth that Napoleon was short came from British wartime propaganda. Which country's cartoonists spread it?" → "Britain" — the stem already says it. Re-read every stem as a player: if any word hands you the answer, rewrite the stem.
-2. **One sharp hook.** A stem gets exactly ONE clue. Never stack descriptors of the same thing ("known for its ancient empire, iconic amphitheater, gladiators…"). A second clue is allowed only if it opens a genuinely different deduction path, never as a second description of the same referent.
-3. **Name the wrong assumption.** In your reasoning (`why_interesting`), state the wrong assumption the player will start from and how the answer overturns it. If you cannot name one, the question is plain recall — pick a different fact or framing.
-4. **The answer must be gettable.** The answer should be something the target player has heard of; the surprise lives in the question and the connection, not in an arcane answer. After the reveal the player must think "of course!" — never "if you say so."
-5. **True/false discipline.** Across your batch, true/false answers must be genuinely ~50/50, and a T/F statement must never telegraph its key (a long, self-justifying statement reads as "True"). When a T/F hides a surprising number, transform it instead: name the subject and ask for the number as multiple-choice (e.g. "St Andrews originally had 22 holes — true or false?" becomes "How many holes did the Old Course at St Andrews originally have?" with options).
-6. **No unguessable open numeric.** For open text questions: if the answer is a specific number or quantity the player cannot actively estimate or reason toward, do NOT emit it as open text — reframe so the estimable part is the question (give the subject, ask the magnitude), or leave the fact to a multiple-choice batch. Numerics the player CAN estimate are excellent open questions (heart beats per day: count your pulse and multiply).
-7. **Answer context payoff.** `explanation` must carry 1–2 spoken sentences of genuinely interesting context behind the answer (where it is, how big, why it is surprising) — it is read aloud after the reveal. Never leave it empty and never restate the question.
-8. **No needless year precision.** Name an exact year in the stem only when the year itself is the point of the question (e.g. a year-guess). Otherwise use the decade or era — "in the 1830s", "in Victorian times" — an exact year for an incidental fact ("In 1834, doctors prescribed…") reads unnatural and fake-precise. The precise year may still live in `explanation`.
-9. **No deductive giveaway.** Self-test: could a player with ZERO knowledge of the fact still derive the answer from the stem's framing alone — a stereotype, a famous-person pattern, or elimination? BAD: "every British tank has a built-in boiling vessel — what beverage is it designed to make?" → Tea (British + beverage: the stereotype answers for you). BAD: "the only U.S. state made up of two distinct peninsulas" → Michigan (the frame is a lookup key any American already holds). BAD: "a Renaissance genius sketched a diving suit… who designed it?" → Leonardo da Vinci (famous-inventor reputation). Fix: ask about the surprising detail instead of the identity the frame gives away (for the tank: what the built-in vessel is for, without naming the drink category), or flip to multiple-choice with the giveaway hint removed.
-10. **Anchor every referent.** The player needs a foothold for every term, claim, and comparison. An unfamiliar term gets a gloss right in the stem ("a 'hippeus', an ancient Greek citizen class"); a record, first, or milestone gets a date (year, decade, or era); a perceptual claim gets a vantage point ("in Earth's sky"). Context evicted from the answer by the answer word-cap lands in the stem as a NEUTRAL anchor — never as a category hint (that breaks rule 9), and never dropped entirely.
-11. **Metric-first units.** Figures use °C, kilometres, kilograms as the primary unit; imperial appears only in parentheses when the source figure is iconic ("100 °F (38 °C)"). The target player cannot convert Fahrenheit or miles mid-quiz. Applies to the stem, every option, and `explanation`.
-12. **Read-aloud clarity.** One idea per sentence. No nested negation and no double-condition phrasing ("never more than six miles from a body of water" forces a second listen). Say numbers the way a person would speak them. Keep the 10-second read-aloud self-test — and if a non-native English listener would need a second pass, rewrite."""
+**Carve-outs — do NOT over-apply the rules:**
+
+- An **estimable numeric is a GOOD open question**: heart beats per day — count your pulse and multiply. Ban only numerics with no reasoning path (rule 5).
+- An **iconic source figure may keep imperial in parentheses**: "100 °F (38 °C)" (rule 10).
+- **Exact years are right** when the year IS the question (`year_guess`, rule 11) and in every entertainment date anchor."""
 
 
 class MCQQuestionItem(BaseModel):
@@ -193,6 +212,17 @@ class MCQQuestionItem(BaseModel):
         None,
         description="snake_case reasoning-pattern key, e.g. 'true_false' or 'odd_one_out'",
     )
+    # 2026-07-30 generation review A4 — craft guard "name the wrong assumption"
+    # was unenforceable on the structured MCQ path because the schema had no
+    # field to carry it. Also feeds the critique judge context.
+    why_interesting: Optional[str] = Field(
+        None,
+        description=(
+            "The wrong assumption the player starts from and how the answer "
+            "overturns it. If none exists, the question is plain recall — "
+            "pick a different fact or framing instead of emitting it"
+        ),
+    )
     # 2026-07-27 live-run F-d: the structured MCQ contract had no source
     # fields at all, so every MCQ question depended on the token-overlap
     # matcher for attribution — the airport-runway/Library-of-Alexandria
@@ -222,8 +252,8 @@ class AdvancedQuestionGenerator:
 
     def __init__(
         self,
-        generation_model: str = "gpt-4o",
-        critique_model: str = "gpt-4o-mini",
+        generation_model: str = llm_factory.GEN,
+        critique_model: str = llm_factory.CRITIQUE,
         generation_temperature: float = 0.8,
         critique_temperature: float = 0.3,
         prompt_version: str = "v2_cot",
@@ -232,8 +262,10 @@ class AdvancedQuestionGenerator:
         """Initialize advanced question generator.
 
         Args:
-            generation_model: Model for question generation (default: gpt-4o)
-            critique_model: Model for quality critique (default: gpt-4o-mini)
+            generation_model: Model for question generation (default: the
+                factory GEN role — frontier per 2026-07-30 founder policy)
+            critique_model: Model for quality critique (default: factory
+                CRITIQUE role)
             generation_temperature: Temperature for generation (0.8 for creativity)
             critique_temperature: Temperature for critique (0.3 for consistency)
             prompt_version: Prompt template version (v2_cot uses Chain of Thought)
@@ -298,6 +330,25 @@ class AdvancedQuestionGenerator:
             if os.path.exists(category_template_path):
                 self.category_prompt_builders[category] = PromptBuilder(
                     template_path=category_template_path
+                )
+
+        # A2 (2026-07-30): fail loud at load when a fact-first template lacks
+        # an injection placeholder — see _REQUIRED_FACT_FIRST_PLACEHOLDERS.
+        fact_first_builders = {"v3_fact_first": self.v3_prompt_builder}
+        fact_first_builders.update(self.category_prompt_builders)
+        for label, builder in fact_first_builders.items():
+            if builder is None:
+                continue
+            missing = [
+                p
+                for p in _REQUIRED_FACT_FIRST_PLACEHOLDERS
+                if p not in builder.template
+            ]
+            if missing:
+                raise ValueError(
+                    f"Fact-first template {label!r} ({builder.template_path}) is "
+                    f"missing injection placeholder(s) {missing} — quality "
+                    "machinery would silently not fire (generation review A2)."
                 )
 
         # Load critique prompt (prefer V2 calibrated version)
@@ -385,6 +436,21 @@ class AdvancedQuestionGenerator:
         # `explanation` contract, 46.B3). Best-of-N / critique stays on the
         # closed slice; the open slice is generated directly so the sentence
         # answer survives the critique judge unchanged.
+        # 2026-07-30 — sample the gold/anti example sections ONCE per
+        # invocation and hand the same strings to every LLM call this order
+        # fans out into (MCQ sub-batches, top-ups). Keeps the static prompt
+        # prefix identical across the order's calls so provider-side prompt
+        # caching can hit (see CACHE_BREAKPOINT_MARKER); orders still rotate
+        # exemplars against each other because each invocation resamples.
+        example_pack = {
+            "excellent_examples": load_gold_standard(
+                topics=topics,
+                difficulty=difficulty,
+                question_type=question_type,
+            ),
+            "anti_examples": load_anti_patterns(),
+        }
+
         open_questions: List[Question] = []
         if open_count > 0:
             print(f"Generating {open_count} open-shape questions...")
@@ -398,6 +464,7 @@ class AdvancedQuestionGenerator:
                 avoid_questions=avoid_questions,
                 user_bad_examples=user_bad_examples,
                 open_shape=True,
+                example_pack=example_pack,
             )
             count = max(0, count - open_count)
         if count == 0:
@@ -424,6 +491,7 @@ class AdvancedQuestionGenerator:
                 user_bad_examples=user_bad_examples,
                 source_facts=source_facts,
                 mcq_patterns=mcq_patterns,
+                example_pack=example_pack,
             )
             return open_questions + closed_questions
 
@@ -444,16 +512,37 @@ class AdvancedQuestionGenerator:
                 source_facts=source_facts,
                 mcq_patterns=mcq_patterns,
                 mcq_emphasis=mcq_emphasis,
+                example_pack=example_pack,
             )
 
             print(f"Generated {len(raw_questions)} raw questions")
 
-            # Stage 2: Critique each question
+            # Stage 2: Critique each question (concurrently — the critique
+            # model is a frontier judge since 2026-07-30; serial calls made
+            # this stage the wall-clock bottleneck).
             print(f"Stage 2: Critiquing {len(raw_questions)} questions...")
-            questions_with_scores = []
+            critique_sem = asyncio.Semaphore(8)
 
-            for q in raw_questions:
-                critique = await self._critique_question(q)
+            async def _critique_bounded(q: Question):
+                async with critique_sem:
+                    return await self._critique_question(q)
+
+            critiques = await asyncio.gather(
+                *(_critique_bounded(q) for q in raw_questions)
+            )
+
+            questions_with_scores = []
+            for q, critique in zip(raw_questions, critiques):
+                if critique is None:
+                    # A6 (2026-07-30): a failed judge is a loud unknown, never
+                    # a fabricated "acceptable 5.0". Unscored candidates rank
+                    # behind every scored one; the error is kept on provenance.
+                    critique = {
+                        "overall_score": None,
+                        "verdict": "unscored",
+                        "critique_model": self.critique_model,
+                        "error": "critique_failed_after_retry",
+                    }
                 provenance = q.generation_metadata or GenerationProvenance()
                 merged_extra = dict(provenance.extra)
                 merged_extra.update(critique)
@@ -462,13 +551,15 @@ class AdvancedQuestionGenerator:
                     "critique_score": critique.get("overall_score"),
                     "extra": merged_extra,
                 })
-                questions_with_scores.append((q, critique["overall_score"]))
+                questions_with_scores.append((q, critique.get("overall_score")))
 
-            # Stage 3: Sort by score and select top N
-            print("Stage 3: Selecting best questions...")
-            questions_with_scores.sort(key=lambda x: x[1], reverse=True)
-
-            selected_questions = [q for q, score in questions_with_scores[:count]]
+            # Stage 3: absolute-score prefilter, then pairwise refinement
+            # (2026-07-30 review, section C: judges rank pairs far better
+            # than they place absolute scores).
+            print("Stage 3: Selecting best questions (pairwise refinement)...")
+            selected_questions = await self._select_top_pairwise(
+                questions_with_scores, count
+            )
 
             # #42 task 42.29 — the dead Stage 4 "regenerate low-quality" stub
             # (it warned but never acted — false confidence) was removed. The
@@ -492,6 +583,7 @@ class AdvancedQuestionGenerator:
                 source_facts=source_facts,
                 mcq_patterns=mcq_patterns,
                 mcq_emphasis=mcq_emphasis,
+                example_pack=example_pack,
             )
             return open_questions + closed_questions
 
@@ -507,6 +599,7 @@ class AdvancedQuestionGenerator:
         source_facts: Optional[list],
         mcq_patterns: set[str],
         question_type: str = "text",
+        example_pack: Optional[dict] = None,
     ) -> List[Question]:
         """Generate ``count`` questions as one small sub-batch per MCQ pattern.
 
@@ -564,6 +657,7 @@ class AdvancedQuestionGenerator:
                     user_bad_examples=user_bad_examples,
                     source_facts=facts,
                     mcq_patterns={pattern},
+                    example_pack=example_pack,
                 )
             except Exception as exc:  # noqa: BLE001
                 # #72 P1.3 (= #42 task 42.31) — crash isolation. One pattern's
@@ -601,6 +695,13 @@ class AdvancedQuestionGenerator:
         if feature_flags.mcq_critique_telemetry():
             for q in questions:
                 critique = await self._critique_question(q)
+                if critique is None:
+                    # A6: telemetry must not fabricate a score; record the miss.
+                    critique = {
+                        "verdict": "unscored",
+                        "critique_model": self.critique_model,
+                        "error": "critique_failed_after_retry",
+                    }
                 provenance = q.generation_metadata or GenerationProvenance()
                 merged_extra = dict(provenance.extra)
                 merged_extra.update(critique)
@@ -731,6 +832,7 @@ class AdvancedQuestionGenerator:
         mcq_patterns: Optional[set[str]] = None,
         mcq_emphasis: bool = False,
         open_shape: bool = False,
+        example_pack: Optional[dict] = None,
     ) -> List[Question]:
         """Generate a batch of questions.
 
@@ -742,6 +844,8 @@ class AdvancedQuestionGenerator:
                 LLM is told to set ``reasoning.pattern_used`` to one of the
                 snake_case keys and emit ``possible_answers`` + key-letter
                 ``correct_answer`` when it picks one.
+            example_pack: Pre-sampled example sections shared by every call of
+                one order (prompt-cache stability); None = sample per call.
         """
         prompt, prompt_version, use_open, use_fact_first = self._build_batch_prompt(
             count=count,
@@ -756,11 +860,12 @@ class AdvancedQuestionGenerator:
             mcq_patterns=mcq_patterns,
             mcq_emphasis=mcq_emphasis,
             open_shape=open_shape,
+            example_pack=example_pack,
         )
 
         # Call LLM
         response = await self.generation_llm.ainvoke([
-            HumanMessage(content=prompt)
+            HumanMessage(content=self._prompt_message_content(prompt))
         ])
 
         # Parse response
@@ -793,6 +898,8 @@ class AdvancedQuestionGenerator:
         mcq_patterns: Optional[set[str]] = None,
         mcq_emphasis: bool = False,
         open_shape: bool = False,
+        example_pack: Optional[dict] = None,
+        response_format_section: Optional[str] = None,
     ):
         """Select the prompt template and render the generation prompt.
 
@@ -800,6 +907,10 @@ class AdvancedQuestionGenerator:
         structured-output MCQ path reuses the identical template-selection
         and section-rendering rules instead of duplicating them. Returns
         ``(prompt, prompt_version, use_open, use_fact_first)``.
+
+        ``response_format_section`` overrides the builder's prose-JSON output
+        contract; the structured MCQ path passes the tool-schema note so the
+        prompt never ships two conflicting output contracts (review A4).
         """
         # Determine which prompt builder and version to use. The open/logical
         # branch (46.B4b) takes precedence and never uses source_facts — open
@@ -855,6 +966,11 @@ class AdvancedQuestionGenerator:
             mcq_patterns, mcq_emphasis=mcq_emphasis
         )
 
+        # A4 (2026-07-30) — the structured MCQ path replaces the prose-JSON
+        # output contract with the tool-schema note.
+        if response_format_section is not None:
+            extra_kwargs["response_format_section"] = response_format_section
+
         # Build prompt
         prompt = prompt_builder.build_prompt(
             count=count,
@@ -865,9 +981,38 @@ class AdvancedQuestionGenerator:
             excluded_topics=excluded_topics,
             avoid_questions=avoid_questions,
             user_bad_examples=user_bad_examples,
+            generation_model=self.generation_model,
+            **(example_pack or {}),
             **extra_kwargs,
         )
         return prompt, prompt_version, use_open, use_fact_first
+
+    def _prompt_message_content(self, prompt: str):
+        """Message content for a generation prompt, honouring the cache marker.
+
+        Under the OpenRouter gateway with an Anthropic generation model, the
+        static prefix (everything above ``CACHE_BREAKPOINT_MARKER``) is sent
+        as a ``cache_control`` text block so repeated calls within one order
+        (and sequential top-ups) read it from the provider prompt cache.
+        Everywhere else the marker is stripped — static-first ordering still
+        benefits providers with implicit prefix caching.
+        """
+        if CACHE_BREAKPOINT_MARKER not in prompt:
+            return prompt
+        static, dynamic = prompt.split(CACHE_BREAKPOINT_MARKER, 1)
+        if (
+            llm_factory.gateway() == llm_factory.OPENROUTER
+            and llm_factory.provider_for_model(self.generation_model) == "anthropic"
+        ):
+            return [
+                {
+                    "type": "text",
+                    "text": static,
+                    "cache_control": {"type": "ephemeral"},
+                },
+                {"type": "text", "text": dynamic},
+            ]
+        return static + dynamic
 
     def _finalize_questions(
         self,
@@ -895,6 +1040,12 @@ class AdvancedQuestionGenerator:
             # (via GenerationProvenance._absorb_unknown_keys); we lift
             # `pattern_used` into the typed `reasoning_pattern` slot here.
             pattern_used = self._extract_pattern_used(q.generation_metadata)
+            # A4 (2026-07-30): keep the model's why_interesting on provenance —
+            # it is the craft-guard "name the wrong assumption" evidence and
+            # would otherwise be dropped when provenance is rebuilt below.
+            why_interesting = self._extract_reasoning_field(
+                q.generation_metadata, "why_interesting"
+            )
             # Issue #46 task 46.B4b — tag pure lateral puzzles
             # `pipeline="logical_puzzle"` at generation time so F8's
             # source_url relaxation (46.B4a / D4) applies; open-mechanism
@@ -913,7 +1064,11 @@ class AdvancedQuestionGenerator:
                 model=self.generation_model,
                 provider=llm_factory.provider_for_model(self.generation_model),
                 prompt_version=prompt_version,
-                generation_temperature=self.generation_llm.temperature,
+                # getattr: frontier models reject sampling params, so the
+                # factory may construct the client without a temperature.
+                generation_temperature=getattr(
+                    self.generation_llm, "temperature", None
+                ),
                 pipeline=pipeline,
                 reasoning_pattern=pattern_used,
                 generation_flow=GENERATION_FLOW,
@@ -921,6 +1076,11 @@ class AdvancedQuestionGenerator:
                     "stage": "initial_generation",
                     "escape_hatch": feature_flags.v3_escape_hatch(),
                     "gen_craft_guards": feature_flags.gen_craft_guards(),
+                    **(
+                        {"why_interesting": why_interesting}
+                        if why_interesting
+                        else {}
+                    ),
                 },
             )
             # Extract self-critique if present (from V2/V3 CoT prompt)
@@ -953,6 +1113,7 @@ class AdvancedQuestionGenerator:
         user_bad_examples: Optional[List[str]],
         source_facts: Optional[list],
         mcq_patterns: set[str],
+        example_pack: Optional[dict] = None,
     ) -> List[Question]:
         """Generate one MCQ sub-batch via structured output (#42 task 42.25).
 
@@ -984,6 +1145,11 @@ class AdvancedQuestionGenerator:
             source_facts=source_facts,
             mcq_patterns=mcq_patterns,
             mcq_emphasis=True,
+            example_pack=example_pack,
+            # A4: structured output is bound below — the prompt must carry the
+            # tool-schema note, not the prose-JSON contract, or the model gets
+            # two conflicting output contracts.
+            response_format_section=STRUCTURED_MCQ_FORMAT_NOTE,
         )
 
         # 2026-07-27 live-run F-a: `include_raw=True` so one invalid item can
@@ -996,7 +1162,9 @@ class AdvancedQuestionGenerator:
         structured_llm = self.generation_llm.with_structured_output(
             MCQBatchOutput, method="function_calling", include_raw=True
         )
-        result = await structured_llm.ainvoke([HumanMessage(content=prompt)])
+        result = await structured_llm.ainvoke([
+            HumanMessage(content=self._prompt_message_content(prompt))
+        ])
         items = self._mcq_items_from_structured_result(result)
 
         default_category = categories[0] if categories else "general"
@@ -1021,7 +1189,10 @@ class AdvancedQuestionGenerator:
                             "source_url": item.source_url,
                             "source_excerpt": item.source_excerpt,
                             "reasoning": {
-                                "pattern_used": item.pattern_used or pinned_pattern
+                                "pattern_used": item.pattern_used or pinned_pattern,
+                                # A4: craft guard "name the wrong assumption"
+                                # is now observable on the structured path.
+                                "why_interesting": item.why_interesting,
                             },
                         },
                         default_difficulty=difficulty or "medium",
@@ -1298,6 +1469,19 @@ class AdvancedQuestionGenerator:
         return pattern if isinstance(pattern, str) and pattern else None
 
     @staticmethod
+    def _extract_reasoning_field(
+        provenance: Optional[GenerationProvenance], key: str
+    ) -> Optional[str]:
+        """A string field out of the parsed ``reasoning`` dict, if present."""
+        if provenance is None:
+            return None
+        reasoning = provenance.extra.get("reasoning")
+        if not isinstance(reasoning, dict):
+            return None
+        value = reasoning.get(key)
+        return value if isinstance(value, str) and value else None
+
+    @staticmethod
     def _format_facts_section(facts: list) -> str:
         """Format a list of Fact objects into a text section for the prompt.
 
@@ -1335,75 +1519,195 @@ class AdvancedQuestionGenerator:
 
         return "\n\n".join(lines)
 
-    async def _critique_question(self, question: Question) -> Dict[str, Any]:
-        """Critique a question using LLM judge.
+    @staticmethod
+    def _render_question_for_judge(question: Question) -> str:
+        """One-block rendering of a question for judge prompts.
 
-        Args:
-            question: Question to critique
-
-        Returns:
-            Critique data: {
-                "overall_score": 8.5,
-                "scores": {...},
-                "verdict": "excellent",
-                "reasoning": "...",
-                ...
-            }
+        A3 (2026-07-30): judges must see the OPTIONS and the resolved answer
+        TEXT — an MCQ scored against a bare key letter made surprise and
+        factual-confidence judgments noise.
         """
-        # Build critique prompt
+        _, answer_text = resolve_correct_answer(
+            question.correct_answer, question.possible_answers
+        )
+        lines = [f"Q: {question.question}"]
+        if question.possible_answers:
+            opts = " | ".join(
+                f"{str(k).lower()}) {v}"
+                for k, v in question.possible_answers.items()
+            )
+            lines.append(f"Options: {opts}")
+        lines.append(f"Answer: {answer_text}")
+        if question.explanation:
+            lines.append(f"Explanation: {question.explanation}")
+        return "\n".join(lines)
+
+    _PAIRWISE_PROMPT = """You are choosing the better of two trivia questions for a voice-first quiz played hands-free while driving. Each question is heard ONCE by a non-native-English adult and answered by voice.
+
+Judge on substance, in this order: the reveal (does the answer overturn an assumption worth retelling?), fairness (a reasoning path besides recall; for MCQ, plausible-but-eliminable options), one-listen clarity, retellability. Ignore superficial polish differences.
+
+QUESTION A:
+{a}
+
+QUESTION B:
+{b}
+
+Respond in JSON only:
+{{"winner": "A" or "B", "reason": "<one short sentence>"}}"""
+
+    def _parse_pairwise_winner(self, content: str) -> Optional[str]:
+        """'A' | 'B' from a pairwise verdict, else None (pair is skipped)."""
+        text = self._strip_markdown_fences(content)
+        start = text.find("{")
+        end = text.rfind("}") + 1
+        if start == -1 or end <= start:
+            return None
+        try:
+            data = json.loads(text[start:end])
+        except json.JSONDecodeError:
+            return None
+        winner = str(data.get("winner", "")).strip().upper()
+        return winner if winner in ("A", "B") else None
+
+    async def _select_top_pairwise(
+        self,
+        questions_with_scores: List[tuple],
+        count: int,
+    ) -> List[Question]:
+        """Absolute-score prefilter, then pairwise refinement (review C).
+
+        Judges rank pairs far better than they place absolute scores, so the
+        final ordering comes from pairwise wins among the top ``2*count``
+        absolute-scored candidates (ties broken by absolute score). Pairing is
+        a deterministic ring — full round-robin when small enough, otherwise
+        each candidate meets its 5 ring-nearest peers; A/B presentation order
+        alternates to cancel position bias. A failed/unparseable verdict skips
+        that pair only. Candidates whose critique failed (score None) sort
+        behind every scored candidate and never displace one.
+        """
+
+        def _abs_key(item: tuple) -> float:
+            score = item[1]
+            return -1.0 if score is None else float(score)
+
+        ordered = sorted(questions_with_scores, key=_abs_key, reverse=True)
+        if count <= 0:
+            return []
+        if len(ordered) <= count:
+            return [q for q, _ in ordered]
+
+        shortlist = ordered[: min(2 * count, len(ordered))]
+        n = len(shortlist)
+        pairs: set[tuple[int, int]] = set()
+        if n * (n - 1) // 2 <= 80:
+            pairs = {(i, j) for i in range(n) for j in range(i + 1, n)}
+        else:
+            for i in range(n):
+                for d in range(1, 6):
+                    j = (i + d) % n
+                    pairs.add((min(i, j), max(i, j)))
+
+        sem = asyncio.Semaphore(8)
+
+        async def _judge_pair(i: int, j: int, flip: bool) -> Optional[int]:
+            a_idx, b_idx = (j, i) if flip else (i, j)
+            prompt = self._PAIRWISE_PROMPT.format(
+                a=self._render_question_for_judge(shortlist[a_idx][0]),
+                b=self._render_question_for_judge(shortlist[b_idx][0]),
+            )
+            try:
+                async with sem:
+                    response = await self.critique_llm.ainvoke(
+                        [HumanMessage(content=prompt)]
+                    )
+            except Exception as exc:  # noqa: BLE001 — judge call boundary
+                print(f"Pairwise judge call failed (pair skipped): {exc!r}")
+                return None
+            winner = self._parse_pairwise_winner(response.content)
+            if winner is None:
+                print("Pairwise judge verdict unparseable (pair skipped)")
+                return None
+            return a_idx if winner == "A" else b_idx
+
+        outcomes = await asyncio.gather(
+            *(
+                _judge_pair(i, j, flip=bool((i + j) % 2))
+                for (i, j) in sorted(pairs)
+            )
+        )
+        wins = [0] * n
+        for w in outcomes:
+            if w is not None:
+                wins[w] += 1
+
+        ranked = sorted(
+            range(n),
+            key=lambda idx: (wins[idx], _abs_key(shortlist[idx])),
+            reverse=True,
+        )
+        return [shortlist[idx][0] for idx in ranked[:count]]
+
+    async def _critique_question(self, question: Question) -> Optional[Dict[str, Any]]:
+        """Critique a question using the LLM judge.
+
+        Returns critique data ({"overall_score": …, "scores": {…}, "verdict":
+        …, …}) or **None** after one retry — never a fabricated neutral score.
+        A6 (2026-07-30): the old parse-failure fallback returned
+        ``overall_score: 5.0, verdict: "acceptable"``, silently ranking failed
+        judgments as average; callers now handle None explicitly.
+        """
+        if question.possible_answers:
+            options_block = " | ".join(
+                f"{str(k).lower()}) {v}"
+                for k, v in question.possible_answers.items()
+            )
+        else:
+            options_block = "(not multiple-choice)"
+        _, answer_text = resolve_correct_answer(
+            question.correct_answer, question.possible_answers
+        )
         critique_prompt = self.critique_template.format(
             question=question.question,
-            correct_answer=question.correct_answer,
+            correct_answer=answer_text,
+            options_block=options_block,
             explanation=question.explanation or "(none provided)",
             question_type=question.type,
             difficulty=question.difficulty,
             topic=question.topic,
         )
 
-        # Call critique LLM
-        response = await self.critique_llm.ainvoke([
-            HumanMessage(content=critique_prompt)
-        ])
+        for attempt in (1, 2):
+            try:
+                response = await self.critique_llm.ainvoke([
+                    HumanMessage(content=critique_prompt)
+                ])
+                critique_content = self._strip_markdown_fences(response.content)
+                start = critique_content.find('{')
+                end = critique_content.rfind('}') + 1
+                if start == -1 or end <= start:
+                    print(
+                        f"No JSON in critique response (attempt {attempt}) "
+                        f"for: {question.question[:60]}..."
+                    )
+                    continue
 
-        # Parse critique JSON
-        try:
-            critique_content = self._strip_markdown_fences(response.content)
-            start = critique_content.find('{')
-            end = critique_content.rfind('}') + 1
+                critique_data = json.loads(critique_content[start:end])
+                critique_data["critique_model"] = self.critique_model
 
-            if start == -1 or end <= start:
-                # Fallback: assume mediocre (not generous) when parsing fails
-                return {
-                    "overall_score": 5.0,
-                    "verdict": "acceptable",
-                    "critique_model": self.critique_model,
-                    "error": "No JSON in critique response"
-                }
+                # Score normalization: if all dimensions scored >8, likely inflated
+                scores = critique_data.get("scores", {})
+                if scores and all(v > 8 for v in scores.values() if isinstance(v, (int, float))):
+                    original = critique_data.get("overall_score", 0)
+                    critique_data["overall_score"] = max(0, original - 0.5)
+                    critique_data["score_normalized"] = True
+                    critique_data["original_score"] = original
 
-            json_str = critique_content[start:end]
-            critique_data = json.loads(json_str)
+                return critique_data
 
-            # Add critique model info
-            critique_data["critique_model"] = self.critique_model
+            except Exception as e:  # noqa: BLE001 — judge call boundary
+                print(f"Critique attempt {attempt} failed: {e}")
 
-            # Score normalization: if all 6 dimensions scored >8, likely inflated
-            scores = critique_data.get("scores", {})
-            if scores and all(v > 8 for v in scores.values() if isinstance(v, (int, float))):
-                original = critique_data.get("overall_score", 0)
-                critique_data["overall_score"] = max(0, original - 0.5)
-                critique_data["score_normalized"] = True
-                critique_data["original_score"] = original
-
-            return critique_data
-
-        except Exception as e:
-            print(f"Error parsing critique: {e}")
-            return {
-                "overall_score": 5.0,
-                "verdict": "acceptable",
-                "critique_model": self.critique_model,
-                "error": str(e)
-            }
+        return None
 
     def _parse_response(
         self,

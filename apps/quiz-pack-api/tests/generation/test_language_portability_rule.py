@@ -34,6 +34,16 @@ PROMPTS = [
 
 HEADING = "## Language Portability (HARD RULE)"
 
+# 2026-07-30 prompt consolidation: the two active fact-first templates carry
+# the rule inside THE CONTRACT under this heading; the legacy templates keep
+# the original standalone section. Either heading satisfies "the rule exists".
+CONTRACT_HEADING = "**Language portability**"
+
+
+def _has_rule_heading(text: str) -> bool:
+    return HEADING in text or CONTRACT_HEADING in text
+
+
 # The classes the old orthography-only rubric missed. Each is a distinct failure
 # mode, so losing any one of them re-opens the bug for that class.
 REQUIRED_CLASSES = [
@@ -47,7 +57,9 @@ REQUIRED_CLASSES = [
 @pytest.mark.parametrize("prompt_file", PROMPTS)
 def test_prompt_carries_the_widened_portability_rule(prompt_file):
     text = (PROMPTS_DIR / prompt_file).read_text(encoding="utf-8")
-    assert HEADING in text, f"{prompt_file}: no language-portability rule section"
+    assert _has_rule_heading(text), (
+        f"{prompt_file}: no language-portability rule section"
+    )
     for phrase in REQUIRED_CLASSES:
         assert phrase in text, f"{prompt_file}: portability rule lost '{phrase}'"
 
@@ -84,5 +96,5 @@ def test_rule_survives_prompt_builder_render(prompt_file):
         facts_section="FACT: test fact",
         mcq_patterns_section="",
     )
-    assert HEADING in rendered
+    assert _has_rule_heading(rendered)
     assert "a murder of crows" in rendered

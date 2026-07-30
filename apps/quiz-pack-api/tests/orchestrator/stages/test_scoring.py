@@ -291,10 +291,11 @@ async def test_veto_shadow_flags_starboard_class_but_keeps_it(
         "q_0": {"gpt-4.1-mini": 4.0},  # clears the 3.0 floor — not score-dropped
         "q_1": {"gpt-4.1-mini": 8.0},  # good
     }
-    # Live SCORING_PROMPT alias names — q_0 reads as a boring dead-end recall Q.
+    # Per-dimension scorer names (2026-07-30 redesign): answerability is a
+    # real scored dimension — q_0 reads as a boring dead-end recall Q.
     dims = {
-        "q_0": {"surprise_delight": 2, "clever_framing": 2},
-        "q_1": {"surprise_delight": 8, "clever_framing": 9},
+        "q_0": {"surprise_delight": 2, "answerability": 2},
+        "q_1": {"surprise_delight": 8, "answerability": 9},
     }
     scorer = _FakeMultiModelScorer(scores, dims=dims)
     stage = ScoringStage(scorer)  # type: ignore[arg-type]
@@ -324,8 +325,8 @@ async def test_veto_enforce_drops_flagged_question(
         "q_1": {"gpt-4.1-mini": 8.0},
     }
     dims = {
-        "q_0": {"surprise_delight": 2, "clever_framing": 2},
-        "q_1": {"surprise_delight": 8, "clever_framing": 9},
+        "q_0": {"surprise_delight": 2, "answerability": 2},
+        "q_1": {"surprise_delight": 8, "answerability": 9},
     }
     scorer = _FakeMultiModelScorer(scores, dims=dims)
     stage = ScoringStage(scorer)  # type: ignore[arg-type]

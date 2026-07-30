@@ -63,32 +63,36 @@ def test_v3_prompt_offers_the_three_reasoning_patterns() -> None:
 
 
 def test_v3_prompt_caps_pure_recall_and_prefers_reasoning() -> None:
-    """The diversity rule is the only thing capping pure-recall questions; if it
-    is dropped the model is free to emit an all-recall (all-boring) batch."""
+    """The batch-shape rule is the only thing capping pure-recall questions; if
+    it is dropped the model is free to emit an all-recall (all-boring) batch.
+    (2026-07-30 consolidation: the old triple-quota wording collapsed into THE
+    CONTRACT's batch-shape rules — same intent, one statement.)"""
     prompt = _read_v3_prompt()
-    assert "At least 3 must use reasoning patterns (7-13)" in prompt
-    assert "No more than 4 can be pure fact-recall (1-6)" in prompt
-    assert "Prefer patterns 7-13" in prompt
+    assert "At least 4 different patterns per batch" in prompt
+    assert "no pattern more than 3 times" in prompt
+    assert "prefer reasoning patterns (7–13) over recall shapes (1–6)" in prompt
 
 
 def test_v3_prompt_scores_answerability() -> None:
-    """Answerability is the self-critique dimension scoring 'can the player
-    reason toward the answer' — the in-prompt signal against dead-end recall."""
+    """Fair answerability is the in-prompt signal against dead-end recall:
+    the player must have a path to the answer besides memory."""
     prompt = _read_v3_prompt()
-    assert "Answerability" in prompt
-    assert "reason, estimate, or deduce toward the answer" in prompt
+    assert "Fair answerability" in prompt
+    assert "at least one path to the answer besides memory" in prompt
 
 
 def test_v3_prompt_states_engagement_path_principle() -> None:
-    """The 'Engagement Path over Dead End' constitutional principle names the
-    boring failure mode directly; it must stay in the live prompt."""
+    """The engagement-path principle survives as a ranked clause of THE
+    CONTRACT's precedence order — fun never outranks a fair reasoning path.
+    (Was: 'Engagement Path over Dead End' constitutional principle.)"""
     prompt = _read_v3_prompt()
-    assert "Engagement Path over Dead End" in prompt
+    assert "(2) fair answerability" in prompt
+    assert "discarded no matter how fun" in prompt
 
 
 def test_v3_prompt_flags_structural_monotony() -> None:
-    """The structural-monotony red flags are the batch-level guard against the
-    'every question starts with Which / all fact-recall' failure mode."""
+    """The batch-shape opener rules are the guard against the 'every question
+    starts with Which' failure mode."""
     prompt = _read_v3_prompt()
-    assert "structural monotony" in prompt.lower()
-    assert "No estimation, comparison, or reasoning questions in the batch" in prompt
+    assert 'At most 30% of the batch opens with "Which"' in prompt
+    assert "at least 4 different opener structures" in prompt

@@ -261,11 +261,14 @@ When the question's topic is "Logic" (number sequences, analogies, odd-one-out, 
 ## Question to Evaluate
 
 **Question:** {question}
+**Options:** {options_block}
 **Correct Answer:** {correct_answer}
 **Explanation:** {explanation}
 **Type:** {question_type}
 **Difficulty:** {difficulty}
 **Topic:** {topic}
+
+For multiple-choice questions, judge WITH the options: distractor plausibility feeds Answerability (plausible-but-eliminable options are good; coin-flip or throwaway options are not), an option that leaks the answer feeds Clever Framing red flags, and Factual Accuracy must confirm exactly ONE option is defensibly correct.
 
 ---
 

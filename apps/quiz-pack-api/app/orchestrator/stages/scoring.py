@@ -68,11 +68,15 @@ MIN_DISTRACTOR_QUALITY = 4
 VETO_SURPRISE_MAX = 3.0
 VETO_ANSWERABILITY_MAX = 3.0
 
-# The live SCORING_PROMPT emits surprise_delight / clever_framing; the richer
-# question_critique_v2 rubric emits surprise_factor / answerability. The veto
-# reads whichever alias the scorer produced, so it works under either prompt.
+# The per-dimension scorer emits surprise_delight + answerability; the richer
+# question_critique_v2 rubric emits surprise_factor + answerability. The veto
+# reads whichever surprise alias the scorer produced. Answerability is a real
+# scored dimension since the 2026-07-30 redesign (generation review A5) — the
+# old clever_framing fallback is gone: clever_framing is capped by nine
+# unrelated craft defects, so reading it here turned the documented
+# dead-end-recall veto into "any craft defect + low surprise → drop".
 _SURPRISE_KEYS = ("surprise_factor", "surprise_delight")
-_ANSWERABILITY_KEYS = ("answerability", "clever_framing")
+_ANSWERABILITY_KEYS = ("answerability",)
 
 
 def _mean_dim(model_scores: list[dict], keys: tuple[str, ...]) -> float | None:

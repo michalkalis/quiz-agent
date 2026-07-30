@@ -63,38 +63,57 @@ def _build_v3_prompt() -> str:
     return prompt
 
 
-def test_craft_guards_absent_when_flag_off(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Default (dormant): production prompt output is unchanged."""
+def test_craft_guard_rules_always_on_in_contract(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """2026-07-30 consolidation: the guard RULES moved into THE CONTRACT and
+    are always on — flag off must still carry every rule's substance. One
+    assertion per rule so stripping any single one fails loudly (the
+    2026-05-20-class silent-regression lesson from P2.1)."""
     monkeypatch.delenv("GEN_CRAFT_GUARDS", raising=False)
     prompt = _build_v3_prompt()
-    assert "CRAFT GUARDS" not in prompt
-    assert "SOURCE FACTS" in prompt  # sanity: the v3 template really rendered
-
-
-def test_craft_guards_present_when_flag_on(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Flag on: every founder-calibrated guard reaches the prompt. One assertion
-    per guard so stripping any single rule fails loudly (the 2026-05-20-class
-    silent-regression lesson from P2.1)."""
-    monkeypatch.setenv("GEN_CRAFT_GUARDS", "1")
-    prompt = _build_v3_prompt()
-    assert "No stem leak" in prompt
-    assert "One sharp hook" in prompt
-    assert "Name the wrong assumption" in prompt
-    assert "The answer must be gettable" in prompt
-    assert "True/false discipline" in prompt
-    assert "No unguessable open numeric" in prompt
-    assert "Answer context payoff" in prompt
+    assert "no answer word (or derivative" in prompt          # stem leak
+    assert "ONE sharp clue per stem" in prompt                # one sharp hook
+    assert "the wrong assumption the player starts from" in prompt
+    assert "something the player has heard of" in prompt      # gettable answer
+    assert "genuinely ~50/50" in prompt                       # T/F discipline
+    assert "at least one path to the answer besides memory" in prompt
+    assert "1–2 spoken sentences" in prompt                   # context payoff
     # Pilot 2026-07-11 R2-Q10: an incidental exact year ("In 1834, …") read
     # unnatural to the founder — decade/era phrasing is the rule, exact year
     # only when the year itself is the question.
-    assert "No needless year precision" in prompt
-    # Rules 9-12: issue #99, G3 blind-rating 2026-07-15 — both models shared
-    # the same four formulation defects (deductive giveaway Q6/Q9/Q8,
-    # unanchored referent Q2/Q7/Q10, imperial units Q7, convoluted stem Q9).
-    assert "No deductive giveaway" in prompt
+    assert "only when the year itself is the point" in prompt
+    # Rules from issue #99, G3 blind-rating 2026-07-15 — both models shared
+    # the same four formulation defects.
+    assert "stereotype, a famous-person pattern, or elimination" in prompt
     assert "Anchor every referent" in prompt
     assert "Metric-first units" in prompt
-    assert "Read-aloud clarity" in prompt
+    assert "10-second read-aloud self-test" in prompt
+
+
+def test_craft_guards_flag_off_hides_illustrations(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Default (dormant): the founder-calibrated illustration block stays out;
+    the rendered prompt is unchanged."""
+    monkeypatch.delenv("GEN_CRAFT_GUARDS", raising=False)
+    prompt = _build_v3_prompt()
+    assert "founder-calibrated illustrations" not in prompt
+    assert "SOURCE FACTS" in prompt  # sanity: the v3 template really rendered
+
+
+def test_craft_guards_flag_on_adds_founder_illustrations(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Flag on: the worked examples from the founder's rating sessions reach
+    the prompt — the calibration data the contract's terse rules can't carry."""
+    monkeypatch.setenv("GEN_CRAFT_GUARDS", "1")
+    prompt = _build_v3_prompt()
+    assert "founder-calibrated illustrations" in prompt
+    assert "Napoleon was short" in prompt          # stem-leak worked example
+    assert "boiling vessel" in prompt              # deductive-giveaway example
+    assert "hippeus" in prompt                     # unanchored-referent example
+    assert "six miles from a body of water" in prompt  # convoluted stem
 
 
 def test_craft_guards_keep_founder_exceptions(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -105,9 +124,9 @@ def test_craft_guards_keep_founder_exceptions(monkeypatch: pytest.MonkeyPatch) -
     prompt = _build_v3_prompt()
     assert "count your pulse and multiply" in prompt
     assert "How many holes did the Old Course at St Andrews originally have?" in prompt
-    # #99 carve-outs: an iconic source figure may keep imperial in parentheses
-    # (rule 11), and the answer-cap's evicted context has a sanctioned home in
-    # the stem as a neutral anchor (rule 10) — not a blanket ban on context.
+    # #99 carve-outs: an iconic source figure may keep imperial in parentheses,
+    # and the answer-cap's evicted context has a sanctioned home in the stem as
+    # a neutral anchor — not a blanket ban on context.
     assert "100 °F (38 °C)" in prompt
     assert "NEUTRAL anchor" in prompt
 

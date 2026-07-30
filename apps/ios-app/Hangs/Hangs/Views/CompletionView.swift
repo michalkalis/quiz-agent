@@ -174,7 +174,13 @@ struct CompletionView: View {
                 icon: "arrow.counterclockwise",
                 height: 58
             ) {
-                Task { await viewModel.startNewQuiz() }
+                // Tracked via `beginQuizStart` (registers under `.quizStart` in the
+                // task bag), never a bare `Task { }`: an untracked start survives
+                // `resetToHome()`'s `taskBag.cancelAll()` and keeps going, so a
+                // "Play Again" then "Home" left an orphan runner that set
+                // currentSession/currentQuestion and spoke question TTS on the Home
+                // screen (#133 V15).
+                viewModel.beginQuizStart()
             }
             .accessibilityIdentifier("completion.playAgain")
 

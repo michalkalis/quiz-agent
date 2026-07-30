@@ -192,3 +192,42 @@ struct CompletionViewUpsellTests {
         }
     }
 }
+
+// MARK: - Play Again must be a TRACKED quiz start (#133 V15)
+
+// Why this test matters: `beginQuizStart()` registers the start Task in the shared
+// `taskBag` under `.quizStart`. A bare `Task { await viewModel.startNewQuiz() }` —
+// what this button used to do — is held by nothing, so it outlives
+// `resetToHome()`'s `taskBag.cancelAll()`. Tapping "Play Again" and then "Home"
+// therefore left an orphan runner that went on to set `currentSession`/
+// `currentQuestion` and speak the question's TTS over the Home screen (the
+// `.idle → askingQuestion` transition is rejected, but the playback side effect
+// still fires).
+@MainActor
+@Suite("CompletionView — Play Again task tracking (#133 V15)")
+struct CompletionViewPlayAgainTests {
+    @Test("tapping Play Again registers the start under .quizStart so Home can cancel it")
+    func playAgainStartIsTrackedAndCancellable() async throws {
+        let vm = QuizViewModel(
+            networkService: MockNetworkService(),
+            audioService: MockAudioService(),
+            persistenceStore: MockPersistenceStore()
+        )
+        vm.currentSession = Fixtures.session(score: 8, answered: 10)
+        vm.quizState = .finished
+        let view = CompletionView(viewModel: vm)
+
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(!vm.taskBag.contains(.quizStart))
+
+            try tree.find(viewWithAccessibilityIdentifier: "completion.playAgain").button().tap()
+            #expect(vm.taskBag.contains(.quizStart),
+                    "an untracked Task { } here survives resetToHome()'s cancelAll and speaks TTS on Home")
+
+            vm.resetToHome()
+            #expect(!vm.taskBag.contains(.quizStart),
+                    "Home must be able to stop the start Play Again just spawned")
+        }
+    }
+}

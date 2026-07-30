@@ -17,7 +17,6 @@ from __future__ import annotations
 import base64
 import logging
 import uuid
-from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import HTTPException
@@ -26,6 +25,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..db.models import AnonymousIdentity, DailyUsage, RefreshToken, User
+from ..usage.tracker import _month_start
 from .app_attest import AppAttestError
 from .apple_oauth import AppleOAuthClient, AppleOAuthError
 from .apple_secrets import AppleTokenCipher
@@ -169,7 +169,7 @@ async def erase_account(session: AsyncSession, user: User) -> None:
     an unlinked random id (not personal data) and, unlike deleting it, the
     device's App Attest key binding is left intact. The caller commits."""
     user_id = str(user.id)
-    await _preserve_todays_count_on_anons(session, user_id)
+    await _preserve_month_usage_on_anons(session, user_id)
     await session.execute(delete(DailyUsage).where(DailyUsage.subject_id == user_id))
     await session.execute(delete(RefreshToken).where(RefreshToken.anon_id == user_id))
     await session.execute(
@@ -180,28 +180,35 @@ async def erase_account(session: AsyncSession, user: User) -> None:
     await session.execute(delete(User).where(User.id == user.id))
 
 
-async def _preserve_todays_count_on_anons(session: AsyncSession, user_id: str) -> None:
-    """Carry the account's *today* question count back onto its linked anonymous
-    identities before the GDPR erasure drops the account's usage rows.
+async def _preserve_month_usage_on_anons(session: AsyncSession, user_id: str) -> None:
+    """Carry the account's *current calendar month* question counts back onto its
+    linked anonymous identities before the GDPR erasure drops its usage rows.
 
     Anti-abuse guard: the device's App Attest key stays bound to its anon, so
     after the delete the very next bootstrap returns the device to that subject —
-    if today's count died with the account, delete→re-bootstrap would be a free
-    daily-limit reset, repeatable every day. Only today's counter is kept
-    (GREATEST, so it can only tighten), on ids that are random and, after the
-    de-link below, no longer connected to the person — GDPR-minimal fraud
-    prevention, not retained account data. ``is_premium`` is deliberately NOT
-    carried over: the entitlement dies with the account."""
-    today = datetime.now(timezone.utc).date()
-    today_row = (
-        await session.execute(
-            select(DailyUsage).where(
-                DailyUsage.subject_id == user_id,
-                DailyUsage.usage_date == today,
+    if the consumed count died with the account, delete→re-bootstrap would be a
+    free quota reset. The window must match the quota window the gate reads
+    (``UsageTracker._read_month`` sums every row since ``_month_start()``);
+    carrying only today's row left every earlier day of the month unprotected,
+    which is a full free allotment per day. Rows are kept per day (GREATEST, so
+    it can only tighten), on ids that are random and, after the de-link below,
+    no longer connected to the person — GDPR-minimal fraud prevention, not
+    retained account data. ``is_premium`` is deliberately NOT carried over: the
+    entitlement dies with the account."""
+    month_rows = (
+        (
+            await session.execute(
+                select(DailyUsage).where(
+                    DailyUsage.subject_id == user_id,
+                    DailyUsage.usage_date >= _month_start(),
+                    DailyUsage.questions_count > 0,
+                )
             )
         )
-    ).scalar_one_or_none()
-    if today_row is None or today_row.questions_count <= 0:
+        .scalars()
+        .all()
+    )
+    if not month_rows:
         return
     anon_ids = (
         (
@@ -215,23 +222,24 @@ async def _preserve_todays_count_on_anons(session: AsyncSession, user_id: str) -
         .all()
     )
     for anon_id in anon_ids:
-        await session.execute(
-            pg_insert(DailyUsage)
-            .values(
-                subject_id=anon_id,
-                usage_date=today,
-                questions_count=today_row.questions_count,
-                is_premium=False,
+        for row in month_rows:
+            await session.execute(
+                pg_insert(DailyUsage)
+                .values(
+                    subject_id=anon_id,
+                    usage_date=row.usage_date,
+                    questions_count=row.questions_count,
+                    is_premium=False,
+                )
+                .on_conflict_do_update(
+                    index_elements=["subject_id", "usage_date"],
+                    set_={
+                        "questions_count": func.greatest(
+                            DailyUsage.questions_count, row.questions_count
+                        )
+                    },
+                )
             )
-            .on_conflict_do_update(
-                index_elements=["subject_id", "usage_date"],
-                set_={
-                    "questions_count": func.greatest(
-                        DailyUsage.questions_count, today_row.questions_count
-                    )
-                },
-            )
-        )
 
 
 async def usage_history(session: AsyncSession, subject_id: str) -> list[DailyUsage]:

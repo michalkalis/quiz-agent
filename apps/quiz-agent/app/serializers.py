@@ -167,8 +167,10 @@ def apply_question_translation(
         question_dict["possible_answers"] = dict(record["possible_answers"])
     if record.get("explanation"):
         question_dict["explanation"] = record["explanation"]
-    if record.get("headline_answer"):
-        question_dict["headline_answer"] = record["headline_answer"]
+    # No `headline_answer` overlay: the public question payload carries no
+    # answer gist at all (#133 V8). The translated gist is still produced and
+    # kept on the record — `translated_question_view` feeds it to the evaluator
+    # and flow injects it into the post-answer evaluation payload.
     return question_dict
 
 

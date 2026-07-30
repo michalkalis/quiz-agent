@@ -29,9 +29,12 @@ OMITTABLE_KEYS = {
     "image_subtype",
     "explanation",
     "age_appropriate",
-    "headline_answer",
     "generated_by",
 }
+# Answer-bearing fields that must not even exist as properties on the schema.
+# `headline_answer` is the gist the evaluator scores against, so listing it as
+# an omittable public key was blessing a pre-answer answer leak (#133 V8).
+ANSWER_KEYS = {"correct_answer", "headline_answer"}
 
 
 def _resolve(schema, components):
@@ -72,4 +75,4 @@ def test_public_question_schema_mirrors_wire_contract():
     props = set(schema["properties"])
     assert props == ALWAYS_PRESENT_KEYS | OMITTABLE_KEYS
     assert set(schema.get("required", [])) == ALWAYS_PRESENT_KEYS
-    assert "correct_answer" not in props
+    assert not (props & ANSWER_KEYS), props & ANSWER_KEYS

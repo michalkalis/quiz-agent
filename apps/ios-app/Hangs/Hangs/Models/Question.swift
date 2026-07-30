@@ -23,7 +23,9 @@ nonisolated struct Question: Codable, Identifiable, Equatable, Sendable {
     let mediaUrl: String?
     let imageSubtype: String?
     let explanation: String?
-    let headlineAnswer: String?
+    // No `headlineAnswer`: the answer gist reaches the client only after the
+    // answer, on `Evaluation.headlineAnswer` (#133 V8). The backend's
+    // PublicQuestion has no such field, so it can never arrive here again.
     let generatedBy: String?
     let ageAppropriate: String?
     let language: String?
@@ -62,7 +64,6 @@ nonisolated struct Question: Codable, Identifiable, Equatable, Sendable {
         case mediaUrl = "media_url"
         case imageSubtype = "image_subtype"
         case explanation
-        case headlineAnswer = "headline_answer"
         case generatedBy = "generated_by"
         case ageAppropriate = "age_appropriate"
         case language
@@ -89,7 +90,6 @@ nonisolated struct Question: Codable, Identifiable, Equatable, Sendable {
         mediaUrl = try container.decodeIfPresent(String.self, forKey: .mediaUrl)
         imageSubtype = try container.decodeIfPresent(String.self, forKey: .imageSubtype)
         explanation = try container.decodeIfPresent(String.self, forKey: .explanation)
-        headlineAnswer = try container.decodeIfPresent(String.self, forKey: .headlineAnswer)
         generatedBy = try container.decodeIfPresent(String.self, forKey: .generatedBy)
         ageAppropriate = try container.decodeIfPresent(String.self, forKey: .ageAppropriate)
         language = try container.decodeIfPresent(String.self, forKey: .language)
@@ -113,7 +113,6 @@ nonisolated struct Question: Codable, Identifiable, Equatable, Sendable {
         mediaUrl: String?,
         imageSubtype: String?,
         explanation: String?,
-        headlineAnswer: String? = nil,
         generatedBy: String?,
         ageAppropriate: String? = nil,
         language: String? = nil,
@@ -135,7 +134,6 @@ nonisolated struct Question: Codable, Identifiable, Equatable, Sendable {
         self.mediaUrl = mediaUrl
         self.imageSubtype = imageSubtype
         self.explanation = explanation
-        self.headlineAnswer = headlineAnswer
         self.generatedBy = generatedBy
         self.ageAppropriate = ageAppropriate
         self.language = language

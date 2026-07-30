@@ -95,8 +95,13 @@ struct NetworkDecodingTests {
         #expect(question.type == .text)
     }
 
-    @Test("JSON with headline_answer decodes into headlineAnswer (open-branch field)")
-    func decodeQuestionWithHeadlineAnswer() throws {
+    // #133 V8: `headline_answer` is the gist the evaluator scores against, so
+    // the backend no longer ships it with the *unanswered* question — Question
+    // has no such property. A stale backend build still sending the key must
+    // not break decoding, and the value must go nowhere (the reveal reads
+    // `Evaluation.headlineAnswer` instead — see the Evaluation test below).
+    @Test("A stray headline_answer on a question payload is ignored, not fatal")
+    func decodeQuestionIgnoresHeadlineAnswer() throws {
         let json = """
         {
             "id": "q_open_1",
@@ -117,31 +122,13 @@ struct NetworkDecodingTests {
         let data = json.data(using: .utf8)!
         let question = try JSONDecoder().decode(Question.self, from: data)
 
-        #expect(question.headlineAnswer == "Italian racing colour")
-    }
-
-    @Test("Question without headline_answer decodes headlineAnswer as nil (closed branch)")
-    func decodeQuestionWithoutHeadlineAnswer() throws {
-        let json = """
-        {
-            "id": "q_closed_1",
-            "question": "What is 2+2?",
-            "type": "text",
-            "possible_answers": null,
-            "difficulty": "easy",
-            "topic": "Math",
-            "category": "adults",
-            "source_url": null,
-            "source_excerpt": null,
-            "media_url": null,
-            "image_subtype": null,
-            "explanation": null
-        }
-        """
-        let data = json.data(using: .utf8)!
-        let question = try JSONDecoder().decode(Question.self, from: data)
-
-        #expect(question.headlineAnswer == nil)
+        #expect(question.id == "q_open_1")
+        #expect(question.explanation == "Red was Italy's international auto racing colour.")
+        // The answer gist is not reachable from a question at all: nothing in
+        // the encoded form of Question can carry it.
+        let reEncoded = try JSONEncoder().encode(question)
+        let keys = try JSONSerialization.jsonObject(with: reEncoded) as? [String: Any]
+        #expect(keys?["headline_answer"] == nil)
     }
 
     // MARK: - isMultipleChoice Logic

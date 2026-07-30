@@ -433,17 +433,21 @@ class PublicQuestionWire(TypedDict):
     image_subtype: NotRequired[str]
     explanation: NotRequired[str]
     age_appropriate: NotRequired[str]
-    headline_answer: NotRequired[str]
     generated_by: NotRequired[str]
 
 
 class PublicQuestion(BaseModel):
     """Client-facing projection of ``Question`` — the typed question payload.
 
-    Deliberately has **no field** for ``correct_answer`` (or any other
-    internal-only data: review workflow, embeddings, ratings, provenance
-    beyond ``generated_by``), so the answer cannot leak into a serialized
-    response. Wire-compatible with the legacy hand-built dict from
+    Deliberately has **no field** for ``correct_answer``, ``headline_answer``
+    (or any other internal-only data: review workflow, embeddings, ratings,
+    provenance beyond ``generated_by``), so the answer cannot leak into a
+    serialized response. ``headline_answer`` is the short answer gist the
+    evaluator actually scores against (``AnswerEvaluator``:
+    ``headline_answer or correct_answer``) — shipping it *with the question*
+    handed the client the answer before it was answered (#133 V8). It reaches
+    iOS only post-answer, on the evaluation payload. Wire-compatible with the
+    legacy hand-built dict from
     ``app.serializers.question_to_dict``: every dump goes through the custom
     serializer below, which reproduces that dict's exact keys and optionality
     (see ``PublicQuestionWire``).
@@ -462,7 +466,6 @@ class PublicQuestion(BaseModel):
     image_subtype: Optional[str] = None
     explanation: Optional[str] = None
     age_appropriate: Optional[str] = None
-    headline_answer: Optional[str] = None
     generated_by: Optional[str] = None
 
     @classmethod
@@ -482,7 +485,6 @@ class PublicQuestion(BaseModel):
             image_subtype=question.image_subtype,
             explanation=question.explanation,
             age_appropriate=question.age_appropriate,
-            headline_answer=question.headline_answer,
             generated_by=(
                 question.generation_metadata.model
                 if question.generation_metadata
@@ -513,8 +515,6 @@ class PublicQuestion(BaseModel):
             wire["explanation"] = self.explanation
         if self.age_appropriate:
             wire["age_appropriate"] = self.age_appropriate
-        if self.headline_answer:
-            wire["headline_answer"] = self.headline_answer
         if self.generated_by:
             wire["generated_by"] = self.generated_by
         return wire

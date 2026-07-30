@@ -6,6 +6,13 @@ had to keep *exactly* the legacy keys, casing and optionality for every question
 type. The EXPECTED_WIRE dicts below are **literal captures** of the legacy
 builder's output (captured 2026-07-20, pre-conversion) — they must never be
 regenerated from the model, or the test becomes a tautology.
+
+One key was deliberately *removed* from the capture since: ``headline_answer``
+(#133 V8, 2026-07-30). It is the short answer gist the evaluator scores against,
+so emitting it alongside the unanswered question handed the client the answer.
+It is now structurally absent from ``PublicQuestion`` and pinned so by
+``test_answer_fields_can_never_appear_in_payload``. Any *other* diff against
+these captures is a wire break, not an improvement.
 """
 
 import json
@@ -90,8 +97,8 @@ FIXTURES = {
 # Literal legacy output — see module docstring. Key facts encoded here:
 # the 9 fixed keys are ALWAYS present (possible_answers/source_url/
 # source_excerpt as null when unset); media_url / image_subtype / explanation /
-# age_appropriate / headline_answer / generated_by are OMITTED (never null)
-# when unset; correct_answer never appears.
+# age_appropriate / generated_by are OMITTED (never null) when unset;
+# correct_answer and headline_answer never appear at all.
 EXPECTED_WIRE = {
     "text_minimal": {
         "id": "q_text1",
@@ -116,7 +123,6 @@ EXPECTED_WIRE = {
         "source_excerpt": "Cats purr at healing frequencies.",
         "explanation": "Purring frequencies promote bone density.",
         "age_appropriate": "all",
-        "headline_answer": "healing vibrations",
         "generated_by": "gpt-9",
     },
     "text_multichoice": {
@@ -193,20 +199,31 @@ def test_optional_keys_are_absent_not_null():
         "image_subtype",
         "explanation",
         "age_appropriate",
-        "headline_answer",
         "generated_by",
     ):
         assert key not in wire, f"{key} must be omitted, not present/null"
 
 
-def test_correct_answer_can_never_appear_in_payload():
-    """The answer must be structurally unable to leak to the client."""
-    assert "correct_answer" not in PublicQuestion.model_fields
-    for name, question in FIXTURES.items():
-        assert "correct_answer" not in question_to_dict(question), name
-    # Even a poisoned input dict cannot smuggle the answer through validation.
-    poisoned = {**EXPECTED_WIRE["text_minimal"], "correct_answer": "Paris"}
-    assert "correct_answer" not in PublicQuestion.model_validate(poisoned).model_dump()
+def test_answer_fields_can_never_appear_in_payload():
+    """The answer must be structurally unable to leak to the client.
+
+    Both spellings of "the answer" are guarded. ``headline_answer`` is not a
+    softer variant: ``AnswerEvaluator`` scores against ``headline_answer or
+    correct_answer``, so for an open question it *is* the answer — and it
+    shipped with the still-unanswered question until #133 V8. ``text_full``
+    below carries one, so this fails the moment the field returns.
+    """
+    for field in ("correct_answer", "headline_answer"):
+        assert field not in PublicQuestion.model_fields, field
+        for name, question in FIXTURES.items():
+            assert field not in question_to_dict(question), f"{name}/{field}"
+        # Even a poisoned input dict cannot smuggle the answer through validation.
+        poisoned = {**EXPECTED_WIRE["text_full"], field: "healing vibrations"}
+        dumped = PublicQuestion.model_validate(poisoned).model_dump()
+        assert field not in dumped, field
+    # Premise guard: text_full HAS a headline_answer, so its absence above is
+    # the projection dropping it, not the fixture lacking one.
+    assert FIXTURES["text_full"].headline_answer == "healing vibrations"
 
 
 def test_legacy_dict_roundtrips_through_typed_field():

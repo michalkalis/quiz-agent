@@ -222,18 +222,18 @@ struct VoiceCommandObservabilityTests {
         #expect(coordinator.shouldLogDroppedTranscript(isFinal: false), "the next utterance is sampled afresh")
     }
 
-    /// WHY: with the master switch OFF `currentCommandScreen` is nil, so EVERY
-    /// transcript takes the window-closed drop branch — yet the consumer is still
-    /// armed for VAD. Attaching raw speech there would upload a running transcript
-    /// of the founder's car in exchange for no diagnostic value whatsoever.
-    @Test("raw speech is never attached to a drop log when voice commands are OFF")
-    func dropLogOmitsTextWhenCommandsDisabled() {
+    /// WHY: the no-raw-speech rule (Logging.swift) is a GA privacy invariant —
+    /// drop logs may carry triage metadata, never what the user actually said.
+    /// The pre-GA "text while founder is the only user" exception was removed
+    /// 2026-07-30; this test keeps it from creeping back in either switch state.
+    @Test("raw speech is never attached to a drop log, regardless of the master switch")
+    func dropLogNeverCarriesText() {
         let (vm, _, _) = makeVM()
         let coordinator = vm.voiceCommandCoordinator
 
         vm.settings.voiceCommandsEnabled = true
         let on = coordinator.droppedTranscriptAttributes("start now", isFinal: false, tokens: 2, sincePrevMs: 420)
-        #expect(on["text"] as? String == "start now", "the temporary diagnostic exception still applies while ON")
+        #expect(on["text"] == nil, "commands ON must not upload transcripts either")
         #expect(on["len"] as? Int == 9)
         #expect(on["sincePrevMs"] as? Int == 420)
 

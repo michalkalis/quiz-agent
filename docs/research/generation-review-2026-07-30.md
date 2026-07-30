@@ -7,6 +7,10 @@ first-hand verification of env/config claims. Companion actions shipped same day
 staging corpus cull to prod's 31 approved rows; translation layer moved to
 claude-opus-5 (see git log 2026-07-30).
 
+> **Addendum (same day):** the full fix order below SHIPPED 2026-07-30 — see
+> [issue #134 — gen pipeline frontier fix run](../issues/issue-134-gen-pipeline-frontier-fix-run.md).
+> Founder model policy: always frontier models; Bedrock channel added (awaits AWS keys).
+
 ## Verdict in one paragraph
 
 The pipeline architecture (source facts → generate → verify → score → dedup → top-up)

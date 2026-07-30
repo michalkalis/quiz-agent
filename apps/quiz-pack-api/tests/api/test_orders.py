@@ -77,9 +77,19 @@ async def test_create_order_happy_path_202(
     assert order.status == "in_progress"
     assert order.target_count == 20  # server-derived, not from body
     assert order.job_id is not None
+    # The queue handoff is stamped, not left to chance: the stuck-order sweep
+    # gates its 'pending' branch on `enqueued_at` (#133 item 1e).
+    assert order.enqueued_at is not None
 
-    # ARQ assertions — exactly one enqueue call with the right args
-    arq_mock.enqueue_job.assert_awaited_once_with("process_order", str(order_id))
+    # ARQ assertions — exactly one enqueue call with the right args, carrying the
+    # deterministic attempt id (adversarial audit 2026-07-30, #133 item 1e).
+    # Without an explicit `_job_id` arq mints a random uuid4 per enqueue, so a
+    # duplicate enqueue of this same first attempt (a sweep tick racing the
+    # handoff) was unrecognisable and ran a second paid pipeline for one
+    # purchase. Counters are 0/0 at creation, hence the ':0:0' suffix.
+    arq_mock.enqueue_job.assert_awaited_once_with(
+        "process_order", str(order_id), _job_id=f"process_order:{order_id}:0:0"
+    )
 
 
 @pytest.mark.asyncio

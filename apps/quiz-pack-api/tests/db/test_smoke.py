@@ -55,7 +55,7 @@ def test_alembic_upgrade_head_is_idempotent() -> None:
     assert "Running upgrade" not in second.stderr
     assert "Running upgrade" not in second.stdout
     # And current revision should match head.
-    assert "9c1a2f6e5b3d" in (current.stdout + current.stderr)
+    assert "a3f7c81d92be" in (current.stdout + current.stderr)
     # First run is allowed to be a no-op too (DB may already be at head from a
     # prior pytest invocation), so we don't assert on it — its purpose is only
     # to guarantee the DB is at head before the second-run idempotency check.

@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import os
 import uuid
+from datetime import datetime, timezone
 from typing import AsyncIterator, Optional
 from unittest.mock import AsyncMock, MagicMock
 
@@ -246,6 +247,7 @@ async def test_retry_failed_order_returns_202(
     jws = make_jws(
         payload_overrides={"transactionId": tx_id, "productId": "pack_10"}
     )
+    before_retry = datetime.now(timezone.utc)
     resp = await client.post(
         f"/v1/orders/{order_id}/retry", headers={"X-StoreKit-JWS": jws}
     )
@@ -284,6 +286,14 @@ async def test_retry_failed_order_returns_202(
     assert job.manual_retry_count == 1
     assert job.error is None
     assert job.progress == 0
+    # Fresh queue handoff (#133 item 1e): the stuck-order sweep gates 'pending'
+    # on `enqueued_at`, so a retry that left it at the original purchase time
+    # would be classified as stuck by the next tick — a second paid pipeline for
+    # this same order, in the window before the flip to 'in_progress'. Compared
+    # against a timestamp from *this* clock, not against `created_at`: that one
+    # is written by `now()` on the DB server, whose clock runs ~60 ms ahead of
+    # the app's inside Docker.
+    assert order.enqueued_at >= before_retry
 
 
 @pytest.mark.integration

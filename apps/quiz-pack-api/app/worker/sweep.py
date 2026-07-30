@@ -59,9 +59,16 @@ async def sweep_stuck_orders(ctx: Dict[str, Any]) -> None:
     now = datetime.now(timezone.utc)
 
     async with session_factory() as session:
+        # Staleness is the age of the *queue handoff* (`order.enqueued_at`), not
+        # the age of the order: a requeued order (manual /retry, or this sweep's
+        # own recovery) has an ancient `created_at`, so measuring that made every
+        # requeue look stuck the moment it parked at 'pending' — and the ~ms
+        # window before its enqueue was enough for a tick to start a second paid
+        # pipeline for the same purchase. Every writer that parks an order at
+        # 'pending' bumps `enqueued_at`.
         pending_stmt = select(GenerationOrder.id).where(
             GenerationOrder.status == "pending",
-            GenerationOrder.created_at < now - PENDING_STUCK_TIMEOUT,
+            GenerationOrder.enqueued_at < now - PENDING_STUCK_TIMEOUT,
         )
         pending_ids = (await session.execute(pending_stmt)).scalars().all()
 
@@ -145,6 +152,7 @@ async def _recover_stuck_order(ctx: Dict[str, Any], order_id: uuid.UUID) -> None
         job.error = None
         job.retry_count = job.retry_count + 1
         order.status = "pending"
+        order.enqueued_at = datetime.now(timezone.utc)
         enqueue_id = attempt_job_id(order_id, job)
         await session.commit()
 

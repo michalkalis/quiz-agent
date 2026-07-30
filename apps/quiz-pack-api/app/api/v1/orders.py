@@ -25,7 +25,7 @@ accepted for the founder-only phase (#95 Session 1).
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Annotated, Optional
 
@@ -250,6 +250,11 @@ async def create_order(
         category=body.category,
         theme=body.theme,
         status="pending",
+        # The sweep measures 'pending' staleness by `enqueued_at`; stamp it at
+        # the same point the row is parked at 'pending', here and on every
+        # requeue, so a tick in the gap before the enqueue below sees a fresh
+        # handoff instead of a stuck order.
+        enqueued_at=datetime.now(timezone.utc),
     )
     session.add(order)
     await session.flush()  # get order.id
@@ -261,6 +266,13 @@ async def create_order(
     order.job_id = job.id
     await session.flush()
 
+    # Read the attempt key before the commit (same reason as in retry_order:
+    # afterwards the ORM would need a lazy refresh, unavailable on this async
+    # session). Counters are 0/0 here, so this first attempt has the same
+    # deterministic id any duplicate enqueue of it would compute — arq drops the
+    # duplicate instead of running two paid pipelines for one purchase.
+    enqueue_id = attempt_job_id(order.id, job)
+
     await session.commit()
 
     # 7. Enqueue ARQ — after commit so the worker can read the row.
@@ -271,7 +283,7 @@ async def create_order(
     # a silently stuck order. The periodic sweep (app.worker.sweep) is the
     # remaining safety net for orders that slip past this point.
     try:
-        await arq_pool.enqueue_job("process_order", str(order.id))
+        await arq_pool.enqueue_job("process_order", str(order.id), _job_id=enqueue_id)
     except Exception as exc:
         job.status = "failed"
         job.error = f"enqueue failed: {exc!r}"
@@ -524,6 +536,9 @@ async def retry_order(
     job.retry_count = 0
     job.manual_retry_count = job.manual_retry_count + 1
     order.status = "pending"
+    # Fresh queue handoff: without this the sweep would keep measuring the
+    # original purchase time and treat this requeue as stuck on its next tick.
+    order.enqueued_at = datetime.now(timezone.utc)
     # Read the attempt key before the commit: after it the ORM would need a
     # lazy refresh to answer, which is not available on this async session.
     enqueue_id = attempt_job_id(order.id, job)

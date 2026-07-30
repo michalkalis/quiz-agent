@@ -70,6 +70,16 @@ class GenerationOrder(Base, UUIDPrimaryKeyMixin):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=text("now()")
     )
+    # When this order was last parked at 'pending' and handed to the queue.
+    # Load-bearing for the stuck-order sweep's `pending` branch, which used to
+    # measure `created_at`: for a *requeued* order (manual /retry or a sweep
+    # recovery) that is hours old, so a tick landing in the few ms between "park
+    # at pending" and "enqueue" classified a live requeue as stuck and started a
+    # second paid pipeline for one purchase. Every writer that parks an order at
+    # 'pending' bumps this; `server_default now()` covers the initial insert.
+    enqueued_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
     delivered_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )

@@ -83,9 +83,15 @@ def _session_factory(engine: AsyncEngine):
 
 
 async def _make_stuck_pending(
-    session: AsyncSession, *, age: timedelta
+    session: AsyncSession, *, age: timedelta, enqueued_age: timedelta | None = None
 ) -> tuple[uuid.UUID, uuid.UUID]:
-    """Insert an order stuck 'pending' (as if enqueue never happened)."""
+    """Insert an order stuck 'pending' (as if enqueue never happened).
+
+    ``age`` backdates the purchase (``created_at``); ``enqueued_age`` backdates
+    the queue handoff (``enqueued_at``) and defaults to ``age``. Passing a
+    *smaller* ``enqueued_age`` models a requeued order: old purchase, fresh
+    handoff — the case the sweep must not touch.
+    """
     order = GenerationOrder(
         transaction_id=f"sweep-pending-{uuid.uuid4().hex}",
         product_id="pack_10",
@@ -100,10 +106,18 @@ async def _make_stuck_pending(
     session.add(job)
     await session.flush()
     order.job_id = job.id
-    # Backdate created_at past the stuck-pending threshold.
+    # Backdate the purchase and the queue handoff; the sweep gates on the latter.
+    now = datetime.now(timezone.utc)
     await session.execute(
-        text("UPDATE generation_orders SET created_at = :ts WHERE id = :id"),
-        {"ts": datetime.now(timezone.utc) - age, "id": order.id},
+        text(
+            "UPDATE generation_orders SET created_at = :created, enqueued_at = :enqueued "
+            "WHERE id = :id"
+        ),
+        {
+            "created": now - age,
+            "enqueued": now - (age if enqueued_age is None else enqueued_age),
+            "id": order.id,
+        },
     )
     await session.commit()
     return order.id, job.id
@@ -330,6 +344,95 @@ async def test_sweep_ignores_a_just_requeued_order(
     assert order.status == "in_progress"
     assert job.retry_count == 0  # recovery budget not burned
     assert job.status == "queued"
+
+    await _cleanup(session, order_id)
+
+
+@pytest.mark.asyncio
+async def test_sweep_gates_pending_on_the_queue_handoff_not_the_purchase(
+    engine: AsyncEngine, session: AsyncSession
+) -> None:
+    """A 'pending' order whose queue handoff is FRESH must be left alone, even
+    when the purchase itself is ancient — while a genuinely stale handoff is
+    still recovered.
+
+    Adversarial audit 2026-07-30 (#133 item 1e): the pending branch measured
+    `order.created_at`, but a requeue (manual /retry or this sweep's own
+    recovery) parks a long-since-purchased order back at 'pending' — ancient
+    `created_at`, brand-new handoff. A tick landing in the few ms between that
+    park and the enqueue therefore matched a live requeue and started a SECOND
+    paid pipeline for one purchase (double LLM + Tavily spend, two packs with
+    one orphaned). Both orders here share the same ancient `created_at`, so the
+    only thing that can separate them is `enqueued_at` — this test fails if the
+    predicate reverts to the purchase timestamp.
+    """
+    ancient = timedelta(hours=1)
+    fresh_id, fresh_job_id = await _make_stuck_pending(
+        session, age=ancient, enqueued_age=timedelta(seconds=1)
+    )
+    stale_id, stale_job_id = await _make_stuck_pending(
+        session, age=ancient, enqueued_age=PENDING_STUCK_TIMEOUT + timedelta(seconds=5)
+    )
+    pool = FakeArqPool(fail=False)
+    ctx: Dict[str, Any] = {
+        "redis": pool,
+        "session_factory": _session_factory(engine),
+    }
+
+    await sweep_stuck_orders(ctx)
+
+    enqueued = [arg for _, arg in pool.calls]
+    assert str(fresh_id) not in enqueued  # no second pipeline for one purchase
+    assert str(stale_id) in enqueued  # recovery still works
+
+    session.expire_all()
+    assert (await session.get(GenerationOrder, fresh_id)).status == "pending"
+    assert (await session.get(GenerationJob, fresh_job_id)).retry_count == 0
+    assert (await session.get(GenerationOrder, stale_id)).status == "in_progress"
+    assert (await session.get(GenerationJob, stale_job_id)).retry_count == 1
+
+    await _cleanup(session, fresh_id)
+    await _cleanup(session, stale_id)
+
+
+@pytest.mark.asyncio
+async def test_sweep_stamps_a_fresh_handoff_when_it_requeues(
+    engine: AsyncEngine, session: AsyncSession
+) -> None:
+    """The sweep's own recovery must bump `enqueued_at` on the order it parks
+    back at 'pending'.
+
+    Otherwise the row it just touched still advertises an ancient handoff, and
+    an immediately-following tick (the cron plus `run_at_startup=True` after a
+    deploy) recovers the same order again — burning the shared retry budget on
+    duplicate attempts until the order fails 'refund_eligible'. The enqueue is
+    forced to fail here because that is the branch that *leaves* the order
+    'pending', i.e. the only one where the stamp still decides the next tick.
+    """
+    order_id, job_id = await _make_stuck_pending(
+        session, age=PENDING_STUCK_TIMEOUT + timedelta(seconds=5)
+    )
+    failing_ctx: Dict[str, Any] = {
+        "redis": FakeArqPool(fail=True),
+        "session_factory": _session_factory(engine),
+    }
+
+    await sweep_stuck_orders(failing_ctx)
+
+    session.expire_all()
+    order = await session.get(GenerationOrder, order_id)
+    assert order.status == "pending"  # premise: still in the pending branch
+    assert order.enqueued_at > datetime.now(timezone.utc) - PENDING_STUCK_TIMEOUT
+
+    # An immediate second tick must not re-recover it.
+    pool = FakeArqPool(fail=False)
+    await sweep_stuck_orders(
+        {"redis": pool, "session_factory": _session_factory(engine)}
+    )
+
+    session.expire_all()
+    assert str(order_id) not in [arg for _, arg in pool.calls]
+    assert (await session.get(GenerationJob, job_id)).retry_count == 1
 
     await _cleanup(session, order_id)
 

@@ -117,12 +117,17 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         }
     }
 
-    private var playbackState: PlaybackState = .idle
+    /// `private(set)` so the operation-overlap contract is assertable without a
+    /// live AVPlayer — same test-seam rationale as `streamingGeneration`.
+    private(set) var playbackState: PlaybackState = .idle
 
-    // Stream continuation for active playback.
+    // Stream continuation for the active playback operation, PAIRED with the id it
+    // belongs to. The pairing is the point (#133 V12): every late caller — the stall
+    // timer, a body unwinding after it was superseded, `cleanupPlayback` — must act
+    // on ITS OWN operation, not on whatever happens to be playing now.
     // AsyncThrowingStream.Continuation.finish() is safe to call multiple times (subsequent calls are no-ops),
     // eliminating the double-resume crashes that CheckedContinuation caused.
-    private var playbackStreamContinuation: AsyncThrowingStream<TimeInterval, Error>.Continuation?
+    private var playbackStreamContinuation: (id: UUID, continuation: AsyncThrowingStream<TimeInterval, Error>.Continuation)?
 
     private var audioRecorder: AVAudioRecorder?
     private var audioPlayer: AVPlayer?
@@ -998,11 +1003,70 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         // Cancel any previous playback first
         await stopPlayback()
 
-        // Mark this as the current operation
-        playbackState = .playing(id: operationId)
+        // Mark this as the current operation — claim + cancellable handle together
+        let stream = beginPlaybackOperation(operationId)
+
+        // Returning must never leave THIS operation registered as current, including
+        // the paths that throw before `performPlaybackBody` installs its own cleanup
+        // (a failed category switch, an unwritable temp file). Id-gated, so a newer
+        // operation's registration is never touched.
+        defer { endPlaybackOperation(operationId) }
 
         // Perform the actual playback
-        return try await performPlayback(data: data, operationId: operationId)
+        return try await performPlayback(data: data, operationId: operationId, stream: stream)
+    }
+
+    /// Claims `operationId` as the current playback operation and registers the
+    /// handle that resumes — or cancels — the caller awaiting it. Deliberately ONE
+    /// synchronous step (#133 V12).
+    ///
+    /// The claim and the registration used to be separated by a real suspension:
+    /// `performPlaybackBody` awaits `asset.load(.duration)` before it reaches its
+    /// playback setup. A newer playback landing in that window saw `.playing` but
+    /// found no continuation, so `stopPlayback()` cancelled nothing — then the older
+    /// call woke up, replaced the newer registration, and sat on a stream nothing
+    /// would ever feed. Its caller hung forever: `playQuestionAudio`'s tail never
+    /// ran, so the thinking-time countdown never armed, the playing-TTS flags stuck
+    /// and voice commands stayed dead until the app was restarted. Claiming and
+    /// registering as one step makes "there is a current operation" and "that
+    /// operation can be cancelled" the same fact.
+    ///
+    /// Internal (not private) so that contract is unit-testable without a live
+    /// AVPlayer — same seam rationale as `streamingGeneration`.
+    func beginPlaybackOperation(_ operationId: UUID) -> AsyncThrowingStream<TimeInterval, Error> {
+        let (stream, continuation) = AsyncThrowingStream<TimeInterval, Error>.makeStream()
+        playbackState = .playing(id: operationId)
+        playbackStreamContinuation = (id: operationId, continuation: continuation)
+        return stream
+    }
+
+    /// The continuation for `operationId`, or `nil` once a newer playback has taken
+    /// over. Every late caller resolves its own operation through this rather than
+    /// reading shared playback state.
+    func playbackContinuation(for operationId: UUID) -> AsyncThrowingStream<TimeInterval, Error>.Continuation? {
+        guard let active = playbackStreamContinuation, active.id == operationId else { return nil }
+        return active.continuation
+    }
+
+    /// Retracts `operationId`'s registration. No-op once a newer operation replaced
+    /// it, so an older call unwinding late cannot strand the newer one's caller.
+    func endPlaybackOperation(_ operationId: UUID) {
+        guard playbackStreamContinuation?.id == operationId else { return }
+        playbackStreamContinuation = nil
+    }
+
+    /// Whether the 5-second stall timer armed for a playback operation should fail
+    /// it. Both conditions are load-bearing:
+    ///
+    /// - `isCurrentOperation` — the timer may only judge the operation it was armed
+    ///   for. It used to read `audioPlayer`, which by then belonged to a NEWER
+    ///   playback, so a superseded operation's timer saw "playing fine", early
+    ///   returned, and never rescued its own stranded caller (#133 V12).
+    /// - `playerIsPlaying` — within its own operation, only a player that never
+    ///   reached `.playing` is a stall. Failing unconditionally aborted every TTS
+    ///   longer than 5 s and started the thinking-timer mid-read.
+    nonisolated static func shouldFailStalledPlayback(isCurrentOperation: Bool, playerIsPlaying: Bool) -> Bool {
+        isCurrentOperation && !playerIsPlaying
     }
 
     /// Performs the actual audio playback with proper cancellation support.
@@ -1011,17 +1075,26 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
     /// stream.continuation.finish() is idempotent — calling it from multiple sources
     /// (completion notification, failure notification, stall timer, stopPlayback) is safe.
     /// CheckedContinuation.resume() called twice would crash; this cannot.
-    private func performPlayback(data: Data, operationId: UUID) async throws -> TimeInterval {
+    private func performPlayback(
+        data: Data,
+        operationId: UUID,
+        stream: AsyncThrowingStream<TimeInterval, Error>
+    ) async throws -> TimeInterval {
         // Switch to .playback for the duration of TTS so we don't pay the ~6dB
         // attenuation .playAndRecord applies. The defer in withPlaybackCategory
         // restores the previous category on every exit path.
         return try await withPlaybackCategory {
-            try await self.performPlaybackBody(data: data, operationId: operationId)
+            try await self.performPlaybackBody(data: data, operationId: operationId, stream: stream)
         }
     }
 
-    private func performPlaybackBody(data: Data, operationId: UUID) async throws -> TimeInterval {
-        // playbackState already set to .playing(id: operationId) by caller
+    private func performPlaybackBody(
+        data: Data,
+        operationId: UUID,
+        stream: AsyncThrowingStream<TimeInterval, Error>
+    ) async throws -> TimeInterval {
+        // playbackState already claimed and the stream registered by the caller
+        // (beginPlaybackOperation) — before any suspension below, by design.
 
         // Save to temporary file for playback (MP3 for universal AVPlayer compatibility)
         let tempURL = FileManager.default.temporaryDirectory
@@ -1062,10 +1135,17 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
         Logger.audio.debug("🔊 Audio duration: \(String(format: "%.1f", durationSeconds), privacy: .public)s")
 
-        isPlaying = true
+        // A newer playback superseded this one while `asset.load` was suspended
+        // above: `stopPlayback()` already finished this operation's stream with
+        // CancellationError and the newer call now owns `audioPlayer`. Bail before
+        // touching any shared playback state — falling through here used to start
+        // the NEWER player, arm observers on this call's orphaned item, and
+        // overwrite the newer registration (#133 V12).
+        guard let continuation = playbackContinuation(for: operationId) else {
+            throw CancellationError()
+        }
 
-        let (stream, continuation) = AsyncThrowingStream<TimeInterval, Error>.makeStream()
-        playbackStreamContinuation = continuation
+        isPlaying = true
 
         // KVO: monitor playback status for stalling diagnostics (logging only)
         let statusObserver = audioPlayer?.observe(\.timeControlStatus, options: [.new]) { player, _ in
@@ -1087,15 +1167,17 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
             }
         }
 
-        // Stall timeout: fail only if playback never reached .playing within 5 seconds.
-        // Without the status check this timer fires unconditionally and aborts any
-        // TTS longer than 5s — which caused the thinking-timer to start mid-read
-        // while audio kept playing in the background.
+        // Stall timeout: fail only if THIS operation never reached .playing within 5
+        // seconds — see `shouldFailStalledPlayback` for why both conditions matter.
         // If playback already completed or was stopped, continuation.finish(throwing:)
         // is a no-op — safe.
         let stalledTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: false) { [weak self] _ in
             Task { @MainActor [weak self] in
-                guard self?.audioPlayer?.timeControlStatus != .playing else { return }
+                guard let self else { return }
+                guard Self.shouldFailStalledPlayback(
+                    isCurrentOperation: playbackContinuation(for: operationId) != nil,
+                    playerIsPlaying: audioPlayer?.timeControlStatus == .playing
+                ) else { return }
                 Logger.audio.warning("⚠️ Playback timeout - audio failed to start within 5 seconds")
                 continuation.finish(throwing: AudioError.playbackFailed)
             }
@@ -1133,14 +1215,15 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         }
 
         // Clean up all local observers/timer when this scope exits — whether via return,
-        // throw, or Task cancellation. The continuation is already cleared by stopPlayback()
-        // or cleanupPlayback() before this defer runs.
+        // throw, or Task cancellation. The registration retraction is id-gated: a newer
+        // playback may already own it by the time this defer runs, and clearing it
+        // blindly would strand THAT caller (the mirror image of #133 V12).
         defer {
             NotificationCenter.default.removeObserver(successObserver)
             NotificationCenter.default.removeObserver(failureObserver)
             statusObserver?.invalidate()
             stalledTimer.invalidate()
-            playbackStreamContinuation = nil
+            endPlaybackOperation(operationId)
         }
 
         audioPlayer?.play()
@@ -1176,8 +1259,8 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
     private func cleanupPlayback(operationId: UUID) async {
         guard case let .playing(activeId) = playbackState, activeId == operationId else { return }
 
-        playbackStreamContinuation?.finish(throwing: CancellationError())
-        playbackStreamContinuation = nil
+        playbackContinuation(for: operationId)?.finish(throwing: CancellationError())
+        endPlaybackOperation(operationId)
 
         audioPlayer?.pause()
         audioPlayer = nil
@@ -1202,9 +1285,12 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
             return
         }
 
-        // Signal the stream: causes `for try await` in performPlayback to throw CancellationError.
+        // Signal the stream: causes `for try await` in performPlayback to throw
+        // CancellationError. Since the claim and the registration are made together
+        // (`beginPlaybackOperation`), a `.playing` state ALWAYS has a continuation to
+        // finish here — the pre-#133 gap where this cancelled nothing is gone.
         // The defer in performPlayback will then remove observers and clean up local state.
-        playbackStreamContinuation?.finish(throwing: CancellationError())
+        playbackStreamContinuation?.continuation.finish(throwing: CancellationError())
         playbackStreamContinuation = nil
 
         audioPlayer?.pause()

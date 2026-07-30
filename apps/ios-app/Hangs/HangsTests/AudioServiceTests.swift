@@ -177,6 +177,122 @@ struct PlaybackStateTests {
     }
 }
 
+// MARK: - Playback Operation Overlap (#133 V12)
+
+//
+// `playOpusAudio` claimed `.playing(id:)` and only registered the continuation that
+// resumes its caller much later, after the real suspension in `asset.load(.duration)`.
+// A newer playback landing in that window found nothing to cancel, then replaced the
+// registration — and the older caller's `for try await` waited on a stream nothing
+// would ever feed. The 5-second stall timer could not rescue it either: it inspected
+// `audioPlayer`, which by then belonged to the NEWER playback, so it saw "playing
+// fine" and early-returned. The awaiting caller hung forever, so
+// `playQuestionAudio`'s tail never ran: no thinking-time countdown, playing-TTS flags
+// stuck true, `currentCommandScreen` nil — voice commands dead until app restart.
+//
+// The claim and the registration are now one step (`beginPlaybackOperation`), and
+// every late caller resolves ITS OWN operation (`playbackContinuation(for:)`). Those
+// seams are asserted directly here: instantiating AudioService touches no
+// AVAudioSession (observers register in `setupAudioSession`), so the overlap
+// bookkeeping is testable without a live AVPlayer. Driving real playback to the
+// suspension point would need a controllable `asset.load` — left to on-device /
+// regression coverage.
+//
+
+@Suite("Playback Operation Overlap")
+@MainActor
+struct PlaybackOperationOverlapTests {
+    @Test("a superseded playback's caller is cancelled, never left waiting")
+    func supersededOperationCancelsItsCaller() async throws {
+        let service = AudioService()
+        let older = UUID()
+        let olderStream = service.beginPlaybackOperation(older)
+
+        // Exactly what a newer playOpusAudio does: stop, then claim. Pre-fix the older
+        // claim carried no continuation yet, so this cancelled nothing.
+        await service.stopPlayback()
+        let newer = UUID()
+        _ = service.beginPlaybackOperation(newer)
+
+        // The older caller must come back — with CancellationError, the documented
+        // supersede semantics — rather than await a stream nobody will ever feed.
+        await #expect(throws: CancellationError.self) {
+            for try await _ in olderStream {}
+        }
+        #expect(service.playbackState == .playing(id: newer), "the newer playback stays the current operation")
+    }
+
+    @Test("an older playback unwinding late cannot strand the newer one")
+    func lateRetractionLeavesNewerOperationIntact() async {
+        let service = AudioService()
+        let older = UUID()
+        _ = service.beginPlaybackOperation(older)
+        await service.stopPlayback()
+        let newer = UUID()
+        _ = service.beginPlaybackOperation(newer)
+
+        service.endPlaybackOperation(older) // the older body's defer, running late
+
+        #expect(
+            service.playbackContinuation(for: newer) != nil,
+            "the newer caller must still be cancellable — clearing the registration blindly is the mirror image of the bug"
+        )
+    }
+
+    @Test("only the owning operation resolves the active continuation")
+    func continuationLookupIsOwnershipGated() {
+        let service = AudioService()
+        let mine = UUID()
+        _ = service.beginPlaybackOperation(mine)
+
+        #expect(service.playbackContinuation(for: mine) != nil)
+        #expect(
+            service.playbackContinuation(for: UUID()) == nil,
+            "a stale operation id must resolve to nothing — that is how late callbacks know to stand down"
+        )
+    }
+
+    @Test("a claim is never observable without the handle that cancels it")
+    func claimAlwaysCarriesItsHandle() {
+        let service = AudioService()
+        #expect(service.playbackState.isIdle)
+
+        let id = UUID()
+        _ = service.beginPlaybackOperation(id)
+
+        // The whole defect was a window where this pair disagreed.
+        #expect(service.playbackState.playbackId == id)
+        #expect(service.playbackContinuation(for: id) != nil)
+    }
+}
+
+// MARK: - Playback Stall Verdict (#133 V12)
+
+@Suite("Playback Stall Verdict")
+struct PlaybackStallVerdictTests {
+    @Test("its own operation, never started playing → fail it")
+    func ownOperationNotPlayingFails() {
+        // The original purpose of the timer: a player that never reached .playing
+        // within 5s is stalled and the caller must be released with an error.
+        #expect(AudioService.shouldFailStalledPlayback(isCurrentOperation: true, playerIsPlaying: false))
+    }
+
+    @Test("its own operation, playing → leave it alone")
+    func ownOperationPlayingIsIgnored() {
+        // A TTS read longer than 5s is not a stall; failing here started the
+        // thinking-timer mid-read while audio kept playing.
+        #expect(!AudioService.shouldFailStalledPlayback(isCurrentOperation: true, playerIsPlaying: true))
+    }
+
+    @Test("a superseded operation never judges the newer playback")
+    func supersededOperationIsIgnored() {
+        // The V12 half: this timer belongs to a playback that was already cancelled.
+        // Reading the live player instead let it early-return believing all was well.
+        #expect(!AudioService.shouldFailStalledPlayback(isCurrentOperation: false, playerIsPlaying: true))
+        #expect(!AudioService.shouldFailStalledPlayback(isCurrentOperation: false, playerIsPlaying: false))
+    }
+}
+
 // MARK: - Audio Session Category Options (#104 founder decision)
 
 //

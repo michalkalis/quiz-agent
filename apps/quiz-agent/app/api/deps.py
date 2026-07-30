@@ -105,6 +105,17 @@ class SubmitInputRequest(BaseModel):
 
     input: str = Field(..., min_length=1, description="User's natural language input")
     participant_id: Optional[str] = Field(default=None, description="For multiplayer")
+    question_id: Optional[str] = Field(
+        default=None,
+        description=(
+            "The question this input answers (#133). Send it on every submit: a "
+            "retry of an already-graded submission is then replayed (or, if the "
+            "text was edited, re-graded against that same question) instead of "
+            "being scored against the next question and charging a second "
+            "freemium question. A question_id the session cannot grade gets 409 "
+            "`question_mismatch`. Omit for the legacy behaviour."
+        ),
+    )
 
 
 class InputResponse(BaseModel):

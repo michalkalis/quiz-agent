@@ -36,7 +36,7 @@ from ...retrieval.question_retriever import QuestionRetriever
 from ...rating.feedback import FeedbackService
 from ...usage.tracker import UsageTracker
 from ...tts.service import TTSService
-from ...quiz.flow import QuizFlowService, prefetch_question_audio
+from ...quiz.flow import QuestionMismatch, QuizFlowService, prefetch_question_audio
 from ...rate_limit import limiter
 from quiz_shared.models.phase import SessionPhase
 
@@ -244,6 +244,18 @@ async def submit_input(
                 answer_text=body.input,
                 participant_id=body.participant_id,
                 include_audio=audio,
+                submitted_question_id=body.question_id,
+            )
+        except QuestionMismatch as e:
+            # #133 1a: the client is a whole question out of step. Grading this
+            # text would score a question the player never saw, so refuse and hand
+            # back the id to resync on. Nothing was mutated.
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "code": "question_mismatch",
+                    "current_question_id": e.current_question_id,
+                },
             )
         except _TRANSIENT_INFRA_ERRORS as e:
             # Cold-wake DB hiccup (staging auto_stop_machines) or pool exhaustion —

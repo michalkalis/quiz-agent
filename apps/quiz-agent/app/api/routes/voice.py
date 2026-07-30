@@ -4,7 +4,15 @@ import asyncio
 import logging
 from difflib import SequenceMatcher
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, File
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    HTTPException,
+    Query,
+    Request,
+    UploadFile,
+)
 
 from ..deps import (
     InputResponse,
@@ -18,7 +26,7 @@ from ..deps import (
 from ...session.manager import SessionManager
 from ...voice.transcriber import VoiceTranscriber
 from ...retrieval.question_retriever import QuestionRetriever
-from ...quiz.flow import QuizFlowService
+from ...quiz.flow import QuestionMismatch, QuizFlowService
 from ...rate_limit import limiter
 from quiz_shared.models.phase import SessionPhase
 
@@ -79,6 +87,18 @@ async def transcribe_and_submit(
     quiz_flow: QuizFlowService = Depends(get_quiz_flow),
     audio: UploadFile = File(..., description="Audio file with quiz answer"),
     participant_id: Optional[str] = None,
+    question_id: Optional[str] = Query(
+        default=None,
+        description=(
+            "The question this recording answers (#133). Send it on every submit: "
+            "a retry of an already-graded submission is then replayed (or "
+            "re-graded against that same question if the new transcript differs) "
+            "instead of being scored against the next question and charging a "
+            "second freemium question. An id the session cannot grade gets 409 "
+            "`question_mismatch` before any transcription is paid for. Omit for "
+            "the legacy behaviour."
+        ),
+    ),
     include_audio: bool = True,
     _auth=Depends(require_auth_or_grace),
 ):
@@ -101,8 +121,16 @@ async def transcribe_and_submit(
                     detail=f"Unsupported audio format. Supported: {', '.join(VoiceTranscriber.SUPPORTED_FORMATS)}",
                 )
 
+            # #133 1a: reject an out-of-step question_id here, before paying
+            # OpenAI for a transcription the flow would refuse to grade anyway.
+            is_resubmission = quiz_flow.classify_submission(session, question_id)
+
+            # Transcribe against the question this recording is FOR: a retry of a
+            # lost submit carries the already-graded id, and priming Whisper with
+            # the question the session has since advanced to would transcribe the
+            # same audio differently — turning a free replay into a paid re-grade.
             current_question = await asyncio.to_thread(
-                question_retriever.get, session.current_question_id
+                question_retriever.get, question_id or session.current_question_id
             )
             if not current_question:
                 raise HTTPException(
@@ -155,9 +183,14 @@ async def transcribe_and_submit(
                     similarity * 100,
                 )
 
-            # Parallel next-question prefetch
+            # Parallel next-question prefetch. Skipped for a re-submitted question
+            # (#133 1a): that path never advances, so the retrieval — a pgvector
+            # query plus an embedding call — would be paid for nothing.
             next_question_task = None
-            if len(session.asked_question_ids) < session.max_questions:
+            if (
+                not is_resubmission
+                and len(session.asked_question_ids) < session.max_questions
+            ):
                 next_question_task = asyncio.create_task(
                     asyncio.to_thread(question_retriever.get_next_question, session)
                 )
@@ -173,6 +206,7 @@ async def transcribe_and_submit(
                 participant_id=participant_id,
                 include_audio=include_audio,
                 next_question=next_question,
+                submitted_question_id=question_id,
             )
 
             # Voice-specific: require an answer intent
@@ -197,6 +231,17 @@ async def transcribe_and_submit(
 
         except HTTPException:
             raise
+        except QuestionMismatch as e:
+            # #133 1a: the client is a whole question out of step. Grading this
+            # recording would score a question the player never saw, so refuse and
+            # hand back the id to resync on. Nothing was mutated.
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "code": "question_mismatch",
+                    "current_question_id": e.current_question_id,
+                },
+            )
         except ValueError as e:
             # Constructed validation text (format/size) — client-safe by design.
             logger.warning(

@@ -11,6 +11,57 @@ from .phase import InvalidPhaseTransition, SessionPhase, is_valid_transition
 logger = logging.getLogger(__name__)
 
 
+class LastEvaluation(BaseModel):
+    """The most recently graded submission, kept so a re-submit is idempotent (#133 1a).
+
+    Clients re-POST an answer for a question the server has already graded: the
+    transient-retry wrapper re-sends when a response is lost, and editing a voice
+    transcript submits the corrected text after the original was accepted. With
+    no record of what was graded, the retry was scored against the NEXT, unseen
+    question and charged a second freemium question. Keeping the graded
+    submission on the session lets the submit path recognise it by
+    ``question_id`` and either replay the stored verdict or re-grade the new text
+    against the SAME question — never advancing twice, never charging twice.
+
+    The deltas are what the flow actually applied, so a re-grade reverses the
+    previous effect exactly instead of recomputing it.
+    """
+
+    question_id: str = Field(..., description="Question this text was graded against")
+    submitted_text: str = Field(
+        ..., description="Raw submitted text (typed input or transcript), as received"
+    )
+    evaluation: Dict[str, Any] = Field(
+        ..., description="The evaluation dict returned to the client; replayed verbatim"
+    )
+    feedback_received: List[str] = Field(
+        default_factory=list,
+        description="Parsed-intent strings that accompanied that submission",
+    )
+    points_awarded: float = Field(
+        0.0, description="Score delta applied to the answering participant"
+    )
+    answered_count_delta: int = Field(
+        0, description="answered_count delta applied (0 for a skip)"
+    )
+    participant_id: Optional[str] = Field(
+        None,
+        description=(
+            "Participant the deltas were applied to (None = the single-player "
+            "default, participants[0]); a reversal must target the same one"
+        ),
+    )
+    translation: Optional[Dict[str, Any]] = Field(
+        None,
+        description=(
+            "Serve-time translation record for that question. Kept because the "
+            "session's current record has since been overwritten by the next "
+            "question, and a re-grade must score against the exact strings the "
+            "player saw."
+        ),
+    )
+
+
 class QuizSession(BaseModel):
     """Quiz session state.
 
@@ -118,6 +169,13 @@ class QuizSession(BaseModel):
     last_result: Optional[str] = Field(
         None,
         description="Last result: correct | partially_correct | incorrect | skipped",
+    )
+
+    # #133 1a — the last graded submission, so a client that re-sends the same
+    # question_id gets its verdict replayed (or the edited text re-graded against
+    # that same question) instead of grading it against the current question.
+    last_evaluation: Optional[LastEvaluation] = Field(
+        None, description="Last graded submission; makes a re-submit idempotent"
     )
 
     # Timestamps

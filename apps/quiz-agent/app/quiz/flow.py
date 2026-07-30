@@ -18,11 +18,13 @@ from ..tts.service import TTSService
 from ..usage.tracker import UsageTracker
 
 from quiz_shared.models.question import Question
-from quiz_shared.models.session import QuizSession
+from quiz_shared.models.session import LastEvaluation, QuizSession
 from quiz_shared.models.phase import SessionPhase
 
 from ..serializers import (
+    apply_question_translation,
     correct_option_key,
+    question_to_dict,
     session_translation,
     translated_question_payload,
     translated_question_view,
@@ -76,6 +78,35 @@ def _log_prefetch_outcome(task: "asyncio.Task") -> None:
         logger.debug("TTS prefetch completed (cache warmed)")
 
 
+class QuestionMismatch(Exception):
+    """A submit carried a ``question_id`` this session cannot grade (#133 1a).
+
+    It is neither the current question nor the last graded one, so the client is
+    a whole question out of step (stale UI, resumed session) and grading the text
+    would score the wrong question. Raised before any mutation — session state is
+    untouched — and turned into a 409 carrying the current id so the client can
+    resync instead of silently answering something the player never saw.
+    """
+
+    def __init__(self, current_question_id: Optional[str]):
+        super().__init__(
+            "submitted question_id does not match this session "
+            f"(current={current_question_id})"
+        )
+        self.current_question_id = current_question_id
+
+
+def _same_submission(new_text: str, graded_text: str) -> bool:
+    """Whether a re-sent submission is the same answer that was already graded.
+
+    Compared case- and whitespace-insensitively because the evaluator normalizes
+    both anyway: a retry differing only there would produce the identical verdict,
+    so replaying it is free and correct. Anything else — an edited transcript, a
+    re-transcribed upload — is a genuinely different answer and gets re-graded.
+    """
+    return new_text.strip().casefold() == graded_text.strip().casefold()
+
+
 @dataclass
 class FlowResult:
     """Result of processing a quiz answer through the flow."""
@@ -87,6 +118,20 @@ class FlowResult:
     quiz_finished: bool = False
     message: str = "Input processed"
     usage_limit_error: Optional[Dict[str, Any]] = None
+
+
+@dataclass
+class _IntentOutcome:
+    """What one parse-and-apply pass actually changed, for the caller to persist.
+
+    ``score_delta``/``answered_delta`` are the participant-counter effects, kept
+    so a re-graded submission can reverse the previous verdict exactly (#133 1a).
+    """
+
+    score_delta: float = 0.0
+    answered_delta: int = 0
+    preferences_changed: bool = False
+    feedback_audio: Optional[bytes] = None
 
 
 class QuizFlowService:
@@ -110,6 +155,29 @@ class QuizFlowService:
         self.usage_tracker = usage_tracker
         self.translation_service = translation_service
 
+    def classify_submission(
+        self, session: QuizSession, submitted_question_id: Optional[str]
+    ) -> bool:
+        """True when a submit re-sends a question this session already graded (#133 1a).
+
+        False = grade it against the current question, which is also the legacy
+        path: a client that sends no ``question_id`` behaves exactly as before.
+        Raises ``QuestionMismatch`` when the id is neither the current nor the
+        last-graded question.
+
+        Pure and side-effect free, so callers can gate expensive work on it — the
+        voice route checks it before paying for transcription.
+        """
+        if (
+            submitted_question_id is None
+            or submitted_question_id == session.current_question_id
+        ):
+            return False
+        previous = session.last_evaluation
+        if previous is not None and previous.question_id == submitted_question_id:
+            return True
+        raise QuestionMismatch(session.current_question_id)
+
     async def process_answer(
         self,
         session: QuizSession,
@@ -117,6 +185,7 @@ class QuizFlowService:
         participant_id: Optional[str] = None,
         include_audio: bool = False,
         next_question: Optional[Question] = None,
+        submitted_question_id: Optional[str] = None,
     ) -> FlowResult:
         """Process a user's answer through the full quiz flow.
 
@@ -126,10 +195,24 @@ class QuizFlowService:
             participant_id: Optional participant ID for multiplayer
             include_audio: Whether to include audio info in response
             next_question: Pre-fetched next question (from parallel fetch in voice endpoint)
+            submitted_question_id: The question the client believes it is answering
+                (#133 1a). None = legacy client, always the current question. An
+                already-graded id is replayed or re-graded against that question
+                instead of scoring the current one; anything else raises
+                ``QuestionMismatch``.
 
         Returns:
             FlowResult with evaluation, next question, audio info, etc.
         """
+        if self.classify_submission(session, submitted_question_id):
+            return await self._process_resubmission(
+                session=session,
+                previous=session.last_evaluation,
+                answer_text=answer_text,
+                participant_id=participant_id,
+                include_audio=include_audio,
+            )
+
         result = FlowResult()
         evaluated_question_id = session.current_question_id
 
@@ -142,110 +225,17 @@ class QuizFlowService:
         if not current_question:
             raise ValueError("Current question not found")
 
-        # #132 D / #126: score against the question exactly as the player saw it.
-        # The serve-time translation record (one LLM call, stored on the session)
-        # carries the translated stem, options, explanation and answer — so the
-        # spoken Slovak answer is matched against Slovak option text, and the
-        # result screen quotes the same strings. No record (English session, or a
-        # translation that fell back) → the original English question, unchanged.
         translation = session_translation(session, evaluated_question_id)
-        display_question = translated_question_view(current_question, translation)
-
-        # Parse intents (fast-path for literal "skip")
-        if answer_text.strip().lower() == "skip":
-            intents = [{"intent_type": "skip", "extracted_data": {}}]
-        else:
-            intents = await self.input_parser.parse(
-                user_input=answer_text,
-                current_question=display_question.question,
-                phase=session.phase,
-            )
-
-        enhanced_feedback_audio = None
-
-        # Process intents
-        for intent in intents:
-            intent_type = intent.get("intent_type")
-            extracted_data = intent.get("extracted_data", {})
-
-            if intent_type == "answer":
-                user_answer = extracted_data.get("answer")
-                eval_result, score_delta = await self.answer_evaluator.evaluate(
-                    user_answer=user_answer,
-                    question=display_question,
-                    question_text=display_question.question,
-                )
-
-                translated_correct = await self._correct_answer_display(
-                    current_question, translation, session
-                )
-
-                result.evaluation = {
-                    "user_answer": user_answer,
-                    "result": eval_result,
-                    "points": score_delta,
-                    "correct_answer": translated_correct,
-                    "question_id": evaluated_question_id,
-                }
-                if display_question.headline_answer:
-                    result.evaluation["headline_answer"] = (
-                        display_question.headline_answer
-                    )
-                if display_question.explanation:
-                    result.evaluation["explanation"] = display_question.explanation
-
-                # Generate enhanced feedback audio
-                if include_audio and self.tts_service:
-                    enhanced_feedback_audio = await self._generate_feedback_audio(
-                        eval_result, translated_correct, session.language
-                    )
-
-                # Update participant score
-                self._update_participant_score(session, participant_id, score_delta)
-                result.feedback_received.append(f"answer: {eval_result}")
-
-            elif intent_type == "skip":
-                translated_correct = await self._correct_answer_display(
-                    current_question, translation, session
-                )
-                result.evaluation = {
-                    "user_answer": "skipped",
-                    "result": "skipped",
-                    "points": 0.0,
-                    "correct_answer": translated_correct,
-                    "question_id": evaluated_question_id,
-                }
-                if display_question.headline_answer:
-                    result.evaluation["headline_answer"] = (
-                        display_question.headline_answer
-                    )
-                if display_question.explanation:
-                    result.evaluation["explanation"] = display_question.explanation
-                result.feedback_received.append("skipped question")
-
-            elif intent_type == "rating":
-                rating_value = extracted_data.get("rating")
-                result.feedback_received.append(f"rating: {rating_value}")
-
-            elif intent_type == "preference_change":
-                for topic in extracted_data.get("avoid_topics") or []:
-                    if not topic:
-                        continue
-                    if topic not in session.disliked_topics:
-                        session.disliked_topics.append(topic)
-                    result.feedback_received.append(f"avoiding: {topic}")
-                for topic in extracted_data.get("prefer_topics") or []:
-                    if not topic:
-                        continue
-                    if topic not in session.preferred_topics:
-                        session.preferred_topics.append(topic)
-                    result.feedback_received.append(f"preference: {topic}")
-                stepped = _DIFFICULTY_STEPS.get(
-                    extracted_data.get("difficulty"), {}
-                ).get(session.current_difficulty)
-                if stepped:
-                    session.current_difficulty = stepped
-                    result.feedback_received.append(f"difficulty: {stepped}")
+        outcome = await self._apply_intents(
+            session=session,
+            answer_text=answer_text,
+            evaluated_question_id=evaluated_question_id,
+            question=current_question,
+            translation=translation,
+            participant_id=participant_id,
+            include_audio=include_audio,
+            result=result,
+        )
 
         # Ghost-question guard (#66): a non-answer intent (rating, difficulty,
         # preference, category, or an unparseable utterance) produces no evaluation.
@@ -253,13 +243,23 @@ class QuizFlowService:
         # current_question_id or burn a freemium question on a non-answer. The
         # callers surface this as a 400 with no state mutation.
         if result.evaluation is None:
-            result.message = "No answer detected in input"
-            return result
+            return self._no_answer_result(session, result, outcome)
+
+        # #133 1a: remember what was graded BEFORE anything advances, so a retry
+        # of this same submission is replayed instead of scoring the next question.
+        session.last_evaluation = self._evaluation_record(
+            result=result,
+            question_id=evaluated_question_id,
+            submitted_text=answer_text,
+            translation=translation,
+            participant_id=participant_id,
+            outcome=outcome,
+        )
 
         # Build audio info
-        if include_audio and result.evaluation:
+        if include_audio:
             result.audio_info = self._build_audio_info(
-                session.session_id, result.evaluation, enhanced_feedback_audio
+                session.session_id, result.evaluation, outcome.feedback_audio
             )
 
         # Check if quiz is finished
@@ -352,18 +352,324 @@ class QuizFlowService:
 
         return result
 
+    async def _apply_intents(
+        self,
+        session: QuizSession,
+        answer_text: str,
+        evaluated_question_id: str,
+        question: Question,
+        translation: Optional[Dict[str, Any]],
+        participant_id: Optional[str],
+        include_audio: bool,
+        result: FlowResult,
+    ) -> _IntentOutcome:
+        """Parse ``answer_text`` and apply every intent it carries to session + result.
+
+        Shared by a first submission and a re-graded one (#133 1a) so an edited
+        transcript goes through the identical parse → evaluate → score path, just
+        pointed at the question it was written for. Returns what was applied, so
+        the caller can persist it and — on a re-grade — reverse the previous
+        verdict's effect.
+        """
+        # #132 D / #126: score against the question exactly as the player saw it.
+        # The serve-time translation record (one LLM call, stored on the session)
+        # carries the translated stem, options, explanation and answer — so the
+        # spoken Slovak answer is matched against Slovak option text, and the
+        # result screen quotes the same strings. No record (English session, or a
+        # translation that fell back) → the original English question, unchanged.
+        display_question = translated_question_view(question, translation)
+
+        # Parse intents (fast-path for literal "skip")
+        if answer_text.strip().lower() == "skip":
+            intents = [{"intent_type": "skip", "extracted_data": {}}]
+        else:
+            intents = await self.input_parser.parse(
+                user_input=answer_text,
+                current_question=display_question.question,
+                phase=session.phase,
+            )
+
+        outcome = _IntentOutcome()
+
+        # Process intents
+        for intent in intents:
+            intent_type = intent.get("intent_type")
+            extracted_data = intent.get("extracted_data", {})
+
+            if intent_type == "answer":
+                user_answer = extracted_data.get("answer")
+                eval_result, score_delta = await self.answer_evaluator.evaluate(
+                    user_answer=user_answer,
+                    question=display_question,
+                    question_text=display_question.question,
+                )
+
+                translated_correct = await self._correct_answer_display(
+                    question, translation, session
+                )
+
+                result.evaluation = {
+                    "user_answer": user_answer,
+                    "result": eval_result,
+                    "points": score_delta,
+                    "correct_answer": translated_correct,
+                    "question_id": evaluated_question_id,
+                }
+                if display_question.headline_answer:
+                    result.evaluation["headline_answer"] = (
+                        display_question.headline_answer
+                    )
+                if display_question.explanation:
+                    result.evaluation["explanation"] = display_question.explanation
+
+                # Generate enhanced feedback audio
+                if include_audio and self.tts_service:
+                    outcome.feedback_audio = await self._generate_feedback_audio(
+                        eval_result, translated_correct, session.language
+                    )
+
+                # Update participant score
+                self._update_participant_score(session, participant_id, score_delta)
+                outcome.score_delta += score_delta
+                outcome.answered_delta += 1
+                result.feedback_received.append(f"answer: {eval_result}")
+
+            elif intent_type == "skip":
+                translated_correct = await self._correct_answer_display(
+                    question, translation, session
+                )
+                result.evaluation = {
+                    "user_answer": "skipped",
+                    "result": "skipped",
+                    "points": 0.0,
+                    "correct_answer": translated_correct,
+                    "question_id": evaluated_question_id,
+                }
+                if display_question.headline_answer:
+                    result.evaluation["headline_answer"] = (
+                        display_question.headline_answer
+                    )
+                if display_question.explanation:
+                    result.evaluation["explanation"] = display_question.explanation
+                result.feedback_received.append("skipped question")
+
+            elif intent_type == "rating":
+                rating_value = extracted_data.get("rating")
+                result.feedback_received.append(f"rating: {rating_value}")
+
+            elif intent_type == "preference_change":
+                for topic in extracted_data.get("avoid_topics") or []:
+                    if not topic:
+                        continue
+                    if topic not in session.disliked_topics:
+                        session.disliked_topics.append(topic)
+                        outcome.preferences_changed = True
+                    result.feedback_received.append(f"avoiding: {topic}")
+                for topic in extracted_data.get("prefer_topics") or []:
+                    if not topic:
+                        continue
+                    if topic not in session.preferred_topics:
+                        session.preferred_topics.append(topic)
+                        outcome.preferences_changed = True
+                    result.feedback_received.append(f"preference: {topic}")
+                stepped = _DIFFICULTY_STEPS.get(
+                    extracted_data.get("difficulty"), {}
+                ).get(session.current_difficulty)
+                if stepped:
+                    # A clamped direction ("harder" at hard) is acknowledged to the
+                    # player but changed nothing — nothing to persist.
+                    if stepped != session.current_difficulty:
+                        outcome.preferences_changed = True
+                    session.current_difficulty = stepped
+                    result.feedback_received.append(f"difficulty: {stepped}")
+
+        return outcome
+
+    async def _process_resubmission(
+        self,
+        session: QuizSession,
+        previous: LastEvaluation,
+        answer_text: str,
+        participant_id: Optional[str],
+        include_audio: bool,
+    ) -> FlowResult:
+        """Handle a submit for the question this session already graded (#133 1a).
+
+        Same text (a retry whose original response was lost) → replay the stored
+        verdict: no evaluation call, no quota, no advance, no counter change.
+        Different text (an edited transcript, or a retried voice upload the STT
+        transcribed slightly differently) → re-grade it against THAT question,
+        reverse the previous verdict's counter effect and replace the record.
+
+        Either way the session never advances twice and the freemium quota is
+        never charged twice — that is the whole invariant this branch exists for.
+        """
+        result = FlowResult()
+
+        if _same_submission(answer_text, previous.submitted_text):
+            result.evaluation = dict(previous.evaluation)
+            result.feedback_received = list(previous.feedback_received)
+            result.message = "Answer already processed"
+            result.next_question_dict = await self._current_question_payload(session)
+            if include_audio:
+                result.audio_info = self._resubmitted_audio_info(
+                    session, result.evaluation, None
+                )
+            return result
+
+        question = await asyncio.to_thread(
+            self.question_retriever.get, previous.question_id
+        )
+        if not question:
+            raise ValueError("Re-submitted question not found")
+
+        outcome = await self._apply_intents(
+            session=session,
+            answer_text=answer_text,
+            evaluated_question_id=previous.question_id,
+            question=question,
+            translation=previous.translation,
+            participant_id=participant_id,
+            include_audio=include_audio,
+            result=result,
+        )
+
+        # An edit that parses to no answer must not destroy the verdict the client
+        # already holds: keep the stored record and let the route 400, exactly as
+        # for a first submission with no answer in it.
+        if result.evaluation is None:
+            return self._no_answer_result(session, result, outcome)
+
+        # Replace, don't accumulate: undo what the previous verdict applied to the
+        # participant before keeping the new one.
+        self._update_participant_score(
+            session,
+            previous.participant_id,
+            -previous.points_awarded,
+            answered_delta=-previous.answered_count_delta,
+        )
+        session.last_evaluation = self._evaluation_record(
+            result=result,
+            question_id=previous.question_id,
+            submitted_text=answer_text,
+            translation=previous.translation,
+            participant_id=participant_id,
+            outcome=outcome,
+        )
+        self.session_manager.update_session(session)
+
+        result.next_question_dict = await self._current_question_payload(session)
+        result.message = "Answer re-evaluated"
+        if include_audio:
+            result.audio_info = self._resubmitted_audio_info(
+                session, result.evaluation, outcome.feedback_audio
+            )
+        return result
+
+    def _no_answer_result(
+        self, session: QuizSession, result: FlowResult, outcome: _IntentOutcome
+    ) -> FlowResult:
+        """Finish a submission that carried no answer (ghost-question guard, #66).
+
+        Nothing advances and no quota is charged. A preference the utterance DID
+        carry ("no more geography", said on its own) is still persisted: it was
+        parsed and applied to the session, and returning before ``update_session``
+        threw it away — the player then kept getting the topic they just rejected.
+        """
+        result.message = "No answer detected in input"
+        if outcome.preferences_changed:
+            self.session_manager.update_session(session)
+            result.message = "Preferences updated, no answer detected"
+        return result
+
+    @staticmethod
+    def _evaluation_record(
+        *,
+        result: FlowResult,
+        question_id: str,
+        submitted_text: str,
+        translation: Optional[Dict[str, Any]],
+        participant_id: Optional[str],
+        outcome: _IntentOutcome,
+    ) -> LastEvaluation:
+        """Snapshot a graded submission for idempotent re-submits (#133 1a)."""
+        return LastEvaluation(
+            question_id=question_id,
+            submitted_text=submitted_text,
+            evaluation=dict(result.evaluation or {}),
+            feedback_received=list(result.feedback_received),
+            points_awarded=outcome.score_delta,
+            answered_count_delta=outcome.answered_delta,
+            participant_id=participant_id,
+            translation=translation,
+        )
+
+    async def _current_question_payload(
+        self, session: QuizSession
+    ) -> Optional[Dict[str, Any]]:
+        """The question the session is on now, in the exact wording it was served.
+
+        Rebuilt from the stored serve-time translation record, never re-translated,
+        so replaying a lost response costs no LLM call. None when there is no
+        current question or the row has since disappeared.
+        """
+        if not session.current_question_id:
+            return None
+        question = await asyncio.to_thread(
+            self.question_retriever.get, session.current_question_id
+        )
+        if not question:
+            return None
+        record = session_translation(session, question.id)
+        payload = apply_question_translation(question_to_dict(question), record)
+        if not record and session.current_question_text:
+            # Pre-#132 session, or a serve where translation fell back: the stem is
+            # the only translated string stored — same fallback GET /question uses.
+            payload["question"] = session.current_question_text
+        return payload
+
+    def _resubmitted_audio_info(
+        self,
+        session: QuizSession,
+        evaluation: Dict[str, Any],
+        feedback_audio: Optional[bytes],
+    ) -> Dict[str, Any]:
+        """Audio block for a replayed / re-graded submission.
+
+        With no freshly synthesized feedback (a replay evaluates nothing) the block
+        carries the cache-backed ``feedback_url`` instead of inline base64: a retry
+        must not pay OpenAI TTS again for audio the client can fetch. The static
+        ``question_url`` is included because the client may have lost the original
+        response that carried it, but no prefetch is fired — that question's audio
+        was already warmed when it was served.
+        """
+        info = self._build_audio_info(session.session_id, evaluation, feedback_audio)
+        if session.current_question_id:
+            info["question_url"] = (
+                f"/api/v1/sessions/{session.session_id}/question/audio"
+            )
+        return info
+
     def _update_participant_score(
-        self, session: QuizSession, participant_id: Optional[str], score_delta: float
+        self,
+        session: QuizSession,
+        participant_id: Optional[str],
+        score_delta: float,
+        answered_delta: int = 1,
     ):
-        """Update the score for the answering participant."""
+        """Apply a score/answered-count delta to the answering participant.
+
+        Negative deltas reverse a previously applied verdict (#133 1a re-grade), so
+        the same targeting rule decides who is credited and who is un-credited.
+        """
         if participant_id:
             for p in session.participants:
                 if p.participant_id == participant_id:
                     p.score += score_delta
-                    p.answered_count += 1
+                    p.answered_count += answered_delta
         elif session.participants:
             session.participants[0].score += score_delta
-            session.participants[0].answered_count += 1
+            session.participants[0].answered_count += answered_delta
 
     def _build_audio_info(
         self,

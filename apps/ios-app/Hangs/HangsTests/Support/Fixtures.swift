@@ -8,6 +8,47 @@
 
 import Foundation
 @testable import Hangs
+import Testing
+
+// MARK: - Deterministic time
+
+/// Records the durations a production timer/backoff asked to sleep and returns
+/// immediately — the seam that takes wall-clock time out of the retry and
+/// glow-display suites (#133 audit: a `waitUntil` racing a production
+/// `Task.sleep` is the defect, not the timeout value).
+///
+/// Asserting `delays` is strictly STRONGER than the "waitUntil eventually"
+/// shape it replaces: it pins the schedule (0.2 s → 0.4 s exponential backoff,
+/// the 2.0 s glow ceiling) rather than only the eventual outcome, and it pins
+/// the SHIPPED durations instead of a test-shrunk stand-in.
+@MainActor
+final class SleepRecorder {
+    private(set) var delays: [TimeInterval] = []
+
+    /// Assign to a production sleep seam (`backoffSleep`, `glowSleep`).
+    var sleep: @MainActor @Sendable (TimeInterval) async -> Void {
+        { [self] seconds in delays.append(seconds) }
+    }
+}
+
+/// Run the main executor until `predicate` holds, bounded by a number of
+/// scheduler turns instead of a wall-clock deadline. Valid ONLY once every
+/// production sleep on the path is injected away: the sole thing left to wait
+/// for is task scheduling, so there is no duration to race.
+@MainActor
+func pumpUntil(
+    _ predicate: @MainActor () -> Bool,
+    turns: Int = 200,
+    _ comment: Comment? = nil,
+    sourceLocation: SourceLocation = #_sourceLocation
+) async {
+    for _ in 0 ..< turns {
+        if predicate() { return }
+        await Task.yield()
+    }
+    if predicate() { return }
+    Issue.record(comment ?? "pumpUntil exhausted \(turns) scheduler turns", sourceLocation: sourceLocation)
+}
 
 // MARK: - Fixtures
 

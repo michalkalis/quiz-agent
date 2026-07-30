@@ -9,8 +9,9 @@
 //  (the mic is open through passenger conversation — an indicator that lights
 //  on every sentence is itself the driving distraction); a matched glow honors
 //  a min-display floor (no flash) and a max ceiling (no lying about a stuck
-//  action). Clock-driven where possible — no real sleeps except the two
-//  timer-expiry tests, which use waitUntil with injected tiny durations.
+//  action). Fully clock- and timer-driven: `now` is a driven clock and the
+//  glow clear timer's sleep is injected, so NO test here waits real time and
+//  the assertions pin the shipped 2.0 s / 1.2 s windows (#133 audit).
 //
 
 import Foundation
@@ -25,40 +26,34 @@ private final class TestClock {
     init(_ now: Date = Date(timeIntervalSince1970: 1_000_000)) { self.now = now }
 }
 
-/// Spin the main executor until `predicate` holds or the deadline passes.
-@MainActor
-private func waitUntil(
-    _ predicate: @MainActor () -> Bool,
-    timeoutMillis: Int = 5000,
-    _ comment: Comment? = nil,
-    sourceLocation: SourceLocation = #_sourceLocation
-) async {
-    let deadline = ContinuousClock.now.advanced(by: .milliseconds(timeoutMillis))
-    while ContinuousClock.now < deadline {
-        if predicate() { return }
-        await Task.yield()
-        try? await Task.sleep(for: .milliseconds(1))
-    }
-    if predicate() { return }
-    Issue.record(comment ?? "waitUntil timed out after \(timeoutMillis)ms", sourceLocation: sourceLocation)
-}
-
 @Suite("Voice feedback glow (#122 Variant C)")
 @MainActor
 struct VoiceFeedbackGlowTests {
-    private func makeCoordinator() -> (QuizViewModel, VoiceCommandCoordinator, TestClock) {
+    /// - Parameter drivenGlowTimer: install the instant, recording clear-timer
+    ///   seam. ONLY the two display-window tests want it — a timer that expires
+    ///   the moment the test yields would clear the glow underneath the tests
+    ///   that must observe it lit. Those keep the production timer, which cannot
+    ///   fire inside their bodies (they never wait for it — the seam exists so
+    ///   nothing in this suite waits out a real window).
+    private func makeCoordinator(drivenGlowTimer: Bool = false)
+        -> (QuizViewModel, VoiceCommandCoordinator, TestClock, SleepRecorder)
+    {
         let vm = Fixtures.makeViewModel()
         let clock = TestClock()
+        let timer = SleepRecorder()
         let coordinator = vm.voiceCommandCoordinator
         coordinator.now = { clock.now }
-        return (vm, coordinator, clock)
+        // Installed before the first `await`, so no timer can already be armed
+        // against the real clock.
+        if drivenGlowTimer { coordinator.glowSleep = timer.sleep }
+        return (vm, coordinator, clock, timer)
     }
 
     // MARK: - Matched
 
     @Test("A recognized command lights the matched glow (visual twin of the ack earcon)")
     func matchedLightsOnRecognizedCommand() async {
-        let (vm, coordinator, _) = makeCoordinator()
+        let (vm, coordinator, _, _) = makeCoordinator()
         vm.quizState = .askingQuestion
 
         // End-to-end through the transcript path: a final "skip" matches on the
@@ -70,19 +65,22 @@ struct VoiceFeedbackGlowTests {
 
     @Test("Matched glow clears at the max-display ceiling even if no action lands")
     func matchedClearsAtMaxDisplay() async {
-        let (_, coordinator, _) = makeCoordinator()
-        coordinator.matchedGlowMaxDisplay = 0.05
+        let (_, coordinator, _, timer) = makeCoordinator(drivenGlowTimer: true)
 
         coordinator.noteMatchedForFeedback()
         #expect(coordinator.voiceFeedbackPhase == .matched)
 
-        await waitUntil({ coordinator.voiceFeedbackPhase == .idle },
+        await pumpUntil({ coordinator.voiceFeedbackPhase == .idle },
                         "matched glow must not outlive the max ceiling")
+        #expect(
+            timer.delays == [2.0],
+            "the ceiling must be armed for the shipped max-display window — a stuck action may not keep claiming it was heard"
+        )
     }
 
     @Test("Screen change clears a matched glow immediately once past the min floor")
     func screenChangePastFloorClears() {
-        let (_, coordinator, clock) = makeCoordinator()
+        let (_, coordinator, clock, _) = makeCoordinator()
 
         coordinator.noteMatchedForFeedback()
         clock.now = clock.now.addingTimeInterval(0.7) // past the 0.6 s floor
@@ -93,7 +91,7 @@ struct VoiceFeedbackGlowTests {
 
     @Test("Screen change before the min floor keeps the glow (no sub-200 ms flash)")
     func screenChangeBeforeFloorKeepsGlow() {
-        let (_, coordinator, clock) = makeCoordinator()
+        let (_, coordinator, clock, _) = makeCoordinator()
 
         coordinator.noteMatchedForFeedback()
         clock.now = clock.now.addingTimeInterval(0.1) // well inside the floor
@@ -104,7 +102,7 @@ struct VoiceFeedbackGlowTests {
 
     @Test("QuizViewModel.transition feeds the action-landed signal")
     func transitionWiring() {
-        let (vm, coordinator, clock) = makeCoordinator()
+        let (vm, coordinator, clock, _) = makeCoordinator()
         vm.quizState = .askingQuestion
 
         coordinator.noteMatchedForFeedback()
@@ -118,7 +116,7 @@ struct VoiceFeedbackGlowTests {
 
     @Test("A content-bearing unmatched FINAL lights the amber glow")
     func unmatchedFinalLights() async {
-        let (vm, coordinator, _) = makeCoordinator()
+        let (vm, coordinator, _, _) = makeCoordinator()
         vm.quizState = .askingQuestion
 
         await coordinator.handleCommandTranscript(
@@ -129,21 +127,21 @@ struct VoiceFeedbackGlowTests {
 
     @Test("A volatile hypothesis never lights the unmatched glow")
     func volatileNeverLights() {
-        let (_, coordinator, _) = makeCoordinator()
+        let (_, coordinator, _, _) = makeCoordinator()
         coordinator.noteUnmatchedForFeedback("some words", isFinal: false)
         #expect(coordinator.voiceFeedbackPhase == .idle)
     }
 
     @Test("A filler-only utterance never lights the unmatched glow")
     func fillerOnlyNeverLights() {
-        let (_, coordinator, _) = makeCoordinator()
+        let (_, coordinator, _, _) = makeCoordinator()
         coordinator.noteUnmatchedForFeedback("um uh hmm", isFinal: true)
         #expect(coordinator.voiceFeedbackPhase == .idle)
     }
 
     @Test("Unmatched glow is throttled to once per cooldown")
     func cooldownThrottles() {
-        let (_, coordinator, clock) = makeCoordinator()
+        let (_, coordinator, clock, _) = makeCoordinator()
 
         coordinator.noteUnmatchedForFeedback("first miss", isFinal: true)
         #expect(coordinator.voiceFeedbackPhase == .unmatched)
@@ -160,7 +158,7 @@ struct VoiceFeedbackGlowTests {
 
     @Test("The same transcript never lights twice in a row")
     func sameTranscriptSuppressed() {
-        let (_, coordinator, clock) = makeCoordinator()
+        let (_, coordinator, clock, _) = makeCoordinator()
 
         coordinator.noteUnmatchedForFeedback("same words", isFinal: true)
         #expect(coordinator.voiceFeedbackPhase == .unmatched)
@@ -176,7 +174,7 @@ struct VoiceFeedbackGlowTests {
 
     @Test("A live matched glow outranks an unmatched candidate")
     func matchedOutranksUnmatched() {
-        let (_, coordinator, _) = makeCoordinator()
+        let (_, coordinator, _, _) = makeCoordinator()
 
         coordinator.noteMatchedForFeedback()
         coordinator.noteUnmatchedForFeedback("some words", isFinal: true)
@@ -185,21 +183,24 @@ struct VoiceFeedbackGlowTests {
 
     @Test("Unmatched glow auto-clears after its fixed display window")
     func unmatchedAutoClears() async {
-        let (_, coordinator, _) = makeCoordinator()
-        coordinator.unmatchedGlowDisplay = 0.05
+        let (_, coordinator, _, timer) = makeCoordinator(drivenGlowTimer: true)
 
         coordinator.noteUnmatchedForFeedback("some words", isFinal: true)
         #expect(coordinator.voiceFeedbackPhase == .unmatched)
 
-        await waitUntil({ coordinator.voiceFeedbackPhase == .idle },
+        await pumpUntil({ coordinator.voiceFeedbackPhase == .idle },
                         "unmatched glow must clear after its display window")
+        #expect(
+            timer.delays == [1.2],
+            "one slow amber breath = the shipped unmatched window; a longer one would keep breathing through cabin talk"
+        )
     }
 
     // MARK: - Reset
 
     @Test("reset() clears the glow but keeps the cooldown closed")
     func resetClearsGlowKeepsCooldown() {
-        let (_, coordinator, clock) = makeCoordinator()
+        let (_, coordinator, clock, _) = makeCoordinator()
 
         coordinator.noteUnmatchedForFeedback("some words", isFinal: true)
         coordinator.reset()

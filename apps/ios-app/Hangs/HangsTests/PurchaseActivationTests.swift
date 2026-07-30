@@ -20,8 +20,8 @@
 
 import Combine
 import Foundation
-import Testing
 @testable import Hangs
+import Testing
 
 @MainActor
 private func makeManager(
@@ -41,7 +41,6 @@ private func makeManager(
 @Suite("Purchase activation state (#102 finding 4)")
 @MainActor
 struct PurchaseActivationTests {
-
     @Test("subscription purchase success without server confirmation lands in .activating, not .success")
     func subscriptionPurchaseUnconfirmedLandsInActivating() async {
         let manager = await makeManager(isEntitled: true, purchaseOutcome: .success(unlimitedActive: true))
@@ -94,6 +93,11 @@ struct PurchaseActivationTests {
             audioService: MockAudioService(),
             persistenceStore: MockPersistenceStore()
         )
+        // Deterministic time (#133 audit): drive the bounded backoff instead of
+        // waiting ~0.6 s of real sleeps for it. Installed before the first
+        // `await`, so the launch reconcile's Task cannot have run yet.
+        let backoff = SleepRecorder()
+        vm.entitlementReconciler.backoffSleep = backoff.sleep
         // Drain the launch-time reconcile (#102 finding 1, same view model
         // init) first so it can't consume the failure budget set below —
         // isolates the assertion to notifyPremiumPurchased's own retry pass.
@@ -111,5 +115,6 @@ struct PurchaseActivationTests {
 
         #expect(confirmed == true, "the bounded retry must still land on the server-confirmed outcome")
         #expect(mock.syncEntitlementsCallCount - baseline >= 3, "a failing sync must retry (#102 finding 1's helper), not give up on the first attempt")
+        #expect(backoff.delays == [0.2, 0.4], "the retries must be spaced (the shared bounded-backoff helper), not an instant re-hammer")
     }
 }

@@ -88,8 +88,11 @@ extension VoiceCommandCoordinator {
     /// (Re)arm the single clear timer — re-adding under the same TaskKey
     /// cancels the previous timer, so the newest deadline always wins.
     private func scheduleGlowClear(after delay: TimeInterval) {
+        // The seam is read (not reached through `self`) so the timer keeps its
+        // weak-self semantics: a released coordinator still clears nothing.
+        let sleep = glowSleep
         let task = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(delay))
+            await sleep(delay)
             guard let self, !Task.isCancelled else { return }
             self.clearFeedbackGlow()
         }

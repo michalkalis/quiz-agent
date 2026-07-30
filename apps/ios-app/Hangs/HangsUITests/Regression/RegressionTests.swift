@@ -72,9 +72,14 @@ final nonisolated class RegressionTests: XCTestCase {
     //
     // Scenario: from askingQuestion state, inject a committed STT event with the
     // correct answer, confirm via the confirmation sheet, and assert the result
-    // screen shows the continue button (happy-path correct flow).
+    // screen shows the CORRECT verdict ("NAILED IT.") plus the continue button.
     //
-    // Regression guarded: STT→processAnswer→showingResult pipeline for correct answers.
+    // Regression guarded: STT→processAnswer→showingResult pipeline for correct
+    // answers, verdict included. Asserting only `result.continue` (as this
+    // scenario did until #133) left the whole app with nothing proving a correct
+    // answer renders the correct verdict end-to-end: every wrong-verdict bug —
+    // an inverted `isCorrect`, the #131-D skip branch swallowing a correct
+    // result, a band wired to the wrong evaluation — would have shipped green.
 
     @MainActor
     func testRSCorrect() async throws {
@@ -107,9 +112,11 @@ final nonisolated class RegressionTests: XCTestCase {
         )
         confirmButton.tap()
 
-        // Assert result screen appears with continue button.
+        // Assert the result screen appears with the continue button AND that the
+        // verdict band says the answer was right.
         let result = ResultPage(app: app)
         result.waitForResult(timeout: 15)
+        result.assertVerdictContains("NAILED IT.")
     }
 
     // MARK: - RS-incorrect

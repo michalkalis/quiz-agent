@@ -69,6 +69,27 @@ final class EntitlementReconciler: ObservableObject {
     /// cleared by `refreshUsage()` only, cancelled in `deinit`.
     private var usageFetchTask: Task<Void, Never>?
 
+    /// Injected sleep for the two bounded-retry backoffs below. Mirrors
+    /// `VoiceCommandCoordinator.now`: a `var` a test swaps right after the
+    /// façade built this child (the launch reconcile is a `Task` that cannot
+    /// run before the test yields the MainActor), so the retry loops are driven
+    /// instantly and the schedule is *asserted* instead of waited out. The four
+    /// usage/entitlement retry tests were the repo's wall-clock-flaky set:
+    /// a `waitUntil` racing real production `Task.sleep`s under full-suite load
+    /// (#133 audit — "waitUntil against a production sleep is the defect").
+    var backoffSleep: @MainActor @Sendable (TimeInterval) async -> Void = { seconds in
+        try? await Task.sleep(for: .seconds(seconds))
+    }
+
+    /// Whether a launch/foreground reconcile is still in flight. Test seam: a
+    /// test that must observe a SECOND reconcile has to wait for the first task
+    /// to unwind, because waiting on the published `usageInfo` can resume in the
+    /// window between the publish and `reconcileTask` clearing — where a new
+    /// caller still JOINS the in-flight attempt (single-flight, by design) and
+    /// fires no sync of its own. That window is what made the foreground
+    /// reconcile test flake ~1 in 3 (#133 audit).
+    var isReconciling: Bool { reconcileTask != nil }
+
     init(
         networkService: NetworkServiceProtocol,
         isLocallyEntitled: @escaping @MainActor () -> Bool
@@ -183,7 +204,7 @@ final class EntitlementReconciler: ObservableObject {
                     return
                 }
                 let backoffSeconds = 0.2 * pow(2.0, Double(attempt - 1))
-                try? await Task.sleep(for: .seconds(backoffSeconds))
+                await backoffSleep(backoffSeconds)
             }
         }
     }
@@ -265,7 +286,7 @@ final class EntitlementReconciler: ObservableObject {
                     return
                 }
                 let backoffSeconds = 0.2 * pow(2.0, Double(attempt - 1))
-                try? await Task.sleep(for: .seconds(backoffSeconds))
+                await backoffSleep(backoffSeconds)
             }
         }
     }

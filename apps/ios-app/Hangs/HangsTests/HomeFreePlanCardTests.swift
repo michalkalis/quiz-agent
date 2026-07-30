@@ -205,11 +205,16 @@ struct HomeFreePlanCardTests {
             persistenceStore: MockPersistenceStore()
         )
 
+        // Drive the bounded retry's backoff instead of waiting it out in real
+        // time (#133 audit) — installed before the first `await`, so the launch
+        // reconcile Task cannot have started.
+        vm.entitlementReconciler.backoffSleep = SleepRecorder().sleep
+
         // The launch reconcile exhausts its bounded retries and marks the load
         // failed; the card must then render a retry affordance, not disappear.
         let deadline = ContinuousClock.now.advanced(by: .milliseconds(15000))
         while ContinuousClock.now < deadline, vm.usageLoadState != .failed {
-            try? await Task.sleep(for: .milliseconds(5))
+            await Task.yield()
         }
         #expect(vm.usageLoadState == .failed, "usage load never surfaced as failed")
         #expect(vm.usageInfo == nil)

@@ -66,13 +66,21 @@ final class VoiceCommandCoordinator: ObservableObject {
     /// for the same transcript" (locked variant-page answer).
     var lastUnmatchedGlowText: String?
 
-    /// #122 glow durations (locked variant-page answers). `var` so tests drive
-    /// them to negligible values instead of sleeping — the repo's three flaky
-    /// async voice tests all came from real `Task.sleep`s.
+    /// #122 glow durations (locked variant-page answers).
     var matchedGlowMinDisplay: TimeInterval = 0.6
     var matchedGlowMaxDisplay: TimeInterval = 2.0
     var unmatchedGlowDisplay: TimeInterval = 1.2
     var unmatchedGlowCooldown: TimeInterval = 4.0
+
+    /// Injected sleep for the glow clear timer (`scheduleGlowClear`). Same
+    /// rationale as `now`: the two display-window tests used to shrink the
+    /// duration to 0.05 s and then wait it out for real, which flaked under
+    /// full-suite load. With the sleep injected the test drives the timer
+    /// instantly *and* asserts the window it was armed for — so the shipped
+    /// 2.0 s / 1.2 s durations are what get pinned, not a test-only value.
+    var glowSleep: @MainActor @Sendable (TimeInterval) async -> Void = { seconds in
+        try? await Task.sleep(for: .seconds(seconds))
+    }
 
     /// P4a founder-overridable flag: spoken "start" on QuestionView opens the
     /// mic. `false` disables ONLY that wiring — the rest of the command layer
